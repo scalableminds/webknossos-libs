@@ -1,11 +1,9 @@
 FROM python:3-slim
 
-RUN pip install numpy scipy pillow
-
 RUN mkdir /app
 WORKDIR /app
 
-COPY cuber.py /app
-COPY config.ini /app
+COPY webknossos_cuber /app
+COPY config.yml /app
 
-ENTRYPOINT [ "python", "cuber.py", "--config", "config.ini" ]
+ENTRYPOINT [ "python", "webknossos_cuber/cuber.py", "--config", "config.yml" ]
