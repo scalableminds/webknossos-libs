@@ -8,5 +8,8 @@ RUN pip install -r requirements.txt
 
 COPY webknossos_cuber /app/webknossos_cuber
 COPY config.yml /app
+COPY setup.py /app
 
-ENTRYPOINT [ "python", "webknossos_cuber/cuber.py", "--config", "config.yml" ]
+RUN python setup.py install
+
+ENTRYPOINT [ "python", "-m", "webknossos_cuber" ]

@@ -7,9 +7,14 @@ setup(
     ],
     package_dir={'webknossos_cuber': 'webknossos_cuber'},
     version='0.0.1',
-    install_requires=[],
-    description="A cubing tool for webKnossos",
+    install_requires=[
+        'scipy',
+        'numpy',
+        'pillow',
+        'pyyaml'
+    ],
+    description='A cubing tool for webKnossos',
     author='Norman Rzepka',
     author_email='norman@scm.io',
-    url="http://scm.io"
+    url='http://scm.io'
 )
