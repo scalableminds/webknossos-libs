@@ -248,6 +248,8 @@ def knossos_cuber(config):
 
     mag1_ref_time = time.time()
 
+    logging.info("Creating mag1 cubes.")
+
     make_mag1_cubes_from_z_stack(
         config,
         cubing_info.source_files,
@@ -260,20 +262,20 @@ def knossos_cuber(config):
                               cubing_info.bbox,
                               cubing_info.resolutions)
 
-    print("Mag 1 succesfully cubed. Took {:.3f}h".format((time.time() - mag1_ref_time) / 3600))
+    logging.info("Mag 1 succesfully cubed. Took {:.3f}h".format((time.time() - mag1_ref_time) / 3600))
 
     total_down_ref_time = time.time()
     curr_mag = 4
 
     while curr_mag <= max(cubing_info.resolutions):
         downsample(config, curr_mag // 2, curr_mag)
-        print("Mag {0} succesfully cubed.".format(curr_mag))
+        logging.info("Mag {0} succesfully cubed.".format(curr_mag))
         curr_mag = curr_mag * 2
 
-    print("All mags generated. Took {:.3f}h."
+    logging.info("All mags generated. Took {:.3f}h."
            .format((time.time() - total_down_ref_time)/3600))
 
-    print('All done.')
+    logging.info('All done.')
 
 
 def create_parser():
@@ -303,6 +305,11 @@ def create_parser():
     parser.add_argument(
         '--name', '-n',
         help="Name of the dataset. If no name is specified, the source directory name will be used.")
+
+    parser.add_argument(
+        '--loglevel', '-ll',
+        help="Loglevel. DEBUG, INFO, WARNING, ERROR or CRITICAL.",
+        default='INFO')
 
     parser.add_argument(
         '--config', '-c',
@@ -397,6 +404,8 @@ def downsample_cube(cube_buffer, factor):
 def main():
     PARSER = create_parser()
     ARGS = PARSER.parse_args()
+
+    logging.basicConfig(level=getattr(logging, ARGS.loglevel.upper(), None))
 
     with open(ARGS.config, 'r') as config_yaml:
         CONFIG = yaml.load(config_yaml)
