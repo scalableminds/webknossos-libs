@@ -268,7 +268,7 @@ def knossos_cuber(config):
     logging.info("Mag 1 succesfully cubed. Took {:.3f}h".format((time.time() - mag1_ref_time) / 3600))
 
     total_down_ref_time = time.time()
-    curr_mag = 4
+    curr_mag = 2
 
     while curr_mag <= max(cubing_info.resolutions):
         downsample(config, curr_mag // 2, curr_mag)
