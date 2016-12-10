@@ -174,7 +174,7 @@ def read_cube(target_path, mag, cube_edge_len, x, y, z):
     cube_full_path = path.join(prefix, file_name)
 
     if not path.exists(prefix):
-        logging.info("Missed cube {0}".format(cube_full_path))
+        logging.debug("Missed cube {0}".format(cube_full_path))
         return np.zeros((cube_edge_len,) * 3, np.uint8)
 
     logging.debug("Reading cube {0}".format(cube_full_path))
@@ -199,8 +199,10 @@ def make_mag1_cubes_from_z_stack(config, source_files, source_dims, cube_dims):
 
     # we iterate over the z cubes and handle cube layer after cube layer
     for cube_z in range(0, num_z_cubes + 1):
+        logging.info("Cubing layer: {0}".format(cube_z))
+
         if skip_already_cubed_layers and check_layer_already_cubed(target_path, cube_z):
-            logging.info("Skipping cube layer: {0}".format(cube_z))
+            logging.debug("Skipping cube layer: {0}".format(cube_z))
             continue
 
         cube_coordinates = list(itertools.product(range(num_x_cubes), range(num_y_cubes)))
@@ -241,6 +243,7 @@ def make_mag1_cubes_from_z_stack(config, source_files, source_dims, cube_dims):
                 # pool.submit(write_cube, cube_buffer[i], target_path, 1, cube_x, cube_y, cube_z)
                 cube_data = cube_buffer[i].swapaxes(0, 1).swapaxes(1, 2)
                 write_cube(target_path, cube_data, 1, cube_x, cube_y, cube_z)
+                logging.info("Cube written: {},{},{} mag {}".format(cube_x, cube_y, cube_z, 1))
 
 
 def knossos_cuber(config):
@@ -385,6 +388,7 @@ def downsample(config, source_mag, target_mag):
         write_cube(target_path, cube_data, target_mag, cube_x, cube_y, cube_z)
 
         logging.debug("Downsampling took {:.8f}s".format(time.time() - ref_time))
+        logging.info("Downsampled cube: {},{},{} mag {}".format(cube_x, cube_y, cube_z, target_mag))
 
 
 
