@@ -1,11 +1,11 @@
 from setuptools import setup
 
 setup(
-    name='webknossos_cuber',
+    name='wkcuber',
     packages=[
-        'webknossos_cuber'
+        'wkcuber'
     ],
-    package_dir={'webknossos_cuber': 'webknossos_cuber'},
+    package_dir={'wkcuber': 'wkcuber'},
     version='0.0.1',
     install_requires=[
         'scipy',
