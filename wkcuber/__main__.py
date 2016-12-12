@@ -3,9 +3,9 @@ import logging
 import yaml
 from argparse import ArgumentParser
 from .config import read_config
-from .cubing import make_mag1_cubes_from_z_stack, \
-    get_cubing_info, write_webknossos_metadata
+from .cubing import make_mag1_cubes_from_z_stack, get_cubing_info
 from .downsampling import downsample
+from .metadata import write_webknossos_metadata
 
 
 def webknossos_cuber(config):
@@ -22,6 +22,7 @@ def webknossos_cuber(config):
     write_webknossos_metadata(config['dataset']['target_path'],
                               config['dataset']['name'],
                               config['dataset']['scale'],
+                              config['dataset']['dtype'],
                               cubing_info.bbox,
                               cubing_info.resolutions)
 

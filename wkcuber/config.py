@@ -8,13 +8,14 @@ DEFAULT_CONFIG = {
         'num_io_threads': 10,
         'cube_edge_len': 128,
         'skip_already_cubed_layers': True,
-        'skip_already_downsampled_cubes': True
+        'skip_already_downsampled_cubes': True,
     },
     'dataset': {
         'source_path': "",
         'target_path': "",
         'name': "",
-        'scale': (1, 1, 1)
+        'scale': (1, 1, 1),
+        'dtype': 'uint8'
     }
 }
 

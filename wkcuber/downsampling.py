@@ -33,6 +33,7 @@ def downsample(config, source_mag, target_mag):
 
     factor = int(target_mag / source_mag)
     target_path = config['dataset']['target_path']
+    dtype = config['dataset']['dtype']
     cube_edge_len = config['processing']['cube_edge_len']
     skip_already_downsampled_cubes = config[
         'processing']['skip_already_downsampled_cubes']
@@ -58,20 +59,26 @@ def downsample(config, source_mag, target_mag):
             cube_x, cube_y, cube_z, target_mag))
 
         ref_time = time.time()
-        cube_buffer = np.zeros((cube_edge_len * factor,) * 3, np.uint8)
+        cube_buffer = np.zeros((cube_edge_len * factor,) * 3, dtype=dtype)
         for local_x in range(factor):
             for local_y in range(factor):
                 for local_z in range(factor):
+                    cube_data = read_cube(
+                        target_path, source_mag, cube_edge_len,
+                        cube_x * factor + local_x,
+                        cube_y * factor + local_y,
+                        cube_z * factor + local_z,
+                        dtype)
                     cube_buffer[
-                        local_x * cube_edge_len:(local_x + 1) * cube_edge_len,
-                        local_y * cube_edge_len:(local_y + 1) * cube_edge_len,
-                        local_z * cube_edge_len:(local_z + 1) * cube_edge_len
-                    ] = read_cube(target_path, source_mag, cube_edge_len,
-                                  cube_x * factor + local_x,
-                                  cube_y * factor + local_y,
-                                  cube_z * factor + local_z)
+                        local_x * cube_edge_len:
+                        (local_x + 1) * cube_edge_len,
+                        local_y * cube_edge_len:
+                        (local_y + 1) * cube_edge_len,
+                        local_z * cube_edge_len:
+                        (local_z + 1) * cube_edge_len
+                    ] = cube_data
 
-        cube_data = downsample_cube(cube_buffer, factor)
+        cube_data = downsample_cube(cube_buffer, factor, dtype)
         write_cube(target_path, cube_data, target_mag, cube_x, cube_y, cube_z)
 
         logging.debug("Downsampling took {:.8f}s".format(
@@ -80,10 +87,10 @@ def downsample(config, source_mag, target_mag):
             cube_x, cube_y, cube_z, target_mag))
 
 
-def downsample_cube(cube_buffer, factor):
+def downsample_cube(cube_buffer, factor, dtype):
 
     return zoom(
-        cube_buffer, 1 / factor, output=np.uint8,
+        cube_buffer, 1 / factor, output=dtype,
         # 1: bilinear
         # 2: bicubic
         order=1,

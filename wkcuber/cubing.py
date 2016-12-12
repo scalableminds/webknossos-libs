@@ -1,10 +1,9 @@
 import time
 import logging
 import sys
-import json
 import numpy as np
 from math import log2, ceil
-from os import path, listdir, makedirs
+from os import path, listdir
 from itertools import product
 from PIL import Image
 from collections import namedtuple
@@ -16,45 +15,6 @@ SOURCE_FORMAT_FILES = ('.tif', '.tiff', '.jpg', '.jpeg', '.png')
 
 CubingInfo = namedtuple('CubingInfo',
                         'source_files source_dims cube_dims bbox resolutions')
-
-
-def write_webknossos_metadata(dataset_base_path,
-                              name,
-                              scale,
-                              bbox,
-                              resolutions):
-
-    if not path.exists(dataset_base_path):
-        makedirs(dataset_base_path)
-
-    settings_json_path = path.join(dataset_base_path, 'settings.json')
-    with open(settings_json_path, 'wt') as settings_json:
-        json.dump({
-            'name': name,
-            'priority': 0,
-            'scale': scale
-        }, settings_json)
-
-    if not path.exists(path.join(dataset_base_path, 'color')):
-        makedirs(path.join(dataset_base_path, 'color'))
-
-    layer_json_path = path.join(dataset_base_path, 'color', 'layer.json')
-    with open(layer_json_path, 'wt') as layer_json:
-        json.dump({
-            'typ': 'color',
-            'class': 'uint8'
-        }, layer_json)
-
-    section_json_path = path.join(dataset_base_path, 'color', 'section.json')
-    with open(section_json_path, 'wt') as section_json:
-        json.dump({
-            'bbox': (
-                (0, bbox[0]),
-                (0, bbox[1]),
-                (0, bbox[2])
-            ),
-            'resolutions': resolutions
-        }, section_json)
 
 
 def find_source_filenames(source_path):
@@ -133,6 +93,7 @@ def make_mag1_cubes_from_z_stack(config, cubing_info):
     source_files = cubing_info.source_files
     source_dims = cubing_info.source_dims
     cube_dims = cubing_info.cube_dims
+    dtype = config['dataset']['dtype']
     target_path = config['dataset']['target_path']
     num_io_threads = config['processing']['num_io_threads']
     skip_already_cubed_layers = config[
@@ -160,7 +121,7 @@ def make_mag1_cubes_from_z_stack(config, cubing_info):
                 cube_edge_len,
                 cube_edge_len,
                 cube_edge_len),
-                np.uint8)
+                dtype=dtype)
 
             for local_z in range(0, cube_edge_len):
                 z = cube_z * cube_edge_len + local_z

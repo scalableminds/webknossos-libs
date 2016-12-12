@@ -40,7 +40,7 @@ def write_cube(target_path, cube_data, mag, x, y, z):
         logging.error("Could not write cube: {0}".format(cube_full_path))
 
 
-def read_cube(target_path, mag, cube_edge_len, x, y, z):
+def read_cube(target_path, mag, cube_edge_len, x, y, z, dtype):
     ref_time = time.time()
 
     prefix = get_cube_folder(target_path, mag, x, y, z)
@@ -49,13 +49,13 @@ def read_cube(target_path, mag, cube_edge_len, x, y, z):
 
     if not path.exists(prefix):
         logging.debug("Missed cube {0}".format(cube_full_path))
-        return np.zeros((cube_edge_len,) * 3, np.uint8)
+        return np.zeros((cube_edge_len,) * 3, dtype=dtype)
 
     logging.debug("Reading cube {0}".format(cube_full_path))
 
     try:
         with open(cube_full_path, "rb") as cube_file:
-            cube_data = np.fromfile(cube_file, dtype=np.uint8).reshape(
+            cube_data = np.fromfile(cube_file, dtype=dtype).reshape(
                 (cube_edge_len,) * 3, order="F")
         logging.debug("Reading took: {:.8f}s".format(time.time() - ref_time))
         return cube_data
