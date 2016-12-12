@@ -6,6 +6,7 @@ from math import ceil
 from os import path, listdir
 from itertools import product
 from scipy.ndimage.interpolation import zoom
+from concurrent.futures import ProcessPoolExecutor
 from .cube_io import read_cube, write_cube, get_cube_full_path
 
 CUBE_FOLDER_REGEX = re.compile('^[xyz]\d{4}$')
@@ -33,10 +34,7 @@ def downsample(config, source_mag, target_mag):
 
     factor = int(target_mag / source_mag)
     target_path = config['dataset']['target_path']
-    dtype = config['dataset']['dtype']
-    cube_edge_len = config['processing']['cube_edge_len']
-    skip_already_downsampled_cubes = config[
-        'processing']['skip_already_downsampled_cubes']
+    num_downsampling_cores = config['processing']['num_downsampling_cores']
 
     source_cube_dims = determine_existing_cube_dims(target_path, source_mag)
     target_cube_dims = tuple(
@@ -47,44 +45,57 @@ def downsample(config, source_mag, target_mag):
         range(target_cube_dims[1]),
         range(target_cube_dims[2]))
 
-    for cube_x, cube_y, cube_z in cube_coordinates:
-        cube_full_path = get_cube_full_path(
-            target_path, target_mag, cube_x, cube_y, cube_z)
-        if skip_already_downsampled_cubes and path.exists(cube_full_path):
-            logging.debug("Skipping downsampling {},{},{} mag {}".format(
-                cube_x, cube_y, cube_z, target_mag))
-            continue
+    with ProcessPoolExecutor(num_downsampling_cores) as pool:
+        for cube_x, cube_y, cube_z in cube_coordinates:
+            pool.submit(downsample_cube_job, config, source_mag, target_mag,
+                cube_x, cube_y, cube_z)
+        
 
-        logging.debug("Downsampling {},{},{} mag {}".format(
+def downsample_cube_job(config, source_mag, target_mag, cube_x, cube_y, cube_z):
+    factor = int(target_mag / source_mag)
+    dtype = config['dataset']['dtype']
+    target_path = config['dataset']['target_path']
+    cube_edge_len = config['processing']['cube_edge_len']
+    skip_already_downsampled_cubes = config[
+        'processing']['skip_already_downsampled_cubes']
+
+
+    cube_full_path = get_cube_full_path(target_path, target_mag, cube_x, cube_y, cube_z)
+    if skip_already_downsampled_cubes and path.exists(cube_full_path):
+        logging.debug("Skipping downsampling {},{},{} mag {}".format(
             cube_x, cube_y, cube_z, target_mag))
+        return
 
-        ref_time = time.time()
-        cube_buffer = np.zeros((cube_edge_len * factor,) * 3, dtype=dtype)
-        for local_x in range(factor):
-            for local_y in range(factor):
-                for local_z in range(factor):
-                    cube_data = read_cube(
-                        target_path, source_mag, cube_edge_len,
-                        cube_x * factor + local_x,
-                        cube_y * factor + local_y,
-                        cube_z * factor + local_z,
-                        dtype)
-                    cube_buffer[
-                        local_x * cube_edge_len:
-                        (local_x + 1) * cube_edge_len,
-                        local_y * cube_edge_len:
-                        (local_y + 1) * cube_edge_len,
-                        local_z * cube_edge_len:
-                        (local_z + 1) * cube_edge_len
-                    ] = cube_data
+    logging.debug("Downsampling {},{},{} mag {}".format(
+        cube_x, cube_y, cube_z, target_mag))
 
-        cube_data = downsample_cube(cube_buffer, factor, dtype)
-        write_cube(target_path, cube_data, target_mag, cube_x, cube_y, cube_z)
+    ref_time = time.time()
+    cube_buffer = np.zeros((cube_edge_len * factor,) * 3, dtype=dtype)
+    for local_x in range(factor):
+        for local_y in range(factor):
+            for local_z in range(factor):
+                cube_data = read_cube(
+                    target_path, source_mag, cube_edge_len,
+                    cube_x * factor + local_x,
+                    cube_y * factor + local_y,
+                    cube_z * factor + local_z,
+                    dtype)
+                cube_buffer[
+                    local_x * cube_edge_len:
+                    (local_x + 1) * cube_edge_len,
+                    local_y * cube_edge_len:
+                    (local_y + 1) * cube_edge_len,
+                    local_z * cube_edge_len:
+                    (local_z + 1) * cube_edge_len
+                ] = cube_data
 
-        logging.debug("Downsampling took {:.8f}s".format(
-            time.time() - ref_time))
-        logging.info("Downsampled cube: {},{},{} mag {}".format(
-            cube_x, cube_y, cube_z, target_mag))
+    cube_data = downsample_cube(cube_buffer, factor, dtype)
+    write_cube(target_path, cube_data, target_mag, cube_x, cube_y, cube_z)
+
+    logging.debug("Downsampling took {:.8f}s".format(
+        time.time() - ref_time))
+    logging.info("Downsampled cube: {},{},{} mag {}".format(
+        cube_x, cube_y, cube_z, target_mag))
 
 
 def downsample_cube(cube_buffer, factor, dtype):
