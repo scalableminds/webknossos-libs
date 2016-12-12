@@ -1,10 +1,11 @@
 import yaml
+from os import cpu_count
 
 DEFAULT_CONFIG = {
     'processing': {
         'buffer_size_in_cubes': 10000,
         'buffer_size_in_cubes_downsampling': 10000,
-        'num_downsampling_cores': 10,
+        'num_downsampling_cores': cpu_count(),
         'num_io_threads': 10,
         'cube_edge_len': 128,
         'skip_already_cubed_layers': True,

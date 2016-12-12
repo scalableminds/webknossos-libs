@@ -29,7 +29,7 @@ def determine_existing_cube_dims(target_path, mag):
 def downsample(config, source_mag, target_mag):
 
     assert source_mag < target_mag
-    logging.info("Downsampling mag {} from mag {}.".format(
+    logging.info("Downsampling mag {} from mag {}".format(
         target_mag, source_mag))
 
     factor = int(target_mag / source_mag)
@@ -46,12 +46,16 @@ def downsample(config, source_mag, target_mag):
         range(target_cube_dims[2]))
 
     with ProcessPoolExecutor(num_downsampling_cores) as pool:
+        logging.debug("Using up to {} worker processes".format(
+            num_downsampling_cores))
         for cube_x, cube_y, cube_z in cube_coordinates:
-            pool.submit(downsample_cube_job, config, source_mag, target_mag,
-                cube_x, cube_y, cube_z)
-        
+            pool.submit(downsample_cube_job, config,
+                        source_mag, target_mag,
+                        cube_x, cube_y, cube_z)
 
-def downsample_cube_job(config, source_mag, target_mag, cube_x, cube_y, cube_z):
+
+def downsample_cube_job(config, source_mag, target_mag,
+                        cube_x, cube_y, cube_z):
     factor = int(target_mag / source_mag)
     dtype = config['dataset']['dtype']
     target_path = config['dataset']['target_path']
@@ -59,8 +63,8 @@ def downsample_cube_job(config, source_mag, target_mag, cube_x, cube_y, cube_z):
     skip_already_downsampled_cubes = config[
         'processing']['skip_already_downsampled_cubes']
 
-
-    cube_full_path = get_cube_full_path(target_path, target_mag, cube_x, cube_y, cube_z)
+    cube_full_path = get_cube_full_path(
+        target_path, target_mag, cube_x, cube_y, cube_z)
     if skip_already_downsampled_cubes and path.exists(cube_full_path):
         logging.debug("Skipping downsampling {},{},{} mag {}".format(
             cube_x, cube_y, cube_z, target_mag))
