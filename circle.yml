@@ -16,7 +16,7 @@ test:
         scalableminds/webknossos-cuber:$CIRCLE_BUILD_NUM \
         -n test \
         /testdata /testoutput
-    - '[ -f testoutput/color ]'
+    - '[ -d testoutput/color ]'
     - '[ $(find testoutput/color/1 -name "*.raw" | wc -l) -eq 36 ]'
     - '[ $(find testoutput/color/2 -name "*.raw" | wc -l) -eq 8 ]'
     - '[ $(find testoutput/color/4 -name "*.raw" | wc -l) -eq 1 ]'
