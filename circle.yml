@@ -20,7 +20,6 @@ test:
     - '[ $(find testoutput/color/1 -name "*.raw" | wc -l) -eq 36 ]'
     - '[ $(find testoutput/color/2 -name "*.raw" | wc -l) -eq 8 ]'
     - '[ $(find testoutput/color/4 -name "*.raw" | wc -l) -eq 1 ]'
-    - rm -rf testoutput
 
 deployment:
   hub:
