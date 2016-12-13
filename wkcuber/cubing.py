@@ -141,7 +141,9 @@ def make_mag1_cubes_from_z_stack(config, cubing_info):
                                             (cube_x + 1) * cube_edge_len,
                                             cube_y * cube_edge_len:
                                             (cube_y + 1) * cube_edge_len]
-                    cube_buffer[i, local_z] = cube_slice
+                    cube_buffer[i, local_z,
+                                0:cube_slice.shape[0],
+                                0:cube_slice.shape[1]] = cube_slice
 
                 logging.debug("Reading took {:.8f}s".format(
                     time.time() - ref_time))
