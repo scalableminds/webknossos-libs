@@ -80,8 +80,8 @@ def get_cubing_info(config):
     return CubingInfo(source_files, source_dims, cube_dims, bbox, resolutions)
 
 
-def check_layer_already_cubed(target_path, cur_z):
-    folder = get_cube_folder(target_path, 1, 1, 1, cur_z)
+def check_layer_already_cubed(target_path, layer_name, cur_z):
+    folder = get_cube_folder(target_path, layer_name, 1, 1, 1, cur_z)
     try:
         return any([file for file in listdir(folder) if file.endswith(".raw")])
     except FileNotFoundError:
@@ -95,6 +95,7 @@ def make_mag1_cubes_from_z_stack(config, cubing_info):
     cube_dims = cubing_info.cube_dims
     dtype = config['dataset']['dtype']
     target_path = config['dataset']['target_path']
+    layer_name = config['dataset']['layer_name']
     num_io_threads = config['processing']['num_io_threads']
     skip_already_cubed_layers = config[
         'processing']['skip_already_cubed_layers']
@@ -107,7 +108,7 @@ def make_mag1_cubes_from_z_stack(config, cubing_info):
         logging.info("Cubing layer: {0}".format(cube_z))
 
         if skip_already_cubed_layers and \
-                check_layer_already_cubed(target_path, cube_z):
+                check_layer_already_cubed(target_path, layer_name, cube_z):
             logging.info("Skipping cube layer: {0}".format(cube_z))
             continue
 
@@ -154,6 +155,7 @@ def make_mag1_cubes_from_z_stack(config, cubing_info):
                 cube_data = cube_buffer[i].swapaxes(0, 1).swapaxes(1, 2)
                 # pool.submit(write_cube, cube_data,
                 #             target_path, 1, cube_x, cube_y, cube_z)
-                write_cube(target_path, cube_data, 1, cube_x, cube_y, cube_z)
+                write_cube(target_path, cube_data, layer_name, 1,
+                           cube_x, cube_y, cube_z)
                 logging.info("Cube written: {},{},{} mag {}".format(
                     cube_x, cube_y, cube_z, 1))

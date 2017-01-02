@@ -23,6 +23,7 @@ def webknossos_cuber(config):
                               config['dataset']['name'],
                               config['dataset']['scale'],
                               config['dataset']['dtype'],
+                              config['dataset']['layer_name'],
                               cubing_info.bbox,
                               cubing_info.resolutions)
 

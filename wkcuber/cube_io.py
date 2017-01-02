@@ -4,8 +4,8 @@ import numpy as np
 from os import path, makedirs
 
 
-def get_cube_folder(target_path, mag, x, y, z):
-    return path.join(target_path, 'color', str(mag),
+def get_cube_folder(target_path, layer_name, mag, x, y, z):
+    return path.join(target_path, layer_name, str(mag),
                      'x{:04d}'.format(x),
                      'y{:04d}'.format(y),
                      'z{:04d}'.format(z))
@@ -15,15 +15,15 @@ def get_cube_file_name(mag, x, y, z):
     return '{:s}_mag{:d}_x{:04d}_y{:04d}_z{:04d}.raw'.format('', mag, x, y, z)
 
 
-def get_cube_full_path(target_path, mag, x, y, z):
-    return path.join(get_cube_folder(target_path, mag, x, y, z),
+def get_cube_full_path(target_path, layer_name, mag, x, y, z):
+    return path.join(get_cube_folder(target_path, layer_name, mag, x, y, z),
                      get_cube_file_name(mag, x, y, z))
 
 
-def write_cube(target_path, cube_data, mag, x, y, z):
+def write_cube(target_path, cube_data, layer_name, mag, x, y, z):
     ref_time = time.time()
 
-    prefix = get_cube_folder(target_path, mag, x, y, z)
+    prefix = get_cube_folder(target_path, layer_name, mag, x, y, z)
     file_name = get_cube_file_name(mag, x, y, z)
     cube_full_path = path.join(prefix, file_name)
 
@@ -40,10 +40,10 @@ def write_cube(target_path, cube_data, mag, x, y, z):
         logging.error("Could not write cube: {0}".format(cube_full_path))
 
 
-def read_cube(target_path, mag, cube_edge_len, x, y, z, dtype):
+def read_cube(target_path, layer_name, mag, cube_edge_len, x, y, z, dtype):
     ref_time = time.time()
 
-    prefix = get_cube_folder(target_path, mag, x, y, z)
+    prefix = get_cube_folder(target_path, layer_name, mag, x, y, z)
     file_name = get_cube_file_name(mag, x, y, z)
     cube_full_path = path.join(prefix, file_name)
 
