@@ -1,7 +1,9 @@
+import shutil
 import time
 import logging
-import yaml
+import os
 from argparse import ArgumentParser
+
 from .config import read_config
 from .cubing import make_mag1_cubes_from_z_stack, get_cubing_info
 from .downsampling import downsample
@@ -9,32 +11,47 @@ from .metadata import write_webknossos_metadata
 
 
 def webknossos_cuber(config):
-    cubing_info = get_cubing_info(config)
+    source_path = config['dataset']['source_path']
+    target_path = config['dataset']['target_path']
+    layer_name = config['dataset']['layer_name']
 
     mag1_ref_time = time.time()
 
-    logging.info("Creating mag1 cubes from {} in {}".format(
-        config['dataset']['source_path'],
-        config['dataset']['target_path']))
+    input_is_cubed = os.path.exists(
+        os.path.join(source_path, layer_name, "1")
+    )
 
-    make_mag1_cubes_from_z_stack(config, cubing_info)
+    cubing_info = get_cubing_info(config, expect_image_files=not input_is_cubed)
+
+    if input_is_cubed:
+        logging.info("Copying mag1 data from {} to {}".format(
+            source_path, target_path))
+        if os.path.exists(target_path):
+            logging.warning("Target path exists already, removing...")
+            shutil.rmtree(target_path)
+        shutil.copytree(source_path, target_path)
+    else:
+        logging.info("Creating mag1 cubes from image stack {} in {}".format(
+            source_path, target_path))
+        make_mag1_cubes_from_z_stack(config, cubing_info)
+
+        logging.info("Mag 1 succesfully cubed. Took {:.3f}h".format(
+            (time.time() - mag1_ref_time) / 3600))
 
     write_webknossos_metadata(config['dataset']['target_path'],
                               config['dataset']['name'],
                               config['dataset']['scale'],
                               config['dataset']['dtype'],
                               config['dataset']['layer_name'],
+                              config['dataset']['layer_type'],
                               cubing_info.bbox,
                               cubing_info.resolutions)
-
-    logging.info("Mag 1 succesfully cubed. Took {:.3f}h".format(
-        (time.time() - mag1_ref_time) / 3600))
 
     total_down_ref_time = time.time()
     curr_mag = 2
 
     while curr_mag <= max(cubing_info.resolutions):
-        downsample(config, curr_mag // 2, curr_mag)
+        downsample(cubing_info, config, curr_mag // 2, curr_mag)
         logging.info("Mag {0} succesfully cubed".format(curr_mag))
         curr_mag = curr_mag * 2
 

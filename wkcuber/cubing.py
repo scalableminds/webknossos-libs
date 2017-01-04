@@ -1,10 +1,14 @@
+import glob
 import time
 import logging
 import sys
+import os
 import numpy as np
 from math import log2, ceil
 from os import path, listdir
 from itertools import product
+
+import re
 from PIL import Image
 from collections import namedtuple
 from concurrent.futures import ThreadPoolExecutor
@@ -14,7 +18,7 @@ from .cube_io import write_cube, get_cube_folder
 SOURCE_FORMAT_FILES = ('.tif', '.tiff', '.jpg', '.jpeg', '.png')
 
 CubingInfo = namedtuple('CubingInfo',
-                        'source_files source_dims cube_dims bbox resolutions')
+                        'source_image_files source_dims cube_dims bbox resolutions')
 
 
 def find_source_filenames(source_path):
@@ -24,11 +28,6 @@ def find_source_filenames(source_path):
 
     all_source_files = [path.join(source_path, s) for s in source_files]
 
-    if len(all_source_files) == 0:
-        logging.critical("No image files of format " +
-                         source_format + " was found.")
-        sys.exit()
-
     all_source_files.sort()
     return all_source_files
 
@@ -37,11 +36,25 @@ def determine_bbox(cube_dims, cube_edge_len):
     return tuple(map(lambda x: (x + 1) * cube_edge_len, cube_dims))
 
 
-def determine_source_dims(source_files):
+def determine_source_dims_from_images(source_files):
     # open the first image and extract the relevant information
     # all images are assumed to have equal dimensions!
     with Image.open(source_files[0]) as test_img:
         return (test_img.width, test_img.height, len(source_files))
+
+
+def determine_source_dims_from_mag1(source_path, cube_edge_len):
+
+    filepattern = os.path.join(source_path, "**", "*.raw")
+    files = glob.glob(filepattern, recursive=True)
+    matches = [re.match(r".*_(\d+)_(\d+)_(\d+)\.raw", f)
+               for f in files]
+    coordinates = [(int(m.group(1)), int(m.group(2)), int(m.group(3)))
+                   for m in matches]
+
+    xs, ys, zs = zip(*coordinates)
+    max_coordinates = [max(xs), max(ys), max(zs)]
+    return [(c + 1) * cube_edge_len for c in max_coordinates]
 
 
 def determine_cube_dims(source_dims, cube_edge_len):
@@ -55,7 +68,7 @@ def determine_resolutions(cube_dims):
     return tuple(map(lambda x: 2 ** x, range(0, max_mag)))
 
 
-def get_cubing_info(config):
+def get_cubing_info(config, expect_image_files):
     """Compute certain cubing parameters from the set of parameters
     specified by the user.
     Args:
@@ -71,13 +84,24 @@ def get_cubing_info(config):
     cube_edge_len = config['processing']['cube_edge_len']
     buffer_size_in_cubes = config['processing']['buffer_size_in_cubes']
 
-    source_files = find_source_filenames(source_path)
-    source_dims = determine_source_dims(source_files)
+    source_image_files = find_source_filenames(source_path)
+
+    if expect_image_files and len(source_image_files) == 0:
+        logging.critical("No image files of formats " +
+                         str(SOURCE_FORMAT_FILES) + " were found.")
+        sys.exit()
+
+    if expect_image_files:
+        source_dims = determine_source_dims_from_images(source_image_files)
+    else:
+        source_dims = determine_source_dims_from_mag1(source_path, cube_edge_len)
+        print(source_dims)
+
     cube_dims = determine_cube_dims(source_dims, cube_edge_len)
     bbox = determine_bbox(cube_dims, cube_edge_len)
     resolutions = determine_resolutions(cube_dims)
 
-    return CubingInfo(source_files, source_dims, cube_dims, bbox, resolutions)
+    return CubingInfo(source_image_files, source_dims, cube_dims, bbox, resolutions)
 
 
 def check_layer_already_cubed(target_path, layer_name, cur_z):
@@ -90,7 +114,7 @@ def check_layer_already_cubed(target_path, layer_name, cur_z):
 
 def make_mag1_cubes_from_z_stack(config, cubing_info):
 
-    source_files = cubing_info.source_files
+    source_files = cubing_info.source_image_files
     source_dims = cubing_info.source_dims
     cube_dims = cubing_info.cube_dims
     dtype = config['dataset']['dtype']

@@ -7,6 +7,7 @@ def write_webknossos_metadata(dataset_base_path,
                               scale,
                               dtype,
                               layer_name,
+                              layer_type,
                               bbox,
                               resolutions):
 
@@ -27,7 +28,7 @@ def write_webknossos_metadata(dataset_base_path,
     layer_json_path = path.join(dataset_base_path, layer_name, 'layer.json')
     with open(layer_json_path, 'wt') as layer_json:
         json.dump({
-            'typ': layer_name,
+            'typ': layer_type,
             'class': dtype
         }, layer_json)
 

@@ -9,6 +9,7 @@ processing:
 dataset:
   dtype: uint8
   layer_name: color
+  layer_type: color
   scale:
     - 12
     - 12
