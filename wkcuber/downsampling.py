@@ -52,12 +52,13 @@ def downsample_cube_job(config, source_mag, target_mag,
     dtype = config['dataset']['dtype']
     target_path = config['dataset']['target_path']
     layer_name = config['dataset']['layer_name']
+    layer_type = config['dataset']['layer_type']
     cube_edge_len = config['processing']['cube_edge_len']
     skip_already_downsampled_cubes = config[
         'processing']['skip_already_downsampled_cubes']
 
     # For segmentation, do not interpolate
-    interpolation_order = 0 if config["layer_type"] == "segmentation" \
+    interpolation_order = 0 if layer_type == "segmentation" \
                             else 1
 
     cube_full_path = get_cube_full_path(
