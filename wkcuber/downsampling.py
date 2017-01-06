@@ -79,7 +79,7 @@ def downsample_cube_job(config, source_mag, target_mag,
         for local_y in range(factor):
             for local_z in range(factor):
                 cube_data = read_cube(
-                    target_path, ds_name, layer_name, source_mag, cube_edge_len,
+                    target_path, layer_name, source_mag, cube_edge_len,
                     cube_x * factor + local_x,
                     cube_y * factor + local_y,
                     cube_z * factor + local_z,
