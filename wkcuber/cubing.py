@@ -95,7 +95,6 @@ def get_cubing_info(config, expect_image_files):
         source_dims = determine_source_dims_from_images(source_image_files)
     else:
         source_dims = determine_source_dims_from_mag1(source_path, cube_edge_len)
-        print(source_dims)
 
     cube_dims = determine_cube_dims(source_dims, cube_edge_len)
     bbox = determine_bbox(cube_dims, cube_edge_len)

@@ -27,9 +27,9 @@ def webknossos_cuber(config):
         logging.info("Copying mag1 data from {} to {}".format(
             source_path, target_path))
         if os.path.exists(target_path):
-            logging.warning("Target path exists already, removing...")
-            shutil.rmtree(target_path)
-        shutil.copytree(source_path, target_path)
+            logging.warning("Target path exists already.")
+        else:
+            shutil.copytree(source_path, target_path)
     else:
         logging.info("Creating mag1 cubes from image stack {} in {}".format(
             source_path, target_path))

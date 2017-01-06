@@ -51,6 +51,7 @@ def downsample_cube_job(config, source_mag, target_mag,
     factor = int(target_mag / source_mag)
     dtype = config['dataset']['dtype']
     target_path = config['dataset']['target_path']
+    ds_name = config['dataset']['name']
     layer_name = config['dataset']['layer_name']
     layer_type = config['dataset']['layer_type']
     cube_edge_len = config['processing']['cube_edge_len']
@@ -62,7 +63,7 @@ def downsample_cube_job(config, source_mag, target_mag,
                             else 1
 
     cube_full_path = get_cube_full_path(
-        target_path, layer_name, target_mag, cube_x, cube_y, cube_z)
+        target_path, ds_name, layer_name, target_mag, cube_x, cube_y, cube_z)
     if skip_already_downsampled_cubes and path.exists(cube_full_path):
         logging.debug("Skipping downsampling {},{},{} mag {}".format(
             cube_x, cube_y, cube_z, target_mag))
@@ -72,33 +73,41 @@ def downsample_cube_job(config, source_mag, target_mag,
         cube_x, cube_y, cube_z, target_mag))
 
     ref_time = time.time()
+    non_empty = False
     cube_buffer = np.zeros((cube_edge_len * factor,) * 3, dtype=dtype)
     for local_x in range(factor):
         for local_y in range(factor):
             for local_z in range(factor):
                 cube_data = read_cube(
-                    target_path, layer_name, source_mag, cube_edge_len,
+                    target_path, ds_name, layer_name, source_mag, cube_edge_len,
                     cube_x * factor + local_x,
                     cube_y * factor + local_y,
                     cube_z * factor + local_z,
                     dtype)
-                cube_buffer[
-                    local_x * cube_edge_len:
-                    (local_x + 1) * cube_edge_len,
-                    local_y * cube_edge_len:
-                    (local_y + 1) * cube_edge_len,
-                    local_z * cube_edge_len:
-                    (local_z + 1) * cube_edge_len
-                ] = cube_data
+                if cube_data is not None:
+                    non_empty = True
+                    cube_buffer[
+                        local_x * cube_edge_len:
+                        (local_x + 1) * cube_edge_len,
+                        local_y * cube_edge_len:
+                        (local_y + 1) * cube_edge_len,
+                        local_z * cube_edge_len:
+                        (local_z + 1) * cube_edge_len
+                    ] = cube_data
+
+    if not non_empty:
+        logging.debug("Skip dowwnsampling empty cube: {},{},{} mag {}".format(
+            cube_x, cube_y, cube_z, target_mag))
+        return
 
     cube_data = downsample_cube(cube_buffer, factor, dtype,
                                 interpolation_order)
-    write_cube(target_path, cube_data, target_mag,
-               layer_name, cube_x, cube_y, cube_z)
+    write_cube(target_path, cube_data, ds_name, layer_name, target_mag,
+               cube_x, cube_y, cube_z)
 
     logging.debug("Downsampling took {:.8f}s".format(
         time.time() - ref_time))
-    logging.info("Downsampled cube: {},{},{} mag {}".format(
+    logging.debug("Downsampled cube: {},{},{} mag {}".format(
         cube_x, cube_y, cube_z, target_mag))
 
 
