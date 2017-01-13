@@ -114,12 +114,11 @@ def check_layer_already_cubed(target_path, layer_name, cur_z):
 def make_mag1_cubes_from_z_stack(config, cubing_info):
 
     source_files = cubing_info.source_image_files
-    source_dims = cubing_info.source_dims
     cube_dims = cubing_info.cube_dims
     dtype = config['dataset']['dtype']
     target_path = config['dataset']['target_path']
+    ds_name = config['dataset']['name']
     layer_name = config['dataset']['layer_name']
-    num_io_threads = config['processing']['num_io_threads']
     skip_already_cubed_layers = config[
         'processing']['skip_already_cubed_layers']
     cube_edge_len = config['processing']['cube_edge_len']
@@ -178,7 +177,7 @@ def make_mag1_cubes_from_z_stack(config, cubing_info):
                 cube_data = cube_buffer[i].swapaxes(0, 1).swapaxes(1, 2)
                 # pool.submit(write_cube, cube_data,
                 #             target_path, 1, cube_x, cube_y, cube_z)
-                write_cube(target_path, cube_data, layer_name, 1,
+                write_cube(target_path, cube_data, ds_name, layer_name, 1,
                            cube_x, cube_y, cube_z)
                 logging.info("Cube written: {},{},{} mag {}".format(
                     cube_x, cube_y, cube_z, 1))
