@@ -11,7 +11,6 @@ from itertools import product
 import re
 from PIL import Image
 from collections import namedtuple
-from concurrent.futures import ThreadPoolExecutor
 from .utils import chunks
 from .cube_io import write_cube, get_cube_folder
 
@@ -47,7 +46,7 @@ def determine_source_dims_from_mag1(source_path, cube_edge_len):
 
     filepattern = os.path.join(source_path, "**", "*.raw")
     files = glob.glob(filepattern, recursive=True)
-    matches = [re.match(r".*_(\d+)_(\d+)_(\d+)\.raw", f)
+    matches = [re.match(r".*/1/x(\d+)/y(\d+)/z(\d+)/.*raw", f)
                for f in files]
     coordinates = [(int(m.group(1)), int(m.group(2)), int(m.group(3)))
                    for m in matches]
