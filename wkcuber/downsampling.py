@@ -64,7 +64,7 @@ def downsample_cube_job(config, source_mag, target_mag,
         'processing']['skip_already_downsampled_cubes']
 
     cube_full_path = get_cube_full_path(
-        target_path, target_mag, cube_x, cube_y, cube_z)
+        target_path, config['dataset']['name'], target_mag, cube_x, cube_y, cube_z)
     if skip_already_downsampled_cubes and path.exists(cube_full_path):
         logging.debug("Skipping downsampling {},{},{} mag {}".format(
             cube_x, cube_y, cube_z, target_mag))
@@ -79,7 +79,7 @@ def downsample_cube_job(config, source_mag, target_mag,
         for local_y in range(factor):
             for local_z in range(factor):
                 cube_data = read_cube(
-                    target_path, source_mag, cube_edge_len,
+                    target_path, config['dataset']['name'], source_mag, cube_edge_len,
                     cube_x * factor + local_x,
                     cube_y * factor + local_y,
                     cube_z * factor + local_z,
@@ -94,7 +94,7 @@ def downsample_cube_job(config, source_mag, target_mag,
                 ] = cube_data
 
     cube_data = downsample_cube(cube_buffer, factor, dtype)
-    write_cube(target_path, cube_data, target_mag, cube_x, cube_y, cube_z)
+    write_cube(target_path, config['dataset']['name'], cube_data, target_mag, cube_x, cube_y, cube_z)
 
     logging.debug("Downsampling took {:.8f}s".format(
         time.time() - ref_time))

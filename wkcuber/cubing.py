@@ -154,6 +154,6 @@ def make_mag1_cubes_from_z_stack(config, cubing_info):
                 cube_data = cube_buffer[i].swapaxes(0, 1).swapaxes(1, 2)
                 # pool.submit(write_cube, cube_data,
                 #             target_path, 1, cube_x, cube_y, cube_z)
-                write_cube(target_path, cube_data, 1, cube_x, cube_y, cube_z)
+                write_cube(target_path, config['dataset']['name'], cube_data, 1, cube_x, cube_y, cube_z)
                 logging.info("Cube written: {},{},{} mag {}".format(
                     cube_x, cube_y, cube_z, 1))
