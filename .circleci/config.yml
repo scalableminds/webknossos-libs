@@ -1,0 +1,63 @@
+version: 2
+jobs:
+  build_test_deploy:
+    machine: true
+    steps:
+      - checkout
+
+      - run:
+          name: Build docker image
+          command: docker build -t "scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM}" .
+
+      - run:
+          name: Test tiff cubing
+          command: |
+            set -x
+            mkdir -p testoutput/tiff
+            docker run \
+              -v "${PWD}/testdata/tiff:/testdata/tiff" \
+              -v "${PWD}/testoutput/tiff:/testoutput/tiff" \
+              --rm \
+              scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
+              -n test \
+              /testdata/tiff /testoutput/tiff
+            [ -d testoutput/tiff/color ]
+            [ $(find testoutput/tiff/color/1 -name "*.raw" | wc -l) -eq 36 ]
+            [ $(find testoutput/tiff/color/2 -name "*.raw" | wc -l) -eq 8 ]
+            [ $(find testoutput/tiff/color/4 -name "*.raw" | wc -l) -eq 1 ]
+
+      - run:
+          name: Test downsampling
+          command: |
+            set -x
+            mkdir -p testoutput/knossos
+            cp -ra testdata/knossos/* testoutput/knossos
+            docker run \
+              -v "${PWD}/testoutput/knossos:/testoutput/knossos" \
+              --rm \
+              scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
+              --downsample \
+              -n test \
+              /testoutput/knossos /testoutput/knossos
+            [ -d testoutput/knossos/color ]
+            [ $(find testoutput/knossos/color/2 -name "*.raw" | wc -l) -eq 8 ]
+            [ $(find testoutput/knossos/color/4 -name "*.raw" | wc -l) -eq 1 ]
+            [ $(find testoutput/knossos/color/8 -name "*.raw" | wc -l) -eq 1 ]
+            [ $(find testoutput/knossos/color/16 -name "*.raw" | wc -l) -eq 1 ]
+
+      - run:
+          name: Push docker images
+          command: |
+            docker login -u $DOCKER_USER -p $DOCKER_PASS
+            docker push scalableminds/webknossos-cuber:$CIRCLE_BUILD_NUM
+            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+              docker tag scalableminds/webknossos-cuber:$CIRCLE_BUILD_NUM scalableminds/webknossos-cuber:latest
+              docker push scalableminds/webknossos-cuber:latest
+            fi
+            docker logout
+
+workflows:
+  version: 2
+  default:
+    jobs:
+      - build_test_deploy

@@ -103,6 +103,14 @@ def create_parser():
              "source format via the command line.",
         default='config.yml')
 
+    parser.add_argument(
+        '--downsample', '-d',
+        dest='downsample', 
+        action='store_true',
+        help="Downsample only")
+
+    parser.set_defaults(downsample=False)
+
     return parser
 
 
@@ -118,7 +126,14 @@ def main():
     CONFIG['dataset']['target_path'] = ARGS.target_path
     CONFIG['dataset']['name'] = ARGS.name
 
-    webknossos_cuber(CONFIG)
+    if not ARGS.downsample:
+        webknossos_cuber(CONFIG)
+    else:
+        curr_mag = 2
+        while curr_mag <= 512:
+            downsample(CONFIG, curr_mag // 2, curr_mag)
+            logging.info("Mag {0} succesfully cubed".format(curr_mag))
+            curr_mag = curr_mag * 2
 
 if __name__ == '__main__':
     main()

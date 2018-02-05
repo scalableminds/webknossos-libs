@@ -18,7 +18,6 @@ def get_cube_file_name(ds_name, mag, x, y, z):
 
 
 def get_only_raw_file_path(target_path, layer_name, mag, x, y, z):
-
     cube_folder = get_cube_folder(target_path, layer_name, mag, x, y, z)
     raw_files = glob.glob(path.join(cube_folder, "*.raw"))
 
@@ -39,7 +38,6 @@ def write_cube(target_path, cube_data, ds_name, layer_name, mag, x, y, z):
 
     cube_full_path = get_cube_full_path(target_path, ds_name, layer_name,
                                         mag, x, y, z)
-
     makedirs(path.dirname(cube_full_path), exist_ok=True)
 
     logging.debug("Writing cube {0}".format(cube_full_path))
@@ -58,7 +56,6 @@ def read_cube(target_path, layer_name, mag, cube_edge_len, x, y, z,
 
     cube_full_path = get_only_raw_file_path(target_path, layer_name,
                                             mag, x, y, z)
-
     if cube_full_path is None:
         logging.debug("Missed cube: {},{},{} mag {}".format(
                         x, y, z, mag))

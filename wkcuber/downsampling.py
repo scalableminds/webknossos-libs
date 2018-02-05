@@ -2,21 +2,34 @@ import time
 import logging
 import re
 import numpy as np
-from math import ceil
+from math import floor
 from os import path, listdir
 from itertools import product
 from scipy.ndimage.interpolation import zoom
 from concurrent.futures import ProcessPoolExecutor
 from .cube_io import read_cube, write_cube, get_cube_full_path
 
-CUBE_FOLDER_REGEX = re.compile('^[xyz]\d{4}$')
+CUBE_FOLDER_REGEX = re.compile('^[xyz](\d{4})$')
 
 
 def get_cube_dimension_for_mag(source_dims, cube_edge_len, mag):
 
     factor = cube_edge_len * mag
 
-    return tuple(ceil(x / factor) for x in source_dims)
+    x_dims = [x for x in listdir(prefix) if CUBE_FOLDER_REGEX.match(x)]
+    y_dims = [y for y in listdir(path.join(prefix, x_dims[0])) if CUBE_FOLDER_REGEX.match(y)]
+    z_dims = [z for z in listdir(path.join(prefix, x_dims[0], y_dims[0])) if CUBE_FOLDER_REGEX.match(z)]
+
+    x_dims.sort()
+    y_dims.sort()
+    z_dims.sort()
+
+    result = list(product(
+        [int(CUBE_FOLDER_REGEX.match(x).group(1)) for x in x_dims],
+        [int(CUBE_FOLDER_REGEX.match(x).group(1)) for x in y_dims], 
+        [int(CUBE_FOLDER_REGEX.match(x).group(1)) for x in z_dims]))
+    result.sort()
+    return result
 
 
 def downsample(cubing_info, config, source_mag, target_mag):
@@ -29,13 +42,13 @@ def downsample(cubing_info, config, source_mag, target_mag):
     cube_edge_len = config['processing']['cube_edge_len']
     source_dims = cubing_info.source_dims
 
-    target_cube_dims = get_cube_dimension_for_mag(source_dims, cube_edge_len,
-                                                  target_mag)
 
-    cube_coordinates = product(
-        range(target_cube_dims[0]),
-        range(target_cube_dims[1]),
-        range(target_cube_dims[2]))
+    source_cube_dims = determine_existing_cube_dims(target_path, cube_edge_len, source_mag)
+#    if len(source_cube_dims) <= 1:
+#        logging.info("No need to downsample mag {} from mag {}", target_mag, source_mag)
+#        return
+
+    cube_coordinates = set(map(lambda xyz: tuple(map(lambda x: floor(x / factor), xyz)), source_cube_dims))
 
     with ProcessPoolExecutor(num_downsampling_cores) as pool:
         logging.debug("Using up to {} worker processes".format(
@@ -80,6 +93,7 @@ def downsample_cube_job(config, source_mag, target_mag,
             for local_z in range(factor):
                 cube_data = read_cube(
                     target_path, layer_name, source_mag, cube_edge_len,
+                    target_path, config['dataset']['name'], source_mag, cube_edge_len,
                     cube_x * factor + local_x,
                     cube_y * factor + local_y,
                     cube_z * factor + local_z,
@@ -96,7 +110,7 @@ def downsample_cube_job(config, source_mag, target_mag,
                     ] = cube_data
 
     if not non_empty:
-        logging.debug("Skip dowwnsampling empty cube: {},{},{} mag {}".format(
+        logging.debug("Skip downsampling empty cube: {},{},{} mag {}".format(
             cube_x, cube_y, cube_z, target_mag))
         return
 
@@ -112,7 +126,8 @@ def downsample_cube_job(config, source_mag, target_mag,
 
 
 def downsample_cube(cube_buffer, factor, dtype, order):
-
+    BILINEAR=1
+    BICUBIC=2
     return zoom(
         cube_buffer, 1 / factor, output=dtype,
         # 0: nearest
