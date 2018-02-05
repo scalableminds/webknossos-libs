@@ -7,19 +7,34 @@ dependencies:
 
 test:
   override:
-    - mkdir testoutput
+    - mkdir -p testoutput/tiff
     - >
       docker run \
-        -v "${PWD}/testdata:/testdata" \
-        -v "${PWD}/testoutput:/testoutput" \
+        -v "${PWD}/testdata/tiff:/testdata/tiff" \
+        -v "${PWD}/testoutput/tiff:/testoutput/tiff" \
         --rm \
         scalableminds/webknossos-cuber:$CIRCLE_BUILD_NUM \
         -n test \
-        /testdata /testoutput
-    - '[ -d testoutput/color ]'
-    - '[ $(find testoutput/color/1 -name "*.raw" | wc -l) -eq 36 ]'
-    - '[ $(find testoutput/color/2 -name "*.raw" | wc -l) -eq 8 ]'
-    - '[ $(find testoutput/color/4 -name "*.raw" | wc -l) -eq 1 ]'
+        /testdata/tiff /testoutput/tiff
+    - '[ -d testoutput/tiff/color ]'
+    - '[ $(find testoutput/tiffcolor/1 -name "*.raw" | wc -l) -eq 36 ]'
+    - '[ $(find testoutput/tiffcolor/2 -name "*.raw" | wc -l) -eq 8 ]'
+    - '[ $(find testoutput/tiffcolor/4 -name "*.raw" | wc -l) -eq 1 ]'
+
+    # - mkdir -p testoutput/knossos
+    # - >
+    #   docker run \
+    #     -v "${PWD}/testdata/knossos:/testdata/knossos" \
+    #     -v "${PWD}/testoutput/knossos:/testoutput/knossos" \
+    #     --rm \
+    #     scalableminds/webknossos-cuber:$CIRCLE_BUILD_NUM \
+    #     --downsample
+    #     -n test \
+    #     /testdata/knossos /testoutput/knossos
+    # - '[ -d testoutput/knossos/color ]'
+    # - '[ $(find testoutput/knossos/color/1 -name "*.raw" | wc -l) -eq 36 ]'
+    # - '[ $(find testoutput/knossos/color/2 -name "*.raw" | wc -l) -eq 8 ]'
+    # - '[ $(find testoutput/knossos/color/4 -name "*.raw" | wc -l) -eq 1 ]'
 
 deployment:
   hub:
