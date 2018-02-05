@@ -42,8 +42,6 @@ jobs:
             [ -d testoutput/knossos/color ]
             [ $(find testoutput/knossos/color/2 -name "*.raw" | wc -l) -eq 8 ]
             [ $(find testoutput/knossos/color/4 -name "*.raw" | wc -l) -eq 1 ]
-            [ $(find testoutput/knossos/color/8 -name "*.raw" | wc -l) -eq 1 ]
-            [ $(find testoutput/knossos/color/16 -name "*.raw" | wc -l) -eq 1 ]
 
       - run:
           name: Push docker images

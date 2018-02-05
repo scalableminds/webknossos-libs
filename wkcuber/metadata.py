@@ -6,6 +6,8 @@ def write_webknossos_metadata(dataset_base_path,
                               name,
                               scale,
                               dtype,
+                              layer_name,
+                              layer_type,
                               bbox,
                               resolutions):
 
@@ -20,17 +22,18 @@ def write_webknossos_metadata(dataset_base_path,
             'scale': scale
         }, settings_json)
 
-    if not path.exists(path.join(dataset_base_path, 'color')):
-        makedirs(path.join(dataset_base_path, 'color'))
+    if not path.exists(path.join(dataset_base_path, layer_name)):
+        makedirs(path.join(dataset_base_path, layer_name))
 
-    layer_json_path = path.join(dataset_base_path, 'color', 'layer.json')
+    layer_json_path = path.join(dataset_base_path, layer_name, 'layer.json')
     with open(layer_json_path, 'wt') as layer_json:
         json.dump({
-            'typ': 'color',
+            'typ': layer_type,
             'class': dtype
         }, layer_json)
 
-    section_json_path = path.join(dataset_base_path, 'color', 'section.json')
+    section_json_path = path.join(
+        dataset_base_path, layer_name, 'section.json')
     with open(section_json_path, 'wt') as section_json:
         json.dump({
             'bbox': (

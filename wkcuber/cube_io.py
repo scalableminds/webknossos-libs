@@ -1,34 +1,44 @@
 import time
 import logging
 import numpy as np
+import glob
 from os import path, makedirs
 
 
-def get_cube_folder(target_path, mag, x, y, z):
-    return path.join(target_path, 'color', str(mag),
+def get_cube_folder(target_path, layer_name, mag, x, y, z):
+    return path.join(target_path, layer_name, str(mag),
                      'x{:04d}'.format(x),
                      'y{:04d}'.format(y),
                      'z{:04d}'.format(z))
 
 
-def get_cube_file_name(name, mag, x, y, z):
-    return '{:s}_mag{:d}_x{:04d}_y{:04d}_z{:04d}.raw'.format(name, mag, x, y, z)
+def get_cube_file_name(ds_name, mag, x, y, z):
+    return '{:s}_mag{:d}_x{:04d}_y{:04d}_z{:04d}.raw'.format(
+        str(ds_name), mag, x, y, z)
 
 
-def get_cube_full_path(target_path, name, mag, x, y, z):
-    return path.join(get_cube_folder(target_path, mag, x, y, z),
-                     get_cube_file_name(name, mag, x, y, z))
+def get_only_raw_file_path(target_path, layer_name, mag, x, y, z):
+    cube_folder = get_cube_folder(target_path, layer_name, mag, x, y, z)
+    raw_files = glob.glob(path.join(cube_folder, "*.raw"))
+
+    if len(raw_files) > 1:
+        raise ValueError("Found %d .raw files in %s" %
+                         (len(raw_files), cube_folder))
+
+    return raw_files[0] if len(raw_files) > 0 else None
 
 
-def write_cube(target_path, name, cube_data, mag, x, y, z):
+def get_cube_full_path(target_path, ds_name, layer_name, mag, x, y, z):
+    return path.join(get_cube_folder(target_path, layer_name, mag, x, y, z),
+                     get_cube_file_name(ds_name, mag, x, y, z))
+
+
+def write_cube(target_path, cube_data, ds_name, layer_name, mag, x, y, z):
     ref_time = time.time()
 
-    prefix = get_cube_folder(target_path, mag, x, y, z)
-    file_name = get_cube_file_name(name, mag, x, y, z)
-    cube_full_path = path.join(prefix, file_name)
-
-    if not path.exists(prefix):
-        makedirs(prefix)
+    cube_full_path = get_cube_full_path(target_path, ds_name, layer_name,
+                                        mag, x, y, z)
+    makedirs(path.dirname(cube_full_path), exist_ok=True)
 
     logging.debug("Writing cube {0}".format(cube_full_path))
 
@@ -40,16 +50,16 @@ def write_cube(target_path, name, cube_data, mag, x, y, z):
         logging.error("Could not write cube: {0}".format(cube_full_path))
 
 
-def read_cube(target_path, name, mag, cube_edge_len, x, y, z, dtype):
+def read_cube(target_path, layer_name, mag, cube_edge_len, x, y, z,
+              dtype):
     ref_time = time.time()
 
-    prefix = get_cube_folder(target_path, mag, x, y, z)
-    file_name = get_cube_file_name(name, mag, x, y, z)
-    cube_full_path = path.join(prefix, file_name)
-
-    if not path.exists(prefix):
-        logging.debug("Missed cube {0}".format(cube_full_path))
-        return np.zeros((cube_edge_len,) * 3, dtype=dtype)
+    cube_full_path = get_only_raw_file_path(target_path, layer_name,
+                                            mag, x, y, z)
+    if cube_full_path is None:
+        logging.debug("Missed cube: {},{},{} mag {}".format(
+            x, y, z, mag))
+        return None
 
     logging.debug("Reading cube {0}".format(cube_full_path))
 
