@@ -43,7 +43,7 @@ def downsample(cubing_info, config, source_mag, target_mag):
     source_dims = cubing_info.source_dims
 
 
-    source_cube_dims = determine_existing_cube_dims(target_path, cube_edge_len, source_mag)
+    source_cube_dims = get_cube_dimension_for_mag(target_path, cube_edge_len, source_mag)
 #    if len(source_cube_dims) <= 1:
 #        logging.info("No need to downsample mag {} from mag {}", target_mag, source_mag)
 #        return
