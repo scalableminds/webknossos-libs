@@ -2,28 +2,34 @@ import time
 import logging
 import re
 import numpy as np
-from math import ceil
+from math import floor
 from os import path, listdir
 from itertools import product
 from scipy.ndimage.interpolation import zoom
 from concurrent.futures import ProcessPoolExecutor
 from .cube_io import read_cube, write_cube, get_cube_full_path
 
-CUBE_FOLDER_REGEX = re.compile('^[xyz]\d{4}$')
+CUBE_FOLDER_REGEX = re.compile('^[xyz](\d{4})$')
 
 
 def determine_existing_cube_dims(target_path, mag):
 
     prefix = path.join(target_path, 'color', str(mag))
 
-    max_x = len(list(filter(CUBE_FOLDER_REGEX.match,
-                            listdir(prefix))))
-    max_y = len(list(filter(CUBE_FOLDER_REGEX.match,
-                            listdir(path.join(prefix, 'x0000')))))
-    max_z = len(list(filter(CUBE_FOLDER_REGEX.match,
-                            listdir(path.join(prefix, 'x0000', 'y0000')))))
+    x_dims = [x for x in listdir(prefix) if CUBE_FOLDER_REGEX.match(x)]
+    y_dims = [y for y in listdir(path.join(prefix, x_dims[0])) if CUBE_FOLDER_REGEX.match(y)]
+    z_dims = [z for z in listdir(path.join(prefix, x_dims[0], y_dims[0])) if CUBE_FOLDER_REGEX.match(z)]
 
-    return (max_x, max_y, max_z)
+    x_dims.sort()
+    y_dims.sort()
+    z_dims.sort()
+
+    result = list(product(
+        [int(CUBE_FOLDER_REGEX.match(x).group(1)) for x in x_dims],
+        [int(CUBE_FOLDER_REGEX.match(x).group(1)) for x in y_dims], 
+        [int(CUBE_FOLDER_REGEX.match(x).group(1)) for x in z_dims]))
+    result.sort()
+    return result
 
 
 def downsample(config, source_mag, target_mag):
@@ -37,13 +43,11 @@ def downsample(config, source_mag, target_mag):
     num_downsampling_cores = config['processing']['num_downsampling_cores']
 
     source_cube_dims = determine_existing_cube_dims(target_path, source_mag)
-    target_cube_dims = tuple(
-        map(lambda x: ceil(x / factor), source_cube_dims))
+#    if len(source_cube_dims) <= 1:
+#        logging.info("No need to downsample mag {} from mag {}", target_mag, source_mag)
+#        return
 
-    cube_coordinates = product(
-        range(target_cube_dims[0]),
-        range(target_cube_dims[1]),
-        range(target_cube_dims[2]))
+    cube_coordinates = set(map(lambda xyz: tuple(map(lambda x: floor(x / factor), xyz)), source_cube_dims))
 
     with ProcessPoolExecutor(num_downsampling_cores) as pool:
         logging.debug("Using up to {} worker processes".format(
@@ -103,12 +107,13 @@ def downsample_cube_job(config, source_mag, target_mag,
 
 
 def downsample_cube(cube_buffer, factor, dtype):
-
+    BILINEAR=1
+    BICUBIC=2
     return zoom(
         cube_buffer, 1 / factor, output=dtype,
         # 1: bilinear
         # 2: bicubic
-        order=1,
+        order=BILINEAR,
         # this does not mean nearest interpolation, it corresponds to how the
         # borders are treated.
         mode='nearest',
