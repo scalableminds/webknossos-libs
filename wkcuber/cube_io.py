@@ -58,7 +58,7 @@ def read_cube(target_path, layer_name, mag, cube_edge_len, x, y, z,
                                             mag, x, y, z)
     if cube_full_path is None:
         logging.debug("Missed cube: {},{},{} mag {}".format(
-                        x, y, z, mag))
+            x, y, z, mag))
         return None
 
     logging.debug("Reading cube {0}".format(cube_full_path))

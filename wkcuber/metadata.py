@@ -32,7 +32,8 @@ def write_webknossos_metadata(dataset_base_path,
             'class': dtype
         }, layer_json)
 
-    section_json_path = path.join(dataset_base_path, layer_name, 'section.json')
+    section_json_path = path.join(
+        dataset_base_path, layer_name, 'section.json')
     with open(section_json_path, 'wt') as section_json:
         json.dump({
             'bbox': (

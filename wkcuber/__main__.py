@@ -21,7 +21,8 @@ def webknossos_cuber(config):
         os.path.join(source_path, layer_name, "1")
     )
 
-    cubing_info = get_cubing_info(config, expect_image_files=not input_is_cubed)
+    cubing_info = get_cubing_info(
+        config, expect_image_files=not input_is_cubed)
 
     if input_is_cubed:
         logging.info("Copying mag1 data from {} to {}".format(
@@ -51,7 +52,7 @@ def webknossos_cuber(config):
     curr_mag = 2
 
     while curr_mag <= max(cubing_info.resolutions):
-        downsample(cubing_info, config, curr_mag // 2, curr_mag)
+        downsample(config, curr_mag // 2, curr_mag)
         logging.info("Mag {0} succesfully cubed".format(curr_mag))
         curr_mag = curr_mag * 2
 
@@ -105,7 +106,7 @@ def create_parser():
 
     parser.add_argument(
         '--downsample', '-d',
-        dest='downsample', 
+        dest='downsample',
         action='store_true',
         help="Downsample only")
 
@@ -129,11 +130,13 @@ def main():
     if not ARGS.downsample:
         webknossos_cuber(CONFIG)
     else:
+        cubing_info = get_cubing_info(CONFIG, expect_image_files=False)
         curr_mag = 2
-        while curr_mag <= 512:
+        while curr_mag <= max(cubing_info.resolutions):
             downsample(CONFIG, curr_mag // 2, curr_mag)
             logging.info("Mag {0} succesfully cubed".format(curr_mag))
             curr_mag = curr_mag * 2
+
 
 if __name__ == '__main__':
     main()

@@ -12,13 +12,14 @@ from .cube_io import read_cube, write_cube, get_cube_full_path
 CUBE_FOLDER_REGEX = re.compile('^[xyz](\d{4})$')
 
 
-def get_cube_dimension_for_mag(source_dims, cube_edge_len, mag):
-
-    factor = cube_edge_len * mag
+def get_cube_dimension_for_mag(target_path, mag):
+    prefix = path.join(target_path, 'color', str(mag))
 
     x_dims = [x for x in listdir(prefix) if CUBE_FOLDER_REGEX.match(x)]
-    y_dims = [y for y in listdir(path.join(prefix, x_dims[0])) if CUBE_FOLDER_REGEX.match(y)]
-    z_dims = [z for z in listdir(path.join(prefix, x_dims[0], y_dims[0])) if CUBE_FOLDER_REGEX.match(z)]
+    y_dims = [y for y in listdir(
+        path.join(prefix, x_dims[0])) if CUBE_FOLDER_REGEX.match(y)]
+    z_dims = [z for z in listdir(
+        path.join(prefix, x_dims[0], y_dims[0])) if CUBE_FOLDER_REGEX.match(z)]
 
     x_dims.sort()
     y_dims.sort()
@@ -26,29 +27,29 @@ def get_cube_dimension_for_mag(source_dims, cube_edge_len, mag):
 
     result = list(product(
         [int(CUBE_FOLDER_REGEX.match(x).group(1)) for x in x_dims],
-        [int(CUBE_FOLDER_REGEX.match(x).group(1)) for x in y_dims], 
+        [int(CUBE_FOLDER_REGEX.match(x).group(1)) for x in y_dims],
         [int(CUBE_FOLDER_REGEX.match(x).group(1)) for x in z_dims]))
     result.sort()
     return result
 
 
-def downsample(cubing_info, config, source_mag, target_mag):
+def downsample(config, source_mag, target_mag):
 
     assert source_mag < target_mag
     logging.info("Downsampling mag {} from mag {}".format(
         target_mag, source_mag))
 
+    factor = int(target_mag / source_mag)
     num_downsampling_cores = config['processing']['num_downsampling_cores']
-    cube_edge_len = config['processing']['cube_edge_len']
-    source_dims = cubing_info.source_dims
+    target_path = config['dataset']['target_path']
 
-
-    source_cube_dims = get_cube_dimension_for_mag(target_path, cube_edge_len, source_mag)
+    source_cube_dims = get_cube_dimension_for_mag(target_path, source_mag)
 #    if len(source_cube_dims) <= 1:
 #        logging.info("No need to downsample mag {} from mag {}", target_mag, source_mag)
 #        return
 
-    cube_coordinates = set(map(lambda xyz: tuple(map(lambda x: floor(x / factor), xyz)), source_cube_dims))
+    cube_coordinates = set(map(lambda xyz: tuple(
+        map(lambda x: floor(x / factor), xyz)), source_cube_dims))
 
     with ProcessPoolExecutor(num_downsampling_cores) as pool:
         logging.debug("Using up to {} worker processes".format(
@@ -73,7 +74,7 @@ def downsample_cube_job(config, source_mag, target_mag,
 
     # For segmentation, do not interpolate
     interpolation_order = 0 if layer_type == "segmentation" \
-                            else 1
+        else 1
 
     cube_full_path = get_cube_full_path(
         target_path, ds_name, layer_name, target_mag, cube_x, cube_y, cube_z)
@@ -93,7 +94,6 @@ def downsample_cube_job(config, source_mag, target_mag,
             for local_z in range(factor):
                 cube_data = read_cube(
                     target_path, layer_name, source_mag, cube_edge_len,
-                    target_path, config['dataset']['name'], source_mag, cube_edge_len,
                     cube_x * factor + local_x,
                     cube_y * factor + local_y,
                     cube_z * factor + local_z,
@@ -126,8 +126,8 @@ def downsample_cube_job(config, source_mag, target_mag,
 
 
 def downsample_cube(cube_buffer, factor, dtype, order):
-    BILINEAR=1
-    BICUBIC=2
+    BILINEAR = 1
+    BICUBIC = 2
     return zoom(
         cube_buffer, 1 / factor, output=dtype,
         # 0: nearest

@@ -17,7 +17,8 @@ from .cube_io import write_cube, get_cube_folder
 SOURCE_FORMAT_FILES = ('.tif', '.tiff', '.jpg', '.jpeg', '.png')
 
 CubingInfo = namedtuple('CubingInfo',
-                        'source_image_files source_dims cube_dims bbox resolutions')
+                        'source_image_files source_dims '
+                        'cube_dims bbox resolutions')
 
 
 def find_source_filenames(source_path):
@@ -49,7 +50,7 @@ def determine_source_dims_from_mag1(source_path, cube_edge_len):
     matches = [re.match(r".*/1/x(\d+)/y(\d+)/z(\d+)/.*raw", f)
                for f in files]
     coordinates = [(int(m.group(1)), int(m.group(2)), int(m.group(3)))
-                   for m in matches]
+                    for m in matches if m is not None]
 
     xs, ys, zs = zip(*coordinates)
     max_coordinates = [max(xs), max(ys), max(zs)]
@@ -93,7 +94,8 @@ def get_cubing_info(config, expect_image_files):
     if expect_image_files:
         source_dims = determine_source_dims_from_images(source_image_files)
     else:
-        source_dims = determine_source_dims_from_mag1(source_path, cube_edge_len)
+        source_dims = determine_source_dims_from_mag1(
+            source_path, cube_edge_len)
 
     cube_dims = determine_cube_dims(source_dims, cube_edge_len)
     bbox = determine_bbox(cube_dims, cube_edge_len)
