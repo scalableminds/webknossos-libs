@@ -14,7 +14,7 @@ def write_webknossos_metadata(dataset_base_path,
     if not path.exists(dataset_base_path):
         makedirs(dataset_base_path)
         
-    # Generate a combined metadata file (for webknossos). Currently have no source of information for team and elementClass
+    # Generate a combined metadata file (for webknossos). Currently have no source of information for team
     datasource_properites_path = path.join(dataset_base_path, 'datasource-properties.json')
     with open(datasource_properties_path, 'wt') as datasource_properties_json:
       json.dump({
@@ -27,7 +27,7 @@ def write_webknossos_metadata(dataset_base_path,
                     'dataFormat': 'knossos',
                     'name': layer_name,
                     'category': layer_type,
-                    'elementClass': '',
+                    'elementClass': dtype,
                     'sections': [
                         'name': '',
                         'resolutions': resolutions,
