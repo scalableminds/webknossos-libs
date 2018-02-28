@@ -12,7 +12,7 @@ import re
 from PIL import Image
 from collections import namedtuple
 from .utils import chunks
-from .cube_io import write_cube, get_cube_folder
+from .cube_io import write_cube, z_layer_exists
 
 SOURCE_FORMAT_FILES = ('.tif', '.tiff', '.jpg', '.jpeg', '.png')
 
@@ -50,7 +50,7 @@ def determine_source_dims_from_mag1(source_path, cube_edge_len):
     matches = [re.match(r".*/1/x(\d+)/y(\d+)/z(\d+)/.*raw", f)
                for f in files]
     coordinates = [(int(m.group(1)), int(m.group(2)), int(m.group(3)))
-                    for m in matches if m is not None]
+                   for m in matches if m is not None]
 
     xs, ys, zs = zip(*coordinates)
     max_coordinates = [max(xs), max(ys), max(zs)]
@@ -101,15 +101,8 @@ def get_cubing_info(config, expect_image_files):
     bbox = determine_bbox(cube_dims, cube_edge_len)
     resolutions = determine_resolutions(cube_dims)
 
-    return CubingInfo(source_image_files, source_dims, cube_dims, bbox, resolutions)
-
-
-def check_layer_already_cubed(target_path, layer_name, cur_z):
-    folder = get_cube_folder(target_path, layer_name, 1, 1, 1, cur_z)
-    try:
-        return any([file for file in listdir(folder) if file.endswith(".raw")])
-    except FileNotFoundError:
-        return False
+    return CubingInfo(
+        source_image_files, source_dims, cube_dims, bbox, resolutions)
 
 
 def make_mag1_cubes_from_z_stack(config, cubing_info):
@@ -131,7 +124,7 @@ def make_mag1_cubes_from_z_stack(config, cubing_info):
         logging.info("Cubing layer: {0}".format(cube_z))
 
         if skip_already_cubed_layers and \
-                check_layer_already_cubed(target_path, layer_name, cube_z):
+                z_layer_exists(target_path, layer_name, cube_z):
             logging.info("Skipping cube layer: {0}".format(cube_z))
             continue
 

@@ -14,8 +14,10 @@ def write_webknossos_metadata(dataset_base_path,
     if not path.exists(dataset_base_path):
         makedirs(dataset_base_path)
 
-    # Generate a combined metadata file (for webknossos). Currently have no source of information for team
-    datasource_properties_path = path.join(dataset_base_path, 'datasource-properties.json')
+    # Generate a metadata file for webKnossos
+    # Currently have no source of information for team
+    datasource_properties_path = path.join(
+        dataset_base_path, 'datasource-properties.json')
     with open(datasource_properties_path, 'wt') as datasource_properties_json:
         json.dump({
             'id': {
@@ -44,4 +46,3 @@ def write_webknossos_metadata(dataset_base_path,
             ],
             'scale': scale
         }, datasource_properties_json, indent=2)
-

@@ -7,7 +7,7 @@ from os import path, listdir
 from itertools import product
 from scipy.ndimage.interpolation import zoom
 from concurrent.futures import ProcessPoolExecutor
-from .cube_io import read_cube, write_cube, get_cube_full_path
+from .cube_io import read_cube, write_cube, cube_exists
 
 CUBE_FOLDER_REGEX = re.compile('^[xyz](\d{4})$')
 
@@ -44,10 +44,6 @@ def downsample(config, source_mag, target_mag):
     target_path = config['dataset']['target_path']
 
     source_cube_dims = get_cube_dimension_for_mag(target_path, source_mag)
-#    if len(source_cube_dims) <= 1:
-#        logging.info("No need to downsample mag {} from mag {}", target_mag, source_mag)
-#        return
-
     cube_coordinates = set(map(lambda xyz: tuple(
         map(lambda x: floor(x / factor), xyz)), source_cube_dims))
 
@@ -76,9 +72,8 @@ def downsample_cube_job(config, source_mag, target_mag,
     interpolation_order = 0 if layer_type == "segmentation" \
         else 1
 
-    cube_full_path = get_cube_full_path(
-        target_path, ds_name, layer_name, target_mag, cube_x, cube_y, cube_z)
-    if skip_already_downsampled_cubes and path.exists(cube_full_path):
+    if skip_already_downsampled_cubes and cube_exists(
+            target_path, layer_name, target_mag, cube_x, cube_y, cube_z):
         logging.debug("Skipping downsampling {},{},{} mag {}".format(
             cube_x, cube_y, cube_z, target_mag))
         return

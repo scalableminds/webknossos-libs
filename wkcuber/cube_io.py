@@ -2,7 +2,7 @@ import time
 import logging
 import numpy as np
 import glob
-from os import path, makedirs
+from os import path, makedirs, listdir
 
 
 def get_cube_folder(target_path, layer_name, mag, x, y, z):
@@ -31,6 +31,18 @@ def get_only_raw_file_path(target_path, layer_name, mag, x, y, z):
 def get_cube_full_path(target_path, ds_name, layer_name, mag, x, y, z):
     return path.join(get_cube_folder(target_path, layer_name, mag, x, y, z),
                      get_cube_file_name(ds_name, mag, x, y, z))
+
+
+def cube_exists(target_path, layer_name, mag, x, y, z):
+    folder = get_cube_folder(target_path, layer_name, mag, x, y, z)
+    try:
+        return any([file for file in listdir(folder) if file.endswith(".raw")])
+    except FileNotFoundError:
+        return False
+
+
+def z_layer_exists(target_path, layer_name, cur_z):
+    return cube_exists(target_path, layer_name, 1, 1, 1, cur_z)
 
 
 def write_cube(target_path, cube_data, ds_name, layer_name, mag, x, y, z):
