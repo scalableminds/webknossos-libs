@@ -1,0 +1,39 @@
+{
+  "id": {
+    "name": "test",
+    "team": "<unknown>"
+  },
+  "dataLayers": [
+    {
+      "dataFormat": "knossos",
+      "name": "color",
+      "category": "color",
+      "elementClass": "uint8",
+      "sections": [
+        {
+          "name": "",
+          "resolutions": [
+            1,
+            2,
+            4
+          ],
+          "boundingBox": {
+            "topLeft": [
+              0,
+              0,
+              0
+            ],
+            "width": 512,
+            "height": 512,
+            "depth": 512
+          }
+        }
+      ]
+    }
+  ],
+  "scale": [
+    12,
+    12,
+    25
+  ]
+}

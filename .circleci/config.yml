@@ -25,6 +25,7 @@ jobs:
             [ $(find testoutput/tiff/color/1 -name "*.raw" | wc -l) -eq 36 ]
             [ $(find testoutput/tiff/color/2 -name "*.raw" | wc -l) -eq 8 ]
             [ $(find testoutput/tiff/color/4 -name "*.raw" | wc -l) -eq 1 ]
+            diff testdata/tiff/datasource-properties.fixture.json testoutput/tiff/datasource-properties.json
 
       - run:
           name: Test downsampling
