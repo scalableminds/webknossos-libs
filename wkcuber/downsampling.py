@@ -1,123 +1,104 @@
 import time
 import logging
-import re
 import numpy as np
 from math import floor
 from os import path, listdir
-from itertools import product
 from scipy.ndimage.interpolation import zoom
 from concurrent.futures import ProcessPoolExecutor
-from .cube_io import read_cube, write_cube, cube_exists
 
-CUBE_FOLDER_REGEX = re.compile('^[xyz](\d{4})$')
+CUBE_EDGE_LEN = 128
 
+def create_parser():
+    parser = ArgumentParser()
 
-def get_cube_dimension_for_mag(target_path, mag):
-    prefix = path.join(target_path, 'color', str(mag))
+    parser.add_argument(
+        'path',
+        help="Directory containing the dataset.")
 
-    x_dims = [x for x in listdir(prefix) if CUBE_FOLDER_REGEX.match(x)]
-    y_dims = [y for y in listdir(
-        path.join(prefix, x_dims[0])) if CUBE_FOLDER_REGEX.match(y)]
-    z_dims = [z for z in listdir(
-        path.join(prefix, x_dims[0], y_dims[0])) if CUBE_FOLDER_REGEX.match(z)]
+    parser.add_argument(
+        '--layer_name', '-l',
+        help="Name of the cubed layer (color or segmentation)",
+        default="color")
 
-    x_dims.sort()
+    parser.add_argument(
+        '--segmentation', '-s',
+        help="This layer is a segmentation layer",
+        dest="segmentation",
+        action='store_true')
+
+    parser.add_argument(
+        '--dtype', '-d',
+        help="Target datatype (e.g. uint8, uint16, uint32)",
+        default="uint8")
+
+    parser.add_argument(
+        '--jobs', '-j',
+        help="Number of parallel jobs",
+        default=4)
+
+    parser.add_argument(
+        '--max', '-m',
+        help="Max resolution to be downsampled",
+        default=512)
+
+    parser.add_argument(
+        '--verbose', '-v',
+        help="Verbose output",
+        dest="verbose",
+        action='store_true')
+
+    parser.set_defaults(verbose=False)
+    parser.set_defaults(segmentation=False)
+
+    return parser
+
+def get_dataset_size(source_wkw):
+    file_size = source_wkw.header.block_len * source_wkw.header.file_len
+    return (file_size,) * 3
+
+def cube_addresses(size):
+    x_dims = list(range(0, size)).sort()
     y_dims.sort()
     z_dims.sort()
 
-    result = list(product(
-        [int(CUBE_FOLDER_REGEX.match(x).group(1)) for x in x_dims],
-        [int(CUBE_FOLDER_REGEX.match(x).group(1)) for x in y_dims],
-        [int(CUBE_FOLDER_REGEX.match(x).group(1)) for x in z_dims]))
-    result.sort()
-    return result
-
-
-def downsample(config, source_mag, target_mag):
-
+def downsample(source_wkw, target_wkw, source_mag, target_mag, num_downsampling_cores, is_segmentation):
     assert source_mag < target_mag
     logging.info("Downsampling mag {} from mag {}".format(
         target_mag, source_mag))
 
     factor = int(target_mag / source_mag)
-    num_downsampling_cores = config['processing']['num_downsampling_cores']
-    target_path = config['dataset']['target_path']
-
-    source_cube_dims = get_cube_dimension_for_mag(target_path, source_mag)
-    cube_coordinates = set(map(lambda xyz: tuple(
-        map(lambda x: floor(x / factor), xyz)), source_cube_dims))
+    source_size = get_dataset_size(source_wkw)
+    cube_coordinates = set(tuple(floor(x / factor) for x in xyz) for xyz in source_cube_dims)
 
     with ProcessPoolExecutor(num_downsampling_cores) as pool:
         logging.debug("Using up to {} worker processes".format(
             num_downsampling_cores))
         for cube_x, cube_y, cube_z in cube_coordinates:
-            pool.submit(downsample_cube_job, config,
-                        source_mag, target_mag,
+            pool.submit(downsample_cube_job, 
+                        source_wkw, target_wkw, 
+                        factor, is_segmentation, 
                         cube_x, cube_y, cube_z)
 
 
-def downsample_cube_job(config, source_mag, target_mag,
+def downsample_cube_job(source_wkw, target_wkw, factor, is_segmentation,
                         cube_x, cube_y, cube_z):
-    factor = int(target_mag / source_mag)
-    dtype = config['dataset']['dtype']
-    target_path = config['dataset']['target_path']
-    ds_name = config['dataset']['name']
-    layer_name = config['dataset']['layer_name']
-    layer_type = config['dataset']['layer_type']
-    cube_edge_len = config['processing']['cube_edge_len']
-    skip_already_downsampled_cubes = config[
-        'processing']['skip_already_downsampled_cubes']
 
-    # For segmentation, do not interpolate
-    interpolation_order = 0 if layer_type == "segmentation" \
-        else 1
+    interpolation_order = 0 if is_segmentation else 1
 
-    if skip_already_downsampled_cubes and cube_exists(
-            target_path, layer_name, target_mag, cube_x, cube_y, cube_z):
-        logging.debug("Skipping downsampling {},{},{} mag {}".format(
-            cube_x, cube_y, cube_z, target_mag))
-        return
+    logging.debug("Downsampling {},{},{}".format(
+        cube_x, cube_y, cube_z))
 
-    logging.debug("Downsampling {},{},{} mag {}".format(
-        cube_x, cube_y, cube_z, target_mag))
+    source_offset = tuple(a * CUBE_EDGE_LEN for a in (cube_x, cube_y, cube_z))
+    target_offset = tuple(a / factor for a in source_offset)
 
     ref_time = time.time()
-    non_empty = False
-    cube_buffer = np.zeros((cube_edge_len * factor,) * 3, dtype=dtype)
-    for local_x in range(factor):
-        for local_y in range(factor):
-            for local_z in range(factor):
-                cube_data = read_cube(
-                    target_path, layer_name, source_mag, cube_edge_len,
-                    cube_x * factor + local_x,
-                    cube_y * factor + local_y,
-                    cube_z * factor + local_z,
-                    dtype)
-                if cube_data is not None:
-                    non_empty = True
-                    cube_buffer[
-                        local_x * cube_edge_len:
-                        (local_x + 1) * cube_edge_len,
-                        local_y * cube_edge_len:
-                        (local_y + 1) * cube_edge_len,
-                        local_z * cube_edge_len:
-                        (local_z + 1) * cube_edge_len
-                    ] = cube_data
-
-    if not non_empty:
-        logging.debug("Skip downsampling empty cube: {},{},{} mag {}".format(
-            cube_x, cube_y, cube_z, target_mag))
-        return
-
-    cube_data = downsample_cube(cube_buffer, factor, dtype,
+    cube_buffer = source_wkw.read(source_offset, (CUBE_EDGE_LEN,)*3)
+    cube_data = downsample_cube(cube_buffer, factor, cube_buffer.dtype,
                                 interpolation_order)
-    write_cube(target_path, cube_data, ds_name, layer_name, target_mag,
-               cube_x, cube_y, cube_z)
+    target.write(target_offset, cube_data)
 
     logging.debug("Downsampling took {:.8f}s".format(
         time.time() - ref_time))
-    logging.debug("Downsampled cube: {},{},{} mag {}".format(
-        cube_x, cube_y, cube_z, target_mag))
 
 
 def downsample_cube(cube_buffer, factor, dtype, order):
@@ -133,3 +114,20 @@ def downsample_cube(cube_buffer, factor, dtype, order):
         # borders are treated.
         mode='nearest',
         prefilter=True)
+
+def open_wkw(path, layer_name, dtype, mag):
+    return wkw.Dataset.open(path.join(path, layer_name, str(mag)), wkw.Header(np.dtype(dtype)))
+
+if __name__ == '__main__':
+    args = create_parser().parse_args()
+
+    if args.verbose:
+        logging.basicConfig(level=logging.DEBUG)
+
+    target_mag = 2
+    while target_mag <= args.max:
+        source_mag = target_mag // 2
+        with open_wkw(args.path, args.layer_name, args.dtype, source_mag) as source_wkw, open_wkw(args.path, args.layer_name, args.dtype, target_mag) as target_wkw:
+            downsample(source_wkw, target_wkw, source_mag, target_mag, args.cores, args.segmentation)
+        logging.info("Mag {0} succesfully cubed".format(target_mag))
+        target_mag = target_mag * 2

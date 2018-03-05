@@ -11,7 +11,8 @@ setup(
         'scipy',
         'numpy',
         'pillow',
-        'pyyaml'
+        'pyyaml',
+        'wkw'
     ],
     description='A cubing tool for webKnossos',
     author='Norman Rzepka',

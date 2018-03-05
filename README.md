@@ -4,13 +4,21 @@
 
 Cubing tool for webKnossos
 
-Based on [knossos_cuber](https://github.com/knossos-project/knossos_cuber).
+```
+# Convert image files to wkw cubes
+docker run -v <host path>:/data webknossos_cuber --rm wkcuber.cubing --layer_name color /data/source/color /data/target
+docker run -v <host path>:/data webknossos_cuber --rm wkcuber.cubing --layer_name segmentation /data/source/segmentation /data/target
 
-```
-docker run -v <host path>:<docker path> webknossos_cuber -n <name> <source> <target>
-```
+# Create lower resolutions
+docker run -v <host path>:/data webknossos_cuber --rm wkcuber.downsampling --layer_name color /data/target
+docker run -v <host path>:/data webknossos_cuber --rm wkcuber.downsampling --layer_name segmentation /data/target
 
-Downsample only:
-```
-docker run -v <host path>:<docker path> webknossos_cuber -n <name> --downsample <source> <target>
+# Compress data in-place (mostly useful for segmentation)
+docker run -v <host path>:/data webknossos_cuber --rm wkcuber.compress --layer_name segmentation /data/target
+
+# Compress data copy (mostly useful for segmentation)
+docker run -v <host path>:/data webknossos_cuber --rm wkcuber.compress --layer_name segmentation /data/target /data/target_compress
+
+# Create metadata
+docker run -v <host path>:/data webknossos_cuber --rm wkcuber.metadata --name great_dataset --scale 11.24,11.24,25 /data/target
 ```
