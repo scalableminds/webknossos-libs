@@ -49,13 +49,12 @@ RUN pip install \
 RUN mkdir /app
 WORKDIR /app
 
-COPY requirements.txt /app
-RUN pip install -r requirements.txt
-
 COPY wkcuber /app/wkcuber
-COPY config.yml /app
+COPY requirements.txt /app
 COPY setup.py /app
 
-RUN python setup.py install
+
+RUN pip install -r requirements.txt && \
+  python setup.py install
 
 ENTRYPOINT [ "python", "-m" ]
