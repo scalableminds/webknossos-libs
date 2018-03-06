@@ -125,7 +125,11 @@ jobs:
           name: Push docker images
           command: |
             docker login -u $DOCKER_USER -p $DOCKER_PASS
+            docker tag \
+              scalableminds/webknossos-cuber:$CIRCLE_BUILD_NUM \
+              scalableminds/webknossos-cuber:$CIRCLE_BRANCH
             docker push scalableminds/webknossos-cuber:$CIRCLE_BUILD_NUM
+            docker push scalableminds/webknossos-cuber:$CIRCLE_BRANCH
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
               docker tag scalableminds/webknossos-cuber:$CIRCLE_BUILD_NUM scalableminds/webknossos-cuber:latest
               docker push scalableminds/webknossos-cuber:latest
