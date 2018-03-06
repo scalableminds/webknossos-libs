@@ -77,7 +77,7 @@ if __name__ == '__main__':
 
         # we iterate over the z layers
         for z in range(0, num_z):
-            logging.info("Cubing layer: {0}".format(z))
+            logging.info("Cubing z={0}".format(z))
             ref_time = time.time()
 
             this_layer = np.array(Image.open(source_files[z]))

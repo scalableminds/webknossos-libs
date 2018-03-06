@@ -25,7 +25,8 @@ jobs:
               -v "${PWD}/testoutput/tiff:/testoutput/tiff" \
               --rm \
               scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
-              wkcuber.cubing
+              wkcuber.cubing \
+              --verbose \
               --layer_name color \
               /testdata/tiff /testoutput/tiff
             [ -d testoutput/tiff/color ]
@@ -42,6 +43,7 @@ jobs:
               --rm \
               scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
               wkcuber.convert \
+              --verbose \
               --dtype uint8 \
               --layer_name color \
               --mag 1 \
@@ -58,8 +60,9 @@ jobs:
               -v "${PWD}/testoutput/tiff:/testoutput/tiff" \
               --rm \
               scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
-              wkcuber.downsampling
-              --max 8
+              wkcuber.downsampling \
+              --verbose \
+              --max 8 \
               --layer_name color \
               /testoutput/tiff
             [ -d testoutput/tiff/color/2 ]
@@ -68,21 +71,21 @@ jobs:
             [ -n testoutput/tiff/color/16 ]
 
       - run:
-          name: Test downsampling
+          name: Test compression
           command: |
             set -x
             docker run \
               -v "${PWD}/testoutput/tiff:/testoutput/tiff" \
               --rm \
               scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
-              wkcuber.downsampling
-              --max 8
+              wkcuber.compress \
+              --verbose \
               --layer_name color \
-              /testoutput/tiff
-            [ -d testoutput/tiff/color/2 ]
-            [ -d testoutput/tiff/color/4 ]
-            [ -d testoutput/tiff/color/8 ]
-            [ -n testoutput/tiff/color/16 ]
+              /testoutput/tiff /testoutput/tiff_compress
+            [ -d testoutput/tiff_compress/color/1 ]
+            [ -d testoutput/tiff_compress/color/2 ]
+            [ -d testoutput/tiff_compress/color/4 ]
+            [ -d testoutput/tiff_compress/color/8 ]
 
       - run:
           name: Test metadata generation
@@ -92,8 +95,8 @@ jobs:
               -v "${PWD}/testoutput/tiff:/testoutput/tiff" \
               --rm \
               scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
-              wkcuber.metadata
-              --name test_dataset
+              wkcuber.metadata \
+              --name test_dataset \
               --scale 11.24,11.24,25 \
               /testoutput/tiff
             [ -e testoutput/tiff/datasource-properties.json ]
