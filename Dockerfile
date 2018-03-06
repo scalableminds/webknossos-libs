@@ -43,6 +43,7 @@ RUN pip install \
   wget https://github.com/scalableminds/webknossos-wrap/archive/master.tar.gz -O webknossos-wrap.tar.gz && \
   tar -xzvf webknossos-wrap.tar.gz && \
   cd webknossos-wrap-master/python && \
+  python setup.py build && \
   python setup.py install
 
 
