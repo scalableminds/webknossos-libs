@@ -5,6 +5,7 @@ from glob import iglob, glob
 
 CUBE_EDGE_LEN = 128
 
+
 class KnossosDataset:
 
     def __init__(self, root, dtype=np.uint8):
@@ -41,7 +42,8 @@ class KnossosDataset:
     def write_cube(self, cube_xyz, cube_data):
         filename = self.__get_only_raw_file_path(cube_xyz)
         if filename is None:
-            filename = path.join(self.__get_cube_folder(cube_xyz), self.__get_cube_file_name(cube_xyz))
+            filename = path.join(self.__get_cube_folder(
+                cube_xyz), self.__get_cube_file_name(cube_xyz))
         with open(filename, "wb") as cube_file:
             cube_data.ravel(order="F").tofile(cube_file)
 

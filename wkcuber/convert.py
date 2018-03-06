@@ -6,11 +6,13 @@ from argparse import ArgumentParser
 from os import path
 from .knossos import KnossosDataset, CUBE_EDGE_LEN
 
-def open_wkw(_path, layer_name, dtype, mag):
-    return wkw.Dataset.open(path.join(_path, layer_name, str(mag)), wkw.Header(np.dtype(dtype)))
 
-def open_knossos(_path, layer_name, dtype, mag):
-    return KnossosDataset.open(path.join(_path, layer_name, str(mag)), np.dtype(dtype))
+def open_wkw(dataset_path, layer_name, dtype, mag):
+    return wkw.Dataset.open(path.join(dataset_path, layer_name, str(mag)), wkw.Header(np.dtype(dtype)))
+
+
+def open_knossos(dataset_path, layer_name, dtype, mag):
+    return KnossosDataset.open(path.join(dataset_path, layer_name, str(mag)), np.dtype(dtype))
 
 
 def create_parser():
@@ -57,7 +59,7 @@ if __name__ == '__main__':
         logging.basicConfig(level=logging.DEBUG)
 
     with open_knossos(args.source_path, args.layer_name, args.dtype, args.mag) as source_knossos, \
-         open_wkw(args.target_path, args.layer_name, args.dtype, args.mag) as target_wkw:
+            open_wkw(args.target_path, args.layer_name, args.dtype, args.mag) as target_wkw:
 
         for cube_xyz in source_knossos.list_cubes():
             logging.info("Converting {},{},{}".format(
@@ -68,5 +70,5 @@ if __name__ == '__main__':
 
             cube_data = source_knossos.read(offset, size)
             target_wkw.write(offset, cube_data)
-            logging.debug("Converting took {:.8f}s".format(time.time() - ref_time))
-
+            logging.debug("Converting took {:.8f}s".format(
+                time.time() - ref_time))

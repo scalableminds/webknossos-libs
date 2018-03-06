@@ -21,8 +21,8 @@ jobs:
             set -x
             mkdir -p testoutput/tiff
             docker run \
-              -v "${PWD}/testdata/tiff:/testdata/tiff" \
-              -v "${PWD}/testoutput/tiff:/testoutput/tiff" \
+              -v "${PWD}/testdata:/testdata" \
+              -v "${PWD}/testoutput:/testoutput" \
               --rm \
               scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
               wkcuber.cubing \
@@ -31,7 +31,7 @@ jobs:
               /testdata/tiff /testoutput/tiff
             [ -d testoutput/tiff/color ]
             [ -d testoutput/tiff/color/1 ]
-            [ $(find testoutput/tiff/color/1 -name "*.wkw" | wc -l) -eq 1 ]
+            [ $(find testoutput/tiff/color/1 -mindepth 3 -name "*.wkw" | wc -l) -eq 1 ]
 
       - run:
           name: Test KNOSSOS conversion
@@ -39,7 +39,8 @@ jobs:
             set -x
             mkdir -p testoutput/knossos
             docker run \
-              -v "${PWD}/testoutput/knossos:/testoutput/knossos" \
+              -v "${PWD}/testdata:/testdata" \
+              -v "${PWD}/testoutput:/testoutput" \
               --rm \
               scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
               wkcuber.convert \
@@ -47,17 +48,17 @@ jobs:
               --dtype uint8 \
               --layer_name color \
               --mag 1 \
-              /testoutput/knossos /testoutput/knossos
+              /testdata/knossos /testoutput/knossos
             [ -d testoutput/knossos/color ]
             [ -d testoutput/knossos/color/1 ]
-            [ $(find testoutput/knossos/color/1 -name "*.wkw" | wc -l) -eq 1 ]
+            [ $(find testoutput/knossos/color/1 -mindepth 3 -name "*.wkw" | wc -l) -eq 1 ]
 
       - run:
           name: Test downsampling
           command: |
             set -x
             docker run \
-              -v "${PWD}/testoutput/tiff:/testoutput/tiff" \
+              -v "${PWD}/testoutput:/testoutput" \
               --rm \
               scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
               wkcuber.downsampling \
@@ -69,13 +70,16 @@ jobs:
             [ -d testoutput/tiff/color/4 ]
             [ -d testoutput/tiff/color/8 ]
             [ -n testoutput/tiff/color/16 ]
+            [ $(find testoutput/knossos/color/2 -mindepth 3 -name "*.wkw" | wc -l) -eq 1 ]
+            [ $(find testoutput/knossos/color/4 -mindepth 3 -name "*.wkw" | wc -l) -eq 1 ]
+            [ $(find testoutput/knossos/color/8 -mindepth 3 -name "*.wkw" | wc -l) -eq 1 ]
 
       - run:
           name: Test compression
           command: |
             set -x
             docker run \
-              -v "${PWD}/testoutput/tiff:/testoutput/tiff" \
+              -v "${PWD}/testoutput:/testoutput" \
               --rm \
               scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
               wkcuber.compress \
@@ -88,11 +92,25 @@ jobs:
             [ -d testoutput/tiff_compress/color/8 ]
 
       - run:
+          name: Test in-place compression
+          command: |
+            set -x
+            cp -r testoutput/tiff testoutput/tiff_compress2
+            docker run \
+              -v "${PWD}/testoutput:/testoutput" \
+              --rm \
+              scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
+              wkcuber.compress \
+              --verbose \
+              --layer_name color \
+              /testoutput/tiff_compress2
+
+      - run:
           name: Test metadata generation
           command: |
             set -x
             docker run \
-              -v "${PWD}/testoutput/tiff:/testoutput/tiff" \
+              -v "${PWD}/testoutput:/testoutput" \
               --rm \
               scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
               wkcuber.metadata \

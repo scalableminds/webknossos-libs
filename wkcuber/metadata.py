@@ -7,6 +7,7 @@ from argparse import ArgumentParser
 from glob import iglob
 from os import path, makedirs, listdir
 
+
 def write_webknossos_metadata(dataset_path,
                               name,
                               scale,
@@ -26,17 +27,20 @@ def write_webknossos_metadata(dataset_path,
             'scale': scale
         }, datasource_properties_json, indent=2)
 
+
 def detect_dtype(dataset_path, layer, mag=1):
     layer_path = path.join(dataset_path, layer, str(mag))
     if path.exists(layer_path):
         with wkw.Dataset.open(layer_path) as dataset:
             return str(np.dtype(dataset.header.voxel_type))
 
+
 def detect_cubeLength(dataset_path, layer, mag=1):
     layer_path = path.join(dataset_path, layer, str(mag))
     if path.exists(layer_path):
         with wkw.Dataset.open(layer_path) as dataset:
             return dataset.header.block_len * dataset.header.file_len
+
 
 def detect_bbox(dataset_path, layer, mag=1):
 
@@ -77,11 +81,13 @@ def detect_resolutions(dataset_path, layer):
 def detect_standard_layer(dataset_path, layer_name):
     bbox = detect_bbox(dataset_path, layer_name)
     dtype = detect_dtype(dataset_path, layer_name)
+
+    mags = list(detect_resolutions(dataset_path, layer_name))
+    mags.sort()
     resolutions = [{
-            "resolution": mag,
-            "cubeLength": detect_cubeLength(dataset_path, layer_name, mag),
-            "scale": (mag,) * 3
-        } for mag in detect_resolutions(dataset_path, layer_name)]
+        "resolution": (mag,) * 3,
+        "cubeLength": detect_cubeLength(dataset_path, layer_name, mag),
+    } for mag in mags]
 
     return {
         'dataFormat': 'wkw',
@@ -122,5 +128,5 @@ def create_parser():
 if __name__ == '__main__':
     args = create_parser().parse_args()
     scale = tuple(float(x) for x in args.scale.split(","))
-    write_webknossos_metadata(args.path, args.name, scale, list(detect_layers(args.path)))
-
+    write_webknossos_metadata(args.path, args.name,
+                              scale, list(detect_layers(args.path)))

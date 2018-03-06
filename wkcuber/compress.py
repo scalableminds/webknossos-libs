@@ -1,14 +1,17 @@
 import time
 import wkw
 import shutil
+import logging
 import numpy as np
 from argparse import ArgumentParser
 from os import path
 
 from .metadata import detect_resolutions
 
-def open_wkw(_path, layer_name, mag):
-    return wkw.Dataset.open(path.join(_path, layer_name, str(mag)))
+
+def open_wkw(dataset_path, layer_name, mag):
+    return wkw.Dataset.open(path.join(dataset_path, layer_name, str(mag)))
+
 
 def create_parser():
     parser = ArgumentParser()
@@ -20,6 +23,7 @@ def create_parser():
     parser.add_argument(
         'target_path',
         help="Output directory for the compressed WKW dataset.",
+        nargs='?',
         default=None)
 
     parser.add_argument(
@@ -29,7 +33,7 @@ def create_parser():
 
     parser.add_argument(
         '--mag', '-m',
-        nargs='*'
+        nargs='*',
         help="Magnification level",
         default=None)
 
@@ -55,7 +59,8 @@ if __name__ == '__main__':
 
     mags = args.mag
     if mags is None:
-        mags = detect_resolutions(args.source_path, args.layer_name)
+        mags = list(detect_resolutions(args.source_path, args.layer_name))
+    mags.sort()
 
     for mag in mags:
         target_mag_path = path.join(target_path, args.layer_name, str(mag))
@@ -66,7 +71,10 @@ if __name__ == '__main__':
 
         if with_tmp_dir:
             shutil.move(
-                path.join(target_path, args.layer_name, str(args.mag)),
-                path.join(args.source_path, args.layer_name, str(args.mag)))
+                path.join(target_path, args.layer_name, str(mag)),
+                path.join(args.source_path, args.layer_name, str(mag)))
 
-        logging.info("Mag {0} succesfully cubed".format(target_mag))
+        logging.info("Mag {0} succesfully compressed".format(mag))
+
+    if with_tmp_dir:
+        shutil.rmtree(target_path)
