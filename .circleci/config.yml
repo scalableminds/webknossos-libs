@@ -6,6 +6,12 @@ jobs:
       - checkout
 
       - run:
+          name: Install tools
+          command: |
+            sudo apt-get update
+            sudo apt-get install jq -y
+
+      - run:
           name: Build docker image
           command: docker build -t "scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM}" .
 
@@ -19,30 +25,80 @@ jobs:
               -v "${PWD}/testoutput/tiff:/testoutput/tiff" \
               --rm \
               scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
-              -n test \
+              wkcuber.cubing
+              --layer_name color \
               /testdata/tiff /testoutput/tiff
             [ -d testoutput/tiff/color ]
-            [ $(find testoutput/tiff/color/1 -name "*.raw" | wc -l) -eq 36 ]
-            [ $(find testoutput/tiff/color/2 -name "*.raw" | wc -l) -eq 8 ]
-            [ $(find testoutput/tiff/color/4 -name "*.raw" | wc -l) -eq 1 ]
-            diff testdata/tiff/datasource-properties.fixture.json testoutput/tiff/datasource-properties.json
+            [ -d testoutput/tiff/color/1 ]
+            [ $(find testoutput/tiff/color/1 -name "*.wkw" | wc -l) -eq 1 ]
+
+      - run:
+          name: Test KNOSSOS conversion
+          command: |
+            set -x
+            mkdir -p testoutput/knossos
+            docker run \
+              -v "${PWD}/testoutput/knossos:/testoutput/knossos" \
+              --rm \
+              scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
+              wkcuber.convert \
+              --dtype uint8 \
+              --layer_name color \
+              --mag 1 \
+              /testoutput/knossos /testoutput/knossos
+            [ -d testoutput/knossos/color ]
+            [ -d testoutput/knossos/color/1 ]
+            [ $(find testoutput/knossos/color/1 -name "*.wkw" | wc -l) -eq 1 ]
 
       - run:
           name: Test downsampling
           command: |
             set -x
-            mkdir -p testoutput/knossos
-            cp -ra testdata/knossos/* testoutput/knossos
             docker run \
-              -v "${PWD}/testoutput/knossos:/testoutput/knossos" \
+              -v "${PWD}/testoutput/tiff:/testoutput/tiff" \
               --rm \
               scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
-              --downsample \
-              -n test \
-              /testoutput/knossos /testoutput/knossos
-            [ -d testoutput/knossos/color ]
-            [ $(find testoutput/knossos/color/2 -name "*.raw" | wc -l) -eq 8 ]
-            [ $(find testoutput/knossos/color/4 -name "*.raw" | wc -l) -eq 1 ]
+              wkcuber.downsampling
+              --max 8
+              --layer_name color \
+              /testoutput/tiff
+            [ -d testoutput/tiff/color/2 ]
+            [ -d testoutput/tiff/color/4 ]
+            [ -d testoutput/tiff/color/8 ]
+            [ -n testoutput/tiff/color/16 ]
+
+      - run:
+          name: Test downsampling
+          command: |
+            set -x
+            docker run \
+              -v "${PWD}/testoutput/tiff:/testoutput/tiff" \
+              --rm \
+              scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
+              wkcuber.downsampling
+              --max 8
+              --layer_name color \
+              /testoutput/tiff
+            [ -d testoutput/tiff/color/2 ]
+            [ -d testoutput/tiff/color/4 ]
+            [ -d testoutput/tiff/color/8 ]
+            [ -n testoutput/tiff/color/16 ]
+
+      - run:
+          name: Test metadata generation
+          command: |
+            set -x
+            docker run \
+              -v "${PWD}/testoutput/tiff:/testoutput/tiff" \
+              --rm \
+              scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
+              wkcuber.metadata
+              --name test_dataset
+              --scale 11.24,11.24,25 \
+              /testoutput/tiff
+            [ -e testoutput/tiff/datasource-properties.json ]
+            jq --argfile a testdata/tiff/datasource-properties.fixture.json --argfile b testoutput/tiff/datasource-properties.json -n '$a == $b'
+            # diff testdata/tiff/datasource-properties.fixture.json testoutput/tiff/datasource-properties.json
 
       - run:
           name: Push docker images

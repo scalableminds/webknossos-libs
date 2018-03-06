@@ -1,39 +1,39 @@
 {
   "id": {
-    "name": "test",
+    "name": "test_dataset",
     "team": "<unknown>"
   },
   "dataLayers": [
     {
-      "dataFormat": "knossos",
+      "dataFormat": "wkw",
       "name": "color",
       "category": "color",
       "elementClass": "uint8",
-      "sections": [
-        {
-          "name": "",
-          "resolutions": [
-            1,
-            2,
-            4
-          ],
-          "boundingBox": {
-            "topLeft": [
-              0,
-              0,
-              0
-            ],
-            "width": 512,
-            "height": 512,
-            "depth": 512
-          }
-        }
-      ]
+      "wkwResolutions": [{
+        "resolution": 1,
+        "cubeLength": 1024,
+      }, {
+        "resolution": 2,
+        "cubeLength": 1024,
+      }, {
+        "resolution": 4,
+        "cubeLength": 1024,
+      }],
+      "boundingBox": {
+        "topLeft": [
+          0,
+          0,
+          0
+        ],
+        "width": 1024,
+        "height": 1024,
+        "depth": 1024
+      }
     }
   ],
   "scale": [
-    12,
-    12,
+    11.25,
+    11.25,
     25
   ]
 }
