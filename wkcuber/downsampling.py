@@ -60,7 +60,7 @@ def cube_addresses(source_wkw):
     def parse_cube_file_name(filename):
         CUBE_REGEX = re.compile("z(\d+)/y(\d+)/x(\d+)(\.wkw)$")
         m = CUBE_REGEX.search(filename)
-        return (int(m.group(1)), int(m.group(2)), int(m.group(3)))
+        return (int(m.group(3)), int(m.group(2)), int(m.group(1)))
 
     wkw_addresses = list(parse_cube_file_name(f)
                          for f in source_wkw.list_files())
