@@ -52,7 +52,7 @@ def detect_bbox(dataset_path, layer, mag=1):
     def parse_cube_file_name(filename):
         CUBE_REGEX = re.compile("z(\d+)/y(\d+)/x(\d+)(\.wkw)$")
         m = CUBE_REGEX.search(filename)
-        return (int(m.group(1)), int(m.group(2)), int(m.group(3)))
+        return (int(m.group(3)), int(m.group(2)), int(m.group(1)))
 
     def list_cubes(layer_path):
         return (parse_cube_file_name(f) for f in list_files(layer_path))
