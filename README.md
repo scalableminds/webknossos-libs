@@ -14,7 +14,7 @@ docker run -v <host path>:/data --rm scalableminds/webknossos-cuber:wkw wkcuber.
 
 # Create lower resolutions
 docker run -v <host path>:/data --rm scalableminds/webknossos-cuber:wkw wkcuber.downsampling --layer_name color /data/target
-docker run -v <host path>:/data --rm scalableminds/webknossos-cuber:wkw wkcuber.downsampling --layer_name segmentation /data/target
+docker run -v <host path>:/data --rm scalableminds/webknossos-cuber:wkw wkcuber.downsampling --layer_name segmentation --interpolation_mode mode /data/target
 
 # Compress data in-place (mostly useful for segmentation)
 docker run -v <host path>:/data --rm scalableminds/webknossos-cuber:wkw wkcuber.compress --layer_name segmentation /data/target
