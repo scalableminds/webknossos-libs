@@ -12,8 +12,9 @@ from itertools import product
 from functools import lru_cache
 from enum import Enum
 
-CUBE_EDGE_LEN = 128
+from .utils import add_jobs_flag, add_verbose_flag, open_wkw, WkwDatasetInfo, ParallelExecutor
 
+CUBE_EDGE_LEN = 128
 
 class InterpolationModes(Enum):
     MEDIAN = 0
@@ -50,78 +51,78 @@ def create_parser():
         help="Max resolution to be downsampled",
         default=512)
 
-    parser.add_argument(
-        '--verbose', '-v',
-        help="Verbose output",
-        dest="verbose",
-        action='store_true')
-
-    parser.set_defaults(verbose=False)
+    add_jobs_flag(parser)
+    add_verbose_flag(parser)
 
     return parser
 
 
-def cube_addresses(source_wkw):
+def cube_addresses(source_wkw_info):
+    with open_wkw(source_wkw_info) as source_wkw:
+        wkw_cubelength = source_wkw.header.file_len * source_wkw.header.block_len
+        factor = wkw_cubelength // CUBE_EDGE_LEN
 
-    wkw_cubelength = source_wkw.header.file_len * source_wkw.header.block_len
-    factor = wkw_cubelength // CUBE_EDGE_LEN
+        def parse_cube_file_name(filename):
+            CUBE_REGEX = re.compile("z(\d+)/y(\d+)/x(\d+)(\.wkw)$")
+            m = CUBE_REGEX.search(filename)
+            return (int(m.group(3)), int(m.group(2)), int(m.group(1)))
 
-    def parse_cube_file_name(filename):
-        CUBE_REGEX = re.compile("z(\d+)/y(\d+)/x(\d+)(\.wkw)$")
-        m = CUBE_REGEX.search(filename)
-        return (int(m.group(3)), int(m.group(2)), int(m.group(1)))
+        wkw_addresses = list(parse_cube_file_name(f)
+                             for f in source_wkw.list_files())
 
-    wkw_addresses = list(parse_cube_file_name(f)
-                         for f in source_wkw.list_files())
+        cube_addresses = []
+        for wkw_x, wkw_y, wkw_z in wkw_addresses:
+            x_dims = list(range(wkw_x * factor, (wkw_x + 1) * factor))
+            y_dims = list(range(wkw_y * factor, (wkw_y + 1) * factor))
+            z_dims = list(range(wkw_z * factor, (wkw_z + 1) * factor))
+            cube_addresses += product(x_dims, y_dims, z_dims)
 
-    cube_addresses = []
-    for wkw_x, wkw_y, wkw_z in wkw_addresses:
-        x_dims = list(range(wkw_x * factor, (wkw_x + 1) * factor))
-        y_dims = list(range(wkw_y * factor, (wkw_y + 1) * factor))
-        z_dims = list(range(wkw_z * factor, (wkw_z + 1) * factor))
-        cube_addresses += product(x_dims, y_dims, z_dims)
-
-    cube_addresses.sort()
-    return cube_addresses
+        cube_addresses.sort()
+        return cube_addresses
 
 
-def downsample(source_wkw, target_wkw, source_mag, target_mag, interpolation_mode):
+def downsample(source_wkw_info, target_wkw_info, source_mag, target_mag, interpolation_mode, jobs):
     assert source_mag < target_mag
     logging.info("Downsampling mag {} from mag {}".format(
         target_mag, source_mag))
 
     factor = int(target_mag / source_mag)
     cube_coordinates = list(set(tuple(x // factor for x in xyz)
-                                for xyz in cube_addresses(source_wkw)))
+                                for xyz in cube_addresses(source_wkw_info)))
     cube_coordinates.sort()
     logging.info("Found cubes: count={} size={} min={} max={}".format(len(
         cube_coordinates), (CUBE_EDGE_LEN,) * 3, min(cube_coordinates), max(cube_coordinates)))
 
-    for cube_x, cube_y, cube_z in cube_coordinates:
-        downsample_cube_job(source_wkw, target_wkw,
-                            factor, interpolation_mode,
-                            cube_x, cube_y, cube_z)
+    with ParallelExecutor(jobs) as pool:
+        for cube_x, cube_y, cube_z in cube_coordinates:
+            pool.submit(downsample_cube_job, 
+                        source_wkw_info, target_wkw_info,
+                        factor, interpolation_mode,
+                        cube_x, cube_y, cube_z)
+
+    logging.info("Mag {0} succesfully cubed".format(target_mag))
 
 
-def downsample_cube_job(source_wkw, target_wkw, factor, interpolation_mode,
+def downsample_cube_job(source_wkw_info, target_wkw_info, factor, interpolation_mode,
                         cube_x, cube_y, cube_z):
 
     logging.debug("Downsampling {},{},{}".format(
         cube_x, cube_y, cube_z))
 
-    source_offset = tuple(a * CUBE_EDGE_LEN for a in (cube_x, cube_y, cube_z))
-    target_offset = tuple(a // factor for a in source_offset)
+    with open_wkw(source_wkw_info) as source_wkw, open_wkw(target_wkw_info) as target_wkw:
+        source_offset = tuple(a * CUBE_EDGE_LEN for a in (cube_x, cube_y, cube_z))
+        target_offset = tuple(a // factor for a in source_offset)
 
-    ref_time = time.time()
-    cube_buffer = source_wkw.read(source_offset, (CUBE_EDGE_LEN,) * 3)[0]
-    if np.all(cube_buffer == 0):
-        logging.debug("Skipping empty cube {},{},{}".format(
-            cube_x, cube_y, cube_z))
-    cube_data = downsample_cube(cube_buffer, factor, interpolation_mode)
-    target_wkw.write(target_offset, cube_data)
+        ref_time = time.time()
+        cube_buffer = source_wkw.read(source_offset, (CUBE_EDGE_LEN,) * 3)[0]
+        if np.all(cube_buffer == 0):
+            logging.debug("Skipping empty cube {},{},{}".format(
+                cube_x, cube_y, cube_z))
+        cube_data = downsample_cube(cube_buffer, factor, interpolation_mode)
+        target_wkw.write(target_offset, cube_data)
 
-    logging.debug("Downsampling took {:.8f}s".format(
-        time.time() - ref_time))
+    logging.debug("Downsampling of {},{},{} took {:.8f}s".format(
+        cube_x, cube_y, cube_z, time.time() - ref_time))
 
 
 def non_linear_filter_3d(data, factor, func):
@@ -188,10 +189,6 @@ def downsample_cube(cube_buffer, factor, interpolation_mode):
             "Invalid interpolation mode: {}".format(interpolation_mode))
 
 
-def open_wkw(dataset_path, layer_name, dtype, mag):
-    return wkw.Dataset.open(path.join(dataset_path, layer_name, str(mag)), wkw.Header(np.dtype(dtype)))
-
-
 if __name__ == '__main__':
     args = create_parser().parse_args()
 
@@ -209,9 +206,7 @@ if __name__ == '__main__':
     target_mag = 2
     while target_mag <= int(args.max):
         source_mag = target_mag // 2
-        with open_wkw(args.path, args.layer_name, args.dtype, source_mag) as source_wkw, \
-                open_wkw(args.path, args.layer_name, args.dtype, target_mag) as target_wkw:
-            downsample(source_wkw, target_wkw, source_mag,
-                       target_mag, interpolation_mode)
-        logging.info("Mag {0} succesfully cubed".format(target_mag))
+        source_wkw_info = WkwDatasetInfo(args.path, args.layer_name, args.dtype, source_mag)
+        target_wkw_info = WkwDatasetInfo(args.path, args.layer_name, args.dtype, target_mag)
+        downsample(source_wkw_info, target_wkw_info, source_mag, target_mag, interpolation_mode, args.jobs)
         target_mag = target_mag * 2
