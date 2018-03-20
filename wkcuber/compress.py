@@ -6,7 +6,9 @@ import numpy as np
 from argparse import ArgumentParser
 from os import path, makedirs
 
-from .utils import add_verbose_flag, add_jobs_flag, open_wkw, WkwDatasetInfo, ParallelExecutor
+from .utils import \
+    add_verbose_flag, add_jobs_flag, \
+    open_wkw, WkwDatasetInfo, ParallelExecutor
 from .metadata import detect_resolutions
 
 
@@ -48,7 +50,8 @@ def compress_file_job(source_path, target_path):
     wkw.File.compress(source_path, target_path)
 
     if not path.exists(target_path):
-        raise Exception("Did not create compressed file {}".format(target_path))
+        raise Exception(
+            "Did not create compressed file {}".format(target_path))
 
     logging.debug("Converting of '{}' took {:.8f}s".format(
         source_path, time.time() - ref_time))
@@ -73,16 +76,19 @@ if __name__ == '__main__':
     mags.sort()
 
     for mag in mags:
-        source_wkw_info = WkwDatasetInfo(args.source_path, args.layer_name, None, mag)
+        source_wkw_info = WkwDatasetInfo(
+            args.source_path, args.layer_name, None, mag)
         target_mag_path = path.join(target_path, args.layer_name, str(mag))
-        logging.info("Compressing mag {0} in '{1}'".format(mag, target_mag_path))
+        logging.info("Compressing mag {0} in '{1}'".format(
+            mag, target_mag_path))
 
         with open_wkw(source_wkw_info) as source_wkw, \
-             ParallelExecutor(args.jobs) as pool:
+                ParallelExecutor(args.jobs) as pool:
             source_wkw.compress(target_mag_path)
             for file in source_wkw.list_files():
                 rel_file = path.relpath(file, source_wkw.root)
-                pool.submit(compress_file_job, file, path.join(target_mag_path, rel_file))
+                pool.submit(compress_file_job, file,
+                            path.join(target_mag_path, rel_file))
 
         logging.info("Mag {0} succesfully compressed".format(mag))
 

@@ -8,18 +8,23 @@ from os import path
 from .knossos import KnossosDataset, CUBE_EDGE_LEN
 
 
-WkwDatasetInfo = namedtuple('WkwDatasetInfo', ('dataset_path', 'layer_name', 'dtype', 'mag'))
-KnossosDatasetInfo = namedtuple('KnossosDatasetInfo', ('dataset_path', 'layer_name', 'dtype', 'mag'))
+WkwDatasetInfo = namedtuple(
+    'WkwDatasetInfo', ('dataset_path', 'layer_name', 'dtype', 'mag'))
+KnossosDatasetInfo = namedtuple(
+    'KnossosDatasetInfo', ('dataset_path', 'layer_name', 'dtype', 'mag'))
 
 
 def open_wkw(info):
     return wkw.Dataset.open(
-        path.join(info.dataset_path, info.layer_name, str(info.mag)), 
+        path.join(info.dataset_path, info.layer_name, str(info.mag)),
         wkw.Header(np.dtype(info.dtype)))
+
 
 def open_knossos(info):
     return KnossosDataset.open(
-        path.join(info.dataset_path, info.layer_name, str(info.mag)), np.dtype(info.dtype))
+        path.join(info.dataset_path, info.layer_name, str(info.mag)), 
+        np.dtype(info.dtype))
+
 
 def add_verbose_flag(parser):
     parser.add_argument(
@@ -30,11 +35,13 @@ def add_verbose_flag(parser):
 
     parser.set_defaults(verbose=False)
 
+
 def add_jobs_flag(parser):
     parser.add_argument(
         '--jobs', '-j',
         help="Parallel jobs",
         default=cpu_count())
+
 
 class ParallelExecutor():
     def __init__(self, jobs):

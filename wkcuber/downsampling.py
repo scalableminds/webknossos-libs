@@ -12,9 +12,12 @@ from itertools import product
 from functools import lru_cache
 from enum import Enum
 
-from .utils import add_jobs_flag, add_verbose_flag, open_wkw, WkwDatasetInfo, ParallelExecutor
+from .utils import \
+    add_jobs_flag, add_verbose_flag, \
+    open_wkw, WkwDatasetInfo, ParallelExecutor
 
 CUBE_EDGE_LEN = 128
+
 
 class InterpolationModes(Enum):
     MEDIAN = 0
@@ -95,7 +98,7 @@ def downsample(source_wkw_info, target_wkw_info, source_mag, target_mag, interpo
 
     with ParallelExecutor(jobs) as pool:
         for cube_x, cube_y, cube_z in cube_coordinates:
-            pool.submit(downsample_cube_job, 
+            pool.submit(downsample_cube_job,
                         source_wkw_info, target_wkw_info,
                         factor, interpolation_mode,
                         cube_x, cube_y, cube_z)
@@ -110,7 +113,8 @@ def downsample_cube_job(source_wkw_info, target_wkw_info, factor, interpolation_
         cube_x, cube_y, cube_z))
 
     with open_wkw(source_wkw_info) as source_wkw, open_wkw(target_wkw_info) as target_wkw:
-        source_offset = tuple(a * CUBE_EDGE_LEN for a in (cube_x, cube_y, cube_z))
+        source_offset = tuple(
+            a * CUBE_EDGE_LEN for a in (cube_x, cube_y, cube_z))
         target_offset = tuple(a // factor for a in source_offset)
 
         ref_time = time.time()
@@ -159,8 +163,8 @@ def linear_filter_3d(data, factor, order):
                 # 1: bilinear
                 # 2: bicubic
                 order=order,
-                # this does not mean nearest interpolation, it corresponds to how the
-                # borders are treated.
+                # this does not mean nearest interpolation, 
+                # it corresponds to how the borders are treated.
                 mode='nearest',
                 prefilter=True)
 
@@ -206,7 +210,10 @@ if __name__ == '__main__':
     target_mag = 2
     while target_mag <= int(args.max):
         source_mag = target_mag // 2
-        source_wkw_info = WkwDatasetInfo(args.path, args.layer_name, args.dtype, source_mag)
-        target_wkw_info = WkwDatasetInfo(args.path, args.layer_name, args.dtype, target_mag)
-        downsample(source_wkw_info, target_wkw_info, source_mag, target_mag, interpolation_mode, args.jobs)
+        source_wkw_info = WkwDatasetInfo(
+            args.path, args.layer_name, args.dtype, source_mag)
+        target_wkw_info = WkwDatasetInfo(
+            args.path, args.layer_name, args.dtype, target_mag)
+        downsample(source_wkw_info, target_wkw_info, source_mag,
+                   target_mag, interpolation_mode, args.jobs)
         target_mag = target_mag * 2
