@@ -20,6 +20,10 @@ Created with [Python3](https://www.python.org/).
 ## Installation
 ### Python3 with pip
 ```
+# Make sure to have lz4 installed:
+# Mac: brew install lz4
+# Ubuntu/Debian: apt-get install liblz4-1
+
 pip install wkcuber
 ```
 
@@ -52,5 +56,5 @@ python -m wkcuber.metadata --name great_dataset --scale 11.24,11.24,25 data/targ
 ```
 
 # License
-AGPLv3
+AGPLv3  
 Copyright scalable minds
