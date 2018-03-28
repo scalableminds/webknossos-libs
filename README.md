@@ -23,6 +23,7 @@ Created with [Python3](https://www.python.org/).
 # Make sure to have lz4 installed:
 # Mac: brew install lz4
 # Ubuntu/Debian: apt-get install liblz4-1
+# CentOS/RHEL: yum install lz4
 
 pip install wkcuber
 ```
