@@ -192,28 +192,30 @@ def downsample_cube(cube_buffer, factor, interpolation_mode):
         raise Exception(
             "Invalid interpolation mode: {}".format(interpolation_mode))
 
+def downsample_mags(path, layer_name, max_mag, dtype='uint8', interpolation_mode='default', jobs=1, verbose=False):
+    if verbose:
+        logging.basicConfig(level=logging.DEBUG)
+
+    if interpolation_mode == 'default':
+        interpolation_mode = InterpolationModes.MEDIAN \
+            if layer_name == 'color' else InterpolationModes.MODE
+    else:
+        interpolation_mode = InterpolationModes[
+            interpolation_mode.upper()]
+
+    target_mag = 2
+    while target_mag <= int(max_mag):
+        source_mag = target_mag // 2
+        source_wkw_info = WkwDatasetInfo(
+            path, layer_name, dtype, source_mag)
+        target_wkw_info = WkwDatasetInfo(
+            path, layer_name, dtype, target_mag)
+        downsample(source_wkw_info, target_wkw_info, source_mag,
+                   target_mag, interpolation_mode, jobs)
+        target_mag = target_mag * 2
 
 if __name__ == '__main__':
     args = create_parser().parse_args()
+    downsample_mags(args.path, args.layer_name, args.max, args.dtype, args.interpolation_mode, args.jobs, args.verbose)
 
-    if args.verbose:
-        logging.basicConfig(level=logging.DEBUG)
-
-    interpolation_mode = None
-    if args.interpolation_mode == 'default':
-        interpolation_mode = InterpolationModes.MEDIAN \
-            if args.layer_name == 'color' else InterpolationModes.MODE
-    else:
-        interpolation_mode = InterpolationModes[
-            args.interpolation_mode.upper()]
-
-    target_mag = 2
-    while target_mag <= int(args.max):
-        source_mag = target_mag // 2
-        source_wkw_info = WkwDatasetInfo(
-            args.path, args.layer_name, args.dtype, source_mag)
-        target_wkw_info = WkwDatasetInfo(
-            args.path, args.layer_name, args.dtype, target_mag)
-        downsample(source_wkw_info, target_wkw_info, source_mag,
-                   target_mag, interpolation_mode, args.jobs)
-        target_mag = target_mag * 2
+    
