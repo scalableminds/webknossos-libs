@@ -56,34 +56,30 @@ def compress_file_job(source_path, target_path):
     logging.debug("Converting of '{}' took {:.8f}s".format(
         source_path, time.time() - ref_time))
 
-
-if __name__ == '__main__':
-    args = create_parser().parse_args()
-
-    if args.verbose:
+def compress(source_path, layer_name, target_path=None, mags=None, jobs=1, verbose=False):
+    if verbose:
         logging.basicConfig(level=logging.DEBUG)
 
-    with_tmp_dir = args.target_path is None
-    target_path = args.source_path + '.tmp' if with_tmp_dir else args.target_path
+    with_tmp_dir = target_path is None
+    target_path = source_path + '.tmp' if with_tmp_dir else target_path
 
     if path.exists(target_path):
         logging.error("Target path '{}' already exists".format(target_path))
         exit(1)
 
-    mags = args.mag
     if mags is None:
-        mags = list(detect_resolutions(args.source_path, args.layer_name))
+        mags = list(detect_resolutions(source_path, layer_name))
     mags.sort()
 
     for mag in mags:
         source_wkw_info = WkwDatasetInfo(
-            args.source_path, args.layer_name, None, mag)
-        target_mag_path = path.join(target_path, args.layer_name, str(mag))
+            source_path, layer_name, None, mag)
+        target_mag_path = path.join(target_path, layer_name, str(mag))
         logging.info("Compressing mag {0} in '{1}'".format(
             mag, target_mag_path))
 
         with open_wkw(source_wkw_info) as source_wkw, \
-                ParallelExecutor(args.jobs) as pool:
+                ParallelExecutor(jobs) as pool:
             source_wkw.compress(target_mag_path)
             for file in source_wkw.list_files():
                 rel_file = path.relpath(file, source_wkw.root)
@@ -93,12 +89,19 @@ if __name__ == '__main__':
         logging.info("Mag {0} succesfully compressed".format(mag))
 
     if with_tmp_dir:
-        makedirs(path.join(args.source_path + '.bak', args.layer_name))
+        makedirs(path.join(source_path + '.bak', layer_name))
         for mag in mags:
             shutil.move(
-                path.join(args.source_path, args.layer_name, str(mag)),
-                path.join(args.source_path + '.bak', args.layer_name, str(mag)))
+                path.join(source_path, layer_name, str(mag)),
+                path.join(source_path + '.bak', layer_name, str(mag)))
             shutil.move(
-                path.join(target_path, args.layer_name, str(mag)),
-                path.join(args.source_path, args.layer_name, str(mag)))
+                path.join(target_path, layer_name, str(mag)),
+                path.join(source_path, layer_name, str(mag)))
         shutil.rmtree(target_path)
+
+
+if __name__ == '__main__':
+    args = create_parser().parse_args()
+    compress(args.source_path, args.layer_name, args.target_path, args.mag, args.jobs, args.verbose)
+
+    

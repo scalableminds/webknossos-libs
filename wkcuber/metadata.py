@@ -11,12 +11,13 @@ from os import path, makedirs, listdir
 def write_webknossos_metadata(dataset_path,
                               name,
                               scale,
-                              layers):
+                              skip_max_id=False):
 
     # Generate a metadata file for webKnossos
     # Currently have no source of information for team
     datasource_properties_path = path.join(
         dataset_path, 'datasource-properties.json')
+    layers = list(detect_layers(dataset_path, skip_max_id))
     with open(datasource_properties_path, 'wt') as datasource_properties_json:
         json.dump({
             'id': {
@@ -98,12 +99,23 @@ def detect_standard_layer(dataset_path, layer_name):
         'wkwResolutions': list(resolutions),
     }
 
+def detect_segmentation_layer(dataset_path, layer_name, skip_max_id):
+    layer_info = detect_standard_layer(dataset_path, layer_name)
+    layer_info['mappings'] = []
+    layer_info['largestSegmentId'] = 128
+    if not skip_max_id:
+        layer_path = path.join(dataset_path, layer_name, '1')
+        with wkw.Dataset.open(layer_path) as dataset:
+            bbox = layer_info['boundingBox']
+            layer_info['largestSegmentId'] = int(np.max(dataset.read([0, 0, 0],
+                                                     [bbox['width'], bbox['height'], bbox['depth']])))
+    return layer_info
 
-def detect_layers(dataset_path):
+def detect_layers(dataset_path, skip_max_id):
     if path.exists(path.join(dataset_path, 'color')):
         yield detect_standard_layer(dataset_path, 'color')
     if path.exists(path.join(dataset_path, 'segmentation')):
-        yield detect_standard_layer(dataset_path, 'segmentation')
+        yield detect_segmentation_layer(dataset_path, 'segmentation', skip_max_id)
 
 
 def create_parser():
@@ -122,11 +134,16 @@ def create_parser():
         help="Scale of the dataset (e.g. 11.2,11.2,25)",
         default="1,1,1")
 
+    parser.add_argument(
+        '--skip_max_id',
+        help="Skip max id computation of segmentation",
+        default=False,
+        action="store_true")
+
     return parser
 
 
 if __name__ == '__main__':
     args = create_parser().parse_args()
     scale = tuple(float(x) for x in args.scale.split(","))
-    write_webknossos_metadata(args.path, args.name,
-                              scale, list(detect_layers(args.path)))
+    write_webknossos_metadata(args.path, args.name, scale, args.skip_max_id)
