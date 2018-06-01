@@ -58,26 +58,37 @@ def create_parser():
 
     return parser
 
+def read_image_file(file_name):
+    try:
+        this_layer = np.array(Image.open(file_name))
+        this_layer = this_layer.swapaxes(0, 1)
+        this_layer = this_layer.reshape(this_layer.shape + (1,))
+        return this_layer
+    except Exception as exc:
+        logging.error("Reading of z={} failed with {}".format(z, exc))
+        raise exc
+
 
 def cubing_job(target_wkw_info, z_slice, source_file_slice):
-    logging.info(z_slice)
+    if len(z_slice) == 0:
+        return
+
+    # logging.info(z_slice)
     with open_wkw(target_wkw_info) as target_wkw:
-        for z, file_name in zip(z_slice, source_file_slice):
-            try:
-                logging.info("Cubing z={}".format(z))
-                ref_time = time.time()
+        try:
+            ref_time = time.time()
+            logging.info("Cubing z={}-{}".format(z_slice[0], z_slice[-1]))
+            buffer = []
+            for z, file_name in zip(z_slice, source_file_slice):
+                buffer.append(read_image_file(file_name))
 
-                this_layer = np.array(Image.open(file_name))
-                this_layer = this_layer.swapaxes(0, 1)
-                this_layer = this_layer.reshape(this_layer.shape + (1,))
+            target_wkw.write([0, 0, z_slice[0]], np.dstack(buffer))
+            logging.debug("Cubing of z={}-{} took {:.8f}s".format(
+                        z_slice[0], z_slice[-1], time.time() - ref_time))
 
-                target_wkw.write([0, 0, z], this_layer)
-
-                logging.debug("Cubing of z={} took {:.8f}s".format(
-                    z, time.time() - ref_time))
-            except Exception as exc:
-                logging.error("Cubing of z={} failed with {}".format(z, exc))
-                raise exc
+        except Exception as exc:
+            logging.error("Cubing of z={}-{} failed with {}".format(z_slice[0], z_slice[-1], exc))
+            raise exc
 
 
 if __name__ == '__main__':
