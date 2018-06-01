@@ -7,6 +7,7 @@ from os import path, listdir
 from PIL import Image
 
 from .utils import \
+    get_chunks, \
     add_verbose_flag, add_jobs_flag, \
     open_wkw, WkwDatasetInfo, ParallelExecutor
 
@@ -53,6 +54,11 @@ def create_parser():
         help="Target datatype (e.g. uint8, uint16, uint32)",
         default="uint8")
 
+    parser.add_argument(
+        '--buffer_slices', '-b',
+        help="Number of slices to buffer per job",
+        default=BLOCK_LEN)
+
     add_verbose_flag(parser)
     add_jobs_flag(parser)
 
@@ -69,26 +75,27 @@ def read_image_file(file_name):
         raise exc
 
 
-def cubing_job(target_wkw_info, z_slice, source_file_slice):
-    if len(z_slice) == 0:
+def cubing_job(target_wkw_info, _z_slice, source_file_slice, buffer_slices):
+    if len(_z_slice) == 0:
         return
 
     # logging.info(z_slice)
     with open_wkw(target_wkw_info) as target_wkw:
-        try:
-            ref_time = time.time()
-            logging.info("Cubing z={}-{}".format(z_slice[0], z_slice[-1]))
-            buffer = []
-            for z, file_name in zip(z_slice, source_file_slice):
-                buffer.append(read_image_file(file_name))
+        for z_slice in get_chunks(_z_slice, buffer_slices):
+            try:
+                ref_time = time.time()
+                logging.info("Cubing z={}-{}".format(z_slice[0], z_slice[-1]))
+                buffer = []
+                for z, file_name in zip(z_slice, source_file_slice):
+                    buffer.append(read_image_file(file_name))
 
-            target_wkw.write([0, 0, z_slice[0]], np.dstack(buffer))
-            logging.debug("Cubing of z={}-{} took {:.8f}s".format(
-                        z_slice[0], z_slice[-1], time.time() - ref_time))
+                target_wkw.write([0, 0, z_slice[0]], np.dstack(buffer))
+                logging.debug("Cubing of z={}-{} took {:.8f}s".format(
+                            z_slice[0], z_slice[-1], time.time() - ref_time))
 
-        except Exception as exc:
-            logging.error("Cubing of z={}-{} failed with {}".format(z_slice[0], z_slice[-1], exc))
-            raise exc
+            except Exception as exc:
+                logging.error("Cubing of z={}-{} failed with {}".format(z_slice[0], z_slice[-1], exc))
+                raise exc
 
 
 if __name__ == '__main__':
@@ -107,4 +114,4 @@ if __name__ == '__main__':
         for z in range(0, num_z, BLOCK_LEN):
             max_z = min(num_z, z + BLOCK_LEN)
             pool.submit(cubing_job, target_wkw_info, list(
-                range(z, max_z)), source_files[z:max_z])
+                range(z, max_z)), source_files[z:max_z], int(args.buffer_slices))

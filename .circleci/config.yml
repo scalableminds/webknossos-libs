@@ -27,6 +27,7 @@ jobs:
               scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
               wkcuber.cubing \
               --verbose \
+              --buffer_slices 8 \
               --layer_name color \
               /testdata/tiff /testoutput/tiff
             [ -d testoutput/tiff/color ]
