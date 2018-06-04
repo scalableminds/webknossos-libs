@@ -63,17 +63,21 @@ def cubing_job(target_wkw_info, z_slice, source_file_slice):
     logging.info(z_slice)
     with open_wkw(target_wkw_info) as target_wkw:
         for z, file_name in zip(z_slice, source_file_slice):
-            logging.info("Cubing z={}".format(z))
-            ref_time = time.time()
+            try:
+                logging.info("Cubing z={}".format(z))
+                ref_time = time.time()
 
-            this_layer = np.array(Image.open(file_name))
-            this_layer = this_layer.swapaxes(0, 1)
-            this_layer = this_layer.reshape(this_layer.shape + (1,))
+                this_layer = np.array(Image.open(file_name))
+                this_layer = this_layer.swapaxes(0, 1)
+                this_layer = this_layer.reshape(this_layer.shape + (1,))
 
-            target_wkw.write([0, 0, z], this_layer)
+                target_wkw.write([0, 0, z], this_layer)
 
-            logging.debug("Cubing of {} took {:.8f}s".format(
-                z, time.time() - ref_time))
+                logging.debug("Cubing of z={} took {:.8f}s".format(
+                    z, time.time() - ref_time))
+            except Exception as exc:
+                logging.error("Cubing of z={} failed with {}".format(z, exc))
+                raise exc
 
 
 if __name__ == '__main__':

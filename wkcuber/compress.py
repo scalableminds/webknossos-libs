@@ -43,18 +43,22 @@ def create_parser():
 
 
 def compress_file_job(source_path, target_path):
-    logging.info("Compressing '{}' to '{}'".format(source_path, target_path))
-    ref_time = time.time()
+    try:
+        logging.info("Compressing '{}' to '{}'".format(source_path, target_path))
+        ref_time = time.time()
 
-    makedirs(path.dirname(target_path), exist_ok=True)
-    wkw.File.compress(source_path, target_path)
+        makedirs(path.dirname(target_path), exist_ok=True)
+        wkw.File.compress(source_path, target_path)
 
-    if not path.exists(target_path):
-        raise Exception(
-            "Did not create compressed file {}".format(target_path))
+        if not path.exists(target_path):
+            raise Exception(
+                "Did not create compressed file {}".format(target_path))
 
-    logging.debug("Converting of '{}' took {:.8f}s".format(
-        source_path, time.time() - ref_time))
+        logging.debug("Compressing of '{}' took {:.8f}s".format(
+            source_path, time.time() - ref_time))
+    except Exception as exc:
+        logging.error("Compressing of '{}' failed with {}".format(source_path, exc))
+        raise exc
 
 def compress(source_path, layer_name, target_path=None, mags=None, jobs=1, verbose=False):
     if verbose:

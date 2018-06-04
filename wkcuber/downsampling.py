@@ -108,25 +108,28 @@ def downsample(source_wkw_info, target_wkw_info, source_mag, target_mag, interpo
 
 def downsample_cube_job(source_wkw_info, target_wkw_info, factor, interpolation_mode,
                         cube_x, cube_y, cube_z):
+    try:
+        logging.debug("Downsampling {},{},{}".format(
+            cube_x, cube_y, cube_z))
 
-    logging.debug("Downsampling {},{},{}".format(
-        cube_x, cube_y, cube_z))
+        with open_wkw(source_wkw_info) as source_wkw, open_wkw(target_wkw_info) as target_wkw:
+            source_offset = tuple(
+                a * CUBE_EDGE_LEN for a in (cube_x, cube_y, cube_z))
+            target_offset = tuple(a // factor for a in source_offset)
 
-    with open_wkw(source_wkw_info) as source_wkw, open_wkw(target_wkw_info) as target_wkw:
-        source_offset = tuple(
-            a * CUBE_EDGE_LEN for a in (cube_x, cube_y, cube_z))
-        target_offset = tuple(a // factor for a in source_offset)
+            ref_time = time.time()
+            cube_buffer = source_wkw.read(source_offset, (CUBE_EDGE_LEN,) * 3)[0]
+            if np.all(cube_buffer == 0):
+                logging.debug("Skipping empty cube {},{},{}".format(
+                    cube_x, cube_y, cube_z))
+            cube_data = downsample_cube(cube_buffer, factor, interpolation_mode)
+            target_wkw.write(target_offset, cube_data)
 
-        ref_time = time.time()
-        cube_buffer = source_wkw.read(source_offset, (CUBE_EDGE_LEN,) * 3)[0]
-        if np.all(cube_buffer == 0):
-            logging.debug("Skipping empty cube {},{},{}".format(
-                cube_x, cube_y, cube_z))
-        cube_data = downsample_cube(cube_buffer, factor, interpolation_mode)
-        target_wkw.write(target_offset, cube_data)
-
-    logging.debug("Downsampling of {},{},{} took {:.8f}s".format(
-        cube_x, cube_y, cube_z, time.time() - ref_time))
+        logging.debug("Downsampling of {},{},{} took {:.8f}s".format(
+            cube_x, cube_y, cube_z, time.time() - ref_time))
+    except Exception as exc:
+        logging.error("Downsampling of {},{},{} failed with {}".format(cube_x, cube_y, cube_z, exc))
+        raise exc
 
 
 def non_linear_filter_3d(data, factor, func):
