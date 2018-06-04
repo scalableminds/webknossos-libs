@@ -36,6 +36,11 @@ def add_verbose_flag(parser):
     parser.set_defaults(verbose=False)
 
 
+def get_chunks(arr, chunk_size):
+    for i in range(0, len(arr), chunk_size):
+        yield arr[i:i + chunk_size]
+
+
 def add_jobs_flag(parser):
     parser.add_argument(
         '--jobs', '-j',
