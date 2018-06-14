@@ -75,13 +75,14 @@ def read_image_file(file_name, dtype):
         raise exc
 
 
-def cubing_job(target_wkw_info, _z_slice, source_file_slice, buffer_slices):
+def cubing_job(target_wkw_info, _z_slice, _source_file_slice, buffer_slices):
     if len(_z_slice) == 0:
         return
 
     # logging.info(z_slice)
     with open_wkw(target_wkw_info) as target_wkw:
-        for z_slice in get_chunks(_z_slice, buffer_slices):
+        for z_slice, source_file_slice in zip(get_chunks(_z_slice, buffer_slices),
+                                              get_chunks(_source_file_slice, buffer_slices)):
             try:
                 ref_time = time.time()
                 logging.info("Cubing z={}-{}".format(z_slice[0], z_slice[-1]))
