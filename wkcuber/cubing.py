@@ -64,9 +64,9 @@ def create_parser():
 
     return parser
 
-def read_image_file(file_name):
+def read_image_file(file_name, dtype):
     try:
-        this_layer = np.array(Image.open(file_name))
+        this_layer = np.array(Image.open(file_name), np.dtype(dtype))
         this_layer = this_layer.swapaxes(0, 1)
         this_layer = this_layer.reshape(this_layer.shape + (1,))
         return this_layer
@@ -88,7 +88,7 @@ def cubing_job(target_wkw_info, _z_slice, _source_file_slice, buffer_slices):
                 logging.info("Cubing z={}-{}".format(z_slice[0], z_slice[-1]))
                 buffer = []
                 for z, file_name in zip(z_slice, source_file_slice):
-                    buffer.append(read_image_file(file_name))
+                    buffer.append(read_image_file(file_name, target_wkw_info.dtype))
 
                 target_wkw.write([0, 0, z_slice[0]], np.dstack(buffer))
                 logging.debug("Cubing of z={}-{} took {:.8f}s".format(
