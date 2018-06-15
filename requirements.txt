@@ -2,4 +2,5 @@ scipy
 numpy
 pillow
 pyyaml
+pytest
 wkw

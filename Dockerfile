@@ -51,6 +51,7 @@ RUN mkdir /app
 WORKDIR /app
 
 COPY wkcuber /app/wkcuber
+COPY tests /app/tests
 COPY requirements.txt /app
 COPY setup.py /app
 
