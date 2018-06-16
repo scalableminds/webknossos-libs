@@ -89,7 +89,6 @@ def cubing_job(target_wkw_info, _z_slice, _source_file_slice, buffer_slices, ima
                 buffer = []
                 for z, file_name in zip(z_slice, source_file_slice):
                     image = read_image_file(file_name, target_wkw_info.dtype)
-                    logging.debug("z={} real={}, expected={}".format(z, image.shape, image_size))
                     assert image.shape[0:2] == image_size, "Slice z={} has the wrong dimensions: {} (expected {}).".format(z, image.shape, image_size)
                     buffer.append(image)
 
