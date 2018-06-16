@@ -75,7 +75,7 @@ def read_image_file(file_name, dtype):
         raise exc
 
 
-def cubing_job(target_wkw_info, _z_slice, _source_file_slice, buffer_slices):
+def cubing_job(target_wkw_info, _z_slice, _source_file_slice, buffer_slices, image_size):
     if len(_z_slice) == 0:
         return
 
@@ -88,7 +88,10 @@ def cubing_job(target_wkw_info, _z_slice, _source_file_slice, buffer_slices):
                 logging.info("Cubing z={}-{}".format(z_slice[0], z_slice[-1]))
                 buffer = []
                 for z, file_name in zip(z_slice, source_file_slice):
-                    buffer.append(read_image_file(file_name, target_wkw_info.dtype))
+                    image = read_image_file(file_name, target_wkw_info.dtype)
+                    logging.debug("z={} real={}, expected={}".format(z, image.shape, image_size))
+                    assert image.shape[0:2] == image_size, "Slice z={} has the wrong dimensions: {} (expected {}).".format(z, image.shape, image_size)
+                    buffer.append(image)
 
                 target_wkw.write([0, 0, z_slice[0]], np.dstack(buffer))
                 logging.debug("Cubing of z={}-{} took {:.8f}s".format(
@@ -115,4 +118,4 @@ if __name__ == '__main__':
         for z in range(0, num_z, BLOCK_LEN):
             max_z = min(num_z, z + BLOCK_LEN)
             pool.submit(cubing_job, target_wkw_info, list(
-                range(z, max_z)), source_files[z:max_z], int(args.buffer_slices))
+                range(z, max_z)), source_files[z:max_z], int(args.buffer_slices), (num_x, num_y))
