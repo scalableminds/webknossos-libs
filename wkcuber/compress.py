@@ -44,7 +44,7 @@ def create_parser():
 
 def compress_file_job(source_path, target_path):
     try:
-        logging.info("Compressing '{}' to '{}'".format(source_path, target_path))
+        logging.debug("Compressing '{}' to '{}'".format(source_path, target_path))
         ref_time = time.time()
 
         makedirs(path.dirname(target_path), exist_ok=True)
@@ -107,5 +107,5 @@ def compress(source_path, layer_name, target_path=None, mags=None, jobs=1, verbo
 if __name__ == '__main__':
     args = create_parser().parse_args()
     compress(args.source_path, args.layer_name, args.target_path, args.mag, args.jobs, args.verbose)
+    logging.info("Old files are still present in '{0}.bak'. Please remove them when not required anymore.".format(args.source_path))
 
-    

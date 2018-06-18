@@ -15,6 +15,25 @@ jobs:
           name: Build docker image
           command: docker build -t "scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM}" .
 
+
+      - run:
+          name: Decompress test data
+          command: tar -xzvf testdata/WT1_wkw.tar.gz
+
+      - run:
+          name: Python tests
+          command: |
+            set -x
+            mkdir -p testoutput
+            docker run \
+              -v "${PWD}/testdata:/testdata" \
+              -v "${PWD}/testoutput:/testoutput" \
+              --rm \
+              --entrypoint "/bin/bash" \
+              -w "/" \
+              scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
+              -c "py.test /app/tests"
+
       - run:
           name: Test tiff cubing
           command: |

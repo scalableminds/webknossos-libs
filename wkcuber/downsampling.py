@@ -25,6 +25,8 @@ class InterpolationModes(Enum):
     NEAREST = 2
     BILINEAR = 3
     BICUBIC = 4
+    MAX = 5
+    MIN = 6
 
 
 def create_parser():
@@ -90,45 +92,47 @@ def downsample(source_wkw_info, target_wkw_info, source_mag, target_mag, interpo
         target_mag, source_mag))
 
     factor = int(target_mag / source_mag)
-    cube_coordinates = list(set(tuple(x // factor for x in xyz)
-                                for xyz in cube_addresses(source_wkw_info)))
-    cube_coordinates.sort()
-    logging.info("Found cubes: count={} size={} min={} max={}".format(len(
-        cube_coordinates), (CUBE_EDGE_LEN,) * 3, min(cube_coordinates), max(cube_coordinates)))
+    source_cube_addresses = cube_addresses(source_wkw_info)
+    target_cube_addresses = list(set(tuple(x // factor for x in xyz)
+                                for xyz in source_cube_addresses))
+    target_cube_addresses.sort()
+    logging.debug("Found source cubes: count={} size={} min={} max={}".format(len(
+        source_cube_addresses), (CUBE_EDGE_LEN,) * 3, min(source_cube_addresses), max(source_cube_addresses)))
+    logging.debug("Found target cubes: count={} size={} min={} max={}".format(len(
+        target_cube_addresses), (CUBE_EDGE_LEN,) * 3, min(target_cube_addresses), max(target_cube_addresses)))
 
     with ParallelExecutor(jobs) as pool:
-        for cube_x, cube_y, cube_z in cube_coordinates:
+        for target_cube_xyz in target_cube_addresses:
             pool.submit(downsample_cube_job,
                         source_wkw_info, target_wkw_info,
                         factor, interpolation_mode,
-                        cube_x, cube_y, cube_z)
+                        target_cube_xyz)
 
     logging.info("Mag {0} succesfully cubed".format(target_mag))
 
 
 def downsample_cube_job(source_wkw_info, target_wkw_info, factor, interpolation_mode,
-                        cube_x, cube_y, cube_z):
+                        target_cube_xyz):
     try:
-        logging.debug("Downsampling {},{},{}".format(
-            cube_x, cube_y, cube_z))
+        logging.debug("Downsampling {}".format(target_cube_xyz))
 
         with open_wkw(source_wkw_info) as source_wkw, open_wkw(target_wkw_info) as target_wkw:
-            source_offset = tuple(
-                a * CUBE_EDGE_LEN for a in (cube_x, cube_y, cube_z))
-            target_offset = tuple(a // factor for a in source_offset)
+            target_offset = tuple(a * CUBE_EDGE_LEN for a in target_cube_xyz)
+            source_offset = tuple(a * factor for a in target_offset)
 
             ref_time = time.time()
-            cube_buffer = source_wkw.read(source_offset, (CUBE_EDGE_LEN,) * 3)[0]
+            cube_buffer = source_wkw.read(source_offset, (CUBE_EDGE_LEN * factor,) * 3)
+            assert cube_buffer.shape[0] == 1, "Only single-channel data is supported"
+            cube_buffer = cube_buffer[0]
             if np.all(cube_buffer == 0):
-                logging.debug("Skipping empty cube {},{},{}".format(
-                    cube_x, cube_y, cube_z))
+                logging.debug("Skipping empty cube {}".format(target_cube_xyz))
             cube_data = downsample_cube(cube_buffer, factor, interpolation_mode)
             target_wkw.write(target_offset, cube_data)
 
-        logging.debug("Downsampling of {},{},{} took {:.8f}s".format(
-            cube_x, cube_y, cube_z, time.time() - ref_time))
+        logging.debug("Downsampling of {} took {:.8f}s".format(
+            target_cube_xyz, time.time() - ref_time))
     except Exception as exc:
-        logging.error("Downsampling of {},{},{} failed with {}".format(cube_x, cube_y, cube_z, exc))
+        logging.error("Downsampling of {} failed with {}".format(target_cube_xyz, exc))
         raise exc
 
 
@@ -171,6 +175,13 @@ def linear_filter_3d(data, factor, order):
                 mode='nearest',
                 prefilter=True)
 
+def _max(x):
+    return np.max(x, axis=0)
+
+
+def _min(x):
+    return np.min(x, axis=0)
+
 
 def _median(x):
     return np.median(x, axis=0).astype(x.dtype)
@@ -191,6 +202,10 @@ def downsample_cube(cube_buffer, factor, interpolation_mode):
         return linear_filter_3d(cube_buffer, factor, 1)
     elif interpolation_mode == InterpolationModes.BICUBIC:
         return linear_filter_3d(cube_buffer, factor, 2)
+    elif interpolation_mode == InterpolationModes.MAX:
+        return non_linear_filter_3d(cube_buffer, factor, _max)
+    elif interpolation_mode == InterpolationModes.MIN:
+        return non_linear_filter_3d(cube_buffer, factor, _min)
     else:
         raise Exception(
             "Invalid interpolation mode: {}".format(interpolation_mode))
@@ -221,4 +236,3 @@ if __name__ == '__main__':
     args = create_parser().parse_args()
     downsample_mags(args.path, args.layer_name, args.max, args.dtype, args.interpolation_mode, args.jobs, args.verbose)
 
-    

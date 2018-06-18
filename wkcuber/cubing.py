@@ -112,6 +112,7 @@ if __name__ == '__main__':
     source_files = find_source_filenames(args.source_path)
     num_x, num_y, num_z = determine_source_dims_from_images(source_files)
 
+    logging.info("Found source files: count={} size={}x{}".format(num_z, num_x, num_y))
     with ParallelExecutor(args.jobs) as pool:
         # we iterate over the z layers
         for z in range(0, num_z, BLOCK_LEN):
