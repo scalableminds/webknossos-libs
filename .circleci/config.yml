@@ -74,6 +74,7 @@ jobs:
             [ -d testoutput/tiff2/color ]
             [ -d testoutput/tiff2/color/1 ]
             [ $(find testoutput/tiff2/color/1 -mindepth 3 -name "*.wkw" | wc -l) -eq 1 ]
+            [ -e testoutput/tiff2/datasource-properties.json ]
 
       - run:
           name: Test KNOSSOS conversion

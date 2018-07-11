@@ -16,7 +16,7 @@ from .utils import \
     add_jobs_flag, add_verbose_flag, \
     open_wkw, WkwDatasetInfo, ParallelExecutor
 
-CUBE_EDGE_LEN = 256
+CUBE_EDGE_LEN = 128
 
 
 class InterpolationModes(Enum):
