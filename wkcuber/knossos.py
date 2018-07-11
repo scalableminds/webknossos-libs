@@ -7,7 +7,6 @@ CUBE_EDGE_LEN = 128
 
 
 class KnossosDataset:
-
     def __init__(self, root, dtype=np.uint8):
         self.root = root
         self.dtype = dtype
@@ -36,33 +35,39 @@ class KnossosDataset:
             return np.zeros((CUBE_EDGE_LEN,) * 3, dtype=self.dtype)
         with open(filename, "rb") as cube_file:
             cube_data = np.fromfile(cube_file, dtype=self.dtype).reshape(
-                (CUBE_EDGE_LEN,) * 3, order="F")
+                (CUBE_EDGE_LEN,) * 3, order="F"
+            )
             return cube_data
 
     def write_cube(self, cube_xyz, cube_data):
         filename = self.__get_only_raw_file_path(cube_xyz)
         if filename is None:
-            filename = path.join(self.__get_cube_folder(
-                cube_xyz), self.__get_cube_file_name(cube_xyz))
+            filename = path.join(
+                self.__get_cube_folder(cube_xyz), self.__get_cube_file_name(cube_xyz)
+            )
         with open(filename, "wb") as cube_file:
             cube_data.ravel(order="F").tofile(cube_file)
 
     def __get_cube_folder(self, cube_xyz):
         x, y, z = cube_xyz
-        return path.join(self.root, 'x{:04d}'.format(x), 'y{:04d}'.format(y), 'z{:04d}'.format(z))
+        return path.join(
+            self.root, "x{:04d}".format(x), "y{:04d}".format(y), "z{:04d}".format(z)
+        )
 
     def __get_cube_file_name(self, cube_xyz):
         x, y, z = cube_xyz
-        return 'cube_x{:04d}_y{:04d}_z{:04d}.raw'.format(x, y, z)
+        return "cube_x{:04d}_y{:04d}_z{:04d}.raw".format(x, y, z)
 
     def __get_only_raw_file_path(self, cube_xyz):
         raw_files = glob(path.join(self.__get_cube_folder(cube_xyz), "*.raw"))
         assert len(raw_files) <= 1, "Found %d .raw files in %s" % (
-            len(raw_files), cube_folder)
+            len(raw_files),
+            cube_folder,
+        )
         return raw_files[0] if len(raw_files) > 0 else None
 
     def list_files(self):
-        return iglob(path.join(self.root, '**', '*.raw'), recursive=True)
+        return iglob(path.join(self.root, "**", "*.raw"), recursive=True)
 
     def __parse_cube_file_name(self, filename):
         CUBE_REGEX = re.compile("x(\d+)/y(\d+)/z(\d+)/(.*\.raw)$")
