@@ -275,15 +275,8 @@ def downsample_mags(path, layer_name, max_mag, dtype, interpolation_mode, jobs):
     target_mag = 2
     while target_mag <= int(max_mag):
         source_mag = target_mag // 2
-        source_wkw_info = WkwDatasetInfo(path, layer_name, dtype, source_mag)
-        target_wkw_info = WkwDatasetInfo(path, layer_name, dtype, target_mag)
-        downsample(
-            source_wkw_info,
-            target_wkw_info,
-            source_mag,
-            target_mag,
-            interpolation_mode,
-            jobs,
+        downsample_mag(
+            path, layer_name, source_mag, target_mag, dtype, interpolation_mode, jobs
         )
         target_mag = target_mag * 2
 
