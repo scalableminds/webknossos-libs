@@ -108,6 +108,11 @@ def compress_mags(source_path, layer_name, target_path=None, mags=None, jobs=1):
             path.join(source_path, layer_name, str(mag)),
         )
         shutil.rmtree(target_path)
+        logging.info(
+            "Old files are still present in '{0}.bak'. Please remove them when not required anymore.".format(
+                source_path
+            )
+        )
 
 
 if __name__ == "__main__":

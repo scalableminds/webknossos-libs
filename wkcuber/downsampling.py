@@ -275,17 +275,21 @@ def downsample_mags(path, layer_name, max_mag, dtype, interpolation_mode, jobs):
     target_mag = 2
     while target_mag <= int(max_mag):
         source_mag = target_mag // 2
-        downsample_mag(
-            path, layer_name, source_mag, target_mag, dtype, interpolation_mode, jobs
+        source_wkw_info = WkwDatasetInfo(path, layer_name, dtype, source_mag)
+        target_wkw_info = WkwDatasetInfo(path, layer_name, dtype, target_mag)
+        downsample(
+            source_wkw_info,
+            target_wkw_info,
+            source_mag,
+            target_mag,
+            interpolation_mode,
+            jobs,
         )
         target_mag = target_mag * 2
 
 
 if __name__ == "__main__":
     args = create_parser().parse_args()
-    if args.verbose:
-        logging.basicConfig(level=logging.DEBUG)
-
     downsample_mags(
         args.path,
         args.layer_name,
