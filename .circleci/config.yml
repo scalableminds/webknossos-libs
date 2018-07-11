@@ -21,6 +21,17 @@ jobs:
           command: tar -xzvf testdata/WT1_wkw.tar.gz
 
       - run:
+          name: Check formatting
+          command: |
+            set -x
+            docker run \
+              --rm \
+              --entrypoint "/bin/bash" \
+              -w "/" \
+              scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
+              -c "black --check /app/wkcuber"
+
+      - run:
           name: Python tests
           command: |
             set -x
