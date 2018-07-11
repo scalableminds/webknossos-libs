@@ -38,7 +38,7 @@ def create_parser():
         default=BLOCK_LEN)
 
     parser.add_argument(
-        '--max', '-m',
+        '--max_mag', '-m',
         help="Max resolution to be downsampled. Needs to be a power of 2.",
         default=512)
 
@@ -80,7 +80,7 @@ if __name__ == '__main__':
     compress_mag_inplace(args.target_path, args.layer_name, 1, args.jobs)
     
     target_mag = 2
-    while target_mag <= int(args.max):
+    while target_mag <= int(args.max_mag):
       source_mag = target_mag // 2
       downsample_mag(args.target_path, args.layer_name, source_mag, target_mag, args.dtype, 'default', args.jobs)
       compress_mag_inplace(args.target_path, args.layer_name, target_mag, args.jobs)
