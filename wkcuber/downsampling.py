@@ -16,7 +16,7 @@ from .utils import \
     add_jobs_flag, add_verbose_flag, \
     open_wkw, WkwDatasetInfo, ParallelExecutor
 
-CUBE_EDGE_LEN = 128
+CUBE_EDGE_LEN = 256
 
 
 class InterpolationModes(Enum):
@@ -210,10 +210,7 @@ def downsample_cube(cube_buffer, factor, interpolation_mode):
         raise Exception(
             "Invalid interpolation mode: {}".format(interpolation_mode))
 
-def downsample_mags(path, layer_name, max_mag, dtype='uint8', interpolation_mode='default', jobs=1, verbose=False):
-    if verbose:
-        logging.basicConfig(level=logging.DEBUG)
-
+def downsample_mag(path, layer_name, source_mag, target_mag, dtype='uint8', interpolation_mode='default', jobs=1):
     if interpolation_mode == 'default':
         interpolation_mode = InterpolationModes.MEDIAN \
             if layer_name == 'color' else InterpolationModes.MODE
@@ -221,18 +218,24 @@ def downsample_mags(path, layer_name, max_mag, dtype='uint8', interpolation_mode
         interpolation_mode = InterpolationModes[
             interpolation_mode.upper()]
 
+    source_wkw_info = WkwDatasetInfo(
+        path, layer_name, dtype, source_mag)
+    target_wkw_info = WkwDatasetInfo(
+        path, layer_name, dtype, target_mag)
+    downsample(source_wkw_info, target_wkw_info, source_mag,
+                   target_mag, interpolation_mode, jobs)
+
+def downsample_mags(path, layer_name, max_mag, dtype, interpolation_mode, jobs):
     target_mag = 2
     while target_mag <= int(max_mag):
         source_mag = target_mag // 2
-        source_wkw_info = WkwDatasetInfo(
-            path, layer_name, dtype, source_mag)
-        target_wkw_info = WkwDatasetInfo(
-            path, layer_name, dtype, target_mag)
-        downsample(source_wkw_info, target_wkw_info, source_mag,
-                   target_mag, interpolation_mode, jobs)
+        downsample_mag(path, layer_name, source_mag, target_mag, dtype, interpolation_mode, jobs)
         target_mag = target_mag * 2
 
 if __name__ == '__main__':
     args = create_parser().parse_args()
-    downsample_mags(args.path, args.layer_name, args.max, args.dtype, args.interpolation_mode, args.jobs, args.verbose)
+    if args.verbose:
+        logging.basicConfig(level=logging.DEBUG)
+
+    downsample_mags(args.path, args.layer_name, args.max, args.dtype, args.interpolation_mode, args.jobs)
 

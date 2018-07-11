@@ -92,6 +92,7 @@ def cubing_job(target_wkw_info, _z_slice, _source_file_slice, buffer_slices, ima
                     assert image.shape[0:2] == image_size, "Slice z={} has the wrong dimensions: {} (expected {}).".format(z, image.shape, image_size)
                     buffer.append(image)
 
+                logging.debug([a.shape for a in buffer])
                 target_wkw.write([0, 0, z_slice[0]], np.dstack(buffer))
                 logging.debug("Cubing of z={}-{} took {:.8f}s".format(
                             z_slice[0], z_slice[-1], time.time() - ref_time))
@@ -100,6 +101,19 @@ def cubing_job(target_wkw_info, _z_slice, _source_file_slice, buffer_slices, ima
                 logging.error("Cubing of z={}-{} failed with {}".format(z_slice[0], z_slice[-1], exc))
                 raise exc
 
+def cubing(source_path, target_path, layer_name, dtype, buffer_slices, jobs):
+    target_wkw_info = WkwDatasetInfo(
+        target_path, layer_name, dtype, 1)
+    source_files = find_source_filenames(source_path)
+    num_x, num_y, num_z = determine_source_dims_from_images(source_files)
+
+    logging.info("Found source files: count={} size={}x{}".format(num_z, num_x, num_y))
+    with ParallelExecutor(jobs) as pool:
+        # we iterate over the z layers
+        for z in range(0, num_z, BLOCK_LEN):
+            max_z = min(num_z, z + BLOCK_LEN)
+            pool.submit(cubing_job, target_wkw_info, list(
+                range(z, max_z)), source_files[z:max_z], int(buffer_slices), (num_x, num_y))
 
 if __name__ == '__main__':
     args = create_parser().parse_args()
@@ -107,15 +121,4 @@ if __name__ == '__main__':
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG)
 
-    target_wkw_info = WkwDatasetInfo(
-        args.target_path, args.layer_name, args.dtype, 1)
-    source_files = find_source_filenames(args.source_path)
-    num_x, num_y, num_z = determine_source_dims_from_images(source_files)
-
-    logging.info("Found source files: count={} size={}x{}".format(num_z, num_x, num_y))
-    with ParallelExecutor(args.jobs) as pool:
-        # we iterate over the z layers
-        for z in range(0, num_z, BLOCK_LEN):
-            max_z = min(num_z, z + BLOCK_LEN)
-            pool.submit(cubing_job, target_wkw_info, list(
-                range(z, max_z)), source_files[z:max_z], int(args.buffer_slices), (num_x, num_y))
+    cubing(args.source_path, args.target_path, args.layer_name, args.dtype, args.buffer_slices, args.jobs)
