@@ -61,6 +61,10 @@ def compress_file_job(source_path, target_path):
         raise exc
 
 def compress_mag(source_path, layer_name, target_path, mag, jobs):
+    if path.exists(path.join(target_path, layer_name, str(mag))):
+        logging.error("Target path '{}' already exists".format(target_path))
+        exit(1)
+    
     source_wkw_info = WkwDatasetInfo(
         source_path, layer_name, None, mag)
     target_mag_path = path.join(target_path, layer_name, str(mag))
@@ -81,10 +85,6 @@ def compress_mag(source_path, layer_name, target_path, mag, jobs):
 def compress_mags(source_path, layer_name, target_path=None, mags=None, jobs=1):
     with_tmp_dir = target_path is None
     target_path = source_path + '.tmp' if with_tmp_dir else target_path
-
-    if path.exists(path.join(target_path, layer_name, str(mag))):
-        logging.error("Target path '{}' already exists".format(target_path))
-        exit(1)
 
     if mags is None:
         mags = list(detect_resolutions(source_path, layer_name))
@@ -108,6 +108,6 @@ if __name__ == '__main__':
     args = create_parser().parse_args()
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG)
-    compress_mag(args.source_path, args.layer_name, args.target_path, args.mag, args.jobs)
+    compress_mags(args.source_path, args.layer_name, args.target_path, args.mag, args.jobs)
     logging.info("Old files are still present in '{0}.bak'. Please remove them when not required anymore.".format(args.source_path))
 
