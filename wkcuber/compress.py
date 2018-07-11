@@ -68,49 +68,45 @@ def compress_file_job(source_path, target_path):
         raise exc
 
 
-def compress(
-    source_path, layer_name, target_path=None, mags=None, jobs=1, verbose=False
-):
-    if verbose:
-        logging.basicConfig(level=logging.DEBUG)
-
-    with_tmp_dir = target_path is None
-    target_path = source_path + ".tmp" if with_tmp_dir else target_path
-
-    if path.exists(target_path):
+def compress_mag(source_path, layer_name, target_path, mag, jobs):
+    if path.exists(path.join(target_path, layer_name, str(mag))):
         logging.error("Target path '{}' already exists".format(target_path))
         exit(1)
+
+    source_wkw_info = WkwDatasetInfo(source_path, layer_name, None, mag)
+    target_mag_path = path.join(target_path, layer_name, str(mag))
+    logging.info("Compressing mag {0} in '{1}'".format(mag, target_mag_path))
+
+    with open_wkw(source_wkw_info) as source_wkw, ParallelExecutor(jobs) as pool:
+        source_wkw.compress(target_mag_path)
+        for file in source_wkw.list_files():
+            rel_file = path.relpath(file, source_wkw.root)
+            pool.submit(compress_file_job, file, path.join(target_mag_path, rel_file))
+
+    logging.info("Mag {0} succesfully compressed".format(mag))
+
+
+def compress_mags(source_path, layer_name, target_path=None, mags=None, jobs=1):
+    with_tmp_dir = target_path is None
+    target_path = source_path + ".tmp" if with_tmp_dir else target_path
 
     if mags is None:
         mags = list(detect_resolutions(source_path, layer_name))
     mags.sort()
 
     for mag in mags:
-        source_wkw_info = WkwDatasetInfo(source_path, layer_name, None, mag)
-        target_mag_path = path.join(target_path, layer_name, str(mag))
-        logging.info("Compressing mag {0} in '{1}'".format(mag, target_mag_path))
-
-        with open_wkw(source_wkw_info) as source_wkw, ParallelExecutor(jobs) as pool:
-            source_wkw.compress(target_mag_path)
-            for file in source_wkw.list_files():
-                rel_file = path.relpath(file, source_wkw.root)
-                pool.submit(
-                    compress_file_job, file, path.join(target_mag_path, rel_file)
-                )
-
-        logging.info("Mag {0} succesfully compressed".format(mag))
+        compress_mag(source_path, layer_name, target_path, mag, jobs)
 
     if with_tmp_dir:
         makedirs(path.join(source_path + ".bak", layer_name))
-        for mag in mags:
-            shutil.move(
-                path.join(source_path, layer_name, str(mag)),
-                path.join(source_path + ".bak", layer_name, str(mag)),
-            )
-            shutil.move(
-                path.join(target_path, layer_name, str(mag)),
-                path.join(source_path, layer_name, str(mag)),
-            )
+        shutil.move(
+            path.join(source_path, layer_name, str(mag)),
+            path.join(source_path + ".bak", layer_name, str(mag)),
+        )
+        shutil.move(
+            path.join(target_path, layer_name, str(mag)),
+            path.join(source_path, layer_name, str(mag)),
+        )
         shutil.rmtree(target_path)
         logging.info(
             "Old files are still present in '{0}.bak'. Please remove them when not required anymore.".format(
@@ -121,11 +117,13 @@ def compress(
 
 if __name__ == "__main__":
     args = create_parser().parse_args()
-    compress(
-        args.source_path,
-        args.layer_name,
-        args.target_path,
-        args.mag,
-        args.jobs,
-        args.verbose,
+    if args.verbose:
+        logging.basicConfig(level=logging.DEBUG)
+    compress_mags(
+        args.source_path, args.layer_name, args.target_path, args.mag, args.jobs
+    )
+    logging.info(
+        "Old files are still present in '{0}.bak'. Please remove them when not required anymore.".format(
+            args.source_path
+        )
     )
