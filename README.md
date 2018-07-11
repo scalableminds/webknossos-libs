@@ -30,7 +30,7 @@ pip install wkcuber
 ```
 
 ### Docker
-Use the CI-built image: [scalableminds/webknossos-cuber](https://hub.docker.com/r/scalableminds/webknossos-cuber/). Example usage `docker run -v <host path>:/data --rm scalableminds/webknossos-cuber:wkw wkcuber --layer_name color --scale 11.24,11.24,25 --name great_dataset /data/source/color /data/target`.
+Use the CI-built image: [scalableminds/webknossos-cuber](https://hub.docker.com/r/scalableminds/webknossos-cuber/). Example usage `docker run -v <host path>:/data --rm scalableminds/webknossos-cuber wkcuber --layer_name color --scale 11.24,11.24,25 --name great_dataset /data/source/color /data/target`.
 
 
 ## Usage
