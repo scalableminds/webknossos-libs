@@ -10,11 +10,12 @@ Created with [Python3](https://www.python.org/).
 
 ## Features
 
-* `cubing`: Convert image stacks to WKW cubes (e.g., `tiff`, `jpg`, `png`)
-* `convert`: Convert KNOSSOS cubes to WKW cubes
-* `downsampling`: Create downsampled magnifications (with `median`, `mode` and linear interpolation modes)
-* `compress`: Compress WKW cubes for efficient file storage (especially useful for segmentation data)
-* `metadata`: Create metadata (with guessing of most parameters)
+* `wkcuber`: Convert image stacks to fully ready WKW datasets (includes downsampling, compressing and metedata generation)
+* `wkcuber.cubing`: Convert image stacks to WKW cubes (e.g., `tiff`, `jpg`, `png`)
+* `wkcuber.convert`: Convert KNOSSOS cubes to WKW cubes
+* `wkcuber.downsampling`: Create downsampled magnifications (with `median`, `mode` and linear interpolation modes)
+* `wkcuber.compress`: Compress WKW cubes for efficient file storage (especially useful for segmentation data)
+* `wkcuber.metadata`: Create metadata (with guessing of most parameters)
 * Most modules support multiprocessing
 
 ## Installation
@@ -29,12 +30,19 @@ pip install wkcuber
 ```
 
 ### Docker
-Use the CI-built image: [scalableminds/webknossos-cuber](https://hub.docker.com/r/scalableminds/webknossos-cuber/). Example usage `docker run -v <host path>:/data --rm scalableminds/webknossos-cuber:wkw wkcuber.cubing  --layer_name color /data/source/color /data/target`.
+Use the CI-built image: [scalableminds/webknossos-cuber](https://hub.docker.com/r/scalableminds/webknossos-cuber/). Example usage `docker run -v <host path>:/data --rm scalableminds/webknossos-cuber:wkw wkcuber --layer_name color --scale 11.24,11.24,25 --name great_dataset /data/source/color /data/target`.
 
 
 ## Usage
 
 ```
+# Convert image stacks into wkw datasets
+python -m wkcuber \
+  --layer_name color \
+  --scale 11.24,11.24,25 \
+  --name great_dataset \
+  data/source/color data/target
+
 # Convert image files to wkw cubes
 python -m wkcuber.cubing --layer_name color data/source/color data/target
 python -m wkcuber.cubing --layer_name segmentation data/source/segmentation data/target
