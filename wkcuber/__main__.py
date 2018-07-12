@@ -108,4 +108,4 @@ if __name__ == "__main__":
         target_mag = target_mag * 2
 
     scale = tuple(float(x) for x in args.scale.split(","))
-    write_webknossos_metadata(args.target_path, args.name, scale, False)
+    write_webknossos_metadata(args.target_path, args.name, scale, compute_max_id=False)

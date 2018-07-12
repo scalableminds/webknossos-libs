@@ -8,12 +8,12 @@ from glob import iglob
 from os import path, makedirs, listdir
 
 
-def write_webknossos_metadata(dataset_path, name, scale, max_id=None):
+def write_webknossos_metadata(dataset_path, name, scale, max_id=0, compute_max_id=False):
 
     # Generate a metadata file for webKnossos
     # Currently have no source of information for team
     datasource_properties_path = path.join(dataset_path, "datasource-properties.json")
-    layers = list(detect_layers(dataset_path, max_id))
+    layers = list(detect_layers(dataset_path, max_id, compute_max_id))
     with open(datasource_properties_path, "wt") as datasource_properties_json:
         json.dump(
             {
@@ -100,11 +100,11 @@ def detect_standard_layer(dataset_path, layer_name):
     }
 
 
-def detect_segmentation_layer(dataset_path, layer_name, max_id):
+def detect_segmentation_layer(dataset_path, layer_name, max_id, compute_max_id):
     layer_info = detect_standard_layer(dataset_path, layer_name)
     layer_info["mappings"] = []
     layer_info["largestSegmentId"] = max_id
-    if max_id is None:
+    if compute_max_id:
         layer_path = path.join(dataset_path, layer_name, "1")
         with wkw.Dataset.open(layer_path) as dataset:
             bbox = layer_info["boundingBox"]
@@ -118,11 +118,11 @@ def detect_segmentation_layer(dataset_path, layer_name, max_id):
     return layer_info
 
 
-def detect_layers(dataset_path, max_id):
+def detect_layers(dataset_path, max_id, compute_max_id):
     if path.exists(path.join(dataset_path, "color")):
         yield detect_standard_layer(dataset_path, "color")
     if path.exists(path.join(dataset_path, "segmentation")):
-        yield detect_segmentation_layer(dataset_path, "segmentation", max_id)
+        yield detect_segmentation_layer(dataset_path, "segmentation", max_id, compute_max_id)
 
 
 def create_parser():
@@ -139,10 +139,17 @@ def create_parser():
         default="1,1,1",
     )
 
-    parser.add_argument(
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
+        '--compute_max_id', "-c",
+        help="set to compute max id",
+        default=False,
+        action='store_true'
+    )
+    group.add_argument(
         "--max_id",
-        help="set max id of segmentation. Compute max id if not given",
-        default=None,
+        help="set max id of segmentation.",
+        default=0,
     )
 
     return parser
@@ -151,4 +158,4 @@ def create_parser():
 if __name__ == "__main__":
     args = create_parser().parse_args()
     scale = tuple(float(x) for x in args.scale.split(","))
-    write_webknossos_metadata(args.path, args.name, scale, args.max_id)
+    write_webknossos_metadata(args.path, args.name, scale, args.max_id, args.compute_max_id)
