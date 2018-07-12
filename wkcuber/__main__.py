@@ -48,6 +48,13 @@ def create_parser():
         default=512,
     )
 
+    parser.add_argument(
+        "--no_compress",
+        help="Don't compress this data",
+        default=False,
+        action="store_true",
+    )
+
     parser.add_argument("--name", "-n", help="Name of the dataset", default=None)
 
     parser.add_argument(
@@ -90,7 +97,8 @@ if __name__ == "__main__":
         args.jobs,
     )
 
-    compress_mag_inplace(args.target_path, args.layer_name, 1, args.jobs)
+    if not args.no_compress:
+        compress_mag_inplace(args.target_path, args.layer_name, 1, args.jobs)
 
     target_mag = 2
     while target_mag <= int(args.max_mag):
@@ -104,7 +112,10 @@ if __name__ == "__main__":
             "default",
             args.jobs,
         )
-        compress_mag_inplace(args.target_path, args.layer_name, target_mag, args.jobs)
+        if not args.no_compress:
+            compress_mag_inplace(
+                args.target_path, args.layer_name, target_mag, args.jobs
+            )
         target_mag = target_mag * 2
 
     scale = tuple(float(x) for x in args.scale.split(","))
