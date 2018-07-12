@@ -111,7 +111,6 @@ def cubing_job(
                     )
                     buffer.append(image)
 
-                logging.debug([a.shape for a in buffer])
                 target_wkw.write([0, 0, z_slice[0]], np.dstack(buffer))
                 logging.debug(
                     "Cubing of z={}-{} took {:.8f}s".format(
