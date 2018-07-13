@@ -12,7 +12,7 @@ Created with [Python3](https://www.python.org/).
 
 * `wkcuber`: Convert image stacks to fully ready WKW datasets (includes downsampling, compressing and metedata generation)
 * `wkcuber.cubing`: Convert image stacks to WKW cubes (e.g., `tiff`, `jpg`, `png`)
-* `wkcuber.convert`: Convert KNOSSOS cubes to WKW cubes
+* `wkcuber.convert_knossos`: Convert KNOSSOS cubes to WKW cubes
 * `wkcuber.downsampling`: Create downsampled magnifications (with `median`, `mode` and linear interpolation modes)
 * `wkcuber.compress`: Compress WKW cubes for efficient file storage (especially useful for segmentation data)
 * `wkcuber.metadata`: Create metadata (with guessing of most parameters)
@@ -48,7 +48,7 @@ python -m wkcuber.cubing --layer_name color data/source/color data/target
 python -m wkcuber.cubing --layer_name segmentation data/source/segmentation data/target
 
 # Convert Knossos cubes to wkw cubes
-python -m wkcuber.convert --layer_name color data/source data/target
+python -m wkcuber.convert_knossos --layer_name color data/source/mag1 data/target
 
 # Create downsampled magnifications
 python -m wkcuber.downsampling --layer_name color data/target

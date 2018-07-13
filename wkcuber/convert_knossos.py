@@ -74,9 +74,7 @@ if __name__ == "__main__":
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG)
 
-    source_knossos_info = KnossosDatasetInfo(
-        args.source_path, args.layer_name, args.dtype, args.mag
-    )
+    source_knossos_info = KnossosDatasetInfo(args.source_path, args.dtype)
     target_wkw_info = WkwDatasetInfo(
         args.target_path, args.layer_name, args.dtype, args.mag
     )
@@ -84,7 +82,12 @@ if __name__ == "__main__":
     with open_knossos(source_knossos_info) as source_knossos, ParallelExecutor(
         args.jobs
     ) as pool:
-        for cube_xyz in source_knossos.list_cubes():
+        knossos_cubes = list(source_knossos.list_cubes())
+        if len(knossos_cubes) == 0:
+            logging.error("No input KNOSSOS cubes found.")
+            exit(1)
+
+        for cube_xyz in knossos_cubes:
             pool.submit(
                 convert_cube_job, cube_xyz, source_knossos_info, target_wkw_info
             )

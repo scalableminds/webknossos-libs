@@ -11,9 +11,7 @@ from .knossos import KnossosDataset, CUBE_EDGE_LEN
 WkwDatasetInfo = namedtuple(
     "WkwDatasetInfo", ("dataset_path", "layer_name", "dtype", "mag")
 )
-KnossosDatasetInfo = namedtuple(
-    "KnossosDatasetInfo", ("dataset_path", "layer_name", "dtype", "mag")
-)
+KnossosDatasetInfo = namedtuple("KnossosDatasetInfo", ("dataset_path", "dtype"))
 
 
 def open_wkw(info):
@@ -24,10 +22,7 @@ def open_wkw(info):
 
 
 def open_knossos(info):
-    return KnossosDataset.open(
-        path.join(info.dataset_path, info.layer_name, str(info.mag)),
-        np.dtype(info.dtype),
-    )
+    return KnossosDataset.open(info.dataset_path, np.dtype(info.dtype))
 
 
 def add_verbose_flag(parser):

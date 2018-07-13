@@ -15,7 +15,6 @@ jobs:
           name: Build docker image
           command: docker build -t "scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM}" .
 
-
       - run:
           name: Decompress test data
           command: tar -xzvf testdata/WT1_wkw.tar.gz
@@ -97,12 +96,11 @@ jobs:
               -v "${PWD}/testoutput:/testoutput" \
               --rm \
               scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
-              wkcuber.convert \
+              wkcuber.convert_knossos \
               --verbose \
               --dtype uint8 \
               --layer_name color \
-              --mag 1 \
-              /testdata/knossos /testoutput/knossos
+              /testdata/knossos/color/1 /testoutput/knossos
             [ -d testoutput/knossos/color ]
             [ -d testoutput/knossos/color/1 ]
             [ $(find testoutput/knossos/color/1 -mindepth 3 -name "*.wkw" | wc -l) -eq 1 ]

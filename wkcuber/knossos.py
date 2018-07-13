@@ -4,6 +4,7 @@ from os import path
 from glob import iglob, glob
 
 CUBE_EDGE_LEN = 128
+CUBE_REGEX = re.compile("x(\d+)/y(\d+)/z(\d+)/(.*\.raw)$")
 
 
 class KnossosDataset:
@@ -70,12 +71,17 @@ class KnossosDataset:
         return iglob(path.join(self.root, "**", "*.raw"), recursive=True)
 
     def __parse_cube_file_name(self, filename):
-        CUBE_REGEX = re.compile("x(\d+)/y(\d+)/z(\d+)/(.*\.raw)$")
         m = CUBE_REGEX.search(filename)
+        if m is None:
+            return None
         return (int(m.group(1)), int(m.group(2)), int(m.group(3)))
 
     def list_cubes(self):
-        return (self.__parse_cube_file_name(f) for f in self.list_files())
+        return (
+            f
+            for f in (self.__parse_cube_file_name(f) for f in self.list_files())
+            if f is not None
+        )
 
     def close(self):
         pass
