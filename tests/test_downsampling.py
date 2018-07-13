@@ -1,6 +1,5 @@
 import numpy as np
 from wkcuber.downsampling import (
-    CUBE_EDGE_LEN,
     InterpolationModes,
     downsample_cube,
     downsample_cube_job,
@@ -9,6 +8,7 @@ from wkcuber.downsampling import (
 from wkcuber.utils import WkwDatasetInfo, open_wkw
 
 WKW_CUBE_SIZE = 1024
+CUBE_EDGE_LEN = 256
 
 source_info = WkwDatasetInfo("testdata/WT1_wkw", "color", "uint8", 1)
 target_info = WkwDatasetInfo("testoutput/WT1_wkw", "color", "uint8", 2)
@@ -34,7 +34,7 @@ def test_downsample_cube():
 def test_cube_addresses():
     cubes_per_file = WKW_CUBE_SIZE // CUBE_EDGE_LEN
 
-    addresses = cube_addresses(source_info)
+    addresses = cube_addresses(source_info, CUBE_EDGE_LEN)
     assert len(addresses) == (5 * cubes_per_file) * (5 * cubes_per_file) * (
         1 * cubes_per_file
     )
@@ -47,8 +47,10 @@ def test_cube_addresses():
 
 
 def test_downsample_cube_job():
-    offset = (15, 15, 0)
-    downsample_cube_job(source_info, target_info, 2, InterpolationModes.MAX, offset)
+    offset = (3, 3, 0)
+    downsample_cube_job(
+        source_info, target_info, 2, InterpolationModes.MAX, CUBE_EDGE_LEN, offset
+    )
 
     source_buffer = read_wkw(
         source_info,

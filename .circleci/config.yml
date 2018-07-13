@@ -56,6 +56,7 @@ jobs:
               scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
               wkcuber.cubing \
               --verbose \
+              --jobs 2 \
               --buffer_slices 8 \
               --layer_name color \
               /testdata/tiff /testoutput/tiff
@@ -75,6 +76,7 @@ jobs:
               scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
               wkcuber \
               --verbose \
+              --jobs 2 \
               --buffer_slices 8 \
               --layer_name color \
               --max_mag 4 \
@@ -85,6 +87,31 @@ jobs:
             [ -d testoutput/tiff2/color/1 ]
             [ $(find testoutput/tiff2/color/1 -mindepth 3 -name "*.wkw" | wc -l) -eq 1 ]
             [ -e testoutput/tiff2/datasource-properties.json ]
+
+      - run:
+          name: Test simple tiff cubing (no compression)
+          command: |
+            set -x
+            mkdir -p testoutput/tiff3
+            docker run \
+              -v "${PWD}/testdata:/testdata" \
+              -v "${PWD}/testoutput:/testoutput" \
+              --rm \
+              scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
+              wkcuber \
+              --verbose \
+              --jobs 2 \
+              --buffer_slices 8 \
+              --layer_name color \
+              --max_mag 4 \
+              --no_compress \
+              --scale 11.24,11.24,25 \
+              --name awesome_data \
+              /testdata/tiff /testoutput/tiff3
+            [ -d testoutput/tiff3/color ]
+            [ -d testoutput/tiff3/color/1 ]
+            [ $(find testoutput/tiff3/color/1 -mindepth 3 -name "*.wkw" | wc -l) -eq 1 ]
+            [ -e testoutput/tiff3/datasource-properties.json ]
 
       - run:
           name: Test KNOSSOS conversion
@@ -98,8 +125,10 @@ jobs:
               scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
               wkcuber.convert_knossos \
               --verbose \
+              --jobs 2 \
               --dtype uint8 \
               --layer_name color \
+              --mag 1 \
               /testdata/knossos/color/1 /testoutput/knossos
             [ -d testoutput/knossos/color ]
             [ -d testoutput/knossos/color/1 ]
@@ -115,7 +144,9 @@ jobs:
               scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
               wkcuber.downsampling \
               --verbose \
+              --jobs 2 \
               --max 8 \
+              --buffer_cube_size 128 \
               --layer_name color \
               /testoutput/tiff
             [ -d testoutput/tiff/color/2 ]
@@ -136,6 +167,7 @@ jobs:
               scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
               wkcuber.compress \
               --verbose \
+              --jobs 2 \
               --layer_name color \
               /testoutput/tiff /testoutput/tiff_compress
             [ -d testoutput/tiff_compress/color/1 ]
@@ -154,6 +186,7 @@ jobs:
               scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
               wkcuber.compress \
               --verbose \
+              --jobs 2 \
               --layer_name color \
               /testoutput/tiff_compress2
 

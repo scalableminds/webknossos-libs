@@ -5,7 +5,7 @@ import logging
 import shutil
 
 from .cubing import cubing, BLOCK_LEN
-from .downsampling import downsample_mag
+from .downsampling import downsample_mag, DEFAULT_EDGE_LEN
 from .compress import compress_mag
 from .metadata import write_webknossos_metadata
 from .utils import add_verbose_flag, add_jobs_flag
@@ -93,12 +93,12 @@ if __name__ == "__main__":
         args.target_path,
         args.layer_name,
         args.dtype,
-        args.buffer_slices,
-        args.jobs,
+        int(args.buffer_slices),
+        int(args.jobs),
     )
 
     if not args.no_compress:
-        compress_mag_inplace(args.target_path, args.layer_name, 1, args.jobs)
+        compress_mag_inplace(args.target_path, args.layer_name, 1, int(args.jobs))
 
     target_mag = 2
     while target_mag <= int(args.max_mag):
@@ -110,11 +110,12 @@ if __name__ == "__main__":
             target_mag,
             args.dtype,
             "default",
-            args.jobs,
+            DEFAULT_EDGE_LEN,
+            int(args.jobs),
         )
         if not args.no_compress:
             compress_mag_inplace(
-                args.target_path, args.layer_name, target_mag, args.jobs
+                args.target_path, args.layer_name, target_mag, int(args.jobs)
             )
         target_mag = target_mag * 2
 

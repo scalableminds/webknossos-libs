@@ -158,6 +158,6 @@ if __name__ == "__main__":
         args.target_path,
         args.layer_name,
         args.dtype,
-        args.buffer_slices,
-        args.jobs,
+        int(args.buffer_slices),
+        int(args.jobs),
     )

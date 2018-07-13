@@ -20,7 +20,7 @@ from .utils import (
     ParallelExecutor,
 )
 
-CUBE_EDGE_LEN = 128
+DEFAULT_EDGE_LEN = 256
 
 
 class InterpolationModes(Enum):
@@ -63,16 +63,23 @@ def create_parser():
         "--max", "-m", help="Max resolution to be downsampled", default=512
     )
 
+    parser.add_argument(
+        "--buffer_cube_size",
+        "-b",
+        help="Size of buffered cube to be downsampled (i.e. buffer cube edge length)",
+        default=DEFAULT_EDGE_LEN,
+    )
+
     add_jobs_flag(parser)
     add_verbose_flag(parser)
 
     return parser
 
 
-def cube_addresses(source_wkw_info):
+def cube_addresses(source_wkw_info, cube_edge_len):
     with open_wkw(source_wkw_info) as source_wkw:
         wkw_cubelength = source_wkw.header.file_len * source_wkw.header.block_len
-        factor = wkw_cubelength // CUBE_EDGE_LEN
+        factor = wkw_cubelength // cube_edge_len
 
         def parse_cube_file_name(filename):
             CUBE_REGEX = re.compile("z(\d+)/y(\d+)/x(\d+)(\.wkw)$")
@@ -93,13 +100,19 @@ def cube_addresses(source_wkw_info):
 
 
 def downsample(
-    source_wkw_info, target_wkw_info, source_mag, target_mag, interpolation_mode, jobs
+    source_wkw_info,
+    target_wkw_info,
+    source_mag,
+    target_mag,
+    interpolation_mode,
+    cube_edge_len,
+    jobs,
 ):
     assert source_mag < target_mag
     logging.info("Downsampling mag {} from mag {}".format(target_mag, source_mag))
 
     factor = int(target_mag / source_mag)
-    source_cube_addresses = cube_addresses(source_wkw_info)
+    source_cube_addresses = cube_addresses(source_wkw_info, cube_edge_len)
     target_cube_addresses = list(
         set(tuple(x // factor for x in xyz) for xyz in source_cube_addresses)
     )
@@ -107,7 +120,7 @@ def downsample(
     logging.debug(
         "Found source cubes: count={} size={} min={} max={}".format(
             len(source_cube_addresses),
-            (CUBE_EDGE_LEN,) * 3,
+            (cube_edge_len,) * 3,
             min(source_cube_addresses),
             max(source_cube_addresses),
         )
@@ -115,7 +128,7 @@ def downsample(
     logging.debug(
         "Found target cubes: count={} size={} min={} max={}".format(
             len(target_cube_addresses),
-            (CUBE_EDGE_LEN,) * 3,
+            (cube_edge_len,) * 3,
             min(target_cube_addresses),
             max(target_cube_addresses),
         )
@@ -129,6 +142,7 @@ def downsample(
                 target_wkw_info,
                 factor,
                 interpolation_mode,
+                cube_edge_len,
                 target_cube_xyz,
             )
 
@@ -136,7 +150,12 @@ def downsample(
 
 
 def downsample_cube_job(
-    source_wkw_info, target_wkw_info, factor, interpolation_mode, target_cube_xyz
+    source_wkw_info,
+    target_wkw_info,
+    factor,
+    interpolation_mode,
+    cube_edge_len,
+    target_cube_xyz,
 ):
     try:
         logging.debug("Downsampling {}".format(target_cube_xyz))
@@ -144,11 +163,11 @@ def downsample_cube_job(
         with open_wkw(source_wkw_info) as source_wkw, open_wkw(
             target_wkw_info
         ) as target_wkw:
-            target_offset = tuple(a * CUBE_EDGE_LEN for a in target_cube_xyz)
+            target_offset = tuple(a * cube_edge_len for a in target_cube_xyz)
             source_offset = tuple(a * factor for a in target_offset)
 
             ref_time = time.time()
-            cube_buffer = source_wkw.read(source_offset, (CUBE_EDGE_LEN * factor,) * 3)
+            cube_buffer = source_wkw.read(source_offset, (cube_edge_len * factor,) * 3)
             assert cube_buffer.shape[0] == 1, "Only single-channel data is supported"
             cube_buffer = cube_buffer[0]
             if np.all(cube_buffer == 0):
@@ -248,6 +267,7 @@ def downsample_mag(
     target_mag,
     dtype="uint8",
     interpolation_mode="default",
+    cube_edge_len=DEFAULT_EDGE_LEN,
     jobs=1,
 ):
     if interpolation_mode == "default":
@@ -267,16 +287,26 @@ def downsample_mag(
         source_mag,
         target_mag,
         interpolation_mode,
+        cube_edge_len,
         jobs,
     )
 
 
-def downsample_mags(path, layer_name, max_mag, dtype, interpolation_mode, jobs):
+def downsample_mags(
+    path, layer_name, max_mag, dtype, interpolation_mode, cube_edge_len, jobs
+):
     target_mag = 2
     while target_mag <= int(max_mag):
         source_mag = target_mag // 2
         downsample_mag(
-            path, layer_name, source_mag, target_mag, dtype, interpolation_mode, jobs
+            path,
+            layer_name,
+            source_mag,
+            target_mag,
+            dtype,
+            interpolation_mode,
+            cube_edge_len,
+            jobs,
         )
         target_mag = target_mag * 2
 
@@ -286,8 +316,9 @@ if __name__ == "__main__":
     downsample_mags(
         args.path,
         args.layer_name,
-        args.max,
+        int(args.max),
         args.dtype,
         args.interpolation_mode,
-        args.jobs,
+        int(args.buffer_cube_size),
+        int(args.jobs),
     )

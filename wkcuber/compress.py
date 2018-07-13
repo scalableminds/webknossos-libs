@@ -120,7 +120,7 @@ if __name__ == "__main__":
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG)
     compress_mags(
-        args.source_path, args.layer_name, args.target_path, args.mag, args.jobs
+        args.source_path, args.layer_name, args.target_path, args.mag, int(args.jobs)
     )
     logging.info(
         "Old files are still present in '{0}.bak'. Please remove them when not required anymore.".format(

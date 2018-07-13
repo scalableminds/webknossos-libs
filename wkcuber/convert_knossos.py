@@ -68,19 +68,12 @@ def convert_cube_job(cube_xyz, source_knossos_info, target_wkw_info):
     )
 
 
-if __name__ == "__main__":
-    args = create_parser().parse_args()
-
-    if args.verbose:
-        logging.basicConfig(level=logging.DEBUG)
-
-    source_knossos_info = KnossosDatasetInfo(args.source_path, args.dtype)
-    target_wkw_info = WkwDatasetInfo(
-        args.target_path, args.layer_name, args.dtype, args.mag
-    )
+def convert_knossos(source_path, target_path, layer_name, dtype, mag=1, jobs=1):
+    source_knossos_info = KnossosDatasetInfo(source_path, dtype)
+    target_wkw_info = WkwDatasetInfo(target_path, layer_name, dtype, int(mag))
 
     with open_knossos(source_knossos_info) as source_knossos, ParallelExecutor(
-        args.jobs
+        int(jobs)
     ) as pool:
         knossos_cubes = list(source_knossos.list_cubes())
         if len(knossos_cubes) == 0:
@@ -92,3 +85,19 @@ if __name__ == "__main__":
             pool.submit(
                 convert_cube_job, cube_xyz, source_knossos_info, target_wkw_info
             )
+
+
+if __name__ == "__main__":
+    args = create_parser().parse_args()
+
+    if args.verbose:
+        logging.basicConfig(level=logging.DEBUG)
+
+    convert_knossos(
+        args.source_path,
+        args.target_path,
+        args.layer_name,
+        args.dtype,
+        args.mag,
+        args.jobs,
+    )
