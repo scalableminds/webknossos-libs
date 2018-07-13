@@ -87,6 +87,7 @@ if __name__ == "__main__":
             logging.error("No input KNOSSOS cubes found.")
             exit(1)
 
+        knossos_cubes.sort()
         for cube_xyz in knossos_cubes:
             pool.submit(
                 convert_cube_job, cube_xyz, source_knossos_info, target_wkw_info
