@@ -8,8 +8,10 @@ from PIL import Image
 
 from .utils import (
     get_chunks,
+    find_files,
     add_verbose_flag,
     add_jobs_flag,
+    determine_source_dims_from_image,
     open_wkw,
     WkwDatasetInfo,
     ParallelExecutor,
@@ -17,26 +19,6 @@ from .utils import (
 
 SOURCE_FORMAT_FILES = (".tif", ".tiff", ".jpg", ".jpeg", ".png")
 BLOCK_LEN = 32
-
-
-def find_source_filenames(source_path):
-    source_files = [
-        f
-        for f in listdir(source_path)
-        if any([f.endswith(suffix) for suffix in SOURCE_FORMAT_FILES])
-    ]
-
-    all_source_files = [path.join(source_path, s) for s in source_files]
-
-    all_source_files.sort()
-    return all_source_files
-
-
-def determine_source_dims_from_images(source_files):
-    # open the first image and extract the relevant information
-    # all images are assumed to have equal dimensions!
-    with Image.open(source_files[0]) as test_img:
-        return (test_img.width, test_img.height, len(source_files))
 
 
 def create_parser():
@@ -63,9 +45,9 @@ def create_parser():
     )
 
     parser.add_argument(
-        "--buffer_slices",
+        "--batch_size",
         "-b",
-        help="Number of slices to buffer per job",
+        help="Number of sections to buffer per job",
         default=BLOCK_LEN,
     )
 
@@ -75,6 +57,16 @@ def create_parser():
     return parser
 
 
+def find_source_filenames(source_path):
+    # Find all files in a folder that have a matching file extension
+    source_files = [
+        path.join(source_path, s)
+        for s in find_files(path.join(source_path, "*"), SOURCE_FORMAT_FILES)
+    ]
+    source_files.sort()
+    return source_files
+
+
 def read_image_file(file_name, dtype):
     try:
         this_layer = np.array(Image.open(file_name), np.dtype(dtype))
@@ -82,67 +74,76 @@ def read_image_file(file_name, dtype):
         this_layer = this_layer.reshape(this_layer.shape + (1,))
         return this_layer
     except Exception as exc:
-        logging.error("Reading of z={} failed with {}".format(z, exc))
+        logging.error("Reading of file={} failed with {}".format(file_name, exc))
         raise exc
 
 
-def cubing_job(
-    target_wkw_info, _z_slice, _source_file_slice, buffer_slices, image_size
-):
-    if len(_z_slice) == 0:
+def cubing_job(target_wkw_info, z_batches, source_file_batches, batch_size, image_size):
+    if len(z_batches) == 0:
         return
 
-    # logging.info(z_slice)
     with open_wkw(target_wkw_info) as target_wkw:
-        for z_slice, source_file_slice in zip(
-            get_chunks(_z_slice, buffer_slices),
-            get_chunks(_source_file_slice, buffer_slices),
+        # Iterate over batches of continuous z sections
+        # The batches have a maximum size of `batch_size`
+        # Batched iterations allows to utilize IO more efficiently
+        for z_batch, source_file_batch in zip(
+            get_chunks(z_batches, batch_size),
+            get_chunks(source_file_batches, batch_size),
         ):
             try:
                 ref_time = time.time()
-                logging.info("Cubing z={}-{}".format(z_slice[0], z_slice[-1]))
+                logging.info("Cubing z={}-{}".format(z_batch[0], z_batch[-1]))
                 buffer = []
-                for z, file_name in zip(z_slice, source_file_slice):
+                # Iterate over each z section in the batch
+                for z, file_name in zip(z_batch, source_file_batch):
                     image = read_image_file(file_name, target_wkw_info.dtype)
                     assert (
                         image.shape[0:2] == image_size
-                    ), "Slice z={} has the wrong dimensions: {} (expected {}).".format(
+                    ), "Section z={} has the wrong dimensions: {} (expected {}).".format(
                         z, image.shape, image_size
                     )
                     buffer.append(image)
 
-                target_wkw.write([0, 0, z_slice[0]], np.dstack(buffer))
+                # Write batch buffer
+                buffer = np.dstack(buffer)
+                target_wkw.write([0, 0, z_batch[0]], buffer)
                 logging.debug(
                     "Cubing of z={}-{} took {:.8f}s".format(
-                        z_slice[0], z_slice[-1], time.time() - ref_time
+                        z_batch[0], z_batch[-1], time.time() - ref_time
                     )
                 )
 
             except Exception as exc:
                 logging.error(
                     "Cubing of z={}-{} failed with {}".format(
-                        z_slice[0], z_slice[-1], exc
+                        z_batch[0], z_batch[-1], exc
                     )
                 )
                 raise exc
 
 
-def cubing(source_path, target_path, layer_name, dtype, buffer_slices, jobs):
+def cubing(source_path, target_path, layer_name, dtype, batch_size, jobs):
     target_wkw_info = WkwDatasetInfo(target_path, layer_name, dtype, 1)
     source_files = find_source_filenames(source_path)
-    num_x, num_y, num_z = determine_source_dims_from_images(source_files)
+
+    # All images are assumed to have equal dimensions
+    num_x, num_y = determine_source_dims_from_image(source_files[0])
+    num_z = len(source_files)
 
     logging.info("Found source files: count={} size={}x{}".format(num_z, num_x, num_y))
     with ParallelExecutor(jobs) as pool:
-        # we iterate over the z layers
+        # We iterate over all z sections
         for z in range(0, num_z, BLOCK_LEN):
+            # Prepare z batches
             max_z = min(num_z, z + BLOCK_LEN)
+            z_batch = list(range(z, max_z))
+            # Execute
             pool.submit(
                 cubing_job,
                 target_wkw_info,
-                list(range(z, max_z)),
+                z_batch,
                 source_files[z:max_z],
-                int(buffer_slices),
+                int(batch_size),
                 (num_x, num_y),
             )
 
@@ -158,6 +159,6 @@ if __name__ == "__main__":
         args.target_path,
         args.layer_name,
         args.dtype,
-        int(args.buffer_slices),
+        int(args.batch_size),
         int(args.jobs),
     )

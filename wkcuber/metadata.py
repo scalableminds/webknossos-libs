@@ -8,12 +8,39 @@ from glob import iglob
 from os import path, makedirs, listdir
 
 
+def create_parser():
+    parser = ArgumentParser()
+
+    parser.add_argument("path", help="Directory containing the dataset.")
+
+    parser.add_argument("--name", "-n", help="Name of the dataset")
+
+    parser.add_argument(
+        "--scale",
+        "-s",
+        help="Scale of the dataset (e.g. 11.2,11.2,25)",
+        default="1,1,1",
+    )
+
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
+        "--compute_max_id",
+        "-c",
+        help="set to compute max id",
+        default=False,
+        action="store_true",
+    )
+    group.add_argument("--max_id", help="set max id of segmentation.", default=0)
+
+    return parser
+
+
 def write_webknossos_metadata(
     dataset_path, name, scale, max_id=0, compute_max_id=False
 ):
 
     # Generate a metadata file for webKnossos
-    # Currently have no source of information for team
+    # Currently includes no source of information for team
     datasource_properties_path = path.join(dataset_path, "datasource-properties.json")
     layers = list(detect_layers(dataset_path, max_id, compute_max_id))
     with open(datasource_properties_path, "wt") as datasource_properties_json:
@@ -43,7 +70,8 @@ def detect_cubeLength(dataset_path, layer, mag=1):
 
 
 def detect_bbox(dataset_path, layer, mag=1):
-
+    # Detect the coarse bounding box of a dataset by iterating
+    # over the WKW cubes
     layer_path = path.join(dataset_path, layer, str(mag))
 
     def list_files(layer_path):
@@ -79,6 +107,7 @@ def detect_resolutions(dataset_path, layer):
 
 
 def detect_standard_layer(dataset_path, layer_name):
+    # Perform metadata detection for well-known layers
     bbox = detect_bbox(dataset_path, layer_name)
     dtype = detect_dtype(dataset_path, layer_name)
 
@@ -102,11 +131,14 @@ def detect_standard_layer(dataset_path, layer_name):
     }
 
 
-def detect_segmentation_layer(dataset_path, layer_name, max_id, compute_max_id):
+def detect_segmentation_layer(dataset_path, layer_name, max_id, compute_max_id=False):
     layer_info = detect_standard_layer(dataset_path, layer_name)
     layer_info["mappings"] = []
     layer_info["largestSegmentId"] = max_id
+
     if compute_max_id:
+        # Computing the current largest segment id
+        # This may take very long due to IO load
         layer_path = path.join(dataset_path, layer_name, "1")
         with wkw.Dataset.open(layer_path) as dataset:
             bbox = layer_info["boundingBox"]
@@ -121,39 +153,13 @@ def detect_segmentation_layer(dataset_path, layer_name, max_id, compute_max_id):
 
 
 def detect_layers(dataset_path, max_id, compute_max_id):
+    # Detect metadata for well-known layers, e.g. color and segmentation
     if path.exists(path.join(dataset_path, "color")):
         yield detect_standard_layer(dataset_path, "color")
     if path.exists(path.join(dataset_path, "segmentation")):
         yield detect_segmentation_layer(
             dataset_path, "segmentation", max_id, compute_max_id
         )
-
-
-def create_parser():
-    parser = ArgumentParser()
-
-    parser.add_argument("path", help="Directory containing the dataset.")
-
-    parser.add_argument("--name", "-n", help="Name of the dataset")
-
-    parser.add_argument(
-        "--scale",
-        "-s",
-        help="Scale of the dataset (e.g. 11.2,11.2,25)",
-        default="1,1,1",
-    )
-
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument(
-        "--compute_max_id",
-        "-c",
-        help="set to compute max id",
-        default=False,
-        action="store_true",
-    )
-    group.add_argument("--max_id", help="set max id of segmentation.", default=0)
-
-    return parser
 
 
 if __name__ == "__main__":

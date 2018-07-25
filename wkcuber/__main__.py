@@ -35,7 +35,7 @@ def create_parser():
     )
 
     parser.add_argument(
-        "--buffer_slices",
+        "--batch_size",
         "-b",
         help="Number of slices to buffer per job",
         default=BLOCK_LEN,
@@ -93,7 +93,7 @@ if __name__ == "__main__":
         args.target_path,
         args.layer_name,
         args.dtype,
-        int(args.buffer_slices),
+        int(args.batch_size),
         int(args.jobs),
     )
 

@@ -1,9 +1,12 @@
 import wkw
 import numpy as np
+from glob import iglob
 from collections import namedtuple
 from multiprocessing import cpu_count
 from concurrent.futures import ProcessPoolExecutor
 from os import path
+from math import floor
+from PIL import Image
 
 from .knossos import KnossosDataset, CUBE_EDGE_LEN
 
@@ -33,13 +36,35 @@ def add_verbose_flag(parser):
     parser.set_defaults(verbose=False)
 
 
+def find_files(source_path, extensions):
+    # Find all files with a matching file extension
+    return (
+        f
+        for f in iglob(source_path, recursive=True)
+        if any([f.endswith(suffix) for suffix in extensions])
+    )
+
+
 def get_chunks(arr, chunk_size):
     for i in range(0, len(arr), chunk_size):
         yield arr[i : i + chunk_size]
 
 
+def get_regular_chunks(min_z, max_z, chunk_size):
+    i = floor(min_z / chunk_size) * chunk_size
+    while i <= max_z:
+        yield range(max(min_z, i), min(max_z + 1, i + chunk_size))
+        i += chunk_size
+
+
 def add_jobs_flag(parser):
     parser.add_argument("--jobs", "-j", help="Parallel jobs", default=cpu_count())
+
+
+def determine_source_dims_from_image(source_file):
+    # Open the first image and extract the relevant information
+    with Image.open(source_file) as test_img:
+        return (test_img.width, test_img.height)
 
 
 class ParallelExecutor:

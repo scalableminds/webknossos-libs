@@ -77,6 +77,8 @@ def create_parser():
 
 
 def cube_addresses(source_wkw_info, cube_edge_len):
+    # Traverse all WKW cubes in the dataset in order to
+    # find all available cubes of size `cube_edge_len`^3
     with open_wkw(source_wkw_info) as source_wkw:
         wkw_cubelength = source_wkw.header.file_len * source_wkw.header.block_len
         factor = wkw_cubelength // cube_edge_len
@@ -112,6 +114,7 @@ def downsample(
     logging.info("Downsampling mag {} from mag {}".format(target_mag, source_mag))
 
     factor = int(target_mag / source_mag)
+    # Detect the cubes that we want to downsample
     source_cube_addresses = cube_addresses(source_wkw_info, cube_edge_len)
     target_cube_addresses = list(
         set(tuple(x // factor for x in xyz) for xyz in source_cube_addresses)
@@ -167,12 +170,17 @@ def downsample_cube_job(
             source_offset = tuple(a * factor for a in target_offset)
 
             ref_time = time.time()
+            # Read source buffer
             cube_buffer = source_wkw.read(source_offset, (cube_edge_len * factor,) * 3)
             assert cube_buffer.shape[0] == 1, "Only single-channel data is supported"
             cube_buffer = cube_buffer[0]
+
             if np.all(cube_buffer == 0):
                 logging.debug("Skipping empty cube {}".format(target_cube_xyz))
+            # Downsample the buffer
             cube_data = downsample_cube(cube_buffer, factor, interpolation_mode)
+
+            # Write the downsampled buffer to target
             target_wkw.write(target_offset, cube_data)
 
         logging.debug(
