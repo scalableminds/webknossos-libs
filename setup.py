@@ -6,7 +6,7 @@ setup(
         'wkcuber'
     ],
     package_dir={'wkcuber': 'wkcuber'},
-    version='0.1.2',
+    version='0.1.3',
     install_requires=[
         'scipy',
         'numpy',
