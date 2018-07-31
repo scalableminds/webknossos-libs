@@ -13,6 +13,7 @@ from .utils import (
     find_files,
     add_verbose_flag,
     add_jobs_flag,
+    pool_get_lock,
     determine_source_dims_from_image,
     open_wkw,
     WkwDatasetInfo,
@@ -57,7 +58,7 @@ def tile_cubing_job(target_wkw_info, z_batches, source_path, batch_size, tile_si
     if len(z_batches) == 0:
         return
 
-    with open_wkw(target_wkw_info) as target_wkw:
+    with open_wkw(target_wkw_info, pool_get_lock()) as target_wkw:
         # Iterate over the z batches
         # Batching is useful to utilize IO more efficiently
         for z_batch in get_chunks(z_batches, batch_size):

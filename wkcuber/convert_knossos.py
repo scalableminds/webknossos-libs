@@ -13,6 +13,7 @@ from .utils import (
     WkwDatasetInfo,
     KnossosDatasetInfo,
     ParallelExecutor,
+    pool_get_lock,
 )
 from .knossos import KnossosDataset, CUBE_EDGE_LEN
 
@@ -57,7 +58,7 @@ def convert_cube_job(cube_xyz, source_knossos_info, target_wkw_info):
     size = (CUBE_EDGE_LEN,) * 3
 
     with open_knossos(source_knossos_info) as source_knossos, open_wkw(
-        target_wkw_info
+        target_wkw_info, pool_get_lock()
     ) as target_wkw:
         cube_data = source_knossos.read(offset, size)
         target_wkw.write(offset, cube_data)

@@ -2,10 +2,10 @@ import wkw
 import numpy as np
 from glob import iglob
 from collections import namedtuple
-from multiprocessing import cpu_count
+from multiprocessing import cpu_count, Lock
 from concurrent.futures import ProcessPoolExecutor
 from os import path
-from math import floor
+from math import floor, ceil
 from PIL import Image
 
 from .knossos import KnossosDataset, CUBE_EDGE_LEN
@@ -17,11 +17,19 @@ WkwDatasetInfo = namedtuple(
 KnossosDatasetInfo = namedtuple("KnossosDatasetInfo", ("dataset_path", "dtype"))
 
 
-def open_wkw(info):
+def _open_wkw(info):
     return wkw.Dataset.open(
         path.join(info.dataset_path, info.layer_name, str(info.mag)),
         wkw.Header(np.dtype(info.dtype)),
     )
+
+
+def open_wkw(info, lock=None):
+    if lock is None:
+        return _open_wkw(info)
+    else:
+        with lock:
+            return _open_wkw(info)
 
 
 def open_knossos(info):
@@ -52,13 +60,26 @@ def get_chunks(arr, chunk_size):
 
 def get_regular_chunks(min_z, max_z, chunk_size):
     i = floor(min_z / chunk_size) * chunk_size
-    while i <= max_z:
-        yield range(max(min_z, i), min(max_z + 1, i + chunk_size))
+    while i < ceil(max_z / chunk_size) * chunk_size:
+        yield range(i, i + chunk_size)
         i += chunk_size
 
 
 def add_jobs_flag(parser):
     parser.add_argument("--jobs", "-j", help="Parallel jobs", default=cpu_count())
+
+
+def pool_init(lock):
+    global process_pool_lock
+    process_pool_lock = lock
+
+
+def pool_get_lock():
+    global process_pool_lock
+    try:
+        return process_pool_lock
+    except NameError:
+        return None
 
 
 def determine_source_dims_from_image(source_file):
@@ -69,7 +90,10 @@ def determine_source_dims_from_image(source_file):
 
 class ParallelExecutor:
     def __init__(self, jobs):
-        self.exec = ProcessPoolExecutor(jobs)
+        self.lock = Lock()
+        self.exec = ProcessPoolExecutor(
+            jobs, initializer=pool_init, initargs=(self.lock,)
+        )
         self.futures = []
 
     def submit(self, fn, *args):

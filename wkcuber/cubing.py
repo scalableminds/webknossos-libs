@@ -6,6 +6,7 @@ from argparse import ArgumentParser
 from os import path, listdir
 from PIL import Image
 
+
 from .utils import (
     get_chunks,
     find_files,
@@ -15,6 +16,7 @@ from .utils import (
     open_wkw,
     WkwDatasetInfo,
     ParallelExecutor,
+    pool_get_lock,
 )
 
 SOURCE_FORMAT_FILES = (".tif", ".tiff", ".jpg", ".jpeg", ".png")
@@ -82,7 +84,7 @@ def cubing_job(target_wkw_info, z_batches, source_file_batches, batch_size, imag
     if len(z_batches) == 0:
         return
 
-    with open_wkw(target_wkw_info) as target_wkw:
+    with open_wkw(target_wkw_info, pool_get_lock()) as target_wkw:
         # Iterate over batches of continuous z sections
         # The batches have a maximum size of `batch_size`
         # Batched iterations allows to utilize IO more efficiently

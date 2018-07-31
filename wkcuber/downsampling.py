@@ -18,6 +18,7 @@ from .utils import (
     open_wkw,
     WkwDatasetInfo,
     ParallelExecutor,
+    pool_get_lock,
 )
 
 DEFAULT_EDGE_LEN = 256
@@ -164,7 +165,7 @@ def downsample_cube_job(
         logging.debug("Downsampling {}".format(target_cube_xyz))
 
         with open_wkw(source_wkw_info) as source_wkw, open_wkw(
-            target_wkw_info
+            target_wkw_info, pool_get_lock()
         ) as target_wkw:
             target_offset = tuple(a * cube_edge_len for a in target_cube_xyz)
             source_offset = tuple(a * factor for a in target_offset)
@@ -321,6 +322,10 @@ def downsample_mags(
 
 if __name__ == "__main__":
     args = create_parser().parse_args()
+
+    if args.verbose:
+        logging.basicConfig(level=logging.DEBUG)
+
     downsample_mags(
         args.path,
         args.layer_name,
