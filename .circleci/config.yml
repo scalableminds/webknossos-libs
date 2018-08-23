@@ -65,6 +65,28 @@ jobs:
             [ $(find testoutput/tiff/color/1 -mindepth 3 -name "*.wkw" | wc -l) -eq 1 ]
 
       - run:
+          name: Test DM3 cubing
+          command: |
+            set -x
+            mkdir -p testdata/dm3
+            mkdir -p testoutput/dm3
+            wget http://www.loci.wisc.edu/files/software/data/dnasample1.zip
+            unzip -d testdata/dm3 dnasample1.zip dnasample1.dm3
+            docker run \
+              -v "${PWD}/testdata:/testdata" \
+              -v "${PWD}/testoutput:/testoutput" \
+              --rm \
+              scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
+              wkcuber.cubing \
+              --verbose \
+              --jobs 1 \
+              --layer_name color \
+              /testdata/dm3 /testoutput/dm3
+            [ -d testoutput/dm3/color ]
+            [ -d testoutput/dm3/color/1 ]
+            [ $(find testoutput/dm3/color/1 -mindepth 3 -name "*.wkw" | wc -l) -eq 16 ]
+
+      - run:
           name: Test tile cubing
           command: |
             set -x
