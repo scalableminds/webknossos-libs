@@ -5,8 +5,9 @@ from collections import namedtuple
 from multiprocessing import cpu_count, Lock
 from concurrent.futures import ProcessPoolExecutor
 from os import path
+from platform import python_version
 from math import floor, ceil
-from PIL import Image
+
 
 from .knossos import KnossosDataset, CUBE_EDGE_LEN
 
@@ -82,18 +83,15 @@ def pool_get_lock():
         return None
 
 
-def determine_source_dims_from_image(source_file):
-    # Open the first image and extract the relevant information
-    with Image.open(source_file) as test_img:
-        return (test_img.width, test_img.height)
-
-
 class ParallelExecutor:
     def __init__(self, jobs):
         self.lock = Lock()
-        self.exec = ProcessPoolExecutor(
-            jobs, initializer=pool_init, initargs=(self.lock,)
-        )
+        if python_version() >= "3.7.0":
+            self.exec = ProcessPoolExecutor(
+                jobs, initializer=pool_init, initargs=(self.lock,)
+            )
+        else:
+            self.exec = ProcessPoolExecutor(jobs)
         self.futures = []
 
     def submit(self, fn, *args):

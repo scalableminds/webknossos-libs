@@ -14,12 +14,12 @@ from .utils import (
     add_verbose_flag,
     add_jobs_flag,
     pool_get_lock,
-    determine_source_dims_from_image,
     open_wkw,
     WkwDatasetInfo,
     ParallelExecutor,
 )
 from .cubing import create_parser, read_image_file
+from .image_readers import image_reader
 
 BLOCK_LEN = 32
 SOURCE_FORMAT_FILES = (".tif", ".tiff", ".jpg", ".jpeg", ".png")
@@ -139,7 +139,7 @@ def tile_cubing(source_path, target_path, layer_name, dtype, batch_size, jobs):
     max_z = max([int(path.basename(f)) for f in sections])
 
     # Determine tile size from first matching file
-    tile_size = determine_source_dims_from_image(
+    tile_size = image_reader.read_dimensions(
         next(find_files(path.join(source_path, "**", "*"), SOURCE_FORMAT_FILES))
     )
     logging.info(
