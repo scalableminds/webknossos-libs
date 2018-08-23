@@ -13,7 +13,7 @@ class PillowImageReader:
         return this_layer
 
     def read_dimensions(self, file_name):
-        with Image.open(source_file) as test_img:
+        with Image.open(file_name) as test_img:
             return (test_img.width, test_img.height)
 
 
