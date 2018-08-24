@@ -55,6 +55,24 @@ def write_webknossos_metadata(
         )
 
 
+def read_metadata_for_layer(wkw_path, layer_name):
+    datasource_properties = json.load(
+        open(path.join(wkw_path, "datasource-properties.json"), "r")
+    )
+    layers = datasource_properties["dataLayers"]
+    layer_info = next(layer for layer in layers if layer["name"] == layer_name)
+    dtype = np.dtype(layer_info["elementClass"])
+    bounding_box = layer_info["boundingBox"]
+    origin = bounding_box["topLeft"]
+    bounding_box = [
+        bounding_box["width"],
+        bounding_box["height"],
+        bounding_box["depth"],
+    ]
+
+    return layer_info, dtype, bounding_box, origin
+
+
 def detect_dtype(dataset_path, layer, mag=1):
     layer_path = path.join(dataset_path, layer, str(mag))
     if path.exists(layer_path):
