@@ -98,15 +98,16 @@ def compress_mags(source_path, layer_name, target_path=None, mags=None, jobs=1):
         compress_mag(source_path, layer_name, target_path, mag, jobs)
 
     if with_tmp_dir:
-        makedirs(path.join(source_path + ".bak", layer_name))
-        shutil.move(
-            path.join(source_path, layer_name, str(mag)),
-            path.join(source_path + ".bak", layer_name, str(mag)),
-        )
-        shutil.move(
-            path.join(target_path, layer_name, str(mag)),
-            path.join(source_path, layer_name, str(mag)),
-        )
+        makedirs(path.join(source_path + ".bak", layer_name), exist_ok=True)
+        for mag in mags:
+            shutil.move(
+                path.join(source_path, layer_name, str(mag)),
+                path.join(source_path + ".bak", layer_name, str(mag)),
+            )
+            shutil.move(
+                path.join(target_path, layer_name, str(mag)),
+                path.join(source_path, layer_name, str(mag)),
+            )
         shutil.rmtree(target_path)
         logging.info(
             "Old files are still present in '{0}.bak'. Please remove them when not required anymore.".format(
@@ -121,9 +122,4 @@ if __name__ == "__main__":
         logging.basicConfig(level=logging.DEBUG)
     compress_mags(
         args.source_path, args.layer_name, args.target_path, args.mag, int(args.jobs)
-    )
-    logging.info(
-        "Old files are still present in '{0}.bak'. Please remove them when not required anymore.".format(
-            args.source_path
-        )
     )

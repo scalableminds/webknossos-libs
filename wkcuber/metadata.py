@@ -1,6 +1,7 @@
 import json
 import re
 import wkw
+import logging
 import numpy as np
 
 from argparse import ArgumentParser
@@ -155,6 +156,7 @@ def detect_segmentation_layer(dataset_path, layer_name, max_id, compute_max_id=F
     layer_info["largestSegmentId"] = max_id
 
     if compute_max_id:
+        logging.info("Computing max id of layer={}".format(layer_name))
         # Computing the current largest segment id
         # This may take very long due to IO load
         layer_path = path.join(dataset_path, layer_name, "1")
@@ -163,10 +165,16 @@ def detect_segmentation_layer(dataset_path, layer_name, max_id, compute_max_id=F
             layer_info["largestSegmentId"] = int(
                 np.max(
                     dataset.read(
-                        [0, 0, 0], [bbox["width"], bbox["height"], bbox["depth"]]
+                        bbox["topLeft"], [bbox["width"], bbox["height"], bbox["depth"]]
                     )
                 )
             )
+            logging.info(
+                "Max id of layer={} is {}".format(
+                    layer_name, layer_info["largestSegmentId"]
+                )
+            )
+
     return layer_info
 
 
@@ -181,6 +189,7 @@ def detect_layers(dataset_path, max_id, compute_max_id):
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG)
     args = create_parser().parse_args()
     scale = tuple(float(x) for x in args.scale.split(","))
     write_webknossos_metadata(
