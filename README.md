@@ -11,13 +11,20 @@ Created with [Python3](https://www.python.org/).
 ## Features
 
 * `wkcuber`: Convert image stacks to fully ready WKW datasets (includes downsampling, compressing and metedata generation)
-* `wkcuber.cubing`: Convert image stacks (e.g., `tiff`, `jpg`, `png`) to WKW cubes
+* `wkcuber.cubing`: Convert image stacks (e.g., `tiff`, `jpg`, `png`, `dm3`) to WKW cubes
 * `wkcuber.tile_cubing`: Convert tiled image stacks (e.g. in `z/y/x.ext` folder structure) to WKW cubes
 * `wkcuber.convert_knossos`: Convert KNOSSOS cubes to WKW cubes
 * `wkcuber.downsampling`: Create downsampled magnifications (with `median`, `mode` and linear interpolation modes)
 * `wkcuber.compress`: Compress WKW cubes for efficient file storage (especially useful for segmentation data)
 * `wkcuber.metadata`: Create metadata (with guessing of most parameters)
 * Most modules support multiprocessing
+
+## Supported input formats
+
+* Standard image formats, e.g. `tiff`, `jpg`, `png`, `bmp`
+* Proprietary image formats, e.g. `dm3`
+* Tiled image stacks (used for Catmaid)
+* KNOSSOS cubes
 
 ## Installation
 ### Python3 with pip
