@@ -6,20 +6,18 @@ from argparse import ArgumentParser
 from os import path, listdir
 from PIL import Image
 
-
 from .utils import (
     get_chunks,
     find_files,
     add_verbose_flag,
     add_jobs_flag,
-    determine_source_dims_from_image,
     open_wkw,
     WkwDatasetInfo,
     ParallelExecutor,
     pool_get_lock,
 )
+from .image_readers import image_reader
 
-SOURCE_FORMAT_FILES = (".tif", ".tiff", ".jpg", ".jpeg", ".png")
 BLOCK_LEN = 32
 
 
@@ -61,20 +59,16 @@ def create_parser():
 
 def find_source_filenames(source_path):
     # Find all files in a folder that have a matching file extension
-    source_files = [
-        path.join(source_path, s)
-        for s in find_files(path.join(source_path, "*"), SOURCE_FORMAT_FILES)
-    ]
+    source_files = list(
+        find_files(path.join(source_path, "*"), image_reader.readers.keys())
+    )
     source_files.sort()
     return source_files
 
 
 def read_image_file(file_name, dtype):
     try:
-        this_layer = np.array(Image.open(file_name), np.dtype(dtype))
-        this_layer = this_layer.swapaxes(0, 1)
-        this_layer = this_layer.reshape(this_layer.shape + (1,))
-        return this_layer
+        return image_reader.read_array(file_name, dtype)
     except Exception as exc:
         logging.error("Reading of file={} failed with {}".format(file_name, exc))
         raise exc
@@ -129,7 +123,7 @@ def cubing(source_path, target_path, layer_name, dtype, batch_size, jobs):
     source_files = find_source_filenames(source_path)
 
     # All images are assumed to have equal dimensions
-    num_x, num_y = determine_source_dims_from_image(source_files[0])
+    num_x, num_y = image_reader.read_dimensions(source_files[0])
     num_z = len(source_files)
 
     logging.info("Found source files: count={} size={}x{}".format(num_z, num_x, num_y))

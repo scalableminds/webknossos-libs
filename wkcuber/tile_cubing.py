@@ -14,15 +14,14 @@ from .utils import (
     add_verbose_flag,
     add_jobs_flag,
     pool_get_lock,
-    determine_source_dims_from_image,
     open_wkw,
     WkwDatasetInfo,
     ParallelExecutor,
 )
 from .cubing import create_parser, read_image_file
+from .image_readers import image_reader
 
 BLOCK_LEN = 32
-SOURCE_FORMAT_FILES = (".tif", ".tiff", ".jpg", ".jpeg", ".png")
 CUBE_REGEX = re.compile("(\d+)/(\d+)\.([a-zA-Z]{3,4})$")
 
 
@@ -46,7 +45,7 @@ def find_source_files(source_section_path):
     all_source_files = [
         path.join(source_section_path, s)
         for s in find_files(
-            path.join(source_section_path, "**", "*"), SOURCE_FORMAT_FILES
+            path.join(source_section_path, "**", "*"), image_reader.readers.keys()
         )
     ]
 
@@ -139,8 +138,8 @@ def tile_cubing(source_path, target_path, layer_name, dtype, batch_size, jobs):
     max_z = max([int(path.basename(f)) for f in sections])
 
     # Determine tile size from first matching file
-    tile_size = determine_source_dims_from_image(
-        next(find_files(path.join(source_path, "**", "*"), SOURCE_FORMAT_FILES))
+    tile_size = image_reader.read_dimensions(
+        next(find_files(path.join(source_path, "**", "*"), image_reader.readers.keys()))
     )
     logging.info(
         "Found source files: count={} tile_size={}x{}".format(
