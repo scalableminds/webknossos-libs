@@ -1,12 +1,9 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name='wkcuber',
-    packages=[
-        'wkcuber'
-    ],
-    package_dir={'wkcuber': 'wkcuber'},
-    version='0.1.4',
+    packages=find_packages(exclude=("tests",)),
+    version='0.1.5',
     install_requires=[
         'scipy',
         'numpy',
