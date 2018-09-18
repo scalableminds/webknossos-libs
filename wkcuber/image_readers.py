@@ -19,7 +19,11 @@ class PillowImageReader:
 
 class Dm3ImageReader:
     def read_array(self, file_name, dtype):
-        this_layer = DM3(file_name).imagedata.astype(np.dtype(dtype))
+        dm3_file = DM3(file_name)
+        factor = (1 + np.iinfo(dm3_file.imagedata.dtype).max) / (
+            1 + np.iinfo(dtype).max
+        )
+        this_layer = (dm3_file.imagedata / factor).astype(np.dtype(dtype))
         this_layer = this_layer.swapaxes(0, 1)
         this_layer = this_layer.reshape(this_layer.shape + (1,))
         return this_layer
