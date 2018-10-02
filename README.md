@@ -10,7 +10,7 @@ Created with [Python3](https://www.python.org/).
 
 ## Features
 
-* `wkcuber`: Convert image stacks to fully ready WKW datasets (includes downsampling, compressing and metedata generation)
+* `wkcuber`: Convert image stacks to fully ready WKW datasets (includes downsampling, compressing and metadata generation)
 * `wkcuber.cubing`: Convert image stacks (e.g., `tiff`, `jpg`, `png`, `dm3`) to WKW cubes
 * `wkcuber.tile_cubing`: Convert tiled image stacks (e.g. in `z/y/x.ext` folder structure) to WKW cubes
 * `wkcuber.convert_knossos`: Convert KNOSSOS cubes to WKW cubes
