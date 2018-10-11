@@ -11,13 +11,13 @@ RUN wget https://github.com/lz4/lz4/archive/v${LZ4_VERSION}.tar.gz -O liblz4.tar
 
 RUN mkdir /app
 WORKDIR /app
+COPY requirements.txt /app
+COPY setup.py /app
+RUN pip install -r requirements.txt
 
 COPY wkcuber /app/wkcuber
 COPY tests /app/tests
-COPY requirements.txt /app
-COPY setup.py /app
 
-RUN pip install -r requirements.txt && \
-  python setup.py install
+RUN python setup.py install
 
 ENTRYPOINT [ "python", "-m" ]

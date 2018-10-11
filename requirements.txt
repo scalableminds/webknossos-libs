@@ -3,6 +3,6 @@ numpy
 pillow
 pyyaml
 pytest
-wkw
+wkw>=0.0.6
 requests
 black

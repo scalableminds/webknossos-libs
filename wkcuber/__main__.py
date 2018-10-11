@@ -5,7 +5,7 @@ import logging
 import shutil
 
 from .cubing import cubing, BLOCK_LEN
-from .downsampling import downsample_mag, DEFAULT_EDGE_LEN
+from .downsampling import downsample_mags, DEFAULT_EDGE_LEN
 from .compress import compress_mag
 from .metadata import write_webknossos_metadata
 from .utils import add_verbose_flag, add_jobs_flag
@@ -37,6 +37,7 @@ def create_parser():
     parser.add_argument(
         "--batch_size",
         "-b",
+        type=int,
         help="Number of slices to buffer per job",
         default=BLOCK_LEN,
     )
@@ -45,6 +46,7 @@ def create_parser():
         "--max_mag",
         "-m",
         help="Max resolution to be downsampled. Needs to be a power of 2.",
+        type=int,
         default=512,
     )
 
@@ -93,31 +95,23 @@ if __name__ == "__main__":
         args.target_path,
         args.layer_name,
         args.dtype,
-        int(args.batch_size),
-        int(args.jobs),
+        args.batch_size,
+        args.jobs,
     )
 
     if not args.no_compress:
-        compress_mag_inplace(args.target_path, args.layer_name, 1, int(args.jobs))
+        compress_mag_inplace(args.target_path, args.layer_name, 1, args.jobs)
 
-    target_mag = 2
-    while target_mag <= int(args.max_mag):
-        source_mag = target_mag // 2
-        downsample_mag(
-            args.target_path,
-            args.layer_name,
-            source_mag,
-            target_mag,
-            args.dtype,
-            "default",
-            DEFAULT_EDGE_LEN,
-            int(args.jobs),
-        )
-        if not args.no_compress:
-            compress_mag_inplace(
-                args.target_path, args.layer_name, target_mag, int(args.jobs)
-            )
-        target_mag = target_mag * 2
+    downsample_mags(
+        args.target_path,
+        args.layer_name,
+        args.max_mag,
+        args.dtype,
+        "default",
+        DEFAULT_EDGE_LEN,
+        args.jobs,
+        not args.no_compress
+    )
 
     scale = tuple(float(x) for x in args.scale.split(","))
     write_webknossos_metadata(args.target_path, args.name, scale, compute_max_id=False)
