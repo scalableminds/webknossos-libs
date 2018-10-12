@@ -136,6 +136,22 @@ def downsample(
         set(tuple(x // mag_factor for x in xyz) for xyz in source_cube_addresses)
     )
     target_cube_addresses.sort()
+    logging.debug(
+        "Found source cubes: count={} size={} min={} max={}".format(
+            len(source_cube_addresses),
+            (cube_edge_len,) * 3,
+            min(source_cube_addresses),
+            max(source_cube_addresses),
+        )
+    )
+    logging.debug(  
+        "Found target cubes: count={} size={} min={} max={}".format(    
+            len(target_cube_addresses), 
+            (cube_edge_len,) * 3,   
+            min(target_cube_addresses), 
+            max(target_cube_addresses), 
+        )   
+    )
 
     with ParallelExecutor(jobs) as pool:
         for target_cube_xyz in target_cube_addresses:
@@ -169,9 +185,6 @@ def downsample_cube_job(
             target_wkw_info, pool_get_lock(), header_block_type
         ) as target_wkw:
             wkw_cubelength = source_wkw.header.file_len * source_wkw.header.block_len
-
-            logging.debug("wkw_cubelength: {}".format(wkw_cubelength))
-            logging.debug("cube_edge_len: {}".format(cube_edge_len))
 
             file_buffer = np.zeros((wkw_cubelength, ) * 3, target_wkw_info.dtype)
             tile_length = cube_edge_len
