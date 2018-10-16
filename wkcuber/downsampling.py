@@ -203,26 +203,25 @@ def downsample_cube_job(
                 cube_buffer = cube_buffer[0]
 
                 if np.all(cube_buffer == 0):
-                    logging.debug("        Skipping empty cube {}".format(target_cube_xyz))
-                    # TODO: Why don't we actually skip the downsampling?
+                    logging.debug("        Skipping empty cube {} (tile {})".format(target_cube_xyz, tile))
+                else:
+                    # Downsample the buffer
 
-                # Downsample the buffer
+                    time_start("apply downsample")
+                    data_cube = downsample_cube(cube_buffer, mag_factor, interpolation_mode)
+                    logging.debug("before downsample_cube {}".format(data_cube.shape))
+                    logging.debug("data_cube.shape: {}".format(data_cube.shape))
 
-                time_start("apply downsample")
-                data_cube = downsample_cube(cube_buffer, mag_factor, interpolation_mode)
-                logging.debug("before downsample_cube {}".format(data_cube.shape))
-                logging.debug("data_cube.shape: {}".format(data_cube.shape))
+                    buffer_offset = target_offset - file_offset
+                    buffer_end = buffer_offset + tile_length
 
-                buffer_offset = target_offset - file_offset
-                buffer_end = buffer_offset + tile_length
+                    file_buffer[
+                        buffer_offset[0]:buffer_end[0], buffer_offset[1]:buffer_end[1], buffer_offset[2]:buffer_end[2]
+                    ] = data_cube
+                    time_stop("apply downsample")
 
-                file_buffer[
-                    buffer_offset[0]:buffer_end[0], buffer_offset[1]:buffer_end[1], buffer_offset[2]:buffer_end[2]
-                ] = data_cube
-                time_stop("apply downsample")
-
-                time_stop("process tile")
-                logging.debug("  ")
+                    time_stop("process tile")
+                    logging.debug("  ")
 
             time_start("Downsampling of {}".format(target_cube_xyz))
             # Write the downsampled buffer to target
