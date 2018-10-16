@@ -1,4 +1,3 @@
-import time
 import logging
 import wkw
 import re
@@ -19,6 +18,8 @@ from .utils import (
     WkwDatasetInfo,
     ParallelExecutor,
     pool_get_lock,
+    time_start,
+    time_stop,
 )
 
 DEFAULT_EDGE_LEN = 256
@@ -27,16 +28,6 @@ def parse_cube_file_name(filename):
     m = CUBE_REGEX.search(filename)
     return (int(m.group(3)), int(m.group(2)), int(m.group(1)))
 
-
-times = {}
-def time_start(identifier):
-    times[identifier] = time.time()
-
-def time_stop(identifier):
-    _time = times.pop(identifier)
-    logging.debug(
-        "{} took {:.8f}s".format(identifier, time.time() - _time)
-    )
 
 class InterpolationModes(Enum):
     MEDIAN = 0

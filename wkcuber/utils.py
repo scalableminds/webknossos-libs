@@ -1,3 +1,4 @@
+import time
 import wkw
 import numpy as np
 import logging
@@ -113,3 +114,14 @@ class ParallelExecutor:
     def __exit__(self, type, value, tb):
         [f.result() for f in self.futures]
         self.exec.__exit__(type, value, tb)
+
+
+times = {}
+def time_start(identifier):
+    times[identifier] = time.time()
+
+def time_stop(identifier):
+    _time = times.pop(identifier)
+    logging.debug(
+        "{} took {:.8f}s".format(identifier, time.time() - _time)
+    )
