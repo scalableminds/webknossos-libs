@@ -4,7 +4,7 @@ from os import path
 from glob import iglob, glob
 
 CUBE_EDGE_LEN = 128
-CUBE_REGEX = re.compile("x(\d+)/y(\d+)/z(\d+)/(.*\.raw)$")
+CUBE_REGEX = re.compile(r"x(\d+)/y(\d+)/z(\d+)/(.*\.raw)$")
 
 
 class KnossosDataset:

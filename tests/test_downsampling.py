@@ -49,7 +49,7 @@ def test_cube_addresses():
 def test_downsample_cube_job():
     offset = (3, 3, 0)
     downsample_cube_job(
-        source_info, target_info, 2, InterpolationModes.MAX, CUBE_EDGE_LEN, offset
+        source_info, target_info, 2, InterpolationModes.MAX, CUBE_EDGE_LEN, offset, True
     )
 
     source_buffer = read_wkw(

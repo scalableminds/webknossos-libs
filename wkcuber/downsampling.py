@@ -23,7 +23,7 @@ from .utils import (
 )
 
 DEFAULT_EDGE_LEN = 256
-CUBE_REGEX = re.compile("z(\d+)/y(\d+)/x(\d+)(\.wkw)$")
+CUBE_REGEX = re.compile(r"z(\d+)/y(\d+)/x(\d+)(\.wkw)$")
 
 
 def parse_cube_file_name(filename):

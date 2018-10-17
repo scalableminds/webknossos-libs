@@ -97,7 +97,7 @@ def detect_bbox(dataset_path, layer, mag=1):
         return iglob(path.join(layer_path, "*", "*", "*.wkw"), recursive=True)
 
     def parse_cube_file_name(filename):
-        CUBE_REGEX = re.compile("z(\d+)/y(\d+)/x(\d+)(\.wkw)$")
+        CUBE_REGEX = re.compile(r"z(\d+)/y(\d+)/x(\d+)(\.wkw)$")
         m = CUBE_REGEX.search(filename)
         return (int(m.group(3)), int(m.group(2)), int(m.group(1)))
 
