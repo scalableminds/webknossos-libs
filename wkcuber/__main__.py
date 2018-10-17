@@ -110,7 +110,7 @@ if __name__ == "__main__":
         "default",
         DEFAULT_EDGE_LEN,
         args.jobs,
-        not args.no_compress
+        not args.no_compress,
     )
 
     scale = tuple(float(x) for x in args.scale.split(","))

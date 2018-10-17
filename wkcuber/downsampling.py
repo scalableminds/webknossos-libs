@@ -24,6 +24,8 @@ from .utils import (
 
 DEFAULT_EDGE_LEN = 256
 CUBE_REGEX = re.compile("z(\d+)/y(\d+)/x(\d+)(\.wkw)$")
+
+
 def parse_cube_file_name(filename):
     m = CUBE_REGEX.search(filename)
     return (int(m.group(3)), int(m.group(2)), int(m.group(1)))
@@ -77,9 +79,9 @@ def create_parser():
         default=DEFAULT_EDGE_LEN,
     )
 
-    parser.add_argument("--compress",
-        action="store_true",
-        help="Compress data during downsampling")
+    parser.add_argument(
+        "--compress", action="store_true", help="Compress data during downsampling"
+    )
 
     add_jobs_flag(parser)
     add_verbose_flag(parser)
@@ -98,9 +100,15 @@ def cube_addresses(source_wkw_info, cube_edge_len):
 
         cube_addresses = []
         for wkw_x, wkw_y, wkw_z in wkw_addresses:
-            x_dims = list(range(wkw_x * buffer_len_factor, (wkw_x + 1) * buffer_len_factor))
-            y_dims = list(range(wkw_y * buffer_len_factor, (wkw_y + 1) * buffer_len_factor))
-            z_dims = list(range(wkw_z * buffer_len_factor, (wkw_z + 1) * buffer_len_factor))
+            x_dims = list(
+                range(wkw_x * buffer_len_factor, (wkw_x + 1) * buffer_len_factor)
+            )
+            y_dims = list(
+                range(wkw_y * buffer_len_factor, (wkw_y + 1) * buffer_len_factor)
+            )
+            z_dims = list(
+                range(wkw_z * buffer_len_factor, (wkw_z + 1) * buffer_len_factor)
+            )
             cube_addresses += product(x_dims, y_dims, z_dims)
 
         cube_addresses.sort()
@@ -135,13 +143,13 @@ def downsample(
             max(source_cube_addresses),
         )
     )
-    logging.debug(  
-        "Found target cubes: count={} size={} min={} max={}".format(    
-            len(target_cube_addresses), 
-            (cube_edge_len,) * 3,   
-            min(target_cube_addresses), 
-            max(target_cube_addresses), 
-        )   
+    logging.debug(
+        "Found target cubes: count={} size={} min={} max={}".format(
+            len(target_cube_addresses),
+            (cube_edge_len,) * 3,
+            min(target_cube_addresses),
+            max(target_cube_addresses),
+        )
     )
 
     with ParallelExecutor(jobs) as pool:
@@ -170,17 +178,21 @@ def downsample_cube_job(
     compress,
 ):
     try:
-        header_block_type = wkw.Header.BLOCK_TYPE_LZ4HC if compress else wkw.Header.BLOCK_TYPE_RAW
+        header_block_type = (
+            wkw.Header.BLOCK_TYPE_LZ4HC if compress else wkw.Header.BLOCK_TYPE_RAW
+        )
 
         with open_wkw(source_wkw_info) as source_wkw, open_wkw(
             target_wkw_info, pool_get_lock(), header_block_type
         ) as target_wkw:
             wkw_cubelength = source_wkw.header.file_len * source_wkw.header.block_len
 
-            file_buffer = np.zeros((wkw_cubelength, ) * 3, target_wkw_info.dtype)
+            file_buffer = np.zeros((wkw_cubelength,) * 3, target_wkw_info.dtype)
             tile_length = cube_edge_len
             tile_count_per_dim = wkw_cubelength // tile_length
-            assert wkw_cubelength % cube_edge_len == 0, "buffer_cube_size must be a divisor of wkw cube length"
+            assert (
+                wkw_cubelength % cube_edge_len == 0
+            ), "buffer_cube_size must be a divisor of wkw cube length"
 
             tile_indices = list(range(0, tile_count_per_dim))
             tiles = product(tile_indices, tile_indices, tile_indices)
@@ -189,7 +201,9 @@ def downsample_cube_job(
             for tile in tiles:
                 time_start("process tile")
 
-                target_offset = np.array(tile) * tile_length + wkw_cubelength * np.array(target_cube_xyz)
+                target_offset = np.array(
+                    tile
+                ) * tile_length + wkw_cubelength * np.array(target_cube_xyz)
                 source_offset = mag_factor * target_offset
                 logging.debug("        tile {}".format(tile))
                 logging.debug("        target_offset {}".format(target_offset))
@@ -197,18 +211,29 @@ def downsample_cube_job(
 
                 # Read source buffer
                 time_start("wkw::read")
-                cube_buffer = source_wkw.read(source_offset, (wkw_cubelength * mag_factor // tile_count_per_dim,) * 3)
+                cube_buffer = source_wkw.read(
+                    source_offset,
+                    (wkw_cubelength * mag_factor // tile_count_per_dim,) * 3,
+                )
                 time_stop("wkw::read")
-                assert cube_buffer.shape[0] == 1, "Only single-channel data is supported"
+                assert (
+                    cube_buffer.shape[0] == 1
+                ), "Only single-channel data is supported"
                 cube_buffer = cube_buffer[0]
 
                 if np.all(cube_buffer == 0):
-                    logging.debug("        Skipping empty cube {} (tile {})".format(target_cube_xyz, tile))
+                    logging.debug(
+                        "        Skipping empty cube {} (tile {})".format(
+                            target_cube_xyz, tile
+                        )
+                    )
                 else:
                     # Downsample the buffer
 
                     time_start("apply downsample")
-                    data_cube = downsample_cube(cube_buffer, mag_factor, interpolation_mode)
+                    data_cube = downsample_cube(
+                        cube_buffer, mag_factor, interpolation_mode
+                    )
                     logging.debug("before downsample_cube {}".format(data_cube.shape))
                     logging.debug("data_cube.shape: {}".format(data_cube.shape))
 
@@ -216,7 +241,9 @@ def downsample_cube_job(
                     buffer_end = buffer_offset + tile_length
 
                     file_buffer[
-                        buffer_offset[0]:buffer_end[0], buffer_offset[1]:buffer_end[1], buffer_offset[2]:buffer_end[2]
+                        buffer_offset[0] : buffer_end[0],
+                        buffer_offset[1] : buffer_end[1],
+                        buffer_offset[2] : buffer_end[2],
                     ] = data_cube
                     time_stop("apply downsample")
 
@@ -367,7 +394,7 @@ if __name__ == "__main__":
 
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG)
-    
+
     downsample_mags(
         args.path,
         args.layer_name,

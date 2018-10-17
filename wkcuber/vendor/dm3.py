@@ -830,7 +830,7 @@ class DM3(object):
             # - read as 32-bit LE unsigned integer
             tn = Image.frombytes("F", (tn_width, tn_height), rawdata, "raw", "F;32")
             # - rescale and convert px data
-            tn = tn.point(lambda x: x * (1. / 65536) + 0)
+            tn = tn.point(lambda x: x * (1.0 / 65536) + 0)
             tn = tn.convert("L")
         # - return image
         return tn
@@ -864,7 +864,7 @@ class DM3(object):
             print("## tndata:", len(tndata))
             tndata = tndata.reshape(tn_height, tn_width)
             # - rescale and convert to integer
-            tndata = tndata / 65536. + 0.
+            tndata = tndata / 65536.0 + 0.0
             tndata = tndata.astype(int)
             # - return thumbnail data
             return tndata
