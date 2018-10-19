@@ -178,7 +178,7 @@ jobs:
 
       - run:
           name: Decompress reference magnification data
-          command: tar -xzvf testdata/tiff_mag_2_reference.tar.gz
+          command: mkdir -p testdata/tiff_mag_2_reference && tar -xzvf testdata/tiff_mag_2_reference.tar.gz -C testdata/tiff_mag_2_reference
 
       - run:
           name: Test downsampling
