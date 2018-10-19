@@ -35,18 +35,11 @@ def test_downsample_cube():
 
 
 def test_cube_addresses():
-    cubes_per_file = WKW_CUBE_SIZE // CUBE_EDGE_LEN
+    addresses = cube_addresses(source_info)
+    assert len(addresses) == 5 * 5 * 1
 
-    addresses = cube_addresses(source_info, CUBE_EDGE_LEN)
-    assert len(addresses) == (5 * cubes_per_file) * (5 * cubes_per_file) * (
-        1 * cubes_per_file
-    )
     assert min(addresses) == (0, 0, 0)
-    assert max(addresses) == (
-        5 * cubes_per_file - 1,
-        5 * cubes_per_file - 1,
-        1 * cubes_per_file - 1,
-    )
+    assert max(addresses) == (4, 4, 0)
 
 
 def downsample_test_helper(use_compress):

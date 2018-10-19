@@ -89,30 +89,12 @@ def create_parser():
     return parser
 
 
-def cube_addresses(source_wkw_info, cube_edge_len):
-    # Traverse all WKW cubes in the dataset in order to
-    # find all available cubes of size `cube_edge_len`^3
+def cube_addresses(source_wkw_info):
+    # Gathers all WKW cubes in the dataset
     with open_wkw(source_wkw_info) as source_wkw:
-        wkw_cubelength = source_wkw.header.file_len * source_wkw.header.block_len
-        buffer_len_factor = wkw_cubelength // cube_edge_len
-
         wkw_addresses = list(parse_cube_file_name(f) for f in source_wkw.list_files())
-
-        cube_addresses = []
-        for wkw_x, wkw_y, wkw_z in wkw_addresses:
-            x_dims = list(
-                range(wkw_x * buffer_len_factor, (wkw_x + 1) * buffer_len_factor)
-            )
-            y_dims = list(
-                range(wkw_y * buffer_len_factor, (wkw_y + 1) * buffer_len_factor)
-            )
-            z_dims = list(
-                range(wkw_z * buffer_len_factor, (wkw_z + 1) * buffer_len_factor)
-            )
-            cube_addresses += product(x_dims, y_dims, z_dims)
-
-        cube_addresses.sort()
-        return cube_addresses
+        wkw_addresses.sort()
+        return wkw_addresses
 
 
 def downsample(
@@ -130,7 +112,8 @@ def downsample(
 
     mag_factor = int(target_mag / source_mag)
     # Detect the cubes that we want to downsample
-    source_cube_addresses = cube_addresses(source_wkw_info, cube_edge_len)
+    source_cube_addresses = cube_addresses(source_wkw_info)
+
     target_cube_addresses = list(
         set(tuple(x // mag_factor for x in xyz) for xyz in source_cube_addresses)
     )
@@ -177,6 +160,8 @@ def downsample_cube_job(
     target_cube_xyz,
     compress,
 ):
+    logging.info("Downsampling of {}".format(target_cube_xyz))
+
     try:
         header_block_type = (
             wkw.Header.BLOCK_TYPE_LZ4HC if compress else wkw.Header.BLOCK_TYPE_RAW
@@ -199,23 +184,18 @@ def downsample_cube_job(
             file_offset = wkw_cubelength * np.array(target_cube_xyz)
 
             for tile in tiles:
-                time_start("process tile")
-
                 target_offset = np.array(
                     tile
                 ) * tile_length + wkw_cubelength * np.array(target_cube_xyz)
                 source_offset = mag_factor * target_offset
-                logging.debug("        tile {}".format(tile))
-                logging.debug("        target_offset {}".format(target_offset))
-                logging.debug("        source_offset {}".format(source_offset))
 
                 # Read source buffer
-                time_start("wkw::read")
+                # time_start("wkw::read")
                 cube_buffer = source_wkw.read(
                     source_offset,
                     (wkw_cubelength * mag_factor // tile_count_per_dim,) * 3,
                 )
-                time_stop("wkw::read")
+                # time_stop("wkw::read")
                 assert (
                     cube_buffer.shape[0] == 1
                 ), "Only single-channel data is supported"
@@ -230,12 +210,9 @@ def downsample_cube_job(
                 else:
                     # Downsample the buffer
 
-                    time_start("apply downsample")
                     data_cube = downsample_cube(
                         cube_buffer, mag_factor, interpolation_mode
                     )
-                    logging.debug("before downsample_cube {}".format(data_cube.shape))
-                    logging.debug("data_cube.shape: {}".format(data_cube.shape))
 
                     buffer_offset = target_offset - file_offset
                     buffer_end = buffer_offset + tile_length
@@ -245,10 +222,6 @@ def downsample_cube_job(
                         buffer_offset[1] : buffer_end[1],
                         buffer_offset[2] : buffer_end[2],
                     ] = data_cube
-                    time_stop("apply downsample")
-
-                    time_stop("process tile")
-                    logging.debug("  ")
 
             time_start("Downsampling of {}".format(target_cube_xyz))
             # Write the downsampled buffer to target
