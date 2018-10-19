@@ -1,5 +1,7 @@
+import time
 import wkw
 import numpy as np
+import logging
 from glob import iglob
 from collections import namedtuple
 from multiprocessing import cpu_count, Lock
@@ -18,19 +20,24 @@ WkwDatasetInfo = namedtuple(
 KnossosDatasetInfo = namedtuple("KnossosDatasetInfo", ("dataset_path", "dtype"))
 
 
-def _open_wkw(info):
-    return wkw.Dataset.open(
-        path.join(info.dataset_path, info.layer_name, str(info.mag)),
-        wkw.Header(np.dtype(info.dtype)),
+def _open_wkw(info, block_type=None):
+    header = wkw.Header(np.dtype(info.dtype))
+    if block_type is not None:
+        header.block_type = block_type
+    logging.debug("setting block_type to {}".format(header.block_type))
+    ds = wkw.Dataset.open(
+        path.join(info.dataset_path, info.layer_name, str(info.mag)), header
     )
+    logging.debug("ds.header.block_type: {}".format(ds.header.block_type))
+    return ds
 
 
-def open_wkw(info, lock=None):
+def open_wkw(info, lock=None, block_type=None):
     if lock is None:
-        return _open_wkw(info)
+        return _open_wkw(info, block_type)
     else:
         with lock:
-            return _open_wkw(info)
+            return _open_wkw(info, block_type)
 
 
 def open_knossos(info):
@@ -67,7 +74,9 @@ def get_regular_chunks(min_z, max_z, chunk_size):
 
 
 def add_jobs_flag(parser):
-    parser.add_argument("--jobs", "-j", help="Parallel jobs", default=cpu_count())
+    parser.add_argument(
+        "--jobs", "-j", help="Parallel jobs", type=int, default=cpu_count()
+    )
 
 
 def pool_init(lock):
@@ -106,3 +115,15 @@ class ParallelExecutor:
     def __exit__(self, type, value, tb):
         [f.result() for f in self.futures]
         self.exec.__exit__(type, value, tb)
+
+
+times = {}
+
+
+def time_start(identifier):
+    times[identifier] = time.time()
+
+
+def time_stop(identifier):
+    _time = times.pop(identifier)
+    logging.debug("{} took {:.8f}s".format(identifier, time.time() - _time))

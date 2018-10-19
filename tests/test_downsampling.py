@@ -1,3 +1,4 @@
+import logging
 import numpy as np
 from wkcuber.downsampling import (
     InterpolationModes,
@@ -5,7 +6,9 @@ from wkcuber.downsampling import (
     downsample_cube_job,
     cube_addresses,
 )
+import wkw
 from wkcuber.utils import WkwDatasetInfo, open_wkw
+import shutil
 
 WKW_CUBE_SIZE = 1024
 CUBE_EDGE_LEN = 256
@@ -14,8 +17,8 @@ source_info = WkwDatasetInfo("testdata/WT1_wkw", "color", "uint8", 1)
 target_info = WkwDatasetInfo("testoutput/WT1_wkw", "color", "uint8", 2)
 
 
-def read_wkw(wkw_info, offset, size):
-    with open_wkw(wkw_info) as wkw_dataset:
+def read_wkw(wkw_info, offset, size, block_type=None):
+    with open_wkw(wkw_info, block_type=block_type) as wkw_dataset:
         return wkw_dataset.read(offset, size)[0]
 
 
@@ -32,38 +35,45 @@ def test_downsample_cube():
 
 
 def test_cube_addresses():
-    cubes_per_file = WKW_CUBE_SIZE // CUBE_EDGE_LEN
+    addresses = cube_addresses(source_info)
+    assert len(addresses) == 5 * 5 * 1
 
-    addresses = cube_addresses(source_info, CUBE_EDGE_LEN)
-    assert len(addresses) == (5 * cubes_per_file) * (5 * cubes_per_file) * (
-        1 * cubes_per_file
-    )
     assert min(addresses) == (0, 0, 0)
-    assert max(addresses) == (
-        5 * cubes_per_file - 1,
-        5 * cubes_per_file - 1,
-        1 * cubes_per_file - 1,
-    )
+    assert max(addresses) == (4, 4, 0)
 
 
-def test_downsample_cube_job():
-    offset = (3, 3, 0)
-    downsample_cube_job(
-        source_info, target_info, 2, InterpolationModes.MAX, CUBE_EDGE_LEN, offset
-    )
+def downsample_test_helper(use_compress):
+    try:
+        shutil.rmtree(target_info.dataset_path)
+    except:
+        pass
 
+    offset = (1, 2, 0)
     source_buffer = read_wkw(
         source_info,
-        tuple(a * CUBE_EDGE_LEN * 2 for a in offset),
+        tuple(a * WKW_CUBE_SIZE * 2 for a in offset),
         (CUBE_EDGE_LEN * 2,) * 3,
     )
     assert np.any(source_buffer != 0)
 
+    downsample_cube_job(
+        source_info, target_info, 2, InterpolationModes.MAX, CUBE_EDGE_LEN, offset, use_compress
+    )
+
+    assert np.any(source_buffer != 0)
+    block_type = wkw.Header.BLOCK_TYPE_LZ4HC if use_compress else wkw.Header.BLOCK_TYPE_RAW
     target_buffer = read_wkw(
-        target_info, tuple(a * CUBE_EDGE_LEN for a in offset), (CUBE_EDGE_LEN,) * 3
+        target_info, tuple(a * WKW_CUBE_SIZE for a in offset), (CUBE_EDGE_LEN,) * 3, block_type
     )
     assert np.any(target_buffer != 0)
 
     assert np.all(
         target_buffer == downsample_cube(source_buffer, 2, InterpolationModes.MAX)
     )
+
+
+def test_downsample_cube_job():
+    downsample_test_helper(False)
+
+def test_compressed_downsample_cube_job():
+    downsample_test_helper(True)

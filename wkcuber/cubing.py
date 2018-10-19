@@ -48,6 +48,7 @@ def create_parser():
         "--batch_size",
         "-b",
         help="Number of sections to buffer per job",
+        type=int,
         default=BLOCK_LEN,
     )
 
@@ -139,7 +140,7 @@ def cubing(source_path, target_path, layer_name, dtype, batch_size, jobs):
                 target_wkw_info,
                 z_batch,
                 source_files[z:max_z],
-                int(batch_size),
+                batch_size,
                 (num_x, num_y),
             )
 
@@ -155,6 +156,6 @@ if __name__ == "__main__":
         args.target_path,
         args.layer_name,
         args.dtype,
-        int(args.batch_size),
-        int(args.jobs),
+        args.batch_size,
+        args.jobs,
     )
