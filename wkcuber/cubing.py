@@ -120,8 +120,9 @@ def cubing_job(target_wkw_info, z_batches, source_file_batches, batch_size, imag
                 raise exc
 
 
-def cubing(source_path, target_path, layer_name, dtype, batch_size, jobs) \
-        -> Tuple[int, int, int]:
+def cubing(
+    source_path, target_path, layer_name, dtype, batch_size, jobs
+) -> Tuple[int, int, int]:
 
     target_wkw_info = WkwDatasetInfo(target_path, layer_name, dtype, 1)
     source_files = find_source_filenames(source_path)
