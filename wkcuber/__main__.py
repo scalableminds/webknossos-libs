@@ -105,6 +105,7 @@ if __name__ == "__main__":
     downsample_mags(
         args.target_path,
         args.layer_name,
+        1,
         args.max_mag,
         args.dtype,
         "default",

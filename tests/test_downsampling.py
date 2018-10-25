@@ -57,13 +57,24 @@ def downsample_test_helper(use_compress):
     assert np.any(source_buffer != 0)
 
     downsample_cube_job(
-        source_info, target_info, 2, InterpolationModes.MAX, CUBE_EDGE_LEN, offset, use_compress
+        source_info,
+        target_info,
+        2,
+        InterpolationModes.MAX,
+        CUBE_EDGE_LEN,
+        offset,
+        use_compress,
     )
 
     assert np.any(source_buffer != 0)
-    block_type = wkw.Header.BLOCK_TYPE_LZ4HC if use_compress else wkw.Header.BLOCK_TYPE_RAW
+    block_type = (
+        wkw.Header.BLOCK_TYPE_LZ4HC if use_compress else wkw.Header.BLOCK_TYPE_RAW
+    )
     target_buffer = read_wkw(
-        target_info, tuple(a * WKW_CUBE_SIZE for a in offset), (CUBE_EDGE_LEN,) * 3, block_type
+        target_info,
+        tuple(a * WKW_CUBE_SIZE for a in offset),
+        (CUBE_EDGE_LEN,) * 3,
+        block_type,
     )
     assert np.any(target_buffer != 0)
 
@@ -74,6 +85,7 @@ def downsample_test_helper(use_compress):
 
 def test_downsample_cube_job():
     downsample_test_helper(False)
+
 
 def test_compressed_downsample_cube_job():
     downsample_test_helper(True)
