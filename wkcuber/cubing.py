@@ -1,11 +1,8 @@
 import time
 import logging
 import numpy as np
-import wkw
 from argparse import ArgumentParser
-from os import path, listdir
-from PIL import Image
-from typing import Tuple
+from os import path
 
 from .utils import (
     get_chunks,
@@ -120,9 +117,7 @@ def cubing_job(target_wkw_info, z_batches, source_file_batches, batch_size, imag
                 raise exc
 
 
-def cubing(
-    source_path, target_path, layer_name, dtype, batch_size, jobs
-) -> Tuple[int, int, int]:
+def cubing(source_path, target_path, layer_name, dtype, batch_size, jobs) -> dict:
 
     target_wkw_info = WkwDatasetInfo(target_path, layer_name, dtype, 1)
     source_files = find_source_filenames(source_path)
@@ -147,7 +142,9 @@ def cubing(
                 batch_size,
                 (num_x, num_y),
             )
-    return (num_x, num_y, num_z)
+
+    # Return Bounding Box
+    return {"topLeft": [0, 0, 0], "width": num_x, "height": num_y, "depth": num_z}
 
 
 if __name__ == "__main__":

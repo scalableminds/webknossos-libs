@@ -6,8 +6,8 @@ import numpy as np
 
 from argparse import ArgumentParser
 from glob import iglob
-from os import path, makedirs, listdir
-from typing import Tuple, Optional
+from os import path, listdir
+from typing import Optional
 
 
 def create_parser():
@@ -43,7 +43,7 @@ def write_webknossos_metadata(
     scale,
     max_id=0,
     compute_max_id=False,
-    exact_bounding_box: Optional[Tuple[int, int, int]] = None,
+    exact_bounding_box: Optional[dict] = None,
 ):
 
     # Generate a metadata file for webKnossos
@@ -136,11 +136,10 @@ def detect_resolutions(dataset_path, layer):
 def detect_standard_layer(dataset_path, layer_name, exact_bounding_box=None):
     # Perform metadata detection for well-known layers
 
-    if exact_bounding_box is not None:
-        width, height, depth = exact_bounding_box
-        bbox = {"topLeft": [0, 0, 0], "width": width, "height": height, "depth": depth}
-    else:
+    if exact_bounding_box is None:
         bbox = detect_bbox(dataset_path, layer_name)
+    else:
+        bbox = exact_bounding_box
 
     dtype = detect_dtype(dataset_path, layer_name)
 
