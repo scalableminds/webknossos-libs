@@ -5,6 +5,7 @@ import wkw
 from argparse import ArgumentParser
 from os import path, listdir
 from PIL import Image
+from typing import Tuple
 
 from .utils import (
     get_chunks,
@@ -119,7 +120,9 @@ def cubing_job(target_wkw_info, z_batches, source_file_batches, batch_size, imag
                 raise exc
 
 
-def cubing(source_path, target_path, layer_name, dtype, batch_size, jobs):
+def cubing(source_path, target_path, layer_name, dtype, batch_size, jobs) \
+        -> Tuple[int, int, int]:
+
     target_wkw_info = WkwDatasetInfo(target_path, layer_name, dtype, 1)
     source_files = find_source_filenames(source_path)
 
@@ -143,6 +146,7 @@ def cubing(source_path, target_path, layer_name, dtype, batch_size, jobs):
                 batch_size,
                 (num_x, num_y),
             )
+    return (num_x, num_y, num_z)
 
 
 if __name__ == "__main__":

@@ -7,6 +7,7 @@ import numpy as np
 from argparse import ArgumentParser
 from glob import iglob
 from os import path, makedirs, listdir
+from typing import Tuple, Optional
 
 
 def create_parser():
@@ -37,13 +38,15 @@ def create_parser():
 
 
 def write_webknossos_metadata(
-    dataset_path, name, scale, max_id=0, compute_max_id=False
+    dataset_path, name, scale, max_id=0, compute_max_id=False,
+    exact_bounding_box: Optional[Tuple[int, int, int]] = None
 ):
 
     # Generate a metadata file for webKnossos
     # Currently includes no source of information for team
     datasource_properties_path = path.join(dataset_path, "datasource-properties.json")
-    layers = list(detect_layers(dataset_path, max_id, compute_max_id))
+    layers = list(detect_layers(dataset_path, max_id, compute_max_id,
+                                exact_bounding_box))
     with open(datasource_properties_path, "wt") as datasource_properties_json:
         json.dump(
             {
@@ -125,9 +128,20 @@ def detect_resolutions(dataset_path, layer):
             yield int(mag)
 
 
-def detect_standard_layer(dataset_path, layer_name):
+def detect_standard_layer(dataset_path, layer_name, exact_bounding_box=None):
     # Perform metadata detection for well-known layers
-    bbox = detect_bbox(dataset_path, layer_name)
+
+    if exact_bounding_box is not None:
+        width, height, depth = exact_bounding_box
+        bbox = {
+            "topLeft": [0, 0, 0],
+            "width": width,
+            "height": height,
+            "depth": depth,
+        }
+    else:
+        bbox = detect_bbox(dataset_path, layer_name)
+
     dtype = detect_dtype(dataset_path, layer_name)
 
     mags = list(detect_resolutions(dataset_path, layer_name))
@@ -150,8 +164,11 @@ def detect_standard_layer(dataset_path, layer_name):
     }
 
 
-def detect_segmentation_layer(dataset_path, layer_name, max_id, compute_max_id=False):
-    layer_info = detect_standard_layer(dataset_path, layer_name)
+def detect_segmentation_layer(dataset_path, layer_name, max_id,
+                              compute_max_id=False,
+                              exact_bounding_box=None):
+    layer_info = detect_standard_layer(dataset_path, layer_name,
+                                       exact_bounding_box)
     layer_info["mappings"] = []
     layer_info["largestSegmentId"] = max_id
 
@@ -178,13 +195,14 @@ def detect_segmentation_layer(dataset_path, layer_name, max_id, compute_max_id=F
     return layer_info
 
 
-def detect_layers(dataset_path, max_id, compute_max_id):
+def detect_layers(dataset_path, max_id, compute_max_id, exact_bounding_box=None):
     # Detect metadata for well-known layers, e.g. color and segmentation
     if path.exists(path.join(dataset_path, "color")):
-        yield detect_standard_layer(dataset_path, "color")
+        yield detect_standard_layer(dataset_path, "color", exact_bounding_box)
     if path.exists(path.join(dataset_path, "segmentation")):
         yield detect_segmentation_layer(
-            dataset_path, "segmentation", max_id, compute_max_id
+            dataset_path, "segmentation", max_id, compute_max_id,
+            exact_bounding_box
         )
 
 
