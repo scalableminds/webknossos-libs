@@ -3,7 +3,7 @@ import wkw
 import re
 import numpy as np
 from argparse import ArgumentParser
-from math import floor
+from math import floor, log2
 from os import path, listdir
 from scipy.stats import mode
 from scipy.ndimage.interpolation import zoom
@@ -69,6 +69,15 @@ def create_parser():
 
     parser.add_argument(
         "--max", "-m", help="Max resolution to be downsampled", type=int, default=512
+    )
+
+    parser.add_argument(
+        "--from_mag",
+        "--from",
+        "-f",
+        help="Resolution to base downsampling on",
+        type=int,
+        default=1,
     )
 
     parser.add_argument(
@@ -343,9 +352,18 @@ def downsample_mag(
 
 
 def downsample_mags(
-    path, layer_name, max_mag, dtype, interpolation_mode, cube_edge_len, jobs, compress
+    path,
+    layer_name,
+    from_mag,
+    max_mag,
+    dtype,
+    interpolation_mode,
+    cube_edge_len,
+    jobs,
+    compress,
 ):
-    target_mag = 2
+    assert log2(from_mag) % 1 == 0, "'from_mag' needs to be power of 2."
+    target_mag = from_mag * 2
     while target_mag <= max_mag:
         source_mag = target_mag // 2
         downsample_mag(
@@ -371,6 +389,7 @@ if __name__ == "__main__":
     downsample_mags(
         args.path,
         args.layer_name,
+        args.from_mag,
         args.max,
         args.dtype,
         args.interpolation_mode,
