@@ -90,7 +90,7 @@ if __name__ == "__main__":
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG)
 
-    cubing(
+    bounding_box = cubing(
         args.source_path,
         args.target_path,
         args.layer_name,
@@ -115,4 +115,10 @@ if __name__ == "__main__":
     )
 
     scale = tuple(float(x) for x in args.scale.split(","))
-    write_webknossos_metadata(args.target_path, args.name, scale, compute_max_id=False)
+    write_webknossos_metadata(
+        args.target_path,
+        args.name,
+        scale,
+        compute_max_id=False,
+        exact_bounding_box=bounding_box,
+    )
