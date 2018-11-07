@@ -20,9 +20,7 @@ class PillowImageReader:
 
 def to_target_datatype(data: np.ndarray, target_dtype) -> np.ndarray:
 
-    factor = (1 + np.iinfo(data.dtype).max) / (
-            1 + np.iinfo(target_dtype).max
-    )
+    factor = (1 + np.iinfo(data.dtype).max) / (1 + np.iinfo(target_dtype).max)
     return (data / factor).astype(np.dtype(target_dtype))
 
 
@@ -40,23 +38,27 @@ class Dm3ImageReader:
 
 
 class Dm4ImageReader:
-
-
     def _read_tags(self, dm4file):
 
         tags = dm4file.read_directory()
-        image_data_tag = tags.named_subdirs['ImageList'].unnamed_subdirs[1].named_subdirs['ImageData']
-        image_tag = image_data_tag.named_tags['Data']
+        image_data_tag = (
+            tags.named_subdirs["ImageList"]
+            .unnamed_subdirs[1]
+            .named_subdirs["ImageData"]
+        )
+        image_tag = image_data_tag.named_tags["Data"]
 
         return image_data_tag, image_tag
 
-
     def _read_dimensions(self, dm4file, image_data_tag):
 
-        width = dm4file.read_tag_data(image_data_tag.named_subdirs['Dimensions'].unnamed_tags[0])
-        height = dm4file.read_tag_data(image_data_tag.named_subdirs['Dimensions'].unnamed_tags[1])
+        width = dm4file.read_tag_data(
+            image_data_tag.named_subdirs["Dimensions"].unnamed_tags[0]
+        )
+        height = dm4file.read_tag_data(
+            image_data_tag.named_subdirs["Dimensions"].unnamed_tags[1]
+        )
         return width, height
-
 
     def read_array(self, file_name, dtype):
 
@@ -73,7 +75,6 @@ class Dm4ImageReader:
         dm4file.close()
 
         return data
-
 
     def read_dimensions(self, file_name):
 
