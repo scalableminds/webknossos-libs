@@ -61,6 +61,9 @@ def find_source_filenames(source_path):
     source_files = list(
         find_files(path.join(source_path, "*"), image_reader.readers.keys())
     )
+    assert (
+        len(source_files) > 0
+    ), f"No image files found in path {source_path}. Supported suffixes are {str(image_reader.readers.keys())}."
     source_files.sort()
     return source_files
 
