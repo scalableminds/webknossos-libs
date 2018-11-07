@@ -60,31 +60,27 @@ class Dm4ImageReader:
 
     def read_array(self, file_name, dtype):
 
-        print(1, file_name)
-
         dm4file = DM4File.open(file_name)
         image_data_tag, image_tag = self._read_tags(dm4file)
         width, height = self._read_dimensions(dm4file, image_data_tag)
 
         data = np.array(dm4file.read_tag_data(image_tag), dtype=np.uint16)
-        data = np.reshape(data, (height, width, 1))
+
+        data = data.reshape((width, height)).T
+        data = np.expand_dims(data, 2)
         data = to_target_datatype(data, dtype)
 
         dm4file.close()
-        print(2, file_name)
 
         return data
 
 
     def read_dimensions(self, file_name):
-        print(3, file_name)
 
         dm4file = DM4File.open(file_name)
         image_data_tag, _ = self._read_tags(dm4file)
         dimensions = self._read_dimensions(dm4file, image_data_tag)
         dm4file.close()
-
-        print(4, file_name)
 
         return dimensions
 
