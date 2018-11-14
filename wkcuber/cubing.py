@@ -76,7 +76,7 @@ def read_image_file(file_name, dtype):
         raise exc
 
 
-def cubing_job(target_wkw_info, z_batches, source_file_batches, batch_size, image_size):
+def cubing_job(target_wkw_info, z_batches, source_file_batches, batch_size, image_size, num_channels):
     if len(z_batches) == 0:
         return
 
@@ -104,6 +104,14 @@ def cubing_job(target_wkw_info, z_batches, source_file_batches, batch_size, imag
 
                 # Write batch buffer
                 buffer = np.dstack(buffer)
+
+                if buffer.ndim == 4:
+                    # In case of multi-channel data, we transpose the data
+                    # so that the first dimension is the channel, since the wkw
+                    # lib expects this.
+                    buffer = np.transpose(buffer, (2, 0, 1, 3))
+                    assert buffer.shape[0] == num_channels
+
                 target_wkw.write([0, 0, z_batch[0]], buffer)
                 logging.debug(
                     "Cubing of z={}-{} took {:.8f}s".format(
@@ -127,6 +135,7 @@ def cubing(source_path, target_path, layer_name, dtype, batch_size, jobs) -> dic
 
     # All images are assumed to have equal dimensions
     num_x, num_y = image_reader.read_dimensions(source_files[0])
+    num_channels = image_reader.read_channel_count(source_files[0])
     num_z = len(source_files)
 
     logging.info("Found source files: count={} size={}x{}".format(num_z, num_x, num_y))
@@ -144,6 +153,7 @@ def cubing(source_path, target_path, layer_name, dtype, batch_size, jobs) -> dic
                 source_files[z:max_z],
                 batch_size,
                 (num_x, num_y),
+                num_channels,
             )
 
     # Return Bounding Box

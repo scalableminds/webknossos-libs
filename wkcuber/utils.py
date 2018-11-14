@@ -20,24 +20,21 @@ WkwDatasetInfo = namedtuple(
 KnossosDatasetInfo = namedtuple("KnossosDatasetInfo", ("dataset_path", "dtype"))
 
 
-def _open_wkw(info, block_type=None):
-    header = wkw.Header(np.dtype(info.dtype))
-    if block_type is not None:
-        header.block_type = block_type
-    logging.debug("setting block_type to {}".format(header.block_type))
+def _open_wkw(info, **kwargs):
+    header = wkw.Header(np.dtype(info.dtype), **kwargs)
     ds = wkw.Dataset.open(
         path.join(info.dataset_path, info.layer_name, str(info.mag)), header
     )
-    logging.debug("ds.header.block_type: {}".format(ds.header.block_type))
     return ds
 
 
-def open_wkw(info, lock=None, block_type=None):
+def open_wkw(info, lock=None, **kwargs):
     if lock is None:
-        return _open_wkw(info, block_type)
-    else:
-        with lock:
-            return _open_wkw(info, block_type)
+        # Create dummy lock
+        lock = Lock()
+
+    with lock:
+        return _open_wkw(info, **kwargs)
 
 
 def open_knossos(info):

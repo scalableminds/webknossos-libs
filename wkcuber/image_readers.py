@@ -1,4 +1,5 @@
 import numpy as np
+import logging
 from os import path
 from PIL import Image
 
@@ -17,6 +18,14 @@ class PillowImageReader:
         with Image.open(file_name) as test_img:
             return (test_img.width, test_img.height)
 
+    def read_channel_count(self, file_name):
+        with Image.open(file_name) as test_img:
+            this_layer = np.array(test_img)
+            if this_layer.ndim == 2:
+                # For two-dimensional data, the channel count is one
+                return 1
+            else:
+                return this_layer.shape[-1]
 
 def to_target_datatype(data: np.ndarray, target_dtype) -> np.ndarray:
 
@@ -35,6 +44,10 @@ class Dm3ImageReader:
     def read_dimensions(self, file_name):
         test_img = DM3(file_name)
         return (test_img.width, test_img.height)
+
+    def read_channel_count(self, file_name):
+        logging.info("Assuming single channel for DM3 data")
+        return 1
 
 
 class Dm4ImageReader:
@@ -85,6 +98,10 @@ class Dm4ImageReader:
 
         return dimensions
 
+    def read_channel_count(self, file_name):
+        logging.info("Assuming single channel for DM4 data")
+        return 1
+
 
 class ImageReader:
     def __init__(self):
@@ -105,6 +122,10 @@ class ImageReader:
     def read_dimensions(self, file_name):
         _, ext = path.splitext(file_name)
         return self.readers[ext].read_dimensions(file_name)
+
+    def read_channel_count(self, file_name):
+        _, ext = path.splitext(file_name)
+        return self.readers[ext].read_channel_count(file_name)
 
 
 image_reader = ImageReader()
