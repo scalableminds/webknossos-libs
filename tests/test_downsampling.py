@@ -17,8 +17,8 @@ source_info = WkwDatasetInfo("testdata/WT1_wkw", "color", "uint8", 1)
 target_info = WkwDatasetInfo("testoutput/WT1_wkw", "color", "uint8", 2)
 
 
-def read_wkw(wkw_info, offset, size, block_type=None):
-    with open_wkw(wkw_info, block_type=block_type) as wkw_dataset:
+def read_wkw(wkw_info, offset, size, **kwargs):
+    with open_wkw(wkw_info, **kwargs) as wkw_dataset:
         return wkw_dataset.read(offset, size)[0]
 
 
@@ -74,7 +74,7 @@ def downsample_test_helper(use_compress):
         target_info,
         tuple(a * WKW_CUBE_SIZE for a in offset),
         (CUBE_EDGE_LEN,) * 3,
-        block_type,
+        block_type=block_type,
     )
     assert np.any(target_buffer != 0)
 
