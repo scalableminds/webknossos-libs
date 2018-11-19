@@ -74,7 +74,7 @@ def downsample_test_helper(use_compress):
         target_info,
         tuple(a * WKW_CUBE_SIZE for a in offset),
         (CUBE_EDGE_LEN,) * 3,
-        block_type,
+        block_type=block_type,
     )
     assert np.any(target_buffer != 0)
 

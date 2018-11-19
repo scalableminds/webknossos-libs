@@ -177,7 +177,7 @@ def downsample_cube_job(
         )
 
         with open_wkw(source_wkw_info) as source_wkw, open_wkw(
-            target_wkw_info, pool_get_lock(), header_block_type
+            target_wkw_info, pool_get_lock(), block_type=header_block_type
         ) as target_wkw:
             wkw_cubelength = source_wkw.header.file_len * source_wkw.header.block_len
 
