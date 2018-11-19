@@ -76,7 +76,14 @@ def read_image_file(file_name, dtype):
         raise exc
 
 
-def cubing_job(target_wkw_info, z_batches, source_file_batches, batch_size, image_size, num_channels):
+def cubing_job(
+    target_wkw_info,
+    z_batches,
+    source_file_batches,
+    batch_size,
+    image_size,
+    num_channels,
+):
     if len(z_batches) == 0:
         return
 

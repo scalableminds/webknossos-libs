@@ -27,6 +27,7 @@ class PillowImageReader:
             else:
                 return this_layer.shape[-1]
 
+
 def to_target_datatype(data: np.ndarray, target_dtype) -> np.ndarray:
 
     factor = (1 + np.iinfo(data.dtype).max) / (1 + np.iinfo(target_dtype).max)
