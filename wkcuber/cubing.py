@@ -87,7 +87,9 @@ def cubing_job(
     if len(z_batches) == 0:
         return
 
-    with open_wkw(target_wkw_info, pool_get_lock()) as target_wkw:
+    with open_wkw(
+        target_wkw_info, pool_get_lock(), num_channels=num_channels
+    ) as target_wkw:
         # Iterate over batches of continuous z sections
         # The batches have a maximum size of `batch_size`
         # Batched iterations allows to utilize IO more efficiently
@@ -101,6 +103,7 @@ def cubing_job(
                 buffer = []
                 # Iterate over each z section in the batch
                 for z, file_name in zip(z_batch, source_file_batch):
+                    # Image shape will be (x, y, channel_count, z=1) or (x, y, z=1)
                     image = read_image_file(file_name, target_wkw_info.dtype)
                     assert (
                         image.shape[0:2] == image_size
@@ -109,13 +112,15 @@ def cubing_job(
                     )
                     buffer.append(image)
 
-                # Write batch buffer
-                buffer = np.dstack(buffer)
+                # Write batch buffer which will have shape (x, y, channel_count, z)
+                # since we concat along the last axis (z)
+                buffer = np.concatenate(buffer, axis=-1)
 
                 if buffer.ndim == 4:
                     # In case of multi-channel data, we transpose the data
                     # so that the first dimension is the channel, since the wkw
                     # lib expects this.
+                    # New shape will be (channel_count, x, y, z)
                     buffer = np.transpose(buffer, (2, 0, 1, 3))
                     assert buffer.shape[0] == num_channels
 
