@@ -19,7 +19,7 @@ target_info = WkwDatasetInfo("testoutput/WT1_wkw", "color", "uint8", 2)
 
 def read_wkw(wkw_info, offset, size, **kwargs):
     with open_wkw(wkw_info, **kwargs) as wkw_dataset:
-        return wkw_dataset.read(offset, size)[0]
+        return wkw_dataset.read(offset, size)
 
 
 def test_downsample_cube():
@@ -53,7 +53,7 @@ def downsample_test_helper(use_compress):
         source_info,
         tuple(a * WKW_CUBE_SIZE * 2 for a in offset),
         (CUBE_EDGE_LEN * 2,) * 3,
-    )
+    )[0]
     assert np.any(source_buffer != 0)
 
     downsample_cube_job(
@@ -75,7 +75,7 @@ def downsample_test_helper(use_compress):
         tuple(a * WKW_CUBE_SIZE for a in offset),
         (CUBE_EDGE_LEN,) * 3,
         block_type=block_type,
-    )
+    )[0]
     assert np.any(target_buffer != 0)
 
     assert np.all(
@@ -89,3 +89,51 @@ def test_downsample_cube_job():
 
 def test_compressed_downsample_cube_job():
     downsample_test_helper(True)
+
+
+def test_downsample_multi_channel():
+    source_info = WkwDatasetInfo("testoutput/multi-channel-test", "color", "uint8", 1)
+    target_info = WkwDatasetInfo("testoutput/multi-channel-test", "color", "uint8", 2)
+    try:
+        shutil.rmtree(source_info.dataset_path)
+        shutil.rmtree(target_info.dataset_path)
+    except:
+        pass
+
+    offset = (0, 0, 0)
+    num_channels = 3
+    size = (32, 32, 10)
+    source_data = (128 * np.random.randn(num_channels, size[0], size[1], size[2])).astype('uint8')
+    file_len = 32
+
+    with open_wkw(source_info, num_channels=num_channels, file_len=file_len) as wkw_dataset:
+        print("writing source_data shape", source_data.shape)
+        wkw_dataset.write(offset, source_data)
+    assert np.any(source_data != 0)
+
+    downsample_cube_job(
+        source_info,
+        target_info,
+        2,
+        InterpolationModes.MAX,
+        CUBE_EDGE_LEN,
+        tuple(a * WKW_CUBE_SIZE for a in offset),
+        False,
+    )
+
+    channels = []
+    for channel_index in range(num_channels):
+        channels.append(downsample_cube(source_data[channel_index], 2, InterpolationModes.MAX))
+    joined_buffer = np.stack(channels)
+
+    target_buffer = read_wkw(
+        target_info,
+        tuple(a * WKW_CUBE_SIZE for a in offset),
+        list(map(lambda x: x // 2, size)),
+        file_len=file_len
+    )
+    assert np.any(target_buffer != 0)
+
+    assert np.all(
+        target_buffer == joined_buffer
+    )

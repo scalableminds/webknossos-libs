@@ -172,6 +172,7 @@ def downsample_cube_job(
     logging.info("Downsampling of {}".format(target_cube_xyz))
 
     try:
+        time_start("Downsampling of {}".format(target_cube_xyz))
         header_block_type = (
             wkw.Header.BLOCK_TYPE_LZ4HC if compress else wkw.Header.BLOCK_TYPE_RAW
         )
@@ -237,10 +238,9 @@ def downsample_cube_job(
                                 buffer_offset[2] : buffer_end[2],
                             ] = data_cube
 
-                time_start("Downsampling of {}".format(target_cube_xyz))
                 # Write the downsampled buffer to target
                 target_wkw.write(file_offset, file_buffer)
-                time_stop("Downsampling of {}".format(target_cube_xyz))
+        time_stop("Downsampling of {}".format(target_cube_xyz))
 
     except Exception as exc:
         logging.error("Downsampling of {} failed with {}".format(target_cube_xyz, exc))
