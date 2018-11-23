@@ -86,7 +86,13 @@ def detect_dtype(dataset_path, layer, mag=1):
     layer_path = path.join(dataset_path, layer, str(mag))
     if path.exists(layer_path):
         with wkw.Dataset.open(layer_path) as dataset:
-            return str(np.dtype(dataset.header.voxel_type))
+            voxel_type = dataset.header.voxel_type
+            num_channels = dataset.header.num_channels
+            voxel_size = np.dtype(voxel_type)
+            if voxel_size == np.uint8 and num_channels > 1:
+                return "uint" + str(8 * num_channels)
+            else:
+                return str(np.dtype(voxel_type))
 
 
 def detect_cubeLength(dataset_path, layer, mag=1):

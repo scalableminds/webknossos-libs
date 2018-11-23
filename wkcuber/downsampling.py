@@ -172,70 +172,75 @@ def downsample_cube_job(
     logging.info("Downsampling of {}".format(target_cube_xyz))
 
     try:
+        time_start("Downsampling of {}".format(target_cube_xyz))
         header_block_type = (
             wkw.Header.BLOCK_TYPE_LZ4HC if compress else wkw.Header.BLOCK_TYPE_RAW
         )
 
-        with open_wkw(source_wkw_info) as source_wkw, open_wkw(
-            target_wkw_info, pool_get_lock(), block_type=header_block_type
-        ) as target_wkw:
-            wkw_cubelength = source_wkw.header.file_len * source_wkw.header.block_len
-
-            file_buffer = np.zeros((wkw_cubelength,) * 3, target_wkw_info.dtype)
-            tile_length = cube_edge_len
-            tile_count_per_dim = wkw_cubelength // tile_length
-            assert (
-                wkw_cubelength % cube_edge_len == 0
-            ), "buffer_cube_size must be a divisor of wkw cube length"
-
-            tile_indices = list(range(0, tile_count_per_dim))
-            tiles = product(tile_indices, tile_indices, tile_indices)
-            file_offset = wkw_cubelength * np.array(target_cube_xyz)
-
-            for tile in tiles:
-                target_offset = np.array(
-                    tile
-                ) * tile_length + wkw_cubelength * np.array(target_cube_xyz)
-                source_offset = mag_factor * target_offset
-
-                # Read source buffer
-                # time_start("wkw::read")
-                cube_buffer = source_wkw.read(
-                    source_offset,
-                    (wkw_cubelength * mag_factor // tile_count_per_dim,) * 3,
+        with open_wkw(source_wkw_info) as source_wkw:
+            num_channels = source_wkw.header.num_channels
+            with open_wkw(
+                target_wkw_info,
+                pool_get_lock(),
+                block_type=header_block_type,
+                num_channels=num_channels,
+            ) as target_wkw:
+                wkw_cubelength = (
+                    source_wkw.header.file_len * source_wkw.header.block_len
                 )
-                # time_stop("wkw::read")
+                shape = (num_channels,) + (wkw_cubelength,) * 3
+                file_buffer = np.zeros(shape, target_wkw_info.dtype)
+                tile_length = cube_edge_len
+                tile_count_per_dim = wkw_cubelength // tile_length
                 assert (
-                    cube_buffer.shape[0] == 1
-                ), "Only single-channel data is supported"
-                cube_buffer = cube_buffer[0]
+                    wkw_cubelength % cube_edge_len == 0
+                ), "buffer_cube_size must be a divisor of wkw cube length"
 
-                if np.all(cube_buffer == 0):
-                    logging.debug(
-                        "        Skipping empty cube {} (tile {})".format(
-                            target_cube_xyz, tile
-                        )
+                tile_indices = list(range(0, tile_count_per_dim))
+                tiles = product(tile_indices, tile_indices, tile_indices)
+                file_offset = wkw_cubelength * np.array(target_cube_xyz)
+
+                for tile in tiles:
+                    target_offset = np.array(
+                        tile
+                    ) * tile_length + wkw_cubelength * np.array(target_cube_xyz)
+                    source_offset = mag_factor * target_offset
+
+                    # Read source buffer
+                    cube_buffer_channels = source_wkw.read(
+                        source_offset,
+                        (wkw_cubelength * mag_factor // tile_count_per_dim,) * 3,
                     )
-                else:
-                    # Downsample the buffer
 
-                    data_cube = downsample_cube(
-                        cube_buffer, mag_factor, interpolation_mode
-                    )
+                    for channel_index in range(num_channels):
+                        cube_buffer = cube_buffer_channels[channel_index]
 
-                    buffer_offset = target_offset - file_offset
-                    buffer_end = buffer_offset + tile_length
+                        if np.all(cube_buffer == 0):
+                            logging.debug(
+                                "        Skipping empty cube {} (tile {})".format(
+                                    target_cube_xyz, tile
+                                )
+                            )
+                        else:
+                            # Downsample the buffer
 
-                    file_buffer[
-                        buffer_offset[0] : buffer_end[0],
-                        buffer_offset[1] : buffer_end[1],
-                        buffer_offset[2] : buffer_end[2],
-                    ] = data_cube
+                            data_cube = downsample_cube(
+                                cube_buffer, mag_factor, interpolation_mode
+                            )
 
-            time_start("Downsampling of {}".format(target_cube_xyz))
-            # Write the downsampled buffer to target
-            target_wkw.write(file_offset, file_buffer)
-            time_stop("Downsampling of {}".format(target_cube_xyz))
+                            buffer_offset = target_offset - file_offset
+                            buffer_end = buffer_offset + tile_length
+
+                            file_buffer[
+                                channel_index,
+                                buffer_offset[0] : buffer_end[0],
+                                buffer_offset[1] : buffer_end[1],
+                                buffer_offset[2] : buffer_end[2],
+                            ] = data_cube
+
+                # Write the downsampled buffer to target
+                target_wkw.write(file_offset, file_buffer)
+        time_stop("Downsampling of {}".format(target_cube_xyz))
 
     except Exception as exc:
         logging.error("Downsampling of {} failed with {}".format(target_cube_xyz, exc))
