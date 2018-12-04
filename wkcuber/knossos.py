@@ -25,9 +25,9 @@ class KnossosDataset:
         assert offset[0] % CUBE_EDGE_LEN == 0
         assert offset[1] % CUBE_EDGE_LEN == 0
         assert offset[2] % CUBE_EDGE_LEN == 0
-        assert shape[0] == CUBE_EDGE_LEN
-        assert shape[1] == CUBE_EDGE_LEN
-        assert shape[2] == CUBE_EDGE_LEN
+        assert data.shape[0] == CUBE_EDGE_LEN
+        assert data.shape[1] == CUBE_EDGE_LEN
+        assert data.shape[2] == CUBE_EDGE_LEN
         self.write_cube(tuple(x // CUBE_EDGE_LEN for x in offset), data)
 
     def read_cube(self, cube_xyz):
