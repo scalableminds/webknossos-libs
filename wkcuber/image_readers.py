@@ -6,6 +6,8 @@ from PIL import Image
 from .vendor.dm3 import DM3
 from .vendor.dm4 import DM4File
 
+# Disable PIL's maximum image limit.
+Image.MAX_IMAGE_PIXELS = None
 
 class PillowImageReader:
     def read_array(self, file_name, dtype):
