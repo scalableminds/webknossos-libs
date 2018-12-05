@@ -9,6 +9,7 @@ from .vendor.dm4 import DM4File
 # Disable PIL's maximum image limit.
 Image.MAX_IMAGE_PIXELS = None
 
+
 class PillowImageReader:
     def read_array(self, file_name, dtype):
         this_layer = np.array(Image.open(file_name), np.dtype(dtype))
