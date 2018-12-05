@@ -62,10 +62,10 @@ def get_chunks(arr, chunk_size):
     for i in range(0, len(arr), chunk_size):
         yield arr[i : i + chunk_size]
 
-
+# min_z and max_z are both inclusive
 def get_regular_chunks(min_z, max_z, chunk_size):
     i = floor(min_z / chunk_size) * chunk_size
-    while i < ceil(max_z / chunk_size) * chunk_size:
+    while i < ceil((max_z + 1) / chunk_size) * chunk_size:
         yield range(i, i + chunk_size)
         i += chunk_size
 
