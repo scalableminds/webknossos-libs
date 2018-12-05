@@ -18,3 +18,12 @@ def test_get_regular_chunks():
     assert len(target) == 6
     assert list(target[0]) == list(range(0, 8))
     assert list(target[-1]) == list(range(40, 48))
+
+
+def test_get_regular_chunks_max_inclusive():
+    target = list(get_regular_chunks(4, 44, 1))
+
+    assert len(target) == 41
+    assert list(target[0]) == list(range(4, 5))
+    # The last chunk should include 44
+    assert list(target[-1]) == list(range(44, 45))
