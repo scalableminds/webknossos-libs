@@ -83,9 +83,8 @@ def create_parser():
     )
     group.add_argument(
         "--anisotropic_target_mag",
-        help="Specify an anisotropic target magnification which should be created (e.g., --anisotropic_target_mag 2 2 1)",
-        nargs="+",
-        type=int,
+        help="Specify an anisotropic target magnification which should be created (e.g., --anisotropic_target_mag 2-2-1)",
+        type=str,
     )
 
     parser.add_argument(
@@ -457,7 +456,7 @@ if __name__ == "__main__":
         logging.basicConfig(level=logging.DEBUG)
 
     if args.anisotropic_target_mag:
-        anisotropic_target_mag = tuple(args.anisotropic_target_mag)
+        anisotropic_target_mag = tuple(map(int, args.anisotropic_target_mag.split("-")))
         assert_valid_mag(args.from_mag)
         assert_valid_mag(anisotropic_target_mag)
 
