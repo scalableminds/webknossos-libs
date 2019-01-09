@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(
     name='wkcuber',
     packages=find_packages(exclude=("tests",)),
-    version='0.1.8',
+    version='0.2.0',
     install_requires=[
         'scipy',
         'numpy',
