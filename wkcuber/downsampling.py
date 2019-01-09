@@ -68,16 +68,24 @@ def create_parser():
     )
 
     parser.add_argument(
-        "--max", "-m", help="Max resolution to be downsampled", type=int, default=512
-    )
-
-    parser.add_argument(
         "--from_mag",
         "--from",
         "-f",
         help="Resolution to base downsampling on",
         type=int,
         default=1,
+    )
+
+    # Either provide the maximum resolution to be downsampled OR a specific, anisotropic magnification.
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
+        "--max", "-m", help="Max resolution to be downsampled", type=int, default=512
+    )
+    group.add_argument(
+        "--anisotropic_target_mag",
+        help="Specify an anisotropic target magnification which should be created (e.g., --anisotropic_target_mag 2 2 1)",
+        nargs="+",
+        type=int,
     )
 
     parser.add_argument(
@@ -106,25 +114,61 @@ def cube_addresses(source_wkw_info):
         return wkw_addresses
 
 
+def mag_as_vector(mag):
+    if isinstance(mag, int):
+        return (mag, mag, mag)
+    else:
+        return mag
+
+
+def is_mag_greater_than(mag1, mag2):
+    for (m1, m2) in zip(mag1, mag2):
+        if m1 > m2:
+            return True
+    return False
+
+
+def assert_valid_mag(mag):
+    if isinstance(mag, int):
+        assert log2(mag) % 1 == 0, "magnification needs to be power of 2."
+    else:
+        assert len(mag) == 3, "magnification must be int or a vector3 of ints"
+        for mag_dim in mag:
+            assert log2(mag_dim) % 1 == 0, "magnification needs to be power of 2."
+
+
+def mag_as_layer_name(mag):
+    if isinstance(mag, int):
+        return str(mag)
+    else:
+        x, y, z = mag
+        return "{}-{}-{}".format(x, y, z)
+
+
 def downsample(
     source_wkw_info,
     target_wkw_info,
-    source_mag,
-    target_mag,
+    _source_mag,
+    _target_mag,
     interpolation_mode,
     cube_edge_len,
     jobs,
     compress,
 ):
-    assert source_mag < target_mag
-    logging.info("Downsampling mag {} from mag {}".format(target_mag, source_mag))
+    source_mag = mag_as_vector(_source_mag)
+    target_mag = mag_as_vector(_target_mag)
+    assert not is_mag_greater_than(source_mag, target_mag)
+    logging.info("Downsampling mag {} from mag {}".format(_target_mag, _source_mag))
 
-    mag_factor = int(target_mag / source_mag)
+    mag_factors = [int(t / s) for (t, s) in zip(target_mag, source_mag)]
     # Detect the cubes that we want to downsample
     source_cube_addresses = cube_addresses(source_wkw_info)
 
     target_cube_addresses = list(
-        set(tuple(x // mag_factor for x in xyz) for xyz in source_cube_addresses)
+        set(
+            tuple(dim // mag_factor for (dim, mag_factor) in zip(xyz, mag_factors))
+            for xyz in source_cube_addresses
+        )
     )
     target_cube_addresses.sort()
     logging.debug(
@@ -150,7 +194,7 @@ def downsample(
                 downsample_cube_job,
                 source_wkw_info,
                 target_wkw_info,
-                mag_factor,
+                mag_factors,
                 interpolation_mode,
                 cube_edge_len,
                 target_cube_xyz,
@@ -163,7 +207,7 @@ def downsample(
 def downsample_cube_job(
     source_wkw_info,
     target_wkw_info,
-    mag_factor,
+    mag_factors,
     interpolation_mode,
     cube_edge_len,
     target_cube_xyz,
@@ -204,12 +248,12 @@ def downsample_cube_job(
                     target_offset = np.array(
                         tile
                     ) * tile_length + wkw_cubelength * np.array(target_cube_xyz)
-                    source_offset = mag_factor * target_offset
+                    source_offset = mag_factors * target_offset
 
                     # Read source buffer
                     cube_buffer_channels = source_wkw.read(
                         source_offset,
-                        (wkw_cubelength * mag_factor // tile_count_per_dim,) * 3,
+                        (wkw_cubelength * np.array(mag_factors) // tile_count_per_dim),
                     )
 
                     for channel_index in range(num_channels):
@@ -225,7 +269,7 @@ def downsample_cube_job(
                             # Downsample the buffer
 
                             data_cube = downsample_cube(
-                                cube_buffer, mag_factor, interpolation_mode
+                                cube_buffer, mag_factors, interpolation_mode
                             )
 
                             buffer_offset = target_offset - file_offset
@@ -247,29 +291,46 @@ def downsample_cube_job(
         raise exc
 
 
-def non_linear_filter_3d(data, factor, func):
+def non_linear_filter_3d(data, factors, func):
     ds = data.shape
-    assert not any((d % factor > 0 for d in ds))
-    data = data.reshape((ds[0], factor, ds[1] // factor, ds[2]), order="F")
+    assert not any((d % factor > 0 for (d, factor) in zip(ds, factors)))
+    data = data.reshape((ds[0], factors[1], ds[1] // factors[1], ds[2]), order="F")
     data = data.swapaxes(0, 1)
     data = data.reshape(
-        (factor * factor, ds[0] * ds[1] // (factor * factor), factor, ds[2] // factor),
+        (
+            factors[0] * factors[1],
+            ds[0] * ds[1] // (factors[0] * factors[1]),
+            factors[2],
+            ds[2] // factors[2],
+        ),
         order="F",
     )
     data = data.swapaxes(2, 1)
     data = data.reshape(
         (
-            factor * factor * factor,
-            (ds[0] * ds[1] * ds[2]) // (factor * factor * factor),
+            factors[0] * factors[1] * factors[2],
+            (ds[0] * ds[1] * ds[2]) // (factors[0] * factors[1] * factors[2]),
         ),
         order="F",
     )
     data = func(data)
-    data = data.reshape((ds[0] // factor, ds[1] // factor, ds[2] // factor), order="F")
+    data = data.reshape(
+        (ds[0] // factors[0], ds[1] // factors[1], ds[2] // factors[2]), order="F"
+    )
     return data
 
 
-def linear_filter_3d(data, factor, order):
+def linear_filter_3d(data, factors, order):
+    factors = np.array(factors)
+
+    if not np.all(factors == factors[0]):
+        logging.debug(
+            "the selected filtering strategy does not support anisotropic downsampling. Selecting {} as uniform downsampling factor".format(
+                factors[0]
+            )
+        )
+    factor = factors[0]
+
     ds = data.shape
     assert not any((d % factor > 0 for d in ds))
     return zoom(
@@ -303,21 +364,21 @@ def _mode(x):
     return mode(x, axis=0, nan_policy="omit")[0][0]
 
 
-def downsample_cube(cube_buffer, factor, interpolation_mode):
+def downsample_cube(cube_buffer, factors, interpolation_mode):
     if interpolation_mode == InterpolationModes.MODE:
-        return non_linear_filter_3d(cube_buffer, factor, _mode)
+        return non_linear_filter_3d(cube_buffer, factors, _mode)
     elif interpolation_mode == InterpolationModes.MEDIAN:
-        return non_linear_filter_3d(cube_buffer, factor, _median)
+        return non_linear_filter_3d(cube_buffer, factors, _median)
     elif interpolation_mode == InterpolationModes.NEAREST:
-        return linear_filter_3d(cube_buffer, factor, 0)
+        return linear_filter_3d(cube_buffer, factors, 0)
     elif interpolation_mode == InterpolationModes.BILINEAR:
-        return linear_filter_3d(cube_buffer, factor, 1)
+        return linear_filter_3d(cube_buffer, factors, 1)
     elif interpolation_mode == InterpolationModes.BICUBIC:
-        return linear_filter_3d(cube_buffer, factor, 2)
+        return linear_filter_3d(cube_buffer, factors, 2)
     elif interpolation_mode == InterpolationModes.MAX:
-        return non_linear_filter_3d(cube_buffer, factor, _max)
+        return non_linear_filter_3d(cube_buffer, factors, _max)
     elif interpolation_mode == InterpolationModes.MIN:
-        return non_linear_filter_3d(cube_buffer, factor, _min)
+        return non_linear_filter_3d(cube_buffer, factors, _min)
     else:
         raise Exception("Invalid interpolation mode: {}".format(interpolation_mode))
 
@@ -342,8 +403,12 @@ def downsample_mag(
     else:
         interpolation_mode = InterpolationModes[interpolation_mode.upper()]
 
-    source_wkw_info = WkwDatasetInfo(path, layer_name, dtype, source_mag)
-    target_wkw_info = WkwDatasetInfo(path, layer_name, dtype, target_mag)
+    source_wkw_info = WkwDatasetInfo(
+        path, layer_name, dtype, mag_as_layer_name(source_mag)
+    )
+    target_wkw_info = WkwDatasetInfo(
+        path, layer_name, dtype, mag_as_layer_name(target_mag)
+    )
     downsample(
         source_wkw_info,
         target_wkw_info,
@@ -391,14 +456,31 @@ if __name__ == "__main__":
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG)
 
-    downsample_mags(
-        args.path,
-        args.layer_name,
-        args.from_mag,
-        args.max,
-        args.dtype,
-        args.interpolation_mode,
-        args.buffer_cube_size,
-        args.jobs,
-        args.compress,
-    )
+    if args.anisotropic_target_mag:
+        anisotropic_target_mag = tuple(args.anisotropic_target_mag)
+        assert_valid_mag(args.from_mag)
+        assert_valid_mag(anisotropic_target_mag)
+
+        downsample_mag(
+            args.path,
+            args.layer_name,
+            args.from_mag,
+            anisotropic_target_mag,
+            args.dtype,
+            args.interpolation_mode,
+            args.buffer_cube_size,
+            args.jobs,
+            args.compress,
+        )
+    else:
+        downsample_mags(
+            args.path,
+            args.layer_name,
+            args.from_mag,
+            args.max,
+            args.dtype,
+            args.interpolation_mode,
+            args.buffer_cube_size,
+            args.jobs,
+            args.compress,
+        )
