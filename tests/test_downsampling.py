@@ -26,7 +26,7 @@ def test_downsample_cube():
     buffer = np.zeros((CUBE_EDGE_LEN,) * 3, dtype=np.uint8)
     buffer[:, :, :] = np.arange(0, CUBE_EDGE_LEN)
 
-    output = downsample_cube(buffer, 2, InterpolationModes.MEDIAN)
+    output = downsample_cube(buffer, (2, 2, 2), InterpolationModes.MEDIAN)
 
     assert output.shape == (CUBE_EDGE_LEN // 2,) * 3
     assert buffer[0, 0, 0] == 0
@@ -59,7 +59,7 @@ def downsample_test_helper(use_compress):
     downsample_cube_job(
         source_info,
         target_info,
-        2,
+        (2, 2, 2),
         InterpolationModes.MAX,
         CUBE_EDGE_LEN,
         offset,
@@ -79,7 +79,7 @@ def downsample_test_helper(use_compress):
     assert np.any(target_buffer != 0)
 
     assert np.all(
-        target_buffer == downsample_cube(source_buffer, 2, InterpolationModes.MAX)
+        target_buffer == downsample_cube(source_buffer, (2, 2, 2), InterpolationModes.MAX)
     )
 
 
@@ -114,7 +114,7 @@ def test_downsample_multi_channel():
     downsample_cube_job(
         source_info,
         target_info,
-        2,
+        (2, 2, 2),
         InterpolationModes.MAX,
         CUBE_EDGE_LEN,
         tuple(a * WKW_CUBE_SIZE for a in offset),
@@ -123,7 +123,7 @@ def test_downsample_multi_channel():
 
     channels = []
     for channel_index in range(num_channels):
-        channels.append(downsample_cube(source_data[channel_index], 2, InterpolationModes.MAX))
+        channels.append(downsample_cube(source_data[channel_index], (2, 2, 2), InterpolationModes.MAX))
     joined_buffer = np.stack(channels)
 
     target_buffer = read_wkw(
