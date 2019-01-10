@@ -1,4 +1,4 @@
-FROM python:3
+FROM python:3.7
 
 ENV LZ4_VERSION=1.8.1.2
 
