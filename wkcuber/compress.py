@@ -5,6 +5,7 @@ import logging
 import numpy as np
 from argparse import ArgumentParser
 from os import path, makedirs
+from uuid import uuid4
 from .mag import Mag
 
 from .utils import (
@@ -86,6 +87,18 @@ def compress_mag(source_path, layer_name, target_path, mag: Mag, jobs):
             pool.submit(compress_file_job, file, path.join(target_mag_path, rel_file))
 
     logging.info("Mag {0} succesfully compressed".format(str(mag)))
+
+
+def compress_mag_inplace(target_path, layer_name, mag: Mag, jobs):
+    compress_target_path = "{}.compress-{}".format(target_path, uuid4())
+    compress_mag(target_path, layer_name, compress_target_path, mag, jobs)
+
+    shutil.rmtree(path.join(args.target_path, args.layer_name, str(mag)))
+    shutil.move(
+        path.join(compress_target_path, layer_name, str(mag)),
+        path.join(target_path, layer_name, str(mag)),
+    )
+    shutil.rmtree(compress_target_path)
 
 
 def compress_mags(
