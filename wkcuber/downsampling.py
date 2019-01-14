@@ -426,6 +426,7 @@ if __name__ == "__main__":
         logging.basicConfig(level=logging.DEBUG)
 
     from_mag = Mag(args.from_mag)
+    max_mag = Mag(args.max)
     if args.anisotropic_target_mag:
         anisotropic_target_mag = Mag(args.anisotropic_target_mag)
 
@@ -445,7 +446,7 @@ if __name__ == "__main__":
             args.path,
             args.layer_name,
             from_mag,
-            Mag(args.max),
+            max_mag,
             args.dtype,
             args.interpolation_mode,
             args.buffer_cube_size,
