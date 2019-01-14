@@ -128,7 +128,7 @@ def downsample(
     assert source_mag < target_mag
     logging.info("Downsampling mag {} from mag {}".format(target_mag, source_mag))
 
-    mag_factors = [int(t / s) for (t, s) in zip(target_mag.to_array(), source_mag.to_array())]
+    mag_factors = [t // s for (t, s) in zip(target_mag.to_array(), source_mag.to_array())]
     # Detect the cubes that we want to downsample
     source_cube_addresses = cube_addresses(source_wkw_info)
 
