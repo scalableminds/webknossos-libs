@@ -87,7 +87,7 @@ if __name__ == "__main__":
     )
 
     if not args.no_compress:
-        compress_mag_inplace(args.target_path, args.layer_name, 1, args.jobs)
+        compress_mag_inplace(args.target_path, args.layer_name, Mag(1), args.jobs)
 
     downsample_mags(
         args.target_path,
