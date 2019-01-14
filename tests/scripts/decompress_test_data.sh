@@ -1,0 +1,1 @@
+tar -xzvf testdata/WT1_wkw.tar.gz
