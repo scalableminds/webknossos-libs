@@ -10,6 +10,7 @@ from scipy.ndimage.interpolation import zoom
 from itertools import product
 from functools import lru_cache
 from enum import Enum
+from .mag import Mag
 
 from .utils import (
     add_jobs_flag,
@@ -113,53 +114,21 @@ def cube_addresses(source_wkw_info):
         return wkw_addresses
 
 
-def mag_as_vector(mag):
-    if isinstance(mag, int):
-        return (mag, mag, mag)
-    else:
-        return mag
-
-
-def is_mag_greater_than(mag1, mag2):
-    for (m1, m2) in zip(mag1, mag2):
-        if m1 > m2:
-            return True
-    return False
-
-
-def assert_valid_mag(mag):
-    if isinstance(mag, int):
-        assert log2(mag) % 1 == 0, "magnification needs to be power of 2."
-    else:
-        assert len(mag) == 3, "magnification must be int or a vector3 of ints"
-        for mag_dim in mag:
-            assert log2(mag_dim) % 1 == 0, "magnification needs to be power of 2."
-
-
-def mag_as_layer_name(mag):
-    if isinstance(mag, int):
-        return str(mag)
-    else:
-        x, y, z = mag
-        return "{}-{}-{}".format(x, y, z)
-
-
 def downsample(
     source_wkw_info,
     target_wkw_info,
-    _source_mag,
-    _target_mag,
+    source_mag: Mag,
+    target_mag: Mag,
     interpolation_mode,
     cube_edge_len,
     jobs,
     compress,
 ):
-    source_mag = mag_as_vector(_source_mag)
-    target_mag = mag_as_vector(_target_mag)
-    assert not is_mag_greater_than(source_mag, target_mag)
-    logging.info("Downsampling mag {} from mag {}".format(_target_mag, _source_mag))
 
-    mag_factors = [int(t / s) for (t, s) in zip(target_mag, source_mag)]
+    assert source_mag < target_mag
+    logging.info("Downsampling mag {} from mag {}".format(target_mag, source_mag))
+
+    mag_factors = [int(t / s) for (t, s) in zip(target_mag.to_array(), source_mag.to_array())]
     # Detect the cubes that we want to downsample
     source_cube_addresses = cube_addresses(source_wkw_info)
 
@@ -385,8 +354,8 @@ def downsample_cube(cube_buffer, factors, interpolation_mode):
 def downsample_mag(
     path,
     layer_name,
-    source_mag,
-    target_mag,
+    source_mag: Mag,
+    target_mag: Mag,
     dtype="uint8",
     interpolation_mode="default",
     cube_edge_len=DEFAULT_EDGE_LEN,
@@ -403,10 +372,10 @@ def downsample_mag(
         interpolation_mode = InterpolationModes[interpolation_mode.upper()]
 
     source_wkw_info = WkwDatasetInfo(
-        path, layer_name, dtype, mag_as_layer_name(source_mag)
+        path, layer_name, dtype, source_mag.to_layer_name()
     )
     target_wkw_info = WkwDatasetInfo(
-        path, layer_name, dtype, mag_as_layer_name(target_mag)
+        path, layer_name, dtype, target_mag.to_layer_name()
     )
     downsample(
         source_wkw_info,
@@ -423,18 +392,17 @@ def downsample_mag(
 def downsample_mags(
     path,
     layer_name,
-    from_mag,
-    max_mag,
+    from_mag: Mag,
+    max_mag: Mag,
     dtype,
     interpolation_mode,
     cube_edge_len,
     jobs,
     compress,
 ):
-    assert log2(from_mag) % 1 == 0, "'from_mag' needs to be power of 2."
-    target_mag = from_mag * 2
+    target_mag = from_mag.scaled_by(2)
     while target_mag <= max_mag:
-        source_mag = target_mag // 2
+        source_mag = target_mag.divided_by(2)
         downsample_mag(
             path,
             layer_name,
@@ -446,7 +414,7 @@ def downsample_mags(
             jobs,
             compress,
         )
-        target_mag = target_mag * 2
+        target_mag.scale_by(2)
 
 
 if __name__ == "__main__":
@@ -455,15 +423,15 @@ if __name__ == "__main__":
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG)
 
+    from_mag = Mag(args.from_mag)
     if args.anisotropic_target_mag:
-        anisotropic_target_mag = tuple(map(int, args.anisotropic_target_mag.split("-")))
-        assert_valid_mag(args.from_mag)
-        assert_valid_mag(anisotropic_target_mag)
+        anisotropic_target_mag = Mag(args.anisotropic_target_mag)
+
 
         downsample_mag(
             args.path,
             args.layer_name,
-            args.from_mag,
+            from_mag,
             anisotropic_target_mag,
             args.dtype,
             args.interpolation_mode,
@@ -475,7 +443,7 @@ if __name__ == "__main__":
         downsample_mags(
             args.path,
             args.layer_name,
-            args.from_mag,
+            from_mag,
             args.max,
             args.dtype,
             args.interpolation_mode,
