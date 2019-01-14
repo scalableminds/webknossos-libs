@@ -97,7 +97,7 @@ def detect_dtype(dataset_path, layer, mag: Mag = Mag(1)):
                 return str(np.dtype(voxel_type))
 
 
-def detect_cubeLength(dataset_path, layer, mag: Mag):
+def detect_cubeLength(dataset_path, layer, mag: Mag = Mag(1)):
     layer_path = path.join(dataset_path, layer, str(mag))
     if path.exists(layer_path):
         with wkw.Dataset.open(layer_path) as dataset:

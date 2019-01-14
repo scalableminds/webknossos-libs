@@ -18,7 +18,7 @@ class Mag:
             elif re.match(r"^\d+-\d+-\d+$", mag) is not None:
                 self.mag = [int(m) for m in mag.split("-")]
 
-        if self.mag is None or len(mag) != 3:
+        if self.mag is None or len(self.mag) != 3:
             raise ValueError(
                 "magnification must be int or a vector3 of ints or a string shaped like e.g. 2-2-1"
             )
