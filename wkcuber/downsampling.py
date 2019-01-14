@@ -445,7 +445,7 @@ if __name__ == "__main__":
             args.path,
             args.layer_name,
             from_mag,
-            args.max,
+            Mag(args.max),
             args.dtype,
             args.interpolation_mode,
             args.buffer_cube_size,
