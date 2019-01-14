@@ -5,7 +5,6 @@ from functools import total_ordering
 
 @total_ordering
 class Mag:
-
     def __init__(self, mag):
         self.mag = None
 
@@ -22,7 +21,9 @@ class Mag:
                     self.mag = potential_mag
 
         if self.mag is None:
-            raise ValueError("magnification must be int or a vector3 of ints or a string shaped like e.g. 2-2-1")
+            raise ValueError(
+                "magnification must be int or a vector3 of ints or a string shaped like e.g. 2-2-1"
+            )
 
         for m in self.mag:
             assert log2(m) % 1 == 0, "magnification needs to be power of 2."
