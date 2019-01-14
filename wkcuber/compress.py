@@ -93,7 +93,7 @@ def compress_mag_inplace(target_path, layer_name, mag: Mag, jobs):
     compress_target_path = "{}.compress-{}".format(target_path, uuid4())
     compress_mag(target_path, layer_name, compress_target_path, mag, jobs)
 
-    shutil.rmtree(path.join(args.target_path, args.layer_name, str(mag)))
+    shutil.rmtree(path.join(target_path, layer_name, str(mag)))
     shutil.move(
         path.join(compress_target_path, layer_name, str(mag)),
         path.join(target_path, layer_name, str(mag)),
