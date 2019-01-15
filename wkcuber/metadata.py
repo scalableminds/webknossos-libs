@@ -8,6 +8,8 @@ from argparse import ArgumentParser
 from glob import iglob
 from os import path, listdir
 from typing import Optional
+from .mag import Mag
+from typing import List
 
 
 def create_parser():
@@ -82,7 +84,7 @@ def read_metadata_for_layer(wkw_path, layer_name):
     return layer_info, dtype, bounding_box, origin
 
 
-def detect_dtype(dataset_path, layer, mag=1):
+def detect_dtype(dataset_path, layer, mag: Mag = Mag(1)):
     layer_path = path.join(dataset_path, layer, str(mag))
     if path.exists(layer_path):
         with wkw.Dataset.open(layer_path) as dataset:
@@ -95,14 +97,14 @@ def detect_dtype(dataset_path, layer, mag=1):
                 return str(np.dtype(voxel_type))
 
 
-def detect_cubeLength(dataset_path, layer, mag=1):
+def detect_cubeLength(dataset_path, layer, mag: Mag = Mag(1)):
     layer_path = path.join(dataset_path, layer, str(mag))
     if path.exists(layer_path):
         with wkw.Dataset.open(layer_path) as dataset:
             return dataset.header.block_len * dataset.header.file_len
 
 
-def detect_bbox(dataset_path, layer, mag=1):
+def detect_bbox(dataset_path, layer, mag: Mag = Mag(1)):
     # Detect the coarse bounding box of a dataset by iterating
     # over the WKW cubes
     layer_path = path.join(dataset_path, layer, str(mag))
@@ -133,10 +135,12 @@ def detect_bbox(dataset_path, layer, mag=1):
     }
 
 
-def detect_resolutions(dataset_path, layer):
+def detect_resolutions(dataset_path, layer) -> List[Mag]:
     for mag in listdir(path.join(dataset_path, layer)):
-        if re.match(r"^\d+$", mag) is not None:
-            yield int(mag)
+        try:
+            yield Mag(mag)
+        except ValueError:
+            logging.info("ignoring {} as resolution".format(mag))
 
 
 def detect_standard_layer(dataset_path, layer_name, exact_bounding_box=None):
@@ -150,10 +154,10 @@ def detect_standard_layer(dataset_path, layer_name, exact_bounding_box=None):
     dtype = detect_dtype(dataset_path, layer_name)
 
     mags = list(detect_resolutions(dataset_path, layer_name))
-    mags.sort()
+    mags = sorted(mags)
     resolutions = [
         {
-            "resolution": (mag,) * 3,
+            "resolution": mag.to_array(),
             "cubeLength": detect_cubeLength(dataset_path, layer_name, mag),
         }
         for mag in mags

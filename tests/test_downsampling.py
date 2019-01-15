@@ -79,7 +79,8 @@ def downsample_test_helper(use_compress):
     assert np.any(target_buffer != 0)
 
     assert np.all(
-        target_buffer == downsample_cube(source_buffer, (2, 2, 2), InterpolationModes.MAX)
+        target_buffer
+        == downsample_cube(source_buffer, (2, 2, 2), InterpolationModes.MAX)
     )
 
 
@@ -103,10 +104,14 @@ def test_downsample_multi_channel():
     offset = (0, 0, 0)
     num_channels = 3
     size = (32, 32, 10)
-    source_data = (128 * np.random.randn(num_channels, size[0], size[1], size[2])).astype('uint8')
+    source_data = (
+        128 * np.random.randn(num_channels, size[0], size[1], size[2])
+    ).astype("uint8")
     file_len = 32
 
-    with open_wkw(source_info, num_channels=num_channels, file_len=file_len) as wkw_dataset:
+    with open_wkw(
+        source_info, num_channels=num_channels, file_len=file_len
+    ) as wkw_dataset:
         print("writing source_data shape", source_data.shape)
         wkw_dataset.write(offset, source_data)
     assert np.any(source_data != 0)
@@ -123,17 +128,19 @@ def test_downsample_multi_channel():
 
     channels = []
     for channel_index in range(num_channels):
-        channels.append(downsample_cube(source_data[channel_index], (2, 2, 2), InterpolationModes.MAX))
+        channels.append(
+            downsample_cube(
+                source_data[channel_index], (2, 2, 2), InterpolationModes.MAX
+            )
+        )
     joined_buffer = np.stack(channels)
 
     target_buffer = read_wkw(
         target_info,
         tuple(a * WKW_CUBE_SIZE for a in offset),
         list(map(lambda x: x // 2, size)),
-        file_len=file_len
+        file_len=file_len,
     )
     assert np.any(target_buffer != 0)
 
-    assert np.all(
-        target_buffer == joined_buffer
-    )
+    assert np.all(target_buffer == joined_buffer)

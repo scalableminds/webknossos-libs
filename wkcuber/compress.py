@@ -5,6 +5,8 @@ import logging
 import numpy as np
 from argparse import ArgumentParser
 from os import path, makedirs
+from uuid import uuid4
+from .mag import Mag
 
 from .utils import (
     add_verbose_flag,
@@ -14,6 +16,7 @@ from .utils import (
     ParallelExecutor,
 )
 from .metadata import detect_resolutions
+from typing import List
 
 
 def create_parser():
@@ -68,14 +71,14 @@ def compress_file_job(source_path, target_path):
         raise exc
 
 
-def compress_mag(source_path, layer_name, target_path, mag, jobs):
+def compress_mag(source_path, layer_name, target_path, mag: Mag, jobs):
     if path.exists(path.join(target_path, layer_name, str(mag))):
         logging.error("Target path '{}' already exists".format(target_path))
         exit(1)
 
     source_wkw_info = WkwDatasetInfo(source_path, layer_name, None, mag)
     target_mag_path = path.join(target_path, layer_name, str(mag))
-    logging.info("Compressing mag {0} in '{1}'".format(mag, target_mag_path))
+    logging.info("Compressing mag {0} in '{1}'".format(str(mag), target_mag_path))
 
     with open_wkw(source_wkw_info) as source_wkw, ParallelExecutor(jobs) as pool:
         source_wkw.compress(target_mag_path)
@@ -83,10 +86,24 @@ def compress_mag(source_path, layer_name, target_path, mag, jobs):
             rel_file = path.relpath(file, source_wkw.root)
             pool.submit(compress_file_job, file, path.join(target_mag_path, rel_file))
 
-    logging.info("Mag {0} succesfully compressed".format(mag))
+    logging.info("Mag {0} succesfully compressed".format(str(mag)))
 
 
-def compress_mags(source_path, layer_name, target_path=None, mags=None, jobs=1):
+def compress_mag_inplace(target_path, layer_name, mag: Mag, jobs):
+    compress_target_path = "{}.compress-{}".format(target_path, uuid4())
+    compress_mag(target_path, layer_name, compress_target_path, mag, jobs)
+
+    shutil.rmtree(path.join(target_path, layer_name, str(mag)))
+    shutil.move(
+        path.join(compress_target_path, layer_name, str(mag)),
+        path.join(target_path, layer_name, str(mag)),
+    )
+    shutil.rmtree(compress_target_path)
+
+
+def compress_mags(
+    source_path, layer_name, target_path=None, mags: List[Mag] = None, jobs=1
+):
     with_tmp_dir = target_path is None
     target_path = source_path + ".tmp" if with_tmp_dir else target_path
 

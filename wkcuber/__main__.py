@@ -1,14 +1,13 @@
 from argparse import ArgumentParser
-from os import path
-from uuid import uuid4
+
 import logging
-import shutil
 
 from .cubing import cubing, BLOCK_LEN
 from .downsampling import downsample_mags, DEFAULT_EDGE_LEN
-from .compress import compress_mag
+from .compress import compress_mag_inplace
 from .metadata import write_webknossos_metadata
 from .utils import add_verbose_flag, add_jobs_flag
+from .mag import Mag
 
 
 def create_parser():
@@ -72,18 +71,6 @@ def create_parser():
     return parser
 
 
-def compress_mag_inplace(target_path, layer_name, mag, jobs):
-    compress_target_path = "{}.compress-{}".format(target_path, uuid4())
-    compress_mag(target_path, layer_name, compress_target_path, mag, jobs)
-
-    shutil.rmtree(path.join(args.target_path, args.layer_name, str(mag)))
-    shutil.move(
-        path.join(compress_target_path, layer_name, str(mag)),
-        path.join(target_path, layer_name, str(mag)),
-    )
-    shutil.rmtree(compress_target_path)
-
-
 if __name__ == "__main__":
     args = create_parser().parse_args()
 
@@ -100,13 +87,13 @@ if __name__ == "__main__":
     )
 
     if not args.no_compress:
-        compress_mag_inplace(args.target_path, args.layer_name, 1, args.jobs)
+        compress_mag_inplace(args.target_path, args.layer_name, Mag(1), args.jobs)
 
     downsample_mags(
         args.target_path,
         args.layer_name,
-        1,
-        args.max_mag,
+        Mag(1),
+        Mag(args.max_mag),
         args.dtype,
         "default",
         DEFAULT_EDGE_LEN,
