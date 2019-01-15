@@ -151,8 +151,6 @@ def detect_standard_layer(dataset_path, layer_name, exact_bounding_box=None):
     else:
         bbox = exact_bounding_box
 
-    dtype = detect_dtype(dataset_path, layer_name)
-
     mags = list(detect_resolutions(dataset_path, layer_name))
     mags = sorted(mags)
     resolutions = [
@@ -162,6 +160,9 @@ def detect_standard_layer(dataset_path, layer_name, exact_bounding_box=None):
         }
         for mag in mags
     ]
+
+    assert len(mags) > 0, "No resolutions found"
+    dtype = detect_dtype(dataset_path, layer_name, mags[0])
 
     return {
         "dataFormat": "wkw",
