@@ -4,6 +4,7 @@ from functools import total_ordering
 
 from typing import List
 
+
 @total_ordering
 class Mag:
     def __init__(self, mag):
@@ -53,7 +54,7 @@ class Mag:
         self.mag = [mag * factor for mag in self.mag]
 
     def divided(self, coord: List[int]):
-        return [ c // m for c, m in zip(coord, self.mag)]
+        return [c // m for c, m in zip(coord, self.mag)]
 
     def divide_by(self, d: int):
         self.mag = [mag // d for mag in self.mag]
