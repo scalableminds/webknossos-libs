@@ -2,6 +2,8 @@ import re
 from math import log2
 from functools import total_ordering
 
+from typing import List
+
 
 @total_ordering
 class Mag:
@@ -30,11 +32,7 @@ class Mag:
         return max(self.mag) < (max(other.to_array()))
 
     def __eq__(self, other):
-        is_equal = True
-        for m1, m2 in zip(self.mag, other.mag):
-            if m1 != m2:
-                is_equal = False
-        return is_equal
+        return all(m1 == m2 for m1, m2 in zip(self.mag, other.mag))
 
     def __str__(self):
         return self.to_layer_name()
@@ -49,14 +47,17 @@ class Mag:
     def to_array(self):
         return self.mag
 
-    def scaled_by(self, factor):
+    def scaled_by(self, factor: int):
         return Mag([mag * factor for mag in self.mag])
 
-    def scale_by(self, factor):
+    def scale_by(self, factor: int):
         self.mag = [mag * factor for mag in self.mag]
 
-    def divide_by(self, d):
+    def divided(self, coord: List[int]):
+        return [c // m for c, m in zip(coord, self.mag)]
+
+    def divide_by(self, d: int):
         self.mag = [mag // d for mag in self.mag]
 
-    def divided_by(self, d):
+    def divided_by(self, d: int):
         return Mag([mag // d for mag in self.mag])
