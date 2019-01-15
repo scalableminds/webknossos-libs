@@ -13,56 +13,23 @@ jobs:
 
       - run:
           name: Build docker image
-          command: docker build -t "scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM}" .
+          command: tests/scripts/build_docker_image.sh
 
       - run:
           name: Decompress test data
-          command: tar -xzvf testdata/WT1_wkw.tar.gz
+          command: tests/scripts/decompress_test_data.sh
 
       - run:
           name: Check formatting
-          command: |
-            set -x
-            docker run \
-              --rm \
-              --entrypoint "/bin/bash" \
-              -w "/" \
-              scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
-              -c "black --check /app/wkcuber"
+          command: tests/scripts/check_formatting.sh
 
       - run:
           name: Python tests
-          command: |
-            set -x
-            mkdir -p testoutput
-            docker run \
-              -v "${PWD}/testdata:/testdata" \
-              -v "${PWD}/testoutput:/testoutput" \
-              --rm \
-              --entrypoint "/bin/bash" \
-              -w "/" \
-              scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
-              -c "py.test /app/tests"
+          command: tests/scripts/python_tests.sh
 
       - run:
           name: Test tiff cubing
-          command: |
-            set -x
-            mkdir -p testoutput/tiff
-            docker run \
-              -v "${PWD}/testdata:/testdata" \
-              -v "${PWD}/testoutput:/testoutput" \
-              --rm \
-              scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
-              wkcuber.cubing \
-              --verbose \
-              --jobs 2 \
-              --batch_size 8 \
-              --layer_name color \
-              /testdata/tiff /testoutput/tiff
-            [ -d testoutput/tiff/color ]
-            [ -d testoutput/tiff/color/1 ]
-            [ $(find testoutput/tiff/color/1 -mindepth 3 -name "*.wkw" | wc -l) -eq 1 ]
+          command: tests/scripts/tiff_cubing.sh
 
       # - run:
       #     name: Test DM3 cubing
@@ -88,170 +55,39 @@ jobs:
 
       - run:
           name: Test tile cubing
-          command: |
-            set -x
-            mkdir -p testoutput/temca2
-            docker run \
-              -v "${PWD}/testdata:/testdata" \
-              -v "${PWD}/testoutput:/testoutput" \
-              --rm \
-              scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
-              wkcuber.tile_cubing \
-              --verbose \
-              --jobs 2 \
-              --batch_size 8 \
-              --layer_name color \
-              /testdata/temca2 /testoutput/temca2
-            [ -d testoutput/temca2/color ]
-            [ -d testoutput/temca2/color/1 ]
-            [ $(find testoutput/temca2/color/1 -mindepth 3 -name "*.wkw" | wc -l) -eq 8 ]
+          command: tests/scripts/tile_cubing.sh
 
       - run:
           name: Test simple tiff cubing
-          command: |
-            set -x
-            mkdir -p testoutput/tiff2
-            docker run \
-              -v "${PWD}/testdata:/testdata" \
-              -v "${PWD}/testoutput:/testoutput" \
-              --rm \
-              scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
-              wkcuber \
-              --verbose \
-              --jobs 2 \
-              --batch_size 8 \
-              --layer_name color \
-              --max_mag 4 \
-              --scale 11.24,11.24,25 \
-              --name awesome_data \
-              /testdata/tiff /testoutput/tiff2
-            [ -d testoutput/tiff2/color ]
-            [ -d testoutput/tiff2/color/1 ]
-            [ $(find testoutput/tiff2/color/1 -mindepth 3 -name "*.wkw" | wc -l) -eq 1 ]
-            [ -e testoutput/tiff2/datasource-properties.json ]
+          command: tests/scripts/simple_tiff_cubing.sh
 
       - run:
           name: Test simple tiff cubing (no compression)
-          command: |
-            set -x
-            mkdir -p testoutput/tiff3
-            docker run \
-              -v "${PWD}/testdata:/testdata" \
-              -v "${PWD}/testoutput:/testoutput" \
-              --rm \
-              scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
-              wkcuber \
-              --verbose \
-              --jobs 2 \
-              --batch_size 8 \
-              --layer_name color \
-              --max_mag 4 \
-              --no_compress \
-              --scale 11.24,11.24,25 \
-              --name awesome_data \
-              /testdata/tiff /testoutput/tiff3
-            [ -d testoutput/tiff3/color ]
-            [ -d testoutput/tiff3/color/1 ]
-            [ $(find testoutput/tiff3/color/1 -mindepth 3 -name "*.wkw" | wc -l) -eq 1 ]
-            [ -e testoutput/tiff3/datasource-properties.json ]
+          command: tests/scripts/simple_tiff_cubing_no_compression.sh
 
       - run:
           name: Test KNOSSOS conversion
-          command: |
-            set -x
-            mkdir -p testoutput/knossos
-            docker run \
-              -v "${PWD}/testdata:/testdata" \
-              -v "${PWD}/testoutput:/testoutput" \
-              --rm \
-              scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
-              wkcuber.convert_knossos \
-              --verbose \
-              --jobs 2 \
-              --dtype uint8 \
-              --layer_name color \
-              --mag 1 \
-              /testdata/knossos/color/1 /testoutput/knossos
-            [ -d testoutput/knossos/color ]
-            [ -d testoutput/knossos/color/1 ]
-            [ $(find testoutput/knossos/color/1 -mindepth 3 -name "*.wkw" | wc -l) -eq 1 ]
+          command: tests/scripts/knossos_conversion.sh
 
       - run:
           name: Decompress reference magnification data
-          command: mkdir -p testdata/tiff_mag_2_reference && tar -xzvf testdata/tiff_mag_2_reference.tar.gz -C testdata/tiff_mag_2_reference
+          command: tests/scripts/decompress_reference_mag.sh
 
       - run:
           name: Test downsampling
-          command: |
-            set -x
-            docker run \
-              -v "${PWD}/testoutput:/testoutput" \
-              --rm \
-              scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
-              wkcuber.downsampling \
-              --verbose \
-              --jobs 2 \
-              --max 8 \
-              --buffer_cube_size 128 \
-              --layer_name color \
-              /testoutput/tiff
-            [ -d testoutput/tiff/color/2 ]
-            [ -d testoutput/tiff/color/4 ]
-            [ -d testoutput/tiff/color/8 ]
-            [ -n testoutput/tiff/color/16 ]
-            [ $(find testoutput/tiff/color/2 -mindepth 3 -name "*.wkw" | wc -l) -eq 1 ]
-            [ $(find testoutput/tiff/color/4 -mindepth 3 -name "*.wkw" | wc -l) -eq 1 ]
-            [ $(find testoutput/tiff/color/8 -mindepth 3 -name "*.wkw" | wc -l) -eq 1 ]
-            cmp --silent testoutput/tiff/color/2/z0/y0/x0.wkw testdata/tiff_mag_2_reference/color/2/z0/y0/x0.wkw
+          command: tests/scripts/downsampling.sh
 
       - run:
           name: Test compression
-          command: |
-            set -x
-            docker run \
-              -v "${PWD}/testoutput:/testoutput" \
-              --rm \
-              scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
-              wkcuber.compress \
-              --verbose \
-              --jobs 2 \
-              --layer_name color \
-              /testoutput/tiff /testoutput/tiff_compress
-            [ -d testoutput/tiff_compress/color/1 ]
-            [ -d testoutput/tiff_compress/color/2 ]
-            [ -d testoutput/tiff_compress/color/4 ]
-            [ -d testoutput/tiff_compress/color/8 ]
+          command: tests/scripts/compression.sh
 
       - run:
           name: Test in-place compression
-          command: |
-            set -x
-            cp -r testoutput/tiff testoutput/tiff_compress2
-            docker run \
-              -v "${PWD}/testoutput:/testoutput" \
-              --rm \
-              scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
-              wkcuber.compress \
-              --verbose \
-              --jobs 2 \
-              --layer_name color \
-              /testoutput/tiff_compress2
+          command: tests/scripts/in_place_compression.sh
 
       - run:
           name: Test metadata generation
-          command: |
-            set -x
-            docker run \
-              -v "${PWD}/testoutput:/testoutput" \
-              --rm \
-              scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
-              wkcuber.metadata \
-              --name test_dataset \
-              --scale 11.24,11.24,25 \
-              /testoutput/tiff
-            [ -e testoutput/tiff/datasource-properties.json ]
-            jq --argfile a testdata/tiff/datasource-properties.fixture.json --argfile b testoutput/tiff/datasource-properties.json -n '$a == $b'
-            # diff testdata/tiff/datasource-properties.fixture.json testoutput/tiff/datasource-properties.json
+          command: tests/scripts/meta_generation.sh
 
       - run:
           name: Push docker images
