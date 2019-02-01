@@ -186,7 +186,6 @@ def downsample_cube_job(
         with open_wkw(source_wkw_info) as source_wkw:
             num_channels = source_wkw.header.num_channels
             source_dtype = source_wkw.header.voxel_type
-            target_wkw_info.dtype = source_dtype
             with open_wkw(
                 target_wkw_info,
                 pool_get_lock(),
@@ -410,7 +409,10 @@ def downsample_mag(
         interpolation_mode = InterpolationModes[interpolation_mode.upper()]
 
     source_wkw_info = WkwDatasetInfo(path, layer_name, None, source_mag.to_layer_name())
-    target_wkw_info = WkwDatasetInfo(path, layer_name, None, target_mag.to_layer_name())
+    with open_wkw(source_wkw_info) as source:
+        target_wkw_info = WkwDatasetInfo(
+            path, layer_name, source.header.voxel_type, target_mag.to_layer_name()
+        )
     downsample(
         source_wkw_info,
         target_wkw_info,
