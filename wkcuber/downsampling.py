@@ -185,6 +185,8 @@ def downsample_cube_job(
 
         with open_wkw(source_wkw_info) as source_wkw:
             num_channels = source_wkw.header.num_channels
+            source_dtype = source_wkw.header.voxel_type
+            target_wkw_info.dtype = source_dtype
             with open_wkw(
                 target_wkw_info,
                 pool_get_lock(),
@@ -195,7 +197,7 @@ def downsample_cube_job(
                     source_wkw.header.file_len * source_wkw.header.block_len
                 )
                 shape = (num_channels,) + (wkw_cubelength,) * 3
-                file_buffer = np.zeros(shape, target_wkw.header.voxel_type)
+                file_buffer = np.zeros(shape, source_dtype)
                 tile_length = cube_edge_len
                 tile_count_per_dim = wkw_cubelength // tile_length
                 assert (
