@@ -8,6 +8,7 @@ from wkcuber.downsampling import (
 )
 import wkw
 from wkcuber.utils import WkwDatasetInfo, open_wkw
+from wkcuber.downsampling import _mode
 import shutil
 
 WKW_CUBE_SIZE = 1024
@@ -26,12 +27,23 @@ def test_downsample_cube():
     buffer = np.zeros((CUBE_EDGE_LEN,) * 3, dtype=np.uint8)
     buffer[:, :, :] = np.arange(0, CUBE_EDGE_LEN)
 
-    output = downsample_cube(buffer, (2, 2, 2), InterpolationModes.MEDIAN)
+    output = downsample_cube(buffer, (2, 2, 2), InterpolationModes.MODE)
 
     assert output.shape == (CUBE_EDGE_LEN // 2,) * 3
     assert buffer[0, 0, 0] == 0
     assert buffer[0, 0, 1] == 1
     assert np.all(output[:, :, :] == np.arange(0, CUBE_EDGE_LEN, 2))
+
+def test_downsample_mode():
+
+    a = np.array([[1, 3, 4, 2, 2, 7],
+                  [5, 2, 2, 1, 4, 1],
+                  [3, 3, 2, 2, 1, 1]])
+
+    result = _mode(a)
+    expected_result = np.array([1, 3, 2, 2, 1, 1])
+
+    assert np.all(result == expected_result)
 
 
 def test_cube_addresses():
