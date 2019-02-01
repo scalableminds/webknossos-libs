@@ -8,7 +8,7 @@ from wkcuber.downsampling import (
 )
 import wkw
 from wkcuber.utils import WkwDatasetInfo, open_wkw
-from wkcuber.downsampling import _mode
+from wkcuber.downsampling import _mode, non_linear_filter_3d
 import shutil
 
 WKW_CUBE_SIZE = 1024
@@ -34,16 +34,41 @@ def test_downsample_cube():
     assert buffer[0, 0, 1] == 1
     assert np.all(output[:, :, :] == np.arange(0, CUBE_EDGE_LEN, 2))
 
+
 def test_downsample_mode():
 
-    a = np.array([[1, 3, 4, 2, 2, 7],
-                  [5, 2, 2, 1, 4, 1],
-                  [3, 3, 2, 2, 1, 1]])
+    a = np.array([[1, 3, 4, 2, 2, 7], [5, 2, 2, 1, 4, 1], [3, 3, 2, 2, 1, 1]])
 
     result = _mode(a)
     expected_result = np.array([1, 3, 2, 2, 1, 1])
 
     assert np.all(result == expected_result)
+
+
+def test_downsample_median():
+
+    a = np.array([[1, 3, 4, 2, 2, 7], [5, 2, 2, 1, 4, 1], [3, 3, 2, 2, 1, 1]])
+
+    result = np.median(a, axis=0)
+    expected_result = np.array([3, 3, 2, 2, 2, 1])
+
+    assert np.all(result == expected_result)
+
+
+def test_non_linear_filter_reshape():
+    a = np.array([[[1, 3], [1, 4]], [[4, 2], [3, 1]]], dtype=np.uint8)
+
+    a_filtered = non_linear_filter_3d(a, [2, 2, 2], _mode)
+    assert a_filtered.dtype == np.uint8
+    expected_result = [1]
+    assert np.all(expected_result == a_filtered)
+
+    a = np.array([[[1, 3], [1, 4]], [[4, 3], [3, 1]]], np.uint32)
+
+    a_filtered = non_linear_filter_3d(a, [2, 2, 1], _mode)
+    assert a_filtered.dtype == np.uint32
+    expected_result = [1, 3]
+    assert np.all(expected_result == a_filtered)
 
 
 def test_cube_addresses():
