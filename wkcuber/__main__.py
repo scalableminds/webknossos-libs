@@ -94,7 +94,6 @@ if __name__ == "__main__":
         args.layer_name,
         Mag(1),
         Mag(args.max_mag),
-        args.dtype,
         "default",
         DEFAULT_EDGE_LEN,
         args.jobs,
