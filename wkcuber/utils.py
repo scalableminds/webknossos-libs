@@ -21,7 +21,10 @@ KnossosDatasetInfo = namedtuple("KnossosDatasetInfo", ("dataset_path", "dtype"))
 
 
 def _open_wkw(info, **kwargs):
-    header = wkw.Header(np.dtype(info.dtype), **kwargs)
+    if info.dtype is not None:
+        header = wkw.Header(np.dtype(info.dtype), **kwargs)
+    else:
+        header = None
     ds = wkw.Dataset.open(
         path.join(info.dataset_path, info.layer_name, str(info.mag)), header
     )

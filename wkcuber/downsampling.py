@@ -5,7 +5,6 @@ import numpy as np
 from argparse import ArgumentParser
 from math import floor, log2
 from os import path, listdir
-from scipy.stats import mode
 from scipy.ndimage.interpolation import zoom
 from itertools import product
 from functools import lru_cache
@@ -62,19 +61,12 @@ def create_parser():
     )
 
     parser.add_argument(
-        "--dtype",
-        "-d",
-        help="Target datatype (e.g. uint8, uint16, uint32)",
-        default="uint8",
-    )
-
-    parser.add_argument(
         "--from_mag",
         "--from",
         "-f",
         help="Resolution to base downsampling on",
-        type=int,
-        default=1,
+        type=str,
+        default="1",
     )
 
     # Either provide the maximum resolution to be downsampled OR a specific, anisotropic magnification.
@@ -193,6 +185,7 @@ def downsample_cube_job(
 
         with open_wkw(source_wkw_info) as source_wkw:
             num_channels = source_wkw.header.num_channels
+            source_dtype = source_wkw.header.voxel_type
             with open_wkw(
                 target_wkw_info,
                 pool_get_lock(),
@@ -203,7 +196,7 @@ def downsample_cube_job(
                     source_wkw.header.file_len * source_wkw.header.block_len
                 )
                 shape = (num_channels,) + (wkw_cubelength,) * 3
-                file_buffer = np.zeros(shape, target_wkw_info.dtype)
+                file_buffer = np.zeros(shape, source_dtype)
                 tile_length = cube_edge_len
                 tile_count_per_dim = wkw_cubelength // tile_length
                 assert (
@@ -331,7 +324,50 @@ def _median(x):
 
 
 def _mode(x):
-    return mode(x, axis=0, nan_policy="omit")[0][0]
+    """
+    Fast mode implementation from: https://stackoverflow.com/a/35674754
+    """
+    # Check inputs
+    ndim = x.ndim
+    axis = 0
+    # Sort array
+    sort = np.sort(x, axis=axis)
+    # Create array to transpose along the axis and get padding shape
+    transpose = np.roll(np.arange(ndim)[::-1], axis)
+    shape = list(sort.shape)
+    shape[axis] = 1
+    # Create a boolean array along strides of unique values
+    strides = (
+        np.concatenate(
+            [
+                np.zeros(shape=shape, dtype="bool"),
+                np.diff(sort, axis=axis) == 0,
+                np.zeros(shape=shape, dtype="bool"),
+            ],
+            axis=axis,
+        )
+        .transpose(transpose)
+        .ravel()
+    )
+    # Count the stride lengths
+    counts = np.cumsum(strides)
+    counts[~strides] = np.concatenate([[0], np.diff(counts[~strides])])
+    counts[strides] = 0
+    # Get shape of padded counts and slice to return to the original shape
+    shape = np.array(sort.shape)
+    shape[axis] += 1
+    shape = shape[transpose]
+    slices = [slice(None)] * ndim
+    slices[axis] = slice(1, None)
+    # Reshape and compute final counts
+    counts = counts.reshape(shape).transpose(transpose)[tuple(slices)] + 1
+
+    # Find maximum counts and return modals/counts
+    slices = [slice(None, i) for i in sort.shape]
+    del slices[axis]
+    index = np.ogrid[slices]
+    index.insert(axis, np.argmax(counts, axis=axis))
+    return sort[tuple(index)]
 
 
 def downsample_cube(cube_buffer, factors, interpolation_mode):
@@ -358,7 +394,6 @@ def downsample_mag(
     layer_name,
     source_mag: Mag,
     target_mag: Mag,
-    dtype="uint8",
     interpolation_mode="default",
     cube_edge_len=DEFAULT_EDGE_LEN,
     jobs=1,
@@ -373,12 +408,11 @@ def downsample_mag(
     else:
         interpolation_mode = InterpolationModes[interpolation_mode.upper()]
 
-    source_wkw_info = WkwDatasetInfo(
-        path, layer_name, dtype, source_mag.to_layer_name()
-    )
-    target_wkw_info = WkwDatasetInfo(
-        path, layer_name, dtype, target_mag.to_layer_name()
-    )
+    source_wkw_info = WkwDatasetInfo(path, layer_name, None, source_mag.to_layer_name())
+    with open_wkw(source_wkw_info) as source:
+        target_wkw_info = WkwDatasetInfo(
+            path, layer_name, source.header.voxel_type, target_mag.to_layer_name()
+        )
     downsample(
         source_wkw_info,
         target_wkw_info,
@@ -396,7 +430,6 @@ def downsample_mags(
     layer_name,
     from_mag: Mag,
     max_mag: Mag,
-    dtype,
     interpolation_mode,
     cube_edge_len,
     jobs,
@@ -410,7 +443,6 @@ def downsample_mags(
             layer_name,
             source_mag,
             target_mag,
-            dtype,
             interpolation_mode,
             cube_edge_len,
             jobs,
@@ -435,7 +467,6 @@ if __name__ == "__main__":
             args.layer_name,
             from_mag,
             anisotropic_target_mag,
-            args.dtype,
             args.interpolation_mode,
             args.buffer_cube_size,
             args.jobs,
@@ -447,7 +478,6 @@ if __name__ == "__main__":
             args.layer_name,
             from_mag,
             max_mag,
-            args.dtype,
             args.interpolation_mode,
             args.buffer_cube_size,
             args.jobs,
