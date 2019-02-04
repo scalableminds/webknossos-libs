@@ -360,14 +360,14 @@ def _mode(x):
     slices = [slice(None)] * ndim
     slices[axis] = slice(1, None)
     # Reshape and compute final counts
-    counts = counts.reshape(shape).transpose(transpose)[slices] + 1
+    counts = counts.reshape(shape).transpose(transpose)[tuple(slices)] + 1
 
     # Find maximum counts and return modals/counts
     slices = [slice(None, i) for i in sort.shape]
     del slices[axis]
     index = np.ogrid[slices]
     index.insert(axis, np.argmax(counts, axis=axis))
-    return sort[index]
+    return sort[tuple(index)]
 
 
 def downsample_cube(cube_buffer, factors, interpolation_mode):
