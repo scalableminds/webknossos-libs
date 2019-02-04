@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(
     name="wkcuber",
     packages=find_packages(exclude=("tests",)),
-    version="0.2.1",
+    version="0.2.2",
     install_requires=["scipy", "numpy", "pillow", "pyyaml", "wkw"],
     description="A cubing tool for webKnossos",
     author="Norman Rzepka",
