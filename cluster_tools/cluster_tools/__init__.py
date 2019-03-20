@@ -1,10 +1,8 @@
-"""Python futures for Condor clusters."""
 from concurrent import futures
 import os
 import sys
 import threading
 import time
-from . import condor
 from . import slurm
 from .remote import INFILE_FMT, OUTFILE_FMT
 from .util import random_string, local_filename
@@ -160,25 +158,6 @@ class SlurmExecutor(ClusterExecutor):
             os.unlink(outf)
         except OSError:
             pass
-
-class CondorExecutor(ClusterExecutor):
-    """Futures executor for executing jobs on a Condor cluster."""
-    def __init__(self, debug=False):
-        super(CondorExecutor, self).__init__(debug)
-        self.logfile = LOGFILE_FMT % random_string()
-
-    def _start(self, workerid, additional_setup_lines):
-        return condor.submit(sys.executable, '-m cfut.remote %s' % workerid,
-                             log=self.logfile)
-
-    def _cleanup(self, jobid):
-        os.unlink(condor.OUTFILE_FMT % str(jobid))
-        os.unlink(condor.ERRFILE_FMT % str(jobid))
-
-    def shutdown(self, wait=True):
-        super(CondorExecutor, self).shutdown(wait)
-        if os.path.exists(self.logfile):
-            os.unlink(self.logfile)
 
 def map(executor, func, args, ordered=True):
     """Convenience function to map a function over cluster jobs. Given
