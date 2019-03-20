@@ -15,7 +15,6 @@ def format_remote_exc():
 
 def worker(workerid):
     """Called to execute a job on a remote host."""
-    print("worker")
     try:
         with open(INFILE_FMT % workerid, 'rb') as f:
             indata = f.read()

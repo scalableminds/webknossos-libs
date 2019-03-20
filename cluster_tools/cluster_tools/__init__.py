@@ -5,10 +5,8 @@ import threading
 import time
 from . import slurm
 from .remote import INFILE_FMT, OUTFILE_FMT
-from .util import random_string, local_filename
+from .util import random_string, local_filename, chcall
 import cloudpickle
-
-LOGFILE_FMT = local_filename('cfut.log.%s.txt')
 
 class RemoteException(Exception):
     def __init__(self, error):
@@ -53,9 +51,16 @@ class FileWaitThread(threading.Thread):
 
                 # Poll for each file.
                 for filename in list(self.waiting):
+                    job_id = self.waiting[filename]
                     if os.path.exists(filename):
-                        self.callback(self.waiting[filename])
-                        del self.waiting[filename]
+                        self.callback(job_id, False)
+                        del job_id
+                    else:
+                        # Let's get the state for the job to check whether it failed
+                        stdout = chcall('sacct -j {} -o State,ExitCode -P'.format(job_id))
+                        if "FAILED" in str(stdout[0]):
+                            self.callback(job_id, True)
+                            del job_id
 
             time.sleep(self.interval)
 
@@ -87,7 +92,7 @@ class ClusterExecutor(futures.Executor):
         cleanup after the job has finished.
         """
 
-    def _completion(self, jobid):
+    def _completion(self, jobid, failed_early):
         """Called whenever a job finishes."""
         with self.jobs_lock:
             fut, workerid = self.jobs.pop(jobid)
@@ -96,9 +101,18 @@ class ClusterExecutor(futures.Executor):
         if self.debug:
             print("job completed: %i" % jobid, file=sys.stderr)
 
-        with open(OUTFILE_FMT % workerid, 'rb') as f:
-            outdata = f.read()
-        success, result = cloudpickle.loads(outdata)
+        if failed_early:
+            # If the code which should be executed on a node wasn't even
+            # started (e.g., because python isn't installed or the cluster_tools
+            # couldn't be found), no output was written to disk. We only noticed
+            # this circumstance because the whole slurm job was marked as failed.
+            # Therefore, we don't try to deserialize pickle output.
+            success = False
+            result = "Job submission/execution failed. Please look into the log file at {}".format(slurm.OUTFILE_FMT.format(jobid))
+        else:
+            with open(OUTFILE_FMT % workerid, 'rb') as f:
+                outdata = f.read()
+            success, result = cloudpickle.loads(outdata)
 
         if success:
             fut.set_result(result)
@@ -106,8 +120,11 @@ class ClusterExecutor(futures.Executor):
             fut.set_exception(RemoteException(result))
 
         # Clean up communication files.
-        os.unlink(INFILE_FMT % workerid)
-        os.unlink(OUTFILE_FMT % workerid)
+
+        if os.path.exists(INFILE_FMT % workerid):
+            os.unlink(INFILE_FMT % workerid)
+        if os.path.exists(OUTFILE_FMT % workerid):
+            os.unlink(OUTFILE_FMT % workerid)
 
         self._cleanup(jobid)
 
@@ -146,7 +163,7 @@ class SlurmExecutor(ClusterExecutor):
     """Futures executor for executing jobs on a Slurm cluster."""
     def _start(self, workerid, additional_setup_lines):
         return slurm.submit(
-            '{} -m cfut.remote {}'.format(sys.executable, workerid, additional_setup_lines=additional_setup_lines)
+            '{} -m cluster_tools.remote {}'.format(sys.executable, workerid, additional_setup_lines=additional_setup_lines)
         )
 
     def _cleanup(self, jobid):

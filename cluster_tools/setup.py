@@ -13,7 +13,7 @@ setup(name='cluster_tools',
       url='https://github.com/scalableminds/cluster_tools',
       license='MIT',
       platforms='ALL',
-      long_description=_read('README.rst'),
+      long_description=_read('README.md'),
 
       packages=['cluster_tools'],
       install_requires=[
