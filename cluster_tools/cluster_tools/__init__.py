@@ -1,4 +1,5 @@
 from concurrent import futures
+from concurrent.futures import ProcessPoolExecutor
 import os
 import sys
 import threading
@@ -7,6 +8,7 @@ from . import slurm
 from .remote import INFILE_FMT, OUTFILE_FMT
 from .util import random_string, local_filename, chcall
 import cloudpickle
+import logging
 
 class RemoteException(Exception):
     def __init__(self, error):
@@ -176,15 +178,32 @@ class SlurmExecutor(ClusterExecutor):
         except OSError:
             pass
 
-def map(executor, func, args, ordered=True):
-    """Convenience function to map a function over cluster jobs. Given
-    a function and an iterable, generates results. (Works like
-    ``itertools.imap``.) If ``ordered`` is False, then the values are
-    generated in an undefined order, possibly more quickly.
-    """
-    with executor:
-        futs = []
-        for arg in args:
-            futs.append(executor.submit(func, arg))
-        for fut in (futs if ordered else futures.as_completed(futs)):
-            yield fut.result()
+    def map(self, func, args, timeout=None, chunksize=None):
+        if chunksize is not None:
+            logging.warning("The provided chunksize parameter is ignored by SlurmExecutor.")
+
+        start_time = time.time()
+
+        with self:
+            futs = []
+            for arg in args:
+                futs.append(self.submit(func, arg))
+            for fut in futs:
+                passed_time = time.time() - start_time
+                remaining_timeout = None if timeout is None else timeout - passed_time
+                yield fut.result(remaining_timeout)
+
+
+class SequentialExecutor(ProcessPoolExecutor):
+    def __init__(self, **kwargs):
+        max_workers = 1
+        return ProcessPoolExecutor.__init__(self, max_workers, **kwargs)
+
+
+def get_executor(environment, *args, **kwargs):
+    if environment == "slurm":
+        return SlurmExecutor(*args, **kwargs)
+    elif environment == "multiprocessing":
+        return ProcessPoolExecutor(*args, **kwargs)
+    elif environment == "sequential":
+        return SequentialExecutor(*args, **kwargs)
