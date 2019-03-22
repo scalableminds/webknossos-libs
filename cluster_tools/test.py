@@ -55,3 +55,15 @@ def test_map():
         with executor:
             result = list(executor.map(square, [2, 3, 4]))
             assert result == [4, 9, 16]
+
+    for exc in get_executors():
+        run_map(exc)
+
+
+def test_slurm_submit_returns_job_ids():
+    exc = cluster_tools.get_executor("slurm", debug=True, keep_logs=True)
+    with exc:
+        future = exc.submit(square, 2)
+        assert isinstance(future.slurm_jobid, int)
+        assert future.slurm_jobid > 0
+        assert future.result() == 4

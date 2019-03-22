@@ -130,7 +130,7 @@ class ClusterExecutor(futures.Executor):
 
         self._cleanup(jobid)
 
-    def submit(self, fun, *args, additional_setup_lines=[], **kwargs):
+    def submit(self, fun, *args, additional_setup_lines=[], job_resources=None, **kwargs):
         """Submit a job to the pool."""
         fut = futures.Future()
 
@@ -139,7 +139,7 @@ class ClusterExecutor(futures.Executor):
         funcser = cloudpickle.dumps((fun, args, kwargs), True)
         with open(INFILE_FMT % workerid, 'wb') as f:
             f.write(funcser)
-        jobid = self._start(workerid, additional_setup_lines)
+        jobid = self._start(workerid, additional_setup_lines, job_resources)
 
         if self.debug:
             print("job submitted: %i" % jobid, file=sys.stderr)
@@ -149,6 +149,8 @@ class ClusterExecutor(futures.Executor):
 
         with self.jobs_lock:
             self.jobs[jobid] = (fut, workerid)
+
+        fut.slurm_jobid = jobid
         return fut
 
     def shutdown(self, wait=True):
@@ -163,9 +165,11 @@ class ClusterExecutor(futures.Executor):
 
 class SlurmExecutor(ClusterExecutor):
     """Futures executor for executing jobs on a Slurm cluster."""
-    def _start(self, workerid, additional_setup_lines):
+    def _start(self, workerid, additional_setup_lines, job_resources):
         return slurm.submit(
-            '{} -m cluster_tools.remote {}'.format(sys.executable, workerid, additional_setup_lines=additional_setup_lines)
+            '{} -m cluster_tools.remote {}'.format(sys.executable, workerid),
+            additional_setup_lines=additional_setup_lines,
+            job_resources=job_resources
         )
 
     def _cleanup(self, jobid):

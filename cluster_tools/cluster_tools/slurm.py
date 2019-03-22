@@ -20,13 +20,20 @@ def submit_text(job):
     os.unlink(filename)
     return int(jobid)
 
-def submit(cmdline, outpat=OUTFILE_FMT.format('%j'), additional_setup_lines=[]):
+def submit(cmdline, outpath=OUTFILE_FMT.format('%j'), additional_setup_lines=[], job_resources=None):
     """Starts a Slurm job that runs the specified shell command line.
     """
+
+    job_resources_lines = []
+    if job_resources is not None:
+        for resource, value in job_resources.items():
+            job_resources_lines += ["#SBATCH --{}={}".format(resource, value)]
+
     script_lines = [
-        "#!/bin/sh",
-        "#SBATCH --output={}".format(outpat),
-        *additional_setup_lines,
-        "srun {}".format(cmdline),
-    ]
+            "#!/bin/sh",
+            "#SBATCH --output={}".format(outpath)
+        ] + job_resources_lines + [
+            *additional_setup_lines,
+            "srun {}".format(cmdline),
+        ]
     return submit_text('\n'.join(script_lines))
