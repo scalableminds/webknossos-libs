@@ -69,9 +69,11 @@ class FileWaitThread(threading.Thread):
 class SlurmExecutor(futures.Executor):
     """Futures executor for executing jobs on a Slurm cluster."""
 
-    def __init__(self, debug=False, keep_logs=False):
+    def __init__(self, debug=False, keep_logs=False, job_resources=None, additional_setup_lines=[]):
         os.makedirs(local_filename(), exist_ok=True)
         self.debug = debug
+        self.job_resources = job_resources
+        self.additional_setup_lines = additional_setup_lines
 
         self.jobs = {}
         self.job_outfiles = {}
@@ -83,15 +85,15 @@ class SlurmExecutor(futures.Executor):
         self.wait_thread.start()
 
 
-    def _start(self, workerid, additional_setup_lines, job_resources):
+    def _start(self, workerid):
         """Start a job with the given worker ID and return an ID
         identifying the new job. The job should run ``python -m
         cfut.remote <workerid>.
         """
         return slurm.submit(
             '{} -m cluster_tools.remote {}'.format(sys.executable, workerid),
-            additional_setup_lines=additional_setup_lines,
-            job_resources=job_resources
+            additional_setup_lines=self.additional_setup_lines,
+            job_resources=self.job_resources
         )
 
 
@@ -144,7 +146,7 @@ class SlurmExecutor(futures.Executor):
 
         self._cleanup(jobid)
 
-    def submit(self, fun, *args, additional_setup_lines=[], job_resources=None, **kwargs):
+    def submit(self, fun, *args, **kwargs):
         """Submit a job to the pool."""
         fut = futures.Future()
 
@@ -153,7 +155,7 @@ class SlurmExecutor(futures.Executor):
         funcser = cloudpickle.dumps((fun, args, kwargs), True)
         with open(INFILE_FMT % workerid, 'wb') as f:
             f.write(funcser)
-        jobid = self._start(workerid, additional_setup_lines, job_resources)
+        jobid = self._start(workerid)
 
         if self.debug:
             print("job submitted: %i" % jobid, file=sys.stderr)

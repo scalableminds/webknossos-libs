@@ -15,7 +15,7 @@ def sleep(duration):
 
 def get_executors():
     return [
-        cluster_tools.get_executor("slurm", debug=True, keep_logs=True),
+        cluster_tools.get_executor("slurm", debug=True, keep_logs=True, job_resources={"mem": "10M"}),
         cluster_tools.get_executor("multiprocessing", 5),
         cluster_tools.get_executor("sequential")
     ]
