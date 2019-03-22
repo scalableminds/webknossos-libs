@@ -66,9 +66,9 @@ class FileWaitThread(threading.Thread):
 
             time.sleep(self.interval)
 
-class ClusterExecutor(futures.Executor):
-    """An abstract base class for executors that run jobs on clusters.
-    """
+class SlurmExecutor(futures.Executor):
+    """Futures executor for executing jobs on a Slurm cluster."""
+
     def __init__(self, debug=False, keep_logs=False):
         os.makedirs(local_filename(), exist_ok=True)
         self.debug = debug
@@ -82,17 +82,31 @@ class ClusterExecutor(futures.Executor):
         self.wait_thread = FileWaitThread(self._completion)
         self.wait_thread.start()
 
-    def _start(workerid):
+
+    def _start(self, workerid, additional_setup_lines, job_resources):
         """Start a job with the given worker ID and return an ID
         identifying the new job. The job should run ``python -m
         cfut.remote <workerid>.
         """
-        raise NotImplementedError()
+        return slurm.submit(
+            '{} -m cluster_tools.remote {}'.format(sys.executable, workerid),
+            additional_setup_lines=additional_setup_lines,
+            job_resources=job_resources
+        )
 
-    def _cleanup(jobid):
+
+    def _cleanup(self, jobid):
         """Given a job ID as returned by _start, perform any necessary
         cleanup after the job has finished.
         """
+        if self.keep_logs:
+            return
+
+        outf = slurm.OUTFILE_FMT.format(str(jobid))
+        try:
+            os.unlink(outf)
+        except OSError:
+            pass
 
     def _completion(self, jobid, failed_early):
         """Called whenever a job finishes."""
@@ -162,25 +176,6 @@ class ClusterExecutor(futures.Executor):
 
         self.wait_thread.stop()
         self.wait_thread.join()
-
-class SlurmExecutor(ClusterExecutor):
-    """Futures executor for executing jobs on a Slurm cluster."""
-    def _start(self, workerid, additional_setup_lines, job_resources):
-        return slurm.submit(
-            '{} -m cluster_tools.remote {}'.format(sys.executable, workerid),
-            additional_setup_lines=additional_setup_lines,
-            job_resources=job_resources
-        )
-
-    def _cleanup(self, jobid):
-        if self.keep_logs:
-            return
-
-        outf = slurm.OUTFILE_FMT.format(str(jobid))
-        try:
-            os.unlink(outf)
-        except OSError:
-            pass
 
     def map(self, func, args, timeout=None, chunksize=None):
         if chunksize is not None:
