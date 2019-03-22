@@ -1,0 +1,44 @@
+version: 2
+jobs:
+  build:
+    machine: true
+    environment:
+      USER_NAME: circleci
+      USER_UID: 1001
+      USER_GID: 1001
+      TZ: Europe/Berlin
+    steps:
+      - checkout
+      - run:
+          name: Build dockered-slurm image
+          command: |
+            cd ./dockered-slurm
+
+            # Build image
+            docker build -t slurm-docker-cluster:17.02.11 .
+            docker-compose up -d
+
+            # Register cluster (with retry)
+            for i in {1..5}; do
+              ./register_cluster.sh && s=0 && break || s=$?
+              sleep 10
+            done
+
+            # Run setup.py on all three nodes
+            docker exec slurmctld bash -c "cd /cluster_tools && python36 setup.py install"
+            docker exec c1 bash -c "cd /cluster_tools && python36 setup.py install"
+            docker exec c2 bash -c "cd /cluster_tools && python36 setup.py install"
+
+      - run:
+          name: Re-run setup
+          command: |
+            cd ./dockered-slurm
+            docker exec slurmctld bash -c "cd /cluster_tools && python36 setup.py install"
+            docker exec c1 bash -c "cd /cluster_tools && python36 setup.py install"
+            docker exec c2 bash -c "cd /cluster_tools && python36 setup.py install"
+
+      - run:
+          name: Run tests
+          command: |
+            cd ./dockered-slurm
+            docker exec slurmctld bash -c "cd /cluster_tools && python36 -m pytest -s test.py"

@@ -44,15 +44,15 @@ def example_3():
 
 
 def sleep_example():
-    # executor = cluster_tools.get_executor("slurm")
+    executor = cluster_tools.get_executor("slurm")
     # executor = cluster_tools.get_executor("multiprocessing", 5)
-    executor = cluster_tools.get_executor("sequential")
+    # executor = cluster_tools.get_executor("sequential")
     with executor:
         print(list(executor.map(sleep, [10, 10, 10])))
 
 
 if __name__ == '__main__':
-    # example_1()
-    # example_2()
-    # example_3()
+    example_1()
+    example_2()
+    example_3()
     sleep_example()
