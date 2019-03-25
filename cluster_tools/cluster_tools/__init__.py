@@ -69,11 +69,12 @@ class FileWaitThread(threading.Thread):
 class SlurmExecutor(futures.Executor):
     """Futures executor for executing jobs on a Slurm cluster."""
 
-    def __init__(self, debug=False, keep_logs=False, job_resources=None, additional_setup_lines=[]):
+    def __init__(self, debug=False, keep_logs=False, job_resources=None, job_name=None, additional_setup_lines=[]):
         os.makedirs(local_filename(), exist_ok=True)
         self.debug = debug
         self.job_resources = job_resources
         self.additional_setup_lines = additional_setup_lines
+        self.job_name = job_name
 
         self.jobs = {}
         self.job_outfiles = {}
@@ -92,8 +93,9 @@ class SlurmExecutor(futures.Executor):
         """
         return slurm.submit(
             '{} -m cluster_tools.remote {}'.format(sys.executable, workerid),
-            additional_setup_lines=self.additional_setup_lines,
-            job_resources=self.job_resources
+            job_resources=self.job_resources,
+            job_name=self.job_name,
+            additional_setup_lines=self.additional_setup_lines
         )
 
 
