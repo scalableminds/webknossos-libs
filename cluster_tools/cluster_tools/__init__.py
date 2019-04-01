@@ -58,11 +58,14 @@ class FileWaitThread(threading.Thread):
                         self.callback(job_id, False)
                         del job_id
                     else:
-                        # Let's get the state for the job to check whether it failed
-                        stdout = chcall('sacct -j {} -o State,ExitCode -P'.format(job_id))
-                        if "FAILED" in str(stdout[0]):
-                            self.callback(job_id, True)
-                            del job_id
+                        try:
+                            # Let's get the state for the job to check whether it failed
+                            stdout = chcall('sacc -j {} -o State,ExitCode -P'.format(job_id))
+                            if "FAILED" in str(stdout[0]):
+                                self.callback(job_id, True)
+                                del job_id
+                        except Exception as e:
+                            logging.error("Cannot call sacct to determine job's status.", e)
 
             time.sleep(self.interval)
 
