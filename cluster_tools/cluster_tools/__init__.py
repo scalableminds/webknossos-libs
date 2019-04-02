@@ -65,7 +65,7 @@ class FileWaitThread(threading.Thread):
                                 self.callback(job_id, True)
                                 del self.waiting[filename]
                             elif "JobState=COMPLETED" in str(stdout[0]):
-                                print("job state is completed, but {} couldn't be found.".format(filename), flush=True)
+                                logging.error("Job state is completed, but {} couldn't be found.".format(filename))
                                 self.callback(job_id, True)
                                 del self.waiting[filename]
                         except Exception as e:
@@ -82,6 +82,7 @@ class SlurmExecutor(futures.Executor):
         self.job_resources = job_resources
         self.additional_setup_lines = additional_setup_lines
         self.job_name = job_name
+        self.was_requested_to_shutdown = False
 
         self.jobs = {}
         self.job_outfiles = {}
@@ -159,11 +160,15 @@ class SlurmExecutor(futures.Executor):
         """Submit a job to the pool."""
         fut = futures.Future()
 
+        if self.was_requested_to_shutdown:
+            raise RuntimeError('submit() was invoked on a SlurmExecutor instance even though shutdown() was executed for that instance.')
+
         # Start the job.
         workerid = random_string()
         funcser = cloudpickle.dumps((fun, args, kwargs), True)
         with open(INFILE_FMT % workerid, 'wb') as f:
             f.write(funcser)
+
         jobid = self._start(workerid)
 
         if self.debug:
@@ -180,6 +185,7 @@ class SlurmExecutor(futures.Executor):
 
     def shutdown(self, wait=True):
         """Close the pool."""
+        self.was_requested_to_shutdown = True
         if wait:
             with self.jobs_lock:
                 if self.jobs:
@@ -192,16 +198,30 @@ class SlurmExecutor(futures.Executor):
         if chunksize is not None:
             logging.warning("The provided chunksize parameter is ignored by SlurmExecutor.")
 
+        if self.was_requested_to_shutdown:
+            raise RuntimeError('submit() was invoked on a SlurmExecutor instance even though shutdown() was executed for that instance.')
+
         start_time = time.time()
 
         with self:
             futs = []
+            results = []
+            # Submit jobs eagerly
             for arg in args:
                 futs.append(self.submit(func, arg))
-            for fut in futs:
-                passed_time = time.time() - start_time
-                remaining_timeout = None if timeout is None else timeout - passed_time
-                yield fut.result(remaining_timeout)
+
+            # Return a separate generator as iterator to avoid that the
+            # map() method itself becomes a generator.
+            # If map() was a generator, the submit() calls would be invoked
+            # lazily which can lead to a shutdown of the executor before
+            # the submit calls are performed.
+            def result_generator():
+                for fut in futs:
+                    passed_time = time.time() - start_time
+                    remaining_timeout = None if timeout is None else timeout - passed_time
+                    yield fut.result(remaining_timeout)
+
+            return result_generator()
 
 
 class SequentialExecutor(ProcessPoolExecutor):

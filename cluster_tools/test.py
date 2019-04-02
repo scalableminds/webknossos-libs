@@ -59,6 +59,14 @@ def test_map():
     for exc in get_executors():
         run_map(exc)
 
+def test_map_lazy():
+    def run_map(executor):
+        with executor:
+            result = executor.map(square, [2, 3, 4])
+        assert list(result) == [4, 9, 16]
+
+    for exc in get_executors():
+        run_map(exc)
 
 def test_slurm_submit_returns_job_ids():
     exc = cluster_tools.get_executor("slurm", debug=True, keep_logs=True)
