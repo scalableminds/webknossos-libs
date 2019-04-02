@@ -56,20 +56,20 @@ class FileWaitThread(threading.Thread):
                     job_id = self.waiting[filename]
                     if os.path.exists(filename):
                         self.callback(job_id, False)
-                        del job_id
+                        del self.waiting[filename]
                     else:
                         try:
                             # Let's get the state for the job to check whether it failed
                             stdout = chcall('scontrol show job {}'.format(job_id))
                             if "JobState=FAILED" in str(stdout[0]):
                                 self.callback(job_id, True)
-                                del job_id
+                                del self.waiting[filename]
                             elif "JobState=COMPLETED" in str(stdout[0]):
                                 print("job state is completed, but {} couldn't be found.".format(filename), flush=True)
                                 self.callback(job_id, True)
-                                del job_id
+                                del self.waiting[filename]
                         except Exception as e:
-                            logging.error("Cannot call sacct to determine job's status.", e)
+                            logging.error("Couldn't call scontrol to determine job's status. {}".format(e))
 
             time.sleep(self.interval)
 
