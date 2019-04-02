@@ -64,6 +64,10 @@ class FileWaitThread(threading.Thread):
                             if "JobState=FAILED" in str(stdout[0]):
                                 self.callback(job_id, True)
                                 del job_id
+                            elif "JobState=COMPLETED" in str(stdout[0]):
+                                print("job state is completed, but {} couldn't be found.".format(filename), flush=True)
+                                self.callback(job_id, True)
+                                del job_id
                         except Exception as e:
                             logging.error("Cannot call sacct to determine job's status.", e)
 
