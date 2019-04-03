@@ -52,10 +52,6 @@ def create_parser():
         default=BLOCK_LEN,
     )
 
-    parser.add_argument(
-        "--distribution_strategy", choices=["sequential", "slurm", "multiprocessing"]
-    )
-
     add_verbose_flag(parser)
     add_distribution_flags(parser)
 
