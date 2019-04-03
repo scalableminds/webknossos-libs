@@ -83,18 +83,11 @@ def get_regular_chunks(min_z, max_z, chunk_size):
 
 def add_distribution_flags(parser):
     parser.add_argument(
-        "--processes",
-        default=cpu_count(),
-        type=int,
-        help="Number of processes to be spawned",
-    )
-
-    parser.add_argument(
         "--jobs",
         "-j",
         default=cpu_count(),
         type=int,
-        help="Number of processes to be spawned. Synonym to --processes.",
+        help="Number of processes to be spawned.",
     )
 
     parser.add_argument(
@@ -117,19 +110,18 @@ def get_executor_for_args(args):
         # we allow args to be None. In this case we are defaulting
         # to these values:
         args.distribution_strategy = "multiprocessing"
-        args.processes = cpu_count()
+        args.jobs = cpu_count()
 
     executor = None
 
     if args.distribution_strategy == "multiprocessing":
-        if args.processes is None and args.jobs is None:
+        if args.jobs is None:
             raise argparse.ArgumentTypeError(
-                "Number of processes (--processes) has to be provided when using multiprocessing as distribution strategy."
+                "Number of processes (--jobs) has to be provided when using multiprocessing as distribution strategy."
             )
 
-        executor = cluster_tools.get_executor("multiprocessing", args.processes)
-        processes = args.processes if args.processes is not None else args.jobs
-        logging.info("Using pool of {} workers.".format(args.processes))
+        executor = cluster_tools.get_executor("multiprocessing", args.jobs)
+        logging.info("Using pool of {} workers.".format(args.jobs))
     elif args.distribution_strategy == "slurm":
         if args.job_resources is None:
             raise argparse.ArgumentTypeError(
