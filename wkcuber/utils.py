@@ -21,10 +21,11 @@ WkwDatasetInfo = namedtuple(
 KnossosDatasetInfo = namedtuple("KnossosDatasetInfo", ("dataset_path", "dtype"))
 
 
-def _open_wkw(info, **kwargs):
+def open_wkw(info, **kwargs):
     if info.dtype is not None:
         header = wkw.Header(np.dtype(info.dtype), **kwargs)
     else:
+        logging.warn("Discarding the following wkw header args, because dtype was not provided: {}".format(kwargs))
         header = None
     ds = wkw.Dataset.open(
         path.join(info.dataset_path, info.layer_name, str(info.mag)), header
@@ -32,18 +33,9 @@ def _open_wkw(info, **kwargs):
     return ds
 
 
-def open_wkw(info, lock=None, **kwargs):
-    if lock is None:
-        # Create dummy lock
-        lock = Lock()
-
-    with lock:
-        return _open_wkw(info, **kwargs)
-
-
-def ensure_wkw(target_wkw_info, num_channels):
+def ensure_wkw(target_wkw_info, **kwargs):
     # Open will create the dataset if it doesn't exist yet
-    target_wkw = open_wkw(target_wkw_info, num_channels=num_channels)
+    target_wkw = open_wkw(target_wkw_info, **kwargs)
     target_wkw.close()
 
 
