@@ -10,10 +10,11 @@ from .mag import Mag
 
 from .utils import (
     add_verbose_flag,
-    add_jobs_flag,
     open_wkw,
     WkwDatasetInfo,
-    ParallelExecutor,
+    add_distribution_flags,
+    get_executor_for_args,
+    wait_and_ensure_success,
 )
 from .metadata import detect_resolutions
 from typing import List
@@ -44,8 +45,8 @@ def create_parser():
         "--mag", "-m", nargs="*", help="Magnification level", default=None
     )
 
-    add_jobs_flag(parser)
     add_verbose_flag(parser)
+    add_distribution_flags(parser)
 
     return parser
 
@@ -71,7 +72,7 @@ def compress_file_job(source_path, target_path):
         raise exc
 
 
-def compress_mag(source_path, layer_name, target_path, mag: Mag, jobs):
+def compress_mag(source_path, layer_name, target_path, mag: Mag, jobs, args=None):
     if path.exists(path.join(target_path, layer_name, str(mag))):
         logging.error("Target path '{}' already exists".format(target_path))
         exit(1)
@@ -80,18 +81,26 @@ def compress_mag(source_path, layer_name, target_path, mag: Mag, jobs):
     target_mag_path = path.join(target_path, layer_name, str(mag))
     logging.info("Compressing mag {0} in '{1}'".format(str(mag), target_mag_path))
 
-    with open_wkw(source_wkw_info) as source_wkw, ParallelExecutor(jobs) as pool:
+    with open_wkw(source_wkw_info) as source_wkw:
         source_wkw.compress(target_mag_path)
-        for file in source_wkw.list_files():
-            rel_file = path.relpath(file, source_wkw.root)
-            pool.submit(compress_file_job, file, path.join(target_mag_path, rel_file))
+        with get_executor_for_args(args) as executor:
+            futures = []
+            for file in source_wkw.list_files():
+                rel_file = path.relpath(file, source_wkw.root)
+                futures.append(
+                    executor.submit(
+                        compress_file_job, file, path.join(target_mag_path, rel_file)
+                    )
+                )
 
-    logging.info("Mag {0} succesfully compressed".format(str(mag)))
+            wait_and_ensure_success(futures)
+
+    logging.info("Mag {0} successfully compressed".format(str(mag)))
 
 
-def compress_mag_inplace(target_path, layer_name, mag: Mag, jobs):
+def compress_mag_inplace(target_path, layer_name, mag: Mag, jobs, args=None):
     compress_target_path = "{}.compress-{}".format(target_path, uuid4())
-    compress_mag(target_path, layer_name, compress_target_path, mag, jobs)
+    compress_mag(target_path, layer_name, compress_target_path, mag, jobs, args)
 
     shutil.rmtree(path.join(target_path, layer_name, str(mag)))
     shutil.move(
@@ -102,7 +111,7 @@ def compress_mag_inplace(target_path, layer_name, mag: Mag, jobs):
 
 
 def compress_mags(
-    source_path, layer_name, target_path=None, mags: List[Mag] = None, jobs=1
+    source_path, layer_name, target_path=None, mags: List[Mag] = None, jobs=1, args=None
 ):
     with_tmp_dir = target_path is None
     target_path = source_path + ".tmp" if with_tmp_dir else target_path
@@ -112,7 +121,7 @@ def compress_mags(
     mags.sort()
 
     for mag in mags:
-        compress_mag(source_path, layer_name, target_path, mag, jobs)
+        compress_mag(source_path, layer_name, target_path, mag, jobs, args)
 
     if with_tmp_dir:
         makedirs(path.join(source_path + ".bak", layer_name), exist_ok=True)
@@ -138,5 +147,10 @@ if __name__ == "__main__":
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG)
     compress_mags(
-        args.source_path, args.layer_name, args.target_path, args.mag, int(args.jobs)
+        args.source_path,
+        args.layer_name,
+        args.target_path,
+        args.mag,
+        int(args.jobs),
+        args,
     )

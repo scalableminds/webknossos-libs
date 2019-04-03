@@ -11,12 +11,12 @@ from .utils import (
     get_chunks,
     get_regular_chunks,
     find_files,
-    add_verbose_flag,
-    add_jobs_flag,
-    pool_get_lock,
+    ensure_wkw,
     open_wkw,
     WkwDatasetInfo,
-    ParallelExecutor,
+    add_distribution_flags,
+    get_executor_for_args,
+    wait_and_ensure_success,
 )
 from .cubing import create_parser, read_image_file
 from .image_readers import image_reader
@@ -57,7 +57,7 @@ def tile_cubing_job(target_wkw_info, z_batches, source_path, batch_size, tile_si
     if len(z_batches) == 0:
         return
 
-    with open_wkw(target_wkw_info, pool_get_lock()) as target_wkw:
+    with open_wkw(target_wkw_info) as target_wkw:
         # Iterate over the z batches
         # Batching is useful to utilize IO more efficiently
         for z_batch in get_chunks(z_batches, batch_size):
@@ -128,7 +128,9 @@ def tile_cubing_job(target_wkw_info, z_batches, source_path, batch_size, tile_si
                 raise exc
 
 
-def tile_cubing(source_path, target_path, layer_name, dtype, batch_size, jobs):
+def tile_cubing(
+    source_path, target_path, layer_name, dtype, batch_size, jobs, args=None
+):
     # Detect available z sections
     sections = find_source_sections(source_path)
     if len(sections) == 0:
@@ -148,17 +150,22 @@ def tile_cubing(source_path, target_path, layer_name, dtype, batch_size, jobs):
     )
 
     target_wkw_info = WkwDatasetInfo(target_path, layer_name, dtype, 1)
-    with ParallelExecutor(jobs) as pool:
+    ensure_wkw(target_wkw_info)
+    with get_executor_for_args(args) as executor:
+        futures = []
         # Iterate over all z batches
         for z_batch in get_regular_chunks(min_z, max_z, BLOCK_LEN):
-            pool.submit(
-                tile_cubing_job,
-                target_wkw_info,
-                list(z_batch),
-                source_path,
-                int(batch_size),
-                tile_size,
+            futures.append(
+                executor.submit(
+                    tile_cubing_job,
+                    target_wkw_info,
+                    list(z_batch),
+                    source_path,
+                    int(batch_size),
+                    tile_size,
+                )
             )
+        wait_and_ensure_success(futures)
 
 
 if __name__ == "__main__":
@@ -174,4 +181,5 @@ if __name__ == "__main__":
         args.dtype,
         int(args.batch_size),
         int(args.jobs),
+        args,
     )
