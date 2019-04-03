@@ -75,6 +75,10 @@ python -m wkcuber.compress --layer_name segmentation data/target data/target_com
 python -m wkcuber.metadata --name great_dataset --scale 11.24,11.24,25 data/target
 ```
 
+### Parallelization
+
+Most tasks can be configured to be executed in a parallelized manner. Via `--distribution_strategy` you can pass `multiprocessing` or `slurm`. The first can be further configured with `--jobs` and the latter via `--job_resources='{"mem": "10M"}'`. Use `--help` to get more information.
+
 ## Test data credits
 Excerpts for testing purposes have been sampled from:
 - Dow Jacobo Hossain Siletti Hudspeth (2018). **Connectomics of the zebrafish's lateral-line neuromast reveals wiring and miswiring in a simple microcircuit.** eLife. [DOI:10.7554/eLife.33988](https://elifesciences.org/articles/33988)
