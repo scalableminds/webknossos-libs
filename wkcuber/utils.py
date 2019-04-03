@@ -20,6 +20,7 @@ WkwDatasetInfo = namedtuple(
 KnossosDatasetInfo = namedtuple("KnossosDatasetInfo", ("dataset_path", "dtype"))
 FallbackArgs = namedtuple("FallbackArgs", ("distribution_strategy", "jobs"))
 
+
 def open_wkw(info, **kwargs):
     if info.dtype is not None:
         header = wkw.Header(np.dtype(info.dtype), **kwargs)
