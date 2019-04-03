@@ -14,6 +14,8 @@ from os import path
 from platform import python_version
 from math import floor, ceil
 
+from .knossos import KnossosDataset, CUBE_EDGE_LEN
+
 WkwDatasetInfo = namedtuple(
     "WkwDatasetInfo", ("dataset_path", "layer_name", "dtype", "mag")
 )
