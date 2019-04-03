@@ -111,11 +111,6 @@ def get_executor_for_args(args):
     executor = None
 
     if args.distribution_strategy == "multiprocessing":
-        if args.jobs is None:
-            raise argparse.ArgumentTypeError(
-                "Number of processes (--jobs) has to be provided when using multiprocessing as distribution strategy."
-            )
-
         executor = cluster_tools.get_executor("multiprocessing", args.jobs)
         logging.info("Using pool of {} workers.".format(args.jobs))
     elif args.distribution_strategy == "slurm":
