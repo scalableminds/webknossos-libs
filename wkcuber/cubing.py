@@ -3,16 +3,18 @@ import logging
 import numpy as np
 from argparse import ArgumentParser
 from os import path
+import cluster_tools
 
 from .utils import (
     get_chunks,
     find_files,
     add_verbose_flag,
-    add_jobs_flag,
     open_wkw,
+    ensure_wkw,
     WkwDatasetInfo,
-    ParallelExecutor,
-    pool_get_lock,
+    add_distribution_flags,
+    get_executor_for_args,
+    wait_and_ensure_success,
 )
 from .image_readers import image_reader
 
@@ -50,8 +52,12 @@ def create_parser():
         default=BLOCK_LEN,
     )
 
+    parser.add_argument(
+        "--distribution_strategy", choices=["sequential", "slurm", "multiprocessing"]
+    )
+
     add_verbose_flag(parser)
-    add_jobs_flag(parser)
+    add_distribution_flags(parser)
 
     return parser
 
@@ -91,9 +97,7 @@ def cubing_job(
     if len(z_batches) == 0:
         return
 
-    with open_wkw(
-        target_wkw_info, pool_get_lock(), num_channels=num_channels
-    ) as target_wkw:
+    with open_wkw(target_wkw_info, num_channels=num_channels) as target_wkw:
         # Iterate over batches of continuous z sections
         # The batches have a maximum size of `batch_size`
         # Batched iterations allows to utilize IO more efficiently
@@ -144,7 +148,9 @@ def cubing_job(
                 raise exc
 
 
-def cubing(source_path, target_path, layer_name, dtype, batch_size, jobs) -> dict:
+def cubing(
+    source_path, target_path, layer_name, dtype, batch_size, jobs, args=None
+) -> dict:
 
     target_wkw_info = WkwDatasetInfo(target_path, layer_name, dtype, 1)
     source_files = find_source_filenames(source_path)
@@ -155,22 +161,30 @@ def cubing(source_path, target_path, layer_name, dtype, batch_size, jobs) -> dic
     num_z = len(source_files)
 
     logging.info("Found source files: count={} size={}x{}".format(num_z, num_x, num_y))
-    with ParallelExecutor(jobs) as pool:
+
+    ensure_wkw(target_wkw_info, num_channels=num_channels)
+
+    with get_executor_for_args(args) as executor:
+        futures = []
         # We iterate over all z sections
         for z in range(0, num_z, BLOCK_LEN):
             # Prepare z batches
             max_z = min(num_z, z + BLOCK_LEN)
             z_batch = list(range(z, max_z))
             # Execute
-            pool.submit(
-                cubing_job,
-                target_wkw_info,
-                z_batch,
-                source_files[z:max_z],
-                batch_size,
-                (num_x, num_y),
-                num_channels,
+            futures.append(
+                executor.submit(
+                    cubing_job,
+                    target_wkw_info,
+                    z_batch,
+                    source_files[z:max_z],
+                    batch_size,
+                    (num_x, num_y),
+                    num_channels,
+                )
             )
+
+        wait_and_ensure_success(futures)
 
     # Return Bounding Box
     return {"topLeft": [0, 0, 0], "width": num_x, "height": num_y, "depth": num_z}
@@ -189,4 +203,5 @@ if __name__ == "__main__":
         args.dtype,
         args.batch_size,
         args.jobs,
+        args=args,
     )

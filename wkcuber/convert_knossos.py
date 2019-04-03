@@ -6,14 +6,15 @@ from argparse import ArgumentParser
 from os import path
 
 from .utils import (
-    add_jobs_flag,
     add_verbose_flag,
     open_wkw,
     open_knossos,
     WkwDatasetInfo,
     KnossosDatasetInfo,
-    ParallelExecutor,
-    pool_get_lock,
+    ensure_wkw,
+    add_distribution_flags,
+    get_executor_for_args,
+    wait_and_ensure_success,
 )
 from .knossos import KnossosDataset, CUBE_EDGE_LEN
 
@@ -45,8 +46,8 @@ def create_parser():
 
     parser.add_argument("--mag", "-m", help="Magnification level", type=int, default=1)
 
-    add_jobs_flag(parser)
     add_verbose_flag(parser)
+    add_distribution_flags(parser)
 
     return parser
 
@@ -58,7 +59,7 @@ def convert_cube_job(cube_xyz, source_knossos_info, target_wkw_info):
     size = (CUBE_EDGE_LEN,) * 3
 
     with open_knossos(source_knossos_info) as source_knossos, open_wkw(
-        target_wkw_info, pool_get_lock()
+        target_wkw_info
     ) as target_wkw:
         cube_data = source_knossos.read(offset, size)
         target_wkw.write(offset, cube_data)
@@ -69,23 +70,30 @@ def convert_cube_job(cube_xyz, source_knossos_info, target_wkw_info):
     )
 
 
-def convert_knossos(source_path, target_path, layer_name, dtype, mag=1, jobs=1):
+def convert_knossos(
+    source_path, target_path, layer_name, dtype, mag=1, jobs=1, args=None
+):
     source_knossos_info = KnossosDatasetInfo(source_path, dtype)
     target_wkw_info = WkwDatasetInfo(target_path, layer_name, dtype, mag)
 
-    with open_knossos(source_knossos_info) as source_knossos, ParallelExecutor(
-        jobs
-    ) as pool:
-        knossos_cubes = list(source_knossos.list_cubes())
-        if len(knossos_cubes) == 0:
-            logging.error("No input KNOSSOS cubes found.")
-            exit(1)
+    ensure_wkw(target_wkw_info)
 
-        knossos_cubes.sort()
-        for cube_xyz in knossos_cubes:
-            pool.submit(
-                convert_cube_job, cube_xyz, source_knossos_info, target_wkw_info
-            )
+    with open_knossos(source_knossos_info) as source_knossos:
+        with get_executor_for_args(args) as executor:
+            knossos_cubes = list(source_knossos.list_cubes())
+            if len(knossos_cubes) == 0:
+                logging.error("No input KNOSSOS cubes found.")
+                exit(1)
+
+            knossos_cubes.sort()
+            futures = []
+            for cube_xyz in knossos_cubes:
+                futures.append(
+                    executor.submit(
+                        convert_cube_job, cube_xyz, source_knossos_info, target_wkw_info
+                    )
+                )
+            wait_and_ensure_success(futures)
 
 
 if __name__ == "__main__":
@@ -101,4 +109,5 @@ if __name__ == "__main__":
         args.dtype,
         args.mag,
         args.jobs,
+        args,
     )

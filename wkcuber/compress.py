@@ -10,10 +10,11 @@ from .mag import Mag
 
 from .utils import (
     add_verbose_flag,
-    add_jobs_flag,
     open_wkw,
     WkwDatasetInfo,
-    ParallelExecutor,
+    add_distribution_flags,
+    get_executor_for_args,
+    wait_and_ensure_success,
 )
 from .metadata import detect_resolutions
 from typing import List
@@ -44,8 +45,8 @@ def create_parser():
         "--mag", "-m", nargs="*", help="Magnification level", default=None
     )
 
-    add_jobs_flag(parser)
     add_verbose_flag(parser)
+    add_distribution_flags(parser)
 
     return parser
 
@@ -80,13 +81,21 @@ def compress_mag(source_path, layer_name, target_path, mag: Mag, jobs):
     target_mag_path = path.join(target_path, layer_name, str(mag))
     logging.info("Compressing mag {0} in '{1}'".format(str(mag), target_mag_path))
 
-    with open_wkw(source_wkw_info) as source_wkw, ParallelExecutor(jobs) as pool:
+    with open_wkw(source_wkw_info) as source_wkw:
         source_wkw.compress(target_mag_path)
-        for file in source_wkw.list_files():
-            rel_file = path.relpath(file, source_wkw.root)
-            pool.submit(compress_file_job, file, path.join(target_mag_path, rel_file))
+        with get_executor_for_args(args) as executor:
+            futures = []
+            for file in source_wkw.list_files():
+                rel_file = path.relpath(file, source_wkw.root)
+                futures.append(
+                    executor.submit(
+                        compress_file_job, file, path.join(target_mag_path, rel_file)
+                    )
+                )
 
-    logging.info("Mag {0} succesfully compressed".format(str(mag)))
+            wait_and_ensure_success(futures)
+
+    logging.info("Mag {0} successfully compressed".format(str(mag)))
 
 
 def compress_mag_inplace(target_path, layer_name, mag: Mag, jobs):

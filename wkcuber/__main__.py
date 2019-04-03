@@ -6,7 +6,7 @@ from .cubing import cubing, BLOCK_LEN
 from .downsampling import downsample_mags, DEFAULT_EDGE_LEN
 from .compress import compress_mag_inplace
 from .metadata import write_webknossos_metadata
-from .utils import add_verbose_flag, add_jobs_flag
+from .utils import add_verbose_flag, add_distribution_flags
 from .mag import Mag
 
 
@@ -66,7 +66,7 @@ def create_parser():
     )
 
     add_verbose_flag(parser)
-    add_jobs_flag(parser)
+    add_distribution_flags(parser)
 
     return parser
 
@@ -84,6 +84,7 @@ if __name__ == "__main__":
         args.dtype,
         args.batch_size,
         args.jobs,
+        args,
     )
 
     if not args.no_compress:

@@ -12,14 +12,15 @@ from enum import Enum
 from .mag import Mag
 
 from .utils import (
-    add_jobs_flag,
     add_verbose_flag,
     open_wkw,
     WkwDatasetInfo,
-    ParallelExecutor,
-    pool_get_lock,
+    ensure_wkw,
     time_start,
     time_stop,
+    add_distribution_flags,
+    get_executor_for_args,
+    wait_and_ensure_success,
 )
 
 DEFAULT_EDGE_LEN = 256
@@ -92,8 +93,8 @@ def create_parser():
         "--compress", action="store_true", help="Compress data during downsampling"
     )
 
-    add_jobs_flag(parser)
     add_verbose_flag(parser)
+    add_distribution_flags(parser)
 
     return parser
 
@@ -115,6 +116,7 @@ def downsample(
     cube_edge_len,
     jobs,
     compress,
+    args=None,
 ):
 
     assert source_mag < target_mag
@@ -150,20 +152,26 @@ def downsample(
         )
     )
 
-    with ParallelExecutor(jobs) as pool:
-        for target_cube_xyz in target_cube_addresses:
-            pool.submit(
-                downsample_cube_job,
-                source_wkw_info,
-                target_wkw_info,
-                mag_factors,
-                interpolation_mode,
-                cube_edge_len,
-                target_cube_xyz,
-                compress,
-            )
+    ensure_wkw(target_wkw_info)
 
-    logging.info("Mag {0} succesfully cubed".format(target_mag))
+    with get_executor_for_args(args) as executor:
+        futures = []
+        for target_cube_xyz in target_cube_addresses:
+            futures.append(
+                executor.submit(
+                    downsample_cube_job,
+                    source_wkw_info,
+                    target_wkw_info,
+                    mag_factors,
+                    interpolation_mode,
+                    cube_edge_len,
+                    target_cube_xyz,
+                    compress,
+                )
+            )
+        wait_and_ensure_success(futures)
+
+    logging.info("Mag {0} successfully cubed".format(target_mag))
 
 
 def downsample_cube_job(
@@ -187,10 +195,7 @@ def downsample_cube_job(
             num_channels = source_wkw.header.num_channels
             source_dtype = source_wkw.header.voxel_type
             with open_wkw(
-                target_wkw_info,
-                pool_get_lock(),
-                block_type=header_block_type,
-                num_channels=num_channels,
+                target_wkw_info, block_type=header_block_type, num_channels=num_channels
             ) as target_wkw:
                 wkw_cubelength = (
                     source_wkw.header.file_len * source_wkw.header.block_len
@@ -398,6 +403,7 @@ def downsample_mag(
     cube_edge_len=DEFAULT_EDGE_LEN,
     jobs=1,
     compress=False,
+    args=None,
 ):
     if interpolation_mode == "default":
         interpolation_mode = (
@@ -422,6 +428,7 @@ def downsample_mag(
         cube_edge_len,
         jobs,
         compress,
+        args,
     )
 
 
@@ -434,6 +441,7 @@ def downsample_mags(
     cube_edge_len,
     jobs,
     compress,
+    args=None,
 ):
     target_mag = from_mag.scaled_by(2)
     while target_mag <= max_mag:
@@ -447,6 +455,7 @@ def downsample_mags(
             cube_edge_len,
             jobs,
             compress,
+            args,
         )
         target_mag.scale_by(2)
 
@@ -471,6 +480,7 @@ if __name__ == "__main__":
             args.buffer_cube_size,
             args.jobs,
             args.compress,
+            args,
         )
     else:
         downsample_mags(
@@ -482,4 +492,5 @@ if __name__ == "__main__":
             args.buffer_cube_size,
             args.jobs,
             args.compress,
+            args,
         )

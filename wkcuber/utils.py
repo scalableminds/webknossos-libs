@@ -2,16 +2,17 @@ import time
 import wkw
 import numpy as np
 import logging
+import argparse
+import cluster_tools
+import json
 from glob import iglob
 from collections import namedtuple
 from multiprocessing import cpu_count, Lock
+import concurrent
 from concurrent.futures import ProcessPoolExecutor
 from os import path
 from platform import python_version
 from math import floor, ceil
-
-
-from .knossos import KnossosDataset, CUBE_EDGE_LEN
 
 
 WkwDatasetInfo = namedtuple(
@@ -38,6 +39,12 @@ def open_wkw(info, lock=None, **kwargs):
 
     with lock:
         return _open_wkw(info, **kwargs)
+
+
+def ensure_wkw(target_wkw_info, num_channels):
+    # Open will create the dataset if it doesn't exist yet
+    target_wkw = open_wkw(target_wkw_info, num_channels=num_channels)
+    target_wkw.close()
 
 
 def open_knossos(info):
@@ -74,48 +81,74 @@ def get_regular_chunks(min_z, max_z, chunk_size):
         i += chunk_size
 
 
-def add_jobs_flag(parser):
+def add_distribution_flags(parser):
     parser.add_argument(
-        "--jobs", "-j", help="Parallel jobs", type=int, default=cpu_count()
+        "--processes",
+        default=cpu_count(),
+        type=int,
+        help="Number of processes to be spawned",
+    )
+
+    parser.add_argument(
+        "--jobs",
+        "-j",
+        default=cpu_count(),
+        type=int,
+        help="Number of processes to be spawned. Synonym to --processes.",
+    )
+
+    parser.add_argument(
+        "--distribution_strategy",
+        default="multiprocessing",
+        choices=["slurm", "multiprocessing"],
+        help="Strategy to distribute the task across CPUs or nodes.",
+    )
+
+    parser.add_argument(
+        "--job_resources",
+        default=None,
+        help='Necessary when using slurm as distribution strategy. Should be a JSON string (e.g., --job_resources=\'{"mem": "10M"}\')',
     )
 
 
-def pool_init(lock):
-    global process_pool_lock
-    process_pool_lock = lock
+def get_executor_for_args(args):
+    if args is None:
+        # For backwards compatibility with code from other packages
+        # we allow args to be None. In this case we are defaulting
+        # to these values:
+        args.distribution_strategy = "multiprocessing"
+        args.processes = cpu_count()
 
+    executor = None
 
-def pool_get_lock():
-    global process_pool_lock
-    try:
-        return process_pool_lock
-    except NameError:
-        return None
-
-
-class ParallelExecutor:
-    def __init__(self, jobs):
-        self.lock = Lock()
-        if python_version() >= "3.7.0":
-            self.exec = ProcessPoolExecutor(
-                jobs, initializer=pool_init, initargs=(self.lock,)
+    if args.distribution_strategy == "multiprocessing":
+        if args.processes is None and args.jobs is None:
+            raise argparse.ArgumentTypeError(
+                "Number of processes (--processes) has to be provided when using multiprocessing as distribution strategy."
             )
-        else:
-            self.exec = ProcessPoolExecutor(jobs)
-        self.futures = []
 
-    def submit(self, fn, *args):
-        future = self.exec.submit(fn, *args)
-        self.futures.append(future)
-        return future
+        executor = cluster_tools.get_executor("multiprocessing", args.processes)
+        processes = args.processes if args.processes is not None else args.jobs
+        logging.info("Using pool of {} workers.".format(args.processes))
+    elif args.distribution_strategy == "slurm":
+        if args.job_resources is None:
+            raise argparse.ArgumentTypeError(
+                'Job resources (--job_resources) has to be provided when using slurm as distribution strategy. Example: --job_resources=\'{"mem": "10M"}\''
+            )
 
-    def __enter__(self):
-        self.exec.__enter__()
-        return self
+        executor = cluster_tools.get_executor(
+            "slurm",
+            debug=True,
+            keep_logs=True,
+            job_resources=json.loads(args.job_resources),
+        )
+        logging.info("Using slurm cluster.")
+    else:
+        logging.error(
+            "Unknown distribution strategy: {}".format(args.distribution_strategy)
+        )
 
-    def __exit__(self, type, value, tb):
-        [f.result() for f in self.futures]
-        self.exec.__exit__(type, value, tb)
+    return executor
 
 
 times = {}
@@ -128,3 +161,10 @@ def time_start(identifier):
 def time_stop(identifier):
     _time = times.pop(identifier)
     logging.debug("{} took {:.8f}s".format(identifier, time.time() - _time))
+
+
+# Waits for all futures to complete and raises an exception
+# as soon as a future resolves with an error.
+def wait_and_ensure_success(futures):
+    for fut in concurrent.futures.as_completed(futures):
+        fut.result()
