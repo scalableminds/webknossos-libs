@@ -14,12 +14,11 @@ from os import path
 from platform import python_version
 from math import floor, ceil
 
-
 WkwDatasetInfo = namedtuple(
     "WkwDatasetInfo", ("dataset_path", "layer_name", "dtype", "mag")
 )
 KnossosDatasetInfo = namedtuple("KnossosDatasetInfo", ("dataset_path", "dtype"))
-
+FallbackArgs = namedtuple("FallbackArgs", ("distribution_strategy", "jobs"))
 
 def open_wkw(info, **kwargs):
     if info.dtype is not None:
@@ -105,7 +104,7 @@ def get_executor_for_args(args):
         # For backwards compatibility with code from other packages
         # we allow args to be None. In this case we are defaulting
         # to these values:
-        args = {"distribution_strategy": "multiprocessing", "jobs": cpu_count()}
+        args = FallbackArgs("multiprocessing", cpu_count())
 
     executor = None
 
