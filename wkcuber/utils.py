@@ -105,10 +105,7 @@ def get_executor_for_args(args):
         # For backwards compatibility with code from other packages
         # we allow args to be None. In this case we are defaulting
         # to these values:
-        args = {
-            "distribution_strategy": "multiprocessing",
-            "jobs": cpu_count()
-        }
+        args = {"distribution_strategy": "multiprocessing", "jobs": cpu_count()}
 
     executor = None
 
