@@ -8,6 +8,7 @@ import sys
 def square(n):
     return n * n
 
+
 def sleep(duration):
     time.sleep(duration)
     return duration
@@ -15,10 +16,13 @@ def sleep(duration):
 
 def get_executors():
     return [
-        cluster_tools.get_executor("slurm", debug=True, keep_logs=True, job_resources={"mem": "10M"}),
+        cluster_tools.get_executor(
+            "slurm", debug=True, keep_logs=True, job_resources={"mem": "10M"}
+        ),
         cluster_tools.get_executor("multiprocessing", 5),
-        cluster_tools.get_executor("sequential")
+        cluster_tools.get_executor("sequential"),
     ]
+
 
 def test_submit():
     def run_square_numbers(executor):
@@ -37,13 +41,16 @@ def test_unordered_sleep():
     """Get host identifying information about the servers running
     our jobs.
     """
+
     def run_sleeps(executor):
         with executor:
             durations = [10, 5, 15]
             futures = [executor.submit(sleep, n) for n in durations]
             if not isinstance(executor, cluster_tools.SequentialExecutor):
                 durations.sort()
-            for duration, future in zip(durations, concurrent.futures.as_completed(futures)):
+            for duration, future in zip(
+                durations, concurrent.futures.as_completed(futures)
+            ):
                 assert future.result() == duration
 
     for exc in get_executors():
@@ -59,6 +66,7 @@ def test_map():
     for exc in get_executors():
         run_map(exc)
 
+
 def test_map_lazy():
     def run_map(executor):
         with executor:
@@ -67,6 +75,7 @@ def test_map_lazy():
 
     for exc in get_executors():
         run_map(exc)
+
 
 def test_slurm_submit_returns_job_ids():
     exc = cluster_tools.get_executor("slurm", debug=True, keep_logs=True)

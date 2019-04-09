@@ -44,6 +44,7 @@ RUN pip install --upgrade pip
 RUN pip install Cython nose
 RUN python36 -m pip install -U pytest
 
+RUN rm -f /usr/bin/python3
 RUN ln -s $(which python36) /usr/bin/python3
 
 RUN set -x \

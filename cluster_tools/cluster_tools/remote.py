@@ -5,18 +5,20 @@ import os
 import traceback
 from .util import local_filename
 
-INFILE_FMT = local_filename('cfut.in.%s.pickle')
-OUTFILE_FMT = local_filename('cfut.out.%s.pickle')
+INFILE_FMT = local_filename("cfut.in.%s.pickle")
+OUTFILE_FMT = local_filename("cfut.out.%s.pickle")
+
 
 def format_remote_exc():
     typ, value, tb = sys.exc_info()
     tb = tb.tb_next  # Remove root call to worker().
-    return ''.join(traceback.format_exception(typ, value, tb))
+    return "".join(traceback.format_exception(typ, value, tb))
+
 
 def worker(workerid):
     """Called to execute a job on a remote host."""
     try:
-        with open(INFILE_FMT % workerid, 'rb') as f:
+        with open(INFILE_FMT % workerid, "rb") as f:
             indata = f.read()
         fun, args, kwargs = cloudpickle.loads(indata)
         result = True, fun(*args, **kwargs)
@@ -29,10 +31,16 @@ def worker(workerid):
         out = cloudpickle.dumps(result, False)
 
     destfile = OUTFILE_FMT % workerid
-    tempfile = destfile + '.tmp'
-    with open(tempfile, 'wb') as f:
+    tempfile = destfile + ".tmp"
+    with open(tempfile, "wb") as f:
         f.write(out)
     os.rename(tempfile, destfile)
 
-if __name__ == '__main__':
-    worker(*sys.argv[1:])
+
+if __name__ == "__main__":
+    worker_id = sys.argv[1]
+    task_id = os.environ.get("SLURM_ARRAY_TASK_ID", None)
+    if task_id is not None:
+        worker_id = worker_id + "-" + task_id
+
+    worker(worker_id)

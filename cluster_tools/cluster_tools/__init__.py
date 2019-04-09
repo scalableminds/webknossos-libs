@@ -10,17 +10,20 @@ from .util import random_string, local_filename, chcall
 import cloudpickle
 import logging
 
+
 class RemoteException(Exception):
     def __init__(self, error):
         self.error = error
 
     def __str__(self):
-        return '\n' + self.error.strip()
+        return "\n" + self.error.strip()
+
 
 class FileWaitThread(threading.Thread):
     """A thread that polls the filesystem waiting for a list of files to
     be created. When a specified file is created, it invokes a callback.
     """
+
     def __init__(self, callback, interval=1):
         """The callable ``callback`` will be invoked with value
         associated with the filename of each file that is created.
@@ -60,23 +63,39 @@ class FileWaitThread(threading.Thread):
                     else:
                         try:
                             # Let's get the state for the job to check whether it failed
-                            stdout = chcall('scontrol show job {}'.format(job_id))
+                            stdout = chcall("scontrol show job {}".format(job_id))
                             if "JobState=FAILED" in str(stdout[0]):
                                 self.callback(job_id, True)
                                 del self.waiting[filename]
                             elif "JobState=COMPLETED" in str(stdout[0]):
-                                logging.error("Job state is completed, but {} couldn't be found.".format(filename))
+                                logging.error(
+                                    "Job state is completed, but {} couldn't be found.".format(
+                                        filename
+                                    )
+                                )
                                 self.callback(job_id, True)
                                 del self.waiting[filename]
                         except Exception as e:
-                            logging.error("Couldn't call scontrol to determine job's status. {}".format(e))
+                            logging.error(
+                                "Couldn't call scontrol to determine job's status. {}".format(
+                                    e
+                                )
+                            )
 
             time.sleep(self.interval)
+
 
 class SlurmExecutor(futures.Executor):
     """Futures executor for executing jobs on a Slurm cluster."""
 
-    def __init__(self, debug=False, keep_logs=False, job_resources=None, job_name=None, additional_setup_lines=[]):
+    def __init__(
+        self,
+        debug=False,
+        keep_logs=False,
+        job_resources=None,
+        job_name=None,
+        additional_setup_lines=[],
+    ):
         os.makedirs(local_filename(), exist_ok=True)
         self.debug = debug
         self.job_resources = job_resources
@@ -84,6 +103,9 @@ class SlurmExecutor(futures.Executor):
         self.job_name = job_name
         self.was_requested_to_shutdown = False
 
+        # `jobs` maps from job id to future and workerid
+        # In case, job arrays are used: job id and workerid are in the format of
+        # `job_id-job_index` and `workerid-job_index`.
         self.jobs = {}
         self.job_outfiles = {}
         self.jobs_lock = threading.Lock()
@@ -93,19 +115,18 @@ class SlurmExecutor(futures.Executor):
         self.wait_thread = FileWaitThread(self._completion)
         self.wait_thread.start()
 
-
-    def _start(self, workerid):
+    def _start(self, workerid, job_count=None):
         """Start a job with the given worker ID and return an ID
         identifying the new job. The job should run ``python -m
         cfut.remote <workerid>.
         """
         return slurm.submit(
-            '{} -m cluster_tools.remote {}'.format(sys.executable, workerid),
+            "{} -m cluster_tools.remote {}".format(sys.executable, workerid),
             job_resources=self.job_resources,
             job_name=self.job_name,
-            additional_setup_lines=self.additional_setup_lines
+            additional_setup_lines=self.additional_setup_lines,
+            job_count=job_count,
         )
-
 
     def _cleanup(self, jobid):
         """Given a job ID as returned by _start, perform any necessary
@@ -127,7 +148,7 @@ class SlurmExecutor(futures.Executor):
             if not self.jobs:
                 self.jobs_empty_cond.notify_all()
         if self.debug:
-            print("job completed: %i" % jobid, file=sys.stderr)
+            print("job completed: {}".format(jobid), file=sys.stderr)
 
         if failed_early:
             # If the code which should be executed on a node wasn't even
@@ -136,9 +157,11 @@ class SlurmExecutor(futures.Executor):
             # this circumstance because the whole slurm job was marked as failed.
             # Therefore, we don't try to deserialize pickle output.
             success = False
-            result = "Job submission/execution failed. Please look into the log file at {}".format(slurm.OUTFILE_FMT.format(jobid))
+            result = "Job submission/execution failed. Please look into the log file at {}".format(
+                slurm.OUTFILE_FMT.format(jobid)
+            )
         else:
-            with open(OUTFILE_FMT % workerid, 'rb') as f:
+            with open(OUTFILE_FMT % workerid, "rb") as f:
                 outdata = f.read()
             success, result = cloudpickle.loads(outdata)
 
@@ -156,17 +179,22 @@ class SlurmExecutor(futures.Executor):
 
         self._cleanup(jobid)
 
+    def ensure_not_shutdown(self):
+        if self.was_requested_to_shutdown:
+            raise RuntimeError(
+                "submit() was invoked on a SlurmExecutor instance even though shutdown() was executed for that instance."
+            )
+
     def submit(self, fun, *args, **kwargs):
         """Submit a job to the pool."""
         fut = futures.Future()
 
-        if self.was_requested_to_shutdown:
-            raise RuntimeError('submit() was invoked on a SlurmExecutor instance even though shutdown() was executed for that instance.')
+        self.ensure_not_shutdown()
 
         # Start the job.
         workerid = random_string()
         funcser = cloudpickle.dumps((fun, args, kwargs), True)
-        with open(INFILE_FMT % workerid, 'wb') as f:
+        with open(INFILE_FMT % workerid, "wb") as f:
             f.write(funcser)
 
         jobid = self._start(workerid)
@@ -183,6 +211,53 @@ class SlurmExecutor(futures.Executor):
         fut.slurm_jobid = jobid
         return fut
 
+    def submit_tasks(self, fun, allArgs):
+        self.ensure_not_shutdown()
+
+        futs = []
+        workerid = random_string()
+
+        get_workerid_with_index = lambda index: workerid + "-" + str(index)
+
+        # Submit jobs eagerly
+        for index, arg in enumerate(allArgs):
+            fut = futures.Future()
+
+            # Start the job.
+            funcser = cloudpickle.dumps((fun, [arg], {}), True)
+            infile_name = INFILE_FMT % get_workerid_with_index(index)
+
+            with open(infile_name, "wb") as f:
+                f.write(funcser)
+
+            futs.append(fut)
+
+        job_count = len(allArgs)
+        jobid = self._start(workerid, job_count)
+        get_jobid_with_index = lambda index: str(jobid) + "-" + str(index)
+
+        if self.debug:
+            print(
+                "main job submitted: %i. consists of %i subjobs." % (jobid, job_count),
+                file=sys.stderr,
+            )
+
+        with self.jobs_lock:
+            for index, fut in enumerate(futs):
+                jobid_with_index = get_jobid_with_index(index)
+                # Thread will wait for it to finish.
+                workerid_with_index = get_workerid_with_index(index)
+                self.wait_thread.wait(
+                    OUTFILE_FMT % workerid_with_index, jobid_with_index
+                )
+
+                fut.slurm_jobid = jobid
+                fut.slurm_jobindex = index
+
+                self.jobs[jobid_with_index] = (fut, workerid_with_index)
+
+        return futs
+
     def shutdown(self, wait=True):
         """Close the pool."""
         self.was_requested_to_shutdown = True
@@ -196,19 +271,17 @@ class SlurmExecutor(futures.Executor):
 
     def map(self, func, args, timeout=None, chunksize=None):
         if chunksize is not None:
-            logging.warning("The provided chunksize parameter is ignored by SlurmExecutor.")
+            logging.warning(
+                "The provided chunksize parameter is ignored by SlurmExecutor."
+            )
 
-        if self.was_requested_to_shutdown:
-            raise RuntimeError('submit() was invoked on a SlurmExecutor instance even though shutdown() was executed for that instance.')
+        self.ensure_not_shutdown()
 
         start_time = time.time()
 
         with self:
-            futs = []
+            futs = self.submit_tasks(func, args)
             results = []
-            # Submit jobs eagerly
-            for arg in args:
-                futs.append(self.submit(func, arg))
 
             # Return a separate generator as iterator to avoid that the
             # map() method itself becomes a generator.
@@ -218,7 +291,9 @@ class SlurmExecutor(futures.Executor):
             def result_generator():
                 for fut in futs:
                     passed_time = time.time() - start_time
-                    remaining_timeout = None if timeout is None else timeout - passed_time
+                    remaining_timeout = (
+                        None if timeout is None else timeout - passed_time
+                    )
                     yield fut.result(remaining_timeout)
 
             return result_generator()
