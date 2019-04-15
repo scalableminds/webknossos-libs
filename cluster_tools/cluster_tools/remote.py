@@ -4,6 +4,7 @@ import sys
 import os
 import traceback
 from .util import local_filename
+import logging
 
 INFILE_FMT = local_filename("cfut.in.%s.pickle")
 OUTFILE_FMT = local_filename("cfut.out.%s.pickle")
@@ -20,7 +21,11 @@ def worker(workerid):
     try:
         with open(INFILE_FMT % workerid, "rb") as f:
             indata = f.read()
-        fun, args, kwargs = cloudpickle.loads(indata)
+        fun, args, kwargs, meta_data = cloudpickle.loads(indata)
+        logging_config = meta_data.get("logging_config", {"level": logging.DEBUG})
+
+        logging.basicConfig(**logging_config)
+        logging.info("Setting up logging.basicConfig with default values (potentially overwriting logging configuration of the main script. Config: {}".format(logging_config))
         result = True, fun(*args, **kwargs)
         out = cloudpickle.dumps(result, True)
 

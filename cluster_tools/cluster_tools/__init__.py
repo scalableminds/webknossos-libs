@@ -116,6 +116,10 @@ class SlurmExecutor(futures.Executor):
         self.wait_thread = FileWaitThread(self._completion)
         self.wait_thread.start()
 
+        self.meta_data = {}
+        if "logging_config" in kwargs:
+            self.meta_data["logging_config"] = kwargs["logging_config"]
+
     def _start(self, workerid, job_count=None):
         """Start a job with the given worker ID and return an ID
         identifying the new job. The job should run ``python -m
@@ -194,7 +198,8 @@ class SlurmExecutor(futures.Executor):
 
         # Start the job.
         workerid = random_string()
-        funcser = cloudpickle.dumps((fun, args, kwargs), True)
+
+        funcser = cloudpickle.dumps((fun, args, kwargs, self.meta_data), True)
         with open(INFILE_FMT % workerid, "wb") as f:
             f.write(funcser)
 
@@ -225,7 +230,7 @@ class SlurmExecutor(futures.Executor):
             fut = futures.Future()
 
             # Start the job.
-            funcser = cloudpickle.dumps((fun, [arg], {}), True)
+            funcser = cloudpickle.dumps((fun, [arg], {}, self.meta_data), True)
             infile_name = INFILE_FMT % get_workerid_with_index(index)
 
             with open(infile_name, "wb") as f:
