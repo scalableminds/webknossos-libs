@@ -88,11 +88,15 @@ def test_slurm_submit_returns_job_ids():
 
 
 def test_executor_args():
-    cluster_tools.get_executor(
+    def pass_with(exc):
+        with exc:
+            pass
+
+    pass_with(cluster_tools.get_executor(
         "slurm", job_resources={"mem": "10M"}, non_existent_arg=True
-    )
-    cluster_tools.get_executor("multiprocessing", non_existent_arg=True)
-    cluster_tools.get_executor("sequential", non_existent_arg=True)
+    ))
+    pass_with(cluster_tools.get_executor("multiprocessing", non_existent_arg=True))
+    pass_with(cluster_tools.get_executor("sequential", non_existent_arg=True))
 
     # Test should succeed if the above lines don't raise an exception
 
