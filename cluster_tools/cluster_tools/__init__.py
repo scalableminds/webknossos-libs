@@ -95,6 +95,7 @@ class SlurmExecutor(futures.Executor):
         job_resources=None,
         job_name=None,
         additional_setup_lines=[],
+        **kwargs,
     ):
         os.makedirs(local_filename(), exist_ok=True)
         self.debug = debug
@@ -299,16 +300,35 @@ class SlurmExecutor(futures.Executor):
             return result_generator()
 
 
+def get_existent_kwargs_subset(white_list, kwargs):
+    new_kwargs = {}
+    for arg_name in white_list:
+        if arg_name in kwargs:
+            new_kwargs[arg_name] = kwargs[arg_name]
+
+    return new_kwargs
+
+
 class SequentialExecutor(ProcessPoolExecutor):
     def __init__(self, **kwargs):
+        white_list = ["mp_context", "initializer", "initargs"]
+        new_kwargs = get_existent_kwargs_subset(white_list, kwargs)
+
         max_workers = 1
-        return ProcessPoolExecutor.__init__(self, max_workers, **kwargs)
+        return ProcessPoolExecutor.__init__(self, max_workers, **new_kwargs)
+
+class WrappedProcessPoolExecutor(ProcessPoolExecutor):
+    def __init__(self, **kwargs):
+        white_list = ["max_workers", "mp_context", "initializer", "initargs"]
+        new_kwargs = get_existent_kwargs_subset(white_list, kwargs)
+
+        return ProcessPoolExecutor.__init__(self, **new_kwargs)
 
 
-def get_executor(environment, *args, **kwargs):
+def get_executor(environment, **kwargs):
     if environment == "slurm":
-        return SlurmExecutor(*args, **kwargs)
+        return SlurmExecutor(**kwargs)
     elif environment == "multiprocessing":
-        return ProcessPoolExecutor(*args, **kwargs)
+        return WrappedProcessPoolExecutor(**kwargs)
     elif environment == "sequential":
-        return SequentialExecutor(*args, **kwargs)
+        return SequentialExecutor(**kwargs)

@@ -19,7 +19,7 @@ def get_executors():
         cluster_tools.get_executor(
             "slurm", debug=True, keep_logs=True, job_resources={"mem": "10M"}
         ),
-        cluster_tools.get_executor("multiprocessing", 5),
+        cluster_tools.get_executor("multiprocessing", max_workers=5),
         cluster_tools.get_executor("sequential"),
     ]
 
@@ -84,3 +84,14 @@ def test_slurm_submit_returns_job_ids():
         assert isinstance(future.slurm_jobid, int)
         assert future.slurm_jobid > 0
         assert future.result() == 4
+
+
+def test_executor_args():
+    cluster_tools.get_executor(
+        "slurm", job_resources={"mem": "10M"}, non_existent_arg=True
+    )
+    cluster_tools.get_executor("multiprocessing", non_existent_arg=True)
+    cluster_tools.get_executor("sequential", non_existent_arg=True)
+
+    # Test should succeed if the above lines don't raise an exception
+
