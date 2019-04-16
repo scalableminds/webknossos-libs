@@ -95,7 +95,7 @@ class SlurmExecutor(futures.Executor):
         job_resources=None,
         job_name=None,
         additional_setup_lines=[],
-        **kwargs,
+        **kwargs
     ):
         os.makedirs(local_filename(), exist_ok=True)
         self.debug = debug
