@@ -218,6 +218,7 @@ class SlurmExecutor(futures.Executor):
         return fut
 
     def submit_tasks(self, fun, allArgs):
+        allArgs = list(allArgs)
         self.ensure_not_shutdown()
 
         futs = []
