@@ -56,6 +56,13 @@ def add_verbose_flag(parser):
 
     parser.set_defaults(verbose=False)
 
+def add_anisotropic_flag(parser):
+    parser.add_argument(
+        "--anisotropic", "-aniso", help="Anisotropic downsampling", dest="anisotropic", action="store_true"
+    )
+
+    parser.set_defaults(anisotropic=False)
+
 
 def find_files(source_path, extensions):
     # Find all files with a matching file extension

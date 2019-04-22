@@ -459,6 +459,42 @@ def downsample_mags(
         )
         target_mag.scale_by(2)
 
+def downsample_mags_anisotropic(
+    path,
+    layer_name,
+    from_mag: Mag,
+    max_mag: Mag,
+    scale,
+    interpolation_mode,
+    cube_edge_len,
+    jobs,
+    compress,
+    args=None,
+):
+    prev_mag = from_mag
+    target_mag = get_next_anisotropic_mag(from_mag, scale)
+    while target_mag <= max_mag:
+        source_mag = prev_mag
+        downsample(
+            path,
+            layer_name,
+            source_mag,
+            target_mag,
+            interpolation_mode,
+            cube_edge_len,
+            jobs,
+            compress,
+            args,
+        )
+        prev_mag = target_mag
+        target_mag = get_next_anisotropic_mag(target_mag, scale)
+
+def get_next_anisotropic_mag(mag, scale):
+    if mag[0] * 2 * scale[0] >= mag[2] * 2 * scale[2]:
+        return Mag(mag[0] * 2, mag[1] * 2, mag[2] * 2)
+    else:
+        return Mag(mag[0] * 2, mag[1] * 2, mag[2])
+
 
 if __name__ == "__main__":
     args = create_parser().parse_args()
