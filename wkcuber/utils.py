@@ -51,10 +51,10 @@ def open_knossos(info):
 
 def add_verbose_flag(parser):
     parser.add_argument(
-        "--verbose", "-v", help="Verbose output", dest="verbose", action="store_true"
+        "--verbose", "-v", help="Verbose output", dest="verbose", action="store_false"
     )
 
-    parser.set_defaults(verbose=False)
+    parser.set_defaults(verbose=True)
 
 
 def find_files(source_path, extensions):
