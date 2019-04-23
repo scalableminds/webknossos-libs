@@ -492,10 +492,10 @@ def downsample_mags_anisotropic(
 
 
 def get_next_anisotropic_mag(mag, scale):
-    if mag[0] * 2 * scale[0] >= mag[2] * 2 * scale[2]:
-        return Mag(mag[0] * 2, mag[1] * 2, mag[2] * 2)
+    if mag.to_array()[0] * 2 * [0] >= mag.to_array()[2] * 2 * scale[2]:
+        return Mag(mag.to_array()[0] * 2, mag.to_array()[1] * 2, mag.to_array()[2] * 2)
     else:
-        return Mag(mag[0] * 2, mag[1] * 2, mag[2])
+        return Mag(mag.to_array()[0] * 2, mag.to_array()[1] * 2, mag.to_array()[2])
 
 
 if __name__ == "__main__":

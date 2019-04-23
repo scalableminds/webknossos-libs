@@ -92,12 +92,13 @@ if __name__ == "__main__":
         compress_mag_inplace(args.target_path, args.layer_name, Mag(1), args.jobs, args)
 
     if args.anisotropic:
+        scale = tuple(float(x) for x in args.scale.split(","))
         downsample_mags_anisotropic(
             args.target_path,
             args.layer_name,
             Mag(1),
             Mag(args.max_mag),
-            args.scale,
+            scale,
             "default",
             DEFAULT_EDGE_LEN,
             args.jobs,
