@@ -92,7 +92,8 @@ if __name__ == "__main__":
         compress_mag_inplace(args.target_path, args.layer_name, Mag(1), args.jobs, args)
 
     if args.anisotropic:
-        downsample_mags_anisotropic(args.target_path,
+        downsample_mags_anisotropic(
+            args.target_path,
             args.layer_name,
             Mag(1),
             Mag(args.max_mag),
@@ -101,7 +102,7 @@ if __name__ == "__main__":
             DEFAULT_EDGE_LEN,
             args.jobs,
             not args.no_compress,
-            )
+        )
 
     else:
         downsample_mags(

@@ -459,6 +459,7 @@ def downsample_mags(
         )
         target_mag.scale_by(2)
 
+
 def downsample_mags_anisotropic(
     path,
     layer_name,
@@ -488,6 +489,7 @@ def downsample_mags_anisotropic(
         )
         prev_mag = target_mag
         target_mag = get_next_anisotropic_mag(target_mag, scale)
+
 
 def get_next_anisotropic_mag(mag, scale):
     if mag[0] * 2 * scale[0] >= mag[2] * 2 * scale[2]:
