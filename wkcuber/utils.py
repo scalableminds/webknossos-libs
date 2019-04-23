@@ -154,72 +154,82 @@ def wait_and_ensure_success(futures):
         fut.result()
 
 
-
 class BufferedSliceWriter(object):
+    def __init__(
+        self, dataset_path, layer_name, dtype, bounding_box, origin, buffer_size=32
+    ):
 
-  def __init__(self, dataset_path, layer_name, dtype, bounding_box, origin, buffer_size=32):
+        self.dataset_path = dataset_path
+        self.layer_name = layer_name
+        self.buffer_size = buffer_size
 
-    self.dataset_path = dataset_path
-    self.layer_name = layer_name
-    self.buffer_size = buffer_size
+        layer_path = path.join(self.dataset_path, self.layer_name, "1")
 
-    layer_path = path.join(self.dataset_path, self.layer_name, "1")
+        self.dataset = wkw.Dataset.open(layer_path, wkw.Header(dtype))
+        self.origin = origin
+        self.bounding_box = bounding_box
 
-    self.dataset = wkw.Dataset.open(layer_path, wkw.Header(dtype))
-    self.origin = origin
-    self.bounding_box = bounding_box
+        self.buffer = []
+        self.current_z = None
+        self.buffer_start_z = None
 
-    self.buffer = []
-    self.current_z = None
-    self.buffer_start_z = None
+    def write_slice(self, z: int, data: np.ndarray):
+        """Takes in a slice in [y, x] shape, writes to WKW file."""
 
-  def write_slice(self, z:int, data: np.ndarray):
-    """Takes in a slice in [y, x] shape, writes to WKW file."""
+        if len(self.buffer) == 0:
+            self.current_z = z
+            self.buffer_start_z = z
 
-    if len(self.buffer) == 0:
-      self.current_z = z
-      self.buffer_start_z = z
+        assert (
+            z == self.current_z
+        ), "({}) Slices have to be written sequentially!".format(getpid())
 
-    assert z == self.current_z, "({}) Slices have to be written sequentially!".format(getpid())
+        self.buffer.append(data.transpose())
+        self.current_z += 1
 
-    self.buffer.append(data.transpose())
-    self.current_z += 1
+        if self.current_z % self.buffer_size == 0:
+            self._write_buffer()
 
-    if self.current_z % self.buffer_size == 0:
-      self._write_buffer()
+    def _write_buffer(self):
 
+        if len(self.buffer) == 0:
+            return
 
-  def _write_buffer(self):
+        assert len(self.buffer) <= self.buffer_size
 
-    if len(self.buffer) == 0:
-      return
+        logging.debug(
+            "({}) Writing {} slices at position {}.".format(
+                getpid(), len(self.buffer), self.buffer_start_z
+            )
+        )
 
-    assert len(self.buffer) <= self.buffer_size
+        origin_with_offset = self.origin.copy()
+        origin_with_offset[2] = self.buffer_start_z
+        x_max = max(slice.shape[0] for slice in self.buffer)
+        y_max = max(slice.shape[1] for slice in self.buffer)
+        self.buffer = [
+            np.pad(
+                slice,
+                mode="constant",
+                pad_width=[(0, x_max - slice.shape[0]), (0, y_max - slice.shape[1])],
+            )
+            for slice in self.buffer
+        ]
+        data = np.concatenate(
+            [np.expand_dims(slice, 2) for slice in self.buffer], axis=2
+        )
 
-    logging.debug("({}) Writing {} slices at position {}.".format(getpid(), len(self.buffer), self.buffer_start_z))
+        self.dataset.write(origin_with_offset, data)
 
-    origin_with_offset = self.origin.copy()
-    origin_with_offset[2] = self.buffer_start_z
-    x_max = max(slice.shape[0] for slice in self.buffer)
-    y_max = max(slice.shape[1] for slice in self.buffer)
-    self.buffer = [np.pad(slice, mode="constant",
-                          pad_width=[(0, x_max - slice.shape[0]),
-                                     (0, y_max - slice.shape[1])])
-                   for slice in self.buffer]
-    data = np.concatenate([np.expand_dims(slice, 2) for slice in self.buffer], axis=2)
+        self.buffer = []
 
-    self.dataset.write(origin_with_offset, data)
+    def close(self):
 
-    self.buffer = []
+        self._write_buffer()
+        self.dataset.close()
 
+    def __enter__(self):
+        return self
 
-  def close(self):
-
-    self._write_buffer()
-    self.dataset.close()
-
-  def __enter__(self):
-    return self
-
-  def __exit__(self, type, value, tb):
-    self.close()
+    def __exit__(self, type, value, tb):
+        self.close()
