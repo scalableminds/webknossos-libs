@@ -57,13 +57,18 @@ class FileWaitThread(threading.Thread):
                 # Poll for each file.
                 for filename in list(self.waiting):
                     job_id = self.waiting[filename]
+
+                    # Let's get the state for the job to check whether it failed.
+                    # It's important to check the status before checking whether the file exists.
+                    # Otherwise, we can run into a race condition where the job succeeds
+                    # after os.path.exists was called and before scontrol is executed.
+                    stdout = chcall("scontrol show job {}".format(job_id))
+
                     if os.path.exists(filename):
                         self.callback(job_id, False)
                         del self.waiting[filename]
                     else:
                         try:
-                            # Let's get the state for the job to check whether it failed
-                            stdout = chcall("scontrol show job {}".format(job_id))
                             if "JobState=FAILED" in str(stdout[0]):
                                 self.callback(job_id, True)
                                 del self.waiting[filename]

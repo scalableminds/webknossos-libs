@@ -26,6 +26,7 @@ def worker(workerid):
 
         logging.basicConfig(**logging_config)
         logging.info("Setting up logging.basicConfig with default values (potentially overwriting logging configuration of the main script. Config: {}".format(logging_config))
+        logging.info("Starting job computation...")
         result = True, fun(*args, **kwargs)
         logging.info("Job computation completed.")
         out = cloudpickle.dumps(result, True)
