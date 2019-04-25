@@ -217,9 +217,9 @@ class SlurmExecutor(futures.Executor):
         fut.slurm_jobid = jobid
         return fut
 
-    def submit_tasks(self, fun, allArgs):
-        allArgs = list(allArgs)
+    def map_to_futures(self, fun, allArgs):
         self.ensure_not_shutdown()
+        allArgs = list(allArgs)
 
         futs = []
         workerid = random_string()
@@ -282,28 +282,38 @@ class SlurmExecutor(futures.Executor):
                 "The provided chunksize parameter is ignored by SlurmExecutor."
             )
 
-        self.ensure_not_shutdown()
 
         start_time = time.time()
 
-        with self:
-            futs = self.submit_tasks(func, args)
-            results = []
+        futs = self.map_to_futures(func, args)
+        results = []
 
-            # Return a separate generator as iterator to avoid that the
-            # map() method itself becomes a generator.
-            # If map() was a generator, the submit() calls would be invoked
-            # lazily which can lead to a shutdown of the executor before
-            # the submit calls are performed.
-            def result_generator():
-                for fut in futs:
-                    passed_time = time.time() - start_time
-                    remaining_timeout = (
-                        None if timeout is None else timeout - passed_time
-                    )
-                    yield fut.result(remaining_timeout)
+        # Return a separate generator as iterator to avoid that the
+        # map() method itself becomes a generator.
+        # If map() was a generator, the submit() calls would be invoked
+        # lazily which can lead to a shutdown of the executor before
+        # the submit calls are performed.
+        def result_generator():
+            for fut in futs:
+                passed_time = time.time() - start_time
+                remaining_timeout = (
+                    None if timeout is None else timeout - passed_time
+                )
+                yield fut.result(remaining_timeout)
 
-            return result_generator()
+        return result_generator()
+    
+
+    def map_unordered(self, func, args):
+        futs = self.map_to_futures(func, args)
+
+        # Return a separate generator to avoid that map_unordered
+        # is executed lazily.
+        def result_generator():
+            for fut in futures.as_completed(futs):
+                yield fut.result()
+
+        return result_generator()
 
 
 def get_existent_kwargs_subset(white_list, kwargs):
@@ -315,20 +325,32 @@ def get_existent_kwargs_subset(white_list, kwargs):
     return new_kwargs
 
 
-class SequentialExecutor(ProcessPoolExecutor):
-    def __init__(self, **kwargs):
-        white_list = ["mp_context", "initializer", "initargs"]
-        new_kwargs = get_existent_kwargs_subset(white_list, kwargs)
-
-        max_workers = 1
-        return ProcessPoolExecutor.__init__(self, max_workers, **new_kwargs)
-
 class WrappedProcessPoolExecutor(ProcessPoolExecutor):
     def __init__(self, **kwargs):
         white_list = ["max_workers", "mp_context", "initializer", "initargs"]
         new_kwargs = get_existent_kwargs_subset(white_list, kwargs)
 
         return ProcessPoolExecutor.__init__(self, **new_kwargs)
+
+
+    def map_unordered(self, func, args):
+
+        futs = [self.submit(func, arg) for arg in args]
+
+        # Return a separate generator to avoid that map_unordered
+        # is executed lazily (otherwise, jobs would be submitted
+        # lazily, as well).
+        def result_generator():
+            for fut in futures.as_completed(futs):
+                yield fut.result()
+
+        return result_generator()
+
+
+class SequentialExecutor(WrappedProcessPoolExecutor):
+    def __init__(self, **kwargs):
+        kwargs["max_workers"] = 1
+        return WrappedProcessPoolExecutor.__init__(self, **kwargs)
 
 
 def get_executor(environment, **kwargs):

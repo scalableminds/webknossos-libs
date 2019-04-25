@@ -38,24 +38,36 @@ def test_submit():
         run_square_numbers(exc)
 
 
+
+
 def test_unordered_sleep():
     """Get host identifying information about the servers running
     our jobs.
     """
-
-    def run_sleeps(executor):
-        with executor:
-            durations = [10, 5, 15]
-            futures = [executor.submit(sleep, n) for n in durations]
-            if not isinstance(executor, cluster_tools.SequentialExecutor):
+    for exc in get_executors():
+        with exc:
+            durations = [10, 5]
+            futures = [exc.submit(sleep, n) for n in durations]
+            if not isinstance(exc, cluster_tools.SequentialExecutor):
                 durations.sort()
             for duration, future in zip(
                 durations, concurrent.futures.as_completed(futures)
             ):
                 assert future.result() == duration
 
+
+def test_unordered_map():
     for exc in get_executors():
-        run_sleeps(exc)
+        with exc:
+            durations = [15, 1]
+            results_gen = exc.map_unordered(sleep, durations)
+            results = list(results_gen)
+
+            if not isinstance(exc, cluster_tools.SequentialExecutor):
+                durations.sort()
+
+            for duration, result in zip(durations, results):
+                assert result == duration
 
 
 def test_map():
@@ -126,3 +138,5 @@ def test_pickled_logging():
 
     debug_out = execute_with_log_level(logging.INFO)
     assert(not (test_output_str in debug_out))
+
+
