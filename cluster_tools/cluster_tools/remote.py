@@ -27,19 +27,24 @@ def worker(workerid):
         logging.basicConfig(**logging_config)
         logging.info("Setting up logging.basicConfig with default values (potentially overwriting logging configuration of the main script. Config: {}".format(logging_config))
         result = True, fun(*args, **kwargs)
+        logging.info("Job computation completed.")
         out = cloudpickle.dumps(result, True)
 
     except Exception as e:
         print(traceback.format_exc())
 
         result = False, format_remote_exc()
+        logging.info("Job computation failed.")
         out = cloudpickle.dumps(result, False)
+
 
     destfile = OUTFILE_FMT % workerid
     tempfile = destfile + ".tmp"
     with open(tempfile, "wb") as f:
         f.write(out)
+    logging.info("Pickle file written to {}.".format(tempfile))
     os.rename(tempfile, destfile)
+    logging.info("Pickle file renamed to {}.".format(destfile))
 
 
 if __name__ == "__main__":
