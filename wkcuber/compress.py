@@ -146,10 +146,4 @@ if __name__ == "__main__":
     args = create_parser().parse_args()
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG)
-    compress_mags(
-        args.source_path,
-        args.layer_name,
-        args.target_path,
-        args.mag,
-        args,
-    )
+    compress_mags(args.source_path, args.layer_name, args.target_path, args.mag, args)

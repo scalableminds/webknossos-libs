@@ -144,9 +144,7 @@ def cubing_job(
                 raise exc
 
 
-def cubing(
-    source_path, target_path, layer_name, dtype, batch_size, args=None
-) -> dict:
+def cubing(source_path, target_path, layer_name, dtype, batch_size, args=None) -> dict:
 
     target_wkw_info = WkwDatasetInfo(target_path, layer_name, dtype, 1)
     source_files = find_source_filenames(source_path)
