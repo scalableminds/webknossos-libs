@@ -464,7 +464,6 @@ def downsample_mags_anisotropic(
     scale,
     interpolation_mode,
     cube_edge_len,
-    jobs,
     compress,
     args=None,
 ):
@@ -480,7 +479,6 @@ def downsample_mags_anisotropic(
             target_mag,
             interpolation_mode,
             cube_edge_len,
-            jobs,
             compress,
             args,
         )

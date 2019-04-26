@@ -100,7 +100,6 @@ if __name__ == "__main__":
             scale,
             "default",
             DEFAULT_EDGE_LEN,
-            args.jobs,
             not args.no_compress,
             args,
         )
@@ -113,7 +112,6 @@ if __name__ == "__main__":
             Mag(args.max_mag),
             "default",
             DEFAULT_EDGE_LEN,
-            args.jobs,
             not args.no_compress,
             args,
         )
