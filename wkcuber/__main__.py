@@ -83,12 +83,11 @@ if __name__ == "__main__":
         args.layer_name,
         args.dtype,
         args.batch_size,
-        args.jobs,
         args,
     )
 
     if not args.no_compress:
-        compress_mag_inplace(args.target_path, args.layer_name, Mag(1), args.jobs, args)
+        compress_mag_inplace(args.target_path, args.layer_name, Mag(1), args)
 
     downsample_mags(
         args.target_path,
@@ -97,7 +96,6 @@ if __name__ == "__main__":
         Mag(args.max_mag),
         "default",
         DEFAULT_EDGE_LEN,
-        args.jobs,
         not args.no_compress,
     )
 
