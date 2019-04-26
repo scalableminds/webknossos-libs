@@ -114,7 +114,6 @@ def downsample(
     target_mag: Mag,
     interpolation_mode,
     cube_edge_len,
-    jobs,
     compress,
     args=None,
 ):
@@ -401,7 +400,6 @@ def downsample_mag(
     target_mag: Mag,
     interpolation_mode="default",
     cube_edge_len=DEFAULT_EDGE_LEN,
-    jobs=1,
     compress=False,
     args=None,
 ):
@@ -426,7 +424,6 @@ def downsample_mag(
         target_mag,
         interpolation_mode,
         cube_edge_len,
-        jobs,
         compress,
         args,
     )
@@ -439,7 +436,6 @@ def downsample_mags(
     max_mag: Mag,
     interpolation_mode,
     cube_edge_len,
-    jobs,
     compress,
     args=None,
 ):
@@ -453,7 +449,6 @@ def downsample_mags(
             target_mag,
             interpolation_mode,
             cube_edge_len,
-            jobs,
             compress,
             args,
         )
@@ -478,7 +473,6 @@ if __name__ == "__main__":
             anisotropic_target_mag,
             args.interpolation_mode,
             args.buffer_cube_size,
-            args.jobs,
             args.compress,
             args,
         )
@@ -490,7 +484,6 @@ if __name__ == "__main__":
             max_mag,
             args.interpolation_mode,
             args.buffer_cube_size,
-            args.jobs,
             args.compress,
             args,
         )
