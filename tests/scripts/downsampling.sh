@@ -4,7 +4,6 @@ docker run \
   --rm \
   scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
   wkcuber.downsampling \
-  --verbose \
   --jobs 2 \
   --max 8 \
   --buffer_cube_size 128 \
