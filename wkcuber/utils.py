@@ -114,7 +114,13 @@ def get_executor_for_args(args):
     if args.distribution_strategy == "multiprocessing":
         # Also accept "processes" instead of job to be compatible with segmentation-tools.
         # In the long run, the args should be unified and provided by the clustertools.
-        jobs = args.jobs if "jobs" in args else args.processes
+        if "jobs" in args:
+            jobs = args.jobs
+        elif "processes" in args:
+            jobs = args.processes
+        else:
+            jobs = cpu_count()
+
         executor = cluster_tools.get_executor("multiprocessing", jobs)
         logging.info("Using pool of {} workers.".format(jobs))
     elif args.distribution_strategy == "slurm":
