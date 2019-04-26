@@ -6,7 +6,7 @@ import threading
 import time
 from . import slurm
 from .remote import INFILE_FMT, OUTFILE_FMT
-from .util import random_string, local_filename, chcall
+from .util import random_string, local_filename, call
 import cloudpickle
 import logging
 
@@ -49,6 +49,11 @@ class FileWaitThread(threading.Thread):
             self.waiting[filename] = value
 
     def run(self):
+
+        def handle_completed_job(job_id, filename, failed_early):
+            self.callback(job_id, failed_early)
+            del self.waiting[filename]
+
         while True:
             with self.lock:
                 if self.shutdown:
@@ -58,34 +63,33 @@ class FileWaitThread(threading.Thread):
                 for filename in list(self.waiting):
                     job_id = self.waiting[filename]
 
-                    # Let's get the state for the job to check whether it failed.
-                    # It's important to check the status before checking whether the file exists.
-                    # Otherwise, we can run into a race condition where the job succeeds
-                    # after os.path.exists was called and before scontrol is executed.
-                    stdout = chcall("scontrol show job {}".format(job_id))
-
                     if os.path.exists(filename):
-                        self.callback(job_id, False)
-                        del self.waiting[filename]
+                        # Check for output file as a fast indicator for job completion
+                        handle_completed_job(job_id, filename, False)
                     else:
-                        try:
-                            if "JobState=FAILED" in str(stdout[0]):
-                                self.callback(job_id, True)
-                                del self.waiting[filename]
-                            elif "JobState=COMPLETED" in str(stdout[0]):
+                        # If the output file was not found, we determine the job status so that
+                        # we can recognize jobs which failed hard (in this case, they don't produce output files)
+                        stdout, _, exit_code = call("scontrol show job {}".format(job_id))
+
+                        # We have to re-check for the output file since this could be created in the mean time
+                        if os.path.exists(filename):
+                            handle_completed_job(job_id, filename, False)
+                        else:
+                            if exit_code != 0:
+                                logging.error(
+                                    "Couldn't call scontrol to determine job's status. {}. Continuing to poll for output file. This could be an indicator for a failed job which was already cleaned up from the slurm db. If this is the case, the process will hang forever.".format(
+                                        e
+                                    )
+                                )
+                            elif "JobState=FAILED" in str(stdout):
+                                handle_completed_job(job_id, filename, True)
+                            elif "JobState=COMPLETED" in str(stdout):
                                 logging.error(
                                     "Job state is completed, but {} couldn't be found.".format(
                                         filename
                                     )
                                 )
-                                self.callback(job_id, True)
-                                del self.waiting[filename]
-                        except Exception as e:
-                            logging.error(
-                                "Couldn't call scontrol to determine job's status. {}".format(
-                                    e
-                                )
-                            )
+                                handle_completed_job(job_id, filename, True)
 
             time.sleep(self.interval)
 
