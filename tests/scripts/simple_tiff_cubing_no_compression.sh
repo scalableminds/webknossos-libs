@@ -6,7 +6,6 @@ docker run \
   --rm \
   scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
   wkcuber \
-  --verbose \
   --jobs 2 \
   --batch_size 8 \
   --layer_name color \
