@@ -180,9 +180,7 @@ class BufferedSliceWriter(object):
             self.current_z = z
             self.buffer_start_z = z
 
-        assert (
-            z == self.current_z
-        ), "({}) Slices have to be written sequentially!".format(getpid())
+        assert z == self.current_z, "Slices have to be written sequentially!"
 
         self.buffer.append(data.transpose())
         self.current_z += 1
