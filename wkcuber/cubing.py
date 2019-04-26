@@ -145,7 +145,7 @@ def cubing_job(
 
 
 def cubing(
-    source_path, target_path, layer_name, dtype, batch_size, jobs, args=None
+    source_path, target_path, layer_name, dtype, batch_size, args=None
 ) -> dict:
 
     target_wkw_info = WkwDatasetInfo(target_path, layer_name, dtype, 1)
@@ -198,6 +198,5 @@ if __name__ == "__main__":
         args.layer_name,
         args.dtype,
         args.batch_size,
-        args.jobs,
         args=args,
     )

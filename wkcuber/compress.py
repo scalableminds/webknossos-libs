@@ -72,7 +72,7 @@ def compress_file_job(source_path, target_path):
         raise exc
 
 
-def compress_mag(source_path, layer_name, target_path, mag: Mag, jobs, args=None):
+def compress_mag(source_path, layer_name, target_path, mag: Mag, args=None):
     if path.exists(path.join(target_path, layer_name, str(mag))):
         logging.error("Target path '{}' already exists".format(target_path))
         exit(1)
@@ -98,9 +98,9 @@ def compress_mag(source_path, layer_name, target_path, mag: Mag, jobs, args=None
     logging.info("Mag {0} successfully compressed".format(str(mag)))
 
 
-def compress_mag_inplace(target_path, layer_name, mag: Mag, jobs, args=None):
+def compress_mag_inplace(target_path, layer_name, mag: Mag, args=None):
     compress_target_path = "{}.compress-{}".format(target_path, uuid4())
-    compress_mag(target_path, layer_name, compress_target_path, mag, jobs, args)
+    compress_mag(target_path, layer_name, compress_target_path, mag, args)
 
     shutil.rmtree(path.join(target_path, layer_name, str(mag)))
     shutil.move(
@@ -111,7 +111,7 @@ def compress_mag_inplace(target_path, layer_name, mag: Mag, jobs, args=None):
 
 
 def compress_mags(
-    source_path, layer_name, target_path=None, mags: List[Mag] = None, jobs=1, args=None
+    source_path, layer_name, target_path=None, mags: List[Mag] = None, args=None
 ):
     with_tmp_dir = target_path is None
     target_path = source_path + ".tmp" if with_tmp_dir else target_path
@@ -121,7 +121,7 @@ def compress_mags(
     mags.sort()
 
     for mag in mags:
-        compress_mag(source_path, layer_name, target_path, mag, jobs, args)
+        compress_mag(source_path, layer_name, target_path, mag, args)
 
     if with_tmp_dir:
         makedirs(path.join(source_path + ".bak", layer_name), exist_ok=True)
@@ -151,6 +151,5 @@ if __name__ == "__main__":
         args.layer_name,
         args.target_path,
         args.mag,
-        int(args.jobs),
         args,
     )
