@@ -4,7 +4,6 @@ docker run \
   --rm \
   scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
   wkcuber.compress \
-  --silent \
   --jobs 2 \
   --layer_name color \
   /testoutput/tiff /testoutput/tiff_compress

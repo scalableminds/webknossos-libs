@@ -6,7 +6,6 @@ docker run \
   --rm \
   scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
   wkcuber.convert_knossos \
-  --silent \
   --jobs 2 \
   --dtype uint8 \
   --layer_name color \
