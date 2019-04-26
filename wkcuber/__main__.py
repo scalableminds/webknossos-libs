@@ -78,6 +78,7 @@ if __name__ == "__main__":
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG)
 
+    print(args)
     bounding_box = cubing(
         args.source_path,
         args.target_path,
@@ -103,6 +104,7 @@ if __name__ == "__main__":
             DEFAULT_EDGE_LEN,
             args.jobs,
             not args.no_compress,
+            args,
         )
 
     else:
@@ -115,6 +117,7 @@ if __name__ == "__main__":
             DEFAULT_EDGE_LEN,
             args.jobs,
             not args.no_compress,
+            args,
         )
 
     scale = tuple(float(x) for x in args.scale.split(","))

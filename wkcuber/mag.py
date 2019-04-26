@@ -31,6 +31,9 @@ class Mag:
     def __lt__(self, other):
         return max(self.mag) < (max(other.to_array()))
 
+    def __le__(self, other):
+        return max(self.mag) <= (max(other.to_array()))
+
     def __eq__(self, other):
         return all(m1 == m2 for m1, m2 in zip(self.mag, other.mag))
 

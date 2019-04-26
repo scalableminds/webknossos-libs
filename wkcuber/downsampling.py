@@ -472,11 +472,12 @@ def downsample_mags_anisotropic(
     compress,
     args=None,
 ):
+    print(args)
     prev_mag = from_mag
     target_mag = get_next_anisotropic_mag(from_mag, scale)
     while target_mag <= max_mag:
         source_mag = prev_mag
-        downsample(
+        downsample_mag(
             path,
             layer_name,
             source_mag,
@@ -487,15 +488,17 @@ def downsample_mags_anisotropic(
             compress,
             args,
         )
+        print(source_mag, target_mag)
         prev_mag = target_mag
         target_mag = get_next_anisotropic_mag(target_mag, scale)
 
 
+
 def get_next_anisotropic_mag(mag, scale):
-    if mag.to_array()[0] * 2 * [0] >= mag.to_array()[2] * 2 * scale[2]:
-        return Mag(mag.to_array()[0] * 2, mag.to_array()[1] * 2, mag.to_array()[2] * 2)
+    if mag.to_array()[0] * 2 * scale[0] >= mag.to_array()[2] * 2 * scale[2]:
+        return Mag([mag.to_array()[0] * 2, mag.to_array()[1] * 2, mag.to_array()[2] * 2])
     else:
-        return Mag(mag.to_array()[0] * 2, mag.to_array()[1] * 2, mag.to_array()[2])
+        return Mag([mag.to_array()[0] * 2, mag.to_array()[1] * 2, mag.to_array()[2]])
 
 
 if __name__ == "__main__":
