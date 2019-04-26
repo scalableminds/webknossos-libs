@@ -77,7 +77,7 @@ def compress_mag(source_path, layer_name, target_path, mag: Mag, jobs, args=None
         logging.error("Target path '{}' already exists".format(target_path))
         exit(1)
 
-    if args is not None and hasattr(args, 'dtype'):
+    if args is not None and hasattr(args, "dtype"):
         dtype = args.dtype
     else:
         dtype = None

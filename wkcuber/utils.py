@@ -24,7 +24,7 @@ FallbackArgs = namedtuple("FallbackArgs", ("distribution_strategy", "jobs"))
 
 
 def open_wkw(info, **kwargs):
-    if hasattr(info, 'dtype'):
+    if hasattr(info, "dtype"):
         header = wkw.Header(np.dtype(info.dtype), **kwargs)
     else:
         logging.warn(

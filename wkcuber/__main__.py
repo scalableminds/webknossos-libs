@@ -78,7 +78,6 @@ if __name__ == "__main__":
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG)
 
-    print(args)
     bounding_box = cubing(
         args.source_path,
         args.target_path,

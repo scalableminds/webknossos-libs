@@ -443,6 +443,7 @@ def downsample_mags(
     compress,
     args=None,
 ):
+
     target_mag = from_mag.scaled_by(2)
     while target_mag <= max_mag:
         source_mag = target_mag.divided_by(2)
@@ -472,7 +473,7 @@ def downsample_mags_anisotropic(
     compress,
     args=None,
 ):
-    print(args)
+
     prev_mag = from_mag
     target_mag = get_next_anisotropic_mag(from_mag, scale)
     while target_mag <= max_mag:
@@ -488,17 +489,33 @@ def downsample_mags_anisotropic(
             compress,
             args,
         )
-        print(source_mag, target_mag)
         prev_mag = target_mag
         target_mag = get_next_anisotropic_mag(target_mag, scale)
 
 
-
 def get_next_anisotropic_mag(mag, scale):
-    if mag.to_array()[0] * 2 * scale[0] >= mag.to_array()[2] * 2 * scale[2]:
-        return Mag([mag.to_array()[0] * 2, mag.to_array()[1] * 2, mag.to_array()[2] * 2])
+    max_index, min_index = detect_larger_and_smaller_dimension_by_size(scale)
+    scale_increase = [1, 1, 1]
+    if (
+        mag.to_array()[min_index] * 2 * scale[min_index]
+        < mag.to_array()[max_index] * 2 * scale[max_index]
+    ):
+        for i in range(len(scale_increase)):
+            scale_increase[i] = 1 if i == max_index else 2
     else:
-        return Mag([mag.to_array()[0] * 2, mag.to_array()[1] * 2, mag.to_array()[2]])
+        scale_increase = [2, 2, 2]
+    return Mag(
+        [
+            mag.to_array()[0] * scale_increase[0],
+            mag.to_array()[1] * scale_increase[1],
+            mag.to_array()[2] * scale_increase[2],
+        ]
+    )
+
+
+def detect_larger_and_smaller_dimension_by_size(scale):
+    scale_np = np.array(scale)
+    return np.argmax(scale_np), np.argmin(scale_np)
 
 
 if __name__ == "__main__":
