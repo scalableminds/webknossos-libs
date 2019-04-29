@@ -185,11 +185,11 @@ def test_downsample_multi_channel():
     assert np.all(target_buffer == joined_buffer)
 
 def test_anisotropic_mag_calculation():
-    scale_test = [[10.5, 10.5, 24], [10.5, 10.5, 20.25], [10.5, 24, 10.5], [24, 10.5, 10.5], [10.5, 10.5, 10.5]] * 2
-    mags_test = [[Mag(1)], Mag(1), Mag(1), Mag(1), Mag(1),
-                 Mag([2, 2, 1]), Mag([2, 2, 1]), Mag([2, 1, 2]), Mag([1, 2, 2]), Mag(2)]
-    mags_expected = [Mag([2, 2, 1]), Mag([2, 2, 2]), Mag([2, 1, 2]), Mag(1, 2, 2), Mag([2, 2, 2]),
-                     Mag([4, 4, 1]), Mag([1, 1, ]), Mag([4, 4, 2]), Mag([4, 1, 4]), Mag(4)]
+    scale_test = [(10.5, 10.5, 24), (10.5, 10.5, 20.25), (10.5, 24, 10.5), (24, 10.5, 10.5), (10.5, 10.5, 10.5)] * 2
+    mags_test = [Mag(1), Mag(1), Mag(1), Mag(1), Mag(1),
+                 Mag((2, 2, 1)), Mag((2, 2, 1)), Mag((2, 1, 2)), Mag((1, 2, 2)), Mag(2)]
+    mags_expected = [Mag((2, 2, 1)), Mag((2, 2, 2)), Mag((2, 1, 2)), Mag((1, 2, 2)), Mag((2, 2, 2)),
+                     Mag((4, 4, 1)), Mag((1, 1, )), Mag((4, 4, 2)), Mag((4, 1, 4)), Mag(4)]
     assert len(mags_test) == len(mags_expected) == len(scale_test), "Test expects the same number of input and result" \
                                                                     " mags for testing."
     for i in range(len(mags_test)):
