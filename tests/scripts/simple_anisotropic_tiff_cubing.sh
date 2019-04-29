@@ -12,7 +12,7 @@ docker run \
   --max_mag 8 \
   --scale 11.24,25,11.24 \
   --name awesome_data \
-  --anisotropic
+  --anisotropic \
   /testdata/tiff /testoutput/tiff3
 [ -d testoutput/tiff3/color ]
 [ -d testoutput/tiff3/color/1 ]
