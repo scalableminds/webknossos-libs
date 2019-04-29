@@ -78,6 +78,7 @@ if __name__ == "__main__":
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG)
 
+    scale = tuple(float(x) for x in args.scale.split(","))
     bounding_box = cubing(
         args.source_path,
         args.target_path,
@@ -91,7 +92,6 @@ if __name__ == "__main__":
         compress_mag_inplace(args.target_path, args.layer_name, Mag(1), args)
 
     if args.anisotropic:
-        scale = tuple(float(x) for x in args.scale.split(","))
         downsample_mags_anisotropic(
             args.target_path,
             args.layer_name,
@@ -116,7 +116,6 @@ if __name__ == "__main__":
             args,
         )
 
-    scale = tuple(float(x) for x in args.scale.split(","))
     write_webknossos_metadata(
         args.target_path,
         args.name,

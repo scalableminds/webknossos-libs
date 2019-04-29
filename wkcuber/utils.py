@@ -64,8 +64,10 @@ def add_verbose_flag(parser):
 def add_anisotropic_flag(parser):
     parser.add_argument(
         "--anisotropic",
-        "-aniso",
-        help="Anisotropic downsampling",
+        "-a",
+        help="Activates Anisotropic downsampling. It will detect which dimension ist the smallest and the largest. "
+        "The largest dimension will only be down sampled by 2 if it would be smaller or equal to the smallest "
+        "dimension in the next downsampling step.",
         dest="anisotropic",
         action="store_true",
     )

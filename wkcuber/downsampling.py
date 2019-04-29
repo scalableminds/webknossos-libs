@@ -487,11 +487,12 @@ def downsample_mags_anisotropic(
 
 
 def get_next_anisotropic_mag(mag, scale):
-    max_index, min_index = detect_larger_and_smaller_dimension_by_size(scale)
+    max_index, min_index = detect_larger_and_smaller_dimension(scale)
+    mag_array = mag.to_array()
     scale_increase = [1, 1, 1]
     if (
-        mag.to_array()[min_index] * 2 * scale[min_index]
-        < mag.to_array()[max_index] * 2 * scale[max_index]
+        mag_array[min_index] * scale[min_index]
+        < mag_array[max_index] * scale[max_index]
     ):
         for i in range(len(scale_increase)):
             scale_increase[i] = 1 if i == max_index else 2
@@ -499,14 +500,14 @@ def get_next_anisotropic_mag(mag, scale):
         scale_increase = [2, 2, 2]
     return Mag(
         [
-            mag.to_array()[0] * scale_increase[0],
-            mag.to_array()[1] * scale_increase[1],
-            mag.to_array()[2] * scale_increase[2],
+            mag_array[0] * scale_increase[0],
+            mag_array[1] * scale_increase[1],
+            mag_array[2] * scale_increase[2],
         ]
     )
 
 
-def detect_larger_and_smaller_dimension_by_size(scale):
+def detect_larger_and_smaller_dimension(scale):
     scale_np = np.array(scale)
     return np.argmax(scale_np), np.argmin(scale_np)
 
