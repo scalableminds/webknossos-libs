@@ -13,3 +13,4 @@
  tests/scripts/compression.sh
  tests/scripts/in_place_compression.sh
  tests/scripts/meta_generation.sh
+ tests/scripts/simple_anisotropic_tiff_cubing.sh

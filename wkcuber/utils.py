@@ -24,7 +24,7 @@ FallbackArgs = namedtuple("FallbackArgs", ("distribution_strategy", "jobs"))
 
 
 def open_wkw(info, **kwargs):
-    if info.dtype is not None:
+    if hasattr(info, "dtype"):
         header = wkw.Header(np.dtype(info.dtype), **kwargs)
     else:
         logging.warn(
@@ -59,6 +59,20 @@ def add_verbose_flag(parser):
     )
 
     parser.set_defaults(verbose=True)
+
+
+def add_anisotropic_flag(parser):
+    parser.add_argument(
+        "--anisotropic",
+        "-a",
+        help="Activates Anisotropic downsampling. It will detect which dimension ist the smallest and the largest. "
+        "The largest dimension will only be down sampled by 2 if it would be smaller or equal to the smallest "
+        "dimension in the next downsampling step.",
+        dest="anisotropic",
+        action="store_true",
+    )
+
+    parser.set_defaults(anisotropic=False)
 
 
 def find_files(source_path, extensions):

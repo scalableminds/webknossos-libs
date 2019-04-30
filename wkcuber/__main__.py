@@ -3,10 +3,10 @@ from argparse import ArgumentParser
 import logging
 
 from .cubing import cubing, BLOCK_LEN
-from .downsampling import downsample_mags, DEFAULT_EDGE_LEN
+from .downsampling import downsample_mags, downsample_mags_anisotropic, DEFAULT_EDGE_LEN
 from .compress import compress_mag_inplace
 from .metadata import write_webknossos_metadata
-from .utils import add_verbose_flag, add_distribution_flags
+from .utils import add_verbose_flag, add_distribution_flags, add_anisotropic_flag
 from .mag import Mag
 
 
@@ -67,6 +67,7 @@ def create_parser():
 
     add_verbose_flag(parser)
     add_distribution_flags(parser)
+    add_anisotropic_flag(parser)
 
     return parser
 
@@ -77,6 +78,7 @@ if __name__ == "__main__":
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG)
 
+    scale = tuple(float(x) for x in args.scale.split(","))
     bounding_box = cubing(
         args.source_path,
         args.target_path,
@@ -89,17 +91,31 @@ if __name__ == "__main__":
     if not args.no_compress:
         compress_mag_inplace(args.target_path, args.layer_name, Mag(1), args)
 
-    downsample_mags(
-        args.target_path,
-        args.layer_name,
-        Mag(1),
-        Mag(args.max_mag),
-        "default",
-        DEFAULT_EDGE_LEN,
-        not args.no_compress,
-    )
+    if args.anisotropic:
+        downsample_mags_anisotropic(
+            args.target_path,
+            args.layer_name,
+            Mag(1),
+            Mag(args.max_mag),
+            scale,
+            "default",
+            DEFAULT_EDGE_LEN,
+            not args.no_compress,
+            args,
+        )
 
-    scale = tuple(float(x) for x in args.scale.split(","))
+    else:
+        downsample_mags(
+            args.target_path,
+            args.layer_name,
+            Mag(1),
+            Mag(args.max_mag),
+            "default",
+            DEFAULT_EDGE_LEN,
+            not args.no_compress,
+            args,
+        )
+
     write_webknossos_metadata(
         args.target_path,
         args.name,

@@ -14,6 +14,8 @@ class Mag:
             self.mag = [mag] * 3
         elif isinstance(mag, list):
             self.mag = mag
+        elif isinstance(mag, tuple):
+            self.mag = [mag_d for mag_d in mag]
         elif isinstance(mag, str):
             if re.match(r"^\d+$", mag) is not None:
                 self.mag = [int(mag)] * 3
@@ -30,6 +32,9 @@ class Mag:
 
     def __lt__(self, other):
         return max(self.mag) < (max(other.to_array()))
+
+    def __le__(self, other):
+        return max(self.mag) <= (max(other.to_array()))
 
     def __eq__(self, other):
         return all(m1 == m2 for m1, m2 in zip(self.mag, other.mag))
