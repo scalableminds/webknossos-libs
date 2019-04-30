@@ -7,7 +7,7 @@ import time
 from . import slurm
 from .remote import INFILE_FMT, OUTFILE_FMT
 from .util import random_string, local_filename, call
-import cloudpickle
+from . import pickling
 import logging
 
 
@@ -169,7 +169,7 @@ class SlurmExecutor(futures.Executor):
             # started (e.g., because python isn't installed or the cluster_tools
             # couldn't be found), no output was written to disk. We only noticed
             # this circumstance because the whole slurm job was marked as failed.
-            # Therefore, we don't try to deserialize pickle output.
+            # Therefore, we don't try to deserialize pickling output.
             success = False
             result = "Job submission/execution failed. Please look into the log file at {}".format(
                 slurm.OUTFILE_FMT.format(jobid)
@@ -177,7 +177,7 @@ class SlurmExecutor(futures.Executor):
         else:
             with open(OUTFILE_FMT % workerid, "rb") as f:
                 outdata = f.read()
-            success, result = cloudpickle.loads(outdata)
+            success, result = pickling.loads(outdata)
 
         if success:
             fut.set_result(result)
@@ -208,7 +208,7 @@ class SlurmExecutor(futures.Executor):
         # Start the job.
         workerid = random_string()
 
-        funcser = cloudpickle.dumps((fun, args, kwargs, self.meta_data), True)
+        funcser = pickling.dumps((fun, args, kwargs, self.meta_data), True)
         with open(INFILE_FMT % workerid, "wb") as f:
             f.write(funcser)
 
@@ -240,7 +240,7 @@ class SlurmExecutor(futures.Executor):
             fut = futures.Future()
 
             # Start the job.
-            funcser = cloudpickle.dumps((fun, [arg], {}, self.meta_data), True)
+            funcser = pickling.dumps((fun, [arg], {}, self.meta_data), True)
             infile_name = INFILE_FMT % get_workerid_with_index(index)
 
             with open(infile_name, "wb") as f:

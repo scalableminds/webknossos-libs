@@ -2,6 +2,9 @@ import subprocess
 import random
 import string
 import os
+import threading
+import time
+import logging
 
 def local_filename(filename=""):
     return os.path.join(os.getenv("CFUT_DIR", ".cfut"), filename)
@@ -43,3 +46,31 @@ def chcall(command, stdin=None):
     if code != 0:
         raise CommandError(command, code, stderr)
     return stdout, stderr
+
+
+def warn_after(job, seconds):
+    '''
+    Use as decorator to warn when a function is taking longer than {seconds} seconds.
+    '''
+    def outer(fn):
+        def inner(*args, **kwargs):
+            exceeded_timeout = [False]
+            start_time = time.time()
+
+            def warn_function():
+              logging.warn("Function {} is taking suspiciously long (longer than {} seconds)".format(job, seconds))
+              exceeded_timeout[0] = True
+
+            timer = threading.Timer(seconds, warn_function)
+            timer.start()
+
+            try:
+                result = fn(*args, **kwargs)
+                if exceeded_timeout[0]:
+                    end_time = time.time()
+                    logging.warn("Function {} succeeded after all (took {} seconds)".format(job, int(end_time - start_time)))
+            finally:
+                timer.cancel()
+            return result
+        return inner
+    return outer

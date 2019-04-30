@@ -14,6 +14,8 @@ def sleep(duration):
     time.sleep(duration)
     return duration
 
+logging.basicConfig()
+
 
 def get_executors():
     return [
