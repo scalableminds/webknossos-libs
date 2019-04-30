@@ -48,7 +48,8 @@ def test_buffered_slice_writer():
         with wkw.Dataset.open(dataset_path, wkw.Header(dtype)) as data:
             try:
                 read_data = data.read(origin, (24, 24, 13))
-                raise AssertionError('Nothing should be written on the disk.')
+                raise AssertionError('Nothing should be written on the disk. But found data with shape: {}'
+                                     .format(read_data.shape))
             except wkw.wkw.WKWException:
                 pass
 
