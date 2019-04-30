@@ -139,7 +139,7 @@ def get_executor_for_args(args):
         else:
             jobs = cpu_count()
 
-        executor = cluster_tools.get_executor("multiprocessing", jobs)
+        executor = cluster_tools.get_executor("multiprocessing", max_workers=jobs)
         logging.info("Using pool of {} workers.".format(jobs))
     elif args.distribution_strategy == "slurm":
         if args.job_resources is None:
