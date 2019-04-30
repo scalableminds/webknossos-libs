@@ -14,6 +14,8 @@ class Mag:
             self.mag = [mag] * 3
         elif isinstance(mag, list):
             self.mag = mag
+        elif isinstance(mag, tuple):
+            self.mag = [mag_d for mag_d in mag]
         elif isinstance(mag, str):
             if re.match(r"^\d+$", mag) is not None:
                 self.mag = [int(mag)] * 3

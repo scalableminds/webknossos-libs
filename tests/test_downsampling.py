@@ -185,15 +185,20 @@ def test_downsample_multi_channel():
     assert np.all(target_buffer == joined_buffer)
 
 def test_anisotropic_mag_calculation():
-    scale_test = [(10.5, 10.5, 24), (10.5, 10.5, 21), (10.5, 24, 10.5), (24, 10.5, 10.5), (10.5, 10.5, 10.5)] * 2
-    mags_test = [Mag(1), Mag(1), Mag(1), Mag(1), Mag(1),
-                 Mag([2, 2, 1]), Mag([2, 2, 1]), Mag([2, 1, 2]), Mag([1, 2, 2]), Mag(2)]
-    mags_expected = [Mag([2, 2, 1]), Mag([2, 2, 1]), Mag([2, 1, 2]), Mag([1, 2, 2]), Mag([2, 2, 2]),
-                     Mag([4, 4, 1]), Mag([4, 4, 2]), Mag([4, 1, 4]), Mag([1, 4, 4]), Mag(4)]
-    assert len(mags_test) == len(mags_expected) == len(scale_test), "Test expects the same number of input and result" \
-                                                                    " mags for testing."
-    for i in range(len(mags_test)):
-        assert mags_expected[i] == get_next_anisotropic_mag(mags_test[i], scale_test[i]), "The next anisotropic" \
+    mag_tests = [
+        [(10.5, 10.5, 24),      Mag(1),         Mag((2, 2, 1))],
+        [(10.5, 10.5, 21),      Mag(1),         Mag((2, 2, 1))],
+        [(10.5, 24, 10.5),      Mag(1),         Mag((2, 1, 2))],
+        [(24, 10.5, 10.5),      Mag(1),         Mag((1, 2, 2))],
+        [(10.5, 10.5, 10.5),    Mag(1),         Mag((2, 2, 2))],
+        [(10.5, 10.5, 24),      Mag((2, 2, 1)), Mag((2, 2, 1))],
+        [(10.5, 10.5, 21),      Mag((2, 2, 1)), Mag((4, 4, 2))],
+        [(10.5, 24, 10.5),      Mag((2, 1, 2)), Mag((4, 1, 4))],
+        [(24, 10.5, 10.5),      Mag((1, 2, 2)), Mag((1, 4, 4))],
+        [(10.5, 10.5, 10.5),    Mag(2),         Mag(4)],
+    ]
+    for i in range(len(mag_tests)):
+        assert mag_tests[i][2] == get_next_anisotropic_mag(mag_tests[i][1], mag_tests[i][0]), "The next anisotropic" \
                                                                                           " Magnification of {} with " \
                                                                                           "the size {} should be {}"\
-            .format(mags_test[i], scale_test[i], mags_expected[i])
+            .format(mag_tests[i][1], mag_tests[i][0], mag_tests[i][2])
