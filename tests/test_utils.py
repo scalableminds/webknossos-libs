@@ -44,20 +44,23 @@ def test_buffered_slice_writer():
 
     with BufferedSliceWriter(dataset_dir, layer_name, dtype, bbox, origin, mag=mag) as writer:
         for i in range(13):
-            writer.write_slice(test_img)
+            writer.write_slice(i, test_img)
         with wkw.Dataset.open(dataset_path, wkw.Header(dtype)) as data:
             try:
                 data.read(origin, (24, 24, 1))
                 raise AssertionError('Nothing should be written on the disk.')
             except wkw.wkw.WKWException:
                 pass
-        for i in range(19):
-            writer.write_slice(test_img)
+
+        for i in range(13, 32):
+            writer.write_slice(i, test_img)
         with wkw.Dataset.open(dataset_path, wkw.Header(dtype)) as data:
             read_data = data.read(origin, (24, 24, 32))
             assert read_data.shape == (24, 24, 32)
-        for i in range(3):
-            writer.write_slice(test_img)
+
+        for i in range(32, 35):
+            writer.write_slice(i, test_img)
+
     with wkw.Dataset.open(dataset_path, wkw.Header(dtype)) as data:
         read_data = data.read(origin, (24, 24, 35))
         assert read_data.shape == (24, 24, 35)
