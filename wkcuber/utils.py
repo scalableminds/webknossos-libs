@@ -13,6 +13,7 @@ from concurrent.futures import ProcessPoolExecutor
 from os import path, getpid
 from platform import python_version
 from math import floor, ceil
+from wkcuber.mag import Mag
 
 from .knossos import KnossosDataset, CUBE_EDGE_LEN
 
@@ -156,14 +157,14 @@ def wait_and_ensure_success(futures):
 
 class BufferedSliceWriter(object):
     def __init__(
-        self, dataset_path, layer_name, dtype, bounding_box, origin, buffer_size=32
+        self, dataset_path, layer_name, dtype, bounding_box, origin, buffer_size=32, mag=Mag(1)
     ):
 
         self.dataset_path = dataset_path
         self.layer_name = layer_name
         self.buffer_size = buffer_size
 
-        layer_path = path.join(self.dataset_path, self.layer_name, "1")
+        layer_path = path.join(self.dataset_path, self.layer_name, mag.to_layer_name())
 
         self.dataset = wkw.Dataset.open(layer_path, wkw.Header(dtype))
         self.origin = origin
