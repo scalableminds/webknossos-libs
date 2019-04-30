@@ -207,8 +207,8 @@ def detect_segmentation_layer(
 def detect_layers(dataset_path, max_id, compute_max_id, exact_bounding_box=None):
     # Detect metadata for well-known layers (i.e., color, prediction and segmentation)
     for layer_name in ["color", "prediction"]:
-      if path.exists(path.join(dataset_path, layer_name)):
-        yield detect_standard_layer(dataset_path, layer_name, exact_bounding_box)
+        if path.exists(path.join(dataset_path, layer_name)):
+            yield detect_standard_layer(dataset_path, layer_name, exact_bounding_box)
     if path.exists(path.join(dataset_path, "segmentation")):
         yield detect_segmentation_layer(
             dataset_path, "segmentation", max_id, compute_max_id, exact_bounding_box
