@@ -157,7 +157,14 @@ def wait_and_ensure_success(futures):
 
 class BufferedSliceWriter(object):
     def __init__(
-        self, dataset_path, layer_name, dtype, bounding_box, origin, buffer_size=32, mag=Mag(1)
+        self,
+        dataset_path,
+        layer_name,
+        dtype,
+        bounding_box,
+        origin,
+        buffer_size=32,
+        mag=Mag(1),
     ):
 
         self.dataset_path = dataset_path

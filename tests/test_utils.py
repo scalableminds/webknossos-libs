@@ -36,7 +36,7 @@ def test_buffered_slice_writer():
     test_img = np.arange(24 * 24).reshape(24, 24).astype(np.uint16)
     dtype = test_img.dtype
     bbox = {'topleft': (0, 0, 0), 'size': (24, 24, 35)}
-    origin = (0, 0, 0)
+    origin = [0, 0, 0]
     dataset_dir = 'testoutput/buffered_slice_writer'
     layer_name = 'color'
     mag = Mag(1)
@@ -47,7 +47,7 @@ def test_buffered_slice_writer():
             writer.write_slice(i, test_img)
         with wkw.Dataset.open(dataset_path, wkw.Header(dtype)) as data:
             try:
-                data.read(origin, (24, 24, 1))
+                read_data = data.read(origin, (24, 24, 13))
                 raise AssertionError('Nothing should be written on the disk.')
             except wkw.wkw.WKWException:
                 pass
