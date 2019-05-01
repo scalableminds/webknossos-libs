@@ -58,15 +58,21 @@ def test_buffered_slice_writer():
             writer.write_slice(i, test_img)
         with wkw.Dataset.open(dataset_path, wkw.Header(dtype)) as data:
             read_data = data.read(origin, (24, 24, 32))
-            assert np.squeeze(read_data).shape == (24, 24, 32)
-            assert read_data.size == read_data[read_data.nonzero()].size
+            assert np.squeeze(read_data).shape == (24, 24, 32), "The read data should have the shape: (24, 24, 32) " \
+                                                                "but has a shape of: {}"\
+                                                                .format(np.squeeze(read_data).shape)
+            assert read_data.size == read_data[read_data.nonzero()].size, "The read data contains zeros while the " \
+                                                                          "written image has no zeros"
 
         for i in range(32, 35):
             writer.write_slice(i, test_img)
 
     with wkw.Dataset.open(dataset_path, wkw.Header(dtype)) as data:
         read_data = data.read(origin, (24, 24, 35))
-        assert np.squeeze(read_data).shape == (24, 24, 35)
-        assert read_data.size == read_data[read_data.nonzero()].size
+        assert np.squeeze(read_data).shape == (24, 24, 35), "The read data should have the shape: (24, 24, 35) " \
+                                                                "but has a shape of: {}"\
+                                                                .format(np.squeeze(read_data).shape)
+        assert read_data.size == read_data[read_data.nonzero()].size, "The read data contains zeros while the " \
+                                                                          "written image has no zeros"
 
 
