@@ -33,7 +33,8 @@ def test_get_regular_chunks_max_inclusive():
 
 
 def test_buffered_slice_writer():
-    test_img = np.arange(24 * 24).reshape(24, 24).astype(np.uint16)
+    test_img = np.arange(24 * 24).reshape(24, 24).astype(np.uint16) + 1
+    assert test_img == test_img[test_img.nonzero()]
     dtype = test_img.dtype
     bbox = {'topleft': (0, 0, 0), 'size': (24, 24, 35)}
     origin = [0, 0, 0]
@@ -48,6 +49,7 @@ def test_buffered_slice_writer():
         with wkw.Dataset.open(dataset_path, wkw.Header(dtype)) as data:
             try:
                 read_data = data.read(origin, (24, 24, 13))
+                read_data = read_data[read_data.nonzero()]
                 raise AssertionError('Nothing should be written on the disk. But found data with shape: {}'
                                      .format(read_data.shape))
             except wkw.wkw.WKWException:
@@ -57,6 +59,7 @@ def test_buffered_slice_writer():
             writer.write_slice(i, test_img)
         with wkw.Dataset.open(dataset_path, wkw.Header(dtype)) as data:
             read_data = data.read(origin, (24, 24, 32))
+            read_data = read_data[read_data.nonzero()]
             assert read_data.shape == (24, 24, 32)
 
         for i in range(32, 35):
@@ -64,6 +67,7 @@ def test_buffered_slice_writer():
 
     with wkw.Dataset.open(dataset_path, wkw.Header(dtype)) as data:
         read_data = data.read(origin, (24, 24, 35))
+        read_data = read_data[read_data.nonzero()]
         assert read_data.shape == (24, 24, 35)
 
 
