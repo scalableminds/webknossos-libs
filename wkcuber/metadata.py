@@ -12,6 +12,10 @@ from .mag import Mag
 from typing import List
 
 
+def get_datasource_path(dataset_path):
+    return path.join(dataset_path, "datasource-properties.json")
+
+
 def create_parser():
     parser = ArgumentParser()
 
@@ -39,6 +43,23 @@ def create_parser():
     return parser
 
 
+def write_datasource_properties(dataset_path, datasource_properties):
+    datasource_properties_path = get_datasource_path(dataset_path)
+    with open(datasource_properties_path, "wt") as datasource_properties_file:
+        json.dump(datasource_properties, datasource_properties_file, indent=2)
+
+
+def read_datasource_properties(dataset_path):
+    with open(get_datasource_path(dataset_path), "r") as datasource_properties_file:
+        return json.load(datasource_properties_file)
+
+
+"""
+Creates a datasource-properties.json file with the specified properties
+for the given dataset path. Common layers are detected automatically.
+"""
+
+
 def write_webknossos_metadata(
     dataset_path,
     name,
@@ -50,28 +71,54 @@ def write_webknossos_metadata(
 
     # Generate a metadata file for webKnossos
     # Currently includes no source of information for team
-    datasource_properties_path = path.join(dataset_path, "datasource-properties.json")
     layers = list(
         detect_layers(dataset_path, max_id, compute_max_id, exact_bounding_box)
     )
-    with open(datasource_properties_path, "wt") as datasource_properties_json:
-        json.dump(
-            {
-                "id": {"name": name, "team": "<unknown>"},
-                "dataLayers": layers,
-                "scale": scale,
-            },
-            datasource_properties_json,
-            indent=2,
+    write_datasource_properties(
+        dataset_path,
+        {
+            "id": {"name": name, "team": "<unknown>"},
+            "dataLayers": layers,
+            "scale": scale,
+        },
+    )
+
+
+"""
+Updates the datasource-properties.json file for a given dataset.
+Use this method if you added new layers and/or magnifications for
+existing layers.
+
+Raises an exception if the datasource-properties.json file does not exist, yet.
+In this case, use write_webknossos_metadata instead.
+"""
+
+
+def refresh_metadata(
+    wkw_path, max_id=0, compute_max_id=False, exact_bounding_box: Optional[dict] = None
+):
+    dataset_path = get_datasource_path(wkw_path)
+    if not path.exists(dataset_path):
+        raise Exception(
+            "datasource-properties.json file could not be found. Please use write_webknossos_metadata to create it."
         )
+
+    datasource_properties = read_datasource_properties(wkw_path)
+
+    new_layers = list(
+        detect_layers(wkw_path, max_id, compute_max_id, exact_bounding_box)
+    )
+
+    datasource_properties["dataLayers"] = new_layers
+    write_datasource_properties(wkw_path, datasource_properties)
 
 
 def read_metadata_for_layer(wkw_path, layer_name):
-    datasource_properties = json.load(
-        open(path.join(wkw_path, "datasource-properties.json"), "r")
-    )
+    datasource_properties = read_datasource_properties(wkw_path)
+
     layers = datasource_properties["dataLayers"]
     layer_info = next(layer for layer in layers if layer["name"] == layer_name)
+
     dtype = np.dtype(layer_info["elementClass"])
     bounding_box = layer_info["boundingBox"]
     origin = bounding_box["topLeft"]
@@ -146,13 +193,15 @@ def detect_resolutions(dataset_path, layer) -> List[Mag]:
 def detect_standard_layer(dataset_path, layer_name, exact_bounding_box=None):
     # Perform metadata detection for well-known layers
 
+    mags = list(detect_resolutions(dataset_path, layer_name))
+    mags = sorted(mags)
+    assert len(mags) > 0, "No resolutions found"
+
     if exact_bounding_box is None:
-        bbox = detect_bbox(dataset_path, layer_name)
+        bbox = detect_bbox(dataset_path, layer_name, mags[0])
     else:
         bbox = exact_bounding_box
 
-    mags = list(detect_resolutions(dataset_path, layer_name))
-    mags = sorted(mags)
     resolutions = [
         {
             "resolution": mag.to_array(),
@@ -161,7 +210,6 @@ def detect_standard_layer(dataset_path, layer_name, exact_bounding_box=None):
         for mag in mags
     ]
 
-    assert len(mags) > 0, "No resolutions found"
     dtype = detect_dtype(dataset_path, layer_name, mags[0])
 
     return {
