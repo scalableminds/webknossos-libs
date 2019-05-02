@@ -337,7 +337,7 @@ class WrappedProcessPoolExecutor(ProcessPoolExecutor):
         white_list = ["max_workers", "mp_context", "initializer", "initargs"]
         new_kwargs = get_existent_kwargs_subset(white_list, kwargs)
 
-        return ProcessPoolExecutor.__init__(self, **new_kwargs)
+        ProcessPoolExecutor.__init__(self, **new_kwargs)
 
 
     def map_unordered(self, func, args):
@@ -357,7 +357,7 @@ class WrappedProcessPoolExecutor(ProcessPoolExecutor):
 class SequentialExecutor(WrappedProcessPoolExecutor):
     def __init__(self, **kwargs):
         kwargs["max_workers"] = 1
-        return WrappedProcessPoolExecutor.__init__(self, **kwargs)
+        WrappedProcessPoolExecutor.__init__(self, **kwargs)
 
 
 def get_executor(environment, **kwargs):

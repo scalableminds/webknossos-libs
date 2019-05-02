@@ -38,6 +38,12 @@ jobs:
             docker exec c2 bash -c "cd /cluster_tools && python36 setup.py install"
 
       - run:
+          name: Run pylint
+          command: |
+            cd ./dockered-slurm
+            docker exec slurmctld bash -c "cd /cluster_tools && python36 -m pylint cluster_tools/"
+
+      - run:
           name: Run tests
           command: |
             cd ./dockered-slurm

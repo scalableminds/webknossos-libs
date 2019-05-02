@@ -1,6 +1,5 @@
 import cloudpickle
 from .util import warn_after
-import time
 
 WARNING_TIMEOUT = 10 * 60 # seconds
 
