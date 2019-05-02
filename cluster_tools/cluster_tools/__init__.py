@@ -77,9 +77,7 @@ class FileWaitThread(threading.Thread):
                         else:
                             if exit_code != 0:
                                 logging.error(
-                                    "Couldn't call scontrol to determine job's status. {}. Continuing to poll for output file. This could be an indicator for a failed job which was already cleaned up from the slurm db. If this is the case, the process will hang forever.".format(
-                                        e
-                                    )
+                                    "Couldn't call scontrol to determine job's status. {}. Continuing to poll for output file. This could be an indicator for a failed job which was already cleaned up from the slurm db. If this is the case, the process will hang forever."
                                 )
                             elif "JobState=FAILED" in str(stdout):
                                 handle_completed_job(job_id, filename, True)
