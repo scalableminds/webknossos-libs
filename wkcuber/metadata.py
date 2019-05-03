@@ -104,7 +104,9 @@ def refresh_metadata(
         )
 
     datasource_properties = read_datasource_properties(wkw_path)
-    existing_layers_dict = {layer["name"]: layer for layer in datasource_properties["dataLayers"]}
+    existing_layers_dict = {
+        layer["name"]: layer for layer in datasource_properties["dataLayers"]
+    }
 
     new_layers = list(
         detect_layers(wkw_path, max_id, compute_max_id, exact_bounding_box)
