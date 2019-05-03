@@ -86,7 +86,7 @@ def write_webknossos_metadata(
 
 """
 Updates the datasource-properties.json file for a given dataset.
-Use this method if you added new layers and/or magnifications for
+Use this method if you added (or removed) layers and/or changed magnifications for
 existing layers.
 
 Raises an exception if the datasource-properties.json file does not exist, yet.
@@ -104,12 +104,27 @@ def refresh_metadata(
         )
 
     datasource_properties = read_datasource_properties(wkw_path)
+    existing_layers_dict = {layer["name"]: layer for layer in datasource_properties["dataLayers"]}
 
     new_layers = list(
         detect_layers(wkw_path, max_id, compute_max_id, exact_bounding_box)
     )
 
-    datasource_properties["dataLayers"] = new_layers
+    # Merge the freshly read layers with the existing layer information, so that information,
+    # such as bounding boxes, are not lost for existing layers.
+    # For existing layers, only the resolutions will be updated.
+    merged_layers = []
+    for new_layer in new_layers:
+        layer_name = new_layer["name"]
+        if layer_name in existing_layers_dict:
+            existing_layer = existing_layers_dict[layer_name]
+            # Update the resolutions
+            existing_layer["wkwResolutions"] = new_layer["wkwResolutions"]
+            merged_layers.append(existing_layer)
+        else:
+            merged_layers.append(new_layer)
+
+    datasource_properties["dataLayers"] = merged_layers
     write_datasource_properties(wkw_path, datasource_properties)
 
 
