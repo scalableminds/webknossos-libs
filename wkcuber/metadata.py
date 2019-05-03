@@ -21,14 +21,15 @@ def create_parser():
 
     parser.add_argument("path", help="Directory containing the dataset.")
 
-    parser.add_argument("--name", "-n", help="Name of the dataset")
-
+    parser.add_argument("--name", "-n", help="Name of the dataset", default=None)
     parser.add_argument(
         "--scale",
         "-s",
         help="Scale of the dataset (e.g. 11.2,11.2,25)",
         default="1,1,1",
     )
+
+    parser.add_argument("--refresh", "-r", default=False, action="store_true")
 
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
@@ -283,7 +284,17 @@ def detect_layers(dataset_path, max_id, compute_max_id, exact_bounding_box=None)
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
     args = create_parser().parse_args()
-    scale = tuple(float(x) for x in args.scale.split(","))
-    write_webknossos_metadata(
-        args.path, args.name, scale, args.max_id, args.compute_max_id
-    )
+    if not args.refresh:
+        assert (
+            args.name is not None
+        ), "Please provide a name via --name to create meta data."
+        scale = tuple(float(x) for x in args.scale.split(","))
+        write_webknossos_metadata(
+            args.path, args.name, scale, args.max_id, args.compute_max_id
+        )
+    else:
+        if args.name is not None:
+            logging.warn(
+                "The --name argument is ignored, since --refresh was provided."
+            )
+        refresh_metadata(args.path, args.max_id, args.compute_max_id)
