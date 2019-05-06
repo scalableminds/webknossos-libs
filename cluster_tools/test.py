@@ -115,10 +115,11 @@ def test_executor_args():
     # Test should succeed if the above lines don't raise an exception
 
 
+test_output_str = "Test-Output"
+def log():
+    logging.debug(test_output_str)
+
 def test_pickled_logging():
-    test_output_str = "Test-Output"
-    def log():
-        logging.debug(test_output_str)
 
     def execute_with_log_level(log_level):
         logging_config = {
@@ -136,9 +137,7 @@ def test_pickled_logging():
                 return file.read()
 
     debug_out = execute_with_log_level(logging.DEBUG)
-    assert(test_output_str in debug_out)
+    assert test_output_str in debug_out
 
     debug_out = execute_with_log_level(logging.INFO)
-    assert(not (test_output_str in debug_out))
-
-
+    assert not (test_output_str in debug_out)

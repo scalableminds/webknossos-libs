@@ -23,11 +23,7 @@ def worker(workerid):
             indata = f.read()
         fun, args, kwargs, meta_data = pickling.loads(indata)
   
-        logging_config = meta_data.get("logging_config", {"level": logging.DEBUG, "format": "%(asctime)s %(levelname)s %(message)s"})
-
-        logging.basicConfig(**logging_config)
-        logging.info("Setting up logging.basicConfig with default values (potentially overwriting logging configuration of the main script. Config: {}".format(logging_config))
-        logging.info("Starting job computation...")
+        setup_logging(meta_data)
         result = True, fun(*args, **kwargs)
         logging.info("Job computation completed.")
         out = pickling.dumps(result, True)
@@ -47,6 +43,22 @@ def worker(workerid):
     logging.info("Pickle file written to {}.".format(tempfile))
     os.rename(tempfile, destfile)
     logging.info("Pickle file renamed to {}.".format(destfile))
+
+
+def setup_logging(meta_data):
+    logging_config = meta_data.get("logging_config", {"level": logging.DEBUG, "format": "%(asctime)s %(levelname)s %(message)s"})
+
+    # Call basicConfig which is necessary for the logging to work.
+    logging.basicConfig(**logging_config)
+
+    # It can happen that the pickled logger was already initialized. In this case,
+    # the above basicConfig call was a noop. Therefore, we have to set the level explicitly.
+    logger = logging.getLogger()
+    if "level" in logging_config:
+        logger.setLevel(logging_config["level"])
+
+    logging.info("Setting up logging.basicConfig (potentially overwriting logging configuration of the main script). Config: {}".format(logging_config))
+    logging.info("Starting job computation...")
 
 
 if __name__ == "__main__":
