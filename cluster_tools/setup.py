@@ -6,7 +6,7 @@ def _read(fn):
     return open(path).read()
 
 setup(name='cluster_tools',
-      version='1.14',
+      version='1.15',
       description='Utility library for easily distributing code execution on clusters',
       author='scalableminds',
       author_email='hello@scalableminds.com',
