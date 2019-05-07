@@ -9,7 +9,8 @@ from .remote import INFILE_FMT, OUTFILE_FMT
 from .util import random_string, local_filename, call
 from . import pickling
 import logging
-
+import importlib
+import re
 
 class RemoteException(Exception):
     def __init__(self, error):
@@ -17,6 +18,41 @@ class RemoteException(Exception):
 
     def __str__(self):
         return "\n" + self.error.strip()
+
+SLURM_STATES = {
+    "Failure": [
+        "CANCELLED",
+        "BOOT_FAIL",
+        "DEADLINE",
+        "FAILED",
+        "NODE_FAIL",
+        "OUT_OF_MEMORY",
+        "PREEMPTED",
+        "STOPPED",
+        "TIMEOUT"
+    ],
+    "Success": [
+        "COMPLETED"
+    ],
+    "Ignore": [
+        "RUNNING",
+        "CONFIGURING",
+        "COMPLETING",
+        "PENDING",
+        "RESV_DEL_HOLD",
+        "REQUEUE_FED",
+        "REQUEUE_HOLD",
+        "REQUEUED",
+        "RESIZING"
+    ],
+    "Unclear": [
+        "SUSPENDED",
+        "REVOKED",
+        "SIGNALING",
+        "SPECIAL_EXIT",
+        "STAGE_OUT"
+    ]
+}
 
 
 class FileWaitThread(threading.Thread):
@@ -79,15 +115,26 @@ class FileWaitThread(threading.Thread):
                                 logging.error(
                                     "Couldn't call scontrol to determine job's status. {}. Continuing to poll for output file. This could be an indicator for a failed job which was already cleaned up from the slurm db. If this is the case, the process will hang forever."
                                 )
-                            elif "JobState=FAILED" in str(stdout):
-                                handle_completed_job(job_id, filename, True)
-                            elif "JobState=COMPLETED" in str(stdout):
-                                logging.error(
-                                    "Job state is completed, but {} couldn't be found.".format(
-                                        filename
-                                    )
-                                )
-                                handle_completed_job(job_id, filename, True)
+                            else:
+                                job_state_search = re.search('JobState=([a-zA-Z_]*)', str(stdout))
+
+                                if job_state_search:
+                                    job_state = job_state_search.group(1)
+
+                                    if job_state in SLURM_STATES["Failure"]:
+                                        handle_completed_job(job_id, filename, True)
+                                    elif job_state in SLURM_STATES["Ignore"]:
+                                        # This job state can be ignored
+                                        pass
+                                    elif job_state in SLURM_STATES["Unclear"]:
+                                        logging.warn("The job state for {} is {}. It's unclear whether the job will recover. Will wait further".format(job_id, job_state))
+                                    elif job_state in SLURM_STATES["Success"]:
+                                        logging.error(
+                                            "Job state is completed, but {} couldn't be found.".format(
+                                                filename
+                                            )
+                                        )
+                                        handle_completed_job(job_id, filename, True)
 
             time.sleep(self.interval)
 
@@ -198,15 +245,38 @@ class SlurmExecutor(futures.Executor):
             )
 
     def dereference_main(self, fun): 
+        if 'USE_CLOUDPICKLE' in os.environ:
+            return fun
+
         # Ensure that passed functions don't refer to __main__, but 
         # instead to the actual module's name. Otherwise, unpickling
         # wouldn't work from within this library.
         #
         # See https://stackoverflow.com/a/56008860/896760 for more context.
 
+        def file_path_to_absolute_module(file_path):
+            """
+            Given a file path, return an import path.
+            :param file_path: A file path.
+            :return:
+            """
+            assert os.path.exists(file_path)
+            file_loc, ext = os.path.splitext(file_path)
+            assert ext in ('.py', '.pyc')
+            directory, module = os.path.split(file_loc)
+            module_path = [module]
+            while True:
+                if os.path.exists(os.path.join(directory, '__init__.py')):
+                    directory, package = os.path.split(directory)
+                    module_path.append(package)
+                else:
+                    break
+            path = '.'.join(module_path[::-1])
+            return path
+
         if fun.__module__ == "__main__":
-            import __main__
-            main_module = __import__(__main__.__file__.split(".py")[0])
+            main_path = file_path_to_absolute_module(sys.argv[0])
+            main_module = importlib.import_module(main_path)
             fun = getattr(main_module, fun.__name__)
 
         return fun
@@ -243,6 +313,7 @@ class SlurmExecutor(futures.Executor):
     def map_to_futures(self, fun, allArgs):
         self.ensure_not_shutdown()
         allArgs = list(allArgs)
+        fun = self.dereference_main(fun)
 
         futs = []
         workerid = random_string()
@@ -306,7 +377,6 @@ class SlurmExecutor(futures.Executor):
                 "The provided chunksize parameter is ignored by SlurmExecutor."
             )
 
-        func = self.dereference_main(func)
         start_time = time.time()
 
         futs = self.map_to_futures(func, args)
