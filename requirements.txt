@@ -6,4 +6,4 @@ pytest
 wkw>=0.0.6
 requests
 black
-cluster_tools==1.16
+cluster_tools==1.18
