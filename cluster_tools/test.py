@@ -114,10 +114,9 @@ def test_executor_args():
 
     # Test should succeed if the above lines don't raise an exception
 
-
 test_output_str = "Test-Output"
-def log():
-    logging.debug(test_output_str)
+def log(string):
+    logging.debug(string)
 
 def test_pickled_logging():
 
@@ -128,7 +127,7 @@ def test_pickled_logging():
         with cluster_tools.get_executor(
             "slurm", debug=True, keep_logs=True, job_resources={"mem": "10M"}, logging_config=logging_config
         ) as executor:
-            fut = executor.submit(log)
+            fut = executor.submit(log, test_output_str)
             fut.result()
 
             output = ".cfut/slurmpy.stdout.{}.log".format(fut.slurm_jobid)
@@ -141,3 +140,8 @@ def test_pickled_logging():
 
     debug_out = execute_with_log_level(logging.INFO)
     assert not (test_output_str in debug_out)
+
+
+if __name__ == "__main__":
+    # Validate that slurm_executor.submit also works when being called from a __main__ module
+    test_pickled_logging()
