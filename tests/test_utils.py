@@ -69,10 +69,19 @@ def test_buffered_slice_writer():
 
     with wkw.Dataset.open(dataset_path, wkw.Header(dtype)) as data:
         read_data = data.read(origin, (24, 24, 35))
-        assert np.squeeze(read_data).shape == (24, 24, 35), "The read data should have the shape: (24, 24, 35) " \
+        read_data = np.squeeze(read_data)
+        assert read_data.shape == (24, 24, 35), "The read data should have the shape: (24, 24, 35) " \
                                                                 "but has a shape of: {}"\
                                                                 .format(np.squeeze(read_data).shape)
         assert read_data.size == read_data[read_data.nonzero()].size, "The read data contains zeros while the " \
                                                                           "written image has no zeros"
+        test_img_3d = np.zeros((test_img.shape[0], test_img.shape[1], 35))
+        for i in np.arange(35):
+            test_img_3d[:, :, i] = test_img
+        # transpose because the slice writer takes [y, x] data and transposes it to [x, y] before writing
+        test_img_3d = np.transpose(test_img_3d, (1, 0, 2))
+        # check if the data are correct
+        assert np.array_equal(test_img_3d, read_data), "The data from the disk is not the same " \
+                                                              "as the data that should be written."
 
 
