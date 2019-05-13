@@ -142,6 +142,21 @@ def test_pickled_logging():
     assert not (test_output_str in debug_out)
 
 
+
+class TestClass:
+    pass
+
+def deref_fun_helper(obj):
+    clss, inst, one, two = obj
+    assert one == 1
+    assert two == 2
+    assert isinstance(inst, clss)
+
+def test_dereferencing_main():
+    with cluster_tools.get_executor("slurm", debug=True, keep_logs=True, job_resources={"mem": "10M"}) as executor:
+        fut = executor.submit(deref_fun_helper, (TestClass, TestClass(), 1, 2))
+        fut.result()
+
 if __name__ == "__main__":
     # Validate that slurm_executor.submit also works when being called from a __main__ module
-    test_pickled_logging()
+    test_dereferencing_main()

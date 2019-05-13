@@ -13,11 +13,12 @@ import importlib
 import re
 
 class RemoteException(Exception):
-    def __init__(self, error):
+    def __init__(self, error, job_id):
         self.error = error
+        self.job_id = job_id
 
     def __str__(self):
-        return "\n" + self.error.strip()
+        return str(self.job_id) + "\n" + self.error.strip()
 
 SLURM_STATES = {
     "Failure": [
@@ -227,7 +228,7 @@ class SlurmExecutor(futures.Executor):
         if success:
             fut.set_result(result)
         else:
-            fut.set_exception(RemoteException(result))
+            fut.set_exception(RemoteException(result, jobid))
 
         # Clean up communication files.
 
@@ -244,48 +245,9 @@ class SlurmExecutor(futures.Executor):
                 "submit() was invoked on a SlurmExecutor instance even though shutdown() was executed for that instance."
             )
 
-    def dereference_main(self, fun): 
-        if 'USE_CLOUDPICKLE' in os.environ:
-            return fun
-
-        # Ensure that passed functions don't refer to __main__, but 
-        # instead to the actual module's name. Otherwise, unpickling
-        # wouldn't work from within this library.
-        #
-        # See https://stackoverflow.com/a/56008860/896760 for more context.
-
-        def file_path_to_absolute_module(file_path):
-            """
-            Given a file path, return an import path.
-            :param file_path: A file path.
-            :return:
-            """
-            assert os.path.exists(file_path)
-            file_loc, ext = os.path.splitext(file_path)
-            assert ext in ('.py', '.pyc')
-            directory, module = os.path.split(file_loc)
-            module_path = [module]
-            while True:
-                if os.path.exists(os.path.join(directory, '__init__.py')):
-                    directory, package = os.path.split(directory)
-                    module_path.append(package)
-                else:
-                    break
-            path = '.'.join(module_path[::-1])
-            return path
-
-        if fun.__module__ == "__main__":
-            main_path = file_path_to_absolute_module(sys.argv[0])
-            main_module = importlib.import_module(main_path)
-            fun = getattr(main_module, fun.__name__)
-
-        return fun
-
-
     def submit(self, fun, *args, **kwargs):
         """Submit a job to the pool."""
         fut = futures.Future()
-        fun = self.dereference_main(fun)
 
         self.ensure_not_shutdown()
 
@@ -313,7 +275,6 @@ class SlurmExecutor(futures.Executor):
     def map_to_futures(self, fun, allArgs):
         self.ensure_not_shutdown()
         allArgs = list(allArgs)
-        fun = self.dereference_main(fun)
 
         futs = []
         workerid = random_string()
