@@ -75,12 +75,6 @@ def create_parser():
 
 if __name__ == "__main__":
     args = create_parser().parse_args()
-    
-    if args.name == None:
-        if os.path.isdir(args.source_path):
-	    args.name == os.path.basename(args.source_path)
-	else:
-	    args.name = os.path.basename(os.path.dirname(args.source_path))
 
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG)
