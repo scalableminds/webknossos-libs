@@ -185,7 +185,7 @@ class SlurmExecutor(futures.Executor):
       print("A termination signal was registered. The following jobs on slurm are still running:\n{}".format(job_ids))
       sys.exit(130)
 
-    def _start(self, workerid, job_count=None):
+    def _start(self, workerid, job_count=None, job_name=None):
         """Start a job with the given worker ID and return an ID
         identifying the new job. The job should run ``python -m
         cfut.remote <workerid>.
@@ -193,7 +193,7 @@ class SlurmExecutor(futures.Executor):
         return slurm.submit(
             "{} -m cluster_tools.remote {}".format(sys.executable, workerid),
             job_resources=self.job_resources,
-            job_name=self.job_name,
+            job_name=job_name if job_name is not None else self.job_name,
             additional_setup_lines=self.additional_setup_lines,
             job_count=job_count,
         )
@@ -268,7 +268,8 @@ class SlurmExecutor(futures.Executor):
         with open(INFILE_FMT % workerid, "wb") as f:
             f.write(funcser)
 
-        jobid = self._start(workerid)
+        job_name = fun.__name__
+        jobid = self._start(workerid, job_name=job_name)
 
         if self.debug:
             print("job submitted: %i" % jobid, file=sys.stderr)
@@ -305,7 +306,8 @@ class SlurmExecutor(futures.Executor):
             futs.append(fut)
 
         job_count = len(allArgs)
-        jobid = self._start(workerid, job_count)
+        job_name = fun.__name__
+        jobid = self._start(workerid, job_count, job_name)
         get_jobid_with_index = lambda index: str(jobid) + "_" + str(index)
 
         if self.debug:
