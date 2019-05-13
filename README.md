@@ -16,7 +16,7 @@ Created with [Python3](https://www.python.org/).
 * `wkcuber.convert_knossos`: Convert KNOSSOS cubes to WKW cubes
 * `wkcuber.downsampling`: Create downsampled magnifications (with `median`, `mode` and linear interpolation modes)
 * `wkcuber.compress`: Compress WKW cubes for efficient file storage (especially useful for segmentation data)
-* `wkcuber.metadata`: Create metadata (with guessing of most parameters)
+* `wkcuber.metadata`: Create (or refresh) metadata (with guessing of most parameters)
 * Most modules support multiprocessing
 
 ## Supported input formats
@@ -73,6 +73,9 @@ python -m wkcuber.compress --layer_name segmentation data/target data/target_com
 
 # Create metadata
 python -m wkcuber.metadata --name great_dataset --scale 11.24,11.24,25 data/target
+
+# Refresh metadata so that new layers and/or magnifications are picked up
+python -m wkcuber.metadata --refresh data/target
 ```
 
 ### Parallelization

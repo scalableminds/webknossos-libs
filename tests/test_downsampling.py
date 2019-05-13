@@ -5,8 +5,10 @@ from wkcuber.downsampling import (
     downsample_cube,
     downsample_cube_job,
     cube_addresses,
+    get_next_anisotropic_mag,
 )
 import wkw
+from wkcuber.mag import Mag
 from wkcuber.utils import WkwDatasetInfo, open_wkw
 from wkcuber.downsampling import _mode, non_linear_filter_3d
 import shutil
@@ -181,3 +183,22 @@ def test_downsample_multi_channel():
     assert np.any(target_buffer != 0)
 
     assert np.all(target_buffer == joined_buffer)
+
+def test_anisotropic_mag_calculation():
+    mag_tests = [
+        [(10.5, 10.5, 24),      Mag(1),         Mag((2, 2, 1))],
+        [(10.5, 10.5, 21),      Mag(1),         Mag((2, 2, 1))],
+        [(10.5, 24, 10.5),      Mag(1),         Mag((2, 1, 2))],
+        [(24, 10.5, 10.5),      Mag(1),         Mag((1, 2, 2))],
+        [(10.5, 10.5, 10.5),    Mag(1),         Mag((2, 2, 2))],
+        [(10.5, 10.5, 24),      Mag((2, 2, 1)), Mag((4, 4, 1))],
+        [(10.5, 10.5, 21),      Mag((2, 2, 1)), Mag((4, 4, 2))],
+        [(10.5, 24, 10.5),      Mag((2, 1, 2)), Mag((4, 1, 4))],
+        [(24, 10.5, 10.5),      Mag((1, 2, 2)), Mag((1, 4, 4))],
+        [(10.5, 10.5, 10.5),    Mag(2),         Mag(4)],
+    ]
+    for i in range(len(mag_tests)):
+        assert mag_tests[i][2] == get_next_anisotropic_mag(mag_tests[i][1], mag_tests[i][0]), "The next anisotropic" \
+                                                                                          " Magnification of {} with " \
+                                                                                          "the size {} should be {}"\
+            .format(mag_tests[i][1], mag_tests[i][0], mag_tests[i][2])

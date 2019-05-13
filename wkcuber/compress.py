@@ -77,7 +77,11 @@ def compress_mag(source_path, layer_name, target_path, mag: Mag, args=None):
         logging.error("Target path '{}' already exists".format(target_path))
         exit(1)
 
-    source_wkw_info = WkwDatasetInfo(source_path, layer_name, None, mag)
+    if args is not None and hasattr(args, "dtype"):
+        dtype = args.dtype
+    else:
+        dtype = None
+    source_wkw_info = WkwDatasetInfo(source_path, layer_name, dtype, mag)
     target_mag_path = path.join(target_path, layer_name, str(mag))
     logging.info("Compressing mag {0} in '{1}'".format(str(mag), target_mag_path))
 

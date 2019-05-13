@@ -439,6 +439,7 @@ def downsample_mags(
     compress,
     args=None,
 ):
+
     target_mag = from_mag.scaled_by(2)
     while target_mag <= max_mag:
         source_mag = target_mag.divided_by(2)
@@ -453,6 +454,62 @@ def downsample_mags(
             args,
         )
         target_mag.scale_by(2)
+
+
+def downsample_mags_anisotropic(
+    path,
+    layer_name,
+    from_mag: Mag,
+    max_mag: Mag,
+    scale,
+    interpolation_mode,
+    cube_edge_len,
+    compress,
+    args=None,
+):
+
+    prev_mag = from_mag
+    target_mag = get_next_anisotropic_mag(from_mag, scale)
+    while target_mag <= max_mag:
+        source_mag = prev_mag
+        downsample_mag(
+            path,
+            layer_name,
+            source_mag,
+            target_mag,
+            interpolation_mode,
+            cube_edge_len,
+            compress,
+            args,
+        )
+        prev_mag = target_mag
+        target_mag = get_next_anisotropic_mag(target_mag, scale)
+
+
+def get_next_anisotropic_mag(mag, scale):
+    max_index, min_index = detect_larger_and_smaller_dimension(scale)
+    mag_array = mag.to_array()
+    scale_increase = [1, 1, 1]
+    if (
+        mag_array[min_index] * scale[min_index]
+        < mag_array[max_index] * scale[max_index]
+    ):
+        for i in range(len(scale_increase)):
+            scale_increase[i] = 1 if i == max_index else 2
+    else:
+        scale_increase = [2, 2, 2]
+    return Mag(
+        [
+            mag_array[0] * scale_increase[0],
+            mag_array[1] * scale_increase[1],
+            mag_array[2] * scale_increase[2],
+        ]
+    )
+
+
+def detect_larger_and_smaller_dimension(scale):
+    scale_np = np.array(scale)
+    return np.argmax(scale_np), np.argmin(scale_np)
 
 
 if __name__ == "__main__":

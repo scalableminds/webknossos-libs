@@ -6,4 +6,4 @@ pytest
 wkw>=0.0.6
 requests
 black
-git+git://github.com/scalableminds/cluster_tools@v1.0#egg=cluster_tools
+cluster_tools>=1.18

@@ -78,6 +78,10 @@ jobs:
           command: tests/scripts/downsampling.sh
 
       - run:
+          name: Test anisotropic downsampling
+          command: tests/scripts/anisotropic_downsampling.sh
+
+      - run:
           name: Test compression
           command: tests/scripts/compression.sh
 
