@@ -1,7 +1,6 @@
 from argparse import ArgumentParser
 
 import logging
-import os
 
 from .cubing import cubing, BLOCK_LEN
 from .downsampling import downsample_mags, downsample_mags_anisotropic, DEFAULT_EDGE_LEN
