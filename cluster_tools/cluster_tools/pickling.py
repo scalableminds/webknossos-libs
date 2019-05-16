@@ -1,7 +1,10 @@
 import sys
 import os
 import io
-if 'USE_CLOUDPICKLE' in os.environ:
+
+use_cloudpickle = 'USE_CLOUDPICKLE' in os.environ
+
+if use_cloudpickle:
     import cloudpickle
     pickle_strategy = cloudpickle
 else:
@@ -35,7 +38,7 @@ def file_path_to_absolute_module(file_path):
 @warn_after("pickle.dumps", WARNING_TIMEOUT)
 def dumps(*args, **kwargs):
     pickled = pickle_strategy.dumps(*args, **kwargs)
-    if 'USE_CLOUDPICKLE' in os.environ:
+    if use_cloudpickle:
         return pickled
 
     main_path = file_path_to_absolute_module(sys.argv[0])

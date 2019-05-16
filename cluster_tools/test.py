@@ -4,6 +4,7 @@ import concurrent.futures
 import time
 import sys
 import logging
+from enum import Enum
 
 # "Worker" functions.
 def square(n):
@@ -24,6 +25,7 @@ def get_executors():
         ),
         cluster_tools.get_executor("multiprocessing", max_workers=5),
         cluster_tools.get_executor("sequential"),
+        cluster_tools.get_executor("test_pickling"),
     ]
 
 
@@ -142,6 +144,28 @@ def test_pickled_logging():
     assert not (test_output_str in debug_out)
 
 
+class DummyEnum(Enum):
+    BANANA = 0
+    APPLE = 1
+    PEAR = 2
+
+def enum_consumer(value):
+    assert value == DummyEnum.BANANA
+
+def test_cloudpickle_serialization():
+    enum_consumer_inner = enum_consumer
+
+    for fn in [enum_consumer, enum_consumer_inner]:
+        try:
+            with cluster_tools.get_executor(
+                "test_pickling"
+            ) as executor:
+                fut = executor.submit(fn, DummyEnum.BANANA)
+            assert fn == enum_consumer
+        except Exception:
+            assert fn != enum_consumer
+
+    assert True
 
 class TestClass:
     pass
