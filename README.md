@@ -14,7 +14,7 @@ Created with [Python3](https://www.python.org/).
 * `wkcuber.cubing`: Convert image stacks (e.g., `tiff`, `jpg`, `png`, `dm3`) to WKW cubes
 * `wkcuber.tile_cubing`: Convert tiled image stacks (e.g. in `z/y/x.ext` folder structure) to WKW cubes
 * `wkcuber.convert_knossos`: Convert KNOSSOS cubes to WKW cubes
-* `wkcuber.downsampling`: Create downsampled magnifications (with `median`, `mode` and linear interpolation modes)
+* `wkcuber.downsampling`: Create downsampled magnifications (with `median`, `mode` and linear interpolation modes). Downsampling compresses the new magnifications by default (disable via `--no-compress`).
 * `wkcuber.compress`: Compress WKW cubes for efficient file storage (especially useful for segmentation data)
 * `wkcuber.metadata`: Create (or refresh) metadata (with guessing of most parameters)
 * Most modules support multiprocessing

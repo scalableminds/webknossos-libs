@@ -75,7 +75,14 @@ def create_parser():
     # Either provide the maximum resolution to be downsampled OR a specific, anisotropic magnification.
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
-        "--max", "-m", help="Max resolution to be downsampled", type=int, default=512
+        "--max",
+        "-m",
+        help="Max resolution to be downsampled. In case of anisotropic downsampling, the process is considered "
+        "done when max(current_mag) >= max(max_mag) where max takes the largest dimension of the mag tuple "
+        "x, y, z. For example, a maximum mag value of 8 (or 8-8-8) will stop the downsampling as soon as a "
+        "magnification is produced for which one dimension is equal or larger than 8.",
+        type=int,
+        default=512,
     )
     group.add_argument(
         "--anisotropic_target_mag",
@@ -95,10 +102,10 @@ def create_parser():
     )
 
     parser.add_argument(
-        "--compress",
+        "--no_compress",
+        help="Don't compress data during downsampling",
+        default=False,
         action="store_true",
-        help="Compress data during downsampling",
-        default=True,
     )
 
     add_verbose_flag(parser)
@@ -539,7 +546,7 @@ if __name__ == "__main__":
             anisotropic_target_mag,
             args.interpolation_mode,
             args.buffer_cube_size,
-            args.compress,
+            not args.no_compress,
             args,
         )
     elif args.anisotropic:
@@ -561,7 +568,7 @@ if __name__ == "__main__":
             scale,
             args.interpolation_mode,
             DEFAULT_EDGE_LEN,
-            args.compress,
+            not args.no_compress,
             args,
         )
     else:
@@ -572,6 +579,6 @@ if __name__ == "__main__":
             max_mag,
             args.interpolation_mode,
             args.buffer_cube_size,
-            args.compress,
+            not args.no_compress,
             args,
         )
