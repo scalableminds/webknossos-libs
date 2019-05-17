@@ -22,7 +22,7 @@ from .utils import (
     add_distribution_flags,
     get_executor_for_args,
     wait_and_ensure_success,
-    add_anisotropic_flag
+    add_anisotropic_flag,
 )
 
 DEFAULT_EDGE_LEN = 256
@@ -79,10 +79,10 @@ def create_parser():
     )
     group.add_argument(
         "--anisotropic_target_mag",
-        help="Specify an explicit anisotropic target magnification which should be " \
-            "created (e.g., --anisotropic_target_mag 2-2-1). Consider using --anisotropic " \
-            "instead which automatically creates multiple anisotropic magnifications depending " \
-            "on the dataset's scale",
+        help="Specify an explicit anisotropic target magnification which should be "
+        "created (e.g., --anisotropic_target_mag 2-2-1). Consider using --anisotropic "
+        "instead which automatically creates multiple anisotropic magnifications depending "
+        "on the dataset's scale",
         type=str,
     )
 
@@ -95,7 +95,10 @@ def create_parser():
     )
 
     parser.add_argument(
-        "--compress", action="store_true", help="Compress data during downsampling", default=True
+        "--compress",
+        action="store_true",
+        help="Compress data during downsampling",
+        default=True,
     )
 
     add_verbose_flag(parser)
@@ -543,9 +546,11 @@ if __name__ == "__main__":
         try:
             scale = read_datasource_properties(args.path)["scale"]
         except Exception as exc:
-            logging.error("Could not determine scale which is necessary " \
-                "to find target magnifications for anisotropic downsampling. " \
-                "Does the provided dataset have a datasource-properties.json file?")
+            logging.error(
+                "Could not determine scale which is necessary "
+                "to find target magnifications for anisotropic downsampling. "
+                "Does the provided dataset have a datasource-properties.json file?"
+            )
             raise exc
 
         downsample_mags_anisotropic(
