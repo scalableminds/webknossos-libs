@@ -65,8 +65,8 @@ def add_anisotropic_flag(parser):
     parser.add_argument(
         "--anisotropic",
         "-a",
-        help="Activates Anisotropic downsampling. It will detect which dimension ist the smallest and the largest. "
-        "The largest dimension will only be down sampled by 2 if it would be smaller or equal to the smallest "
+        help="Activates Anisotropic downsampling. It will detect which dimension is the smallest and the largest. "
+        "The largest dimension will only be downsampled by 2 if it would be smaller or equal to the smallest "
         "dimension in the next downsampling step.",
         dest="anisotropic",
         action="store_true",
