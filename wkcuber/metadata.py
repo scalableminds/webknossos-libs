@@ -210,7 +210,9 @@ def detect_resolutions(dataset_path, layer) -> List[Mag]:
             logging.info("ignoring {} as resolution".format(mag))
 
 
-def detect_standard_layer(dataset_path, layer_name, exact_bounding_box=None):
+def detect_standard_layer(
+    dataset_path, layer_name, exact_bounding_box=None, category="color"
+):
     # Perform metadata detection for well-known layers
 
     mags = list(detect_resolutions(dataset_path, layer_name))
@@ -235,7 +237,7 @@ def detect_standard_layer(dataset_path, layer_name, exact_bounding_box=None):
     return {
         "dataFormat": "wkw",
         "name": layer_name,
-        "category": layer_name,
+        "category": category,
         "elementClass": dtype,
         "boundingBox": bbox,
         "wkwResolutions": list(resolutions),
@@ -245,7 +247,9 @@ def detect_standard_layer(dataset_path, layer_name, exact_bounding_box=None):
 def detect_segmentation_layer(
     dataset_path, layer_name, max_id, compute_max_id=False, exact_bounding_box=None
 ):
-    layer_info = detect_standard_layer(dataset_path, layer_name, exact_bounding_box)
+    layer_info = detect_standard_layer(
+        dataset_path, layer_name, exact_bounding_box, category="segmentation"
+    )
     layer_info["mappings"] = []
     layer_info["largestSegmentId"] = max_id
 
