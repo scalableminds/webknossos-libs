@@ -69,6 +69,8 @@ def write_webknossos_metadata(
     compute_max_id=False,
     exact_bounding_box: Optional[dict] = None,
 ):
+    if name == None:
+        name = path.basename(dataset_path)
 
     # Generate a metadata file for webKnossos
     # Currently includes no source of information for team
