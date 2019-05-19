@@ -10,6 +10,7 @@ from itertools import product
 from functools import lru_cache
 from enum import Enum
 from .mag import Mag
+from wkcuber.metadata import read_datasource_properties
 
 from .utils import (
     add_verbose_flag,
@@ -21,6 +22,7 @@ from .utils import (
     add_distribution_flags,
     get_executor_for_args,
     wait_and_ensure_success,
+    add_anisotropic_flag,
 )
 
 DEFAULT_EDGE_LEN = 256
@@ -73,11 +75,21 @@ def create_parser():
     # Either provide the maximum resolution to be downsampled OR a specific, anisotropic magnification.
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
-        "--max", "-m", help="Max resolution to be downsampled", type=int, default=512
+        "--max",
+        "-m",
+        help="Max resolution to be downsampled. In case of anisotropic downsampling, the process is considered "
+        "done when max(current_mag) >= max(max_mag) where max takes the largest dimension of the mag tuple "
+        "x, y, z. For example, a maximum mag value of 8 (or 8-8-8) will stop the downsampling as soon as a "
+        "magnification is produced for which one dimension is equal or larger than 8.",
+        type=int,
+        default=512,
     )
     group.add_argument(
         "--anisotropic_target_mag",
-        help="Specify an anisotropic target magnification which should be created (e.g., --anisotropic_target_mag 2-2-1)",
+        help="Specify an explicit anisotropic target magnification which should be "
+        "created (e.g., --anisotropic_target_mag 2-2-1). Consider using --anisotropic "
+        "instead which automatically creates multiple anisotropic magnifications depending "
+        "on the dataset's scale",
         type=str,
     )
 
@@ -90,10 +102,14 @@ def create_parser():
     )
 
     parser.add_argument(
-        "--compress", action="store_true", help="Compress data during downsampling"
+        "--no_compress",
+        help="Don't compress data during downsampling",
+        default=False,
+        action="store_true",
     )
 
     add_verbose_flag(parser)
+    add_anisotropic_flag(parser)
     add_distribution_flags(parser)
 
     return parser
@@ -530,7 +546,29 @@ if __name__ == "__main__":
             anisotropic_target_mag,
             args.interpolation_mode,
             args.buffer_cube_size,
-            args.compress,
+            not args.no_compress,
+            args,
+        )
+    elif args.anisotropic:
+        try:
+            scale = read_datasource_properties(args.path)["scale"]
+        except Exception as exc:
+            logging.error(
+                "Could not determine scale which is necessary "
+                "to find target magnifications for anisotropic downsampling. "
+                "Does the provided dataset have a datasource-properties.json file?"
+            )
+            raise exc
+
+        downsample_mags_anisotropic(
+            args.path,
+            args.layer_name,
+            from_mag,
+            max_mag,
+            scale,
+            args.interpolation_mode,
+            DEFAULT_EDGE_LEN,
+            not args.no_compress,
             args,
         )
     else:
@@ -541,6 +579,6 @@ if __name__ == "__main__":
             max_mag,
             args.interpolation_mode,
             args.buffer_cube_size,
-            args.compress,
+            not args.no_compress,
             args,
         )
