@@ -60,6 +60,15 @@ def create_parser():
     return parser
 
 
+def wkw_name_and_bbox_to_tiff_name(
+    name: str, bbox: Dict[str, Tuple[int, int, int]]
+) -> str:
+    return (
+        f'{name}_topleft_{bbox["topleft"][0]}_{bbox["topleft"][1]}_{bbox["topleft"][2]}'
+        f'_size_{bbox["topleft"][0]}_{bbox["topleft"][1]}_{bbox["topleft"][2]}.tiff'
+    )
+
+
 def export_tiff_slice(
     export_args: Tuple[int, Dict[str, Tuple[int, int, int]], str, str, str, str]
 ):
@@ -89,18 +98,18 @@ def export_tiff_slice(
         ]
         tiff_bbox["size"] = [tiff_bbox["size"][0], tiff_bbox["size"][1], 1]
 
-    tiff_file_name = (
-        f'{name}_topleft_{tiff_bbox["topleft"][0]}_{tiff_bbox["topleft"][1]}_{tiff_bbox["topleft"][2]}'
-        f'_size_{tiff_bbox["topleft"][0]}_{tiff_bbox["topleft"][1]}_{tiff_bbox["topleft"][2]}.tiff'
-    )
+    tiff_file_name = wkw_name_and_bbox_to_tiff_name(name, tiff_bbox)
 
     tiff_file_path = os.path.join(dest_path, tiff_file_name)
 
     with wkw.Dataset.open(dataset_path) as dataset:
         tiff_data = dataset.read(tiff_bbox["topleft"], tiff_bbox["size"])
     tiff_data = np.squeeze(tiff_data)
+    # swap the axis
+    tiff_data.transpose((1, 0))
 
     logging.info(f"saving slice {slice_number}")
+
     image = Image.fromarray(tiff_data)
     image.save(tiff_file_path)
 
