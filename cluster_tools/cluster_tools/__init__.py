@@ -181,7 +181,7 @@ class SlurmExecutor(futures.Executor):
 
     def handle_kill(self,signum, frame):
       self.wait_thread.stop()
-      job_ids = "\n".join(str(id) for id in self.jobs.keys())
+      job_ids = ",".join(str(id) for id in self.jobs.keys())
       print("A termination signal was registered. The following jobs on slurm are still running:\n{}".format(job_ids))
       sys.exit(130)
 

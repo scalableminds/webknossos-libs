@@ -1,6 +1,7 @@
 import sys
 import os
 import io
+import logging
 
 use_cloudpickle = 'USE_CLOUDPICKLE' in os.environ
 
@@ -41,10 +42,20 @@ def dumps(*args, **kwargs):
     if use_cloudpickle:
         return pickled
 
-    main_path = file_path_to_absolute_module(sys.argv[0])
-    # See [1] for the reasons of this horrible hack
-    # [1] https://stackoverflow.com/a/45630450/896760
-    return pickled.replace(b'__main__', str.encode(main_path))
+    main_str = b'__main__'
+    if not main_str in pickled:
+        # No need to do any replacements when __main__ is not
+        # mentioned
+        return pickled
+
+    try:
+        main_path = file_path_to_absolute_module(sys.argv[0])
+        # See [1] for the reasons of this horrible hack
+        # [1] https://stackoverflow.com/a/45630450/896760
+        return pickled.replace(main_str, str.encode(main_path))
+    except Exception as exc:
+        logging.warning("Couldn't do any __main__ replacements. Returning raw pickle. Exception: {}".format(exc))
+        return pickled
 
 @warn_after("pickle.loads", WARNING_TIMEOUT)
 def loads(*args, **kwargs):
