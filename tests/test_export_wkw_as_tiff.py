@@ -44,6 +44,7 @@ def test_export_tiff_stack():
             test_image.transpose((1, 0))
 
             correct_image = dataset.read(off=slice_bbox["topleft"], shape=slice_bbox["size"])
+            correct_image = np.squeeze(correct_image)
 
             assert np.array_equal(correct_image, test_image), f"The tiff file {tiff_path} that was written is not " \
                                                               f"equal to the original wkw_file."
