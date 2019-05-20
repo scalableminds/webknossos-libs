@@ -43,6 +43,11 @@ def create_parser():
         default="z",
     )
 
+    parser.add_argument("--tiling", "-t", help='In order to be able to convert large datasets it needs to be done in '
+                                               'smaller pieces even in just one slice. Therefore this option will '
+                                               'generate images per slice. The format is e.g. "x,y" when the axis is z',
+                        default=None)
+
     parser.add_argument(
         "--bbox",
         "-b",
