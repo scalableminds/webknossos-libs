@@ -20,7 +20,10 @@ def create_parser():
     )
 
     parser.add_argument(
-        "--destination_path", "-d", help="Output directory for the generated dataset.", required=True
+        "--destination_path",
+        "-d",
+        help="Output directory for the generated dataset.",
+        required=True,
     )
 
     parser.add_argument(
