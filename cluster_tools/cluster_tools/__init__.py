@@ -402,7 +402,7 @@ class WrappedProcessPoolExecutor(ProcessPoolExecutor):
 
     def map_unordered(self, func, args):
 
-        futs = [self.submit(func, arg) for arg in args]
+        futs = self.map_to_futures(func, args)
 
         # Return a separate generator to avoid that map_unordered
         # is executed lazily (otherwise, jobs would be submitted
@@ -412,6 +412,11 @@ class WrappedProcessPoolExecutor(ProcessPoolExecutor):
                 yield fut.result()
 
         return result_generator()
+
+    def map_to_futures(self, func, args):
+
+        futs = [self.submit(func, arg) for arg in args]
+        return futs
 
 
 class SequentialExecutor(WrappedProcessPoolExecutor):

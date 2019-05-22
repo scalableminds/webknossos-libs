@@ -21,7 +21,7 @@ logging.basicConfig()
 def get_executors():
     return [
         cluster_tools.get_executor(
-            "slurm", debug=True, keep_logs=True, job_resources={"mem": "10M"}
+            "slurm", debug=True, keep_logs=True, job_resources={"mem": "100M"}
         ),
         cluster_tools.get_executor("multiprocessing", max_workers=5),
         cluster_tools.get_executor("sequential"),
@@ -73,6 +73,21 @@ def test_unordered_map():
             for duration, result in zip(durations, results):
                 assert result == duration
 
+def test_map_to_futures():
+    for exc in get_executors():
+        with exc:
+            durations = [15, 1]
+            futures = exc.map_to_futures(sleep, durations)
+            results = []
+
+            for i, duration in enumerate(concurrent.futures.as_completed(futures)):
+                results.append(duration.result())
+
+            if not isinstance(exc, cluster_tools.SequentialExecutor):
+                durations.sort()
+
+            for duration, result in zip(durations, results):
+                assert result == duration
 
 def test_map():
     def run_map(executor):
