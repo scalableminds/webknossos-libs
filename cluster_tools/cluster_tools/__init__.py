@@ -193,7 +193,7 @@ class SlurmExecutor(futures.Executor):
         return slurm.submit(
             "{} -m cluster_tools.remote {}".format(sys.executable, workerid),
             job_resources=self.job_resources,
-            job_name=job_name if job_name is not None else self.job_name,
+            job_name=self.job_name if self.job_name is not None else job_name,
             additional_setup_lines=self.additional_setup_lines,
             job_count=job_count,
         )
