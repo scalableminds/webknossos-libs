@@ -64,7 +64,6 @@ def wkw_name_and_bbox_to_tiff_name(name: str, slice_index: int) -> str:
 def export_tiff_slice(
     export_args: Tuple[int, Tuple[Dict[str, Tuple[int, int, int]], str, str, str]]
 ):
-    logging.info(f"saving slice {export_args}")
     slice_number, (bbox, dest_path, name, dataset_path) = export_args
     tiff_bbox = bbox
     tiff_bbox["topleft"] = [
@@ -80,9 +79,17 @@ def export_tiff_slice(
 
     with wkw.Dataset.open(dataset_path) as dataset:
         tiff_data = dataset.read(tiff_bbox["topleft"], tiff_bbox["size"])
-    tiff_data = np.squeeze(tiff_data)
-    # swap the axis
-    tiff_data.transpose((1, 0))
+
+    # discard the z dimension
+    tiff_data.squeeze(axis=3)
+    if tiff_data.shape[0] == 1:
+        # discard greyscale dimension
+        tiff_data.squeeze(axis=0)
+        # swap the axis
+        tiff_data.transpose((1, 0))
+    else:
+        # swap axis and move the channel axis
+        tiff_data.transpose((2, 1, 0))
 
     logging.info(f"saving slice {slice_number}")
 
