@@ -3,6 +3,7 @@ from argparse import ArgumentParser
 import logging
 import wkw
 import os
+import copy
 from math import ceil
 import numpy as np
 from PIL import Image
@@ -36,10 +37,14 @@ def create_parser():
 
     parser.add_argument("--name", "-n", help="Name of the tiffs", default="")
 
-    parser.add_argument("--tiling", "-t", help='In order to be able to convert large datasets it needs to be done in '
-                                               'smaller pieces even in just one slice. Therefore this option will '
-                                               'generate images per slice. The format is e.g. "x,y" when the axis is z',
-                        default=None)
+    parser.add_argument(
+        "--tiling",
+        "-t",
+        help="In order to be able to convert large datasets it needs to be done in "
+        "smaller pieces even in just one slice. Therefore this option will "
+        'generate images per slice. The format is e.g. "x,y" when the axis is z',
+        default=None,
+    )
 
     parser.add_argument(
         "--bbox",
@@ -54,12 +59,14 @@ def create_parser():
         "--mag", "-m", help="The magnification that should be read", default=1
     )
 
-    parser.add_argument("--tiling_slice_size",
-                        "-t",
-                        help="This will activate tiling. Thus each z-slice will be divided"
-                        "into multiple smaller tiff-pieces. The input is interpreted as the "
-                        "x and y size of a single tile with the format x,y.",
-                        default=None)
+    parser.add_argument(
+        "--tiling_slice_size",
+        "-tiling_size",
+        help="This will activate tiling. Thus each z-slice will be divided"
+        "into multiple smaller tiff-pieces. The input is interpreted as the "
+        "x and y size of a single tile with the format x,y.",
+        default=None,
+    )
 
     add_verbose_flag(parser)
     add_distribution_flags(parser)
@@ -73,10 +80,14 @@ def wkw_name_and_bbox_to_tiff_name(name: str, slice_index: int) -> str:
     else:
         return f"name_{slice_index}.tiff"
 
-def calculate_tiling_size(bbox: Dict[str, Tuple[int, int, int]], tiling_size_x: int, tiling_size_y: int):
+
+def calculate_tiling_size(
+    bbox: Dict[str, Tuple[int, int, int]], tiling_size_x: int, tiling_size_y: int
+):
     tiling_number_x = ceil(bbox["size"][0] / tiling_size_x)
     tiling_number_y = ceil(bbox["size"][1] / tiling_size_y)
     return (tiling_number_x, tiling_number_y)
+
 
 def wkw_slice_to_image(data_slice: np.ndarray):
     # discard the z dimension
@@ -91,18 +102,23 @@ def wkw_slice_to_image(data_slice: np.ndarray):
         data_slice = data_slice.transpose((2, 1, 0))
     return Image.fromarray(data_slice)
 
+
 def export_tiff_slice(
-    export_args: Tuple[int, Tuple[Dict[str, Tuple[int, int, int]], str, str, str, Union[None, Tuple[int, int]]]]
+    export_args: Tuple[
+        int,
+        Tuple[
+            Dict[str, Tuple[int, int, int]], str, str, str,
+            Union[None, Tuple[int, int]]
+        ],
+    ]
 ):
-    slice_number, (bbox, dest_path, name, dataset_path, tiling_size) = export_args
-    tiff_bbox = bbox
+    slice_number, (tiff_bbox, dest_path, name, dataset_path, tiling_size) = export_args
     tiff_bbox["topleft"] = [
         tiff_bbox["topleft"][0],
         tiff_bbox["topleft"][1],
         tiff_bbox["topleft"][2] + slice_number,
     ]
     tiff_bbox["size"] = [tiff_bbox["size"][0], tiff_bbox["size"][1], 1]
-
     if tiling_size is None:
         with wkw.Dataset.open(dataset_path) as dataset:
             tiff_data = dataset.read(tiff_bbox["topleft"], tiff_bbox["size"])
@@ -115,21 +131,25 @@ def export_tiff_slice(
         image = wkw_slice_to_image(tiff_data)
         image.save(tiff_file_path)
     else:
-        tile_bbox = tiff_bbox
+        tile_bbox = copy.deepcopy(tiff_bbox)
         tile_bbox["size"] = [tiling_size[0], tiling_size[1], 1]
-
         with wkw.Dataset.open(dataset_path) as dataset:
-            for y_tile_index in range(ceil(tiff_bbox["size"][1] / tiling_size[1])):
-                tile_bbox["size"][1] += tiling_size[1]
-                tile_tiff_path = os.path.join(dest_path, slice_number, y_tile_index)
-                os.makedirs(tile_tiff_path)
-                for x_tile_index in range(ceil(tiff_bbox["size"][0] / tiling_size[0])):
+            for y_tile_index in range(ceil((tiff_bbox["size"][1] - 1) / tiling_size[1])):
+                tile_bbox["topleft"][1] += tiling_size[1]
+                tile_tiff_path = os.path.join(dest_path, str(slice_number), str(y_tile_index))
+                os.makedirs(tile_tiff_path, exist_ok=True)
+                for x_tile_index in range(ceil((tiff_bbox["size"][0] - 1) / tiling_size[0])):
+                    print(tile_bbox)
                     tile_tiff_filename = f"{x_tile_index}.tiff"
                     tile_bbox["topleft"][0] += tiling_size[0]
 
-                    tile_tiff_data = dataset.read(tile_bbox["topleft"], tile_bbox["size"])
+                    tile_tiff_data = dataset.read(
+                        tile_bbox["topleft"], tile_bbox["size"]
+                    )
                     tile_image = wkw_slice_to_image(tile_tiff_data)
                     tile_image.save(os.path.join(tile_tiff_path, tile_tiff_filename))
+
+                tile_bbox["topleft"][0] = tiff_bbox["topleft"][0]
 
         logging.info(f"saved all tiles of slice {slice_number}")
 
@@ -144,7 +164,9 @@ def export_tiff_stack(
         num_slices = bbox["size"][2]
         slices = range(num_slices)
         export_args = zip(
-            slices, [(bbox, destination_path, name, dataset_path, tiling_slice_size)] * num_slices
+            slices,
+            [(bbox, destination_path, name, dataset_path, tiling_slice_size)]
+            * num_slices,
         )
         logging.info(f"starting jobs")
         executor.map(export_tiff_slice, export_args)
@@ -163,13 +185,16 @@ if __name__ == "__main__":
         assert len(bbox) == 6
         bbox = {"topleft": bbox[0:3], "size": bbox[3:6]}
 
-    if args.tiling_slice_size is not None:
-        args.tiling_slice_size = [int(s.strip()) for s in args.tilint_slice_size.split(",")]
-        assert len(args.tiling_slice_size) == 2
-
-
-
     logging.info(f"Starting tiff export for bounding box: {bbox}")
+
+    if args.tiling_slice_size is not None:
+        args.tiling_slice_size = [
+            int(s.strip()) for s in args.tiling_slice_size.split(",")
+        ]
+        assert len(args.tiling_slice_size) == 2
+        logging.info(
+            f"Using tiling with the size of {args.tiling_slice_size[0]},{args.tiling_slice_size[1]}."
+        )
 
     export_tiff_stack(
         wkw_file_path=args.source_path,
