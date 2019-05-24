@@ -7,7 +7,7 @@ import copy
 from math import ceil
 import numpy as np
 from PIL import Image
-from typing import Tuple, Dict, Union
+from typing import Tuple, Dict, Union, List
 
 from .metadata import read_metadata_for_layer
 from .utils import add_verbose_flag, add_distribution_flags, get_executor_for_args
@@ -78,15 +78,7 @@ def wkw_name_and_bbox_to_tiff_name(name: str, slice_index: int) -> str:
     if name is None or name == "":
         return f"{slice_index}.tiff"
     else:
-        return f"name_{slice_index}.tiff"
-
-
-def calculate_tiling_size(
-    bbox: Dict[str, Tuple[int, int, int]], tiling_size_x: int, tiling_size_y: int
-):
-    tiling_number_x = ceil(bbox["size"][0] / tiling_size_x)
-    tiling_number_y = ceil(bbox["size"][1] / tiling_size_y)
-    return (tiling_number_x, tiling_number_y)
+        return f"{name}_{slice_index}.tiff"
 
 
 def wkw_slice_to_image(data_slice: np.ndarray):
@@ -107,8 +99,7 @@ def export_tiff_slice(
     export_args: Tuple[
         int,
         Tuple[
-            Dict[str, Tuple[int, int, int]], str, str, str,
-            Union[None, Tuple[int, int]]
+            Dict[str, Tuple[int, int, int]], str, str, str, Union[None, Tuple[int, int]]
         ],
     ]
 ):
@@ -119,6 +110,7 @@ def export_tiff_slice(
         tiff_bbox["topleft"][2] + slice_number,
     ]
     tiff_bbox["size"] = [tiff_bbox["size"][0], tiff_bbox["size"][1], 1]
+
     if tiling_size is None:
         with wkw.Dataset.open(dataset_path) as dataset:
             tiff_data = dataset.read(tiff_bbox["topleft"], tiff_bbox["size"])
@@ -126,20 +118,27 @@ def export_tiff_slice(
 
         tiff_file_path = os.path.join(dest_path, tiff_file_name)
 
-        logging.info(f"saving slice {slice_number}")
-
         image = wkw_slice_to_image(tiff_data)
         image.save(tiff_file_path)
+        logging.info(f"saved slice {slice_number}")
+
     else:
         tile_bbox = copy.deepcopy(tiff_bbox)
         tile_bbox["size"] = [tiling_size[0], tiling_size[1], 1]
         with wkw.Dataset.open(dataset_path) as dataset:
-            for y_tile_index in range(ceil((tiff_bbox["size"][1] - 1) / tiling_size[1])):
+
+            for y_tile_index in range(
+                1, ceil((tiff_bbox["size"][1]) / tiling_size[1]) + 1
+            ):
                 tile_bbox["topleft"][1] += tiling_size[1]
-                tile_tiff_path = os.path.join(dest_path, str(slice_number), str(y_tile_index))
+                tile_tiff_path = os.path.join(
+                    dest_path, str(slice_number), str(y_tile_index)
+                )
                 os.makedirs(tile_tiff_path, exist_ok=True)
-                for x_tile_index in range(ceil((tiff_bbox["size"][0] - 1) / tiling_size[0])):
-                    print(tile_bbox)
+
+                for x_tile_index in range(
+                    1, ceil((tiff_bbox["size"][0]) / tiling_size[0]) + 1
+                ):
                     tile_tiff_filename = f"{x_tile_index}.tiff"
                     tile_bbox["topleft"][0] += tiling_size[0]
 
@@ -149,6 +148,7 @@ def export_tiff_slice(
                     tile_image = wkw_slice_to_image(tile_tiff_data)
                     tile_image.save(os.path.join(tile_tiff_path, tile_tiff_filename))
 
+                # reset the bbox
                 tile_bbox["topleft"][0] = tiff_bbox["topleft"][0]
 
         logging.info(f"saved all tiles of slice {slice_number}")
@@ -158,11 +158,11 @@ def export_tiff_stack(
     wkw_file_path, wkw_layer, bbox, mag, destination_path, name, tiling_slice_size, args
 ):
     os.makedirs(destination_path, exist_ok=True)
-
     dataset_path = os.path.join(wkw_file_path, wkw_layer, mag.to_layer_name())
+
     with get_executor_for_args(args) as executor:
         num_slices = bbox["size"][2]
-        slices = range(num_slices)
+        slices = range(1, num_slices + 1)
         export_args = zip(
             slices,
             [(bbox, destination_path, name, dataset_path, tiling_slice_size)]

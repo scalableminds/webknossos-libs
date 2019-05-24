@@ -10,8 +10,7 @@ def test_export_tiff_stack():
     args_list = ["--source_path", os.path.join("testdata", "WT1_wkw"),
                  "--destination_path", os.path.join("testoutput", "WT1_wkw"),
                  "--layer_name", "color",
-                 "--name", "text_export",
-                 "--axis", "z",
+                 "--name", "test_export",
                  "--bbox", "0,0,0,100,100,5",
                  "--mag", "1"]
     args = parser.parse_args(args_list)
@@ -26,7 +25,7 @@ def test_export_tiff_stack():
         mag=Mag(args.mag),
         destination_path=args.destination_path,
         name=args.name,
-        axis=args.axis,
+        tiling_slice_size=None,
         args=args,
     )
 
@@ -34,7 +33,7 @@ def test_export_tiff_stack():
     with wkw.Dataset.open(test_wkw_file_path) as dataset:
         slice_bbox = bbox
         slice_bbox["size"] = [slice_bbox["size"][0], slice_bbox["size"][1], 1]
-        for data_slice in range(bbox["size"][2]):
+        for data_slice in range(1, bbox["size"][2] + 1):
             slice_bbox["offset"] = [slice_bbox["topleft"][0], slice_bbox["topleft"][1], bbox["topleft"][2] + data_slice]
             tiff_path = os.path.join(args.destination_path, wkw_name_and_bbox_to_tiff_name(args.name, data_slice))
 
