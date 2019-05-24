@@ -22,7 +22,7 @@ def create_parser():
     parser.add_argument(
         "--destination_path",
         "-d",
-        help="Output directory for the generated dataset.",
+        help="Output directory for the generated tiff files.",
         required=True,
     )
 
@@ -33,20 +33,22 @@ def create_parser():
         default="color",
     )
 
-    parser.add_argument("--name", "-n", help="Name of the tiffs", default=None)
+    parser.add_argument("--name", "-n", help="Name of the tiffs", default="")
 
     parser.add_argument(
         "--axis",
         "-a",
         help="The axis that the image should be generated along. "
-        "Thus choosing z will print x,y slices.",
+        "Thus, choosing z will output x,y slices.",
         default="z",
     )
 
     parser.add_argument(
         "--bbox",
         "-b",
-        help="The BoundingBox of which the tiff stack should be generated.",
+        help="The BoundingBox of which the tiff stack should be generated."
+             "The input format is x,y,z,width,height,depth."
+             "(By default, data for the full bounding box of the dataset is generated)",
         default=None,
     )
 
@@ -61,12 +63,12 @@ def create_parser():
 
 
 def wkw_name_and_bbox_to_tiff_name(
-    name: str, bbox: Dict[str, Tuple[int, int, int]]
+    name: str, slice_index: int
 ) -> str:
-    return (
-        f'{name}_topleft_{bbox["topleft"][0]}_{bbox["topleft"][1]}_{bbox["topleft"][2]}'
-        f'_size_{bbox["topleft"][0]}_{bbox["topleft"][1]}_{bbox["topleft"][2]}.tiff'
-    )
+    if name is None or name == "":
+        return f'{slice_index}.tiff'
+    else:
+        return f'name_{slice_index}.tiff'
 
 
 def export_tiff_slice(
@@ -98,7 +100,7 @@ def export_tiff_slice(
         ]
         tiff_bbox["size"] = [tiff_bbox["size"][0], tiff_bbox["size"][1], 1]
 
-    tiff_file_name = wkw_name_and_bbox_to_tiff_name(name, tiff_bbox)
+    tiff_file_name = wkw_name_and_bbox_to_tiff_name(name, slice_number)
 
     tiff_file_path = os.path.join(dest_path, tiff_file_name)
 
@@ -156,8 +158,7 @@ if __name__ == "__main__":
         assert len(bbox) == 6
         bbox = {"topleft": bbox[0:3], "size": bbox[3:6]}
 
-    if args.name == None:
-        args.name = read_datasource_properties(args.source_path)["id"]["name"]
+    logging.info(f"Starting tiff export for bounding box: {bbox}")
 
     export_tiff_stack(
         wkw_file_path=args.source_path,
