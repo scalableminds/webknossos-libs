@@ -81,15 +81,15 @@ def export_tiff_slice(
         tiff_data = dataset.read(tiff_bbox["topleft"], tiff_bbox["size"])
 
     # discard the z dimension
-    tiff_data.squeeze(axis=3)
+    tiff_data = tiff_data.squeeze(axis=3)
     if tiff_data.shape[0] == 1:
         # discard greyscale dimension
-        tiff_data.squeeze(axis=0)
+        tiff_data = tiff_data.squeeze(axis=0)
         # swap the axis
-        tiff_data.transpose((1, 0))
+        tiff_data = tiff_data.transpose((1, 0))
     else:
         # swap axis and move the channel axis
-        tiff_data.transpose((2, 1, 0))
+        tiff_data = tiff_data.transpose((2, 1, 0))
 
     logging.info(f"saving slice {slice_number}")
 
