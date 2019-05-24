@@ -34,9 +34,9 @@ def test_export_tiff_stack():
     with wkw.Dataset.open(test_wkw_file_path) as dataset:
         slice_bbox = bbox
         slice_bbox["size"] = [slice_bbox["size"][0], slice_bbox["size"][1], 1]
-        for slice in range(bbox["size"][2]):
-            slice_bbox["offset"] = [slice_bbox["topleft"][0], slice_bbox["topleft"][1], bbox["topleft"][2] + slice]
-            tiff_path = os.path.join(args.destination_path, wkw_name_and_bbox_to_tiff_name(args.name, slice))
+        for data_slice in range(bbox["size"][2]):
+            slice_bbox["offset"] = [slice_bbox["topleft"][0], slice_bbox["topleft"][1], bbox["topleft"][2] + data_slice]
+            tiff_path = os.path.join(args.destination_path, wkw_name_and_bbox_to_tiff_name(args.name, data_slice))
 
             assert os.path.isfile(tiff_path), f"Expected a tiff to be written at: {tiff_path}."
 

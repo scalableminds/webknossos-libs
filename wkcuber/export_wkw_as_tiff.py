@@ -7,7 +7,7 @@ import numpy as np
 from PIL import Image
 from typing import Tuple, Dict
 
-from .metadata import read_metadata_for_layer, read_datasource_properties
+from .metadata import read_metadata_for_layer
 from .utils import add_verbose_flag, add_distribution_flags, get_executor_for_args
 from .mag import Mag
 
@@ -36,19 +36,11 @@ def create_parser():
     parser.add_argument("--name", "-n", help="Name of the tiffs", default="")
 
     parser.add_argument(
-        "--axis",
-        "-a",
-        help="The axis that the image should be generated along. "
-        "Thus, choosing z will output x,y slices.",
-        default="z",
-    )
-
-    parser.add_argument(
         "--bbox",
         "-b",
         help="The BoundingBox of which the tiff stack should be generated."
-             "The input format is x,y,z,width,height,depth."
-             "(By default, data for the full bounding box of the dataset is generated)",
+        "The input format is x,y,z,width,height,depth."
+        "(By default, data for the full bounding box of the dataset is generated)",
         default=None,
     )
 
@@ -62,43 +54,25 @@ def create_parser():
     return parser
 
 
-def wkw_name_and_bbox_to_tiff_name(
-    name: str, slice_index: int
-) -> str:
+def wkw_name_and_bbox_to_tiff_name(name: str, slice_index: int) -> str:
     if name is None or name == "":
-        return f'{slice_index}.tiff'
+        return f"{slice_index}.tiff"
     else:
-        return f'name_{slice_index}.tiff'
+        return f"name_{slice_index}.tiff"
 
 
 def export_tiff_slice(
-    export_args: Tuple[int, Dict[str, Tuple[int, int, int]], str, str, str, str]
+    export_args: Tuple[int, Tuple[Dict[str, Tuple[int, int, int]], str, str, str]]
 ):
-    slice_number, bbox, dest_path, name, axis, dataset_path = export_args
+    logging.info(f"saving slice {export_args}")
+    slice_number, (bbox, dest_path, name, dataset_path) = export_args
     tiff_bbox = bbox
-
-    if axis == "x":
-        tiff_bbox["topleft"] = [
-            tiff_bbox["topleft"][0] + slice_number,
-            tiff_bbox["topleft"][1],
-            tiff_bbox["topleft"][2],
-        ]
-        tiff_bbox["size"] = [1, tiff_bbox["size"][1], tiff_bbox["size"][2]]
-        logging.info(f"starting job: x")
-    if axis == "y":
-        tiff_bbox["topleft"] = [
-            tiff_bbox["topleft"][0],
-            tiff_bbox["topleft"][1] + slice_number,
-            tiff_bbox["topleft"][2],
-        ]
-        tiff_bbox["size"] = [tiff_bbox["size"][0], 1, tiff_bbox["size"][2]]
-    else:
-        tiff_bbox["topleft"] = [
-            tiff_bbox["topleft"][0],
-            tiff_bbox["topleft"][1],
-            tiff_bbox["topleft"][2] + slice_number,
-        ]
-        tiff_bbox["size"] = [tiff_bbox["size"][0], tiff_bbox["size"][1], 1]
+    tiff_bbox["topleft"] = [
+        tiff_bbox["topleft"][0],
+        tiff_bbox["topleft"][1],
+        tiff_bbox["topleft"][2] + slice_number,
+    ]
+    tiff_bbox["size"] = [tiff_bbox["size"][0], tiff_bbox["size"][1], 1]
 
     tiff_file_name = wkw_name_and_bbox_to_tiff_name(name, slice_number)
 
@@ -117,28 +91,16 @@ def export_tiff_slice(
 
 
 def export_tiff_stack(
-    wkw_file_path, wkw_layer, bbox, mag, destination_path, name, axis, args
+    wkw_file_path, wkw_layer, bbox, mag, destination_path, name, args
 ):
-    if not os.path.isdir(destination_path):
-        os.mkdir(destination_path)
+    os.makedirs(destination_path, exist_ok=True)
 
     dataset_path = os.path.join(wkw_file_path, wkw_layer, mag.to_layer_name())
     with get_executor_for_args(args) as executor:
-        if axis == "x":
-            axis_index = 0
-        elif axis == "y":
-            axis_index = 1
-        else:
-            axis_index = 2
-        num_slices = bbox["size"][axis_index]
+        num_slices = bbox["size"][2]
         slices = range(num_slices)
         export_args = zip(
-            slices,
-            [bbox] * num_slices,
-            [destination_path] * num_slices,
-            [name] * num_slices,
-            [axis] * num_slices,
-            [dataset_path] * num_slices,
+            slices, [(bbox, destination_path, name, dataset_path)] * num_slices
         )
         logging.info(f"starting jobs")
         executor.map(export_tiff_slice, export_args)
@@ -150,8 +112,7 @@ if __name__ == "__main__":
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG)
 
-    assert args.axis in ("x", "y", "z"), "The axis needs to be x, y or z."
-    if args.bbox == None:
+    if args.bbox is None:
         _, _, bbox, _ = read_metadata_for_layer(args.source_path, args.layer_name)
     else:
         bbox = [int(s.strip()) for s in args.bbox.split(",")]
@@ -167,6 +128,5 @@ if __name__ == "__main__":
         mag=Mag(args.mag),
         destination_path=args.destination_path,
         name=args.name,
-        axis=args.axis,
         args=args,
     )
