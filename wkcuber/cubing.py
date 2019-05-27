@@ -130,6 +130,7 @@ def cubing_job(
                 if pad:
                     x_max = max(slice.shape[0] for slice in buffer)
                     y_max = max(slice.shape[1] for slice in buffer)
+
                     buffer = [
                         np.pad(
                             slice,
@@ -137,6 +138,8 @@ def cubing_job(
                             pad_width=[
                                 (0, x_max - slice.shape[0]),
                                 (0, y_max - slice.shape[1]),
+                                (0, 0),
+                                (0, 0),
                             ],
                         )
                         for slice in buffer
