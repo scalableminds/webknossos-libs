@@ -52,6 +52,15 @@ def create_parser():
         default=BLOCK_LEN,
     )
 
+    parser.add_argument(
+        "--pad",
+        help="Automatically pad image files at the bottom and right borders. "
+        "Use this, when the input images don't have a common size, but have "
+        "their origin at (0, 0).",
+        default=False,
+        action="store_true",
+    )
+
     add_verbose_flag(parser)
     add_distribution_flags(parser)
 
@@ -89,6 +98,7 @@ def cubing_job(
     batch_size,
     image_size,
     num_channels,
+    pad=False,
 ):
     if len(z_batches) == 0:
         return
@@ -109,12 +119,28 @@ def cubing_job(
                 for z, file_name in zip(z_batch, source_file_batch):
                     # Image shape will be (x, y, channel_count, z=1) or (x, y, z=1)
                     image = read_image_file(file_name, target_wkw_info.dtype)
-                    assert (
-                        image.shape[0:2] == image_size
-                    ), "Section z={} has the wrong dimensions: {} (expected {}).".format(
-                        z, image.shape, image_size
-                    )
+                    if not pad:
+                        assert (
+                            image.shape[0:2] == image_size
+                        ), "Section z={} has the wrong dimensions: {} (expected {}). Consider using --pad.".format(
+                            z, image.shape, image_size
+                        )
                     buffer.append(image)
+
+                if pad:
+                    x_max = max(slice.shape[0] for slice in buffer)
+                    y_max = max(slice.shape[1] for slice in buffer)
+                    buffer = [
+                        np.pad(
+                            slice,
+                            mode="constant",
+                            pad_width=[
+                                (0, x_max - slice.shape[0]),
+                                (0, y_max - slice.shape[1]),
+                            ],
+                        )
+                        for slice in buffer
+                    ]
 
                 # Write batch buffer which will have shape (x, y, channel_count, z)
                 # since we concat along the last axis (z)
@@ -175,6 +201,7 @@ def cubing(source_path, target_path, layer_name, dtype, batch_size, args=None) -
                     batch_size,
                     (num_x, num_y),
                     num_channels,
+                    args.pad,
                 )
             )
 
