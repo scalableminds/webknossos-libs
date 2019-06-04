@@ -11,6 +11,7 @@ from functools import lru_cache
 from enum import Enum
 from .mag import Mag
 from wkcuber.metadata import read_datasource_properties
+from .cubing import setup_logging
 
 from .utils import (
     add_verbose_flag,
@@ -530,9 +531,7 @@ def detect_larger_and_smaller_dimension(scale):
 
 if __name__ == "__main__":
     args = create_parser().parse_args()
-
-    if args.verbose:
-        logging.basicConfig(level=logging.DEBUG)
+    setup_logging(args)
 
     from_mag = Mag(args.from_mag)
     max_mag = Mag(args.max)

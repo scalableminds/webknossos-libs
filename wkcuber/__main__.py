@@ -42,11 +42,17 @@ def create_parser():
     return parser
 
 
+def setup_logging(args):
+    
+    logging.basicConfig(
+      level=logging.DEBUG if args.verbose else: logging.INFO,
+      format="%(asctime)s %(levelname)s %(message)s",
+    )
+
+
 if __name__ == "__main__":
     args = create_parser().parse_args()
-
-    if args.verbose:
-        logging.basicConfig(level=logging.DEBUG)
+    setup_logging(args)
 
     scale = tuple(float(x) for x in args.scale.split(","))
     bounding_box = cubing(

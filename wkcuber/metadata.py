@@ -10,7 +10,8 @@ from os import path, listdir
 from typing import Optional
 from .mag import Mag
 from typing import List
-
+from .cubing import setup_logging
+from .utils import add_verbose_flag
 
 def get_datasource_path(dataset_path):
     return path.join(dataset_path, "datasource-properties.json")
@@ -40,6 +41,8 @@ def create_parser():
         action="store_true",
     )
     group.add_argument("--max_id", help="set max id of segmentation.", default=0)
+
+    add_verbose_flag(parser)
 
     return parser
 
@@ -288,8 +291,9 @@ def detect_layers(dataset_path, max_id, compute_max_id, exact_bounding_box=None)
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
     args = create_parser().parse_args()
+    setup_logging(args)
+
     if not args.refresh:
         assert (
             args.name is not None

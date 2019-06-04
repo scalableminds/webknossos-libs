@@ -18,7 +18,7 @@ from .utils import (
     get_executor_for_args,
     wait_and_ensure_success,
 )
-from .cubing import create_parser, read_image_file
+from .cubing import create_parser, read_image_file, setup_logging
 from .image_readers import image_reader
 
 BLOCK_LEN = 32
@@ -170,9 +170,7 @@ def tile_cubing(
 
 if __name__ == "__main__":
     args = create_parser().parse_args()
-
-    if args.verbose:
-        logging.basicConfig(level=logging.DEBUG)
+    setup_logging(args)
 
     tile_cubing(
         args.source_path,
