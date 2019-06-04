@@ -20,6 +20,7 @@ from .metadata import detect_resolutions
 from typing import List
 from .cubing import setup_logging
 
+
 def create_parser():
     parser = ArgumentParser()
 

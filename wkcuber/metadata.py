@@ -13,6 +13,7 @@ from typing import List
 from .cubing import setup_logging
 from .utils import add_verbose_flag
 
+
 def get_datasource_path(dataset_path):
     return path.join(dataset_path, "datasource-properties.json")
 
