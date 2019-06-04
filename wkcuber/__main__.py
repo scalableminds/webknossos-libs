@@ -43,10 +43,10 @@ def create_parser():
 
 
 def setup_logging(args):
-    
+
     logging.basicConfig(
-      level=logging.DEBUG if args.verbose else: logging.INFO,
-      format="%(asctime)s %(levelname)s %(message)s",
+        level=(logging.DEBUG if args.verbose else logging.INFO),
+        format="%(asctime)s %(levelname)s %(message)s",
     )
 
 
