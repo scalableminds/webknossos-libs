@@ -15,10 +15,10 @@ from .utils import (
     add_distribution_flags,
     get_executor_for_args,
     wait_and_ensure_success,
+    setup_logging,
 )
 from .metadata import detect_resolutions
 from typing import List
-from .cubing import setup_logging
 
 
 def create_parser():

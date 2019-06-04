@@ -15,9 +15,9 @@ from .utils import (
     add_distribution_flags,
     get_executor_for_args,
     wait_and_ensure_success,
+    setup_logging,
 )
 from .knossos import KnossosDataset, CUBE_EDGE_LEN
-from .cubing import setup_logging
 
 
 def create_parser():

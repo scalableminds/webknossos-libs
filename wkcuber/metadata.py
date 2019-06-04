@@ -10,8 +10,7 @@ from os import path, listdir
 from typing import Optional
 from .mag import Mag
 from typing import List
-from .cubing import setup_logging
-from .utils import add_verbose_flag
+from .utils import add_verbose_flag, setup_logging
 
 
 def get_datasource_path(dataset_path):

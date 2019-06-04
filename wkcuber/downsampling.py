@@ -11,7 +11,6 @@ from functools import lru_cache
 from enum import Enum
 from .mag import Mag
 from wkcuber.metadata import read_datasource_properties
-from .cubing import setup_logging
 
 from .utils import (
     add_verbose_flag,
@@ -24,6 +23,7 @@ from .utils import (
     get_executor_for_args,
     wait_and_ensure_success,
     add_anisotropic_flag,
+    setup_logging,
 )
 
 DEFAULT_EDGE_LEN = 256

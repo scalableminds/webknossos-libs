@@ -15,9 +15,9 @@ from .utils import (
     add_distribution_flags,
     get_executor_for_args,
     wait_and_ensure_success,
+    setup_logging,
 )
 from .image_readers import image_reader
-from .cubing import setup_logging
 
 BLOCK_LEN = 32
 
