@@ -4,6 +4,7 @@ import numpy as np
 from argparse import ArgumentParser
 from os import path
 import cluster_tools
+from tifffile import memmap
 
 from .utils import (
     get_chunks,
@@ -90,6 +91,25 @@ def read_image_file(file_name, dtype):
         logging.error("Reading of file={} failed with {}".format(file_name, exc))
         raise exc
 
+def read_tile_from_image(file_name, dtype, tile_index, tile_extent):
+    try:
+         # image_reader.read_array(file_name, dtype)
+         memmap_image = memmap(file_name, page=0)
+
+         tile_index_x, tile_index_y = tile_index
+         tile_extent_x, tile_extent_y = tile_extent
+
+         x = tile_index_x * tile_extent_x
+         y = tile_index_y * tile_extent_y
+         tile = np.empty((tile_extent_x, tile_extent_y,1), dtype=dtype)
+         for y_index in range(tile_extent[1]):
+            tile[0:tile_extent_x, y_index, 0] = memmap_image[x:(x + tile_extent_x), y + y_index]
+         return tile
+
+    except Exception as exc:
+        logging.error("Reading of file={} failed with {}".format(file_name, exc))
+        raise exc
+
 
 def cubing_job(
     target_wkw_info,
@@ -97,6 +117,8 @@ def cubing_job(
     source_file_batches,
     batch_size,
     image_size,
+    tile_index,
+    tile_extent,
     num_channels,
     pad=False,
 ):
@@ -118,12 +140,17 @@ def cubing_job(
                 # Iterate over each z section in the batch
                 for z, file_name in zip(z_batch, source_file_batch):
                     # Image shape will be (x, y, channel_count, z=1) or (x, y, z=1)
-                    image = read_image_file(file_name, target_wkw_info.dtype)
+                    if tile_extent == image_size:
+                        image = read_image_file(file_name, target_wkw_info.dtype)
+                    else:
+                        image = read_tile_from_image(file_name, target_wkw_info.dtype, tile_index, tile_extent)
+                        print("image.shape", image.shape)
+
                     if not pad:
                         assert (
-                            image.shape[0:2] == image_size
+                            image.shape[0:2] == tile_extent
                         ), "Section z={} has the wrong dimensions: {} (expected {}). Consider using --pad.".format(
-                            z, image.shape, image_size
+                            z, image.shape, tile_extent
                         )
                     buffer.append(image)
 
@@ -187,27 +214,36 @@ def cubing(source_path, target_path, layer_name, dtype, batch_size, args=None) -
 
     ensure_wkw(target_wkw_info, num_channels=num_channels)
 
+    # todo: check whether input can be read memorymapped
+    tile_extent = (num_x // 2, num_y // 2)
+    tile_count = (num_x // tile_extent[0], num_y // tile_extent[1])
+
     with get_executor_for_args(args) as executor:
         futures = []
-        # We iterate over all z sections
-        for z in range(0, num_z, BLOCK_LEN):
-            # Prepare z batches
-            max_z = min(num_z, z + BLOCK_LEN)
-            z_batch = list(range(z, max_z))
-            # Execute
-            futures.append(
-                executor.submit(
-                    cubing_job,
-                    target_wkw_info,
-                    z_batch,
-                    source_files[z:max_z],
-                    batch_size,
-                    (num_x, num_y),
-                    num_channels,
-                    args.pad,
-                )
-            )
-
+        for y_tile in range(tile_count[0]):
+            for x_tile in range(tile_count[0]):
+                tile_index = (x_tile, y_tile)
+                # We iterate over all z sections
+                for z in range(0, num_z, BLOCK_LEN):
+                    # Prepare z batches
+                    max_z = min(num_z, z + BLOCK_LEN)
+                    z_batch = list(range(z, max_z))
+                    # Execute
+                    futures.append(
+                        executor.submit(
+                            cubing_job,
+                            target_wkw_info,
+                            z_batch,
+                            source_files[z:max_z],
+                            batch_size,
+                            (num_x, num_y),
+                            tile_index,
+                            tile_extent,
+                            num_channels,
+                            args.pad,
+                        )
+                    )
+        # futures = executor.map_to_futures(cubing_job, job_descriptions)
         wait_and_ensure_success(futures)
 
     # Return Bounding Box
