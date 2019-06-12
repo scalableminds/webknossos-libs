@@ -6,7 +6,12 @@ from .cubing import cubing, BLOCK_LEN, create_parser as create_cubing_parser
 from .downsampling import downsample_mags, downsample_mags_anisotropic, DEFAULT_EDGE_LEN
 from .compress import compress_mag_inplace
 from .metadata import write_webknossos_metadata
-from .utils import add_verbose_flag, add_distribution_flags, add_anisotropic_flag
+from .utils import (
+    add_verbose_flag,
+    add_distribution_flags,
+    add_anisotropic_flag,
+    setup_logging,
+)
 from .mag import Mag
 
 
@@ -44,9 +49,7 @@ def create_parser():
 
 if __name__ == "__main__":
     args = create_parser().parse_args()
-
-    if args.verbose:
-        logging.basicConfig(level=logging.DEBUG)
+    setup_logging(args)
 
     scale = tuple(float(x) for x in args.scale.split(","))
     bounding_box = cubing(

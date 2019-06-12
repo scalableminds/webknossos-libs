@@ -15,6 +15,7 @@ from .utils import (
     add_distribution_flags,
     get_executor_for_args,
     wait_and_ensure_success,
+    setup_logging,
 )
 from .metadata import detect_resolutions
 from typing import List
@@ -148,6 +149,5 @@ def compress_mags(
 
 if __name__ == "__main__":
     args = create_parser().parse_args()
-    if args.verbose:
-        logging.basicConfig(level=logging.DEBUG)
+    setup_logging(args)
     compress_mags(args.source_path, args.layer_name, args.target_path, args.mag, args)

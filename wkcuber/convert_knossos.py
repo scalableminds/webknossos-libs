@@ -15,6 +15,7 @@ from .utils import (
     add_distribution_flags,
     get_executor_for_args,
     wait_and_ensure_success,
+    setup_logging,
 )
 from .knossos import KnossosDataset, CUBE_EDGE_LEN
 
@@ -98,9 +99,7 @@ def convert_knossos(
 
 if __name__ == "__main__":
     args = create_parser().parse_args()
-
-    if args.verbose:
-        logging.basicConfig(level=logging.DEBUG)
+    setup_logging(args)
 
     convert_knossos(
         args.source_path,

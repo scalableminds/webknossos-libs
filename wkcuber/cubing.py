@@ -15,6 +15,7 @@ from .utils import (
     add_distribution_flags,
     get_executor_for_args,
     wait_and_ensure_success,
+    setup_logging,
 )
 from .image_readers import image_reader
 
@@ -216,9 +217,7 @@ def cubing(source_path, target_path, layer_name, dtype, batch_size, args=None) -
 
 if __name__ == "__main__":
     args = create_parser().parse_args()
-
-    if args.verbose:
-        logging.basicConfig(level=logging.DEBUG)
+    setup_logging(args)
 
     cubing(
         args.source_path,

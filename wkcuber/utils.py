@@ -76,6 +76,14 @@ def add_anisotropic_flag(parser):
     parser.set_defaults(anisotropic=False)
 
 
+def setup_logging(args):
+
+    logging.basicConfig(
+        level=(logging.DEBUG if args.verbose else logging.INFO),
+        format="%(asctime)s %(levelname)s %(message)s",
+    )
+
+
 def find_files(source_path, extensions):
     # Find all files with a matching file extension
     return (

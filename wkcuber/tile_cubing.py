@@ -17,6 +17,7 @@ from .utils import (
     add_distribution_flags,
     get_executor_for_args,
     wait_and_ensure_success,
+    setup_logging,
 )
 from .cubing import create_parser, read_image_file
 from .image_readers import image_reader
@@ -170,9 +171,7 @@ def tile_cubing(
 
 if __name__ == "__main__":
     args = create_parser().parse_args()
-
-    if args.verbose:
-        logging.basicConfig(level=logging.DEBUG)
+    setup_logging(args)
 
     tile_cubing(
         args.source_path,
