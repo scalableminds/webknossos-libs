@@ -2,44 +2,21 @@ from argparse import ArgumentParser
 
 import logging
 
-from .cubing import cubing, BLOCK_LEN
+from .cubing import cubing, BLOCK_LEN, create_parser as create_cubing_parser
 from .downsampling import downsample_mags, downsample_mags_anisotropic, DEFAULT_EDGE_LEN
 from .compress import compress_mag_inplace
 from .metadata import write_webknossos_metadata
-from .utils import add_verbose_flag, add_distribution_flags, add_anisotropic_flag
+from .utils import (
+    add_verbose_flag,
+    add_distribution_flags,
+    add_anisotropic_flag,
+    setup_logging,
+)
 from .mag import Mag
 
 
 def create_parser():
-    parser = ArgumentParser()
-
-    parser.add_argument("source_path", help="Directory containing the input images.")
-
-    parser.add_argument(
-        "target_path", help="Output directory for the generated dataset."
-    )
-
-    parser.add_argument(
-        "--layer_name",
-        "-l",
-        help="Name of the cubed layer (color or segmentation)",
-        default="color",
-    )
-
-    parser.add_argument(
-        "--dtype",
-        "-d",
-        help="Target datatype (e.g. uint8, uint16, uint32)",
-        default="uint8",
-    )
-
-    parser.add_argument(
-        "--batch_size",
-        "-b",
-        type=int,
-        help="Number of slices to buffer per job",
-        default=BLOCK_LEN,
-    )
+    parser = create_cubing_parser()
 
     parser.add_argument(
         "--max_mag",
@@ -65,8 +42,6 @@ def create_parser():
         default="1,1,1",
     )
 
-    add_verbose_flag(parser)
-    add_distribution_flags(parser)
     add_anisotropic_flag(parser)
 
     return parser
@@ -74,9 +49,7 @@ def create_parser():
 
 if __name__ == "__main__":
     args = create_parser().parse_args()
-
-    if args.verbose:
-        logging.basicConfig(level=logging.DEBUG)
+    setup_logging(args)
 
     scale = tuple(float(x) for x in args.scale.split(","))
     bounding_box = cubing(

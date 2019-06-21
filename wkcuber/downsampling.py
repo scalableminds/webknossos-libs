@@ -23,6 +23,7 @@ from .utils import (
     get_executor_for_args,
     wait_and_ensure_success,
     add_anisotropic_flag,
+    setup_logging,
 )
 
 DEFAULT_EDGE_LEN = 256
@@ -530,9 +531,7 @@ def detect_larger_and_smaller_dimension(scale):
 
 if __name__ == "__main__":
     args = create_parser().parse_args()
-
-    if args.verbose:
-        logging.basicConfig(level=logging.DEBUG)
+    setup_logging(args)
 
     from_mag = Mag(args.from_mag)
     max_mag = Mag(args.max)
