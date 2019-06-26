@@ -39,6 +39,7 @@ services:
       - ./slurm_jobdir:/data
       - ..:/cluster_tools
       - var_log_slurm:/var/log/slurm
+      - .history:/root/.history
     expose:
       - "6817"
     depends_on:

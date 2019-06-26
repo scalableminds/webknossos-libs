@@ -26,13 +26,14 @@ def get_executors():
         cluster_tools.get_executor("multiprocessing", max_workers=5),
         cluster_tools.get_executor("sequential"),
         cluster_tools.get_executor("test_pickling"),
+        # cluster_tools.get_executor("pbs"),
     ]
 
 
 def test_submit():
     def run_square_numbers(executor):
         with executor:
-            job_count = 5
+            job_count = 1
             job_range = range(job_count)
             futures = [executor.submit(square, n) for n in job_range]
             for future, job_index in zip(futures, job_range):
@@ -113,8 +114,8 @@ def test_slurm_submit_returns_job_ids():
     exc = cluster_tools.get_executor("slurm", debug=True, keep_logs=True)
     with exc:
         future = exc.submit(square, 2)
-        assert isinstance(future.slurm_jobid, int)
-        assert future.slurm_jobid > 0
+        assert isinstance(future.cluster_jobid, int)
+        assert future.cluster_jobid > 0
         assert future.result() == 4
 
 
@@ -147,7 +148,7 @@ def test_pickled_logging():
             fut = executor.submit(log, test_output_str)
             fut.result()
 
-            output = ".cfut/slurmpy.stdout.{}.log".format(fut.slurm_jobid)
+            output = ".cfut/slurmpy.stdout.{}.log".format(fut.cluster_jobid)
 
             with open(output, 'r') as file:
                 return file.read()

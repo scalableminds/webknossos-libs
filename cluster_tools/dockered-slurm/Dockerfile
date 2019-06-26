@@ -102,6 +102,11 @@ COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
 RUN python36 -m pip install pylint
 
+# PBS
+# COPY pbs.conf /etc/pbs.conf
+# COPY setup-pbs.sh /home/root/setup-pbs.sh
+# RUN /bin/bash /home/root/setup-pbs.sh
+
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 
 CMD ["slurmdbd"]

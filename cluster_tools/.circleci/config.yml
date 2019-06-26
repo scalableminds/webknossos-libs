@@ -29,6 +29,17 @@ jobs:
             docker exec c1 bash -c "cd /cluster_tools && python36 setup.py install"
             docker exec c2 bash -c "cd /cluster_tools && python36 setup.py install"
 
+      # - run:
+      #     name: Setup PBS
+      #     command: |
+      #       /etc/init.d/pbs start
+      #       . /etc/profile.d/pbs.sh
+
+      #       qmgr -c "set server flatuid=true"
+      #       qmgr -c "set server acl_roots+=root@*"
+      #       qmgr -c "set server operators+=root@*"
+      #       qmgr -c “s s job_history_enable=1”
+
       - run:
           name: Re-run setup
           command: |
