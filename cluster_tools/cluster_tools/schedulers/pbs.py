@@ -77,12 +77,15 @@ class PBSExecutor(ClusterExecutor):
         log_path = self.format_log_file_name("$PBS_JOBID")
         print("log_path", log_path)
 
-        job_resources_lines = []
+        job_resources_line = ""
         if self.job_resources is not None:
+            specs = []
             for resource, value in self.job_resources.items():
                 if resource == "time":
                     resource == "walltime"
-                job_resources_lines += ["#PBS --{}={}".format(resource, value)]
+                specs.append("{}={}".format(resource, value))
+            if len(specs) > 0:
+                job_resources_line = "#PBS -l {}".format(",".join(specs))
 
         job_array_line = ""
         if job_count is not None:
@@ -102,7 +105,7 @@ class PBSExecutor(ClusterExecutor):
             "#PBS -o {}".format(log_path),
             '#PBS -N "{}"'.format(job_name),
             job_array_line,
-            *job_resources_lines,
+            job_resources_line,
             *additional_setup_lines,
             'export PATH=$PBS_O_PATH',
             'cd $PBS_O_WORKDIR',
