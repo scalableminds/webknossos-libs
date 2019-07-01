@@ -4,7 +4,7 @@ import re
 import numpy as np
 from argparse import ArgumentParser
 from math import floor, log2
-from os import path, listdir
+import os
 from scipy.ndimage.interpolation import zoom
 from itertools import product
 from functools import lru_cache
@@ -447,6 +447,26 @@ def downsample_mag(
 
 
 def downsample_mags(
+    path,
+    max_mag: Mag,
+    interpolation_mode,
+    cube_edge_len,
+    compress,
+    args=None,
+    scale = None,
+    anisotropic=True
+):
+    layer_name = os.path.basename(os.path.dirname(path))
+    from_mag = Mag(os.path.basename(path))
+    scale = args.get("scale", scale)
+    if anisotropic:
+        downsample_mags_anisotropic(path, layer_name, from_mag, max_mag, scale, interpolation_mode, cube_edge_len, compress, args)
+    else:
+        downsample_mags_isotropic(path, layer_name, from_mag, max_mag, interpolation_mode, cube_edge_len, compress, args)
+
+
+
+def downsample_mags_isotropic(
     path,
     layer_name,
     from_mag: Mag,
