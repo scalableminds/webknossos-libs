@@ -7,7 +7,7 @@ import copy
 from math import ceil
 import numpy as np
 from PIL import Image
-from typing import Tuple, Dict, Union
+from typing import Tuple, Dict, Union, List
 
 from wkcuber.metadata import read_metadata_for_layer
 from wkcuber.utils import (
@@ -111,7 +111,7 @@ def export_tiff_slice(
     tiff_bbox["topleft"] = [
         tiff_bbox["topleft"][0],
         tiff_bbox["topleft"][1],
-        tiff_bbox["topleft"][2] + slice_number,
+        tiff_bbox["topleft"][2] + slice_number - 1,
     ]
     tiff_bbox["size"] = [tiff_bbox["size"][0], tiff_bbox["size"][1], 1]
 
@@ -136,11 +136,11 @@ def export_tiff_slice(
                 for x_tile_index in range(ceil(tiff_bbox["size"][0] / tiling_size[0])):
                     tile_tiff_filename = f"{x_tile_index + 1}.tiff"
                     tile_bbox_topleft = [
-                        tiff_bbox[0] + tile_bbox_size[0] * x_tile_index,
-                        tiff_bbox[1] + tile_bbox_size[1] * y_tile_index,
-                        tiff_bbox[2],
+                        tiff_bbox["topleft"][0] + tile_bbox_size[0] * x_tile_index,
+                        tiff_bbox["topleft"][1] + tile_bbox_size[1] * y_tile_index,
+                        tiff_bbox["topleft"][2],
                     ]
-                    tile_tiff_data = dataset.read(tile_bbox_topleft, tiff_bbox["size"])
+                    tile_tiff_data = dataset.read(off=tile_bbox_topleft, shape=tile_bbox_size)
                     tile_image = wkw_slice_to_image(tile_tiff_data)
                     tile_image.save(os.path.join(tile_tiff_path, tile_tiff_filename))
 
@@ -165,9 +165,7 @@ def export_tiff_stack(
         executor.map(export_tiff_slice, export_args)
 
 
-if __name__ == "__main__":
-    args = create_parser().parse_args()
-
+def export_wkw_as_tiff(args):
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG)
 
@@ -206,3 +204,13 @@ if __name__ == "__main__":
         tiling_slice_size=args.tile_size,
         args=args,
     )
+
+
+def run(args_list: List):
+    arguments = create_parser().parse_args(args_list)
+    export_wkw_as_tiff(arguments)
+
+
+if __name__ == "__main__":
+    arguments = create_parser().parse_args()
+    export_wkw_as_tiff(arguments)
