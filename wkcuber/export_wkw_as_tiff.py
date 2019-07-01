@@ -140,7 +140,9 @@ def export_tiff_slice(
                         tiff_bbox["topleft"][1] + tile_bbox_size[1] * y_tile_index,
                         tiff_bbox["topleft"][2],
                     ]
-                    tile_tiff_data = dataset.read(off=tile_bbox_topleft, shape=tile_bbox_size)
+                    tile_tiff_data = dataset.read(
+                        off=tile_bbox_topleft, shape=tile_bbox_size
+                    )
                     tile_image = wkw_slice_to_image(tile_tiff_data)
                     tile_image.save(os.path.join(tile_tiff_path, tile_tiff_filename))
 
