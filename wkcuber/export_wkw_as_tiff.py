@@ -187,7 +187,7 @@ def export_wkw_as_tiff(args):
         args.tile_size[0] = ceil(bbox["size"][0] / args.tile_size[0])
         args.tile_size[1] = ceil(bbox["size"][1] / args.tile_size[1])
 
-    if args.tile_size is not None:
+    elif args.tile_size is not None:
         args.tile_size = [int(s.strip()) for s in args.tile_size.split(",")]
         assert len(args.tile_size) == 2
         logging.info(
