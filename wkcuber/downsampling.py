@@ -3,11 +3,9 @@ import wkw
 import re
 import numpy as np
 from argparse import ArgumentParser
-from math import floor, log2
 import os
 from scipy.ndimage.interpolation import zoom
 from itertools import product
-from functools import lru_cache
 from enum import Enum
 from .mag import Mag
 from wkcuber.metadata import read_datasource_properties
@@ -448,22 +446,46 @@ def downsample_mag(
 
 def downsample_mags(
     path,
-    max_mag: Mag,
-    interpolation_mode,
-    cube_edge_len,
-    compress,
+    layer_name=None,
+    from_mag: Mag = None,
+    max_mag: Mag = Mag(32),
+    interpolation_mode="default",
+    cube_edge_len=DEFAULT_EDGE_LEN,
+    compress=True,
     args=None,
-    scale = None,
-    anisotropic=True
+    anisotropic=False,
 ):
-    layer_name = os.path.basename(os.path.dirname(path))
-    from_mag = Mag(os.path.basename(path))
-    scale = args.get("scale", scale)
+    if not layer_name:
+        layer_name = os.path.basename(os.path.dirname(path))
+    if not from_mag:
+        from_mag = Mag(os.path.basename(path))
     if anisotropic:
-        downsample_mags_anisotropic(path, layer_name, from_mag, max_mag, scale, interpolation_mode, cube_edge_len, compress, args)
+        datasource_properties = read_datasource_properties(
+            os.path.dirname(os.path.dirname(path))
+        )
+        scale = datasource_properties["scale"]
+        downsample_mags_anisotropic(
+            path,
+            layer_name,
+            from_mag,
+            max_mag,
+            scale,
+            interpolation_mode,
+            cube_edge_len,
+            compress,
+            args,
+        )
     else:
-        downsample_mags_isotropic(path, layer_name, from_mag, max_mag, interpolation_mode, cube_edge_len, compress, args)
-
+        downsample_mags_isotropic(
+            path,
+            layer_name,
+            from_mag,
+            max_mag,
+            interpolation_mode,
+            cube_edge_len,
+            compress,
+            args,
+        )
 
 
 def downsample_mags_isotropic(
@@ -591,7 +613,7 @@ if __name__ == "__main__":
             args,
         )
     else:
-        downsample_mags(
+        downsample_mags_isotropic(
             args.path,
             args.layer_name,
             from_mag,

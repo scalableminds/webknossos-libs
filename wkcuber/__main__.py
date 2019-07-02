@@ -1,17 +1,14 @@
 from argparse import ArgumentParser
 
-import logging
-
-from .cubing import cubing, BLOCK_LEN, create_parser as create_cubing_parser
-from .downsampling import downsample_mags, downsample_mags_anisotropic, DEFAULT_EDGE_LEN
+from .cubing import cubing, create_parser as create_cubing_parser
+from .downsampling import (
+    downsample_mags_isotropic,
+    downsample_mags_anisotropic,
+    DEFAULT_EDGE_LEN,
+)
 from .compress import compress_mag_inplace
 from .metadata import write_webknossos_metadata
-from .utils import (
-    add_verbose_flag,
-    add_distribution_flags,
-    add_anisotropic_flag,
-    setup_logging,
-)
+from .utils import add_anisotropic_flag, setup_logging
 from .mag import Mag
 
 
@@ -78,7 +75,7 @@ if __name__ == "__main__":
         )
 
     else:
-        downsample_mags(
+        downsample_mags_isotropic(
             args.target_path,
             args.layer_name,
             Mag(1),
