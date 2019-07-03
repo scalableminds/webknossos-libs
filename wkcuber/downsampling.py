@@ -623,7 +623,7 @@ if __name__ == "__main__":
             args,
         )
     else:
-        downsample_mags(
+        downsample_mags_isotropic(
             args.path,
             args.layer_name,
             from_mag,
