@@ -7,10 +7,10 @@ import os
 from scipy.ndimage.interpolation import zoom
 from itertools import product
 from enum import Enum
-from .mag import Mag
+from wkcuber.mag import Mag
 from wkcuber.metadata import read_datasource_properties
 
-from .utils import (
+from wkcuber.utils import (
     add_verbose_flag,
     open_wkw,
     WkwDatasetInfo,
@@ -453,17 +453,27 @@ def downsample_mags(
     cube_edge_len=DEFAULT_EDGE_LEN,
     compress=True,
     args=None,
-    anisotropic=False,
+    anisotropic=True,
 ):
-    if not layer_name:
+    scale = getattr(args, "scale", None) if args else None
+    if not layer_name or not from_mag:
         layer_name = os.path.basename(os.path.dirname(path))
-    if not from_mag:
         from_mag = Mag(os.path.basename(path))
+        path = os.path.dirname(os.path.dirname(path))
+        if anisotropic:
+            scale = read_datasource_properties(path)["scale"]
+
     if anisotropic:
-        datasource_properties = read_datasource_properties(
-            os.path.dirname(os.path.dirname(path))
-        )
-        scale = datasource_properties["scale"]
+        if not scale:
+            try:
+                scale = read_datasource_properties(args.path)["scale"]
+            except Exception as exc:
+                logging.error(
+                    "Could not get the scale from the datasource-properties.json. Probably your path is wrong. "
+                    "If you do not provide the layer_name or from_mag, they need to be included in the path."
+                    "(e.g. dataset/color/1). Other wise the path should just point at the dataset directory."
+                )
+                raise exc
         downsample_mags_anisotropic(
             path,
             layer_name,
@@ -613,7 +623,7 @@ if __name__ == "__main__":
             args,
         )
     else:
-        downsample_mags_isotropic(
+        downsample_mags(
             args.path,
             args.layer_name,
             from_mag,
