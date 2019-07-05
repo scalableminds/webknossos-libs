@@ -1,5 +1,3 @@
-from argparse import ArgumentParser
-
 from .cubing import cubing, create_parser as create_cubing_parser
 from .downsampling import (
     downsample_mags_isotropic,
@@ -8,7 +6,7 @@ from .downsampling import (
 )
 from .compress import compress_mag_inplace
 from .metadata import write_webknossos_metadata
-from .utils import add_anisotropic_flag, setup_logging
+from .utils import add_isotropic_flag, setup_logging
 from .mag import Mag
 
 
@@ -39,7 +37,7 @@ def create_parser():
         default="1,1,1",
     )
 
-    add_anisotropic_flag(parser)
+    add_isotropic_flag(parser)
 
     return parser
 
@@ -61,7 +59,7 @@ if __name__ == "__main__":
     if not args.no_compress:
         compress_mag_inplace(args.target_path, args.layer_name, Mag(1), args)
 
-    if args.anisotropic:
+    if not args.isotropic:
         downsample_mags_anisotropic(
             args.target_path,
             args.layer_name,

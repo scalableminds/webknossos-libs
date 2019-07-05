@@ -20,7 +20,7 @@ from wkcuber.utils import (
     add_distribution_flags,
     get_executor_for_args,
     wait_and_ensure_success,
-    add_anisotropic_flag,
+    add_isotropic_flag,
     setup_logging,
 )
 
@@ -108,7 +108,7 @@ def create_parser():
     )
 
     add_verbose_flag(parser)
-    add_anisotropic_flag(parser)
+    add_isotropic_flag(parser)
     add_distribution_flags(parser)
 
     return parser
@@ -445,15 +445,15 @@ def downsample_mag(
 
 
 def downsample_mags(
-    path,
-    layer_name=None,
+    path: str,
+    layer_name: str=None,
     from_mag: Mag = None,
     max_mag: Mag = Mag(32),
-    interpolation_mode="default",
-    cube_edge_len=DEFAULT_EDGE_LEN,
-    compress=True,
+    interpolation_mode: str="default",
+    cube_edge_len: int=DEFAULT_EDGE_LEN,
+    compress: bool=True,
     args=None,
-    anisotropic=True,
+    anisotropic: bool=True,
 ):
     scale = getattr(args, "scale", None) if args else None
     if not layer_name or not from_mag:
@@ -469,9 +469,10 @@ def downsample_mags(
                 scale = read_datasource_properties(args.path)["scale"]
             except Exception as exc:
                 logging.error(
-                    "Could not get the scale from the datasource-properties.json. Probably your path is wrong. "
+                    f"Could not get the scale from the datasource-properties.json. Probably your path is wrong. "
                     "If you do not provide the layer_name or from_mag, they need to be included in the path."
                     "(e.g. dataset/color/1). Other wise the path should just point at the dataset directory."
+                    "the path: {path}"
                 )
                 raise exc
         downsample_mags_anisotropic(
@@ -600,7 +601,7 @@ if __name__ == "__main__":
             not args.no_compress,
             args,
         )
-    elif args.anisotropic:
+    elif not args.isotropic:
         try:
             scale = read_datasource_properties(args.path)["scale"]
         except Exception as exc:

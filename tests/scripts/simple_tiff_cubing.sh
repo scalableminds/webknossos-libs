@@ -12,6 +12,7 @@ docker run \
   --max_mag 4 \
   --scale 11.24,11.24,25 \
   --name awesome_data \
+  --isotropic \
   /testdata/tiff /testoutput/tiff2
 [ -d testoutput/tiff2/color ]
 [ -d testoutput/tiff2/color/1 ]
