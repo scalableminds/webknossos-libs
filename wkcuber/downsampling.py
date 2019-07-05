@@ -446,14 +446,14 @@ def downsample_mag(
 
 def downsample_mags(
     path: str,
-    layer_name: str=None,
+    layer_name: str = None,
     from_mag: Mag = None,
     max_mag: Mag = Mag(32),
-    interpolation_mode: str="default",
-    cube_edge_len: int=DEFAULT_EDGE_LEN,
-    compress: bool=True,
+    interpolation_mode: str = "default",
+    cube_edge_len: int = DEFAULT_EDGE_LEN,
+    compress: bool = True,
     args=None,
-    anisotropic: bool=True,
+    anisotropic: bool = True,
 ):
     scale = getattr(args, "scale", None) if args else None
     if not layer_name or not from_mag:
