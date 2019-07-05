@@ -17,7 +17,7 @@ setup(name='cluster_tools',
       packages=find_packages(),
       install_requires=[
           'cloudpickle',
-          'futures',
+          'futures; python_version == "2.7"'
       ],
 
       classifiers=[
