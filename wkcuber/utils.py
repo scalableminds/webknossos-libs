@@ -13,7 +13,7 @@ from concurrent.futures import ProcessPoolExecutor
 from os import path, getpid
 from platform import python_version
 from math import floor, ceil
-from wkcuber.mag import Mag
+from .mag import Mag
 
 from .knossos import KnossosDataset, CUBE_EDGE_LEN
 
@@ -66,9 +66,8 @@ def add_isotropic_flag(parser):
     parser.add_argument(
         "--isotropic",
         "-iso",
-        help="Activates Anisotropic downsampling. It will detect which dimension is the smallest and the largest. "
-        "The largest dimension will only be downsampled by 2 if it would be smaller or equal to the smallest "
-        "dimension in the next downsampling step.",
+        help="Activates isotropic downsampling. The default is anisotropic downsampling. "
+             "Therefore it will always downsample each dimension with the factor 2.",
         dest="isotropic",
         default=False,
         action="store_true",

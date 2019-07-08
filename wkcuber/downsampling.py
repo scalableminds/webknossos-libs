@@ -7,8 +7,8 @@ import os
 from scipy.ndimage.interpolation import zoom
 from itertools import product
 from enum import Enum
-from wkcuber.mag import Mag
-from wkcuber.metadata import read_datasource_properties
+from .mag import Mag
+from .metadata import read_datasource_properties
 
 from wkcuber.utils import (
     add_verbose_flag,
@@ -464,14 +464,14 @@ def downsample_mags(
             scale = read_datasource_properties(path)["scale"]
 
     if anisotropic:
-        if not scale:
+        if scale is None:
             try:
                 scale = read_datasource_properties(args.path)["scale"]
             except Exception as exc:
                 logging.error(
                     f"Could not get the scale from the datasource-properties.json. Probably your path is wrong. "
                     "If you do not provide the layer_name or from_mag, they need to be included in the path."
-                    "(e.g. dataset/color/1). Other wise the path should just point at the dataset directory."
+                    "(e.g. dataset/color/1). Otherwise the path should just point at the dataset directory."
                     "the path: {path}"
                 )
                 raise exc
