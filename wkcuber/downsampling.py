@@ -107,6 +107,13 @@ def create_parser():
         action="store_true",
     )
 
+    parser.add_argument(
+        "--scale",
+        "-s",
+        help="Scale of the dataset (e.g. 11.2,11.2,25). This is the size of one voxel in nm.",
+        default="1,1,1",
+    )
+
     add_verbose_flag(parser)
     add_isotropic_flag(parser)
     add_distribution_flags(parser)
@@ -588,6 +595,9 @@ if __name__ == "__main__":
 
     from_mag = Mag(args.from_mag)
     max_mag = Mag(args.max)
+    scale = (
+        (float(x) for x in args.scale.split(",")) if hasattr(args, "scale") else None
+    )
     if args.anisotropic_target_mag:
         anisotropic_target_mag = Mag(args.anisotropic_target_mag)
 
@@ -602,15 +612,16 @@ if __name__ == "__main__":
             args,
         )
     elif not args.isotropic:
-        try:
-            scale = read_datasource_properties(args.path)["scale"]
-        except Exception as exc:
-            logging.error(
-                "Could not determine scale which is necessary "
-                "to find target magnifications for anisotropic downsampling. "
-                "Does the provided dataset have a datasource-properties.json file?"
-            )
-            raise exc
+        if scale is None:
+            try:
+                scale = read_datasource_properties(args.path)["scale"]
+            except Exception as exc:
+                logging.error(
+                    "Could not determine scale which is necessary "
+                    "to find target magnifications for anisotropic downsampling. "
+                    "Does the provided dataset have a datasource-properties.json file?"
+                )
+                raise exc
 
         downsample_mags_anisotropic(
             args.path,

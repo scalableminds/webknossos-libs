@@ -37,6 +37,7 @@ docker run \
   --max 16 \
   --buffer_cube_size 128 \
   --layer_name color \
+  --scale 11.24,11.24,25 \
   /testoutput/tiff
 [ -d testoutput/tiff/color/2-2-1 ]
 [ -d testoutput/tiff/color/4-4-1 ]
