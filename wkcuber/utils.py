@@ -67,7 +67,7 @@ def add_isotropic_flag(parser):
         "--isotropic",
         "-iso",
         help="Activates isotropic downsampling. The default is anisotropic downsampling. "
-             "Therefore it will always downsample each dimension with the factor 2.",
+        "Therefore it will always downsample each dimension with the factor 2.",
         dest="isotropic",
         default=False,
         action="store_true",
