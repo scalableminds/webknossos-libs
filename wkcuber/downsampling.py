@@ -7,8 +7,8 @@ import os
 from scipy.ndimage.interpolation import zoom
 from itertools import product
 from enum import Enum
-from .mag import Mag
-from .metadata import read_datasource_properties
+from wkcuber.mag import Mag
+from wkcuber.metadata import read_datasource_properties
 
 from wkcuber.utils import (
     add_verbose_flag,
@@ -566,6 +566,9 @@ def downsample_mags_anisotropic(
 def get_next_anisotropic_mag(mag, scale):
     max_index, min_index = detect_larger_and_smaller_dimension(scale)
     mag_array = mag.to_array()
+    logging.info(scale)
+    logging.info(type(scale))
+    logging.info(scale[1])
     scale_increase = [1, 1, 1]
     if (
         mag_array[min_index] * scale[min_index]
@@ -596,7 +599,7 @@ if __name__ == "__main__":
     from_mag = Mag(args.from_mag)
     max_mag = Mag(args.max)
     scale = (
-        (float(x) for x in args.scale.split(",")) if hasattr(args, "scale") else None
+        [float(x) for x in args.scale.split(",")] if hasattr(args, "scale") else None
     )
     if args.anisotropic_target_mag:
         anisotropic_target_mag = Mag(args.anisotropic_target_mag)
