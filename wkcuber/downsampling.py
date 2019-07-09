@@ -7,10 +7,10 @@ import os
 from scipy.ndimage.interpolation import zoom
 from itertools import product
 from enum import Enum
-from wkcuber.mag import Mag
-from wkcuber.metadata import read_datasource_properties
+from .mag import Mag
+from .metadata import read_datasource_properties
 
-from wkcuber.utils import (
+from .utils import (
     add_verbose_flag,
     open_wkw,
     WkwDatasetInfo,
