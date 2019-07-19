@@ -107,37 +107,47 @@ class SlurmExecutor(ClusterExecutor):
 
         return submit_text("\n".join(script_lines))
 
-
-
     def check_for_crashed_job(self, job_id) -> Union["failed", "ignore", "completed"]:
+
+        job_states = []
 
         # If the output file was not found, we determine the job status so that
         # we can recognize jobs which failed hard (in this case, they don't produce output files)
         stdout, _, exit_code = call("scontrol show job {}".format(job_id))
+        stdout = stdout.decode("utf8")
 
-        if exit_code != 0:
-            logging.error(
-                "Couldn't call scontrol to determine job's status. {}. Continuing to poll for output file. This could be an indicator for a failed job which was already cleaned up from the slurm db. If this is the case, the process will hang forever."
-            )
-            return "ignore"
-        else:
+        if exit_code == 0:
             job_state_search = re.search('JobState=([a-zA-Z_]*)', str(stdout))
-
             if job_state_search:
-                job_state = job_state_search.group(1)
-
-                if job_state in SLURM_STATES["Failure"]:
-                    return "failed"
-                elif job_state in SLURM_STATES["Ignore"]:
-                    return "ignore"
-                elif job_state in SLURM_STATES["Unclear"]:
-                    logging.warn("The job state for {} is {}. It's unclear whether the job will recover. Will wait further".format(job_id, job_state))
-                    return "ignore"
-                elif job_state in SLURM_STATES["Success"]:
-                    return "completed"
-                else:
-                    logging.error("Unhandled slurm job state? {}".format(job_state))
-                    return "ignore"
+                job_states = [job_state_search.group(1)]
             else:
                 logging.error("Could not extract slurm job state? {}".format(stdout[0:10]))
-                return "ignore"
+        else:
+            stdout, _, exit_code = call("sacct -j {} -o State -P".format(job_id))
+            stdout = stdout.decode("utf8")
+
+            if exit_code == 0:
+                job_states = stdout.split("\n")[1:]
+        
+        if len(job_states) == 0:
+            logging.error(
+                "Couldn't call scontrol nor sacct to determine job's status. Continuing to poll for output file. This could be an indicator for a failed job which was already cleaned up from the slurm db. If this is the case, the process will hang forever."
+            )
+            return "ignore"
+
+        def matches_states(slurm_states):
+            return len(list(set(job_states) & set(slurm_states))) > 0
+
+        if matches_states(SLURM_STATES["Failure"]):
+            return "failed"
+        elif matches_states(SLURM_STATES["Ignore"]):
+            return "ignore"
+        elif matches_states(SLURM_STATES["Unclear"]):
+            logging.warn("The job state for {} is {}. It's unclear whether the job will recover. Will wait further".format(job_id, job_states))
+            return "ignore"
+        elif matches_states(SLURM_STATES["Success"]):
+            return "completed"
+        else:
+            logging.error("Unhandled slurm job state? {}".format(job_states))
+            return "ignore"
+    

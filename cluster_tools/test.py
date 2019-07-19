@@ -33,7 +33,7 @@ def get_executors():
 def test_submit():
     def run_square_numbers(executor):
         with executor:
-            job_count = 1
+            job_count = 3
             job_range = range(job_count)
             futures = [executor.submit(square, n) for n in job_range]
             for future, job_index in zip(futures, job_range):
@@ -41,8 +41,6 @@ def test_submit():
 
     for exc in get_executors():
         run_square_numbers(exc)
-
-
 
 
 def test_unordered_sleep():
