@@ -7,6 +7,8 @@ def _read(fn):
 
 setup(name='cluster_tools',
       version='v1.28',
+      use_scm_version=True,
+      setup_requires=['setuptools_scm'],
       description='Utility library for easily distributing code execution on clusters',
       author='scalableminds',
       author_email='hello@scalableminds.com',
