@@ -57,7 +57,7 @@ def test_export_tiff_stack_tile_size():
     tile_bbox = {"topleft": bbox["topleft"], "size": [30, 30, 1]}
     test_wkw_file_path = os.path.join("testdata", "WT1_wkw", "color", Mag(1).to_layer_name())
     with wkw.Dataset.open(test_wkw_file_path) as dataset:
-        slice_bbox = bbox
+        slice_bbox = {"topleft": bbox["topleft"], "size": bbox["size"]}
         slice_bbox["size"] = [slice_bbox["size"][0], slice_bbox["size"][1], 1]
         for data_slice_index in range(bbox["size"][2]):
 

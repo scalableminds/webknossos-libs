@@ -131,6 +131,7 @@ def add_distribution_flags(parser):
         help='Necessary when using slurm as distribution strategy. Should be a JSON string (e.g., --job_resources=\'{"mem": "10M"}\')',
     )
 
+
 def add_batch_size_flag(parser):
     parser.add_argument(
         "--batch_size",
