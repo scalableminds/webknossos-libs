@@ -121,5 +121,6 @@ def test_export_tiff_stack_tiles_per_dimension():
                     assert np.array_equal(correct_image, test_image), f"The tiff file {tiff_path} that was written " \
                         f"is not equal to the original wkw_file."
 
+
 if __name__ == "__main__":
     test_export_tiff_stack_tile_size()

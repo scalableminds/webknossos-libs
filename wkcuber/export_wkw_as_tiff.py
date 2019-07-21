@@ -3,7 +3,6 @@ from argparse import ArgumentParser
 import logging
 import wkw
 import os
-import copy
 from math import ceil
 import numpy as np
 from PIL import Image
@@ -14,6 +13,7 @@ from wkcuber.utils import (
     add_verbose_flag,
     add_distribution_flags,
     get_executor_for_args,
+    add_batch_size_flag
 )
 from wkcuber.mag import Mag
 
@@ -72,6 +72,8 @@ def create_parser():
         default=None,
     )
 
+    add_batch_size_flag(parser)
+
     add_verbose_flag(parser)
     add_distribution_flags(parser)
 
@@ -103,64 +105,67 @@ def export_tiff_slice(
     export_args: Tuple[
         int,
         Tuple[
-            Dict[str, Tuple[int, int, int]], str, str, str, Union[None, Tuple[int, int]]
+            Dict[str, Tuple[int, int, int]], str, str, str, Union[None, Tuple[int, int]], int
         ],
     ]
 ):
-    slice_number, (tiff_bbox, dest_path, name, dataset_path, tiling_size) = export_args
-    tiff_bbox["topleft"] = [
-        tiff_bbox["topleft"][0],
-        tiff_bbox["topleft"][1],
-        tiff_bbox["topleft"][2] + slice_number - 1,
-    ]
-    tiff_bbox["size"] = [tiff_bbox["size"][0], tiff_bbox["size"][1], 1]
+    slice_number, (tiff_bbox, dest_path, name, dataset_path, tiling_size, batch_size) = export_args
+    first_slice_number = slice_number * batch_size + tiff_bbox["topleft"][2]
+    number_of_slices = min(tiff_bbox["size"][2] - slice_number * batch_size, batch_size)
+    tiff_bbox["size"] = [tiff_bbox["size"][0], tiff_bbox["size"][1], number_of_slices]
 
     with wkw.Dataset.open(dataset_path) as dataset:
-        if tiling_size is None:
-            tiff_data = dataset.read(tiff_bbox["topleft"], tiff_bbox["size"])
-            tiff_file_name = wkw_name_and_bbox_to_tiff_name(name, slice_number)
+        tiff_data = dataset.read(tiff_bbox["topleft"], tiff_bbox["size"])
+        for slice_index in number_of_slices:
+            current_slice_number = first_slice_number + slice_index
+            if tiling_size is None:
+                tiff_file_name = wkw_name_and_bbox_to_tiff_name(name, current_slice_number + 1)
 
-            tiff_file_path = os.path.join(dest_path, tiff_file_name)
+                tiff_file_path = os.path.join(dest_path, tiff_file_name)
 
-            image = wkw_slice_to_image(tiff_data)
-            image.save(tiff_file_path)
-            logging.info(f"saved slice {slice_number}")
+                image = wkw_slice_to_image(tiff_data[:, :, current_slice_number])
+                image.save(tiff_file_path)
+                logging.info(f"saved slice {current_slice_number + 1}")
 
-        else:
-            tile_bbox_size = [tiling_size[0], tiling_size[1], 1]
-            for y_tile_index in range(ceil(tiff_bbox["size"][1] / tiling_size[1])):
-                tile_tiff_path = os.path.join(
-                    dest_path, str(slice_number), str(y_tile_index + 1)
-                )
-                os.makedirs(tile_tiff_path, exist_ok=True)
-                for x_tile_index in range(ceil(tiff_bbox["size"][0] / tiling_size[0])):
-                    tile_tiff_filename = f"{x_tile_index + 1}.tiff"
-                    tile_bbox_topleft = [
-                        tiff_bbox["topleft"][0] + tile_bbox_size[0] * x_tile_index,
-                        tiff_bbox["topleft"][1] + tile_bbox_size[1] * y_tile_index,
-                        tiff_bbox["topleft"][2],
-                    ]
-                    tile_tiff_data = dataset.read(
-                        off=tile_bbox_topleft, shape=tile_bbox_size
+            else:
+                tile_bbox_size = [tiling_size[0], tiling_size[1], 1]
+                for y_tile_index in range(ceil(tiff_bbox["size"][1] / tiling_size[1])):
+                    tile_tiff_path = os.path.join(
+                        dest_path, str(current_slice_number + 1), str(y_tile_index + 1)
                     )
-                    tile_image = wkw_slice_to_image(tile_tiff_data)
-                    tile_image.save(os.path.join(tile_tiff_path, tile_tiff_filename))
+                    os.makedirs(tile_tiff_path, exist_ok=True)
+                    for x_tile_index in range(ceil(tiff_bbox["size"][0] / tiling_size[0])):
+                        tile_tiff_filename = f"{x_tile_index + 1}.tiff"
+                        tile_bbox_topleft = [
+                            tiff_bbox["topleft"][0] + tile_bbox_size[0] * x_tile_index,
+                            tiff_bbox["topleft"][1] + tile_bbox_size[1] * y_tile_index,
+                            current_slice_number,
+                        ]
+                        tile_image = wkw_slice_to_image(tiff_data[
+                                                        tile_bbox_topleft[0]: tile_bbox_topleft[0] + tile_bbox_size[0],
+                                                        tile_bbox_topleft[1]: tile_bbox_topleft[1] + tile_bbox_size[1],
+                                                        current_slice_number
+                                                        ])
 
-    logging.info(f"saved all tiles of slice {slice_number}")
+                        tile_image.save(os.path.join(tile_tiff_path, tile_tiff_filename))
+
+                logging.info(f"saved tiles for slice {current_slice_number + 1}")
+
+    logging.info(f"saved all tiles of batch {slice_number}")
 
 
 def export_tiff_stack(
-    wkw_file_path, wkw_layer, bbox, mag, destination_path, name, tiling_slice_size, args
+    wkw_file_path, wkw_layer, bbox, mag, destination_path, name, tiling_slice_size, batch_size, args
 ):
     os.makedirs(destination_path, exist_ok=True)
     dataset_path = os.path.join(wkw_file_path, wkw_layer, mag.to_layer_name())
 
     with get_executor_for_args(args) as executor:
-        num_slices = bbox["size"][2]
-        slices = range(1, num_slices + 1)
+        num_slices = ceil(bbox["size"][2] / batch_size)
+        slices = range(0, num_slices)
         export_args = zip(
             slices,
-            [(bbox, destination_path, name, dataset_path, tiling_slice_size)]
+            [(bbox, destination_path, name, dataset_path, tiling_slice_size, batch_size)]
             * num_slices,
         )
         logging.info(f"starting jobs")
@@ -195,6 +200,7 @@ def export_wkw_as_tiff(args):
         logging.info(
             f"Using tiling with the size of {args.tile_size[0]},{args.tile_size[1]}."
         )
+    args.batch_size = int(args.batch_size)
 
     export_tiff_stack(
         wkw_file_path=args.source_path,
@@ -204,6 +210,7 @@ def export_wkw_as_tiff(args):
         destination_path=args.destination_path,
         name=args.name,
         tiling_slice_size=args.tile_size,
+        batch_size=args.batch_size,
         args=args,
     )
 
