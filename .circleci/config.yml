@@ -94,6 +94,10 @@ jobs:
           command: tests/scripts/meta_generation.sh
 
       - run:
+          name: Remove reference magnification data
+          command: rm -r testdata/tiff_mag_2_reference/
+
+      - run:
           name: Push docker images
           command: |
             echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
@@ -125,17 +129,18 @@ jobs:
           name: Publish python package
           command: |
             if [ -n "$CIRCLE_TAG" ]; then
-              echo "[distutils]" >> .pypirc
-              echo "index-servers = pypi" >> .pypirc
-              echo "[pypi]" >> .pypirc
-              echo "repository=https://upload.pypi.org/legacy/" >> .pypirc
-              echo "username=$PYPI_USERNAME" >> .pypirc
-              echo "password=$PYPI_PASSWORD" >> .pypirc
+              echo "[distutils]" >> ~/.pypirc
+              echo "index-servers = pypi" >> ~/.pypirc
+              echo "[pypi]" >> ~/.pypirc
+              echo "repository=https://upload.pypi.org/legacy/" >> ~/.pypirc
+              echo "username=$PYPI_USERNAME" >> ~/.pypirc
+              echo "password=$PYPI_PASSWORD" >> ~/.pypirc
 
               docker run --rm \
                 --entrypoint "" \
-                -v $(pwd)/.git:/app/.git \
-                -v $(pwd)/.pypirc:/root/.pypirc \
+                --workdir /wkcuber \
+                -v $(pwd):/wkcuber \
+                -v $HOME/.pypirc:/root/.pypirc \
                 scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
                 python setup.py sdist upload
             else
