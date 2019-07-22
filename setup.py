@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="wkcuber",
-    packages=find_packages(exclude=("tests","testdata","testoutput")),
+    packages=find_packages(exclude=("tests",)),
     use_scm_version=True,
     setup_requires=['setuptools_scm'],
     install_requires=["scipy", "numpy", "pillow", "pyyaml", "wkw", "cluster_tools>=1.19"],
