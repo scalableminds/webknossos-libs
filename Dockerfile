@@ -18,6 +18,8 @@ RUN pip install -r requirements.txt
 COPY wkcuber /app/wkcuber
 COPY tests /app/tests
 
+COPY .git /app/.git
 RUN python setup.py install
+RUN rm -r /app/.git
 
 ENTRYPOINT [ "python", "-m" ]
