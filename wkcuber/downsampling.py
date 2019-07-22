@@ -462,18 +462,24 @@ def downsample_mags(
     args=None,
     anisotropic: bool = True,
 ):
+    assert layer_name and from_mag or not layer_name and not from_mag, (
+        "You provided only one of the following "
+        "parameters: layer_name, from_mag but both "
+        "need to be set or none. If you don't provide "
+        "the parameters you need to provide the path "
+        "argument with the mag and layer to downsample"
+        " (e.g dataset/color/1)."
+    )
     scale = getattr(args, "scale", None) if args else None
     if not layer_name or not from_mag:
         layer_name = os.path.basename(os.path.dirname(path))
         from_mag = Mag(os.path.basename(path))
         path = os.path.dirname(os.path.dirname(path))
-        if anisotropic:
-            scale = read_datasource_properties(path)["scale"]
 
     if anisotropic:
         if scale is None:
             try:
-                scale = read_datasource_properties(args.path)["scale"]
+                scale = read_datasource_properties(path)["scale"]
             except Exception as exc:
                 logging.error(
                     f"Could not get the scale from the datasource-properties.json. Probably your path is wrong. "
@@ -566,9 +572,6 @@ def downsample_mags_anisotropic(
 def get_next_anisotropic_mag(mag, scale):
     max_index, min_index = detect_larger_and_smaller_dimension(scale)
     mag_array = mag.to_array()
-    logging.info(scale)
-    logging.info(type(scale))
-    logging.info(scale[1])
     scale_increase = [1, 1, 1]
     if (
         mag_array[min_index] * scale[min_index]

@@ -52,11 +52,7 @@ def open_knossos(info):
 
 def add_verbose_flag(parser):
     parser.add_argument(
-        "--silent",
-        "-silent",
-        help="Silent output",
-        dest="verbose",
-        action="store_false",
+        "--silent", help="Silent output", dest="verbose", action="store_false"
     )
 
     parser.set_defaults(verbose=True)
@@ -65,9 +61,8 @@ def add_verbose_flag(parser):
 def add_isotropic_flag(parser):
     parser.add_argument(
         "--isotropic",
-        "-iso",
         help="Activates isotropic downsampling. The default is anisotropic downsampling. "
-        "Therefore it will always downsample each dimension with the factor 2.",
+        "Isotropic downsampling will always downsample each dimension with the factor 2.",
         dest="isotropic",
         default=False,
         action="store_true",

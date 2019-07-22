@@ -39,8 +39,9 @@ docker run \
   --layer_name color \
   --scale 11.24,11.24,25 \
   /testoutput/tiff
-[ -d testoutput/tiff/color/2-2-1 ]
-[ -d testoutput/tiff/color/4-4-1 ]
-[ $(find testoutput/tiff/color/2-2-1 -mindepth 3 -name "*.wkw" | wc -l) -eq 1 ]
-[ $(find testoutput/tiff/color/4-4-1 -mindepth 3 -name "*.wkw" | wc -l) -eq 1 ]
+[ -d testoutput/tiff/color/8-8-2 ]
+[ -d testoutput/tiff/color/16-16-4 ]
+[ $(find testoutput/tiff/color/8-8-2 -mindepth 3 -name "*.wkw" | wc -l) -eq 1 ]
+[ $(find testoutput/tiff/color/16-16-4 -mindepth 3 -name "*.wkw" | wc -l) -eq 1 ]
+
 
