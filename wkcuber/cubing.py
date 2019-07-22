@@ -1,9 +1,10 @@
 import time
 import logging
 import numpy as np
-from argparse import ArgumentParser
+from argparse import ArgumentParser, ArgumentTypeError
 from os import path
 import cluster_tools
+import re
 
 from .utils import (
     get_chunks,
@@ -21,6 +22,17 @@ from .image_readers import image_reader
 
 BLOCK_LEN = 32
 
+
+# similar to ImageJ https://imagej.net/BigStitcher_StackLoader#File_pattern
+def check_input_pattern(input_pattern: str) -> str :
+    x_match = re.search("{x+}", input_pattern)
+    y_match = re.search("{y+}", input_pattern)
+    z_match = re.search("{z+}", input_pattern)
+
+    if x_match is None or y_match is None or z_match is None:
+        raise ArgumentTypeError("{} is not a valid pattern".format(input_pattern))
+
+    return input_pattern
 
 def create_parser():
     parser = ArgumentParser()
@@ -61,6 +73,11 @@ def create_parser():
         default=False,
         action="store_true",
     )
+
+    parser.add_argument("--input_path_pattern",
+                        help="Path to input images e.g. path_{x}_{y}_{z}/image.tiff",
+                        type=check_input_pattern,
+                        default="{z}/{y}/{x}.tiff")
 
     add_verbose_flag(parser)
     add_distribution_flags(parser)
