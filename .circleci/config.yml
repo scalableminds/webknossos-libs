@@ -97,15 +97,28 @@ jobs:
           name: Push docker images
           command: |
             echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-            docker tag \
-              scalableminds/webknossos-cuber:$CIRCLE_BUILD_NUM \
-              scalableminds/webknossos-cuber:$CIRCLE_BRANCH
             docker push scalableminds/webknossos-cuber:$CIRCLE_BUILD_NUM
-            docker push scalableminds/webknossos-cuber:$CIRCLE_BRANCH
-            if [ "${CIRCLE_BRANCH}" == "master" ]; then
-              docker tag scalableminds/webknossos-cuber:$CIRCLE_BUILD_NUM scalableminds/webknossos-cuber:latest
-              docker push scalableminds/webknossos-cuber:latest
+
+            if [ -n "$CIRCLE_TAG" ]; then
+              docker tag \
+                scalableminds/webknossos-cuber:$CIRCLE_BUILD_NUM \
+                scalableminds/webknossos-cuber:$CIRCLE_TAG
+              docker push scalableminds/webknossos-cuber:$CIRCLE_TAG
             fi
+
+            if [ -n "$CIRCLE_BRANCH" ]; then
+              docker tag \
+                scalableminds/webknossos-cuber:$CIRCLE_BUILD_NUM \
+                scalableminds/webknossos-cuber:$CIRCLE_BRANCH
+              docker push scalableminds/webknossos-cuber:$CIRCLE_BRANCH
+              if [ "${CIRCLE_BRANCH}" == "master" ]; then
+                docker tag \
+                  scalableminds/webknossos-cuber:$CIRCLE_BUILD_NUM \
+                  scalableminds/webknossos-cuber:latest
+                docker push scalableminds/webknossos-cuber:latest
+              fi
+            fi
+
             docker logout
 
       - run:
