@@ -43,7 +43,6 @@ def create_parser():
 
     parser.add_argument(
         "--bbox",
-        "-bbox",
         help="The BoundingBox of which the tiff stack should be generated."
         "The input format is x,y,z,width,height,depth."
         "(By default, data for the full bounding box of the dataset is generated)",
@@ -66,7 +65,6 @@ def create_parser():
 
     tiling_option_group.add_argument(
         "--tile_size",
-        "-tile_size",
         help='For very large datasets, it is recommended to enable tiling which will ensure that each slice is exported to multiple images (i.e., tiles). As a parameter you should provide the the size of each tile per dimension in the form of "x,y".'
         'Also see at "--tiles_per_dimension" to specify the number of tiles in the dimensions.',
         default=None,
@@ -120,7 +118,6 @@ def export_tiff_slice(
         tiling_size,
         batch_size,
     ) = export_args
-    first_slice_number = batch_number * batch_size + tiff_bbox["topleft"][2]
     number_of_slices = min(tiff_bbox["size"][2] - batch_number * batch_size, batch_size)
     tiff_bbox["size"] = [tiff_bbox["size"][0], tiff_bbox["size"][1], number_of_slices]
 
