@@ -13,6 +13,7 @@ RUN mkdir /app
 WORKDIR /app
 COPY requirements.txt /app
 COPY setup.py /app
+COPY MANIFEST.in /app
 RUN pip install -r requirements.txt
 
 COPY wkcuber /app/wkcuber

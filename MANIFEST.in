@@ -1,0 +1,6 @@
+recursive-exclude .* *
+exclude .*
+exclude Dockerfile
+recursive-exclude tests *
+recursive-exclude testdata *
+recursive-exclude testoutput *
