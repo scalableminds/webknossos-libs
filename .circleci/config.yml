@@ -133,7 +133,7 @@ workflows:
   version: 2
   default:
     jobs:
-      - build_test_deploy
+      - build_test_deploy:
           filters:
             tags:
               only: /.*/
