@@ -5,6 +5,7 @@ from argparse import ArgumentParser, ArgumentTypeError
 from os import path
 import cluster_tools
 import re
+from typing import List
 
 from .utils import (
     get_chunks,
@@ -33,6 +34,19 @@ def check_input_pattern(input_pattern: str) -> str :
         raise ArgumentTypeError("{} is not a valid pattern".format(input_pattern))
 
     return input_pattern
+
+
+def replace_coordinate(pattern: str, coord_id: str, coord: int) -> str:
+    occurrences = re.findall("{" + coord_id + "+}", pattern)
+    for occurrence in occurrences:
+        number_of_digits = len(occurrence) - 2
+        if number_of_digits > 1:
+            format_str = "0"+ str(number_of_digits) + "d"
+        else:
+            format_str = "d"
+        pattern = pattern.replace(occurrence, format(coord, format_str), 1)
+    return pattern
+
 
 def create_parser():
     parser = ArgumentParser()
@@ -99,6 +113,16 @@ def find_source_filenames(source_path):
     )
     source_files.sort()
     return source_files
+
+def find_source_filenames_by_pattern(file_path_pattern: str) -> List[str]:
+    pass
+    # TODO:
+    # 1. get all files with regex match
+    # 2. get minimum and maximum from all the files with matching against a regex and using the matching group
+    #       x: replace y and z with a number in the range of x and z and then x is the only matching group left
+    #           test against all and save min, max
+    #           y, z analog
+
 
 
 def read_image_file(file_name, dtype):
@@ -191,7 +215,7 @@ def cubing_job(
                 raise exc
 
 
-def cubing(source_path, target_path, layer_name, dtype, batch_size, args=None) -> dict:
+def cubing(source_path, target_path, layer_name, dtype, batch_size, input_path_pattern, args=None) -> dict:
 
     target_wkw_info = WkwDatasetInfo(target_path, layer_name, dtype, 1)
     source_files = find_source_filenames(source_path)
@@ -242,5 +266,6 @@ if __name__ == "__main__":
         args.layer_name,
         args.dtype,
         args.batch_size,
+        args.input_path_pattern,
         args=args,
     )
