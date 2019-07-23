@@ -29,7 +29,6 @@ BLOCK_LEN = 32
 CUBE_REGEX = re.compile("(\d+)/(\d+)\.([a-zA-Z]{3,4})$")
 
 
-
 # similar to ImageJ https://imagej.net/BigStitcher_StackLoader#File_pattern
 def check_input_pattern(input_pattern: str) -> str :
     x_match = re.search("{x+}", input_pattern)
@@ -83,6 +82,7 @@ def find_source_filenames_by_pattern(file_path_pattern: str) -> List[str]:
 
     return z_min, y_min, x_min, ordered_files
 
+
 def detect_interval_for_dimensions(file_path_pattern: str, files):
     x_min = None
     y_min = None
@@ -109,41 +109,6 @@ def detect_interval_for_dimensions(file_path_pattern: str, files):
                 z_max = z_max if z_max > coordinate_value else coordinate_value
 
     return z_min, z_max, y_min, y_max, x_min, x_max
-
-
-def determine_dimensions_order_in_pattern(file_path_pattern: str) -> List[str]:
-    dimension_order = []
-    occurrences = re.findall("({x+}|{y+}|{z+})", file_path_pattern)
-    for occurrence in occurrences:
-        dimension_order.append(occurrence[1])
-    return dimension_order
-
-def find_source_sections(source_path):
-    section_folders = [
-        f for f in listdir(source_path) if path.isdir(path.join(source_path, f))
-    ]
-    section_folders = [path.join(source_path, s) for s in section_folders]
-    section_folders.sort()
-    return section_folders
-
-
-def parse_tile_file_name(filename):
-    m = CUBE_REGEX.search(filename)
-    if m is None:
-        return None
-    return (int(m.group(1)), int(m.group(2)), m.group(3))
-
-
-def find_source_files(source_section_path):
-    all_source_files = [
-        path.join(source_section_path, s)
-        for s in find_files(
-            path.join(source_section_path, "**", "*"), image_reader.readers.keys()
-        )
-    ]
-
-    all_source_files.sort()
-    return all_source_files
 
 
 def tile_cubing_job(target_wkw_info, batch_start_index, batch_ordered_files, batch_size, tile_size,
@@ -204,17 +169,12 @@ def tile_cubing(
 ):
 
     z_min, x_min, y_min, ordered_files = find_source_filenames_by_pattern(input_path_pattern)
-    # Detect available z sections
-    #sections = find_source_sections(source_path)
     if len(ordered_files) == 0:
         logging.error("No source files found")
         return
-    #min_z = min([int(path.basename(f)) for f in sections])
-    #max_z = max([int(path.basename(f)) for f in sections])
 
     # Determine tile size from first matching file
     tile_size = image_reader.read_dimensions(
-        #next(find_files(path.join(source_path, "**", "*"), image_reader.readers.keys()))
         ordered_files[0][0][0]
     )
     logging.info(
