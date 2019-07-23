@@ -71,14 +71,17 @@ def find_source_filenames_by_pattern(file_path_pattern: str) -> List[str]:
     ordered_files = []
     for z in range(z_min, z_max + 1):
         z_pattern = replace_coordinate(file_path_pattern, 'z', z)
-        files_in_this_z_dimension = []
+        files_in_z_dimension = []
         for y in range(y_min, y_max + 1):
             z_y_pattern = replace_coordinate(z_pattern, 'y', y)
+            files_in_z_y_dimension = []
             for x in range(x_min, x_max + 1):
                 z_y_x_pattern = replace_coordinate(z_y_pattern, 'x', x)
-        ordered_files.append(files_in_this_z_dimension)
+                files_in_z_y_dimension.append(z_y_x_pattern)
+            files_in_z_dimension.append(files_in_z_y_dimension)
+        ordered_files.append(files_in_z_dimension)
 
-    return z_min, z_max, ordered_files
+    return z_min, y_min, x_min, ordered_files
 
 def detect_interval_for_dimensions(file_path_pattern: str, files):
     x_min = None
@@ -143,91 +146,64 @@ def find_source_files(source_section_path):
     return all_source_files
 
 
-def tile_cubing_job(target_wkw_info, batch_ordered_files, batch_size, tile_size):
+def tile_cubing_job(target_wkw_info, batch_start_index, batch_ordered_files, batch_size, tile_size,
+                    z_offset, y_offset, x_offset):
     if len(batch_ordered_files) == 0:
         return
 
     with open_wkw(target_wkw_info) as target_wkw:
         # Iterate over the z batches
         # Batching is useful to utilize IO more efficiently
-        for z_batch in get_chunks(z_batches, batch_size):
+        for z_batch in get_chunks(batch_ordered_files, batch_size):
             try:
                 ref_time = time.time()
                 logging.info("Cubing z={}-{}".format(z_batch[0], z_batch[-1]))
 
-                for file in batch_ordered_files:
-
-
-                # Detect all available tiles in this z batch
-                tile_coords = []
-                for z in z_batch:
-                    tile_coords += [
-                        (z,) + parse_tile_file_name(f)
-                        for f in find_source_files("{}/{}".format(source_path, z))
-                    ]
-                # Figure out what x-y combinations are available in this z batch
-                xy = sorted(set([(x, y) for z, y, x, _ in tile_coords]))
-
-                # Iterate over all x-y combinations from this z batch
-                for x, y in xy:
-                    ref_time2 = time.time()
-                    buffer = []
-                    for z in z_batch:
-                        # Find the file extension of the x-y tile in this z
-                        ext = next(
-                            (
-                                ext
-                                for _z, _y, _x, ext in tile_coords
-                                if _z == z and _y == y and _x == x
-                            ),
-                            None,
-                        )
-                        # Read file if exists or zeros instead
-                        if ext is not None:
-                            image = read_image_file(
-                                "{}/{}/{}/{}.{}".format(source_path, z, y, x, ext),
-                                target_wkw_info.dtype,
+                for x in range(z_batch[0][0]):
+                    for y in range(z_batch[0]):
+                        for z in len(z_batch):
+                            ref_time2 = time.time()
+                            buffer = []
+                            # Read file if exists or zeros instead
+                            if os.path.isfile(z_batch[z][y][x]):
+                                image = read_image_file(z_batch[z][y][x])
+                                buffer.append(image)
+                            else:
+                                logging.warning(f"File: {z_batch[z][y][x]} expected but not found. The file will be skipped. "
+                                                f"This might result in unexpected results.")
+                                buffer.append(
+                                    np.zeros(tile_size, dtype=target_wkw_info.dtype)
+                                )
+                        # Write buffer to target
+                        buffer = np.dstack(buffer)
+                        if np.any(buffer != 0):
+                            target_wkw.write(
+                                [x * tile_size[0] + x_offset, y * tile_size[1] + y_offset, z_offset + batch_start_index], buffer
                             )
-                            buffer.append(image)
-                        else:
-                            logging.warning(f"File: {z_y_x_pattern} expected but not found. The file will be skipped. "
-                                    f"This might result in unexpected results.")
-                            buffer.append(
-                                np.zeros(tile_size, dtype=target_wkw_info.dtype)
+                        logging.debug(
+                            "Cubing of z={}-{} x={} y={} took {:.8f}s".format(
+                                z_offset, z_offset + len(z_batch), x + x_offset, y + y_offset, time.time() - ref_time2
                             )
-
-                    # Write buffer to target
-                    buffer = np.dstack(buffer)
-                    if np.any(buffer != 0):
-                        target_wkw.write(
-                            [x * tile_size[0], y * tile_size[1], z_batch[0]], buffer
                         )
-                    logging.debug(
-                        "Cubing of z={}-{} x={} y={} took {:.8f}s".format(
-                            z_batch[0], z_batch[-1], x, y, time.time() - ref_time2
-                        )
-                    )
-
                 logging.debug(
                     "Cubing of z={}-{} took {:.8f}s".format(
-                        z_batch[0], z_batch[-1], time.time() - ref_time
+                        z_offset, z_offset + len(z_batch), time.time() - ref_time
                     )
                 )
-
             except Exception as exc:
                 logging.error(
                     "Cubing of z={}-{} failed with {}".format(
-                        z_batch[0], z_batch[-1], exc
+                        z_offset, z_offset + len(z_batch), exc
                     )
                 )
-                raise exc
+            raise exc
 
 
 def tile_cubing(
     source_path, target_path, layer_name, dtype, batch_size, jobs, input_path_pattern, args=None
 ):
 
-    z_min, z_max, ordered_files = find_source_filenames_by_pattern(input_path_pattern)
+    z_min, x_min, y_min, ordered_files = find_source_filenames_by_pattern(input_path_pattern)
     # Detect available z sections
     #sections = find_source_sections(source_path)
     if len(ordered_files) == 0:
@@ -239,7 +215,7 @@ def tile_cubing(
     # Determine tile size from first matching file
     tile_size = image_reader.read_dimensions(
         #next(find_files(path.join(source_path, "**", "*"), image_reader.readers.keys()))
-        ordered_files[0][0]
+        ordered_files[0][0][0]
     )
     logging.info(
         "Found source files: count={} tile_size={}x{}".format(
@@ -252,14 +228,18 @@ def tile_cubing(
     with get_executor_for_args(args) as executor:
         futures = []
         # Iterate over all z batches
-        for z_start_index in range(0, len(ordered_files), batch_size):
+        for z_start_index in range(0, len(ordered_files), BLOCK_LEN):
             futures.append(
                 executor.submit(
                     tile_cubing_job,
                     target_wkw_info,
+                    z_start_index,
                     ordered_files[z_start_index: z_start_index + batch_size],
                     batch_size,
                     tile_size,
+                    z_min + z_start_index,
+                    y_min,
+                    z_min
                 )
             )
         wait_and_ensure_success(futures)
