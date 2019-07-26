@@ -24,6 +24,9 @@ KnossosDatasetInfo = namedtuple("KnossosDatasetInfo", ("dataset_path", "dtype"))
 FallbackArgs = namedtuple("FallbackArgs", ("distribution_strategy", "jobs"))
 
 
+BLOCK_LEN = 32
+
+
 def open_wkw(info, **kwargs):
     if hasattr(info, "dtype"):
         header = wkw.Header(np.dtype(info.dtype), **kwargs)
@@ -126,6 +129,16 @@ def add_distribution_flags(parser):
         "--job_resources",
         default=None,
         help='Necessary when using slurm as distribution strategy. Should be a JSON string (e.g., --job_resources=\'{"mem": "10M"}\')',
+    )
+
+
+def add_batch_size_flag(parser):
+    parser.add_argument(
+        "--batch_size",
+        "-b",
+        help="Number of sections to buffer per job",
+        type=int,
+        default=BLOCK_LEN,
     )
 
 

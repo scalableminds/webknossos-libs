@@ -3,12 +3,12 @@ import logging
 import numpy as np
 from argparse import ArgumentParser
 from os import path
-import cluster_tools
 
 from .utils import (
     get_chunks,
     find_files,
     add_verbose_flag,
+    add_batch_size_flag,
     open_wkw,
     ensure_wkw,
     WkwDatasetInfo,
@@ -45,13 +45,7 @@ def create_parser():
         default="uint8",
     )
 
-    parser.add_argument(
-        "--batch_size",
-        "-b",
-        help="Number of sections to buffer per job",
-        type=int,
-        default=BLOCK_LEN,
-    )
+    add_batch_size_flag(parser)
 
     parser.add_argument(
         "--pad",
