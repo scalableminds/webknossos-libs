@@ -94,35 +94,54 @@ jobs:
           command: tests/scripts/meta_generation.sh
 
       - run:
+          name: Remove reference magnification data
+          command: rm -r testdata/tiff_mag_2_reference/
+
+      - run:
           name: Push docker images
           command: |
             echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-            docker tag \
-              scalableminds/webknossos-cuber:$CIRCLE_BUILD_NUM \
-              scalableminds/webknossos-cuber:$CIRCLE_BRANCH
             docker push scalableminds/webknossos-cuber:$CIRCLE_BUILD_NUM
-            docker push scalableminds/webknossos-cuber:$CIRCLE_BRANCH
-            if [ "${CIRCLE_BRANCH}" == "master" ]; then
-              docker tag scalableminds/webknossos-cuber:$CIRCLE_BUILD_NUM scalableminds/webknossos-cuber:latest
-              docker push scalableminds/webknossos-cuber:latest
+
+            if [ -n "$CIRCLE_TAG" ]; then
+              docker tag \
+                scalableminds/webknossos-cuber:$CIRCLE_BUILD_NUM \
+                scalableminds/webknossos-cuber:$CIRCLE_TAG
+              docker push scalableminds/webknossos-cuber:$CIRCLE_TAG
             fi
+
+            if [ -n "$CIRCLE_BRANCH" ]; then
+              NORMALIZED_CIRCLE_BRANCH=${CIRCLE_BRANCH//[\/-]/_}
+              docker tag \
+                scalableminds/webknossos-cuber:$CIRCLE_BUILD_NUM \
+                scalableminds/webknossos-cuber:$NORMALIZED_CIRCLE_BRANCH
+              docker push scalableminds/webknossos-cuber:$NORMALIZED_CIRCLE_BRANCH
+              if [ "${CIRCLE_BRANCH}" == "master" ]; then
+                docker tag \
+                  scalableminds/webknossos-cuber:$CIRCLE_BUILD_NUM \
+                  scalableminds/webknossos-cuber:latest
+                docker push scalableminds/webknossos-cuber:latest
+              fi
+            fi
+
             docker logout
 
       - run:
           name: Publish python package
           command: |
             if [ -n "$CIRCLE_TAG" ]; then
-              echo "[distutils]" >> .pypirc
-              echo "index-servers = pypi" >> .pypirc
-              echo "[pypi]" >> .pypirc
-              echo "repository=https://upload.pypi.org/legacy/" >> .pypirc
-              echo "username=$PYPI_USERNAME" >> .pypirc
-              echo "password=$PYPI_PASSWORD" >> .pypirc
+              echo "[distutils]" >> ~/.pypirc
+              echo "index-servers = pypi" >> ~/.pypirc
+              echo "[pypi]" >> ~/.pypirc
+              echo "repository=https://upload.pypi.org/legacy/" >> ~/.pypirc
+              echo "username=$PYPI_USERNAME" >> ~/.pypirc
+              echo "password=$PYPI_PASSWORD" >> ~/.pypirc
 
               docker run --rm \
                 --entrypoint "" \
-                -v $(pwd)/.git:/app/.git \
-                -v $(pwd)/.pypirc:/root/.pypirc \
+                --workdir /wkcuber \
+                -v $(pwd):/wkcuber \
+                -v $HOME/.pypirc:/root/.pypirc \
                 scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
                 python setup.py sdist upload
             else
