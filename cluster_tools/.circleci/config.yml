@@ -68,6 +68,7 @@ jobs:
               echo "[distutils]" >> .pypirc
               echo "index-servers = pypi" >> .pypirc
               echo "[pypi]" >> .pypirc
+              cp .pypirc $HOME/.pypirc
               echo "repository=https://upload.pypi.org/legacy/" >> .pypirc
               echo "username=$PYPI_USERNAME" >> .pypirc
               echo "password=$PYPI_PASSWORD" >> .pypirc
