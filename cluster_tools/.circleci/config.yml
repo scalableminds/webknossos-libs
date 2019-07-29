@@ -60,3 +60,27 @@ jobs:
             cd ./dockered-slurm
             docker exec slurmctld bash -c "cd /cluster_tools && python36 -m pytest -s test.py"
             docker exec slurmctld bash -c "cd /cluster_tools && python36 test.py"
+
+      - run:
+          name: Publish python package
+          command: |
+            if [ -n "$CIRCLE_TAG" ]; then
+              echo "[distutils]" >> .pypirc
+              echo "index-servers = pypi" >> .pypirc
+              echo "[pypi]" >> .pypirc
+              echo "repository=https://upload.pypi.org/legacy/" >> .pypirc
+              echo "username=$PYPI_USERNAME" >> .pypirc
+              echo "password=$PYPI_PASSWORD" >> .pypirc
+              docker exec slurmctld bash -c "cd /cluster_tools && python36 setup.py sdist upload"
+            else
+              echo "Skipping publishing on non-tag"
+            fi
+
+workflows:
+  version: 2
+  default:
+    jobs:
+      - build:
+          filters:
+            tags:
+              only: /.*/
