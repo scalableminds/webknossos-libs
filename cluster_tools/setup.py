@@ -6,7 +6,6 @@ def _read(fn):
     return open(path).read()
 
 setup(name='cluster_tools',
-      version='v1.28',
       use_scm_version=True,
       setup_requires=['setuptools_scm'],
       description='Utility library for easily distributing code execution on clusters',

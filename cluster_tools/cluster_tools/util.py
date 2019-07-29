@@ -82,7 +82,9 @@ class FileWaitThread(threading.Thread):
     be created. When a specified file is created, it invokes a callback.
     """
 
-    def __init__(self, callback, executor, interval=1):
+    MAX_RETRY = 30
+
+    def __init__(self, callback, executor, interval=2):
         """The callable ``callback`` will be invoked with value
         associated with the filename of each file that is created.
         ``interval`` specifies the polling rate.
@@ -91,6 +93,7 @@ class FileWaitThread(threading.Thread):
         self.callback = callback
         self.interval = interval
         self.waiting = {}
+        self.retryMap = {}
         self.lock = threading.Lock()
         self.shutdown = False
         self.executor = executor
@@ -133,12 +136,22 @@ class FileWaitThread(threading.Thread):
                             handle_completed_job(job_id, filename, False)
                         else:
                             if status == "completed":
-                                logging.error(
-                                    "Job state is completed, but {} couldn't be found.".format(
-                                        filename
+                                self.retryMap[filename] = self.retryMap.get(filename, 0)
+                                self.retryMap[filename] += 1
+
+                                if self.retryMap[filename] <= FileWaitThread.MAX_RETRY:
+                                    # Retry by looping again
+                                    logging.warning(
+                                        "Job state is completed, but {} couldn't be found. Retrying {}/{}".format(
+                                            filename, self.retryMap[filename], FileWaitThread.MAX_RETRY
+                                        )
                                     )
-                                )
-                                handle_completed_job(job_id, filename, True)
+                                else:
+                                    logging.error(
+                                        "Job state is completed, but {} couldn't be found.".format(filename)
+                                    )
+                                    handle_completed_job(job_id, filename, True)
+
                             elif status == "failed":
                                 handle_completed_job(job_id, filename, True)
                             elif status == "ignore":
