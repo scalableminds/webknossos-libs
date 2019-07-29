@@ -1,7 +1,7 @@
 import time
 import logging
 import numpy as np
-from typing import List
+from typing import List, Dict
 import os
 from glob import glob
 import re
@@ -53,19 +53,74 @@ def replace_coordinate(pattern: str, coord_id: str, coord: int) -> str:
     return pattern
 
 
-def replace_coordinates_with_regex(pattern: str, coord_ids: List[str]) -> str:
+def replace_coordinates_with_regex(pattern: str, coord_ids: Dict[str, int]) -> str:
     occurrences = re.findall("({x+}|{y+}|{z+})", pattern)
-    for occurrences in occurrences:
-        if occurrences[1] in coord_ids:
-            number_of_digits = len(occurrences) - 2
-            pattern = pattern.replace(occurrences, "[0-9]" * number_of_digits, 1)
+    for occurrence in occurrences:
+        if occurrence[1] in coord_ids:
+            number_of_digits = len(occurrence) - 2 - coord_ids[occurrence[1]]
+            pattern = pattern.replace(occurrence, "[0-9]" * number_of_digits, 1)
     return pattern
 
+def get_digit_numbers_for_dimension(pattern):
+    x_number = 0
+    y_number = 0
+    z_number = 0
+    occurrences = re.findall("({x+}|{y+}|{z+})", pattern)
+    for occurrence in occurrences:
+        if occurrence[1] == 'x':
+            x_number = max(x_number, len(occurrence) - 2)
+        if occurrence[1] == 'y':
+            y_number = max(y_number, len(occurrence) - 2)
+        if occurrence[1] == 'z':
+            z_number = max(z_number, len(occurrence) - 2)
+    return x_number, y_number, z_number
+
+
+def detect_interval_for_dimensions(file_path_pattern: str, x_decimal_length: int, y_decimal_length: int, z_decimal_length: int) -> List[str]:
+    x_min = None
+    y_min = None
+    z_min = None
+    x_max = 0
+    y_max = 0
+    z_max = 0
+    all_files_unordered = []
+    for x in range(x_decimal_length):
+        for y in range(y_decimal_length):
+            for z in range(z_decimal_length):
+                specific_pattern = replace_coordinates_with_regex(file_path_pattern, {'z': z, 'y': y, 'x': x})
+                found_files = glob(specific_pattern)
+                all_files_unordered.extend(found_files)
+                for file in found_files:
+                    occurrences = re.findall("({x+}|{y+}|{z+})", file_path_pattern)
+                    index_offset_caused_by_brackets_and_specific_length = 0
+                    for occurrence in occurrences:
+                        # update the offset since the pattern and the file path have different length
+                        occurrence_begin_index = file_path_pattern.index(occurrence) - index_offset_caused_by_brackets_and_specific_length
+                        index_offset_caused_by_brackets_and_specific_length = index_offset_caused_by_brackets_and_specific_length + 2
+                        if occurrence[1] == 'x':
+                            occurrence_end_index = occurrence_begin_index + x_decimal_length - x
+                            index_offset_caused_by_brackets_and_specific_length = index_offset_caused_by_brackets_and_specific_length + x
+                            coordinate_value = int(file[occurrence_begin_index:occurrence_end_index])
+                            x_min = x_min if x_min and x_min < coordinate_value else coordinate_value
+                            x_max = x_max if x_max > coordinate_value else coordinate_value
+                        elif occurrence[1] == 'y':
+                            occurrence_end_index = occurrence_begin_index + y_decimal_length - y
+                            index_offset_caused_by_brackets_and_specific_length = index_offset_caused_by_brackets_and_specific_length + y
+                            coordinate_value = int(file[occurrence_begin_index:occurrence_end_index])
+                            y_min = y_min if y_min and y_min < coordinate_value else coordinate_value
+                            y_max = y_max if y_max > coordinate_value else coordinate_value
+                        else:
+                            occurrence_end_index = occurrence_begin_index + z_decimal_length - z
+                            index_offset_caused_by_brackets_and_specific_length = index_offset_caused_by_brackets_and_specific_length + z
+                            coordinate_value = int(file[occurrence_begin_index:occurrence_end_index])
+                            z_min = z_min if z_min and z_min < coordinate_value else coordinate_value
+                            z_max = z_max if z_max > coordinate_value else coordinate_value
+
+    return z_min, z_max, y_min, y_max, x_min, x_max
 
 def find_source_filenames_by_pattern(file_path_pattern: str) -> List[str]:
-    search_regex = replace_coordinates_with_regex(file_path_pattern, ['z', 'y', 'x'])
-    all_files_unordered = glob(search_regex)
-    z_min, z_max, y_min, y_max, x_min, x_max = detect_interval_for_dimensions(file_path_pattern, all_files_unordered)
+    x_decimal_length, y_decimal_length, z_decimal_length = get_digit_numbers_for_dimension(file_path_pattern)
+    z_min, z_max, y_min, y_max, x_min, x_max = detect_interval_for_dimensions(file_path_pattern, x_decimal_length, y_decimal_length, z_decimal_length)
 
     ordered_files = []
     for z in range(z_min, z_max + 1):
@@ -83,34 +138,6 @@ def find_source_filenames_by_pattern(file_path_pattern: str) -> List[str]:
     return z_min, y_min, x_min, ordered_files
 
 
-def detect_interval_for_dimensions(file_path_pattern: str, files):
-    x_min = None
-    y_min = None
-    z_min = None
-    x_max = 0
-    y_max = 0
-    z_max = 0
-    for file in files:
-        occurrences = re.findall("({x+}|{y+}|{z+})", file_path_pattern)
-        index_offset_caused_by_brackets = 0
-        for occurrence in occurrences:
-            occurrence_begin_index = file_path_pattern.index(occurrence) - index_offset_caused_by_brackets
-            occurrence_end_index = occurrence_begin_index + len(occurrence) - 2
-            index_offset_caused_by_brackets = index_offset_caused_by_brackets + 2
-            coordinate_value = int(file[occurrence_begin_index:occurrence_end_index])
-            if occurrence[1] == 'x':
-                x_min = x_min if x_min and x_min < coordinate_value else coordinate_value
-                x_max = x_max if x_max > coordinate_value else coordinate_value
-            elif occurrence[1] == 'y':
-                y_min = y_min if y_min and y_min < coordinate_value else coordinate_value
-                y_max = y_max if y_max > coordinate_value else coordinate_value
-            else:
-                z_min = z_min if z_min and z_min < coordinate_value else coordinate_value
-                z_max = z_max if z_max > coordinate_value else coordinate_value
-
-    return z_min, z_max, y_min, y_max, x_min, x_max
-
-
 def tile_cubing_job(target_wkw_info, batch_start_index, batch_ordered_files, batch_size, tile_size,
                     z_offset, y_offset, x_offset):
     if len(batch_ordered_files) == 0:
@@ -124,24 +151,28 @@ def tile_cubing_job(target_wkw_info, batch_start_index, batch_ordered_files, bat
                 ref_time = time.time()
                 logging.info("Cubing z={}-{}".format(z_batch[0], z_batch[-1]))
 
-                for x in range(z_batch[0][0]):
-                    for y in range(z_batch[0]):
-                        for z in len(z_batch):
-                            ref_time2 = time.time()
-                            buffer = []
+                for x in range(len(z_batch[0][0])):
+                    for y in range(len(z_batch[0])):
+                        ref_time2 = time.time()
+                        buffer = []
+                        for z in range(len(z_batch)):
                             # Read file if exists or zeros instead
                             if os.path.isfile(z_batch[z][y][x]):
-                                image = read_image_file(z_batch[z][y][x])
+                                image = read_image_file(z_batch[z][y][x], target_wkw_info.dtype)
+                                image = np.squeeze(image)
                                 buffer.append(image)
                             else:
                                 logging.warning(f"File: {z_batch[z][y][x]} expected but not found. The file will be skipped. "
-                                                f"This might result in unexpected results.")
+                                                f"This might produce unexpected results.")
                                 buffer.append(
                                     np.zeros(tile_size, dtype=target_wkw_info.dtype)
                                 )
                         # Write buffer to target
-                        buffer = np.dstack(buffer)
                         if np.any(buffer != 0):
+                            buffer = np.stack(buffer)
+                            # transpose if the data have a color channel
+                            if(len(buffer.shape) == 4):
+                                buffer = np.transpose(buffer, (3, 0, 1, 2))
                             target_wkw.write(
                                 [x * tile_size[0] + x_offset, y * tile_size[1] + y_offset, z_offset + batch_start_index], buffer
                             )
@@ -161,11 +192,11 @@ def tile_cubing_job(target_wkw_info, batch_start_index, batch_ordered_files, bat
                         z_offset, z_offset + len(z_batch), exc
                     )
                 )
-            raise exc
+                raise exc
 
 
 def tile_cubing(
-    source_path, target_path, layer_name, dtype, batch_size, jobs, input_path_pattern, args=None
+    target_path, layer_name, dtype, batch_size, input_path_pattern, args=None
 ):
 
     z_min, x_min, y_min, ordered_files = find_source_filenames_by_pattern(input_path_pattern)
@@ -177,6 +208,7 @@ def tile_cubing(
     tile_size = image_reader.read_dimensions(
         ordered_files[0][0][0]
     )
+    num_channels = image_reader.read_channel_count(ordered_files[0][0][0])
     logging.info(
         "Found source files: count={} tile_size={}x{}".format(
             sum(len(z_files) for z_files in ordered_files), tile_size[0], tile_size[1]
@@ -184,7 +216,7 @@ def tile_cubing(
     )
 
     target_wkw_info = WkwDatasetInfo(target_path, layer_name, dtype, 1)
-    ensure_wkw(target_wkw_info)
+    ensure_wkw(target_wkw_info, num_channels=num_channels)
     with get_executor_for_args(args) as executor:
         futures = []
         # Iterate over all z batches
@@ -219,12 +251,10 @@ if __name__ == "__main__":
     input_path_pattern = os.path.join(args.source_path, args.input_path_pattern)
 
     tile_cubing(
-        args.source_path,
         args.target_path,
         args.layer_name,
         args.dtype,
         int(args.batch_size),
-        int(args.jobs),
         input_path_pattern,
         args,
     )
