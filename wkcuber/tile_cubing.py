@@ -41,10 +41,10 @@ def check_input_pattern(input_pattern: str) -> str :
     return input_pattern
 
 
-def replace_coordinate(pattern: str, coord_id: str, coord: int) -> str:
+def replace_coordinate(pattern: str, coord_id: str, coord: int, length_offset: int = 0) -> str:
     occurrences = re.findall("{" + coord_id + "+}", pattern)
     for occurrence in occurrences:
-        number_of_digits = len(occurrence) - 2
+        number_of_digits = len(occurrence) - 2 - length_offset
         if number_of_digits > 1:
             format_str = "0"+ str(number_of_digits) + "d"
         else:
@@ -61,6 +61,7 @@ def replace_coordinates_with_regex(pattern: str, coord_ids: Dict[str, int]) -> s
             pattern = pattern.replace(occurrence, "[0-9]" * number_of_digits, 1)
     return pattern
 
+
 def get_digit_numbers_for_dimension(pattern):
     x_number = 0
     y_number = 0
@@ -76,7 +77,7 @@ def get_digit_numbers_for_dimension(pattern):
     return x_number, y_number, z_number
 
 
-def detect_interval_for_dimensions(file_path_pattern: str, x_decimal_length: int, y_decimal_length: int, z_decimal_length: int) -> List[str]:
+def detect_interval_for_dimensions(file_path_pattern: str, x_decimal_length: int, y_decimal_length: int, z_decimal_length: int) -> int:
     x_min = None
     y_min = None
     z_min = None
@@ -96,49 +97,73 @@ def detect_interval_for_dimensions(file_path_pattern: str, x_decimal_length: int
                     for occurrence in occurrences:
                         # update the offset since the pattern and the file path have different length
                         occurrence_begin_index = file_path_pattern.index(occurrence) - index_offset_caused_by_brackets_and_specific_length
-                        index_offset_caused_by_brackets_and_specific_length = index_offset_caused_by_brackets_and_specific_length + 2
+                        index_offset_caused_by_brackets_and_specific_length += 2
                         if occurrence[1] == 'x':
                             occurrence_end_index = occurrence_begin_index + x_decimal_length - x
-                            index_offset_caused_by_brackets_and_specific_length = index_offset_caused_by_brackets_and_specific_length + x
+                            index_offset_caused_by_brackets_and_specific_length += x
                             coordinate_value = int(file[occurrence_begin_index:occurrence_end_index])
                             x_min = x_min if x_min and x_min < coordinate_value else coordinate_value
                             x_max = x_max if x_max > coordinate_value else coordinate_value
                         elif occurrence[1] == 'y':
                             occurrence_end_index = occurrence_begin_index + y_decimal_length - y
-                            index_offset_caused_by_brackets_and_specific_length = index_offset_caused_by_brackets_and_specific_length + y
+                            index_offset_caused_by_brackets_and_specific_length += y
                             coordinate_value = int(file[occurrence_begin_index:occurrence_end_index])
                             y_min = y_min if y_min and y_min < coordinate_value else coordinate_value
                             y_max = y_max if y_max > coordinate_value else coordinate_value
                         else:
                             occurrence_end_index = occurrence_begin_index + z_decimal_length - z
-                            index_offset_caused_by_brackets_and_specific_length = index_offset_caused_by_brackets_and_specific_length + z
+                            index_offset_caused_by_brackets_and_specific_length += z
                             coordinate_value = int(file[occurrence_begin_index:occurrence_end_index])
                             z_min = z_min if z_min and z_min < coordinate_value else coordinate_value
                             z_max = z_max if z_max > coordinate_value else coordinate_value
 
     return z_min, z_max, y_min, y_max, x_min, x_max
 
+
+def list_all_source_files_ordered(file_path_pattern: str,
+                                  z_min: int, z_max: int, y_min: int, y_max: int, x_min: int, x_max: int,
+                                  x_decimal_length: int, y_decimal_length: int, z_decimal_length: int):
+    ordered_files = []
+    for z in range(z_min, z_max + 1):
+        files_in_z_dimension = []
+        for y in range(y_min, y_max + 1):
+            files_in_z_y_dimension = []
+            for x in range(x_min, x_max + 1):
+                found_path = None
+                for z_missing_number_length in range(x_decimal_length):
+                    for y_missing_number_length in range(y_decimal_length):
+                        for x_missing_number_length in range(z_decimal_length):
+                            z_file_path = replace_coordinate(file_path_pattern, 'z', z, length_offset=z_missing_number_length)
+                            z_y_file_path = replace_coordinate(z_file_path, 'y', y, length_offset=y_missing_number_length)
+                            z_y_x_file_path = replace_coordinate(z_y_file_path, 'x', x, length_offset=x_missing_number_length)
+
+                            if os.path.isfile(z_y_x_file_path):
+                                found_path = z_y_x_file_path
+                                break
+                        if found_path:
+                            break
+                    if found_path:
+                        break
+                if not found_path:
+                    # still get a default one since the script needs a file to maintain the order
+                    found_path = z_y_x_file_path
+                files_in_z_y_dimension.append(found_path)
+            files_in_z_dimension.append(files_in_z_y_dimension)
+        ordered_files.append(files_in_z_dimension)
+
+    return ordered_files
+
+
 def find_source_filenames_by_pattern(file_path_pattern: str) -> List[str]:
     x_decimal_length, y_decimal_length, z_decimal_length = get_digit_numbers_for_dimension(file_path_pattern)
     z_min, z_max, y_min, y_max, x_min, x_max = detect_interval_for_dimensions(file_path_pattern, x_decimal_length, y_decimal_length, z_decimal_length)
 
-    ordered_files = []
-    for z in range(z_min, z_max + 1):
-        z_pattern = replace_coordinate(file_path_pattern, 'z', z)
-        files_in_z_dimension = []
-        for y in range(y_min, y_max + 1):
-            z_y_pattern = replace_coordinate(z_pattern, 'y', y)
-            files_in_z_y_dimension = []
-            for x in range(x_min, x_max + 1):
-                z_y_x_pattern = replace_coordinate(z_y_pattern, 'x', x)
-                files_in_z_y_dimension.append(z_y_x_pattern)
-            files_in_z_dimension.append(files_in_z_y_dimension)
-        ordered_files.append(files_in_z_dimension)
+    ordered_files = list_all_source_files_ordered(file_path_pattern, z_min, z_max, y_min, y_max, x_min, x_max, x_decimal_length, y_decimal_length, z_decimal_length)
 
     return z_min, y_min, x_min, ordered_files
 
 
-def tile_cubing_job(target_wkw_info, batch_start_index, batch_ordered_files, batch_size, tile_size,
+def tile_cubing_job(target_wkw_info, batch_ordered_files, batch_size, tile_size,
                     z_offset, y_offset, x_offset):
     if len(batch_ordered_files) == 0:
         return
@@ -146,6 +171,7 @@ def tile_cubing_job(target_wkw_info, batch_start_index, batch_ordered_files, bat
     with open_wkw(target_wkw_info) as target_wkw:
         # Iterate over the z batches
         # Batching is useful to utilize IO more efficiently
+        z_batch_offset = 0
         for z_batch in get_chunks(batch_ordered_files, batch_size):
             try:
                 ref_time = time.time()
@@ -171,35 +197,36 @@ def tile_cubing_job(target_wkw_info, batch_start_index, batch_ordered_files, bat
                         if np.any(buffer != 0):
                             buffer = np.stack(buffer)
                             # transpose if the data have a color channel
-                            if(len(buffer.shape) == 4):
+                            if len(buffer.shape) == 4:
                                 buffer = np.transpose(buffer, (3, 0, 1, 2))
                             target_wkw.write(
-                                [x * tile_size[0] + x_offset, y * tile_size[1] + y_offset, z_offset + batch_start_index], buffer
+                                [x * tile_size[0] + x_offset, y * tile_size[1] + y_offset, z_offset + z_batch_offset], buffer
                             )
                         logging.debug(
                             "Cubing of z={}-{} x={} y={} took {:.8f}s".format(
-                                z_offset, z_offset + len(z_batch), x + x_offset, y + y_offset, time.time() - ref_time2
+                                z_offset + z_batch_offset, z_offset + z_batch_offset + len(z_batch), x + x_offset, y + y_offset, time.time() - ref_time2
                             )
                         )
                 logging.debug(
                     "Cubing of z={}-{} took {:.8f}s".format(
-                        z_offset, z_offset + len(z_batch), time.time() - ref_time
+                        z_offset + z_batch_offset, z_offset + z_batch_offset + len(z_batch), time.time() - ref_time
                     )
                 )
             except Exception as exc:
                 logging.error(
                     "Cubing of z={}-{} failed with {}".format(
-                        z_offset, z_offset + len(z_batch), exc
+                        z_offset + z_batch_offset, z_offset + z_batch_offset + len(z_batch), exc
                     )
                 )
                 raise exc
+            z_batch_offset += len(z_batch)
 
 
 def tile_cubing(
     target_path, layer_name, dtype, batch_size, input_path_pattern, args=None
 ):
 
-    z_min, x_min, y_min, ordered_files = find_source_filenames_by_pattern(input_path_pattern)
+    z_min, y_min, x_min, ordered_files = find_source_filenames_by_pattern(input_path_pattern)
     if len(ordered_files) == 0:
         logging.error("No source files found")
         return
@@ -225,8 +252,7 @@ def tile_cubing(
                 executor.submit(
                     tile_cubing_job,
                     target_wkw_info,
-                    z_start_index,
-                    ordered_files[z_start_index: z_start_index + batch_size],
+                    ordered_files[z_start_index: z_start_index + BLOCK_LEN],
                     batch_size,
                     tile_size,
                     z_min + z_start_index,
@@ -236,14 +262,17 @@ def tile_cubing(
             )
         wait_and_ensure_success(futures)
 
+
 def create_parser():
     parser = create_cubing_parser()
 
     parser.add_argument("--input_path_pattern",
-                        help="Path to input images e.g. path_{x}_{y}_{z}/image.tiff",
+                        help="Path to input images e.g. path_{xxxxx}_{yyyyy}_{zzzzz}/image.tiff. "
+                             "The number of signs indicate the longest number in the dimension to the base of 10.",
                         type=check_input_pattern,
-                        default="{z}/{y}/{x}.tiff")
+                        default="{zzzzzzzzzzzzzzz}/{yyyyyyyyyyyyyyy}/{xxxxxxxxxxxxxxx}.tiff")
     return parser
+
 
 if __name__ == "__main__":
     args = create_parser().parse_args()
