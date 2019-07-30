@@ -6,7 +6,7 @@ from .downsampling import (
 )
 from .compress import compress_mag_inplace
 from .metadata import write_webknossos_metadata
-from .utils import add_isotropic_flag, setup_logging
+from .utils import add_isotropic_flag, setup_logging, add_scale_flag
 from .mag import Mag
 
 
@@ -30,13 +30,7 @@ def create_parser():
 
     parser.add_argument("--name", "-n", help="Name of the dataset", default=None)
 
-    parser.add_argument(
-        "--scale",
-        "-s",
-        help="Scale of the dataset (e.g. 11.2,11.2,25). This is the size of one voxel in nm.",
-        default="1,1,1",
-    )
-
+    add_scale_flag(parser)
     add_isotropic_flag(parser)
 
     return parser

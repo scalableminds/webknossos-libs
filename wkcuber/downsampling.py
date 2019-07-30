@@ -21,6 +21,7 @@ from .utils import (
     get_executor_for_args,
     wait_and_ensure_success,
     add_isotropic_flag,
+    add_scale_flag,
     setup_logging,
 )
 
@@ -83,6 +84,7 @@ def create_parser():
         type=int,
         default=512,
     )
+    
     group.add_argument(
         "--anisotropic_target_mag",
         help="Specify an explicit anisotropic target magnification which should be "
@@ -107,13 +109,7 @@ def create_parser():
         action="store_true",
     )
 
-    parser.add_argument(
-        "--scale",
-        "-s",
-        help="Scale of the dataset (e.g. 11.2,11.2,25). This is the size of one voxel in nm.",
-        default="1,1,1",
-    )
-
+    add_scale_flag(parser)
     add_verbose_flag(parser)
     add_isotropic_flag(parser)
     add_distribution_flags(parser)
