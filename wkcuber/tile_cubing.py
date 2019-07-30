@@ -180,9 +180,12 @@ def find_file_with_dimensions(
 ) -> str:
     found_path = None
     # optimize the bounds
-    upper_bound_x = min(floor(log10(x_decimal_length)) + 1, x_decimal_length)
-    upper_bound_y = min(floor(log10(y_decimal_length)) + 1, y_decimal_length)
-    upper_bound_z = min(floor(log10(z_decimal_length)) + 1, z_decimal_length)
+    upper_bound_x = min(floor(log10(x_value + 1)) + 1, x_decimal_length)
+    upper_bound_y = min(floor(log10(y_value + 1)) + 1, y_decimal_length)
+    upper_bound_z = min(floor(log10(z_value + 1)) + 1, z_decimal_length)
+    x_missing_number_length_offset = x_decimal_length - upper_bound_x
+    y_missing_number_length_offset = y_decimal_length - upper_bound_y
+    z_missing_number_length_offset = z_decimal_length - upper_bound_z
 
     # try to find the file with all combinations of number lengths
     for z_missing_number_length in range(upper_bound_z):
@@ -191,9 +194,9 @@ def find_file_with_dimensions(
                 file_path = replace_coordinates(
                     file_path_pattern,
                     {
-                        "z": (z_value, z_missing_number_length),
-                        "y": (y_value, y_missing_number_length),
-                        "x": (x_value, x_missing_number_length),
+                        "z": (z_value, z_missing_number_length + z_missing_number_length_offset),
+                        "y": (y_value, y_missing_number_length + y_missing_number_length_offset),
+                        "x": (x_value, x_missing_number_length + x_missing_number_length_offset),
                     },
                 )
                 if os.path.isfile(file_path):
@@ -276,7 +279,7 @@ def tile_cubing_job(
                 )
             except Exception as exc:
                 logging.error(
-                    "Cubing of z={}-{} failed with {}".format(
+                    "Cubing of z={}-{} failed with: {}".format(
                         z_batch[0], z_batch[-1], exc
                     )
                 )
