@@ -194,9 +194,18 @@ def find_file_with_dimensions(
                 file_path = replace_coordinates(
                     file_path_pattern,
                     {
-                        "z": (z_value, z_missing_number_length + z_missing_number_length_offset),
-                        "y": (y_value, y_missing_number_length + y_missing_number_length_offset),
-                        "x": (x_value, x_missing_number_length + x_missing_number_length_offset),
+                        "z": (
+                            z_value,
+                            z_missing_number_length + z_missing_number_length_offset,
+                        ),
+                        "y": (
+                            y_value,
+                            y_missing_number_length + y_missing_number_length_offset,
+                        ),
+                        "x": (
+                            x_value,
+                            x_missing_number_length + x_missing_number_length_offset,
+                        ),
                     },
                 )
                 if os.path.isfile(file_path):
