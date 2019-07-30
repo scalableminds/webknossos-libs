@@ -1,10 +1,11 @@
 import time
 import logging
 import numpy as np
-from typing import Dict, Tuple
+from typing import Dict, Tuple, List
 import os
 from glob import glob
 import re
+from math import floor, ceil
 from argparse import ArgumentTypeError
 
 from wkcuber.utils import (
@@ -20,7 +21,7 @@ from wkcuber.cubing import create_parser as create_cubing_parser, read_image_fil
 from wkcuber.image_readers import image_reader
 
 BLOCK_LEN = 32
-CUBE_REGEX = re.compile("(\d+)/(\d+)\.([a-zA-Z]{3,4})$")
+PADDING_FILE_NAME = '/'
 
 
 # similar to ImageJ https://imagej.net/BigStitcher_StackLoader#File_pattern
@@ -218,6 +219,22 @@ def list_all_source_files_ordered(
     return ordered_files, number_of_files_found
 
 
+def pad_files_for_regular_chunk_alignment(ordered_files: List[str], z_min: int, z_max: int, chunk_size: int = BLOCK_LEN):
+    new_z_min = floor(z_min / chunk_size) * chunk_size
+    new_z_max = ceil(z_max / chunk_size) * chunk_size - 1
+    number_of_pad_files_to_prepend = z_min - new_z_min
+    number_of_pad_files_to_append = new_z_max - z_max
+
+    x_length = len(ordered_files[0][0])
+    y_length = len(ordered_files[0])
+    invalid_z_dimension_files = [[PADDING_FILE_NAME for x in range(x_length)] for y in range(y_length)]
+
+    padded_ordered_files = [invalid_z_dimension_files] * number_of_pad_files_to_prepend
+    padded_ordered_files.extend(ordered_files)
+    padded_ordered_files.extend([invalid_z_dimension_files] * number_of_pad_files_to_append)
+    return padded_ordered_files, new_z_min, new_z_max
+
+
 def tile_cubing_job(
     target_wkw_info,
     batch_ordered_files,
@@ -252,25 +269,32 @@ def tile_cubing_job(
                                 image = np.squeeze(image)
                                 buffer.append(image)
                             else:
-                                logging.warning(
-                                    f"File: {z_batch[z][y][x]} expected but not found. The file will be skipped. "
-                                    f"This might produce unexpected results."
-                                )
+                                # print a warning if the file is not part of the padding
+                                if not z_batch[z][y][x] == PADDING_FILE_NAME:
+                                    logging.warning(
+                                        f"File: {z_batch[z][y][x]} expected but not found. The file will be skipped. "
+                                        f"This might produce unexpected results."
+                                    )
+                                # add zeros instead
                                 buffer.append(
                                     np.squeeze(
                                         np.zeros(tile_size, dtype=target_wkw_info.dtype)
                                     )
                                 )
-                        # Write buffer to target
+
+                        buffer = np.stack(buffer, axis=2)
+                        # transpose if the data have a color channel
+                        if len(buffer.shape) == 4:
+                            buffer = np.transpose(buffer, (3, 0, 1, 2))
+                        # Write buffer to target if not empty
                         if np.any(buffer != 0):
-                            buffer = np.stack(buffer)
-                            # transpose if the data have a color channel
-                            if len(buffer.shape) == 4:
-                                buffer = np.transpose(buffer, (3, 0, 1, 2))
+                            print((x + x_offset) * tile_size[0],
+                                    (y + y_offset) * tile_size[1],
+                                    z_offset + z_batch_offset, buffer.shape)
                             target_wkw.write(
                                 [
-                                    x * tile_size[0] + x_offset,
-                                    y * tile_size[1] + y_offset,
+                                    (x + x_offset) * tile_size[0],
+                                    (y + y_offset) * tile_size[1],
                                     z_offset + z_batch_offset,
                                 ],
                                 buffer,
@@ -342,6 +366,7 @@ def tile_cubing(
             len(ordered_files) * len(ordered_files[0]) * len(ordered_files[0][0]),
         )
     )
+    ordered_files, z_min, z_max = pad_files_for_regular_chunk_alignment(ordered_files, z_min, z_max)
 
     target_wkw_info = WkwDatasetInfo(target_path, layer_name, dtype, 1)
     ensure_wkw(target_wkw_info, num_channels=num_channels)
@@ -358,7 +383,7 @@ def tile_cubing(
                     tile_size,
                     z_min + z_start_index,
                     y_min,
-                    z_min,
+                    x_min,
                 )
             )
         wait_and_ensure_success(futures)
@@ -372,7 +397,7 @@ def create_parser():
         help="Path to input images e.g. path_{xxxxx}_{yyyyy}_{zzzzz}/image.tiff. "
         "The number of signs indicate the longest number in the dimension to the base of 10.",
         type=check_input_pattern,
-        default="{zzzzzzzzzzzzzzz}/{yyyyyyyyyyyyyyy}/{xxxxxxxxxxxxxxx}.jpg",
+        default="{zzzzzzzzzz}/{yyyyyyyyyy}/{xxxxxxxxxx}.jpg",
     )
     return parser
 
