@@ -84,7 +84,7 @@ def create_parser():
         type=int,
         default=512,
     )
-    
+
     group.add_argument(
         "--anisotropic_target_mag",
         help="Specify an explicit anisotropic target magnification which should be "
