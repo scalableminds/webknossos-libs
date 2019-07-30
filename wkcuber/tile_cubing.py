@@ -5,7 +5,7 @@ from typing import Dict, Tuple, List
 import os
 from glob import glob
 import re
-from math import floor, ceil
+from math import floor, ceil, log10
 from argparse import ArgumentTypeError
 
 from wkcuber.utils import (
@@ -169,83 +169,6 @@ def detect_interval_for_dimensions(
     return z_min, z_max, y_min, y_max, x_min, x_max, arbitrary_file, file_count
 
 
-def list_all_source_files_ordered(
-    file_path_pattern: str,
-    z_min: int,
-    z_max: int,
-    y_min: int,
-    y_max: int,
-    x_min: int,
-    x_max: int,
-    x_decimal_length: int,
-    y_decimal_length: int,
-    z_decimal_length: int,
-):
-    ordered_files = []
-    number_of_files_found = 0
-    # scan for files in the whole range
-    for z in range(z_min, z_max + 1):
-        files_in_z_dimension = []
-        for y in range(y_min, y_max + 1):
-            files_in_z_y_dimension = []
-            for x in range(x_min, x_max + 1):
-                found_path = None
-
-                # try to find the file with all combinations of number lengths
-                for z_missing_number_length in range(x_decimal_length):
-                    for y_missing_number_length in range(y_decimal_length):
-                        for x_missing_number_length in range(z_decimal_length):
-                            file_path = replace_coordinates(
-                                file_path_pattern,
-                                {
-                                    "z": (z, z_missing_number_length),
-                                    "y": (y, y_missing_number_length),
-                                    "x": (x, x_missing_number_length),
-                                },
-                            )
-
-                            if os.path.isfile(file_path):
-                                # set the file as found and break out of the
-                                number_of_files_found += 1
-                                found_path = file_path
-                                break
-                        if found_path:
-                            break
-                    if found_path:
-                        break
-                if not found_path:
-                    # still get a default one since the script needs a file to maintain the order
-                    found_path = file_path
-                # create a list for each sub-dimension
-                files_in_z_y_dimension.append(found_path)
-            files_in_z_dimension.append(files_in_z_y_dimension)
-        ordered_files.append(files_in_z_dimension)
-
-    return ordered_files, number_of_files_found
-
-
-def pad_files_for_regular_chunk_alignment(
-    ordered_files: List[str], z_min: int, z_max: int, chunk_size: int = BLOCK_LEN
-):
-    new_z_min = floor(z_min / chunk_size) * chunk_size
-    new_z_max = ceil(z_max / chunk_size) * chunk_size - 1
-    number_of_pad_files_to_prepend = z_min - new_z_min
-    number_of_pad_files_to_append = new_z_max - z_max
-
-    x_length = len(ordered_files[0][0])
-    y_length = len(ordered_files[0])
-    invalid_z_dimension_files = [
-        [PADDING_FILE_NAME for x in range(x_length)] for y in range(y_length)
-    ]
-
-    padded_ordered_files = [invalid_z_dimension_files] * number_of_pad_files_to_prepend
-    padded_ordered_files.extend(ordered_files)
-    padded_ordered_files.extend(
-        [invalid_z_dimension_files] * number_of_pad_files_to_append
-    )
-    return padded_ordered_files, new_z_min, new_z_max
-
-
 def find_file_with_dimensions(
     file_path_pattern: str,
     x_value: int,
@@ -255,13 +178,16 @@ def find_file_with_dimensions(
     y_decimal_length: int,
     z_decimal_length: int,
 ) -> str:
-    # todo log_10 optimization
     found_path = None
+    # optimize the bounds
+    upper_bound_x = min(floor(log10(x_decimal_length)) + 1, x_decimal_length)
+    upper_bound_y = min(floor(log10(y_decimal_length)) + 1, y_decimal_length)
+    upper_bound_z = min(floor(log10(z_decimal_length)) + 1, z_decimal_length)
 
     # try to find the file with all combinations of number lengths
-    for z_missing_number_length in range(x_decimal_length):
-        for y_missing_number_length in range(y_decimal_length):
-            for x_missing_number_length in range(z_decimal_length):
+    for z_missing_number_length in range(upper_bound_z):
+        for y_missing_number_length in range(upper_bound_y):
+            for x_missing_number_length in range(upper_bound_x):
                 file_path = replace_coordinates(
                     file_path_pattern,
                     {
@@ -272,13 +198,9 @@ def find_file_with_dimensions(
                 )
                 if os.path.isfile(file_path):
                     # set the file as found and break out of the
-                    found_path = file_path
-                    break
-            if found_path:
-                break
-        if found_path:
-            break
-    return found_path
+                    return file_path
+
+    return None
 
 
 def tile_cubing_job(
@@ -419,7 +341,7 @@ def create_parser():
         help="Path to input images e.g. path_{xxxxx}_{yyyyy}_{zzzzz}/image.tiff. "
         "The number of signs indicate the longest number in the dimension to the base of 10.",
         type=check_input_pattern,
-        default="{zzzzzzzzzz}/{yyyyyyyyyy}/{xxxxxxxxxx}.jpg",
+        default="{zzzzzzzzzzzzzzz}/{yyyyyyyyyyyyyyy}/{xxxxxxxxxxxxxxx}.jpg",
     )
     return parser
 
