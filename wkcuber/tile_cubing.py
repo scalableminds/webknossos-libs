@@ -178,14 +178,13 @@ def find_file_with_dimensions(
     y_decimal_length: int,
     z_decimal_length: int,
 ) -> str:
-    found_path = None
     # optimize the bounds
-    upper_bound_x = min(floor(log10(x_value + 1)) + 1, x_decimal_length)
-    upper_bound_y = min(floor(log10(y_value + 1)) + 1, y_decimal_length)
-    upper_bound_z = min(floor(log10(z_value + 1)) + 1, z_decimal_length)
-    x_missing_number_length_offset = x_decimal_length - upper_bound_x
-    y_missing_number_length_offset = y_decimal_length - upper_bound_y
-    z_missing_number_length_offset = z_decimal_length - upper_bound_z
+    x_missing_number_length_offset = floor(log10(max(x_value, 1))) + 1
+    y_missing_number_length_offset = floor(log10(max(y_value, 1))) + 1
+    z_missing_number_length_offset = floor(log10(max(z_value, 1))) + 1
+    upper_bound_x = x_decimal_length - x_missing_number_length_offset
+    upper_bound_y = y_decimal_length - y_missing_number_length_offset
+    upper_bound_z = z_decimal_length - z_missing_number_length_offset
 
     # try to find the file with all combinations of number lengths
     for z_missing_number_length in range(upper_bound_z):
@@ -351,9 +350,11 @@ def create_parser():
     parser.add_argument(
         "--input_path_pattern",
         help="Path to input images e.g. path_{xxxxx}_{yyyyy}_{zzzzz}/image.tiff. "
-        "The number of signs indicate the longest number in the dimension to the base of 10.",
+        "The number of signs indicate the longest number in the dimension to the base of 10."
+        "It is recommended to always provide the input path pattern to improve the "
+        "performance since the default might try too many combinations.",
         type=check_input_pattern,
-        default="{zzzzzzzzzzzzzzz}/{yyyyyyyyyyyyyyy}/{xxxxxxxxxxxxxxx}.jpg",
+        default="{zzzzzzzzzz}/{yyyyyyyyyy}/{xxxxxxxxxx}.jpg",
     )
     return parser
 
