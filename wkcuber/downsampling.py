@@ -3,14 +3,12 @@ import wkw
 import re
 import numpy as np
 from argparse import ArgumentParser
-from math import floor, log2
-from os import path, listdir
+import os
 from scipy.ndimage.interpolation import zoom
 from itertools import product
-from functools import lru_cache
 from enum import Enum
 from .mag import Mag
-from wkcuber.metadata import read_datasource_properties
+from .metadata import read_datasource_properties
 
 from .utils import (
     add_verbose_flag,
@@ -22,7 +20,8 @@ from .utils import (
     add_distribution_flags,
     get_executor_for_args,
     wait_and_ensure_success,
-    add_anisotropic_flag,
+    add_isotropic_flag,
+    add_scale_flag,
     setup_logging,
 )
 
@@ -85,6 +84,7 @@ def create_parser():
         type=int,
         default=512,
     )
+
     group.add_argument(
         "--anisotropic_target_mag",
         help="Specify an explicit anisotropic target magnification which should be "
@@ -109,8 +109,9 @@ def create_parser():
         action="store_true",
     )
 
+    add_scale_flag(parser)
     add_verbose_flag(parser)
-    add_anisotropic_flag(parser)
+    add_isotropic_flag(parser)
     add_distribution_flags(parser)
 
     return parser
@@ -447,6 +448,67 @@ def downsample_mag(
 
 
 def downsample_mags(
+    path: str,
+    layer_name: str = None,
+    from_mag: Mag = None,
+    max_mag: Mag = Mag(32),
+    interpolation_mode: str = "default",
+    cube_edge_len: int = DEFAULT_EDGE_LEN,
+    compress: bool = True,
+    args=None,
+    anisotropic: bool = True,
+):
+    assert layer_name and from_mag or not layer_name and not from_mag, (
+        "You provided only one of the following "
+        "parameters: layer_name, from_mag but both "
+        "need to be set or none. If you don't provide "
+        "the parameters you need to provide the path "
+        "argument with the mag and layer to downsample"
+        " (e.g dataset/color/1)."
+    )
+    scale = getattr(args, "scale", None) if args else None
+    if not layer_name or not from_mag:
+        layer_name = os.path.basename(os.path.dirname(path))
+        from_mag = Mag(os.path.basename(path))
+        path = os.path.dirname(os.path.dirname(path))
+
+    if anisotropic:
+        if scale is None:
+            try:
+                scale = read_datasource_properties(path)["scale"]
+            except Exception as exc:
+                logging.error(
+                    f"Could not get the scale from the datasource-properties.json. Probably your path is wrong. "
+                    "If you do not provide the layer_name or from_mag, they need to be included in the path."
+                    "(e.g. dataset/color/1). Otherwise the path should just point at the dataset directory."
+                    "the path: {path}"
+                )
+                raise exc
+        downsample_mags_anisotropic(
+            path,
+            layer_name,
+            from_mag,
+            max_mag,
+            scale,
+            interpolation_mode,
+            cube_edge_len,
+            compress,
+            args,
+        )
+    else:
+        downsample_mags_isotropic(
+            path,
+            layer_name,
+            from_mag,
+            max_mag,
+            interpolation_mode,
+            cube_edge_len,
+            compress,
+            args,
+        )
+
+
+def downsample_mags_isotropic(
     path,
     layer_name,
     from_mag: Mag,
@@ -535,6 +597,9 @@ if __name__ == "__main__":
 
     from_mag = Mag(args.from_mag)
     max_mag = Mag(args.max)
+    scale = (
+        [float(x) for x in args.scale.split(",")] if hasattr(args, "scale") else None
+    )
     if args.anisotropic_target_mag:
         anisotropic_target_mag = Mag(args.anisotropic_target_mag)
 
@@ -548,16 +613,17 @@ if __name__ == "__main__":
             not args.no_compress,
             args,
         )
-    elif args.anisotropic:
-        try:
-            scale = read_datasource_properties(args.path)["scale"]
-        except Exception as exc:
-            logging.error(
-                "Could not determine scale which is necessary "
-                "to find target magnifications for anisotropic downsampling. "
-                "Does the provided dataset have a datasource-properties.json file?"
-            )
-            raise exc
+    elif not args.isotropic:
+        if scale is None:
+            try:
+                scale = read_datasource_properties(args.path)["scale"]
+            except Exception as exc:
+                logging.error(
+                    "Could not determine scale which is necessary "
+                    "to find target magnifications for anisotropic downsampling. "
+                    "Does the provided dataset have a datasource-properties.json file?"
+                )
+                raise exc
 
         downsample_mags_anisotropic(
             args.path,
@@ -571,7 +637,7 @@ if __name__ == "__main__":
             args,
         )
     else:
-        downsample_mags(
+        downsample_mags_isotropic(
             args.path,
             args.layer_name,
             from_mag,

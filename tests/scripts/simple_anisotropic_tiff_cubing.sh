@@ -9,10 +9,9 @@ docker run \
   --jobs 2 \
   --batch_size 8 \
   --layer_name color \
-  --max_mag 8 \
+  --max 8 \
   --scale 11.24,25,11.24 \
   --name awesome_data \
-  --anisotropic \
   /testdata/tiff /testoutput/tiff3
 [ -d testoutput/tiff3/color ]
 [ -d testoutput/tiff3/color/1 ]
