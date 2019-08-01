@@ -1,6 +1,6 @@
 from concurrent import futures
 import os
-from cluster_tools.util import random_string, local_filename, FileWaitThread
+from cluster_tools.util import random_string, local_filename, FileWaitThread, enrich_future_with_uncaught_warning, get_function_name
 import threading
 import signal
 import sys
@@ -149,9 +149,14 @@ class ClusterExecutor(futures.Executor):
                 "submit() was invoked on a ClusterExecutor instance even though shutdown() was executed for that instance."
             )
 
+    def create_enriched_future(self):
+        fut = futures.Future()
+        enrich_future_with_uncaught_warning(fut)
+        return fut
+
     def submit(self, fun, *args, **kwargs):
         """Submit a job to the pool."""
-        fut = futures.Future()
+        fut = self.create_enriched_future()
 
         self.ensure_not_shutdown()
 
@@ -162,7 +167,7 @@ class ClusterExecutor(futures.Executor):
         with open(INFILE_FMT % workerid, "wb") as f:
             f.write(funcser)
 
-        job_name = fun.__name__
+        job_name = get_function_name(fun)
         jobid = self._start(workerid, job_name=job_name)
 
         if self.debug:
@@ -192,7 +197,7 @@ class ClusterExecutor(futures.Executor):
 
         # Submit jobs eagerly
         for index, arg in enumerate(allArgs):
-            fut = futures.Future()
+            fut = self.create_enriched_future()
 
             # Start the job.
             funcser = pickling.dumps((fun, [arg], {}, self.meta_data), True)
@@ -204,7 +209,7 @@ class ClusterExecutor(futures.Executor):
             futs.append(fut)
 
         job_count = len(allArgs)
-        job_name = fun.__name__
+        job_name = get_function_name(fun)
         jobid = self._start(workerid, job_count, job_name)
         
 

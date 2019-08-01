@@ -5,6 +5,8 @@ import time
 import sys
 import logging
 from enum import Enum
+from functools import partial
+import os
 
 # "Worker" functions.
 def square(n):
@@ -17,6 +19,10 @@ def sleep(duration):
 
 logging.basicConfig()
 
+def raise_if(msg, bool):
+    if bool:
+        raise Exception("raise_if was called with True: {}".format(msg))
+
 
 def get_executors():
     return [
@@ -28,6 +34,67 @@ def get_executors():
         cluster_tools.get_executor("test_pickling"),
         # cluster_tools.get_executor("pbs"),
     ]
+
+def test_uncaught_warning():
+    """
+    This test ensures that there are warnings for "uncaught" futures.
+    """
+
+    # Log to a specific file which we can check for
+    log_file_name = 'warning.log'
+    logger = logging.getLogger('')
+    logger.setLevel(logging.DEBUG)
+    # create file handler which logs even debug messages
+    if os.path.exists(log_file_name):
+        os.remove(log_file_name)
+    fh = logging.FileHandler(log_file_name)
+    logger.addHandler(fh)
+
+    cases = [False, True]
+
+    def expect_marker(marker, msg, should_exist=True):
+        maybe_negate = lambda b: b if should_exist else not b
+
+        fh.flush()
+        with open(log_file_name) as file:
+            content = file.read()
+            assert maybe_negate(marker in content), msg
+
+    # In the following 4 cases we check whether there is a/no warning when using
+    # map/submit with/without checking the futures.
+    for exc in get_executors():
+        marker = "map-expect-warning"
+        with exc:
+            exc.map(partial(raise_if, marker), cases)
+        expect_marker(marker, "There should be a warning for an uncaught Future in map")
+
+    for exc in get_executors():
+        marker = "map-dont-expect-warning"
+        with exc:
+            try:
+                list(exc.map(partial(raise_if, marker), cases))
+            except Exception:
+                pass
+        expect_marker(marker, "There should be no warning for an uncaught Future in map", False)
+
+    for exc in get_executors():
+        marker = "submit-expect-warning"
+        with exc:
+            futures = [exc.submit(partial(raise_if, marker), b) for b in cases]
+        expect_marker(marker, "There should be no warning for an uncaught Future in submit")
+
+    for exc in get_executors():
+        marker = "submit-dont-expect-warning"
+        with exc:
+            futures = [exc.submit(partial(raise_if, marker), b) for b in cases]
+            try:
+                for f in futures:
+                    f.result()
+            except Exception:
+                pass
+        expect_marker(marker, "There should be a warning for an uncaught Future in submit", False)
+
+    logger.removeHandler(fh)
 
 
 def test_submit():

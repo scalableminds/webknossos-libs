@@ -6,6 +6,7 @@ import threading
 import time
 import logging
 import re
+import types
 
 def local_filename(filename=""):
     return os.path.join(os.getenv("CFUT_DIR", ".cfut"), filename)
@@ -158,3 +159,41 @@ class FileWaitThread(threading.Thread):
                                 pass
 
             time.sleep(self.interval)
+
+def get_function_name(fun):
+    # When using functools.partial, __name__ does not exist
+    return fun.__name__ if hasattr(fun, "__name__") else "<unknown function>"
+
+def enrich_future_with_uncaught_warning(f):
+    """
+    Hooks into relevant methods of the given future so that we can detect
+    whether someone handled the exception potentially thrown by the future.
+    """
+    methods_to_hook = ["cancel", "result", "exception", "add_done_callback"]
+
+    def warn_if_exception_not_handled(future):
+        # By calling exception here, we are increasing cluster_tools_handler_count by 1
+        maybe_exception = future.exception()
+        if maybe_exception is not None:
+            if hasattr(f, "cluster_tools_handler_count") and f.cluster_tools_handler_count <= 1:
+                logging.warning("A future crashed with an exception: {}. Future: {}".format(maybe_exception, future))
+
+    if not hasattr(f, "is_wrapped_by_cluster_tools"):
+        f.is_wrapped_by_cluster_tools = True
+        f.cluster_tools_handler_count = 0
+        f.add_done_callback(warn_if_exception_not_handled)
+
+        def hook_method(m):
+            # Ensure that cluster_tools_handler_count is creased when
+            # method m is called
+
+            old_method = getattr(f, m)
+
+            def new_method(self, *args, **kwargs):
+                self.cluster_tools_handler_count += 1
+                return old_method(*args, **kwargs)
+
+            setattr(f, m, types.MethodType(new_method, f))
+
+        for m in methods_to_hook:
+            hook_method(m)
