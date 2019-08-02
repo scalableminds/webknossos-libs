@@ -169,7 +169,14 @@ def downsample(
         )
     )
 
-    ensure_wkw(target_wkw_info)
+    with open_wkw(source_wkw_info) as source_wkw:
+        num_channels = source_wkw.header.num_channels
+        header_block_type = (
+            wkw.Header.BLOCK_TYPE_LZ4HC if compress else wkw.Header.BLOCK_TYPE_RAW
+        )
+        ensure_wkw(
+            target_wkw_info, block_type=header_block_type, num_channels=num_channels
+        )
 
     with get_executor_for_args(args) as executor:
         futures = []
