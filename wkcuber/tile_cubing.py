@@ -1,11 +1,11 @@
 import time
 import logging
 import numpy as np
-from typing import Dict, Tuple, List
+from typing import Dict, Tuple, Union
 import os
 from glob import glob
 import re
-from math import floor, ceil, log10
+from math import floor, log10
 from argparse import ArgumentTypeError
 
 from wkcuber.utils import (
@@ -89,18 +89,23 @@ def detect_interval_for_dimensions(
     x_decimal_length: int,
     y_decimal_length: int,
     z_decimal_length: int,
-) -> int:
-    x_min = None
-    y_min = None
-    z_min = None
-    x_max = 0
-    y_max = 0
-    z_max = 0
+) -> Tuple[int, int, int, int, int, int, str, int]:
     arbitrary_file = None
     file_count = 0
-    for x in range(x_decimal_length):
-        for y in range(y_decimal_length):
-            for z in range(z_decimal_length):
+    decimal_length = {
+        "x": x_decimal_length,
+        "y": y_decimal_length,
+        "z": z_decimal_length,
+    }
+    current_decimal_length = {"x": 0, "y": 0, "z": 0}
+    max_dimensions = {"x": 0, "y": 0, "z": 0}
+    min_dimensions = {"x": None, "y": None, "z": None}
+    for x in range(x_decimal_length + 1):
+        current_decimal_length["x"] = x
+        for y in range(y_decimal_length + 1):
+            current_decimal_length["y"] = y
+            for z in range(z_decimal_length + 1):
+                current_decimal_length["z"] = z
                 specific_pattern = replace_coordinates_with_glob_regex(
                     file_path_pattern, {"z": z, "y": y, "x": x}
                 )
@@ -117,56 +122,41 @@ def detect_interval_for_dimensions(
                             - index_offset_caused_by_brackets_and_specific_length
                         )
                         index_offset_caused_by_brackets_and_specific_length += 2
-                        if occurrence[1] == "x":
-                            occurrence_end_index = (
-                                occurrence_begin_index + x_decimal_length - x
-                            )
-                            index_offset_caused_by_brackets_and_specific_length += x
-                            coordinate_value = int(
-                                file[occurrence_begin_index:occurrence_end_index]
-                            )
-                            x_min = (
-                                x_min
-                                if x_min and x_min < coordinate_value
-                                else coordinate_value
-                            )
-                            x_max = (
-                                x_max if x_max > coordinate_value else coordinate_value
-                            )
-                        elif occurrence[1] == "y":
-                            occurrence_end_index = (
-                                occurrence_begin_index + y_decimal_length - y
-                            )
-                            index_offset_caused_by_brackets_and_specific_length += y
-                            coordinate_value = int(
-                                file[occurrence_begin_index:occurrence_end_index]
-                            )
-                            y_min = (
-                                y_min
-                                if y_min and y_min < coordinate_value
-                                else coordinate_value
-                            )
-                            y_max = (
-                                y_max if y_max > coordinate_value else coordinate_value
-                            )
-                        else:
-                            occurrence_end_index = (
-                                occurrence_begin_index + z_decimal_length - z
-                            )
-                            index_offset_caused_by_brackets_and_specific_length += z
-                            coordinate_value = int(
-                                file[occurrence_begin_index:occurrence_end_index]
-                            )
-                            z_min = (
-                                z_min
-                                if z_min and z_min < coordinate_value
-                                else coordinate_value
-                            )
-                            z_max = (
-                                z_max if z_max > coordinate_value else coordinate_value
-                            )
+                        current_dimension = occurrence[1]
+                        occurrence_end_index = (
+                            occurrence_begin_index
+                            + decimal_length[current_dimension]
+                            - current_decimal_length[current_dimension]
+                        )
+                        index_offset_caused_by_brackets_and_specific_length += current_decimal_length[
+                            current_dimension
+                        ]
+                        coordinate_value = int(
+                            file[occurrence_begin_index:occurrence_end_index]
+                        )
+                        min_dimensions[current_dimension] = (
+                            min_dimensions[current_dimension]
+                            if min_dimensions[current_dimension]
+                            and min_dimensions[current_dimension] < coordinate_value
+                            else coordinate_value
+                        )
+                        max_dimensions[current_dimension] = (
+                            max_dimensions[current_dimension]
+                            if max_dimensions[current_dimension]
+                            and max_dimensions[current_dimension] > coordinate_value
+                            else coordinate_value
+                        )
 
-    return z_min, z_max, y_min, y_max, x_min, x_max, arbitrary_file, file_count
+    return (
+        min_dimensions["x"],
+        max_dimensions["x"],
+        min_dimensions["y"],
+        max_dimensions["y"],
+        min_dimensions["z"],
+        max_dimensions["z"],
+        arbitrary_file,
+        file_count,
+    )
 
 
 def find_file_with_dimensions(
@@ -177,7 +167,7 @@ def find_file_with_dimensions(
     x_decimal_length: int,
     y_decimal_length: int,
     z_decimal_length: int,
-) -> str:
+) -> Union[str, None]:
     # optimize the bounds
     x_missing_number_length_offset = floor(log10(max(x_value, 1))) + 1
     y_missing_number_length_offset = floor(log10(max(y_value, 1))) + 1
@@ -300,17 +290,17 @@ def tile_cubing(
     x_decimal_length, y_decimal_length, z_decimal_length = get_digit_numbers_for_dimension(
         input_path_pattern
     )
-    z_min, z_max, y_min, y_max, x_min, x_max, arbitraty_file, file_count = detect_interval_for_dimensions(
+    z_min, z_max, y_min, y_max, x_min, x_max, arbitrary_file, file_count = detect_interval_for_dimensions(
         input_path_pattern, x_decimal_length, y_decimal_length, z_decimal_length
     )
 
-    if not arbitraty_file:
+    if not arbitrary_file:
         logging.error("No source files found")
         return
 
     # Determine tile size from first matching file
-    tile_size = image_reader.read_dimensions(arbitraty_file)
-    num_channels = image_reader.read_channel_count(arbitraty_file)
+    tile_size = image_reader.read_dimensions(arbitrary_file)
+    num_channels = image_reader.read_channel_count(arbitrary_file)
     tile_size = (tile_size[0], tile_size[1], num_channels)
     logging.info(
         "Found source files: count={} with tile_size={}x{}".format(
