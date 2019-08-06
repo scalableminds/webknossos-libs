@@ -69,9 +69,6 @@ class SlurmExecutor(ClusterExecutor):
         return os.environ.get("SLURM_JOB_ID")
 
     def format_log_file_name(self, jobid):
-        # dirty workaround: job id can be a compound id (jobid_jobindex)
-        # which we always put into log files with jobid.jobindex format
-        jobid = str(jobid).replace("_", ".")
         return local_filename("slurmpy.stdout.{}.log").format(str(jobid))
 
     def inner_submit(
@@ -84,7 +81,7 @@ class SlurmExecutor(ClusterExecutor):
         """Starts a Slurm job that runs the specified shell command line.
         """
 
-        log_path = self.format_log_file_name("%j" if job_count is None else "%A.%a")
+        log_path = self.format_log_file_name("%j" if job_count is None else "%A_%a")
 
         job_resources_lines = []
         if self.job_resources is not None:
@@ -148,6 +145,5 @@ class SlurmExecutor(ClusterExecutor):
         elif matches_states(SLURM_STATES["Success"]):
             return "completed"
         else:
-            logging.error("Unhandled slurm job state? {}".format(job_states))
+            logging.error("Unhandled slurm job state for job id {}? {}".format(job_id, job_states))
             return "ignore"
-    
