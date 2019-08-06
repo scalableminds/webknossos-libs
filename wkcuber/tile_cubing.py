@@ -19,7 +19,7 @@ from .utils import (
     wait_and_ensure_success,
     setup_logging,
 )
-from .cubing import create_parser, read_image_file
+from .cubing import create_parser, read_image_file, prepare_slices_for_wkw
 from .image_readers import image_reader
 
 BLOCK_LEN = 32
@@ -79,7 +79,7 @@ def tile_cubing_job(target_wkw_info, z_batches, source_path, batch_size, tile_si
                 # Iterate over all x-y combinations from this z batch
                 for x, y in xy:
                     ref_time2 = time.time()
-                    buffer = []
+                    slices = []
                     for z in z_batch:
                         # Find the file extension of the x-y tile in this z
                         ext = next(
@@ -96,16 +96,17 @@ def tile_cubing_job(target_wkw_info, z_batches, source_path, batch_size, tile_si
                                 "{}/{}/{}/{}.{}".format(source_path, z, y, x, ext),
                                 target_wkw_info.dtype,
                             )
-                            buffer.append(image)
+                            slices.append(image)
                         else:
-                            buffer.append(
+                            slices.append(
                                 np.zeros(
-                                    tile_size + (1, 1), dtype=target_wkw_info.dtype
+                                    tile_size + (1,1), dtype=target_wkw_info.dtype
                                 )
                             )
 
                     # Write buffer to target
-                    buffer = np.dstack(buffer)
+                    buffer = prepare_slices_for_wkw(slices)
+
                     if np.any(buffer != 0):
                         target_wkw.write(
                             [x * tile_size[0], y * tile_size[1], z_batch[0]], buffer
