@@ -148,12 +148,12 @@ def detect_interval_for_dimensions(
                         )
 
     return (
-        min_dimensions["x"],
-        max_dimensions["x"],
-        min_dimensions["y"],
-        max_dimensions["y"],
         min_dimensions["z"],
         max_dimensions["z"],
+        min_dimensions["y"],
+        max_dimensions["y"],
+        min_dimensions["x"],
+        max_dimensions["x"],
         arbitrary_file,
         file_count,
     )
