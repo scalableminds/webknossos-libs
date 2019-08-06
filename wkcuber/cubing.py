@@ -85,6 +85,7 @@ def read_image_file(file_name, dtype):
         logging.error("Reading of file={} failed with {}".format(file_name, exc))
         raise exc
 
+
 def prepare_slices_for_wkw(slices, num_channels=None):
     # Write batch buffer which will have shape (x, y, channel_count, z)
     # since we concat along the last axis (z)
@@ -97,6 +98,7 @@ def prepare_slices_for_wkw(slices, num_channels=None):
     if num_channels is not None:
         assert buffer.shape[0] == num_channels
     return buffer
+
 
 def cubing_job(
     target_wkw_info,

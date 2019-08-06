@@ -100,7 +100,7 @@ def tile_cubing_job(target_wkw_info, z_batches, source_path, batch_size, tile_si
                         else:
                             slices.append(
                                 np.zeros(
-                                    tile_size + (1,1), dtype=target_wkw_info.dtype
+                                    tile_size + (1, 1), dtype=target_wkw_info.dtype
                                 )
                             )
 
