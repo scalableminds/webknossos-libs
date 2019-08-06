@@ -121,7 +121,14 @@ class ImageReader:
 
     def read_array(self, file_name, dtype):
         _, ext = path.splitext(file_name)
-        return self.readers[ext].read_array(file_name, dtype)
+
+        # Image shape will be (x, y, channel_count, z=1) or (x, y, z=1)
+        image = self.readers[ext].read_array(file_name, dtype)
+        # Standardize the image shape to (x, y, channel_count, z=1)
+        if image.ndim == 3:
+            image = image.reshape(image.shape + (1,))
+
+        return image
 
     def read_dimensions(self, file_name):
         _, ext = path.splitext(file_name)
