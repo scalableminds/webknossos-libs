@@ -3,6 +3,7 @@ import logging
 import numpy as np
 from argparse import ArgumentParser
 from os import path
+from natsort import natsorted
 
 from .utils import (
     get_chunks,
@@ -74,8 +75,7 @@ def find_source_filenames(source_path):
         + str(image_reader.readers.keys())
         + "."
     )
-    source_files.sort()
-    return source_files
+    return natsorted(source_files)
 
 
 def read_image_file(file_name, dtype):
