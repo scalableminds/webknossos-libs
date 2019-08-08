@@ -4,7 +4,7 @@ import re
 import os
 import threading
 import time
-from cluster_tools.util import chcall, random_string, local_filename, call
+from cluster_tools.util import chcall, random_string, call
 from .cluster_executor import ClusterExecutor
 import logging
 from typing import Union
@@ -45,17 +45,6 @@ SLURM_STATES = {
 }
 
 
-def submit_text(job):
-    """Submits a Slurm job represented as a job file string. Returns
-    the job ID.
-    """
-
-    filename = local_filename("_temp_{}.sh".format(random_string()))
-    with open(filename, "w") as f:
-        f.write(job)
-    jobid, _ = chcall("sbatch --parsable {}".format(filename))
-    os.unlink(filename)
-    return int(jobid)
 
 
 class SlurmExecutor(ClusterExecutor):
@@ -69,7 +58,19 @@ class SlurmExecutor(ClusterExecutor):
         return os.environ.get("SLURM_JOB_ID")
 
     def format_log_file_name(self, jobid):
-        return local_filename("slurmpy.stdout.{}.log").format(str(jobid))
+        return "slurmpy.stdout.{}.log".format(str(jobid))
+
+    def submit_text(self, job):
+        """Submits a Slurm job represented as a job file string. Returns
+        the job ID.
+        """
+
+        filename = self.get_temp_file_path("_temp_slurm{}.sh".format(random_string()))
+        with open(filename, "w") as f:
+            f.write(job)
+        jobid, _ = chcall("sbatch --parsable {}".format(filename))
+        os.unlink(filename)
+        return int(jobid)
 
     def inner_submit(
         self,
@@ -81,7 +82,7 @@ class SlurmExecutor(ClusterExecutor):
         """Starts a Slurm job that runs the specified shell command line.
         """
 
-        log_path = self.format_log_file_name("%j" if job_count is None else "%A_%a")
+        log_path = self.format_log_file_path("%j" if job_count is None else "%A_%a")
 
         job_resources_lines = []
         if self.job_resources is not None:
@@ -102,7 +103,7 @@ class SlurmExecutor(ClusterExecutor):
             + [*additional_setup_lines, "srun {}".format(cmdline)]
         )
 
-        return submit_text("\n".join(script_lines))
+        return self.submit_text("\n".join(script_lines))
 
     def check_for_crashed_job(self, job_id) -> Union["failed", "ignore", "completed"]:
 

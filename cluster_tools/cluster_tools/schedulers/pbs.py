@@ -4,7 +4,7 @@ import re
 import os
 import threading
 import time
-from cluster_tools.util import chcall, random_string, local_filename, call
+from cluster_tools.util import chcall, random_string, call
 from .cluster_executor import ClusterExecutor
 import logging
 from typing import Union
@@ -31,23 +31,6 @@ PBS_STATES = {
     ]
 }
 
-def submit_text(job):
-    """Submits a PBS job represented as a job file string. Returns
-    the job ID.
-    """
-
-    filename = local_filename("_temp_{}.sh".format(random_string()))
-    with open(filename, "w") as f:
-        f.write(job)
-    jobid_desc, _ = chcall("qsub -V {}".format(filename))
-    match = re.search("^[0-9]+", jobid_desc.decode("utf-8") )
-    assert match is not None    
-    jobid = match.group(0)
-
-    print("jobid", jobid)
-    # os.unlink(filename)
-    return int(jobid)
-
 
 class PBSExecutor(ClusterExecutor):
 
@@ -60,7 +43,24 @@ class PBSExecutor(ClusterExecutor):
         return os.environ.get("PBS_JOBID")
 
     def format_log_file_name(self, jobid):
-        return local_filename("pbs.stdout.{}.log").format(str(jobid))
+        return "pbs.stdout.{}.log".format(str(jobid))
+
+    def submit_text(self, job):
+        """Submits a PBS job represented as a job file string. Returns
+        the job ID.
+        """
+
+        filename = self.get_temp_file_path("_temp_pbs_{}.sh".format(random_string()))
+        with open(filename, "w") as f:
+            f.write(job)
+        jobid_desc, _ = chcall("qsub -V {}".format(filename))
+        match = re.search("^[0-9]+", jobid_desc.decode("utf-8") )
+        assert match is not None
+        jobid = match.group(0)
+
+        print("jobid", jobid)
+        # os.unlink(filename)
+        return int(jobid)
 
     def inner_submit(
         self,
@@ -74,7 +74,7 @@ class PBSExecutor(ClusterExecutor):
 
         # if job_count is None else "$PBS_JOBID.$PBS_ARRAY_INDEX"
         # $PBS_JOBID will also include an array index if it's a job array
-        log_path = self.format_log_file_name("$PBS_JOBID")
+        log_path = self.format_log_file_path("$PBS_JOBID")
         print("log_path", log_path)
 
         job_resources_line = ""
@@ -112,7 +112,7 @@ class PBSExecutor(ClusterExecutor):
             "{}".format(cmdline)
         ]
 
-        return submit_text("\n".join(script_lines))
+        return self.submit_text("\n".join(script_lines))
 
 
     def check_for_crashed_job(self, job_id) -> Union["failed", "ignore", "completed"]:

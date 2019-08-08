@@ -8,6 +8,7 @@ from enum import Enum
 from functools import partial
 import os
 import pytest
+import shutil
 
 # "Worker" functions.
 def square(n):
@@ -28,7 +29,7 @@ def raise_if(msg, bool):
 def get_executors():
     return [
         cluster_tools.get_executor(
-            "slurm", debug=True, keep_logs=True, job_resources={"mem": "100M"}
+            "slurm", debug=True, job_resources={"mem": "100M"}
         ),
         cluster_tools.get_executor("multiprocessing", max_workers=5),
         cluster_tools.get_executor("sequential"),
@@ -178,12 +179,25 @@ def test_map_lazy():
 
 
 def test_slurm_submit_returns_job_ids():
-    exc = cluster_tools.get_executor("slurm", debug=True, keep_logs=True)
+    exc = cluster_tools.get_executor("slurm", debug=True)
     with exc:
         future = exc.submit(square, 2)
         assert isinstance(future.cluster_jobid, int)
         assert future.cluster_jobid > 0
         assert future.result() == 4
+
+def test_slurm_cfut_dir():
+    cfut_dir = "./test_cfut_dir"
+    if os.path.exists(cfut_dir):
+        shutil.rmtree(cfut_dir)
+
+    exc = cluster_tools.get_executor("slurm", debug=True, cfut_dir=cfut_dir)
+    with exc:
+        future = exc.submit(square, 2)
+        assert future.result() == 4
+
+    assert os.path.exists(cfut_dir)
+    assert len(os.listdir(cfut_dir)) == 1
 
 
 def test_executor_args():
@@ -210,7 +224,7 @@ def test_pickled_logging():
             "level": log_level,
         }
         with cluster_tools.get_executor(
-            "slurm", debug=True, keep_logs=True, job_resources={"mem": "10M"}, logging_config=logging_config
+            "slurm", debug=True, job_resources={"mem": "10M"}, logging_config=logging_config
         ) as executor:
             fut = executor.submit(log, test_output_str)
             fut.result()
@@ -260,7 +274,7 @@ def deref_fun_helper(obj):
     assert isinstance(inst, clss)
 
 def test_dereferencing_main():
-    with cluster_tools.get_executor("slurm", debug=True, keep_logs=True, job_resources={"mem": "10M"}) as executor:
+    with cluster_tools.get_executor("slurm", debug=True, job_resources={"mem": "10M"}) as executor:
         fut = executor.submit(deref_fun_helper, (TestClass, TestClass(), 1, 2))
         fut.result()
 

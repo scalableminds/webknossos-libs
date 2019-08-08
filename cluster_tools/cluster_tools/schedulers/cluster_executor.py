@@ -1,13 +1,13 @@
 from concurrent import futures
 import os
-from cluster_tools.util import random_string, local_filename, FileWaitThread, enrich_future_with_uncaught_warning, get_function_name
+from cluster_tools.util import random_string, FileWaitThread, enrich_future_with_uncaught_warning, get_function_name
 import threading
 import signal
 import sys
 from cluster_tools import pickling
 import time
 from abc import ABC, abstractmethod
-from cluster_tools.file_formatters import INFILE_FMT, OUTFILE_FMT
+from cluster_tools.file_formatters import format_infile_name, format_outfile_name
 import logging
 from typing import Union
 
@@ -26,18 +26,19 @@ class ClusterExecutor(futures.Executor):
     def __init__(
         self,
         debug=False,
-        keep_logs=False,
+        keep_logs=True,
+        cfut_dir=None,
         job_resources=None,
         job_name=None,
         additional_setup_lines=[],
         **kwargs
     ):
-        os.makedirs(local_filename(), exist_ok=True)
         self.debug = debug
         self.job_resources = job_resources
         self.additional_setup_lines = additional_setup_lines
         self.job_name = job_name
         self.was_requested_to_shutdown = False
+        self.cfut_dir = cfut_dir if cfut_dir is not None else os.getenv("CFUT_DIR", ".cfut")
 
         # `jobs` maps from job id to future and workerid
         # In case, job arrays are used: job id and workerid are in the format of
@@ -51,13 +52,14 @@ class ClusterExecutor(futures.Executor):
         self.wait_thread = FileWaitThread(self._completion, self)
         self.wait_thread.start()
 
+        os.makedirs(self.cfut_dir, exist_ok=True)
+
         signal.signal(signal.SIGINT, self.handle_kill)
         signal.signal(signal.SIGTERM, self.handle_kill)
 
         self.meta_data = {}
         if "logging_config" in kwargs:
             self.meta_data["logging_config"] = kwargs["logging_config"]
-
 
     def handle_kill(self,signum, frame):
       self.wait_thread.stop()
@@ -77,7 +79,7 @@ class ClusterExecutor(futures.Executor):
         cfut.remote <workerid>.
         """
         return self.inner_submit(
-            "{} -m cluster_tools.remote {}".format(sys.executable, workerid),
+            f"{sys.executable} -m cluster_tools.remote {workerid} {self.cfut_dir}",
             job_name=self.job_name if self.job_name is not None else job_name,
             additional_setup_lines=self.additional_setup_lines,
             job_count=job_count,
@@ -94,7 +96,7 @@ class ClusterExecutor(futures.Executor):
         if self.keep_logs:
             return
 
-        outf = self.format_log_file_name(jobid)
+        outf = self.format_log_file_path(jobid)
         try:
             os.unlink(outf)
         except OSError:
@@ -104,6 +106,17 @@ class ClusterExecutor(futures.Executor):
     def format_log_file_name(self, jobid):
         pass
 
+    def format_log_file_path(self, jobid):
+        return os.path.join(self.cfut_dir, self.format_log_file_name(jobid))
+
+    def get_temp_file_path(self, file_name):
+        return os.path.join(self.cfut_dir, file_name)
+
+    def format_infile_name(self, job_id):
+        return format_infile_name(self.cfut_dir, job_id)
+
+    def format_outfile_name(self, job_id):
+        return format_outfile_name(self.cfut_dir, job_id)
 
     def _completion(self, jobid, failed_early):
         """Called whenever a job finishes."""
@@ -122,10 +135,10 @@ class ClusterExecutor(futures.Executor):
             # Therefore, we don't try to deserialize pickling output.
             success = False
             result = "Job submission/execution failed. Please look into the log file at {}".format(
-                self.format_log_file_name(jobid)
+                self.format_log_file_path(jobid)
             )
         else:
-            with open(OUTFILE_FMT % workerid, "rb") as f:
+            with open(self.format_outfile_name(workerid), "rb") as f:
                 outdata = f.read()
             success, result = pickling.loads(outdata)
 
@@ -136,10 +149,12 @@ class ClusterExecutor(futures.Executor):
 
         # Clean up communication files.
 
-        if os.path.exists(INFILE_FMT % workerid):
-            os.unlink(INFILE_FMT % workerid)
-        if os.path.exists(OUTFILE_FMT % workerid):
-            os.unlink(OUTFILE_FMT % workerid)
+        infile_name = self.format_infile_name(workerid)
+        outfile_name = self.format_outfile_name(workerid)
+        if os.path.exists(infile_name):
+            os.unlink(infile_name)
+        if os.path.exists(outfile_name):
+            os.unlink(outfile_name)
 
         self._cleanup(jobid)
 
@@ -164,7 +179,7 @@ class ClusterExecutor(futures.Executor):
         workerid = random_string()
 
         funcser = pickling.dumps((fun, args, kwargs, self.meta_data), True)
-        with open(INFILE_FMT % workerid, "wb") as f:
+        with open(self.format_infile_name(workerid), "wb") as f:
             f.write(funcser)
 
         job_name = get_function_name(fun)
@@ -174,7 +189,7 @@ class ClusterExecutor(futures.Executor):
             print("job submitted: %i" % jobid, file=sys.stderr)
 
         # Thread will wait for it to finish.
-        self.wait_thread.waitFor(OUTFILE_FMT % workerid, jobid)
+        self.wait_thread.waitFor(self.format_outfile_name(workerid), jobid)
 
         with self.jobs_lock:
             self.jobs[jobid] = (fut, workerid)
@@ -201,7 +216,7 @@ class ClusterExecutor(futures.Executor):
 
             # Start the job.
             funcser = pickling.dumps((fun, [arg], {}, self.meta_data), True)
-            infile_name = INFILE_FMT % self.get_workerid_with_index(workerid, index)
+            infile_name = self.format_infile_name(self.get_workerid_with_index(workerid, index))
 
             with open(infile_name, "wb") as f:
                 f.write(funcser)
@@ -225,7 +240,7 @@ class ClusterExecutor(futures.Executor):
                 # Thread will wait for it to finish.
                 workerid_with_index = self.get_workerid_with_index(workerid, index)
                 self.wait_thread.waitFor(
-                    OUTFILE_FMT % workerid_with_index, jobid_with_index
+                    self.format_outfile_name(workerid_with_index), jobid_with_index
                 )
 
                 fut.cluster_jobid = jobid

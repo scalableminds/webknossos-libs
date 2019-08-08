@@ -6,7 +6,7 @@ from . import pickling
 import logging
 from cluster_tools.schedulers.slurm import SlurmExecutor
 from cluster_tools.schedulers.pbs import PBSExecutor
-from .file_formatters import INFILE_FMT, OUTFILE_FMT
+from .file_formatters import format_infile_name, format_outfile_name
 
 def format_remote_exc():
     typ, value, tb = sys.exc_info()
@@ -14,13 +14,14 @@ def format_remote_exc():
     return "".join(traceback.format_exception(typ, value, tb))
 
 
-def worker(workerid):
+def worker(workerid, cfut_dir):
     """Called to execute a job on a remote host."""
     executor = get_executor_class()
     try:
-        print("trying to read: ", INFILE_FMT % workerid)
+        input_file_name = format_infile_name(cfut_dir, workerid)
+        print("trying to read: ", input_file_name)
         print("working dir: ", os.getcwd())
-        with open(INFILE_FMT % workerid, "rb") as f:
+        with open(input_file_name, "rb") as f:
             indata = f.read()
         fun, args, kwargs, meta_data = pickling.loads(indata)
         setup_logging(meta_data)
@@ -37,8 +38,7 @@ def worker(workerid):
         logging.info("Job computation failed.")
         out = pickling.dumps(result, False)
 
-
-    destfile = OUTFILE_FMT % workerid
+    destfile = format_outfile_name(cfut_dir, workerid)
     tempfile = destfile + ".tmp"
     with open(tempfile, "wb") as f:
         f.write(out)
@@ -70,8 +70,10 @@ def get_executor_class():
 
 if __name__ == "__main__":
     worker_id = sys.argv[1]
+    cfut_dir = sys.argv[2]
+
     job_array_index = get_executor_class().get_job_array_index()
     if job_array_index is not None:
         worker_id = worker_id + "_" + job_array_index
 
-    worker(worker_id)
+    worker(worker_id, cfut_dir)
