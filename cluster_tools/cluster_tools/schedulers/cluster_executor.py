@@ -40,6 +40,8 @@ class ClusterExecutor(futures.Executor):
         self.was_requested_to_shutdown = False
         self.cfut_dir = cfut_dir if cfut_dir is not None else os.getenv("CFUT_DIR", ".cfut")
 
+        logging.info(f"Instantiating ClusterExecutor. Log files are stored in {self.cfut_dir}")
+
         # `jobs` maps from job id to future and workerid
         # In case, job arrays are used: job id and workerid are in the format of
         # `job_id-job_index` and `workerid-job_index`.
