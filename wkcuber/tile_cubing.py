@@ -6,6 +6,7 @@ import wkw
 from argparse import ArgumentParser
 from os import path, listdir
 from PIL import Image
+from natsort import natsorted
 
 from .utils import (
     get_chunks,
@@ -31,8 +32,7 @@ def find_source_sections(source_path):
         f for f in listdir(source_path) if path.isdir(path.join(source_path, f))
     ]
     section_folders = [path.join(source_path, s) for s in section_folders]
-    section_folders.sort()
-    return section_folders
+    return natsorted(section_folders)
 
 
 def parse_tile_file_name(filename):
@@ -49,9 +49,7 @@ def find_source_files(source_section_path):
             path.join(source_section_path, "**", "*"), image_reader.readers.keys()
         )
     ]
-
-    all_source_files.sort()
-    return all_source_files
+    return natsorted(all_source_files)
 
 
 def tile_cubing_job(target_wkw_info, z_batches, source_path, batch_size, tile_size):
