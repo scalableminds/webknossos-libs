@@ -5,7 +5,7 @@ from .downsampling import (
     DEFAULT_EDGE_LEN,
 )
 from .compress import compress_mag_inplace
-from .metadata import write_webknossos_metadata
+from .metadata import write_webknossos_metadata, refresh_metadata
 from .utils import add_isotropic_flag, setup_logging, add_scale_flag
 from .mag import Mag
 
@@ -50,6 +50,14 @@ if __name__ == "__main__":
         args,
     )
 
+    write_webknossos_metadata(
+        args.target_path,
+        args.name,
+        scale,
+        compute_max_id=False,
+        exact_bounding_box=bounding_box,
+    )
+
     if not args.no_compress:
         compress_mag_inplace(args.target_path, args.layer_name, Mag(1), args)
 
@@ -78,10 +86,4 @@ if __name__ == "__main__":
             args,
         )
 
-    write_webknossos_metadata(
-        args.target_path,
-        args.name,
-        scale,
-        compute_max_id=False,
-        exact_bounding_box=bounding_box,
-    )
+    refresh_metadata(args.target_path)
