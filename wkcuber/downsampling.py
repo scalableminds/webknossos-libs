@@ -280,15 +280,7 @@ def downsample_cube_job(
                                     buffer_end[1] - buffer_offset[1],
                                     buffer_end[2] - buffer_offset[2],
                                 )
-                                empty_chunk = np.zeros(
-                                    (
-                                        data_cube_shape[0],
-                                        data_cube_shape[1],
-                                        sparse_batch_size // mag_factors[2],
-                                    ),
-                                    dtype=source_dtype,
-                                )
-                                data_cube = np.empty(
+                                data_cube = np.zeros(
                                     data_cube_shape, dtype=source_dtype
                                 )
 
@@ -303,9 +295,7 @@ def downsample_cube_job(
                                         * sparse_batch_size,
                                     ]
                                     is_empty = np.all(current_slice_chunk == 0)
-                                    if is_empty:
-                                        batch = empty_chunk
-                                    else:
+                                    if not is_empty:
                                         batch = downsample_cube(
                                             current_slice_chunk,
                                             mag_factors,
