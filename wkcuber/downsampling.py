@@ -302,13 +302,13 @@ def downsample_cube_job(
                                             interpolation_mode,
                                         )
 
-                                    data_cube[
-                                        :,
-                                        :,
-                                        (sparse_batch_size // mag_factors[2])
-                                        * z : (z + 1)
-                                        * (sparse_batch_size // mag_factors[2]),
-                                    ] = batch
+                                        data_cube[
+                                            :,
+                                            :,
+                                            (sparse_batch_size // mag_factors[2])
+                                            * z : (z + 1)
+                                            * (sparse_batch_size // mag_factors[2]),
+                                        ] = batch
 
                             else:
                                 data_cube = downsample_cube(
