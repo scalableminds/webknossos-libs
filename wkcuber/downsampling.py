@@ -236,6 +236,7 @@ def downsample_cube_job(
                 tiles = product(tile_indices, tile_indices, tile_indices)
                 file_offset = wkw_cubelength * np.array(target_cube_xyz)
 
+                buffer_is_empty = True
                 for tile in tiles:
                     target_offset = np.array(
                         tile
@@ -243,9 +244,11 @@ def downsample_cube_job(
                     source_offset = mag_factors * target_offset
 
                     # Read source buffer
+                    source_buffer_shape = (
+                        wkw_cubelength * np.array(mag_factors) // tile_count_per_dim
+                    )
                     cube_buffer_channels = source_wkw.read(
-                        source_offset,
-                        (wkw_cubelength * np.array(mag_factors) // tile_count_per_dim),
+                        source_offset, source_buffer_shape
                     )
 
                     for channel_index in range(num_channels):
@@ -258,14 +261,69 @@ def downsample_cube_job(
                                 )
                             )
                         else:
+                            buffer_is_empty = False
                             # Downsample the buffer
-
-                            data_cube = downsample_cube(
-                                cube_buffer, mag_factors, interpolation_mode
-                            )
-
                             buffer_offset = target_offset - file_offset
                             buffer_end = buffer_offset + tile_length
+
+                            sparse_threshold = 0.3
+                            sparse_batch_size = 32
+                            is_sparse = (
+                                np.count_nonzero(cube_buffer == 0) / cube_buffer.size
+                                > sparse_threshold
+                            )
+
+                            if is_sparse:
+                                logging.debug("Choosing sparse downsampling strategy.")
+                                data_cube_shape = (
+                                    buffer_end[0] - buffer_offset[0],
+                                    buffer_end[1] - buffer_offset[1],
+                                    buffer_end[2] - buffer_offset[2],
+                                )
+                                empty_chunk = np.zeros(
+                                    (
+                                        data_cube_shape[0],
+                                        data_cube_shape[1],
+                                        sparse_batch_size // mag_factors[2],
+                                    ),
+                                    dtype=source_dtype,
+                                )
+                                data_cube = np.empty(
+                                    data_cube_shape, dtype=source_dtype
+                                )
+
+                                for z in range(
+                                    source_buffer_shape[2] // sparse_batch_size
+                                ):
+                                    current_slice_chunk = cube_buffer[
+                                        :,
+                                        :,
+                                        sparse_batch_size
+                                        * z : (z + 1)
+                                        * sparse_batch_size,
+                                    ]
+                                    is_empty = np.all(current_slice_chunk == 0)
+                                    if is_empty:
+                                        batch = empty_chunk
+                                    else:
+                                        batch = downsample_cube(
+                                            current_slice_chunk,
+                                            mag_factors,
+                                            interpolation_mode,
+                                        )
+
+                                    data_cube[
+                                        :,
+                                        :,
+                                        (sparse_batch_size // mag_factors[2])
+                                        * z : (z + 1)
+                                        * (sparse_batch_size // mag_factors[2]),
+                                    ] = batch
+
+                            else:
+                                data_cube = downsample_cube(
+                                    cube_buffer, mag_factors, interpolation_mode
+                                )
 
                             file_buffer[
                                 channel_index,
@@ -274,8 +332,11 @@ def downsample_cube_job(
                                 buffer_offset[2] : buffer_end[2],
                             ] = data_cube
 
-                # Write the downsampled buffer to target
-                target_wkw.write(file_offset, file_buffer)
+                if not buffer_is_empty:
+                    # Write the downsampled buffer to target
+                    target_wkw.write(file_offset, file_buffer)
+                else:
+                    logging.debug("Avoiding writing completely empty buffer.")
         time_stop("Downsampling of {}".format(target_cube_xyz))
 
     except Exception as exc:
