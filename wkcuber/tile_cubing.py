@@ -5,7 +5,6 @@ from typing import Dict, Tuple, Union
 import os
 from glob import glob
 import re
-from math import floor, log10
 from argparse import ArgumentTypeError
 
 from wkcuber.utils import (
@@ -44,9 +43,7 @@ def replace_coordinates(
     for occurrence in occurrences:
         coord = occurrence[1]
         if coord in coord_ids_with_replacement_info:
-            number_of_digits = (
-                len(occurrence) - 2 - coord_ids_with_replacement_info[coord][1]
-            )
+            number_of_digits = coord_ids_with_replacement_info[coord][1]
             if number_of_digits > 1:
                 format_str = "0" + str(number_of_digits) + "d"
             else:
@@ -100,6 +97,8 @@ def detect_interval_for_dimensions(
     current_decimal_length = {"x": 0, "y": 0, "z": 0}
     max_dimensions = {"x": 0, "y": 0, "z": 0}
     min_dimensions = {"x": None, "y": None, "z": None}
+
+    # find all files by trying all combinations of dimension lengths
     for x in range(x_decimal_length + 1):
         current_decimal_length["x"] = x
         for y in range(y_decimal_length + 1):
@@ -112,7 +111,6 @@ def detect_interval_for_dimensions(
                 found_files = glob(specific_pattern)
                 file_count += len(found_files)
                 for file in found_files:
-                    arbitrary_file = file
                     occurrences = re.findall("({x+}|{y+}|{z+})", file_path_pattern)
                     index_offset_caused_by_brackets_and_specific_length = 0
                     for occurrence in occurrences:
@@ -134,17 +132,12 @@ def detect_interval_for_dimensions(
                         coordinate_value = int(
                             file[occurrence_begin_index:occurrence_end_index]
                         )
-                        min_dimensions[current_dimension] = (
-                            min_dimensions[current_dimension]
-                            if min_dimensions[current_dimension]
-                            and min_dimensions[current_dimension] < coordinate_value
-                            else coordinate_value
+                        min_dimensions[current_dimension] = min(
+                            min_dimensions[current_dimension] or coordinate_value,
+                            coordinate_value,
                         )
-                        max_dimensions[current_dimension] = (
-                            max_dimensions[current_dimension]
-                            if max_dimensions[current_dimension]
-                            and max_dimensions[current_dimension] > coordinate_value
-                            else coordinate_value
+                        max_dimensions[current_dimension] = max(
+                            max_dimensions[current_dimension], coordinate_value
                         )
 
     return (
@@ -154,7 +147,7 @@ def detect_interval_for_dimensions(
         max_dimensions["y"],
         min_dimensions["x"],
         max_dimensions["x"],
-        arbitrary_file,
+        file,
         file_count,
     )
 
@@ -168,38 +161,26 @@ def find_file_with_dimensions(
     y_decimal_length: int,
     z_decimal_length: int,
 ) -> Union[str, None]:
-    # optimize the bounds
-    x_missing_number_length_offset = floor(log10(max(x_value, 1))) + 1
-    y_missing_number_length_offset = floor(log10(max(y_value, 1))) + 1
-    z_missing_number_length_offset = floor(log10(max(z_value, 1))) + 1
-    upper_bound_x = x_decimal_length - x_missing_number_length_offset
-    upper_bound_y = y_decimal_length - y_missing_number_length_offset
-    upper_bound_z = z_decimal_length - z_missing_number_length_offset
 
-    # try to find the file with all combinations of number lengths
-    for z_missing_number_length in range(upper_bound_z):
-        for y_missing_number_length in range(upper_bound_y):
-            for x_missing_number_length in range(upper_bound_x):
-                file_path = replace_coordinates(
-                    file_path_pattern,
-                    {
-                        "z": (
-                            z_value,
-                            z_missing_number_length + z_missing_number_length_offset,
-                        ),
-                        "y": (
-                            y_value,
-                            y_missing_number_length + y_missing_number_length_offset,
-                        ),
-                        "x": (
-                            x_value,
-                            x_missing_number_length + x_missing_number_length_offset,
-                        ),
-                    },
-                )
-                if os.path.isfile(file_path):
-                    # set the file as found and break out of the
-                    return file_path
+    file_path_unpadded = replace_coordinates(
+        file_path_pattern, {"z": (z_value, 0), "y": (y_value, 0), "x": (x_value, 0)}
+    )
+
+    file_path_padded = replace_coordinates(
+        file_path_pattern,
+        {
+            "z": (z_value, z_decimal_length),
+            "y": (y_value, y_decimal_length),
+            "x": (x_value, x_decimal_length),
+        },
+    )
+
+    # the unpadded file pattern has a higher precedence
+    if os.path.isfile(file_path_unpadded):
+        return file_path_unpadded
+
+    if os.path.isfile(file_path_padded):
+        return file_path_padded
 
     return None
 
@@ -234,7 +215,7 @@ def tile_cubing_job(
                         ref_time2 = time.time()
                         buffer = []
                         for z in z_batch:
-                            # Read file if exists or zeros instead
+                            # Read file if exists or use zeros instead
                             file = find_file_with_dimensions(
                                 input_path_pattern,
                                 x,
@@ -245,6 +226,7 @@ def tile_cubing_job(
                                 z_decimal_length,
                             )
                             if file:
+                                # read the image
                                 image = read_image_file(file, target_wkw_info.dtype)
                                 image = np.squeeze(image)
                                 buffer.append(image)
@@ -295,7 +277,9 @@ def tile_cubing(
     )
 
     if not arbitrary_file:
-        logging.error("No source files found")
+        logging.error(
+            f"No source files found. Maybe the input_path_pattern was wrong. You provided: {input_path_pattern}"
+        )
         return
 
     # Determine tile size from first matching file
