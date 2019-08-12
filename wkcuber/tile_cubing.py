@@ -36,7 +36,9 @@ def check_input_pattern(input_pattern: str) -> str:
     return input_pattern
 
 
-""" Replaces the coordinates with a specific length. The coord_ids_with_replacement_info is a Dict that maps a dimension to a tuple of the coordinate value and the desired length. """
+""" Replaces the coordinates with a specific length. 
+The coord_ids_with_replacement_info is a Dict that maps a dimension 
+to a tuple of the coordinate value and the desired length. """
 
 
 def replace_coordinates(
