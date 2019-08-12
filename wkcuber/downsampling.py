@@ -21,7 +21,6 @@ from .utils import (
     get_executor_for_args,
     wait_and_ensure_success,
     add_isotropic_flag,
-    add_scale_flag,
     setup_logging,
 )
 
@@ -109,7 +108,6 @@ def create_parser():
         action="store_true",
     )
 
-    add_scale_flag(parser)
     add_verbose_flag(parser)
     add_isotropic_flag(parser)
     add_distribution_flags(parser)
@@ -604,9 +602,7 @@ if __name__ == "__main__":
 
     from_mag = Mag(args.from_mag)
     max_mag = Mag(args.max)
-    scale = (
-        [float(x) for x in args.scale.split(",")] if hasattr(args, "scale") else None
-    )
+
     if args.anisotropic_target_mag:
         anisotropic_target_mag = Mag(args.anisotropic_target_mag)
 
@@ -621,16 +617,15 @@ if __name__ == "__main__":
             args,
         )
     elif not args.isotropic:
-        if scale is None:
-            try:
-                scale = read_datasource_properties(args.path)["scale"]
-            except Exception as exc:
-                logging.error(
-                    "Could not determine scale which is necessary "
-                    "to find target magnifications for anisotropic downsampling. "
-                    "Does the provided dataset have a datasource-properties.json file?"
-                )
-                raise exc
+        try:
+            scale = read_datasource_properties(args.path)["scale"]
+        except Exception as exc:
+            logging.error(
+                "Could not determine scale which is necessary "
+                "to find target magnifications for anisotropic downsampling. "
+                "Does the provided dataset have a datasource-properties.json file?"
+            )
+            raise exc
 
         downsample_mags_anisotropic(
             args.path,

@@ -66,7 +66,7 @@ def add_scale_flag(parser):
         "--scale",
         "-s",
         help="Scale of the dataset (e.g. 11.2,11.2,25). This is the size of one voxel in nm.",
-        default="1,1,1",
+        required=True,
     )
 
 

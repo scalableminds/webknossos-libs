@@ -66,6 +66,10 @@ jobs:
           command: tests/scripts/simple_tiff_cubing_no_compression.sh
 
       - run:
+          name: Test metadata generation
+          command: tests/scripts/meta_generation.sh
+
+      - run:
           name: Test KNOSSOS conversion
           command: tests/scripts/knossos_conversion.sh
 
@@ -88,10 +92,6 @@ jobs:
       - run:
           name: Test in-place compression
           command: tests/scripts/in_place_compression.sh
-
-      - run:
-          name: Test metadata generation
-          command: tests/scripts/meta_generation.sh
 
       - run:
           name: Remove reference magnification data
