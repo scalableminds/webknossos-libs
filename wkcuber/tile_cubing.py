@@ -1,7 +1,7 @@
 import time
 import logging
 import numpy as np
-from typing import Dict, Tuple, Union
+from typing import Dict, Tuple, Union, List
 import os
 from glob import glob
 import re
@@ -36,6 +36,9 @@ def check_input_pattern(input_pattern: str) -> str:
     return input_pattern
 
 
+""" Replaces the coordinates with a specific length. The coord_ids_with_replacement_info is a Dict that maps a dimension to a tuple of the coordinate value and the desired length. """
+
+
 def replace_coordinates(
     pattern: str, coord_ids_with_replacement_info: Dict[str, Tuple[int, int]]
 ) -> str:
@@ -44,14 +47,24 @@ def replace_coordinates(
         coord = occurrence[1]
         if coord in coord_ids_with_replacement_info:
             number_of_digits = coord_ids_with_replacement_info[coord][1]
-            if number_of_digits > 1:
-                format_str = "0" + str(number_of_digits) + "d"
-            else:
-                format_str = "d"
+            format_str = "0" + str(number_of_digits) + "d"
             pattern = pattern.replace(
                 occurrence,
                 format(coord_ids_with_replacement_info[coord][0], format_str),
                 1,
+            )
+    return pattern
+
+
+def replace_pattern_to_specific_length_without_brackets(
+    pattern: str, coord_ids_with_specific_length: Dict[str, int]
+) -> str:
+    occurrences = re.findall("({x+}|{y+}|{z+})", pattern)
+    for occurrence in occurrences:
+        coord = occurrence[1]
+        if coord in coord_ids_with_specific_length:
+            pattern = pattern.replace(
+                occurrence, coord * coord_ids_with_specific_length[coord], 1
             )
     return pattern
 
@@ -61,77 +74,67 @@ def replace_coordinates_with_glob_regex(pattern: str, coord_ids: Dict[str, int])
     for occurrence in occurrences:
         coord = occurrence[1]
         if coord in coord_ids:
-            number_of_digits = len(occurrence) - 2 - coord_ids[coord]
+            number_of_digits = coord_ids[coord]
             pattern = pattern.replace(occurrence, "[0-9]" * number_of_digits, 1)
     return pattern
 
 
-def get_digit_numbers_for_dimension(pattern):
-    x_number = 0
-    y_number = 0
-    z_number = 0
+""" Counts how many digits the dimensions x, y and z occupy in the given pattern. """
+
+
+def get_digit_counts_for_dimensions(pattern):
     occurrences = re.findall("({x+}|{y+}|{z+})", pattern)
+    decimal_lengths = {"x": 0, "y": 0, "z": 0}
+
     for occurrence in occurrences:
-        if occurrence[1] == "x":
-            x_number = max(x_number, len(occurrence) - 2)
-        if occurrence[1] == "y":
-            y_number = max(y_number, len(occurrence) - 2)
-        if occurrence[1] == "z":
-            z_number = max(z_number, len(occurrence) - 2)
-    return x_number, y_number, z_number
+        current_dimension = occurrence[1]
+        decimal_lengths[current_dimension] = max(
+            decimal_lengths[current_dimension], len(occurrence) - 2
+        )
+
+    return decimal_lengths
 
 
 def detect_interval_for_dimensions(
-    file_path_pattern: str,
-    x_decimal_length: int,
-    y_decimal_length: int,
-    z_decimal_length: int,
-) -> Tuple[int, int, int, int, int, int, str, int]:
+    file_path_pattern: str, decimal_lengths: Dict[str, int]
+) -> Tuple[Dict[str, int], Dict[str, int], str, int]:
     arbitrary_file = None
     file_count = 0
-    decimal_length = {
-        "x": x_decimal_length,
-        "y": y_decimal_length,
-        "z": z_decimal_length,
-    }
+    # dictionary that maps the dimension string to the current dimension length
+    # used to avoid distinction of dimensions with if statements
     current_decimal_length = {"x": 0, "y": 0, "z": 0}
     max_dimensions = {"x": 0, "y": 0, "z": 0}
     min_dimensions = {"x": None, "y": None, "z": None}
+    occurrences = re.findall("({x+}|{y+}|{z+})", file_path_pattern)
 
     # find all files by trying all combinations of dimension lengths
-    for x in range(x_decimal_length + 1):
+    for x in range(decimal_lengths["x"] + 1):
         current_decimal_length["x"] = x
-        for y in range(y_decimal_length + 1):
+        for y in range(decimal_lengths["y"] + 1):
             current_decimal_length["y"] = y
-            for z in range(z_decimal_length + 1):
+            for z in range(decimal_lengths["z"] + 1):
                 current_decimal_length["z"] = z
                 specific_pattern = replace_coordinates_with_glob_regex(
                     file_path_pattern, {"z": z, "y": y, "x": x}
                 )
                 found_files = glob(specific_pattern)
                 file_count += len(found_files)
-                for file in found_files:
-                    occurrences = re.findall("({x+}|{y+}|{z+})", file_path_pattern)
-                    index_offset_caused_by_brackets_and_specific_length = 0
-                    for occurrence in occurrences:
-                        # update the offset since the pattern and the file path have different length
-                        occurrence_begin_index = (
-                            file_path_pattern.index(occurrence)
-                            - index_offset_caused_by_brackets_and_specific_length
-                        )
-                        index_offset_caused_by_brackets_and_specific_length += 2
-                        current_dimension = occurrence[1]
-                        occurrence_end_index = (
-                            occurrence_begin_index
-                            + decimal_length[current_dimension]
-                            - current_decimal_length[current_dimension]
-                        )
-                        index_offset_caused_by_brackets_and_specific_length += current_decimal_length[
-                            current_dimension
+                for file_name in found_files:
+                    # Turn a pattern {xxx}/{yyy}/{zzzzzz} for given dimension counts into (e.g., 2, 2, 3) into
+                    # something like xx/yy/zzz (note that the curly braces are gone)
+                    applied_fpp = replace_pattern_to_specific_length_without_brackets(
+                        file_path_pattern, {"x": x, "y": y, "z": z}
+                    )
+
+                    # For each dimension, look up where it starts within the applied pattern.
+                    # Use that index to look up the actual value within the file name
+                    for current_dimension in ["x", "y", "z"]:
+                        idx = applied_fpp.index(current_dimension)
+                        coordinate_value = file_name[
+                            idx : idx + current_decimal_length[current_dimension]
                         ]
-                        coordinate_value = int(
-                            file[occurrence_begin_index:occurrence_end_index]
-                        )
+                        coordinate_value = int(coordinate_value)
+                        assert coordinate_value
                         min_dimensions[current_dimension] = min(
                             min_dimensions[current_dimension] or coordinate_value,
                             coordinate_value,
@@ -140,16 +143,7 @@ def detect_interval_for_dimensions(
                             max_dimensions[current_dimension], coordinate_value
                         )
 
-    return (
-        min_dimensions["z"],
-        max_dimensions["z"],
-        min_dimensions["y"],
-        max_dimensions["y"],
-        min_dimensions["x"],
-        max_dimensions["x"],
-        file,
-        file_count,
-    )
+    return (min_dimensions, max_dimensions, file_name, file_count)
 
 
 def find_file_with_dimensions(
@@ -157,9 +151,7 @@ def find_file_with_dimensions(
     x_value: int,
     y_value: int,
     z_value: int,
-    x_decimal_length: int,
-    y_decimal_length: int,
-    z_decimal_length: int,
+    decimal_lengths: Dict[str, int],
 ) -> Union[str, None]:
 
     file_path_unpadded = replace_coordinates(
@@ -169,9 +161,9 @@ def find_file_with_dimensions(
     file_path_padded = replace_coordinates(
         file_path_pattern,
         {
-            "z": (z_value, z_decimal_length),
-            "y": (y_value, y_decimal_length),
-            "x": (x_value, x_decimal_length),
+            "z": (z_value, decimal_lengths["z"]),
+            "y": (y_value, decimal_lengths["y"]),
+            "x": (x_value, decimal_lengths["x"]),
         },
     )
 
@@ -186,18 +178,14 @@ def find_file_with_dimensions(
 
 
 def tile_cubing_job(
-    target_wkw_info,
-    z_batches,
-    input_path_pattern,
-    batch_size,
-    tile_size,
-    y_min,
-    y_max,
-    x_min,
-    x_max,
-    x_decimal_length,
-    y_decimal_length,
-    z_decimal_length,
+    target_wkw_info: WkwDatasetInfo,
+    z_batches: List[int],
+    input_path_pattern: str,
+    batch_size: int,
+    tile_size: Tuple[int, int, int],
+    min_dimensions: Dict[str, int],
+    max_dimensions: Dict[str, int],
+    decimal_lengths: Dict[str, int],
 ):
     if len(z_batches) == 0:
         return
@@ -210,24 +198,20 @@ def tile_cubing_job(
                 ref_time = time.time()
                 logging.info("Cubing z={}-{}".format(z_batch[0], z_batch[-1]))
 
-                for x in range(x_min, x_max + 1):
-                    for y in range(y_min, y_max + 1):
+                for x in range(min_dimensions["x"], max_dimensions["x"] + 1):
+                    for y in range(min_dimensions["y"], max_dimensions["y"] + 1):
                         ref_time2 = time.time()
                         buffer = []
                         for z in z_batch:
                             # Read file if exists or use zeros instead
-                            file = find_file_with_dimensions(
-                                input_path_pattern,
-                                x,
-                                y,
-                                z,
-                                x_decimal_length,
-                                y_decimal_length,
-                                z_decimal_length,
+                            file_name = find_file_with_dimensions(
+                                input_path_pattern, x, y, z, decimal_lengths
                             )
-                            if file:
+                            if file_name:
                                 # read the image
-                                image = read_image_file(file, target_wkw_info.dtype)
+                                image = read_image_file(
+                                    file_name, target_wkw_info.dtype
+                                )
                                 image = np.squeeze(image)
                                 buffer.append(image)
                             else:
@@ -269,11 +253,9 @@ def tile_cubing_job(
 def tile_cubing(
     target_path, layer_name, dtype, batch_size, input_path_pattern, args=None
 ):
-    x_decimal_length, y_decimal_length, z_decimal_length = get_digit_numbers_for_dimension(
-        input_path_pattern
-    )
-    z_min, z_max, y_min, y_max, x_min, x_max, arbitrary_file, file_count = detect_interval_for_dimensions(
-        input_path_pattern, x_decimal_length, y_decimal_length, z_decimal_length
+    decimal_lengths = get_digit_counts_for_dimensions(input_path_pattern)
+    min_dimensions, max_dimensions, arbitrary_file, file_count = detect_interval_for_dimensions(
+        input_path_pattern, decimal_lengths
     )
 
     if not arbitrary_file:
@@ -297,7 +279,9 @@ def tile_cubing(
     with get_executor_for_args(args) as executor:
         futures = []
         # Iterate over all z batches
-        for z_batch in get_regular_chunks(z_min, z_max, BLOCK_LEN):
+        for z_batch in get_regular_chunks(
+            min_dimensions["z"], max_dimensions["z"], BLOCK_LEN
+        ):
             futures.append(
                 executor.submit(
                     tile_cubing_job,
@@ -306,13 +290,9 @@ def tile_cubing(
                     input_path_pattern,
                     batch_size,
                     tile_size,
-                    y_min,
-                    y_max,
-                    x_min,
-                    x_max,
-                    x_decimal_length,
-                    y_decimal_length,
-                    z_decimal_length,
+                    min_dimensions,
+                    max_dimensions,
+                    decimal_lengths,
                 )
             )
         wait_and_ensure_success(futures)
@@ -324,9 +304,7 @@ def create_parser():
     parser.add_argument(
         "--input_path_pattern",
         help="Path to input images e.g. path_{xxxxx}_{yyyyy}_{zzzzz}/image.tiff. "
-        "The number of signs indicate the longest number in the dimension to the base of 10."
-        "It is recommended to always provide the input path pattern to improve the "
-        "performance since the default might try too many combinations.",
+        "The number of characters indicate the longest number in the dimension to the base of 10.",
         type=check_input_pattern,
         default="{zzzzzzzzzz}/{yyyyyyyyyy}/{xxxxxxxxxx}.jpg",
     )
