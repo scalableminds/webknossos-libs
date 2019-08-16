@@ -6,12 +6,8 @@ import os
 from glob import glob
 import re
 from argparse import ArgumentTypeError
-import wkw
-from argparse import ArgumentParser
-from os import path, listdir
-from PIL import Image
 
-from wkcuber.utils import (
+from .utils import (
     get_chunks,
     ensure_wkw,
     open_wkw,
@@ -21,10 +17,9 @@ from wkcuber.utils import (
     setup_logging,
     get_regular_chunks,
 )
-from wkcuber.cubing import create_parser as create_cubing_parser, read_image_file
-from wkcuber.image_readers import image_reader
-from wkcuber.cubing import create_parser, read_image_file, prepare_slices_for_wkw
-from wkcuber.image_readers import image_reader
+from .cubing import create_parser as create_cubing_parser
+from .cubing import read_image_file, prepare_slices_for_wkw
+from .image_readers import image_reader
 
 BLOCK_LEN = 32
 PADDING_FILE_NAME = "/"
