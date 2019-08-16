@@ -103,7 +103,6 @@ def downsample_test_helper(use_compress):
         CUBE_EDGE_LEN,
         offset,
         use_compress,
-        False,
     )
     downsample_cube_job(downsample_args)
 
