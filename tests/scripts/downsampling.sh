@@ -8,6 +8,7 @@ docker run \
   --max 8 \
   --buffer_cube_size 128 \
   --layer_name color \
+  --isotropic \
   /testoutput/tiff
 [ -d testoutput/tiff/color/2 ]
 [ -d testoutput/tiff/color/4 ]

@@ -3,12 +3,13 @@ import logging
 import numpy as np
 from argparse import ArgumentParser
 from os import path
-import cluster_tools
+from natsort import natsorted
 
 from .utils import (
     get_chunks,
     find_files,
     add_verbose_flag,
+    add_batch_size_flag,
     open_wkw,
     ensure_wkw,
     WkwDatasetInfo,
@@ -45,13 +46,7 @@ def create_parser():
         default="uint8",
     )
 
-    parser.add_argument(
-        "--batch_size",
-        "-b",
-        help="Number of sections to buffer per job",
-        type=int,
-        default=BLOCK_LEN,
-    )
+    add_batch_size_flag(parser)
 
     parser.add_argument(
         "--pad",
@@ -80,8 +75,7 @@ def find_source_filenames(source_path):
         + str(image_reader.readers.keys())
         + "."
     )
-    source_files.sort()
-    return source_files
+    return natsorted(source_files)
 
 
 def read_image_file(file_name, dtype):
@@ -90,6 +84,24 @@ def read_image_file(file_name, dtype):
     except Exception as exc:
         logging.error("Reading of file={} failed with {}".format(file_name, exc))
         raise exc
+
+
+def prepare_slices_for_wkw(slices, num_channels=None):
+    # Ensure that the channel_count exists
+    need_to_add_channel_count = (len(slices[0].shape) == 2)
+    # Write batch buffer which will have shape (x, y, channel_count, z)
+    # since we concat along the last axis (z)
+    buffer = np.stack(slices, axis=-1)
+    # Add the channel_count if it is missing
+    if need_to_add_channel_count:
+        buffer = np.expand_dims(buffer, axis=2)
+    # We transpose the data so that the first dimension is the channel,
+    # since the wkw library expects this.
+    # New shape will be (channel_count, x, y, z)
+    buffer = np.transpose(buffer, (2, 0, 1, 3))
+    if num_channels is not None:
+        assert buffer.shape[0] == num_channels
+    return buffer
 
 
 def cubing_job(
@@ -115,10 +127,10 @@ def cubing_job(
             try:
                 ref_time = time.time()
                 logging.info("Cubing z={}-{}".format(z_batch[0], z_batch[-1]))
-                buffer = []
+                slices = []
                 # Iterate over each z section in the batch
                 for z, file_name in zip(z_batch, source_file_batch):
-                    # Image shape will be (x, y, channel_count, z=1) or (x, y, z=1)
+                    # Image shape will be (x, y, channel_count, z=1)
                     image = read_image_file(file_name, target_wkw_info.dtype)
                     if not pad:
                         assert (
@@ -126,37 +138,27 @@ def cubing_job(
                         ), "Section z={} has the wrong dimensions: {} (expected {}). Consider using --pad.".format(
                             z, image.shape, image_size
                         )
-                    buffer.append(image)
+                    slices.append(image)
 
                 if pad:
-                    x_max = max(slice.shape[0] for slice in buffer)
-                    y_max = max(slice.shape[1] for slice in buffer)
+                    x_max = max(_slice.shape[0] for _slice in slices)
+                    y_max = max(_slice.shape[1] for _slice in slices)
 
-                    buffer = [
+                    slices = [
                         np.pad(
-                            slice,
+                            _slice,
                             mode="constant",
                             pad_width=[
-                                (0, x_max - slice.shape[0]),
-                                (0, y_max - slice.shape[1]),
+                                (0, x_max - _slice.shape[0]),
+                                (0, y_max - _slice.shape[1]),
                                 (0, 0),
                                 (0, 0),
                             ],
                         )
-                        for slice in buffer
+                        for _slice in slices
                     ]
 
-                # Write batch buffer which will have shape (x, y, channel_count, z)
-                # since we concat along the last axis (z)
-                buffer = np.concatenate(buffer, axis=-1)
-
-                if buffer.ndim == 4:
-                    # In case of multi-channel data, we transpose the data
-                    # so that the first dimension is the channel, since the wkw
-                    # lib expects this.
-                    # New shape will be (channel_count, x, y, z)
-                    buffer = np.transpose(buffer, (2, 0, 1, 3))
-                    assert buffer.shape[0] == num_channels
+                buffer = prepare_slices_for_wkw(slices, num_channels)
 
                 target_wkw.write([0, 0, z_batch[0]], buffer)
                 logging.debug(

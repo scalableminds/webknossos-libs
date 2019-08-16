@@ -1,17 +1,12 @@
-from argparse import ArgumentParser
-
-import logging
-
-from .cubing import cubing, BLOCK_LEN, create_parser as create_cubing_parser
-from .downsampling import downsample_mags, downsample_mags_anisotropic, DEFAULT_EDGE_LEN
-from .compress import compress_mag_inplace
-from .metadata import write_webknossos_metadata
-from .utils import (
-    add_verbose_flag,
-    add_distribution_flags,
-    add_anisotropic_flag,
-    setup_logging,
+from .cubing import cubing, create_parser as create_cubing_parser
+from .downsampling import (
+    downsample_mags_isotropic,
+    downsample_mags_anisotropic,
+    DEFAULT_EDGE_LEN,
 )
+from .compress import compress_mag_inplace
+from .metadata import write_webknossos_metadata, refresh_metadata
+from .utils import add_isotropic_flag, setup_logging, add_scale_flag
 from .mag import Mag
 
 
@@ -35,14 +30,8 @@ def create_parser():
 
     parser.add_argument("--name", "-n", help="Name of the dataset", default=None)
 
-    parser.add_argument(
-        "--scale",
-        "-s",
-        help="Scale of the dataset (e.g. 11.2,11.2,25). This is the size of one voxel in nm.",
-        default="1,1,1",
-    )
-
-    add_anisotropic_flag(parser)
+    add_scale_flag(parser)
+    add_isotropic_flag(parser)
 
     return parser
 
@@ -61,10 +50,18 @@ if __name__ == "__main__":
         args,
     )
 
+    write_webknossos_metadata(
+        args.target_path,
+        args.name,
+        scale,
+        compute_max_id=False,
+        exact_bounding_box=bounding_box,
+    )
+
     if not args.no_compress:
         compress_mag_inplace(args.target_path, args.layer_name, Mag(1), args)
 
-    if args.anisotropic:
+    if not args.isotropic:
         downsample_mags_anisotropic(
             args.target_path,
             args.layer_name,
@@ -78,7 +75,7 @@ if __name__ == "__main__":
         )
 
     else:
-        downsample_mags(
+        downsample_mags_isotropic(
             args.target_path,
             args.layer_name,
             Mag(1),
@@ -89,10 +86,4 @@ if __name__ == "__main__":
             args,
         )
 
-    write_webknossos_metadata(
-        args.target_path,
-        args.name,
-        scale,
-        compute_max_id=False,
-        exact_bounding_box=bounding_box,
-    )
+    refresh_metadata(args.target_path)

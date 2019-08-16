@@ -10,7 +10,7 @@ from os import path, listdir
 from typing import Optional
 from .mag import Mag
 from typing import List
-from .utils import add_verbose_flag, setup_logging
+from .utils import add_verbose_flag, setup_logging, add_scale_flag
 
 
 def get_datasource_path(dataset_path):
@@ -23,12 +23,6 @@ def create_parser():
     parser.add_argument("path", help="Directory containing the dataset.")
 
     parser.add_argument("--name", "-n", help="Name of the dataset", default=None)
-    parser.add_argument(
-        "--scale",
-        "-s",
-        help="Scale of the dataset (e.g. 11.2,11.2,25)",
-        default="1,1,1",
-    )
 
     parser.add_argument("--refresh", "-r", default=False, action="store_true")
 
@@ -42,6 +36,7 @@ def create_parser():
     )
     group.add_argument("--max_id", help="set max id of segmentation.", default=0)
 
+    add_scale_flag(parser)
     add_verbose_flag(parser)
 
     return parser

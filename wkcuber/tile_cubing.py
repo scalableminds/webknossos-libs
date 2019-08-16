@@ -6,6 +6,10 @@ import os
 from glob import glob
 import re
 from argparse import ArgumentTypeError
+import wkw
+from argparse import ArgumentParser
+from os import path, listdir
+from PIL import Image
 
 from wkcuber.utils import (
     get_chunks,
@@ -18,6 +22,8 @@ from wkcuber.utils import (
     get_regular_chunks,
 )
 from wkcuber.cubing import create_parser as create_cubing_parser, read_image_file
+from wkcuber.image_readers import image_reader
+from wkcuber.cubing import create_parser, read_image_file, prepare_slices_for_wkw
 from wkcuber.image_readers import image_reader
 
 BLOCK_LEN = 32
@@ -69,7 +75,6 @@ def replace_pattern_to_specific_length_without_brackets(
                 occurrence, coord * coord_ids_with_specific_length[coord], 1
             )
     return pattern
-
 
 def replace_coordinates_with_glob_regex(pattern: str, coord_ids: Dict[str, int]) -> str:
     occurrences = re.findall("({x+}|{y+}|{z+})", pattern)
@@ -224,14 +229,11 @@ def tile_cubing_job(
                                     )
                                 )
 
-                        buffer = np.stack(buffer, axis=2)
-                        # transpose if the data have a color channel
-                        if len(buffer.shape) == 4:
-                            buffer = np.transpose(buffer, (3, 0, 1, 2))
+                        data = prepare_slices_for_wkw(buffer, num_channels=tile_size[2])
                         # Write buffer to target if not empty
-                        if np.any(buffer != 0):
+                        if np.any(data != 0):
                             target_wkw.write(
-                                [x * tile_size[0], y * tile_size[1], z_batch[0]], buffer
+                                [x * tile_size[0], y * tile_size[1], z_batch[0]], data
                             )
                         logging.debug(
                             "Cubing of z={}-{} x={} y={} took {:.8f}s".format(

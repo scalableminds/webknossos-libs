@@ -13,7 +13,7 @@ from concurrent.futures import ProcessPoolExecutor
 from os import path, getpid
 from platform import python_version
 from math import floor, ceil
-from wkcuber.mag import Mag
+from .mag import Mag
 
 from .knossos import KnossosDataset, CUBE_EDGE_LEN
 
@@ -22,6 +22,9 @@ WkwDatasetInfo = namedtuple(
 )
 KnossosDatasetInfo = namedtuple("KnossosDatasetInfo", ("dataset_path", "dtype"))
 FallbackArgs = namedtuple("FallbackArgs", ("distribution_strategy", "jobs"))
+
+
+BLOCK_LEN = 32
 
 
 def open_wkw(info, **kwargs):
@@ -52,24 +55,28 @@ def open_knossos(info):
 
 def add_verbose_flag(parser):
     parser.add_argument(
-        "--silent",
-        "-silent",
-        help="Silent output",
-        dest="verbose",
-        action="store_false",
+        "--silent", help="Silent output", dest="verbose", action="store_false"
     )
 
     parser.set_defaults(verbose=True)
 
 
-def add_anisotropic_flag(parser):
+def add_scale_flag(parser):
     parser.add_argument(
-        "--anisotropic",
-        "-a",
-        help="Activates Anisotropic downsampling. It will detect which dimension is the smallest and the largest. "
-        "The largest dimension will only be downsampled by 2 if it would be smaller or equal to the smallest "
-        "dimension in the next downsampling step.",
-        dest="anisotropic",
+        "--scale",
+        "-s",
+        help="Scale of the dataset (e.g. 11.2,11.2,25). This is the size of one voxel in nm.",
+        required=True,
+    )
+
+
+def add_isotropic_flag(parser):
+    parser.add_argument(
+        "--isotropic",
+        help="Activates isotropic downsampling. The default is anisotropic downsampling. "
+        "Isotropic downsampling will always downsample each dimension with the factor 2.",
+        dest="isotropic",
+        default=False,
         action="store_true",
     )
 
@@ -126,6 +133,16 @@ def add_distribution_flags(parser):
         "--job_resources",
         default=None,
         help='Necessary when using slurm as distribution strategy. Should be a JSON string (e.g., --job_resources=\'{"mem": "10M"}\')',
+    )
+
+
+def add_batch_size_flag(parser):
+    parser.add_argument(
+        "--batch_size",
+        "-b",
+        help="Number of sections to buffer per job",
+        type=int,
+        default=BLOCK_LEN,
     )
 
 

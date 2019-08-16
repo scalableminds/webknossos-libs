@@ -1,0 +1,4 @@
+recursive-exclude .* *
+exclude .*
+recursive-exclude tests *
+recursive-exclude testdata *
