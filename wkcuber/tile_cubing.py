@@ -204,7 +204,7 @@ def tile_cubing_job(
                 for x in range(min_dimensions["x"], max_dimensions["x"] + 1):
                     for y in range(min_dimensions["y"], max_dimensions["y"] + 1):
                         ref_time2 = time.time()
-                        buffer = []
+                        slices = []
                         for z in z_batch:
                             # Read file if exists or use zeros instead
                             file_name = find_file_with_dimensions(
@@ -215,20 +215,18 @@ def tile_cubing_job(
                                 image = read_image_file(
                                     file_name, target_wkw_info.dtype
                                 )
-                                image = np.squeeze(image)
-                                buffer.append(image)
+                                slices.append(image)
                             else:
                                 # add zeros instead
-                                buffer.append(
-                                    np.squeeze(
-                                        np.zeros(tile_size, dtype=target_wkw_info.dtype)
+                                slices.append(
+                                    np.zeros(
+                                        tile_size + (1,), dtype=target_wkw_info.dtype
                                     )
                                 )
-                        buffer = np.stack(buffer, axis=2)
-                        # transpose if the data have a color channel
-                        if len(buffer.shape) == 4:
-                            buffer = np.transpose(buffer, (3, 0, 1, 2))
-                        # Write buffer to target if not empty
+                        buffer = prepare_slices_for_wkw(
+                            slices, num_channels=tile_size[2]
+                        )
+
                         if np.any(buffer != 0):
                             target_wkw.write(
                                 [x * tile_size[0], y * tile_size[1], z_batch[0]], buffer
