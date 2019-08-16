@@ -107,7 +107,6 @@ def detect_interval_for_dimensions(
     current_decimal_length = {"x": 0, "y": 0, "z": 0}
     max_dimensions = {"x": 0, "y": 0, "z": 0}
     min_dimensions = {"x": None, "y": None, "z": None}
-    occurrences = re.findall("({x+}|{y+}|{z+})", file_path_pattern)
 
     # find all files by trying all combinations of dimension lengths
     for x in range(decimal_lengths["x"] + 1):
@@ -122,6 +121,7 @@ def detect_interval_for_dimensions(
                 found_files = glob(specific_pattern)
                 file_count += len(found_files)
                 for file_name in found_files:
+                    arbitrary_file = file_name
                     # Turn a pattern {xxx}/{yyy}/{zzzzzz} for given dimension counts into (e.g., 2, 2, 3) into
                     # something like xx/yy/zzz (note that the curly braces are gone)
                     applied_fpp = replace_pattern_to_specific_length_without_brackets(
@@ -145,7 +145,7 @@ def detect_interval_for_dimensions(
                             max_dimensions[current_dimension], coordinate_value
                         )
 
-    return (min_dimensions, max_dimensions, file_name, file_count)
+    return min_dimensions, max_dimensions, arbitrary_file, file_count
 
 
 def find_file_with_dimensions(
