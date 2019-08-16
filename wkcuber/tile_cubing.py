@@ -7,7 +7,7 @@ from glob import glob
 import re
 from argparse import ArgumentTypeError
 
-from .utils import (
+from wkcuber.utils import (
     get_chunks,
     ensure_wkw,
     open_wkw,
@@ -17,9 +17,9 @@ from .utils import (
     setup_logging,
     get_regular_chunks,
 )
-from .cubing import create_parser as create_cubing_parser
-from .cubing import read_image_file, prepare_slices_for_wkw
-from .image_readers import image_reader
+from wkcuber.cubing import create_parser as create_cubing_parser
+from wkcuber.cubing import read_image_file, prepare_slices_for_wkw
+from wkcuber.image_readers import image_reader
 
 BLOCK_LEN = 32
 PADDING_FILE_NAME = "/"
@@ -224,12 +224,14 @@ def tile_cubing_job(
                                         np.zeros(tile_size, dtype=target_wkw_info.dtype)
                                     )
                                 )
-
-                        data = prepare_slices_for_wkw(buffer, num_channels=tile_size[2])
+                        buffer = np.stack(buffer, axis=2)
+                        # transpose if the data have a color channel
+                        if len(buffer.shape) == 4:
+                            buffer = np.transpose(buffer, (3, 0, 1, 2))
                         # Write buffer to target if not empty
-                        if np.any(data != 0):
+                        if np.any(buffer != 0):
                             target_wkw.write(
-                                [x * tile_size[0], y * tile_size[1], z_batch[0]], data
+                                [x * tile_size[0], y * tile_size[1], z_batch[0]], buffer
                             )
                         logging.debug(
                             "Cubing of z={}-{} x={} y={} took {:.8f}s".format(

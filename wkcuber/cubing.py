@@ -87,14 +87,10 @@ def read_image_file(file_name, dtype):
 
 
 def prepare_slices_for_wkw(slices, num_channels=None):
-    # Ensure that the channel_count exists
-    need_to_add_channel_count = len(slices[0].shape) == 2
     # Write batch buffer which will have shape (x, y, channel_count, z)
     # since we concat along the last axis (z)
-    buffer = np.stack(slices, axis=-1)
-    # Add the channel_count if it is missing
-    if need_to_add_channel_count:
-        buffer = np.expand_dims(buffer, axis=2)
+    buffer = np.concatenate(slices, axis=-1)
+
     # We transpose the data so that the first dimension is the channel,
     # since the wkw library expects this.
     # New shape will be (channel_count, x, y, z)
