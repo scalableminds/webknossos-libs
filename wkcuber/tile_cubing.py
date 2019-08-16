@@ -76,6 +76,7 @@ def replace_pattern_to_specific_length_without_brackets(
             )
     return pattern
 
+
 def replace_coordinates_with_glob_regex(pattern: str, coord_ids: Dict[str, int]) -> str:
     occurrences = re.findall("({x+}|{y+}|{z+})", pattern)
     for occurrence in occurrences:

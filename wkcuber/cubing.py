@@ -88,7 +88,7 @@ def read_image_file(file_name, dtype):
 
 def prepare_slices_for_wkw(slices, num_channels=None):
     # Ensure that the channel_count exists
-    need_to_add_channel_count = (len(slices[0].shape) == 2)
+    need_to_add_channel_count = len(slices[0].shape) == 2
     # Write batch buffer which will have shape (x, y, channel_count, z)
     # since we concat along the last axis (z)
     buffer = np.stack(slices, axis=-1)
