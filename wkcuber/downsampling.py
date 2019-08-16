@@ -177,11 +177,10 @@ def downsample(
         )
 
     with get_executor_for_args(args) as executor:
-        futures = []
+        job_args = []
         for target_cube_xyz in target_cube_addresses:
-            futures.append(
-                executor.submit(
-                    downsample_cube_job,
+            job_args.append(
+                (
                     source_wkw_info,
                     target_wkw_info,
                     mag_factors,
@@ -191,20 +190,21 @@ def downsample(
                     compress,
                 )
             )
-        wait_and_ensure_success(futures)
+        wait_and_ensure_success(executor.map_to_futures(downsample_cube_job, job_args))
 
     logging.info("Mag {0} successfully cubed".format(target_mag))
 
 
-def downsample_cube_job(
-    source_wkw_info,
-    target_wkw_info,
-    mag_factors,
-    interpolation_mode,
-    cube_edge_len,
-    target_cube_xyz,
-    compress,
-):
+def downsample_cube_job(args):
+    (
+        source_wkw_info,
+        target_wkw_info,
+        mag_factors,
+        interpolation_mode,
+        cube_edge_len,
+        target_cube_xyz,
+        compress,
+    ) = args
     logging.info("Downsampling of {}".format(target_cube_xyz))
 
     try:
