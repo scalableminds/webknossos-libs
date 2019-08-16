@@ -100,15 +100,16 @@ def prepare_slices_for_wkw(slices, num_channels=None):
     return buffer
 
 
-def cubing_job(
-    target_wkw_info,
-    z_batches,
-    source_file_batches,
-    batch_size,
-    image_size,
-    num_channels,
-    pad=False,
-):
+def cubing_job(args):
+    (
+        target_wkw_info,
+        z_batches,
+        source_file_batches,
+        batch_size,
+        image_size,
+        num_channels,
+        pad,
+    ) = args
     if len(z_batches) == 0:
         return
 
@@ -187,16 +188,15 @@ def cubing(source_path, target_path, layer_name, dtype, batch_size, args=None) -
     ensure_wkw(target_wkw_info, num_channels=num_channels)
 
     with get_executor_for_args(args) as executor:
-        futures = []
+        job_args = []
         # We iterate over all z sections
         for z in range(0, num_z, BLOCK_LEN):
             # Prepare z batches
             max_z = min(num_z, z + BLOCK_LEN)
             z_batch = list(range(z, max_z))
-            # Execute
-            futures.append(
-                executor.submit(
-                    cubing_job,
+            # Prepare job
+            job_args.append(
+                (
                     target_wkw_info,
                     z_batch,
                     source_files[z:max_z],
@@ -207,7 +207,7 @@ def cubing(source_path, target_path, layer_name, dtype, batch_size, args=None) -
                 )
             )
 
-        wait_and_ensure_success(futures)
+        wait_and_ensure_success(executor.map_to_futures(cubing_job, job_args))
 
     # Return Bounding Box
     return {"topLeft": [0, 0, 0], "width": num_x, "height": num_y, "depth": num_z}

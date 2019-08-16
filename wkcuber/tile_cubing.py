@@ -52,7 +52,8 @@ def find_source_files(source_section_path):
     return natsorted(all_source_files)
 
 
-def tile_cubing_job(target_wkw_info, z_batches, source_path, batch_size, tile_size):
+def tile_cubing_job(args):
+    target_wkw_info, z_batches, source_path, batch_size, tile_size = args
     if len(z_batches) == 0:
         return
 
@@ -154,12 +155,11 @@ def tile_cubing(
     target_wkw_info = WkwDatasetInfo(target_path, layer_name, dtype, 1)
     ensure_wkw(target_wkw_info)
     with get_executor_for_args(args) as executor:
-        futures = []
+        job_args = []
         # Iterate over all z batches
         for z_batch in get_regular_chunks(min_z, max_z, BLOCK_LEN):
-            futures.append(
-                executor.submit(
-                    tile_cubing_job,
+            job_args.append(
+                (
                     target_wkw_info,
                     list(z_batch),
                     source_path,
@@ -167,7 +167,7 @@ def tile_cubing(
                     tile_size,
                 )
             )
-        wait_and_ensure_success(futures)
+        wait_and_ensure_success(executor.map_to_futures(tile_cubing_job, job_args))
 
 
 if __name__ == "__main__":

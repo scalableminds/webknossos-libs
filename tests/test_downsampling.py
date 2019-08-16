@@ -95,7 +95,7 @@ def downsample_test_helper(use_compress):
     )[0]
     assert np.any(source_buffer != 0)
 
-    downsample_cube_job(
+    downsample_args = (
         source_info,
         target_info,
         (2, 2, 2),
@@ -104,6 +104,7 @@ def downsample_test_helper(use_compress):
         offset,
         use_compress,
     )
+    downsample_cube_job(downsample_args)
 
     assert np.any(source_buffer != 0)
     block_type = (
@@ -155,7 +156,7 @@ def test_downsample_multi_channel():
         wkw_dataset.write(offset, source_data)
     assert np.any(source_data != 0)
 
-    downsample_cube_job(
+    downsample_args = (
         source_info,
         target_info,
         (2, 2, 2),
@@ -164,6 +165,7 @@ def test_downsample_multi_channel():
         tuple(a * WKW_CUBE_SIZE for a in offset),
         False,
     )
+    downsample_cube_job(downsample_args)
 
     channels = []
     for channel_index in range(num_channels):
@@ -184,21 +186,27 @@ def test_downsample_multi_channel():
 
     assert np.all(target_buffer == joined_buffer)
 
+
 def test_anisotropic_mag_calculation():
     mag_tests = [
-        [(10.5, 10.5, 24),      Mag(1),         Mag((2, 2, 1))],
-        [(10.5, 10.5, 21),      Mag(1),         Mag((2, 2, 1))],
-        [(10.5, 24, 10.5),      Mag(1),         Mag((2, 1, 2))],
-        [(24, 10.5, 10.5),      Mag(1),         Mag((1, 2, 2))],
-        [(10.5, 10.5, 10.5),    Mag(1),         Mag((2, 2, 2))],
-        [(10.5, 10.5, 24),      Mag((2, 2, 1)), Mag((4, 4, 1))],
-        [(10.5, 10.5, 21),      Mag((2, 2, 1)), Mag((4, 4, 2))],
-        [(10.5, 24, 10.5),      Mag((2, 1, 2)), Mag((4, 1, 4))],
-        [(24, 10.5, 10.5),      Mag((1, 2, 2)), Mag((1, 4, 4))],
-        [(10.5, 10.5, 10.5),    Mag(2),         Mag(4)],
+        [(10.5, 10.5, 24), Mag(1), Mag((2, 2, 1))],
+        [(10.5, 10.5, 21), Mag(1), Mag((2, 2, 1))],
+        [(10.5, 24, 10.5), Mag(1), Mag((2, 1, 2))],
+        [(24, 10.5, 10.5), Mag(1), Mag((1, 2, 2))],
+        [(10.5, 10.5, 10.5), Mag(1), Mag((2, 2, 2))],
+        [(10.5, 10.5, 24), Mag((2, 2, 1)), Mag((4, 4, 1))],
+        [(10.5, 10.5, 21), Mag((2, 2, 1)), Mag((4, 4, 2))],
+        [(10.5, 24, 10.5), Mag((2, 1, 2)), Mag((4, 1, 4))],
+        [(24, 10.5, 10.5), Mag((1, 2, 2)), Mag((1, 4, 4))],
+        [(10.5, 10.5, 10.5), Mag(2), Mag(4)],
     ]
     for i in range(len(mag_tests)):
-        assert mag_tests[i][2] == get_next_anisotropic_mag(mag_tests[i][1], mag_tests[i][0]), "The next anisotropic" \
-                                                                                          " Magnification of {} with " \
-                                                                                          "the size {} should be {}"\
-            .format(mag_tests[i][1], mag_tests[i][0], mag_tests[i][2])
+        assert mag_tests[i][2] == get_next_anisotropic_mag(
+            mag_tests[i][1], mag_tests[i][0]
+        ), (
+            "The next anisotropic"
+            " Magnification of {} with "
+            "the size {} should be {}".format(
+                mag_tests[i][1], mag_tests[i][0], mag_tests[i][2]
+            )
+        )
