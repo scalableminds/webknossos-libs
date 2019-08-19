@@ -1,7 +1,7 @@
 import time
 import logging
 import numpy as np
-from typing import Dict, Tuple, Union, List
+from typing import Dict, Tuple, Union
 import os
 from glob import glob
 import re
