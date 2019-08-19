@@ -181,15 +181,9 @@ def find_file_with_dimensions(
 
 
 def tile_cubing_job(
-    target_wkw_info: WkwDatasetInfo,
-    z_batches: List[int],
-    input_path_pattern: str,
-    batch_size: int,
-    tile_size: Tuple[int, int, int],
-    min_dimensions: Dict[str, int],
-    max_dimensions: Dict[str, int],
-    decimal_lengths: Dict[str, int],
+        args
 ):
+    target_wkw_info, z_batches, input_path_pattern, batch_size, tile_size, min_dimensions, max_dimensions, decimal_lengths = args
     if len(z_batches) == 0:
         return
 
@@ -277,14 +271,13 @@ def tile_cubing(
     target_wkw_info = WkwDatasetInfo(target_path, layer_name, dtype, 1)
     ensure_wkw(target_wkw_info, num_channels=num_channels)
     with get_executor_for_args(args) as executor:
-        futures = []
+        job_args = []
         # Iterate over all z batches
         for z_batch in get_regular_chunks(
             min_dimensions["z"], max_dimensions["z"], BLOCK_LEN
         ):
-            futures.append(
-                executor.submit(
-                    tile_cubing_job,
+            job_args.append(
+                (
                     target_wkw_info,
                     list(z_batch),
                     input_path_pattern,
@@ -295,7 +288,7 @@ def tile_cubing(
                     decimal_lengths,
                 )
             )
-        wait_and_ensure_success(futures)
+        wait_and_ensure_success(executor.map_to_futures(tile_cubing_job, job_args))
 
 
 def create_parser():

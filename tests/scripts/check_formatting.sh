@@ -4,4 +4,4 @@ docker run \
   --entrypoint "/bin/bash" \
   -w "/" \
   scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
-  -c "black --check /app/wkcuber"
+  -c "black --check /app"

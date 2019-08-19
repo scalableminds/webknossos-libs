@@ -52,7 +52,8 @@ def create_parser():
     return parser
 
 
-def compress_file_job(source_path, target_path):
+def compress_file_job(args):
+    source_path, target_path = args
     try:
         logging.debug("Compressing '{}' to '{}'".format(source_path, target_path))
         ref_time = time.time()
@@ -89,16 +90,14 @@ def compress_mag(source_path, layer_name, target_path, mag: Mag, args=None):
     with open_wkw(source_wkw_info) as source_wkw:
         source_wkw.compress(target_mag_path)
         with get_executor_for_args(args) as executor:
-            futures = []
+            job_args = []
             for file in source_wkw.list_files():
                 rel_file = path.relpath(file, source_wkw.root)
-                futures.append(
-                    executor.submit(
-                        compress_file_job, file, path.join(target_mag_path, rel_file)
-                    )
-                )
+                job_args.append((file, path.join(target_mag_path, rel_file)))
 
-            wait_and_ensure_success(futures)
+            wait_and_ensure_success(
+                executor.map_to_futures(compress_file_job, job_args)
+            )
 
     logging.info("Mag {0} successfully compressed".format(str(mag)))
 

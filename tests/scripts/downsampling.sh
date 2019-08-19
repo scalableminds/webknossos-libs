@@ -18,3 +18,4 @@ docker run \
 [ $(find testoutput/tiff/color/4 -mindepth 3 -name "*.wkw" | wc -l) -eq 1 ]
 [ $(find testoutput/tiff/color/8 -mindepth 3 -name "*.wkw" | wc -l) -eq 1 ]
 cmp --silent testoutput/tiff/color/2/z0/y0/x0.wkw testdata/tiff_mag_2_reference/color/2/z0/y0/x0.wkw
+cmp --silent testoutput/tiff/color/2/header.wkw testdata/tiff_mag_2_reference/color/2/header.wkw

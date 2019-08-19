@@ -53,7 +53,8 @@ def create_parser():
     return parser
 
 
-def convert_cube_job(cube_xyz, source_knossos_info, target_wkw_info):
+def convert_cube_job(args):
+    cube_xyz, source_knossos_info, target_wkw_info = args
     logging.info("Converting {},{},{}".format(cube_xyz[0], cube_xyz[1], cube_xyz[2]))
     ref_time = time.time()
     offset = tuple(x * CUBE_EDGE_LEN for x in cube_xyz)
@@ -87,14 +88,11 @@ def convert_knossos(
                 exit(1)
 
             knossos_cubes.sort()
-            futures = []
+            job_args = []
             for cube_xyz in knossos_cubes:
-                futures.append(
-                    executor.submit(
-                        convert_cube_job, cube_xyz, source_knossos_info, target_wkw_info
-                    )
-                )
-            wait_and_ensure_success(futures)
+                job_args.append((cube_xyz, source_knossos_info, target_wkw_info))
+
+            wait_and_ensure_success(executor.map_to_futures(convert_cube_job, job_args))
 
 
 if __name__ == "__main__":
