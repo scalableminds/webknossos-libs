@@ -1,59 +1,189 @@
 import time
 import logging
 import numpy as np
+from typing import Dict, Tuple, Union
+import os
+from glob import glob
 import re
-import wkw
-from argparse import ArgumentParser
-from os import path, listdir
-from PIL import Image
-from natsort import natsorted
+from argparse import ArgumentTypeError
 
 from .utils import (
     get_chunks,
-    get_regular_chunks,
-    find_files,
     ensure_wkw,
     open_wkw,
     WkwDatasetInfo,
-    add_distribution_flags,
     get_executor_for_args,
     wait_and_ensure_success,
     setup_logging,
+    get_regular_chunks,
 )
-from .cubing import create_parser, read_image_file, prepare_slices_for_wkw
+from .cubing import create_parser as create_cubing_parser
+from .cubing import read_image_file, prepare_slices_for_wkw
 from .image_readers import image_reader
 
 BLOCK_LEN = 32
-CUBE_REGEX = re.compile("(\d+)/(\d+)\.([a-zA-Z]{3,4})$")
+PADDING_FILE_NAME = "/"
 
 
-def find_source_sections(source_path):
-    section_folders = [
-        f for f in listdir(source_path) if path.isdir(path.join(source_path, f))
-    ]
-    section_folders = [path.join(source_path, s) for s in section_folders]
-    return natsorted(section_folders)
+# similar to ImageJ https://imagej.net/BigStitcher_StackLoader#File_pattern
+def check_input_pattern(input_pattern: str) -> str:
+    x_match = re.search("{x+}", input_pattern)
+    y_match = re.search("{y+}", input_pattern)
+    z_match = re.search("{z+}", input_pattern)
+
+    if x_match is None or y_match is None or z_match is None:
+        raise ArgumentTypeError("{} is not a valid pattern".format(input_pattern))
+
+    return input_pattern
 
 
-def parse_tile_file_name(filename):
-    m = CUBE_REGEX.search(filename)
-    if m is None:
-        return None
-    return (int(m.group(1)), int(m.group(2)), m.group(3))
+""" Replaces the coordinates with a specific length. 
+The coord_ids_with_replacement_info is a Dict that maps a dimension 
+to a tuple of the coordinate value and the desired length. """
 
 
-def find_source_files(source_section_path):
-    all_source_files = [
-        path.join(source_section_path, s)
-        for s in find_files(
-            path.join(source_section_path, "**", "*"), image_reader.readers.keys()
+def replace_coordinates(
+    pattern: str, coord_ids_with_replacement_info: Dict[str, Tuple[int, int]]
+) -> str:
+    occurrences = re.findall("({x+}|{y+}|{z+})", pattern)
+    for occurrence in occurrences:
+        coord = occurrence[1]
+        if coord in coord_ids_with_replacement_info:
+            number_of_digits = coord_ids_with_replacement_info[coord][1]
+            format_str = "0" + str(number_of_digits) + "d"
+            pattern = pattern.replace(
+                occurrence,
+                format(coord_ids_with_replacement_info[coord][0], format_str),
+                1,
+            )
+    return pattern
+
+
+def replace_pattern_to_specific_length_without_brackets(
+    pattern: str, coord_ids_with_specific_length: Dict[str, int]
+) -> str:
+    occurrences = re.findall("({x+}|{y+}|{z+})", pattern)
+    for occurrence in occurrences:
+        coord = occurrence[1]
+        if coord in coord_ids_with_specific_length:
+            pattern = pattern.replace(
+                occurrence, coord * coord_ids_with_specific_length[coord], 1
+            )
+    return pattern
+
+
+def replace_coordinates_with_glob_regex(pattern: str, coord_ids: Dict[str, int]) -> str:
+    occurrences = re.findall("({x+}|{y+}|{z+})", pattern)
+    for occurrence in occurrences:
+        coord = occurrence[1]
+        if coord in coord_ids:
+            number_of_digits = coord_ids[coord]
+            pattern = pattern.replace(occurrence, "[0-9]" * number_of_digits, 1)
+    return pattern
+
+
+""" Counts how many digits the dimensions x, y and z occupy in the given pattern. """
+
+
+def get_digit_counts_for_dimensions(pattern):
+    occurrences = re.findall("({x+}|{y+}|{z+})", pattern)
+    decimal_lengths = {"x": 0, "y": 0, "z": 0}
+
+    for occurrence in occurrences:
+        current_dimension = occurrence[1]
+        decimal_lengths[current_dimension] = max(
+            decimal_lengths[current_dimension], len(occurrence) - 2
         )
-    ]
-    return natsorted(all_source_files)
+
+    return decimal_lengths
+
+
+def detect_interval_for_dimensions(
+    file_path_pattern: str, decimal_lengths: Dict[str, int]
+) -> Tuple[Dict[str, int], Dict[str, int], str, int]:
+    arbitrary_file = None
+    file_count = 0
+    # dictionary that maps the dimension string to the current dimension length
+    # used to avoid distinction of dimensions with if statements
+    current_decimal_length = {"x": 0, "y": 0, "z": 0}
+    max_dimensions = {"x": 0, "y": 0, "z": 0}
+    min_dimensions = {"x": None, "y": None, "z": None}
+
+    # find all files by trying all combinations of dimension lengths
+    for x in range(decimal_lengths["x"] + 1):
+        current_decimal_length["x"] = x
+        for y in range(decimal_lengths["y"] + 1):
+            current_decimal_length["y"] = y
+            for z in range(decimal_lengths["z"] + 1):
+                current_decimal_length["z"] = z
+                specific_pattern = replace_coordinates_with_glob_regex(
+                    file_path_pattern, {"z": z, "y": y, "x": x}
+                )
+                found_files = glob(specific_pattern)
+                file_count += len(found_files)
+                for file_name in found_files:
+                    arbitrary_file = file_name
+                    # Turn a pattern {xxx}/{yyy}/{zzzzzz} for given dimension counts into (e.g., 2, 2, 3) into
+                    # something like xx/yy/zzz (note that the curly braces are gone)
+                    applied_fpp = replace_pattern_to_specific_length_without_brackets(
+                        file_path_pattern, {"x": x, "y": y, "z": z}
+                    )
+
+                    # For each dimension, look up where it starts within the applied pattern.
+                    # Use that index to look up the actual value within the file name
+                    for current_dimension in ["x", "y", "z"]:
+                        idx = applied_fpp.index(current_dimension)
+                        coordinate_value = file_name[
+                            idx : idx + current_decimal_length[current_dimension]
+                        ]
+                        coordinate_value = int(coordinate_value)
+                        assert coordinate_value
+                        min_dimensions[current_dimension] = min(
+                            min_dimensions[current_dimension] or coordinate_value,
+                            coordinate_value,
+                        )
+                        max_dimensions[current_dimension] = max(
+                            max_dimensions[current_dimension], coordinate_value
+                        )
+
+    return min_dimensions, max_dimensions, arbitrary_file, file_count
+
+
+def find_file_with_dimensions(
+    file_path_pattern: str,
+    x_value: int,
+    y_value: int,
+    z_value: int,
+    decimal_lengths: Dict[str, int],
+) -> Union[str, None]:
+
+    file_path_unpadded = replace_coordinates(
+        file_path_pattern, {"z": (z_value, 0), "y": (y_value, 0), "x": (x_value, 0)}
+    )
+
+    file_path_padded = replace_coordinates(
+        file_path_pattern,
+        {
+            "z": (z_value, decimal_lengths["z"]),
+            "y": (y_value, decimal_lengths["y"]),
+            "x": (x_value, decimal_lengths["x"]),
+        },
+    )
+
+    # the unpadded file pattern has a higher precedence
+    if os.path.isfile(file_path_unpadded):
+        return file_path_unpadded
+
+    if os.path.isfile(file_path_padded):
+        return file_path_padded
+
+    return None
 
 
 def tile_cubing_job(args):
-    target_wkw_info, z_batches, source_path, batch_size, tile_size = args
+    target_wkw_info, z_batches, input_path_pattern, batch_size, tile_size, min_dimensions, max_dimensions, decimal_lengths = (
+        args
+    )
     if len(z_batches) == 0:
         return
 
@@ -65,66 +195,49 @@ def tile_cubing_job(args):
                 ref_time = time.time()
                 logging.info("Cubing z={}-{}".format(z_batch[0], z_batch[-1]))
 
-                # Detect all available tiles in this z batch
-                tile_coords = []
-                for z in z_batch:
-                    tile_coords += [
-                        (z,) + parse_tile_file_name(f)
-                        for f in find_source_files("{}/{}".format(source_path, z))
-                    ]
-                # Figure out what x-y combinations are available in this z batch
-                xy = sorted(set([(x, y) for z, y, x, _ in tile_coords]))
-
-                # Iterate over all x-y combinations from this z batch
-                for x, y in xy:
-                    ref_time2 = time.time()
-                    slices = []
-                    for z in z_batch:
-                        # Find the file extension of the x-y tile in this z
-                        ext = next(
-                            (
-                                ext
-                                for _z, _y, _x, ext in tile_coords
-                                if _z == z and _y == y and _x == x
-                            ),
-                            None,
-                        )
-                        # Read file if exists or zeros instead
-                        if ext is not None:
-                            image = read_image_file(
-                                "{}/{}/{}/{}.{}".format(source_path, z, y, x, ext),
-                                target_wkw_info.dtype,
+                for x in range(min_dimensions["x"], max_dimensions["x"] + 1):
+                    for y in range(min_dimensions["y"], max_dimensions["y"] + 1):
+                        ref_time2 = time.time()
+                        slices = []
+                        for z in z_batch:
+                            # Read file if exists or use zeros instead
+                            file_name = find_file_with_dimensions(
+                                input_path_pattern, x, y, z, decimal_lengths
                             )
-                            slices.append(image)
-                        else:
-                            slices.append(
-                                np.zeros(
-                                    tile_size + (1, 1), dtype=target_wkw_info.dtype
+                            if file_name:
+                                # read the image
+                                image = read_image_file(
+                                    file_name, target_wkw_info.dtype
                                 )
+                                slices.append(image)
+                            else:
+                                # add zeros instead
+                                slices.append(
+                                    np.zeros(
+                                        tile_size + (1,), dtype=target_wkw_info.dtype
+                                    )
+                                )
+                        buffer = prepare_slices_for_wkw(
+                            slices, num_channels=tile_size[2]
+                        )
+
+                        if np.any(buffer != 0):
+                            target_wkw.write(
+                                [x * tile_size[0], y * tile_size[1], z_batch[0]], buffer
                             )
-
-                    # Write buffer to target
-                    buffer = prepare_slices_for_wkw(slices)
-
-                    if np.any(buffer != 0):
-                        target_wkw.write(
-                            [x * tile_size[0], y * tile_size[1], z_batch[0]], buffer
+                        logging.debug(
+                            "Cubing of z={}-{} x={} y={} took {:.8f}s".format(
+                                z_batch[0], z_batch[-1], x, y, time.time() - ref_time2
+                            )
                         )
-                    logging.debug(
-                        "Cubing of z={}-{} x={} y={} took {:.8f}s".format(
-                            z_batch[0], z_batch[-1], x, y, time.time() - ref_time2
-                        )
-                    )
-
                 logging.debug(
                     "Cubing of z={}-{} took {:.8f}s".format(
                         z_batch[0], z_batch[-1], time.time() - ref_time
                     )
                 )
-
             except Exception as exc:
                 logging.error(
-                    "Cubing of z={}-{} failed with {}".format(
+                    "Cubing of z={}-{} failed with: {}".format(
                         z_batch[0], z_batch[-1], exc
                     )
                 )
@@ -132,54 +245,75 @@ def tile_cubing_job(args):
 
 
 def tile_cubing(
-    source_path, target_path, layer_name, dtype, batch_size, jobs, args=None
+    target_path, layer_name, dtype, batch_size, input_path_pattern, args=None
 ):
-    # Detect available z sections
-    sections = find_source_sections(source_path)
-    if len(sections) == 0:
-        logging.error("No source files found")
+    decimal_lengths = get_digit_counts_for_dimensions(input_path_pattern)
+    min_dimensions, max_dimensions, arbitrary_file, file_count = detect_interval_for_dimensions(
+        input_path_pattern, decimal_lengths
+    )
+
+    if not arbitrary_file:
+        logging.error(
+            f"No source files found. Maybe the input_path_pattern was wrong. You provided: {input_path_pattern}"
+        )
         return
-    min_z = min([int(path.basename(f)) for f in sections])
-    max_z = max([int(path.basename(f)) for f in sections])
 
     # Determine tile size from first matching file
-    tile_size = image_reader.read_dimensions(
-        next(find_files(path.join(source_path, "**", "*"), image_reader.readers.keys()))
-    )
+    tile_size = image_reader.read_dimensions(arbitrary_file)
+    num_channels = image_reader.read_channel_count(arbitrary_file)
+    tile_size = (tile_size[0], tile_size[1], num_channels)
     logging.info(
-        "Found source files: count={} tile_size={}x{}".format(
-            len(sections), tile_size[0], tile_size[1]
+        "Found source files: count={} with tile_size={}x{}".format(
+            file_count, tile_size[0], tile_size[1]
         )
     )
 
     target_wkw_info = WkwDatasetInfo(target_path, layer_name, dtype, 1)
-    ensure_wkw(target_wkw_info)
+    ensure_wkw(target_wkw_info, num_channels=num_channels)
     with get_executor_for_args(args) as executor:
         job_args = []
         # Iterate over all z batches
-        for z_batch in get_regular_chunks(min_z, max_z, BLOCK_LEN):
+        for z_batch in get_regular_chunks(
+            min_dimensions["z"], max_dimensions["z"], BLOCK_LEN
+        ):
             job_args.append(
                 (
                     target_wkw_info,
                     list(z_batch),
-                    source_path,
-                    int(batch_size),
+                    input_path_pattern,
+                    batch_size,
                     tile_size,
+                    min_dimensions,
+                    max_dimensions,
+                    decimal_lengths,
                 )
             )
         wait_and_ensure_success(executor.map_to_futures(tile_cubing_job, job_args))
 
 
+def create_parser():
+    parser = create_cubing_parser()
+
+    parser.add_argument(
+        "--input_path_pattern",
+        help="Path to input images e.g. path_{xxxxx}_{yyyyy}_{zzzzz}/image.tiff. "
+        "The number of characters indicate the longest number in the dimension to the base of 10.",
+        type=check_input_pattern,
+        default="{zzzzzzzzzz}/{yyyyyyyyyy}/{xxxxxxxxxx}.jpg",
+    )
+    return parser
+
+
 if __name__ == "__main__":
     args = create_parser().parse_args()
     setup_logging(args)
+    input_path_pattern = os.path.join(args.source_path, args.input_path_pattern)
 
     tile_cubing(
-        args.source_path,
         args.target_path,
         args.layer_name,
         args.dtype,
         int(args.batch_size),
-        int(args.jobs),
+        input_path_pattern,
         args,
     )
