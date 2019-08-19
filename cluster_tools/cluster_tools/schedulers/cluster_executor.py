@@ -39,6 +39,7 @@ class ClusterExecutor(futures.Executor):
         self.job_name = job_name
         self.was_requested_to_shutdown = False
         self.cfut_dir = cfut_dir if cfut_dir is not None else os.getenv("CFUT_DIR", ".cfut")
+        self.files_to_clean_up = []
 
         logging.info(f"Instantiating ClusterExecutor. Log files are stored in {self.cfut_dir}")
 
@@ -99,10 +100,8 @@ class ClusterExecutor(futures.Executor):
             return
 
         outf = self.format_log_file_path(jobid)
-        try:
-            os.unlink(outf)
-        except OSError:
-            pass
+        self.files_to_clean_up.append(outf)
+
 
     @abstractmethod
     def format_log_file_name(self, jobid):
@@ -153,10 +152,8 @@ class ClusterExecutor(futures.Executor):
 
         infile_name = self.format_infile_name(workerid)
         outfile_name = self.format_outfile_name(workerid)
-        if os.path.exists(infile_name):
-            os.unlink(infile_name)
-        if os.path.exists(outfile_name):
-            os.unlink(outfile_name)
+        self.files_to_clean_up.append(infile_name)
+        self.files_to_clean_up.append(outfile_name)
 
         self._cleanup(jobid)
 
@@ -205,6 +202,9 @@ class ClusterExecutor(futures.Executor):
     def get_jobid_with_index(self, jobid, index):
         return str(jobid) + "_" + str(index)
 
+    def get_function_pickle_path(self, workerid):
+        return self.format_infile_name(self.get_workerid_with_index(workerid, "function"))
+
     def map_to_futures(self, fun, allArgs):
         self.ensure_not_shutdown()
         allArgs = list(allArgs)
@@ -212,12 +212,17 @@ class ClusterExecutor(futures.Executor):
         futs = []
         workerid = random_string()
 
+        pickled_function_path = self.get_function_pickle_path(workerid)
+        self.files_to_clean_up.append(pickled_function_path)
+        with open(pickled_function_path, "wb") as file:
+            pickling.dump(fun, file)
+
         # Submit jobs eagerly
         for index, arg in enumerate(allArgs):
             fut = self.create_enriched_future()
 
             # Start the job.
-            funcser = pickling.dumps((fun, [arg], {}, self.meta_data))
+            funcser = pickling.dumps((pickled_function_path, [arg], {}, self.meta_data))
             infile_name = self.format_infile_name(self.get_workerid_with_index(workerid, index))
 
             with open(infile_name, "wb") as f:
@@ -262,6 +267,13 @@ class ClusterExecutor(futures.Executor):
 
         self.wait_thread.stop()
         self.wait_thread.join()
+
+        for file_to_clean_up in self.files_to_clean_up:
+            try:
+                os.unlink(file_to_clean_up)
+            except OSError:
+                pass
+        self.files_to_clean_up = []
 
 
     def map(self, func, args, timeout=None, chunksize=None):
