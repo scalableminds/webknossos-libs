@@ -38,24 +38,12 @@ def file_path_to_absolute_module(file_path):
 
 @warn_after("pickle.dumps", WARNING_TIMEOUT)
 def dumps(*args, **kwargs):
-    pickled = pickle_strategy.dumps(*args, **kwargs)
-    if use_cloudpickle:
-        return pickled
+    # Protocol 4 allows to serialize objects larger than 4 GiB, but is only supported
+    # beginning from Python 3.4
+    protocol = 4 if sys.version_info[0] >= 3 and sys.version_info[1] >= 4 else 3
+    pickled = pickle_strategy.dumps(*args, protocol=protocol, **kwargs)
+    return pickled
 
-    main_str = b'__main__'
-    if not main_str in pickled:
-        # No need to do any replacements when __main__ is not
-        # mentioned
-        return pickled
-
-    try:
-        main_path = file_path_to_absolute_module(sys.argv[0])
-        # See [1] for the reasons of this horrible hack
-        # [1] https://stackoverflow.com/a/45630450/896760
-        return pickled.replace(main_str, str.encode(main_path))
-    except Exception as exc:
-        logging.warning("Couldn't do any __main__ replacements. Returning raw pickle. Exception: {}".format(exc))
-        return pickled
 
 @warn_after("pickle.loads", WARNING_TIMEOUT)
 def loads(*args, **kwargs):

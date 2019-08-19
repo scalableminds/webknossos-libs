@@ -29,14 +29,14 @@ def worker(workerid, cfut_dir):
         logging.info("Job computation started (jobid={}, workerid={}).".format(executor.get_current_job_id(), workerid))
         result = True, fun(*args, **kwargs)
         logging.info("Job computation completed.")
-        out = pickling.dumps(result, True)
+        out = pickling.dumps(result)
 
     except Exception as e:
         print(traceback.format_exc())
 
         result = False, format_remote_exc()
         logging.info("Job computation failed.")
-        out = pickling.dumps(result, False)
+        out = pickling.dumps(result)
 
     destfile = format_outfile_name(cfut_dir, workerid)
     tempfile = destfile + ".tmp"

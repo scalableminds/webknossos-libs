@@ -59,7 +59,6 @@ jobs:
           command: |
             cd ./dockered-slurm
             docker exec slurmctld bash -c "cd /cluster_tools && python36 -m pytest -s test.py"
-            docker exec slurmctld bash -c "cd /cluster_tools && python36 test.py"
 
       - run:
           name: Publish python package

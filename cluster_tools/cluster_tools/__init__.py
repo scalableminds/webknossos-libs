@@ -56,7 +56,7 @@ class SequentialExecutor(WrappedProcessPoolExecutor):
         WrappedProcessPoolExecutor.__init__(self, **kwargs)
 
 def pickle_identity(obj):
-    return pickling.loads(pickling.dumps(obj, True))
+    return pickling.loads(pickling.dumps(obj))
 
 def pickle_identity_executor(func, *args, **kwargs):
     result = func(*args, **kwargs)
