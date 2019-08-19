@@ -180,10 +180,10 @@ def find_file_with_dimensions(
     return None
 
 
-def tile_cubing_job(
+def tile_cubing_job(args):
+    target_wkw_info, z_batches, input_path_pattern, batch_size, tile_size, min_dimensions, max_dimensions, decimal_lengths = (
         args
-):
-    target_wkw_info, z_batches, input_path_pattern, batch_size, tile_size, min_dimensions, max_dimensions, decimal_lengths = args
+    )
     if len(z_batches) == 0:
         return
 
