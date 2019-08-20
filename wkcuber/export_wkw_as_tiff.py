@@ -55,7 +55,7 @@ def create_parser():
     )
 
     parser.add_argument(
-        "--downsample", "-d", help="Downsample each tiff image", default=1, type=int
+        "--downsample", help="Downsample each tiff image", default=1, type=int
     )
 
     tiling_option_group = parser.add_mutually_exclusive_group()
@@ -85,9 +85,9 @@ def create_parser():
 
 def wkw_name_and_bbox_to_tiff_name(name: str, slice_index: int) -> str:
     if name is None or name == "":
-        return f"{slice_index}.tiff"
+        return f"{slice_index:06d}.tiff"
     else:
-        return f"{name}_{slice_index}.tiff"
+        return f"{name}_{slice_index:06d}.tiff"
 
 
 def wkw_slice_to_image(data_slice: np.ndarray, downsample: int = 1) -> Image:
@@ -236,7 +236,8 @@ def export_wkw_as_tiff(args):
         logging.basicConfig(level=logging.DEBUG)
 
     if args.bbox is None:
-        _, _, bbox, _ = read_metadata_for_layer(args.source_path, args.layer_name)
+        _, _, bbox, origin = read_metadata_for_layer(args.source_path, args.layer_name)
+        bbox = {"topleft": origin, "size": bbox}
     else:
         bbox = [int(s.strip()) for s in args.bbox.split(",")]
         assert len(bbox) == 6
