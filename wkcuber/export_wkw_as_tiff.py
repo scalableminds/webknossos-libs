@@ -6,6 +6,7 @@ import os
 from math import ceil
 import numpy as np
 from PIL import Image
+from scipy.ndimage.interpolation import zoom
 from typing import Tuple, Dict, Union, List
 
 from wkcuber.metadata import read_metadata_for_layer
@@ -53,6 +54,10 @@ def create_parser():
         "--mag", "-m", help="The magnification that should be read", default=1
     )
 
+    parser.add_argument(
+        "--downsample", "-d", help="Downsample each tiff image", default=1, type=int
+    )
+
     tiling_option_group = parser.add_mutually_exclusive_group()
 
     tiling_option_group.add_argument(
@@ -85,7 +90,7 @@ def wkw_name_and_bbox_to_tiff_name(name: str, slice_index: int) -> str:
         return f"{name}_{slice_index}.tiff"
 
 
-def wkw_slice_to_image(data_slice: np.ndarray) -> Image:
+def wkw_slice_to_image(data_slice: np.ndarray, downsample: int = 1) -> Image:
     if data_slice.shape[0] == 1:
         # discard greyscale dimension
         data_slice = data_slice.squeeze(axis=0)
@@ -94,6 +99,18 @@ def wkw_slice_to_image(data_slice: np.ndarray) -> Image:
     else:
         # swap axis and move the channel axis
         data_slice = data_slice.transpose((2, 1, 0))
+
+    if downsample > 1:
+        data_slice = zoom(
+            data_slice,
+            1 / downsample,
+            output=data_slice.dtype,
+            order=1,
+            # this does not mean nearest interpolation,
+            # it corresponds to how the borders are treated.
+            mode="nearest",
+            prefilter=True,
+        )
     return Image.fromarray(data_slice)
 
 
@@ -107,6 +124,7 @@ def export_tiff_slice(
             str,
             Union[None, Tuple[int, int]],
             int,
+            int,
         ],
     ]
 ):
@@ -117,6 +135,7 @@ def export_tiff_slice(
         dataset_path,
         tiling_size,
         batch_size,
+        downsample,
     ) = export_args
     number_of_slices = min(tiff_bbox["size"][2] - batch_number * batch_size, batch_size)
     tiff_bbox["size"] = [tiff_bbox["size"][0], tiff_bbox["size"][1], number_of_slices]
@@ -138,7 +157,7 @@ def export_tiff_slice(
 
                 tiff_file_path = os.path.join(dest_path, tiff_file_name)
 
-                image = wkw_slice_to_image(tiff_data[:, :, :, slice_index])
+                image = wkw_slice_to_image(tiff_data[:, :, :, slice_index], downsample)
                 image.save(tiff_file_path)
                 logging.info(f"saved slice {slice_name_number}")
 
@@ -162,7 +181,8 @@ def export_tiff_slice(
                                 * tiling_size[1] : (y_tile_index + 1)
                                 * tiling_size[1],
                                 slice_index,
-                            ]
+                            ],
+                            downsample,
                         )
 
                         tile_image.save(
@@ -183,6 +203,7 @@ def export_tiff_stack(
     name,
     tiling_slice_size,
     batch_size,
+    downsample,
     args,
 ):
     os.makedirs(destination_path, exist_ok=True)
@@ -201,6 +222,7 @@ def export_tiff_stack(
                     dataset_path,
                     tiling_slice_size,
                     batch_size,
+                    downsample,
                 )
             ]
             * num_slices,
@@ -248,6 +270,7 @@ def export_wkw_as_tiff(args):
         name=args.name,
         tiling_slice_size=args.tile_size,
         batch_size=args.batch_size,
+        downsample=args.downsample,
         args=args,
     )
 
