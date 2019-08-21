@@ -18,7 +18,7 @@ def create_parser():
         "-m",
         help="Max resolution to be downsampled. Needs to be a power of 2.",
         type=int,
-        default=512,
+        default=32,
     )
 
     parser.add_argument(
