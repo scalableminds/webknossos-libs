@@ -140,7 +140,11 @@ def export_tiff_slice(
     tiff_bbox = tiff_bbox.copy()
     number_of_slices = min(tiff_bbox["size"][2] - batch_number * batch_size, batch_size)
     tiff_bbox["size"] = [tiff_bbox["size"][0], tiff_bbox["size"][1], number_of_slices]
-    tiff_bbox["topleft"] = [tiff_bbox["topleft"][0], tiff_bbox["topleft"][1], tiff_bbox["topleft"][2] + batch_number * batch_size]
+    tiff_bbox["topleft"] = [
+        tiff_bbox["topleft"][0],
+        tiff_bbox["topleft"][1],
+        tiff_bbox["topleft"][2] + batch_number * batch_size,
+    ]
 
     with wkw.Dataset.open(dataset_path) as dataset:
         if tiling_size is None:
