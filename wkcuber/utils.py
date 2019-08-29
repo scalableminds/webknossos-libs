@@ -61,12 +61,12 @@ def add_verbose_flag(parser):
     parser.set_defaults(verbose=True)
 
 
-def add_scale_flag(parser):
+def add_scale_flag(parser, required=True):
     parser.add_argument(
         "--scale",
         "-s",
         help="Scale of the dataset (e.g. 11.2,11.2,25). This is the size of one voxel in nm.",
-        required=True,
+        required=required,
     )
 
 
