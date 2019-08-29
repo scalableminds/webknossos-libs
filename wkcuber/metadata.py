@@ -36,7 +36,7 @@ def create_parser():
     )
     group.add_argument("--max_id", help="set max id of segmentation.", default=0)
 
-    add_scale_flag(parser)
+    add_scale_flag(parser, required=False)
     add_verbose_flag(parser)
 
     return parser
@@ -290,6 +290,9 @@ if __name__ == "__main__":
     setup_logging(args)
 
     if not args.refresh:
+        assert (
+            args.scale is not None
+        ), "The scale has to be specified when creating metadata for a dataset."
         assert (
             args.name is not None
         ), "Please provide a name via --name to create meta data."
