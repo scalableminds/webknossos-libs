@@ -290,7 +290,9 @@ if __name__ == "__main__":
     setup_logging(args)
 
     if not args.refresh:
-        assert args.scale is not None, "The scale has to be specified when creating metadata for a dataset."
+        assert (
+            args.scale is not None
+        ), "The scale has to be specified when creating metadata for a dataset."
         assert (
             args.name is not None
         ), "Please provide a name via --name to create meta data."
