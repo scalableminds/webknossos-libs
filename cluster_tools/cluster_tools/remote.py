@@ -6,7 +6,11 @@ from . import pickling
 import logging
 from cluster_tools.schedulers.slurm import SlurmExecutor
 from cluster_tools.schedulers.pbs import PBSExecutor
-from .file_formatters import format_infile_name, format_outfile_name
+
+def get_executor_class():
+    for executor in [SlurmExecutor, PBSExecutor]:
+        if executor.get_current_job_id() is not None:
+            return executor
 
 def format_remote_exc():
     typ, value, tb = sys.exc_info()
@@ -14,15 +18,27 @@ def format_remote_exc():
     return "".join(traceback.format_exception(typ, value, tb))
 
 
-def worker(workerid, cfut_dir):
+def get_custom_main_path(workerid):
+    custom_main_path = None
+    main_meta_path = get_executor_class().get_main_meta_path(cfut_dir, workerid)
+    if os.path.exists(main_meta_path):
+        with open(main_meta_path, "r") as file:
+            custom_main_path = file.read()
+    return custom_main_path
+
+def worker(workerid, job_array_index, cfut_dir):
     """Called to execute a job on a remote host."""
+
+    workerid_with_idx = worker_id + "_" + job_array_index if job_array_index is not None else workerid
+
     executor = get_executor_class()
     try:
-        input_file_name = format_infile_name(cfut_dir, workerid)
+        input_file_name = executor.format_infile_name(cfut_dir, workerid_with_idx)
         print("trying to read: ", input_file_name)
         print("working dir: ", os.getcwd())
+
         with open(input_file_name, "rb") as f:
-            fun, args, kwargs, meta_data = pickling.load(f)
+            fun, args, kwargs, meta_data = pickling.load(f, get_custom_main_path(workerid))
 
         if type(fun) == str:
             with open(fun, "rb") as function_file:
@@ -30,7 +46,7 @@ def worker(workerid, cfut_dir):
 
         setup_logging(meta_data)
         
-        logging.info("Job computation started (jobid={}, workerid={}).".format(executor.get_current_job_id(), workerid))
+        logging.info("Job computation started (jobid={}, workerid_with_idx={}).".format(executor.get_current_job_id(), workerid_with_idx))
         result = True, fun(*args, **kwargs)
         logging.info("Job computation completed.")
         out = pickling.dumps(result)
@@ -42,7 +58,7 @@ def worker(workerid, cfut_dir):
         logging.info("Job computation failed.")
         out = pickling.dumps(result)
 
-    destfile = format_outfile_name(cfut_dir, workerid)
+    destfile = executor.format_outfile_name(cfut_dir, workerid_with_idx)
     tempfile = destfile + ".tmp"
     with open(tempfile, "wb") as f:
         f.write(out)
@@ -67,17 +83,9 @@ def setup_logging(meta_data):
     logging.info("Starting job computation...")
 
 
-def get_executor_class():
-    for executor in [SlurmExecutor, PBSExecutor]:
-        if executor.get_current_job_id() is not None:
-            return executor
-
 if __name__ == "__main__":
     worker_id = sys.argv[1]
     cfut_dir = sys.argv[2]
-
     job_array_index = get_executor_class().get_job_array_index()
-    if job_array_index is not None:
-        worker_id = worker_id + "_" + job_array_index
 
-    worker(worker_id, cfut_dir)
+    worker(worker_id, job_array_index, cfut_dir)

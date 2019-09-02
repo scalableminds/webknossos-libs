@@ -5,11 +5,12 @@ import threading
 import signal
 import sys
 from cluster_tools import pickling
+from cluster_tools.pickling import file_path_to_absolute_module
 import time
 from abc import ABC, abstractmethod
-from cluster_tools.file_formatters import format_infile_name, format_outfile_name
 import logging
 from typing import Union
+from ..util import local_filename
 
 class RemoteException(Exception):
     def __init__(self, error, job_id):
@@ -81,6 +82,7 @@ class ClusterExecutor(futures.Executor):
         identifying the new job. The job should run ``python -m
         cfut.remote <workerid>.
         """
+
         return self.inner_submit(
             f"{sys.executable} -m cluster_tools.remote {workerid} {self.cfut_dir}",
             job_name=self.job_name if self.job_name is not None else job_name,
@@ -113,11 +115,13 @@ class ClusterExecutor(futures.Executor):
     def get_temp_file_path(self, file_name):
         return os.path.join(self.cfut_dir, file_name)
 
-    def format_infile_name(self, job_id):
-        return format_infile_name(self.cfut_dir, job_id)
+    @staticmethod
+    def format_infile_name(cfut_dir, job_id):
+        return os.path.join(cfut_dir, "cfut.in.%s.pickle" % job_id)
 
-    def format_outfile_name(self, job_id):
-        return format_outfile_name(self.cfut_dir, job_id)
+    @staticmethod
+    def format_outfile_name(cfut_dir, job_id):
+        return os.path.join(cfut_dir, "cfut.out.%s.pickle" % job_id)
 
     def _completion(self, jobid, failed_early):
         """Called whenever a job finishes."""
@@ -139,7 +143,7 @@ class ClusterExecutor(futures.Executor):
                 self.format_log_file_path(jobid)
             )
         else:
-            with open(self.format_outfile_name(workerid), "rb") as f:
+            with open(self.format_outfile_name(self.cfut_dir, workerid), "rb") as f:
                 outdata = f.read()
             success, result = pickling.loads(outdata)
 
@@ -150,8 +154,8 @@ class ClusterExecutor(futures.Executor):
 
         # Clean up communication files.
 
-        infile_name = self.format_infile_name(workerid)
-        outfile_name = self.format_outfile_name(workerid)
+        infile_name = self.format_infile_name(self.cfut_dir, workerid)
+        outfile_name = self.format_outfile_name(self.cfut_dir, workerid)
         self.files_to_clean_up.append(infile_name)
         self.files_to_clean_up.append(outfile_name)
 
@@ -178,8 +182,10 @@ class ClusterExecutor(futures.Executor):
         workerid = random_string()
 
         funcser = pickling.dumps((fun, args, kwargs, self.meta_data))
-        with open(self.format_infile_name(workerid), "wb") as f:
+        with open(self.format_infile_name(self.cfut_dir, workerid), "wb") as f:
             f.write(funcser)
+
+        self.store_main_path_to_meta_file(workerid)
 
         job_name = get_function_name(fun)
         jobid = self._start(workerid, job_name=job_name)
@@ -188,7 +194,7 @@ class ClusterExecutor(futures.Executor):
             print("job submitted: %i" % jobid, file=sys.stderr)
 
         # Thread will wait for it to finish.
-        self.wait_thread.waitFor(self.format_outfile_name(workerid), jobid)
+        self.wait_thread.waitFor(self.format_outfile_name(self.cfut_dir, workerid), jobid)
 
         with self.jobs_lock:
             self.jobs[jobid] = (fut, workerid)
@@ -203,7 +209,15 @@ class ClusterExecutor(futures.Executor):
         return str(jobid) + "_" + str(index)
 
     def get_function_pickle_path(self, workerid):
-        return self.format_infile_name(self.get_workerid_with_index(workerid, "function"))
+        return self.format_infile_name(self.cfut_dir, self.get_workerid_with_index(workerid, "function"))
+
+    @staticmethod
+    def get_main_meta_path(cfut_dir, workerid):
+        return os.path.join(cfut_dir, f"cfut.main_path.{workerid}.txt")
+
+    def store_main_path_to_meta_file(self, workerid):
+        with open(self.get_main_meta_path(self.cfut_dir, workerid), "w") as file:
+            file.write(file_path_to_absolute_module(sys.argv[0]))
 
     def map_to_futures(self, fun, allArgs):
         self.ensure_not_shutdown()
@@ -216,6 +230,7 @@ class ClusterExecutor(futures.Executor):
         self.files_to_clean_up.append(pickled_function_path)
         with open(pickled_function_path, "wb") as file:
             pickling.dump(fun, file)
+        self.store_main_path_to_meta_file(workerid)
 
         # Submit jobs eagerly
         for index, arg in enumerate(allArgs):
@@ -223,7 +238,7 @@ class ClusterExecutor(futures.Executor):
 
             # Start the job.
             funcser = pickling.dumps((pickled_function_path, [arg], {}, self.meta_data))
-            infile_name = self.format_infile_name(self.get_workerid_with_index(workerid, index))
+            infile_name = self.format_infile_name(self.cfut_dir, self.get_workerid_with_index(workerid, index))
 
             with open(infile_name, "wb") as f:
                 f.write(funcser)
@@ -247,7 +262,7 @@ class ClusterExecutor(futures.Executor):
                 # Thread will wait for it to finish.
                 workerid_with_index = self.get_workerid_with_index(workerid, index)
                 self.wait_thread.waitFor(
-                    self.format_outfile_name(workerid_with_index), jobid_with_index
+                    self.format_outfile_name(self.cfut_dir, workerid_with_index), jobid_with_index
                 )
 
                 fut.cluster_jobid = jobid

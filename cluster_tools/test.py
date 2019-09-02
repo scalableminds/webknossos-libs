@@ -197,7 +197,7 @@ def test_slurm_cfut_dir():
         assert future.result() == 4
 
     assert os.path.exists(cfut_dir)
-    assert len(os.listdir(cfut_dir)) == 1
+    assert len(os.listdir(cfut_dir)) == 2
 
 
 def test_executor_args():
@@ -263,3 +263,21 @@ def test_cloudpickle_serialization():
             assert fn != enum_consumer
 
     assert True
+
+class TestClass:
+    pass
+
+def deref_fun_helper(obj):
+    clss, inst, one, two = obj
+    assert one == 1
+    assert two == 2
+    assert isinstance(inst, clss)
+
+def test_dereferencing_main():
+    with cluster_tools.get_executor("slurm", debug=True, job_resources={"mem": "10M"}) as executor:
+        fut = executor.submit(deref_fun_helper, (TestClass, TestClass(), 1, 2))
+        fut.result()
+
+if __name__ == "__main__":
+    # Validate that slurm_executor.submit also works when being called from a __main__ module
+    test_dereferencing_main()
