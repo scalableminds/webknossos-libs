@@ -133,7 +133,14 @@ def refresh_metadata(
 
 def convert_element_class_to_dtype(elementClass):
     default_dtype = np.uint8 if "uint" in elementClass else np.dtype(elementClass)
-    conversion_map = {"float": np.float32, "double": np.float64, "uint8": np.uint8, "uint16": np.uint16, "uint32": np.uint32, "uint64": np.uint64}
+    conversion_map = {
+        "float": np.float32,
+        "double": np.float64,
+        "uint8": np.uint8,
+        "uint16": np.uint16,
+        "uint32": np.uint32,
+        "uint64": np.uint64,
+    }
     return conversion_map.get(elementClass, default_dtype)
 
 
@@ -156,7 +163,14 @@ def read_metadata_for_layer(wkw_path, layer_name):
 
 
 def convert_dype_to_element_class(dtype):
-    element_class_to_dtype_map = {"float": np.float32, "double": np.float64, "uint8": np.uint8, "uint16": np.uint16, "uint32": np.uint32, "uint64": np.uint64}
+    element_class_to_dtype_map = {
+        "float": np.float32,
+        "double": np.float64,
+        "uint8": np.uint8,
+        "uint16": np.uint16,
+        "uint32": np.uint32,
+        "uint64": np.uint64,
+    }
     conversion_map = {v: k for k, v in element_class_to_dtype_map.items()}
     return conversion_map.get(dtype.type, str(dtype))
 
