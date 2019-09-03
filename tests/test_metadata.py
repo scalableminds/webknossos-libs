@@ -17,9 +17,9 @@ def test_element_class_convertion():
     prediction_wkw_info = WkwDatasetInfo(
         test_wkw_path, prediction_layer_name, np.float32, 1
     )
-    ensure_wkw(prediction_wkw_info, num_channels=1)
+    ensure_wkw(prediction_wkw_info, num_channels=3)
 
-    write_costum_layer(test_wkw_path, "prediction", np.float32, num_channels=1)
+    write_custom_layer(test_wkw_path, "prediction", np.float32, num_channels=3)
     write_webknossos_metadata(
         test_wkw_path,
         "test_metadata",
@@ -27,8 +27,8 @@ def test_element_class_convertion():
         compute_max_id=True,
         exact_bounding_box={"topLeft": [0, 0, 0], "width": 4, "height": 4, "depth": 4},
     )
-    write_costum_layer(test_wkw_path, "segmentation", np.float64, num_channels=1)
-    write_costum_layer(test_wkw_path, "color", np.uint8, num_channels=3)
+    write_custom_layer(test_wkw_path, "segmentation", np.float64, num_channels=1)
+    write_custom_layer(test_wkw_path, "color", np.uint8, num_channels=3)
 
     refresh_metadata(test_wkw_path)
 
@@ -54,7 +54,7 @@ def check_element_class_of_layer(
     assert converted_dtype == expected_dtype
 
 
-def write_costum_layer(target_path, layer_name, dtype, num_channels):
+def write_custom_layer(target_path, layer_name, dtype, num_channels):
     data = (
         np.arange(4 * 4 * 4 * num_channels)
         .reshape((num_channels, 4, 4, 4))
