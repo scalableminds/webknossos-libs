@@ -35,6 +35,7 @@ def create_parser():
 
     return parser
 
+
 def main(args):
     setup_logging(args)
 
