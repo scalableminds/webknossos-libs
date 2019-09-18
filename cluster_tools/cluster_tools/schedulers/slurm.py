@@ -91,7 +91,8 @@ class SlurmExecutor(ClusterExecutor):
 
         job_array_line = ""
         if job_count is not None:
-            job_array_line = "#SBATCH --array=0-{}".format(job_count - 1)
+            MAXIMUM_SIMULTANEOUS_JOBS = 500
+            job_array_line = "#SBATCH --array=0-{}%{}".format(job_count - 1, MAXIMUM_SIMULTANEOUS_JOBS)
 
         script_lines = (
             [

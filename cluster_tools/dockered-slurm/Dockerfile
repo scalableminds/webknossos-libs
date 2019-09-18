@@ -28,9 +28,9 @@ RUN yum makecache fast \
            centos-release-scl \
            python-devel \
            python-pip \
-           python36 \
-           python36-devel \
-           python36-pip \
+           python3 \
+           python3-devel \
+           python3-pip \
            rh-python36 \
            mariadb-server \
            mariadb-devel \
@@ -42,10 +42,10 @@ RUN yum makecache fast \
 RUN pip install --upgrade pip
 
 RUN pip install Cython nose
-RUN python36 -m pip install -U pytest
+RUN python3 -m pip install -U pytest
 
-RUN rm -f /usr/bin/python3
-RUN ln -s $(which python36) /usr/bin/python3
+# RUN rm -f /usr/bin/python3
+# RUN ln -s $(which python36) /usr/bin/python3
 
 RUN set -x \
     && wget -O /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-amd64" \
@@ -100,7 +100,7 @@ COPY slurmdbd.conf /etc/slurm/slurmdbd.conf
 
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
-RUN python36 -m pip install pylint
+RUN python3 -m pip install pylint
 
 # PBS
 # COPY pbs.conf /etc/pbs.conf

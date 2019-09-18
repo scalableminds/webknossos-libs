@@ -25,9 +25,9 @@ jobs:
             done
 
             # Run setup.py on all three nodes
-            docker exec slurmctld bash -c "cd /cluster_tools && python36 setup.py install"
-            docker exec c1 bash -c "cd /cluster_tools && python36 setup.py install"
-            docker exec c2 bash -c "cd /cluster_tools && python36 setup.py install"
+            docker exec slurmctld bash -c "cd /cluster_tools && python3 setup.py install"
+            docker exec c1 bash -c "cd /cluster_tools && python3 setup.py install"
+            docker exec c2 bash -c "cd /cluster_tools && python3 setup.py install"
 
       # - run:
       #     name: Setup PBS
@@ -44,22 +44,22 @@ jobs:
           name: Re-run setup
           command: |
             cd ./dockered-slurm
-            docker exec slurmctld bash -c "cd /cluster_tools && python36 setup.py install"
-            docker exec c1 bash -c "cd /cluster_tools && python36 setup.py install"
-            docker exec c2 bash -c "cd /cluster_tools && python36 setup.py install"
+            docker exec slurmctld bash -c "cd /cluster_tools && python3 setup.py install"
+            docker exec c1 bash -c "cd /cluster_tools && python3 setup.py install"
+            docker exec c2 bash -c "cd /cluster_tools && python3 setup.py install"
 
       - run:
           name: Run pylint
           command: |
             cd ./dockered-slurm
-            docker exec slurmctld bash -c "cd /cluster_tools && python36 -m pylint cluster_tools/"
+            docker exec slurmctld bash -c "cd /cluster_tools && python3 -m pylint cluster_tools/"
 
       - run:
           name: Run tests
           command: |
             cd ./dockered-slurm
-            docker exec slurmctld bash -c "cd /cluster_tools && python36 -m pytest -s test.py"
-            docker exec slurmctld bash -c "cd /cluster_tools && python36 test.py"
+            docker exec slurmctld bash -c "cd /cluster_tools && python3 -m pytest -s test.py"
+            docker exec slurmctld bash -c "cd /cluster_tools && python3 test.py"
 
       - run:
           name: Publish python package
@@ -72,7 +72,7 @@ jobs:
               echo "username=$PYPI_USERNAME" >> .pypirc
               echo "password=$PYPI_PASSWORD" >> .pypirc
               docker exec slurmctld bash -c "cp /cluster_tools/.pypirc ~/.pypirc"
-              docker exec slurmctld bash -c "cd /cluster_tools && python36 setup.py sdist upload"
+              docker exec slurmctld bash -c "cd /cluster_tools && python3 setup.py sdist upload"
             else
               echo "Skipping publishing on non-tag"
             fi
