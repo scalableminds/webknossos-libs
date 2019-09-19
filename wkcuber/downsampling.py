@@ -18,6 +18,7 @@ from .utils import (
     time_start,
     time_stop,
     add_distribution_flags,
+    add_interpolation_flag,
     get_executor_for_args,
     wait_and_ensure_success,
     add_isotropic_flag,
@@ -53,13 +54,6 @@ def create_parser():
         "-l",
         help="Name of the cubed layer (color or segmentation)",
         default="color",
-    )
-
-    parser.add_argument(
-        "--interpolation_mode",
-        "-i",
-        help="Interpolation mode (median, mode, nearest, bilinear or bicubic)",
-        default="default",
     )
 
     parser.add_argument(
@@ -108,6 +102,7 @@ def create_parser():
         action="store_true",
     )
 
+    add_interpolation_flag(parser)
     add_verbose_flag(parser)
     add_isotropic_flag(parser)
     add_distribution_flags(parser)
@@ -283,6 +278,7 @@ def downsample_cube_job(args):
 
 def non_linear_filter_3d(data, factors, func):
     ds = data.shape
+    logging.info(f"{data.shape}, {factors}")
     assert not any((d % factor > 0 for (d, factor) in zip(ds, factors)))
     data = data.reshape((ds[0], factors[1], ds[1] // factors[1], ds[2]), order="F")
     data = data.swapaxes(0, 1)
@@ -426,14 +422,7 @@ def downsample_mag(
     compress=False,
     args=None,
 ):
-    if interpolation_mode == "default":
-        interpolation_mode = (
-            InterpolationModes.MEDIAN
-            if layer_name == "color"
-            else InterpolationModes.MODE
-        )
-    else:
-        interpolation_mode = InterpolationModes[interpolation_mode.upper()]
+    interpolation_mode = parse_interpolation_mode(interpolation_mode, layer_name)
 
     source_wkw_info = WkwDatasetInfo(path, layer_name, None, source_mag.to_layer_name())
     with open_wkw(source_wkw_info) as source:
@@ -450,6 +439,17 @@ def downsample_mag(
         compress,
         args,
     )
+
+
+def parse_interpolation_mode(interpolation_mode, layer_name):
+    if interpolation_mode.upper() == "DEFAULT":
+        return (
+            InterpolationModes.MEDIAN
+            if layer_name == "color"
+            else InterpolationModes.MODE
+        )
+    else:
+        return InterpolationModes[interpolation_mode.upper()]
 
 
 def downsample_mags(

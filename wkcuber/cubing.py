@@ -5,6 +5,8 @@ from argparse import ArgumentParser
 from os import path
 from natsort import natsorted
 
+from .mag import Mag
+from .downsampling import downsample_cube, parse_interpolation_mode
 from .utils import (
     get_chunks,
     find_files,
@@ -14,6 +16,7 @@ from .utils import (
     ensure_wkw,
     WkwDatasetInfo,
     add_distribution_flags,
+    add_interpolation_flag,
     get_executor_for_args,
     wait_and_ensure_success,
     setup_logging,
@@ -57,6 +60,13 @@ def create_parser():
         action="store_true",
     )
 
+    parser.add_argument(
+        "--target_mag",
+        help="Automatically downsamples the cubed images to the provided mag before writing to disk. The magnification can be provided like 2-2-1.",
+        default=None,
+    )
+
+    add_interpolation_flag(parser)
     add_verbose_flag(parser)
     add_distribution_flags(parser)
 
@@ -104,6 +114,8 @@ def cubing_job(args):
     (
         target_wkw_info,
         z_batches,
+        target_mag,
+        interpolation_mode,
         source_file_batches,
         batch_size,
         image_size,
@@ -112,6 +124,8 @@ def cubing_job(args):
     ) = args
     if len(z_batches) == 0:
         return
+
+    downsampling_needed = target_mag != Mag(1)
 
     with open_wkw(target_wkw_info, num_channels=num_channels) as target_wkw:
         # Iterate over batches of continuous z sections
@@ -152,12 +166,26 @@ def cubing_job(args):
                                 (0, 0),
                             ],
                         )
-                        for _slice in slices
+                        for _slice
+                        in slices
                     ]
 
                 buffer = prepare_slices_for_wkw(slices, num_channels)
-
-                target_wkw.write([0, 0, z_batch[0]], buffer)
+                if downsampling_needed:
+                    logging.info(f"Downsampling buffer of size {buffer.shape}.")
+                    padding_size_for_downsampling = [(0, (required_multiple_of - (buffer_dimension_size % required_multiple_of)) % required_multiple_of) for (required_multiple_of, buffer_dimension_size) in zip(target_mag.to_array(), buffer.shape[1:])]
+                    logging.info([(0, 0)] + padding_size_for_downsampling)
+                    buffer = np.pad(buffer, pad_width=[(0, 0)] + padding_size_for_downsampling, mode='constant')
+                    downsampled_buffer_shape = [current_dimension_size // dimension_decrease for (dimension_decrease, current_dimension_size) in zip([1,] + target_mag.to_array(), buffer.shape)]
+                    logging.info(f"downsampled size{downsampled_buffer_shape}")
+                    downsampled_buffer = np.empty(dtype=buffer.dtype, shape=downsampled_buffer_shape)
+                    logging.info(f"d-buffer of size {downsampled_buffer.shape}.")
+                    for channel in range(buffer.shape[0]):
+                        downsampled_buffer[channel] = downsample_cube(buffer[channel], target_mag.to_array(), interpolation_mode)
+                    target_wkw.write([0, 0, z_batch[0] / target_mag.to_array()[2]], buffer)
+                    
+                else:
+                    target_wkw.write([0, 0, z_batch[0]], buffer)
                 logging.debug(
                     "Cubing of z={}-{} took {:.8f}s".format(
                         z_batch[0], z_batch[-1], time.time() - ref_time
@@ -175,7 +203,12 @@ def cubing_job(args):
 
 def cubing(source_path, target_path, layer_name, dtype, batch_size, args=None) -> dict:
 
-    target_wkw_info = WkwDatasetInfo(target_path, layer_name, dtype, 1)
+    target_mag = Mag(getattr(args, "target_mag", 1))
+    target_wkw_info = WkwDatasetInfo(target_path, layer_name, dtype, target_mag)
+    if target_mag != Mag(1):
+        interpolation_mode = parse_interpolation_mode(getattr(args, "interpolation_mode", "DEFAULT"), target_wkw_info.layer_name)
+        logging.info(f"Downsampling the cubed image to {target_mag} in memory with interpolation mode {interpolation_mode}.")
+
     source_files = find_source_filenames(source_path)
 
     # All images are assumed to have equal dimensions
@@ -199,6 +232,8 @@ def cubing(source_path, target_path, layer_name, dtype, batch_size, args=None) -
                 (
                     target_wkw_info,
                     z_batch,
+                    target_mag,
+                    interpolation_mode,
                     source_files[z:max_z],
                     batch_size,
                     (num_x, num_y),
