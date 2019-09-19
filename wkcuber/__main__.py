@@ -36,8 +36,7 @@ def create_parser():
     return parser
 
 
-if __name__ == "__main__":
-    args = create_parser().parse_args()
+def main(args):
     setup_logging(args)
 
     scale = tuple(float(x) for x in args.scale.split(","))
@@ -87,3 +86,8 @@ if __name__ == "__main__":
         )
 
     refresh_metadata(args.target_path)
+
+
+if __name__ == "__main__":
+    parsed_args = create_parser().parse_args()
+    main(parsed_args)
