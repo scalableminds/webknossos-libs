@@ -166,24 +166,50 @@ def cubing_job(args):
                                 (0, 0),
                             ],
                         )
-                        for _slice
-                        in slices
+                        for _slice in slices
                     ]
 
                 buffer = prepare_slices_for_wkw(slices, num_channels)
                 if downsampling_needed:
                     logging.info(f"Downsampling buffer of size {buffer.shape}.")
-                    padding_size_for_downsampling = [(0, (required_multiple_of - (buffer_dimension_size % required_multiple_of)) % required_multiple_of) for (required_multiple_of, buffer_dimension_size) in zip(target_mag.to_array(), buffer.shape[1:])]
+                    padding_size_for_downsampling = [
+                        (
+                            0,
+                            (
+                                required_multiple_of
+                                - (buffer_dimension_size % required_multiple_of)
+                            )
+                            % required_multiple_of,
+                        )
+                        for (required_multiple_of, buffer_dimension_size) in zip(
+                            target_mag.to_array(), buffer.shape[1:]
+                        )
+                    ]
                     logging.info([(0, 0)] + padding_size_for_downsampling)
-                    buffer = np.pad(buffer, pad_width=[(0, 0)] + padding_size_for_downsampling, mode='constant')
-                    downsampled_buffer_shape = [current_dimension_size // dimension_decrease for (dimension_decrease, current_dimension_size) in zip([1,] + target_mag.to_array(), buffer.shape)]
+                    buffer = np.pad(
+                        buffer,
+                        pad_width=[(0, 0)] + padding_size_for_downsampling,
+                        mode="constant",
+                    )
+                    downsampled_buffer_shape = [
+                        current_dimension_size // dimension_decrease
+                        for (dimension_decrease, current_dimension_size) in zip(
+                            [1] + target_mag.to_array(), buffer.shape
+                        )
+                    ]
                     logging.info(f"downsampled size{downsampled_buffer_shape}")
-                    downsampled_buffer = np.empty(dtype=buffer.dtype, shape=downsampled_buffer_shape)
+                    downsampled_buffer = np.empty(
+                        dtype=buffer.dtype, shape=downsampled_buffer_shape
+                    )
                     logging.info(f"d-buffer of size {downsampled_buffer.shape}.")
                     for channel in range(buffer.shape[0]):
-                        downsampled_buffer[channel] = downsample_cube(buffer[channel], target_mag.to_array(), interpolation_mode)
-                    target_wkw.write([0, 0, z_batch[0] / target_mag.to_array()[2]], buffer)
-                    
+                        downsampled_buffer[channel] = downsample_cube(
+                            buffer[channel], target_mag.to_array(), interpolation_mode
+                        )
+                    target_wkw.write(
+                        [0, 0, z_batch[0] / target_mag.to_array()[2]], buffer
+                    )
+
                 else:
                     target_wkw.write([0, 0, z_batch[0]], buffer)
                 logging.debug(
@@ -206,8 +232,12 @@ def cubing(source_path, target_path, layer_name, dtype, batch_size, args=None) -
     target_mag = Mag(getattr(args, "target_mag", 1))
     target_wkw_info = WkwDatasetInfo(target_path, layer_name, dtype, target_mag)
     if target_mag != Mag(1):
-        interpolation_mode = parse_interpolation_mode(getattr(args, "interpolation_mode", "DEFAULT"), target_wkw_info.layer_name)
-        logging.info(f"Downsampling the cubed image to {target_mag} in memory with interpolation mode {interpolation_mode}.")
+        interpolation_mode = parse_interpolation_mode(
+            getattr(args, "interpolation_mode", "DEFAULT"), target_wkw_info.layer_name
+        )
+        logging.info(
+            f"Downsampling the cubed image to {target_mag} in memory with interpolation mode {interpolation_mode}."
+        )
 
     source_files = find_source_filenames(source_path)
 
