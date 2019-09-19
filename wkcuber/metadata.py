@@ -131,13 +131,26 @@ def refresh_metadata(
     write_datasource_properties(wkw_path, datasource_properties)
 
 
+def convert_element_class_to_dtype(elementClass):
+    default_dtype = np.uint8 if "uint" in elementClass else np.dtype(elementClass)
+    conversion_map = {
+        "float": np.float32,
+        "double": np.float64,
+        "uint8": np.uint8,
+        "uint16": np.uint16,
+        "uint32": np.uint32,
+        "uint64": np.uint64,
+    }
+    return conversion_map.get(elementClass, default_dtype)
+
+
 def read_metadata_for_layer(wkw_path, layer_name):
     datasource_properties = read_datasource_properties(wkw_path)
 
     layers = datasource_properties["dataLayers"]
     layer_info = next(layer for layer in layers if layer["name"] == layer_name)
 
-    dtype = np.dtype(layer_info["elementClass"])
+    dtype = convert_element_class_to_dtype(layer_info["elementClass"])
     bounding_box = layer_info["boundingBox"]
     origin = bounding_box["topLeft"]
     bounding_box = [
@@ -147,6 +160,19 @@ def read_metadata_for_layer(wkw_path, layer_name):
     ]
 
     return layer_info, dtype, bounding_box, origin
+
+
+def convert_dype_to_element_class(dtype):
+    element_class_to_dtype_map = {
+        "float": np.float32,
+        "double": np.float64,
+        "uint8": np.uint8,
+        "uint16": np.uint16,
+        "uint32": np.uint32,
+        "uint64": np.uint64,
+    }
+    conversion_map = {v: k for k, v in element_class_to_dtype_map.items()}
+    return conversion_map.get(dtype.type, str(dtype))
 
 
 def detect_dtype(dataset_path, layer, mag: Mag = Mag(1)):
@@ -159,7 +185,7 @@ def detect_dtype(dataset_path, layer, mag: Mag = Mag(1)):
             if voxel_size == np.uint8 and num_channels > 1:
                 return "uint" + str(8 * num_channels)
             else:
-                return str(np.dtype(voxel_type))
+                return convert_dype_to_element_class(voxel_size)
 
 
 def detect_cubeLength(dataset_path, layer, mag: Mag = Mag(1)):
@@ -302,7 +328,7 @@ if __name__ == "__main__":
         )
     else:
         if args.name is not None:
-            logging.warn(
+            logging.warning(
                 "The --name argument is ignored, since --refresh was provided."
             )
         refresh_metadata(args.path, args.max_id, args.compute_max_id)
