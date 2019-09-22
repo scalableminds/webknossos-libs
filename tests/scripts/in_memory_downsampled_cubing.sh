@@ -11,7 +11,7 @@ docker run \
   --layer_name color \
   --target_mag 2-2-1 \
   --interpolation_mode default \
-  /testdata/tiff /testoutput/tiff4
-[ -d testoutput/tiff4/color ]
-[ -d testoutput/tiff4/color/2-2-1 ]
-[ $(find testoutput/tiff4/color/2-2-1 -mindepth 3 -name "*.wkw" | wc -l) -eq 1 ]
+  /testdata/tiff /testoutput/in_memory_downsampled_tiff
+[ -d testoutput/in_memory_downsampled_tiff/color ]
+[ -d testoutput/in_memory_downsampled_tiff/color/2-2-1 ]
+[ $(find testoutput/in_memory_downsampled_tiff/color/2-2-1 -mindepth 3 -name "*.wkw" | wc -l) -eq 1 ]
