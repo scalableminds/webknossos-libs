@@ -37,12 +37,13 @@ def worker(workerid, job_array_index, cfut_dir):
         print("trying to read: ", input_file_name)
         print("working dir: ", os.getcwd())
 
+        custom_main_path = get_custom_main_path(workerid)
         with open(input_file_name, "rb") as f:
-            fun, args, kwargs, meta_data = pickling.load(f, get_custom_main_path(workerid))
+            fun, args, kwargs, meta_data = pickling.load(f, custom_main_path)
 
         if type(fun) == str:
             with open(fun, "rb") as function_file:
-                fun = pickling.load(function_file)
+                fun = pickling.load(function_file, custom_main_path)
 
         setup_logging(meta_data)
         
