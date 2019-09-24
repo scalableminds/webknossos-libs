@@ -8,6 +8,7 @@ from wkcuber.metadata import (
     refresh_metadata,
     read_datasource_properties,
     read_metadata_for_layer,
+    detect_mappings
 )
 
 
@@ -66,5 +67,21 @@ def write_custom_layer(target_path, layer_name, dtype, num_channels):
         dataset.write(off=(0, 0, 0), data=data)
 
 
+def test_mapping_detection():
+    # NOTE: the mappings do not match do the actual wkw data. Therefore do not use them
+    # TODO update when I have example mappings
+    expected_mappings = []
+    datapath_with_mappings = "testdata/"
+    layer_name_with_mapping = "segmentation"
+    detected_mappings = detect_mappings(datapath_with_mappings, layer_name_with_mapping)
+    assert all(any(detected_mapping == expected_mapping for expected_mapping in expected_mappings) for detected_mapping in detected_mappings)
+
+    datapath_without_mappings = "testdata/"
+    layer_name_without_mapping = "color"
+    detected_mappings = detect_mappings(datapath_without_mappings, layer_name_without_mapping)
+    assert len(detected_mappings) == 0
+
+
 if __name__ == "__main__":
     test_element_class_convertion()
+    test_mapping_detection()
