@@ -42,9 +42,7 @@ def test_buffered_slice_writer():
     mag = Mag(1)
     dataset_path = os.path.join(dataset_dir, layer_name, mag.to_layer_name())
 
-    with BufferedSliceWriter(
-        dataset_dir, layer_name, dtype, origin, mag=mag
-    ) as writer:
+    with BufferedSliceWriter(dataset_dir, layer_name, dtype, origin, mag=mag) as writer:
         for i in range(13):
             writer.write_slice(i, test_img)
         with wkw.Dataset.open(dataset_path, wkw.Header(dtype)) as data:
