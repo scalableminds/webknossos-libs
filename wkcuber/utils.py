@@ -32,6 +32,7 @@ BLOCK_LEN = 32
 
 logger = getLogger(__name__)
 
+
 def open_wkw(info, **kwargs):
     if hasattr(info, "dtype"):
         header = wkw.Header(np.dtype(info.dtype), **kwargs)
@@ -224,7 +225,7 @@ class BufferedSliceWriter(object):
         # file_len specifies, how many buckets written per dimension into a wkw cube. Using 32,
         # results in 1 GB/wkw file for 8-bit data
         file_len: int = 32,
-        mag: Mag = Mag("1")
+        mag: Mag = Mag("1"),
     ):
 
         self.dataset_path = dataset_path
