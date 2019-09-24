@@ -8,3 +8,4 @@ requests
 black
 cluster_tools==1.40
 natsort
+psutil
