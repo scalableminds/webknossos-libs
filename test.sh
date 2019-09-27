@@ -4,6 +4,7 @@
  tests/scripts/check_formatting.sh
  tests/scripts/python_tests.sh
  tests/scripts/tiff_cubing.sh
+ tests/scripts/in_memory_downsampled_cubing.sh
  tests/scripts/tile_cubing.sh
  tests/scripts/simple_tiff_cubing.sh
  tests/scripts/simple_tiff_cubing_no_compression.sh

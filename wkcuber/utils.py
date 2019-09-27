@@ -89,6 +89,15 @@ def add_isotropic_flag(parser):
     parser.set_defaults(anisotropic=False)
 
 
+def add_interpolation_flag(parser):
+    parser.add_argument(
+        "--interpolation_mode",
+        "-i",
+        help="Interpolation mode (median, mode, nearest, bilinear or bicubic)",
+        default="default",
+    )
+
+
 def setup_logging(args):
 
     logging.basicConfig(

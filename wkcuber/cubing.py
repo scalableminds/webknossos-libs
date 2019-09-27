@@ -5,6 +5,8 @@ from argparse import ArgumentParser
 from os import path
 from natsort import natsorted
 
+from .mag import Mag
+from .downsampling import downsample_cube, parse_interpolation_mode
 from .utils import (
     get_chunks,
     find_files,
@@ -14,6 +16,7 @@ from .utils import (
     ensure_wkw,
     WkwDatasetInfo,
     add_distribution_flags,
+    add_interpolation_flag,
     get_executor_for_args,
     wait_and_ensure_success,
     setup_logging,
@@ -57,6 +60,15 @@ def create_parser():
         action="store_true",
     )
 
+    parser.add_argument(
+        "--target_mag",
+        help="Automatically downsamples the cubed images to the provided "
+        "magnification before writing to disk. The magnification can "
+        "be provided like 2-2-1.",
+        default="1",
+    )
+
+    add_interpolation_flag(parser)
     add_verbose_flag(parser)
     add_distribution_flags(parser)
 
@@ -104,6 +116,8 @@ def cubing_job(args):
     (
         target_wkw_info,
         z_batches,
+        target_mag,
+        interpolation_mode,
         source_file_batches,
         batch_size,
         image_size,
@@ -112,6 +126,8 @@ def cubing_job(args):
     ) = args
     if len(z_batches) == 0:
         return
+
+    downsampling_needed = target_mag != Mag(1)
 
     with open_wkw(target_wkw_info, num_channels=num_channels) as target_wkw:
         # Iterate over batches of continuous z sections
@@ -156,8 +172,12 @@ def cubing_job(args):
                     ]
 
                 buffer = prepare_slices_for_wkw(slices, num_channels)
+                if downsampling_needed:
+                    buffer = downsample_unpadded_data(
+                        buffer, target_mag, interpolation_mode
+                    )
 
-                target_wkw.write([0, 0, z_batch[0]], buffer)
+                target_wkw.write([0, 0, z_batch[0] / target_mag.to_array()[2]], buffer)
                 logging.debug(
                     "Cubing of z={}-{} took {:.8f}s".format(
                         z_batch[0], z_batch[-1], time.time() - ref_time
@@ -173,9 +193,41 @@ def cubing_job(args):
                 raise exc
 
 
+def downsample_unpadded_data(buffer, target_mag, interpolation_mode):
+    logging.info(
+        f"Downsampling buffer of size {buffer.shape} to mag {target_mag.to_layer_name()}"
+    )
+    target_mag_np = np.array(target_mag.to_array())
+    current_dimension_size = np.array(buffer.shape[1:])
+    padding_size_for_downsampling = (
+        target_mag_np - (current_dimension_size % target_mag_np) % target_mag_np
+    )
+    padding_size_for_downsampling = list(zip([0, 0, 0], padding_size_for_downsampling))
+    buffer = np.pad(
+        buffer, pad_width=[(0, 0)] + padding_size_for_downsampling, mode="constant"
+    )
+    dimension_decrease = np.array([1] + target_mag.to_array())
+    downsampled_buffer_shape = np.array(buffer.shape) // dimension_decrease
+    downsampled_buffer = np.empty(dtype=buffer.dtype, shape=downsampled_buffer_shape)
+    for channel in range(buffer.shape[0]):
+        downsampled_buffer[channel] = downsample_cube(
+            buffer[channel], target_mag.to_array(), interpolation_mode
+        )
+    return downsampled_buffer
+
+
 def cubing(source_path, target_path, layer_name, dtype, batch_size, args=None) -> dict:
 
-    target_wkw_info = WkwDatasetInfo(target_path, layer_name, dtype, 1)
+    target_mag = Mag(args.target_mag)
+    target_wkw_info = WkwDatasetInfo(target_path, layer_name, dtype, target_mag)
+    interpolation_mode = parse_interpolation_mode(
+        args.interpolation_mode, target_wkw_info.layer_name
+    )
+    if target_mag != Mag(1):
+        logging.info(
+            f"Downsampling the cubed image to {target_mag} in memory with interpolation mode {interpolation_mode}."
+        )
+
     source_files = find_source_filenames(source_path)
 
     # All images are assumed to have equal dimensions
@@ -199,6 +251,8 @@ def cubing(source_path, target_path, layer_name, dtype, batch_size, args=None) -
                 (
                     target_wkw_info,
                     z_batch,
+                    target_mag,
+                    interpolation_mode,
                     source_files[z:max_z],
                     batch_size,
                     (num_x, num_y),
