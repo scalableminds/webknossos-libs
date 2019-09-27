@@ -9,16 +9,15 @@ import nibabel as nib
 from .utils import (
     add_verbose_flag,
     open_wkw,
-    open_knossos,
     WkwDatasetInfo,
-    KnossosDatasetInfo,
     ensure_wkw,
     add_distribution_flags,
     get_executor_for_args,
     wait_and_ensure_success,
     setup_logging,
 )
-from .knossos import KnossosDataset, CUBE_EDGE_LEN
+from .image_readers import to_target_datatype
+from .metadata import write_webknossos_metadata
 
 
 def create_parser():
@@ -46,54 +45,72 @@ def create_parser():
         default="uint8",
     )
 
-    parser.add_argument("--mag", "-m", help="Magnification level", type=int, default=1)
-
     add_verbose_flag(parser)
     add_distribution_flags(parser)
 
     return parser
 
 
-def convert_cube_job(args):
-    cube_xyz, source_knossos_info, target_wkw_info = args
-    logging.info("Converting {},{},{}".format(cube_xyz[0], cube_xyz[1], cube_xyz[2]))
-    ref_time = time.time()
-    offset = tuple(x * CUBE_EDGE_LEN for x in cube_xyz)
-    size = (CUBE_EDGE_LEN,) * 3
+def to_target_datatype(data: np.ndarray, target_dtype) -> np.ndarray:
 
-    with open_knossos(source_knossos_info) as source_knossos, open_wkw(
-        target_wkw_info
-    ) as target_wkw:
-        cube_data = source_knossos.read(offset, size)
-        target_wkw.write(offset, cube_data)
-    logging.debug(
-        "Converting of {},{},{} took {:.8f}s".format(
-            cube_xyz[0], cube_xyz[1], cube_xyz[2], time.time() - ref_time
-        )
-    )
+    if data.dtype == np.dtype("float32") or data.dtype == np.dtype("float64"):
+        factor = data.max()
+
+    else:
+        factor = 1 + np.iinfo(data.dtype).max
+
+    if target_dtype != np.dtype("float32"):
+        factor = factor / (1 + np.iinfo(target_dtype).max)
+    return (data / factor).astype(np.dtype(target_dtype))
 
 
 def convert_nifti(
-    source_path, target_path, layer_name, dtype, mag=1, jobs=1, args=None
+    source_nifti_path, target_path, layer_name, dtype, mag=1
 ):
-    source_knossos_info = KnossosDatasetInfo(source_path, dtype)
     target_wkw_info = WkwDatasetInfo(target_path, layer_name, dtype, mag)
-
     ensure_wkw(target_wkw_info)
 
-    with nib.load(source_path) as source_nifti:
-        with get_executor_for_args(args) as executor:
-            knossos_cubes = list(source_knossos.list_cubes())
-            if len(knossos_cubes) == 0:
-                logging.error("No input KNOSSOS cubes found.")
-                exit(1)
+    ref_time = time.time()
+    # ignoring affine transformation
+    offset = (0, 0, 0)
 
-            knossos_cubes.sort()
-            job_args = []
-            for cube_xyz in knossos_cubes:
-                job_args.append((cube_xyz, source_knossos_info, target_wkw_info))
+    with open_wkw(target_wkw_info) as target_wkw:
+        source_nifti = nib.load(source_nifti_path)
+        cube_data = np.array(source_nifti.get_fdata())
+        if len(source_nifti.shape) == 3:
+            size = list(source_nifti.shape)
+            cube_data = cube_data.reshape((1,) + source_nifti.shape)
 
-            wait_and_ensure_success(executor.map_to_futures(convert_cube_job, job_args))
+
+        elif len(source_nifti.shape) == 4:
+            size = list(source_nifti.shape[:-1])
+            cube_data = np.transpose(cube_data, (3, 0, 1, 2))
+
+        else:
+            logging.warning(
+                "Converting of {} failed! Too many or too less dimensions".format(
+                    source_nifti_path
+                )
+            )
+
+            return
+
+        cube_data = to_target_datatype(cube_data, dtype)
+        target_wkw.write(offset, cube_data)
+
+
+    logging.debug(
+        "Converting of {} took {:.8f}s".format(
+            source_nifti_path, time.time() - ref_time
+        )
+    )
+
+    write_webknossos_metadata(
+        target_path,
+        source_nifti_path.split("/")[-2],
+        scale="10,10,10",
+        exact_bounding_box={"topleft": offset, "size": size}
+    )
 
 
 if __name__ == "__main__":
@@ -104,8 +121,5 @@ if __name__ == "__main__":
         args.source_path,
         args.target_path,
         args.layer_name,
-        args.dtype,
-        args.mag,
-        args.jobs,
-        args,
+        args.dtype
     )
