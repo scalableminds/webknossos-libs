@@ -69,20 +69,20 @@ def write_custom_layer(target_path, layer_name, dtype, num_channels):
 
 def test_mapping_detection():
     # NOTE: the mappings do not match do the actual wkw data. Therefore do not use them
-    # TODO update when I have example mappings
-    expected_mappings = []
-    datapath_with_mappings = "testdata/"
+    expected_mappings = ["test_mapping_1.json", "test_mapping_2.json", "test_mapping_3.json", "test_mapping_4.json", "test_mapping_5.json"]
+    datapath_with_mappings = "testdata/test_metadata"
     layer_name_with_mapping = "segmentation"
     detected_mappings = detect_mappings(datapath_with_mappings, layer_name_with_mapping)
-    # test if all detected mappings are the expected_mappings
-    assert all(any(detected_mapping == expected_mapping for expected_mapping in expected_mappings) for detected_mapping in detected_mappings)
-    # test if all mappings were detected
-    assert len(expected_mappings) == len(detected_mappings)
 
-    datapath_without_mappings = "testdata/"
+    # test if all detected mappings are int the expected_mappings
+    assert all(detected_mapping in expected_mappings for detected_mapping in detected_mappings), "Found unexpected mapping(s)."
+    # test if all mappings were detected
+    assert len(expected_mappings) == len(detected_mappings), "Did not find all mappings."
+
+    datapath_without_mappings = "testdata/WT1_wkw"
     layer_name_without_mapping = "color"
     detected_mappings = detect_mappings(datapath_without_mappings, layer_name_without_mapping)
-    assert len(detected_mappings) == 0
+    assert len(detected_mappings) == 0, "Found mapping(s) even though there should not be any mapping."
 
 
 if __name__ == "__main__":

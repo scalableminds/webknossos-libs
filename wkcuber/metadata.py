@@ -276,7 +276,6 @@ def detect_mappings(dataset_path, layer_name):
     return mapping_file_names
 
 
-
 def detect_segmentation_layer(
     dataset_path, layer_name, max_id, compute_max_id=False, exact_bounding_box=None
 ):
