@@ -412,6 +412,29 @@ def downsample_cube(cube_buffer, factors, interpolation_mode):
         raise Exception("Invalid interpolation mode: {}".format(interpolation_mode))
 
 
+def downsample_unpadded_data(buffer, target_mag, interpolation_mode):
+    logging.info(
+        f"Downsampling buffer of size {buffer.shape} to mag {target_mag.to_layer_name()}"
+    )
+    target_mag_np = np.array(target_mag.to_array())
+    current_dimension_size = np.array(buffer.shape[1:])
+    padding_size_for_downsampling = (
+        target_mag_np - (current_dimension_size % target_mag_np) % target_mag_np
+    )
+    padding_size_for_downsampling = list(zip([0, 0, 0], padding_size_for_downsampling))
+    buffer = np.pad(
+        buffer, pad_width=[(0, 0)] + padding_size_for_downsampling, mode="constant"
+    )
+    dimension_decrease = np.array([1] + target_mag.to_array())
+    downsampled_buffer_shape = np.array(buffer.shape) // dimension_decrease
+    downsampled_buffer = np.empty(dtype=buffer.dtype, shape=downsampled_buffer_shape)
+    for channel in range(buffer.shape[0]):
+        downsampled_buffer[channel] = downsample_cube(
+            buffer[channel], target_mag.to_array(), interpolation_mode
+        )
+    return downsampled_buffer
+
+
 def downsample_mag(
     path,
     layer_name,
