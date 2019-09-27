@@ -10,6 +10,7 @@ docker run \
   --batch_size 8 \
   --layer_name color \
   --max 8 \
+  --scale "11.24,11.24,25"\
   --name awesome_data \
   /testdata/tiff /testoutput/tiff3
 [ -d testoutput/tiff3/color ]

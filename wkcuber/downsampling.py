@@ -8,7 +8,7 @@ from scipy.ndimage.interpolation import zoom
 from itertools import product
 from enum import Enum
 from .mag import Mag
-from .metadata import read_datasource_properties
+from .metadata import read_datasource_properties, refresh_metadata
 
 from .utils import (
     add_verbose_flag,
@@ -649,3 +649,5 @@ if __name__ == "__main__":
             not args.no_compress,
             args,
         )
+
+    refresh_metadata(args.path)
