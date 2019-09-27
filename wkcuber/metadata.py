@@ -3,6 +3,7 @@ import re
 import wkw
 import logging
 import numpy as np
+import glob
 
 from argparse import ArgumentParser
 from glob import iglob
@@ -268,13 +269,20 @@ def detect_standard_layer(
     }
 
 
+def detect_mappings(dataset_path, layer_name):
+    pattern = path.join(dataset_path, layer_name, "mappings", "*.json")
+    mapping_files = glob.glob(pattern)
+    mapping_file_names = [path.basename(mapping_file) for mapping_file in mapping_files]
+    return mapping_file_names
+
+
 def detect_segmentation_layer(
     dataset_path, layer_name, max_id, compute_max_id=False, exact_bounding_box=None
 ):
     layer_info = detect_standard_layer(
         dataset_path, layer_name, exact_bounding_box, category="segmentation"
     )
-    layer_info["mappings"] = []
+    layer_info["mappings"] = detect_mappings(dataset_path, layer_name)
     layer_info["largestSegmentId"] = max_id
 
     if compute_max_id:
