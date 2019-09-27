@@ -74,7 +74,10 @@ def test_mapping_detection():
     datapath_with_mappings = "testdata/"
     layer_name_with_mapping = "segmentation"
     detected_mappings = detect_mappings(datapath_with_mappings, layer_name_with_mapping)
+    # test if all detected mappings are the expected_mappings
     assert all(any(detected_mapping == expected_mapping for expected_mapping in expected_mappings) for detected_mapping in detected_mappings)
+    # test if all mappings were detected
+    assert len(expected_mappings) == len(detected_mappings)
 
     datapath_without_mappings = "testdata/"
     layer_name_without_mapping = "color"
