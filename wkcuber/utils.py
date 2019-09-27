@@ -5,6 +5,8 @@ import logging
 import argparse
 import cluster_tools
 import json
+import shutil
+from typing import List
 from glob import iglob
 from collections import namedtuple
 from multiprocessing import cpu_count, Lock
@@ -14,6 +16,7 @@ from os import path, getpid
 from platform import python_version
 from math import floor, ceil
 from .mag import Mag
+import re
 
 from .knossos import KnossosDataset, CUBE_EDGE_LEN
 
@@ -23,7 +26,7 @@ WkwDatasetInfo = namedtuple(
 KnossosDatasetInfo = namedtuple("KnossosDatasetInfo", ("dataset_path", "dtype"))
 FallbackArgs = namedtuple("FallbackArgs", ("distribution_strategy", "jobs"))
 
-
+CUBE_REGEX = re.compile(r"z(\d+)/y(\d+)/x(\d+)(\.wkw)$")
 BLOCK_LEN = 32
 
 
@@ -31,7 +34,7 @@ def open_wkw(info, **kwargs):
     if hasattr(info, "dtype"):
         header = wkw.Header(np.dtype(info.dtype), **kwargs)
     else:
-        logging.warn(
+        logging.warning(
             "Discarding the following wkw header args, because dtype was not provided: {}".format(
                 kwargs
             )
@@ -47,6 +50,33 @@ def ensure_wkw(target_wkw_info, **kwargs):
     # Open will create the dataset if it doesn't exist yet
     target_wkw = open_wkw(target_wkw_info, **kwargs)
     target_wkw.close()
+
+
+def infer_bounding_box(dataset: WkwDatasetInfo):
+
+    # N x 3 array of cube addresses
+    addresses = np.array(cube_addresses(dataset))
+
+    with open_wkw(dataset) as d:
+        voxel_length = d.header.file_len * d.header.block_len
+
+    top_left = addresses.min(axis=0) * voxel_length
+    size = (addresses.max(axis=0) - addresses.min(axis=0) + 1) * voxel_length
+
+    return (top_left.tolist(), size.tolist())
+
+
+def cube_addresses(source_wkw_info):
+    # Gathers all WKW cubes in the dataset
+    with open_wkw(source_wkw_info) as source_wkw:
+        wkw_addresses = list(parse_cube_file_name(f) for f in source_wkw.list_files())
+        wkw_addresses.sort()
+        return wkw_addresses
+
+
+def parse_cube_file_name(filename):
+    m = CUBE_REGEX.search(filename)
+    return int(m.group(3)), int(m.group(2)), int(m.group(1))
 
 
 def open_knossos(info):
