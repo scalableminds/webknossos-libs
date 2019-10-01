@@ -3,7 +3,7 @@ import logging
 import wkw
 import numpy as np
 from argparse import ArgumentParser
-from os import path
+import os
 import nibabel as nib
 
 from .utils import (
@@ -12,11 +12,9 @@ from .utils import (
     WkwDatasetInfo,
     ensure_wkw,
     add_distribution_flags,
-    get_executor_for_args,
-    wait_and_ensure_success,
     setup_logging,
 )
-from .image_readers import to_target_datatype
+
 from .metadata import write_webknossos_metadata
 
 
@@ -34,15 +32,34 @@ def create_parser():
     parser.add_argument(
         "--layer_name",
         "-l",
-        help="Name of the cubed layer (color or segmentation)",
+        help="Name of the cubed layer (color or segmentation).",
         default="color",
     )
 
     parser.add_argument(
         "--dtype",
         "-d",
-        help="Target datatype (e.g. uint8, uint16, uint32)",
+        help="Target datatype (e.g. uint8, uint16, uint32).",
         default="uint8",
+    )
+
+    parser.add_argument(
+        "--convert_folder",
+        help="Bool indicating whether to or not to convert complete folder, default is false ",
+        type=bool,
+        default=False,
+    )
+
+    parser.add_argument(
+        "--color_file",
+        help="When converting folder, name of file to become color layer",
+        default=None
+    )
+
+    parser.add_argument(
+        "--segmentation_file",
+        help="When converting folder, name of file to become segmentation layer",
+        default=None,
     )
 
     add_verbose_flag(parser)
@@ -57,10 +74,11 @@ def to_target_datatype(data: np.ndarray, target_dtype) -> np.ndarray:
         factor = data.max()
 
     else:
-        factor = 1 + np.iinfo(data.dtype).max
+        factor = np.iinfo(data.dtype).max
 
     if target_dtype != np.dtype("float32"):
-        factor = factor / (1 + np.iinfo(target_dtype).max)
+        factor = factor / np.iinfo(target_dtype).max
+
     return (data / factor).astype(np.dtype(target_dtype))
 
 
@@ -81,7 +99,6 @@ def convert_nifti(
             size = list(source_nifti.shape)
             cube_data = cube_data.reshape((1,) + source_nifti.shape)
 
-
         elif len(source_nifti.shape) == 4:
             size = list(source_nifti.shape[:-1])
             cube_data = np.transpose(cube_data, (3, 0, 1, 2))
@@ -98,7 +115,6 @@ def convert_nifti(
         cube_data = to_target_datatype(cube_data, dtype)
         target_wkw.write(offset, cube_data)
 
-
     logging.debug(
         "Converting of {} took {:.8f}s".format(
             source_nifti_path, time.time() - ref_time
@@ -113,13 +129,54 @@ def convert_nifti(
     )
 
 
+def convert_folder_nifti(source_folder_path, target_path, color_file, segmentation_file):
+    files = [f for f in os.listdir(source_folder_path) if f.endswith(".nii")]
+
+    if color_file not in files and color_file != None:
+        logging.warning("Specified color file {} not in source path {}!".format(color_file, source_folder_path))
+
+    if segmentation_file not in files and segmentation_file != None:
+        logging.warning(
+            "Specified segmentation_file file {} not in source path {}!".format(
+                segmentation_file,
+                segmentation_file
+            )
+        )
+
+    for file in files:
+        if file == color_file:
+            convert_nifti(
+                os.path.join(source_folder_path, file),
+                target_path,
+                "color",
+                "uint8"
+            )
+        elif file == segmentation_file:
+            convert_nifti(
+                os.path.join(source_folder_path, file),
+                target_path,
+                "segmentation",
+                "uint32"
+            )
+        else:
+            convert_nifti(
+                os.path.join(source_folder_path, file),
+                target_path,
+                file,
+                "uint8"
+            )
+
+
 if __name__ == "__main__":
     args = create_parser().parse_args()
     setup_logging(args)
 
-    convert_nifti(
-        args.source_path,
-        args.target_path,
-        args.layer_name,
-        args.dtype
-    )
+    if not args.convert_folder:
+        convert_nifti(
+            args.source_path,
+            args.target_path,
+            args.layer_name,
+            args.dtype
+        )
+    else:
+        convert_folder_nifti(args.source_path, args.target_path, args.color_file, args.segmentation_file)
