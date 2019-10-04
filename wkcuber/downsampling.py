@@ -555,7 +555,7 @@ def downsample_mags_isotropic(
     max_mag: Mag,
     interpolation_mode,
     compress,
-    buffer_edge_len,
+    buffer_edge_len=None,
     args=None,
 ):
 
