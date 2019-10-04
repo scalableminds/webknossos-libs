@@ -37,12 +37,8 @@ def open_wkw(info, **kwargs):
     if hasattr(info, "dtype"):
         header = wkw.Header(np.dtype(info.dtype), **kwargs)
     else:
-        logging.warn(
-            "Discarding the following wkw header args, because dtype was not provided: {}".format(
-                kwargs
-            )
-        )
-        header = None
+        header = wkw.Header(np.uint8, **kwargs)
+
     ds = wkw.Dataset.open(
         path.join(info.dataset_path, info.layer_name, str(info.mag)), header
     )
