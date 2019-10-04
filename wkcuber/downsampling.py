@@ -168,7 +168,10 @@ def downsample(
             wkw.Header.BLOCK_TYPE_LZ4HC if compress else wkw.Header.BLOCK_TYPE_RAW
         )
         ensure_wkw(
-            target_wkw_info, block_type=header_block_type, num_channels=num_channels, file_len=source_wkw.header.file_len
+            target_wkw_info,
+            block_type=header_block_type,
+            num_channels=num_channels,
+            file_len=source_wkw.header.file_len,
         )
 
     with get_executor_for_args(args) as executor:
@@ -213,12 +216,17 @@ def downsample_cube_job(args):
             num_channels = source_wkw.header.num_channels
             source_dtype = source_wkw.header.voxel_type
             with open_wkw(
-                target_wkw_info, block_type=header_block_type, num_channels=num_channels, file_len=source_wkw.header.file_len
+                target_wkw_info,
+                block_type=header_block_type,
+                num_channels=num_channels,
+                file_len=source_wkw.header.file_len,
             ) as target_wkw:
                 wkw_cubelength = (
                     source_wkw.header.file_len * source_wkw.header.block_len
                 )
-                buffer_edge_len = buffer_edge_len or min(DEFAULT_EDGE_LEN, wkw_cubelength)
+                buffer_edge_len = buffer_edge_len or min(
+                    DEFAULT_EDGE_LEN, wkw_cubelength
+                )
                 shape = (num_channels,) + (wkw_cubelength,) * 3
                 file_buffer = np.zeros(shape, source_dtype)
                 tile_length = buffer_edge_len
