@@ -34,6 +34,10 @@ def parse_cube_file_name(filename):
     return (int(m.group(3)), int(m.group(2)), int(m.group(1)))
 
 
+def determine_cube_edge_len(dataset):
+    return dataset.header.file_len * dataset.header.block_len
+
+
 class InterpolationModes(Enum):
     MEDIAN = 0
     MODE = 1
@@ -145,22 +149,25 @@ def downsample(
         )
     )
     target_cube_addresses.sort()
-    logging.debug(
-        "Found source cubes: count={} size={} min={} max={}".format(
-            len(source_cube_addresses),
-            (buffer_edge_len,) * 3,
-            min(source_cube_addresses),
-            max(source_cube_addresses),
+    with open_wkw(source_wkw_info) as source_wkw:
+        if buffer_edge_len is None:
+            buffer_edge_len = determine_cube_edge_len(source_wkw)
+        logging.debug(
+            "Found source cubes: count={} size={} min={} max={}".format(
+                len(source_cube_addresses),
+                (buffer_edge_len,) * 3,
+                min(source_cube_addresses),
+                max(source_cube_addresses),
+            )
         )
-    )
-    logging.debug(
-        "Found target cubes: count={} size={} min={} max={}".format(
-            len(target_cube_addresses),
-            (buffer_edge_len,) * 3,
-            min(target_cube_addresses),
-            max(target_cube_addresses),
+        logging.debug(
+            "Found target cubes: count={} size={} min={} max={}".format(
+                len(target_cube_addresses),
+                (buffer_edge_len,) * 3,
+                min(target_cube_addresses),
+                max(target_cube_addresses),
+            )
         )
-    )
 
     with open_wkw(source_wkw_info) as source_wkw:
         num_channels = source_wkw.header.num_channels
@@ -221,9 +228,7 @@ def downsample_cube_job(args):
                 num_channels=num_channels,
                 file_len=source_wkw.header.file_len,
             ) as target_wkw:
-                wkw_cubelength = (
-                    source_wkw.header.file_len * source_wkw.header.block_len
-                )
+                wkw_cubelength = determine_cube_edge_len(source_wkw)
                 buffer_edge_len = buffer_edge_len or min(
                     DEFAULT_EDGE_LEN, wkw_cubelength
                 )
