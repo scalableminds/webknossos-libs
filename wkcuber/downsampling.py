@@ -34,8 +34,8 @@ def parse_cube_file_name(filename):
     return (int(m.group(3)), int(m.group(2)), int(m.group(1)))
 
 
-def determine_cube_edge_len(dataset):
-    return dataset.header.file_len * dataset.header.block_len
+def determine_buffer_edge_len(dataset):
+    return min(DEFAULT_EDGE_LEN, dataset.header.file_len * dataset.header.block_len)
 
 
 class InterpolationModes(Enum):
@@ -151,7 +151,7 @@ def downsample(
     target_cube_addresses.sort()
     with open_wkw(source_wkw_info) as source_wkw:
         if buffer_edge_len is None:
-            buffer_edge_len = determine_cube_edge_len(source_wkw)
+            buffer_edge_len = determine_buffer_edge_len(source_wkw)
         logging.debug(
             "Found source cubes: count={} size={} min={} max={}".format(
                 len(source_cube_addresses),
@@ -228,9 +228,8 @@ def downsample_cube_job(args):
                 num_channels=num_channels,
                 file_len=source_wkw.header.file_len,
             ) as target_wkw:
-                wkw_cubelength = determine_cube_edge_len(source_wkw)
-                buffer_edge_len = buffer_edge_len or min(
-                    DEFAULT_EDGE_LEN, wkw_cubelength
+                wkw_cubelength = (
+                    source_wkw.header.file_len * source_wkw.header.block_len
                 )
                 shape = (num_channels,) + (wkw_cubelength,) * 3
                 file_buffer = np.zeros(shape, source_dtype)
