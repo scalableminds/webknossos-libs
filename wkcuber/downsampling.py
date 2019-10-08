@@ -38,6 +38,12 @@ def determine_buffer_edge_len(dataset):
     return min(DEFAULT_EDGE_LEN, dataset.header.file_len * dataset.header.block_len)
 
 
+def calculate_scale(target_mag):
+    max_target_value = max(list(target_mag.to_array()))
+    scale_array = max_target_value / np.array(target_mag.to_array())
+    return tuple(scale_array)
+
+
 class InterpolationModes(Enum):
     MEDIAN = 0
     MODE = 1
@@ -645,11 +651,14 @@ if __name__ == "__main__":
     if args.anisotropic_target_mag:
         anisotropic_target_mag = Mag(args.anisotropic_target_mag)
 
-        downsample_mag(
+        scale = calculate_scale(anisotropic_target_mag)
+
+        downsample_mags_anisotropic(
             args.path,
             args.layer_name,
             from_mag,
             anisotropic_target_mag,
+            scale,
             args.interpolation_mode,
             not args.no_compress,
             args.buffer_cube_size,
