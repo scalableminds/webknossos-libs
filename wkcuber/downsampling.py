@@ -96,7 +96,7 @@ def create_parser():
         "-b",
         help="Size of buffered cube to be downsampled (i.e. buffer cube edge length)",
         type=int,
-        default=DEFAULT_EDGE_LEN,
+        default=None,
     )
 
     parser.add_argument(
