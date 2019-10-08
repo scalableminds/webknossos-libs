@@ -100,8 +100,8 @@ def downsample_test_helper(use_compress):
         target_info,
         (2, 2, 2),
         InterpolationModes.MAX,
-        CUBE_EDGE_LEN,
         offset,
+        CUBE_EDGE_LEN,
         use_compress,
     )
     downsample_cube_job(downsample_args)
@@ -161,8 +161,8 @@ def test_downsample_multi_channel():
         target_info,
         (2, 2, 2),
         InterpolationModes.MAX,
-        CUBE_EDGE_LEN,
         tuple(a * WKW_CUBE_SIZE for a in offset),
+        CUBE_EDGE_LEN,
         False,
     )
     downsample_cube_job(downsample_args)

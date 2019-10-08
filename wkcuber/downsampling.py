@@ -34,6 +34,10 @@ def parse_cube_file_name(filename):
     return (int(m.group(3)), int(m.group(2)), int(m.group(1)))
 
 
+def determine_buffer_edge_len(dataset):
+    return min(DEFAULT_EDGE_LEN, dataset.header.file_len * dataset.header.block_len)
+
+
 class InterpolationModes(Enum):
     MEDIAN = 0
     MODE = 1
@@ -92,7 +96,7 @@ def create_parser():
         "-b",
         help="Size of buffered cube to be downsampled (i.e. buffer cube edge length)",
         type=int,
-        default=DEFAULT_EDGE_LEN,
+        default=None,
     )
 
     parser.add_argument(
@@ -124,8 +128,8 @@ def downsample(
     source_mag: Mag,
     target_mag: Mag,
     interpolation_mode,
-    cube_edge_len,
     compress,
+    buffer_edge_len=None,
     args=None,
 ):
 
@@ -145,22 +149,25 @@ def downsample(
         )
     )
     target_cube_addresses.sort()
-    logging.debug(
-        "Found source cubes: count={} size={} min={} max={}".format(
-            len(source_cube_addresses),
-            (cube_edge_len,) * 3,
-            min(source_cube_addresses),
-            max(source_cube_addresses),
+    with open_wkw(source_wkw_info) as source_wkw:
+        if buffer_edge_len is None:
+            buffer_edge_len = determine_buffer_edge_len(source_wkw)
+        logging.debug(
+            "Found source cubes: count={} size={} min={} max={}".format(
+                len(source_cube_addresses),
+                (buffer_edge_len,) * 3,
+                min(source_cube_addresses),
+                max(source_cube_addresses),
+            )
         )
-    )
-    logging.debug(
-        "Found target cubes: count={} size={} min={} max={}".format(
-            len(target_cube_addresses),
-            (cube_edge_len,) * 3,
-            min(target_cube_addresses),
-            max(target_cube_addresses),
+        logging.debug(
+            "Found target cubes: count={} size={} min={} max={}".format(
+                len(target_cube_addresses),
+                (buffer_edge_len,) * 3,
+                min(target_cube_addresses),
+                max(target_cube_addresses),
+            )
         )
-    )
 
     with open_wkw(source_wkw_info) as source_wkw:
         num_channels = source_wkw.header.num_channels
@@ -168,7 +175,10 @@ def downsample(
             wkw.Header.BLOCK_TYPE_LZ4HC if compress else wkw.Header.BLOCK_TYPE_RAW
         )
         ensure_wkw(
-            target_wkw_info, block_type=header_block_type, num_channels=num_channels
+            target_wkw_info,
+            block_type=header_block_type,
+            num_channels=num_channels,
+            file_len=source_wkw.header.file_len,
         )
 
     with get_executor_for_args(args) as executor:
@@ -180,8 +190,8 @@ def downsample(
                     target_wkw_info,
                     mag_factors,
                     interpolation_mode,
-                    cube_edge_len,
                     target_cube_xyz,
+                    buffer_edge_len,
                     compress,
                 )
             )
@@ -196,10 +206,11 @@ def downsample_cube_job(args):
         target_wkw_info,
         mag_factors,
         interpolation_mode,
-        cube_edge_len,
         target_cube_xyz,
+        buffer_edge_len,
         compress,
     ) = args
+
     logging.info("Downsampling of {}".format(target_cube_xyz))
 
     try:
@@ -212,17 +223,21 @@ def downsample_cube_job(args):
             num_channels = source_wkw.header.num_channels
             source_dtype = source_wkw.header.voxel_type
             with open_wkw(
-                target_wkw_info, block_type=header_block_type, num_channels=num_channels
+                target_wkw_info,
+                block_type=header_block_type,
+                num_channels=num_channels,
+                file_len=source_wkw.header.file_len,
             ) as target_wkw:
                 wkw_cubelength = (
                     source_wkw.header.file_len * source_wkw.header.block_len
                 )
                 shape = (num_channels,) + (wkw_cubelength,) * 3
                 file_buffer = np.zeros(shape, source_dtype)
-                tile_length = cube_edge_len
+                tile_length = buffer_edge_len
                 tile_count_per_dim = wkw_cubelength // tile_length
+
                 assert (
-                    wkw_cubelength % cube_edge_len == 0
+                    wkw_cubelength % buffer_edge_len == 0
                 ), "buffer_cube_size must be a divisor of wkw cube length"
 
                 tile_indices = list(range(0, tile_count_per_dim))
@@ -441,8 +456,8 @@ def downsample_mag(
     source_mag: Mag,
     target_mag: Mag,
     interpolation_mode="default",
-    cube_edge_len=DEFAULT_EDGE_LEN,
     compress=False,
+    buffer_edge_len=None,
     args=None,
 ):
     interpolation_mode = parse_interpolation_mode(interpolation_mode, layer_name)
@@ -452,14 +467,15 @@ def downsample_mag(
         target_wkw_info = WkwDatasetInfo(
             path, layer_name, source.header.voxel_type, target_mag.to_layer_name()
         )
+
     downsample(
         source_wkw_info,
         target_wkw_info,
         source_mag,
         target_mag,
         interpolation_mode,
-        cube_edge_len,
         compress,
+        buffer_edge_len,
         args,
     )
 
@@ -481,7 +497,7 @@ def downsample_mags(
     from_mag: Mag = None,
     max_mag: Mag = Mag(32),
     interpolation_mode: str = "default",
-    cube_edge_len: int = DEFAULT_EDGE_LEN,
+    buffer_edge_len: int = None,
     compress: bool = True,
     args=None,
     anisotropic: bool = True,
@@ -519,8 +535,8 @@ def downsample_mags(
             max_mag,
             scale,
             interpolation_mode,
-            cube_edge_len,
             compress,
+            buffer_edge_len,
             args,
         )
     else:
@@ -530,8 +546,8 @@ def downsample_mags(
             from_mag,
             max_mag,
             interpolation_mode,
-            cube_edge_len,
             compress,
+            buffer_edge_len,
             args,
         )
 
@@ -542,8 +558,8 @@ def downsample_mags_isotropic(
     from_mag: Mag,
     max_mag: Mag,
     interpolation_mode,
-    cube_edge_len,
     compress,
+    buffer_edge_len=None,
     args=None,
 ):
 
@@ -556,8 +572,8 @@ def downsample_mags_isotropic(
             source_mag,
             target_mag,
             interpolation_mode,
-            cube_edge_len,
             compress,
+            buffer_edge_len,
             args,
         )
         target_mag.scale_by(2)
@@ -570,8 +586,8 @@ def downsample_mags_anisotropic(
     max_mag: Mag,
     scale,
     interpolation_mode,
-    cube_edge_len,
     compress,
+    buffer_edge_len=None,
     args=None,
 ):
 
@@ -585,8 +601,8 @@ def downsample_mags_anisotropic(
             source_mag,
             target_mag,
             interpolation_mode,
-            cube_edge_len,
             compress,
+            buffer_edge_len,
             args,
         )
         prev_mag = target_mag
@@ -635,8 +651,8 @@ if __name__ == "__main__":
             from_mag,
             anisotropic_target_mag,
             args.interpolation_mode,
-            args.buffer_cube_size,
             not args.no_compress,
+            args.buffer_cube_size,
             args,
         )
     elif not args.isotropic:
@@ -657,9 +673,8 @@ if __name__ == "__main__":
             max_mag,
             scale,
             args.interpolation_mode,
-            DEFAULT_EDGE_LEN,
             not args.no_compress,
-            args,
+            args=args,
         )
     else:
         downsample_mags_isotropic(
@@ -668,8 +683,8 @@ if __name__ == "__main__":
             from_mag,
             max_mag,
             args.interpolation_mode,
-            args.buffer_cube_size,
             not args.no_compress,
+            args.buffer_cube_size,
             args,
         )
 

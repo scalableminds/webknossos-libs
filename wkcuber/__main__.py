@@ -68,9 +68,8 @@ def main(args):
             Mag(args.max_mag),
             scale,
             "default",
-            DEFAULT_EDGE_LEN,
             not args.no_compress,
-            args,
+            args=args,
         )
 
     else:
@@ -80,9 +79,8 @@ def main(args):
             Mag(1),
             Mag(args.max_mag),
             "default",
-            DEFAULT_EDGE_LEN,
             not args.no_compress,
-            args,
+            args=args,
         )
 
     refresh_metadata(args.target_path)
