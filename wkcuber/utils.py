@@ -22,7 +22,7 @@ from .knossos import KnossosDataset
 from .mag import Mag
 
 WkwDatasetInfo = namedtuple(
-    "WkwDatasetInfo", ("dataset_path", "layer_name", "dtype", "mag")
+    "WkwDatasetInfo", ("dataset_path", "layer_name", "mag", "header")
 )
 KnossosDatasetInfo = namedtuple("KnossosDatasetInfo", ("dataset_path", "dtype"))
 FallbackArgs = namedtuple("FallbackArgs", ("distribution_strategy", "jobs"))
@@ -33,21 +33,16 @@ BLOCK_LEN = 32
 logger = getLogger(__name__)
 
 
-def open_wkw(info, **kwargs):
-    if hasattr(info, "dtype"):
-        header = wkw.Header(np.dtype(info.dtype), **kwargs)
-    else:
-        header = wkw.Header(np.uint8, **kwargs)
-
+def open_wkw(info):
     ds = wkw.Dataset.open(
-        path.join(info.dataset_path, info.layer_name, str(info.mag)), header
+        path.join(info.dataset_path, info.layer_name, str(info.mag)), info.header
     )
     return ds
 
 
-def ensure_wkw(target_wkw_info, **kwargs):
+def ensure_wkw(target_wkw_info):
     # Open will create the dataset if it doesn't exist yet
-    target_wkw = open_wkw(target_wkw_info, **kwargs)
+    target_wkw = open_wkw(target_wkw_info)
     target_wkw.close()
 
 

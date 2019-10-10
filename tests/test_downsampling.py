@@ -16,12 +16,12 @@ import shutil
 WKW_CUBE_SIZE = 1024
 CUBE_EDGE_LEN = 256
 
-source_info = WkwDatasetInfo("testdata/WT1_wkw", "color", "uint8", 1)
-target_info = WkwDatasetInfo("testoutput/WT1_wkw", "color", "uint8", 2)
+source_info = WkwDatasetInfo("testdata/WT1_wkw", "color", 1, wkw.Header(np.uint8))
+target_info = WkwDatasetInfo("testoutput/WT1_wkw", "color", 2, wkw.Header(np.uint8))
 
 
-def read_wkw(wkw_info, offset, size, **kwargs):
-    with open_wkw(wkw_info, **kwargs) as wkw_dataset:
+def read_wkw(wkw_info, offset, size):
+    with open_wkw(wkw_info) as wkw_dataset:
         return wkw_dataset.read(offset, size)
 
 
@@ -110,11 +110,10 @@ def downsample_test_helper(use_compress):
     block_type = (
         wkw.Header.BLOCK_TYPE_LZ4HC if use_compress else wkw.Header.BLOCK_TYPE_RAW
     )
+    target_info.header.block_type = block_type
+
     target_buffer = read_wkw(
-        target_info,
-        tuple(a * WKW_CUBE_SIZE for a in offset),
-        (CUBE_EDGE_LEN,) * 3,
-        block_type=block_type,
+        target_info, tuple(a * WKW_CUBE_SIZE for a in offset), (CUBE_EDGE_LEN,) * 3
     )[0]
     assert np.any(target_buffer != 0)
 
@@ -133,14 +132,6 @@ def test_compressed_downsample_cube_job():
 
 
 def test_downsample_multi_channel():
-    source_info = WkwDatasetInfo("testoutput/multi-channel-test", "color", "uint8", 1)
-    target_info = WkwDatasetInfo("testoutput/multi-channel-test", "color", "uint8", 2)
-    try:
-        shutil.rmtree(source_info.dataset_path)
-        shutil.rmtree(target_info.dataset_path)
-    except:
-        pass
-
     offset = (0, 0, 0)
     num_channels = 3
     size = (32, 32, 10)
@@ -149,9 +140,25 @@ def test_downsample_multi_channel():
     ).astype("uint8")
     file_len = 32
 
-    with open_wkw(
-        source_info, num_channels=num_channels, file_len=file_len
-    ) as wkw_dataset:
+    source_info = WkwDatasetInfo(
+        "testoutput/multi-channel-test",
+        "color",
+        1,
+        wkw.Header(np.uint8, num_channels, file_len=file_len),
+    )
+    target_info = WkwDatasetInfo(
+        "testoutput/multi-channel-test",
+        "color",
+        2,
+        wkw.Header(np.uint8, file_len=file_len),
+    )
+    try:
+        shutil.rmtree(source_info.dataset_path)
+        shutil.rmtree(target_info.dataset_path)
+    except:
+        pass
+
+    with open_wkw(source_info) as wkw_dataset:
         print("writing source_data shape", source_data.shape)
         wkw_dataset.write(offset, source_data)
     assert np.any(source_data != 0)
@@ -180,7 +187,6 @@ def test_downsample_multi_channel():
         target_info,
         tuple(a * WKW_CUBE_SIZE for a in offset),
         list(map(lambda x: x // 2, size)),
-        file_len=file_len,
     )
     assert np.any(target_buffer != 0)
 

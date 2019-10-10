@@ -6,6 +6,7 @@ import os
 from glob import glob
 import re
 from argparse import ArgumentTypeError
+import wkw
 
 from .utils import (
     get_chunks,
@@ -268,8 +269,10 @@ def tile_cubing(
         )
     )
 
-    target_wkw_info = WkwDatasetInfo(target_path, layer_name, dtype, 1)
-    ensure_wkw(target_wkw_info, num_channels=num_channels)
+    target_wkw_info = WkwDatasetInfo(
+        target_path, layer_name, 1, wkw.Header(dtype, num_channels)
+    )
+    ensure_wkw(target_wkw_info)
     with get_executor_for_args(args) as executor:
         job_args = []
         # Iterate over all z batches

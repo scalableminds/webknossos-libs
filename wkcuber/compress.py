@@ -83,7 +83,7 @@ def compress_mag(source_path, layer_name, target_path, mag: Mag, args=None):
         dtype = args.dtype
     else:
         dtype = None
-    source_wkw_info = WkwDatasetInfo(source_path, layer_name, dtype, mag)
+    source_wkw_info = WkwDatasetInfo(source_path, layer_name, mag, wkw.Header(dtype))
     target_mag_path = path.join(target_path, layer_name, str(mag))
     logging.info("Compressing mag {0} in '{1}'".format(str(mag), target_mag_path))
 
