@@ -38,7 +38,9 @@ def determine_buffer_edge_len(dataset):
     return min(DEFAULT_EDGE_LEN, dataset.header.file_len * dataset.header.block_len)
 
 
-def calculate_scale(target_mag):
+def calculate_virtual_scale_for_target_mag(target_mag):
+    "This scale is not the actual scale of the dataset"
+    "The virtual scale is used for downsample_mags_anisotropic."
     max_target_value = max(list(target_mag.to_array()))
     scale_array = max_target_value / np.array(target_mag.to_array())
     return tuple(scale_array)
@@ -651,7 +653,7 @@ if __name__ == "__main__":
     if args.anisotropic_target_mag:
         anisotropic_target_mag = Mag(args.anisotropic_target_mag)
 
-        scale = calculate_scale(anisotropic_target_mag)
+        scale = calculate_virtual_scale_for_target_mag(anisotropic_target_mag)
 
         downsample_mags_anisotropic(
             args.path,
