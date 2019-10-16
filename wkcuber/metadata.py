@@ -163,7 +163,7 @@ def read_metadata_for_layer(wkw_path, layer_name):
     return layer_info, dtype, bounding_box, origin
 
 
-def convert_dype_to_element_class(dtype):
+def convert_dtype_to_element_class(dtype):
     element_class_to_dtype_map = {
         "float": np.float32,
         "double": np.float64,
@@ -173,7 +173,7 @@ def convert_dype_to_element_class(dtype):
         "uint64": np.uint64,
     }
     conversion_map = {v: k for k, v in element_class_to_dtype_map.items()}
-    return conversion_map.get(dtype.type, str(dtype))
+    return conversion_map.get(dtype, str(dtype))
 
 
 def detect_dtype(dataset_path, layer, mag: Mag = Mag(1)):
@@ -185,7 +185,7 @@ def detect_dtype(dataset_path, layer, mag: Mag = Mag(1)):
             if voxel_size == np.uint8 and num_channels > 1:
                 return "uint" + str(8 * num_channels)
             else:
-                return convert_dype_to_element_class(voxel_size)
+                return convert_dtype_to_element_class(voxel_size)
 
 
 def detect_cubeLength(dataset_path, layer, mag: Mag = Mag(1)):
