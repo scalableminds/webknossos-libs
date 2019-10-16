@@ -12,7 +12,7 @@ Image.MAX_IMAGE_PIXELS = None
 
 class PillowImageReader:
     def read_array(self, file_name, dtype):
-        this_layer = np.array(Image.open(file_name), np.dtype(dtype))
+        this_layer = np.array(Image.open(file_name), dtype)
         this_layer = this_layer.swapaxes(0, 1)
         this_layer = this_layer.reshape(this_layer.shape + (1,))
         return this_layer

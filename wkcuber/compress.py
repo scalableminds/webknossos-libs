@@ -18,6 +18,7 @@ from .utils import (
     setup_logging,
 )
 from .metadata import detect_resolutions
+from .metadata import convert_element_class_to_dtype
 from typing import List
 
 
@@ -80,10 +81,10 @@ def compress_mag(source_path, layer_name, target_path, mag: Mag, args=None):
         exit(1)
 
     if args is not None and hasattr(args, "dtype"):
-        dtype = args.dtype
+        header = wkw.Header(convert_element_class_to_dtype(args.dtype))
     else:
-        dtype = None
-    source_wkw_info = WkwDatasetInfo(source_path, layer_name, mag, wkw.Header(dtype))
+        header = None
+    source_wkw_info = WkwDatasetInfo(source_path, layer_name, mag, header)
     target_mag_path = path.join(target_path, layer_name, str(mag))
     logging.info("Compressing mag {0} in '{1}'".format(str(mag), target_mag_path))
 

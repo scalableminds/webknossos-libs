@@ -21,6 +21,7 @@ from .utils import (
 from .cubing import create_parser as create_cubing_parser
 from .cubing import read_image_file, prepare_slices_for_wkw
 from .image_readers import image_reader
+from .metadata import convert_element_class_to_dtype
 
 BLOCK_LEN = 32
 PADDING_FILE_NAME = "/"
@@ -271,7 +272,7 @@ def tile_cubing(
     )
 
     target_wkw_info = WkwDatasetInfo(
-        target_path, layer_name, 1, wkw.Header(dtype, num_channels)
+        target_path, layer_name, 1, wkw.Header(convert_element_class_to_dtype(dtype), num_channels)
     )
     ensure_wkw(target_wkw_info)
     with get_executor_for_args(args) as executor:
