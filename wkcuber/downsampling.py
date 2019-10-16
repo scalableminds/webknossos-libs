@@ -38,6 +38,14 @@ def determine_buffer_edge_len(dataset):
     return min(DEFAULT_EDGE_LEN, dataset.header.file_len * dataset.header.block_len)
 
 
+def calculate_virtual_scale_for_target_mag(target_mag):
+    "This scale is not the actual scale of the dataset"
+    "The virtual scale is used for downsample_mags_anisotropic."
+    max_target_value = max(list(target_mag.to_array()))
+    scale_array = max_target_value / np.array(target_mag.to_array())
+    return tuple(scale_array)
+
+
 class InterpolationModes(Enum):
     MEDIAN = 0
     MODE = 1
@@ -84,8 +92,8 @@ def create_parser():
 
     group.add_argument(
         "--anisotropic_target_mag",
-        help="Specify an explicit anisotropic target magnification which should be "
-        "created (e.g., --anisotropic_target_mag 2-2-1). Consider using --anisotropic "
+        help="Specify an explicit anisotropic target magnification (e.g., --anisotropic_target_mag 16-16-4)."
+        "All magnifications until this target magnification will be created. Consider using --anisotropic "
         "instead which automatically creates multiple anisotropic magnifications depending "
         "on the dataset's scale",
         type=str,
@@ -645,11 +653,14 @@ if __name__ == "__main__":
     if args.anisotropic_target_mag:
         anisotropic_target_mag = Mag(args.anisotropic_target_mag)
 
-        downsample_mag(
+        scale = calculate_virtual_scale_for_target_mag(anisotropic_target_mag)
+
+        downsample_mags_anisotropic(
             args.path,
             args.layer_name,
             from_mag,
             anisotropic_target_mag,
+            scale,
             args.interpolation_mode,
             not args.no_compress,
             args.buffer_cube_size,
