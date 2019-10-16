@@ -41,6 +41,7 @@ def open_wkw(info):
 
 
 def ensure_wkw(target_wkw_info):
+    assert target_wkw_info.header is not None
     # Open will create the dataset if it doesn't exist yet
     target_wkw = open_wkw(target_wkw_info)
     target_wkw.close()

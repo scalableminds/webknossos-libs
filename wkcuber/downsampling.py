@@ -474,9 +474,7 @@ def downsample_mag(
 ):
     interpolation_mode = parse_interpolation_mode(interpolation_mode, layer_name)
 
-    source_wkw_info = WkwDatasetInfo(
-        path, layer_name, source_mag.to_layer_name(), wkw.Header(np.uint8)
-    )
+    source_wkw_info = WkwDatasetInfo(path, layer_name, source_mag.to_layer_name(), None)
     with open_wkw(source_wkw_info) as source:
         target_wkw_info = WkwDatasetInfo(
             path,
