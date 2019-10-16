@@ -20,7 +20,6 @@ import traceback
 
 from .knossos import KnossosDataset
 from .mag import Mag
-from .metadata import convert_element_class_to_dtype
 
 WkwDatasetInfo = namedtuple(
     "WkwDatasetInfo", ("dataset_path", "layer_name", "mag", "header")
@@ -49,9 +48,7 @@ def ensure_wkw(target_wkw_info):
 
 
 def open_knossos(info):
-    return KnossosDataset.open(
-        info.dataset_path, convert_element_class_to_dtype(info.dtype)
-    )
+    return KnossosDataset.open(info.dataset_path, np.dtype(info.dtype))
 
 
 def add_verbose_flag(parser):
