@@ -77,7 +77,9 @@ def convert_knossos(
     source_path, target_path, layer_name, dtype, mag=1, jobs=1, args=None
 ):
     source_knossos_info = KnossosDatasetInfo(source_path, dtype)
-    target_wkw_info = WkwDatasetInfo(target_path, layer_name, mag, wkw.Header(convert_element_class_to_dtype(dtype)))
+    target_wkw_info = WkwDatasetInfo(
+        target_path, layer_name, mag, wkw.Header(convert_element_class_to_dtype(dtype))
+    )
 
     ensure_wkw(target_wkw_info)
 

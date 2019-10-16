@@ -272,7 +272,10 @@ def tile_cubing(
     )
 
     target_wkw_info = WkwDatasetInfo(
-        target_path, layer_name, 1, wkw.Header(convert_element_class_to_dtype(dtype), num_channels)
+        target_path,
+        layer_name,
+        1,
+        wkw.Header(convert_element_class_to_dtype(dtype), num_channels),
     )
     ensure_wkw(target_wkw_info)
     with get_executor_for_args(args) as executor:
