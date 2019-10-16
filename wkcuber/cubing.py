@@ -145,7 +145,9 @@ def cubing_job(args):
                 # Iterate over each z section in the batch
                 for z, file_name in zip(z_batch, source_file_batch):
                     # Image shape will be (x, y, channel_count, z=1)
-                    image = read_image_file(file_name, target_wkw_info.dtype)
+                    image = read_image_file(
+                        file_name, target_wkw_info.header.voxel_type
+                    )
                     if not pad:
                         assert (
                             image.shape[0:2] == image_size

@@ -208,14 +208,15 @@ def tile_cubing_job(args):
                             if file_name:
                                 # read the image
                                 image = read_image_file(
-                                    file_name, target_wkw_info.dtype
+                                    file_name, target_wkw_info.header.voxel_type
                                 )
                                 slices.append(image)
                             else:
                                 # add zeros instead
                                 slices.append(
                                     np.zeros(
-                                        tile_size + (1,), dtype=target_wkw_info.dtype
+                                        tile_size + (1,),
+                                        dtype=target_wkw_info.header.voxel_type,
                                     )
                                 )
                         buffer = prepare_slices_for_wkw(

@@ -48,7 +48,7 @@ def ensure_wkw(target_wkw_info):
 
 
 def open_knossos(info):
-    return KnossosDataset.open(info.dataset_path, np.dtype(info.dtype))
+    return KnossosDataset.open(info.dataset_path, np.dtype(info.header.voxel_type))
 
 
 def add_verbose_flag(parser):
