@@ -78,8 +78,6 @@ def add_isotropic_flag(parser):
         action="store_true",
     )
 
-    parser.set_defaults(anisotropic=False)
-
 
 def add_interpolation_flag(parser):
     parser.add_argument(
