@@ -42,7 +42,7 @@ def extend_wkw_dataset_info_header(wkw_info, **kwargs):
     for key, value in kwargs.items():
         setattr(wkw_info.header, key, value)
 
-        
+
 def calculate_virtual_scale_for_target_mag(target_mag):
     "This scale is not the actual scale of the dataset"
     "The virtual scale is used for downsample_mags_anisotropic."
