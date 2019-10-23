@@ -38,6 +38,11 @@ def determine_buffer_edge_len(dataset):
     return min(DEFAULT_EDGE_LEN, dataset.header.file_len * dataset.header.block_len)
 
 
+def extend_wkw_dataset_info_header(wkw_info, **kwargs):
+    for key, value in kwargs.items():
+        setattr(wkw_info.header, key, value)
+
+
 def calculate_virtual_scale_for_target_mag(target_mag):
     "This scale is not the actual scale of the dataset"
     "The virtual scale is used for downsample_mags_anisotropic."
@@ -182,12 +187,15 @@ def downsample(
         header_block_type = (
             wkw.Header.BLOCK_TYPE_LZ4HC if compress else wkw.Header.BLOCK_TYPE_RAW
         )
-        ensure_wkw(
+
+        extend_wkw_dataset_info_header(
             target_wkw_info,
-            block_type=header_block_type,
             num_channels=num_channels,
             file_len=source_wkw.header.file_len,
+            block_type=header_block_type,
         )
+
+        ensure_wkw(target_wkw_info)
 
     with get_executor_for_args(args) as executor:
         job_args = []
@@ -230,12 +238,16 @@ def downsample_cube_job(args):
         with open_wkw(source_wkw_info) as source_wkw:
             num_channels = source_wkw.header.num_channels
             source_dtype = source_wkw.header.voxel_type
-            with open_wkw(
+
+            extend_wkw_dataset_info_header(
                 target_wkw_info,
-                block_type=header_block_type,
+                voxel_type=source_dtype,
                 num_channels=num_channels,
                 file_len=source_wkw.header.file_len,
-            ) as target_wkw:
+                block_type=header_block_type,
+            )
+
+            with open_wkw(target_wkw_info) as target_wkw:
                 wkw_cubelength = (
                     source_wkw.header.file_len * source_wkw.header.block_len
                 )
@@ -470,10 +482,13 @@ def downsample_mag(
 ):
     interpolation_mode = parse_interpolation_mode(interpolation_mode, layer_name)
 
-    source_wkw_info = WkwDatasetInfo(path, layer_name, None, source_mag.to_layer_name())
+    source_wkw_info = WkwDatasetInfo(path, layer_name, source_mag.to_layer_name(), None)
     with open_wkw(source_wkw_info) as source:
         target_wkw_info = WkwDatasetInfo(
-            path, layer_name, source.header.voxel_type, target_mag.to_layer_name()
+            path,
+            layer_name,
+            target_mag.to_layer_name(),
+            wkw.Header(source.header.voxel_type),
         )
 
     downsample(

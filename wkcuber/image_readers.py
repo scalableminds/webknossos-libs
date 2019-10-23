@@ -12,7 +12,7 @@ Image.MAX_IMAGE_PIXELS = None
 
 class PillowImageReader:
     def read_array(self, file_name, dtype):
-        this_layer = np.array(Image.open(file_name), np.dtype(dtype))
+        this_layer = np.array(Image.open(file_name), dtype)
         this_layer = this_layer.swapaxes(0, 1)
         this_layer = this_layer.reshape(this_layer.shape + (1,))
         return this_layer
@@ -34,7 +34,7 @@ class PillowImageReader:
 def to_target_datatype(data: np.ndarray, target_dtype) -> np.ndarray:
 
     factor = (1 + np.iinfo(data.dtype).max) / (1 + np.iinfo(target_dtype).max)
-    return (data / factor).astype(np.dtype(target_dtype))
+    return (data / factor).astype(target_dtype)
 
 
 class Dm3ImageReader:

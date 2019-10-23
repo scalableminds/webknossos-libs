@@ -1,5 +1,6 @@
 import numpy as np
 import os
+import wkw
 
 from wkcuber.cubing import ensure_wkw
 from wkcuber.utils import WkwDatasetInfo, open_wkw
@@ -16,9 +17,9 @@ def test_element_class_convertion():
     test_wkw_path = os.path.join("testoutput", "test_metadata")
     prediction_layer_name = "prediction"
     prediction_wkw_info = WkwDatasetInfo(
-        test_wkw_path, prediction_layer_name, np.float32, 1
+        test_wkw_path, prediction_layer_name, 1, wkw.Header(np.float32, num_channels=3)
     )
-    ensure_wkw(prediction_wkw_info, num_channels=3)
+    ensure_wkw(prediction_wkw_info)
 
     write_custom_layer(test_wkw_path, "prediction", np.float32, num_channels=3)
     write_webknossos_metadata(
@@ -61,9 +62,11 @@ def write_custom_layer(target_path, layer_name, dtype, num_channels):
         .reshape((num_channels, 4, 4, 4))
         .astype(dtype)
     )
-    prediction_wkw_info = WkwDatasetInfo(target_path, layer_name, dtype, 1)
-    ensure_wkw(prediction_wkw_info, num_channels=num_channels)
-    with open_wkw(prediction_wkw_info, num_channels=num_channels) as dataset:
+    prediction_wkw_info = WkwDatasetInfo(
+        target_path, layer_name, 1, wkw.Header(dtype, num_channels)
+    )
+    ensure_wkw(prediction_wkw_info)
+    with open_wkw(prediction_wkw_info) as dataset:
         dataset.write(off=(0, 0, 0), data=data)
 
 

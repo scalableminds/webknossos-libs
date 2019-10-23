@@ -1,6 +1,7 @@
 import time
 import logging
 import numpy as np
+import wkw
 from argparse import ArgumentParser
 from os import path
 from natsort import natsorted
@@ -22,6 +23,7 @@ from .utils import (
     setup_logging,
 )
 from .image_readers import image_reader
+from .metadata import convert_element_class_to_dtype
 
 BLOCK_LEN = 32
 
@@ -121,7 +123,6 @@ def cubing_job(args):
         source_file_batches,
         batch_size,
         image_size,
-        num_channels,
         pad,
     ) = args
     if len(z_batches) == 0:
@@ -129,7 +130,7 @@ def cubing_job(args):
 
     downsampling_needed = target_mag != Mag(1)
 
-    with open_wkw(target_wkw_info, num_channels=num_channels) as target_wkw:
+    with open_wkw(target_wkw_info) as target_wkw:
         # Iterate over batches of continuous z sections
         # The batches have a maximum size of `batch_size`
         # Batched iterations allows to utilize IO more efficiently
@@ -144,7 +145,9 @@ def cubing_job(args):
                 # Iterate over each z section in the batch
                 for z, file_name in zip(z_batch, source_file_batch):
                     # Image shape will be (x, y, channel_count, z=1)
-                    image = read_image_file(file_name, target_wkw_info.dtype)
+                    image = read_image_file(
+                        file_name, target_wkw_info.header.voxel_type
+                    )
                     if not pad:
                         assert (
                             image.shape[0:2] == image_size
@@ -171,7 +174,9 @@ def cubing_job(args):
                         for _slice in slices
                     ]
 
-                buffer = prepare_slices_for_wkw(slices, num_channels)
+                buffer = prepare_slices_for_wkw(
+                    slices, target_wkw_info.header.num_channels
+                )
                 if downsampling_needed:
                     buffer = downsample_unpadded_data(
                         buffer, target_mag, interpolation_mode
@@ -195,8 +200,20 @@ def cubing_job(args):
 
 def cubing(source_path, target_path, layer_name, dtype, batch_size, args=None) -> dict:
 
+    source_files = find_source_filenames(source_path)
+
+    # All images are assumed to have equal dimensions
+    num_x, num_y = image_reader.read_dimensions(source_files[0])
+    num_channels = image_reader.read_channel_count(source_files[0])
+    num_z = len(source_files)
+
     target_mag = Mag(args.target_mag)
-    target_wkw_info = WkwDatasetInfo(target_path, layer_name, dtype, target_mag)
+    target_wkw_info = WkwDatasetInfo(
+        target_path,
+        layer_name,
+        target_mag,
+        wkw.Header(convert_element_class_to_dtype(dtype), num_channels),
+    )
     interpolation_mode = parse_interpolation_mode(
         args.interpolation_mode, target_wkw_info.layer_name
     )
@@ -205,16 +222,9 @@ def cubing(source_path, target_path, layer_name, dtype, batch_size, args=None) -
             f"Downsampling the cubed image to {target_mag} in memory with interpolation mode {interpolation_mode}."
         )
 
-    source_files = find_source_filenames(source_path)
-
-    # All images are assumed to have equal dimensions
-    num_x, num_y = image_reader.read_dimensions(source_files[0])
-    num_channels = image_reader.read_channel_count(source_files[0])
-    num_z = len(source_files)
-
     logging.info("Found source files: count={} size={}x{}".format(num_z, num_x, num_y))
 
-    ensure_wkw(target_wkw_info, num_channels=num_channels)
+    ensure_wkw(target_wkw_info)
 
     with get_executor_for_args(args) as executor:
         job_args = []
@@ -233,7 +243,6 @@ def cubing(source_path, target_path, layer_name, dtype, batch_size, args=None) -
                     source_files[z:max_z],
                     batch_size,
                     (num_x, num_y),
-                    num_channels,
                     args.pad,
                 )
             )
