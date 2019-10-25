@@ -5,14 +5,9 @@ import logging
 import argparse
 import cluster_tools
 import json
-<<<<<<< HEAD
-import shutil
-from typing import List
-=======
 import os
 import psutil
 from typing import List, Tuple, Union
->>>>>>> master
 from glob import iglob
 from collections import namedtuple
 from multiprocessing import cpu_count, Lock
@@ -20,13 +15,8 @@ import concurrent
 from concurrent.futures import ProcessPoolExecutor
 from os import path, getpid
 from math import floor, ceil
-<<<<<<< HEAD
-from .mag import Mag
-import re
-=======
 from logging import getLogger
 import traceback
->>>>>>> master
 
 from .knossos import KnossosDataset
 from .mag import Mag
@@ -37,7 +27,7 @@ WkwDatasetInfo = namedtuple(
 KnossosDatasetInfo = namedtuple("KnossosDatasetInfo", ("dataset_path", "dtype"))
 FallbackArgs = namedtuple("FallbackArgs", ("distribution_strategy", "jobs"))
 
-CUBE_REGEX = re.compile(r"z(\d+)/y(\d+)/x(\d+)(\.wkw)$")
+
 BLOCK_LEN = 32
 
 logger = getLogger(__name__)
