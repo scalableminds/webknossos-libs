@@ -3,6 +3,7 @@ import re
 import wkw
 import logging
 import numpy as np
+import glob
 
 from argparse import ArgumentParser
 from glob import iglob
@@ -162,7 +163,7 @@ def read_metadata_for_layer(wkw_path, layer_name):
     return layer_info, dtype, bounding_box, origin
 
 
-def convert_dype_to_element_class(dtype):
+def convert_dtype_to_element_class(dtype):
     element_class_to_dtype_map = {
         "float": np.float32,
         "double": np.float64,
@@ -172,20 +173,19 @@ def convert_dype_to_element_class(dtype):
         "uint64": np.uint64,
     }
     conversion_map = {v: k for k, v in element_class_to_dtype_map.items()}
-    return conversion_map.get(dtype.type, str(dtype))
+    return conversion_map.get(dtype, str(dtype))
 
 
 def detect_dtype(dataset_path, layer, mag: Mag = Mag(1)):
     layer_path = path.join(dataset_path, layer, str(mag))
     if path.exists(layer_path):
         with wkw.Dataset.open(layer_path) as dataset:
-            voxel_type = dataset.header.voxel_type
+            voxel_size = dataset.header.voxel_type
             num_channels = dataset.header.num_channels
-            voxel_size = np.dtype(voxel_type)
             if voxel_size == np.uint8 and num_channels > 1:
                 return "uint" + str(8 * num_channels)
             else:
-                return convert_dype_to_element_class(voxel_size)
+                return convert_dtype_to_element_class(voxel_size)
 
 
 def detect_cubeLength(dataset_path, layer, mag: Mag = Mag(1)):
@@ -268,13 +268,20 @@ def detect_standard_layer(
     }
 
 
+def detect_mappings(dataset_path, layer_name):
+    pattern = path.join(dataset_path, layer_name, "mappings", "*.json")
+    mapping_files = glob.glob(pattern)
+    mapping_file_names = [path.basename(mapping_file) for mapping_file in mapping_files]
+    return mapping_file_names
+
+
 def detect_segmentation_layer(
     dataset_path, layer_name, max_id, compute_max_id=False, exact_bounding_box=None
 ):
     layer_info = detect_standard_layer(
         dataset_path, layer_name, exact_bounding_box, category="segmentation"
     )
-    layer_info["mappings"] = []
+    layer_info["mappings"] = detect_mappings(dataset_path, layer_name)
     layer_info["largestSegmentId"] = max_id
 
     if compute_max_id:
