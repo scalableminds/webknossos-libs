@@ -204,7 +204,7 @@ def cubing_job(args):
                 raise exc
 
 
-def cubing(source_path, target_path, layer_name, dtype, batch_size) -> dict:
+def cubing(source_path, target_path, layer_name, dtype, batch_size, args) -> dict:
 
     source_files = find_source_filenames(source_path)
 
