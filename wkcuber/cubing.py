@@ -55,7 +55,6 @@ def create_parser():
         "--wkw_file_len",
         default=32,
         help="Amount of blocks which are written per dimension to a wkw cube. The default value of 32 means that 1024 slices are written to one cube (since one block has 32**3 voxels by default). For single-channel uint8 data, this results in 1 GB per cube file. If file_len is set to 1, only 32 slices are written to one cube. Must be a power of two.",
-        default="uint8",
     )
 
     add_batch_size_flag(parser)
