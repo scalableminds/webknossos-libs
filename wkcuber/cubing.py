@@ -219,7 +219,11 @@ def cubing(source_path, target_path, layer_name, dtype, batch_size) -> dict:
         target_path,
         layer_name,
         target_mag,
-        wkw.Header(convert_element_class_to_dtype(dtype), num_channels, file_len=args.wkw_file_len),
+        wkw.Header(
+            convert_element_class_to_dtype(dtype),
+            num_channels,
+            file_len=args.wkw_file_len,
+        ),
     )
     interpolation_mode = parse_interpolation_mode(
         args.interpolation_mode, target_wkw_info.layer_name
