@@ -9,6 +9,7 @@ docker run \
   --jobs 2 \
   --batch_size 8 \
   --layer_name color \
+  --wkw_file_len 16 \
   /testdata/tiff /testoutput/tiff
 [ -d testoutput/tiff/color ]
 [ -d testoutput/tiff/color/1 ]
