@@ -1,3 +1,4 @@
+import re
 import time
 import wkw
 import numpy as np
@@ -29,6 +30,7 @@ FallbackArgs = namedtuple("FallbackArgs", ("distribution_strategy", "jobs"))
 
 
 BLOCK_LEN = 32
+CUBE_REGEX = re.compile(r"z(\d+)/y(\d+)/x(\d+)(\.wkw)$")
 
 logger = getLogger(__name__)
 
@@ -45,20 +47,6 @@ def ensure_wkw(target_wkw_info):
     # Open will create the dataset if it doesn't exist yet
     target_wkw = open_wkw(target_wkw_info)
     target_wkw.close()
-
-
-def infer_bounding_box(dataset: WkwDatasetInfo):
-
-    # N x 3 array of cube addresses
-    addresses = np.array(cube_addresses(dataset))
-
-    with open_wkw(dataset) as d:
-        voxel_length = d.header.file_len * d.header.block_len
-
-    top_left = addresses.min(axis=0) * voxel_length
-    size = (addresses.max(axis=0) - addresses.min(axis=0) + 1) * voxel_length
-
-    return (top_left.tolist(), size.tolist())
 
 
 def cube_addresses(source_wkw_info):

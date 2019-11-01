@@ -28,7 +28,6 @@ from .utils import (
 )
 
 DEFAULT_EDGE_LEN = 256
-CUBE_REGEX = re.compile(r"z(\d+)/y(\d+)/x(\d+)(\.wkw)$")
 
 
 def determine_buffer_edge_len(dataset):

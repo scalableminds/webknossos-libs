@@ -3,6 +3,8 @@ import wkw
 import numpy as np
 from argparse import ArgumentParser
 
+from .metadata import detect_bbox
+
 from .utils import (
     add_verbose_flag,
     open_wkw,
@@ -10,8 +12,6 @@ from .utils import (
     ensure_wkw,
     add_distribution_flags,
     setup_logging,
-    infer_bounding_box,
-    BLOCK_LEN,
 )
 
 
@@ -84,12 +84,20 @@ def recube(
 
     ensure_wkw(target_wkw_info)
 
-    bounding_box = infer_bounding_box(source_wkw_info)
+    bounding_box_dict = detect_bbox(source_wkw_info)
+    bounding_box = (
+        bounding_box_dict["topleft"],
+        [
+            bounding_box_dict["width"],
+            bounding_box_dict["height"],
+            bounding_box_dict["depth"],
+        ],
+    )
     bottom_right = [
         coord + size for coord, size in zip(bounding_box[0], bounding_box[1])
     ]
 
-    wkw_cube_size = wkw_file_len * BLOCK_LEN
+    wkw_cube_size = wkw_file_len * target_wkw_header.block_len
 
     outer_bounding_box_tl = list(
         map(lambda lx: next_lower_divisible_by(lx, wkw_cube_size), bounding_box[0])
