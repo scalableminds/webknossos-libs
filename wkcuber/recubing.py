@@ -2,6 +2,7 @@ import logging
 import wkw
 import numpy as np
 from argparse import ArgumentParser
+from itertools import product
 
 from .metadata import detect_bbox
 
@@ -12,6 +13,8 @@ from .utils import (
     ensure_wkw,
     add_distribution_flags,
     setup_logging,
+    get_executor_for_args,
+    wait_and_ensure_success,
 )
 
 
@@ -84,9 +87,9 @@ def recube(
 
     ensure_wkw(target_wkw_info)
 
-    bounding_box_dict = detect_bbox(source_wkw_info)
+    bounding_box_dict = detect_bbox(source_wkw_info.dataset_path, layer_name)
     bounding_box = (
-        bounding_box_dict["topleft"],
+        bounding_box_dict["topLeft"],
         [
             bounding_box_dict["width"],
             bounding_box_dict["height"],
@@ -111,25 +114,55 @@ def recube(
         outer_bounding_box_br[2] - outer_bounding_box_tl[2],
     ]
 
+    target_cube_addresses = product(
+        range(0, outer_bounding_box_size[0], wkw_cube_size),
+        range(0, outer_bounding_box_size[1], wkw_cube_size),
+        range(0, outer_bounding_box_size[2], wkw_cube_size),
+    )
+
+    with get_executor_for_args(args) as executor:
+        job_args = []
+        for target_cube_xyz in target_cube_addresses:
+            job_args.append(
+                (
+                    source_wkw_info,
+                    target_wkw_info,
+                    outer_bounding_box_size,
+                    outer_bounding_box_tl,
+                    wkw_cube_size,
+                    target_cube_xyz,
+                )
+            )
+        wait_and_ensure_success(executor.map_to_futures(recubing_cube_job, job_args))
+
+    logging.info(f'{layer_name} successfully resampled!')
+
+
+def recubing_cube_job(args):
+    (
+        source_wkw_info,
+        target_wkw_info,
+        outer_bounding_box_size,
+        outer_bounding_box_tl,
+        wkw_cube_size,
+        target_cube_xyz,
+    ) = args
+
     with open_wkw(source_wkw_info) as source_wkw_dataset:
         with open_wkw(target_wkw_info) as target_wkw_dataset:
-            for x in range(0, outer_bounding_box_size[0], wkw_cube_size):
-                for y in range(0, outer_bounding_box_size[1], wkw_cube_size):
-                    for z in range(0, outer_bounding_box_size[2], wkw_cube_size):
+            top_left = [
+                outer_bounding_box_tl[0] + target_cube_xyz[0],
+                outer_bounding_box_tl[1] + target_cube_xyz[1],
+                outer_bounding_box_tl[2] + target_cube_xyz[2],
+            ]
 
-                        top_left = [
-                            outer_bounding_box_tl[0] + x,
-                            outer_bounding_box_tl[1] + y,
-                            outer_bounding_box_tl[2] + z,
-                        ]
+            logging.info("Writing at {}".format(top_left))
 
-                        logging.info("Writing at {}".format(top_left))
+            data_cube = source_wkw_dataset.read(
+                top_left, (wkw_cube_size, wkw_cube_size, wkw_cube_size)
+            )
 
-                        data_cube = source_wkw_dataset.read(
-                            top_left, (wkw_cube_size, wkw_cube_size, wkw_cube_size)
-                        )
-
-                        target_wkw_dataset.write(top_left, data_cube)
+            target_wkw_dataset.write(top_left, data_cube)
 
 
 if __name__ == "__main__":
