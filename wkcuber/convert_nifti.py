@@ -133,14 +133,14 @@ def convert_folder_nifti(
 ):
     files = [f for f in os.listdir(source_folder_path) if f.endswith(".nii")]
 
-    if color_file not in files and color_file != None:
+    if color_file not in files and color_file is not None:
         logging.warning(
             "Specified color file {} not in source path {}!".format(
                 color_file, source_folder_path
             )
         )
 
-    if segmentation_file not in files and segmentation_file != None:
+    if segmentation_file not in files and segmentation_file is not None:
         logging.warning(
             "Specified segmentation_file file {} not in source path {}!".format(
                 segmentation_file, segmentation_file
@@ -161,7 +161,7 @@ def convert_folder_nifti(
             )
         else:
             convert_nifti(
-                os.path.join(source_folder_path, file), target_path, file, "uint8"
+                os.path.join(source_folder_path, file), target_path, file[:-4], "uint8"
             )
 
 
