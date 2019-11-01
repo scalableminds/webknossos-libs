@@ -51,6 +51,12 @@ def create_parser():
         default="uint8",
     )
 
+    parser.add_argument(
+        "--wkw_file_len",
+        default=32,
+        help="Amount of blocks which are written per dimension to a wkw cube. The default value of 32 means that 1024 slices are written to one cube (since one block has 32**3 voxels by default). For single-channel uint8 data, this results in 1 GB per cube file. If file_len is set to 1, only 32 slices are written to one cube. Must be a power of two.",
+    )
+
     add_batch_size_flag(parser)
 
     parser.add_argument(
@@ -198,7 +204,7 @@ def cubing_job(args):
                 raise exc
 
 
-def cubing(source_path, target_path, layer_name, dtype, batch_size, args=None) -> dict:
+def cubing(source_path, target_path, layer_name, dtype, batch_size, args) -> dict:
 
     source_files = find_source_filenames(source_path)
 
@@ -212,7 +218,11 @@ def cubing(source_path, target_path, layer_name, dtype, batch_size, args=None) -
         target_path,
         layer_name,
         target_mag,
-        wkw.Header(convert_element_class_to_dtype(dtype), num_channels),
+        wkw.Header(
+            convert_element_class_to_dtype(dtype),
+            num_channels,
+            file_len=args.wkw_file_len,
+        ),
     )
     interpolation_mode = parse_interpolation_mode(
         args.interpolation_mode, target_wkw_info.layer_name
