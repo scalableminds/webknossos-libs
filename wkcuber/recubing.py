@@ -104,24 +104,24 @@ def recube(
     ]
 
     with open_wkw(source_wkw_info) as source_wkw_dataset:
-        for x in range(0, outer_bounding_box_size[0], wkw_cube_size):
-            for y in range(0, outer_bounding_box_size[1], wkw_cube_size):
-                for z in range(0, outer_bounding_box_size[2], wkw_cube_size):
-                    logging.info("Reading at offset {}, {}, {}".format(x, y, z))
+        with open_wkw(target_wkw_info) as target_wkw_dataset:
+            for x in range(0, outer_bounding_box_size[0], wkw_cube_size):
+                for y in range(0, outer_bounding_box_size[1], wkw_cube_size):
+                    for z in range(0, outer_bounding_box_size[2], wkw_cube_size):
 
-                    top_left = [
-                        outer_bounding_box_tl[0] + x,
-                        outer_bounding_box_tl[1] + y,
-                        outer_bounding_box_tl[2] + z,
-                    ]
+                        top_left = [
+                            outer_bounding_box_tl[0] + x,
+                            outer_bounding_box_tl[1] + y,
+                            outer_bounding_box_tl[2] + z,
+                        ]
 
-                    logging.info("Writing at {}".format(top_left))
+                        logging.info("Writing at {}".format(top_left))
 
-                    data_cube = source_wkw_dataset.read(
-                        top_left, (wkw_cube_size, wkw_cube_size, wkw_cube_size)
-                    )
-                    target_wkw_dataset = open_wkw(target_wkw_info)
-                    target_wkw_dataset.write(top_left, data_cube)
+                        data_cube = source_wkw_dataset.read(
+                            top_left, (wkw_cube_size, wkw_cube_size, wkw_cube_size)
+                        )
+
+                        target_wkw_dataset.write(top_left, data_cube)
 
 
 if __name__ == "__main__":
