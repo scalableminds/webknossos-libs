@@ -128,14 +128,17 @@ def export_tiff_slice(
         ],
     ]
 ):
-    batch_number, (
-        tiff_bbox,
-        dest_path,
-        name,
-        dataset_path,
-        tiling_size,
-        batch_size,
-        downsample,
+    (
+        batch_number,
+        (
+            tiff_bbox,
+            dest_path,
+            name,
+            dataset_path,
+            tiling_size,
+            batch_size,
+            downsample,
+        ),
     ) = export_args
     tiff_bbox = tiff_bbox.copy()
     number_of_slices = min(tiff_bbox["size"][2] - batch_number * batch_size, batch_size)
