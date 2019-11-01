@@ -53,7 +53,7 @@ def create_parser():
     parser.add_argument(
         "--color_file",
         help="When converting folder, name of file to become color layer",
-        default=None
+        default=None,
     )
 
     parser.add_argument(
@@ -82,9 +82,7 @@ def to_target_datatype(data: np.ndarray, target_dtype) -> np.ndarray:
     return (data / factor).astype(np.dtype(target_dtype))
 
 
-def convert_nifti(
-    source_nifti_path, target_path, layer_name, dtype, mag=1
-):
+def convert_nifti(source_nifti_path, target_path, layer_name, dtype, mag=1):
     target_wkw_info = WkwDatasetInfo(target_path, layer_name, dtype, mag)
     ensure_wkw(target_wkw_info)
 
@@ -95,6 +93,7 @@ def convert_nifti(
     with open_wkw(target_wkw_info) as target_wkw:
         source_nifti = nib.load(source_nifti_path)
         cube_data = np.array(source_nifti.get_fdata())
+
         if len(source_nifti.shape) == 3:
             size = list(source_nifti.shape)
             cube_data = cube_data.reshape((1,) + source_nifti.shape)
@@ -125,45 +124,44 @@ def convert_nifti(
         target_path,
         source_nifti_path.split("/")[-2],
         scale="10,10,10",
-        exact_bounding_box={"topleft": offset, "size": size}
+        exact_bounding_box={"topleft": offset, "size": size},
     )
 
 
-def convert_folder_nifti(source_folder_path, target_path, color_file, segmentation_file):
+def convert_folder_nifti(
+    source_folder_path, target_path, color_file, segmentation_file
+):
     files = [f for f in os.listdir(source_folder_path) if f.endswith(".nii")]
 
     if color_file not in files and color_file != None:
-        logging.warning("Specified color file {} not in source path {}!".format(color_file, source_folder_path))
+        logging.warning(
+            "Specified color file {} not in source path {}!".format(
+                color_file, source_folder_path
+            )
+        )
 
     if segmentation_file not in files and segmentation_file != None:
         logging.warning(
             "Specified segmentation_file file {} not in source path {}!".format(
-                segmentation_file,
-                segmentation_file
+                segmentation_file, segmentation_file
             )
         )
 
     for file in files:
         if file == color_file:
             convert_nifti(
-                os.path.join(source_folder_path, file),
-                target_path,
-                "color",
-                "uint8"
+                os.path.join(source_folder_path, file), target_path, "color", "uint8"
             )
         elif file == segmentation_file:
             convert_nifti(
                 os.path.join(source_folder_path, file),
                 target_path,
                 "segmentation",
-                "uint32"
+                "uint32",
             )
         else:
             convert_nifti(
-                os.path.join(source_folder_path, file),
-                target_path,
-                file,
-                "uint8"
+                os.path.join(source_folder_path, file), target_path, file, "uint8"
             )
 
 
@@ -172,11 +170,8 @@ if __name__ == "__main__":
     setup_logging(args)
 
     if not args.convert_folder:
-        convert_nifti(
-            args.source_path,
-            args.target_path,
-            args.layer_name,
-            args.dtype
-        )
+        convert_nifti(args.source_path, args.target_path, args.layer_name, args.dtype)
     else:
-        convert_folder_nifti(args.source_path, args.target_path, args.color_file, args.segmentation_file)
+        convert_folder_nifti(
+            args.source_path, args.target_path, args.color_file, args.segmentation_file
+        )
