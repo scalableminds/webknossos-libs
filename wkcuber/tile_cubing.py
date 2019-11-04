@@ -183,9 +183,16 @@ def find_file_with_dimensions(
 
 
 def tile_cubing_job(args):
-    target_wkw_info, z_batches, input_path_pattern, batch_size, tile_size, min_dimensions, max_dimensions, decimal_lengths = (
-        args
-    )
+    (
+        target_wkw_info,
+        z_batches,
+        input_path_pattern,
+        batch_size,
+        tile_size,
+        min_dimensions,
+        max_dimensions,
+        decimal_lengths,
+    ) = args
     if len(z_batches) == 0:
         return
 
@@ -251,9 +258,12 @@ def tile_cubing(
     target_path, layer_name, dtype, batch_size, input_path_pattern, args=None
 ):
     decimal_lengths = get_digit_counts_for_dimensions(input_path_pattern)
-    min_dimensions, max_dimensions, arbitrary_file, file_count = detect_interval_for_dimensions(
-        input_path_pattern, decimal_lengths
-    )
+    (
+        min_dimensions,
+        max_dimensions,
+        arbitrary_file,
+        file_count,
+    ) = detect_interval_for_dimensions(input_path_pattern, decimal_lengths)
 
     if not arbitrary_file:
         logging.error(
