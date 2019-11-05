@@ -124,7 +124,7 @@ def convert_nifti(source_nifti_path, target_path, layer_name, dtype, mag=1):
         target_path,
         source_nifti_path.split("/")[-2],
         scale="10,10,10",
-        exact_bounding_box={"topleft": offset, "size": size},
+        exact_bounding_box={"topLeft": offset, "width": size[0], "height": size[1], "depth": size[2]},
     )
 
 
