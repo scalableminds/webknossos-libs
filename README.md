@@ -19,6 +19,7 @@ Created with [Python3](https://www.python.org/).
 * `wkcuber.downsampling`: Create downsampled magnifications (with `median`, `mode` and linear interpolation modes). Downsampling compresses the new magnifications by default (disable via `--no-compress`).
 * `wkcuber.compress`: Compress WKW cubes for efficient file storage (especially useful for segmentation data)
 * `wkcuber.metadata`: Create (or refresh) metadata (with guessing of most parameters)
+* `wkcuber.recubing`: Read existing WKW cubes in and write them again specifying the WKW file length. Useful when dataset was written e.g. with file length 1.
 * Most modules support multiprocessing
 
 ## Supported input formats
@@ -85,6 +86,9 @@ python -m wkcuber.metadata --name great_dataset --scale 11.24,11.24,25 data/targ
 
 # Refresh metadata so that new layers and/or magnifications are picked up
 python -m wkcuber.metadata --refresh data/target
+
+# Recubing an existing dataset
+python -m wkcuber.recubing --layer_name color --dtype uint8 /data/source/wkw /data/target
 ```
 
 ### Parallelization
