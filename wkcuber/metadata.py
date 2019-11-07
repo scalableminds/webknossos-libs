@@ -250,15 +250,9 @@ def detect_standard_layer(
 
     # BB can be created manually
     # assert the presence/spelling of all attributes
-    assert (
-        "width" in bbox
-    ), "Attribute `width` is missing/misspelled in bounding box"
-    assert (
-        "height" in bbox
-    ), "Attribute `height` is missing/misspelled in bounding box"
-    assert (
-        "depth" in bbox
-    ), "Attribute `depth` is missing/misspelled in bounding box"
+    assert "width" in bbox, "Attribute `width` is missing/misspelled in bounding box"
+    assert "height" in bbox, "Attribute `height` is missing/misspelled in bounding box"
+    assert "depth" in bbox, "Attribute `depth` is missing/misspelled in bounding box"
     assert (
         "topLeft" in bbox
     ), "Attribute `topLeft` is missing/misspelled in bounding box"
