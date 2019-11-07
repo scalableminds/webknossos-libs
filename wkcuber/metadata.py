@@ -12,6 +12,8 @@ from typing import Optional
 from .mag import Mag
 from typing import List
 from .utils import add_verbose_flag, setup_logging, add_scale_flag
+from pathlib import Path
+from os.path import *
 
 
 def get_datasource_path(dataset_path):
@@ -309,13 +311,22 @@ def detect_segmentation_layer(
 
 def detect_layers(dataset_path, max_id, compute_max_id, exact_bounding_box=None):
     # Detect metadata for well-known layers (i.e., color, prediction and segmentation)
-    for layer_name in ["color", "prediction"]:
-        if path.exists(path.join(dataset_path, layer_name)):
-            yield detect_standard_layer(dataset_path, layer_name, exact_bounding_box)
+    if path.exists(path.join(dataset_path, "color")):
+        yield detect_standard_layer(dataset_path, "color", exact_bounding_box)
     if path.exists(path.join(dataset_path, "segmentation")):
         yield detect_segmentation_layer(
             dataset_path, "segmentation", max_id, compute_max_id, exact_bounding_box
         )
+    available_layer_names = set(
+        [
+            basename(normpath(Path(x).parent.parent))
+            for x in glob.glob(dataset_path + "*/*/header.wkw")
+        ]
+    )
+    for layer_name in available_layer_names:
+        # color and segmentation are already checked explicitly to ensure downwards compatibility
+        if layer_name not in ["color", "segmentation"]:
+            yield detect_standard_layer(dataset_path, layer_name, exact_bounding_box)
 
 
 if __name__ == "__main__":
