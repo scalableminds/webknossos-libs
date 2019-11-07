@@ -13,7 +13,7 @@ from wkcuber.metadata import (
 )
 
 
-def test_element_class_convertion():
+def test_element_class_conversion():
     test_wkw_path = os.path.join("testoutput", "test_metadata")
     prediction_layer_name = "prediction"
     prediction_wkw_info = WkwDatasetInfo(
@@ -103,5 +103,5 @@ def test_mapping_detection():
 
 
 if __name__ == "__main__":
-    test_element_class_convertion()
+    test_element_class_conversion()
     test_mapping_detection()
