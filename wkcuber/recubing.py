@@ -135,7 +135,7 @@ def recube(
             )
         wait_and_ensure_success(executor.map_to_futures(recubing_cube_job, job_args))
 
-    logging.info(f'{layer_name} successfully resampled!')
+    logging.info(f"{layer_name} successfully resampled!")
 
 
 def recubing_cube_job(args):
