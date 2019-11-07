@@ -1,3 +1,4 @@
+import re
 import time
 import wkw
 import numpy as np
@@ -29,6 +30,7 @@ FallbackArgs = namedtuple("FallbackArgs", ("distribution_strategy", "jobs"))
 
 
 BLOCK_LEN = 32
+CUBE_REGEX = re.compile(r"z(\d+)/y(\d+)/x(\d+)(\.wkw)$")
 
 logger = getLogger(__name__)
 
@@ -45,6 +47,19 @@ def ensure_wkw(target_wkw_info):
     # Open will create the dataset if it doesn't exist yet
     target_wkw = open_wkw(target_wkw_info)
     target_wkw.close()
+
+
+def cube_addresses(source_wkw_info):
+    # Gathers all WKW cubes in the dataset
+    with open_wkw(source_wkw_info) as source_wkw:
+        wkw_addresses = list(parse_cube_file_name(f) for f in source_wkw.list_files())
+        wkw_addresses.sort()
+        return wkw_addresses
+
+
+def parse_cube_file_name(filename):
+    m = CUBE_REGEX.search(filename)
+    return int(m.group(3)), int(m.group(2)), int(m.group(1))
 
 
 def open_knossos(info):
