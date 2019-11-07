@@ -13,7 +13,7 @@ from .mag import Mag
 from typing import List
 from .utils import add_verbose_flag, setup_logging, add_scale_flag
 from pathlib import Path
-from os.path import *
+from os.path import basename, normpath
 
 
 def get_datasource_path(dataset_path):
@@ -324,7 +324,7 @@ def detect_layers(dataset_path, max_id, compute_max_id, exact_bounding_box=None)
         ]
     )
     for layer_name in available_layer_names:
-        # color and segmentation are already checked explicitly to ensure downwards compatibility
+        # color and segmentation are already checked explicitly to ensure downwards compatibility (some older datasets don't have the header.wkw file)
         if layer_name not in ["color", "segmentation"]:
             yield detect_standard_layer(dataset_path, layer_name, exact_bounding_box)
 
