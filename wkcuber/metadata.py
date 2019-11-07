@@ -248,7 +248,7 @@ def detect_standard_layer(
     else:
         bbox = exact_bounding_box
 
-    # BB can be create manually
+    # BB can be created manually
     # assert the presence/spelling of all attributes
     assert "width" in exact_bounding_box, "Attribute `width` is missing/mispelled in bounding box"
     assert "height" in exact_bounding_box, "Attribute `height` is missing/mispelled in bounding box"
