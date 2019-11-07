@@ -23,15 +23,11 @@ from .utils import (
     wait_and_ensure_success,
     add_isotropic_flag,
     setup_logging,
+    cube_addresses,
+    parse_cube_file_name,
 )
 
 DEFAULT_EDGE_LEN = 256
-CUBE_REGEX = re.compile(r"z(\d+)/y(\d+)/x(\d+)(\.wkw)$")
-
-
-def parse_cube_file_name(filename):
-    m = CUBE_REGEX.search(filename)
-    return (int(m.group(3)), int(m.group(2)), int(m.group(1)))
 
 
 def determine_buffer_edge_len(dataset):
@@ -125,14 +121,6 @@ def create_parser():
     add_distribution_flags(parser)
 
     return parser
-
-
-def cube_addresses(source_wkw_info):
-    # Gathers all WKW cubes in the dataset
-    with open_wkw(source_wkw_info) as source_wkw:
-        wkw_addresses = list(parse_cube_file_name(f) for f in source_wkw.list_files())
-        wkw_addresses.sort()
-        return wkw_addresses
 
 
 def downsample(
