@@ -49,6 +49,16 @@ class WrappedProcessPoolExecutor(ProcessPoolExecutor):
         futs = [self.submit(func, arg) for arg in args]
         return futs
 
+    def forward_log(self, fut):
+        """
+        Similar to the cluster executor, this method Takes a future from which the log file is forwarded to the active
+        process. This method blocks as long as the future is not done.
+        """
+
+        # Since the default behavior of process pool executors is to show the log in the main process
+        # we don't need to do anything except for blocking until the future is done.
+        return fut.result()
+
 
 class SequentialExecutor(WrappedProcessPoolExecutor):
     def __init__(self, **kwargs):

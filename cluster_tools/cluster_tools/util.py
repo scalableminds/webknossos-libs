@@ -129,7 +129,7 @@ class FileWaitThread(threading.Thread):
                     if os.path.exists(filename):
                         # Check for output file as a fast indicator for job completion
                         handle_completed_job(job_id, filename, False)
-                    else:
+                    elif self.executor is not None:
                         status = self.executor.check_for_crashed_job(job_id)
 
                         # We have to re-check for the output file since this could be created in the mean time

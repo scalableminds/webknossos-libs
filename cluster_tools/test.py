@@ -9,6 +9,8 @@ from functools import partial
 import os
 import pytest
 import shutil
+import contextlib
+import io
 
 # "Worker" functions.
 def square(n):
@@ -239,6 +241,24 @@ def test_pickled_logging():
 
     debug_out = execute_with_log_level(logging.INFO)
     assert not (test_output_str in debug_out)
+
+
+def test_tailed_logging():
+
+    with cluster_tools.get_executor(
+        "slurm", debug=True, job_resources={"mem": "10M"}, logging_config={
+            "level": logging.DEBUG,
+        }
+    ) as executor:
+        secret_string = "secret_string"
+
+        f = io.StringIO()
+        with contextlib.redirect_stdout(f):
+            fut = executor.submit(log, secret_string)
+            executor.forward_log(fut)
+        
+        assert secret_string in f.getvalue()
+        assert "jid" in f.getvalue()
 
 
 class DummyEnum(Enum):

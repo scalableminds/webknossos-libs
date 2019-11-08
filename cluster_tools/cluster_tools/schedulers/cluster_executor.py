@@ -11,6 +11,8 @@ from abc import ABC, abstractmethod
 import logging
 from typing import Union
 from ..util import local_filename
+from cluster_tools.tailf import Tail
+from logging import getLogger
 
 class RemoteException(Exception):
     def __init__(self, error, job_id):
@@ -328,3 +330,25 @@ class ClusterExecutor(futures.Executor):
                 yield fut.result()
 
         return result_generator()
+
+    def forward_log(self, fut):
+        """
+        Takes a future from which the log file is forwarded to the active
+        process. This method blocks as long as the future is not done.
+        """
+
+        log_path = self.format_log_file_path(fut.cluster_jobid)
+        # Don't use a logger instance here, since the child process
+        # probably already used a logger.
+        log_callback = lambda s: sys.stdout.write(f"(jid={fut.cluster_jobid}) {s}")
+        tailer = Tail(log_path, log_callback)
+        fut.add_done_callback(lambda _: tailer.cancel())
+
+        # Poll until the log file exists
+        while not (os.path.exists(log_path) or tailer.is_cancelled):
+            time.sleep(2)
+
+        # Log the output of the log file until future is resolved
+        # by the done_callback we attached earlier.
+        tailer.follow(2)
+        return fut.result()
