@@ -6,6 +6,6 @@ pytest
 wkw==0.1.0
 requests
 black
-cluster_tools==1.41
+cluster_tools==1.42
 natsort
 psutil
