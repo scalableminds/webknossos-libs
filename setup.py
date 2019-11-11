@@ -11,7 +11,7 @@ setup(
         "pillow",
         "pyyaml",
         "wkw",
-        "cluster_tools==1.42",
+        "cluster_tools==1.43",
         "natsort",
     ],
     description="A cubing tool for webKnossos",
