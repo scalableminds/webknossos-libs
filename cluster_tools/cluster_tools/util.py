@@ -122,9 +122,15 @@ class FileWaitThread(threading.Thread):
                 if self.shutdown:
                     return
 
+                pending_tasks = self.executor.get_pending_tasks()
+
                 # Poll for each file.
                 for filename in list(self.waiting):
                     job_id = self.waiting[filename]
+                    if job_id in pending_tasks:
+                        # Don't check status of pending tasks, since this
+                        # can vastly slow down the polling.
+                        continue
 
                     if os.path.exists(filename):
                         # Check for output file as a fast indicator for job completion
@@ -157,7 +163,6 @@ class FileWaitThread(threading.Thread):
                                 handle_completed_job(job_id, filename, True)
                             elif status == "ignore":
                                 pass
-
             time.sleep(self.interval)
 
 def get_function_name(fun):

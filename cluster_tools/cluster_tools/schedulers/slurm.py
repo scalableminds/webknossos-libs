@@ -91,8 +91,7 @@ class SlurmExecutor(ClusterExecutor):
 
         job_array_line = ""
         if job_count is not None:
-            MAXIMUM_SIMULTANEOUS_JOBS = 500
-            job_array_line = "#SBATCH --array=0-{}%{}".format(job_count - 1, MAXIMUM_SIMULTANEOUS_JOBS)
+            job_array_line = "#SBATCH --array=0-{}".format(job_count - 1)
 
         script_lines = (
             [
@@ -149,3 +148,16 @@ class SlurmExecutor(ClusterExecutor):
         else:
             logging.error("Unhandled slurm job state for job id {}? {}".format(job_id, job_states))
             return "ignore"
+
+    def get_pending_tasks(self):
+        try:
+            # Get the job ids (%i) of the active user (-u) which are pending (-t) and format
+            # them one-per-line (-r) while excluding the header (-h).
+            stdout, _ = chcall("squeue -u $(whoami) -t PENDING -r -h --format=%i")
+            stdout = stdout.decode("utf8")
+
+            job_ids = set(stdout.split("\n"))
+            return job_ids
+        except Exception as e:
+            logging.error("Couldn't query pending jobs. Polling for finished jobs might be slow.")
+            return []

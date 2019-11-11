@@ -150,3 +150,7 @@ class PBSExecutor(ClusterExecutor):
             else:
                 logging.error("Could not extract pbs job state? {}...".format(stdout[0:10]))
                 return "ignore"
+
+    def get_pending_tasks(self):
+        # Not implemented, yet. Currently, this is only used for performance optimization.
+        return []
