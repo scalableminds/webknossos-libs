@@ -187,7 +187,17 @@ def downsample(
 
     with get_executor_for_args(args) as executor:
         job_args = []
+        processed_data_since_last_logging = 0
         for target_cube_xyz in target_cube_addresses:
+            use_logging = False
+            wkw_length = source_wkw.header.file_len * source_wkw.header.block_len
+            processed_data_since_last_logging += wkw_length ** 3
+            if (
+                processed_data_since_last_logging > 1024 ** 2
+            ):  # log every megabyte of processed data
+                use_logging = True
+                processed_data_since_last_logging = 0
+
             job_args.append(
                 (
                     source_wkw_info,
@@ -197,6 +207,7 @@ def downsample(
                     target_cube_xyz,
                     buffer_edge_len,
                     compress,
+                    use_logging,
                 )
             )
         wait_and_ensure_success(executor.map_to_futures(downsample_cube_job, job_args))
@@ -213,12 +224,15 @@ def downsample_cube_job(args):
         target_cube_xyz,
         buffer_edge_len,
         compress,
+        use_logging,
     ) = args
 
-    logging.info("Downsampling of {}".format(target_cube_xyz))
+    if use_logging:
+        logging.info("Downsampling of {}".format(target_cube_xyz))
 
     try:
-        time_start("Downsampling of {}".format(target_cube_xyz))
+        if use_logging:
+            time_start("Downsampling of {}".format(target_cube_xyz))
         header_block_type = (
             wkw.Header.BLOCK_TYPE_LZ4HC if compress else wkw.Header.BLOCK_TYPE_RAW
         )
@@ -277,7 +291,10 @@ def downsample_cube_job(args):
                             # Downsample the buffer
 
                             data_cube = downsample_cube(
-                                cube_buffer, mag_factors, interpolation_mode
+                                cube_buffer,
+                                mag_factors,
+                                interpolation_mode,
+                                use_logging,
                             )
 
                             buffer_offset = target_offset - file_offset
@@ -292,16 +309,18 @@ def downsample_cube_job(args):
 
                 # Write the downsampled buffer to target
                 target_wkw.write(file_offset, file_buffer)
-        time_stop("Downsampling of {}".format(target_cube_xyz))
+        if use_logging:
+            time_stop("Downsampling of {}".format(target_cube_xyz))
 
     except Exception as exc:
         logging.error("Downsampling of {} failed with {}".format(target_cube_xyz, exc))
         raise exc
 
 
-def non_linear_filter_3d(data, factors, func):
+def non_linear_filter_3d(data, factors, func, use_logging=True):
     ds = data.shape
-    logging.info(f"{data.shape}, {factors}")
+    if use_logging:
+        logging.info(f"{data.shape}, {factors}")
     assert not any((d % factor > 0 for (d, factor) in zip(ds, factors)))
     data = data.reshape((ds[0], factors[1], ds[1] // factors[1], ds[2]), order="F")
     data = data.swapaxes(0, 1)
@@ -416,11 +435,11 @@ def _mode(x):
     return sort[tuple(index)]
 
 
-def downsample_cube(cube_buffer, factors, interpolation_mode):
+def downsample_cube(cube_buffer, factors, interpolation_mode, use_logging=True):
     if interpolation_mode == InterpolationModes.MODE:
-        return non_linear_filter_3d(cube_buffer, factors, _mode)
+        return non_linear_filter_3d(cube_buffer, factors, _mode, use_logging)
     elif interpolation_mode == InterpolationModes.MEDIAN:
-        return non_linear_filter_3d(cube_buffer, factors, _median)
+        return non_linear_filter_3d(cube_buffer, factors, _median, use_logging)
     elif interpolation_mode == InterpolationModes.NEAREST:
         return linear_filter_3d(cube_buffer, factors, 0)
     elif interpolation_mode == InterpolationModes.BILINEAR:
@@ -428,9 +447,9 @@ def downsample_cube(cube_buffer, factors, interpolation_mode):
     elif interpolation_mode == InterpolationModes.BICUBIC:
         return linear_filter_3d(cube_buffer, factors, 2)
     elif interpolation_mode == InterpolationModes.MAX:
-        return non_linear_filter_3d(cube_buffer, factors, _max)
+        return non_linear_filter_3d(cube_buffer, factors, _max, use_logging)
     elif interpolation_mode == InterpolationModes.MIN:
-        return non_linear_filter_3d(cube_buffer, factors, _min)
+        return non_linear_filter_3d(cube_buffer, factors, _min, use_logging)
     else:
         raise Exception("Invalid interpolation mode: {}".format(interpolation_mode))
 
@@ -652,7 +671,6 @@ if __name__ == "__main__":
 
     from_mag = Mag(args.from_mag)
     max_mag = Mag(args.max)
-
     if args.anisotropic_target_mag:
         anisotropic_target_mag = Mag(args.anisotropic_target_mag)
 

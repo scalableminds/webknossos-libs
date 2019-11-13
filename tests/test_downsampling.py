@@ -103,6 +103,7 @@ def downsample_test_helper(use_compress):
         offset,
         CUBE_EDGE_LEN,
         use_compress,
+        True,
     )
     downsample_cube_job(downsample_args)
 
@@ -171,6 +172,7 @@ def test_downsample_multi_channel():
         tuple(a * WKW_CUBE_SIZE for a in offset),
         CUBE_EDGE_LEN,
         False,
+        True,
     )
     downsample_cube_job(downsample_args)
 
