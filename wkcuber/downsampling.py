@@ -188,13 +188,13 @@ def downsample(
     with get_executor_for_args(args) as executor:
         job_args = []
         processed_data_since_last_logging = 0
-        for target_cube_xyz in target_cube_addresses:
+        for i, target_cube_xyz in enumerate(target_cube_addresses):
             use_logging = False
             wkw_length = source_wkw.header.file_len * source_wkw.header.block_len
             processed_data_since_last_logging += wkw_length ** 3
             if (
-                processed_data_since_last_logging > 1024 ** 2
-            ):  # log every megabyte of processed data
+                i == 0 or processed_data_since_last_logging > 1024 ** 3
+            ):  # log every gigabyte of processed data
                 use_logging = True
                 processed_data_since_last_logging = 0
 
@@ -281,13 +281,7 @@ def downsample_cube_job(args):
                     for channel_index in range(num_channels):
                         cube_buffer = cube_buffer_channels[channel_index]
 
-                        if np.all(cube_buffer == 0):
-                            logging.debug(
-                                "        Skipping empty cube {} (tile {})".format(
-                                    target_cube_xyz, tile
-                                )
-                            )
-                        else:
+                        if not np.all(cube_buffer == 0):
                             # Downsample the buffer
 
                             data_cube = downsample_cube(
