@@ -1,4 +1,6 @@
 import logging
+import math
+
 import wkw
 import re
 import numpy as np
@@ -187,16 +189,14 @@ def downsample(
 
     with get_executor_for_args(args) as executor:
         job_args = []
-        processed_data_since_last_logging = 0
+        voxel_count_per_cube = (
+            source_wkw.header.file_len * source_wkw.header.block_len
+        ) ** 3
+        job_count_per_log = math.ceil(
+            1024 ** 3 / voxel_count_per_cube
+        )  # log every gigavoxel of processed data
         for i, target_cube_xyz in enumerate(target_cube_addresses):
-            use_logging = False
-            wkw_length = source_wkw.header.file_len * source_wkw.header.block_len
-            processed_data_since_last_logging += wkw_length ** 3
-            if (
-                i == 0 or processed_data_since_last_logging > 1024 ** 3
-            ):  # log every gigabyte of processed data
-                use_logging = True
-                processed_data_since_last_logging = 0
+            use_logging = i % job_count_per_log == 0
 
             job_args.append(
                 (
@@ -285,10 +285,7 @@ def downsample_cube_job(args):
                             # Downsample the buffer
 
                             data_cube = downsample_cube(
-                                cube_buffer,
-                                mag_factors,
-                                interpolation_mode,
-                                use_logging,
+                                cube_buffer, mag_factors, interpolation_mode
                             )
 
                             buffer_offset = target_offset - file_offset
@@ -311,10 +308,8 @@ def downsample_cube_job(args):
         raise exc
 
 
-def non_linear_filter_3d(data, factors, func, use_logging=True):
+def non_linear_filter_3d(data, factors, func):
     ds = data.shape
-    if use_logging:
-        logging.info(f"{data.shape}, {factors}")
     assert not any((d % factor > 0 for (d, factor) in zip(ds, factors)))
     data = data.reshape((ds[0], factors[1], ds[1] // factors[1], ds[2]), order="F")
     data = data.swapaxes(0, 1)
@@ -429,11 +424,11 @@ def _mode(x):
     return sort[tuple(index)]
 
 
-def downsample_cube(cube_buffer, factors, interpolation_mode, use_logging=True):
+def downsample_cube(cube_buffer, factors, interpolation_mode):
     if interpolation_mode == InterpolationModes.MODE:
-        return non_linear_filter_3d(cube_buffer, factors, _mode, use_logging)
+        return non_linear_filter_3d(cube_buffer, factors, _mode)
     elif interpolation_mode == InterpolationModes.MEDIAN:
-        return non_linear_filter_3d(cube_buffer, factors, _median, use_logging)
+        return non_linear_filter_3d(cube_buffer, factors, _median)
     elif interpolation_mode == InterpolationModes.NEAREST:
         return linear_filter_3d(cube_buffer, factors, 0)
     elif interpolation_mode == InterpolationModes.BILINEAR:
@@ -441,9 +436,9 @@ def downsample_cube(cube_buffer, factors, interpolation_mode, use_logging=True):
     elif interpolation_mode == InterpolationModes.BICUBIC:
         return linear_filter_3d(cube_buffer, factors, 2)
     elif interpolation_mode == InterpolationModes.MAX:
-        return non_linear_filter_3d(cube_buffer, factors, _max, use_logging)
+        return non_linear_filter_3d(cube_buffer, factors, _max)
     elif interpolation_mode == InterpolationModes.MIN:
-        return non_linear_filter_3d(cube_buffer, factors, _min, use_logging)
+        return non_linear_filter_3d(cube_buffer, factors, _min)
     else:
         raise Exception("Invalid interpolation mode: {}".format(interpolation_mode))
 
