@@ -106,7 +106,7 @@ def convert_nifti(source_nifti_path, target_path, layer_name, dtype, scale, mag=
             return
 
         if scale is None:
-            scale = tuple(map(float, source_nifti.header['pixdim'][:3]))
+            scale = tuple(map(float, source_nifti.header["pixdim"][:3]))
 
         cube_data = to_target_datatype(cube_data, dtype)
         target_wkw.write(offset, cube_data)
@@ -153,9 +153,7 @@ def convert_folder_nifti(
         if path == color_path.name:
             convert_nifti(path, target_path, "color", "uint8", scale)
         elif path == segmentation_path.name:
-            convert_nifti(
-                path, target_path, "segmentation", "uint32", scale,
-            )
+            convert_nifti(path, target_path, "segmentation", "uint32", scale)
         else:
             convert_nifti(path, target_path, path.stem, "uint8", scale)
 
