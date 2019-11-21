@@ -349,9 +349,8 @@ if __name__ == "__main__":
         assert (
             args.name is not None
         ), "Please provide a name via --name to create meta data."
-        scale = tuple(float(x) for x in args.scale.split(","))
         write_webknossos_metadata(
-            args.path, args.name, scale, args.max_id, args.compute_max_id
+            args.path, args.name, args.scale, args.max_id, args.compute_max_id
         )
     else:
         if args.name is not None:
