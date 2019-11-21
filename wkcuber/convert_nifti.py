@@ -118,7 +118,7 @@ def convert_nifti(source_nifti_path, target_path, layer_name, dtype, scale, mag=
     )
 
     write_webknossos_metadata(
-        target_path,
+        str(target_path),
         source_nifti_path.stem,
         scale=scale,
         exact_bounding_box={

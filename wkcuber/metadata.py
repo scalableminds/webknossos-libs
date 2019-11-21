@@ -63,8 +63,8 @@ for the given dataset path. Common layers are detected automatically.
 
 
 def write_webknossos_metadata(
-    dataset_path,
-    name,
+    dataset_path: str,
+    name: str,
     scale,
     max_id=0,
     compute_max_id=False,
@@ -318,7 +318,7 @@ def detect_segmentation_layer(
     return layer_info
 
 
-def detect_layers(dataset_path, max_id, compute_max_id, exact_bounding_box=None):
+def detect_layers(dataset_path: str, max_id, compute_max_id, exact_bounding_box=None):
     # Detect metadata for well-known layers (i.e., color, prediction and segmentation)
     if path.exists(path.join(dataset_path, "color")):
         yield detect_standard_layer(dataset_path, "color", exact_bounding_box)
@@ -329,7 +329,7 @@ def detect_layers(dataset_path, max_id, compute_max_id, exact_bounding_box=None)
     available_layer_names = set(
         [
             basename(normpath(Path(x).parent.parent))
-            for x in dataset_path.glob("*/*/header.wkw")
+            for x in glob.glob(dataset_path + "*/*/header.wkw")
         ]
     )
     for layer_name in available_layer_names:
