@@ -329,7 +329,7 @@ def detect_layers(dataset_path, max_id, compute_max_id, exact_bounding_box=None)
     available_layer_names = set(
         [
             basename(normpath(Path(x).parent.parent))
-            for x in glob.glob(path.join(dataset_path, "/*/*/header.wkw"))
+            for x in dataset_path.glob("*/*/header.wkw")
         ]
     )
     for layer_name in available_layer_names:
