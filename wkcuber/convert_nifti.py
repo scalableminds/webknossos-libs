@@ -12,6 +12,7 @@ from .utils import (
     WkwDatasetInfo,
     ensure_wkw,
     setup_logging,
+    add_scale_flag,
 )
 
 from .metadata import write_webknossos_metadata
@@ -56,10 +57,7 @@ def create_parser():
         default=None,
     )
 
-    parser.add_argument(
-        "--scale", help="The scale of the NIFTI input in the form X,Y,Z.", default=None,
-    )
-
+    add_scale_flag(parser, required=False)
     add_verbose_flag(parser)
 
     return parser
@@ -106,6 +104,9 @@ def convert_nifti(source_nifti_path, target_path, layer_name, dtype, scale, mag=
             )
 
             return
+
+        if scale is None:
+            scale = tuple(map(float, source_nifti.header['pixdim'][:3]))
 
         cube_data = to_target_datatype(cube_data, dtype)
         target_wkw.write(offset, cube_data)
