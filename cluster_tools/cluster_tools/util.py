@@ -167,7 +167,11 @@ class FileWaitThread(threading.Thread):
 
 def get_function_name(fun):
     # When using functools.partial, __name__ does not exist
-    return fun.__name__ if hasattr(fun, "__name__") else "<unknown function>"
+    try:
+        return fun.__name__ if hasattr(fun, "__name__") else fun.func.__name__
+    except Exception:
+        return "<unknown function>"
+
 
 def enrich_future_with_uncaught_warning(f):
     """
