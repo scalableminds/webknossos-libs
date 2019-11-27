@@ -348,9 +348,12 @@ def detect_layers(dataset_path, max_id, compute_max_id, exact_bounding_box=None)
     for layer_name in available_layer_names:
         # color and segmentation are already checked explicitly to ensure downwards compatibility (some older datasets don't have the header.wkw file)
         if layer_name not in ["color", "segmentation"]:
-            layer_info = detect_standard_layer(
-                dataset_path, layer_name, exact_bounding_box
-            )
+            try:
+                layer_info = detect_standard_layer(
+                    dataset_path, layer_name, exact_bounding_box
+                )
+            except:
+                pass
             if layer_info is not None:
                 yield layer_info
             else:
