@@ -257,12 +257,15 @@ def detect_standard_layer(
 
     mags = list(detect_resolutions(dataset_path, layer_name))
     mags = sorted(mags)
-    assert len(mags) > 0, "No resolutions found"
+    assert len(mags) > 0, f"No resolutions found for {dataset_path}/{layer_name}"
 
     if exact_bounding_box is None:
         bbox = detect_bbox(dataset_path, layer_name, mags[0])
     else:
         bbox = exact_bounding_box
+    assert (
+        bbox is not None
+    ), f"Could not detect bounding box for {dataset_path}/{layer_name}"
 
     resolutions = [
         {
@@ -272,11 +275,12 @@ def detect_standard_layer(
         for mag in mags
     ]
     resolutions = [r for r in resolutions if r["cubeLength"] is not None]
+    assert len(resolutions) > 0, f"No resolutions found for {dataset_path}/{layer_name}"
 
     dtype = detect_dtype(dataset_path, layer_name, mags[0])
-
-    if dtype is None or bbox is None or len(resolutions) == 0:
-        return None
+    assert (
+        dtype is not None
+    ), f"Data type could not be detected for {dataset_path}/{layer_name}"
 
     return {
         "dataFormat": "wkw",
@@ -301,8 +305,6 @@ def detect_segmentation_layer(
     layer_info = detect_standard_layer(
         dataset_path, layer_name, exact_bounding_box, category="segmentation"
     )
-    if layer_info is None:
-        return None
     layer_info["mappings"] = detect_mappings(dataset_path, layer_name)
     layer_info["largestSegmentId"] = max_id
 
@@ -332,15 +334,11 @@ def detect_segmentation_layer(
 def detect_layers(dataset_path, max_id, compute_max_id, exact_bounding_box=None):
     # Detect metadata for well-known layers (i.e., color, prediction and segmentation)
     if path.exists(path.join(dataset_path, "color")):
-        layer_info = detect_standard_layer(dataset_path, "color", exact_bounding_box)
-        if layer_info is not None:
-            yield layer_info
+        yield detect_standard_layer(dataset_path, "color", exact_bounding_box)
     if path.exists(path.join(dataset_path, "segmentation")):
-        layer_info = detect_segmentation_layer(
+        yield detect_segmentation_layer(
             dataset_path, "segmentation", max_id, compute_max_id, exact_bounding_box
         )
-        if layer_info is not None:
-            yield layer_info
     available_layer_names = set(
         [
             basename(normpath(Path(x).parent.parent))
@@ -355,6 +353,8 @@ def detect_layers(dataset_path, max_id, compute_max_id, exact_bounding_box=None)
             )
             if layer_info is not None:
                 yield layer_info
+            else:
+                logging.warning(f"{layer_name} is not a WKW layer")
 
 
 if __name__ == "__main__":
