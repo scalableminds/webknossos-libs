@@ -47,7 +47,11 @@ class Mag:
         if x == y and y == z:
             return str(x)
         else:
-            return "{}-{}-{}".format(x, y, z)
+            return self.to_long_layer_name()
+
+    def to_long_layer_name(self):
+        x, y, z = self.mag
+        return "{}-{}-{}".format(x, y, z)
 
     def to_array(self):
         return self.mag

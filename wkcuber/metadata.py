@@ -178,9 +178,19 @@ def convert_dtype_to_element_class(dtype):
     return conversion_map.get(dtype, str(dtype))
 
 
-def detect_dtype(dataset_path, layer, mag: Mag = Mag(1)):
+def detect_mag_path(dataset_path, layer, mag: Mag = Mag(1)):
     layer_path = path.join(dataset_path, layer, str(mag))
     if path.exists(layer_path):
+        return layer_path
+    layer_path = path.join(dataset_path, layer, mag.to_long_layer_name())
+    if path.exists(layer_path):
+        return layer_path
+    return None
+
+
+def detect_dtype(dataset_path, layer, mag: Mag = Mag(1)):
+    layer_path = detect_mag_path(dataset_path, layer, mag)
+    if layer_path is not None:
         with wkw.Dataset.open(layer_path) as dataset:
             voxel_size = dataset.header.voxel_type
             num_channels = dataset.header.num_channels
@@ -191,8 +201,8 @@ def detect_dtype(dataset_path, layer, mag: Mag = Mag(1)):
 
 
 def detect_cubeLength(dataset_path, layer, mag: Mag = Mag(1)):
-    layer_path = path.join(dataset_path, layer, str(mag))
-    if path.exists(layer_path):
+    layer_path = detect_mag_path(dataset_path, layer, mag)
+    if layer_path is not None:
         with wkw.Dataset.open(layer_path) as dataset:
             return dataset.header.block_len * dataset.header.file_len
 
@@ -200,7 +210,9 @@ def detect_cubeLength(dataset_path, layer, mag: Mag = Mag(1)):
 def detect_bbox(dataset_path, layer, mag: Mag = Mag(1)):
     # Detect the coarse bounding box of a dataset by iterating
     # over the WKW cubes
-    layer_path = path.join(dataset_path, layer, str(mag))
+    layer_path = detect_mag_path(dataset_path, layer, mag)
+    if layer_path is None:
+        return None
 
     def list_files(layer_path):
         return iglob(path.join(layer_path, "*", "*", "*.wkw"), recursive=True)
@@ -219,6 +231,8 @@ def detect_bbox(dataset_path, layer, mag: Mag = Mag(1)):
     max_x, max_y, max_z = max(xs), max(ys), max(zs)
 
     cubeLength = detect_cubeLength(dataset_path, layer, mag)
+    if cubeLength is None:
+        return None
 
     return {
         "topLeft": [min_x * cubeLength, min_y * cubeLength, min_z * cubeLength],
@@ -257,8 +271,12 @@ def detect_standard_layer(
         }
         for mag in mags
     ]
+    resolutions = [r for r in resolutions if r["cubeLength"] is not None]
 
     dtype = detect_dtype(dataset_path, layer_name, mags[0])
+
+    if dtype is None or bbox is None or len(resolutions) == 0:
+        return None
 
     return {
         "dataFormat": "wkw",
@@ -283,6 +301,8 @@ def detect_segmentation_layer(
     layer_info = detect_standard_layer(
         dataset_path, layer_name, exact_bounding_box, category="segmentation"
     )
+    if layer_info is None:
+        return None
     layer_info["mappings"] = detect_mappings(dataset_path, layer_name)
     layer_info["largestSegmentId"] = max_id
 
@@ -290,7 +310,7 @@ def detect_segmentation_layer(
         logging.info("Computing max id of layer={}".format(layer_name))
         # Computing the current largest segment id
         # This may take very long due to IO load
-        layer_path = path.join(dataset_path, layer_name, "1")
+        layer_path = detect_mag_path(dataset_path, layer_name, Mag(1))
         with wkw.Dataset.open(layer_path) as dataset:
             bbox = layer_info["boundingBox"]
             layer_info["largestSegmentId"] = int(
@@ -312,11 +332,15 @@ def detect_segmentation_layer(
 def detect_layers(dataset_path, max_id, compute_max_id, exact_bounding_box=None):
     # Detect metadata for well-known layers (i.e., color, prediction and segmentation)
     if path.exists(path.join(dataset_path, "color")):
-        yield detect_standard_layer(dataset_path, "color", exact_bounding_box)
+        layer_info = detect_standard_layer(dataset_path, "color", exact_bounding_box)
+        if layer_info is not None:
+            yield layer_info
     if path.exists(path.join(dataset_path, "segmentation")):
-        yield detect_segmentation_layer(
+        layer_info = detect_segmentation_layer(
             dataset_path, "segmentation", max_id, compute_max_id, exact_bounding_box
         )
+        if layer_info is not None:
+            yield layer_info
     available_layer_names = set(
         [
             basename(normpath(Path(x).parent.parent))
@@ -326,7 +350,11 @@ def detect_layers(dataset_path, max_id, compute_max_id, exact_bounding_box=None)
     for layer_name in available_layer_names:
         # color and segmentation are already checked explicitly to ensure downwards compatibility (some older datasets don't have the header.wkw file)
         if layer_name not in ["color", "segmentation"]:
-            yield detect_standard_layer(dataset_path, layer_name, exact_bounding_box)
+            layer_info = detect_standard_layer(
+                dataset_path, layer_name, exact_bounding_box
+            )
+            if layer_info is not None:
+                yield layer_info
 
 
 if __name__ == "__main__":
