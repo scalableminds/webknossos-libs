@@ -45,6 +45,10 @@ def create_parser():
     )
 
     parser.add_argument(
+        "--start_z", help="The z coordinate of the first slice", default=0, type=int
+    )
+
+    parser.add_argument(
         "--dtype",
         "-d",
         help="Target datatype (e.g. uint8, uint16, uint32)",
@@ -237,12 +241,14 @@ def cubing(source_path, target_path, layer_name, dtype, batch_size, args) -> dic
 
     ensure_wkw(target_wkw_info)
 
+    start_z = args.start_z
+
     with get_executor_for_args(args) as executor:
         job_args = []
         # We iterate over all z sections
-        for z in range(0, num_z, BLOCK_LEN):
+        for z in range(start_z, num_z + start_z, BLOCK_LEN):
             # Prepare z batches
-            max_z = min(num_z, z + BLOCK_LEN)
+            max_z = min(num_z + start_z, z + BLOCK_LEN)
             z_batch = list(range(z, max_z))
             # Prepare job
             job_args.append(
@@ -251,7 +257,7 @@ def cubing(source_path, target_path, layer_name, dtype, batch_size, args) -> dic
                     z_batch,
                     target_mag,
                     interpolation_mode,
-                    source_files[z:max_z],
+                    source_files[z - start_z : max_z - start_z],
                     batch_size,
                     (num_x, num_y),
                     args.pad,

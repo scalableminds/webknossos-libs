@@ -3,9 +3,10 @@ numpy
 pillow
 pyyaml
 pytest
-wkw==0.1.0
+wkw==0.1.1
 requests
-black
-cluster_tools==1.43
+black==19.3b0
+cluster_tools==1.44
 natsort
 psutil
+nibabel

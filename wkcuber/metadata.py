@@ -63,8 +63,8 @@ for the given dataset path. Common layers are detected automatically.
 
 
 def write_webknossos_metadata(
-    dataset_path,
-    name,
+    dataset_path: str,
+    name: str,
     scale,
     max_id=0,
     compute_max_id=False,
@@ -178,9 +178,19 @@ def convert_dtype_to_element_class(dtype):
     return conversion_map.get(dtype, str(dtype))
 
 
-def detect_dtype(dataset_path, layer, mag: Mag = Mag(1)):
+def detect_mag_path(dataset_path, layer, mag: Mag = Mag(1)):
     layer_path = path.join(dataset_path, layer, str(mag))
     if path.exists(layer_path):
+        return layer_path
+    layer_path = path.join(dataset_path, layer, mag.to_long_layer_name())
+    if path.exists(layer_path):
+        return layer_path
+    return None
+
+
+def detect_dtype(dataset_path, layer, mag: Mag = Mag(1)):
+    layer_path = detect_mag_path(dataset_path, layer, mag)
+    if layer_path is not None:
         with wkw.Dataset.open(layer_path) as dataset:
             voxel_size = dataset.header.voxel_type
             num_channels = dataset.header.num_channels
@@ -191,8 +201,8 @@ def detect_dtype(dataset_path, layer, mag: Mag = Mag(1)):
 
 
 def detect_cubeLength(dataset_path, layer, mag: Mag = Mag(1)):
-    layer_path = path.join(dataset_path, layer, str(mag))
-    if path.exists(layer_path):
+    layer_path = detect_mag_path(dataset_path, layer, mag)
+    if layer_path is not None:
         with wkw.Dataset.open(layer_path) as dataset:
             return dataset.header.block_len * dataset.header.file_len
 
@@ -200,7 +210,9 @@ def detect_cubeLength(dataset_path, layer, mag: Mag = Mag(1)):
 def detect_bbox(dataset_path, layer, mag: Mag = Mag(1)):
     # Detect the coarse bounding box of a dataset by iterating
     # over the WKW cubes
-    layer_path = path.join(dataset_path, layer, str(mag))
+    layer_path = detect_mag_path(dataset_path, layer, mag)
+    if layer_path is None:
+        return None
 
     def list_files(layer_path):
         return iglob(path.join(layer_path, "*", "*", "*.wkw"), recursive=True)
@@ -219,6 +231,8 @@ def detect_bbox(dataset_path, layer, mag: Mag = Mag(1)):
     max_x, max_y, max_z = max(xs), max(ys), max(zs)
 
     cubeLength = detect_cubeLength(dataset_path, layer, mag)
+    if cubeLength is None:
+        return None
 
     return {
         "topLeft": [min_x * cubeLength, min_y * cubeLength, min_z * cubeLength],
@@ -243,12 +257,24 @@ def detect_standard_layer(
 
     mags = list(detect_resolutions(dataset_path, layer_name))
     mags = sorted(mags)
-    assert len(mags) > 0, "No resolutions found"
+    assert len(mags) > 0, f"No resolutions found for {dataset_path}/{layer_name}"
 
     if exact_bounding_box is None:
         bbox = detect_bbox(dataset_path, layer_name, mags[0])
     else:
         bbox = exact_bounding_box
+    assert (
+        bbox is not None
+    ), f"Could not detect bounding box for {dataset_path}/{layer_name}"
+
+    # BB can be created manually
+    # assert the presence/spelling of all attributes
+    assert "width" in bbox, "Attribute `width` is missing/misspelled in bounding box"
+    assert "height" in bbox, "Attribute `height` is missing/misspelled in bounding box"
+    assert "depth" in bbox, "Attribute `depth` is missing/misspelled in bounding box"
+    assert (
+        "topLeft" in bbox
+    ), "Attribute `topLeft` is missing/misspelled in bounding box"
 
     resolutions = [
         {
@@ -257,8 +283,13 @@ def detect_standard_layer(
         }
         for mag in mags
     ]
+    resolutions = [r for r in resolutions if r["cubeLength"] is not None]
+    assert len(resolutions) > 0, f"No resolutions found for {dataset_path}/{layer_name}"
 
     dtype = detect_dtype(dataset_path, layer_name, mags[0])
+    assert (
+        dtype is not None
+    ), f"Data type could not be detected for {dataset_path}/{layer_name}"
 
     return {
         "dataFormat": "wkw",
@@ -290,7 +321,7 @@ def detect_segmentation_layer(
         logging.info("Computing max id of layer={}".format(layer_name))
         # Computing the current largest segment id
         # This may take very long due to IO load
-        layer_path = path.join(dataset_path, layer_name, "1")
+        layer_path = detect_mag_path(dataset_path, layer_name, Mag(1))
         with wkw.Dataset.open(layer_path) as dataset:
             bbox = layer_info["boundingBox"]
             layer_info["largestSegmentId"] = int(
@@ -309,7 +340,7 @@ def detect_segmentation_layer(
     return layer_info
 
 
-def detect_layers(dataset_path, max_id, compute_max_id, exact_bounding_box=None):
+def detect_layers(dataset_path: str, max_id, compute_max_id, exact_bounding_box=None):
     # Detect metadata for well-known layers (i.e., color, prediction and segmentation)
     if path.exists(path.join(dataset_path, "color")):
         yield detect_standard_layer(dataset_path, "color", exact_bounding_box)
@@ -320,13 +351,22 @@ def detect_layers(dataset_path, max_id, compute_max_id, exact_bounding_box=None)
     available_layer_names = set(
         [
             basename(normpath(Path(x).parent.parent))
-            for x in glob.glob(dataset_path + "/*/*/header.wkw")
+            for x in glob.glob(path.join(dataset_path, "*/*/header.wkw"))
         ]
     )
     for layer_name in available_layer_names:
         # color and segmentation are already checked explicitly to ensure downwards compatibility (some older datasets don't have the header.wkw file)
         if layer_name not in ["color", "segmentation"]:
-            yield detect_standard_layer(dataset_path, layer_name, exact_bounding_box)
+            try:
+                layer_info = detect_standard_layer(
+                    dataset_path, layer_name, exact_bounding_box
+                )
+            except:
+                pass
+            if layer_info is not None:
+                yield layer_info
+            else:
+                logging.warning(f"{layer_name} is not a WKW layer")
 
 
 if __name__ == "__main__":
@@ -340,9 +380,8 @@ if __name__ == "__main__":
         assert (
             args.name is not None
         ), "Please provide a name via --name to create meta data."
-        scale = tuple(float(x) for x in args.scale.split(","))
         write_webknossos_metadata(
-            args.path, args.name, scale, args.max_id, args.compute_max_id
+            args.path, args.name, args.scale, args.max_id, args.compute_max_id
         )
     else:
         if args.name is not None:
