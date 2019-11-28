@@ -90,3 +90,6 @@ if __name__ == "__main__":
     job_array_index = get_executor_class().get_job_array_index()
 
     worker(worker_id, job_array_index, cfut_dir)
+    # This is a workaround for the case that some subprocesses are still hanging around and are waited for.
+    # If this point is reached, results were written to disk and we can "safely" shut down everything.
+    sys.exit()
