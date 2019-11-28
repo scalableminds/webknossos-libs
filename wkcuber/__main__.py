@@ -39,7 +39,6 @@ def create_parser():
 def main(args):
     setup_logging(args)
 
-    scale = tuple(float(x) for x in args.scale.split(","))
     bounding_box = cubing(
         args.source_path,
         args.target_path,
@@ -52,7 +51,7 @@ def main(args):
     write_webknossos_metadata(
         args.target_path,
         args.name,
-        scale,
+        args.scale,
         compute_max_id=False,
         exact_bounding_box=bounding_box,
     )

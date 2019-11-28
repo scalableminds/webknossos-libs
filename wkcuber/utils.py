@@ -62,6 +62,14 @@ def parse_cube_file_name(filename):
     return int(m.group(3)), int(m.group(2)), int(m.group(1))
 
 
+def parse_scale(scale):
+    try:
+        scale = tuple(float(x) for x in scale.split(","))
+        return scale
+    except Exception:
+        raise argparse.ArgumentTypeError("The scale could not be parsed")
+
+
 def open_knossos(info):
     return KnossosDataset.open(info.dataset_path, np.dtype(info.dtype))
 
@@ -80,6 +88,7 @@ def add_scale_flag(parser, required=True):
         "-s",
         help="Scale of the dataset (e.g. 11.2,11.2,25). This is the size of one voxel in nm.",
         required=required,
+        type=parse_scale,
     )
 
 

@@ -9,3 +9,4 @@ black
 cluster_tools==1.44
 natsort
 psutil
+nibabel
