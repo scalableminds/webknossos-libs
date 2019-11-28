@@ -63,8 +63,8 @@ for the given dataset path. Common layers are detected automatically.
 
 
 def write_webknossos_metadata(
-    dataset_path,
-    name,
+    dataset_path: str,
+    name: str,
     scale,
     max_id=0,
     compute_max_id=False,
@@ -267,6 +267,15 @@ def detect_standard_layer(
         bbox is not None
     ), f"Could not detect bounding box for {dataset_path}/{layer_name}"
 
+    # BB can be created manually
+    # assert the presence/spelling of all attributes
+    assert "width" in bbox, "Attribute `width` is missing/misspelled in bounding box"
+    assert "height" in bbox, "Attribute `height` is missing/misspelled in bounding box"
+    assert "depth" in bbox, "Attribute `depth` is missing/misspelled in bounding box"
+    assert (
+        "topLeft" in bbox
+    ), "Attribute `topLeft` is missing/misspelled in bounding box"
+
     resolutions = [
         {
             "resolution": mag.to_array(),
@@ -331,7 +340,7 @@ def detect_segmentation_layer(
     return layer_info
 
 
-def detect_layers(dataset_path, max_id, compute_max_id, exact_bounding_box=None):
+def detect_layers(dataset_path: str, max_id, compute_max_id, exact_bounding_box=None):
     # Detect metadata for well-known layers (i.e., color, prediction and segmentation)
     if path.exists(path.join(dataset_path, "color")):
         yield detect_standard_layer(dataset_path, "color", exact_bounding_box)
@@ -342,7 +351,7 @@ def detect_layers(dataset_path, max_id, compute_max_id, exact_bounding_box=None)
     available_layer_names = set(
         [
             basename(normpath(Path(x).parent.parent))
-            for x in glob.glob(dataset_path + "/*/*/header.wkw")
+            for x in glob.glob(path.join(dataset_path, "*/*/header.wkw"))
         ]
     )
     for layer_name in available_layer_names:
@@ -371,9 +380,8 @@ if __name__ == "__main__":
         assert (
             args.name is not None
         ), "Please provide a name via --name to create meta data."
-        scale = tuple(float(x) for x in args.scale.split(","))
         write_webknossos_metadata(
-            args.path, args.name, scale, args.max_id, args.compute_max_id
+            args.path, args.name, args.scale, args.max_id, args.compute_max_id
         )
     else:
         if args.name is not None:
