@@ -45,7 +45,7 @@ def create_parser():
     )
 
     parser.add_argument(
-        "--start_z", help="The z coordinate of the first slice", default=0, type=int,
+        "--start_z", help="The z coordinate of the first slice", default=0, type=int
     )
 
     parser.add_argument(
