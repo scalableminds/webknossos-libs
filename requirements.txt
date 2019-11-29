@@ -6,7 +6,7 @@ pytest
 wkw==0.1.1
 requests
 black==19.3b0
-cluster_tools==1.44
+cluster_tools==1.45
 natsort
 psutil
 nibabel
