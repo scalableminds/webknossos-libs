@@ -37,7 +37,7 @@ class KnossosDataset:
             return np.zeros((CUBE_EDGE_LEN,) * 3, dtype=self.dtype)
         with open(filename, "rb") as cube_file:
             file_data = np.fromfile(cube_file, dtype=self.dtype)
-            cube_data = np.zeros(CUBE_EDGE_LEN * 3, dtype=self.dtype)
+            cube_data = np.zeros(CUBE_EDGE_LEN ** 3, dtype=self.dtype)
             cube_data[0 : file_data.size] = file_data
             cube_data = cube_data.reshape((CUBE_EDGE_LEN,) * 3, order="F")
             return cube_data
