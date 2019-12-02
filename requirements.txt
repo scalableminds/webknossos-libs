@@ -3,7 +3,7 @@ numpy
 pillow
 pyyaml
 pytest
-wkw==0.1.1
+wkw==0.1.2
 requests
 black==19.3b0
 cluster_tools==1.45
