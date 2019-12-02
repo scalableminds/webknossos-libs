@@ -1,15 +1,11 @@
 set -xe
-docker run \
-  -v "${PWD}/testoutput:/testoutput" \
-  --rm \
-  scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
-  wkcuber.downsampling \
+python -m wkcuber.downsampling \
   --jobs 2 \
   --max 8 \
   --buffer_cube_size 128 \
   --layer_name color \
   --isotropic \
-  /testoutput/tiff
+  testoutput/tiff
 [ -d testoutput/tiff/color/2 ]
 [ -d testoutput/tiff/color/4 ]
 [ -d testoutput/tiff/color/8 ]

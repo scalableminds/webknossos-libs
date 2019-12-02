@@ -16,21 +16,24 @@ jobs:
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python-version }}
-        architecture: 'x64' # (x64 or x86)
+        architecture: 'x64'
     - name: Install tools
       run: sudo apt-get update && sudo apt-get install jq -y
         
     - name: Build docker image
-      run: tests/scripts/build_docker_image.sh
+      run: docker build -t scalableminds/webknossos-cuber:$GITHUB_SHA .
+
+    - name: Install dependencies
+      run: pip install -r requirements.txt
       
     - name: Decompress test data
-      run: tests/scripts/decompress_test_data.sh
+      run: tar -xzvf testdata/WT1_wkw.tar.gz
       
     - name: Check formatting
-      run: tests/scripts/check_formatting.sh
+      run: black --check .
       
     - name: Python tests
-      run: tests/scripts/python_tests.sh
+      run: py.test /app/tests
       
     - name: Test tiff cubing
       run: tests/scripts/tiff_cubing.sh
@@ -51,7 +54,9 @@ jobs:
       run: tests/scripts/knossos_conversion.sh
       
     - name: Decompress reference magnification data
-      run: tests/scripts/decompress_reference_mag.sh
+      run: |
+        mkdir -p testdata/tiff_mag_2_reference
+        tar -xzvf testdata/tiff_mag_2_reference.tar.gz -C testdata/tiff_mag_2_reference
 
     - name: Test downsampling
       run: tests/scripts/downsampling.sh

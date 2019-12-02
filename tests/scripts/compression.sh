@@ -1,12 +1,8 @@
 set -xe
-docker run \
-  -v "${PWD}/testoutput:/testoutput" \
-  --rm \
-  scalableminds/webknossos-cuber:${CIRCLE_BUILD_NUM} \
-  wkcuber.compress \
+python -m wkcuber.compress \
   --jobs 2 \
   --layer_name color \
-  /testoutput/tiff /testoutput/tiff_compress
+  testoutput/tiff testoutput/tiff_compress
 [ -d testoutput/tiff_compress/color/1 ]
 [ -d testoutput/tiff_compress/color/2 ]
 [ -d testoutput/tiff_compress/color/4 ]
