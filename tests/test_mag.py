@@ -3,7 +3,7 @@ from wkcuber.metadata import detect_resolutions
 
 
 def test_detect_resolutions():
-    resolutions = sorted(list(detect_resolutions("/testdata/WT1_wkw", "color")))
+    resolutions = sorted(list(detect_resolutions("testdata/WT1_wkw", "color")))
     assert [mag.to_layer_name() for mag in resolutions] == ["1", "2-2-1"]
 
 
