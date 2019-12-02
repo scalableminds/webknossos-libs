@@ -33,12 +33,12 @@ jobs:
     - name: Python tests
       run: py.test tests
       
-    - name: Smoke test Docker
+    - name: Smoke test docker
       run: |
         docker run --rm \
           -v$(pwd)/testdata:/app/testdata \
           scalableminds/webknossos-cuber:$GITHUB_SHA \
-          wkcuber \
+          wkcuber.cubing \
             --jobs 2 \
             --batch_size 8 \
             --layer_name color \
