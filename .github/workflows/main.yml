@@ -1,0 +1,112 @@
+name: CI
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: [3.7]
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+        architecture: 'x64' # (x64 or x86)
+    - name: Install tools
+      run: sudo apt-get update && sudo apt-get install jq -y
+        
+    - name: Build docker image
+      run: tests/scripts/build_docker_image.sh
+      
+    - name: Decompress test data
+      run: tests/scripts/decompress_test_data.sh
+      
+    - name: Check formatting
+      run: tests/scripts/check_formatting.sh
+      
+    - name: Python tests
+      run: tests/scripts/python_tests.sh
+      
+    - name: Test tiff cubing
+      run: tests/scripts/tiff_cubing.sh
+      
+    - name: Test tile cubing
+      run: tests/scripts/tile_cubing.sh
+      
+    - name: Test simple tiff cubing
+      run: tests/scripts/simple_tiff_cubing.sh
+      
+    - name: Test simple tiff cubing (no compression)
+      run: tests/scripts/simple_tiff_cubing_no_compression.sh
+      
+    - name: Test metadata generation
+      run: tests/scripts/meta_generation.sh
+      
+    - name: Test KNOSSOS conversion
+      run: tests/scripts/knossos_conversion.sh
+      
+    - name: Decompress reference magnification data
+      run: tests/scripts/decompress_reference_mag.sh
+
+    - name: Test downsampling
+      run: tests/scripts/downsampling.sh
+
+    - name: Test anisotropic downsampling
+      run: tests/scripts/anisotropic_downsampling.sh
+
+    - name: Test compression
+      run: tests/scripts/compression.sh
+
+    - name: Test in-place compression
+      run: tests/scripts/in_place_compression.sh
+
+    - name: Remove reference magnification data
+      run: rm -r testdata/tiff_mag_2_reference/
+    
+    - name: Push docker images
+      env:
+        DOCKER_USER: ${{ secrets.DOCKER_USER }}
+        DOCKER_PASS: ${{ secrets.DOCKER_PASS }}
+      run: |
+        echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+        docker push scalableminds/webknossos-cuber:$GITHUB_SHA
+
+    - name: Push docker images (for tag)
+      if: startsWith(github.event.ref, 'refs/tags')
+      run: |
+        CI_TAG=$(git describe --tags)
+        docker tag \
+          scalableminds/webknossos-cuber:$GITHUB_SHA \
+          scalableminds/webknossos-cuber:$CI_TAG
+        docker push scalableminds/webknossos-cuber:$CI_TAG
+
+    - name: Push docker images (for branch)
+      if: startsWith(github.event.ref, 'refs/heads')
+      run: |
+        CI_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+        NORMALIZED_CI_BRANCH=${CI_BRANCH//[\/-]/_}
+        docker tag \
+          scalableminds/webknossos-cuber:$GITHUB_SHA \
+          scalableminds/webknossos-cuber:$NORMALIZED_CI_BRANCH
+        docker push scalableminds/webknossos-cuber:$NORMALIZED_CI_BRANCH
+        if [ "${CI_BRANCH}" == "master" ]; then
+          docker tag \
+            scalableminds/webknossos-cuber:$GITHUB_SHA \
+            scalableminds/webknossos-cuber:latest
+          docker push scalableminds/webknossos-cuber:latest
+        fi
+
+    - name: Publish python package
+      if: startsWith(github.event.ref, 'refs/tags')
+      env:
+        TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+      run: |
+        pip install twine
+        python setup.py sdist
+        twine upload dist/*
