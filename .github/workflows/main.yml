@@ -82,13 +82,16 @@ jobs:
 
     - name: Remove reference magnification data
       run: rm -r testdata/tiff_mag_2_reference/
-    
-    - name: Push docker images
+
+    - name: Login to docker
       env:
         DOCKER_USER: ${{ secrets.DOCKER_USER }}
         DOCKER_PASS: ${{ secrets.DOCKER_PASS }}
       run: |
         echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+    
+    - name: Push docker images
+      run: |
         docker push scalableminds/webknossos-cuber:$GITHUB_SHA
 
     - name: Push docker images (for tag)
