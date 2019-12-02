@@ -17,9 +17,7 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
         architecture: 'x64'
-    - name: Install tools
-      run: sudo apt-get update && sudo apt-get install jq -y
-        
+
     - name: Build docker image
       run: docker build -t scalableminds/webknossos-cuber:$GITHUB_SHA .
 
@@ -35,9 +33,21 @@ jobs:
     - name: Python tests
       run: py.test tests
       
+    - name: Smoke test Docker
+      run: |
+        docker run --rm \
+          -v$(pwd)/testdata:/app/testdata \
+          scalableminds/webknossos-cuber:$GITHUB_SHA \
+          wkcuber \
+            --jobs 2 \
+            --batch_size 8 \
+            --layer_name color \
+            --wkw_file_len 32 \
+            testdata/tiff testoutput/tiff
+
     - name: Test tiff cubing
       run: tests/scripts/tiff_cubing.sh
-      
+
     - name: Test tile cubing
       run: tests/scripts/tile_cubing.sh
       
