@@ -5,8 +5,6 @@ import numpy as np
 path_a = sys.argv[1]
 path_b = sys.argv[2]
 
-print(sys.argv)
-
 with wkw.Dataset.open(path_a) as ds_a, wkw.Dataset.open(path_b) as ds_b:
     assert ds_a.header.version == ds_b.header.version
     assert ds_a.header.block_len == ds_b.header.block_len
