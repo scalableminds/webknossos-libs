@@ -33,7 +33,7 @@ jobs:
       run: black --check .
       
     - name: Python tests
-      run: py.test /app/tests
+      run: py.test tests
       
     - name: Test tiff cubing
       run: tests/scripts/tiff_cubing.sh
