@@ -1,6 +1,7 @@
 # webKnossos cuber
 
 [![CircleCI Status](https://circleci.com/gh/scalableminds/webknossos-cuber.svg?&style=shield)](https://circleci.com/gh/scalableminds/webknossos-cuber)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fscalableminds%2Fwebknossos-cuber.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fscalableminds%2Fwebknossos-cuber?ref=badge_shield)
 
 Easily create [WKW](https://github.com/scalableminds/webknossos-wrap) datasets for [webKnossos](https://webknossos.org).
 
@@ -103,3 +104,6 @@ Excerpts for testing purposes have been sampled from:
 ## License
 AGPLv3  
 Copyright scalable minds
+
+
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fscalableminds%2Fwebknossos-cuber.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fscalableminds%2Fwebknossos-cuber?ref=badge_large)
