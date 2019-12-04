@@ -106,7 +106,7 @@ jobs:
     - name: Push docker images (for branch)
       if: startsWith(github.event.ref, 'refs/heads')
       run: |
-        CI_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+        CI_BRANCH=${GITHUB_REF##*/}
         NORMALIZED_CI_BRANCH=${CI_BRANCH//[\/-]/_}
         docker tag \
           scalableminds/webknossos-cuber:$GITHUB_SHA \
