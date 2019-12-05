@@ -37,7 +37,9 @@ class KnossosDataset:
             cube_data = np.fromfile(cube_file, dtype=self.dtype)
             if cube_data.size != CUBE_SIZE:
                 padded_data = np.zeros(CUBE_SIZE, dtype=self.dtype)
-                padded_data[0 : min(cube_data.size, CUBE_SIZE)] = cube_data
+                padded_data[0 : min(cube_data.size, CUBE_SIZE)] = cube_data[
+                    0 : min(cube_data.size, CUBE_SIZE)
+                ]
                 cube_data = padded_data
             cube_data = cube_data.reshape(CUBE_SHAPE, order="F")
             return cube_data
