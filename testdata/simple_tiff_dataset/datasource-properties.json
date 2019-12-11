@@ -1,0 +1,49 @@
+{
+    "id": {
+        "name": "tiff_dataset_1",
+        "team": ""
+    },
+    "scale": [
+        1
+    ],
+    "dataLayers": [
+        {
+            "dataFormat": "tiff",
+            "name": "color",
+            "category": "color",
+            "elementClass": "uint8",
+            "num_channels": 1,
+            "boundingBox": {
+                "topLeft": [
+                    0,
+                    0,
+                    0
+                ],
+                "width": 265,
+                "height": 265,
+                "depth": 10
+            },
+            "wkwResolutions": [
+                {
+                    "resolution": [
+                        1,
+                        1,
+                        1
+                    ]
+                }
+            ]
+        }
+    ],
+    "grid_shape": [
+        0,
+        0
+    ],
+    "min_dimensions": [
+        0,
+        0
+    ],
+    "max_dimensions": [
+        0,
+        0
+    ]
+}
