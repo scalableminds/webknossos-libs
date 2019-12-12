@@ -65,7 +65,8 @@ class KnossosDataset:
         return "cube_x{:04d}_y{:04d}_z{:04d}.raw".format(x, y, z)
 
     def __get_only_raw_file_path(self, cube_xyz):
-        raw_files = glob(path.join(self.__get_cube_folder(cube_xyz), "*.raw"))
+        cube_folder = self.__get_cube_folder(cube_xyz)
+        raw_files = glob(path.join(cube_folder, "*.raw"))
         assert len(raw_files) <= 1, "Found %d .raw files in %s" % (
             len(raw_files),
             cube_folder,
@@ -98,5 +99,5 @@ class KnossosDataset:
     def __enter__(self):
         return self
 
-    def __exit__(self, type, value, tb):
+    def __exit__(self, _type, _value, _tb):
         self.close()

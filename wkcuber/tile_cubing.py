@@ -39,14 +39,13 @@ def check_input_pattern(input_pattern: str) -> str:
     return input_pattern
 
 
-""" Replaces the coordinates with a specific length. 
-The coord_ids_with_replacement_info is a Dict that maps a dimension 
-to a tuple of the coordinate value and the desired length. """
-
 
 def replace_coordinates(
     pattern: str, coord_ids_with_replacement_info: Dict[str, Tuple[int, int]]
 ) -> str:
+    """ Replaces the coordinates with a specific length. 
+    The coord_ids_with_replacement_info is a Dict that maps a dimension 
+    to a tuple of the coordinate value and the desired length. """
     occurrences = re.findall("({x+}|{y+}|{z+})", pattern)
     for occurrence in occurrences:
         coord = occurrence[1]
@@ -84,10 +83,8 @@ def replace_coordinates_with_glob_regex(pattern: str, coord_ids: Dict[str, int])
     return pattern
 
 
-""" Counts how many digits the dimensions x, y and z occupy in the given pattern. """
-
-
 def get_digit_counts_for_dimensions(pattern):
+    """ Counts how many digits the dimensions x, y and z occupy in the given pattern. """
     occurrences = re.findall("({x+}|{y+}|{z+})", pattern)
     decimal_lengths = {"x": 0, "y": 0, "z": 0}
 

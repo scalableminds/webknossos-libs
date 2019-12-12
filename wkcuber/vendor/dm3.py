@@ -31,6 +31,8 @@
 ## SOFTWARE
 ################################################################################
 
+# pylint: disable=bare-except
+
 from __future__ import print_function
 
 import sys
@@ -55,7 +57,7 @@ if PY3:
     # unicode() deprecated in Python 3
     unicode_str = str
 else:
-    unicode_str = unicode
+    unicode_str = unicode # pylint: disable=undefined-variable
 
 ### utility fuctions ###
 
@@ -245,16 +247,16 @@ class DM3(object):
             print("rTG: Current Group Level:", self._curGroupLevel)
         # is the group sorted?
         sorted_ = readByte(self._f)
-        isSorted = sorted_ == 1
+        _isSorted = sorted_ == 1
         # is the group open?
         opened = readByte(self._f)
-        isOpen = opened == 1
+        _isOpen = opened == 1
         # number of Tags
         nTags = readLong(self._f)
         if debugLevel > 5:
             print("rTG: Iterating over the", nTags, "tag entries in this group")
         # read Tags
-        for i in range(nTags):
+        for _i in range(nTags):
             self._readTagEntry()
         # go back up one level as reading group is finished
         self._curGroupLevel += -1
@@ -293,7 +295,7 @@ class DM3(object):
         delim = readString(self._f, 4).decode("latin-1")
         if delim != "%%%%":
             raise Exception(hex(self._f.tell()) + ": Tag Type delimiter not %%%%")
-        nInTag = readLong(self._f)
+        _nInTag = readLong(self._f)
         self._readAnyData()
         return 1
 
@@ -345,7 +347,7 @@ class DM3(object):
             )
         return 1
 
-    def _readNativeData(self, encodedType, etSize):
+    def _readNativeData(self, encodedType, _etSize):
         # reads ordinary data types
         if encodedType in readFunc:
             val = readFunc[encodedType](self._f)
@@ -427,7 +429,7 @@ class DM3(object):
             and (arraySize < 256)
         ):
             # treat as string
-            val = self._readStringData(bufSize)
+            _val = self._readStringData(bufSize)
         else:
             # treat as binary data
             # - store data size and offset as tags
@@ -444,7 +446,7 @@ class DM3(object):
         if debugLevel > 3:
             print("Reading Struct Types at Pos = " + hex(self._f.tell()))
 
-        structNameLength = readLong(self._f)
+        _structNameLength = readLong(self._f)
         nFields = readLong(self._f)
 
         if debugLevel > 5:
@@ -629,7 +631,7 @@ class DM3(object):
         else:
             for tag in self._storedTags:
                 dumpf.write("{}\n".format(tag.encode(self._outputcharset)))
-            dumpf.close
+            dumpf.close()
 
     @property
     def info(self):

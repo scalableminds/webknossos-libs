@@ -1,9 +1,7 @@
 import time
 import logging
 import wkw
-import numpy as np
 from argparse import ArgumentParser
-from os import path
 
 from .utils import (
     add_verbose_flag,
@@ -17,7 +15,7 @@ from .utils import (
     wait_and_ensure_success,
     setup_logging,
 )
-from .knossos import KnossosDataset, CUBE_EDGE_LEN
+from .knossos import CUBE_EDGE_LEN
 from .metadata import convert_element_class_to_dtype
 
 
@@ -74,7 +72,7 @@ def convert_cube_job(args):
 
 
 def convert_knossos(
-    source_path, target_path, layer_name, dtype, mag=1, jobs=1, args=None
+    source_path, target_path, layer_name, dtype, mag=1, args=None
 ):
     source_knossos_info = KnossosDatasetInfo(source_path, dtype)
     target_wkw_info = WkwDatasetInfo(
@@ -108,6 +106,5 @@ if __name__ == "__main__":
         args.layer_name,
         args.dtype,
         args.mag,
-        args.jobs,
         args,
     )
