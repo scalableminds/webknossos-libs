@@ -99,5 +99,5 @@ if __name__ == "__main__":
     setup_logging(args)
 
     convert_knossos(
-        args.source_path, args.target_path, args.layer_name, args.dtype, args.mag, args,
+        args.source_path, args.target_path, args.layer_name, args.dtype, args.mag, args
     )
