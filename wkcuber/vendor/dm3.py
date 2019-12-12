@@ -57,7 +57,7 @@ if PY3:
     # unicode() deprecated in Python 3
     unicode_str = str
 else:
-    unicode_str = unicode # pylint: disable=undefined-variable
+    unicode_str = unicode  # pylint: disable=undefined-variable
 
 ### utility fuctions ###
 

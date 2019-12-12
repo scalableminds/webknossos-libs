@@ -39,7 +39,6 @@ def check_input_pattern(input_pattern: str) -> str:
     return input_pattern
 
 
-
 def replace_coordinates(
     pattern: str, coord_ids_with_replacement_info: Dict[str, Tuple[int, int]]
 ) -> str:

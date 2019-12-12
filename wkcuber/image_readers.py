@@ -28,7 +28,7 @@ class PillowImageReader:
                 # For two-dimensional data, the channel count is one
                 return 1
             else:
-                return this_layer.shape[-1] # pylint: disable=unsubscriptable-object
+                return this_layer.shape[-1]  # pylint: disable=unsubscriptable-object
 
 
 def to_target_datatype(data: np.ndarray, target_dtype) -> np.ndarray:

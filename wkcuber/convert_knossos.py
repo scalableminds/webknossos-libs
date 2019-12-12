@@ -71,9 +71,7 @@ def convert_cube_job(args):
     )
 
 
-def convert_knossos(
-    source_path, target_path, layer_name, dtype, mag=1, args=None
-):
+def convert_knossos(source_path, target_path, layer_name, dtype, mag=1, args=None):
     source_knossos_info = KnossosDatasetInfo(source_path, dtype)
     target_wkw_info = WkwDatasetInfo(
         target_path, layer_name, mag, wkw.Header(convert_element_class_to_dtype(dtype))
@@ -101,10 +99,5 @@ if __name__ == "__main__":
     setup_logging(args)
 
     convert_knossos(
-        args.source_path,
-        args.target_path,
-        args.layer_name,
-        args.dtype,
-        args.mag,
-        args,
+        args.source_path, args.target_path, args.layer_name, args.dtype, args.mag, args,
     )
