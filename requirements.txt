@@ -10,3 +10,4 @@ cluster_tools==1.45
 natsort
 psutil
 nibabel
+pylint==2.3.1
