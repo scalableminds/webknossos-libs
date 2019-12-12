@@ -64,7 +64,7 @@ def main(args):
             args.layer_name,
             Mag(1),
             Mag(args.max_mag),
-            scale,
+            args.scale,
             "default",
             not args.no_compress,
             args=args,
