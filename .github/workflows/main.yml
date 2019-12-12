@@ -29,6 +29,9 @@ jobs:
       
     - name: Check formatting
       run: black --check .
+
+    - name: Lint code
+      run: python -m pylint -j4 wkcuber
       
     - name: Python tests
       run: py.test tests
