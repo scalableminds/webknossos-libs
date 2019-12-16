@@ -67,7 +67,7 @@ class ClusterExecutor(futures.Executor):
         if "logging_config" in kwargs:
             self.meta_data["logging_config"] = kwargs["logging_config"]
 
-    def handle_kill(self,signum, frame):
+    def handle_kill(self, signum, frame):
       self.wait_thread.stop()
       job_ids = ",".join(str(id) for id in self.jobs.keys())
       print("A termination signal was registered. The following jobs are still running on the cluster:\n{}".format(job_ids))
@@ -250,7 +250,6 @@ class ClusterExecutor(futures.Executor):
         job_count = len(allArgs)
         job_name = get_function_name(fun)
         jobid = self._start(workerid, job_count, job_name)
-        
 
         if self.debug:
             print(
@@ -302,10 +301,9 @@ class ClusterExecutor(futures.Executor):
         start_time = time.time()
 
         futs = self.map_to_futures(func, args)
-        results = []
 
-        # Return a separate generator as iterator to avoid that the
-        # map() method itself becomes a generator.
+        # Return a separate generator as an iterator to avoid that the
+        # map() method itself becomes a generator (due to the usage of yield).
         # If map() was a generator, the submit() calls would be invoked
         # lazily which can lead to a shutdown of the executor before
         # the submit calls are performed.
