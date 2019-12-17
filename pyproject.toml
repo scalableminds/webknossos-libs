@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "wkcuber"
-version = "0.0.0"
+version = "0.0.0" # filled by setuptools-scm
 description = "A cubing tool for webKnossos"
 authors = ["scalable minds <hello@scalableminds.com>"]
 license = "AGPL-3.0"
