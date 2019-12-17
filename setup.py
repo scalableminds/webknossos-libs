@@ -11,6 +11,7 @@ setup(
         "pillow",
         "pyyaml",
         "wkw",
+        "psutil",
         "cluster_tools==1.46",
         "natsort",
     ],
