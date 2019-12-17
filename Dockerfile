@@ -5,7 +5,7 @@ WORKDIR /app
 COPY requirements.txt /app
 COPY setup.py /app
 COPY README.md /app
-RUN pip install -r requirements.txt
+RUN pip install poetry
 
 COPY wkcuber /app/wkcuber
 COPY tests /app/tests

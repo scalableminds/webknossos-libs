@@ -22,7 +22,9 @@ jobs:
       run: docker build -t scalableminds/webknossos-cuber:$GITHUB_SHA .
 
     - name: Install dependencies
-      run: poetry install
+      run: |
+        pip install poetry
+        poetry install
       
     - name: Decompress test data
       run: tar -xzvf testdata/WT1_wkw.tar.gz
