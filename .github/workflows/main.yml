@@ -133,6 +133,6 @@ jobs:
       if: matrix["python-version"] == '3.7'
       # if: startsWith(github.event.ref, 'refs/tags') && ${{ matrix.python-version }} === '3.7'
       env:
-        POETRY_HTTP_BASIC_PYPI_USERNAME: ${{ secrets.PYPI_USERNAME }}
-        POETRY_HTTP_BASIC_PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        PYPI_USERNAME: ${{ secrets.PYPI_USERNAME }}
+        PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
       run: ./publish.sh
