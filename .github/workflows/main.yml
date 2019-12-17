@@ -130,7 +130,7 @@ jobs:
         [[ -z $(git status -s) ]]
 
     - name: Publish python package
-      if: ${{ matrix.python-version }} === '3.7'
+      if: matrix.python-version === '3.7'
       # if: startsWith(github.event.ref, 'refs/tags') && ${{ matrix.python-version }} === '3.7'
       env:
         POETRY_HTTP_BASIC_PYPI_USERNAME: ${{ secrets.PYPI_USERNAME }}
