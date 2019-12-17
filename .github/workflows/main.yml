@@ -22,7 +22,7 @@ jobs:
       run: docker build -t scalableminds/webknossos-cuber:$GITHUB_SHA .
 
     - name: Install dependencies
-      run: pip install -r requirements.txt
+      run: poetry install
       
     - name: Decompress test data
       run: tar -xzvf testdata/WT1_wkw.tar.gz
@@ -125,9 +125,6 @@ jobs:
     - name: Publish python package
       if: startsWith(github.event.ref, 'refs/tags')
       env:
-        TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-      run: |
-        pip install twine
-        python setup.py sdist
-        twine upload dist/*
+        POETRY_HTTP_BASIC_PYPI_USERNAME: ${{ secrets.PYPI_USERNAME }}
+        POETRY_HTTP_BASIC_PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+      run: ./publish.sh
