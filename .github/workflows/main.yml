@@ -8,7 +8,7 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: [3.7]
+        python-version: [3.6, 3.7]
 
     steps:
     - uses: actions/checkout@v1
@@ -22,7 +22,9 @@ jobs:
       run: docker build -t scalableminds/webknossos-cuber:$GITHUB_SHA .
 
     - name: Install dependencies
-      run: pip install -r requirements.txt
+      run: |
+        pip install poetry
+        poetry install
       
     - name: Decompress test data
       run: tar -xzvf testdata/WT1_wkw.tar.gz
@@ -122,12 +124,14 @@ jobs:
           docker push scalableminds/webknossos-cuber:latest
         fi
 
-    - name: Publish python package
-      if: startsWith(github.event.ref, 'refs/tags')
-      env:
-        TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+    - name: Check if git is dirty
       run: |
-        pip install twine
-        python setup.py sdist
-        twine upload dist/*
+        git diff --no-ext-diff --quiet --exit-code
+        [[ -z $(git status -s) ]]
+
+    - name: Publish python package
+      if: startsWith(github.event.ref, 'refs/tags') && matrix.python-version == '3.7'
+      env:
+        PYPI_USERNAME: ${{ secrets.PYPI_USERNAME }}
+        PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+      run: ./publish.sh
