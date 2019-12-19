@@ -4,7 +4,7 @@ from os.path import join
 import logging
 import numpy as np
 
-from wkcuber.api.MagDataset import MagDataset
+from wkcuber.api.MagDataset import MagDataset, WKMagDataset, TiffMagDataset
 from wkcuber.mag import Mag
 
 
@@ -47,7 +47,7 @@ class Layer:
         except OSError:
             logging.info("Creation of MagDataset {} failed".format(full_path))
 
-        self.mags[mag] = MagDataset.create(self, mag)
+        self.mags[mag] = self.__get_mag_type__().create(self, mag)
         self.dataset.properties.add_mag(self.name, mag, cube_length)
 
         return self.mags[mag]
@@ -65,9 +65,7 @@ class Layer:
                 )
             )
 
-        full_path = join(self.dataset.path, self.name, mag)
-
-        self.mags[mag] = MagDataset(self, mag)
+        self.mags[mag] = self.__get_mag_type__()(self, mag)
         self.dataset.properties.add_mag(self.name, mag, cube_length)
 
     def delete_mag(self, mag):
@@ -81,3 +79,16 @@ class Layer:
         # delete files on disk
         full_path = join(self.dataset.path, self.name, mag)
         rmtree(full_path)
+
+    def __get_mag_type__(self):
+        raise NotImplementedError
+
+
+class WKLayer(Layer):
+    def __get_mag_type__(self):
+        return WKMagDataset
+
+
+class TiffLayer(Layer):
+    def __get_mag_type__(self):
+        return TiffMagDataset

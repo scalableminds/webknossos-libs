@@ -4,9 +4,11 @@ from os import mkdir
 from os.path import join, normpath, basename
 from pathlib import Path
 import numpy as np
+from os import path
 
 from wkcuber.api.Properties import WKProperties, TiffProperties
-from wkcuber.api.Layer import Layer
+from wkcuber.api.Layer import Layer, WKLayer, TiffLayer
+from wkcuber.api.Slice import TiffSlice
 
 
 class AbstractDataset(ABC):
@@ -77,7 +79,7 @@ class AbstractDataset(ABC):
                     layer_name
                 )
             )
-        self.layers[layer_name] = Layer(layer_name, self, dtype, num_channels)
+        self.layers[layer_name] = self.__create_layer__(layer_name, dtype, num_channels)
         self.properties.add_layer(layer_name, category, dtype.name, num_channels)
         return self.layers[layer_name]
 
@@ -93,6 +95,15 @@ class AbstractDataset(ABC):
         # delete files on disk
         rmtree(join(self.path, layer_name))
 
+    def get_slice(self, layer_name, mag_name, size=(1024, 1024, 1024), global_offset=(0, 0, 0)):
+        layer = self.get_layer(layer_name)
+        mag = layer.get_mag(mag_name)
+        mag_file_path = path.join(self.path, layer.name, mag.name)
+
+        return mag.get_slice(mag_file_path, size=size, global_offset=global_offset)
+
+    def __create_layer__(self, layer_name, dtype, num_channels):
+        raise NotImplementedError
 
 class WKDataset(AbstractDataset):
     @classmethod
@@ -112,6 +123,9 @@ class WKDataset(AbstractDataset):
 
     def to_tiff_dataset(self, new_dataset_path):
         raise NotImplementedError  # TODO; implement
+
+    def __create_layer__(self, layer_name, dtype, num_channels):
+        return WKLayer(layer_name, self, dtype, num_channels)
 
 
 class TiffDataset(AbstractDataset):
@@ -134,3 +148,6 @@ class TiffDataset(AbstractDataset):
 
     def to_wk_dataset(self, new_dataset_path):
         raise NotImplementedError  # TODO; implement
+
+    def __create_layer__(self, layer_name, dtype, num_channels):
+        return TiffLayer(layer_name, self, dtype, num_channels)

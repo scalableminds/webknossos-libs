@@ -12,6 +12,7 @@ class MagDataset:
         self.mag = {}
         self.layer = layer
         self.name = name
+        self.header = self.get_header()
 
         file_path = join(self.layer.dataset.path, self.layer.name, self.name)
         size = self.layer.dataset.properties.data_layers[
@@ -20,33 +21,22 @@ class MagDataset:
         offset = self.layer.dataset.properties.data_layers[
             self.layer.name
         ].get_bounding_box_offset()
-        if isinstance(self.layer.dataset, api.Dataset.WKDataset):
-            self.header = wkw.Header(
-                voxel_type=self.layer.dtype, num_channels=self.layer.num_channels
-            )
-            self.slice = WKSlice(file_path, size, offset)
-        elif isinstance(self.layer.dataset, api.Dataset.TiffDataset):
-            self.slice = TiffSlice(file_path, size, offset)
-            self.header = TiffMagHeader(
-                dtype=self.layer.dtype, num_channels=self.layer.num_channels
-            )
-        else:
-            raise TypeError()
+        self.slice = self.__get_slice_type__()(file_path, self.header, size, offset)
 
         # MagDataset uses Slice to access the actual data, but there are no bounds for an MagDataset (unlike a Slice)
         self.slice.is_bounded = False
 
     def open(self):
-        self.slice.open(self.header)
+        self.slice.open()
 
     def close(self):
         self.slice.close()
 
     def read(self, size, offset=(0, 0, 0)):
-        return self.slice.read(size, offset, self.header)
+        return self.slice.read(size, offset)
 
     def write(self, data, offset=(0, 0, 0)):
-        self.slice.write(data, offset, self.header)
+        self.slice.write(data, offset)
         layer_properties = self.layer.dataset.properties.data_layers[self.layer.name]
         current_offset = layer_properties.get_bounding_box_offset()
         current_size = layer_properties.get_bounding_box_size()
@@ -59,13 +49,58 @@ class MagDataset:
                 self.layer.name, total_size
             )
 
+    def get_header(self):
+        raise NotImplementedError
+
+    def get_slice(self, mag_file_path, size, global_offset):
+        raise NotImplementedError
+
+    def __get_slice_type__(self):
+        raise NotImplementedError
+
+    @classmethod
+    def create(cls, layer, name):
+        raise NotImplementedError
+
+
+class WKMagDataset(MagDataset):
+
+    def get_header(self):
+        return wkw.Header(
+                voxel_type=self.layer.dtype, num_channels=self.layer.num_channels
+            )
+
+    def get_slice(self, mag_file_path, size, global_offset):
+        return WKSlice(mag_file_path, self.get_header(), size, global_offset)
+
+    def __get_slice_type__(self):
+        return WKSlice
+
     @classmethod
     def create(cls, layer, name):
         mag_dataset = cls(layer, name)
-        if isinstance(layer.dataset, api.Dataset.WKDataset):
-            wkw.Dataset.create(
-                join(layer.dataset.path, layer.name, mag_dataset.name),
-                mag_dataset.header,
+        wkw.Dataset.create(
+            join(layer.dataset.path, layer.name, mag_dataset.name),
+            mag_dataset.header,
+        )
+
+        return mag_dataset
+
+
+class TiffMagDataset(MagDataset):
+
+    def get_header(self):
+        return TiffMagHeader(
+                dtype=self.layer.dtype, num_channels=self.layer.num_channels
             )
 
+    def get_slice(self, mag_file_path, size, global_offset):
+        return TiffSlice(mag_file_path, self.get_header(), size, global_offset)
+
+    def __get_slice_type__(self):
+        return TiffSlice
+
+    @classmethod
+    def create(cls, layer, name):
+        mag_dataset = cls(layer, name)
         return mag_dataset

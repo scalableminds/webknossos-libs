@@ -7,25 +7,22 @@ from os import path
 from wkcuber.api.Slice import WKSlice, TiffSlice
 
 
-def delete_dir(relatve_path):
-    dirname = path.join(path.dirname(__file__), relatve_path)
-    if path.exists(dirname) and path.isdir(dirname):
-        rmtree(dirname)
+def delete_dir(relative_path):
+    if path.exists(relative_path) and path.isdir(relative_path):
+        rmtree(relative_path)
 
 
 def test_create_WKDataset_with_layer_and_mag():
     delete_dir("../testoutput/WKDataset")
 
-    dirname = path.dirname(__file__)
-    filename = path.join(dirname, "../testoutput/WKDataset")
-    ds = WKDataset.create(filename, [1])
+    ds = WKDataset.create("../testoutput/WKDataset", scale=(1, 1, 1))
     ds.add_layer("color", "color")
 
     ds.get_layer("color").add_mag("1")
     ds.get_layer("color").add_mag("2-2-1")
 
-    assert path.exists(path.join(dirname, "../testoutput/WKDataset/color/1"))
-    assert path.exists(path.join(dirname, "../testoutput/WKDataset/color/2-2-1"))
+    assert path.exists("../testoutput/WKDataset/color/1")
+    assert path.exists("../testoutput/WKDataset/color/2-2-1")
 
     assert len(ds.properties.data_layers) == 1
     assert len(ds.properties.data_layers["color"].wkw_resolutions) == 2
@@ -34,123 +31,95 @@ def test_create_WKDataset_with_layer_and_mag():
 def test_create_TiffDataset_with_layer_and_mag():
     delete_dir("../testoutput/TiffDataset")
 
-    dirname = path.dirname(__file__)
-    filename = path.join(dirname, "../testoutput/TiffDataset")
-    ds = WKDataset.create(filename, [1])
+    ds = WKDataset.create("../testoutput/TiffDataset", scale=(1, 1, 1))
     ds.add_layer("color", "color")
 
     ds.get_layer("color").add_mag("1")
     ds.get_layer("color").add_mag("2-2-1")
 
-    assert path.exists(path.join(dirname, "../testoutput/TiffDataset/color/1"))
-    assert path.exists(
-        path.join(dirname, "../testoutput/TiffDataset/color/2-2-1")
-    )
+    assert path.exists("../testoutput/TiffDataset/color/1")
+    assert path.exists("../testoutput/TiffDataset/color/2-2-1")
 
     assert len(ds.properties.data_layers) == 1
     assert len(ds.properties.data_layers["color"].wkw_resolutions) == 2
 
 
 def test_open_wk_dataset():
-    dirname = path.dirname(__file__)
-    filename = path.join(dirname, "../testdata/simple_wk_dataset")
-    ds = WKDataset.open(filename)
+    ds = WKDataset.open("../testdata/simple_wk_dataset")
 
     assert len(ds.properties.data_layers) == 1
     assert len(ds.properties.data_layers["color"].wkw_resolutions) == 1
 
 
 def test_slice_read_with_open():
-    dirname = path.dirname(__file__)
-    mag_filename = path.join(dirname, "../testdata/simple_wk_dataset/color/1")
-    slice = WKSlice(mag_filename)
+    wk_slice = WKDataset.open("../testdata/simple_wk_dataset/").get_slice("color", "1")
 
-    assert not slice._is_opened
+    assert not wk_slice._is_opened
 
-    with slice.open():
-        assert slice._is_opened
+    with wk_slice.open():
+        assert wk_slice._is_opened
 
-        data = slice.read((10, 10, 10))
+        data = wk_slice.read((10, 10, 10))
         assert data.shape == (3, 10, 10, 10)  # three channel
 
-    assert not slice._is_opened
+    assert not wk_slice._is_opened
 
 
 def test_slice_read_without_open():
-    dirname = path.dirname(__file__)
-    mag_filename = path.join(dirname, "../testdata/simple_wk_dataset/color/1")
-    slice = WKSlice(mag_filename)
+    wk_slice = WKDataset.open("../testdata/simple_wk_dataset/").get_slice("color", "1")
 
-    assert not slice._is_opened
+    assert not wk_slice._is_opened
 
     # 'read()' checks if it was already opened. If not, it opens and closes automatically
-    data = slice.read((10, 10, 10))
+    data = wk_slice.read((10, 10, 10))
     assert data.shape == (3, 10, 10, 10)  # three channel
 
-    assert not slice._is_opened
+    assert not wk_slice._is_opened
 
 
 def test_slice_wk_write():
-    dirname = path.dirname(__file__)
-    old_dataset_path = path.join(dirname, "../testdata/simple_wk_dataset/")
-    new_dataset_path = path.join(dirname, "../testoutput/simple_wk_dataset/")
-    mag_filename = path.join(new_dataset_path, "color/1")
+    delete_dir("../testoutput/simple_wk_dataset/")
+    copytree("../testdata/simple_wk_dataset/", "../testoutput/simple_wk_dataset/")
 
-    delete_dir(new_dataset_path)
+    wk_slice = WKDataset.open("../testoutput/simple_wk_dataset/").get_slice("color", "1", size=(100, 100, 100))
 
-    copytree(old_dataset_path, new_dataset_path)
+    with wk_slice.open():
+        np.random.seed(1234)
+        write_data = np.random.rand(3, 10, 10, 10).astype(np.uint8)
 
-    slice = WKSlice(mag_filename, size=(100, 100, 100))
+        wk_slice.write(write_data)
 
-    with slice.open():
-        data = slice.read((10, 10, 10))
-        assert not np.array_equal(data, np.zeros((3, 10, 10, 10)))
-
-        slice.write(np.zeros((3, 10, 10, 10), dtype=np.uint8))
-
-        data = slice.read((10, 10, 10))
-        assert np.array_equal(data, np.zeros((3, 10, 10, 10)))
+        data = wk_slice.read((10, 10, 10))
+        assert np.array_equal(data, write_data)
 
 
 def test_slice_tiff_write():
-    dirname = path.dirname(__file__)
-    old_dataset_path = path.join(dirname, "../testdata/simple_tiff_dataset/")
-    new_dataset_path = path.join(dirname, "../testoutput/simple_tiff_dataset/")
-    mag_filename = path.join(new_dataset_path, "color/1")
+    delete_dir("../testoutput/simple_tiff_dataset/")
+    copytree("../testdata/simple_tiff_dataset/", "../testoutput/simple_tiff_dataset/")
 
-    delete_dir(new_dataset_path)
+    tiff_slice = TiffDataset.open("../testoutput/simple_tiff_dataset/").get_slice("color", "1", size=(100, 100, 100))
 
-    copytree(old_dataset_path, new_dataset_path)
+    with tiff_slice.open():
+        np.random.seed(1234)
+        write_data = np.random.rand(5, 5, 5).astype(np.uint8)
 
-    slice = TiffSlice(mag_filename, size=(100, 100, 100))
+        tiff_slice.write(np.zeros((5, 5, 5), dtype=np.uint8))
 
-    with slice.open():  # no need to pass a header because the default fit for this test
-        data = slice.read((5, 5, 5))
-        assert not np.array_equal(data, np.zeros((5, 5, 5)))
-
-        slice.write(np.zeros((5, 5, 5), dtype=np.uint8))
-
-        data = slice.read((5, 5, 5))
-        assert np.array_equal(data, np.zeros((1, 5, 5, 5)))
+        data = tiff_slice.read((5, 5, 5))  # data.shape = (1, 5, 5, 5) because this dataset has one channel
+        assert np.array_equal(data, np.expand_dims(write_data, 0))
 
 
 def test_slice_tiff_write_out_of_bounds():
-    dirname = path.dirname(__file__)
-    old_dataset_path = path.join(dirname, "../testdata/simple_tiff_dataset/")
-    new_dataset_path = path.join(
-        dirname, "../testoutput/tiff_slice_dataset_out_of_bounds/"
-    )
-    mag_filename = path.join(new_dataset_path, "color/1")
+    new_dataset_path = "../testoutput/tiff_slice_dataset_out_of_bounds/"
 
     delete_dir(new_dataset_path)
+    copytree("../testdata/simple_tiff_dataset/", new_dataset_path)
 
-    copytree(old_dataset_path, new_dataset_path)
+    tiff_slice = TiffDataset.open(new_dataset_path).get_slice("color", "1", size=(100, 100, 100))
 
-    slice = TiffSlice(mag_filename, size=(100, 100, 100))
-
-    with slice.open():
+    with tiff_slice.open():
         try:
-            slice.write(
+            tiff_slice.write(
                 np.zeros((200, 200, 5), dtype=np.uint8)
             )  # this is bigger than the bounding_box
             raise AssertionError(
@@ -160,16 +129,11 @@ def test_slice_tiff_write_out_of_bounds():
             pass
 
 
-def test_tiff_write_out_of_bounds():
-    dirname = path.dirname(__file__)
-    old_dataset_path = path.join(dirname, "../testdata/simple_tiff_dataset/")
-    new_dataset_path = path.join(
-        dirname, "../testoutput/simple_tiff_dataset_out_of_bounds/"
-    )
+def test_tiff_write_out_of_bounds(): # TODO: fix
+    new_dataset_path = "../testoutput/simple_tiff_dataset_out_of_bounds/"
 
     delete_dir(new_dataset_path)
-
-    copytree(old_dataset_path, new_dataset_path)
+    copytree("../testdata/simple_tiff_dataset/", new_dataset_path)
 
     ds = TiffDataset.open(new_dataset_path)
     mag_dataset = ds.get_layer("color").get_mag("1")
@@ -182,15 +146,10 @@ def test_tiff_write_out_of_bounds():
 
 
 def test_wk_write_out_of_bounds():
-    dirname = path.dirname(__file__)
-    old_dataset_path = path.join(dirname, "../testdata/simple_wk_dataset/")
-    new_dataset_path = path.join(
-        dirname, "../testoutput/simple_wk_dataset_out_of_bounds/"
-    )
+    new_dataset_path = "../testoutput/simple_wk_dataset_out_of_bounds/"
 
     delete_dir(new_dataset_path)
-
-    copytree(old_dataset_path, new_dataset_path)
+    copytree("../testdata/simple_wk_dataset/", new_dataset_path)
 
     ds = WKDataset.open(new_dataset_path)
     mag_dataset = ds.get_layer("color").get_mag("1")
@@ -211,14 +170,11 @@ def test_wk_write_out_of_bounds():
 
 
 def test_tiff_write_multi_channel_uint8():
-    dirname = path.dirname(__file__)
-    dataset_path = path.join(dirname, "../testoutput/tiff_multichannel/")
-
+    dataset_path = "../testoutput/tiff_multichannel/"
     delete_dir(dataset_path)
 
-    ds_tiff = TiffDataset.create(dataset_path, [1])
-    ds_tiff.add_layer("color", "color", num_channels=3)
-    ds_tiff.get_layer("color").add_mag("1")
+    ds_tiff = TiffDataset.create(dataset_path, scale=(1, 1, 1))
+    mag = ds_tiff.add_layer("color", "color", num_channels=3).add_mag("1")
 
     # 10 images (z-layers), each 250x250, dtype=np.uint8
     data = np.zeros((3, 250, 250, 10), dtype=np.uint8)
@@ -231,16 +187,15 @@ def test_tiff_write_multi_channel_uint8():
 
     ds_tiff.get_layer("color").get_mag("1").write(data)
 
+    assert np.array_equal(data, mag.read(size=(250, 250, 10)))
+
 
 def test_tiff_write_multi_channel_uint16():
-    dirname = path.dirname(__file__)
-    dataset_path = path.join(dirname, "../testoutput/tiff_multichannel/")
-
+    dataset_path = "../testoutput/tiff_multichannel/"
     delete_dir(dataset_path)
 
-    ds_tiff = TiffDataset.create(dataset_path, [1])
-    ds_tiff.add_layer("color", "color", num_channels=3, dtype=np.uint16)
-    ds_tiff.get_layer("color").add_mag("1")
+    ds_tiff = TiffDataset.create(dataset_path, scale=(1, 1, 1))
+    mag = ds_tiff.add_layer("color", "color", num_channels=3, dtype=np.uint16).add_mag("1")
 
     # 10 images (z-layers), each 250x250, dtype=np.uint16
     data = np.zeros((3, 250, 250, 10), dtype=np.uint16)
@@ -251,41 +206,40 @@ def test_tiff_write_multi_channel_uint16():
                 data[1, i, j, h] = j * 256
                 data[2, i, j, h] = 100 * 256
 
-    ds_tiff.get_layer("color").get_mag("1").write(data)
+    mag.write(data)
+    written_data = mag.read(size=(250, 250, 10))
+
+    print(written_data.dtype)
+
+    assert np.array_equal(data, written_data)
 
 
 def test_wkw_empty_read():
-    delete_dir("../testoutput/Empty_WKDataset")
+    filename = "../testoutput/Empty_WKDataset"
+    delete_dir(filename)
 
-    dirname = path.dirname(__file__)
-    filename = path.join(dirname, "../testoutput/Empty_WKDataset")
-
-    mag = WKDataset.create(filename, [1]).add_layer("color", "color").add_mag("1")
+    mag = WKDataset.create(filename, scale=(1, 1, 1)).add_layer("color", "color").add_mag("1")
     data = mag.read(size=(0, 0, 0), offset=(1, 1, 1))
 
     assert data.shape == (1, 0, 0, 0)
 
 
 def test_tiff_empty_read():
-    delete_dir("../testoutput/Empty_TiffDataset")
+    filename = "../testoutput/Empty_TiffDataset"
+    delete_dir(filename)
 
-    dirname = path.dirname(__file__)
-    filename = path.join(dirname, "../testoutput/Empty_TiffDataset")
-
-    mag = TiffDataset.create(filename, [1]).add_layer("color", "color").add_mag("1")
+    mag = TiffDataset.create(filename, scale=(1, 1, 1)).add_layer("color", "color").add_mag("1")
     data = mag.read(size=(0, 0, 0), offset=(1, 1, 1))
 
     assert data.shape == (1, 0, 0, 0)
 
 
 def test_tiff_read_padded_data():
-    delete_dir("../testoutput/Empty_TiffDataset")
-
-    dirname = path.dirname(__file__)
-    filename = path.join(dirname, "../testoutput/Empty_TiffDataset")
+    filename = "../testoutput/Empty_TiffDataset"
+    delete_dir(filename)
 
     mag = (
-        TiffDataset.create(filename, [1])
+        TiffDataset.create(filename, scale=(1, 1, 1))
         .add_layer("color", "color", num_channels=3)
         .add_mag("1")
     )

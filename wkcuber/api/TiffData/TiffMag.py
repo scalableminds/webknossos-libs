@@ -1,6 +1,6 @@
 from typing import Optional, List
 
-from PIL import Image
+from skimage import io
 import numpy as np
 import os
 from re import findall
@@ -46,6 +46,7 @@ def detect_value(
                 f"Failed to autodetect tile ranges, there were files not matching the pattern: {ls_item} does not match {pattern_element}"
             )
     return []
+
 
 
 """
@@ -100,8 +101,8 @@ class TiffMag:
         ]
 
         for z in z_range:
-            self.tiffs[z] = Image.open(
-                os.path.join(self.root, to_file_name(z))
+            self.tiffs[z] = TiffReader.open(
+                self.get_file_name_for_layer(z)
             )  # open is lazy
 
     def read(self, off, shape):
@@ -109,19 +110,18 @@ class TiffMag:
             # modify the shape to also include the num_channels
             shape = tuple(shape) + tuple([self.num_channels])
 
-        data = np.empty(shape=shape)
-        for i, (z, tiff_offset) in enumerate(
+        data = np.zeros(shape=shape, dtype=self.dtype)
+        for i, (z, off, size) in enumerate(
             self.calculate_relevant_slices(off, shape)
         ):
             if z in self.tiffs:
-                data[:, :, i] = np.array(self.tiffs[z])[tiff_offset]
+                data[:, :, i] = np.array(self.tiffs[z].read(), self.dtype)[off[0]:off[0] + size[0], off[1]:off[1] + size[1]]
             else:
                 shape_without_z = shape[:2] + shape[3:]
                 data[:, :, i] = np.zeros(shape_without_z, self.dtype)
 
         # convert data into shape with dedicated num_channels (len(data.shape) == 4)
-        # this only effects data where previously len(data.shape) was 3 and the num_channel is 1
-        # data = data.reshape((-1,) + data.shape[-3:])
+        # this only effects data where the num_channel is 1 and therefore len(data.shape) was 3
         if self.has_only_one_channel():
             data = np.expand_dims(data, 4)  # TODO: make this pretty
 
@@ -131,7 +131,7 @@ class TiffMag:
 
     def write(self, off, data):
         # convert data into shape with dedicated num_channels (len(data.shape) == 4)
-        # this only effects data where previously len(data.shape) was 3 and the num_channel is 1
+        # this only effects data where the num_channel is 1 and therefore len(data.shape) was 3
         data = data.reshape((-1,) + data.shape[-3:])
 
         # reformat array to have the channels as the first index (similar to wkw)
@@ -139,33 +139,25 @@ class TiffMag:
 
         self.assert_correct_data_format(data)
 
-        for i, (z, tiff_offset) in enumerate(
+        for i, (z, offset, _) in enumerate(
             self.calculate_relevant_slices(off, data.shape)
         ):
-            mode = "RGB" if not self.has_only_one_channel() else None
-
             # initialize images for z_layers that did not exist before
             if z not in self.tiffs:
                 total_shape = [
                     sum(x)
-                    for x in zip_longest(data[:, :, i].shape, tiff_offset, fillvalue=0)
+                    for x in zip_longest(data[:, :, i].shape, offset, fillvalue=0)
                 ]
                 if self.has_only_one_channel():
                     total_shape = tuple(total_shape)[:-1]  # TODO: make this pretty
-                self.tiffs[z] = Image.fromarray(np.zeros(total_shape, self.dtype), mode)
+                self.tiffs[z] = TiffReader.init_tiff(np.zeros(total_shape, self.dtype), self.get_file_name_for_layer(z))
 
             # write new pixel data into the image
             pixel_data = (
                 data[:, :, i] if not self.has_only_one_channel() else data[:, :, i, 0]
             )
-            new_region = Image.fromarray(pixel_data, mode)
-            self.tiffs[z] = self.tiffs[
-                z
-            ].copy()  # TODO: investigate why a copy must be used (otherwise the save fails)
-            self.tiffs[z].paste(new_region, (tiff_offset[0], tiff_offset[1]))
 
-            # save the new image
-            self.tiffs[z].save(os.path.join(self.root, to_file_name(z)))
+            self.tiffs[z].merge_with_image(pixel_data, offset)
 
     def compress(self, dst_path: str, compress_files: bool = False):
         raise NotImplementedError
@@ -177,15 +169,14 @@ class TiffMag:
             yield os.path.relpath(os.path.normpath(file_path), self.root)
 
     def close(self):
-        for layer_name in self.tiffs:
-            self.tiffs[layer_name].close()
+        return
 
     def calculate_relevant_slices(self, offset, shape):
         # TODO: use pattern
         for z in range(offset[2] + 1, offset[2] + shape[2] + 1):
             yield tuple(
-                (z, offset[0:2])
-            )  # return tuple of important z layers an the x-y offset (without z offset)
+                (z, offset[0:2], shape[0:2])
+            )  # return tuple of important z layers an the x-y offset (without z offset) and the size (without z length)
 
     def has_only_one_channel(self):
         return self.num_channels == 1
@@ -205,6 +196,9 @@ class TiffMag:
                 "The type of the provided data does not match the expected type. (Expected np.array of tpye %s)"
                 % self.dtype.name
             )
+
+    def get_file_name_for_layer(self, z):
+        return os.path.join(self.root, to_file_name(z))
 
     @staticmethod
     def open(root: str, header=None):
@@ -226,5 +220,40 @@ class TiffMag:
 class TiffMagHeader:
     def __init__(self, pattern="{z}.tiff", dtype=np.dtype("uint8"), num_channels=1):
         self.pattern = pattern
-        self.dtype = dtype
+        self.dtype = np.dtype(dtype)
         self.num_channels = num_channels
+
+
+class TiffReader:
+
+    def __init__(self, file_name):
+        self.file_name = file_name
+
+    @classmethod
+    def init_tiff(cls, pixels, file_name):
+        tr = TiffReader(file_name)
+        tr.write(pixels)
+        return tr
+
+    @classmethod
+    def open(cls, file_name):
+        return cls(file_name)
+
+    def read(self):
+        return io.imread(self.file_name)
+
+    def write(self, pixels):
+        io.imsave(self.file_name, pixels, check_contrast=False)
+
+    def merge_with_image(self, foreground_pixels, offset):
+        background_pixels = self.read()
+        bg_shape = background_pixels.shape
+        fg_shape = foreground_pixels.shape
+
+        fg_shape_with_off = [sum(x) for x in zip_longest(fg_shape, offset, fillvalue=0)]
+        total_shape = [max(x) for x in zip(bg_shape, fg_shape_with_off)]
+        new_image = np.zeros(total_shape, dtype=background_pixels.dtype)
+
+        new_image[0:bg_shape[0], 0:bg_shape[1]] = background_pixels
+        new_image[offset[0]: fg_shape_with_off[0], offset[1]: fg_shape_with_off[1]] = foreground_pixels
+        self.write(new_image)

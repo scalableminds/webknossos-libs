@@ -1,3 +1,4 @@
+skimage
 scipy
 numpy
 pillow

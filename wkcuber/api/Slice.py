@@ -1,21 +1,22 @@
 import numpy as np
 from wkw import Dataset
 
-from wkcuber.api.TiffData.TiffMag import TiffMag, TiffMagHeader
+from wkcuber.api.TiffData.TiffMag import TiffMag
 
 
 class Slice:
     def __init__(
-        self, path_to_mag_dataset, size=(1024, 1024, 1024), global_offset=(0, 0, 0)
+        self, path_to_mag_dataset, header, size=(1024, 1024, 1024), global_offset=(0, 0, 0)
     ):
         self.dataset = None
         self.path = path_to_mag_dataset
+        self.header = header
         self.size = size
         self.global_offset = global_offset
         self.is_bounded = True
         self._is_opened = False
 
-    def open(self, header=None):
+    def open(self):
         raise NotImplemented()
 
     def close(self):
@@ -26,7 +27,7 @@ class Slice:
             self.dataset = None
             self._is_opened = False
 
-    def write(self, data, offset=(0, 0, 0), header=None):
+    def write(self, data, offset=(0, 0, 0)):
         # assert the size of the parameter data is not in conflict with the attribute self.size
         self.assert_bounds(offset, data.shape[-3:])
 
@@ -34,14 +35,14 @@ class Slice:
         absolute_offset = tuple(sum(x) for x in zip(self.global_offset, offset))
 
         if not self._is_opened:
-            self.open(header)
+            self.open()
 
         self.dataset.write(absolute_offset, data)
 
         if not self._is_opened:
             self.close()
 
-    def read(self, size=None, offset=(0, 0, 0), header=None):
+    def read(self, size=None, offset=(0, 0, 0)):
         was_opened = self._is_opened
         size = size or self.size
 
@@ -52,7 +53,7 @@ class Slice:
         absolute_offset = tuple(sum(x) for x in zip(self.global_offset, offset))
 
         if not was_opened:
-            self.open(header)
+            self.open()
 
         data = self.dataset.read(absolute_offset, size)
 
@@ -83,30 +84,20 @@ class Slice:
 
 
 class WKSlice(Slice):
-    def open(self, header=None):
+    def open(self):
         if self._is_opened:
             raise Exception("Cannot open slice: the slice is already opened")
         else:
-            self.dataset = Dataset.open(self.path, header)
+            self.dataset = Dataset.open(self.path)  # No need to pass the header to the wkw.Dataset
             self._is_opened = True
         return self
 
-        """
-        wkw.Header(
-            convert_element_class_to_dtype(dtype),
-            num_channels,
-            file_len=args.wkw_file_len,
-        ),
-        """
-
 
 class TiffSlice(Slice):
-    def open(self, header=None):
+    def open(self):
         if self._is_opened:
             raise Exception("Cannot open slice: the slice is already opened")
         else:
-            if header is None:
-                header = TiffMagHeader()
-            self.dataset = TiffMag.open(self.path, header)
+            self.dataset = TiffMag.open(self.path, self.header)
             self._is_opened = True
         return self
