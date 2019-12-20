@@ -217,6 +217,7 @@ def test_update_new_bounding_box_offset():
 
     assert ds.properties.data_layers["color"].bounding_box["topLeft"] == (-1, -1, -1)
 
+    np.random.seed(1234)
     write_data = np.random.rand(10, 10, 10).astype(np.uint8)
     mag.write(
         write_data, offset=(10, 10, 10)
@@ -405,6 +406,7 @@ def test_num_channel_mismatch_assertion():
         "1"
     )  # num_channel=1 is also the default
 
+    np.random.seed(1234)
     write_data = np.random.rand(3, 10, 10, 10).astype(np.uint8)  # 3 channel
 
     try:
