@@ -175,6 +175,28 @@ def test_slice_tiff_write_out_of_bounds():
             pass
 
 
+def test_slice_wk_write_out_of_bounds():
+    new_dataset_path = "../testoutput/wk_slice_dataset_out_of_bounds/"
+
+    delete_dir(new_dataset_path)
+    copytree("../testdata/simple_wk_dataset/", new_dataset_path)
+
+    tiff_slice = WKDataset.open(new_dataset_path).get_slice(
+        "color", "1", size=(100, 100, 100)
+    )
+
+    with tiff_slice.open():
+        try:
+            tiff_slice.write(
+                np.zeros((200, 200, 5), dtype=np.uint8)
+            )  # this is bigger than the bounding_box
+            raise Exception(
+                "The test 'test_slice_tiff_write_out_of_bounds' did not throw an exception even though it should"
+            )
+        except AssertionError:
+            pass
+
+
 def test_tiff_write_out_of_bounds():
     new_dataset_path = "../testoutput/simple_tiff_dataset_out_of_bounds/"
 
