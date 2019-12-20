@@ -8,7 +8,6 @@ from os import path
 
 from wkcuber.api.Properties import WKProperties, TiffProperties
 from wkcuber.api.Layer import Layer, WKLayer, TiffLayer
-from wkcuber.api.Slice import TiffSlice
 
 
 class AbstractDataset(ABC):
@@ -25,17 +24,11 @@ class AbstractDataset(ABC):
                 layer.name, layer.category, layer.element_class, layer.num_channels
             )
             for resolution in layer.wkw_resolutions:
-                try:
-                    # fails if the resolution is of type TiffResolution, because Tiffs do not have a cube_size
-                    self.layers[layer_name].setup_mag(
-                        resolution.mag.to_layer_name(), resolution.cube_length
-                    )
-                except AttributeError:
-                    self.layers[layer_name].setup_mag(resolution.mag.to_layer_name())
+                self.layers[layer_name].setup_mag(resolution.mag.to_layer_name())
 
     @classmethod
     @abstractmethod
-    def open(cls, path):
+    def open(cls, dataset_path):
         pass
 
     @classmethod
@@ -53,7 +46,7 @@ class AbstractDataset(ABC):
 
     @classmethod
     @abstractmethod
-    def create(cls, path, scale):
+    def create(cls, dataset_path, scale):
         pass
 
     def downsample(self, layer, target_mag_shape, source_mag):
@@ -83,6 +76,26 @@ class AbstractDataset(ABC):
         self.properties.add_layer(layer_name, category, dtype.name, num_channels)
         return self.layers[layer_name]
 
+    def get_or_add_layer(
+        self, layer_name, category, dtype=np.dtype("uint8"), num_channels=1
+    ):
+        if layer_name in self.layers.keys():
+            assert self.properties.data_layers[layer_name].category == category, (
+                "Cannot get_or_add_layer: The layer %s already exists, but the dytpes do not match"
+                % layer_name
+            )
+            assert self.layers[layer_name].dtype == np.dtype(dtype), (
+                "Cannot get_or_add_layer: The layer %s already exists, but the dytpes do not match"
+                % layer_name
+            )
+            assert self.layers[layer_name].num_channels == num_channels, (
+                "Cannot get_or_add_layer: The layer %s already exists, but the number of channels do not match"
+                % layer_name
+            )
+            return self.layers[layer_name]
+        else:
+            return self.add_layer(layer_name, category, dtype, num_channels)
+
     def delete_layer(self, layer_name):
         if layer_name not in self.layers.keys():
             raise IndexError(
@@ -95,7 +108,9 @@ class AbstractDataset(ABC):
         # delete files on disk
         rmtree(join(self.path, layer_name))
 
-    def get_slice(self, layer_name, mag_name, size=(1024, 1024, 1024), global_offset=(0, 0, 0)):
+    def get_slice(
+        self, layer_name, mag_name, size=(1024, 1024, 1024), global_offset=(0, 0, 0)
+    ):
         layer = self.get_layer(layer_name)
         mag = layer.get_mag(mag_name)
         mag_file_path = path.join(self.path, layer.name, mag.name)
@@ -105,16 +120,21 @@ class AbstractDataset(ABC):
     def __create_layer__(self, layer_name, dtype, num_channels):
         raise NotImplementedError
 
+
 class WKDataset(AbstractDataset):
     @classmethod
-    def open(cls, path):
-        properties = WKProperties.from_json(join(path, "datasource-properties.json"))
+    def open(cls, dataset_path):
+        properties = WKProperties.from_json(
+            join(dataset_path, "datasource-properties.json")
+        )
         return cls(properties)
 
     @classmethod
-    def create(cls, path, scale):
-        name = basename(normpath(path))
-        properties = WKProperties(join(path, "datasource-properties.json"), name, scale)
+    def create(cls, dataset_path, scale):
+        name = basename(normpath(dataset_path))
+        properties = WKProperties(
+            join(dataset_path, "datasource-properties.json"), name, scale
+        )
         return WKDataset.create_with_properties(properties)
 
     def __init__(self, properties):
@@ -130,15 +150,17 @@ class WKDataset(AbstractDataset):
 
 class TiffDataset(AbstractDataset):
     @classmethod
-    def open(cls, path):
-        properties = TiffProperties.from_json(join(path, "datasource-properties.json"))
+    def open(cls, dataset_path):
+        properties = TiffProperties.from_json(
+            join(dataset_path, "datasource-properties.json")
+        )
         return cls(properties)
 
     @classmethod
-    def create(cls, path, scale):
-        name = basename(normpath(path))
+    def create(cls, dataset_path, scale):
+        name = basename(normpath(dataset_path))
         properties = TiffProperties(
-            join(path, "datasource-properties.json"), name, scale
+            join(dataset_path, "datasource-properties.json"), name, scale
         )
         return TiffDataset.create_with_properties(properties)
 

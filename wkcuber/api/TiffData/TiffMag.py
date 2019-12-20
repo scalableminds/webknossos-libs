@@ -48,41 +48,6 @@ def detect_value(
     return []
 
 
-
-"""
-def read_tiled_slice(
-    tiled_dataset_path_parent: Optional[str],
-    tiled_dataset_path_pattern: str,
-    x_range: range,
-    y_range: range,
-    z: int,
-    initial_read: bool = False,
-    z_range: Optional[range] = None,
-) -> np.ndarray:
-    image_grid = []
-    for x in x_range:
-        col = []
-        for y in y_range:
-            real_pos = find_closest_non_skip_tile(
-                np.array([z, x, y]), skip_tiles, z_range
-            )
-
-            current_path = SliceReader3D.fill_path_pattern(
-                tiled_dataset_path_pattern, real_pos
-            )
-            if tiled_dataset_path_parent is not None:
-                current_path = os.path.join(tiled_dataset_path_parent, current_path)
-
-            logger.debug("Reading image {}".format(current_path))
-
-            col.append(
-                read_image(current_path, initial_read=initial_read).transpose()
-            )
-        image_grid.append(col)
-    return np.array(image_grid)
-"""
-
-
 class TiffMag:
     def __init__(self, root, header):
         x_range = [0]  # currently tiled tiffs are not supported
@@ -111,19 +76,20 @@ class TiffMag:
             shape = tuple(shape) + tuple([self.num_channels])
 
         data = np.zeros(shape=shape, dtype=self.dtype)
-        for i, (z, off, size) in enumerate(
-            self.calculate_relevant_slices(off, shape)
-        ):
+        for i, (z, off, size) in enumerate(self.calculate_relevant_slices(off, shape)):
             if z in self.tiffs:
-                data[:, :, i] = np.array(self.tiffs[z].read(), self.dtype)[off[0]:off[0] + size[0], off[1]:off[1] + size[1]]
+                data[:, :, i] = np.array(self.tiffs[z].read(), self.dtype)[
+                    off[0] : off[0] + size[0], off[1] : off[1] + size[1]
+                ]
             else:
                 shape_without_z = shape[:2] + shape[3:]
                 data[:, :, i] = np.zeros(shape_without_z, self.dtype)
 
-        # convert data into shape with dedicated num_channels (len(data.shape) == 4)
-        # this only effects data where the num_channel is 1 and therefore len(data.shape) was 3
         if self.has_only_one_channel():
-            data = np.expand_dims(data, 4)  # TODO: make this pretty
+            # convert data into shape with dedicated num_channels (len(data.shape) == 4)
+            # this only effects data where the num_channel is 1 and therefore len(data.shape) was 3
+            # this makes it easier to handle both, multi-channel and single-channel, similar
+            data = np.expand_dims(data, 4)
 
         # reformat array to have the channels as the first index (similar to wkw)
         data = np.moveaxis(data, -1, 0)
@@ -132,6 +98,7 @@ class TiffMag:
     def write(self, off, data):
         # convert data into shape with dedicated num_channels (len(data.shape) == 4)
         # this only effects data where the num_channel is 1 and therefore len(data.shape) was 3
+        # this makes it easier to handle both, multi-channel and single-channel, similar
         data = data.reshape((-1,) + data.shape[-3:])
 
         # reformat array to have the channels as the first index (similar to wkw)
@@ -149,8 +116,13 @@ class TiffMag:
                     for x in zip_longest(data[:, :, i].shape, offset, fillvalue=0)
                 ]
                 if self.has_only_one_channel():
-                    total_shape = tuple(total_shape)[:-1]  # TODO: make this pretty
-                self.tiffs[z] = TiffReader.init_tiff(np.zeros(total_shape, self.dtype), self.get_file_name_for_layer(z))
+                    # Convert single-channel data into the expected format
+                    # E.g. convert shape (300, 300, 1) into (300, 300)
+                    total_shape = tuple(total_shape)[:-1]
+
+                self.tiffs[z] = TiffReader.init_tiff(
+                    np.zeros(total_shape, self.dtype), self.get_file_name_for_layer(z)
+                )
 
             # write new pixel data into the image
             pixel_data = (
@@ -206,10 +178,6 @@ class TiffMag:
             header = TiffMagHeader()
         return TiffMag(root, header)
 
-    @staticmethod
-    def create(root: str, header):
-        raise NotImplementedError  # TODO: what is the difference to open?
-
     def __enter__(self):
         return self
 
@@ -225,7 +193,6 @@ class TiffMagHeader:
 
 
 class TiffReader:
-
     def __init__(self, file_name):
         self.file_name = file_name
 
@@ -254,6 +221,8 @@ class TiffReader:
         total_shape = [max(x) for x in zip(bg_shape, fg_shape_with_off)]
         new_image = np.zeros(total_shape, dtype=background_pixels.dtype)
 
-        new_image[0:bg_shape[0], 0:bg_shape[1]] = background_pixels
-        new_image[offset[0]: fg_shape_with_off[0], offset[1]: fg_shape_with_off[1]] = foreground_pixels
+        new_image[0 : bg_shape[0], 0 : bg_shape[1]] = background_pixels
+        new_image[
+            offset[0] : fg_shape_with_off[0], offset[1] : fg_shape_with_off[1]
+        ] = foreground_pixels
         self.write(new_image)

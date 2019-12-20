@@ -39,9 +39,6 @@ class WkResolution(Resolution):
 
 
 class Properties:
-
-    # TODO: implement a test that reads a json and then writes it again and compares the files
-
     def __init__(self, path, name, scale, team="", data_layers=None):
         self.path = path
         self.name = name
@@ -66,19 +63,18 @@ class Properties:
         del self.data_layers[layer_name]
         self.export_as_json()
 
-    def add_mag(self, layer_name, mag, cube_length):
-        pass
-
     def delete_mag(self, layer_name, mag):
         self.data_layers[layer_name].wkw_resolutions = [
             r for r in self.data_layers[layer_name].wkw_resolutions if r.mag != Mag(mag)
         ]
         self.export_as_json()
 
-    def set_bounding_box_size_of_layer(
-        self, layer_name, size
-    ):  # TODO: why does the bb belong to the layer and not to the mag? (I can add data to one specific mag)
+    def set_bounding_box_size_of_layer(self, layer_name, size):
         self.data_layers[layer_name].set_bounding_box_size(size)
+        self.export_as_json()
+
+    def set_bounding_box_offset_of_layer(self, layer_name, offset):
+        self.data_layers[layer_name].set_bounding_box_offset(offset)
         self.export_as_json()
 
 
@@ -111,9 +107,7 @@ class WKProperties(Properties):
         with open(self.path, "w") as outfile:
             json.dump(data, outfile, indent=4, separators=(",", ": "))
 
-    def add_layer(
-        self, layer_name, category, element_class, num_channels=1
-    ):  # TODO: how to handle this? Storing it in the json is redundant with the wkwHeader, but what if there is no wkwHeader yet?
+    def add_layer(self, layer_name, category, element_class, num_channels=1):
         # this layer is already in data_layers in case we reconstruct the dataset from a datasource-properties.json
         if layer_name not in self.data_layers:
             new_layer = LayerProperties(
@@ -135,21 +129,9 @@ class WKProperties(Properties):
 
 
 class TiffProperties(Properties):
-    def __init__(
-        self,
-        path,
-        name,
-        scale,
-        team="",
-        data_layers=None,
-        grid_shape=(0, 0),
-        min_dimensions=(0, 0),
-        max_dimensions=(0, 0),
-    ):
+    def __init__(self, path, name, scale, team="", data_layers=None, grid_shape=(0, 0)):
         super().__init__(path, name, scale, team, data_layers)
         self.grid_shape = grid_shape
-        self.min_dimensions = min_dimensions
-        self.max_dimensions = max_dimensions
 
     @classmethod
     def from_json(cls, path):
@@ -170,8 +152,6 @@ class TiffProperties(Properties):
                 data["id"]["team"],
                 data_layers,
                 data["grid_shape"],
-                data["min_dimensions"],
-                data["max_dimensions"],
             )
 
     def export_as_json(self):
@@ -183,8 +163,6 @@ class TiffProperties(Properties):
                 for layer_name in self.data_layers
             ],
             "grid_shape": self.grid_shape,
-            "min_dimensions": self.min_dimensions,
-            "max_dimensions": self.max_dimensions,
         }
         with open(self.path, "w") as outfile:
             json.dump(data, outfile, indent=4, separators=(",", ": "))
@@ -198,7 +176,7 @@ class TiffProperties(Properties):
             self.data_layers[layer_name] = new_layer
             self.export_as_json()
 
-    def add_mag(self, layer_name, mag, cube_length):
+    def add_mag(self, layer_name, mag):
         # this mag is already in wkw_resolutions in case we reconstruct the dataset from a datasource-properties.json
         if not any(
             [
@@ -227,7 +205,7 @@ class LayerProperties:
         self.element_class = element_class
         self.num_channels = num_channels
         self.bounding_box = bounding_box or {
-            "topLeft": (0, 0, 0),
+            "topLeft": (-1, -1, -1),
             "width": 0,
             "height": 0,
             "depth": 0,
@@ -256,20 +234,20 @@ class LayerProperties:
         return np.dtype(self.element_class)
 
     @classmethod
-    def from_json(cls, json_data, ResolutionType):
+    def from_json(cls, json_data, resolution_type):
         # create LayerProperties without resolutions
         layer_properties = cls(
             json_data["dataFormat"],
             json_data["name"],
             json_data["category"],
             json_data["elementClass"],
-            json_data["num_channels"],  # TODO: how to avoid writing this for wk?
+            json_data["num_channels"],
             json_data["boundingBox"],
         )
 
         # add resolutions to LayerProperties
         for resolution in json_data["wkwResolutions"]:
-            layer_properties.add_resolution(ResolutionType.from_json(resolution))
+            layer_properties.add_resolution(resolution_type.from_json(resolution))
 
         return layer_properties
 
@@ -293,3 +271,6 @@ class LayerProperties:
         self.bounding_box["width"] = size[0]
         self.bounding_box["height"] = size[1]
         self.bounding_box["depth"] = size[2]
+
+    def set_bounding_box_offset(self, offset):
+        self.bounding_box["topLeft"] = offset

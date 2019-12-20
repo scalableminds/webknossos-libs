@@ -6,7 +6,11 @@ from wkcuber.api.TiffData.TiffMag import TiffMag
 
 class Slice:
     def __init__(
-        self, path_to_mag_dataset, header, size=(1024, 1024, 1024), global_offset=(0, 0, 0)
+        self,
+        path_to_mag_dataset,
+        header,
+        size=(1024, 1024, 1024),
+        global_offset=(0, 0, 0),
     ):
         self.dataset = None
         self.path = path_to_mag_dataset
@@ -29,6 +33,7 @@ class Slice:
 
     def write(self, data, offset=(0, 0, 0)):
         # assert the size of the parameter data is not in conflict with the attribute self.size
+        assert_non_negative_offset(offset)
         self.assert_bounds(offset, data.shape[-3:])
 
         # calculate the absolute offset
@@ -70,7 +75,7 @@ class Slice:
 
     def assert_bounds(self, offset, size):
         if not self.check_bounds(offset, size):
-            raise Exception(
+            raise AssertionError(
                 "Writing out of bounds: The parameter 'size' {} is not compatible with the attribute 'size' {}".format(
                     size, self.size
                 )
@@ -88,7 +93,9 @@ class WKSlice(Slice):
         if self._is_opened:
             raise Exception("Cannot open slice: the slice is already opened")
         else:
-            self.dataset = Dataset.open(self.path)  # No need to pass the header to the wkw.Dataset
+            self.dataset = Dataset.open(
+                self.path
+            )  # No need to pass the header to the wkw.Dataset
             self._is_opened = True
         return self
 
@@ -101,3 +108,13 @@ class TiffSlice(Slice):
             self.dataset = TiffMag.open(self.path, self.header)
             self._is_opened = True
         return self
+
+
+def assert_non_negative_offset(offset):
+    all_positive = all(i >= 0 for i in offset)
+    if not all_positive:
+        raise Exception(
+            "All elements of the offset need to be positive: %s" % "("
+            + ",".join(map(str, offset))
+            + ")"
+        )
