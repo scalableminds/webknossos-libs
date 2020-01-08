@@ -157,10 +157,10 @@ class TiffDataset(AbstractDataset):
         return cls(properties)
 
     @classmethod
-    def create(cls, dataset_path, scale):
+    def create(cls, dataset_path, scale, pattern="{z}.tiff"):
         name = basename(normpath(dataset_path))
         properties = TiffProperties(
-            join(dataset_path, "datasource-properties.json"), name, scale
+            join(dataset_path, "datasource-properties.json"), name, scale, pattern=pattern
         )
         return TiffDataset.create_with_properties(properties)
 

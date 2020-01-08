@@ -129,9 +129,10 @@ class WKProperties(Properties):
 
 
 class TiffProperties(Properties):
-    def __init__(self, path, name, scale, team="", data_layers=None, grid_shape=(0, 0)):
+    def __init__(self, path, name, scale, pattern, team="", data_layers=None, grid_shape=(0, 0)):
         super().__init__(path, name, scale, team, data_layers)
         self.grid_shape = grid_shape
+        self.pattern = pattern
 
     @classmethod
     def from_json(cls, path):
@@ -146,18 +147,20 @@ class TiffProperties(Properties):
                 )
 
             return cls(
-                path,
-                data["id"]["name"],
-                data["scale"],
-                data["id"]["team"],
-                data_layers,
-                data["grid_shape"],
+                path=path,
+                name=data["id"]["name"],
+                scale=data["scale"],
+                pattern=data["pattern"],
+                team=data["id"]["team"],
+                data_layers=data_layers,
+                grid_shape=data["grid_shape"],
             )
 
     def export_as_json(self):
         data = {
             "id": {"name": self.name, "team": self.team},
             "scale": self.scale,
+            "pattern": self.pattern,
             "dataLayers": [
                 self.data_layers[layer_name].to_json()
                 for layer_name in self.data_layers

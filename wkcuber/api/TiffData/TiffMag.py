@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional, List, Tuple, Set
 
 from skimage import io
 import numpy as np
@@ -48,22 +48,35 @@ def detect_value(
     return []
 
 
+def detect_ranges(pattern, file_names):
+    extracted_value_pairs = [extract_xyz_values(pattern, file_name) for file_name in file_names]
+    x_values, y_values, z_values = zip(*extracted_value_pairs) if len(extracted_value_pairs) > 0 else [], [], []
+
+    # remove duplicates
+    return list(set(x_values)), list(set(y_values)), list(set(z_values))
+
+
+def extract_xyz_values(pattern, file_name):
+    x_value = detect_value(pattern, file_name, dim="x")
+    y_value = detect_value(pattern, file_name, dim="y")
+    z_value = detect_value(pattern, file_name, dim="z")
+
+    x = None if len(x_value) == 0 else x_value[0]
+    y = None if len(y_value) == 0 else y_value[0]
+    z = None if len(z_value) == 0 else z_value[0]
+
+    return x, y, z
+
+
 class TiffMag:
     def __init__(self, root, header):
-        x_range = [0]  # currently tiled tiffs are not supported
-        y_range = [0]  # currently tiled tiffs are not supported
 
         self.root = root
         self.tiffs = dict()
         self.dtype = header.dtype
         self.num_channels = header.num_channels
 
-        pattern = "test.000{z}.tiff"  # TODO dont hardcode this
-
-        z_range = [
-            detect_value(pattern, file_name, dim="z")[0]
-            for file_name in self.list_files()
-        ]
+        x_range, y_range, z_range = detect_ranges(header.pattern, self.list_files())
 
         for z in z_range:
             self.tiffs[z] = TiffReader.open(
@@ -89,7 +102,7 @@ class TiffMag:
             # convert data into shape with dedicated num_channels (len(data.shape) == 4)
             # this only effects data where the num_channel is 1 and therefore len(data.shape) was 3
             # this makes it easier to handle both, multi-channel and single-channel, similar
-            data = np.expand_dims(data, 4)
+            data = np.expand_dims(data, 3)
 
         # reformat array to have the channels as the first index (similar to wkw)
         data = np.moveaxis(data, -1, 0)

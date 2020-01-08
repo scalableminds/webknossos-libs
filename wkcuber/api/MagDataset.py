@@ -118,9 +118,14 @@ class WKMagDataset(MagDataset):
 
 
 class TiffMagDataset(MagDataset):
+
+    def __init__(self, layer, name, pattern):
+        self.pattern = pattern
+        super().__init__(layer, name)
+
     def get_header(self):
         return TiffMagHeader(
-            dtype=self.layer.dtype, num_channels=self.layer.num_channels
+            pattern=self.pattern, dtype=self.layer.dtype, num_channels=self.layer.num_channels
         )
 
     def get_slice(self, mag_file_path, size, global_offset):
@@ -130,6 +135,6 @@ class TiffMagDataset(MagDataset):
         return TiffSlice
 
     @classmethod
-    def create(cls, layer, name):
-        mag_dataset = cls(layer, name)
+    def create(cls, layer, name, pattern):
+        mag_dataset = cls(layer, name, pattern)
         return mag_dataset
