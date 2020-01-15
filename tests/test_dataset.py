@@ -518,3 +518,51 @@ def test_get_or_add_mag_for_tiff():
     layer.get_or_add_mag("1")
     assert "1" in layer.mags.keys()
     assert mag.name == "1"
+
+
+def test_tiled_tiff_read_and_write_multichannel():
+    delete_dir("../testoutput/TiledTiffDataset")
+    tiled_tiff_ds = TiffDataset.create_tiled(
+        "../testoutput/TiledTiffDataset",
+        scale=(1, 1, 1),
+        tile_size=(32, 32),
+        pattern="{xxx}_{yyy}_{zzz}.tif",
+    )
+
+    mag = tiled_tiff_ds.add_layer("color", "color", num_channels=3).add_mag("1")
+
+    data = np.zeros((3, 250, 250, 10), dtype=np.uint8)
+    for h in range(10):
+        for i in range(250):
+            for j in range(250):
+                data[0, i, j, h] = i
+                data[1, i, j, h] = j
+                data[2, i, j, h] = 100
+
+    mag.write(data, offset=(5, 5, 5))
+    written_data = mag.read(size=(250, 250, 10), offset=(5, 5, 5))
+    assert written_data.shape == (3, 250, 250, 10)
+    assert np.array_equal(data, written_data)
+
+
+def test_tiled_tiff_read_and_write():
+    delete_dir("../testoutput/TiledTiffDataset")
+    tiled_tiff_ds = TiffDataset.create_tiled(
+        "../testoutput/TiledTiffDataset",
+        scale=(1, 1, 1),
+        tile_size=(32, 32),
+        pattern="{xxx}_{yyy}_{zzz}.tif",
+    )
+
+    mag = tiled_tiff_ds.add_layer("color", "color").add_mag("1")
+
+    data = np.zeros((250, 250, 10), dtype=np.uint8)
+    for h in range(10):
+        for i in range(250):
+            for j in range(250):
+                data[i, j, h] = i + j % 250
+
+    mag.write(data, offset=(5, 5, 5))
+    written_data = mag.read(size=(250, 250, 10), offset=(5, 5, 5))
+    assert written_data.shape == (1, 250, 250, 10)
+    assert np.array_equal(written_data, np.expand_dims(data, 0))

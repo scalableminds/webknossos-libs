@@ -116,7 +116,9 @@ class TiffLayer(Layer):
         self.__assert_mag_does_not_exist_yet__(mag)
         self.__create_dir_for_mag__(mag)
 
-        self.mags[mag] = TiffMagDataset.create(self, mag, self.dataset.properties.pattern)
+        self.mags[mag] = TiffMagDataset.create(
+            self, mag, self.dataset.properties.pattern
+        )
         self.dataset.properties.add_mag(self.name, mag)
 
         return self.mags[mag]

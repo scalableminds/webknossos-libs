@@ -157,10 +157,26 @@ class TiffDataset(AbstractDataset):
         return cls(properties)
 
     @classmethod
-    def create(cls, dataset_path, scale, pattern="{z}.tiff"):
+    def create(cls, dataset_path, scale, pattern="{z}.tif"):
         name = basename(normpath(dataset_path))
         properties = TiffProperties(
-            join(dataset_path, "datasource-properties.json"), name, scale, pattern=pattern
+            join(dataset_path, "datasource-properties.json"),
+            name,
+            scale,
+            pattern=pattern,
+            tile_size=None,
+        )
+        return TiffDataset.create_with_properties(properties)
+
+    @classmethod
+    def create_tiled(cls, dataset_path, scale, tile_size, pattern="{z}.tif"):
+        name = basename(normpath(dataset_path))
+        properties = TiffProperties(
+            join(dataset_path, "datasource-properties.json"),
+            name,
+            scale,
+            pattern=pattern,
+            tile_size=tile_size,
         )
         return TiffDataset.create_with_properties(properties)
 
