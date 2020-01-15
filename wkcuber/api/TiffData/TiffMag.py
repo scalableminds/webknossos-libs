@@ -89,7 +89,7 @@ class TiffMag:
             # convert data into shape with dedicated num_channels (len(data.shape) == 4)
             # this only effects data where the num_channel is 1 and therefore len(data.shape) was 3
             # this makes it easier to handle both, multi-channel and single-channel, similar
-            data = np.expand_dims(data, 4)
+            data = np.expand_dims(data, 3)
 
         # reformat array to have the channels as the first index (similar to wkw)
         data = np.moveaxis(data, -1, 0)

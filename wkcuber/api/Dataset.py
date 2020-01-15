@@ -11,6 +11,7 @@ from wkcuber.api.Layer import Layer, WKLayer, TiffLayer
 
 
 class AbstractDataset(ABC):
+
     @abstractmethod
     def __init__(self, properties):
         self.layers = {}

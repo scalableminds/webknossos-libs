@@ -9,6 +9,10 @@ from wkcuber.mag import Mag
 
 
 class Layer:
+
+    COLOR_TYPE = "color"
+    SEGMENTATION_TYPE = "segmentation"
+
     def __init__(self, name, dataset, dtype, num_channels):
         self.name = name
         self.dataset = dataset

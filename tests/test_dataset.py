@@ -6,6 +6,7 @@ from shutil import rmtree, copytree
 from wkcuber.api.Dataset import WKDataset, TiffDataset
 from os import path, mkdir
 
+from wkcuber.api.Layer import Layer
 from wkcuber.api.Properties import Properties, TiffProperties
 
 
@@ -60,7 +61,7 @@ def test_create_TiffDataset_with_layer_and_mag():
     delete_dir("../testoutput/TiffDataset")
 
     ds = WKDataset.create("../testoutput/TiffDataset", scale=(1, 1, 1))
-    ds.add_layer("color", "color")
+    ds.add_layer("color", Layer.COLOR_TYPE)
 
     ds.get_layer("color").add_mag("1")
     ds.get_layer("color").add_mag("2-2-1")
@@ -126,7 +127,7 @@ def test_slice_wk_write():
 
     with wk_slice.open():
         np.random.seed(1234)
-        write_data = np.random.rand(3, 10, 10, 10).astype(np.uint8)
+        write_data = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
 
         wk_slice.write(write_data)
 
@@ -144,9 +145,9 @@ def test_slice_tiff_write():
 
     with tiff_slice.open():
         np.random.seed(1234)
-        write_data = np.random.rand(5, 5, 5).astype(np.uint8)
+        write_data = (np.random.rand(5, 5, 5) * 255).astype(np.uint8)
 
-        tiff_slice.write(np.zeros((5, 5, 5), dtype=np.uint8))
+        tiff_slice.write(write_data)
 
         data = tiff_slice.read((5, 5, 5))
         assert data.shape == (1, 5, 5, 5)  # this dataset has only one channel
@@ -191,7 +192,7 @@ def test_slice_wk_write_out_of_bounds():
                 np.zeros((200, 200, 5), dtype=np.uint8)
             )  # this is bigger than the bounding_box
             raise Exception(
-                "The test 'test_slice_tiff_write_out_of_bounds' did not throw an exception even though it should"
+                "The test 'test_slice_wk_write_out_of_bounds' did not throw an exception even though it should"
             )
         except AssertionError:
             pass
@@ -235,12 +236,12 @@ def test_update_new_bounding_box_offset():
     delete_dir("../testoutput/TiffDataset")
 
     ds = TiffDataset.create("../testoutput/TiffDataset", scale=(1, 1, 1))
-    mag = ds.add_layer("color", "color").add_mag("1")
+    mag = ds.add_layer("color", Layer.COLOR_TYPE).add_mag("1")
 
     assert ds.properties.data_layers["color"].bounding_box["topLeft"] == (-1, -1, -1)
 
     np.random.seed(1234)
-    write_data = np.random.rand(10, 10, 10).astype(np.uint8)
+    write_data = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
     mag.write(
         write_data, offset=(10, 10, 10)
     )  # the write method of MagDataset does always use the relative offset to (0, 0, 0)
@@ -257,7 +258,7 @@ def test_tiff_write_multi_channel_uint8():
     delete_dir(dataset_path)
 
     ds_tiff = TiffDataset.create(dataset_path, scale=(1, 1, 1))
-    mag = ds_tiff.add_layer("color", "color", num_channels=3).add_mag("1")
+    mag = ds_tiff.add_layer("color", Layer.COLOR_TYPE, num_channels=3).add_mag("1")
 
     # 10 images (z-layers), each 250x250, dtype=np.uint8
     data = np.zeros((3, 250, 250, 10), dtype=np.uint8)
@@ -278,7 +279,7 @@ def test_wk_write_multi_channel_uint8():
     delete_dir(dataset_path)
 
     ds_tiff = WKDataset.create(dataset_path, scale=(1, 1, 1))
-    mag = ds_tiff.add_layer("color", "color", num_channels=3).add_mag("1")
+    mag = ds_tiff.add_layer("color", Layer.COLOR_TYPE, num_channels=3).add_mag("1")
 
     # 10 images (z-layers), each 250x250, dtype=np.uint8
     data = np.zeros((3, 250, 250, 10), dtype=np.uint8)
@@ -299,7 +300,7 @@ def test_tiff_write_multi_channel_uint16():
     delete_dir(dataset_path)
 
     ds_tiff = TiffDataset.create(dataset_path, scale=(1, 1, 1))
-    mag = ds_tiff.add_layer("color", "color", num_channels=3, dtype=np.uint16).add_mag(
+    mag = ds_tiff.add_layer("color", Layer.COLOR_TYPE, num_channels=3, dtype=np.uint16).add_mag(
         "1"
     )
 
@@ -325,7 +326,7 @@ def test_wk_write_multi_channel_uint16():
     delete_dir(dataset_path)
 
     ds_tiff = WKDataset.create(dataset_path, scale=(1, 1, 1))
-    mag = ds_tiff.add_layer("color", "color", num_channels=3, dtype=np.uint16).add_mag(
+    mag = ds_tiff.add_layer("color", Layer.COLOR_TYPE, num_channels=3, dtype=np.uint16).add_mag(
         "1"
     )
 
@@ -352,7 +353,7 @@ def test_wkw_empty_read():
 
     mag = (
         WKDataset.create(filename, scale=(1, 1, 1))
-        .add_layer("color", "color")
+        .add_layer("color", Layer.COLOR_TYPE)
         .add_mag("1")
     )
     data = mag.read(size=(0, 0, 0), offset=(1, 1, 1))
@@ -366,7 +367,7 @@ def test_tiff_empty_read():
 
     mag = (
         TiffDataset.create(filename, scale=(1, 1, 1))
-        .add_layer("color", "color")
+        .add_layer("color", Layer.COLOR_TYPE)
         .add_mag("1")
     )
     data = mag.read(size=(0, 0, 0), offset=(1, 1, 1))
@@ -380,7 +381,7 @@ def test_tiff_read_padded_data():
 
     mag = (
         TiffDataset.create(filename, scale=(1, 1, 1))
-        .add_layer("color", "color", num_channels=3)
+        .add_layer("color", Layer.COLOR_TYPE, num_channels=3)
         .add_mag("1")
     )
     # there are no tiffs yet, however, this should not fail but pad the data with zeros
@@ -396,7 +397,7 @@ def test_wk_read_padded_data():
 
     mag = (
         WKDataset.create(filename, scale=(1, 1, 1))
-        .add_layer("color", "color", num_channels=3)
+        .add_layer("color", Layer.COLOR_TYPE, num_channels=3)
         .add_mag("1")
     )
     # there are no tiffs yet, however, this should not fail but pad the data with zeros
@@ -424,12 +425,12 @@ def test_num_channel_mismatch_assertion():
     delete_dir("../testoutput/WKDataset")
 
     ds = WKDataset.create("../testoutput/WKDataset", scale=(1, 1, 1))
-    mag = ds.add_layer("color", "color", num_channels=1).add_mag(
+    mag = ds.add_layer("color", Layer.COLOR_TYPE, num_channels=1).add_mag(
         "1"
     )  # num_channel=1 is also the default
 
     np.random.seed(1234)
-    write_data = np.random.rand(3, 10, 10, 10).astype(np.uint8)  # 3 channel
+    write_data = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)  # 3 channel
 
     try:
         mag.write(write_data)  # there is a mismatch between the number of channels
@@ -450,18 +451,18 @@ def test_get_or_add_layer():
     assert "color" not in ds.layers.keys()
 
     # layer did not exist before
-    layer = ds.get_or_add_layer("color", "color", dtype=np.uint8, num_channels=1)
+    layer = ds.get_or_add_layer("color", Layer.COLOR_TYPE, dtype=np.uint8, num_channels=1)
     assert "color" in ds.layers.keys()
     assert layer.name == "color"
 
     # layer did exist before
-    layer = ds.get_or_add_layer("color", "color", dtype=np.uint8, num_channels=1)
+    layer = ds.get_or_add_layer("color", Layer.COLOR_TYPE, dtype=np.uint8, num_channels=1)
     assert "color" in ds.layers.keys()
     assert layer.name == "color"
 
     try:
         # layer did exist before but with another 'dtype' (this would work the same for 'category' and 'num_channels')
-        layer = ds.get_or_add_layer("color", "color", dtype=np.uint16, num_channels=1)
+        layer = ds.get_or_add_layer("color", Layer.COLOR_TYPE, dtype=np.uint16, num_channels=1)
 
         raise Exception(
             "The test 'test_get_or_add_layer' did not throw an exception even though it should"
@@ -474,7 +475,7 @@ def test_get_or_add_mag_for_wk():
     delete_dir("../testoutput/WKDataset")
 
     layer = WKDataset.create("../testoutput/WKDataset", scale=(1, 1, 1)).add_layer(
-        "color", "color"
+        "color", Layer.COLOR_TYPE
     )
 
     assert "1" not in layer.mags.keys()
@@ -504,7 +505,7 @@ def test_get_or_add_mag_for_tiff():
     delete_dir("../testoutput/WKDataset")
 
     layer = TiffDataset.create("../testoutput/WKDataset", scale=(1, 1, 1)).add_layer(
-        "color", "color"
+        "color", Layer.COLOR_TYPE
     )
 
     assert "1" not in layer.mags.keys()
