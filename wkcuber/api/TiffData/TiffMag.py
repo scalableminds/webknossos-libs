@@ -21,7 +21,7 @@ def replace_coordinate(pattern: str, coord_id: str, coord: int) -> str:
 
 
 def to_file_name(z):
-    return replace_coordinate("test.000{z}.tiff", "z", z)
+    return replace_coordinate("test.{zzzz}.tif", "z", z)
 
 
 def detect_value(
@@ -58,7 +58,7 @@ class TiffMag:
         self.dtype = header.dtype
         self.num_channels = header.num_channels
 
-        pattern = "test.000{z}.tiff"  # TODO dont hardcode this
+        pattern = "test.{zzzz}.tif"  # TODO dont hardcode this
 
         z_range = [
             detect_value(pattern, file_name, dim="z")[0]
@@ -76,10 +76,10 @@ class TiffMag:
             shape = tuple(shape) + tuple([self.num_channels])
 
         data = np.zeros(shape=shape, dtype=self.dtype)
-        for i, (z, off, size) in enumerate(self.calculate_relevant_slices(off, shape)):
+        for i, (z, offset, size) in enumerate(self.calculate_relevant_slices(off, shape)):
             if z in self.tiffs:
                 data[:, :, i] = np.array(self.tiffs[z].read(), self.dtype)[
-                    off[0] : off[0] + size[0], off[1] : off[1] + size[1]
+                    offset[0] : offset[0] + size[0], offset[1] : offset[1] + size[1]
                 ]
             else:
                 shape_without_z = shape[:2] + shape[3:]
@@ -135,7 +135,7 @@ class TiffMag:
         raise NotImplementedError
 
     def list_files(self):
-        file_paths = list(iglob(os.path.join(self.root, "*.tiff")))
+        file_paths = list(iglob(os.path.join(self.root, "*.tif")))
 
         for file_path in file_paths:
             yield os.path.relpath(os.path.normpath(file_path), self.root)
@@ -160,13 +160,11 @@ class TiffMag:
             )
         if not data.shape[3] == self.num_channels:
             raise AttributeError(
-                "The shape of the provided data does not match the expected shape. (Expected %d channels)"
-                % self.num_channels
+                f"The shape of the provided data does not match the expected shape. (Expected {self.num_channels} channels)"
             )
         if not np.dtype(data.dtype) == self.dtype:
             raise AttributeError(
-                "The type of the provided data does not match the expected type. (Expected np.array of tpye %s)"
-                % self.dtype.name
+                f"The type of the provided data does not match the expected type. (Expected np.array of type {self.dtype.name})"
             )
 
     def get_file_name_for_layer(self, z):
@@ -186,7 +184,7 @@ class TiffMag:
 
 
 class TiffMagHeader:
-    def __init__(self, pattern="{z}.tiff", dtype=np.dtype("uint8"), num_channels=1):
+    def __init__(self, pattern="{z}.tif", dtype=np.dtype("uint8"), num_channels=1):
         self.pattern = pattern
         self.dtype = np.dtype(dtype)
         self.num_channels = num_channels

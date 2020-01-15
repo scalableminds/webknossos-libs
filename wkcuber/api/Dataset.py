@@ -1,19 +1,19 @@
 from shutil import rmtree
 from abc import ABC, abstractmethod
-from os import mkdir
+from os import mkdir, path
 from os.path import join, normpath, basename
 from pathlib import Path
 import numpy as np
-from os import path
 
-from wkcuber.api.Properties import WKProperties, TiffProperties
+from wkcuber.api.Properties import WKProperties, TiffProperties, Properties
 from wkcuber.api.Layer import Layer, WKLayer, TiffLayer
 
 
 class AbstractDataset(ABC):
 
     @abstractmethod
-    def __init__(self, properties):
+    def __init__(self, dataset_path):
+        properties = self._get_properties_type()._from_json(join(dataset_path, Properties.FILE_NAME))
         self.layers = {}
         self.path = Path(properties.path).parent
         self.properties = properties
@@ -28,22 +28,17 @@ class AbstractDataset(ABC):
                 self.layers[layer_name].setup_mag(resolution.mag.to_layer_name())
 
     @classmethod
-    @abstractmethod
-    def open(cls, dataset_path):
-        pass
-
-    @classmethod
     def create_with_properties(cls, properties):
-        # initialize object
-        dataset = cls(properties)
+        dataset_path = path.dirname(properties.path)
         # create directories on disk and write datasource-properties.json
         try:
-            mkdir(dataset.path)
-            dataset.properties.export_as_json()
+            mkdir(dataset_path)
+            properties._export_as_json()
         except OSError:
-            raise FileExistsError("Creation of Dataset {} failed".format(dataset.path))
+            raise FileExistsError("Creation of Dataset {} failed".format(dataset_path))
 
-        return dataset
+        # initialize object
+        return cls(dataset_path)
 
     @classmethod
     @abstractmethod
@@ -73,25 +68,22 @@ class AbstractDataset(ABC):
                     layer_name
                 )
             )
-        self.layers[layer_name] = self.__create_layer__(layer_name, dtype, num_channels)
-        self.properties.add_layer(layer_name, category, dtype.name, num_channels)
+        self.layers[layer_name] = self._create_layer(layer_name, dtype, num_channels)
+        self.properties._add_layer(layer_name, category, dtype.name, num_channels)
         return self.layers[layer_name]
 
     def get_or_add_layer(
-        self, layer_name, category, dtype=np.dtype("uint8"), num_channels=1
+            self, layer_name, category, dtype=None, num_channels=None
     ):
         if layer_name in self.layers.keys():
             assert self.properties.data_layers[layer_name].category == category, (
-                "Cannot get_or_add_layer: The layer %s already exists, but the dytpes do not match"
-                % layer_name
+                f"Cannot get_or_add_layer: The layer {layer_name} already exists, but the categories do not match"
             )
-            assert self.layers[layer_name].dtype == np.dtype(dtype), (
-                "Cannot get_or_add_layer: The layer %s already exists, but the dytpes do not match"
-                % layer_name
+            assert dtype is None or self.layers[layer_name].dtype == np.dtype(dtype), (
+                f"Cannot get_or_add_layer: The layer {layer_name} already exists, but the dtypes do not match"
             )
-            assert self.layers[layer_name].num_channels == num_channels, (
-                "Cannot get_or_add_layer: The layer %s already exists, but the number of channels do not match"
-                % layer_name
+            assert num_channels is None or self.layers[layer_name].num_channels == num_channels, (
+                f"Cannot get_or_add_layer: The layer {layer_name} already exists, but the number of channels do not match"
             )
             return self.layers[layer_name]
         else:
@@ -105,12 +97,12 @@ class AbstractDataset(ABC):
                 )
             )
         del self.layers[layer_name]
-        self.properties.delete_layer(layer_name)
+        self.properties._delete_layer(layer_name)
         # delete files on disk
         rmtree(join(self.path, layer_name))
 
     def get_slice(
-        self, layer_name, mag_name, size=(1024, 1024, 1024), global_offset=(0, 0, 0)
+            self, layer_name, mag_name, size=(1024, 1024, 1024), global_offset=(0, 0, 0)
     ):
         layer = self.get_layer(layer_name)
         mag = layer.get_mag(mag_name)
@@ -118,59 +110,55 @@ class AbstractDataset(ABC):
 
         return mag.get_slice(mag_file_path, size=size, global_offset=global_offset)
 
-    def __create_layer__(self, layer_name, dtype, num_channels):
+    def _create_layer(self, layer_name, dtype, num_channels):
         raise NotImplementedError
+
+    @abstractmethod
+    def _get_properties_type(self):
+        pass
 
 
 class WKDataset(AbstractDataset):
     @classmethod
-    def open(cls, dataset_path):
-        properties = WKProperties.from_json(
-            join(dataset_path, "datasource-properties.json")
-        )
-        return cls(properties)
-
-    @classmethod
     def create(cls, dataset_path, scale):
         name = basename(normpath(dataset_path))
         properties = WKProperties(
-            join(dataset_path, "datasource-properties.json"), name, scale
+            join(dataset_path, Properties.FILE_NAME), name, scale
         )
         return WKDataset.create_with_properties(properties)
 
-    def __init__(self, properties):
-        super().__init__(properties)
-        assert isinstance(properties, WKProperties)
+    def __init__(self, dataset_path):
+        super().__init__(dataset_path)
+        assert isinstance(self.properties, WKProperties)
 
     def to_tiff_dataset(self, new_dataset_path):
         raise NotImplementedError  # TODO; implement
 
-    def __create_layer__(self, layer_name, dtype, num_channels):
+    def _create_layer(self, layer_name, dtype, num_channels):
         return WKLayer(layer_name, self, dtype, num_channels)
+
+    def _get_properties_type(self):
+        return WKProperties
 
 
 class TiffDataset(AbstractDataset):
     @classmethod
-    def open(cls, dataset_path):
-        properties = TiffProperties.from_json(
-            join(dataset_path, "datasource-properties.json")
-        )
-        return cls(properties)
-
-    @classmethod
     def create(cls, dataset_path, scale):
         name = basename(normpath(dataset_path))
         properties = TiffProperties(
-            join(dataset_path, "datasource-properties.json"), name, scale
+            join(dataset_path, Properties.FILE_NAME), name, scale
         )
         return TiffDataset.create_with_properties(properties)
 
-    def __init__(self, properties):
-        super().__init__(properties)
-        assert isinstance(properties, TiffProperties)
+    def __init__(self, dataset_path):
+        super().__init__(dataset_path)
+        assert isinstance(self.properties, TiffProperties)
 
     def to_wk_dataset(self, new_dataset_path):
         raise NotImplementedError  # TODO; implement
 
-    def __create_layer__(self, layer_name, dtype, num_channels):
+    def _create_layer(self, layer_name, dtype, num_channels):
         return TiffLayer(layer_name, self, dtype, num_channels)
+
+    def _get_properties_type(self):
+        return TiffProperties

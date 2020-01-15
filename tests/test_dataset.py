@@ -7,7 +7,7 @@ from wkcuber.api.Dataset import WKDataset, TiffDataset
 from os import path, mkdir
 
 from wkcuber.api.Layer import Layer
-from wkcuber.api.Properties import Properties, TiffProperties
+from wkcuber.api.Properties import TiffProperties
 from wkcuber.mag import Mag
 
 
@@ -16,7 +16,7 @@ def delete_dir(relative_path):
         rmtree(relative_path)
 
 
-def test_create_WKDataset_with_layer_and_mag():
+def test_create_wk_dataset_with_layer_and_mag():
     delete_dir("../testoutput/wk_dataset")
 
     ds = WKDataset.create("../testoutput/wk_dataset", scale=(1, 1, 1))
@@ -32,7 +32,7 @@ def test_create_WKDataset_with_layer_and_mag():
     assert len(ds.properties.data_layers["color"].wkw_magnifications) == 2
 
 
-def test_create_WKDataset_with_explicit_header_fields():
+def test_create_wk_dataset_with_explicit_header_fields():
     delete_dir("../testoutput/wk_dataset_advanced")
 
     ds = WKDataset.create("../testoutput/wk_dataset_advanced", scale=(1, 1, 1))
@@ -62,7 +62,7 @@ def test_create_WKDataset_with_explicit_header_fields():
     )
 
 
-def test_create_TiffDataset_with_layer_and_mag():
+def test_create_tiff_dataset_with_layer_and_mag():
     # This test would be the same for WKDataset
 
     delete_dir("../testoutput/tiff_dataset")
@@ -81,14 +81,14 @@ def test_create_TiffDataset_with_layer_and_mag():
 
 
 def test_open_wk_dataset():
-    ds = WKDataset.open("../testdata/simple_wk_dataset")
+    ds = WKDataset("../testdata/simple_wk_dataset")
 
     assert len(ds.properties.data_layers) == 1
     assert len(ds.properties.data_layers["color"].wkw_magnifications) == 1
 
 
 def test_open_tiff_dataset():
-    ds = TiffDataset.open("../testdata/simple_tiff_dataset")
+    ds = TiffDataset("../testdata/simple_tiff_dataset")
 
     assert len(ds.properties.data_layers) == 1
     assert len(ds.properties.data_layers["color"].wkw_magnifications) == 1
@@ -97,7 +97,7 @@ def test_open_tiff_dataset():
 def test_slice_read_with_open():
     # This test would be the same for TiffDataset
 
-    wk_slice = WKDataset.open("../testdata/simple_wk_dataset/").get_slice("color", "1")
+    wk_slice = WKDataset("../testdata/simple_wk_dataset/").get_slice("color", "1")
 
     assert not wk_slice._is_opened
 
@@ -113,7 +113,7 @@ def test_slice_read_with_open():
 def test_slice_read_without_open():
     # This test would be the same for TiffDataset
 
-    wk_slice = WKDataset.open("../testdata/simple_wk_dataset/").get_slice("color", "1")
+    wk_slice = WKDataset("../testdata/simple_wk_dataset/").get_slice("color", "1")
 
     assert not wk_slice._is_opened
 
@@ -128,7 +128,7 @@ def test_slice_wk_write():
     delete_dir("../testoutput/simple_wk_dataset/")
     copytree("../testdata/simple_wk_dataset/", "../testoutput/simple_wk_dataset/")
 
-    wk_slice = WKDataset.open("../testoutput/simple_wk_dataset/").get_slice(
+    wk_slice = WKDataset("../testoutput/simple_wk_dataset/").get_slice(
         "color", "1", size=(100, 100, 100)
     )
 
@@ -146,7 +146,7 @@ def test_slice_tiff_write():
     delete_dir("../testoutput/simple_tiff_dataset/")
     copytree("../testdata/simple_tiff_dataset/", "../testoutput/simple_tiff_dataset/")
 
-    tiff_slice = TiffDataset.open("../testoutput/simple_tiff_dataset/").get_slice(
+    tiff_slice = TiffDataset("../testoutput/simple_tiff_dataset/").get_slice(
         "color", "1", size=(100, 100, 100)
     )
 
@@ -167,7 +167,7 @@ def test_slice_tiff_write_out_of_bounds():
     delete_dir(new_dataset_path)
     copytree("../testdata/simple_tiff_dataset/", new_dataset_path)
 
-    tiff_slice = TiffDataset.open(new_dataset_path).get_slice(
+    tiff_slice = TiffDataset(new_dataset_path).get_slice(
         "color", "1", size=(100, 100, 100)
     )
 
@@ -189,7 +189,7 @@ def test_slice_wk_write_out_of_bounds():
     delete_dir(new_dataset_path)
     copytree("../testdata/simple_wk_dataset/", new_dataset_path)
 
-    tiff_slice = WKDataset.open(new_dataset_path).get_slice(
+    tiff_slice = WKDataset(new_dataset_path).get_slice(
         "color", "1", size=(100, 100, 100)
     )
 
@@ -211,7 +211,7 @@ def test_tiff_write_out_of_bounds():
     delete_dir(new_dataset_path)
     copytree("../testdata/simple_tiff_dataset/", new_dataset_path)
 
-    ds = TiffDataset.open(new_dataset_path)
+    ds = TiffDataset(new_dataset_path)
     mag_dataset = ds.get_layer("color").get_mag("1")
 
     assert ds.properties.data_layers["color"].get_bounding_box_size() == (265, 265, 10)
@@ -227,7 +227,7 @@ def test_wk_write_out_of_bounds():
     delete_dir(new_dataset_path)
     copytree("../testdata/simple_wk_dataset/", new_dataset_path)
 
-    ds = WKDataset.open(new_dataset_path)
+    ds = WKDataset(new_dataset_path)
     mag_dataset = ds.get_layer("color").get_mag("1")
 
     assert ds.properties.data_layers["color"].get_bounding_box_size() == (24, 24, 24)
@@ -407,7 +407,7 @@ def test_wk_read_padded_data():
         .add_layer("color", Layer.COLOR_TYPE, num_channels=3)
         .add_mag("1")
     )
-    # there are no tiffs yet, however, this should not fail but pad the data with zeros
+    # there is no data yet, however, this should not fail but pad the data with zeros
     data = mag.read(size=(10, 10, 10))
 
     assert data.shape == (3, 10, 10, 10)
@@ -420,10 +420,10 @@ def test_read_and_write_of_properties():
     source_file_name = "../testdata/simple_tiff_dataset/datasource-properties.json"
     destination_file_name = destination_path + "datasource-properties.json"
 
-    imported_properties = TiffProperties.from_json(source_file_name)
-    imported_properties.path = destination_file_name
+    imported_properties = TiffProperties._from_json(source_file_name)
+    imported_properties._path = destination_file_name
     mkdir(destination_path)
-    imported_properties.export_as_json()
+    imported_properties._export_as_json()
 
     filecmp.cmp(source_file_name, destination_file_name)
 
@@ -437,7 +437,7 @@ def test_num_channel_mismatch_assertion():
     )  # num_channel=1 is also the default
 
     np.random.seed(1234)
-    write_data = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)  # 3 channel
+    write_data = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)  # 3 channels
 
     try:
         mag.write(write_data)  # there is a mismatch between the number of channels

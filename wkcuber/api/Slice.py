@@ -11,13 +11,14 @@ class Slice:
         header,
         size=(1024, 1024, 1024),
         global_offset=(0, 0, 0),
+        is_bounded=True
     ):
         self.dataset = None
         self.path = path_to_mag_dataset
         self.header = header
         self.size = size
         self.global_offset = global_offset
-        self.is_bounded = True
+        self.is_bounded = is_bounded
         self._is_opened = False
 
     def open(self):

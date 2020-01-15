@@ -5,89 +5,119 @@ from wkcuber.mag import Mag
 
 
 class Resolution:
-    def to_json(self):
+    def _to_json(self):
         pass
 
     @classmethod
-    def from_json(cls, json_data):
+    def _from_json(cls, json_data):
         pass
 
 
 class TiffResolution(Resolution):
     def __init__(self, mag):
-        self.mag = Mag(mag)
+        self._mag = Mag(mag)
 
-    def to_json(self):
+    def _to_json(self):
         return {"resolution": self.mag.to_array()}
 
     @classmethod
-    def from_json(cls, json_data):
+    def _from_json(cls, json_data):
         return cls(json_data["resolution"])
+
+    @property
+    def mag(self):
+        return self._mag
 
 
 class WkResolution(Resolution):
     def __init__(self, mag, cube_length):
-        self.mag = Mag(mag)
-        self.cube_length = cube_length
+        self._mag = Mag(mag)
+        self._cube_length = cube_length
 
-    def to_json(self):
+    def _to_json(self):
         return {"resolution": self.mag.to_array(), "cube_length": self.cube_length}
 
     @classmethod
-    def from_json(cls, json_data):
+    def _from_json(cls, json_data):
         return cls(json_data["resolution"], json_data["cube_length"])
+
+    @property
+    def mag(self):
+        return self._mag
+
+    @property
+    def cube_length(self):
+        return self._cube_length
 
 
 class Properties:
+
+    FILE_NAME = "datasource-properties.json"
+
     def __init__(self, path, name, scale, team="", data_layers=None):
-        self.path = path
-        self.name = name
-        self.team = team
-        self.scale = scale
+        self._path = path
+        self._name = name
+        self._team = team
+        self._scale = scale
         if data_layers is None:
-            self.data_layers = {}
+            self._data_layers = {}
         else:
-            self.data_layers = data_layers
+            self._data_layers = data_layers
 
     @classmethod
-    def from_json(cls, path):
+    def _from_json(cls, path):
         pass
 
-    def export_as_json(self):
+    def _export_as_json(self):
         pass
 
-    def add_layer(self, layer_name, category, element_class, num_channels=1):
+    def _add_layer(self, layer_name, category, element_class, num_channels=1):
         pass
 
-    def delete_layer(self, layer_name):
+    def _delete_layer(self, layer_name):
         del self.data_layers[layer_name]
-        self.export_as_json()
+        self._export_as_json()
 
-    def delete_mag(self, layer_name, mag):
-        self.data_layers[layer_name].wkw_magnifications = [
-            r for r in self.data_layers[layer_name].wkw_magnifications if r.mag != Mag(mag)
-        ]
-        self.export_as_json()
+    def _delete_mag(self, layer_name, mag):
+        self._data_layers[layer_name]._delete_resolution(mag)
+        self._export_as_json()
 
-    def set_bounding_box_size_of_layer(self, layer_name, size):
-        self.data_layers[layer_name].set_bounding_box_size(size)
-        self.export_as_json()
+    def _set_bounding_box_of_layer(self, layer_name, offset, size):
+        self._data_layers[layer_name]._set_bounding_box_size(size)
+        self._data_layers[layer_name]._set_bounding_box_offset(offset)
+        self._export_as_json()
 
-    def set_bounding_box_offset_of_layer(self, layer_name, offset):
-        self.data_layers[layer_name].set_bounding_box_offset(offset)
-        self.export_as_json()
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def path(self):
+        return self._path
+
+    @property
+    def team(self):
+        return self._team
+
+    @property
+    def scale(self):
+        return self._scale
+
+    @property
+    def data_layers(self):
+        return self._data_layers
 
 
 class WKProperties(Properties):
     @classmethod
-    def from_json(cls, path):
+    def _from_json(cls, path):
         with open(path) as datasource_properties:
             data = json.load(datasource_properties)
 
             # reconstruct data_layers
             data_layers = {}
             for layer in data["dataLayers"]:
-                data_layers[layer["name"]] = LayerProperties.from_json(
+                data_layers[layer["name"]] = LayerProperties._from_json(
                     layer, WkResolution
                 )
 
@@ -95,28 +125,28 @@ class WKProperties(Properties):
                 path, data["id"]["name"], data["scale"], data["id"]["team"], data_layers
             )
 
-    def export_as_json(self):
+    def _export_as_json(self):
         data = {
             "id": {"name": self.name, "team": self.team},
             "scale": self.scale,
             "dataLayers": [
-                self.data_layers[layer_name].to_json()
+                self.data_layers[layer_name]._to_json()
                 for layer_name in self.data_layers
             ],
         }
         with open(self.path, "w") as outfile:
             json.dump(data, outfile, indent=4, separators=(",", ": "))
 
-    def add_layer(self, layer_name, category, element_class, num_channels=1):
+    def _add_layer(self, layer_name, category, element_class, num_channels=1):
         # this layer is already in data_layers in case we reconstruct the dataset from a datasource-properties.json
         if layer_name not in self.data_layers:
             new_layer = LayerProperties(
                 "wkw", layer_name, category, element_class, num_channels
             )
             self.data_layers[layer_name] = new_layer
-            self.export_as_json()
+            self._export_as_json()
 
-    def add_mag(self, layer_name, mag, cube_length):
+    def _add_mag(self, layer_name, mag, cube_length):
         # this mag is already in wkw_magnifications in case we reconstruct the dataset from a datasource-properties.json
         if not any(
             [
@@ -124,24 +154,24 @@ class WKProperties(Properties):
                 for res in self.data_layers[layer_name].wkw_magnifications
             ]
         ):
-            self.data_layers[layer_name].add_resolution(WkResolution(mag, cube_length))
-            self.export_as_json()
+            self._data_layers[layer_name]._add_resolution(WkResolution(mag, cube_length))
+            self._export_as_json()
 
 
 class TiffProperties(Properties):
     def __init__(self, path, name, scale, team="", data_layers=None, grid_shape=(0, 0)):
         super().__init__(path, name, scale, team, data_layers)
-        self.grid_shape = grid_shape
+        self._grid_shape = grid_shape
 
     @classmethod
-    def from_json(cls, path):
+    def _from_json(cls, path):
         with open(path) as datasource_properties:
             data = json.load(datasource_properties)
 
             # reconstruct data_layers
             data_layers = {}
             for layer in data["dataLayers"]:
-                data_layers[layer["name"]] = LayerProperties.from_json(
+                data_layers[layer["name"]] = LayerProperties._from_json(
                     layer, TiffResolution
                 )
 
@@ -154,12 +184,12 @@ class TiffProperties(Properties):
                 data["grid_shape"],
             )
 
-    def export_as_json(self):
+    def _export_as_json(self):
         data = {
             "id": {"name": self.name, "team": self.team},
             "scale": self.scale,
             "dataLayers": [
-                self.data_layers[layer_name].to_json()
+                self.data_layers[layer_name]._to_json()
                 for layer_name in self.data_layers
             ],
             "grid_shape": self.grid_shape,
@@ -167,16 +197,20 @@ class TiffProperties(Properties):
         with open(self.path, "w") as outfile:
             json.dump(data, outfile, indent=4, separators=(",", ": "))
 
-    def add_layer(self, layer_name, category, element_class="uint8", num_channels=1):
+    @property
+    def grid_shape(self):
+        return self._grid_shape
+
+    def _add_layer(self, layer_name, category, element_class="uint8", num_channels=1):
         # this layer is already in data_layers in case we reconstruct the dataset from a datasource-properties.json
         if layer_name not in self.data_layers:
             new_layer = LayerProperties(
                 "tiff", layer_name, category, element_class, num_channels
             )
             self.data_layers[layer_name] = new_layer
-            self.export_as_json()
+            self._export_as_json()
 
-    def add_mag(self, layer_name, mag):
+    def _add_mag(self, layer_name, mag):
         # this mag is already in wkw_magnifications in case we reconstruct the dataset from a datasource-properties.json
         if not any(
             [
@@ -184,8 +218,8 @@ class TiffProperties(Properties):
                 for res in self.data_layers[layer_name].wkw_magnifications
             ]
         ):
-            self.data_layers[layer_name].add_resolution(TiffResolution(mag))
-            self.export_as_json()
+            self.data_layers[layer_name]._add_resolution(TiffResolution(mag))
+            self._export_as_json()
 
 
 class LayerProperties:
@@ -199,20 +233,20 @@ class LayerProperties:
         bounding_box=None,
         resolutions=None,
     ):
-        self.data_format = data_format
-        self.name = name
-        self.category = category
-        self.element_class = element_class
-        self.num_channels = num_channels
-        self.bounding_box = bounding_box or {
+        self._data_format = data_format
+        self._name = name
+        self._category = category
+        self._element_class = element_class
+        self._num_channels = num_channels
+        self._bounding_box = bounding_box or {
             "topLeft": (-1, -1, -1),
             "width": 0,
             "height": 0,
             "depth": 0,
         }
-        self.wkw_magnifications = resolutions or []
+        self._wkw_magnifications = resolutions or []
 
-    def to_json(self):
+    def _to_json(self):
         return {
             "dataFormat": self.data_format,
             "name": self.name,
@@ -227,14 +261,11 @@ class LayerProperties:
                 "height": self.bounding_box["height"],
                 "depth": self.bounding_box["depth"],
             },
-            "wkwResolutions": [r.to_json() for r in self.wkw_magnifications],
+            "wkwResolutions": [r._to_json() for r in self.wkw_magnifications],
         }
 
-    def get_element_type(self):
-        return np.dtype(self.element_class)
-
     @classmethod
-    def from_json(cls, json_data, resolution_type):
+    def _from_json(cls, json_data, resolution_type):
         # create LayerProperties without resolutions
         layer_properties = cls(
             json_data["dataFormat"],
@@ -247,15 +278,15 @@ class LayerProperties:
 
         # add resolutions to LayerProperties
         for resolution in json_data["wkwResolutions"]:
-            layer_properties.add_resolution(resolution_type.from_json(resolution))
+            layer_properties._add_resolution(resolution_type._from_json(resolution))
 
         return layer_properties
 
-    def add_resolution(self, resolution):
-        self.wkw_magnifications.append(resolution)
+    def _add_resolution(self, resolution):
+        self._wkw_magnifications.append(resolution)
 
-    def delete_resolution(self, resolution):
-        self.wkw_magnifications.delete(resolution)
+    def _delete_resolution(self, resolution):
+        self._wkw_magnifications.delete(resolution)
 
     def get_bounding_box_size(self):
         return (
@@ -267,10 +298,38 @@ class LayerProperties:
     def get_bounding_box_offset(self):
         return tuple(self.bounding_box["topLeft"])
 
-    def set_bounding_box_size(self, size):
-        self.bounding_box["width"] = size[0]
-        self.bounding_box["height"] = size[1]
-        self.bounding_box["depth"] = size[2]
+    def _set_bounding_box_size(self, size):
+        self._bounding_box["width"] = size[0]
+        self._bounding_box["height"] = size[1]
+        self._bounding_box["depth"] = size[2]
 
-    def set_bounding_box_offset(self, offset):
-        self.bounding_box["topLeft"] = offset
+    def _set_bounding_box_offset(self, offset):
+        self._bounding_box["topLeft"] = offset
+
+    @property
+    def data_format(self):
+        return self._data_format
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def category(self):
+        return self._category
+
+    @property
+    def element_class(self):
+        return self._element_class
+
+    @property
+    def num_channels(self):
+        return self._num_channels
+
+    @property
+    def bounding_box(self):
+        return self._bounding_box
+
+    @property
+    def wkw_magnifications(self):
+        return self._wkw_magnifications
