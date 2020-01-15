@@ -24,7 +24,7 @@ class AbstractDataset(ABC):
             self.add_layer(
                 layer.name, layer.category, layer.element_class, layer.num_channels
             )
-            for resolution in layer.wkw_resolutions:
+            for resolution in layer.wkw_magnifications:
                 self.layers[layer_name].setup_mag(resolution.mag.to_layer_name())
 
     @classmethod

@@ -64,8 +64,8 @@ class Properties:
         self.export_as_json()
 
     def delete_mag(self, layer_name, mag):
-        self.data_layers[layer_name].wkw_resolutions = [
-            r for r in self.data_layers[layer_name].wkw_resolutions if r.mag != Mag(mag)
+        self.data_layers[layer_name].wkw_magnifications = [
+            r for r in self.data_layers[layer_name].wkw_magnifications if r.mag != Mag(mag)
         ]
         self.export_as_json()
 
@@ -117,11 +117,11 @@ class WKProperties(Properties):
             self.export_as_json()
 
     def add_mag(self, layer_name, mag, cube_length):
-        # this mag is already in wkw_resolutions in case we reconstruct the dataset from a datasource-properties.json
+        # this mag is already in wkw_magnifications in case we reconstruct the dataset from a datasource-properties.json
         if not any(
             [
                 res.mag == Mag(mag)
-                for res in self.data_layers[layer_name].wkw_resolutions
+                for res in self.data_layers[layer_name].wkw_magnifications
             ]
         ):
             self.data_layers[layer_name].add_resolution(WkResolution(mag, cube_length))
@@ -177,11 +177,11 @@ class TiffProperties(Properties):
             self.export_as_json()
 
     def add_mag(self, layer_name, mag):
-        # this mag is already in wkw_resolutions in case we reconstruct the dataset from a datasource-properties.json
+        # this mag is already in wkw_magnifications in case we reconstruct the dataset from a datasource-properties.json
         if not any(
             [
                 res.mag == Mag(mag)
-                for res in self.data_layers[layer_name].wkw_resolutions
+                for res in self.data_layers[layer_name].wkw_magnifications
             ]
         ):
             self.data_layers[layer_name].add_resolution(TiffResolution(mag))
@@ -210,7 +210,7 @@ class LayerProperties:
             "height": 0,
             "depth": 0,
         }
-        self.wkw_resolutions = resolutions or []
+        self.wkw_magnifications = resolutions or []
 
     def to_json(self):
         return {
@@ -227,7 +227,7 @@ class LayerProperties:
                 "height": self.bounding_box["height"],
                 "depth": self.bounding_box["depth"],
             },
-            "wkwResolutions": [r.to_json() for r in self.wkw_resolutions],
+            "wkwResolutions": [r.to_json() for r in self.wkw_magnifications],
         }
 
     def get_element_type(self):
@@ -252,10 +252,10 @@ class LayerProperties:
         return layer_properties
 
     def add_resolution(self, resolution):
-        self.wkw_resolutions.append(resolution)
+        self.wkw_magnifications.append(resolution)
 
     def delete_resolution(self, resolution):
-        self.wkw_resolutions.delete(resolution)
+        self.wkw_magnifications.delete(resolution)
 
     def get_bounding_box_size(self):
         return (

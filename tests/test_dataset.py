@@ -8,6 +8,7 @@ from os import path, mkdir
 
 from wkcuber.api.Layer import Layer
 from wkcuber.api.Properties import Properties, TiffProperties
+from wkcuber.mag import Mag
 
 
 def delete_dir(relative_path):
@@ -16,75 +17,81 @@ def delete_dir(relative_path):
 
 
 def test_create_WKDataset_with_layer_and_mag():
-    delete_dir("../testoutput/WKDataset")
+    delete_dir("../testoutput/wk_dataset")
 
-    ds = WKDataset.create("../testoutput/WKDataset", scale=(1, 1, 1))
+    ds = WKDataset.create("../testoutput/wk_dataset", scale=(1, 1, 1))
     ds.add_layer("color", "color")
 
     ds.get_layer("color").add_mag("1")
     ds.get_layer("color").add_mag("2-2-1")
 
-    assert path.exists("../testoutput/WKDataset/color/1")
-    assert path.exists("../testoutput/WKDataset/color/2-2-1")
+    assert path.exists("../testoutput/wk_dataset/color/1")
+    assert path.exists("../testoutput/wk_dataset/color/2-2-1")
 
     assert len(ds.properties.data_layers) == 1
-    assert len(ds.properties.data_layers["color"].wkw_resolutions) == 2
+    assert len(ds.properties.data_layers["color"].wkw_magnifications) == 2
 
 
 def test_create_WKDataset_with_explicit_header_fields():
-    delete_dir("../testoutput/WKDataset_advanced")
+    delete_dir("../testoutput/wk_dataset_advanced")
 
-    ds = WKDataset.create("../testoutput/WKDataset_advanced", scale=(1, 1, 1))
+    ds = WKDataset.create("../testoutput/wk_dataset_advanced", scale=(1, 1, 1))
     ds.add_layer("color", "color", dtype=np.uint16, num_channels=3)
 
     ds.get_layer("color").add_mag("1", block_len=64, file_len=64)
     ds.get_layer("color").add_mag("2-2-1")
 
-    assert path.exists("../testoutput/WKDataset_advanced/color/1")
-    assert path.exists("../testoutput/WKDataset_advanced/color/2-2-1")
+    assert path.exists("../testoutput/wk_dataset_advanced/color/1")
+    assert path.exists("../testoutput/wk_dataset_advanced/color/2-2-1")
 
     assert len(ds.properties.data_layers) == 1
-    assert len(ds.properties.data_layers["color"].wkw_resolutions) == 2
+    assert len(ds.properties.data_layers["color"].wkw_magnifications) == 2
 
     assert ds.properties.data_layers["color"].element_class == np.dtype(np.uint16)
     assert (
-        ds.properties.data_layers["color"].wkw_resolutions[0].cube_length == 64 * 64
+        ds.properties.data_layers["color"].wkw_magnifications[0].cube_length == 64 * 64
     )  # mag "1"
+    assert(
+        ds.properties.data_layers["color"].wkw_magnifications[0].mag == Mag("1")
+    )
     assert (
-        ds.properties.data_layers["color"].wkw_resolutions[1].cube_length == 32 * 32
+        ds.properties.data_layers["color"].wkw_magnifications[1].cube_length == 32 * 32
     )  # mag "2-2-1" (defaults are used)
+    assert(
+        ds.properties.data_layers["color"].wkw_magnifications[1].mag == Mag("2-2-1")
+    )
 
 
 def test_create_TiffDataset_with_layer_and_mag():
     # This test would be the same for WKDataset
 
-    delete_dir("../testoutput/TiffDataset")
+    delete_dir("../testoutput/tiff_dataset")
 
-    ds = WKDataset.create("../testoutput/TiffDataset", scale=(1, 1, 1))
+    ds = WKDataset.create("../testoutput/tiff_dataset", scale=(1, 1, 1))
     ds.add_layer("color", Layer.COLOR_TYPE)
 
     ds.get_layer("color").add_mag("1")
     ds.get_layer("color").add_mag("2-2-1")
 
-    assert path.exists("../testoutput/TiffDataset/color/1")
-    assert path.exists("../testoutput/TiffDataset/color/2-2-1")
+    assert path.exists("../testoutput/tiff_dataset/color/1")
+    assert path.exists("../testoutput/tiff_dataset/color/2-2-1")
 
     assert len(ds.properties.data_layers) == 1
-    assert len(ds.properties.data_layers["color"].wkw_resolutions) == 2
+    assert len(ds.properties.data_layers["color"].wkw_magnifications) == 2
 
 
 def test_open_wk_dataset():
     ds = WKDataset.open("../testdata/simple_wk_dataset")
 
     assert len(ds.properties.data_layers) == 1
-    assert len(ds.properties.data_layers["color"].wkw_resolutions) == 1
+    assert len(ds.properties.data_layers["color"].wkw_magnifications) == 1
 
 
 def test_open_tiff_dataset():
     ds = TiffDataset.open("../testdata/simple_tiff_dataset")
 
     assert len(ds.properties.data_layers) == 1
-    assert len(ds.properties.data_layers["color"].wkw_resolutions) == 1
+    assert len(ds.properties.data_layers["color"].wkw_magnifications) == 1
 
 
 def test_slice_read_with_open():
@@ -233,9 +240,9 @@ def test_wk_write_out_of_bounds():
 def test_update_new_bounding_box_offset():
     # This test would be the same for WKDataset
 
-    delete_dir("../testoutput/TiffDataset")
+    delete_dir("../testoutput/tiff_dataset")
 
-    ds = TiffDataset.create("../testoutput/TiffDataset", scale=(1, 1, 1))
+    ds = TiffDataset.create("../testoutput/tiff_dataset", scale=(1, 1, 1))
     mag = ds.add_layer("color", Layer.COLOR_TYPE).add_mag("1")
 
     assert ds.properties.data_layers["color"].bounding_box["topLeft"] == (-1, -1, -1)
@@ -348,7 +355,7 @@ def test_wk_write_multi_channel_uint16():
 
 
 def test_wkw_empty_read():
-    filename = "../testoutput/Empty_WKDataset"
+    filename = "../testoutput/empty_wk_dataset"
     delete_dir(filename)
 
     mag = (
@@ -362,7 +369,7 @@ def test_wkw_empty_read():
 
 
 def test_tiff_empty_read():
-    filename = "../testoutput/Empty_TiffDataset"
+    filename = "../testoutput/empty_tiff_dataset"
     delete_dir(filename)
 
     mag = (
@@ -376,7 +383,7 @@ def test_tiff_empty_read():
 
 
 def test_tiff_read_padded_data():
-    filename = "../testoutput/Empty_TiffDataset"
+    filename = "../testoutput/empty_tiff_dataset"
     delete_dir(filename)
 
     mag = (
@@ -392,7 +399,7 @@ def test_tiff_read_padded_data():
 
 
 def test_wk_read_padded_data():
-    filename = "../testoutput/Empty_WKDataset"
+    filename = "../testoutput/empty_wk_dataset"
     delete_dir(filename)
 
     mag = (
@@ -422,9 +429,9 @@ def test_read_and_write_of_properties():
 
 
 def test_num_channel_mismatch_assertion():
-    delete_dir("../testoutput/WKDataset")
+    delete_dir("../testoutput/wk_dataset")
 
-    ds = WKDataset.create("../testoutput/WKDataset", scale=(1, 1, 1))
+    ds = WKDataset.create("../testoutput/wk_dataset", scale=(1, 1, 1))
     mag = ds.add_layer("color", Layer.COLOR_TYPE, num_channels=1).add_mag(
         "1"
     )  # num_channel=1 is also the default
@@ -444,9 +451,9 @@ def test_num_channel_mismatch_assertion():
 def test_get_or_add_layer():
     # This test would be the same for TiffDataset
 
-    delete_dir("../testoutput/WKDataset")
+    delete_dir("../testoutput/wk_dataset")
 
-    ds = WKDataset.create("../testoutput/WKDataset", scale=(1, 1, 1))
+    ds = WKDataset.create("../testoutput/wk_dataset", scale=(1, 1, 1))
 
     assert "color" not in ds.layers.keys()
 
@@ -472,9 +479,9 @@ def test_get_or_add_layer():
 
 
 def test_get_or_add_mag_for_wk():
-    delete_dir("../testoutput/WKDataset")
+    delete_dir("../testoutput/wk_dataset")
 
-    layer = WKDataset.create("../testoutput/WKDataset", scale=(1, 1, 1)).add_layer(
+    layer = WKDataset.create("../testoutput/wk_dataset", scale=(1, 1, 1)).add_layer(
         "color", Layer.COLOR_TYPE
     )
 
@@ -502,9 +509,9 @@ def test_get_or_add_mag_for_wk():
 
 
 def test_get_or_add_mag_for_tiff():
-    delete_dir("../testoutput/WKDataset")
+    delete_dir("../testoutput/wk_dataset")
 
-    layer = TiffDataset.create("../testoutput/WKDataset", scale=(1, 1, 1)).add_layer(
+    layer = TiffDataset.create("../testoutput/wk_dataset", scale=(1, 1, 1)).add_layer(
         "color", Layer.COLOR_TYPE
     )
 
