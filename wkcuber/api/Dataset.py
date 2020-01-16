@@ -74,7 +74,9 @@ class AbstractDataset(ABC):
         self.properties._add_layer(layer_name, category, dtype.name, num_channels)
         return self.layers[layer_name]
 
-    def get_or_add_layer(self, layer_name, category, dtype=None, num_channels=None) -> Layer:
+    def get_or_add_layer(
+        self, layer_name, category, dtype=None, num_channels=None
+    ) -> Layer:
         if layer_name in self.layers.keys():
             assert self.properties.data_layers[layer_name].category == category, (
                 f"Cannot get_or_add_layer: The layer '{layer_name}' already exists, but the categories do not match. "
@@ -86,7 +88,10 @@ class AbstractDataset(ABC):
                 + f"The dtype of the existing layer is '{self.layers[layer_name].dtype}' "
                 + f"and the passed parameter is '{dtype}'."
             )
-            assert (num_channels is None or self.layers[layer_name].num_channels == num_channels), (
+            assert (
+                num_channels is None
+                or self.layers[layer_name].num_channels == num_channels
+            ), (
                 f"Cannot get_or_add_layer: The layer '{layer_name}' already exists, but the number of channels do not match. "
                 + f"The number of channels of the existing layer are '{self.layers[layer_name].num_channels}' "
                 + f"and the passed parameter is '{num_channels}'."

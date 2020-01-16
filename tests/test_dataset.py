@@ -189,9 +189,7 @@ def test_view_wk_write_out_of_bounds():
     delete_dir(new_dataset_path)
     copytree("../testdata/simple_wk_dataset/", new_dataset_path)
 
-    tiff_view = WKDataset(new_dataset_path).get_view(
-        "color", "1", size=(100, 100, 100)
-    )
+    tiff_view = WKDataset(new_dataset_path).get_view("color", "1", size=(100, 100, 100))
 
     with tiff_view.open():
         try:

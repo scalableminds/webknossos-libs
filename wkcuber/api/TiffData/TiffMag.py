@@ -58,7 +58,7 @@ class TiffMag:
         self.dtype = header.dtype
         self.num_channels = header.num_channels
 
-        pattern = "{zzzzz}.tif"  # TODO dont hardcode this
+        pattern = "{zzzzz}.tif"
 
         z_range = [
             detect_value(pattern, file_name, dim="z")[0]
@@ -146,7 +146,6 @@ class TiffMag:
         return
 
     def calculate_relevant_slices(self, offset, shape):
-        # TODO: use pattern
         for z in range(offset[2] + 1, offset[2] + shape[2] + 1):
             yield tuple(
                 (z, offset[0:2], shape[0:2])
