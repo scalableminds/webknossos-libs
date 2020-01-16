@@ -10,10 +10,11 @@ from wkcuber.api.Layer import Layer, WKLayer, TiffLayer
 
 
 class AbstractDataset(ABC):
-
     @abstractmethod
     def __init__(self, dataset_path):
-        properties = self._get_properties_type()._from_json(join(dataset_path, Properties.FILE_NAME))
+        properties = self._get_properties_type()._from_json(
+            join(dataset_path, Properties.FILE_NAME)
+        )
         self.layers = {}
         self.path = Path(properties.path).parent
         self.properties = properties
@@ -72,18 +73,22 @@ class AbstractDataset(ABC):
         self.properties._add_layer(layer_name, category, dtype.name, num_channels)
         return self.layers[layer_name]
 
-    def get_or_add_layer(
-            self, layer_name, category, dtype=None, num_channels=None
-    ):
+    def get_or_add_layer(self, layer_name, category, dtype=None, num_channels=None):
         if layer_name in self.layers.keys():
             assert self.properties.data_layers[layer_name].category == category, (
-                f"Cannot get_or_add_layer: The layer {layer_name} already exists, but the categories do not match"
+                f"Cannot get_or_add_layer: The layer '{layer_name}' already exists, but the categories do not match. "
+                + f"The category of the existing layer is '{self.properties.data_layers[layer_name].category}' "
+                + f"and the passed parameter is '{category}'."
             )
             assert dtype is None or self.layers[layer_name].dtype == np.dtype(dtype), (
-                f"Cannot get_or_add_layer: The layer {layer_name} already exists, but the dtypes do not match"
+                f"Cannot get_or_add_layer: The layer '{layer_name}' already exists, but the dtypes do not match. "
+                + f"The dtype of the existing layer is '{self.layers[layer_name].dtype}' "
+                + f"and the passed parameter is '{dtype}'."
             )
-            assert num_channels is None or self.layers[layer_name].num_channels == num_channels, (
-                f"Cannot get_or_add_layer: The layer {layer_name} already exists, but the number of channels do not match"
+            assert (num_channels is None or self.layers[layer_name].num_channels == num_channels), (
+                f"Cannot get_or_add_layer: The layer '{layer_name}' already exists, but the number of channels do not match. "
+                + f"The number of channels of the existing layer are '{self.layers[layer_name].num_channels}' "
+                + f"and the passed parameter is '{num_channels}'."
             )
             return self.layers[layer_name]
         else:
@@ -92,18 +97,14 @@ class AbstractDataset(ABC):
     def delete_layer(self, layer_name):
         if layer_name not in self.layers.keys():
             raise IndexError(
-                "Removing layer {} failed. There is no layer with this name".format(
-                    layer_name
-                )
+                f"Removing layer {layer_name} failed. There is no layer with this name"
             )
         del self.layers[layer_name]
         self.properties._delete_layer(layer_name)
         # delete files on disk
         rmtree(join(self.path, layer_name))
 
-    def get_slice(
-            self, layer_name, mag_name, size=(1024, 1024, 1024), global_offset=(0, 0, 0)
-    ):
+    def get_slice(self, layer_name, mag_name, size, global_offset=(0, 0, 0)):
         layer = self.get_layer(layer_name)
         mag = layer.get_mag(mag_name)
         mag_file_path = path.join(self.path, layer.name, mag.name)
@@ -122,9 +123,7 @@ class WKDataset(AbstractDataset):
     @classmethod
     def create(cls, dataset_path, scale):
         name = basename(normpath(dataset_path))
-        properties = WKProperties(
-            join(dataset_path, Properties.FILE_NAME), name, scale
-        )
+        properties = WKProperties(join(dataset_path, Properties.FILE_NAME), name, scale)
         return WKDataset.create_with_properties(properties)
 
     def __init__(self, dataset_path):

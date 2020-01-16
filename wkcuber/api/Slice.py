@@ -9,9 +9,9 @@ class Slice:
         self,
         path_to_mag_dataset,
         header,
-        size=(1024, 1024, 1024),
+        size,
         global_offset=(0, 0, 0),
-        is_bounded=True
+        is_bounded=True,
     ):
         self.dataset = None
         self.path = path_to_mag_dataset
@@ -77,9 +77,7 @@ class Slice:
     def assert_bounds(self, offset, size):
         if not self.check_bounds(offset, size):
             raise AssertionError(
-                "Writing out of bounds: The parameter 'size' {} is not compatible with the attribute 'size' {}".format(
-                    size, self.size
-                )
+                f"Writing out of bounds: The passed parameter 'size' {size} exceeds the size of the current slice ({self.size})"
             )
 
     def __enter__(self):

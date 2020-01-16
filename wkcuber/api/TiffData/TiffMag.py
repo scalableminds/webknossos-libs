@@ -21,7 +21,7 @@ def replace_coordinate(pattern: str, coord_id: str, coord: int) -> str:
 
 
 def to_file_name(z):
-    return replace_coordinate("test.{zzzz}.tif", "z", z)
+    return replace_coordinate("{zzzzz}.tif", "z", z)
 
 
 def detect_value(
@@ -58,7 +58,7 @@ class TiffMag:
         self.dtype = header.dtype
         self.num_channels = header.num_channels
 
-        pattern = "test.{zzzz}.tif"  # TODO dont hardcode this
+        pattern = "{zzzzz}.tif"  # TODO dont hardcode this
 
         z_range = [
             detect_value(pattern, file_name, dim="z")[0]
@@ -76,7 +76,9 @@ class TiffMag:
             shape = tuple(shape) + tuple([self.num_channels])
 
         data = np.zeros(shape=shape, dtype=self.dtype)
-        for i, (z, offset, size) in enumerate(self.calculate_relevant_slices(off, shape)):
+        for i, (z, offset, size) in enumerate(
+            self.calculate_relevant_slices(off, shape)
+        ):
             if z in self.tiffs:
                 data[:, :, i] = np.array(self.tiffs[z].read(), self.dtype)[
                     offset[0] : offset[0] + size[0], offset[1] : offset[1] + size[1]

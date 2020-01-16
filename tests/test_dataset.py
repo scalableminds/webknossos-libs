@@ -51,15 +51,11 @@ def test_create_wk_dataset_with_explicit_header_fields():
     assert (
         ds.properties.data_layers["color"].wkw_magnifications[0].cube_length == 64 * 64
     )  # mag "1"
-    assert(
-        ds.properties.data_layers["color"].wkw_magnifications[0].mag == Mag("1")
-    )
+    assert ds.properties.data_layers["color"].wkw_magnifications[0].mag == Mag("1")
     assert (
         ds.properties.data_layers["color"].wkw_magnifications[1].cube_length == 32 * 32
     )  # mag "2-2-1" (defaults are used)
-    assert(
-        ds.properties.data_layers["color"].wkw_magnifications[1].mag == Mag("2-2-1")
-    )
+    assert ds.properties.data_layers["color"].wkw_magnifications[1].mag == Mag("2-2-1")
 
 
 def test_create_tiff_dataset_with_layer_and_mag():
@@ -97,7 +93,9 @@ def test_open_tiff_dataset():
 def test_slice_read_with_open():
     # This test would be the same for TiffDataset
 
-    wk_slice = WKDataset("../testdata/simple_wk_dataset/").get_slice("color", "1")
+    wk_slice = WKDataset("../testdata/simple_wk_dataset/").get_slice(
+        "color", "1", size=(32, 32, 32)
+    )
 
     assert not wk_slice._is_opened
 
@@ -113,7 +111,9 @@ def test_slice_read_with_open():
 def test_slice_read_without_open():
     # This test would be the same for TiffDataset
 
-    wk_slice = WKDataset("../testdata/simple_wk_dataset/").get_slice("color", "1")
+    wk_slice = WKDataset("../testdata/simple_wk_dataset/").get_slice(
+        "color", "1", size=(32, 32, 32)
+    )
 
     assert not wk_slice._is_opened
 
@@ -307,9 +307,9 @@ def test_tiff_write_multi_channel_uint16():
     delete_dir(dataset_path)
 
     ds_tiff = TiffDataset.create(dataset_path, scale=(1, 1, 1))
-    mag = ds_tiff.add_layer("color", Layer.COLOR_TYPE, num_channels=3, dtype=np.uint16).add_mag(
-        "1"
-    )
+    mag = ds_tiff.add_layer(
+        "color", Layer.COLOR_TYPE, num_channels=3, dtype=np.uint16
+    ).add_mag("1")
 
     # 10 images (z-layers), each 250x250, dtype=np.uint16
     data = np.zeros((3, 250, 250, 10), dtype=np.uint16)
@@ -333,9 +333,9 @@ def test_wk_write_multi_channel_uint16():
     delete_dir(dataset_path)
 
     ds_tiff = WKDataset.create(dataset_path, scale=(1, 1, 1))
-    mag = ds_tiff.add_layer("color", Layer.COLOR_TYPE, num_channels=3, dtype=np.uint16).add_mag(
-        "1"
-    )
+    mag = ds_tiff.add_layer(
+        "color", Layer.COLOR_TYPE, num_channels=3, dtype=np.uint16
+    ).add_mag("1")
 
     # 10 images (z-layers), each 250x250, dtype=np.uint16
     data = np.zeros((3, 250, 250, 10), dtype=np.uint16)
@@ -458,18 +458,24 @@ def test_get_or_add_layer():
     assert "color" not in ds.layers.keys()
 
     # layer did not exist before
-    layer = ds.get_or_add_layer("color", Layer.COLOR_TYPE, dtype=np.uint8, num_channels=1)
+    layer = ds.get_or_add_layer(
+        "color", Layer.COLOR_TYPE, dtype=np.uint8, num_channels=1
+    )
     assert "color" in ds.layers.keys()
     assert layer.name == "color"
 
     # layer did exist before
-    layer = ds.get_or_add_layer("color", Layer.COLOR_TYPE, dtype=np.uint8, num_channels=1)
+    layer = ds.get_or_add_layer(
+        "color", Layer.COLOR_TYPE, dtype=np.uint8, num_channels=1
+    )
     assert "color" in ds.layers.keys()
     assert layer.name == "color"
 
     try:
         # layer did exist before but with another 'dtype' (this would work the same for 'category' and 'num_channels')
-        layer = ds.get_or_add_layer("color", Layer.COLOR_TYPE, dtype=np.uint16, num_channels=1)
+        layer = ds.get_or_add_layer(
+            "color", Layer.COLOR_TYPE, dtype=np.uint16, num_channels=1
+        )
 
         raise Exception(
             "The test 'test_get_or_add_layer' did not throw an exception even though it should"

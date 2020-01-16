@@ -154,7 +154,9 @@ class WKProperties(Properties):
                 for res in self.data_layers[layer_name].wkw_magnifications
             ]
         ):
-            self._data_layers[layer_name]._add_resolution(WkResolution(mag, cube_length))
+            self._data_layers[layer_name]._add_resolution(
+                WkResolution(mag, cube_length)
+            )
             self._export_as_json()
 
 

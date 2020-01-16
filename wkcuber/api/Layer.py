@@ -70,15 +70,15 @@ class WKLayer(Layer):
         mag = Mag(mag).to_layer_name()
 
         if mag in self.mags.keys():
-            assert block_len is None or self.mags[mag].header.block_len == block_len, (
-                f"Cannot get_or_add_mag: The mag {mag} already exists, but the block lengths do not match"
-            )
-            assert file_len is None or self.mags[mag].header.file_len == file_len, (
-                f"Cannot get_or_add_mag: The mag {mag} already exists, but the file lengths do not match"
-            )
-            assert block_type is None or self.mags[mag].header.block_type == block_type, (
-                f"Cannot get_or_add_mag: The mag {mag} already exists, but the block types do not match"
-            )
+            assert (
+                block_len is None or self.mags[mag].header.block_len == block_len
+            ), f"Cannot get_or_add_mag: The mag {mag} already exists, but the block lengths do not match"
+            assert (
+                file_len is None or self.mags[mag].header.file_len == file_len
+            ), f"Cannot get_or_add_mag: The mag {mag} already exists, but the file lengths do not match"
+            assert (
+                block_type is None or self.mags[mag].header.block_type == block_type
+            ), f"Cannot get_or_add_mag: The mag {mag} already exists, but the block types do not match"
             return self.get_mag(mag)
         else:
             return self.add_mag(mag, block_len, file_len, block_type)

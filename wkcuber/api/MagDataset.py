@@ -62,13 +62,13 @@ class MagDataset:
     def _assert_valid_num_channels(self, write_data_shape):
         num_channels = self.layer.num_channels
         if len(write_data_shape) == 3:
-            assert num_channels == 1, (
-                f"The number of channels of the dataset ({num_channels}) does not match the number of channels of the passed data (1)"
-            )
+            assert (
+                num_channels == 1
+            ), f"The number of channels of the dataset ({num_channels}) does not match the number of channels of the passed data (1)"
         else:
-            assert num_channels == 3, (
-                f"The number of channels of the dataset ({num_channels}) does not match the number of channels of the passed data ({write_data_shape[0]})"
-            )
+            assert (
+                num_channels == 3
+            ), f"The number of channels of the dataset ({num_channels}) does not match the number of channels of the passed data ({write_data_shape[0]})"
 
 
 class WKMagDataset(MagDataset):
