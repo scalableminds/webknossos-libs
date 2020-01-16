@@ -56,12 +56,6 @@ def read_datasource_properties(dataset_path):
         return json.load(datasource_properties_file)
 
 
-"""
-Creates a datasource-properties.json file with the specified properties
-for the given dataset path. Common layers are detected automatically.
-"""
-
-
 def write_webknossos_metadata(
     dataset_path: str,
     name: str,
@@ -70,6 +64,10 @@ def write_webknossos_metadata(
     compute_max_id=False,
     exact_bounding_box: Optional[dict] = None,
 ):
+    """
+    Creates a datasource-properties.json file with the specified properties
+    for the given dataset path. Common layers are detected automatically.
+    """
     if name == None:
         name = path.basename(dataset_path)
 
@@ -88,19 +86,17 @@ def write_webknossos_metadata(
     )
 
 
-"""
-Updates the datasource-properties.json file for a given dataset.
-Use this method if you added (or removed) layers and/or changed magnifications for
-existing layers.
-
-Raises an exception if the datasource-properties.json file does not exist, yet.
-In this case, use write_webknossos_metadata instead.
-"""
-
-
 def refresh_metadata(
     wkw_path, max_id=0, compute_max_id=False, exact_bounding_box: Optional[dict] = None
 ):
+    """
+    Updates the datasource-properties.json file for a given dataset.
+    Use this method if you added (or removed) layers and/or changed magnifications for
+    existing layers.
+
+    Raises an exception if the datasource-properties.json file does not exist, yet.
+    In this case, use write_webknossos_metadata instead.
+    """
     dataset_path = get_datasource_path(wkw_path)
     if not path.exists(dataset_path):
         raise Exception(
@@ -361,7 +357,7 @@ def detect_layers(dataset_path: str, max_id, compute_max_id, exact_bounding_box=
                 layer_info = detect_standard_layer(
                     dataset_path, layer_name, exact_bounding_box
                 )
-            except:
+            except Exception:
                 pass
             if layer_info is not None:
                 yield layer_info

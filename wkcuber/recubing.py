@@ -142,7 +142,7 @@ def recubing_cube_job(args):
     (
         source_wkw_info,
         target_wkw_info,
-        outer_bounding_box_size,
+        _outer_bounding_box_size,
         outer_bounding_box_tl,
         wkw_cube_size,
         target_cube_xyz,

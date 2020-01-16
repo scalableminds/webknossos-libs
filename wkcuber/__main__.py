@@ -1,9 +1,5 @@
 from .cubing import cubing, create_parser as create_cubing_parser
-from .downsampling import (
-    downsample_mags_isotropic,
-    downsample_mags_anisotropic,
-    DEFAULT_EDGE_LEN,
-)
+from .downsampling import downsample_mags_isotropic, downsample_mags_anisotropic
 from .compress import compress_mag_inplace
 from .metadata import write_webknossos_metadata, refresh_metadata
 from .utils import add_isotropic_flag, setup_logging, add_scale_flag
@@ -65,7 +61,7 @@ def main(args):
             args.layer_name,
             Mag(1),
             Mag(args.max_mag),
-            scale,
+            args.scale,
             "default",
             not args.no_compress,
             args=args,

@@ -28,7 +28,7 @@ class PillowImageReader:
                 # For two-dimensional data, the channel count is one
                 return 1
             else:
-                return this_layer.shape[-1]
+                return this_layer.shape[-1]  # pylint: disable=unsubscriptable-object
 
 
 def to_target_datatype(data: np.ndarray, target_dtype) -> np.ndarray:
@@ -49,7 +49,7 @@ class Dm3ImageReader:
         test_img = DM3(file_name)
         return (test_img.width, test_img.height)
 
-    def read_channel_count(self, file_name):
+    def read_channel_count(self, _file_name):
         logging.info("Assuming single channel for DM3 data")
         return 1
 
@@ -102,7 +102,7 @@ class Dm4ImageReader:
 
         return dimensions
 
-    def read_channel_count(self, file_name):
+    def read_channel_count(self, _file_name):
         logging.info("Assuming single channel for DM4 data")
         return 1
 

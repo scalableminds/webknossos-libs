@@ -2,7 +2,6 @@ import logging
 import math
 
 import wkw
-import re
 import numpy as np
 from argparse import ArgumentParser
 import os
@@ -26,7 +25,6 @@ from .utils import (
     add_isotropic_flag,
     setup_logging,
     cube_addresses,
-    parse_cube_file_name,
 )
 
 DEFAULT_EDGE_LEN = 256
@@ -42,8 +40,10 @@ def extend_wkw_dataset_info_header(wkw_info, **kwargs):
 
 
 def calculate_virtual_scale_for_target_mag(target_mag):
-    "This scale is not the actual scale of the dataset"
-    "The virtual scale is used for downsample_mags_anisotropic."
+    """
+    This scale is not the actual scale of the dataset
+    The virtual scale is used for downsample_mags_anisotropic.
+    """
     max_target_value = max(list(target_mag.to_array()))
     scale_array = max_target_value / np.array(target_mag.to_array())
     return tuple(scale_array)
