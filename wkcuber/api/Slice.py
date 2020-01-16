@@ -48,7 +48,7 @@ class Slice:
         if not self._is_opened:
             self.close()
 
-    def read(self, size=None, offset=(0, 0, 0)):
+    def read(self, size=None, offset=(0, 0, 0)) -> np.array:
         was_opened = self._is_opened
         size = size or self.size
 
@@ -68,7 +68,7 @@ class Slice:
 
         return data
 
-    def check_bounds(self, offset, size):
+    def check_bounds(self, offset, size) -> bool:
         for s1, s2, off in zip(self.size, size, offset):
             if s2 + off > s1 and self.is_bounded:
                 return False

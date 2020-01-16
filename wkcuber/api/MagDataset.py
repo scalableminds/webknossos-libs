@@ -1,6 +1,7 @@
 from os.path import join
 
 from wkw import wkw
+import numpy as np
 
 import wkcuber.api as api
 from wkcuber.api.Slice import WKSlice, TiffSlice
@@ -9,7 +10,6 @@ from wkcuber.api.TiffData.TiffMag import TiffMagHeader
 
 class MagDataset:
     def __init__(self, layer, name):
-        self.mag = {}
         self.layer = layer
         self.name = name
         self.header = self.get_header()
@@ -31,7 +31,7 @@ class MagDataset:
     def close(self):
         self.slice.close()
 
-    def read(self, size, offset=(0, 0, 0)):
+    def read(self, size, offset=(0, 0, 0)) -> np.array:
         return self.slice.read(size, offset)
 
     def write(self, data, offset=(0, 0, 0)):
@@ -78,7 +78,7 @@ class WKMagDataset(MagDataset):
         self.block_type = block_type
         super().__init__(layer, name)
 
-    def get_header(self):
+    def get_header(self) -> wkw.Header:
         return wkw.Header(
             voxel_type=self.layer.dtype,
             num_channels=self.layer.num_channels,
@@ -88,7 +88,7 @@ class WKMagDataset(MagDataset):
             block_type=self.block_type,
         )
 
-    def get_slice(self, mag_file_path, size, global_offset, is_bounded=True):
+    def get_slice(self, mag_file_path, size, global_offset, is_bounded=True) -> WKSlice:
         return WKSlice(mag_file_path, self.header, size, global_offset, is_bounded)
 
     @classmethod
@@ -102,12 +102,12 @@ class WKMagDataset(MagDataset):
 
 
 class TiffMagDataset(MagDataset):
-    def get_header(self):
+    def get_header(self) -> TiffMagHeader:
         return TiffMagHeader(
             dtype=self.layer.dtype, num_channels=self.layer.num_channels
         )
 
-    def get_slice(self, mag_file_path, size, global_offset, is_bounded=True):
+    def get_slice(self, mag_file_path, size, global_offset, is_bounded=True) -> TiffSlice:
         return TiffSlice(mag_file_path, self.header, size, global_offset, is_bounded)
 
     @classmethod

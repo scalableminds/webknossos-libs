@@ -8,7 +8,6 @@
     ],
     "dataLayers": [
         {
-            "dataFormat": "tiff",
             "name": "color",
             "category": "color",
             "elementClass": "uint8",

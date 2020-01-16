@@ -7,6 +7,7 @@ import numpy as np
 
 from wkcuber.api.Properties import WKProperties, TiffProperties, Properties
 from wkcuber.api.Layer import Layer, WKLayer, TiffLayer
+from wkcuber.api.Slice import Slice
 
 
 class AbstractDataset(ABC):
@@ -49,7 +50,7 @@ class AbstractDataset(ABC):
     def downsample(self, layer, target_mag_shape, source_mag):
         raise NotImplemented()
 
-    def get_properties(self):
+    def get_properties(self) -> Properties:
         return self.properties
 
     def get_layer(self, layer_name) -> Layer:
@@ -73,7 +74,7 @@ class AbstractDataset(ABC):
         self.properties._add_layer(layer_name, category, dtype.name, num_channels)
         return self.layers[layer_name]
 
-    def get_or_add_layer(self, layer_name, category, dtype=None, num_channels=None):
+    def get_or_add_layer(self, layer_name, category, dtype=None, num_channels=None) -> Layer:
         if layer_name in self.layers.keys():
             assert self.properties.data_layers[layer_name].category == category, (
                 f"Cannot get_or_add_layer: The layer '{layer_name}' already exists, but the categories do not match. "
@@ -104,14 +105,14 @@ class AbstractDataset(ABC):
         # delete files on disk
         rmtree(join(self.path, layer_name))
 
-    def get_slice(self, layer_name, mag_name, size, global_offset=(0, 0, 0)):
+    def get_slice(self, layer_name, mag_name, size, global_offset=(0, 0, 0)) -> Slice:
         layer = self.get_layer(layer_name)
         mag = layer.get_mag(mag_name)
         mag_file_path = path.join(self.path, layer.name, mag.name)
 
         return mag.get_slice(mag_file_path, size=size, global_offset=global_offset)
 
-    def _create_layer(self, layer_name, dtype, num_channels):
+    def _create_layer(self, layer_name, dtype, num_channels) -> Layer:
         raise NotImplementedError
 
     @abstractmethod
@@ -133,7 +134,7 @@ class WKDataset(AbstractDataset):
     def to_tiff_dataset(self, new_dataset_path):
         raise NotImplementedError  # TODO; implement
 
-    def _create_layer(self, layer_name, dtype, num_channels):
+    def _create_layer(self, layer_name, dtype, num_channels) -> Layer:
         return WKLayer(layer_name, self, dtype, num_channels)
 
     def _get_properties_type(self):
@@ -156,7 +157,7 @@ class TiffDataset(AbstractDataset):
     def to_wk_dataset(self, new_dataset_path):
         raise NotImplementedError  # TODO; implement
 
-    def _create_layer(self, layer_name, dtype, num_channels):
+    def _create_layer(self, layer_name, dtype, num_channels) -> Layer:
         return TiffLayer(layer_name, self, dtype, num_channels)
 
     def _get_properties_type(self):

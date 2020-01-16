@@ -5,7 +5,7 @@ from wkcuber.mag import Mag
 
 
 class Resolution:
-    def _to_json(self):
+    def _to_json(self) -> dict:
         pass
 
     @classmethod
@@ -17,7 +17,7 @@ class TiffResolution(Resolution):
     def __init__(self, mag):
         self._mag = Mag(mag)
 
-    def _to_json(self):
+    def _to_json(self) -> dict:
         return {"resolution": self.mag.to_array()}
 
     @classmethod
@@ -25,7 +25,7 @@ class TiffResolution(Resolution):
         return cls(json_data["resolution"])
 
     @property
-    def mag(self):
+    def mag(self) -> Mag:
         return self._mag
 
 
@@ -34,7 +34,7 @@ class WkResolution(Resolution):
         self._mag = Mag(mag)
         self._cube_length = cube_length
 
-    def _to_json(self):
+    def _to_json(self) -> dict:
         return {"resolution": self.mag.to_array(), "cube_length": self.cube_length}
 
     @classmethod
@@ -42,11 +42,11 @@ class WkResolution(Resolution):
         return cls(json_data["resolution"], json_data["cube_length"])
 
     @property
-    def mag(self):
+    def mag(self) -> Mag:
         return self._mag
 
     @property
-    def cube_length(self):
+    def cube_length(self) -> int:
         return self._cube_length
 
 
@@ -72,7 +72,13 @@ class Properties:
         pass
 
     def _add_layer(self, layer_name, category, element_class, num_channels=1):
-        pass
+        # this layer is already in data_layers in case we reconstruct the dataset from a datasource-properties.json
+        if layer_name not in self.data_layers:
+            new_layer = LayerProperties(
+                layer_name, category, element_class, num_channels
+            )
+            self.data_layers[layer_name] = new_layer
+            self._export_as_json()
 
     def _delete_layer(self, layer_name):
         del self.data_layers[layer_name]
@@ -88,29 +94,29 @@ class Properties:
         self._export_as_json()
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self._name
 
     @property
-    def path(self):
+    def path(self) -> str:
         return self._path
 
     @property
-    def team(self):
+    def team(self) -> str:
         return self._team
 
     @property
-    def scale(self):
+    def scale(self) -> tuple:
         return self._scale
 
     @property
-    def data_layers(self):
+    def data_layers(self) -> dict:
         return self._data_layers
 
 
 class WKProperties(Properties):
     @classmethod
-    def _from_json(cls, path):
+    def _from_json(cls, path) -> Properties:
         with open(path) as datasource_properties:
             data = json.load(datasource_properties)
 
@@ -137,15 +143,6 @@ class WKProperties(Properties):
         with open(self.path, "w") as outfile:
             json.dump(data, outfile, indent=4, separators=(",", ": "))
 
-    def _add_layer(self, layer_name, category, element_class, num_channels=1):
-        # this layer is already in data_layers in case we reconstruct the dataset from a datasource-properties.json
-        if layer_name not in self.data_layers:
-            new_layer = LayerProperties(
-                "wkw", layer_name, category, element_class, num_channels
-            )
-            self.data_layers[layer_name] = new_layer
-            self._export_as_json()
-
     def _add_mag(self, layer_name, mag, cube_length):
         # this mag is already in wkw_magnifications in case we reconstruct the dataset from a datasource-properties.json
         if not any(
@@ -166,7 +163,7 @@ class TiffProperties(Properties):
         self._grid_shape = grid_shape
 
     @classmethod
-    def _from_json(cls, path):
+    def _from_json(cls, path) -> Properties:
         with open(path) as datasource_properties:
             data = json.load(datasource_properties)
 
@@ -200,17 +197,8 @@ class TiffProperties(Properties):
             json.dump(data, outfile, indent=4, separators=(",", ": "))
 
     @property
-    def grid_shape(self):
+    def grid_shape(self) -> tuple:
         return self._grid_shape
-
-    def _add_layer(self, layer_name, category, element_class="uint8", num_channels=1):
-        # this layer is already in data_layers in case we reconstruct the dataset from a datasource-properties.json
-        if layer_name not in self.data_layers:
-            new_layer = LayerProperties(
-                "tiff", layer_name, category, element_class, num_channels
-            )
-            self.data_layers[layer_name] = new_layer
-            self._export_as_json()
 
     def _add_mag(self, layer_name, mag):
         # this mag is already in wkw_magnifications in case we reconstruct the dataset from a datasource-properties.json
@@ -227,7 +215,6 @@ class TiffProperties(Properties):
 class LayerProperties:
     def __init__(
         self,
-        data_format,
         name,
         category,
         element_class,
@@ -235,7 +222,6 @@ class LayerProperties:
         bounding_box=None,
         resolutions=None,
     ):
-        self._data_format = data_format
         self._name = name
         self._category = category
         self._element_class = element_class
@@ -250,7 +236,6 @@ class LayerProperties:
 
     def _to_json(self):
         return {
-            "dataFormat": self.data_format,
             "name": self.name,
             "category": self.category,
             "elementClass": self.element_class,
@@ -270,7 +255,6 @@ class LayerProperties:
     def _from_json(cls, json_data, resolution_type):
         # create LayerProperties without resolutions
         layer_properties = cls(
-            json_data["dataFormat"],
             json_data["name"],
             json_data["category"],
             json_data["elementClass"],
@@ -290,14 +274,14 @@ class LayerProperties:
     def _delete_resolution(self, resolution):
         self._wkw_magnifications.delete(resolution)
 
-    def get_bounding_box_size(self):
+    def get_bounding_box_size(self) -> tuple:
         return (
             self.bounding_box["width"],
             self.bounding_box["height"],
             self.bounding_box["depth"],
         )
 
-    def get_bounding_box_offset(self):
+    def get_bounding_box_offset(self) -> tuple:
         return tuple(self.bounding_box["topLeft"])
 
     def _set_bounding_box_size(self, size):
@@ -309,15 +293,11 @@ class LayerProperties:
         self._bounding_box["topLeft"] = offset
 
     @property
-    def data_format(self):
-        return self._data_format
-
-    @property
-    def name(self):
+    def name(self) -> str:
         return self._name
 
     @property
-    def category(self):
+    def category(self) -> str:
         return self._category
 
     @property
@@ -325,13 +305,13 @@ class LayerProperties:
         return self._element_class
 
     @property
-    def num_channels(self):
+    def num_channels(self) -> int:
         return self._num_channels
 
     @property
-    def bounding_box(self):
+    def bounding_box(self) -> dict:
         return self._bounding_box
 
     @property
-    def wkw_magnifications(self):
+    def wkw_magnifications(self) -> dict:
         return self._wkw_magnifications

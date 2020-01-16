@@ -53,7 +53,7 @@ class Layer:
 
 
 class WKLayer(Layer):
-    def add_mag(self, mag, block_len=32, file_len=32, block_type=1):
+    def add_mag(self, mag, block_len=32, file_len=32, block_type=1) -> WKMagDataset:
         # normalize the name of the mag
         mag = Mag(mag).to_layer_name()
 
@@ -65,7 +65,7 @@ class WKLayer(Layer):
 
         return self.mags[mag]
 
-    def get_or_add_mag(self, mag, block_len=None, file_len=None, block_type=None):
+    def get_or_add_mag(self, mag, block_len=None, file_len=None, block_type=None) -> WKMagDataset:
         # normalize the name of the mag
         mag = Mag(mag).to_layer_name()
 
@@ -103,7 +103,7 @@ class WKLayer(Layer):
 
 
 class TiffLayer(Layer):
-    def add_mag(self, mag):
+    def add_mag(self, mag) -> MagDataset:
         # normalize the name of the mag
         mag = Mag(mag).to_layer_name()
 
@@ -115,7 +115,7 @@ class TiffLayer(Layer):
 
         return self.mags[mag]
 
-    def get_or_add_mag(self, mag):
+    def get_or_add_mag(self, mag) -> MagDataset:
         # normalize the name of the mag
         mag = Mag(mag).to_layer_name()
 
