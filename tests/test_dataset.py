@@ -90,116 +90,116 @@ def test_open_tiff_dataset():
     assert len(ds.properties.data_layers["color"].wkw_magnifications) == 1
 
 
-def test_slice_read_with_open():
+def test_view_read_with_open():
     # This test would be the same for TiffDataset
 
-    wk_slice = WKDataset("../testdata/simple_wk_dataset/").get_slice(
+    wk_view = WKDataset("../testdata/simple_wk_dataset/").get_view(
         "color", "1", size=(32, 32, 32)
     )
 
-    assert not wk_slice._is_opened
+    assert not wk_view._is_opened
 
-    with wk_slice.open():
-        assert wk_slice._is_opened
+    with wk_view.open():
+        assert wk_view._is_opened
 
-        data = wk_slice.read((10, 10, 10))
+        data = wk_view.read((10, 10, 10))
         assert data.shape == (3, 10, 10, 10)  # three channel
 
-    assert not wk_slice._is_opened
+    assert not wk_view._is_opened
 
 
-def test_slice_read_without_open():
+def test_view_read_without_open():
     # This test would be the same for TiffDataset
 
-    wk_slice = WKDataset("../testdata/simple_wk_dataset/").get_slice(
+    wk_view = WKDataset("../testdata/simple_wk_dataset/").get_view(
         "color", "1", size=(32, 32, 32)
     )
 
-    assert not wk_slice._is_opened
+    assert not wk_view._is_opened
 
     # 'read()' checks if it was already opened. If not, it opens and closes automatically
-    data = wk_slice.read((10, 10, 10))
+    data = wk_view.read((10, 10, 10))
     assert data.shape == (3, 10, 10, 10)  # three channel
 
-    assert not wk_slice._is_opened
+    assert not wk_view._is_opened
 
 
-def test_slice_wk_write():
+def test_view_wk_write():
     delete_dir("../testoutput/simple_wk_dataset/")
     copytree("../testdata/simple_wk_dataset/", "../testoutput/simple_wk_dataset/")
 
-    wk_slice = WKDataset("../testoutput/simple_wk_dataset/").get_slice(
+    wk_view = WKDataset("../testoutput/simple_wk_dataset/").get_view(
         "color", "1", size=(100, 100, 100)
     )
 
-    with wk_slice.open():
+    with wk_view.open():
         np.random.seed(1234)
         write_data = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
 
-        wk_slice.write(write_data)
+        wk_view.write(write_data)
 
-        data = wk_slice.read((10, 10, 10))
+        data = wk_view.read((10, 10, 10))
         assert np.array_equal(data, write_data)
 
 
-def test_slice_tiff_write():
+def test_view_tiff_write():
     delete_dir("../testoutput/simple_tiff_dataset/")
     copytree("../testdata/simple_tiff_dataset/", "../testoutput/simple_tiff_dataset/")
 
-    tiff_slice = TiffDataset("../testoutput/simple_tiff_dataset/").get_slice(
+    tiff_view = TiffDataset("../testoutput/simple_tiff_dataset/").get_view(
         "color", "1", size=(100, 100, 100)
     )
 
-    with tiff_slice.open():
+    with tiff_view.open():
         np.random.seed(1234)
         write_data = (np.random.rand(5, 5, 5) * 255).astype(np.uint8)
 
-        tiff_slice.write(write_data)
+        tiff_view.write(write_data)
 
-        data = tiff_slice.read((5, 5, 5))
+        data = tiff_view.read((5, 5, 5))
         assert data.shape == (1, 5, 5, 5)  # this dataset has only one channel
         assert np.array_equal(data, np.expand_dims(write_data, 0))
 
 
-def test_slice_tiff_write_out_of_bounds():
-    new_dataset_path = "../testoutput/tiff_slice_dataset_out_of_bounds/"
+def test_view_tiff_write_out_of_bounds():
+    new_dataset_path = "../testoutput/tiff_view_dataset_out_of_bounds/"
 
     delete_dir(new_dataset_path)
     copytree("../testdata/simple_tiff_dataset/", new_dataset_path)
 
-    tiff_slice = TiffDataset(new_dataset_path).get_slice(
+    tiff_view = TiffDataset(new_dataset_path).get_view(
         "color", "1", size=(100, 100, 100)
     )
 
-    with tiff_slice.open():
+    with tiff_view.open():
         try:
-            tiff_slice.write(
+            tiff_view.write(
                 np.zeros((200, 200, 5), dtype=np.uint8)
             )  # this is bigger than the bounding_box
             raise Exception(
-                "The test 'test_slice_tiff_write_out_of_bounds' did not throw an exception even though it should"
+                "The test 'test_view_tiff_write_out_of_bounds' did not throw an exception even though it should"
             )
         except AssertionError:
             pass
 
 
-def test_slice_wk_write_out_of_bounds():
-    new_dataset_path = "../testoutput/wk_slice_dataset_out_of_bounds/"
+def test_view_wk_write_out_of_bounds():
+    new_dataset_path = "../testoutput/wk_view_dataset_out_of_bounds/"
 
     delete_dir(new_dataset_path)
     copytree("../testdata/simple_wk_dataset/", new_dataset_path)
 
-    tiff_slice = WKDataset(new_dataset_path).get_slice(
+    tiff_view = WKDataset(new_dataset_path).get_view(
         "color", "1", size=(100, 100, 100)
     )
 
-    with tiff_slice.open():
+    with tiff_view.open():
         try:
-            tiff_slice.write(
+            tiff_view.write(
                 np.zeros((200, 200, 5), dtype=np.uint8)
             )  # this is bigger than the bounding_box
             raise Exception(
-                "The test 'test_slice_wk_write_out_of_bounds' did not throw an exception even though it should"
+                "The test 'test_view_wk_write_out_of_bounds' did not throw an exception even though it should"
             )
         except AssertionError:
             pass

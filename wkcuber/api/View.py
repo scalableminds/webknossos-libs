@@ -4,7 +4,7 @@ from wkw import Dataset
 from wkcuber.api.TiffData.TiffMag import TiffMag
 
 
-class Slice:
+class View:
     def __init__(
         self,
         path_to_mag_dataset,
@@ -26,7 +26,7 @@ class Slice:
 
     def close(self):
         if not self._is_opened:
-            raise Exception("Cannot close slice: the slice is not opened")
+            raise Exception("Cannot close View: the view is not opened")
         else:
             self.dataset.close()
             self.dataset = None
@@ -77,7 +77,7 @@ class Slice:
     def assert_bounds(self, offset, size):
         if not self.check_bounds(offset, size):
             raise AssertionError(
-                f"Writing out of bounds: The passed parameter 'size' {size} exceeds the size of the current slice ({self.size})"
+                f"Writing out of bounds: The passed parameter 'size' {size} exceeds the size of the current view ({self.size})"
             )
 
     def __enter__(self):
@@ -87,10 +87,10 @@ class Slice:
         self.close()
 
 
-class WKSlice(Slice):
+class WKView(View):
     def open(self):
         if self._is_opened:
-            raise Exception("Cannot open slice: the slice is already opened")
+            raise Exception("Cannot open view: the view is already opened")
         else:
             self.dataset = Dataset.open(
                 self.path
@@ -99,10 +99,10 @@ class WKSlice(Slice):
         return self
 
 
-class TiffSlice(Slice):
+class TiffView(View):
     def open(self):
         if self._is_opened:
-            raise Exception("Cannot open slice: the slice is already opened")
+            raise Exception("Cannot open view: the view is already opened")
         else:
             self.dataset = TiffMag.open(self.path, self.header)
             self._is_opened = True

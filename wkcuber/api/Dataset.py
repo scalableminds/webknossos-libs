@@ -7,7 +7,7 @@ import numpy as np
 
 from wkcuber.api.Properties import WKProperties, TiffProperties, Properties
 from wkcuber.api.Layer import Layer, WKLayer, TiffLayer
-from wkcuber.api.Slice import Slice
+from wkcuber.api.View import View
 
 
 class AbstractDataset(ABC):
@@ -105,12 +105,12 @@ class AbstractDataset(ABC):
         # delete files on disk
         rmtree(join(self.path, layer_name))
 
-    def get_slice(self, layer_name, mag_name, size, global_offset=(0, 0, 0)) -> Slice:
+    def get_view(self, layer_name, mag_name, size, global_offset=(0, 0, 0)) -> View:
         layer = self.get_layer(layer_name)
         mag = layer.get_mag(mag_name)
         mag_file_path = path.join(self.path, layer.name, mag.name)
 
-        return mag.get_slice(mag_file_path, size=size, global_offset=global_offset)
+        return mag.get_view(mag_file_path, size=size, global_offset=global_offset)
 
     def _create_layer(self, layer_name, dtype, num_channels) -> Layer:
         raise NotImplementedError

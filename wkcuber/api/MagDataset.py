@@ -4,7 +4,7 @@ from wkw import wkw
 import numpy as np
 
 import wkcuber.api as api
-from wkcuber.api.Slice import WKSlice, TiffSlice
+from wkcuber.api.View import WKView, TiffView
 from wkcuber.api.TiffData.TiffMag import TiffMagHeader
 
 
@@ -21,22 +21,22 @@ class MagDataset:
         offset = self.layer.dataset.properties.data_layers[
             self.layer.name
         ].get_bounding_box_offset()
-        self.slice = self.get_slice(
+        self.view = self.get_view(
             file_path, size, global_offset=(0, 0, 0), is_bounded=False
         )
 
     def open(self):
-        self.slice.initialize()
+        self.view.initialize()
 
     def close(self):
-        self.slice.close()
+        self.view.close()
 
     def read(self, size, offset=(0, 0, 0)) -> np.array:
-        return self.slice.read(size, offset)
+        return self.view.read(size, offset)
 
     def write(self, data, offset=(0, 0, 0)):
         self._assert_valid_num_channels(data.shape)
-        self.slice.write(data, offset)
+        self.view.write(data, offset)
         layer_properties = self.layer.dataset.properties.data_layers[self.layer.name]
         current_offset = layer_properties.get_bounding_box_offset()
         current_size = layer_properties.get_bounding_box_size()
@@ -47,7 +47,7 @@ class MagDataset:
             else tuple(min(x) for x in zip(current_offset, offset))
         )
         total_size = tuple(max(x) for x in zip(current_size, data.shape[-3:]))
-        self.slice.size = total_size
+        self.view.size = total_size
 
         self.layer.dataset.properties._set_bounding_box_of_layer(
             self.layer.name, new_offset, total_size
@@ -56,7 +56,7 @@ class MagDataset:
     def get_header(self):
         raise NotImplementedError
 
-    def get_slice(self, mag_file_path, size, global_offset, is_bounded=True):
+    def get_view(self, mag_file_path, size, global_offset, is_bounded=True):
         raise NotImplementedError
 
     def _assert_valid_num_channels(self, write_data_shape):
@@ -88,8 +88,8 @@ class WKMagDataset(MagDataset):
             block_type=self.block_type,
         )
 
-    def get_slice(self, mag_file_path, size, global_offset, is_bounded=True) -> WKSlice:
-        return WKSlice(mag_file_path, self.header, size, global_offset, is_bounded)
+    def get_view(self, mag_file_path, size, global_offset, is_bounded=True) -> WKView:
+        return WKView(mag_file_path, self.header, size, global_offset, is_bounded)
 
     @classmethod
     def create(cls, layer, name, block_len, file_len, block_type):
@@ -107,8 +107,8 @@ class TiffMagDataset(MagDataset):
             dtype=self.layer.dtype, num_channels=self.layer.num_channels
         )
 
-    def get_slice(self, mag_file_path, size, global_offset, is_bounded=True) -> TiffSlice:
-        return TiffSlice(mag_file_path, self.header, size, global_offset, is_bounded)
+    def get_view(self, mag_file_path, size, global_offset, is_bounded=True) -> TiffView:
+        return TiffView(mag_file_path, self.header, size, global_offset, is_bounded)
 
     @classmethod
     def create(cls, layer, name):
