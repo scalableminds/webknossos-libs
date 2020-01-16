@@ -6,10 +6,9 @@
     "scale": [
         1
     ],
-    "pattern": "test.{zzzz}.tif",
+    "pattern": "{zzzzz}.tif",
     "dataLayers": [
         {
-            "dataFormat": "tiff",
             "name": "color",
             "category": "color",
             "elementClass": "uint8",

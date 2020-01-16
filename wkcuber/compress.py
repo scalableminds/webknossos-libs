@@ -2,7 +2,6 @@ import time
 import wkw
 import shutil
 import logging
-import numpy as np
 from argparse import ArgumentParser
 from os import path, makedirs
 from uuid import uuid4

@@ -11,9 +11,8 @@ import psutil
 from typing import List, Tuple, Union
 from glob import iglob
 from collections import namedtuple
-from multiprocessing import cpu_count, Lock
+from multiprocessing import cpu_count
 import concurrent
-from concurrent.futures import ProcessPoolExecutor
 from os import path, getpid
 from math import floor, ceil
 from logging import getLogger

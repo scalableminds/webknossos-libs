@@ -5,6 +5,8 @@ from os import path
 from glob import iglob, glob
 
 CUBE_EDGE_LEN = 128
+CUBE_SIZE = CUBE_EDGE_LEN ** 3
+CUBE_SHAPE = (CUBE_EDGE_LEN,) * 3
 CUBE_REGEX = re.compile(r"x(\d+)/y(\d+)/z(\d+)/(.*\.raw)$")
 
 
@@ -17,28 +19,29 @@ class KnossosDataset:
         assert offset[0] % CUBE_EDGE_LEN == 0
         assert offset[1] % CUBE_EDGE_LEN == 0
         assert offset[2] % CUBE_EDGE_LEN == 0
-        assert shape[0] == CUBE_EDGE_LEN
-        assert shape[1] == CUBE_EDGE_LEN
-        assert shape[2] == CUBE_EDGE_LEN
+        assert shape == CUBE_SHAPE
         return self.read_cube(tuple(x // CUBE_EDGE_LEN for x in offset))
 
     def write(self, offset, data):
         assert offset[0] % CUBE_EDGE_LEN == 0
         assert offset[1] % CUBE_EDGE_LEN == 0
         assert offset[2] % CUBE_EDGE_LEN == 0
-        assert data.shape[0] == CUBE_EDGE_LEN
-        assert data.shape[1] == CUBE_EDGE_LEN
-        assert data.shape[2] == CUBE_EDGE_LEN
+        assert data.shape == CUBE_SHAPE
         self.write_cube(tuple(x // CUBE_EDGE_LEN for x in offset), data)
 
     def read_cube(self, cube_xyz):
         filename = self.__get_only_raw_file_path(cube_xyz)
         if filename is None:
-            return np.zeros((CUBE_EDGE_LEN,) * 3, dtype=self.dtype)
+            return np.zeros(CUBE_SHAPE, dtype=self.dtype)
         with open(filename, "rb") as cube_file:
-            cube_data = np.fromfile(cube_file, dtype=self.dtype).reshape(
-                (CUBE_EDGE_LEN,) * 3, order="F"
-            )
+            cube_data = np.fromfile(cube_file, dtype=self.dtype)
+            if cube_data.size != CUBE_SIZE:
+                padded_data = np.zeros(CUBE_SIZE, dtype=self.dtype)
+                padded_data[0 : min(cube_data.size, CUBE_SIZE)] = cube_data[
+                    0 : min(cube_data.size, CUBE_SIZE)
+                ]
+                cube_data = padded_data
+            cube_data = cube_data.reshape(CUBE_SHAPE, order="F")
             return cube_data
 
     def write_cube(self, cube_xyz, cube_data):
@@ -62,7 +65,8 @@ class KnossosDataset:
         return "cube_x{:04d}_y{:04d}_z{:04d}.raw".format(x, y, z)
 
     def __get_only_raw_file_path(self, cube_xyz):
-        raw_files = glob(path.join(self.__get_cube_folder(cube_xyz), "*.raw"))
+        cube_folder = self.__get_cube_folder(cube_xyz)
+        raw_files = glob(path.join(cube_folder, "*.raw"))
         assert len(raw_files) <= 1, "Found %d .raw files in %s" % (
             len(raw_files),
             cube_folder,
@@ -95,5 +99,5 @@ class KnossosDataset:
     def __enter__(self):
         return self
 
-    def __exit__(self, type, value, tb):
+    def __exit__(self, _type, _value, _tb):
         self.close()

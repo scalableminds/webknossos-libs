@@ -151,7 +151,7 @@ def read_tag_header_dm4(dmfile, endian):
     )
 
 
-def _read_tag_name(dmfile, endian):
+def _read_tag_name(dmfile, _endian):
     tag_name_len = struct.unpack_from(">H", dmfile.read(2))[
         0
     ]  # DM4 specifies this property as always big endian
@@ -160,7 +160,7 @@ def _read_tag_name(dmfile, endian):
         data = dmfile.read(tag_name_len)
         try:
             tag_name = data.decode("utf-8", errors="ignore")
-        except UnicodeDecodeError as e:
+        except UnicodeDecodeError as _e:
             tag_name = None
             pass
 
@@ -213,7 +213,7 @@ def _read_tag_data(dmfile, tag, endian):
         dmfile.seek(tag.data_offset)
 
         _read_tag_garbage_str(dmfile)
-        (tag_array_length, tag_array_types) = _read_tag_data_info(dmfile)
+        (_tag_array_length, tag_array_types) = _read_tag_data_info(dmfile)
 
         tag_data_type_code = tag_array_types[0]
 
@@ -246,19 +246,19 @@ def read_tag_data_group(dmfile, tag, endian):
     dmfile.seek(tag.data_offset)
 
     _read_tag_garbage_str(dmfile)
-    (tag_array_length, tag_array_types) = _read_tag_data_info(dmfile)
+    # tag_array_types[1] contains length_groupname
+    (_tag_array_length, tag_array_types) = _read_tag_data_info(dmfile)
 
     tag_data_type = tag_array_types[0]
     assert tag_data_type == 15
 
-    length_groupname = tag_array_types[1]
     number_of_entries_in_group = tag_array_types[2]
     field_data = tag_array_types[3:]
 
     field_types_list = []
 
     for iField in range(0, number_of_entries_in_group):
-        fieldname_length = field_data[iField * 2]
+        # field_data[iField * 2] contains fieldname_length
         fieldname_type = field_data[(iField * 2) + 1]
         field_types_list.append(fieldname_type)
 
@@ -276,7 +276,7 @@ def read_tag_data_array(dmfile, tag, endian):
 
     _read_tag_garbage_str(dmfile)
 
-    (tag_array_length, tag_array_types) = _read_tag_data_info(dmfile)
+    (_tag_array_length, tag_array_types) = _read_tag_data_info(dmfile)
 
     assert tag_array_types[0] == 20
     array_data_type_code = tag_array_types[1]
@@ -360,7 +360,7 @@ class DM4File:
 
         dir_obj = DM4File.DM4TagDir(directory_tag.name, directory_tag, {}, [], {}, [])
 
-        for iTag in range(0, directory_tag.num_tags):
+        for _iTag in range(0, directory_tag.num_tags):
             tag = read_tag_header_dm4(self.hfile, self.endian_str)
             if tag is None:
                 break

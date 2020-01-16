@@ -1,3 +1,4 @@
+
 import itertools
 from typing import Optional, List, Tuple, Set
 
@@ -21,7 +22,7 @@ def replace_coordinate(pattern: str, coord_id: str, coord: int) -> str:
     return pattern
 
 
-def to_file_name(pattern, x, y, z):
+def to_file_name(pattern, x, y, z) -> str:
     file_name = pattern
     if x is not None:
         file_name = replace_coordinate(file_name, "x", x)
@@ -100,7 +101,8 @@ class TiffMag:
                 self.get_file_name_for_layer(xyz)
             )  # open is lazy
 
-    def read(self, off, shape):
+    def read(self, off, shape) -> np.array:
+        #if not self.has_only_one_channel():
         # modify the shape to also include the num_channels
         shape = tuple(shape) + tuple([self.header.num_channels])
 
@@ -225,7 +227,7 @@ class TiffMag:
                         )
                     )
 
-    def has_only_one_channel(self):
+    def has_only_one_channel(self) -> bool:
         return self.header.num_channels == 1
 
     def assert_correct_data_format(self, data):
@@ -241,18 +243,17 @@ class TiffMag:
                 )
             if not data.shape[3] == self.header.num_channels:
                 raise AttributeError(
-                    "The shape of the provided data does not match the expected shape. (Expected %d channels)"
-                    % self.header.num_channels
+                    f"The shape of the provided data does not match the expected shape. (Expected {self.header.num_channels} channels)"
                 )
         if not np.dtype(data.dtype) == self.header.dtype:
             raise AttributeError(
-                "The type of the provided data does not match the expected type. (Expected np.array of tpye %s)"
-                % self.header.dtype.name
+                f"The type of the provided data does not match the expected type. (Expected np.array of type {self.header.dtype.name})"
             )
 
-    def get_file_name_for_layer(self, xyz):
+    def get_file_name_for_layer(self, xyz) -> str:
         x, y, z = xyz
         return os.path.join(self.root, to_file_name(self.header.pattern, x, y, z))
+
 
     @staticmethod
     def open(root: str, header=None):
@@ -270,7 +271,7 @@ class TiffMag:
 class TiffMagHeader:
     def __init__(
         self,
-        pattern="{z}.tif",
+        pattern="{zzzzz}.tif",
         dtype=np.dtype("uint8"),
         num_channels=1,
         tile_size=(32, 32),
@@ -295,7 +296,7 @@ class TiffReader:
     def open(cls, file_name):
         return cls(file_name)
 
-    def read(self):
+    def read(self) -> np.array:
         return io.imread(self.file_name)
 
     def write(self, pixels):

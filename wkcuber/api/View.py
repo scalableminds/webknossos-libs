@@ -4,20 +4,21 @@ from wkw import Dataset
 from wkcuber.api.TiffData.TiffMag import TiffMag
 
 
-class Slice:
+class View:
     def __init__(
         self,
         path_to_mag_dataset,
         header,
-        size=(1024, 1024, 1024),
+        size,
         global_offset=(0, 0, 0),
+        is_bounded=True,
     ):
         self.dataset = None
         self.path = path_to_mag_dataset
         self.header = header
         self.size = size
         self.global_offset = global_offset
-        self.is_bounded = True
+        self.is_bounded = is_bounded
         self._is_opened = False
 
     def open(self):
@@ -25,7 +26,7 @@ class Slice:
 
     def close(self):
         if not self._is_opened:
-            raise Exception("Cannot close slice: the slice is not opened")
+            raise Exception("Cannot close View: the view is not opened")
         else:
             self.dataset.close()
             self.dataset = None
@@ -47,7 +48,7 @@ class Slice:
         if not self._is_opened:
             self.close()
 
-    def read(self, size=None, offset=(0, 0, 0)):
+    def read(self, size=None, offset=(0, 0, 0)) -> np.array:
         was_opened = self._is_opened
         size = size or self.size
 
@@ -67,7 +68,7 @@ class Slice:
 
         return data
 
-    def check_bounds(self, offset, size):
+    def check_bounds(self, offset, size) -> bool:
         for s1, s2, off in zip(self.size, size, offset):
             if s2 + off > s1 and self.is_bounded:
                 return False
@@ -76,9 +77,7 @@ class Slice:
     def assert_bounds(self, offset, size):
         if not self.check_bounds(offset, size):
             raise AssertionError(
-                "Writing out of bounds: The parameter 'size' {} is not compatible with the attribute 'size' {}".format(
-                    size, self.size
-                )
+                f"Writing out of bounds: The passed parameter 'size' {size} exceeds the size of the current view ({self.size})"
             )
 
     def __enter__(self):
@@ -88,10 +87,10 @@ class Slice:
         self.close()
 
 
-class WKSlice(Slice):
+class WKView(View):
     def open(self):
         if self._is_opened:
-            raise Exception("Cannot open slice: the slice is already opened")
+            raise Exception("Cannot open view: the view is already opened")
         else:
             self.dataset = Dataset.open(
                 self.path
@@ -100,10 +99,10 @@ class WKSlice(Slice):
         return self
 
 
-class TiffSlice(Slice):
+class TiffView(View):
     def open(self):
         if self._is_opened:
-            raise Exception("Cannot open slice: the slice is already opened")
+            raise Exception("Cannot open view: the view is already opened")
         else:
             self.dataset = TiffMag.open(self.path, self.header)
             self._is_opened = True
