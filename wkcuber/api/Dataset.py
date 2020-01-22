@@ -1,6 +1,6 @@
 from shutil import rmtree
 from abc import ABC, abstractmethod
-from os import mkdir, path
+from os import makedirs, path
 from os.path import join, normpath, basename
 from pathlib import Path
 import numpy as np
@@ -34,7 +34,7 @@ class AbstractDataset(ABC):
         dataset_path = path.dirname(properties.path)
         # create directories on disk and write datasource-properties.json
         try:
-            mkdir(dataset_path)
+            makedirs(dataset_path)
             properties._export_as_json()
         except OSError:
             raise FileExistsError("Creation of Dataset {} failed".format(dataset_path))
