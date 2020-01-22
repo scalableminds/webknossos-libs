@@ -259,6 +259,22 @@ def test_update_new_bounding_box_offset():
     assert ds.properties.data_layers["color"].bounding_box["topLeft"] == (5, 5, 10)
 
 
+def test_other_file_extensions_for_tiff_dataset():
+    # The TiffDataset also works with other file extensions (in this case .png)
+    # It also works with .jpg but this format uses lossy compression
+
+    delete_dir("./testoutput/png_dataset")
+
+    ds = TiffDataset.create("./testoutput/png_dataset", scale=(1, 1, 1), pattern="{zzz}.png")
+    mag = ds.add_layer("color", Layer.COLOR_TYPE).add_mag("1")
+
+    np.random.seed(1234)
+    write_data = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
+    mag.write(write_data)
+    assert np.array_equal(mag.read((10, 10, 10)), np.expand_dims(write_data, 0))
+
+
+
 def test_tiff_write_multi_channel_uint8():
     dataset_path = "./testoutput/tiff_multichannel/"
     delete_dir(dataset_path)
@@ -534,9 +550,9 @@ def test_get_or_add_mag_for_tiff():
 
 
 def test_tiled_tiff_read_and_write_multichannel():
-    delete_dir("../testoutput/TiledTiffDataset")
+    delete_dir("./testoutput/TiledTiffDataset")
     tiled_tiff_ds = TiffDataset.create_tiled(
-        "../testoutput/TiledTiffDataset",
+        "./testoutput/TiledTiffDataset",
         scale=(1, 1, 1),
         tile_size=(32, 32),
         pattern="{xxx}_{yyy}_{zzz}.tif",
@@ -559,9 +575,9 @@ def test_tiled_tiff_read_and_write_multichannel():
 
 
 def test_tiled_tiff_read_and_write():
-    delete_dir("../testoutput/TiledTiffDataset")
+    delete_dir("./testoutput/tiled_tiff_dataset")
     tiled_tiff_ds = TiffDataset.create_tiled(
-        "../testoutput/TiledTiffDataset",
+        "./testoutput/tiled_tiff_dataset",
         scale=(1, 1, 1),
         tile_size=(32, 32),
         pattern="{xxx}_{yyy}_{zzz}.tif",
@@ -583,12 +599,12 @@ def test_tiled_tiff_read_and_write():
     assert mag.get_tile(1, 1, 6).shape == (1, 32, 32, 1)
     assert np.array_equal(
         mag.get_tile(1, 1, 6)[0, :, :, 0],
-        TiffReader("../testoutput/TiledTiffDataset/color/1/001_001_006.tif").read()
+        TiffReader("./testoutput/tiled_tiff_dataset/color/1/001_001_006.tif").read()
     )
 
 
 def test_get_tile_for_non_tiled_tiff_dataset():
-    ds = TiffDataset("../testdata/simple_tiff_dataset")
+    ds = TiffDataset("./testdata/simple_tiff_dataset")
     mag = ds.get_layer("color").get_mag("1")
     assert np.array_equal(mag.get_tile(0, 0, 9), mag.read((265, 265, 9)))  # the x and y dimensions of the data of this dataset are 265
     # adjust annotations so that is is not a warning
