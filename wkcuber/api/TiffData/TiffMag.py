@@ -1,4 +1,3 @@
-
 import itertools
 from typing import Optional, List, Tuple, Set
 
@@ -102,7 +101,7 @@ class TiffMag:
             )  # open is lazy
 
     def read(self, off, shape) -> np.array:
-        #if not self.has_only_one_channel():
+        # if not self.has_only_one_channel():
         # modify the shape to also include the num_channels
         shape = tuple(shape) + tuple([self.header.num_channels])
 
@@ -123,8 +122,14 @@ class TiffMag:
                 ]
 
                 index_slice = [
-                    slice(offset_in_input_data[0], offset_in_input_data[0] + loaded_data.shape[0]),
-                    slice(offset_in_input_data[1], offset_in_input_data[1] + loaded_data.shape[1]),
+                    slice(
+                        offset_in_input_data[0],
+                        offset_in_input_data[0] + loaded_data.shape[0],
+                    ),
+                    slice(
+                        offset_in_input_data[1],
+                        offset_in_input_data[1] + loaded_data.shape[1],
+                    ),
                     z_index_in_data,
                 ]
                 if self.has_only_one_channel():
@@ -194,12 +199,20 @@ class TiffMag:
 
         max_indices = tuple(i1 + i2 for i1, i2 in zip(offset, shape))
 
-        x_first_index = offset[0] // tile_size[0] if tile_size else None  # floor division
-        x_last_index = -(-max_indices[0] // tile_size[0]) if tile_size else None  # ceil division
+        x_first_index = (
+            offset[0] // tile_size[0] if tile_size else None
+        )  # floor division
+        x_last_index = (
+            -(-max_indices[0] // tile_size[0]) if tile_size else None
+        )  # ceil division
         x_indices = range(x_first_index, x_last_index) if tile_size else [None]
 
-        y_first_index = offset[1] // tile_size[1] if tile_size else None  # floor division
-        y_last_index = -(-max_indices[1] // tile_size[1]) if tile_size else None  # ceil division
+        y_first_index = (
+            offset[1] // tile_size[1] if tile_size else None
+        )  # floor division
+        y_last_index = (
+            -(-max_indices[1] // tile_size[1]) if tile_size else None
+        )  # ceil division
         y_indices = range(y_first_index, y_last_index) if tile_size else [None]
 
         for x in x_indices:
@@ -207,18 +220,29 @@ class TiffMag:
                 for z in range(offset[2], offset[2] + shape[2]):
                     # calculate the offsets and the size for the x and y coordinate
                     tile_shape = shape[0:2] + shape[3:4]
-                    offset_in_output_data = tuple(offset[0:2] * np.equal((x, y), (x_first_index, y_first_index)))
+                    offset_in_output_data = tuple(
+                        offset[0:2] * np.equal((x, y), (x_first_index, y_first_index))
+                    )
                     offset_in_input_data = (0, 0)
 
                     if tile_size:
                         tile_top_left_corner = np.array((x, y)) * tile_size
                         tile_bottom_right_corner = tile_top_left_corner + tile_size
-                        shape_top_left_corner = np.maximum(offset[0:2], tile_top_left_corner)
-                        shape_bottom_right = np.minimum(max_indices[0:2], tile_bottom_right_corner)
+                        shape_top_left_corner = np.maximum(
+                            offset[0:2], tile_top_left_corner
+                        )
+                        shape_bottom_right = np.minimum(
+                            max_indices[0:2], tile_bottom_right_corner
+                        )
 
                         offset_in_input_data = shape_top_left_corner - offset[0:2]
-                        offset_in_output_data = tuple((offset[0:2] - shape_top_left_corner) * np.equal((x, y), (x_first_index, y_first_index)))
-                        tile_shape = tuple(shape_bottom_right - shape_top_left_corner) + tuple(shape[3:4])
+                        offset_in_output_data = tuple(
+                            (offset[0:2] - shape_top_left_corner)
+                            * np.equal((x, y), (x_first_index, y_first_index))
+                        )
+                        tile_shape = tuple(
+                            shape_bottom_right - shape_top_left_corner
+                        ) + tuple(shape[3:4])
 
                     yield tuple(
                         (
@@ -255,7 +279,6 @@ class TiffMag:
     def get_file_name_for_layer(self, xyz) -> str:
         x, y, z = xyz
         return os.path.join(self.root, to_file_name(self.header.pattern, x, y, z))
-
 
     @staticmethod
     def open(root: str, header=None):

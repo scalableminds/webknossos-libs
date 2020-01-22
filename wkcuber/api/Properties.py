@@ -207,9 +207,7 @@ class TiffProperties(Properties):
                 for layer_name in self.data_layers
             ],
             "grid_shape": self.grid_shape,
-            "tile_size": {}
-            if self.tile_size is None
-            else self.tile_size,
+            "tile_size": {} if self.tile_size is None else self.tile_size,
         }
         with open(self.path, "w") as outfile:
             json.dump(data, outfile, indent=4, separators=(",", ": "))
