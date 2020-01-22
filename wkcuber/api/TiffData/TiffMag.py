@@ -180,7 +180,8 @@ class TiffMag:
         raise NotImplementedError
 
     def list_files(self):
-        file_paths = list(iglob(os.path.join(self.root, "*.tif")))
+        _, file_extension = os.path.splitext(self.header.pattern)
+        file_paths = list(iglob(os.path.join(self.root, "*" + file_extension)))
 
         for file_path in file_paths:
             yield os.path.relpath(os.path.normpath(file_path), self.root)
@@ -216,6 +217,7 @@ class TiffMag:
                         shape_bottom_right = np.minimum(max_indices[0:2], tile_bottom_right_corner)
 
                         offset_in_input_data = shape_top_left_corner - offset[0:2]
+                        offset_in_output_data = tuple((offset[0:2] - shape_top_left_corner) * np.equal((x, y), (x_first_index, y_first_index)))
                         tile_shape = tuple(shape_bottom_right - shape_top_left_corner) + tuple(shape[3:4])
 
                     yield tuple(

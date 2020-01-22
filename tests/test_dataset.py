@@ -8,6 +8,7 @@ from os import path, makedirs
 
 from wkcuber.api.Layer import Layer
 from wkcuber.api.Properties import TiffProperties
+from wkcuber.api.TiffData.TiffMag import TiffReader
 from wkcuber.mag import Mag
 
 
@@ -578,3 +579,27 @@ def test_tiled_tiff_read_and_write():
     written_data = mag.read(size=(250, 250, 10), offset=(5, 5, 5))
     assert written_data.shape == (1, 250, 250, 10)
     assert np.array_equal(written_data, np.expand_dims(data, 0))
+
+    assert mag.get_tile(1, 1, 6).shape == (1, 32, 32, 1)
+    assert np.array_equal(
+        mag.get_tile(1, 1, 6)[0, :, :, 0],
+        TiffReader("../testoutput/TiledTiffDataset/color/1/001_001_006.tif").read()
+    )
+
+
+def test_get_tile_for_non_tiled_tiff_dataset():
+    ds = TiffDataset("../testdata/simple_tiff_dataset")
+    mag = ds.get_layer("color").get_mag("1")
+    assert np.array_equal(mag.get_tile(0, 0, 9), mag.read((265, 265, 9)))  # the x and y dimensions of the data of this dataset are 265
+    # adjust annotations so that is is not a warning
+
+    try:
+        mag = mag.get_tile(1, 0, 9)  # fails because there is no tile with x_index = 1
+
+        raise Exception(
+            "The test 'test_get_tile_for_non_tiled_tiff_dataset' did not throw an exception even though it should"
+        )
+    except AttributeError:
+        pass
+
+
