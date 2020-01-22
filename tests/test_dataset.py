@@ -420,7 +420,7 @@ def test_read_and_write_of_properties():
 
     imported_properties = TiffProperties._from_json(source_file_name)
     imported_properties._path = destination_file_name
-    makedirs(destination_path, )
+    makedirs(destination_path)
     imported_properties._export_as_json()
 
     filecmp.cmp(source_file_name, destination_file_name)
