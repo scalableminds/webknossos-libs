@@ -3,7 +3,7 @@ from os.path import join
 from os import makedirs
 from wkw import wkw
 
-from wkcuber.api.MagDataset import MagDataset, WKMagDataset, TiffMagDataset
+from wkcuber.api.MagDataset import MagDataset, WKMagDataset, TiffMagDataset, TiledTiffMagDataset
 from wkcuber.mag import Mag
 
 
@@ -137,4 +137,31 @@ class TiffLayer(Layer):
         self._assert_mag_does_not_exist_yet(mag)
 
         self.mags[mag] = TiffMagDataset(self, mag, self.dataset.properties.pattern)
+        self.dataset.properties._add_mag(self.name, mag)
+
+
+class TiledTiffLayer(TiffLayer):
+    def add_mag(self, mag) -> MagDataset:
+        # normalize the name of the mag
+        mag = Mag(mag).to_layer_name()
+
+        self._assert_mag_does_not_exist_yet(mag)
+        self._create_dir_for_mag(mag)
+
+        self.mags[mag] = TiledTiffMagDataset.create(
+            self, mag, self.dataset.properties.pattern
+        )
+        self.dataset.properties._add_mag(self.name, mag)
+
+        return self.mags[mag]
+
+    def setup_mag(self, mag):
+        # This method is used to initialize the mag when opening the Dataset. This does not create e.g. folders.
+
+        # normalize the name of the mag
+        mag = Mag(mag).to_layer_name()
+
+        self._assert_mag_does_not_exist_yet(mag)
+
+        self.mags[mag] = TiledTiffMagDataset(self, mag, self.dataset.properties.pattern)
         self.dataset.properties._add_mag(self.name, mag)

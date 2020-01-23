@@ -114,6 +114,13 @@ class TiffMagDataset(MagDataset):
     def get_view(self, mag_file_path, size, global_offset, is_bounded=True) -> TiffView:
         return TiffView(mag_file_path, self.header, size, global_offset, is_bounded)
 
+    @classmethod
+    def create(cls, layer, name, pattern):
+        mag_dataset = cls(layer, name, pattern)
+        return mag_dataset
+
+
+class TiledTiffMagDataset(TiffMagDataset):
     def get_tile(self, x_index, y_index, z_index) -> np.array:
         tile_size = self.layer.dataset.properties.tile_size
         if tile_size is None:
@@ -133,8 +140,3 @@ class TiffMagDataset(MagDataset):
                 (x_index, y_index, z_index)
             )
             return self.read(size, offset)
-
-    @classmethod
-    def create(cls, layer, name, pattern):
-        mag_dataset = cls(layer, name, pattern)
-        return mag_dataset

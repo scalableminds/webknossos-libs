@@ -3,7 +3,7 @@ import filecmp
 import numpy as np
 from shutil import rmtree, copytree
 
-from wkcuber.api.Dataset import WKDataset, TiffDataset
+from wkcuber.api.Dataset import WKDataset, TiffDataset, TiledTiffDataset
 from os import path, makedirs
 
 from wkcuber.api.Layer import Layer
@@ -552,7 +552,7 @@ def test_get_or_add_mag_for_tiff():
 
 def test_tiled_tiff_read_and_write_multichannel():
     delete_dir("./testoutput/TiledTiffDataset")
-    tiled_tiff_ds = TiffDataset.create_tiled(
+    tiled_tiff_ds = TiledTiffDataset.create(
         "./testoutput/TiledTiffDataset",
         scale=(1, 1, 1),
         tile_size=(32, 32),
@@ -577,7 +577,7 @@ def test_tiled_tiff_read_and_write_multichannel():
 
 def test_tiled_tiff_read_and_write():
     delete_dir("./testoutput/tiled_tiff_dataset")
-    tiled_tiff_ds = TiffDataset.create_tiled(
+    tiled_tiff_ds = TiledTiffDataset.create(
         "./testoutput/tiled_tiff_dataset",
         scale=(1, 1, 1),
         tile_size=(32, 32),
@@ -600,23 +600,5 @@ def test_tiled_tiff_read_and_write():
     assert mag.get_tile(1, 1, 6).shape == (1, 32, 32, 1)
     assert np.array_equal(
         mag.get_tile(1, 1, 6)[0, :, :, 0],
-        TiffReader("./testoutput/tiled_tiff_dataset/color/1/001_001_006.tif").read(),
+        TiffReader("./testoutput/tiled_tiff_dataset/color/1/001_001_006.tif").read()
     )
-
-
-def test_get_tile_for_non_tiled_tiff_dataset():
-    ds = TiffDataset("./testdata/simple_tiff_dataset")
-    mag = ds.get_layer("color").get_mag("1")
-    assert np.array_equal(
-        mag.get_tile(0, 0, 9), mag.read((265, 265, 9))
-    )  # the x and y dimensions of the data of this dataset are 265
-    # adjust annotations so that is is not a warning
-
-    try:
-        mag = mag.get_tile(1, 0, 9)  # fails because there is no tile with x_index = 1
-
-        raise Exception(
-            "The test 'test_get_tile_for_non_tiled_tiff_dataset' did not throw an exception even though it should"
-        )
-    except AttributeError:
-        pass

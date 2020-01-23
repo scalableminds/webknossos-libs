@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 
 from wkcuber.api.Properties import WKProperties, TiffProperties, Properties
-from wkcuber.api.Layer import Layer, WKLayer, TiffLayer
+from wkcuber.api.Layer import Layer, WKLayer, TiffLayer, TiledTiffLayer
 from wkcuber.api.View import View
 
 
@@ -41,11 +41,6 @@ class AbstractDataset(ABC):
 
         # initialize object
         return cls(dataset_path)
-
-    @classmethod
-    @abstractmethod
-    def create(cls, dataset_path, scale):
-        pass
 
     def downsample(self, layer, target_mag_shape, source_mag):
         raise NotImplemented()
@@ -159,18 +154,6 @@ class TiffDataset(AbstractDataset):
         )
         return TiffDataset.create_with_properties(properties)
 
-    @classmethod
-    def create_tiled(cls, dataset_path, scale, tile_size, pattern="{zzzzz}.tif"):
-        name = basename(normpath(dataset_path))
-        properties = TiffProperties(
-            join(dataset_path, "datasource-properties.json"),
-            name,
-            scale,
-            pattern=pattern,
-            tile_size=tile_size,
-        )
-        return TiffDataset.create_with_properties(properties)
-
     def __init__(self, dataset_path):
         super().__init__(dataset_path)
         assert isinstance(self.properties, TiffProperties)
@@ -180,6 +163,33 @@ class TiffDataset(AbstractDataset):
 
     def _create_layer(self, layer_name, dtype, num_channels) -> Layer:
         return TiffLayer(layer_name, self, dtype, num_channels)
+
+    def _get_properties_type(self):
+        return TiffProperties
+
+
+class TiledTiffDataset(AbstractDataset):
+    @classmethod
+    def create(cls, dataset_path, scale, tile_size, pattern="{zzzzz}.tif"):
+        name = basename(normpath(dataset_path))
+        properties = TiffProperties(
+            join(dataset_path, "datasource-properties.json"),
+            name,
+            scale,
+            pattern=pattern,
+            tile_size=tile_size,
+        )
+        return TiledTiffDataset.create_with_properties(properties)
+
+    def to_wk_dataset(self, new_dataset_path):
+        raise NotImplementedError  # TODO; implement
+
+    def __init__(self, dataset_path):
+        super().__init__(dataset_path)
+        assert isinstance(self.properties, TiffProperties)
+
+    def _create_layer(self, layer_name, dtype, num_channels) -> Layer:
+        return TiledTiffLayer(layer_name, self, dtype, num_channels)
 
     def _get_properties_type(self):
         return TiffProperties
