@@ -1,7 +1,33 @@
 import json
 import numpy as np
+from os.path import join, dirname, isfile
+
+from wkw import wkw
 
 from wkcuber.mag import Mag
+
+
+def extract_num_channels(num_channels_in_properties, path, layer, mag):
+    # if a wk dataset is not created with this API, then it most likely doesn't have the attribute 'num_channels' in the
+    # datasource-properties.json. In this case we need to extract the 'num_channels' from the 'header.wkw'.
+    if num_channels_in_properties is None:
+        wkw_ds_file_path = join(dirname(path), layer, str(mag["resolution"]))
+        if not isfile(join(wkw_ds_file_path, "header.wkw")):
+            raise Exception(
+                f"The dataset you are trying to open does not have the attribute 'num_channels' for layer {layer}. "
+                f"However, this attribute is necessary. To mitigate this problem, it was tried to locate "
+                f"the file {wkw_ds_file_path} to extract the num_channels from there. "
+                f"Since this file does not exist, the attempt to open the dataset failed."
+                f"Please add the attribute manually to solve the problem. "
+                f"If the layer does not contains any data, you can also delete the layer and add it again.")
+        return extract_num_channels_from_wkw_header(wkw_ds_file_path)
+    else:
+        return num_channels_in_properties
+
+
+def extract_num_channels_from_wkw_header(wkw_ds_file_path):
+    wkw_ds = wkw.Dataset.open(wkw_ds_file_path)
+    return wkw_ds.header.num_channels
 
 
 class Resolution:
@@ -35,11 +61,11 @@ class WkResolution(Resolution):
         self._cube_length = cube_length
 
     def _to_json(self) -> dict:
-        return {"resolution": self.mag.to_array(), "cube_length": self.cube_length}
+        return {"resolution": self.mag.to_array(), "cubeLength": self.cube_length}
 
     @classmethod
     def _from_json(cls, json_data):
-        return cls(json_data["resolution"], json_data["cube_length"])
+        return cls(json_data["resolution"], json_data["cubeLength"])
 
     @property
     def mag(self) -> Mag:
@@ -124,7 +150,7 @@ class WKProperties(Properties):
             data_layers = {}
             for layer in data["dataLayers"]:
                 data_layers[layer["name"]] = LayerProperties._from_json(
-                    layer, WkResolution
+                    layer, WkResolution, path
                 )
 
             return cls(
@@ -183,7 +209,7 @@ class TiffProperties(Properties):
             data_layers = {}
             for layer in data["dataLayers"]:
                 data_layers[layer["name"]] = LayerProperties._from_json(
-                    layer, TiffResolution
+                    layer, TiffResolution, path
                 )
 
             return cls(
@@ -268,13 +294,13 @@ class LayerProperties:
         }
 
     @classmethod
-    def _from_json(cls, json_data, resolution_type):
+    def _from_json(cls, json_data, resolution_type, dataset_path):
         # create LayerProperties without resolutions
         layer_properties = cls(
             json_data["name"],
             json_data["category"],
             json_data["elementClass"],
-            json_data["num_channels"],
+            extract_num_channels(json_data.get("num_channels"), dataset_path, json_data["name"], json_data["wkwResolutions"][0]),
             json_data["boundingBox"],
         )
 

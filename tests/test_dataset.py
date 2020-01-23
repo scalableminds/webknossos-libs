@@ -1,4 +1,5 @@
 import filecmp
+import json
 
 import numpy as np
 from shutil import rmtree, copytree
@@ -602,3 +603,20 @@ def test_tiled_tiff_read_and_write():
         mag.get_tile(1, 1, 6)[0, :, :, 0],
         TiffReader("./testoutput/tiled_tiff_dataset/color/1/001_001_006.tif").read()
     )
+
+
+def test_open_dataset_without_num_channels_in_properties():
+    delete_dir("./testoutput/old_wk_dataset/")
+    copytree("./testdata/old_wk_dataset/", "./testoutput/old_wk_dataset/")
+
+    with open("./testoutput/old_wk_dataset/datasource-properties.json") as datasource_properties:
+        data = json.load(datasource_properties)
+        assert data["dataLayers"][0].get("num_channels") is None
+
+    ds = WKDataset("./testoutput/old_wk_dataset/")
+    assert ds.properties.data_layers["color"].num_channels == 1
+    ds.properties._export_as_json()
+
+    with open("./testoutput/old_wk_dataset/datasource-properties.json") as datasource_properties:
+        data = json.load(datasource_properties)
+        assert data["dataLayers"][0].get("num_channels") is not None
