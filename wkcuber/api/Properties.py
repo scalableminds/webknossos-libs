@@ -19,7 +19,8 @@ def extract_num_channels(num_channels_in_properties, path, layer, mag):
                 f"the file {wkw_ds_file_path} to extract the num_channels from there. "
                 f"Since this file does not exist, the attempt to open the dataset failed."
                 f"Please add the attribute manually to solve the problem. "
-                f"If the layer does not contains any data, you can also delete the layer and add it again.")
+                f"If the layer does not contains any data, you can also delete the layer and add it again."
+            )
         return extract_num_channels_from_wkw_header(wkw_ds_file_path)
     else:
         return num_channels_in_properties
@@ -300,7 +301,12 @@ class LayerProperties:
             json_data["name"],
             json_data["category"],
             json_data["elementClass"],
-            extract_num_channels(json_data.get("num_channels"), dataset_path, json_data["name"], json_data["wkwResolutions"][0]),
+            extract_num_channels(
+                json_data.get("num_channels"),
+                dataset_path,
+                json_data["name"],
+                json_data["wkwResolutions"][0],
+            ),
             json_data["boundingBox"],
         )
 

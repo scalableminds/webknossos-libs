@@ -601,7 +601,7 @@ def test_tiled_tiff_read_and_write():
     assert mag.get_tile(1, 1, 6).shape == (1, 32, 32, 1)
     assert np.array_equal(
         mag.get_tile(1, 1, 6)[0, :, :, 0],
-        TiffReader("./testoutput/tiled_tiff_dataset/color/1/001_001_006.tif").read()
+        TiffReader("./testoutput/tiled_tiff_dataset/color/1/001_001_006.tif").read(),
     )
 
 
@@ -609,7 +609,9 @@ def test_open_dataset_without_num_channels_in_properties():
     delete_dir("./testoutput/old_wk_dataset/")
     copytree("./testdata/old_wk_dataset/", "./testoutput/old_wk_dataset/")
 
-    with open("./testoutput/old_wk_dataset/datasource-properties.json") as datasource_properties:
+    with open(
+        "./testoutput/old_wk_dataset/datasource-properties.json"
+    ) as datasource_properties:
         data = json.load(datasource_properties)
         assert data["dataLayers"][0].get("num_channels") is None
 
@@ -617,20 +619,53 @@ def test_open_dataset_without_num_channels_in_properties():
     assert ds.properties.data_layers["color"].num_channels == 1
     ds.properties._export_as_json()
 
-    with open("./testoutput/old_wk_dataset/datasource-properties.json") as datasource_properties:
+    with open(
+        "./testoutput/old_wk_dataset/datasource-properties.json"
+    ) as datasource_properties:
         data = json.load(datasource_properties)
         assert data["dataLayers"][0].get("num_channels") is not None
 
 
 def test_advanced_pattern():
-    delete_dir("../testoutput/wk_dataset2")
-    ds = TiledTiffDataset.create("../testoutput/wk_dataset2", scale=(1, 1, 1), tile_size=(32,32), pattern="{xxxx}/{yyyy}/{zzzz}.tif")
+    delete_dir("../testoutput/tiff_dataset2")
+    ds = TiledTiffDataset.create(
+        "../testoutput/tiff_dataset2",
+        scale=(1, 1, 1),
+        tile_size=(32, 32),
+        pattern="{xxxx}/{yyyy}/{zzzz}.tif",
+    )
     mag = ds.add_layer("color", Layer.COLOR_TYPE).add_mag("1")
     data = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
     mag.write(data)
 
-    assert np.array_equal(
-        mag.read(size=(10, 10, 10)),
-        np.expand_dims(data, 0)
-    )
+    assert np.array_equal(mag.read(size=(10, 10, 10)), np.expand_dims(data, 0))
 
+
+def test_invalid_pattern():
+
+    delete_dir("../testoutput/tiff_invalid_dataset")
+    try:
+        TiledTiffDataset.create(
+            "../testoutput/tiff_invalid_dataset",
+            scale=(1, 1, 1),
+            tile_size=(32, 32),
+            pattern="{xxxx}/{yyyy}/{zzzz.tif",
+        )
+        raise Exception(
+            "The test 'test_invalid_pattern' did not throw an exception even though it should"
+        )
+    except AssertionError:
+        pass
+
+    try:
+        TiledTiffDataset.create(
+            "../testoutput/tiff_invalid_dataset",
+            scale=(1, 1, 1),
+            tile_size=(32, 32),
+            pattern="zzzz.tif",
+        )
+        raise Exception(
+            "The test 'test_invalid_pattern' did not throw an exception even though it should"
+        )
+    except AssertionError:
+        pass

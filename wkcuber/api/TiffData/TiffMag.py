@@ -1,16 +1,18 @@
 import itertools
+import re
 from typing import Optional, List, Tuple, Set
 
 from skimage import io
 import numpy as np
 import os
-from re import findall
 from glob import iglob
 from itertools import zip_longest
 
+from wkcuber.utils import logger
+
 
 def replace_coordinate(pattern: str, coord_id: str, coord: int) -> str:
-    occurrences = findall("{" + coord_id + "+}", pattern)
+    occurrences = re.findall("{" + coord_id + "+}", pattern)
     for occurrence in occurrences:
         number_of_digits = len(occurrence) - 2
         if number_of_digits > 1:
@@ -21,15 +23,99 @@ def replace_coordinate(pattern: str, coord_id: str, coord: int) -> str:
     return pattern
 
 
-def to_file_name(pattern, x, y, z) -> str:
-    file_name = pattern
-    if x is not None:
-        file_name = replace_coordinate(file_name, "x", x)
-    if y is not None:
-        file_name = replace_coordinate(file_name, "y", y)
-    if z is not None:
-        file_name = replace_coordinate(file_name, "z", z)
-    return file_name
+def detect_tile_ranges(
+    tiled_dataset_path_parent: Optional[str], tiled_dataset_path_pattern: Optional[str]
+) -> Tuple[range, range, range]:
+    if tiled_dataset_path_pattern is not None:
+        if tiled_dataset_path_parent is not None:
+            full_pattern = os.path.join(
+                tiled_dataset_path_parent, tiled_dataset_path_pattern
+            )
+        else:
+            full_pattern = tiled_dataset_path_pattern
+        pattern_split = os.path.normpath(full_pattern).split(os.path.sep)
+        prefix = ""
+        if full_pattern.startswith(os.path.sep):
+            prefix = "/"
+
+        detected_z_range, detected_x_range, detected_y_range = detect_tile_ranges_from_pattern_recursively(
+            pattern_split, prefix, set(), set(), set()
+        )
+
+        logger.info(
+            f"Auto-detected tile ranges from tif directory structure: z {detected_z_range} x {detected_x_range} y {detected_y_range}"
+        )
+        return (detected_z_range, detected_x_range, detected_y_range)
+
+    raise Exception("Couldn't auto-detect tile ranges from wkw or tile path pattern")
+
+
+def detect_tile_ranges_from_pattern_recursively(
+    pattern_elements: List[str],
+    prefix: str,
+    z_values: Set[int],
+    x_values: Set[int],
+    y_values: Set[int],
+) -> Tuple[Optional[range], Optional[range], Optional[range]]:
+    current_pattern_element, prefix, remaining_pattern_elements = advance_to_next_relevant_pattern_element(
+        pattern_elements, prefix
+    )
+    items = os.listdir(prefix)
+    for ls_item in items:
+        _, file_extension = os.path.splitext(pattern_elements[-1])
+        if (
+            os.path.isdir(os.path.join(prefix, ls_item))
+            or os.path.splitext(ls_item)[1].lower()[0:4] == file_extension
+        ):
+            z_values.update(detect_value(current_pattern_element, ls_item, "z"))
+            x_values.update(detect_value(current_pattern_element, ls_item, "x", ["z"]))
+            y_values.update(
+                detect_value(current_pattern_element, ls_item, "y", ["z", "x"])
+            )
+
+    prefix = os.path.join(prefix, current_pattern_element)
+
+    if z_values:
+        prefix = replace_coordinate(prefix, "z", min(z_values))
+    if x_values:
+        prefix = replace_coordinate(prefix, "x", min(x_values))
+    if y_values:
+        prefix = replace_coordinate(prefix, "y", min(y_values))
+
+    if (
+        os.path.exists(prefix)
+        and os.path.isdir(prefix)
+        and (z_values or x_values or y_values)
+    ):
+        return detect_tile_ranges_from_pattern_recursively(
+            remaining_pattern_elements, prefix, z_values, x_values, y_values
+        )
+    else:
+        return (
+            values_to_range(z_values),
+            values_to_range(x_values),
+            values_to_range(y_values),
+        )
+
+
+def advance_to_next_relevant_pattern_element(
+    pattern_elements: List[str], prefix: str
+) -> Tuple[str, str, List[str]]:
+    current_pattern_element = ""
+    i = 0
+    for i, pattern_element in enumerate(pattern_elements):
+        if "{" in pattern_element or "}" in pattern_element:
+            current_pattern_element = pattern_element
+            break
+        prefix = os.path.join(prefix, pattern_element)
+    remaining_pattern_elements = pattern_elements[i + 1 :]
+    return current_pattern_element, prefix, remaining_pattern_elements
+
+
+def values_to_range(values: Set[int]):
+    if len(values) > 0:
+        return range(min(values), max(values) + 1)
+    return range(0, 0)
 
 
 def detect_value(
@@ -56,30 +142,15 @@ def detect_value(
     return []
 
 
-def detect_ranges(pattern, file_names):
-    extracted_value_pairs = [
-        extract_xyz_values(pattern, file_name) for file_name in file_names
-    ]
-    x_values, y_values, z_values = (
-        zip(*extracted_value_pairs) if len(extracted_value_pairs) > 0 else [],
-        [],
-        [],
-    )
-
-    # remove duplicates
-    return list(set(x_values)), list(set(y_values)), list(set(z_values))
-
-
-def extract_xyz_values(pattern, file_name):
-    x_value = detect_value(pattern, file_name, dim="x")
-    y_value = detect_value(pattern, file_name, dim="y")
-    z_value = detect_value(pattern, file_name, dim="z")
-
-    x = None if len(x_value) == 0 else x_value[0]
-    y = None if len(y_value) == 0 else y_value[0]
-    z = None if len(z_value) == 0 else z_value[0]
-
-    return x, y, z
+def to_file_name(pattern, x, y, z) -> str:
+    file_name = pattern
+    if x is not None:
+        file_name = replace_coordinate(file_name, "x", x)
+    if y is not None:
+        file_name = replace_coordinate(file_name, "y", y)
+    if z is not None:
+        file_name = replace_coordinate(file_name, "z", z)
+    return file_name
 
 
 class TiffMag:
@@ -89,9 +160,7 @@ class TiffMag:
         self.tiffs = dict()
         self.header = header
 
-        x_range, y_range, z_range = detect_ranges(
-            self.header.pattern, self.list_files()
-        )
+        z_range, x_range, y_range = detect_tile_ranges(self.root, self.header.pattern)
 
         available_tiffs = list(itertools.product(x_range, y_range, z_range))
 

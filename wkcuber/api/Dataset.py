@@ -144,6 +144,7 @@ class WKDataset(AbstractDataset):
 class TiffDataset(AbstractDataset):
     @classmethod
     def create(cls, dataset_path, scale, pattern="{zzzzz}.tif"):
+        validate_pattern(pattern)
         name = basename(normpath(dataset_path))
         properties = TiffProperties(
             join(dataset_path, "datasource-properties.json"),
@@ -171,6 +172,7 @@ class TiffDataset(AbstractDataset):
 class TiledTiffDataset(AbstractDataset):
     @classmethod
     def create(cls, dataset_path, scale, tile_size, pattern="{zzzzz}.tif"):
+        validate_pattern(pattern)
         name = basename(normpath(dataset_path))
         properties = TiffProperties(
             join(dataset_path, "datasource-properties.json"),
@@ -193,3 +195,14 @@ class TiledTiffDataset(AbstractDataset):
 
     def _get_properties_type(self):
         return TiffProperties
+
+
+def validate_pattern(pattern):
+    assert pattern.count("{") > 0 and pattern.count("}") > 0, (
+        f"The provided pattern {pattern} is invalid."
+        + " It needs to contain at least one '{' and one '}'."
+    )
+    assert pattern.count("{") == pattern.count("}"), (
+        f"The provided pattern {pattern} is invalid."
+        + " The number of '{' does not match the number of '}'."
+    )

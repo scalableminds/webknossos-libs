@@ -3,7 +3,12 @@ from os.path import join
 from os import makedirs
 from wkw import wkw
 
-from wkcuber.api.MagDataset import MagDataset, WKMagDataset, TiffMagDataset, TiledTiffMagDataset
+from wkcuber.api.MagDataset import (
+    MagDataset,
+    WKMagDataset,
+    TiffMagDataset,
+    TiledTiffMagDataset,
+)
 from wkcuber.mag import Mag
 
 
