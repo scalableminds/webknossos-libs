@@ -620,3 +620,17 @@ def test_open_dataset_without_num_channels_in_properties():
     with open("./testoutput/old_wk_dataset/datasource-properties.json") as datasource_properties:
         data = json.load(datasource_properties)
         assert data["dataLayers"][0].get("num_channels") is not None
+
+
+def test_advanced_pattern():
+    delete_dir("../testoutput/wk_dataset2")
+    ds = TiledTiffDataset.create("../testoutput/wk_dataset2", scale=(1, 1, 1), tile_size=(32,32), pattern="{xxxx}/{yyyy}/{zzzz}.tif")
+    mag = ds.add_layer("color", Layer.COLOR_TYPE).add_mag("1")
+    data = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
+    mag.write(data)
+
+    assert np.array_equal(
+        mag.read(size=(10, 10, 10)),
+        np.expand_dims(data, 0)
+    )
+

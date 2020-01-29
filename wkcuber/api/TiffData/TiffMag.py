@@ -325,6 +325,7 @@ class TiffReader:
         return io.imread(self.file_name)
 
     def write(self, pixels):
+        os.makedirs(os.path.dirname(self.file_name), exist_ok=True)
         io.imsave(self.file_name, pixels, check_contrast=False)
 
     def merge_with_image(self, foreground_pixels, offset):
