@@ -39,10 +39,7 @@ def create_parser():
     )
 
     parser.add_argument(
-        "--dtype",
-        "-d",
-        help="Target datatype (e.g. uint8, uint16).",
-        default="uint8",
+        "--dtype", "-d", help="Target datatype (e.g. uint8, uint16).", default="uint8"
     )
 
     parser.add_argument(
