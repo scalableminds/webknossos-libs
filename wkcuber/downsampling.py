@@ -632,12 +632,13 @@ def get_next_anisotropic_mag(mag, scale):
     max_index, min_index = detect_larger_and_smaller_dimension(scale)
     mag_array = mag.to_array()
     scale_increase = [1, 1, 1]
+
     if (
         mag_array[min_index] * scale[min_index]
         < mag_array[max_index] * scale[max_index]
     ):
         for i in range(len(scale_increase)):
-            scale_increase[i] = 1 if i == max_index else 2
+            scale_increase[i] = 1 if scale[i] == scale[max_index] else 2
     else:
         scale_increase = [2, 2, 2]
     return Mag(
