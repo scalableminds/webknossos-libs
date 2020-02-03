@@ -39,10 +39,7 @@ def create_parser():
     )
 
     parser.add_argument(
-        "--dtype",
-        "-d",
-        help="Target datatype (e.g. uint8, uint16, uint32).",
-        default="uint8",
+        "--dtype", "-d", help="Target datatype (e.g. uint8, uint16).", default="uint8"
     )
 
     parser.add_argument(
@@ -149,11 +146,13 @@ def convert_folder_nifti(
             )
         )
 
+    logging.info("Segmentation file will also use uint8 as a datatype.")
+
     for path in paths:
-        if path == color_path.name:
+        if path == color_path:
             convert_nifti(path, target_path, "color", "uint8", scale)
-        elif path == segmentation_path.name:
-            convert_nifti(path, target_path, "segmentation", "uint32", scale)
+        elif path == segmentation_path:
+            convert_nifti(path, target_path, "segmentation", "uint8", scale)
         else:
             convert_nifti(path, target_path, path.stem, "uint8", scale)
 
