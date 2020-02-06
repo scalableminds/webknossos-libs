@@ -73,7 +73,12 @@ def to_target_datatype(data: np.ndarray, target_dtype) -> np.ndarray:
 
 def convert_nifti(source_nifti_path, target_path, layer_name, dtype, scale, mag=1):
     target_wkw_info = WkwDatasetInfo(
-        str(target_path.resolve()), layer_name, mag, wkw.Header(np.dtype(dtype), block_type=wkw.Header.BLOCK_TYPE_LZ4HC, file_len=256)
+        str(target_path.resolve()),
+        layer_name,
+        mag,
+        wkw.Header(
+            np.dtype(dtype), block_type=wkw.Header.BLOCK_TYPE_LZ4HC, file_len=256
+        ),
     )
     ensure_wkw(target_wkw_info)
 
