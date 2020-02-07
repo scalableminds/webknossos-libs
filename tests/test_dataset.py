@@ -627,9 +627,9 @@ def test_open_dataset_without_num_channels_in_properties():
 
 
 def test_advanced_pattern():
-    delete_dir("../testoutput/tiff_dataset2")
+    delete_dir("../testoutput/tiff_dataset_advanced_pattern")
     ds = TiledTiffDataset.create(
-        "../testoutput/tiff_dataset2",
+        "../testoutput/tiff_dataset_advanced_pattern",
         scale=(1, 1, 1),
         tile_size=(32, 32),
         pattern="{xxxx}/{yyyy}/{zzzz}.tif",
