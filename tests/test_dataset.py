@@ -9,7 +9,7 @@ from wkcuber.api.Dataset import WKDataset, TiffDataset, TiledTiffDataset
 from os import path, makedirs
 
 from wkcuber.api.Layer import Layer
-from wkcuber.api.Properties import TiffProperties, WKProperties
+from wkcuber.api.Properties.DatasetProperties import TiffProperties, WKProperties
 from wkcuber.api.TiffData.TiffMag import TiffReader
 from wkcuber.mag import Mag
 
@@ -673,8 +673,8 @@ def test_invalid_pattern():
 
 
 def test_properties_with_segmentation():
-    input_json_path = "../testdata/complex_property_ds/datasource-properties.json"
-    output_json_path = "../testoutput/complex_property_ds/datasource-properties.json"
+    input_json_path = "./testdata/complex_property_ds/datasource-properties.json"
+    output_json_path = "./testoutput/complex_property_ds/datasource-properties.json"
     properties = WKProperties._from_json(input_json_path)
 
     # the attributes 'largest_segment_id' and 'mappings' only exist if it is a SegmentationLayer

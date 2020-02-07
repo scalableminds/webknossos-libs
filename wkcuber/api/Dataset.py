@@ -5,7 +5,7 @@ from os.path import join, normpath, basename
 from pathlib import Path
 import numpy as np
 
-from wkcuber.api.Properties import WKProperties, TiffProperties, Properties
+from wkcuber.api.Properties.DatasetProperties import WKProperties, TiffProperties, Properties
 from wkcuber.api.Layer import Layer, WKLayer, TiffLayer, TiledTiffLayer
 from wkcuber.api.View import View
 
