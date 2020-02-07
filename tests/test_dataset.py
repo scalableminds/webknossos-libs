@@ -679,7 +679,14 @@ def test_properties_with_segmentation():
 
     # the attributes 'largest_segment_id' and 'mappings' only exist if it is a SegmentationLayer
     assert properties.data_layers["segmentation"].largest_segment_id == 1000000000
-    assert properties.data_layers["segmentation"].mappings == ["larger5um1", "axons", "astrocyte-ge-7", "astrocyte", "mitochondria", "astrocyte-full"]
+    assert properties.data_layers["segmentation"].mappings == [
+        "larger5um1",
+        "axons",
+        "astrocyte-ge-7",
+        "astrocyte",
+        "mitochondria",
+        "astrocyte-full",
+    ]
 
     # export the json under a new name
     makedirs(dirname(output_json_path), exist_ok=True)
@@ -689,9 +696,6 @@ def test_properties_with_segmentation():
     # validate if contents match
     with open(input_json_path) as input_properties:
         input_data = json.load(input_properties)
-        for layer in input_data["dataLayers"]:
-            # remove the num_channels because they are not part of the original json
-            del layer["dataFormat"]
 
         with open(output_json_path) as output_properties:
             output_data = json.load(output_properties)

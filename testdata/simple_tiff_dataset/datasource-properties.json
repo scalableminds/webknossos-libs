@@ -11,6 +11,7 @@
         {
             "name": "color",
             "category": "color",
+            "dataFormat": "tiff",
             "elementClass": "uint8",
             "num_channels": 1,
             "boundingBox": {

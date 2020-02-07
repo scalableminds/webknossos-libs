@@ -5,7 +5,11 @@ from os.path import join, normpath, basename
 from pathlib import Path
 import numpy as np
 
-from wkcuber.api.Properties.DatasetProperties import WKProperties, TiffProperties, Properties
+from wkcuber.api.Properties.DatasetProperties import (
+    WKProperties,
+    TiffProperties,
+    Properties,
+)
 from wkcuber.api.Layer import Layer, WKLayer, TiffLayer, TiledTiffLayer
 from wkcuber.api.View import View
 
@@ -19,6 +23,7 @@ class AbstractDataset(ABC):
         self.layers = {}
         self.path = Path(properties.path).parent
         self.properties = properties
+        self.data_format = "abstract"
 
         # construct self.layer
         for layer_name in self.properties.data_layers:
@@ -66,7 +71,9 @@ class AbstractDataset(ABC):
                 )
             )
         self.layers[layer_name] = self._create_layer(layer_name, dtype, num_channels)
-        self.properties._add_layer(layer_name, category, dtype.name, num_channels)
+        self.properties._add_layer(
+            layer_name, category, dtype.name, self.data_format, num_channels
+        )
         return self.layers[layer_name]
 
     def get_or_add_layer(
@@ -129,6 +136,7 @@ class WKDataset(AbstractDataset):
 
     def __init__(self, dataset_path):
         super().__init__(dataset_path)
+        self.data_format = "wkw"
         assert isinstance(self.properties, WKProperties)
 
     def to_tiff_dataset(self, new_dataset_path):
@@ -157,6 +165,7 @@ class TiffDataset(AbstractDataset):
 
     def __init__(self, dataset_path):
         super().__init__(dataset_path)
+        self.data_format = "tiff"
         assert isinstance(self.properties, TiffProperties)
 
     def to_wk_dataset(self, new_dataset_path):
@@ -188,6 +197,7 @@ class TiledTiffDataset(AbstractDataset):
 
     def __init__(self, dataset_path):
         super().__init__(dataset_path)
+        self.data_format = "tiledTiff"
         assert isinstance(self.properties, TiffProperties)
 
     def _create_layer(self, layer_name, dtype, num_channels) -> Layer:

@@ -1,7 +1,10 @@
 import json
 
 from wkcuber.api.Layer import Layer
-from wkcuber.api.Properties.LayerProperties import SegmentationLayerProperties, LayerProperties
+from wkcuber.api.Properties.LayerProperties import (
+    SegmentationLayerProperties,
+    LayerProperties,
+)
 from wkcuber.api.Properties.ResolutionProperties import WkResolution, TiffResolution
 from wkcuber.mag import Mag
 
@@ -27,16 +30,18 @@ class Properties:
     def _export_as_json(self):
         pass
 
-    def _add_layer(self, layer_name, category, element_class, num_channels=1):
+    def _add_layer(
+        self, layer_name, category, element_class, data_format, num_channels=1
+    ):
         # this layer is already in data_layers in case we reconstruct the dataset from a datasource-properties.json
         if layer_name not in self.data_layers:
             if category == Layer.SEGMENTATION_TYPE:
                 new_layer = SegmentationLayerProperties(
-                    layer_name, category, element_class, num_channels
+                    layer_name, category, element_class, data_format, num_channels
                 )
             else:
                 new_layer = LayerProperties(
-                    layer_name, category, element_class, num_channels
+                    layer_name, category, element_class, data_format, num_channels
                 )
             self.data_layers[layer_name] = new_layer
             self._export_as_json()

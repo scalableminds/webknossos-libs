@@ -9,7 +9,9 @@ def extract_num_channels(num_channels_in_properties, path, layer, mag):
     # if a wk dataset is not created with this API, then it most likely doesn't have the attribute 'num_channels' in the
     # datasource-properties.json. In this case we need to extract the 'num_channels' from the 'header.wkw'.
     if num_channels_in_properties is None:
-        wkw_ds_file_path = join(dirname(path), layer, Mag(mag["resolution"]).to_layer_name())
+        wkw_ds_file_path = join(
+            dirname(path), layer, Mag(mag["resolution"]).to_layer_name()
+        )
         if not isfile(join(wkw_ds_file_path, "header.wkw")):
             raise Exception(
                 f"The dataset you are trying to open does not have the attribute 'num_channels' for layer {layer}. "
@@ -35,6 +37,7 @@ class LayerProperties:
         name,
         category,
         element_class,
+        data_format,
         num_channels,
         bounding_box=None,
         resolutions=None,
@@ -42,6 +45,7 @@ class LayerProperties:
         self._name = name
         self._category = category
         self._element_class = element_class
+        self._data_format = data_format
         self._num_channels = num_channels
         self._bounding_box = bounding_box or {
             "topLeft": (-1, -1, -1),
@@ -56,6 +60,7 @@ class LayerProperties:
             "name": self.name,
             "category": self.category,
             "elementClass": self.element_class,
+            "dataFormat": self._data_format,
             "num_channels": self.num_channels,
             "boundingBox": {}
             if self.bounding_box is None
@@ -75,6 +80,7 @@ class LayerProperties:
             json_data["name"],
             json_data["category"],
             json_data["elementClass"],
+            json_data["dataFormat"],
             extract_num_channels(
                 json_data.get("num_channels"),
                 dataset_path,
@@ -127,6 +133,10 @@ class LayerProperties:
         return self._element_class
 
     @property
+    def data_format(self):
+        return self._data_format
+
+    @property
     def num_channels(self) -> int:
         return self._num_channels
 
@@ -140,8 +150,27 @@ class LayerProperties:
 
 
 class SegmentationLayerProperties(LayerProperties):
-    def __init__(self, name, category, element_class, num_channels, bounding_box=None, resolutions=None, largest_segment_id=None, mappings=None):
-        super().__init__(name, category, element_class, num_channels, bounding_box, resolutions)
+    def __init__(
+        self,
+        name,
+        category,
+        element_class,
+        data_format,
+        num_channels,
+        bounding_box=None,
+        resolutions=None,
+        largest_segment_id=None,
+        mappings=None,
+    ):
+        super().__init__(
+            name,
+            category,
+            element_class,
+            data_format,
+            num_channels,
+            bounding_box,
+            resolutions,
+        )
         self._largest_segment_id = largest_segment_id
         self._mappings = mappings
 
@@ -159,6 +188,7 @@ class SegmentationLayerProperties(LayerProperties):
             json_data["name"],
             json_data["category"],
             json_data["elementClass"],
+            json_data["dataFormat"],
             extract_num_channels(
                 json_data.get("num_channels"),
                 dataset_path,
