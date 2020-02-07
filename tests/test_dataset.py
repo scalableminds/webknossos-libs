@@ -1,5 +1,6 @@
 import filecmp
 import json
+from os.path import dirname
 
 import numpy as np
 from shutil import rmtree, copytree
@@ -8,7 +9,7 @@ from wkcuber.api.Dataset import WKDataset, TiffDataset, TiledTiffDataset
 from os import path, makedirs
 
 from wkcuber.api.Layer import Layer
-from wkcuber.api.Properties import TiffProperties
+from wkcuber.api.Properties import TiffProperties, WKProperties
 from wkcuber.api.TiffData.TiffMag import TiffReader
 from wkcuber.mag import Mag
 
@@ -669,3 +670,33 @@ def test_invalid_pattern():
         )
     except AssertionError:
         pass
+
+
+def test_properties_with_segmentation():
+    input_json_path = "../testdata/complex_property_ds/datasource-properties.json"
+    output_json_path = "../testoutput/complex_property_ds/datasource-properties.json"
+    properties = WKProperties._from_json(input_json_path)
+
+    # the attributes 'largest_segment_id' and 'mappings' only exist if it is a SegmentationLayer
+    assert properties.data_layers["segmentation"].largest_segment_id == 1000000000
+    assert properties.data_layers["segmentation"].mappings == ["larger5um1", "axons", "astrocyte-ge-7", "astrocyte", "mitochondria", "astrocyte-full"]
+
+    # export the json under a new name
+    makedirs(dirname(output_json_path), exist_ok=True)
+    properties._path = output_json_path
+    properties._export_as_json()
+
+    # validate if contents match
+    with open(input_json_path) as input_properties:
+        input_data = json.load(input_properties)
+        for layer in input_data["dataLayers"]:
+            # remove the num_channels because they are not part of the original json
+            del layer["dataFormat"]
+
+        with open(output_json_path) as output_properties:
+            output_data = json.load(output_properties)
+            for layer in output_data["dataLayers"]:
+                # remove the num_channels because they are not part of the original json
+                del layer["num_channels"]
+
+            assert input_data == output_data

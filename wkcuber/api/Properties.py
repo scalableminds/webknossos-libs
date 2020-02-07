@@ -4,6 +4,7 @@ from os.path import join, dirname, isfile
 
 from wkw import wkw
 
+from wkcuber.api.Layer import Layer
 from wkcuber.mag import Mag
 
 
@@ -11,7 +12,7 @@ def extract_num_channels(num_channels_in_properties, path, layer, mag):
     # if a wk dataset is not created with this API, then it most likely doesn't have the attribute 'num_channels' in the
     # datasource-properties.json. In this case we need to extract the 'num_channels' from the 'header.wkw'.
     if num_channels_in_properties is None:
-        wkw_ds_file_path = join(dirname(path), layer, str(mag["resolution"]))
+        wkw_ds_file_path = join(dirname(path), layer, Mag(mag["resolution"]).to_layer_name())
         if not isfile(join(wkw_ds_file_path, "header.wkw")):
             raise Exception(
                 f"The dataset you are trying to open does not have the attribute 'num_channels' for layer {layer}. "
@@ -101,9 +102,14 @@ class Properties:
     def _add_layer(self, layer_name, category, element_class, num_channels=1):
         # this layer is already in data_layers in case we reconstruct the dataset from a datasource-properties.json
         if layer_name not in self.data_layers:
-            new_layer = LayerProperties(
-                layer_name, category, element_class, num_channels
-            )
+            if category == Layer.SEGMENTATION_TYPE:
+                new_layer = SegmentationLayerProperties(
+                    layer_name, category, element_class, num_channels
+                )
+            else:
+                new_layer = LayerProperties(
+                    layer_name, category, element_class, num_channels
+                )
             self.data_layers[layer_name] = new_layer
             self._export_as_json()
 
@@ -150,9 +156,14 @@ class WKProperties(Properties):
             # reconstruct data_layers
             data_layers = {}
             for layer in data["dataLayers"]:
-                data_layers[layer["name"]] = LayerProperties._from_json(
-                    layer, WkResolution, path
-                )
+                if layer["category"] == Layer.SEGMENTATION_TYPE:
+                    data_layers[layer["name"]] = SegmentationLayerProperties._from_json(
+                        layer, WkResolution, path
+                    )
+                else:
+                    data_layers[layer["name"]] = LayerProperties._from_json(
+                        layer, WkResolution, path
+                    )
 
             return cls(
                 path, data["id"]["name"], data["scale"], data["id"]["team"], data_layers
@@ -209,9 +220,14 @@ class TiffProperties(Properties):
             # reconstruct data_layers
             data_layers = {}
             for layer in data["dataLayers"]:
-                data_layers[layer["name"]] = LayerProperties._from_json(
-                    layer, TiffResolution, path
-                )
+                if layer["category"] == Layer.SEGMENTATION_TYPE:
+                    data_layers[layer["name"]] = SegmentationLayerProperties._from_json(
+                        layer, TiffResolution, path
+                    )
+                else:
+                    data_layers[layer["name"]] = LayerProperties._from_json(
+                        layer, TiffResolution, path
+                    )
 
             return cls(
                 path=path,
@@ -363,3 +379,50 @@ class LayerProperties:
     @property
     def wkw_magnifications(self) -> dict:
         return self._wkw_magnifications
+
+
+class SegmentationLayerProperties(LayerProperties):
+    def __init__(self, name, category, element_class, num_channels, bounding_box=None, resolutions=None, largest_segment_id=None, mappings=None):
+        super().__init__(name, category, element_class, num_channels, bounding_box, resolutions)
+        self._largest_segment_id = largest_segment_id
+        self._mappings = mappings
+
+    def _to_json(self):
+        json_properties = super()._to_json()
+        json_properties["largestSegmentId"] = self._largest_segment_id
+        if self._mappings is not None:
+            json_properties["mappings"] = self._mappings
+        return json_properties
+
+    @classmethod
+    def _from_json(cls, json_data, resolution_type, dataset_path):
+        # create LayerProperties without resolutions
+        layer_properties = cls(
+            json_data["name"],
+            json_data["category"],
+            json_data["elementClass"],
+            extract_num_channels(
+                json_data.get("num_channels"),
+                dataset_path,
+                json_data["name"],
+                json_data["wkwResolutions"][0],
+            ),
+            json_data["boundingBox"],
+            None,
+            json_data["largestSegmentId"],
+            json_data["mappings"],
+        )
+
+        # add resolutions to LayerProperties
+        for resolution in json_data["wkwResolutions"]:
+            layer_properties._add_resolution(resolution_type._from_json(resolution))
+
+        return layer_properties
+
+    @property
+    def largest_segment_id(self) -> int:
+        return self._largest_segment_id
+
+    @property
+    def mappings(self) -> list:
+        return self._mappings
