@@ -130,18 +130,9 @@ class WKProperties(Properties):
 
 class TiffProperties(Properties):
     def __init__(
-        self,
-        path,
-        name,
-        scale,
-        pattern,
-        team="",
-        data_layers=None,
-        grid_shape=(0, 0),
-        tile_size=(32, 32),
+        self, path, name, scale, pattern, team="", data_layers=None, tile_size=(32, 32)
     ):
         super().__init__(path, name, scale, team, data_layers)
-        self._grid_shape = grid_shape
         self.pattern = pattern
         self.tile_size = tile_size
 
@@ -169,7 +160,6 @@ class TiffProperties(Properties):
                 pattern=data["pattern"],
                 team=data["id"]["team"],
                 data_layers=data_layers,
-                grid_shape=data["grid_shape"],
                 tile_size=data.get("tile_size"),
             )
 
@@ -182,15 +172,12 @@ class TiffProperties(Properties):
                 self.data_layers[layer_name]._to_json()
                 for layer_name in self.data_layers
             ],
-            "grid_shape": self.grid_shape,
-            "tile_size": {} if self.tile_size is None else self.tile_size,
         }
+        if self.tile_size is not None:
+            data["tile_size"] = self.tile_size
+
         with open(self.path, "w") as outfile:
             json.dump(data, outfile, indent=4, separators=(",", ": "))
-
-    @property
-    def grid_shape(self) -> tuple:
-        return self._grid_shape
 
     def _add_mag(self, layer_name, mag):
         # this mag is already in wkw_magnifications in case we reconstruct the dataset from a datasource-properties.json
