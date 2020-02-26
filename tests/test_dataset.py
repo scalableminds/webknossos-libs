@@ -293,7 +293,7 @@ def test_other_file_extensions_for_tiff_dataset():
 
 
 def test_tiff_write_multi_channel_uint8():
-    dataset_path = "./testoutput/tiff_multichannel/"
+    dataset_path = "../testoutput/tiff_multichannel/"
     delete_dir(dataset_path)
 
     ds_tiff = TiffDataset.create(dataset_path, scale=(1, 1, 1))
@@ -642,9 +642,9 @@ def test_open_dataset_without_num_channels_in_properties():
 
 
 def test_advanced_pattern():
-    delete_dir("../testoutput/tiff_dataset_advanced_pattern")
+    delete_dir("./testoutput/tiff_dataset_advanced_pattern")
     ds = TiledTiffDataset.create(
-        "../testoutput/tiff_dataset_advanced_pattern",
+        "./testoutput/tiff_dataset_advanced_pattern",
         scale=(1, 1, 1),
         tile_size=(32, 32),
         pattern="{xxxx}/{yyyy}/{zzzz}.tif",
@@ -658,10 +658,10 @@ def test_advanced_pattern():
 
 def test_invalid_pattern():
 
-    delete_dir("../testoutput/tiff_invalid_dataset")
+    delete_dir("./testoutput/tiff_invalid_dataset")
     try:
         TiledTiffDataset.create(
-            "../testoutput/tiff_invalid_dataset",
+            "./testoutput/tiff_invalid_dataset",
             scale=(1, 1, 1),
             tile_size=(32, 32),
             pattern="{xxxx}/{yyyy}/{zzzz.tif",
@@ -674,7 +674,7 @@ def test_invalid_pattern():
 
     try:
         TiledTiffDataset.create(
-            "../testoutput/tiff_invalid_dataset",
+            "./testoutput/tiff_invalid_dataset",
             scale=(1, 1, 1),
             tile_size=(32, 32),
             pattern="zzzz.tif",
@@ -721,10 +721,10 @@ def test_properties_with_segmentation():
 
 
 def test_chunking_wk():
-    delete_dir("../testoutput/chunking_dataset_wk/")
-    copytree("../testdata/simple_wk_dataset/", "../testoutput/chunking_dataset_wk/")
+    delete_dir("./testoutput/chunking_dataset_wk/")
+    copytree("./testdata/simple_wk_dataset/", "./testoutput/chunking_dataset_wk/")
 
-    view = WKDataset("../testoutput/chunking_dataset_wk/").get_view(
+    view = WKDataset("./testoutput/chunking_dataset_wk/").get_view(
         "color", "1", size=(256, 256, 256)
     )
 
@@ -737,10 +737,10 @@ def test_chunking_wk():
 
 
 def test_chunking_tiff():
-    delete_dir("../testoutput/chunking_dataset_tiff/")
-    copytree("../testdata/simple_tiff_dataset/", "../testoutput/chunking_dataset_tiff/")
+    delete_dir("./testoutput/chunking_dataset_tiff/")
+    copytree("./testdata/simple_tiff_dataset/", "./testoutput/chunking_dataset_tiff/")
 
-    view = TiffDataset("../testoutput/chunking_dataset_tiff/").get_view(
+    view = TiffDataset("./testoutput/chunking_dataset_tiff/").get_view(
         "color", "1", size=(265, 265, 1)
     )
 
