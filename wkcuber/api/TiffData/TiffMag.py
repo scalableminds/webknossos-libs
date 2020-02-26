@@ -214,7 +214,7 @@ class TiffMag:
         data = np.moveaxis(data, -1, 0)
         return data
 
-    def write(self, off, data):  # TODO: maybe update gridShape in properties
+    def write(self, off, data):
         if not len(data.shape) == 3:
             # reformat array to have the channels as the first index (similar to wkw)
             # this is only necessary if the data has a dedicated dimensions for the num_channels
