@@ -12,11 +12,25 @@ from wkcuber.api.Layer import Layer
 from wkcuber.api.Properties.DatasetProperties import TiffProperties, WKProperties
 from wkcuber.api.TiffData.TiffMag import TiffReader
 from wkcuber.mag import Mag
+from wkcuber.utils import get_executor_for_args
 
 
 def delete_dir(relative_path):
     if path.exists(relative_path) and path.isdir(relative_path):
         rmtree(relative_path)
+
+
+def chunk_job(args):
+    view, additional_args = args
+
+    data = view.read(view.size)
+    if data.shape[0] == 1:
+        data = data[0]
+
+    # increment the color value of each voxel
+    data += 50
+    view.write(data)
+
 
 
 def test_create_wk_dataset_with_layer_and_mag():
@@ -704,3 +718,38 @@ def test_properties_with_segmentation():
                 del layer["num_channels"]
 
             assert input_data == output_data
+
+
+def test_chunking_wk():
+    delete_dir("../testoutput/chunking_dataset_wk/")
+    copytree("../testdata/simple_wk_dataset/", "../testoutput/chunking_dataset_wk/")
+
+    view = WKDataset("../testoutput/chunking_dataset_wk/").get_view(
+        "color", "1", size=(256, 256, 256)
+    )
+
+    original_data = view.read(view.size)
+
+    with get_executor_for_args(None) as executor:
+        view.for_each_chunk(chunk_job, job_args_per_chunk="test", chunk_size=(64, 64, 64), chunk_alignment=None, executor=executor)
+
+    assert np.array_equal(original_data + 1, view.read(view.size))
+
+
+def test_chunking_tiff():
+    delete_dir("../testoutput/chunking_dataset_tiff/")
+    copytree("../testdata/simple_tiff_dataset/", "../testoutput/chunking_dataset_tiff/")
+
+    view = TiffDataset("../testoutput/chunking_dataset_tiff/").get_view(
+        "color", "1", size=(265, 265, 1)
+    )
+
+    original_data = view.read(view.size)
+
+    # TODO: this test fails because the chunk_size is smaller than a file -> we open the file multiple times in parallel
+    # TODO: -> assert that the alignment does not allow that a file is edited concurently
+    with get_executor_for_args(None) as executor:
+        view.for_each_chunk(chunk_job, job_args_per_chunk="test", chunk_size=(150, 150, 1), chunk_alignment=None, executor=executor)
+
+    new_data = view.read(view.size)
+    assert np.array_equal(original_data + 50, new_data)

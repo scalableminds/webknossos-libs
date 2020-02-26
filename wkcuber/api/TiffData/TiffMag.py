@@ -161,7 +161,9 @@ class TiffMag:
         self.header = header
 
         z_range, x_range, y_range = detect_tile_ranges(self.root, self.header.pattern)
-
+        z_range = [None] if z_range == range(0, 0) else z_range
+        y_range = [None] if y_range == range(0, 0) else y_range
+        x_range = [None] if x_range == range(0, 0) else x_range
         available_tiffs = list(itertools.product(x_range, y_range, z_range))
 
         for xyz in available_tiffs:
@@ -187,7 +189,8 @@ class TiffMag:
             if xyz in self.tiffs:
                 # load data and discard the padded data
                 loaded_data = np.array(self.tiffs[xyz].read(), self.header.dtype)[
-                    offset_in_output_data[0] :, offset_in_output_data[1] :
+                    offset_in_output_data[0] : offset_in_output_data[0] + shape[0],
+                    offset_in_output_data[1] : offset_in_output_data[1] + shape[1]
                 ]
 
                 index_slice = [
