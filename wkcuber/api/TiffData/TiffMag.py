@@ -67,8 +67,12 @@ def detect_tile_ranges_from_pattern_recursively(
             os.path.isdir(os.path.join(prefix, ls_item))
             or os.path.splitext(ls_item)[1].lower()[0:4] == file_extension
         ):
-            z_values.update(detect_value(current_pattern_element, ls_item, "z"))
-            x_values.update(detect_value(current_pattern_element, ls_item, "x", ["z"]))
+            z_values.update(
+                detect_value(current_pattern_element, ls_item, "z", ["x", "y"])
+            )
+            x_values.update(
+                detect_value(current_pattern_element, ls_item, "x", ["y", "z"])
+            )
             y_values.update(
                 detect_value(current_pattern_element, ls_item, "y", ["z", "x"])
             )
@@ -167,12 +171,12 @@ class TiffMag:
         available_tiffs = list(itertools.product(x_range, y_range, z_range))
 
         for xyz in available_tiffs:
-            self.tiffs[xyz] = TiffReader.open(
-                self.get_file_name_for_layer(xyz)
-            )  # open is lazy
+            if xyz != (None, None, None):
+                self.tiffs[xyz] = TiffReader.open(
+                    self.get_file_name_for_layer(xyz)
+                )  # open is lazy
 
     def read(self, off, shape) -> np.array:
-        # if not self.has_only_one_channel():
         # modify the shape to also include the num_channels
         shape = tuple(shape) + tuple([self.header.num_channels])
 
@@ -190,7 +194,7 @@ class TiffMag:
                 # load data and discard the padded data
                 loaded_data = np.array(self.tiffs[xyz].read(), self.header.dtype)[
                     offset_in_output_data[0] : offset_in_output_data[0] + shape[0],
-                    offset_in_output_data[1] : offset_in_output_data[1] + shape[1]
+                    offset_in_output_data[1] : offset_in_output_data[1] + shape[1],
                 ]
 
                 index_slice = [
@@ -267,25 +271,35 @@ class TiffMag:
         return
 
     def calculate_relevant_slices(self, offset, shape):
-        tile_size = self.header.tile_size
+        """
+        The purpose of this method is to find out which tiles need to be touched.
+        Each tile is specified by its (x, y, z)-dimensions.
+        For each tile, this method also returns what offsets inside of each individual tile need to be used.
+        Additionally, this method returns for each tile where the data of the tile fits into the bigger picture.
+        :param offset: the offset in the dataset compared to the coordinate (0, 0, 0)
+        :param shape: the shape of the data that is about to be written or the shape of the data that is about to be read (depending on where this method is used)
+        :return: tiles that need to be considered (+ their shape, the offset in the tiles, and the offset in the original data)
+        """
+
+        tile_size = (
+            self.header.tile_size
+        )  # tile_size is None if the dataset is a simple TiffDataset
 
         max_indices = tuple(i1 + i2 for i1, i2 in zip(offset, shape))
 
-        x_first_index = (
-            offset[0] // tile_size[0] if tile_size else None
-        )  # floor division
-        x_last_index = (
-            -(-max_indices[0] // tile_size[0]) if tile_size else None
-        )  # ceil division
-        x_indices = range(x_first_index, x_last_index) if tile_size else [None]
+        if tile_size is None:
+            x_first_index = None
+            x_indices = [None]
+            y_first_index = None
+            y_indices = [None]
+        else:
+            x_first_index = offset[0] // tile_size[0]  # floor division
+            x_last_index = np.math.ceil(max_indices[0] / tile_size[0])
+            x_indices = range(x_first_index, x_last_index)
 
-        y_first_index = (
-            offset[1] // tile_size[1] if tile_size else None
-        )  # floor division
-        y_last_index = (
-            -(-max_indices[1] // tile_size[1]) if tile_size else None
-        )  # ceil division
-        y_indices = range(y_first_index, y_last_index) if tile_size else [None]
+            y_first_index = offset[1] // tile_size[1]  # floor division
+            y_last_index = np.math.ceil(max_indices[1] / tile_size[1])
+            y_indices = range(y_first_index, y_last_index)
 
         for x in x_indices:
             for y in y_indices:

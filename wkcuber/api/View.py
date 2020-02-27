@@ -83,7 +83,29 @@ class View:
                 f"Writing out of bounds: The passed parameter 'size' {size} exceeds the size of the current view ({self.size})"
             )
 
-    def for_each_chunk(self, work_on_chunk, job_args_per_chunk, chunk_size, chunk_alignment, executor):
+    def for_each_chunk(self, work_on_chunk, job_args_per_chunk, chunk_size, executor):
+        job_args = []
+        bb = BoundingBox(self.global_offset, self.size)
+
+        self._check_chunk_size(chunk_size)
+
+        for chunk in bb.chunk(chunk_size, chunk_size):
+            job_args.append(
+                (
+                    self._get_class_type()(
+                        self.path, self.header, chunk.size, chunk.topleft
+                    ),
+                    job_args_per_chunk,
+                )
+            )
+
+        # execute the work for each chunk
+        wait_and_ensure_success(executor.map_to_futures(work_on_chunk, job_args))
+
+    def _check_chunk_size(self, chunk_size):
+        raise NotImplementedError
+
+    def _get_class_type(self):
         raise NotImplementedError
 
     def __enter__(self):
@@ -104,26 +126,22 @@ class WKView(View):
             self._is_opened = True
         return self
 
-    def for_each_chunk(self, work_on_chunk, job_args_per_chunk, chunk_size, chunk_alignment, executor):
-        job_args = []
-        bb = BoundingBox(self.global_offset, self.size)
+    def _check_chunk_size(self, chunk_size):
+        file_dim = (self.header.file_len * self.header.block_len,) * 3
 
-        # TODO: how to choose the alignment? file_size (from header) or chunk_size?
-        for chunk in bb.chunk(chunk_size, chunk_alignment):
-            job_args.append(
-                (
-                    WKView(
-                        self.path,
-                        self.header,
-                        chunk.size,
-                        chunk.topleft
-                    ),
-                    job_args_per_chunk
-                )
+        assert chunk_size is not None
+
+        if 0 in chunk_size:
+            raise AssertionError(
+                f"The passed parameter 'chunk_size' {chunk_size} contains at least one 0. This is not allowed."
+            )
+        if (np.array(chunk_size) % file_dim).any():
+            raise AssertionError(
+                f"The passed parameter 'chunk_size' {chunk_size} must be a multiple of the file size {file_dim}"
             )
 
-        # execute the work for each chunk
-        wait_and_ensure_success(executor.map_to_futures(work_on_chunk, job_args))
+    def _get_class_type(self):
+        return WKView
 
 
 class TiffView(View):
@@ -135,26 +153,33 @@ class TiffView(View):
             self._is_opened = True
         return self
 
-    def for_each_chunk(self, work_on_chunk, job_args_per_chunk, chunk_size, chunk_alignment, executor):
-        job_args = []
-        bb = BoundingBox(self.global_offset, self.size)
+    def _check_chunk_size(self, chunk_size):
+        assert chunk_size is not None
 
-        # TODO: how to choose the alignment? file_size (from header) or chunk_size?
-        for chunk in bb.chunk(chunk_size, chunk_alignment):
-            job_args.append(
-                (
-                    TiffView(
-                        self.path,
-                        self.header,
-                        chunk.size,
-                        chunk.topleft
-                    ),
-                    job_args_per_chunk
-                )
+        if 0 in chunk_size:
+            raise AssertionError(
+                f"The passed parameter 'chunk_size' {chunk_size} contains at least one 0. This is not allowed."
             )
 
-        # execute the work for each chunk
-        wait_and_ensure_success(executor.map_to_futures(work_on_chunk, job_args))
+        if self.header.tile_size is None:
+            # non tiled tiff dataset
+            if self.size[0:2] != chunk_size[0:2]:
+                raise AssertionError(
+                    f"The x- and y-length of the passed parameter 'chunk_size' {chunk_size} do not match with the size of the view {self.size}."
+                )
+        else:
+            # tiled tiff dataset
+            file_dim = tuple(self.header.tile_size) + (
+                1,
+            )  # the z-dimension of an image is 1
+            if (np.array(chunk_size) % file_dim).any():
+                raise AssertionError(
+                    f"The passed parameter 'chunk_size' {chunk_size} must be a multiple of the file size {file_dim}"
+                )
+
+    def _get_class_type(self):
+        return TiffView
+
 
 def assert_non_negative_offset(offset):
     all_positive = all(i >= 0 for i in offset)

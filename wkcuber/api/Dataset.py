@@ -180,7 +180,9 @@ class TiffDataset(AbstractDataset):
 
 class TiledTiffDataset(AbstractDataset):
     @classmethod
-    def create(cls, dataset_path, scale, tile_size, pattern="{zzzzz}.tif"):
+    def create(
+        cls, dataset_path, scale, tile_size, pattern="{xxxxx}/{yyyyy}/{zzzzz}.tif"
+    ):
         validate_pattern(pattern)
         name = basename(normpath(dataset_path))
         properties = TiffProperties(
@@ -197,7 +199,7 @@ class TiledTiffDataset(AbstractDataset):
 
     def __init__(self, dataset_path):
         super().__init__(dataset_path)
-        self.data_format = "tiledTiff"
+        self.data_format = "tiled_tiff"
         assert isinstance(self.properties, TiffProperties)
 
     def _create_layer(self, layer_name, dtype, num_channels) -> Layer:
