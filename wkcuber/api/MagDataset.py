@@ -123,18 +123,8 @@ class TiffMagDataset(MagDataset):
 class TiledTiffMagDataset(TiffMagDataset):
     def get_tile(self, x_index, y_index, z_index) -> np.array:
         tile_size = self.layer.dataset.properties.tile_size
-        if tile_size is None:
-            # not a tiled dataset
-            if x_index != 0 or y_index != 0:
-                raise AttributeError(
-                    f"Cannot read tile (x: {x_index}, y: {y_index}, z: {z_index}) from the dataset. The x_index and the y_index must be 0 for non-tiled TiffDatasets"
-                )
-            data_shape = np.array(self.view.size)
-            data_shape[-1] = z_index  # only get the data of one z layer
-            return self.read(tuple(data_shape))
-        else:
-            size = tuple(tile_size) + tuple((1,))
-            offset = np.array((0, 0, 0)) + np.array(size) * np.array(
-                (x_index, y_index, z_index)
-            )
-            return self.read(size, offset)
+        size = tuple(tile_size) + tuple((1,))
+        offset = np.array((0, 0, 0)) + np.array(size) * np.array(
+            (x_index, y_index, z_index)
+        )
+        return self.read(size, offset)

@@ -690,3 +690,61 @@ def test_properties_with_segmentation():
                 del layer["num_channels"]
 
             assert input_data == output_data
+
+
+def test_tiled_tiff_inverse_pattern():
+    delete_dir("./testoutput/tiled_tiff_dataset_inverse")
+    tiled_tiff_ds = TiledTiffDataset.create(
+        "./testoutput/tiled_tiff_dataset_inverse",
+        scale=(1, 1, 1),
+        tile_size=(32, 64),
+        pattern="{zzz}/{xxx}/{yyy}.tif",
+    )
+
+    mag = tiled_tiff_ds.add_layer("color", "color").add_mag("1")
+
+    data = np.zeros((250, 200, 10), dtype=np.uint8)
+    for h in range(10):
+        for i in range(250):
+            for j in range(200):
+                data[i, j, h] = i + j % 250
+
+    mag.write(data, offset=(5, 5, 5))
+    written_data = mag.read(size=(250, 200, 10), offset=(5, 5, 5))
+    assert written_data.shape == (1, 250, 200, 10)
+    assert np.array_equal(written_data, np.expand_dims(data, 0))
+
+    assert mag.get_tile(1, 1, 6).shape == (1, 32, 64, 1)
+    assert np.array_equal(
+        mag.get_tile(1, 2, 6)[0, :, :, 0],
+        TiffReader(
+            "./testoutput/tiled_tiff_dataset_inverse/color/1/006/001/002.tif"
+        ).read(),
+    )
+
+    assert np.array_equal(
+        data[(32 * 1) - 5 : (32 * 2) - 5, (64 * 2) - 5 : (64 * 3) - 5, 6],
+        TiffReader(
+            "./testoutput/tiled_tiff_dataset_inverse/color/1/006/001/002.tif"
+        ).read(),
+    )
+
+
+def test_view_write_without_open():
+    # This test would be the same for TiffDataset
+
+    delete_dir("./testoutput/wk_dataset_write_without_open")
+
+    ds = WKDataset.create("./testoutput/wk_dataset_write_without_open", scale=(1, 1, 1))
+    ds.add_layer("color", "color")
+
+    ds.get_layer("color").add_mag("1")
+
+    wk_view = ds.get_view("color", "1", size=(32, 64, 16))
+
+    assert not wk_view._is_opened
+
+    write_data = (np.random.rand(32, 64, 16) * 255).astype(np.uint8)
+    wk_view.write(write_data)
+
+    assert not wk_view._is_opened

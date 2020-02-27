@@ -67,8 +67,12 @@ def detect_tile_ranges_from_pattern_recursively(
             os.path.isdir(os.path.join(prefix, ls_item))
             or os.path.splitext(ls_item)[1].lower()[0:4] == file_extension
         ):
-            z_values.update(detect_value(current_pattern_element, ls_item, "z"))
-            x_values.update(detect_value(current_pattern_element, ls_item, "x", ["z"]))
+            z_values.update(
+                detect_value(current_pattern_element, ls_item, "z", ["x", "y"])
+            )
+            x_values.update(
+                detect_value(current_pattern_element, ls_item, "x", ["y", "z"])
+            )
             y_values.update(
                 detect_value(current_pattern_element, ls_item, "y", ["z", "x"])
             )
@@ -161,13 +165,16 @@ class TiffMag:
         self.header = header
 
         z_range, x_range, y_range = detect_tile_ranges(self.root, self.header.pattern)
-
+        z_range = [None] if z_range == range(0, 0) else z_range
+        y_range = [None] if y_range == range(0, 0) else y_range
+        x_range = [None] if x_range == range(0, 0) else x_range
         available_tiffs = list(itertools.product(x_range, y_range, z_range))
 
         for xyz in available_tiffs:
-            self.tiffs[xyz] = TiffReader.open(
-                self.get_file_name_for_layer(xyz)
-            )  # open is lazy
+            if xyz != (None, None, None):
+                self.tiffs[xyz] = TiffReader.open(
+                    self.get_file_name_for_layer(xyz)
+                )  # open is lazy
 
     def read(self, off, shape) -> np.array:
         # modify the shape to also include the num_channels
