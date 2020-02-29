@@ -84,15 +84,15 @@ class View:
             )
 
     def for_each_chunk(self, work_on_chunk, job_args_per_chunk, chunk_size, executor):
-        job_args = []
-        bb = BoundingBox(self.global_offset, self.size)
-
         self._check_chunk_size(chunk_size)
 
-        for chunk in bb.chunk(chunk_size, chunk_size):
+        job_args = []
+
+        for chunk in BoundingBox(self.global_offset, self.size).chunk(chunk_size, chunk_size):
             job_args.append(
                 (
-                    self._get_class_type()(
+                    # call the constructor of the subclass
+                    type(self)(
                         self.path, self.header, chunk.size, chunk.topleft
                     ),
                     job_args_per_chunk,
@@ -103,9 +103,6 @@ class View:
         wait_and_ensure_success(executor.map_to_futures(work_on_chunk, job_args))
 
     def _check_chunk_size(self, chunk_size):
-        raise NotImplementedError
-
-    def _get_class_type(self):
         raise NotImplementedError
 
     def __enter__(self):
@@ -140,9 +137,6 @@ class WKView(View):
                 f"The passed parameter 'chunk_size' {chunk_size} must be a multiple of the file size {file_dim}"
             )
 
-    def _get_class_type(self):
-        return WKView
-
 
 class TiffView(View):
     def open(self):
@@ -176,9 +170,6 @@ class TiffView(View):
                 raise AssertionError(
                     f"The passed parameter 'chunk_size' {chunk_size} must be a multiple of the file size {file_dim}"
                 )
-
-    def _get_class_type(self):
-        return TiffView
 
 
 def assert_non_negative_offset(offset):
