@@ -88,13 +88,13 @@ class View:
 
         job_args = []
 
-        for chunk in BoundingBox(self.global_offset, self.size).chunk(chunk_size, chunk_size):
+        for chunk in BoundingBox(self.global_offset, self.size).chunk(
+            chunk_size, chunk_size
+        ):
             job_args.append(
                 (
                     # call the constructor of the subclass
-                    type(self)(
-                        self.path, self.header, chunk.size, chunk.topleft
-                    ),
+                    type(self)(self.path, self.header, chunk.size, chunk.topleft),
                     job_args_per_chunk,
                 )
             )
