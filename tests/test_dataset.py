@@ -6,11 +6,11 @@ import numpy as np
 from shutil import rmtree, copytree
 
 from wkcuber.api.Dataset import WKDataset, TiffDataset, TiledTiffDataset
-from wkcuber.api.Properties.DatasetProperties import WKProperties, TiffProperties
-from wkcuber.api.TiffData.TiffMag import TiffReader
 from os import path, makedirs
 
 from wkcuber.api.Layer import Layer
+from wkcuber.api.Properties.DatasetProperties import TiffProperties, WKProperties
+from wkcuber.api.TiffData.TiffMag import TiffReader
 from wkcuber.mag import Mag
 
 
