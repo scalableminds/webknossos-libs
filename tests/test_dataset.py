@@ -6,11 +6,11 @@ import numpy as np
 from shutil import rmtree, copytree
 
 from wkcuber.api.Dataset import WKDataset, TiffDataset, TiledTiffDataset
+from wkcuber.api.Properties.DatasetProperties import WKProperties, TiffProperties
+from wkcuber.api.TiffData.TiffMag import TiffReader
 from os import path, makedirs
 
 from wkcuber.api.Layer import Layer
-from wkcuber.api.Properties.DatasetProperties import TiffProperties, WKProperties
-from wkcuber.api.TiffData.TiffMag import TiffReader
 from wkcuber.mag import Mag
 
 
@@ -353,8 +353,6 @@ def test_wk_write_multi_channel_uint16():
 
     mag.write(data)
     written_data = mag.read(size=(250, 200, 10))
-
-    print(written_data.dtype)
 
     assert np.array_equal(data, written_data)
 
