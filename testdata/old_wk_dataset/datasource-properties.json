@@ -1,0 +1,26 @@
+{
+  "id" : {
+    "name" : "ROI2017_wkw",
+    "team" : "Connectomics department"
+  },
+  "dataLayers" : [ {
+    "name" : "color",
+    "category" : "color",
+    "boundingBox" : {
+      "topLeft" : [ 0, 0, 0 ],
+      "width" : 1024,
+      "height" : 1024,
+      "depth" : 1024
+    },
+    "wkwResolutions" : [ {
+      "resolution" : 1,
+      "cubeLength" : 1024
+    }, {
+      "resolution" : 2,
+      "cubeLength" : 512
+    }],
+    "elementClass" : "uint8",
+    "dataFormat" : "wkw"
+  }],
+  "scale" : [ 11.239999771118164, 11.239999771118164, 28 ]
+}

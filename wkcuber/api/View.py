@@ -33,6 +33,7 @@ class View:
             self._is_opened = False
 
     def write(self, data, offset=(0, 0, 0)):
+        was_opened = self._is_opened
         # assert the size of the parameter data is not in conflict with the attribute self.size
         assert_non_negative_offset(offset)
         self.assert_bounds(offset, data.shape[-3:])
@@ -40,17 +41,17 @@ class View:
         # calculate the absolute offset
         absolute_offset = tuple(sum(x) for x in zip(self.global_offset, offset))
 
-        if not self._is_opened:
+        if not was_opened:
             self.open()
 
         self.dataset.write(absolute_offset, data)
 
-        if not self._is_opened:
+        if not was_opened:
             self.close()
 
     def read(self, size=None, offset=(0, 0, 0)) -> np.array:
         was_opened = self._is_opened
-        size = size or self.size
+        size = self.size if size is None else size
 
         # assert the parameter size is not in conflict with the attribute self.size
         self.assert_bounds(offset, size)

@@ -6,10 +6,12 @@
     "scale": [
         1
     ],
+    "pattern": "{zzzzz}.tif",
     "dataLayers": [
         {
             "name": "color",
             "category": "color",
+            "dataFormat": "tiff",
             "elementClass": "uint8",
             "num_channels": 1,
             "boundingBox": {
@@ -32,9 +34,5 @@
                 }
             ]
         }
-    ],
-    "grid_shape": [
-        0,
-        0
     ]
 }

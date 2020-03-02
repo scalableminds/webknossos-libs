@@ -18,9 +18,6 @@ class MagDataset:
         size = self.layer.dataset.properties.data_layers[
             self.layer.name
         ].get_bounding_box_size()
-        offset = self.layer.dataset.properties.data_layers[
-            self.layer.name
-        ].get_bounding_box_offset()
         self.view = self.get_view(
             file_path, size, global_offset=(0, 0, 0), is_bounded=False
         )
@@ -102,15 +99,32 @@ class WKMagDataset(MagDataset):
 
 
 class TiffMagDataset(MagDataset):
+    def __init__(self, layer, name, pattern):
+        self.pattern = pattern
+        super().__init__(layer, name)
+
     def get_header(self) -> TiffMagHeader:
         return TiffMagHeader(
-            dtype=self.layer.dtype, num_channels=self.layer.num_channels
+            pattern=self.pattern,
+            dtype=self.layer.dtype,
+            num_channels=self.layer.num_channels,
+            tile_size=self.layer.dataset.properties.tile_size,
         )
 
     def get_view(self, mag_file_path, size, global_offset, is_bounded=True) -> TiffView:
         return TiffView(mag_file_path, self.header, size, global_offset, is_bounded)
 
     @classmethod
-    def create(cls, layer, name):
-        mag_dataset = cls(layer, name)
+    def create(cls, layer, name, pattern):
+        mag_dataset = cls(layer, name, pattern)
         return mag_dataset
+
+
+class TiledTiffMagDataset(TiffMagDataset):
+    def get_tile(self, x_index, y_index, z_index) -> np.array:
+        tile_size = self.layer.dataset.properties.tile_size
+        size = tuple(tile_size) + tuple((1,))
+        offset = np.array((0, 0, 0)) + np.array(size) * np.array(
+            (x_index, y_index, z_index)
+        )
+        return self.read(size, offset)
