@@ -1,15 +1,18 @@
-from typing import Optional, List, Generator
+import itertools
+import re
+from typing import Optional, List, Tuple, Set
 
 from skimage import io
 import numpy as np
 import os
-from re import findall
 from glob import iglob
 from itertools import zip_longest
 
+from wkcuber.utils import logger
+
 
 def replace_coordinate(pattern: str, coord_id: str, coord: int) -> str:
-    occurrences = findall("{" + coord_id + "+}", pattern)
+    occurrences = re.findall("{" + coord_id + "+}", pattern)
     for occurrence in occurrences:
         number_of_digits = len(occurrence) - 2
         if number_of_digits > 1:
@@ -20,8 +23,103 @@ def replace_coordinate(pattern: str, coord_id: str, coord: int) -> str:
     return pattern
 
 
-def to_file_name(z) -> str:
-    return replace_coordinate("{zzzzz}.tif", "z", z)
+def detect_tile_ranges(
+    tiled_dataset_path_parent: Optional[str], tiled_dataset_path_pattern: Optional[str]
+) -> Tuple[range, range, range]:
+    if tiled_dataset_path_pattern is not None:
+        if tiled_dataset_path_parent is not None:
+            full_pattern = os.path.join(
+                tiled_dataset_path_parent, tiled_dataset_path_pattern
+            )
+        else:
+            full_pattern = tiled_dataset_path_pattern
+        pattern_split = os.path.normpath(full_pattern).split(os.path.sep)
+        prefix = ""
+        if full_pattern.startswith(os.path.sep):
+            prefix = "/"
+
+        detected_z_range, detected_x_range, detected_y_range = detect_tile_ranges_from_pattern_recursively(
+            pattern_split, prefix, set(), set(), set()
+        )
+
+        logger.info(
+            f"Auto-detected tile ranges from tif directory structure: z {detected_z_range} x {detected_x_range} y {detected_y_range}"
+        )
+        return (detected_z_range, detected_x_range, detected_y_range)
+
+    raise Exception("Couldn't auto-detect tile ranges from wkw or tile path pattern")
+
+
+def detect_tile_ranges_from_pattern_recursively(
+    pattern_elements: List[str],
+    prefix: str,
+    z_values: Set[int],
+    x_values: Set[int],
+    y_values: Set[int],
+) -> Tuple[Optional[range], Optional[range], Optional[range]]:
+    current_pattern_element, prefix, remaining_pattern_elements = advance_to_next_relevant_pattern_element(
+        pattern_elements, prefix
+    )
+    items = os.listdir(prefix)
+    for ls_item in items:
+        _, file_extension = os.path.splitext(pattern_elements[-1])
+        if (
+            os.path.isdir(os.path.join(prefix, ls_item))
+            or os.path.splitext(ls_item)[1].lower()[0:4] == file_extension
+        ):
+            z_values.update(
+                detect_value(current_pattern_element, ls_item, "z", ["x", "y"])
+            )
+            x_values.update(
+                detect_value(current_pattern_element, ls_item, "x", ["y", "z"])
+            )
+            y_values.update(
+                detect_value(current_pattern_element, ls_item, "y", ["z", "x"])
+            )
+
+    prefix = os.path.join(prefix, current_pattern_element)
+
+    if z_values:
+        prefix = replace_coordinate(prefix, "z", min(z_values))
+    if x_values:
+        prefix = replace_coordinate(prefix, "x", min(x_values))
+    if y_values:
+        prefix = replace_coordinate(prefix, "y", min(y_values))
+
+    if (
+        os.path.exists(prefix)
+        and os.path.isdir(prefix)
+        and (z_values or x_values or y_values)
+    ):
+        return detect_tile_ranges_from_pattern_recursively(
+            remaining_pattern_elements, prefix, z_values, x_values, y_values
+        )
+    else:
+        return (
+            values_to_range(z_values),
+            values_to_range(x_values),
+            values_to_range(y_values),
+        )
+
+
+def advance_to_next_relevant_pattern_element(
+    pattern_elements: List[str], prefix: str
+) -> Tuple[str, str, List[str]]:
+    current_pattern_element = ""
+    i = 0
+    for i, pattern_element in enumerate(pattern_elements):
+        if "{" in pattern_element or "}" in pattern_element:
+            current_pattern_element = pattern_element
+            break
+        prefix = os.path.join(prefix, pattern_element)
+    remaining_pattern_elements = pattern_elements[i + 1 :]
+    return current_pattern_element, prefix, remaining_pattern_elements
+
+
+def values_to_range(values: Set[int]):
+    if len(values) > 0:
+        return range(min(values), max(values) + 1)
+    return range(0, 0)
 
 
 def detect_value(
@@ -48,96 +146,123 @@ def detect_value(
     return []
 
 
+def to_file_name(pattern, x, y, z) -> str:
+    file_name = pattern
+    if x is not None:
+        file_name = replace_coordinate(file_name, "x", x)
+    if y is not None:
+        file_name = replace_coordinate(file_name, "y", y)
+    if z is not None:
+        file_name = replace_coordinate(file_name, "z", z)
+    return file_name
+
+
 class TiffMag:
     def __init__(self, root, header):
-        x_range = [0]  # currently tiled tiffs are not supported
-        y_range = [0]  # currently tiled tiffs are not supported
 
         self.root = root
         self.tiffs = dict()
-        self.dtype = header.dtype
-        self.num_channels = header.num_channels
+        self.header = header
 
-        pattern = "{zzzzz}.tif"
+        z_range, x_range, y_range = detect_tile_ranges(self.root, self.header.pattern)
+        z_range = [None] if z_range == range(0, 0) else z_range
+        y_range = [None] if y_range == range(0, 0) else y_range
+        x_range = [None] if x_range == range(0, 0) else x_range
+        available_tiffs = list(itertools.product(x_range, y_range, z_range))
 
-        z_range = [
-            detect_value(pattern, file_name, dim="z")[0]
-            for file_name in self.list_files()
-        ]
-
-        for z in z_range:
-            self.tiffs[z] = TiffReader.open(
-                self.get_file_name_for_layer(z)
-            )  # open is lazy
+        for xyz in available_tiffs:
+            if xyz != (None, None, None):
+                self.tiffs[xyz] = TiffReader.open(
+                    self.get_file_name_for_layer(xyz)
+                )  # open is lazy
 
     def read(self, off, shape) -> np.array:
-        if not self.has_only_one_channel():
-            # modify the shape to also include the num_channels
-            shape = tuple(shape) + tuple([self.num_channels])
+        # modify the shape to also include the num_channels
+        shape = tuple(shape) + tuple([self.header.num_channels])
 
-        data = np.zeros(shape=shape, dtype=self.dtype)
-        for i, (z, offset, size) in enumerate(
-            self.calculate_relevant_slices(off, shape)
-        ):
-            if z in self.tiffs:
-                data[:, :, i] = np.array(self.tiffs[z].read(), self.dtype)[
-                    offset[0] : offset[0] + size[0], offset[1] : offset[1] + size[1]
+        data = np.zeros(shape=shape, dtype=self.header.dtype)
+        for (
+            xyz,
+            _,
+            offset_in_output_data,
+            offset_in_input_data,
+        ) in self.calculate_relevant_slices(off, shape):
+            x, y, z = xyz
+            z_index_in_data = z - off[2]
+
+            if xyz in self.tiffs:
+                # load data and discard the padded data
+                loaded_data = np.array(self.tiffs[xyz].read(), self.header.dtype)[
+                    offset_in_output_data[0] : offset_in_output_data[0] + shape[0],
+                    offset_in_output_data[1] : offset_in_output_data[1] + shape[1],
                 ]
-            else:
-                shape_without_z = shape[:2] + shape[3:]
-                data[:, :, i] = np.zeros(shape_without_z, self.dtype)
 
-        if self.has_only_one_channel():
-            # convert data into shape with dedicated num_channels (len(data.shape) == 4)
-            # this only effects data where the num_channel is 1 and therefore len(data.shape) was 3
-            # this makes it easier to handle both, multi-channel and single-channel, similar
-            data = np.expand_dims(data, 3)
+                index_slice = [
+                    slice(
+                        offset_in_input_data[0],
+                        offset_in_input_data[0] + loaded_data.shape[0],
+                    ),
+                    slice(
+                        offset_in_input_data[1],
+                        offset_in_input_data[1] + loaded_data.shape[1],
+                    ),
+                    z_index_in_data,
+                ]
+                if self.has_only_one_channel():
+                    index_slice.append(0)
+
+                # store the loaded data at the right position in 'data'
+                data[tuple(index_slice)] = loaded_data
 
         # reformat array to have the channels as the first index (similar to wkw)
         data = np.moveaxis(data, -1, 0)
         return data
 
     def write(self, off, data):
-        # convert data into shape with dedicated num_channels (len(data.shape) == 4)
-        # this only effects data where the num_channel is 1 and therefore len(data.shape) was 3
-        # this makes it easier to handle both, multi-channel and single-channel, similar
-        data = data.reshape((-1,) + data.shape[-3:])
-
-        # reformat array to have the channels as the first index (similar to wkw)
-        data = np.moveaxis(data, 0, -1)
+        if not len(data.shape) == 3:
+            # reformat array to have the channels as the first index (similar to wkw)
+            # this is only necessary if the data has a dedicated dimensions for the num_channels
+            data = np.moveaxis(data, 0, -1)
 
         self.assert_correct_data_format(data)
 
-        for i, (z, offset, _) in enumerate(
-            self.calculate_relevant_slices(off, data.shape)
-        ):
+        for (
+            xyz,
+            shape,
+            offset_in_output_data,
+            offset_in_input_data,
+        ) in self.calculate_relevant_slices(off, data.shape):
             # initialize images for z_layers that did not exist before
-            if z not in self.tiffs:
-                total_shape = [
+            x, y, z = xyz
+            z_index_in_input_data = z - off[2]
+            if xyz not in self.tiffs:
+                # 'output_data_shape' might be bigger than 'shape' because it accounts for padded data
+                output_data_shape = [
                     sum(x)
-                    for x in zip_longest(data[:, :, i].shape, offset, fillvalue=0)
+                    for x in zip_longest(shape, offset_in_output_data, fillvalue=0)
                 ]
-                if self.has_only_one_channel():
-                    # Convert single-channel data into the expected format
-                    # E.g. convert shape (300, 300, 1) into (300, 300)
-                    total_shape = tuple(total_shape)[:-1]
 
-                self.tiffs[z] = TiffReader.init_tiff(
-                    np.zeros(total_shape, self.dtype), self.get_file_name_for_layer(z)
+                # initialize an empty image with the right shape
+                self.tiffs[xyz] = TiffReader.init_tiff(
+                    np.zeros(output_data_shape, self.header.dtype),
+                    self.get_file_name_for_layer(xyz),
                 )
 
             # write new pixel data into the image
-            pixel_data = (
-                data[:, :, i] if not self.has_only_one_channel() else data[:, :, i, 0]
-            )
+            pixel_data = data[
+                slice(offset_in_input_data[0], offset_in_input_data[0] + shape[0]),
+                slice(offset_in_input_data[1], offset_in_input_data[1] + shape[1]),
+                z_index_in_input_data,
+            ]
 
-            self.tiffs[z].merge_with_image(pixel_data, offset)
+            self.tiffs[xyz].merge_with_image(pixel_data, offset_in_output_data)
 
     def compress(self, dst_path: str, compress_files: bool = False):
         raise NotImplementedError
 
     def list_files(self):
-        file_paths = list(iglob(os.path.join(self.root, "*.tif")))
+        _, file_extension = os.path.splitext(self.header.pattern)
+        file_paths = list(iglob(os.path.join(self.root, "*" + file_extension)))
 
         for file_path in file_paths:
             yield os.path.relpath(os.path.normpath(file_path), self.root)
@@ -146,30 +271,100 @@ class TiffMag:
         return
 
     def calculate_relevant_slices(self, offset, shape):
-        for z in range(offset[2] + 1, offset[2] + shape[2] + 1):
-            yield tuple(
-                (z, offset[0:2], shape[0:2])
-            )  # return tuple of important z layers an the x-y offset (without z offset) and the size (without z length)
+        """
+        The purpose of this method is to find out which tiles need to be touched.
+        Each tile is specified by its (x, y, z)-dimensions.
+        For each tile, this method also returns what offsets inside of each individual tile need to be used.
+        Additionally, this method returns for each tile where the data of the tile fits into the bigger picture.
+        :param offset: the offset in the dataset compared to the coordinate (0, 0, 0)
+        :param shape: the shape of the data that is about to be written or read (depending on where this method is used)
+        :return: tiles that need to be considered (+ their shape, the offset in the tiles, and the offset in the original data)
+        """
+
+        tile_size = (
+            self.header.tile_size
+        )  # tile_size is None if the dataset is a simple TiffDataset
+
+        max_indices = tuple(i1 + i2 for i1, i2 in zip(offset, shape))
+
+        if tile_size is None:
+            x_first_index = None
+            x_indices = [None]
+            y_first_index = None
+            y_indices = [None]
+        else:
+            x_first_index = offset[0] // tile_size[0]  # floor division
+            x_last_index = np.math.ceil(max_indices[0] / tile_size[0])
+            x_indices = range(x_first_index, x_last_index)
+
+            y_first_index = offset[1] // tile_size[1]  # floor division
+            y_last_index = np.math.ceil(max_indices[1] / tile_size[1])
+            y_indices = range(y_first_index, y_last_index)
+
+        for x in x_indices:
+            for y in y_indices:
+                for z in range(offset[2], offset[2] + shape[2]):
+                    # calculate the offsets and the size for the x and y coordinate
+                    tile_shape = shape[0:2] + shape[3:4]
+                    offset_in_output_data = tuple(
+                        offset[0:2] * np.equal((x, y), (x_first_index, y_first_index))
+                    )
+                    offset_in_input_data = (0, 0)
+
+                    if tile_size:
+                        tile_top_left_corner = np.array((x, y)) * tile_size
+                        tile_bottom_right_corner = tile_top_left_corner + tile_size
+                        shape_top_left_corner = np.maximum(
+                            offset[0:2], tile_top_left_corner
+                        )
+                        shape_bottom_right = np.minimum(
+                            max_indices[0:2], tile_bottom_right_corner
+                        )
+
+                        offset_in_input_data = shape_top_left_corner - offset[0:2]
+                        offset_in_output_data = tuple(
+                            (offset[0:2] - shape_top_left_corner)
+                            * np.equal((x, y), (x_first_index, y_first_index))
+                        )
+                        tile_shape = tuple(
+                            shape_bottom_right - shape_top_left_corner
+                        ) + tuple(shape[3:4])
+
+                    yield tuple(
+                        (
+                            (x, y, z),
+                            tile_shape,
+                            offset_in_output_data,
+                            offset_in_input_data,
+                        )
+                    )
 
     def has_only_one_channel(self) -> bool:
-        return self.num_channels == 1
+        return self.header.num_channels == 1
 
     def assert_correct_data_format(self, data):
-        if not len(data.shape) == 4:
+        if self.has_only_one_channel():
+            if not len(data.shape) == 3:
+                raise AttributeError(
+                    "The shape of the provided data does not match the expected shape."
+                )
+        else:
+            if not len(data.shape) == 4:
+                raise AttributeError(
+                    "The shape of the provided data does not match the expected shape."
+                )
+            if not data.shape[3] == self.header.num_channels:
+                raise AttributeError(
+                    f"The shape of the provided data does not match the expected shape. (Expected {self.header.num_channels} channels)"
+                )
+        if not np.dtype(data.dtype) == self.header.dtype:
             raise AttributeError(
-                "The shape of the provided data does not match the expected shape."
-            )
-        if not data.shape[3] == self.num_channels:
-            raise AttributeError(
-                f"The shape of the provided data does not match the expected shape. (Expected {self.num_channels} channels)"
-            )
-        if not np.dtype(data.dtype) == self.dtype:
-            raise AttributeError(
-                f"The type of the provided data does not match the expected type. (Expected np.array of type {self.dtype.name})"
+                f"The type of the provided data does not match the expected type. (Expected np.array of type {self.header.dtype.name})"
             )
 
-    def get_file_name_for_layer(self, z) -> str:
-        return os.path.join(self.root, to_file_name(z))
+    def get_file_name_for_layer(self, xyz) -> str:
+        x, y, z = xyz
+        return os.path.join(self.root, to_file_name(self.header.pattern, x, y, z))
 
     @staticmethod
     def open(root: str, header=None):
@@ -185,10 +380,17 @@ class TiffMag:
 
 
 class TiffMagHeader:
-    def __init__(self, pattern="{z}.tif", dtype=np.dtype("uint8"), num_channels=1):
+    def __init__(
+        self,
+        pattern="{zzzzz}.tif",
+        dtype=np.dtype("uint8"),
+        num_channels=1,
+        tile_size=(32, 32),
+    ):
         self.pattern = pattern
         self.dtype = np.dtype(dtype)
         self.num_channels = num_channels
+        self.tile_size = tile_size
 
 
 class TiffReader:
@@ -209,6 +411,7 @@ class TiffReader:
         return io.imread(self.file_name)
 
     def write(self, pixels):
+        os.makedirs(os.path.dirname(self.file_name), exist_ok=True)
         io.imsave(self.file_name, pixels, check_contrast=False)
 
     def merge_with_image(self, foreground_pixels, offset):

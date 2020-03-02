@@ -1,19 +1,33 @@
 import filecmp
+import json
+from os.path import dirname
 
 import numpy as np
 from shutil import rmtree, copytree
 
-from wkcuber.api.Dataset import WKDataset, TiffDataset
+from wkcuber.api.Dataset import WKDataset, TiffDataset, TiledTiffDataset
 from os import path, makedirs
 
 from wkcuber.api.Layer import Layer
-from wkcuber.api.Properties import TiffProperties
+from wkcuber.api.Properties.DatasetProperties import TiffProperties, WKProperties
+from wkcuber.api.TiffData.TiffMag import TiffReader
 from wkcuber.mag import Mag
 
 
 def delete_dir(relative_path):
     if path.exists(relative_path) and path.isdir(relative_path):
         rmtree(relative_path)
+
+
+def get_multichanneled_data(dtype):
+    data = np.zeros((3, 250, 200, 10), dtype=dtype)
+    for h in range(10):
+        for i in range(250):
+            for j in range(200):
+                data[0, i, j, h] = i * 256
+                data[1, i, j, h] = j * 256
+                data[2, i, j, h] = 100 * 256
+    return data
 
 
 def test_create_wk_dataset_with_layer_and_mag():
@@ -258,6 +272,23 @@ def test_update_new_bounding_box_offset():
     assert ds.properties.data_layers["color"].bounding_box["topLeft"] == (5, 5, 10)
 
 
+def test_other_file_extensions_for_tiff_dataset():
+    # The TiffDataset also works with other file extensions (in this case .png)
+    # It also works with .jpg but this format uses lossy compression
+
+    delete_dir("./testoutput/png_dataset")
+
+    ds = TiffDataset.create(
+        "./testoutput/png_dataset", scale=(1, 1, 1), pattern="{zzz}.png"
+    )
+    mag = ds.add_layer("color", Layer.COLOR_TYPE).add_mag("1")
+
+    np.random.seed(1234)
+    write_data = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
+    mag.write(write_data)
+    assert np.array_equal(mag.read((10, 10, 10)), np.expand_dims(write_data, 0))
+
+
 def test_tiff_write_multi_channel_uint8():
     dataset_path = "./testoutput/tiff_multichannel/"
     delete_dir(dataset_path)
@@ -265,18 +296,12 @@ def test_tiff_write_multi_channel_uint8():
     ds_tiff = TiffDataset.create(dataset_path, scale=(1, 1, 1))
     mag = ds_tiff.add_layer("color", Layer.COLOR_TYPE, num_channels=3).add_mag("1")
 
-    # 10 images (z-layers), each 250x250, dtype=np.uint8
-    data = np.zeros((3, 250, 250, 10), dtype=np.uint8)
-    for h in range(10):
-        for i in range(250):
-            for j in range(250):
-                data[0, i, j, h] = i
-                data[1, i, j, h] = j
-                data[2, i, j, h] = 100
+    # 10 images (z-layers), each 250x200, dtype=np.uint8
+    data = get_multichanneled_data(np.uint8)
 
     ds_tiff.get_layer("color").get_mag("1").write(data)
 
-    assert np.array_equal(data, mag.read(size=(250, 250, 10)))
+    assert np.array_equal(data, mag.read(size=(250, 200, 10)))
 
 
 def test_wk_write_multi_channel_uint8():
@@ -286,18 +311,12 @@ def test_wk_write_multi_channel_uint8():
     ds_tiff = WKDataset.create(dataset_path, scale=(1, 1, 1))
     mag = ds_tiff.add_layer("color", Layer.COLOR_TYPE, num_channels=3).add_mag("1")
 
-    # 10 images (z-layers), each 250x250, dtype=np.uint8
-    data = np.zeros((3, 250, 250, 10), dtype=np.uint8)
-    for h in range(10):
-        for i in range(250):
-            for j in range(250):
-                data[0, i, j, h] = i
-                data[1, i, j, h] = j
-                data[2, i, j, h] = 100
+    # 10 images (z-layers), each 250x200, dtype=np.uint8
+    data = get_multichanneled_data(np.uint8)
 
     ds_tiff.get_layer("color").get_mag("1").write(data)
 
-    assert np.array_equal(data, mag.read(size=(250, 250, 10)))
+    assert np.array_equal(data, mag.read(size=(250, 200, 10)))
 
 
 def test_tiff_write_multi_channel_uint16():
@@ -309,17 +328,11 @@ def test_tiff_write_multi_channel_uint16():
         "color", Layer.COLOR_TYPE, num_channels=3, dtype=np.uint16
     ).add_mag("1")
 
-    # 10 images (z-layers), each 250x250, dtype=np.uint16
-    data = np.zeros((3, 250, 250, 10), dtype=np.uint16)
-    for h in range(10):
-        for i in range(250):
-            for j in range(250):
-                data[0, i, j, h] = i * 256
-                data[1, i, j, h] = j * 256
-                data[2, i, j, h] = 100 * 256
+    # 10 images (z-layers), each 250x200, dtype=np.uint16
+    data = get_multichanneled_data(np.uint16)
 
     mag.write(data)
-    written_data = mag.read(size=(250, 250, 10))
+    written_data = mag.read(size=(250, 200, 10))
 
     print(written_data.dtype)
 
@@ -335,19 +348,11 @@ def test_wk_write_multi_channel_uint16():
         "color", Layer.COLOR_TYPE, num_channels=3, dtype=np.uint16
     ).add_mag("1")
 
-    # 10 images (z-layers), each 250x250, dtype=np.uint16
-    data = np.zeros((3, 250, 250, 10), dtype=np.uint16)
-    for h in range(10):
-        for i in range(250):
-            for j in range(250):
-                data[0, i, j, h] = i * 256
-                data[1, i, j, h] = j * 256
-                data[2, i, j, h] = 100 * 256
+    # 10 images (z-layers), each 250x200, dtype=np.uint16
+    data = get_multichanneled_data(np.uint16)
 
     mag.write(data)
-    written_data = mag.read(size=(250, 250, 10))
-
-    print(written_data.dtype)
+    written_data = mag.read(size=(250, 200, 10))
 
     assert np.array_equal(data, written_data)
 
@@ -530,3 +535,214 @@ def test_get_or_add_mag_for_tiff():
     layer.get_or_add_mag("1")
     assert "1" in layer.mags.keys()
     assert mag.name == "1"
+
+
+def test_tiled_tiff_read_and_write_multichannel():
+    delete_dir("./testoutput/TiledTiffDataset")
+    tiled_tiff_ds = TiledTiffDataset.create(
+        "./testoutput/TiledTiffDataset",
+        scale=(1, 1, 1),
+        tile_size=(32, 64),
+        pattern="{xxx}_{yyy}_{zzz}.tif",
+    )
+
+    mag = tiled_tiff_ds.add_layer("color", "color", num_channels=3).add_mag("1")
+
+    data = get_multichanneled_data(np.uint8)
+
+    mag.write(data, offset=(5, 5, 5))
+    written_data = mag.read(size=(250, 200, 10), offset=(5, 5, 5))
+    assert written_data.shape == (3, 250, 200, 10)
+    assert np.array_equal(data, written_data)
+
+
+def test_tiled_tiff_read_and_write():
+    delete_dir("./testoutput/tiled_tiff_dataset")
+    tiled_tiff_ds = TiledTiffDataset.create(
+        "./testoutput/tiled_tiff_dataset",
+        scale=(1, 1, 1),
+        tile_size=(32, 64),
+        pattern="{xxx}_{yyy}_{zzz}.tif",
+    )
+
+    mag = tiled_tiff_ds.add_layer("color", "color").add_mag("1")
+
+    data = np.zeros((250, 200, 10), dtype=np.uint8)
+    for h in range(10):
+        for i in range(250):
+            for j in range(200):
+                data[i, j, h] = i + j % 250
+
+    mag.write(data, offset=(5, 5, 5))
+    written_data = mag.read(size=(250, 200, 10), offset=(5, 5, 5))
+    assert written_data.shape == (1, 250, 200, 10)
+    assert np.array_equal(written_data, np.expand_dims(data, 0))
+
+    assert mag.get_tile(1, 1, 6).shape == (1, 32, 64, 1)
+    assert np.array_equal(
+        mag.get_tile(1, 2, 6)[0, :, :, 0],
+        TiffReader("./testoutput/tiled_tiff_dataset/color/1/001_002_006.tif").read(),
+    )
+
+    assert np.array_equal(
+        data[(32 * 1) - 5 : (32 * 2) - 5, (64 * 2) - 5 : (64 * 3) - 5, 6],
+        TiffReader("./testoutput/tiled_tiff_dataset/color/1/001_002_006.tif").read(),
+    )
+
+
+def test_open_dataset_without_num_channels_in_properties():
+    delete_dir("./testoutput/old_wk_dataset/")
+    copytree("./testdata/old_wk_dataset/", "./testoutput/old_wk_dataset/")
+
+    with open(
+        "./testoutput/old_wk_dataset/datasource-properties.json"
+    ) as datasource_properties:
+        data = json.load(datasource_properties)
+        assert data["dataLayers"][0].get("num_channels") is None
+
+    ds = WKDataset("./testoutput/old_wk_dataset/")
+    assert ds.properties.data_layers["color"].num_channels == 1
+    ds.properties._export_as_json()
+
+    with open(
+        "./testoutput/old_wk_dataset/datasource-properties.json"
+    ) as datasource_properties:
+        data = json.load(datasource_properties)
+        assert data["dataLayers"][0].get("num_channels") == 1
+
+
+def test_advanced_pattern():
+    delete_dir("./testoutput/tiff_dataset_advanced_pattern")
+    ds = TiledTiffDataset.create(
+        "./testoutput/tiff_dataset_advanced_pattern",
+        scale=(1, 1, 1),
+        tile_size=(32, 32),
+        pattern="{xxxx}/{yyyy}/{zzzz}.tif",
+    )
+    mag = ds.add_layer("color", Layer.COLOR_TYPE).add_mag("1")
+    data = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
+    mag.write(data)
+
+    assert np.array_equal(mag.read(size=(10, 10, 10)), np.expand_dims(data, 0))
+
+
+def test_invalid_pattern():
+
+    delete_dir("./testoutput/tiff_invalid_dataset")
+    try:
+        TiledTiffDataset.create(
+            "./testoutput/tiff_invalid_dataset",
+            scale=(1, 1, 1),
+            tile_size=(32, 32),
+            pattern="{xxxx}/{yyyy}/{zzzz.tif",
+        )
+        raise Exception(
+            "The test 'test_invalid_pattern' did not throw an exception even though it should"
+        )
+    except AssertionError:
+        pass
+
+    try:
+        TiledTiffDataset.create(
+            "./testoutput/tiff_invalid_dataset",
+            scale=(1, 1, 1),
+            tile_size=(32, 32),
+            pattern="zzzz.tif",
+        )
+        raise Exception(
+            "The test 'test_invalid_pattern' did not throw an exception even though it should"
+        )
+    except AssertionError:
+        pass
+
+
+def test_properties_with_segmentation():
+    input_json_path = "./testdata/complex_property_ds/datasource-properties.json"
+    output_json_path = "./testoutput/complex_property_ds/datasource-properties.json"
+    properties = WKProperties._from_json(input_json_path)
+
+    # the attributes 'largest_segment_id' and 'mappings' only exist if it is a SegmentationLayer
+    assert properties.data_layers["segmentation"].largest_segment_id == 1000000000
+    assert properties.data_layers["segmentation"].mappings == [
+        "larger5um1",
+        "axons",
+        "astrocyte-ge-7",
+        "astrocyte",
+        "mitochondria",
+        "astrocyte-full",
+    ]
+
+    # export the json under a new name
+    makedirs(dirname(output_json_path), exist_ok=True)
+    properties._path = output_json_path
+    properties._export_as_json()
+
+    # validate if contents match
+    with open(input_json_path) as input_properties:
+        input_data = json.load(input_properties)
+
+        with open(output_json_path) as output_properties:
+            output_data = json.load(output_properties)
+            for layer in output_data["dataLayers"]:
+                # remove the num_channels because they are not part of the original json
+                del layer["num_channels"]
+
+            assert input_data == output_data
+
+
+def test_tiled_tiff_inverse_pattern():
+    delete_dir("./testoutput/tiled_tiff_dataset_inverse")
+    tiled_tiff_ds = TiledTiffDataset.create(
+        "./testoutput/tiled_tiff_dataset_inverse",
+        scale=(1, 1, 1),
+        tile_size=(32, 64),
+        pattern="{zzz}/{xxx}/{yyy}.tif",
+    )
+
+    mag = tiled_tiff_ds.add_layer("color", "color").add_mag("1")
+
+    data = np.zeros((250, 200, 10), dtype=np.uint8)
+    for h in range(10):
+        for i in range(250):
+            for j in range(200):
+                data[i, j, h] = i + j % 250
+
+    mag.write(data, offset=(5, 5, 5))
+    written_data = mag.read(size=(250, 200, 10), offset=(5, 5, 5))
+    assert written_data.shape == (1, 250, 200, 10)
+    assert np.array_equal(written_data, np.expand_dims(data, 0))
+
+    assert mag.get_tile(1, 1, 6).shape == (1, 32, 64, 1)
+    assert np.array_equal(
+        mag.get_tile(1, 2, 6)[0, :, :, 0],
+        TiffReader(
+            "./testoutput/tiled_tiff_dataset_inverse/color/1/006/001/002.tif"
+        ).read(),
+    )
+
+    assert np.array_equal(
+        data[(32 * 1) - 5 : (32 * 2) - 5, (64 * 2) - 5 : (64 * 3) - 5, 6],
+        TiffReader(
+            "./testoutput/tiled_tiff_dataset_inverse/color/1/006/001/002.tif"
+        ).read(),
+    )
+
+
+def test_view_write_without_open():
+    # This test would be the same for TiffDataset
+
+    delete_dir("./testoutput/wk_dataset_write_without_open")
+
+    ds = WKDataset.create("./testoutput/wk_dataset_write_without_open", scale=(1, 1, 1))
+    ds.add_layer("color", "color")
+
+    ds.get_layer("color").add_mag("1")
+
+    wk_view = ds.get_view("color", "1", size=(32, 64, 16))
+
+    assert not wk_view._is_opened
+
+    write_data = (np.random.rand(32, 64, 16) * 255).astype(np.uint8)
+    wk_view.write(write_data)
+
+    assert not wk_view._is_opened
