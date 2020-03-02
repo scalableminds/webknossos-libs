@@ -277,7 +277,7 @@ class TiffMag:
         For each tile, this method also returns what offsets inside of each individual tile need to be used.
         Additionally, this method returns for each tile where the data of the tile fits into the bigger picture.
         :param offset: the offset in the dataset compared to the coordinate (0, 0, 0)
-        :param shape: the shape of the data that is about to be written or the shape of the data that is about to be read (depending on where this method is used)
+        :param shape: the shape of the data that is about to be written or read (depending on where this method is used)
         :return: tiles that need to be considered (+ their shape, the offset in the tiles, and the offset in the original data)
         """
 

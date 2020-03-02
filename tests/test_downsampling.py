@@ -207,14 +207,15 @@ def test_anisotropic_mag_calculation():
         [(10.5, 24, 10.5), Mag((2, 1, 2)), Mag((4, 1, 4))],
         [(24, 10.5, 10.5), Mag((1, 2, 2)), Mag((1, 4, 4))],
         [(10.5, 10.5, 10.5), Mag(2), Mag(4)],
+        [(320, 320, 200), Mag(1), Mag((1, 1, 2))],
+        [(320, 320, 200), Mag((1, 1, 2)), Mag((2, 2, 4))],
     ]
+
     for i in range(len(mag_tests)):
-        assert mag_tests[i][2] == get_next_anisotropic_mag(
-            mag_tests[i][1], mag_tests[i][0]
-        ), (
+        next_mag = get_next_anisotropic_mag(mag_tests[i][1], mag_tests[i][0])
+        assert mag_tests[i][2] == next_mag, (
             "The next anisotropic"
-            " Magnification of {} with "
-            "the size {} should be {}".format(
-                mag_tests[i][1], mag_tests[i][0], mag_tests[i][2]
-            )
+            f" Magnification of {mag_tests[i][1]} with "
+            f"the size {mag_tests[i][0]} should be {mag_tests[i][2]} "
+            f"and not {next_mag}"
         )

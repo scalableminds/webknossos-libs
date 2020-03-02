@@ -39,10 +39,7 @@ def create_parser():
     )
 
     parser.add_argument(
-        "--dtype",
-        "-d",
-        help="Target datatype (e.g. uint8, uint16, uint32).",
-        default="uint8",
+        "--dtype", "-d", help="Target datatype (e.g. uint8, uint16).", default="uint8"
     )
 
     parser.add_argument(
@@ -74,9 +71,18 @@ def to_target_datatype(data: np.ndarray, target_dtype) -> np.ndarray:
     return (data / factor).astype(np.dtype(target_dtype))
 
 
-def convert_nifti(source_nifti_path, target_path, layer_name, dtype, scale, mag=1):
+def convert_nifti(
+    source_nifti_path, target_path, layer_name, dtype, scale, mag=1, file_len=256
+):
     target_wkw_info = WkwDatasetInfo(
-        str(target_path.resolve()), layer_name, mag, wkw.Header(np.dtype(dtype))
+        str(target_path.resolve()),
+        layer_name,
+        mag,
+        wkw.Header(
+            np.dtype(dtype),
+            block_type=wkw.Header.BLOCK_TYPE_LZ4HC,
+            file_len=file_len // 32,
+        ),
     )
     ensure_wkw(target_wkw_info)
 
@@ -109,6 +115,20 @@ def convert_nifti(source_nifti_path, target_path, layer_name, dtype, scale, mag=
             scale = tuple(map(float, source_nifti.header["pixdim"][:3]))
 
         cube_data = to_target_datatype(cube_data, dtype)
+
+        # Writing wkw compressed requires files of shape (file_len, file_len, file_len)
+        # Pad data accordingly
+        padding_offset = file_len - np.array(cube_data.shape[1:4]) % file_len
+        cube_data = np.pad(
+            cube_data,
+            (
+                (0, 0),
+                (0, int(padding_offset[0])),
+                (0, int(padding_offset[1])),
+                (0, int(padding_offset[2])),
+            ),
+        )
+
         target_wkw.write(offset, cube_data)
 
     logging.debug(
@@ -149,11 +169,13 @@ def convert_folder_nifti(
             )
         )
 
+    logging.info("Segmentation file will also use uint8 as a datatype.")
+
     for path in paths:
-        if path == color_path.name:
+        if path == color_path:
             convert_nifti(path, target_path, "color", "uint8", scale)
-        elif path == segmentation_path.name:
-            convert_nifti(path, target_path, "segmentation", "uint32", scale)
+        elif path == segmentation_path:
+            convert_nifti(path, target_path, "segmentation", "uint8", scale)
         else:
             convert_nifti(path, target_path, path.stem, "uint8", scale)
 

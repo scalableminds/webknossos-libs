@@ -437,8 +437,6 @@ def test_wk_write_multi_channel_uint16():
     mag.write(data)
     written_data = mag.read(size=(250, 200, 10))
 
-    print(written_data.dtype)
-
     assert np.array_equal(data, written_data)
 
 
