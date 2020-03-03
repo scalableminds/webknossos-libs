@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 from wkw import Dataset
 
@@ -71,6 +73,11 @@ class View:
 
         return data
 
+    def get_view(self, size, offset=(0, 0, 0)):
+        self.assert_bounds(offset, size)
+        view_offset = self.global_offset + np.array(offset)
+        return type(self)(self.path, self.header, size=size, global_offset=view_offset, is_bounded=self.is_bounded)
+
     def check_bounds(self, offset, size) -> bool:
         for s1, s2, off in zip(self.size, size, offset):
             if s2 + off > s1 and self.is_bounded:
@@ -91,10 +98,10 @@ class View:
         for chunk in BoundingBox(self.global_offset, self.size).chunk(
             chunk_size, chunk_size
         ):
+            relative_offset = np.array(chunk.topleft) - np.array(self.global_offset)
             job_args.append(
                 (
-                    # call the constructor of the subclass
-                    type(self)(self.path, self.header, chunk.size, chunk.topleft),
+                    self.get_view(size=chunk.size, offset=relative_offset),
                     job_args_per_chunk,
                 )
             )
@@ -124,17 +131,19 @@ class WKView(View):
         return self
 
     def _check_chunk_size(self, chunk_size):
-        file_dim = (self.header.file_len * self.header.block_len,) * 3
-
         assert chunk_size is not None
 
         if 0 in chunk_size:
             raise AssertionError(
                 f"The passed parameter 'chunk_size' {chunk_size} contains at least one 0. This is not allowed."
             )
-        if (np.array(chunk_size) % file_dim).any():
+        if not np.all(np.array([math.log2(size).is_integer() for size in np.array(chunk_size)])):
             raise AssertionError(
-                f"The passed parameter 'chunk_size' {chunk_size} must be a multiple of the file size {file_dim}"
+                f"Each element of the passed parameter 'chunk_size' {chunk_size} must be a power of 2.."
+            )
+        if (np.array(chunk_size) % (32, 32, 32)).any():
+            raise AssertionError(
+                f"The passed parameter 'chunk_size' {chunk_size} must be a multiple of (32, 32, 32)."
             )
 
 
