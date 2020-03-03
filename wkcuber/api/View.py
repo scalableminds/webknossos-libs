@@ -76,7 +76,13 @@ class View:
     def get_view(self, size, offset=(0, 0, 0)):
         self.assert_bounds(offset, size)
         view_offset = self.global_offset + np.array(offset)
-        return type(self)(self.path, self.header, size=size, global_offset=view_offset, is_bounded=self.is_bounded)
+        return type(self)(
+            self.path,
+            self.header,
+            size=size,
+            global_offset=view_offset,
+            is_bounded=self.is_bounded,
+        )
 
     def check_bounds(self, offset, size) -> bool:
         for s1, s2, off in zip(self.size, size, offset):
@@ -137,7 +143,9 @@ class WKView(View):
             raise AssertionError(
                 f"The passed parameter 'chunk_size' {chunk_size} contains at least one 0. This is not allowed."
             )
-        if not np.all(np.array([math.log2(size).is_integer() for size in np.array(chunk_size)])):
+        if not np.all(
+            np.array([math.log2(size).is_integer() for size in np.array(chunk_size)])
+        ):
             raise AssertionError(
                 f"Each element of the passed parameter 'chunk_size' {chunk_size} must be a power of 2.."
             )

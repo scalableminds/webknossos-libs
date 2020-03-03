@@ -112,7 +112,9 @@ class AbstractDataset(ABC):
         # delete files on disk
         rmtree(join(self.path, layer_name))
 
-    def get_view(self, layer_name, mag_name, size, offset=(0, 0, 0), is_bounded=True) -> View:
+    def get_view(
+        self, layer_name, mag_name, size, offset=(0, 0, 0), is_bounded=True
+    ) -> View:
         layer = self.get_layer(layer_name)
         mag = layer.get_mag(mag_name)
 

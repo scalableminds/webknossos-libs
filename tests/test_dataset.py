@@ -315,7 +315,9 @@ def test_view_wk_write_out_of_bounds():
 def test_wk_view_out_of_bounds():
     try:
         # The size of the mag is (24, 24, 24). Trying to get an bigger view should throw an error
-        WKDataset("./testdata/simple_wk_dataset/").get_view("color", "1", size=(100, 100, 100))
+        WKDataset("./testdata/simple_wk_dataset/").get_view(
+            "color", "1", size=(100, 100, 100)
+        )
         raise Exception(
             "The test 'test_view_wk_write_out_of_bounds' did not throw an exception even though it should"
         )
@@ -326,7 +328,9 @@ def test_wk_view_out_of_bounds():
 def test_tiff_view_out_of_bounds():
     try:
         # The size of the mag is (24, 24, 24). Trying to get an bigger view should throw an error
-        TiffDataset("./testdata/simple_tiff_dataset/").get_view("color", "1", size=(100, 100, 100))
+        TiffDataset("./testdata/simple_tiff_dataset/").get_view(
+            "color", "1", size=(100, 100, 100)
+        )
         raise Exception(
             "The test 'test_view_wk_write_out_of_bounds' did not throw an exception even though it should"
         )
@@ -835,7 +839,9 @@ def test_chunking_wk_advanced():
     )
 
     ds = WKDataset("./testoutput/chunking_dataset_wk_advanced/")
-    view = ds.get_view("color", "1", size=(150, 150, 54), offset=(10, 10, 10), is_bounded=False)
+    view = ds.get_view(
+        "color", "1", size=(150, 150, 54), offset=(10, 10, 10), is_bounded=False
+    )
     for_each_chunking_advanced(ds, view)
 
 
@@ -912,7 +918,9 @@ def test_chunking_tiled_tiff_advanced():
     )
 
     ds = WKDataset("./testoutput/chunking_dataset_tiled_tiff_advanced/")
-    view = ds.get_view("color", "1", size=(150, 150, 54), offset=(10, 10, 10), is_bounded=False)
+    view = ds.get_view(
+        "color", "1", size=(150, 150, 54), offset=(10, 10, 10), is_bounded=False
+    )
 
     for_each_chunking_advanced(ds, view)
 

@@ -48,7 +48,9 @@ class MagDataset:
         raise NotImplementedError
 
     def get_view(self, size=None, offset=None, is_bounded=True):
-        size_in_properties = self.layer.dataset.properties.data_layers[self.layer.name].get_bounding_box_size()
+        size_in_properties = self.layer.dataset.properties.data_layers[
+            self.layer.name
+        ].get_bounding_box_size()
 
         if offset is None:
             offset = (0, 0, 0)
@@ -65,10 +67,16 @@ class MagDataset:
                 )
 
         mag_file_path = join(self.layer.dataset.path, self.layer.name, self.name)
-        offset_in_properties = self.layer.dataset.properties.data_layers[self.layer.name].get_bounding_box_offset()
-        dataset_offset = (0, 0, 0) if offset_in_properties == (-1, -1, -1) else offset_in_properties
+        offset_in_properties = self.layer.dataset.properties.data_layers[
+            self.layer.name
+        ].get_bounding_box_offset()
+        dataset_offset = (
+            (0, 0, 0) if offset_in_properties == (-1, -1, -1) else offset_in_properties
+        )
         global_offset = np.array(dataset_offset) + np.array(offset)
-        return self._get_view_type()(mag_file_path, self.header, size, global_offset, is_bounded)
+        return self._get_view_type()(
+            mag_file_path, self.header, size, global_offset, is_bounded
+        )
 
     def _get_view_type(self):
         raise NotImplementedError
