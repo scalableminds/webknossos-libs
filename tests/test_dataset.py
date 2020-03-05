@@ -11,12 +11,107 @@ from os import path, makedirs
 from wkcuber.api.Layer import Layer
 from wkcuber.api.Properties.DatasetProperties import TiffProperties, WKProperties
 from wkcuber.api.TiffData.TiffMag import TiffReader
+from wkcuber.api.bounding_box import BoundingBox
 from wkcuber.mag import Mag
+from wkcuber.utils import get_executor_for_args
 
 
 def delete_dir(relative_path):
     if path.exists(relative_path) and path.isdir(relative_path):
         rmtree(relative_path)
+
+
+def chunk_job(args):
+    view, additional_args = args
+
+    # increment the color value of each voxel
+    data = view.read(view.size)
+    if data.shape[0] == 1:
+        data = data[0, :, :, :]
+    data += 50
+    view.write(data)
+
+
+def advanced_chunk_job(args):
+    view, additional_args = args
+
+    # write different data for each chunk (depending on the global_offset of the chunk)
+    data = view.read(view.size)
+    data = np.ones(data.shape, dtype=np.uint8) * np.uint8(sum(view.global_offset))
+    view.write(data)
+
+
+def for_each_chunking_with_wrong_chunk_size(view):
+    with get_executor_for_args(None) as executor:
+        try:
+            view.for_each_chunk(
+                chunk_job,
+                job_args_per_chunk="test",
+                chunk_size=(0, 64, 64),
+                executor=executor,
+            )
+            raise Exception(
+                "The test did not throw an exception even though it should. "
+                "The chunk_size should not contain zeros"
+            )
+        except AssertionError:
+            pass
+
+        try:
+            view.for_each_chunk(
+                chunk_job,
+                job_args_per_chunk="test",
+                chunk_size=(16, 64, 64),
+                executor=executor,
+            )
+            raise Exception(
+                "The test did not throw an exception even though it should. "
+            )
+        except AssertionError:
+            pass
+
+        try:
+            view.for_each_chunk(
+                chunk_job,
+                job_args_per_chunk="test",
+                chunk_size=(100, 64, 64),
+                executor=executor,
+            )
+            raise Exception(
+                "The test did not throw an exception even though it should. "
+            )
+        except AssertionError:
+            pass
+
+
+def for_each_chunking_advanced(ds, view):
+    chunk_size = (64, 64, 64)
+    with get_executor_for_args(None) as executor:
+        view.for_each_chunk(
+            advanced_chunk_job,
+            job_args_per_chunk="test",
+            chunk_size=chunk_size,
+            executor=executor,
+        )
+
+    for offset, size in [
+        ((10, 10, 10), (54, 54, 54)),
+        ((10, 64, 10), (54, 64, 54)),
+        ((10, 128, 10), (54, 32, 54)),
+        ((64, 10, 10), (64, 54, 54)),
+        ((64, 64, 10), (64, 64, 54)),
+        ((64, 128, 10), (64, 32, 54)),
+        ((128, 10, 10), (32, 54, 54)),
+        ((128, 64, 10), (32, 64, 54)),
+        ((128, 128, 10), (32, 32, 54)),
+    ]:
+        chunk = ds.get_view("color", "1", size=size, offset=offset, is_bounded=False)
+        chunk_data = chunk.read(chunk.size)
+        assert np.array_equal(
+            np.ones(chunk_data.shape, dtype=np.uint8)
+            * np.uint8(sum(chunk.global_offset)),
+            chunk_data,
+        )
 
 
 def get_multichanneled_data(dtype):
@@ -108,7 +203,7 @@ def test_view_read_with_open():
     # This test would be the same for TiffDataset
 
     wk_view = WKDataset("./testdata/simple_wk_dataset/").get_view(
-        "color", "1", size=(32, 32, 32)
+        "color", "1", size=(16, 16, 16)
     )
 
     assert not wk_view._is_opened
@@ -126,7 +221,7 @@ def test_view_read_without_open():
     # This test would be the same for TiffDataset
 
     wk_view = WKDataset("./testdata/simple_wk_dataset/").get_view(
-        "color", "1", size=(32, 32, 32)
+        "color", "1", size=(16, 16, 16)
     )
 
     assert not wk_view._is_opened
@@ -143,7 +238,7 @@ def test_view_wk_write():
     copytree("./testdata/simple_wk_dataset/", "./testoutput/simple_wk_dataset/")
 
     wk_view = WKDataset("./testoutput/simple_wk_dataset/").get_view(
-        "color", "1", size=(100, 100, 100)
+        "color", "1", size=(16, 16, 16)
     )
 
     with wk_view.open():
@@ -161,7 +256,7 @@ def test_view_tiff_write():
     copytree("./testdata/simple_tiff_dataset/", "./testoutput/simple_tiff_dataset/")
 
     tiff_view = TiffDataset("./testoutput/simple_tiff_dataset/").get_view(
-        "color", "1", size=(100, 100, 100)
+        "color", "1", size=(16, 16, 10)
     )
 
     with tiff_view.open():
@@ -182,7 +277,7 @@ def test_view_tiff_write_out_of_bounds():
     copytree("./testdata/simple_tiff_dataset/", new_dataset_path)
 
     tiff_view = TiffDataset(new_dataset_path).get_view(
-        "color", "1", size=(100, 100, 100)
+        "color", "1", size=(100, 100, 10)
     )
 
     with tiff_view.open():
@@ -203,7 +298,7 @@ def test_view_wk_write_out_of_bounds():
     delete_dir(new_dataset_path)
     copytree("./testdata/simple_wk_dataset/", new_dataset_path)
 
-    tiff_view = WKDataset(new_dataset_path).get_view("color", "1", size=(100, 100, 100))
+    tiff_view = WKDataset(new_dataset_path).get_view("color", "1", size=(16, 16, 16))
 
     with tiff_view.open():
         try:
@@ -215,6 +310,32 @@ def test_view_wk_write_out_of_bounds():
             )
         except AssertionError:
             pass
+
+
+def test_wk_view_out_of_bounds():
+    try:
+        # The size of the mag is (24, 24, 24). Trying to get an bigger view should throw an error
+        WKDataset("./testdata/simple_wk_dataset/").get_view(
+            "color", "1", size=(100, 100, 100)
+        )
+        raise Exception(
+            "The test 'test_view_wk_write_out_of_bounds' did not throw an exception even though it should"
+        )
+    except AssertionError:
+        pass
+
+
+def test_tiff_view_out_of_bounds():
+    try:
+        # The size of the mag is (24, 24, 24). Trying to get an bigger view should throw an error
+        TiffDataset("./testdata/simple_tiff_dataset/").get_view(
+            "color", "1", size=(100, 100, 100)
+        )
+        raise Exception(
+            "The test 'test_view_wk_write_out_of_bounds' did not throw an exception even though it should"
+        )
+    except AssertionError:
+        pass
 
 
 def test_tiff_write_out_of_bounds():
@@ -690,6 +811,120 @@ def test_properties_with_segmentation():
             assert input_data == output_data
 
 
+def test_chunking_wk():
+    delete_dir("./testoutput/chunking_dataset_wk/")
+    copytree("./testdata/simple_wk_dataset/", "./testoutput/chunking_dataset_wk/")
+
+    view = WKDataset("./testoutput/chunking_dataset_wk/").get_view(
+        "color", "1", size=(256, 256, 256), is_bounded=False
+    )
+
+    original_data = view.read(view.size)
+
+    with get_executor_for_args(None) as executor:
+        view.for_each_chunk(
+            chunk_job,
+            job_args_per_chunk="test",
+            chunk_size=(64, 64, 64),
+            executor=executor,
+        )
+
+    assert np.array_equal(original_data + 50, view.read(view.size))
+
+
+def test_chunking_wk_advanced():
+    delete_dir("./testoutput/chunking_dataset_wk_advanced/")
+    copytree(
+        "./testdata/simple_wk_dataset/", "./testoutput/chunking_dataset_wk_advanced/"
+    )
+
+    ds = WKDataset("./testoutput/chunking_dataset_wk_advanced/")
+    view = ds.get_view(
+        "color", "1", size=(150, 150, 54), offset=(10, 10, 10), is_bounded=False
+    )
+    for_each_chunking_advanced(ds, view)
+
+
+def test_chunking_wk_wrong_chunk_size():
+    delete_dir("./testoutput/chunking_dataset_wk_with_wrong_chunk_size/")
+    copytree(
+        "./testdata/simple_wk_dataset/",
+        "./testoutput/chunking_dataset_wk_with_wrong_chunk_size/",
+    )
+
+    view = WKDataset(
+        "./testoutput/chunking_dataset_wk_with_wrong_chunk_size/"
+    ).get_view("color", "1", size=(256, 256, 256), is_bounded=False)
+
+    for_each_chunking_with_wrong_chunk_size(view)
+
+
+def test_chunking_tiff():
+    delete_dir("./testoutput/chunking_dataset_tiff/")
+    copytree("./testdata/simple_tiff_dataset/", "./testoutput/chunking_dataset_tiff/")
+
+    view = TiffDataset("./testoutput/chunking_dataset_tiff/").get_view(
+        "color", "1", size=(265, 265, 10)
+    )
+
+    original_data = view.read(view.size)
+
+    with get_executor_for_args(None) as executor:
+        view.for_each_chunk(
+            chunk_job,
+            job_args_per_chunk="test",
+            chunk_size=(265, 265, 1),
+            executor=executor,
+        )
+
+    new_data = view.read(view.size)
+    assert np.array_equal(original_data + 50, new_data)
+
+
+def test_chunking_tiff_wrong_chunk_size():
+    delete_dir("./testoutput/chunking_dataset_tiff_with_wrong_chunk_size/")
+    copytree(
+        "./testdata/simple_tiff_dataset/",
+        "./testoutput/chunking_dataset_tiff_with_wrong_chunk_size/",
+    )
+
+    view = TiffDataset(
+        "./testoutput/chunking_dataset_tiff_with_wrong_chunk_size/"
+    ).get_view("color", "1", size=(256, 256, 256), is_bounded=False)
+
+    for_each_chunking_with_wrong_chunk_size(view)
+
+
+def test_chunking_tiled_tiff_wrong_chunk_size():
+    delete_dir("./testoutput/chunking_dataset_tiled_tiff_with_wrong_chunk_size/")
+
+    ds = TiledTiffDataset.create(
+        "./testoutput/chunking_dataset_tiled_tiff_with_wrong_chunk_size/",
+        scale=(1, 1, 1),
+        tile_size=(32, 32),
+        pattern="{xxxx}/{yyyy}/{zzzz}.tif",
+    )
+    ds.add_layer("color", Layer.COLOR_TYPE).add_mag("1")
+    view = ds.get_view("color", "1", size=(256, 256, 256), is_bounded=False)
+
+    for_each_chunking_with_wrong_chunk_size(view)
+
+
+def test_chunking_tiled_tiff_advanced():
+    delete_dir("./testoutput/chunking_dataset_tiled_tiff_advanced/")
+    copytree(
+        "./testdata/simple_wk_dataset/",
+        "./testoutput/chunking_dataset_tiled_tiff_advanced/",
+    )
+
+    ds = WKDataset("./testoutput/chunking_dataset_tiled_tiff_advanced/")
+    view = ds.get_view(
+        "color", "1", size=(150, 150, 54), offset=(10, 10, 10), is_bounded=False
+    )
+
+    for_each_chunking_advanced(ds, view)
+
+
 def test_tiled_tiff_inverse_pattern():
     delete_dir("./testoutput/tiled_tiff_dataset_inverse")
     tiled_tiff_ds = TiledTiffDataset.create(
@@ -699,7 +934,7 @@ def test_tiled_tiff_inverse_pattern():
         pattern="{zzz}/{xxx}/{yyy}.tif",
     )
 
-    mag = tiled_tiff_ds.add_layer("color", "color").add_mag("1")
+    mag = tiled_tiff_ds.add_layer("color", Layer.COLOR_TYPE).add_mag("1")
 
     data = np.zeros((250, 200, 10), dtype=np.uint8)
     for h in range(10):
@@ -738,7 +973,7 @@ def test_view_write_without_open():
 
     ds.get_layer("color").add_mag("1")
 
-    wk_view = ds.get_view("color", "1", size=(32, 64, 16))
+    wk_view = ds.get_view("color", "1", size=(32, 64, 16), is_bounded=False)
 
     assert not wk_view._is_opened
 

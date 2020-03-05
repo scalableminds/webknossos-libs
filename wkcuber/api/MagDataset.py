@@ -14,13 +14,7 @@ class MagDataset:
         self.name = name
         self.header = self.get_header()
 
-        file_path = join(self.layer.dataset.path, self.layer.name, self.name)
-        size = self.layer.dataset.properties.data_layers[
-            self.layer.name
-        ].get_bounding_box_size()
-        self.view = self.get_view(
-            file_path, size, global_offset=(0, 0, 0), is_bounded=False
-        )
+        self.view = self.get_view(is_bounded=False)
 
     def open(self):
         self.view.initialize()
@@ -53,7 +47,38 @@ class MagDataset:
     def get_header(self):
         raise NotImplementedError
 
-    def get_view(self, mag_file_path, size, global_offset, is_bounded=True):
+    def get_view(self, size=None, offset=None, is_bounded=True):
+        size_in_properties = self.layer.dataset.properties.data_layers[
+            self.layer.name
+        ].get_bounding_box_size()
+
+        if offset is None:
+            offset = (0, 0, 0)
+
+        if size is None:
+            size = size_in_properties
+
+        # assert that the parameter size is valid
+        for s1, s2, off in zip(size_in_properties, size, offset):
+            if s2 + off > s1 and is_bounded:
+                raise AssertionError(
+                    f"The combination of the passed parameter 'size' {size} and {offset} are not compatible with the "
+                    f"size ({size_in_properties}) from the properties.json."
+                )
+
+        mag_file_path = join(self.layer.dataset.path, self.layer.name, self.name)
+        offset_in_properties = self.layer.dataset.properties.data_layers[
+            self.layer.name
+        ].get_bounding_box_offset()
+        dataset_offset = (
+            (0, 0, 0) if offset_in_properties == (-1, -1, -1) else offset_in_properties
+        )
+        global_offset = np.array(dataset_offset) + np.array(offset)
+        return self._get_view_type()(
+            mag_file_path, self.header, size, global_offset, is_bounded
+        )
+
+    def _get_view_type(self):
         raise NotImplementedError
 
     def _assert_valid_num_channels(self, write_data_shape):
@@ -85,9 +110,6 @@ class WKMagDataset(MagDataset):
             block_type=self.block_type,
         )
 
-    def get_view(self, mag_file_path, size, global_offset, is_bounded=True) -> WKView:
-        return WKView(mag_file_path, self.header, size, global_offset, is_bounded)
-
     @classmethod
     def create(cls, layer, name, block_len, file_len, block_type):
         mag_dataset = cls(layer, name, block_len, file_len, block_type)
@@ -96,6 +118,9 @@ class WKMagDataset(MagDataset):
         )
 
         return mag_dataset
+
+    def _get_view_type(self):
+        return WKView
 
 
 class TiffMagDataset(MagDataset):
@@ -111,13 +136,13 @@ class TiffMagDataset(MagDataset):
             tile_size=self.layer.dataset.properties.tile_size,
         )
 
-    def get_view(self, mag_file_path, size, global_offset, is_bounded=True) -> TiffView:
-        return TiffView(mag_file_path, self.header, size, global_offset, is_bounded)
-
     @classmethod
     def create(cls, layer, name, pattern):
         mag_dataset = cls(layer, name, pattern)
         return mag_dataset
+
+    def _get_view_type(self):
+        return TiffView
 
 
 class TiledTiffMagDataset(TiffMagDataset):

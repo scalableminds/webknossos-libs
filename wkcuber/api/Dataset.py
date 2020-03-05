@@ -112,12 +112,13 @@ class AbstractDataset(ABC):
         # delete files on disk
         rmtree(join(self.path, layer_name))
 
-    def get_view(self, layer_name, mag_name, size, global_offset=(0, 0, 0)) -> View:
+    def get_view(
+        self, layer_name, mag_name, size, offset=(0, 0, 0), is_bounded=True
+    ) -> View:
         layer = self.get_layer(layer_name)
         mag = layer.get_mag(mag_name)
-        mag_file_path = path.join(self.path, layer.name, mag.name)
 
-        return mag.get_view(mag_file_path, size=size, global_offset=global_offset)
+        return mag.get_view(size=size, offset=offset, is_bounded=is_bounded)
 
     def _create_layer(self, layer_name, dtype, num_channels) -> Layer:
         raise NotImplementedError
