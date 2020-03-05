@@ -1,9 +1,16 @@
-from typing import Tuple, Union, List, Dict, Generator, Optional
+# mypy: allow-untyped-defs
 import json
+from typing import Dict, Generator, Iterable, List, Optional, Tuple, Union, NamedTuple
+
 import numpy as np
 from wkcuber.mag import Mag
 
 Shape3D = Union[List[int], Tuple[int, int, int], np.ndarray]
+
+
+class BoundingBoxNamedTuple(NamedTuple):
+    topleft: Tuple[int, int, int]
+    size: Tuple[int, int, int]
 
 
 class BoundingBox:
@@ -13,48 +20,64 @@ class BoundingBox:
         self.size = np.array(size, dtype=np.int)
 
     @property
-    def bottomright(self):
+    def bottomright(self) -> np.ndarray:
 
         return self.topleft + self.size
 
     @staticmethod
-    def from_wkw(bbox: Dict):
+    def from_wkw(bbox: Dict) -> "BoundingBox":
         return BoundingBox(
             bbox["topLeft"], [bbox["width"], bbox["height"], bbox["depth"]]
         )
 
     @staticmethod
-    def from_config(bbox: Dict):
+    def from_config(bbox: Dict) -> "BoundingBox":
         return BoundingBox(bbox["topleft"], bbox["size"])
 
     @staticmethod
-    def from_tuple6(tuple6: Tuple):
+    def from_tuple6(tuple6: Tuple[int, int, int, int, int, int]) -> "BoundingBox":
         return BoundingBox(tuple6[0:3], tuple6[3:6])
 
     @staticmethod
-    def from_tuple2(tuple2: Tuple):
+    def from_tuple2(tuple2: Tuple[Shape3D, Shape3D]) -> "BoundingBox":
         return BoundingBox(tuple2[0], tuple2[1])
 
     @staticmethod
-    def from_auto(obj):
+    def from_points(points: Iterable[Shape3D]) -> "BoundingBox":
+
+        all_points = np.array(points)
+        topleft = all_points.min(axis=0)
+        bottomright = all_points.max(axis=0)
+
+        # bottomright is exclusive
+        bottomright += 1
+
+        return BoundingBox(topleft, bottomright - topleft)
+
+    @staticmethod
+    def from_named_tuple(bb_named_tuple: BoundingBoxNamedTuple):
+
+        return BoundingBox(bb_named_tuple.topleft, bb_named_tuple.size)
+
+    @staticmethod
+    def from_auto(obj) -> "BoundingBox":
         if isinstance(obj, BoundingBox):
             return obj
         elif isinstance(obj, str):
             return BoundingBox.from_auto(json.loads(obj))
         elif isinstance(obj, dict):
             return BoundingBox.from_wkw(obj)
+        elif isinstance(obj, BoundingBoxNamedTuple):
+            return BoundingBox.from_named_tuple(obj)
         elif isinstance(obj, list) or isinstance(obj, tuple):
             if len(obj) == 2:
-                return BoundingBox.from_tuple2(obj)
+                return BoundingBox.from_tuple2(obj)  # type: ignore
             elif len(obj) == 6:
-                return BoundingBox.from_tuple6(obj)
+                return BoundingBox.from_tuple6(obj)  # type: ignore
 
         raise Exception("Unknown bounding box format.")
 
-    def as_tuple2_string(self):
-        return str([self.topleft, self.size])
-
-    def as_wkw(self):
+    def as_wkw(self) -> dict:
 
         width, height, depth = self.size.tolist()
 
@@ -65,11 +88,11 @@ class BoundingBox:
             "depth": depth,
         }
 
-    def as_config(self):
+    def as_config(self) -> dict:
 
         return {"topleft": self.topleft.tolist(), "size": self.size.tolist()}
 
-    def as_checkpoint_name(self):
+    def as_checkpoint_name(self) -> str:
 
         x, y, z = self.topleft
         width, height, depth = self.size
@@ -77,17 +100,21 @@ class BoundingBox:
             x=x, y=y, z=z, width=width, height=height, depth=depth
         )
 
-    def __repr__(self):
+    def as_tuple6(self) -> Tuple[int, int, int, int, int, int]:
+
+        return tuple(self.topleft.tolist() + self.size.tolist())  # type: ignore
+
+    def __repr__(self) -> str:
 
         return "BoundingBox(topleft={}, size={})".format(
             str(tuple(self.topleft)), str(tuple(self.size))
         )
 
-    def __str__(self):
+    def __str__(self) -> str:
 
         return self.__repr__()
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
 
         return np.array_equal(self.topleft, other.topleft) and np.array_equal(
             self.size, other.size
@@ -122,11 +149,11 @@ class BoundingBox:
         if not dont_assert:
             assert (
                 not intersection.is_empty()
-            ), "No intersection between bounding boxes {} and {}.".format(self, other)
+            ), f"No intersection between bounding boxes {self} and {other}."
 
         return intersection
 
-    def extended_by(self, other: "BoundingBox"):
+    def extended_by(self, other: "BoundingBox") -> "BoundingBox":
 
         topleft = np.minimum(self.topleft, other.topleft)
         bottomright = np.maximum(self.bottomright, other.bottomright)
@@ -138,13 +165,18 @@ class BoundingBox:
 
         return not all(self.size > 0)
 
-    def in_mag(self, mag: Mag) -> "BoundingBox":
+    def in_mag(self, mag: Mag, ceil: bool = False) -> "BoundingBox":
 
         np_mag = np.array(mag.to_array())
 
+        def ceil_maybe(array: np.ndarray) -> np.ndarray:
+            if ceil:
+                return np.ceil(array)
+            return array
+
         return BoundingBox(
-            topleft=(self.topleft / np_mag).astype(np.int),
-            size=(self.size / np_mag).astype(np.int),
+            topleft=ceil_maybe(self.topleft / np_mag).astype(np.int),
+            size=ceil_maybe(self.size / np_mag).astype(np.int),
         )
 
     def contains(self, coord: Shape3D) -> bool:
@@ -154,6 +186,9 @@ class BoundingBox:
         return np.all(coord >= self.topleft) and np.all(
             coord < self.topleft + self.size
         )
+
+    def contains_bbox(self, inner_bbox: "BoundingBox") -> bool:
+        return inner_bbox.intersected_with(self) == inner_bbox
 
     def chunk(
         self, chunk_size: Shape3D, chunk_border_alignments: Optional[List[int]] = None
@@ -174,7 +209,7 @@ class BoundingBox:
             chunk_border_alignments = np.array(chunk_border_alignments)
             assert np.all(
                 chunk_size % chunk_border_alignments == 0
-            ), "{} not divisible by {}".format(chunk_size, chunk_border_alignments)
+            ), f"{chunk_size} not divisible by {chunk_border_alignments}"
 
             # Move the start to be aligned correctly. This doesn't actually change
             # the start of the first chunk, because we'll intersect with `self`,
