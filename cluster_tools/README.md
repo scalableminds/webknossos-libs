@@ -20,6 +20,15 @@ if __name__ == '__main__':
     assert result == [4, 9, 16]
 ```
 
+## Dev Setup
+
+```
+cd dockered-slurm
+docker-compose up -d
+docker exec -it slurmctld bash
+docker exec -it c1 bash
+```
+
 ## Credits
 
 Thanks to [sampsyo/clusterfutures](https://github.com/sampsyo/clusterfutures) for providing the slurm core abstraction and [giovtorres/slurm-docker-cluster](https://github.com/giovtorres/slurm-docker-cluster) for providing the slurm docker environment which we use for CI based testing.

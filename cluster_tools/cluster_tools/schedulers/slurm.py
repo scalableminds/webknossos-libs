@@ -68,9 +68,14 @@ class SlurmExecutor(ClusterExecutor):
         filename = self.get_temp_file_path("_temp_slurm{}.sh".format(random_string()))
         with open(filename, "w") as f:
             f.write(job)
-        jobid, _ = chcall("sbatch --parsable {}".format(filename))
+        job_id, stderr = chcall("sbatch --parsable {}".format(filename))
         os.unlink(filename)
-        return int(jobid)
+
+        if len(stderr) > 0:
+            logging.warning(f"Submitting batch job emitted warnings: {stderr}")
+
+        return int(job_id)
+
 
     def inner_submit(
         self,
@@ -126,7 +131,7 @@ class SlurmExecutor(ClusterExecutor):
 
             if exit_code == 0:
                 job_states = stdout.split("\n")[1:]
-        
+
         if len(job_states) == 0:
             logging.error(
                 "Couldn't call scontrol nor sacct to determine job's status. Continuing to poll for output file. This could be an indicator for a failed job which was already cleaned up from the slurm db. If this is the case, the process will hang forever."

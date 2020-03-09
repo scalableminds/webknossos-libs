@@ -85,12 +85,14 @@ class ClusterExecutor(futures.Executor):
         cfut.remote <workerid>.
         """
 
-        return self.inner_submit(
+        jobid = self.inner_submit(
             f"{sys.executable} -m cluster_tools.remote {workerid} {self.cfut_dir}",
             job_name=self.job_name if self.job_name is not None else job_name,
             additional_setup_lines=self.additional_setup_lines,
             job_count=job_count,
         )
+
+        return jobid
 
     @abstractmethod
     def inner_submit(self, *args, **kwargs):
