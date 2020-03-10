@@ -1,8 +1,10 @@
 # mypy: allow-untyped-defs
 import json
+import re
 from typing import Dict, Generator, Iterable, List, Optional, Tuple, Union, NamedTuple
 
 import numpy as np
+
 from wkcuber.mag import Mag
 
 Shape3D = Union[List[int], Tuple[int, int, int], np.ndarray]
@@ -58,6 +60,20 @@ class BoundingBox:
     def from_named_tuple(bb_named_tuple: BoundingBoxNamedTuple):
 
         return BoundingBox(bb_named_tuple.topleft, bb_named_tuple.size)
+
+    @staticmethod
+    def from_checkpoint_name(checkpoint_name: str) -> "BoundingBox":
+        """ This function extracts a bounding box in the format x_y_z_sx_sy_xz which is contained in a string.
+        """
+        regex = r"(([0-9]+_){5}([0-9]+))"
+        match = re.search(regex, checkpoint_name)
+        assert (
+            match is not None
+        ), f"Could not extract bounding box from {checkpoint_name}"
+        bbox_tuple = tuple(int(value) for value in match.group().split("_"))
+        topleft = bbox_tuple[:3]
+        size = bbox_tuple[3:6]
+        return BoundingBox.from_tuple2((topleft, size))
 
     @staticmethod
     def from_auto(obj) -> "BoundingBox":
