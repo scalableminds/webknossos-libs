@@ -68,7 +68,7 @@ class BoundingBox:
         regex = r"(([0-9]+_){5}([0-9]+))"
         match = re.search(regex, checkpoint_name)
         assert (
-                match is not None
+            match is not None
         ), f"Could not extract bounding box from {checkpoint_name}"
         bbox_tuple = tuple(int(value) for value in match.group().split("_"))
         topleft = bbox_tuple[:3]
