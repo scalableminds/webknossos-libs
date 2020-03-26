@@ -24,7 +24,6 @@ def file_path_to_absolute_module(file_path):
     """
     assert os.path.exists(file_path)
     file_loc, ext = os.path.splitext(file_path)
-    assert ext in ('.py', '.pyc')
     directory, module = os.path.split(file_loc)
     module_path = [module]
     while True:
