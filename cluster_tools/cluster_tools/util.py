@@ -11,8 +11,12 @@ import types
 def local_filename(filename=""):
     return os.path.join(os.getenv("CFUT_DIR", ".cfut"), filename)
 
+# Instantiate a dedicate generator to avoid being dependent on
+# the global seed which some external code might have set.
+random_generator = random.Random()
+
 def random_string(length=32, chars=(string.ascii_letters + string.digits)):
-    return ''.join(random.choice(chars) for i in range(length))
+    return ''.join(random_generator.choice(chars) for i in range(length))
 
 def call(command, stdin=None):
     """Invokes a shell command as a subprocess, optionally with some
