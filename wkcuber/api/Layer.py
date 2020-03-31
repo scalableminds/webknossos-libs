@@ -58,7 +58,9 @@ class Layer:
 
 
 class WKLayer(Layer):
-    def add_mag(self, mag, block_len=None, file_len=None, block_type=None) -> WKMagDataset:
+    def add_mag(
+        self, mag, block_len=None, file_len=None, block_type=None
+    ) -> WKMagDataset:
         if block_len is None:
             block_len = 32
         if file_len is None:
