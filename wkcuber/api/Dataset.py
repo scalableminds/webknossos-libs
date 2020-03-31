@@ -60,7 +60,12 @@ class AbstractDataset(ABC):
             )
         return self.layers[layer_name]
 
-    def add_layer(self, layer_name, category, dtype=np.dtype("uint8"), num_channels=1):
+    def add_layer(self, layer_name, category, dtype=None, num_channels=None):
+        if dtype is None:
+            dtype = np.dtype("uint8")
+        if num_channels is None:
+            num_channels = 1
+
         # normalize the value of dtype in case the parameter was passed as a string
         dtype = np.dtype(dtype)
 

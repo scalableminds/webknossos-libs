@@ -37,7 +37,12 @@ class MagDataset:
             if current_offset == (-1, -1, -1)
             else tuple(min(x) for x in zip(current_offset, offset))
         )
-        total_size = tuple(max(x) for x in zip(current_size, data.shape[-3:]))
+
+        old_end_offset = np.array(current_offset) + np.array(current_size)
+        new_end_offset = np.array(offset) + np.array(data.shape[-3:])
+        max_end_offset = np.array([old_end_offset, new_end_offset]).max(axis=0)
+        total_size = tuple(max_end_offset - np.array(new_offset))
+
         self.view.size = total_size
 
         self.layer.dataset.properties._set_bounding_box_of_layer(

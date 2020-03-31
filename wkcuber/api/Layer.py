@@ -58,7 +58,14 @@ class Layer:
 
 
 class WKLayer(Layer):
-    def add_mag(self, mag, block_len=32, file_len=32, block_type=1) -> WKMagDataset:
+    def add_mag(self, mag, block_len=None, file_len=None, block_type=None) -> WKMagDataset:
+        if block_len is None:
+            block_len = 32
+        if file_len is None:
+            file_len = 32
+        if block_type is None:
+            block_type = wkw.Header.BLOCK_TYPE_RAW
+
         # normalize the name of the mag
         mag = Mag(mag).to_layer_name()
 
