@@ -109,12 +109,14 @@ class LayerProperties:
         return tuple(self.bounding_box["topLeft"])
 
     def _set_bounding_box_size(self, size):
-        self._bounding_box["width"] = size[0]
-        self._bounding_box["height"] = size[1]
-        self._bounding_box["depth"] = size[2]
+        # Cast to int in case the provided parameter contains numpy integer
+        self._bounding_box["width"] = int(size[0])
+        self._bounding_box["height"] = int(size[1])
+        self._bounding_box["depth"] = int(size[2])
 
     def _set_bounding_box_offset(self, offset):
-        self._bounding_box["topLeft"] = offset
+        # Cast to int in case the provided parameter contains numpy integer
+        self._bounding_box["topLeft"] = tuple(map(int, offset))
 
     @property
     def name(self) -> str:
@@ -194,7 +196,7 @@ class SegmentationLayerProperties(LayerProperties):
             json_data["boundingBox"],
             None,
             json_data["largestSegmentId"],
-            json_data["mappings"],
+            json_data["mappings"] if "mappings" in json_data else None,
         )
 
         # add resolutions to LayerProperties

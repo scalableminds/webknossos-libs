@@ -38,7 +38,11 @@ def detect_tile_ranges(
         if full_pattern.startswith(os.path.sep):
             prefix = "/"
 
-        detected_z_range, detected_x_range, detected_y_range = detect_tile_ranges_from_pattern_recursively(
+        (
+            detected_z_range,
+            detected_x_range,
+            detected_y_range,
+        ) = detect_tile_ranges_from_pattern_recursively(
             pattern_split, prefix, set(), set(), set()
         )
 
@@ -57,9 +61,11 @@ def detect_tile_ranges_from_pattern_recursively(
     x_values: Set[int],
     y_values: Set[int],
 ) -> Tuple[Optional[range], Optional[range], Optional[range]]:
-    current_pattern_element, prefix, remaining_pattern_elements = advance_to_next_relevant_pattern_element(
-        pattern_elements, prefix
-    )
+    (
+        current_pattern_element,
+        prefix,
+        remaining_pattern_elements,
+    ) = advance_to_next_relevant_pattern_element(pattern_elements, prefix)
     items = os.listdir(prefix)
     for ls_item in items:
         _, file_extension = os.path.splitext(pattern_elements[-1])
