@@ -1,6 +1,6 @@
+import numpy as np
 from wkcuber.mag import Mag
 from wkcuber.metadata import detect_resolutions
-
 
 def test_detect_resolutions():
     resolutions = sorted(list(detect_resolutions("testdata/WT1_wkw", "color")))
@@ -23,3 +23,7 @@ def test_mag_constructor():
 
     assert mag1 > mag2
     assert mag1.to_layer_name() == "16-2-4"
+    
+    assert np.all(mag1.as_np() == np.array([16, 2, 4]))
+    assert mag1 == Mag(mag1)
+    assert mag1 == Mag(mag1.as_np())

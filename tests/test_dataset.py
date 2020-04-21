@@ -776,6 +776,11 @@ def test_invalid_pattern():
     except AssertionError:
         pass
 
+def test_largest_segment_id_requirement():
+    ds = WKDataset("./testoutput/largest_segmentat_id")
+    
+    ds.add_layer("segmentation", "segmentation")
+
 
 def test_properties_with_segmentation():
     input_json_path = "./testdata/complex_property_ds/datasource-properties.json"

@@ -1,6 +1,7 @@
 import re
 from math import log2
 from functools import total_ordering
+import numpy as np
 
 from typing import List
 
@@ -21,6 +22,11 @@ class Mag:
                 self.mag = [int(mag)] * 3
             elif re.match(r"^\d+-\d+-\d+$", mag) is not None:
                 self.mag = [int(m) for m in mag.split("-")]
+        elif isinstance(mag, Mag):
+            self.mag = mag.mag
+        elif isinstance(mag, np.ndarray):
+            assert mag.shape == (3,)
+            self.mag = list(mag)
 
         if self.mag is None or len(self.mag) != 3:
             raise ValueError(
@@ -70,3 +76,6 @@ class Mag:
 
     def divided_by(self, d: int):
         return Mag([mag // d for mag in self.mag])
+
+    def as_np(self) -> np.ndarray:
+        return np.array(self.mag)
