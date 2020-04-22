@@ -44,9 +44,13 @@ class MagDataset:
             else tuple(min(x) for x in zip(current_offset_in_mag1, offset_in_mag1))
         )
 
-        old_end_offset_in_mag1 = np.array(current_offset_in_mag1) + np.array(current_size_in_mag1)
+        old_end_offset_in_mag1 = np.array(current_offset_in_mag1) + np.array(
+            current_size_in_mag1
+        )
         new_end_offset_in_mag1 = (np.array(offset) + np.array(data.shape[-3:])) * mag_np
-        max_end_offset_in_mag1 = np.array([old_end_offset_in_mag1, new_end_offset_in_mag1]).max(axis=0)
+        max_end_offset_in_mag1 = np.array(
+            [old_end_offset_in_mag1, new_end_offset_in_mag1]
+        ).max(axis=0)
         total_size_in_mag1 = max_end_offset_in_mag1 - np.array(new_offset_in_mag1)
         total_size = total_size_in_mag1 / mag_np
 

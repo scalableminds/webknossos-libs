@@ -36,10 +36,17 @@ class Properties:
         # this layer is already in data_layers in case we reconstruct the dataset from a datasource-properties.json
         if layer_name not in self.data_layers:
             if category == Layer.SEGMENTATION_TYPE:
-                assert "largest_segment_id" in kwargs, "When adding a segmentation layer, largest_segment_id has to be supplied."
-                
+                assert (
+                    "largest_segment_id" in kwargs
+                ), "When adding a segmentation layer, largest_segment_id has to be supplied."
+
                 new_layer = SegmentationLayerProperties(
-                    layer_name, category, element_class, data_format, num_channels, largest_segment_id=kwargs["largest_segment_id"]
+                    layer_name,
+                    category,
+                    element_class,
+                    data_format,
+                    num_channels,
+                    largest_segment_id=kwargs["largest_segment_id"],
                 )
             else:
                 new_layer = LayerProperties(

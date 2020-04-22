@@ -4,6 +4,7 @@ from os import makedirs, path
 from os.path import join, normpath, basename
 from pathlib import Path
 import numpy as np
+import os
 
 from wkcuber.api.Properties.DatasetProperties import (
     WKProperties,
@@ -39,8 +40,12 @@ class AbstractDataset(ABC):
         dataset_path = path.dirname(properties.path)
 
         if os.path.exists(dataset_path):
-            assert os.path.isdir(dataset_path), f"Creation of Dataset at {dataset_path} failed, because a file already exists at this path."
-            assert not os.listdir(dataset_path), f"Creation of Dataset at {dataset_path} failed, because a non-empty folder already exists at this path."
+            assert os.path.isdir(
+                dataset_path
+            ), f"Creation of Dataset at {dataset_path} failed, because a file already exists at this path."
+            assert not os.listdir(
+                dataset_path
+            ), f"Creation of Dataset at {dataset_path} failed, because a non-empty folder already exists at this path."
 
         # create directories on disk and write datasource-properties.json
         try:
@@ -80,10 +85,10 @@ class AbstractDataset(ABC):
                     layer_name
                 )
             )
-        self.layers[layer_name] = self._create_layer(layer_name, dtype, num_channels)
         self.properties._add_layer(
             layer_name, category, dtype.name, self.data_format, num_channels, **kwargs
         )
+        self.layers[layer_name] = self._create_layer(layer_name, dtype, num_channels)
         return self.layers[layer_name]
 
     def get_or_add_layer(
