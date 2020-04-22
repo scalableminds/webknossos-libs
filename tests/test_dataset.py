@@ -383,12 +383,10 @@ def test_wk_write_out_of_bounds_mag2():
     assert ds.properties.data_layers["color"].get_bounding_box_offset() == (0, 0, 0)
     assert ds.properties.data_layers["color"].get_bounding_box_size() == (24, 24, 24)
     mag_dataset.write(
-        np.zeros((3, 50, 1, 48), dtype=np.uint8),
-        (10, 10, 10)
+        np.zeros((3, 50, 1, 48), dtype=np.uint8), (10, 10, 10)
     )  # this is bigger than the bounding_box
     assert ds.properties.data_layers["color"].get_bounding_box_offset() == (0, 0, 0)
     assert ds.properties.data_layers["color"].get_bounding_box_size() == (120, 24, 58)
-
 
 
 def test_update_new_bounding_box_offset():
@@ -797,19 +795,23 @@ def test_invalid_pattern():
     except AssertionError:
         pass
 
+
 def test_largest_segment_id_requirement():
     path = "./testoutput/largest_segment_id"
     delete_dir(path)
     ds = WKDataset.create(path, scale=(10, 10, 10))
-    
+
     with pytest.raises(AssertionError):
         ds.add_layer("segmentation", "segmentation")
-    
+
     largest_segment_id = 10
-    ds.add_layer("segmentation", "segmentation", largest_segment_id=largest_segment_id).add_mag(Mag(1))
+    ds.add_layer(
+        "segmentation", "segmentation", largest_segment_id=largest_segment_id
+    ).add_mag(Mag(1))
 
     ds = WKDataset(path)
     ds.properties.data_layers["segmentation"].largest_segment_id == largest_segment_id
+
 
 def test_properties_with_segmentation():
     input_json_path = "./testdata/complex_property_ds/datasource-properties.json"
