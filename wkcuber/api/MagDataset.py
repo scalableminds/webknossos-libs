@@ -6,6 +6,7 @@ import numpy as np
 import wkcuber.api as api
 from wkcuber.api.View import WKView, TiffView
 from wkcuber.api.TiffData.TiffMag import TiffMagHeader
+from wkcuber.mag import Mag
 
 
 class MagDataset:
@@ -29,24 +30,34 @@ class MagDataset:
         self._assert_valid_num_channels(data.shape)
         self.view.write(data, offset)
         layer_properties = self.layer.dataset.properties.data_layers[self.layer.name]
-        current_offset = layer_properties.get_bounding_box_offset()
-        current_size = layer_properties.get_bounding_box_size()
+        current_offset_in_mag1 = layer_properties.get_bounding_box_offset()
+        current_size_in_mag1 = layer_properties.get_bounding_box_size()
 
-        new_offset = (
-            offset
-            if current_offset == (-1, -1, -1)
-            else tuple(min(x) for x in zip(current_offset, offset))
+        mag = Mag(self.name)
+        mag_np = mag.as_np()
+
+        offset_in_mag1 = tuple(np.array(offset) * mag_np)
+
+        new_offset_in_mag1 = (
+            offset_in_mag1
+            if current_offset_in_mag1 == (-1, -1, -1)
+            else tuple(min(x) for x in zip(current_offset_in_mag1, offset_in_mag1))
         )
 
-        old_end_offset = np.array(current_offset) + np.array(current_size)
-        new_end_offset = np.array(offset) + np.array(data.shape[-3:])
-        max_end_offset = np.array([old_end_offset, new_end_offset]).max(axis=0)
-        total_size = tuple(max_end_offset - np.array(new_offset))
+        old_end_offset_in_mag1 = np.array(current_offset_in_mag1) + np.array(
+            current_size_in_mag1
+        )
+        new_end_offset_in_mag1 = (np.array(offset) + np.array(data.shape[-3:])) * mag_np
+        max_end_offset_in_mag1 = np.array(
+            [old_end_offset_in_mag1, new_end_offset_in_mag1]
+        ).max(axis=0)
+        total_size_in_mag1 = max_end_offset_in_mag1 - np.array(new_offset_in_mag1)
+        total_size = total_size_in_mag1 / mag_np
 
-        self.view.size = total_size
+        self.view.size = tuple(total_size)
 
         self.layer.dataset.properties._set_bounding_box_of_layer(
-            self.layer.name, new_offset, total_size
+            self.layer.name, tuple(new_offset_in_mag1), tuple(total_size_in_mag1)
         )
 
     def get_header(self):
