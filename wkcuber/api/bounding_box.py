@@ -120,6 +120,10 @@ class BoundingBox:
 
         return tuple(self.topleft.tolist() + self.size.tolist())  # type: ignore
 
+    def as_csv(self) -> str:
+
+        return ",".join(map(str, self.as_tuple6()))
+
     def __repr__(self) -> str:
 
         return "BoundingBox(topleft={}, size={})".format(
