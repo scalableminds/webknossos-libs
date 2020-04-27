@@ -10,6 +10,7 @@ from math import ceil
 ds_name = "simple_wk_dataset"
 source_path = os.path.join("testdata", ds_name)
 
+
 def test_export_tiff_stack():
     destination_path = os.path.join("testoutput", ds_name + "_tiff")
     bbox = BoundingBox((100, 100, 10), (100, 500, 50))
@@ -31,9 +32,7 @@ def test_export_tiff_stack():
 
     run(args_list)
 
-    test_wkw_file_path = os.path.join(
-        source_path, "color", Mag(1).to_layer_name()
-    )
+    test_wkw_file_path = os.path.join(source_path, "color", Mag(1).to_layer_name())
     with wkw.Dataset.open(test_wkw_file_path) as dataset:
         slice_bbox = bbox_dict
         slice_bbox["size"] = [slice_bbox["size"][0], slice_bbox["size"][1], 1]
@@ -89,9 +88,7 @@ def test_export_tiff_stack_tile_size():
     run(args_list)
 
     tile_bbox = {"topleft": bbox["topleft"], "size": [30, 30, 1]}
-    test_wkw_file_path = os.path.join(
-        source_path, "color", Mag(1).to_layer_name()
-    )
+    test_wkw_file_path = os.path.join(source_path, "color", Mag(1).to_layer_name())
     with wkw.Dataset.open(test_wkw_file_path) as dataset:
         slice_bbox = {"topleft": bbox["topleft"], "size": bbox["size"]}
         slice_bbox["size"] = [slice_bbox["size"][0], slice_bbox["size"][1], 1]
@@ -155,9 +152,7 @@ def test_export_tiff_stack_tiles_per_dimension():
     run(args_list)
 
     tile_bbox = {"topleft": bbox["topleft"], "size": [17, 17, 1]}
-    test_wkw_file_path = os.path.join(
-        source_path, "color", Mag(1).to_layer_name()
-    )
+    test_wkw_file_path = os.path.join(source_path, "color", Mag(1).to_layer_name())
     with wkw.Dataset.open(test_wkw_file_path) as dataset:
         slice_bbox = bbox
         slice_bbox["size"] = [slice_bbox["size"][0], slice_bbox["size"][1], 1]
