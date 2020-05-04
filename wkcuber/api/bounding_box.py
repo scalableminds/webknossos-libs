@@ -260,6 +260,13 @@ class BoundingBox:
             self.topleft[2] : self.bottomright[2],
         ]
 
+    def as_slices(self) -> Tuple[slice, slice, slice]:
+        return np.index_exp[
+            self.topleft[0] : self.bottomright[0],
+            self.topleft[1] : self.bottomright[1],
+            self.topleft[2] : self.bottomright[2],
+        ]
+
     def copy(self) -> "BoundingBox":
 
         return BoundingBox(self.topleft.copy(), self.bottomright.copy())
