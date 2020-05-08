@@ -105,7 +105,7 @@ class MagDataset:
             ), f"The number of channels of the dataset ({num_channels}) does not match the number of channels of the passed data (1)"
         else:
             assert (
-                num_channels == 3
+                num_channels == write_data_shape[0]
             ), f"The number of channels of the dataset ({num_channels}) does not match the number of channels of the passed data ({write_data_shape[0]})"
 
 
