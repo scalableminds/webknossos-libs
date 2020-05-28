@@ -185,19 +185,29 @@ class BoundingBox:
 
         return not all(self.size > 0)
 
-    def in_mag(self, mag: Mag, ceil: bool = False) -> "BoundingBox":
+    def in_mag(self, mag: Mag) -> "BoundingBox":
 
         np_mag = np.array(mag.to_array())
 
-        def ceil_maybe(array: np.ndarray) -> np.ndarray:
-            if ceil:
-                return np.ceil(array)
-            return array
+        assert (
+            np.count_nonzero(self.topleft % np_mag) == 0
+        ), f"topleft {self.topleft} is not aligned with the mag {mag}. Use BoundingBox.align_with_mag()."
+        assert (
+            np.count_nonzero(self.bottomright % np_mag) == 0
+        ), f"bottomright {self.bottomright} is not aligned with the mag {mag}. Use BoundingBox.align_with_mag()."
 
         return BoundingBox(
-            topleft=ceil_maybe(self.topleft / np_mag).astype(np.int),
-            size=ceil_maybe(self.size / np_mag).astype(np.int),
+            topleft=(self.topleft // np_mag).astype(np.int),
+            size=(self.size // np_mag).astype(np.int),
         )
+
+    def align_with_mag(self, mag: Mag):
+        """Rounds the bounding box up, so that both topleft and bottomright are divisible by mag."""
+
+        np_mag = np.array(mag.to_array())
+        topleft = (self.topleft // np_mag).astype(np.int) * np_mag
+        bottomright = np.ceil(self.bottomright / np_mag).astype(np.int) * np_mag
+        return BoundingBox(topleft, bottomright - topleft)
 
     def contains(self, coord: Shape3D) -> bool:
 
