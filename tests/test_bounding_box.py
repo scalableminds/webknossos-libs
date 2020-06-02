@@ -1,6 +1,4 @@
-import numpy as np
 from wkcuber.api.bounding_box import BoundingBox, Mag
-from wkcuber.metadata import detect_resolutions
 import pytest
 
 
