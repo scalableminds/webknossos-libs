@@ -112,7 +112,7 @@ description = "Utility library for easily distributing code execution on cluster
 name = "cluster-tools"
 optional = false
 python-versions = "*"
-version = "1.46"
+version = "1.49"
 
 [package.dependencies]
 cloudpickle = "*"
@@ -595,7 +595,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["pathlib2", "contextlib2", "unittest2"]
 
 [metadata]
-content-hash = "273409b6423b78dda553b1088ce6abbf6324ceabfd02f925bbd39f1d35b259aa"
+content-hash = "ad38a6910688301eb13f13cf6bb28dca5f5065c84003874652b52b7dc1ad4487"
 python-versions = "^3.6"
 
 [metadata.files]
@@ -671,7 +671,7 @@ cloudpickle = [
     {file = "cloudpickle-1.2.2.tar.gz", hash = "sha256:922401d7140e133253ff5fab4faa4a1166416066453a783b00b507dca93f8859"},
 ]
 cluster-tools = [
-    {file = "cluster_tools-1.46.tar.gz", hash = "sha256:9cd60a0800046ba88f4edca2d5f29105edad4ffd85953df09359584537d2fd20"},
+    {file = "cluster_tools-1.49.tar.gz", hash = "sha256:5513b0b198d657e3614e2770974ba447d3bc33287b4dfa52fd149eac3d3faf95"},
 ]
 colorama = [
     {file = "colorama-0.4.3-py2.py3-none-any.whl", hash = "sha256:7d73d2a99753107a36ac6b455ee49046802e59d9d076ef8e47b61499fa29afff"},

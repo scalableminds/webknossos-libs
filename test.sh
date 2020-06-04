@@ -1,3 +1,4 @@
+set -euxo pipefail
 export CIRCLE_BUILD_NUM=latest
 tests/scripts/build_docker_image.sh
 tests/scripts/decompress_test_data.sh

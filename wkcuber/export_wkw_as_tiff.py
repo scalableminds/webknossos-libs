@@ -1,5 +1,5 @@
 from argparse import ArgumentParser
-
+from functools import partial
 import logging
 import wkw
 import os
@@ -17,6 +17,7 @@ from wkcuber.utils import (
     add_batch_size_flag,
 )
 from wkcuber.mag import Mag
+from wkcuber.utils import wait_and_ensure_success
 
 
 def create_parser():
@@ -115,30 +116,30 @@ def wkw_slice_to_image(data_slice: np.ndarray, downsample: int = 1) -> Image:
 
 
 def export_tiff_slice(
-    export_args: Tuple[
-        int,
-        Tuple[
-            Dict[str, Tuple[int, int, int]],
-            str,
-            str,
-            str,
-            Union[None, Tuple[int, int]],
-            int,
-            int,
-        ],
-    ]
+    tiff_bbox: Dict[str, Tuple[int, int, int]],
+    dest_path: str,
+    name: str,
+    dataset_path: str,
+    tiling_size: Union[None, Tuple[int, int]],
+    batch_size: int,
+    downsample: int,
+    mag: Mag,
+    batch_number: int,
 ):
-    (
-        batch_number,
-        (tiff_bbox, dest_path, name, dataset_path, tiling_size, batch_size, downsample),
-    ) = export_args
+
     tiff_bbox = tiff_bbox.copy()
-    number_of_slices = min(tiff_bbox["size"][2] - batch_number * batch_size, batch_size)
-    tiff_bbox["size"] = [tiff_bbox["size"][0], tiff_bbox["size"][1], number_of_slices]
+    number_of_slices = (
+        min(tiff_bbox["size"][2] - batch_number * batch_size, batch_size) // mag.mag[2]
+    )
+    tiff_bbox["size"] = [
+        tiff_bbox["size"][0] // mag.mag[0],
+        tiff_bbox["size"][1] // mag.mag[1],
+        number_of_slices,
+    ]
     tiff_bbox["topleft"] = [
-        tiff_bbox["topleft"][0],
-        tiff_bbox["topleft"][1],
-        tiff_bbox["topleft"][2] + batch_number * batch_size,
+        tiff_bbox["topleft"][0] // mag.mag[0],
+        tiff_bbox["topleft"][1] // mag.mag[1],
+        (tiff_bbox["topleft"][2] + batch_number * batch_size) // mag.mag[2],
     ]
 
     with wkw.Dataset.open(dataset_path) as dataset:
@@ -155,7 +156,6 @@ def export_tiff_slice(
             slice_name_number = batch_number * batch_size + slice_index + 1
             if tiling_size is None:
                 tiff_file_name = wkw_name_and_bbox_to_tiff_name(name, slice_name_number)
-
                 tiff_file_path = os.path.join(dest_path, tiff_file_name)
 
                 image = wkw_slice_to_image(tiff_data[:, :, :, slice_index], downsample)
@@ -213,23 +213,23 @@ def export_tiff_stack(
     with get_executor_for_args(args) as executor:
         num_slices = ceil(bbox["size"][2] / batch_size)
         slices = range(0, num_slices)
-        export_args = zip(
-            slices,
-            [
-                (
-                    bbox,
-                    destination_path,
-                    name,
-                    dataset_path,
-                    tiling_slice_size,
-                    batch_size,
-                    downsample,
-                )
-            ]
-            * num_slices,
-        )
+
         logging.info(f"starting jobs")
-        executor.map(export_tiff_slice, export_args)
+        futures = executor.map_to_futures(
+            partial(
+                export_tiff_slice,
+                bbox,
+                destination_path,
+                name,
+                dataset_path,
+                tiling_slice_size,
+                batch_size,
+                downsample,
+                mag,
+            ),
+            slices,
+        )
+        wait_and_ensure_success(futures)
 
 
 def export_wkw_as_tiff(args):
