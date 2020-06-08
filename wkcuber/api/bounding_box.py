@@ -218,7 +218,7 @@ class BoundingBox:
         )
 
     def contains_bbox(self, inner_bbox: "BoundingBox") -> bool:
-        return inner_bbox.intersected_with(self) == inner_bbox
+        return inner_bbox.intersected_with(self, dont_assert=True) == inner_bbox
 
     def chunk(
         self, chunk_size: Shape3D, chunk_border_alignments: Optional[List[int]] = None
