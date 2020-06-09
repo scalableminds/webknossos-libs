@@ -204,7 +204,7 @@ class BoundingBox:
     def align_with_mag(self, mag: Mag, ceil=False):
         """Rounds the bounding box, so that both topleft and bottomright are divisible by mag.
 
-        :argument ceil: If true, we read more, otherwise less.
+        :argument ceil: If true, the bounding box is enlarged when necessary. If false, it's shrinked when necessary.
         """
 
         np_mag = np.array(mag.to_array())
