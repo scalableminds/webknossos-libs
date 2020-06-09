@@ -209,7 +209,8 @@ class BoundingBox:
 
         np_mag = np.array(mag.to_array())
 
-        align = lambda point, round_fn: return round_fn(point / np_mag).astype(np.int) * np_mag
+        align = lambda point, round_fn: round_fn(point / np_mag).astype(np.int) * np_mag
+
         if ceil:
             topleft = align(self.topleft, np.floor)
             bottomright = align(self.bottomright, np.ceil)
