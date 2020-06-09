@@ -201,12 +201,21 @@ class BoundingBox:
             size=(self.size // np_mag).astype(np.int),
         )
 
-    def align_with_mag(self, mag: Mag):
-        """Rounds the bounding box up, so that both topleft and bottomright are divisible by mag."""
+    def align_with_mag(self, mag: Mag, ceil=False):
+        """Rounds the bounding box, so that both topleft and bottomright are divisible by mag.
+
+        :argument ceil: If true, we read more, otherwise less.
+        """
 
         np_mag = np.array(mag.to_array())
-        topleft = (self.topleft // np_mag).astype(np.int) * np_mag
-        bottomright = np.ceil(self.bottomright / np_mag).astype(np.int) * np_mag
+
+        if ceil:
+            topleft = np.floor(self.topleft / np_mag).astype(np.int) * np_mag
+            bottomright = np.ceil(self.bottomright / np_mag).astype(np.int) * np_mag
+        else:
+            topleft = np.ceil(self.topleft / np_mag).astype(np.int) * np_mag
+            bottomright = np.floor(self.bottomright / np_mag).astype(np.int) * np_mag
+
         return BoundingBox(topleft, bottomright - topleft)
 
     def contains(self, coord: Shape3D) -> bool:
