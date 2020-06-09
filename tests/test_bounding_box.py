@@ -4,18 +4,18 @@ import pytest
 
 def test_align_with_mag_ceiled():
 
-    assert BoundingBox((1, 1, 1), (10, 10, 10)).align_with_mag(Mag(2), ceil=True) == BoundingBox(
-        topleft=(0, 0, 0), size=(12, 12, 12)
-    )
-    assert BoundingBox((1, 1, 1), (9, 9, 9)).align_with_mag(Mag(2), ceil=True) == BoundingBox(
-        topleft=(0, 0, 0), size=(10, 10, 10)
-    )
-    assert BoundingBox((1, 1, 1), (9, 9, 9)).align_with_mag(Mag(4), ceil=True) == BoundingBox(
-        topleft=(0, 0, 0), size=(12, 12, 12)
-    )
-    assert BoundingBox((1, 2, 3), (9, 9, 9)).align_with_mag(Mag(2), ceil=True) == BoundingBox(
-        topleft=(0, 2, 2), size=(10, 10, 10)
-    )
+    assert BoundingBox((1, 1, 1), (10, 10, 10)).align_with_mag(
+        Mag(2), ceil=True
+    ) == BoundingBox(topleft=(0, 0, 0), size=(12, 12, 12))
+    assert BoundingBox((1, 1, 1), (9, 9, 9)).align_with_mag(
+        Mag(2), ceil=True
+    ) == BoundingBox(topleft=(0, 0, 0), size=(10, 10, 10))
+    assert BoundingBox((1, 1, 1), (9, 9, 9)).align_with_mag(
+        Mag(4), ceil=True
+    ) == BoundingBox(topleft=(0, 0, 0), size=(12, 12, 12))
+    assert BoundingBox((1, 2, 3), (9, 9, 9)).align_with_mag(
+        Mag(2), ceil=True
+    ) == BoundingBox(topleft=(0, 2, 2), size=(10, 10, 10))
 
 
 def test_align_with_mag_floored():
