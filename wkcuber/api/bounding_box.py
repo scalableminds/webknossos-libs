@@ -209,13 +209,13 @@ class BoundingBox:
 
         np_mag = np.array(mag.to_array())
 
+        align = lambda point, round_fn: return round_fn(point / np_mag).astype(np.int) * np_mag
         if ceil:
-            topleft = np.floor(self.topleft / np_mag).astype(np.int) * np_mag
-            bottomright = np.ceil(self.bottomright / np_mag).astype(np.int) * np_mag
+            topleft = align(self.topleft, np.floor)
+            bottomright = align(self.bottomright, np.ceil)
         else:
-            topleft = np.ceil(self.topleft / np_mag).astype(np.int) * np_mag
-            bottomright = np.floor(self.bottomright / np_mag).astype(np.int) * np_mag
-
+            topleft = align(self.topleft, np.ceil)
+            bottomright = align(self.bottomright, np.floor)
         return BoundingBox(topleft, bottomright - topleft)
 
     def contains(self, coord: Shape3D) -> bool:
