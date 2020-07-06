@@ -810,7 +810,7 @@ def test_largest_segment_id_requirement():
     ).add_mag(Mag(1))
 
     ds = WKDataset(path)
-    ds.properties.data_layers["segmentation"].largest_segment_id == largest_segment_id
+    assert ds.properties.data_layers["segmentation"].largest_segment_id == largest_segment_id
 
 
 def test_properties_with_segmentation():
@@ -1017,3 +1017,107 @@ def test_view_write_without_open():
     wk_view.write(write_data)
 
     assert not wk_view._is_opened
+
+
+def test_typing_of_get_mag():
+    ds = WKDataset("./testdata/simple_wk_dataset")
+    layer = ds.get_layer("color")
+    assert layer.get_mag("1") == layer.get_mag(1)
+    assert layer.get_mag("1") == layer.get_mag((1, 1, 1))
+    assert layer.get_mag("1") == layer.get_mag(Mag(1))
+
+
+def test_wk_dataset_get_or_create():
+    delete_dir("./testoutput/wk_dataset_get_or_create")
+
+    # dataset does not exists yet
+    ds1 = WKDataset.get_or_create("./testoutput/wk_dataset_get_or_create", scale=(1, 1, 1))
+    assert "color" not in ds1.layers.keys()
+    ds1.add_layer("color", Layer.COLOR_TYPE)
+    assert "color" in ds1.layers.keys()
+
+    # dataset already exists
+    ds2 = WKDataset.get_or_create("./testoutput/wk_dataset_get_or_create", scale=(1, 1, 1))
+    assert "color" in ds2.layers.keys()
+
+    try:
+        # dataset already exists, but with a different scale
+        WKDataset.get_or_create("./testoutput/wk_dataset_get_or_create", scale=(2, 2, 2))
+        raise Exception(
+            "The test did not throw an exception even though it should. "
+        )
+    except AssertionError:
+        pass
+
+
+def test_tiff_dataset_get_or_create():
+    delete_dir("./testoutput/tiff_dataset_get_or_create")
+
+    # dataset does not exists yet
+    ds1 = TiffDataset.get_or_create("./testoutput/tiff_dataset_get_or_create", scale=(1, 1, 1))
+    assert "color" not in ds1.layers.keys()
+    ds1.add_layer("color", Layer.COLOR_TYPE)
+    assert "color" in ds1.layers.keys()
+
+    # dataset already exists
+    ds2 = TiffDataset.get_or_create("./testoutput/tiff_dataset_get_or_create", scale=(1, 1, 1))
+    assert "color" in ds2.layers.keys()
+
+    try:
+        # dataset already exists, but with a different scale
+        TiffDataset.get_or_create("./testoutput/tiff_dataset_get_or_create", scale=(2, 2, 2))
+        raise Exception(
+            "The test did not throw an exception even though it should. "
+        )
+    except AssertionError:
+        pass
+
+    try:
+        # dataset already exists, but with a different pattern
+        TiffDataset.get_or_create("./testoutput/tiff_dataset_get_or_create", scale=(1, 1, 1), pattern="ds_{zzz}.tif")
+        raise Exception(
+            "The test did not throw an exception even though it should. "
+        )
+    except AssertionError:
+        pass
+
+
+def test_tiled_tiff_dataset_get_or_create():
+    delete_dir("./testoutput/tiled_tiff_dataset_get_or_create")
+
+    # dataset does not exists yet
+    ds1 = TiledTiffDataset.get_or_create("./testoutput/tiled_tiff_dataset_get_or_create", scale=(1, 1, 1), tile_size=(32, 64))
+    assert "color" not in ds1.layers.keys()
+    ds1.add_layer("color", Layer.COLOR_TYPE)
+    assert "color" in ds1.layers.keys()
+
+    # dataset already exists
+    ds2 = TiledTiffDataset.get_or_create("./testoutput/tiled_tiff_dataset_get_or_create", scale=(1, 1, 1), tile_size=(32, 64))
+    assert "color" in ds2.layers.keys()
+
+    try:
+        # dataset already exists, but with a different scale
+        TiledTiffDataset.get_or_create("./testoutput/tiled_tiff_dataset_get_or_create", scale=(2, 2, 2), tile_size=(32, 64))
+        raise Exception(
+            "The test did not throw an exception even though it should. "
+        )
+    except AssertionError:
+        pass
+
+    try:
+        # dataset already exists, but with a different tile_size
+        TiledTiffDataset.get_or_create("./testoutput/tiled_tiff_dataset_get_or_create", scale=(1, 1, 1), tile_size=(100, 100))
+        raise Exception(
+            "The test did not throw an exception even though it should. "
+        )
+    except AssertionError:
+        pass
+
+    try:
+        # dataset already exists, but with a different pattern
+        TiledTiffDataset.get_or_create("./testoutput/tiled_tiff_dataset_get_or_create", scale=(1, 1, 1), tile_size=(32, 64), pattern="ds_{zzz}.tif")
+        raise Exception(
+            "The test did not throw an exception even though it should. "
+        )
+    except AssertionError:
+        pass
