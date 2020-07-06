@@ -14,7 +14,9 @@ def extract_num_channels(num_channels_in_properties, path, layer, mag):
     if mag is None:
         # Unable to extract the 'num_channels' from the 'header.wkw' if the dataset has no magnifications.
         # This should never be the case because wkw-datasets that are created without this API always have a magnification.
-        raise RuntimeError("Cannot extract the number of channels of a dataset without a properties file and without any magnifications")
+        raise RuntimeError(
+            "Cannot extract the number of channels of a dataset without a properties file and without any magnifications"
+        )
 
     wkw_ds_file_path = join(
         dirname(path), layer, Mag(mag["resolution"]).to_layer_name()
@@ -86,7 +88,9 @@ class LayerProperties:
                 json_data.get("num_channels"),
                 dataset_path,
                 json_data["name"],
-                json_data["wkwResolutions"][0] if len(json_data["wkwResolutions"]) > 0 else None,
+                json_data["wkwResolutions"][0]
+                if len(json_data["wkwResolutions"]) > 0
+                else None,
             ),
             json_data["boundingBox"],
         )

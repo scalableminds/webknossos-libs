@@ -52,7 +52,9 @@ class AbstractDataset(ABC):
             makedirs(dataset_path, exist_ok=True)
             properties._export_as_json()
         except OSError as e:
-            raise type(e)("Creation of Dataset {} failed. ".format(dataset_path) + repr(e))
+            raise type(e)(
+                "Creation of Dataset {} failed. ".format(dataset_path) + repr(e)
+            )
 
         # initialize object
         return cls(dataset_path)
@@ -152,9 +154,13 @@ class WKDataset(AbstractDataset):
 
     @classmethod
     def get_or_create(cls, dataset_path, scale):
-        if os.path.exists(join(dataset_path, Properties.FILE_NAME)):  # use the properties file to check if the Dataset exists
+        if os.path.exists(
+            join(dataset_path, Properties.FILE_NAME)
+        ):  # use the properties file to check if the Dataset exists
             ds = WKDataset(dataset_path)
-            assert tuple(ds.properties.scale) == tuple(scale), f"Cannot get_or_create WKDataset: The dataset {dataset_path} already exists, but the scales do not match ({ds.properties.scale} != {scale})"
+            assert tuple(ds.properties.scale) == tuple(
+                scale
+            ), f"Cannot get_or_create WKDataset: The dataset {dataset_path} already exists, but the scales do not match ({ds.properties.scale} != {scale})"
             return ds
         else:
             return cls.create(dataset_path, scale)
@@ -191,14 +197,15 @@ class TiffDataset(AbstractDataset):
     @classmethod
     def get_or_create(cls, dataset_path, scale, pattern=None):
         if os.path.exists(
-                join(dataset_path, Properties.FILE_NAME)):  # use the properties file to check if the Dataset exists
+            join(dataset_path, Properties.FILE_NAME)
+        ):  # use the properties file to check if the Dataset exists
             ds = TiffDataset(dataset_path)
-            assert (
-                    tuple(ds.properties.scale) == tuple(scale)
+            assert tuple(ds.properties.scale) == tuple(
+                scale
             ), f"Cannot get_or_create TiffDataset: The dataset {dataset_path} already exists, but the scales do not match ({ds.properties.scale} != {scale})"
             if pattern is not None:
                 assert (
-                        ds.properties.pattern == pattern
+                    ds.properties.pattern == pattern
                 ), f"Cannot get_or_create TiffDataset: The dataset {dataset_path} already exists, but the patterns do not match ({ds.properties.pattern} != {pattern})"
             return ds
         else:
@@ -241,17 +248,18 @@ class TiledTiffDataset(AbstractDataset):
     @classmethod
     def get_or_create(cls, dataset_path, scale, tile_size, pattern=None):
         if os.path.exists(
-                join(dataset_path, Properties.FILE_NAME)):  # use the properties file to check if the Dataset exists
+            join(dataset_path, Properties.FILE_NAME)
+        ):  # use the properties file to check if the Dataset exists
             ds = TiledTiffDataset(dataset_path)
-            assert (
-                    tuple(ds.properties.scale) == tuple(scale)
+            assert tuple(ds.properties.scale) == tuple(
+                scale
             ), f"Cannot get_or_create TiledTiffDataset: The dataset {dataset_path} already exists, but the scales do not match ({ds.properties.scale} != {scale})"
-            assert (
-                    tuple(ds.properties.tile_size) == tuple(tile_size)
+            assert tuple(ds.properties.tile_size) == tuple(
+                tile_size
             ), f"Cannot get_or_create TiledTiffDataset: The dataset {dataset_path} already exists, but the tile sizes do not match ({ds.properties.tile_size} != {tile_size})"
             if pattern is not None:
                 assert (
-                        ds.properties.pattern == pattern
+                    ds.properties.pattern == pattern
                 ), f"Cannot get_or_create TiledTiffDataset: The dataset {dataset_path} already exists, but the patterns do not match ({ds.properties.pattern} != {pattern})"
             return ds
         else:
