@@ -28,11 +28,13 @@ class Layer:
         makedirs(full_path, exist_ok=True)
 
     def get_mag(self, mag) -> MagDataset:
+        mag = Mag(mag).to_layer_name()
         if mag not in self.mags.keys():
             raise IndexError("The mag {} is not a mag of this layer".format(mag))
         return self.mags[mag]
 
     def delete_mag(self, mag):
+        mag = Mag(mag).to_layer_name()
         if mag not in self.mags.keys():
             raise IndexError(
                 "Deleting mag {} failed. There is no mag with this name".format(mag)
@@ -45,10 +47,12 @@ class Layer:
         rmtree(full_path)
 
     def _create_dir_for_mag(self, mag):
+        mag = Mag(mag).to_layer_name()
         full_path = join(self.dataset.path, self.name, mag)
         makedirs(full_path, exist_ok=True)
 
     def _assert_mag_does_not_exist_yet(self, mag):
+        mag = Mag(mag).to_layer_name()
         if mag in self.mags.keys():
             raise IndexError(
                 "Adding mag {} failed. There is already a mag with this name".format(
