@@ -16,6 +16,8 @@ from wkcuber.api.bounding_box import BoundingBox
 from wkcuber.mag import Mag
 from wkcuber.utils import get_executor_for_args
 
+expected_error_msg = "The test did not throw an exception even though it should. "
+
 
 def delete_dir(relative_path):
     if path.exists(relative_path) and path.isdir(relative_path):
@@ -52,8 +54,7 @@ def for_each_chunking_with_wrong_chunk_size(view):
                 executor=executor,
             )
             raise Exception(
-                "The test did not throw an exception even though it should. "
-                "The chunk_size should not contain zeros"
+                expected_error_msg + "The chunk_size should not contain zeros"
             )
         except AssertionError:
             pass
@@ -65,9 +66,7 @@ def for_each_chunking_with_wrong_chunk_size(view):
                 chunk_size=(16, 64, 64),
                 executor=executor,
             )
-            raise Exception(
-                "The test did not throw an exception even though it should. "
-            )
+            raise Exception(expected_error_msg)
         except AssertionError:
             pass
 
@@ -78,9 +77,7 @@ def for_each_chunking_with_wrong_chunk_size(view):
                 chunk_size=(100, 64, 64),
                 executor=executor,
             )
-            raise Exception(
-                "The test did not throw an exception even though it should. "
-            )
+            raise Exception(expected_error_msg)
         except AssertionError:
             pass
 
@@ -1052,7 +1049,7 @@ def test_wk_dataset_get_or_create():
         WKDataset.get_or_create(
             "./testoutput/wk_dataset_get_or_create", scale=(2, 2, 2)
         )
-        raise Exception("The test did not throw an exception even though it should. ")
+        raise Exception(expected_error_msg)
     except AssertionError:
         pass
 
@@ -1079,7 +1076,7 @@ def test_tiff_dataset_get_or_create():
         TiffDataset.get_or_create(
             "./testoutput/tiff_dataset_get_or_create", scale=(2, 2, 2)
         )
-        raise Exception("The test did not throw an exception even though it should. ")
+        raise Exception(expected_error_msg)
     except AssertionError:
         pass
 
@@ -1090,7 +1087,7 @@ def test_tiff_dataset_get_or_create():
             scale=(1, 1, 1),
             pattern="ds_{zzz}.tif",
         )
-        raise Exception("The test did not throw an exception even though it should. ")
+        raise Exception(expected_error_msg)
     except AssertionError:
         pass
 
@@ -1123,7 +1120,7 @@ def test_tiled_tiff_dataset_get_or_create():
             scale=(2, 2, 2),
             tile_size=(32, 64),
         )
-        raise Exception("The test did not throw an exception even though it should. ")
+        raise Exception(expected_error_msg)
     except AssertionError:
         pass
 
@@ -1134,7 +1131,7 @@ def test_tiled_tiff_dataset_get_or_create():
             scale=(1, 1, 1),
             tile_size=(100, 100),
         )
-        raise Exception("The test did not throw an exception even though it should. ")
+        raise Exception(expected_error_msg)
     except AssertionError:
         pass
 
@@ -1146,6 +1143,6 @@ def test_tiled_tiff_dataset_get_or_create():
             tile_size=(32, 64),
             pattern="ds_{zzz}.tif",
         )
-        raise Exception("The test did not throw an exception even though it should. ")
+        raise Exception(expected_error_msg)
     except AssertionError:
         pass
