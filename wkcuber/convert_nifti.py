@@ -5,7 +5,7 @@ import numpy as np
 from argparse import ArgumentParser
 from pathlib import Path
 import nibabel as nib
-from  skimage import io
+from skimage import io
 
 from wkcuber.api.bounding_box import BoundingBox
 from wkcuber.api.Dataset import WKDataset, TiffDataset
@@ -84,9 +84,13 @@ def create_parser():
     return parser
 
 
-def to_target_datatype(data: np.ndarray, target_dtype, is_probably_binary: bool) -> np.ndarray:
+def to_target_datatype(
+    data: np.ndarray, target_dtype, is_probably_binary: bool
+) -> np.ndarray:
     if is_probably_binary:
-        logging.info(f"Casting directly to {target_dtype}, as input seems to be binary.")
+        logging.info(
+            f"Casting directly to {target_dtype}, as input seems to be binary."
+        )
         return data.astype(np.dtype(target_dtype))
 
     if data.dtype == np.dtype("float32"):
@@ -100,10 +104,19 @@ def to_target_datatype(data: np.ndarray, target_dtype, is_probably_binary: bool)
 
 
 def convert_nifti(
-    source_nifti_path, target_path, layer_name, dtype, scale, mag=1, file_len=32, bbox_to_enforce=None, write_tiff=False, use_orientation_header=False
+    source_nifti_path,
+    target_path,
+    layer_name,
+    dtype,
+    scale,
+    mag=1,
+    file_len=32,
+    bbox_to_enforce=None,
+    write_tiff=False,
+    use_orientation_header=False,
 ):
 
-    ref_time = time.time()    
+    ref_time = time.time()
     # Assume no translation
     offset = (0, 0, 0)
 
@@ -117,12 +130,14 @@ def convert_nifti(
 
     cube_data = np.array(source_nifti.get_fdata())
 
-    is_probably_binary = np.unique(cube_data).shape[0] == 2 
-    assume_segmentation_layer = False # Since webKnossos does not support multiple segmention layers, this is hardcoded to False right now.
+    is_probably_binary = np.unique(cube_data).shape[0] == 2
+    assume_segmentation_layer = False  # Since webKnossos does not support multiple segmention layers, this is hardcoded to False right now.
 
-    max_cell_id_args = {
-        "largest_segment_id": int(np.max(cube_data) + 1)
-    } if assume_segmentation_layer else {}
+    max_cell_id_args = (
+        {"largest_segment_id": int(np.max(cube_data) + 1)}
+        if assume_segmentation_layer
+        else {}
+    )
     category_type = "segmentation" if assume_segmentation_layer else "color"
     logging.debug(f"Assuming {category_type} as layer type for {layer_name}")
 
@@ -147,19 +162,19 @@ def convert_nifti(
         # Flip y and z
         cube_data = np.flip(cube_data, (2, 3))
 
-
     if scale is None:
         scale = tuple(map(float, source_nifti.header["pixdim"][:3]))
     logging.info(f"Using scale: {scale}")
     cube_data = to_target_datatype(cube_data, dtype, is_probably_binary)
 
-    
     # everything needs to be padded to
     if bbox_to_enforce is not None:
         target_topleft = np.array((0,) + tuple(bbox_to_enforce.topleft))
         target_size = np.array((1,) + tuple(bbox_to_enforce.size))
 
-        cube_data = pad_or_crop_to_size_and_topleft(cube_data, target_size, target_topleft)
+        cube_data = pad_or_crop_to_size_and_topleft(
+            cube_data, target_size, target_topleft
+        )
 
     # Writing wkw compressed requires files of shape (file_len, file_len, file_len)
     # Pad data accordingly
@@ -178,13 +193,17 @@ def convert_nifti(
     if write_tiff:
         # assert False, "Not supported right now."
         ds = TiffDataset.get_or_create(target_path, scale=scale or (1, 1, 1))
-        layer = ds.get_or_add_layer(layer_name, category_type, np.dtype(dtype), **max_cell_id_args)
+        layer = ds.get_or_add_layer(
+            layer_name, category_type, np.dtype(dtype), **max_cell_id_args
+        )
         mag = layer.get_or_add_mag("1")
 
         mag.write(cube_data.squeeze())
     else:
         ds = WKDataset.get_or_create(target_path, scale=scale or (1, 1, 1))
-        layer = ds.get_or_add_layer(layer_name, category_type, np.dtype(dtype), **max_cell_id_args)
+        layer = ds.get_or_add_layer(
+            layer_name, category_type, np.dtype(dtype), **max_cell_id_args
+        )
         mag = layer.get_or_add_mag("1", file_len=file_len // 32)
         mag.write(cube_data)
 
@@ -196,7 +215,14 @@ def convert_nifti(
 
 
 def convert_folder_nifti(
-    source_folder_path, target_path, color_subpath, segmentation_subpath, scale, use_orientation_header=False, bbox_to_enforce=None, write_tiff=False
+    source_folder_path,
+    target_path,
+    color_subpath,
+    segmentation_subpath,
+    scale,
+    use_orientation_header=False,
+    bbox_to_enforce=None,
+    write_tiff=False,
 ):
     paths = list(source_folder_path.rglob("**/*.nii"))
 
@@ -224,9 +250,9 @@ def convert_folder_nifti(
 
     conversion_args = {
         "scale": scale,
-        "write_tiff": write_tiff, 
+        "write_tiff": write_tiff,
         "bbox_to_enforce": bbox_to_enforce,
-        "use_orientation_header": use_orientation_header
+        "use_orientation_header": use_orientation_header,
     }
     for path in paths:
         if path == color_path:
@@ -253,7 +279,7 @@ def main():
         "scale": args.scale,
         "write_tiff": args.write_tiff,
         "bbox_to_enforce": bbox_to_enforce,
-        "use_orientation_header": args.use_orientation_header
+        "use_orientation_header": args.use_orientation_header,
     }
 
     if source_path.is_dir():
@@ -262,12 +288,17 @@ def main():
             Path(args.target_path),
             args.color_file,
             args.segmentation_file,
-            **conversion_args
+            **conversion_args,
         )
     else:
         convert_nifti(
-            source_path, Path(args.target_path), args.layer_name, args.dtype, **conversion_args
+            source_path,
+            Path(args.target_path),
+            args.layer_name,
+            args.dtype,
+            **conversion_args,
         )
+
 
 if __name__ == "__main__":
     main()

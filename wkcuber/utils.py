@@ -374,6 +374,7 @@ def log_memory_consumption(additional_output=""):
         )
     )
 
+
 def pad_or_crop_to_size_and_topleft(cube_data, target_size, target_topleft):
     """
     Given an numpy array and a target_size/target_topleft, the array
