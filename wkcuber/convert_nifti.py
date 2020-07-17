@@ -21,6 +21,8 @@ from .utils import (
 
 from .metadata import write_webknossos_metadata
 
+from wkcuber.utils import DEFAULT_WKW_FILE_LEN, DEFAULT_WKW_VOXELS_PER_BLOCK
+
 
 def create_parser():
     parser = ArgumentParser()
@@ -110,12 +112,12 @@ def convert_nifti(
     dtype,
     scale,
     mag=1,
-    file_len=32,
+    file_len=DEFAULT_WKW_FILE_LEN,
     bbox_to_enforce=None,
     write_tiff=False,
     use_orientation_header=False,
 ):
-
+    voxels_per_cube = file_len * DEFAULT_WKW_VOXELS_PER_BLOCK
     ref_time = time.time()
     # Assume no translation
     offset = (0, 0, 0)
@@ -176,9 +178,9 @@ def convert_nifti(
             cube_data, target_size, target_topleft
         )
 
-    # Writing wkw compressed requires files of shape (file_len, file_len, file_len)
+    # Writing wkw compressed requires files of shape (voxels_per_cube, voxels_per_cube, voxels_per_cube)
     # Pad data accordingly
-    padding_offset = file_len - np.array(cube_data.shape[1:4]) % file_len
+    padding_offset = voxels_per_cube - np.array(cube_data.shape[1:4]) % voxels_per_cube
     padding_offset = (0, 0, 0)
     cube_data = np.pad(
         cube_data,
@@ -191,7 +193,6 @@ def convert_nifti(
     )
 
     if write_tiff:
-        # assert False, "Not supported right now."
         ds = TiffDataset.get_or_create(target_path, scale=scale or (1, 1, 1))
         layer = ds.get_or_add_layer(
             layer_name, category_type, np.dtype(dtype), **max_cell_id_args
@@ -204,7 +205,7 @@ def convert_nifti(
         layer = ds.get_or_add_layer(
             layer_name, category_type, np.dtype(dtype), **max_cell_id_args
         )
-        mag = layer.get_or_add_mag("1", file_len=file_len // 32)
+        mag = layer.get_or_add_mag("1", file_len=file_len)
         mag.write(cube_data)
 
     logging.debug(

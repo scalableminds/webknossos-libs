@@ -29,6 +29,8 @@ FallbackArgs = namedtuple("FallbackArgs", ("distribution_strategy", "jobs"))
 
 
 BLOCK_LEN = 32
+DEFAULT_WKW_FILE_LEN = 32
+DEFAULT_WKW_VOXELS_PER_BLOCK = 32
 CUBE_REGEX = re.compile(r"z(\d+)/y(\d+)/x(\d+)(\.wkw)$")
 
 logger = getLogger(__name__)
@@ -246,7 +248,7 @@ class BufferedSliceWriter(object):
         buffer_size: int = 32,
         # file_len specifies, how many buckets written per dimension into a wkw cube. Using 32,
         # results in 1 GB/wkw file for 8-bit data
-        file_len: int = 32,
+        file_len: int = DEFAULT_WKW_FILE_LEN,
         mag: Mag = Mag("1"),
     ):
 
