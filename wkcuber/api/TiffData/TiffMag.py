@@ -352,7 +352,7 @@ class TiffMag:
         if self.has_only_one_channel():
             if not len(data.shape) == 3:
                 raise AttributeError(
-                    "The shape of the provided data does not match the expected shape."
+                    "The shape of the provided data does not match the expected shape. Expected three-dimensional data shape, since target data is single-channel."
                 )
         else:
             if not len(data.shape) == 4:

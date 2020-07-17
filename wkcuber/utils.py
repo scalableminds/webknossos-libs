@@ -375,6 +375,13 @@ def log_memory_consumption(additional_output=""):
     )
 
 def pad_or_crop_to_size_and_topleft(cube_data, target_size, target_topleft):
+    """
+    Given an numpy array and a target_size/target_topleft, the array
+    will be padded so that it is within the bounding box descriped by topleft and size.
+    If the input data is too large, the data will be cropped (evenly from opposite sides
+    with the assumption that the most important data is in the center).
+    """
+
     # Pad to size
     half_padding = (target_size - cube_data.shape) / 2
     half_padding = np.clip(half_padding, 0, None)

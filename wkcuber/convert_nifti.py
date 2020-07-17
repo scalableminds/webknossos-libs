@@ -7,6 +7,7 @@ from pathlib import Path
 import nibabel as nib
 from  skimage import io
 
+from wkcuber.api.bounding_box import BoundingBox
 from wkcuber.api.Dataset import WKDataset, TiffDataset
 from .utils import (
     add_verbose_flag,
@@ -71,6 +72,12 @@ def create_parser():
         action="store_true",
     )
 
+    parser.add_argument(
+        "--enforce_bounding_box",
+        help="The BoundingBox to which the input data should be written. If the input data is too small, it will be padded. If it's too large, it will be cropped. The input format is x,y,z,width,height,depth.",
+        default=None,
+    )
+
     add_scale_flag(parser, required=False)
     add_verbose_flag(parser)
 
@@ -93,11 +100,10 @@ def to_target_datatype(data: np.ndarray, target_dtype, is_probably_binary: bool)
 
 
 def convert_nifti(
-    source_nifti_path, target_path, layer_name, dtype, scale, mag=1, file_len=32, target_size=None, target_topleft=None, write_tiff=False, use_orientation_header=False
+    source_nifti_path, target_path, layer_name, dtype, scale, mag=1, file_len=32, bbox_to_enforce=None, write_tiff=False, use_orientation_header=False
 ):
 
-    ref_time = time.time()
-    
+    ref_time = time.time()    
     # Assume no translation
     offset = (0, 0, 0)
 
@@ -146,10 +152,13 @@ def convert_nifti(
         scale = tuple(map(float, source_nifti.header["pixdim"][:3]))
     logging.info(f"Using scale: {scale}")
     cube_data = to_target_datatype(cube_data, dtype, is_probably_binary)
+
     
     # everything needs to be padded to
-    if target_topleft is not None or target_size is not None:
-        assert target_topleft is not None and target_size is not None, "target_topleft and target_size have to be either both undefined or both defined"
+    if bbox_to_enforce is not None:
+        target_topleft = np.array((0,) + tuple(bbox_to_enforce.topleft))
+        target_size = np.array((1,) + tuple(bbox_to_enforce.size))
+
         cube_data = pad_or_crop_to_size_and_topleft(cube_data, target_size, target_topleft)
 
     # Writing wkw compressed requires files of shape (file_len, file_len, file_len)
@@ -167,16 +176,12 @@ def convert_nifti(
     )
 
     if write_tiff:
-        assert False, "Not supported right now."
+        # assert False, "Not supported right now."
         ds = TiffDataset.get_or_create(target_path, scale=scale or (1, 1, 1))
         layer = ds.get_or_add_layer(layer_name, category_type, np.dtype(dtype), **max_cell_id_args)
         mag = layer.get_or_add_mag("1")
 
-        for z in range(size[2]):
-            tiff_data = cube_data[:, :, :, z]
-            assert tiff_data.shape[1:3] == tuple(target_size + target_topleft)[1:3]
-
-            mag.write(tiff_data, (0, 0, 0, z))
+        mag.write(cube_data.squeeze())
     else:
         ds = WKDataset.get_or_create(target_path, scale=scale or (1, 1, 1))
         layer = ds.get_or_add_layer(layer_name, category_type, np.dtype(dtype), **max_cell_id_args)
@@ -191,7 +196,7 @@ def convert_nifti(
 
 
 def convert_folder_nifti(
-    source_folder_path, target_path, color_subpath, segmentation_subpath, scale, target_size=None, target_topleft=None, write_tiff=False
+    source_folder_path, target_path, color_subpath, segmentation_subpath, scale, use_orientation_header=False, bbox_to_enforce=None, write_tiff=False
 ):
     paths = list(source_folder_path.rglob("**/*.nii"))
 
@@ -217,13 +222,19 @@ def convert_folder_nifti(
 
     logging.info("Segmentation file will also use uint8 as a datatype.")
 
+    conversion_args = {
+        "scale": scale,
+        "write_tiff": write_tiff, 
+        "bbox_to_enforce": bbox_to_enforce,
+        "use_orientation_header": use_orientation_header
+    }
     for path in paths:
         if path == color_path:
-            convert_nifti(path, target_path, "color", "uint8", scale, write_tiff=write_tiff, target_topleft=target_topleft, target_size=target_size, use_orientation_header=use_orientation_header)
+            convert_nifti(path, target_path, "color", "uint8", **conversion_args)
         elif path == segmentation_path:
-            convert_nifti(path, target_path, "segmentation", "uint8", scale, write_tiff=write_tiff, target_topleft=target_topleft, target_size=target_size, use_orientation_header=use_orientation_header)
+            convert_nifti(path, target_path, "segmentation", "uint8", **conversion_args)
         else:
-            convert_nifti(path, target_path, path.stem, "uint8", scale, write_tiff=write_tiff, target_topleft=target_topleft, target_size=target_size, use_orientation_header=use_orientation_header)
+            convert_nifti(path, target_path, path.stem, "uint8", **conversion_args)
 
 
 def main():
@@ -232,8 +243,18 @@ def main():
 
     source_path = Path(args.source_path)
 
-    target_topleft = np.array((0, 50, 36, 1))
-    target_size = np.array((1, 156, 112, 30))
+    bbox_to_enforce = None
+    if args.enforce_bounding_box is not None:
+        bbox_tuple = tuple(int(x) for x in args.enforce_bounding_box.split(","))
+        print("bbox_tuple", bbox_tuple)
+        bbox_to_enforce = BoundingBox.from_tuple6(bbox_tuple)
+
+    conversion_args = {
+        "scale": args.scale,
+        "write_tiff": args.write_tiff,
+        "bbox_to_enforce": bbox_to_enforce,
+        "use_orientation_header": args.use_orientation_header
+    }
 
     if source_path.is_dir():
         convert_folder_nifti(
@@ -241,15 +262,11 @@ def main():
             Path(args.target_path),
             args.color_file,
             args.segmentation_file,
-            args.scale,
-            write_tiff=args.write_tiff,
-            target_topleft=target_topleft,
-            target_size=target_size,
-            use_orientation_header=args.use_orientation_header
+            **conversion_args
         )
     else:
         convert_nifti(
-            source_path, Path(args.target_path), args.layer_name, args.dtype, args.scale, target_topleft=target_topleft, target_size=target_size, write_tiff=write_tiff, use_orientation_header=args.use_orientation_header
+            source_path, Path(args.target_path), args.layer_name, args.dtype, **conversion_args
         )
 
 if __name__ == "__main__":
