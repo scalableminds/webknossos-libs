@@ -414,11 +414,11 @@ class TiffReader:
         return cls(file_name)
 
     def read(self) -> np.array:
-        return io.imread(self.file_name)
+        return io.imread(self.file_name).transpose()
 
     def write(self, pixels):
         os.makedirs(os.path.dirname(self.file_name), exist_ok=True)
-        io.imsave(self.file_name, pixels, check_contrast=False)
+        io.imsave(self.file_name, pixels.transpose(), check_contrast=False)
 
     def merge_with_image(self, foreground_pixels, offset):
         background_pixels = self.read()
