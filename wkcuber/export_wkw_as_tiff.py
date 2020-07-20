@@ -15,6 +15,7 @@ from wkcuber.utils import (
     add_distribution_flags,
     get_executor_for_args,
     add_batch_size_flag,
+    parse_bounding_box
 )
 from wkcuber.mag import Mag
 from wkcuber.utils import wait_and_ensure_success
@@ -49,6 +50,7 @@ def create_parser():
         "The input format is x,y,z,width,height,depth."
         "(By default, data for the full bounding box of the dataset is generated)",
         default=None,
+        type=parse_bounding_box,
     )
 
     parser.add_argument(
@@ -240,9 +242,7 @@ def export_wkw_as_tiff(args):
         _, _, bbox, origin = read_metadata_for_layer(args.source_path, args.layer_name)
         bbox = {"topleft": origin, "size": bbox}
     else:
-        bbox = [int(s.strip()) for s in args.bbox.split(",")]
-        assert len(bbox) == 6
-        bbox = {"topleft": bbox[0:3], "size": bbox[3:6]}
+        bbox = {"topleft": list(args.bbox.topleft), "size": list(args.bbox.size)}
 
     logging.info(f"Starting tiff export for bounding box: {bbox}")
 

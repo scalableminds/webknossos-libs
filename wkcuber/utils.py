@@ -17,6 +17,7 @@ from os import path, getpid
 from math import floor, ceil
 from logging import getLogger
 import traceback
+from wkcuber.api.bounding_box import BoundingBox
 
 from .knossos import KnossosDataset
 from .mag import Mag
@@ -69,6 +70,12 @@ def parse_scale(scale):
         return scale
     except Exception:
         raise argparse.ArgumentTypeError("The scale could not be parsed")
+
+def parse_bounding_box(bbox_str):
+    try:
+        return BoundingBox.from_csv(bbox_str)
+    except Exception:
+        raise argparse.ArgumentTypeError("The bounding box could not be parsed.")
 
 
 def open_knossos(info):

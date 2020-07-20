@@ -17,6 +17,7 @@ from .utils import (
     setup_logging,
     add_scale_flag,
     pad_or_crop_to_size_and_topleft,
+    parse_bounding_box
 )
 
 from .metadata import write_webknossos_metadata
@@ -78,6 +79,7 @@ def create_parser():
         "--enforce_bounding_box",
         help="The BoundingBox to which the input data should be written. If the input data is too small, it will be padded. If it's too large, it will be cropped. The input format is x,y,z,width,height,depth.",
         default=None,
+        type=parse_bounding_box,
     )
 
     parser.add_argument(
@@ -282,23 +284,20 @@ def main():
 
     source_path = Path(args.source_path)
 
-    bbox_to_enforce = None
-    if args.enforce_bounding_box is not None:
-        bbox_tuple = tuple(int(x) for x in args.enforce_bounding_box.split(","))
-        bbox_to_enforce = BoundingBox.from_tuple6(bbox_tuple)
-
     flip_axes = None
     if args.flip_axes is not None:
         flip_axes = tuple(int(x) for x in args.flip_axes.split(","))
         for index in flip_axes:
-            assert 0 <= index <= 3, "flip_axes parameter must only contain indices between 0 and 3."
+            assert (
+                0 <= index <= 3
+            ), "flip_axes parameter must only contain indices between 0 and 3."
 
     conversion_args = {
         "scale": args.scale,
         "write_tiff": args.write_tiff,
-        "bbox_to_enforce": bbox_to_enforce,
+        "bbox_to_enforce": args.enforce_bounding_box,
         "use_orientation_header": args.use_orientation_header,
-        "flip_axes": flip_axes
+        "flip_axes": flip_axes,
     }
 
     if source_path.is_dir():
