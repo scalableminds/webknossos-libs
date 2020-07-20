@@ -1,6 +1,8 @@
 from shutil import rmtree
 from os.path import join
 from os import makedirs
+from typing import Tuple
+
 from wkw import wkw
 
 from wkcuber.api.MagDataset import (
@@ -59,6 +61,13 @@ class Layer:
                     mag
                 )
             )
+
+    def set_bounding_box(
+        self, offset: Tuple[int, int, int], size: Tuple[int, int, int]
+    ):
+        self.dataset.properties._set_bounding_box_of_layer(
+            self.name, tuple(offset), tuple(size)
+        )
 
 
 class WKLayer(Layer):
