@@ -80,6 +80,12 @@ def create_parser():
         default=None,
     )
 
+    parser.add_argument(
+        "--flip_axes",
+        help="The axes at which should be flipped. Input format is a comma separated list of axis indices. For example, 1,2,3 will flip the x, y and z axes.",
+        default=None,
+    )
+
     add_scale_flag(parser, required=False)
     add_verbose_flag(parser)
 
@@ -116,6 +122,7 @@ def convert_nifti(
     bbox_to_enforce=None,
     write_tiff=False,
     use_orientation_header=False,
+    flip_axes=None,
 ):
     voxels_per_cube = file_len * DEFAULT_WKW_VOXELS_PER_BLOCK
     ref_time = time.time()
@@ -161,8 +168,11 @@ def convert_nifti(
         return
 
     if use_orientation_header:
-        # Flip y and z
+        # Flip y and z to transform data into wkw's coordinate system.
         cube_data = np.flip(cube_data, (2, 3))
+
+    if flip_axes:
+        cube_data = np.flip(cube_data, flip_axes)
 
     if scale is None:
         scale = tuple(map(float, source_nifti.header["pixdim"][:3]))
@@ -224,6 +234,7 @@ def convert_folder_nifti(
     use_orientation_header=False,
     bbox_to_enforce=None,
     write_tiff=False,
+    flip_axes=None,
 ):
     paths = list(source_folder_path.rglob("**/*.nii"))
 
@@ -254,6 +265,7 @@ def convert_folder_nifti(
         "write_tiff": write_tiff,
         "bbox_to_enforce": bbox_to_enforce,
         "use_orientation_header": use_orientation_header,
+        "flip_axes": flip_axes,
     }
     for path in paths:
         if path == color_path:
@@ -273,14 +285,20 @@ def main():
     bbox_to_enforce = None
     if args.enforce_bounding_box is not None:
         bbox_tuple = tuple(int(x) for x in args.enforce_bounding_box.split(","))
-        print("bbox_tuple", bbox_tuple)
         bbox_to_enforce = BoundingBox.from_tuple6(bbox_tuple)
+
+    flip_axes = None
+    if args.flip_axes is not None:
+        flip_axes = tuple(int(x) for x in args.flip_axes.split(","))
+        for index in flip_axes:
+            assert 0 <= index <= 3, "flip_axes parameter must only contain indices between 0 and 3."
 
     conversion_args = {
         "scale": args.scale,
         "write_tiff": args.write_tiff,
         "bbox_to_enforce": bbox_to_enforce,
         "use_orientation_header": args.use_orientation_header,
+        "flip_axes": flip_axes
     }
 
     if source_path.is_dir():
