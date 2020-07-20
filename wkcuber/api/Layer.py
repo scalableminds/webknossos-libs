@@ -3,6 +3,8 @@ from os.path import join
 from os import makedirs
 from typing import Tuple
 
+import numpy as np
+
 from wkw import wkw
 
 from wkcuber.api.MagDataset import (
@@ -63,11 +65,18 @@ class Layer:
             )
 
     def set_bounding_box(
-        self, offset: Tuple[int, int, int], size: Tuple[int, int, int]
+        self, offset: Tuple[int, int, int] = None, size: Tuple[int, int, int] = None
     ):
+        if offset is None:
+            offset = self.dataset.properties.data_layers["color"].get_bounding_box_offset()
+        if size is None:
+            size = self.dataset.properties.data_layers["color"].get_bounding_box_size()
         self.dataset.properties._set_bounding_box_of_layer(
             self.name, tuple(offset), tuple(size)
         )
+        for _, mag in self.mags.items():
+            mag.view.global_offset = offset
+            mag.view.size = size
 
 
 class WKLayer(Layer):

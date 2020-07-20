@@ -1159,13 +1159,12 @@ def test_changing_layer_bounding_box():
     layer = ds.get_layer("color")
     mag = layer.get_mag("1")
 
-    bbox_offset = ds.properties.data_layers["color"].get_bounding_box_offset()
     bbox_size = ds.properties.data_layers["color"].get_bounding_box_size()
     assert bbox_size == (265, 265, 10)
     original_data = mag.read(bbox_size)
     assert original_data.shape == (1, 265, 265, 10)
 
-    layer.set_bounding_box(bbox_offset, (100, 100, 10))  # decrease boundingbox
+    layer.set_bounding_box(size=(100, 100, 10))  # decrease boundingbox
 
     bbox_size = ds.properties.data_layers["color"].get_bounding_box_size()
     assert bbox_size == (100, 100, 10)
@@ -1173,10 +1172,24 @@ def test_changing_layer_bounding_box():
     assert less_data.shape == (1, 100, 100, 10)
     assert np.array_equal(original_data[:, :100, :100, :10], less_data)
 
-    layer.set_bounding_box(bbox_offset, (300, 300, 10))  # increase the boundingbox
+    layer.set_bounding_box(size=(300, 300, 10))  # increase the boundingbox
 
     bbox_size = ds.properties.data_layers["color"].get_bounding_box_size()
     assert bbox_size == (300, 300, 10)
     more_data = mag.read(bbox_size)
     assert more_data.shape == (1, 300, 300, 10)
     assert np.array_equal(more_data[:, :265, :265, :10], original_data)
+
+    layer.set_bounding_box(size=(300, 300, 10))  # increase the boundingbox
+
+    assert ds.properties.data_layers["color"].get_bounding_box_offset() == (0, 0, 0)
+
+    layer.set_bounding_box(offset=(10, 10, 0), size=(255, 255, 10))  # change offset and size
+
+    new_bbox_offset = ds.properties.data_layers["color"].get_bounding_box_offset()
+    new_bbox_size = ds.properties.data_layers["color"].get_bounding_box_size()
+    assert new_bbox_offset == (10, 10, 0)
+    assert new_bbox_size == (255, 255, 10)
+    new_data = mag.read(new_bbox_size)
+    assert new_data.shape == (1, 255, 255, 10)
+    assert np.array_equal(original_data[:, 10:, 10:, :], new_data)
