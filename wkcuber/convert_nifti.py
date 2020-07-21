@@ -142,7 +142,9 @@ def convert_nifti(
     cube_data = np.array(source_nifti.get_fdata())
 
     is_probably_binary = np.unique(cube_data).shape[0] == 2
-    assume_segmentation_layer = False  # Since webKnossos does not support multiple segmention layers, this is hardcoded to False right now.
+    assume_segmentation_layer = (
+        False
+    )  # Since webKnossos does not support multiple segmention layers, this is hardcoded to False right now.
 
     max_cell_id_args = (
         {"largest_segment_id": int(np.max(cube_data) + 1)}
