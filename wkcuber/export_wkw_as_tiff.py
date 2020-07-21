@@ -15,7 +15,7 @@ from wkcuber.utils import (
     add_distribution_flags,
     get_executor_for_args,
     add_batch_size_flag,
-    parse_bounding_box
+    parse_bounding_box,
 )
 from wkcuber.mag import Mag
 from wkcuber.utils import wait_and_ensure_success

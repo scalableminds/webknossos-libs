@@ -17,7 +17,7 @@ from .utils import (
     setup_logging,
     add_scale_flag,
     pad_or_crop_to_size_and_topleft,
-    parse_bounding_box
+    parse_bounding_box,
 )
 
 from .metadata import write_webknossos_metadata

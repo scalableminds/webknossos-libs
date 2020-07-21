@@ -71,6 +71,7 @@ def parse_scale(scale):
     except Exception:
         raise argparse.ArgumentTypeError("The scale could not be parsed")
 
+
 def parse_bounding_box(bbox_str):
     try:
         return BoundingBox.from_csv(bbox_str)
