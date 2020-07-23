@@ -398,6 +398,7 @@ class TiffMagHeader:
         self.num_channels = num_channels
         self.tile_size = tile_size
 
+
 def transpose_for_skimage(data):
     if len(data.shape) == 2:
         return data.transpose()
