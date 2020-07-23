@@ -10,6 +10,7 @@ from wkcuber.api.MagDataset import (
     TiledTiffMagDataset,
 )
 from wkcuber.mag import Mag
+from wkcuber.utils import DEFAULT_WKW_FILE_LEN
 
 
 class Layer:
@@ -68,7 +69,7 @@ class WKLayer(Layer):
         if block_len is None:
             block_len = 32
         if file_len is None:
-            file_len = 32
+            file_len = DEFAULT_WKW_FILE_LEN
         if block_type is None:
             block_type = wkw.Header.BLOCK_TYPE_RAW
 
