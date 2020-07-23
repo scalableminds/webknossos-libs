@@ -1,26 +1,18 @@
 import time
 import logging
-import wkw
 import numpy as np
 from argparse import ArgumentParser
 from pathlib import Path
 import nibabel as nib
-from skimage import io
 
-from wkcuber.api.bounding_box import BoundingBox
 from wkcuber.api.Dataset import WKDataset, TiffDataset
 from .utils import (
     add_verbose_flag,
-    open_wkw,
-    WkwDatasetInfo,
-    ensure_wkw,
     setup_logging,
     add_scale_flag,
     pad_or_crop_to_size_and_topleft,
     parse_bounding_box,
 )
-
-from .metadata import write_webknossos_metadata
 
 from wkcuber.utils import DEFAULT_WKW_FILE_LEN, DEFAULT_WKW_VOXELS_PER_BLOCK
 
@@ -128,8 +120,6 @@ def convert_nifti(
 ):
     voxels_per_cube = file_len * DEFAULT_WKW_VOXELS_PER_BLOCK
     ref_time = time.time()
-    # Assume no translation
-    offset = (0, 0, 0)
 
     source_nifti = nib.load(str(source_nifti_path.resolve()))
 
@@ -155,11 +145,9 @@ def convert_nifti(
     logging.debug(f"Assuming {category_type} as layer type for {layer_name}")
 
     if len(source_nifti.shape) == 3:
-        size = list(source_nifti.shape)
         cube_data = cube_data.reshape((1,) + source_nifti.shape)
 
     elif len(source_nifti.shape) == 4:
-        size = list(source_nifti.shape[:-1])
         cube_data = np.transpose(cube_data, (3, 0, 1, 2))
 
     else:
