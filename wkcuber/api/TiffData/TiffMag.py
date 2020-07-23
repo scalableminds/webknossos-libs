@@ -352,7 +352,7 @@ class TiffMag:
         if self.has_only_one_channel():
             if not len(data.shape) == 3:
                 raise AttributeError(
-                    "The shape of the provided data does not match the expected shape."
+                    "The shape of the provided data does not match the expected shape. Expected three-dimensional data shape, since target data is single-channel."
                 )
         else:
             if not len(data.shape) == 4:
@@ -399,6 +399,15 @@ class TiffMagHeader:
         self.tile_size = tile_size
 
 
+def transpose_for_skimage(data):
+    if len(data.shape) == 2:
+        return data.transpose()
+    elif len(data.shape) == 3:
+        return data.transpose((1, 0, 2))
+    else:
+        raise ValueError("Cannot handle shape for data.")
+
+
 class TiffReader:
     def __init__(self, file_name):
         self.file_name = file_name
@@ -414,11 +423,12 @@ class TiffReader:
         return cls(file_name)
 
     def read(self) -> np.array:
-        return io.imread(self.file_name)
+        data = io.imread(self.file_name)
+        return transpose_for_skimage(data)
 
     def write(self, pixels):
         os.makedirs(os.path.dirname(self.file_name), exist_ok=True)
-        io.imsave(self.file_name, pixels, check_contrast=False)
+        io.imsave(self.file_name, transpose_for_skimage(pixels), check_contrast=False)
 
     def merge_with_image(self, foreground_pixels, offset):
         background_pixels = self.read()

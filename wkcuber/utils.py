@@ -17,6 +17,7 @@ from os import path, getpid
 from math import floor, ceil
 from logging import getLogger
 import traceback
+from wkcuber.api.bounding_box import BoundingBox
 
 from .knossos import KnossosDataset
 from .mag import Mag
@@ -29,6 +30,8 @@ FallbackArgs = namedtuple("FallbackArgs", ("distribution_strategy", "jobs"))
 
 
 BLOCK_LEN = 32
+DEFAULT_WKW_FILE_LEN = 32
+DEFAULT_WKW_VOXELS_PER_BLOCK = 32
 CUBE_REGEX = re.compile(r"z(\d+)/y(\d+)/x(\d+)(\.wkw)$")
 
 logger = getLogger(__name__)
@@ -67,6 +70,13 @@ def parse_scale(scale):
         return scale
     except Exception:
         raise argparse.ArgumentTypeError("The scale could not be parsed")
+
+
+def parse_bounding_box(bbox_str):
+    try:
+        return BoundingBox.from_csv(bbox_str)
+    except Exception:
+        raise argparse.ArgumentTypeError("The bounding box could not be parsed.")
 
 
 def open_knossos(info):
@@ -246,7 +256,7 @@ class BufferedSliceWriter(object):
         buffer_size: int = 32,
         # file_len specifies, how many buckets written per dimension into a wkw cube. Using 32,
         # results in 1 GB/wkw file for 8-bit data
-        file_len: int = 32,
+        file_len: int = DEFAULT_WKW_FILE_LEN,
         mag: Mag = Mag("1"),
     ):
 
@@ -373,3 +383,53 @@ def log_memory_consumption(additional_output=""):
             additional_output,
         )
     )
+
+
+def pad_or_crop_to_size_and_topleft(cube_data, target_size, target_topleft):
+    """
+    Given an numpy array and a target_size/target_topleft, the array
+    will be padded so that it is within the bounding box descriped by topleft and size.
+    If the input data is too large, the data will be cropped (evenly from opposite sides
+    with the assumption that the most important data is in the center).
+    """
+
+    # Pad to size
+    half_padding = (target_size - cube_data.shape) / 2
+    half_padding = np.clip(half_padding, 0, None)
+    left_padding = np.floor(half_padding).astype(np.uint32)
+    right_padding = np.floor(half_padding).astype(np.uint32)
+
+    cube_data = np.pad(
+        cube_data,
+        (
+            (0, 0),
+            (left_padding[1], right_padding[1]),
+            (left_padding[2], right_padding[2]),
+            (0, 0),
+        ),
+    )
+
+    # Potentially crop to size
+    half_overflow = (cube_data.shape - target_size) / 2
+    half_overflow = np.clip(half_overflow, 0, None)
+    left_overflow = np.floor(half_overflow).astype(np.uint32)
+    right_overflow = np.floor(half_overflow).astype(np.uint32)
+    cube_data = cube_data[
+        :,
+        left_overflow[1] : cube_data.shape[1] - right_overflow[1],
+        left_overflow[2] : cube_data.shape[2] - right_overflow[2],
+        :,
+    ]
+
+    # Pad to topleft
+    cube_data = np.pad(
+        cube_data,
+        (
+            (0, 0),
+            (target_topleft[1], max(0, target_size[1] - cube_data.shape[1])),
+            (target_topleft[2], max(0, target_size[2] - cube_data.shape[2])),
+            (target_topleft[3], max(0, target_size[3] - cube_data.shape[3])),
+        ),
+    )
+
+    return cube_data

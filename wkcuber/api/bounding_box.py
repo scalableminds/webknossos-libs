@@ -76,11 +76,19 @@ class BoundingBox:
         return BoundingBox.from_tuple2((topleft, size))
 
     @staticmethod
+    def from_csv(csv_bbox: str) -> "BoundingBox":
+        bbox_tuple = tuple(int(x) for x in csv_bbox.split(","))
+        return BoundingBox.from_tuple6(bbox_tuple)
+
+    @staticmethod
     def from_auto(obj) -> "BoundingBox":
         if isinstance(obj, BoundingBox):
             return obj
         elif isinstance(obj, str):
-            return BoundingBox.from_auto(json.loads(obj))
+            if ":" in obj:
+                return BoundingBox.from_auto(json.loads(obj))
+            else:
+                return BoundingBox.from_csv(obj)
         elif isinstance(obj, dict):
             return BoundingBox.from_wkw(obj)
         elif isinstance(obj, BoundingBoxNamedTuple):
