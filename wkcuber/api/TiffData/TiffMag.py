@@ -7,6 +7,7 @@ import numpy as np
 import os
 from glob import iglob
 from itertools import zip_longest
+from tifffile import memmap
 
 from wkcuber.utils import logger
 
@@ -198,10 +199,13 @@ class TiffMag:
 
             if xyz in self.tiffs:
                 # load data and discard the padded data
-                loaded_data = np.array(self.tiffs[xyz].read(), self.header.dtype)[
-                    offset_in_output_data[0] : offset_in_output_data[0] + shape[0],
-                    offset_in_output_data[1] : offset_in_output_data[1] + shape[1],
-                ]
+
+                loaded_data = self.tiffs[xyz].read_tile_from_image(np.uint8, offset_in_output_data, (shape[0], shape[1]))
+
+                #loaded_data = np.array(self.tiffs[xyz].read(), self.header.dtype)[
+                #    offset_in_output_data[0] : offset_in_output_data[0] + shape[0],
+                #    offset_in_output_data[1] : offset_in_output_data[1] + shape[1],
+                #]
 
                 index_slice = [
                     slice(
@@ -425,6 +429,27 @@ class TiffReader:
     def read(self) -> np.array:
         data = io.imread(self.file_name)
         return transpose_for_skimage(data)
+
+    def read_tile_from_image(self, dtype, tile_index, tile_extent) -> np.ndarray:
+        try:
+            print(f"tile_index {tile_index}, tile_extent {tile_extent}")
+            # image_reader.read_array(file_name, dtype)
+            memmap_image = memmap(self.file_name, page=0)
+
+            tile_index_x, tile_index_y = tile_index
+            tile_extent_x, tile_extent_y = tile_extent
+
+            x = tile_index_x * tile_extent_x
+            y = tile_index_y * tile_extent_y
+            tile = np.empty((tile_extent_x, tile_extent_y), dtype=dtype)
+            for y_index in range(tile_extent[1]):
+                tile[0:tile_extent_x, y_index] = memmap_image[x:(x + tile_extent_x), y + y_index]
+            return tile
+
+        except Exception as exc:
+            print(f"tile_index {tile_index}, tile_extent {tile_extent}")
+            logger.error("MMAP-Reading of file={} failed with {}".format(self.file_name, exc))
+            raise exc
 
     def write(self, pixels):
         os.makedirs(os.path.dirname(self.file_name), exist_ok=True)
