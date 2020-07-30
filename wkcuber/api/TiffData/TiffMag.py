@@ -202,11 +202,6 @@ class TiffMag:
 
                 loaded_data = self.tiffs[xyz].read_tile_from_image(np.uint8, offset_in_output_data, (shape[0], shape[1]))
 
-                #loaded_data = np.array(self.tiffs[xyz].read(), self.header.dtype)[
-                #    offset_in_output_data[0] : offset_in_output_data[0] + shape[0],
-                #    offset_in_output_data[1] : offset_in_output_data[1] + shape[1],
-                #]
-
                 index_slice = [
                     slice(
                         offset_in_input_data[0],
@@ -415,6 +410,7 @@ def transpose_for_skimage(data):
 class TiffReader:
     def __init__(self, file_name):
         self.file_name = file_name
+        self.memmap_image = memmap(self.file_name, page=0)
 
     @classmethod
     def init_tiff(cls, pixels, file_name):
@@ -432,8 +428,7 @@ class TiffReader:
 
     def read_tile_from_image(self, dtype, tile_index, tile_extent) -> np.ndarray:
         try:
-            memmap_image = memmap(self.file_name, page=0)
-            image_shape = memmap_image.shape
+            image_shape = (self.memmap_image.shape[1], self.memmap_image.shape[0]) # mmapped image is transposed
 
             tile_index_x, tile_index_y = tile_index
             tile_extent_x, tile_extent_y = tile_extent
@@ -445,7 +440,7 @@ class TiffReader:
                     continue
                 x_read_from = min(max(tile_index_x, 0), image_shape[0] - 1)
                 x_read_to = min(max(tile_index_x + tile_extent_x, 0), image_shape[0] - 1)
-                tile[0:x_read_to - x_read_from, y_index] = memmap_image[x_read_from:x_read_to, y_read_index]
+                tile[0:x_read_to - x_read_from, y_index] = self.memmap_image[y_read_index,x_read_from:x_read_to].transpose()
             return tile
 
         except Exception as exc:
