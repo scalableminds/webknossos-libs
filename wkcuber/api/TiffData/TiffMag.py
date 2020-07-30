@@ -432,22 +432,23 @@ class TiffReader:
 
     def read_tile_from_image(self, dtype, tile_index, tile_extent) -> np.ndarray:
         try:
-            print(f"tile_index {tile_index}, tile_extent {tile_extent}")
-            # image_reader.read_array(file_name, dtype)
             memmap_image = memmap(self.file_name, page=0)
+            image_shape = memmap_image.shape
 
             tile_index_x, tile_index_y = tile_index
             tile_extent_x, tile_extent_y = tile_extent
 
-            x = tile_index_x * tile_extent_x
-            y = tile_index_y * tile_extent_y
             tile = np.empty((tile_extent_x, tile_extent_y), dtype=dtype)
             for y_index in range(tile_extent[1]):
-                tile[0:tile_extent_x, y_index] = memmap_image[x:(x + tile_extent_x), y + y_index]
+                y_read_index = tile_index_y + y_index
+                if y_read_index < 0 or y_read_index > image_shape[1] - 1:
+                    continue
+                x_read_from = min(max(tile_index_x, 0), image_shape[0] - 1)
+                x_read_to = min(max(tile_index_x + tile_extent_x, 0), image_shape[0] - 1)
+                tile[0:x_read_to - x_read_from, y_index] = memmap_image[x_read_from:x_read_to, y_read_index]
             return tile
 
         except Exception as exc:
-            print(f"tile_index {tile_index}, tile_extent {tile_extent}")
             logger.error("MMAP-Reading of file={} failed with {}".format(self.file_name, exc))
             raise exc
 
