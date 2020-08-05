@@ -200,7 +200,16 @@ class TiffMag:
             if xyz in self.tiffs:
                 # load data and discard the padded data
 
-                loaded_data = self.tiffs[xyz].read_tile_from_image(np.uint8, offset_in_output_data, (shape[0], shape[1]))
+                try:
+                    loaded_data = self.tiffs[xyz].read_tile_from_image(
+                        offset_in_output_data, (shape[0], shape[1])
+                    )
+                except ValueError:
+                    # assume tiff is not mem-mappable
+                    loaded_data = np.array(self.tiffs[xyz].read(), self.header.dtype)[
+                        offset_in_output_data[0] : offset_in_output_data[0] + shape[0],
+                        offset_in_output_data[1] : offset_in_output_data[1] + shape[1],
+                    ]
 
                 index_slice = [
                     slice(
@@ -410,7 +419,11 @@ def transpose_for_skimage(data):
 class TiffReader:
     def __init__(self, file_name):
         self.file_name = file_name
-        self.memmap_image = memmap(self.file_name, page=0)
+        try:
+            self.memmap_image = memmap(self.file_name, mode="r")
+        except ValueError:
+            self.memmap_image = None
+            pass  # image not memmmappable
 
     @classmethod
     def init_tiff(cls, pixels, file_name):
@@ -426,25 +439,38 @@ class TiffReader:
         data = io.imread(self.file_name)
         return transpose_for_skimage(data)
 
-    def read_tile_from_image(self, dtype, tile_index, tile_extent) -> np.ndarray:
+    def read_tile_from_image(self, tile_index, tile_extent) -> np.ndarray:
+        if self.memmap_image is None:
+            raise ValueError("No active mem-map")
         try:
-            image_shape = (self.memmap_image.shape[1], self.memmap_image.shape[0]) # mmapped image is transposed
+            image_shape = (
+                self.memmap_image.shape[1],
+                self.memmap_image.shape[0],
+            )  # mmapped image is transposed
 
             tile_index_x, tile_index_y = tile_index
             tile_extent_x, tile_extent_y = tile_extent
 
-            tile = np.empty((tile_extent_x, tile_extent_y), dtype=dtype)
+            tile = np.empty(
+                (tile_extent_x, tile_extent_y), dtype=self.memmap_image.dtype
+            )
             for y_index in range(tile_extent[1]):
                 y_read_index = tile_index_y + y_index
                 if y_read_index < 0 or y_read_index > image_shape[1] - 1:
                     continue
                 x_read_from = min(max(tile_index_x, 0), image_shape[0] - 1)
-                x_read_to = min(max(tile_index_x + tile_extent_x, 0), image_shape[0] - 1)
-                tile[0:x_read_to - x_read_from, y_index] = self.memmap_image[y_read_index,x_read_from:x_read_to].transpose()
+                x_read_to = min(
+                    max(tile_index_x + tile_extent_x, 0), image_shape[0] - 1
+                )
+                tile[0 : x_read_to - x_read_from, y_index] = self.memmap_image[
+                    y_read_index, x_read_from:x_read_to
+                ].transpose()
             return tile
 
         except Exception as exc:
-            logger.error("MMAP-Reading of file={} failed with {}".format(self.file_name, exc))
+            logger.error(
+                "MMAP-Reading of file={} failed with {}".format(self.file_name, exc)
+            )
             raise exc
 
     def write(self, pixels):
