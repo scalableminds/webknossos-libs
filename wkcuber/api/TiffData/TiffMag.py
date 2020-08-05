@@ -1,6 +1,7 @@
 import itertools
 import re
 from typing import Optional, List, Tuple, Set
+import tifffile
 
 from skimage import io
 import numpy as np
