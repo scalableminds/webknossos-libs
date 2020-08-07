@@ -221,7 +221,7 @@ def test_tiff_mag_read_with_open():
     mag = layer.get_mag("1")
     mag.open()
     data = mag.read((10, 10, 10))
-    assert data.shape == (3, 10, 10, 10)  # three channel
+    assert data.shape == (1, 10, 10, 10)  # single channel
 
 
 def test_view_read_without_open():
