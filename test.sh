@@ -12,7 +12,7 @@ tests/scripts/simple_tiff_cubing_no_compression.sh
 tests/scripts/knossos_conversion.sh
 tests/scripts/decompress_reference_mag.sh
 tests/scripts/downsampling.sh
-tests/scripts/compression.sh
+tests/scripts/compression_and_verification.sh
 tests/scripts/in_place_compression.sh
 tests/scripts/meta_generation.sh
 tests/scripts/simple_anisotropic_tiff_cubing.sh

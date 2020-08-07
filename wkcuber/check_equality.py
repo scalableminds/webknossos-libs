@@ -54,11 +54,11 @@ def create_parser():
     return parser
 
 
-def assert_equality_for_chunk(source_path: str, layer_name: str, mag_key, sub_box):
+def assert_equality_for_chunk(source_path: str, target_path: str, layer_name: str, mag_key, sub_box):
     wk_dataset = WKDataset(source_path)
     layer = wk_dataset.layers[layer_name]
     backup_wkw_info = WkwDatasetInfo(
-        source_path + BACKUP_EXT, layer_name, mag_key, header=None
+        target_path, layer_name, mag_key, header=None
     )
     with open_wkw(backup_wkw_info) as backup_wkw:
         mag_ds = layer.get_mag(mag_key)
@@ -131,7 +131,7 @@ def check_equality(source_path: str, target_path: str, args=None):
                     bbox.chunk([CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE], [CHUNK_SIZE])
                 )
                 assert_fn = named_partial(
-                    assert_equality_for_chunk, source_path, layer_name, mag_key
+                    assert_equality_for_chunk, source_path, target_path, layer_name, mag_key
                 )
 
                 wait_and_ensure_success(executor.map_to_futures(assert_fn, boxes))
