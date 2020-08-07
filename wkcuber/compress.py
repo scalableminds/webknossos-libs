@@ -47,8 +47,6 @@ def create_parser():
         "--mag", "-m", nargs="*", help="Magnification level", default=None
     )
 
-    parser.add_argument("--verify", default=False, action="store_true")
-
     add_verbose_flag(parser)
     add_distribution_flags(parser)
 
