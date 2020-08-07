@@ -105,7 +105,6 @@ def check_equality(source_path: str, target_path: str, args=None):
         ), f"The mags between {source_path}/{layer_name} and {target_path}/{layer_name} are not equal: {source_mags} != {target_mags}"
 
         layer_properties = wk_src_dataset.properties.data_layers[layer_name]
-        layer = wk_src_dataset.layers[layer_name]
 
         official_bbox = layer_properties.get_bounding_box()
 
