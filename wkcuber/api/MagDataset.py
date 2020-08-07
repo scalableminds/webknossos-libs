@@ -18,7 +18,7 @@ class MagDataset:
         self.view = self.get_view(is_bounded=False)
 
     def open(self):
-        self.view.initialize()
+        self.view.open()
 
     def close(self):
         self.view.close()

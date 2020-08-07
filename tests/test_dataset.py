@@ -198,7 +198,6 @@ def test_open_tiff_dataset():
 
 
 def test_view_read_with_open():
-    # This test would be the same for TiffDataset
 
     wk_view = WKDataset("./testdata/simple_wk_dataset/").get_view(
         "color", "1", size=(16, 16, 16)
@@ -213,6 +212,16 @@ def test_view_read_with_open():
         assert data.shape == (3, 10, 10, 10)  # three channel
 
     assert not wk_view._is_opened
+
+
+def test_tiff_mag_read_with_open():
+
+    tiff_dataset = TiffDataset("./testdata/simple_tiff_dataset/")
+    layer = tiff_dataset.get_layer("color")
+    mag = layer.get_mag("1")
+    mag.open()
+    data = mag.read((10, 10, 10))
+    assert data.shape == (1, 10, 10, 10)  # single channel
 
 
 def test_view_read_without_open():
