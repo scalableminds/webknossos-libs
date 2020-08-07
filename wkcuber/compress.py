@@ -16,9 +16,10 @@ from .utils import (
     wait_and_ensure_success,
     setup_logging,
 )
-from .metadata import detect_resolutions
-from .metadata import convert_element_class_to_dtype
+from .metadata import detect_resolutions, convert_element_class_to_dtype
 from typing import List
+
+BACKUP_EXT = ".bak"
 
 
 def create_parser():
@@ -44,6 +45,10 @@ def create_parser():
 
     parser.add_argument(
         "--mag", "-m", nargs="*", help="Magnification level", default=None
+    )
+
+    parser.add_argument(
+        "--verify", default=False, action="store_true",
     )
 
     add_verbose_flag(parser)
@@ -128,11 +133,11 @@ def compress_mags(
         compress_mag(source_path, layer_name, target_path, mag, args)
 
     if with_tmp_dir:
-        makedirs(path.join(source_path + ".bak", layer_name), exist_ok=True)
+        makedirs(path.join(source_path + BACKUP_EXT, layer_name), exist_ok=True)
         for mag in mags:
             shutil.move(
                 path.join(source_path, layer_name, str(mag)),
-                path.join(source_path + ".bak", layer_name, str(mag)),
+                path.join(source_path + BACKUP_EXT, layer_name, str(mag)),
             )
             shutil.move(
                 path.join(target_path, layer_name, str(mag)),
