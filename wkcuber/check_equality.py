@@ -36,9 +36,7 @@ def create_parser():
     parser.add_argument("source_path", help="Path to input WKW dataset")
 
     parser.add_argument(
-        "target_path",
-        help="WKW dataset with which to compare the input dataset (defaults to the input path + '.bak', since wkcuber.compress writes the backup there by default)",
-        default=None,
+        "target_path", help="WKW dataset with which to compare the input dataset."
     )
 
     parser.add_argument(
@@ -55,20 +53,20 @@ def create_parser():
 
 
 def assert_equality_for_chunk(
-    source_path: str, target_path: str, layer_name: str, mag_key, sub_box
+    source_path: str, target_path: str, layer_name: str, mag, sub_box
 ):
     wk_dataset = WKDataset(source_path)
     layer = wk_dataset.layers[layer_name]
-    backup_wkw_info = WkwDatasetInfo(target_path, layer_name, mag_key, header=None)
+    backup_wkw_info = WkwDatasetInfo(target_path, layer_name, mag, header=None)
     with open_wkw(backup_wkw_info) as backup_wkw:
-        mag_ds = layer.get_mag(mag_key)
+        mag_ds = layer.get_mag(mag)
         logging.info(f"Checking sub_box: {sub_box}")
 
         data = mag_ds.read(sub_box.size, sub_box.topleft)
         backup_data = backup_wkw.read(sub_box.topleft, sub_box.size)
         assert np.all(
             data == backup_data
-        ), f"Data differs in bounding box {sub_box} for layer {layer_name} with mag {mag_key}"
+        ), f"Data differs in bounding box {sub_box} for layer {layer_name} with mag {mag}"
 
 
 def check_equality(source_path: str, target_path: str, args=None):
@@ -100,42 +98,36 @@ def check_equality(source_path: str, target_path: str, args=None):
         target_mags = list(detect_resolutions(target_path, layer_name))
         source_mags.sort()
         target_mags.sort()
+        mags = source_mags
 
         assert (
             source_mags == target_mags
         ), f"The mags between {source_path}/{layer_name} and {target_path}/{layer_name} are not equal: {source_mags} != {target_mags}"
-        mags = source_mags
 
         layer_properties = wk_src_dataset.properties.data_layers[layer_name]
         layer = wk_src_dataset.layers[layer_name]
 
         official_bbox = layer_properties.get_bounding_box()
 
-        for mag_key in layer.mags.keys():
+        for mag in mags:
             inferred_src_bbox = BoundingBox.from_auto(
-                detect_bbox(source_path, layer_name, mag_key)
+                detect_bbox(source_path, layer_name, mag)
             )
             inferred_target_bbox = BoundingBox.from_auto(
-                detect_bbox(target_path, layer_name, mag_key)
+                detect_bbox(target_path, layer_name, mag)
             )
 
             bbox = inferred_src_bbox.extended_by(inferred_target_bbox).extended_by(
                 official_bbox
             )
-            logging.info(
-                f"Start verification of {layer_name} in mag {mag_key} in {bbox}"
-            )
+            logging.info(f"Start verification of {layer_name} in mag {mag} in {bbox}")
 
             with get_executor_for_args(args) as executor:
                 boxes = list(
                     bbox.chunk([CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE], [CHUNK_SIZE])
                 )
                 assert_fn = named_partial(
-                    assert_equality_for_chunk,
-                    source_path,
-                    target_path,
-                    layer_name,
-                    mag_key,
+                    assert_equality_for_chunk, source_path, target_path, layer_name, mag
                 )
 
                 wait_and_ensure_success(executor.map_to_futures(assert_fn, boxes))
