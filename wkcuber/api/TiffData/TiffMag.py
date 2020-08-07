@@ -423,7 +423,8 @@ class TiffReader:
             self.memmap_image = memmap(self.file_name, mode="r")
         except ValueError:
             self.memmap_image = None
-            pass  # image not memmmappable
+        except FileNotFoundError:
+            self.memmap_image = None
 
     @classmethod
     def init_tiff(cls, pixels, file_name):
