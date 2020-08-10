@@ -48,6 +48,9 @@ class Mag:
     def __str__(self):
         return self.to_layer_name()
 
+    def __expr__(self):
+        return f"Mag({self.to_layer_name()})"
+
     def to_layer_name(self):
         x, y, z = self.mag
         if x == y and y == z:
