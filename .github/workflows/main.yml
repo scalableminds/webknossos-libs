@@ -79,8 +79,8 @@ jobs:
     - name: Test anisotropic downsampling
       run: tests/scripts/anisotropic_downsampling.sh
 
-    - name: Test compression
-      run: tests/scripts/compression.sh
+    - name: Test compression and verification
+      run: tests/scripts/compression_and_verification.sh
 
     - name: Test in-place compression
       run: tests/scripts/in_place_compression.sh

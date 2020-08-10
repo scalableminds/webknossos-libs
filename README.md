@@ -20,6 +20,7 @@ Created with [Python3](https://www.python.org/).
 * `wkcuber.compress`: Compress WKW cubes for efficient file storage (especially useful for segmentation data)
 * `wkcuber.metadata`: Create (or refresh) metadata (with guessing of most parameters)
 * `wkcuber.recubing`: Read existing WKW cubes in and write them again specifying the WKW file length. Useful when dataset was written e.g. with file length 1.
+* `wkcuber.check_equality`: Compare two WKW datasets to check whether they are equal (e.g., after compressing a dataset, this task can be useful to double-check that the compressed dataset contains the same data).
 * Most modules support multiprocessing
 
 ## Supported input formats
@@ -89,6 +90,9 @@ python -m wkcuber.metadata --refresh data/target
 
 # Recubing an existing dataset
 python -m wkcuber.recubing --layer_name color --dtype uint8 /data/source/wkw /data/target
+
+# Check two datasets for equality
+python -m wkcuber.check_equality /data/source /data/target
 ```
 
 ### Parallelization

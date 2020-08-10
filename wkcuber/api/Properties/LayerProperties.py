@@ -3,6 +3,7 @@ from os.path import join, dirname, isfile
 from wkw import wkw
 
 from wkcuber.mag import Mag
+from wkcuber.api.bounding_box import BoundingBox
 
 
 def extract_num_channels(num_channels_in_properties, path, layer, mag):
@@ -106,6 +107,10 @@ class LayerProperties:
 
     def _delete_resolution(self, resolution):
         self._wkw_magnifications.delete(resolution)
+
+    def get_bounding_box(self) -> BoundingBox:
+
+        return BoundingBox(self.get_bounding_box_offset(), self.get_bounding_box_size())
 
     def get_bounding_box_size(self) -> tuple:
         return (
