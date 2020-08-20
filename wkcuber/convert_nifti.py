@@ -2,9 +2,11 @@ import time
 import logging
 import wkw
 import numpy as np
-from argparse import ArgumentParser
-from pathlib import Path
 import nibabel as nib
+
+from argparse import ArgumentParser
+from sklearn import preprocessing
+from pathlib import Path
 
 from .utils import (
     add_verbose_flag,
@@ -23,7 +25,7 @@ def create_parser():
 
     parser.add_argument(
         "source_path",
-        help="Path to NIFTY file or to a directory if multiple NIFTI files should be converted. "
+        help="Path to NIFTI file or to a directory if multiple NIFTI files should be converted. "
         "In the latter case, also see --color_file and --segmentation_file.",
     )
 
@@ -72,7 +74,7 @@ def to_target_datatype(data: np.ndarray, target_dtype) -> np.ndarray:
 
 
 def convert_nifti(
-    source_nifti_path, target_path, layer_name, dtype, scale, mag=1, file_len=256
+    source_nifti_path, target_path, layer_name, dtype, scale, is_segmentation=false, mag=1, file_len=256
 ):
     target_wkw_info = WkwDatasetInfo(
         str(target_path.resolve()),
