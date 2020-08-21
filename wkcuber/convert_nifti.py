@@ -102,7 +102,8 @@ def to_target_datatype(
     else:
         factor = np.iinfo(data.dtype).max / np.iinfo(target_dtype).max
 
-    if factor == 0:
+    if data.max() == 0:
+        logging.warning("Not rescaling data since maximum is 0")
         factor = 1
 
     return (data / factor).astype(np.dtype(target_dtype))
