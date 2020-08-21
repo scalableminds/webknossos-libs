@@ -1,20 +1,21 @@
-import time
 import logging
-import numpy as np
+import time
 from argparse import ArgumentParser
 from pathlib import Path
-import nibabel as nib
 
-from wkcuber.api.Dataset import WKDataset, TiffDataset
-from .utils import (
-    add_verbose_flag,
-    setup_logging,
+import nibabel as nib
+import numpy as np
+
+from wkcuber.api.Dataset import TiffDataset, WKDataset
+from wkcuber.utils import (
+    DEFAULT_WKW_FILE_LEN,
+    DEFAULT_WKW_VOXELS_PER_BLOCK,
     add_scale_flag,
+    add_verbose_flag,
     pad_or_crop_to_size_and_topleft,
     parse_bounding_box,
+    setup_logging,
 )
-
-from wkcuber.utils import DEFAULT_WKW_FILE_LEN, DEFAULT_WKW_VOXELS_PER_BLOCK
 
 
 def create_parser():
@@ -101,6 +102,10 @@ def to_target_datatype(
         factor = data.max() / np.iinfo(target_dtype).max
     else:
         factor = np.iinfo(data.dtype).max / np.iinfo(target_dtype).max
+
+    if data.max() == 0:
+        logging.warning("Not rescaling data since maximum is 0")
+        factor = 1
 
     return (data / factor).astype(np.dtype(target_dtype))
 
