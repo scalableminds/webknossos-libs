@@ -79,17 +79,24 @@ class MagDataset:
             offset = offset_in_properties
 
         if size is None:
-            size = np.array(size_in_properties) - np.array(offset)
+            size = np.array(size_in_properties) - (
+                np.array(offset) - np.array(offset_in_properties)
+            )
 
-        # assert that the parameter size is valid
-        for s1, s2, off in zip(size_in_properties, size, offset):
-            if s2 + off > s1 and is_bounded:
-                raise AssertionError(
-                    f"The combination of the passed parameter 'size' {size} and {offset} are not compatible with the "
-                    f"size ({size_in_properties}) from the properties.json."
-                )
+        # assert that the parameters size and offset are valid
+        if is_bounded:
+            for off_prop, off in zip(offset_in_properties, offset):
+                if off < off_prop:
+                    raise AssertionError(
+                        f"The passed parameter 'offset' {offset} is outside the bounding box from the properties.json."
+                    )
+            for s1, s2, off in zip(size_in_properties, size, offset):
+                if s2 + off > s1:
+                    raise AssertionError(
+                        f"The combination of the passed parameter 'size' {size} and 'offset' {offset} are not compatible with the "
+                        f"size ({size_in_properties}) from the properties.json."
+                    )
 
-        #global_offset = np.array(offset) + np.array(offset)
         mag_file_path = join(self.layer.dataset.path, self.layer.name, self.name)
         return self._get_view_type()(
             mag_file_path, self.header, size, offset, is_bounded
