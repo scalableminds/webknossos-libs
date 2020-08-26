@@ -88,13 +88,15 @@ class MagDataset:
             for off_prop, off in zip(offset_in_properties, offset):
                 if off < off_prop:
                     raise AssertionError(
-                        f"The passed parameter 'offset' {offset} is outside the bounding box from the properties.json."
+                        f"The passed parameter 'offset' {offset} is outside the bounding box from the properties.json. "
+                        f"Use is_bounded=False if you intend to write outside out the existing bounding box."
                     )
             for s1, s2, off in zip(size_in_properties, size, offset):
                 if s2 + off > s1:
                     raise AssertionError(
                         f"The combination of the passed parameter 'size' {size} and 'offset' {offset} are not compatible with the "
-                        f"size ({size_in_properties}) from the properties.json."
+                        f"size ({size_in_properties}) from the properties.json.  "
+                        f"Use is_bounded=False if you intend to write outside out the existing bounding box."
                     )
 
         mag_file_path = join(self.layer.dataset.path, self.layer.name, self.name)
