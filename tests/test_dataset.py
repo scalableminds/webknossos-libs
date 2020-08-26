@@ -1204,3 +1204,4 @@ def test_changing_layer_bounding_box():
     new_data = mag.read(new_bbox_size)
     assert new_data.shape == (1, 255, 255, 10)
     assert np.array_equal(original_data[:, 10:, 10:, :], new_data)
+

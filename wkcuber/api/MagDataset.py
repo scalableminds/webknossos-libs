@@ -15,7 +15,7 @@ class MagDataset:
         self.name = name
         self.header = self.get_header()
 
-        self.view = self.get_view(is_bounded=False)
+        self.view = self.get_view(offset=(0, 0, 0), is_bounded=False)
 
     def open(self):
         self.view.open()
@@ -68,11 +68,18 @@ class MagDataset:
             self.layer.name
         ].get_bounding_box_size()
 
+        offset_in_properties = self.layer.dataset.properties.data_layers[
+            self.layer.name
+        ].get_bounding_box_offset()
+
+        if offset_in_properties == (-1, -1, -1):
+            offset_in_properties = (0, 0, 0)
+
         if offset is None:
-            offset = (0, 0, 0)
+            offset = offset_in_properties
 
         if size is None:
-            size = size_in_properties
+            size = np.array(size_in_properties) - np.array(offset)
 
         # assert that the parameter size is valid
         for s1, s2, off in zip(size_in_properties, size, offset):
@@ -82,16 +89,10 @@ class MagDataset:
                     f"size ({size_in_properties}) from the properties.json."
                 )
 
+        #global_offset = np.array(offset) + np.array(offset)
         mag_file_path = join(self.layer.dataset.path, self.layer.name, self.name)
-        offset_in_properties = self.layer.dataset.properties.data_layers[
-            self.layer.name
-        ].get_bounding_box_offset()
-        dataset_offset = (
-            (0, 0, 0) if offset_in_properties == (-1, -1, -1) else offset_in_properties
-        )
-        global_offset = np.array(dataset_offset) + np.array(offset)
         return self._get_view_type()(
-            mag_file_path, self.header, size, global_offset, is_bounded
+            mag_file_path, self.header, size, offset, is_bounded
         )
 
     def _get_view_type(self):
