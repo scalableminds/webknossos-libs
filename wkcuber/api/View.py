@@ -36,14 +36,16 @@ class View:
             self.dataset = None
             self._is_opened = False
 
-    def write(self, data, offset=(0, 0, 0)):
+    def write(self, data, relative_offset=(0, 0, 0)):
         was_opened = self._is_opened
         # assert the size of the parameter data is not in conflict with the attribute self.size
-        assert_non_negative_offset(offset)
-        self.assert_bounds(offset, data.shape[-3:])
+        assert_non_negative_offset(relative_offset)
+        self.assert_bounds(relative_offset, data.shape[-3:])
 
         # calculate the absolute offset
-        absolute_offset = tuple(sum(x) for x in zip(self.global_offset, offset))
+        absolute_offset = tuple(
+            sum(x) for x in zip(self.global_offset, relative_offset)
+        )
 
         if not was_opened:
             self.open()
@@ -73,14 +75,14 @@ class View:
 
         return data
 
-    def get_view(self, size, offset=(0, 0, 0)):
-        self.assert_bounds(offset, size)
-        view_offset = self.global_offset + np.array(offset)
+    def get_view(self, size, relative_offset=(0, 0, 0)):
+        self.assert_bounds(relative_offset, size)
+        view_offset = self.global_offset + np.array(relative_offset)
         return type(self)(
             self.path,
             self.header,
             size=size,
-            global_offset=view_offset,
+            global_offset=tuple(view_offset),
             is_bounded=self.is_bounded,
         )
 
@@ -107,7 +109,7 @@ class View:
             relative_offset = np.array(chunk.topleft) - np.array(self.global_offset)
             job_args.append(
                 (
-                    self.get_view(size=chunk.size, offset=relative_offset),
+                    self.get_view(size=chunk.size, relative_offset=relative_offset),
                     job_args_per_chunk,
                 )
             )

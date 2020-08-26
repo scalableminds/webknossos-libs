@@ -15,7 +15,7 @@ class MagDataset:
         self.name = name
         self.header = self.get_header()
 
-        self.view = self.get_view(is_bounded=False)
+        self.view = self.get_view(offset=(0, 0, 0), is_bounded=False)
 
     def open(self):
         self.view.open()
@@ -68,30 +68,40 @@ class MagDataset:
             self.layer.name
         ].get_bounding_box_size()
 
-        if offset is None:
-            offset = (0, 0, 0)
-
-        if size is None:
-            size = size_in_properties
-
-        # assert that the parameter size is valid
-        for s1, s2, off in zip(size_in_properties, size, offset):
-            if s2 + off > s1 and is_bounded:
-                raise AssertionError(
-                    f"The combination of the passed parameter 'size' {size} and {offset} are not compatible with the "
-                    f"size ({size_in_properties}) from the properties.json."
-                )
-
-        mag_file_path = join(self.layer.dataset.path, self.layer.name, self.name)
         offset_in_properties = self.layer.dataset.properties.data_layers[
             self.layer.name
         ].get_bounding_box_offset()
-        dataset_offset = (
-            (0, 0, 0) if offset_in_properties == (-1, -1, -1) else offset_in_properties
-        )
-        global_offset = np.array(dataset_offset) + np.array(offset)
+
+        if offset_in_properties == (-1, -1, -1):
+            offset_in_properties = (0, 0, 0)
+
+        if offset is None:
+            offset = offset_in_properties
+
+        if size is None:
+            size = np.array(size_in_properties) - (
+                np.array(offset) - np.array(offset_in_properties)
+            )
+
+        # assert that the parameters size and offset are valid
+        if is_bounded:
+            for off_prop, off in zip(offset_in_properties, offset):
+                if off < off_prop:
+                    raise AssertionError(
+                        f"The passed parameter 'offset' {offset} is outside the bounding box from the properties.json. "
+                        f"Use is_bounded=False if you intend to write outside out the existing bounding box."
+                    )
+            for s1, s2, off in zip(size_in_properties, size, offset):
+                if s2 + off > s1:
+                    raise AssertionError(
+                        f"The combination of the passed parameter 'size' {size} and 'offset' {offset} are not compatible with the "
+                        f"size ({size_in_properties}) from the properties.json.  "
+                        f"Use is_bounded=False if you intend to write outside out the existing bounding box."
+                    )
+
+        mag_file_path = join(self.layer.dataset.path, self.layer.name, self.name)
         return self._get_view_type()(
-            mag_file_path, self.header, size, global_offset, is_bounded
+            mag_file_path, self.header, size, offset, is_bounded
         )
 
     def _get_view_type(self):

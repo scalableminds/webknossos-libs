@@ -1204,3 +1204,75 @@ def test_changing_layer_bounding_box():
     new_data = mag.read(new_bbox_size)
     assert new_data.shape == (1, 255, 255, 10)
     assert np.array_equal(original_data[:, 10:, 10:, :], new_data)
+
+
+def test_view_offsets():
+    delete_dir("./testoutput/wk_offset_tests")
+
+    ds = WKDataset.create("./testoutput/wk_offset_tests", scale=(1, 1, 1))
+    mag = ds.add_layer("color", "color").add_mag("1")
+
+    # The dataset is new -> no data has been written.
+    # Therefore, the size of the bounding box in the properties.json is (0, 0, 0)
+
+    # Creating this view works because the size is set to (0, 0, 0)
+    # However, in practice such a view would not make sense because 'is_bounded' is set to 'True'
+    wk_view = ds.get_view("color", "1", size=(0, 0, 0), is_bounded=True)
+    assert wk_view.global_offset == tuple((0, 0, 0))
+    assert wk_view.size == tuple((0, 0, 0))
+
+    try:
+        # Creating this view does not work because the size (16, 16, 16) would exceed the boundingbox from the properties.json
+        ds.get_view("color", "1", size=(16, 16, 16), is_bounded=True)
+        raise Exception(expected_error_msg)
+    except AssertionError:
+        pass
+
+    # This works because 'is_bounded' is set to 'False'
+    # Therefore, the bounding box of the view can be larger than the bounding box from the properties.json
+    wk_view = ds.get_view("color", "1", size=(16, 16, 16), is_bounded=False)
+    assert wk_view.global_offset == tuple((0, 0, 0))
+    assert wk_view.size == tuple((16, 16, 16))
+
+    np.random.seed(1234)
+    write_data = (np.random.rand(100, 200, 300) * 255).astype(np.uint8)
+    mag.write(write_data, offset=(10, 20, 30))
+
+    # The bounding box of the dataset was updated according to the written data
+    # Therefore, creating a view with a size of (16, 16, 16) is now allowed
+    wk_view = ds.get_view("color", "1", size=(16, 16, 16), is_bounded=True)
+    assert wk_view.global_offset == tuple((10, 20, 30))
+    assert wk_view.size == tuple((16, 16, 16))
+
+    try:
+        # Creating this view does not work because the offset (0, 0, 0) would be outside of the boundingbox from the properties.json
+        ds.get_view("color", "1", size=(16, 16, 16), offset=(0, 0, 0), is_bounded=True)
+        raise Exception(expected_error_msg)
+    except AssertionError:
+        pass
+
+    # Creating this view works, even though the offset (0, 0, 0) is outside of the boundingbox from the properties.json, because 'is_bounded' is set to 'False'
+    wk_view = ds.get_view(
+        "color", "1", size=(16, 16, 16), offset=(0, 0, 0), is_bounded=False
+    )
+    assert wk_view.global_offset == tuple((0, 0, 0))
+    assert wk_view.size == tuple((16, 16, 16))
+
+    # Creating this view works because the bounding box of the view is inside the bounding box from the properties.json
+    wk_view = ds.get_view(
+        "color", "1", size=(16, 16, 16), offset=(20, 30, 40), is_bounded=True
+    )
+    assert wk_view.global_offset == tuple((20, 30, 40))
+    assert wk_view.size == tuple((16, 16, 16))
+
+    # Creating this subview works because the subview is completely inside the 'wk_view'
+    sub_view = wk_view.get_view(size=(8, 8, 8), relative_offset=(8, 8, 8))
+    assert sub_view.global_offset == tuple((28, 38, 48))
+    assert sub_view.size == tuple((8, 8, 8))
+
+    try:
+        # Creating this subview does not work because it is not completely inside the 'wk_view'
+        wk_view.get_view(size=(10, 10, 10), relative_offset=(8, 8, 8))
+        raise Exception(expected_error_msg)
+    except AssertionError:
+        pass
