@@ -22,10 +22,10 @@ class Layer:
     COLOR_TYPE = "color"
     SEGMENTATION_TYPE = "segmentation"
 
-    def __init__(self, name, dataset, dtype, num_channels):
+    def __init__(self, name, dataset, dtype_per_channel, num_channels):
         self.name = name
         self.dataset = dataset
-        self.dtype = dtype
+        self.dtype_per_channel = dtype_per_channel
         self.num_channels = num_channels
         self.mags = {}
 

@@ -128,7 +128,7 @@ class WKMagDataset(MagDataset):
 
     def get_header(self) -> wkw.Header:
         return wkw.Header(
-            voxel_type=self.layer.dtype,
+            voxel_type=self.layer.dtype_per_channel,
             num_channels=self.layer.num_channels,
             version=1,
             block_len=self.block_len,
@@ -157,7 +157,7 @@ class TiffMagDataset(MagDataset):
     def get_header(self) -> TiffMagHeader:
         return TiffMagHeader(
             pattern=self.pattern,
-            dtype=self.layer.dtype,
+            dtype_per_channel=self.layer.dtype_per_channel,
             num_channels=self.layer.num_channels,
             tile_size=self.layer.dataset.properties.tile_size,
         )

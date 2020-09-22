@@ -143,7 +143,7 @@ def test_create_wk_dataset_with_explicit_header_fields():
     delete_dir("./testoutput/wk_dataset_advanced")
 
     ds = WKDataset.create("./testoutput/wk_dataset_advanced", scale=(1, 1, 1))
-    ds.add_layer("color", "color", dtype=np.uint16, num_channels=3)
+    ds.add_layer("color", "color", dtype_per_layer="uint48", num_channels=3)
 
     ds.get_layer("color").add_mag("1", block_len=64, file_len=64)
     ds.get_layer("color").add_mag("2-2-1")
@@ -154,7 +154,7 @@ def test_create_wk_dataset_with_explicit_header_fields():
     assert len(ds.properties.data_layers) == 1
     assert len(ds.properties.data_layers["color"].wkw_magnifications) == 2
 
-    assert ds.properties.data_layers["color"].element_class == np.dtype(np.uint16)
+    assert ds.properties.data_layers["color"].element_class == "uint48"
     assert (
         ds.properties.data_layers["color"].wkw_magnifications[0].cube_length == 64 * 64
     )  # mag "1"
@@ -471,7 +471,7 @@ def test_tiff_write_multi_channel_uint16():
 
     ds_tiff = TiffDataset.create(dataset_path, scale=(1, 1, 1))
     mag = ds_tiff.add_layer(
-        "color", Layer.COLOR_TYPE, num_channels=3, dtype=np.uint16
+        "color", Layer.COLOR_TYPE, num_channels=3, dtype_per_layer="uint48"
     ).add_mag("1")
 
     # 10 images (z-layers), each 250x200, dtype=np.uint16
@@ -491,7 +491,7 @@ def test_wk_write_multi_channel_uint16():
 
     ds_tiff = WKDataset.create(dataset_path, scale=(1, 1, 1))
     mag = ds_tiff.add_layer(
-        "color", Layer.COLOR_TYPE, num_channels=3, dtype=np.uint16
+        "color", Layer.COLOR_TYPE, num_channels=3, dtype_per_layer="uint48"
     ).add_mag("1")
 
     # 10 images (z-layers), each 250x200, dtype=np.uint16
@@ -608,22 +608,22 @@ def test_get_or_add_layer():
 
     # layer did not exist before
     layer = ds.get_or_add_layer(
-        "color", Layer.COLOR_TYPE, dtype=np.uint8, num_channels=1
+        "color", Layer.COLOR_TYPE, dtype_per_layer="uint8", num_channels=1
     )
     assert "color" in ds.layers.keys()
     assert layer.name == "color"
 
     # layer did exist before
     layer = ds.get_or_add_layer(
-        "color", Layer.COLOR_TYPE, dtype=np.uint8, num_channels=1
+        "color", Layer.COLOR_TYPE, dtype_per_layer="uint8", num_channels=1
     )
     assert "color" in ds.layers.keys()
     assert layer.name == "color"
 
     try:
-        # layer did exist before but with another 'dtype' (this would work the same for 'category' and 'num_channels')
+        # layer did exist before but with another 'dtype_per_layer' (this would work the same for 'category' and 'num_channels')
         layer = ds.get_or_add_layer(
-            "color", Layer.COLOR_TYPE, dtype=np.uint16, num_channels=1
+            "color", Layer.COLOR_TYPE, dtype_per_layer="uint16", num_channels=1
         )
 
         raise Exception(
@@ -1276,3 +1276,12 @@ def test_view_offsets():
         raise Exception(expected_error_msg)
     except AssertionError:
         pass
+
+
+def test_adding_layer_with_invalid_dtype_per_layer():
+    delete_dir("./testoutput/wk_dataset_write_without_open")
+
+    ds = WKDataset.create("./testoutput/wk_dataset_write_without_open", scale=(1, 1, 1))
+    with pytest.raises(TypeError):
+        # this would lead to a dtype_per_channel of "uint10", but that is not a valid dtype
+        ds.add_layer("color", "color", dtype_per_layer="uint30", num_channels=3)
