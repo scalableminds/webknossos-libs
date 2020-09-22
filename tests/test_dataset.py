@@ -1,5 +1,6 @@
 import filecmp
 import json
+import os
 from os.path import dirname
 import pytest
 
@@ -1276,3 +1277,28 @@ def test_view_offsets():
         raise Exception(expected_error_msg)
     except AssertionError:
         pass
+
+
+def test_add_symlink_layer():
+    delete_dir("./testoutput/wk_dataset_with_symlink")
+    delete_dir("./testoutput/simple_wk_dataset_copy")
+    copytree("./testdata/simple_wk_dataset/", "./testoutput/simple_wk_dataset_copy/")
+
+    original_mag = WKDataset("./testoutput/simple_wk_dataset_copy/").get_layer("color").get_mag("1")
+
+    ds = WKDataset.create("./testoutput/wk_dataset_with_symlink", scale=(1, 1, 1))
+    symlink_layer = ds.add_symlink_layer("./testoutput/simple_wk_dataset_copy/color/")
+    mag = symlink_layer.get_mag("1")
+
+    assert path.exists("./testoutput/wk_dataset_with_symlink/color/1")
+
+    assert len(ds.properties.data_layers) == 1
+    assert len(ds.properties.data_layers["color"].wkw_magnifications) == 1
+
+    # write data in symlink layer
+    write_data = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
+    mag.write(write_data)
+
+    assert np.array_equal(mag.read((10, 10, 10)), write_data)
+    assert np.array_equal(original_mag.read((10, 10, 10)), write_data)
+
