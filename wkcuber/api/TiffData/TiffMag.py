@@ -198,7 +198,9 @@ class TiffMag:
 
             if xyz in self.tiffs:
                 # load data and discard the padded data
-                loaded_data = np.array(self.tiffs[xyz].read(), self.header.dtype_per_channel)[
+                loaded_data = np.array(
+                    self.tiffs[xyz].read(), self.header.dtype_per_channel
+                )[
                     offset_in_output_data[0] : offset_in_output_data[0] + shape[0],
                     offset_in_output_data[1] : offset_in_output_data[1] + shape[1],
                 ]

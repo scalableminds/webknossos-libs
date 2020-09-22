@@ -29,14 +29,19 @@ def dtype_per_layer_to_dtype_per_channel(dtype_per_layer, num_channels):
         return None
     # split the dtype into the actual type and the number of bits
     # example: "uint24" -> ["uint", "24"]
-    dtype_per_layer_parts = re.split('(\d+)', str(dtype_per_layer))
+    dtype_per_layer_parts = re.split("(\d+)", str(dtype_per_layer))
     # calculate number of bits for dtype_per_channel
-    dtype_per_channel_parts = [(str(int(int(part) / num_channels)) if is_int(part) else part) for part in
-                               dtype_per_layer_parts]
+    dtype_per_channel_parts = [
+        (str(int(int(part) / num_channels)) if is_int(part) else part)
+        for part in dtype_per_layer_parts
+    ]
     try:
-        return np.dtype(''.join(dtype_per_channel_parts))
+        return np.dtype("".join(dtype_per_channel_parts))
     except TypeError as e:
-        raise TypeError("Converting dtype_per_layer to dtype_per_channel failed. Double check if the dtype_per_layer value is correct. " + str(e))
+        raise TypeError(
+            "Converting dtype_per_layer to dtype_per_channel failed. Double check if the dtype_per_layer value is correct. "
+            + str(e)
+        )
 
 
 class AbstractDataset(ABC):
@@ -96,11 +101,13 @@ class AbstractDataset(ABC):
             )
         return self.layers[layer_name]
 
-    def add_layer(self, layer_name, category, dtype_per_layer=None, num_channels=None, **kwargs):
+    def add_layer(
+        self, layer_name, category, dtype_per_layer=None, num_channels=None, **kwargs
+    ):
         if num_channels is None:
             num_channels = 1
         if dtype_per_layer is None:
-            dtype_per_layer = "uint" + str(8*num_channels)
+            dtype_per_layer = "uint" + str(8 * num_channels)
 
         if layer_name in self.layers.keys():
             raise IndexError(
@@ -110,12 +117,21 @@ class AbstractDataset(ABC):
             )
 
         # check if dtype_per_channel is a valid dtype
-        dtype_per_channel = dtype_per_layer_to_dtype_per_channel(dtype_per_layer, num_channels)
+        dtype_per_channel = dtype_per_layer_to_dtype_per_channel(
+            dtype_per_layer, num_channels
+        )
 
         self.properties._add_layer(
-            layer_name, category, dtype_per_layer, self.data_format, num_channels, **kwargs
+            layer_name,
+            category,
+            dtype_per_layer,
+            self.data_format,
+            num_channels,
+            **kwargs,
         )
-        self.layers[layer_name] = self._create_layer(layer_name, dtype_per_channel, num_channels)
+        self.layers[layer_name] = self._create_layer(
+            layer_name, dtype_per_channel, num_channels
+        )
         return self.layers[layer_name]
 
     def get_or_add_layer(
@@ -127,8 +143,13 @@ class AbstractDataset(ABC):
                 + f"The category of the existing layer is '{self.properties.data_layers[layer_name].category}' "
                 + f"and the passed parameter is '{category}'."
             )
-            dtype_per_channel = dtype_per_layer_to_dtype_per_channel(dtype_per_layer, num_channels)
-            assert dtype_per_layer is None or self.layers[layer_name].dtype_per_channel == dtype_per_channel, (
+            dtype_per_channel = dtype_per_layer_to_dtype_per_channel(
+                dtype_per_layer, num_channels
+            )
+            assert (
+                dtype_per_layer is None
+                or self.layers[layer_name].dtype_per_channel == dtype_per_channel
+            ), (
                 f"Cannot get_or_add_layer: The layer '{layer_name}' already exists, but the dtypes do not match. "
                 + f"The dtype_per_channel of the existing layer is '{self.layers[layer_name].dtype_per_channel}' "
                 + f"and the passed parameter would result in a dtype_per_channel of '{dtype_per_channel}'."
@@ -143,7 +164,9 @@ class AbstractDataset(ABC):
             )
             return self.layers[layer_name]
         else:
-            return self.add_layer(layer_name, category, dtype_per_layer, num_channels, **kwargs)
+            return self.add_layer(
+                layer_name, category, dtype_per_layer, num_channels, **kwargs
+            )
 
     def delete_layer(self, layer_name):
         if layer_name not in self.layers.keys():
