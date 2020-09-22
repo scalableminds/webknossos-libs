@@ -1284,7 +1284,11 @@ def test_add_symlink_layer():
     delete_dir("./testoutput/simple_wk_dataset_copy")
     copytree("./testdata/simple_wk_dataset/", "./testoutput/simple_wk_dataset_copy/")
 
-    original_mag = WKDataset("./testoutput/simple_wk_dataset_copy/").get_layer("color").get_mag("1")
+    original_mag = (
+        WKDataset("./testoutput/simple_wk_dataset_copy/")
+        .get_layer("color")
+        .get_mag("1")
+    )
 
     ds = WKDataset.create("./testoutput/wk_dataset_with_symlink", scale=(1, 1, 1))
     symlink_layer = ds.add_symlink_layer("./testoutput/simple_wk_dataset_copy/color/")
@@ -1301,4 +1305,3 @@ def test_add_symlink_layer():
 
     assert np.array_equal(mag.read((10, 10, 10)), write_data)
     assert np.array_equal(original_mag.read((10, 10, 10)), write_data)
-
