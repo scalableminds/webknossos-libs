@@ -1,7 +1,7 @@
 import math
 
 import numpy as np
-from wkw import Dataset
+from wkw import Dataset, wkw
 
 from wkcuber.api.TiffData.TiffMag import TiffMag
 from wkcuber.api.bounding_box import BoundingBox
@@ -46,6 +46,8 @@ class View:
         absolute_offset = tuple(
             sum(x) for x in zip(self.global_offset, relative_offset)
         )
+
+        absolute_offset, data = self._handle_compressed_write(absolute_offset, data)
 
         if not was_opened:
             self.open()
@@ -120,6 +122,9 @@ class View:
     def _check_chunk_size(self, chunk_size):
         raise NotImplementedError
 
+    def _handle_compressed_write(self, absolute_offset, data):
+        return absolute_offset, data
+
     def __enter__(self):
         return self
 
@@ -155,6 +160,40 @@ class WKView(View):
             raise AssertionError(
                 f"The passed parameter 'chunk_size' {chunk_size} must be a multiple of (32, 32, 32)."
             )
+
+    def _handle_compressed_write(self, absolute_offset, data):
+        if (
+            self.header.block_type == wkw.Header.BLOCK_TYPE_LZ4
+            or self.header.block_type == wkw.Header.BLOCK_TYPE_LZ4HC
+        ):
+            # data is compressed
+
+            # calculate aligned bounding box
+            file_bb = np.full(3, self.header.file_len * self.header.block_len)
+            margin_to_top_left = np.array(absolute_offset) % file_bb
+            aligned_offset = np.array(absolute_offset) - margin_to_top_left
+            bottom_right = np.array(absolute_offset) + np.array(list(data.shape)[-3:])
+            margin_to_bottom_right = file_bb - (bottom_right % file_bb)
+            aligned_bottom_right = bottom_right + margin_to_bottom_right
+            aligned_shape = aligned_bottom_right - aligned_offset
+
+            if tuple(aligned_offset) != tuple(absolute_offset) or tuple(
+                aligned_shape
+            ) != tuple(list(data.shape)[-3:]):
+                # the data is not aligned
+                # read the aligned bounding box
+                aligned_data = self.read(offset=aligned_offset, size=aligned_shape)
+                index_slice = [slice(None, None)] + [
+                    slice(start, end)
+                    for start, end in zip(
+                        margin_to_top_left, bottom_right - aligned_offset
+                    )
+                ]
+                # overwrite the specified data
+                aligned_data[tuple(index_slice)] = data
+                return tuple(aligned_offset), aligned_data
+
+        return absolute_offset, data
 
 
 class TiffView(View):
