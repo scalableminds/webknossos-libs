@@ -140,7 +140,6 @@ def convert_nifti(
     assume_segmentation_layer = (
         False
     )  # Since webKnossos does not support multiple segmention layers, this is hardcoded to False right now.
-
     max_cell_id_args = (
         {"largest_segment_id": int(np.max(cube_data) + 1)}
         if assume_segmentation_layer
@@ -202,7 +201,10 @@ def convert_nifti(
     if write_tiff:
         ds = TiffDataset.get_or_create(target_path, scale=scale or (1, 1, 1))
         layer = ds.get_or_add_layer(
-            layer_name, category_type, np.dtype(dtype), **max_cell_id_args
+            layer_name,
+            category_type,
+            dtype_per_layer=np.dtype(dtype),
+            **max_cell_id_args,
         )
         mag = layer.get_or_add_mag("1")
 
@@ -210,7 +212,10 @@ def convert_nifti(
     else:
         ds = WKDataset.get_or_create(target_path, scale=scale or (1, 1, 1))
         layer = ds.get_or_add_layer(
-            layer_name, category_type, np.dtype(dtype), **max_cell_id_args
+            layer_name,
+            category_type,
+            dtype_per_layer=np.dtype(dtype),
+            **max_cell_id_args,
         )
         mag = layer.get_or_add_mag("1", file_len=file_len)
         mag.write(cube_data)

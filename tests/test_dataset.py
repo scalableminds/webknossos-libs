@@ -1279,9 +1279,22 @@ def test_view_offsets():
 
 
 def test_adding_layer_with_invalid_dtype_per_layer():
-    delete_dir("./testoutput/wk_dataset_write_without_open")
+    delete_dir("./testoutput/invalid_dtype")
 
-    ds = WKDataset.create("./testoutput/wk_dataset_write_without_open", scale=(1, 1, 1))
+    ds = WKDataset.create("./testoutput/invalid_dtype", scale=(1, 1, 1))
     with pytest.raises(TypeError):
         # this would lead to a dtype_per_channel of "uint10", but that is not a valid dtype
         ds.add_layer("color", "color", dtype_per_layer="uint30", num_channels=3)
+    with pytest.raises(TypeError):
+        # the dtype_per_layer must contain a digit (e.g. np.uint8)
+        ds.add_layer("color", "color", dtype_per_layer="int", num_channels=3)
+
+
+def test_adding_layer_with_valid_dtype_per_layer():
+    delete_dir("./testoutput/valid_dtype")
+
+    ds = WKDataset.create("./testoutput/valid_dtype", scale=(1, 1, 1))
+    ds.add_layer("color1", Layer.COLOR_TYPE, dtype_per_layer="uint24", num_channels=3)
+    ds.add_layer("color2", Layer.COLOR_TYPE, dtype_per_layer=np.uint8, num_channels=1)
+    ds.add_layer("color3", Layer.COLOR_TYPE, dtype_per_channel=np.uint8, num_channels=3)
+    ds.add_layer("color4", Layer.COLOR_TYPE, dtype_per_channel="uint8", num_channels=3)
