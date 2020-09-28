@@ -23,8 +23,8 @@ class MagDataset:
     def close(self):
         self.view.close()
 
-    def read(self, size, offset=(0, 0, 0)) -> np.array:
-        return self.view.read(size, offset)
+    def read(self, offset=(0, 0, 0), size=None) -> np.array:
+        return self.view.read(offset, size)
 
     def write(self, data, offset=(0, 0, 0)):
         self._assert_valid_num_channels(data.shape)
@@ -178,4 +178,4 @@ class TiledTiffMagDataset(TiffMagDataset):
         offset = np.array((0, 0, 0)) + np.array(size) * np.array(
             (x_index, y_index, z_index)
         )
-        return self.read(size, offset)
+        return self.read(offset, size)

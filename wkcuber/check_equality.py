@@ -62,7 +62,7 @@ def assert_equality_for_chunk(
         mag_ds = layer.get_mag(mag)
         logging.info(f"Checking sub_box: {sub_box}")
 
-        data = mag_ds.read(sub_box.size, sub_box.topleft)
+        data = mag_ds.read(sub_box.topleft, sub_box.size)
         backup_data = backup_wkw.read(sub_box.topleft, sub_box.size)
         assert np.all(
             data == backup_data

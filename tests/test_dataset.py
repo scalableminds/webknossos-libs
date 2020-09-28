@@ -29,7 +29,7 @@ def chunk_job(args):
     view, additional_args = args
 
     # increment the color value of each voxel
-    data = view.read(view.size)
+    data = view.read(size=view.size)
     if data.shape[0] == 1:
         data = data[0, :, :, :]
     data += 50
@@ -40,7 +40,7 @@ def advanced_chunk_job(args):
     view, additional_args = args
 
     # write different data for each chunk (depending on the global_offset of the chunk)
-    data = view.read(view.size)
+    data = view.read(size=view.size)
     data = np.ones(data.shape, dtype=np.uint8) * np.uint8(sum(view.global_offset))
     view.write(data)
 
@@ -105,7 +105,7 @@ def for_each_chunking_advanced(ds, view):
         ((128, 128, 10), (32, 32, 54)),
     ]:
         chunk = ds.get_view("color", "1", size=size, offset=offset, is_bounded=False)
-        chunk_data = chunk.read(chunk.size)
+        chunk_data = chunk.read(size=chunk.size)
         assert np.array_equal(
             np.ones(chunk_data.shape, dtype=np.uint8)
             * np.uint8(sum(chunk.global_offset)),
@@ -209,7 +209,7 @@ def test_view_read_with_open():
     with wk_view.open():
         assert wk_view._is_opened
 
-        data = wk_view.read((10, 10, 10))
+        data = wk_view.read(size=(10, 10, 10))
         assert data.shape == (3, 10, 10, 10)  # three channel
 
     assert not wk_view._is_opened
@@ -221,7 +221,7 @@ def test_tiff_mag_read_with_open():
     layer = tiff_dataset.get_layer("color")
     mag = layer.get_mag("1")
     mag.open()
-    data = mag.read((10, 10, 10))
+    data = mag.read(size=(10, 10, 10))
     assert data.shape == (1, 10, 10, 10)  # single channel
 
 
@@ -235,7 +235,7 @@ def test_view_read_without_open():
     assert not wk_view._is_opened
 
     # 'read()' checks if it was already opened. If not, it opens and closes automatically
-    data = wk_view.read((10, 10, 10))
+    data = wk_view.read(size=(10, 10, 10))
     assert data.shape == (3, 10, 10, 10)  # three channel
 
     assert not wk_view._is_opened
@@ -255,7 +255,7 @@ def test_view_wk_write():
 
         wk_view.write(write_data)
 
-        data = wk_view.read((10, 10, 10))
+        data = wk_view.read(size=(10, 10, 10))
         assert np.array_equal(data, write_data)
 
 
@@ -273,7 +273,7 @@ def test_view_tiff_write():
 
         tiff_view.write(write_data)
 
-        data = tiff_view.read((5, 5, 5))
+        data = tiff_view.read(size=(5, 5, 5))
         assert data.shape == (1, 5, 5, 5)  # this dataset has only one channel
         assert np.array_equal(data, np.expand_dims(write_data, 0))
 
@@ -433,7 +433,7 @@ def test_other_file_extensions_for_tiff_dataset():
     np.random.seed(1234)
     write_data = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
     mag.write(write_data)
-    assert np.array_equal(mag.read((10, 10, 10)), np.expand_dims(write_data, 0))
+    assert np.array_equal(mag.read(size=(10, 10, 10)), np.expand_dims(write_data, 0))
 
 
 def test_tiff_write_multi_channel_uint8():
@@ -513,7 +513,7 @@ def test_wkw_empty_read():
         .add_layer("color", Layer.COLOR_TYPE)
         .add_mag("1")
     )
-    data = mag.read(size=(0, 0, 0), offset=(1, 1, 1))
+    data = mag.read(offset=(1, 1, 1), size=(0, 0, 0))
 
     assert data.shape == (1, 0, 0, 0)
 
@@ -527,7 +527,7 @@ def test_tiff_empty_read():
         .add_layer("color", Layer.COLOR_TYPE)
         .add_mag("1")
     )
-    data = mag.read(size=(0, 0, 0), offset=(1, 1, 1))
+    data = mag.read(offset=(1, 1, 1), size=(0, 0, 0))
 
     assert data.shape == (1, 0, 0, 0)
 
@@ -698,7 +698,7 @@ def test_tiled_tiff_read_and_write_multichannel():
     data = get_multichanneled_data(np.uint8)
 
     mag.write(data, offset=(5, 5, 5))
-    written_data = mag.read(size=(250, 200, 10), offset=(5, 5, 5))
+    written_data = mag.read(offset=(5, 5, 5), size=(250, 200, 10))
     assert written_data.shape == (3, 250, 200, 10)
     assert np.array_equal(data, written_data)
 
@@ -721,7 +721,7 @@ def test_tiled_tiff_read_and_write():
                 data[i, j, h] = i + j % 250
 
     mag.write(data, offset=(5, 5, 5))
-    written_data = mag.read(size=(250, 200, 10), offset=(5, 5, 5))
+    written_data = mag.read(offset=(5, 5, 5), size=(250, 200, 10))
     assert written_data.shape == (1, 250, 200, 10)
     assert np.array_equal(written_data, np.expand_dims(data, 0))
 
@@ -865,7 +865,7 @@ def test_chunking_wk():
         "color", "1", size=(256, 256, 256), is_bounded=False
     )
 
-    original_data = view.read(view.size)
+    original_data = view.read(size=view.size)
 
     with get_executor_for_args(None) as executor:
         view.for_each_chunk(
@@ -875,7 +875,7 @@ def test_chunking_wk():
             executor=executor,
         )
 
-    assert np.array_equal(original_data + 50, view.read(view.size))
+    assert np.array_equal(original_data + 50, view.read(size=view.size))
 
 
 def test_chunking_wk_advanced():
@@ -913,7 +913,7 @@ def test_chunking_tiff():
         "color", "1", size=(265, 265, 10)
     )
 
-    original_data = view.read(view.size)
+    original_data = view.read(size=view.size)
 
     with get_executor_for_args(None) as executor:
         view.for_each_chunk(
@@ -923,7 +923,7 @@ def test_chunking_tiff():
             executor=executor,
         )
 
-    new_data = view.read(view.size)
+    new_data = view.read(size=view.size)
     assert np.array_equal(original_data + 50, new_data)
 
 
@@ -989,7 +989,7 @@ def test_tiled_tiff_inverse_pattern():
                 data[i, j, h] = i + j % 250
 
     mag.write(data, offset=(5, 5, 5))
-    written_data = mag.read(size=(250, 200, 10), offset=(5, 5, 5))
+    written_data = mag.read(offset=(5, 5, 5), size=(250, 200, 10))
     assert written_data.shape == (1, 250, 200, 10)
     assert np.array_equal(written_data, np.expand_dims(data, 0))
 
@@ -1171,14 +1171,14 @@ def test_changing_layer_bounding_box():
 
     bbox_size = ds.properties.data_layers["color"].get_bounding_box_size()
     assert bbox_size == (265, 265, 10)
-    original_data = mag.read(bbox_size)
+    original_data = mag.read(size=bbox_size)
     assert original_data.shape == (1, 265, 265, 10)
 
     layer.set_bounding_box_size((100, 100, 10))  # decrease boundingbox
 
     bbox_size = ds.properties.data_layers["color"].get_bounding_box_size()
     assert bbox_size == (100, 100, 10)
-    less_data = mag.read(bbox_size)
+    less_data = mag.read(size=bbox_size)
     assert less_data.shape == (1, 100, 100, 10)
     assert np.array_equal(original_data[:, :100, :100, :10], less_data)
 
@@ -1186,7 +1186,7 @@ def test_changing_layer_bounding_box():
 
     bbox_size = ds.properties.data_layers["color"].get_bounding_box_size()
     assert bbox_size == (300, 300, 10)
-    more_data = mag.read(bbox_size)
+    more_data = mag.read(size=bbox_size)
     assert more_data.shape == (1, 300, 300, 10)
     assert np.array_equal(more_data[:, :265, :265, :10], original_data)
 
@@ -1202,7 +1202,7 @@ def test_changing_layer_bounding_box():
     new_bbox_size = ds.properties.data_layers["color"].get_bounding_box_size()
     assert new_bbox_offset == (10, 10, 0)
     assert new_bbox_size == (255, 255, 10)
-    new_data = mag.read(new_bbox_size)
+    new_data = mag.read(size=new_bbox_size)
     assert new_data.shape == (1, 255, 255, 10)
     assert np.array_equal(original_data[:, 10:, 10:, :], new_data)
 
@@ -1328,5 +1328,5 @@ def test_add_symlink_layer():
     write_data = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
     mag.write(write_data)
 
-    assert np.array_equal(mag.read((10, 10, 10)), write_data)
-    assert np.array_equal(original_mag.read((10, 10, 10)), write_data)
+    assert np.array_equal(mag.read(size=(10, 10, 10)), write_data)
+    assert np.array_equal(original_mag.read(size=(10, 10, 10)), write_data)
