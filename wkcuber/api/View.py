@@ -119,7 +119,7 @@ class View:
             relative_offset = np.array(chunk.topleft) - np.array(self.global_offset)
             view = self.get_view(size=chunk.size, relative_offset=relative_offset)
             view.is_bounded = True
-            job_args.append((view, job_args_per_chunk,))
+            job_args.append((view, job_args_per_chunk))
 
         # execute the work for each chunk
         wait_and_ensure_success(executor.map_to_futures(work_on_chunk, job_args))
