@@ -239,6 +239,32 @@ class AbstractDataset(ABC):
         # delete files on disk
         rmtree(join(self.path, layer_name))
 
+    def add_symlink_layer(self, foreign_layer_path) -> Layer:
+        foreign_layer_path = os.path.abspath(foreign_layer_path)
+        layer_name = os.path.basename(os.path.normpath(foreign_layer_path))
+        if layer_name in self.layers.keys():
+            raise IndexError(
+                f"Cannot create symlink to {foreign_layer_path}. This dataset already has a layer called {layer_name}."
+            )
+
+        os.symlink(foreign_layer_path, join(self.path, layer_name))
+
+        # copy the properties of the layer into the properties of this dataset
+        layer_properties = self._get_type()(
+            Path(foreign_layer_path).parent
+        ).properties.data_layers[layer_name]
+        self.properties.data_layers[layer_name] = layer_properties
+        self.properties._export_as_json()
+
+        self.layers[layer_name] = self._create_layer(
+            layer_name,
+            np.dtype(layer_properties.element_class),
+            layer_properties.num_channels,
+        )
+        for resolution in layer_properties.wkw_magnifications:
+            self.layers[layer_name].setup_mag(resolution.mag.to_layer_name())
+        return self.layers[layer_name]
+
     def get_view(self, layer_name, mag, size, offset=None, is_bounded=True) -> View:
         layer = self.get_layer(layer_name)
         mag_ds = layer.get_mag(mag)
@@ -250,6 +276,10 @@ class AbstractDataset(ABC):
 
     @abstractmethod
     def _get_properties_type(self):
+        pass
+
+    @abstractmethod
+    def _get_type(self):
         pass
 
 
@@ -286,6 +316,9 @@ class WKDataset(AbstractDataset):
 
     def _get_properties_type(self):
         return WKProperties
+
+    def _get_type(self):
+        return WKDataset
 
 
 class TiffDataset(AbstractDataset):
@@ -335,6 +368,9 @@ class TiffDataset(AbstractDataset):
 
     def _get_properties_type(self):
         return TiffProperties
+
+    def _get_type(self):
+        return TiffDataset
 
 
 class TiledTiffDataset(AbstractDataset):
@@ -389,6 +425,9 @@ class TiledTiffDataset(AbstractDataset):
 
     def _get_properties_type(self):
         return TiffProperties
+
+    def _get_type(self):
+        return TiledTiffDataset
 
 
 def validate_pattern(pattern):

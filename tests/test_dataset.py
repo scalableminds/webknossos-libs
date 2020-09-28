@@ -1,5 +1,6 @@
 import filecmp
 import json
+import os
 from os.path import dirname
 import pytest
 
@@ -1286,8 +1287,9 @@ def test_adding_layer_with_invalid_dtype_per_layer():
         # this would lead to a dtype_per_channel of "uint10", but that is not a valid dtype
         ds.add_layer("color", "color", dtype_per_layer="uint30", num_channels=3)
     with pytest.raises(TypeError):
-        # the dtype_per_layer must contain a digit (e.g. np.uint8)
+        # "int" is interpreted as "int64", but 64 bit cannot be split into 3 channels
         ds.add_layer("color", "color", dtype_per_layer="int", num_channels=3)
+    ds.add_layer("color", "color", dtype_per_layer="int", num_channels=4)  # "int"/"int64" works with 4 channels
 
 
 def test_adding_layer_with_valid_dtype_per_layer():
@@ -1298,3 +1300,31 @@ def test_adding_layer_with_valid_dtype_per_layer():
     ds.add_layer("color2", Layer.COLOR_TYPE, dtype_per_layer=np.uint8, num_channels=1)
     ds.add_layer("color3", Layer.COLOR_TYPE, dtype_per_channel=np.uint8, num_channels=3)
     ds.add_layer("color4", Layer.COLOR_TYPE, dtype_per_channel="uint8", num_channels=3)
+
+
+def test_add_symlink_layer():
+    delete_dir("./testoutput/wk_dataset_with_symlink")
+    delete_dir("./testoutput/simple_wk_dataset_copy")
+    copytree("./testdata/simple_wk_dataset/", "./testoutput/simple_wk_dataset_copy/")
+
+    original_mag = (
+        WKDataset("./testoutput/simple_wk_dataset_copy/")
+        .get_layer("color")
+        .get_mag("1")
+    )
+
+    ds = WKDataset.create("./testoutput/wk_dataset_with_symlink", scale=(1, 1, 1))
+    symlink_layer = ds.add_symlink_layer("./testoutput/simple_wk_dataset_copy/color/")
+    mag = symlink_layer.get_mag("1")
+
+    assert path.exists("./testoutput/wk_dataset_with_symlink/color/1")
+
+    assert len(ds.properties.data_layers) == 1
+    assert len(ds.properties.data_layers["color"].wkw_magnifications) == 1
+
+    # write data in symlink layer
+    write_data = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
+    mag.write(write_data)
+
+    assert np.array_equal(mag.read((10, 10, 10)), write_data)
+    assert np.array_equal(original_mag.read((10, 10, 10)), write_data)
