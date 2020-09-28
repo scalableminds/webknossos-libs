@@ -258,7 +258,9 @@ class AbstractDataset(ABC):
 
         self.layers[layer_name] = self._create_layer(
             layer_name,
-            np.dtype(layer_properties.element_class),
+            dtype_per_layer_to_dtype_per_channel(
+                layer_properties.element_class, layer_properties.num_channels
+            ),
             layer_properties.num_channels,
         )
         for resolution in layer_properties.wkw_magnifications:
