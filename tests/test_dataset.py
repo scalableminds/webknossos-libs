@@ -1306,7 +1306,9 @@ def test_writing_subset_of_compressed_data_multi_channel():
     )
 
     write_data2 = (np.random.rand(3, 100, 100, 100) * 255).astype(np.uint8)
-    compressed_mag.write(offset=(10, 20, 30), data=write_data2)
+    compressed_mag.write(
+        offset=(10, 20, 30), data=write_data2, allow_compressed_write=True
+    )
 
     np.array_equal(
         write_data2, compressed_mag.read(offset=(10, 20, 30), size=(100, 100, 100))
@@ -1339,7 +1341,9 @@ def test_writing_subset_of_compressed_data_single_channel():
     )
 
     write_data2 = (np.random.rand(100, 100, 100) * 255).astype(np.uint8)
-    compressed_mag.write(offset=(10, 20, 30), data=write_data2)
+    compressed_mag.write(
+        offset=(10, 20, 30), data=write_data2, allow_compressed_write=True
+    )
 
     np.array_equal(
         write_data2, compressed_mag.read(offset=(10, 20, 30), size=(100, 100, 100))
@@ -1347,4 +1351,68 @@ def test_writing_subset_of_compressed_data_single_channel():
     np.array_equal(
         write_data1[:10, :20, :30],
         compressed_mag.read(offset=(0, 0, 0), size=(10, 20, 30)),
+    )  # the old data is still there
+
+
+def test_writing_subset_of_compressed_data():
+    delete_dir("./testoutput/compressed_data/")
+
+    # create uncompressed dataset
+    WKDataset.create(
+        os.path.abspath("./testoutput/compressed_data"), scale=(1, 1, 1)
+    ).add_layer("color", Layer.COLOR_TYPE).add_mag("1").write(
+        (np.random.rand(100, 200, 300) * 255).astype(np.uint8)
+    )
+
+    # compress data
+    compress_mag_inplace(
+        os.path.abspath("./testoutput/compressed_data/"),
+        layer_name="color",
+        mag=Mag("1"),
+    )
+
+    # open compressed dataset
+    compressed_mag = (
+        WKDataset("./testoutput/compressed_data").get_layer("color").get_mag("1")
+    )
+
+    with pytest.raises(ValueError):
+        compressed_mag.write(
+            offset=(10, 20, 30),
+            data=(np.random.rand(100, 100, 100) * 255).astype(np.uint8),
+        )
+
+
+def test_writing_subset_of_chunked_compressed_data():
+    delete_dir("./testoutput/compressed_data/")
+
+    # create uncompressed dataset
+    write_data1 = (np.random.rand(100, 200, 300) * 255).astype(np.uint8)
+    WKDataset.create(
+        os.path.abspath("./testoutput/compressed_data"), scale=(1, 1, 1)
+    ).add_layer("color", Layer.COLOR_TYPE).add_mag("1").write(write_data1)
+
+    # compress data
+    compress_mag_inplace(
+        os.path.abspath("./testoutput/compressed_data/"),
+        layer_name="color",
+        mag=Mag("1"),
+    )
+
+    # open compressed dataset
+    compressed_view = WKDataset("./testoutput/compressed_data").get_view(
+        "color", "1", size=(100, 200, 300), is_bounded=True
+    )
+
+    write_data2 = (np.random.rand(90, 80, 70) * 255).astype(np.uint8)
+    compressed_view.write(
+        relative_offset=(10, 20, 30), data=write_data2, allow_compressed_write=True
+    )
+
+    np.array_equal(
+        write_data2, compressed_view.read(offset=(10, 20, 30), size=(90, 80, 70))
+    )  # the new data was written
+    np.array_equal(
+        write_data1[:10, :20, :30],
+        compressed_view.read(offset=(0, 0, 0), size=(10, 20, 30)),
     )  # the old data is still there
