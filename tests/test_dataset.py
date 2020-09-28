@@ -1289,7 +1289,9 @@ def test_adding_layer_with_invalid_dtype_per_layer():
     with pytest.raises(TypeError):
         # "int" is interpreted as "int64", but 64 bit cannot be split into 3 channels
         ds.add_layer("color", "color", dtype_per_layer="int", num_channels=3)
-    ds.add_layer("color", "color", dtype_per_layer="int", num_channels=4)  # "int"/"int64" works with 4 channels
+    ds.add_layer(
+        "color", "color", dtype_per_layer="int", num_channels=4
+    )  # "int"/"int64" works with 4 channels
 
 
 def test_adding_layer_with_valid_dtype_per_layer():
