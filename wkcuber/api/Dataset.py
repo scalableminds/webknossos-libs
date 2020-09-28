@@ -32,11 +32,6 @@ def convert_dtypes(dtype, num_channels, dtype_per_layer_to_dtype_per_channel):
         return None
     op = operator.truediv if dtype_per_layer_to_dtype_per_channel else operator.mul
 
-    if not any(char.isdigit() for char in str(dtype)):
-        raise TypeError(
-            f"Converting dtype_per_layer to dtype_per_channel failed. The dtype {str(dtype)} must contain a digit."
-        )
-
     # split the dtype into the actual type and the number of bits
     # example: "uint24" -> ["uint", "24"]
     dtype_parts = re.split("(\d+)", str(dtype))
@@ -158,8 +153,10 @@ class AbstractDataset(ABC):
                 dtype_per_channel, num_channels
             )
         elif dtype_per_layer is not None:
-            if type(dtype_per_layer) is not str:
+            try:
                 dtype_per_layer = str(np.dtype(dtype_per_layer))
+            except Exception:
+                pass  # casting to np.dtype fails if the user specifies a special dtype like "uint24"
             dtype_per_channel = dtype_per_layer_to_dtype_per_channel(
                 dtype_per_layer, num_channels
             )
