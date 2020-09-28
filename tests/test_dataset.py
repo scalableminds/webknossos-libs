@@ -1286,10 +1286,12 @@ def test_writing_subset_of_compressed_data_multi_channel():
     delete_dir("./testoutput/compressed_data/")
 
     # create uncompressed dataset
-    write_data1 = (np.random.rand(3, 100, 200, 300) * 255).astype(np.uint8)
+    write_data1 = (np.random.rand(3, 20, 40, 60) * 255).astype(np.uint8)
     WKDataset.create(
         os.path.abspath("./testoutput/compressed_data"), scale=(1, 1, 1)
-    ).add_layer("color", Layer.COLOR_TYPE, num_channels=3).add_mag("1").write(
+    ).add_layer("color", Layer.COLOR_TYPE, num_channels=3).add_mag(
+        "1", block_len=8, file_len=8
+    ).write(
         write_data1
     )
 
@@ -1305,13 +1307,13 @@ def test_writing_subset_of_compressed_data_multi_channel():
         WKDataset("./testoutput/compressed_data").get_layer("color").get_mag("1")
     )
 
-    write_data2 = (np.random.rand(3, 100, 100, 100) * 255).astype(np.uint8)
+    write_data2 = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
     compressed_mag.write(
         offset=(10, 20, 30), data=write_data2, allow_compressed_write=True
     )
 
     np.array_equal(
-        write_data2, compressed_mag.read(offset=(10, 20, 30), size=(100, 100, 100))
+        write_data2, compressed_mag.read(offset=(10, 20, 30), size=(10, 10, 10))
     )  # the new data was written
     np.array_equal(
         write_data1[:, :10, :20, :30],
@@ -1323,10 +1325,12 @@ def test_writing_subset_of_compressed_data_single_channel():
     delete_dir("./testoutput/compressed_data/")
 
     # create uncompressed dataset
-    write_data1 = (np.random.rand(100, 200, 300) * 255).astype(np.uint8)
+    write_data1 = (np.random.rand(20, 40, 60) * 255).astype(np.uint8)
     WKDataset.create(
         os.path.abspath("./testoutput/compressed_data"), scale=(1, 1, 1)
-    ).add_layer("color", Layer.COLOR_TYPE).add_mag("1").write(write_data1)
+    ).add_layer("color", Layer.COLOR_TYPE).add_mag("1", block_len=8, file_len=8).write(
+        write_data1
+    )
 
     # compress data
     compress_mag_inplace(
@@ -1340,13 +1344,13 @@ def test_writing_subset_of_compressed_data_single_channel():
         WKDataset("./testoutput/compressed_data").get_layer("color").get_mag("1")
     )
 
-    write_data2 = (np.random.rand(100, 100, 100) * 255).astype(np.uint8)
+    write_data2 = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
     compressed_mag.write(
         offset=(10, 20, 30), data=write_data2, allow_compressed_write=True
     )
 
     np.array_equal(
-        write_data2, compressed_mag.read(offset=(10, 20, 30), size=(100, 100, 100))
+        write_data2, compressed_mag.read(offset=(10, 20, 30), size=(10, 10, 10))
     )  # the new data was written
     np.array_equal(
         write_data1[:10, :20, :30],
@@ -1360,8 +1364,8 @@ def test_writing_subset_of_compressed_data():
     # create uncompressed dataset
     WKDataset.create(
         os.path.abspath("./testoutput/compressed_data"), scale=(1, 1, 1)
-    ).add_layer("color", Layer.COLOR_TYPE).add_mag("1").write(
-        (np.random.rand(100, 200, 300) * 255).astype(np.uint8)
+    ).add_layer("color", Layer.COLOR_TYPE).add_mag("1", block_len=8, file_len=8).write(
+        (np.random.rand(20, 40, 60) * 255).astype(np.uint8)
     )
 
     # compress data
@@ -1377,9 +1381,10 @@ def test_writing_subset_of_compressed_data():
     )
 
     with pytest.raises(ValueError):
+        # calling 'write' with unaligned data on compressed data without setting 'allow_compressed_write=True'
         compressed_mag.write(
             offset=(10, 20, 30),
-            data=(np.random.rand(100, 100, 100) * 255).astype(np.uint8),
+            data=(np.random.rand(10, 10, 10) * 255).astype(np.uint8),
         )
 
 
@@ -1390,7 +1395,9 @@ def test_writing_subset_of_chunked_compressed_data():
     write_data1 = (np.random.rand(100, 200, 300) * 255).astype(np.uint8)
     WKDataset.create(
         os.path.abspath("./testoutput/compressed_data"), scale=(1, 1, 1)
-    ).add_layer("color", Layer.COLOR_TYPE).add_mag("1").write(write_data1)
+    ).add_layer("color", Layer.COLOR_TYPE).add_mag("1", block_len=8, file_len=8).write(
+        write_data1
+    )
 
     # compress data
     compress_mag_inplace(
@@ -1404,13 +1411,22 @@ def test_writing_subset_of_chunked_compressed_data():
         "color", "1", size=(100, 200, 300), is_bounded=True
     )
 
-    write_data2 = (np.random.rand(90, 80, 70) * 255).astype(np.uint8)
+    with pytest.raises(AssertionError):
+        # the aligned data (offset=(0,0,0), size=(128, 128, 128)) is NOT fully within the bounding box of the view
+        compressed_view.write(
+            relative_offset=(10, 20, 30),
+            data=(np.random.rand(90, 80, 70) * 255).astype(np.uint8),
+            allow_compressed_write=True,
+        )
+
+    # the aligned data (offset=(0,0,0), size=(64, 64, 64)) IS fully within the bounding box of the view
+    write_data2 = (np.random.rand(50, 40, 30) * 255).astype(np.uint8)
     compressed_view.write(
         relative_offset=(10, 20, 30), data=write_data2, allow_compressed_write=True
     )
 
     np.array_equal(
-        write_data2, compressed_view.read(offset=(10, 20, 30), size=(90, 80, 70))
+        write_data2, compressed_view.read(offset=(10, 20, 30), size=(50, 40, 30))
     )  # the new data was written
     np.array_equal(
         write_data1[:10, :20, :30],

@@ -117,12 +117,9 @@ class View:
             chunk_size, chunk_size
         ):
             relative_offset = np.array(chunk.topleft) - np.array(self.global_offset)
-            job_args.append(
-                (
-                    self.get_view(size=chunk.size, relative_offset=relative_offset),
-                    job_args_per_chunk,
-                )
-            )
+            view = self.get_view(size=chunk.size, relative_offset=relative_offset)
+            view.is_bounded = True
+            job_args.append((view, job_args_per_chunk,))
 
         # execute the work for each chunk
         wait_and_ensure_success(executor.map_to_futures(work_on_chunk, job_args))
@@ -194,14 +191,14 @@ class WKView(View):
             or tuple(aligned_shape) != data.shape[-3:]
         ):
             # the data is not aligned
-
-            # Deactivate the bounds of the view temporarily
-            # This is okay here because the read data is only handled internally and not exposed to the user
-            is_bounded = self.is_bounded
-            self.is_bounded = False
             # read the aligned bounding box
-            aligned_data = self.read(offset=aligned_offset, size=aligned_shape)
-            self.is_bounded = is_bounded  # activate the bounds again
+            try:
+                aligned_data = self.read(offset=aligned_offset, size=aligned_shape)
+            except AssertionError as e:
+                raise AssertionError(
+                    f"Writing compressed data failed. The compressed file is not fully inside the bounding box of the view (offset={self.global_offset}, size={self.size}). "
+                    + str(e)
+                )
             index_slice = (
                 slice(None, None),
                 *(
