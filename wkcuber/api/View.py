@@ -1,7 +1,7 @@
 import math
 
 import numpy as np
-from wkw import Dataset
+from wkw import Dataset, wkw
 
 from wkcuber.api.TiffData.TiffMag import TiffMag
 from wkcuber.api.bounding_box import BoundingBox
@@ -36,7 +36,7 @@ class View:
             self.dataset = None
             self._is_opened = False
 
-    def write(self, data, relative_offset=(0, 0, 0)):
+    def write(self, data, relative_offset=(0, 0, 0), allow_compressed_write=False):
         was_opened = self._is_opened
         # assert the size of the parameter data is not in conflict with the attribute self.size
         assert_non_negative_offset(relative_offset)
@@ -46,6 +46,9 @@ class View:
         absolute_offset = tuple(
             sum(x) for x in zip(self.global_offset, relative_offset)
         )
+
+        if self._is_compressed() and allow_compressed_write:
+            absolute_offset, data = self._handle_compressed_write(absolute_offset, data)
 
         if not was_opened:
             self.open()
@@ -95,7 +98,7 @@ class View:
     def assert_bounds(self, offset, size):
         if not self.check_bounds(offset, size):
             raise AssertionError(
-                f"Writing out of bounds: The passed parameter 'size' {size} exceeds the size of the current view ({self.size})"
+                f"Accessing data out of bounds: The passed parameter 'size' {size} exceeds the size of the current view ({self.size})"
             )
 
     def for_each_chunk(self, work_on_chunk, job_args_per_chunk, chunk_size, executor):
@@ -107,18 +110,21 @@ class View:
             chunk_size, chunk_size
         ):
             relative_offset = np.array(chunk.topleft) - np.array(self.global_offset)
-            job_args.append(
-                (
-                    self.get_view(size=chunk.size, relative_offset=relative_offset),
-                    job_args_per_chunk,
-                )
-            )
+            view = self.get_view(size=chunk.size, relative_offset=relative_offset)
+            view.is_bounded = True
+            job_args.append((view, job_args_per_chunk))
 
         # execute the work for each chunk
         wait_and_ensure_success(executor.map_to_futures(work_on_chunk, job_args))
 
     def _check_chunk_size(self, chunk_size):
         raise NotImplementedError
+
+    def _is_compressed(self):
+        return False
+
+    def _handle_compressed_write(self, absolute_offset, data):
+        return absolute_offset, data
 
     def __enter__(self):
         return self
@@ -155,6 +161,51 @@ class WKView(View):
             raise AssertionError(
                 f"The passed parameter 'chunk_size' {chunk_size} must be a multiple of (32, 32, 32)."
             )
+
+    def _is_compressed(self):
+        return (
+            self.header.block_type == wkw.Header.BLOCK_TYPE_LZ4
+            or self.header.block_type == wkw.Header.BLOCK_TYPE_LZ4HC
+        )
+
+    def _handle_compressed_write(self, absolute_offset, data):
+        # calculate aligned bounding box
+        file_bb = np.full(3, self.header.file_len * self.header.block_len)
+        absolute_offset_np = np.array(absolute_offset)
+        margin_to_top_left = absolute_offset_np % file_bb
+        aligned_offset = absolute_offset_np - margin_to_top_left
+        bottom_right = absolute_offset_np + np.array(data.shape[-3:])
+        margin_to_bottom_right = file_bb - (bottom_right % file_bb)
+        aligned_bottom_right = bottom_right + margin_to_bottom_right
+        aligned_shape = aligned_bottom_right - aligned_offset
+
+        if (
+            tuple(aligned_offset) != absolute_offset
+            or tuple(aligned_shape) != data.shape[-3:]
+        ):
+            # the data is not aligned
+            # read the aligned bounding box
+            try:
+                aligned_data = self.read(offset=aligned_offset, size=aligned_shape)
+            except AssertionError as e:
+                raise AssertionError(
+                    f"Writing compressed data failed. The compressed file is not fully inside the bounding box of the view (offset={self.global_offset}, size={self.size}). "
+                    + str(e)
+                )
+            index_slice = (
+                slice(None, None),
+                *(
+                    slice(start, end)
+                    for start, end in zip(
+                        margin_to_top_left, bottom_right - aligned_offset
+                    )
+                ),
+            )
+            # overwrite the specified data
+            aligned_data[tuple(index_slice)] = data
+            return tuple(aligned_offset), aligned_data
+        else:
+            return absolute_offset, data
 
 
 class TiffView(View):
