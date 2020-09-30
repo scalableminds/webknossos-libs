@@ -48,9 +48,7 @@ class View:
         )
 
         if self._is_compressed() and allow_compressed_write:
-            absolute_offset, data = self._handle_compressed_write(
-                absolute_offset, data
-            )
+            absolute_offset, data = self._handle_compressed_write(absolute_offset, data)
 
         if not was_opened:
             self.open()
