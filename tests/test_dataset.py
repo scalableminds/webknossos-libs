@@ -1380,7 +1380,7 @@ def test_writing_subset_of_compressed_data():
         WKDataset("./testoutput/compressed_data").get_layer("color").get_mag("1")
     )
 
-    with pytest.raises(ValueError):
+    with pytest.raises(WKWException):
         # calling 'write' with unaligned data on compressed data without setting 'allow_compressed_write=True'
         compressed_mag.write(
             offset=(10, 20, 30),
