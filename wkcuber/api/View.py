@@ -47,15 +47,10 @@ class View:
             sum(x) for x in zip(self.global_offset, relative_offset)
         )
 
-        if self._is_compressed():
-            if allow_compressed_write:
-                absolute_offset, data = self._handle_compressed_write(
-                    absolute_offset, data
-                )
-            else:
-                raise ValueError(
-                    "Cannot write unaligned compressed data. Align the data first or use the parameter 'allow_compressed_write', which might impact the performance."
-                )
+        if self._is_compressed() and allow_compressed_write:
+            absolute_offset, data = self._handle_compressed_write(
+                absolute_offset, data
+            )
 
         if not was_opened:
             self.open()
