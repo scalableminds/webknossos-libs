@@ -1,3 +1,4 @@
+import operator
 from shutil import rmtree
 from abc import ABC, abstractmethod
 from os import makedirs, path
@@ -5,6 +6,7 @@ from os.path import join, normpath, basename
 from pathlib import Path
 import numpy as np
 import os
+import re
 
 from wkcuber.api.Properties.DatasetProperties import (
     WKProperties,
@@ -13,6 +15,54 @@ from wkcuber.api.Properties.DatasetProperties import (
 )
 from wkcuber.api.Layer import Layer, WKLayer, TiffLayer, TiledTiffLayer
 from wkcuber.api.View import View
+
+DEFAULT_BIT_DEPTH = 8
+
+
+def is_int(s: str) -> bool:
+    try:
+        int(s)
+        return True
+    except ValueError:
+        return False
+
+
+def convert_dtypes(dtype, num_channels, dtype_per_layer_to_dtype_per_channel):
+    if dtype is None:
+        return None
+    op = operator.truediv if dtype_per_layer_to_dtype_per_channel else operator.mul
+
+    # split the dtype into the actual type and the number of bits
+    # example: "uint24" -> ["uint", "24"]
+    dtype_parts = re.split("(\d+)", str(dtype))
+    # calculate number of bits for dtype_per_channel
+    converted_dtype_parts = [
+        (str(int(op(int(part), num_channels))) if is_int(part) else part)
+        for part in dtype_parts
+    ]
+    return "".join(converted_dtype_parts)
+
+
+def dtype_per_layer_to_dtype_per_channel(dtype_per_layer, num_channels):
+    try:
+        return np.dtype(
+            convert_dtypes(
+                dtype_per_layer, num_channels, dtype_per_layer_to_dtype_per_channel=True
+            )
+        )
+    except TypeError as e:
+        raise TypeError(
+            "Converting dtype_per_layer to dtype_per_channel failed. Double check if the dtype_per_layer value is correct. "
+            + str(e)
+        )
+
+
+def dtype_per_channel_to_dtype_per_layer(dtype_per_channel, num_channels):
+    return convert_dtypes(
+        np.dtype(dtype_per_channel),
+        num_channels,
+        dtype_per_layer_to_dtype_per_channel=False,
+    )
 
 
 class AbstractDataset(ABC):
@@ -30,7 +80,10 @@ class AbstractDataset(ABC):
         for layer_name in self.properties.data_layers:
             layer = self.properties.data_layers[layer_name]
             self.add_layer(
-                layer.name, layer.category, layer.element_class, layer.num_channels
+                layer.name,
+                layer.category,
+                dtype_per_layer=layer.element_class,
+                num_channels=layer.num_channels,
             )
             for resolution in layer.wkw_magnifications:
                 self.layers[layer_name].setup_mag(resolution.mag.to_layer_name())
@@ -72,14 +125,44 @@ class AbstractDataset(ABC):
             )
         return self.layers[layer_name]
 
-    def add_layer(self, layer_name, category, dtype=None, num_channels=None, **kwargs):
-        if dtype is None:
-            dtype = np.dtype("uint8")
+    def add_layer(
+        self,
+        layer_name,
+        category,
+        dtype_per_layer=None,
+        dtype_per_channel=None,
+        num_channels=None,
+        **kwargs,
+    ):
         if num_channels is None:
             num_channels = 1
 
-        # normalize the value of dtype in case the parameter was passed as a string
-        dtype = np.dtype(dtype)
+        if dtype_per_layer is not None and dtype_per_channel is not None:
+            raise AttributeError(
+                "Cannot add layer. Specifying both 'dtype_per_layer' and 'dtype_per_channel' is not allowed"
+            )
+        elif dtype_per_channel is not None:
+            try:
+                dtype_per_channel = np.dtype(dtype_per_channel)
+            except TypeError as e:
+                raise TypeError(
+                    "Cannot add layer. The specified 'dtype_per_channel' must be a valid dtype. "
+                    + str(e)
+                )
+            dtype_per_layer = dtype_per_channel_to_dtype_per_layer(
+                dtype_per_channel, num_channels
+            )
+        elif dtype_per_layer is not None:
+            try:
+                dtype_per_layer = str(np.dtype(dtype_per_layer))
+            except Exception:
+                pass  # casting to np.dtype fails if the user specifies a special dtype like "uint24"
+            dtype_per_channel = dtype_per_layer_to_dtype_per_channel(
+                dtype_per_layer, num_channels
+            )
+        else:
+            dtype_per_layer = "uint" + str(DEFAULT_BIT_DEPTH * num_channels)
+            dtype_per_channel = np.dtype("uint" + str(DEFAULT_BIT_DEPTH))
 
         if layer_name in self.layers.keys():
             raise IndexError(
@@ -87,14 +170,28 @@ class AbstractDataset(ABC):
                     layer_name
                 )
             )
+
         self.properties._add_layer(
-            layer_name, category, dtype.name, self.data_format, num_channels, **kwargs
+            layer_name,
+            category,
+            dtype_per_layer,
+            self.data_format,
+            num_channels,
+            **kwargs,
         )
-        self.layers[layer_name] = self._create_layer(layer_name, dtype, num_channels)
+        self.layers[layer_name] = self._create_layer(
+            layer_name, dtype_per_channel, num_channels
+        )
         return self.layers[layer_name]
 
     def get_or_add_layer(
-        self, layer_name, category, dtype=None, num_channels=None, **kwargs
+        self,
+        layer_name,
+        category,
+        dtype_per_layer=None,
+        dtype_per_channel=None,
+        num_channels=None,
+        **kwargs,
     ) -> Layer:
         if layer_name in self.layers.keys():
             assert self.properties.data_layers[layer_name].category == category, (
@@ -102,10 +199,16 @@ class AbstractDataset(ABC):
                 + f"The category of the existing layer is '{self.properties.data_layers[layer_name].category}' "
                 + f"and the passed parameter is '{category}'."
             )
-            assert dtype is None or self.layers[layer_name].dtype == np.dtype(dtype), (
+            dtype_per_channel = dtype_per_layer_to_dtype_per_channel(
+                dtype_per_layer, num_channels
+            )
+            assert (
+                dtype_per_layer is None
+                or self.layers[layer_name].dtype_per_channel == dtype_per_channel
+            ), (
                 f"Cannot get_or_add_layer: The layer '{layer_name}' already exists, but the dtypes do not match. "
-                + f"The dtype of the existing layer is '{self.layers[layer_name].dtype}' "
-                + f"and the passed parameter is '{dtype}'."
+                + f"The dtype_per_channel of the existing layer is '{self.layers[layer_name].dtype_per_channel}' "
+                + f"and the passed parameter would result in a dtype_per_channel of '{dtype_per_channel}'."
             )
             assert (
                 num_channels is None
@@ -117,7 +220,14 @@ class AbstractDataset(ABC):
             )
             return self.layers[layer_name]
         else:
-            return self.add_layer(layer_name, category, dtype, num_channels, **kwargs)
+            return self.add_layer(
+                layer_name,
+                category,
+                dtype_per_layer=dtype_per_layer,
+                dtype_per_channel=dtype_per_channel,
+                num_channels=num_channels,
+                **kwargs,
+            )
 
     def delete_layer(self, layer_name):
         if layer_name not in self.layers.keys():
@@ -148,7 +258,9 @@ class AbstractDataset(ABC):
 
         self.layers[layer_name] = self._create_layer(
             layer_name,
-            np.dtype(layer_properties.element_class),
+            dtype_per_layer_to_dtype_per_channel(
+                layer_properties.element_class, layer_properties.num_channels
+            ),
             layer_properties.num_channels,
         )
         for resolution in layer_properties.wkw_magnifications:
@@ -161,7 +273,7 @@ class AbstractDataset(ABC):
 
         return mag_ds.get_view(size=size, offset=offset, is_bounded=is_bounded)
 
-    def _create_layer(self, layer_name, dtype, num_channels) -> Layer:
+    def _create_layer(self, layer_name, dtype_per_channel, num_channels) -> Layer:
         raise NotImplementedError
 
     @abstractmethod
@@ -201,8 +313,8 @@ class WKDataset(AbstractDataset):
     def to_tiff_dataset(self, new_dataset_path):
         raise NotImplementedError  # TODO; implement
 
-    def _create_layer(self, layer_name, dtype, num_channels) -> Layer:
-        return WKLayer(layer_name, self, dtype, num_channels)
+    def _create_layer(self, layer_name, dtype_per_channel, num_channels) -> Layer:
+        return WKLayer(layer_name, self, dtype_per_channel, num_channels)
 
     def _get_properties_type(self):
         return WKProperties
@@ -253,8 +365,8 @@ class TiffDataset(AbstractDataset):
     def to_wk_dataset(self, new_dataset_path):
         raise NotImplementedError  # TODO; implement
 
-    def _create_layer(self, layer_name, dtype, num_channels) -> Layer:
-        return TiffLayer(layer_name, self, dtype, num_channels)
+    def _create_layer(self, layer_name, dtype_per_channel, num_channels) -> Layer:
+        return TiffLayer(layer_name, self, dtype_per_channel, num_channels)
 
     def _get_properties_type(self):
         return TiffProperties
@@ -310,8 +422,8 @@ class TiledTiffDataset(AbstractDataset):
         self.data_format = "tiled_tiff"
         assert isinstance(self.properties, TiffProperties)
 
-    def _create_layer(self, layer_name, dtype, num_channels) -> Layer:
-        return TiledTiffLayer(layer_name, self, dtype, num_channels)
+    def _create_layer(self, layer_name, dtype_per_channel, num_channels) -> Layer:
+        return TiledTiffLayer(layer_name, self, dtype_per_channel, num_channels)
 
     def _get_properties_type(self):
         return TiffProperties

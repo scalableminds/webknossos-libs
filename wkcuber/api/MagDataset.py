@@ -23,8 +23,8 @@ class MagDataset:
     def close(self):
         self.view.close()
 
-    def read(self, size, offset=(0, 0, 0)) -> np.array:
-        return self.view.read(size, offset)
+    def read(self, offset=(0, 0, 0), size=None) -> np.array:
+        return self.view.read(offset, size)
 
     def write(self, data, offset=(0, 0, 0), allow_compressed_write=False):
         self._assert_valid_num_channels(data.shape)
@@ -128,7 +128,7 @@ class WKMagDataset(MagDataset):
 
     def get_header(self) -> wkw.Header:
         return wkw.Header(
-            voxel_type=self.layer.dtype,
+            voxel_type=self.layer.dtype_per_channel,
             num_channels=self.layer.num_channels,
             version=1,
             block_len=self.block_len,
@@ -157,7 +157,7 @@ class TiffMagDataset(MagDataset):
     def get_header(self) -> TiffMagHeader:
         return TiffMagHeader(
             pattern=self.pattern,
-            dtype=self.layer.dtype,
+            dtype_per_channel=self.layer.dtype_per_channel,
             num_channels=self.layer.num_channels,
             tile_size=self.layer.dataset.properties.tile_size,
         )
@@ -178,4 +178,4 @@ class TiledTiffMagDataset(TiffMagDataset):
         offset = np.array((0, 0, 0)) + np.array(size) * np.array(
             (x_index, y_index, z_index)
         )
-        return self.read(size, offset)
+        return self.read(offset, size)

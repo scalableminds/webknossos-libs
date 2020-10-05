@@ -58,7 +58,7 @@ class View:
         if not was_opened:
             self.close()
 
-    def read(self, size=None, offset=(0, 0, 0)) -> np.array:
+    def read(self, offset=(0, 0, 0), size=None) -> np.array:
         was_opened = self._is_opened
         size = self.size if size is None else size
 

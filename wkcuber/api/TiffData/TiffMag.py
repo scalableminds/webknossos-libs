@@ -186,7 +186,7 @@ class TiffMag:
         # modify the shape to also include the num_channels
         shape = tuple(shape) + tuple([self.header.num_channels])
 
-        data = np.zeros(shape=shape, dtype=self.header.dtype)
+        data = np.zeros(shape=shape, dtype=self.header.dtype_per_channel)
         for (
             xyz,
             _,
@@ -198,7 +198,9 @@ class TiffMag:
 
             if xyz in self.tiffs:
                 # load data and discard the padded data
-                loaded_data = np.array(self.tiffs[xyz].read(), self.header.dtype)[
+                loaded_data = np.array(
+                    self.tiffs[xyz].read(), self.header.dtype_per_channel
+                )[
                     offset_in_output_data[0] : offset_in_output_data[0] + shape[0],
                     offset_in_output_data[1] : offset_in_output_data[1] + shape[1],
                 ]
@@ -250,7 +252,7 @@ class TiffMag:
 
                 # initialize an empty image with the right shape
                 self.tiffs[xyz] = TiffReader.init_tiff(
-                    np.zeros(output_data_shape, self.header.dtype),
+                    np.zeros(output_data_shape, self.header.dtype_per_channel),
                     self.get_file_name_for_layer(xyz),
                 )
 
@@ -363,9 +365,9 @@ class TiffMag:
                 raise AttributeError(
                     f"The shape of the provided data does not match the expected shape. (Expected {self.header.num_channels} channels)"
                 )
-        if not np.dtype(data.dtype) == self.header.dtype:
+        if not np.dtype(data.dtype) == self.header.dtype_per_channel:
             raise AttributeError(
-                f"The type of the provided data does not match the expected type. (Expected np.array of type {self.header.dtype.name})"
+                f"The type of the provided data does not match the expected type. (Expected np.array of type {self.header.dtype_per_channel.name})"
             )
 
     def get_file_name_for_layer(self, xyz) -> str:
@@ -389,12 +391,12 @@ class TiffMagHeader:
     def __init__(
         self,
         pattern="{zzzzz}.tif",
-        dtype=np.dtype("uint8"),
+        dtype_per_channel=np.dtype("uint8"),
         num_channels=1,
         tile_size=(32, 32),
     ):
         self.pattern = pattern
-        self.dtype = np.dtype(dtype)
+        self.dtype_per_channel = np.dtype(dtype_per_channel)
         self.num_channels = num_channels
         self.tile_size = tile_size
 

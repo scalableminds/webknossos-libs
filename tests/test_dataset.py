@@ -32,7 +32,7 @@ def chunk_job(args):
     view, additional_args = args
 
     # increment the color value of each voxel
-    data = view.read(view.size)
+    data = view.read(size=view.size)
     if data.shape[0] == 1:
         data = data[0, :, :, :]
     data += 50
@@ -43,7 +43,7 @@ def advanced_chunk_job(args):
     view, additional_args = args
 
     # write different data for each chunk (depending on the global_offset of the chunk)
-    data = view.read(view.size)
+    data = view.read(size=view.size)
     data = np.ones(data.shape, dtype=np.uint8) * np.uint8(sum(view.global_offset))
     view.write(data)
 
@@ -108,7 +108,7 @@ def for_each_chunking_advanced(ds, view):
         ((128, 128, 10), (32, 32, 54)),
     ]:
         chunk = ds.get_view("color", "1", size=size, offset=offset, is_bounded=False)
-        chunk_data = chunk.read(chunk.size)
+        chunk_data = chunk.read(size=chunk.size)
         assert np.array_equal(
             np.ones(chunk_data.shape, dtype=np.uint8)
             * np.uint8(sum(chunk.global_offset)),
@@ -147,7 +147,7 @@ def test_create_wk_dataset_with_explicit_header_fields():
     delete_dir("./testoutput/wk_dataset_advanced")
 
     ds = WKDataset.create("./testoutput/wk_dataset_advanced", scale=(1, 1, 1))
-    ds.add_layer("color", "color", dtype=np.uint16, num_channels=3)
+    ds.add_layer("color", "color", dtype_per_layer="uint48", num_channels=3)
 
     ds.get_layer("color").add_mag("1", block_len=64, file_len=64)
     ds.get_layer("color").add_mag("2-2-1")
@@ -158,7 +158,7 @@ def test_create_wk_dataset_with_explicit_header_fields():
     assert len(ds.properties.data_layers) == 1
     assert len(ds.properties.data_layers["color"].wkw_magnifications) == 2
 
-    assert ds.properties.data_layers["color"].element_class == np.dtype(np.uint16)
+    assert ds.properties.data_layers["color"].element_class == "uint48"
     assert (
         ds.properties.data_layers["color"].wkw_magnifications[0].cube_length == 64 * 64
     )  # mag "1"
@@ -212,7 +212,7 @@ def test_view_read_with_open():
     with wk_view.open():
         assert wk_view._is_opened
 
-        data = wk_view.read((10, 10, 10))
+        data = wk_view.read(size=(10, 10, 10))
         assert data.shape == (3, 10, 10, 10)  # three channel
 
     assert not wk_view._is_opened
@@ -224,7 +224,7 @@ def test_tiff_mag_read_with_open():
     layer = tiff_dataset.get_layer("color")
     mag = layer.get_mag("1")
     mag.open()
-    data = mag.read((10, 10, 10))
+    data = mag.read(size=(10, 10, 10))
     assert data.shape == (1, 10, 10, 10)  # single channel
 
 
@@ -238,7 +238,7 @@ def test_view_read_without_open():
     assert not wk_view._is_opened
 
     # 'read()' checks if it was already opened. If not, it opens and closes automatically
-    data = wk_view.read((10, 10, 10))
+    data = wk_view.read(size=(10, 10, 10))
     assert data.shape == (3, 10, 10, 10)  # three channel
 
     assert not wk_view._is_opened
@@ -258,7 +258,7 @@ def test_view_wk_write():
 
         wk_view.write(write_data)
 
-        data = wk_view.read((10, 10, 10))
+        data = wk_view.read(size=(10, 10, 10))
         assert np.array_equal(data, write_data)
 
 
@@ -276,7 +276,7 @@ def test_view_tiff_write():
 
         tiff_view.write(write_data)
 
-        data = tiff_view.read((5, 5, 5))
+        data = tiff_view.read(size=(5, 5, 5))
         assert data.shape == (1, 5, 5, 5)  # this dataset has only one channel
         assert np.array_equal(data, np.expand_dims(write_data, 0))
 
@@ -436,7 +436,7 @@ def test_other_file_extensions_for_tiff_dataset():
     np.random.seed(1234)
     write_data = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
     mag.write(write_data)
-    assert np.array_equal(mag.read((10, 10, 10)), np.expand_dims(write_data, 0))
+    assert np.array_equal(mag.read(size=(10, 10, 10)), np.expand_dims(write_data, 0))
 
 
 def test_tiff_write_multi_channel_uint8():
@@ -475,7 +475,7 @@ def test_tiff_write_multi_channel_uint16():
 
     ds_tiff = TiffDataset.create(dataset_path, scale=(1, 1, 1))
     mag = ds_tiff.add_layer(
-        "color", Layer.COLOR_TYPE, num_channels=3, dtype=np.uint16
+        "color", Layer.COLOR_TYPE, num_channels=3, dtype_per_layer="uint48"
     ).add_mag("1")
 
     # 10 images (z-layers), each 250x200, dtype=np.uint16
@@ -495,7 +495,7 @@ def test_wk_write_multi_channel_uint16():
 
     ds_tiff = WKDataset.create(dataset_path, scale=(1, 1, 1))
     mag = ds_tiff.add_layer(
-        "color", Layer.COLOR_TYPE, num_channels=3, dtype=np.uint16
+        "color", Layer.COLOR_TYPE, num_channels=3, dtype_per_layer="uint48"
     ).add_mag("1")
 
     # 10 images (z-layers), each 250x200, dtype=np.uint16
@@ -516,7 +516,7 @@ def test_wkw_empty_read():
         .add_layer("color", Layer.COLOR_TYPE)
         .add_mag("1")
     )
-    data = mag.read(size=(0, 0, 0), offset=(1, 1, 1))
+    data = mag.read(offset=(1, 1, 1), size=(0, 0, 0))
 
     assert data.shape == (1, 0, 0, 0)
 
@@ -530,7 +530,7 @@ def test_tiff_empty_read():
         .add_layer("color", Layer.COLOR_TYPE)
         .add_mag("1")
     )
-    data = mag.read(size=(0, 0, 0), offset=(1, 1, 1))
+    data = mag.read(offset=(1, 1, 1), size=(0, 0, 0))
 
     assert data.shape == (1, 0, 0, 0)
 
@@ -612,22 +612,22 @@ def test_get_or_add_layer():
 
     # layer did not exist before
     layer = ds.get_or_add_layer(
-        "color", Layer.COLOR_TYPE, dtype=np.uint8, num_channels=1
+        "color", Layer.COLOR_TYPE, dtype_per_layer="uint8", num_channels=1
     )
     assert "color" in ds.layers.keys()
     assert layer.name == "color"
 
     # layer did exist before
     layer = ds.get_or_add_layer(
-        "color", Layer.COLOR_TYPE, dtype=np.uint8, num_channels=1
+        "color", Layer.COLOR_TYPE, dtype_per_layer="uint8", num_channels=1
     )
     assert "color" in ds.layers.keys()
     assert layer.name == "color"
 
     try:
-        # layer did exist before but with another 'dtype' (this would work the same for 'category' and 'num_channels')
+        # layer did exist before but with another 'dtype_per_layer' (this would work the same for 'category' and 'num_channels')
         layer = ds.get_or_add_layer(
-            "color", Layer.COLOR_TYPE, dtype=np.uint16, num_channels=1
+            "color", Layer.COLOR_TYPE, dtype_per_layer="uint16", num_channels=1
         )
 
         raise Exception(
@@ -701,7 +701,7 @@ def test_tiled_tiff_read_and_write_multichannel():
     data = get_multichanneled_data(np.uint8)
 
     mag.write(data, offset=(5, 5, 5))
-    written_data = mag.read(size=(250, 200, 10), offset=(5, 5, 5))
+    written_data = mag.read(offset=(5, 5, 5), size=(250, 200, 10))
     assert written_data.shape == (3, 250, 200, 10)
     assert np.array_equal(data, written_data)
 
@@ -724,7 +724,7 @@ def test_tiled_tiff_read_and_write():
                 data[i, j, h] = i + j % 250
 
     mag.write(data, offset=(5, 5, 5))
-    written_data = mag.read(size=(250, 200, 10), offset=(5, 5, 5))
+    written_data = mag.read(offset=(5, 5, 5), size=(250, 200, 10))
     assert written_data.shape == (1, 250, 200, 10)
     assert np.array_equal(written_data, np.expand_dims(data, 0))
 
@@ -868,7 +868,7 @@ def test_chunking_wk():
         "color", "1", size=(256, 256, 256), is_bounded=False
     )
 
-    original_data = view.read(view.size)
+    original_data = view.read(size=view.size)
 
     with get_executor_for_args(None) as executor:
         view.for_each_chunk(
@@ -878,7 +878,7 @@ def test_chunking_wk():
             executor=executor,
         )
 
-    assert np.array_equal(original_data + 50, view.read(view.size))
+    assert np.array_equal(original_data + 50, view.read(size=view.size))
 
 
 def test_chunking_wk_advanced():
@@ -916,7 +916,7 @@ def test_chunking_tiff():
         "color", "1", size=(265, 265, 10)
     )
 
-    original_data = view.read(view.size)
+    original_data = view.read(size=view.size)
 
     with get_executor_for_args(None) as executor:
         view.for_each_chunk(
@@ -926,7 +926,7 @@ def test_chunking_tiff():
             executor=executor,
         )
 
-    new_data = view.read(view.size)
+    new_data = view.read(size=view.size)
     assert np.array_equal(original_data + 50, new_data)
 
 
@@ -992,7 +992,7 @@ def test_tiled_tiff_inverse_pattern():
                 data[i, j, h] = i + j % 250
 
     mag.write(data, offset=(5, 5, 5))
-    written_data = mag.read(size=(250, 200, 10), offset=(5, 5, 5))
+    written_data = mag.read(offset=(5, 5, 5), size=(250, 200, 10))
     assert written_data.shape == (1, 250, 200, 10)
     assert np.array_equal(written_data, np.expand_dims(data, 0))
 
@@ -1174,14 +1174,14 @@ def test_changing_layer_bounding_box():
 
     bbox_size = ds.properties.data_layers["color"].get_bounding_box_size()
     assert bbox_size == (265, 265, 10)
-    original_data = mag.read(bbox_size)
+    original_data = mag.read(size=bbox_size)
     assert original_data.shape == (1, 265, 265, 10)
 
     layer.set_bounding_box_size((100, 100, 10))  # decrease boundingbox
 
     bbox_size = ds.properties.data_layers["color"].get_bounding_box_size()
     assert bbox_size == (100, 100, 10)
-    less_data = mag.read(bbox_size)
+    less_data = mag.read(size=bbox_size)
     assert less_data.shape == (1, 100, 100, 10)
     assert np.array_equal(original_data[:, :100, :100, :10], less_data)
 
@@ -1189,7 +1189,7 @@ def test_changing_layer_bounding_box():
 
     bbox_size = ds.properties.data_layers["color"].get_bounding_box_size()
     assert bbox_size == (300, 300, 10)
-    more_data = mag.read(bbox_size)
+    more_data = mag.read(size=bbox_size)
     assert more_data.shape == (1, 300, 300, 10)
     assert np.array_equal(more_data[:, :265, :265, :10], original_data)
 
@@ -1205,7 +1205,7 @@ def test_changing_layer_bounding_box():
     new_bbox_size = ds.properties.data_layers["color"].get_bounding_box_size()
     assert new_bbox_offset == (10, 10, 0)
     assert new_bbox_size == (255, 255, 10)
-    new_data = mag.read(new_bbox_size)
+    new_data = mag.read(size=new_bbox_size)
     assert new_data.shape == (1, 255, 255, 10)
     assert np.array_equal(original_data[:, 10:, 10:, :], new_data)
 
@@ -1280,6 +1280,31 @@ def test_view_offsets():
         raise Exception(expected_error_msg)
     except AssertionError:
         pass
+
+
+def test_adding_layer_with_invalid_dtype_per_layer():
+    delete_dir("./testoutput/invalid_dtype")
+
+    ds = WKDataset.create("./testoutput/invalid_dtype", scale=(1, 1, 1))
+    with pytest.raises(TypeError):
+        # this would lead to a dtype_per_channel of "uint10", but that is not a valid dtype
+        ds.add_layer("color", "color", dtype_per_layer="uint30", num_channels=3)
+    with pytest.raises(TypeError):
+        # "int" is interpreted as "int64", but 64 bit cannot be split into 3 channels
+        ds.add_layer("color", "color", dtype_per_layer="int", num_channels=3)
+    ds.add_layer(
+        "color", "color", dtype_per_layer="int", num_channels=4
+    )  # "int"/"int64" works with 4 channels
+
+
+def test_adding_layer_with_valid_dtype_per_layer():
+    delete_dir("./testoutput/valid_dtype")
+
+    ds = WKDataset.create("./testoutput/valid_dtype", scale=(1, 1, 1))
+    ds.add_layer("color1", Layer.COLOR_TYPE, dtype_per_layer="uint24", num_channels=3)
+    ds.add_layer("color2", Layer.COLOR_TYPE, dtype_per_layer=np.uint8, num_channels=1)
+    ds.add_layer("color3", Layer.COLOR_TYPE, dtype_per_channel=np.uint8, num_channels=3)
+    ds.add_layer("color4", Layer.COLOR_TYPE, dtype_per_channel="uint8", num_channels=3)
 
 
 def test_writing_subset_of_compressed_data_multi_channel():
@@ -1458,5 +1483,5 @@ def test_add_symlink_layer():
     write_data = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
     mag.write(write_data)
 
-    assert np.array_equal(mag.read((10, 10, 10)), write_data)
-    assert np.array_equal(original_mag.read((10, 10, 10)), write_data)
+    assert np.array_equal(mag.read(size=(10, 10, 10)), write_data)
+    assert np.array_equal(original_mag.read(size=(10, 10, 10)), write_data)

@@ -11,7 +11,7 @@
             "dataFormat": "wkw",
             "name": "color",
             "category": "color",
-            "elementClass": "uint8",
+            "elementClass": "uint24",
             "num_channels": 3,
             "boundingBox": {
                 "topLeft": [
