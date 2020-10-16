@@ -2,15 +2,6 @@ from wkcuber.mag import Mag
 
 
 class Resolution:
-    def _to_json(self) -> dict:
-        pass
-
-    @classmethod
-    def _from_json(cls, json_data):
-        pass
-
-
-class TiffResolution(Resolution):
     def __init__(self, mag):
         self._mag = Mag(mag)
 
@@ -28,7 +19,7 @@ class TiffResolution(Resolution):
 
 class WkResolution(Resolution):
     def __init__(self, mag, cube_length):
-        self._mag = Mag(mag)
+        super().__init__(mag)
         self._cube_length = cube_length
 
     def _to_json(self) -> dict:

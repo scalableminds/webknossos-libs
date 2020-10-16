@@ -12,6 +12,7 @@ from wkcuber.api.MagDataset import (
     WKMagDataset,
     TiffMagDataset,
     TiledTiffMagDataset,
+    find_mag_path_on_disk,
 )
 from wkcuber.mag import Mag
 from wkcuber.utils import DEFAULT_WKW_FILE_LEN
@@ -48,7 +49,7 @@ class Layer:
         del self.mags[mag]
         self.dataset.properties._delete_mag(self.name, mag)
         # delete files on disk
-        full_path = join(self.dataset.path, self.name, mag)
+        full_path = find_mag_path_on_disk(self.dataset.path, self.name, mag)
         rmtree(full_path)
 
     def _create_dir_for_mag(self, mag):
@@ -138,7 +139,9 @@ class WKLayer(Layer):
 
         self._assert_mag_does_not_exist_yet(mag)
 
-        with wkw.Dataset.open(join(self.dataset.path, self.name, mag)) as wkw_dataset:
+        with wkw.Dataset.open(
+            find_mag_path_on_disk(self.dataset.path, self.name, mag)
+        ) as wkw_dataset:
             wk_header = wkw_dataset.header
 
         self.mags[mag] = WKMagDataset(

@@ -1,7 +1,7 @@
 import filecmp
 import json
 import os
-from os.path import dirname
+from os.path import dirname, join
 import pytest
 
 import numpy as np
@@ -147,7 +147,7 @@ def test_create_wk_dataset_with_explicit_header_fields():
     delete_dir("./testoutput/wk_dataset_advanced")
 
     ds = WKDataset.create("./testoutput/wk_dataset_advanced", scale=(1, 1, 1))
-    ds.add_layer("color", "color", dtype_per_layer="uint48", num_channels=3)
+    ds.add_layer("color", Layer.COLOR_TYPE, dtype_per_layer="uint48", num_channels=3)
 
     ds.get_layer("color").add_mag("1", block_len=64, file_len=64)
     ds.get_layer("color").add_mag("2-2-1")
@@ -696,7 +696,9 @@ def test_tiled_tiff_read_and_write_multichannel():
         pattern="{xxx}_{yyy}_{zzz}.tif",
     )
 
-    mag = tiled_tiff_ds.add_layer("color", "color", num_channels=3).add_mag("1")
+    mag = tiled_tiff_ds.add_layer("color", Layer.COLOR_TYPE, num_channels=3).add_mag(
+        "1"
+    )
 
     data = get_multichanneled_data(np.uint8)
 
@@ -715,7 +717,7 @@ def test_tiled_tiff_read_and_write():
         pattern="{xxx}_{yyy}_{zzz}.tif",
     )
 
-    mag = tiled_tiff_ds.add_layer("color", "color").add_mag("1")
+    mag = tiled_tiff_ds.add_layer("color", Layer.COLOR_TYPE).add_mag("1")
 
     data = np.zeros((250, 200, 10), dtype=np.uint8)
     for h in range(10):
@@ -812,11 +814,11 @@ def test_largest_segment_id_requirement():
     ds = WKDataset.create(path, scale=(10, 10, 10))
 
     with pytest.raises(AssertionError):
-        ds.add_layer("segmentation", "segmentation")
+        ds.add_layer("segmentation", Layer.SEGMENTATION_TYPE)
 
     largest_segment_id = 10
     ds.add_layer(
-        "segmentation", "segmentation", largest_segment_id=largest_segment_id
+        "segmentation", Layer.SEGMENTATION_TYPE, largest_segment_id=largest_segment_id
     ).add_mag(Mag(1))
 
     ds = WKDataset(path)
@@ -1018,7 +1020,7 @@ def test_view_write_without_open():
     delete_dir("./testoutput/wk_dataset_write_without_open")
 
     ds = WKDataset.create("./testoutput/wk_dataset_write_without_open", scale=(1, 1, 1))
-    ds.add_layer("color", "color")
+    ds.add_layer("color", Layer.COLOR_TYPE)
 
     ds.get_layer("color").add_mag("1")
 
@@ -1214,7 +1216,7 @@ def test_view_offsets():
     delete_dir("./testoutput/wk_offset_tests")
 
     ds = WKDataset.create("./testoutput/wk_offset_tests", scale=(1, 1, 1))
-    mag = ds.add_layer("color", "color").add_mag("1")
+    mag = ds.add_layer("color", Layer.COLOR_TYPE).add_mag("1")
 
     # The dataset is new -> no data has been written.
     # Therefore, the size of the bounding box in the properties.json is (0, 0, 0)
@@ -1288,12 +1290,14 @@ def test_adding_layer_with_invalid_dtype_per_layer():
     ds = WKDataset.create("./testoutput/invalid_dtype", scale=(1, 1, 1))
     with pytest.raises(TypeError):
         # this would lead to a dtype_per_channel of "uint10", but that is not a valid dtype
-        ds.add_layer("color", "color", dtype_per_layer="uint30", num_channels=3)
+        ds.add_layer(
+            "color", Layer.COLOR_TYPE, dtype_per_layer="uint30", num_channels=3
+        )
     with pytest.raises(TypeError):
         # "int" is interpreted as "int64", but 64 bit cannot be split into 3 channels
-        ds.add_layer("color", "color", dtype_per_layer="int", num_channels=3)
+        ds.add_layer("color", Layer.COLOR_TYPE, dtype_per_layer="int", num_channels=3)
     ds.add_layer(
-        "color", "color", dtype_per_layer="int", num_channels=4
+        "color", Layer.COLOR_TYPE, dtype_per_layer="int", num_channels=4
     )  # "int"/"int64" works with 4 channels
 
 
@@ -1485,3 +1489,39 @@ def test_add_symlink_layer():
 
     assert np.array_equal(mag.read(size=(10, 10, 10)), write_data)
     assert np.array_equal(original_mag.read(size=(10, 10, 10)), write_data)
+
+
+def test_search_dataset_also_for_long_layer_name():
+    delete_dir("./testoutput/long_layer_name")
+
+    ds = WKDataset.create("./testoutput/long_layer_name", scale=(1, 1, 1))
+    mag = ds.add_layer("color", Layer.COLOR_TYPE).add_mag("2")
+
+    assert mag.name == "2"
+    short_mag_file_path = join(ds.path, "color", Mag(mag.name).to_layer_name())
+    long_mag_file_path = join(ds.path, "color", Mag(mag.name).to_long_layer_name())
+
+    assert os.path.exists(short_mag_file_path)
+    assert not os.path.exists(long_mag_file_path)
+
+    write_data = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
+    mag.write(write_data, offset=(10, 10, 10))
+
+    assert np.array_equal(
+        mag.read(offset=(10, 10, 10), size=(10, 10, 10)), np.expand_dims(write_data, 0)
+    )
+
+    # rename the path from "long_layer_name/color/2" to "long_layer_name/color/2-2-2"
+    os.rename(short_mag_file_path, long_mag_file_path)
+
+    with pytest.raises(WKWException):
+        # the dataset has to be reopened to notice the changed directory
+        mag.read(offset=(10, 10, 10), size=(10, 10, 10))
+
+    # when opening the dataset, it searches both for the long and the short path
+    layer = WKDataset("./testoutput/long_layer_name").get_layer("color")
+    mag = layer.get_mag("2")
+    assert np.array_equal(
+        mag.read(offset=(10, 10, 10), size=(10, 10, 10)), np.expand_dims(write_data, 0)
+    )
+    layer.delete_mag("2")

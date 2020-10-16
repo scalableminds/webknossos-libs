@@ -106,7 +106,11 @@ class LayerProperties:
         self._wkw_magnifications.append(resolution)
 
     def _delete_resolution(self, resolution):
-        self._wkw_magnifications.delete(resolution)
+        resolutions_to_delete = [
+            res for res in self._wkw_magnifications if res.mag == Mag(resolution)
+        ]
+        for res in resolutions_to_delete:
+            self._wkw_magnifications.remove(res)
 
     def get_bounding_box(self) -> BoundingBox:
 
