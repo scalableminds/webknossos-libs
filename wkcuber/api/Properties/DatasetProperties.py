@@ -5,7 +5,7 @@ from wkcuber.api.Properties.LayerProperties import (
     SegmentationLayerProperties,
     LayerProperties,
 )
-from wkcuber.api.Properties.ResolutionProperties import WkResolution, TiffResolution
+from wkcuber.api.Properties.ResolutionProperties import WkResolution, Resolution
 from wkcuber.mag import Mag
 
 
@@ -155,11 +155,11 @@ class TiffProperties(Properties):
             for layer in data["dataLayers"]:
                 if layer["category"] == Layer.SEGMENTATION_TYPE:
                     data_layers[layer["name"]] = SegmentationLayerProperties._from_json(
-                        layer, TiffResolution, path
+                        layer, Resolution, path
                     )
                 else:
                     data_layers[layer["name"]] = LayerProperties._from_json(
-                        layer, TiffResolution, path
+                        layer, Resolution, path
                     )
 
             return cls(
@@ -196,5 +196,5 @@ class TiffProperties(Properties):
                 for res in self.data_layers[layer_name].wkw_magnifications
             ]
         ):
-            self.data_layers[layer_name]._add_resolution(TiffResolution(mag))
+            self.data_layers[layer_name]._add_resolution(Resolution(mag))
             self._export_as_json()

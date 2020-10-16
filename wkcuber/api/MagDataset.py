@@ -1,3 +1,4 @@
+import os
 from os.path import join
 
 from wkw import wkw
@@ -7,6 +8,16 @@ import wkcuber.api as api
 from wkcuber.api.View import WKView, TiffView
 from wkcuber.api.TiffData.TiffMag import TiffMagHeader
 from wkcuber.mag import Mag
+
+
+def find_mag_path_on_disk(dataset_path: str, layer_name: str, mag_name: str):
+    mag = Mag(mag_name)
+    short_mag_file_path = join(dataset_path, layer_name, mag.to_layer_name())
+    long_mag_file_path = join(dataset_path, layer_name, mag.to_long_layer_name())
+    if os.path.exists(short_mag_file_path):
+        return short_mag_file_path
+    else:
+        return long_mag_file_path
 
 
 class MagDataset:
@@ -99,7 +110,9 @@ class MagDataset:
                         f"Use is_bounded=False if you intend to write outside out the existing bounding box."
                     )
 
-        mag_file_path = join(self.layer.dataset.path, self.layer.name, self.name)
+        mag_file_path = find_mag_path_on_disk(
+            self.layer.dataset.path, self.layer.name, self.name
+        )
         return self._get_view_type()(
             mag_file_path, self.header, size, offset, is_bounded
         )
