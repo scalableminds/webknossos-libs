@@ -8,6 +8,8 @@ import numpy as np
 import os
 import re
 
+from wkcuber.utils import logger
+
 from wkcuber.api.Properties.DatasetProperties import (
     WKProperties,
     TiffProperties,
@@ -134,6 +136,10 @@ class AbstractDataset(ABC):
         num_channels=None,
         **kwargs,
     ):
+        if "dtype" in kwargs:
+            raise ValueError(
+                f"Called Dataset.add_layer with 'dtype'={kwargs['dtype']}. This parameter is deprecated. Use 'dtype_per_layer' or 'dtype_per_channel' instead."
+            )
         if num_channels is None:
             num_channels = 1
 
@@ -193,6 +199,10 @@ class AbstractDataset(ABC):
         num_channels=None,
         **kwargs,
     ) -> Layer:
+        if "dtype" in kwargs:
+            raise ValueError(
+                f"Called Dataset.get_or_add_layer with 'dtype'={kwargs['dtype']}. This parameter is deprecated. Use 'dtype_per_layer' or 'dtype_per_channel' instead."
+            )
         if layer_name in self.layers.keys():
             assert self.properties.data_layers[layer_name].category == category, (
                 f"Cannot get_or_add_layer: The layer '{layer_name}' already exists, but the categories do not match. "

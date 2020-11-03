@@ -1525,3 +1525,14 @@ def test_search_dataset_also_for_long_layer_name():
         mag.read(offset=(10, 10, 10), size=(10, 10, 10)), np.expand_dims(write_data, 0)
     )
     layer.delete_mag("2")
+
+
+def test_outdated_dtype_parameter():
+    delete_dir("./testoutput/outdated_dtype")
+
+    ds = WKDataset.create("./testoutput/outdated_dtype", scale=(1, 1, 1))
+    with pytest.raises(ValueError):
+        ds.get_or_add_layer("color", Layer.COLOR_TYPE, dtype=np.uint8, num_channels=1)
+
+    with pytest.raises(ValueError):
+        ds.add_layer("color", Layer.COLOR_TYPE, dtype=np.uint8, num_channels=1)
