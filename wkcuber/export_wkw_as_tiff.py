@@ -1,4 +1,4 @@
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
 from functools import partial
 import logging
 import wkw
@@ -21,7 +21,7 @@ from wkcuber.mag import Mag
 from wkcuber.utils import wait_and_ensure_success
 
 
-def create_parser():
+def create_parser() -> ArgumentParser:
     parser = ArgumentParser()
 
     parser.add_argument(
@@ -127,22 +127,22 @@ def export_tiff_slice(
     downsample: int,
     mag: Mag,
     batch_number: int,
-):
+) -> None:
 
     tiff_bbox = tiff_bbox.copy()
     number_of_slices = (
         min(tiff_bbox["size"][2] - batch_number * batch_size, batch_size) // mag.mag[2]
     )
-    tiff_bbox["size"] = [
+    tiff_bbox["size"] = (
         tiff_bbox["size"][0] // mag.mag[0],
         tiff_bbox["size"][1] // mag.mag[1],
         number_of_slices,
-    ]
-    tiff_bbox["topleft"] = [
+    )
+    tiff_bbox["topleft"] = (
         tiff_bbox["topleft"][0] // mag.mag[0],
         tiff_bbox["topleft"][1] // mag.mag[1],
         (tiff_bbox["topleft"][2] + batch_number * batch_size) // mag.mag[2],
-    ]
+    )
 
     with wkw.Dataset.open(dataset_path) as dataset:
         if tiling_size is None:
@@ -198,17 +198,17 @@ def export_tiff_slice(
 
 
 def export_tiff_stack(
-    wkw_file_path,
-    wkw_layer,
-    bbox,
-    mag,
-    destination_path,
-    name,
-    tiling_slice_size,
-    batch_size,
-    downsample,
-    args,
-):
+    wkw_file_path: str,
+    wkw_layer: str,
+    bbox: Dict[str, List[int]],
+    mag: Mag,
+    destination_path: str,
+    name: str,
+    tiling_slice_size: Union[None, Tuple[int, int]],
+    batch_size: int,
+    downsample: int,
+    args: Namespace,
+) -> None:
     os.makedirs(destination_path, exist_ok=True)
     dataset_path = os.path.join(wkw_file_path, wkw_layer, mag.to_layer_name())
 
@@ -234,13 +234,13 @@ def export_tiff_stack(
         wait_and_ensure_success(futures)
 
 
-def export_wkw_as_tiff(args):
+def export_wkw_as_tiff(args: Namespace) -> None:
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG)
 
     if args.bbox is None:
-        _, _, bbox, origin = read_metadata_for_layer(args.source_path, args.layer_name)
-        bbox = {"topleft": origin, "size": bbox}
+        _, _, bbox_dim, origin = read_metadata_for_layer(args.source_path, args.layer_name)
+        bbox = {"topleft": origin, "size": bbox_dim}
     else:
         bbox = {"topleft": list(args.bbox.topleft), "size": list(args.bbox.size)}
 
@@ -277,7 +277,7 @@ def export_wkw_as_tiff(args):
     )
 
 
-def run(args_list: List):
+def run(args_list: List) -> None:
     arguments = create_parser().parse_args(args_list)
     export_wkw_as_tiff(arguments)
 

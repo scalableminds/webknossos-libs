@@ -1,9 +1,13 @@
 import logging
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
+from collections import Callable
+from typing import Any
+
 from wkcuber.api.Dataset import WKDataset
-from wkcuber.api.bounding_box import BoundingBox
+from wkcuber.api.bounding_box import BoundingBox, BoundingBoxNamedTuple
 import numpy as np
 
+from wkcuber.mag import Mag
 from .utils import (
     add_verbose_flag,
     open_wkw,
@@ -20,7 +24,7 @@ from .compress import BACKUP_EXT
 CHUNK_SIZE = 1024
 
 
-def named_partial(func, *args, **kwargs):
+def named_partial(func: Callable, *args: Any, **kwargs: Any) -> Callable:
     # Propagate __name__ and __doc__ attributes to partial function
     partial_func = functools.partial(func, *args, **kwargs)
     functools.update_wrapper(partial_func, func)
@@ -30,7 +34,7 @@ def named_partial(func, *args, **kwargs):
     return partial_func
 
 
-def create_parser():
+def create_parser() -> ArgumentParser:
     parser = ArgumentParser()
 
     parser.add_argument("source_path", help="Path to input WKW dataset")
@@ -53,8 +57,8 @@ def create_parser():
 
 
 def assert_equality_for_chunk(
-    source_path: str, target_path: str, layer_name: str, mag, sub_box
-):
+    source_path: str, target_path: str, layer_name: str, mag: Mag, sub_box: BoundingBoxNamedTuple
+) -> None:
     wk_dataset = WKDataset(source_path)
     layer = wk_dataset.layers[layer_name]
     backup_wkw_info = WkwDatasetInfo(target_path, layer_name, mag, header=None)
@@ -69,7 +73,7 @@ def assert_equality_for_chunk(
         ), f"Data differs in bounding box {sub_box} for layer {layer_name} with mag {mag}"
 
 
-def check_equality(source_path: str, target_path: str, args=None):
+def check_equality(source_path: str, target_path: str, args: Namespace = None) -> None:
 
     logging.info(f"Comparing {source_path} with {target_path}")
 
@@ -84,7 +88,7 @@ def check_equality(source_path: str, target_path: str, args=None):
 
     existing_layer_names = src_layer_names
 
-    if args.layer_name is not None:
+    if args is not None and args.layer_name is not None:
         assert (
             args.layer_name in existing_layer_names
         ), f"Provided layer {args.layer_name} does not exist in input dataset."

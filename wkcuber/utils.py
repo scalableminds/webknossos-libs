@@ -1,5 +1,8 @@
 import re
 import time
+from concurrent.futures._base import Executor, Future
+from types import TracebackType
+
 import wkw
 import numpy as np
 import logging
@@ -8,15 +11,18 @@ import cluster_tools
 import json
 import os
 import psutil
-from typing import List, Tuple, Union
+from typing import List, Tuple, Union, Iterable, Generator, Any, Optional, Type
 from glob import iglob
 from collections import namedtuple
 from multiprocessing import cpu_count
-import concurrent
+from concurrent.futures import as_completed
 from os import path, getpid
 from math import floor, ceil
 from logging import getLogger
 import traceback
+
+from cluster_tools.schedulers.cluster_executor import ClusterExecutor
+
 from wkcuber.api.bounding_box import BoundingBox
 
 from .knossos import KnossosDataset
@@ -37,21 +43,21 @@ CUBE_REGEX = re.compile(r"z(\d+)/y(\d+)/x(\d+)(\.wkw)$")
 logger = getLogger(__name__)
 
 
-def open_wkw(info):
+def open_wkw(info: WkwDatasetInfo) -> wkw.Dataset:
     ds = wkw.Dataset.open(
         path.join(info.dataset_path, info.layer_name, str(info.mag)), info.header
     )
     return ds
 
 
-def ensure_wkw(target_wkw_info):
+def ensure_wkw(target_wkw_info: WkwDatasetInfo) -> None:
     assert target_wkw_info.header is not None
     # Open will create the dataset if it doesn't exist yet
     target_wkw = open_wkw(target_wkw_info)
     target_wkw.close()
 
 
-def cube_addresses(source_wkw_info):
+def cube_addresses(source_wkw_info: WkwDatasetInfo) -> List[Tuple[int, int, int]]:
     # Gathers all WKW cubes in the dataset
     with open_wkw(source_wkw_info) as source_wkw:
         wkw_addresses = list(parse_cube_file_name(f) for f in source_wkw.list_files())
@@ -59,31 +65,32 @@ def cube_addresses(source_wkw_info):
         return wkw_addresses
 
 
-def parse_cube_file_name(filename):
+def parse_cube_file_name(filename: str) -> Tuple[int, int, int]:
     m = CUBE_REGEX.search(filename)
+    if m is None:
+        raise ValueError(f"Failed to parse cube file name {filename}")
     return int(m.group(3)), int(m.group(2)), int(m.group(1))
 
 
-def parse_scale(scale):
+def parse_scale(scale: str) -> Tuple[float, ...]:
     try:
-        scale = tuple(float(x) for x in scale.split(","))
-        return scale
+        return tuple(float(x) for x in scale.split(","))
     except Exception:
         raise argparse.ArgumentTypeError("The scale could not be parsed")
 
 
-def parse_bounding_box(bbox_str):
+def parse_bounding_box(bbox_str: str) -> BoundingBox:
     try:
         return BoundingBox.from_csv(bbox_str)
     except Exception:
         raise argparse.ArgumentTypeError("The bounding box could not be parsed.")
 
 
-def open_knossos(info):
+def open_knossos(info: KnossosDatasetInfo) -> KnossosDataset:
     return KnossosDataset.open(info.dataset_path, np.dtype(info.dtype))
 
 
-def add_verbose_flag(parser):
+def add_verbose_flag(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--silent", help="Silent output", dest="verbose", action="store_false"
     )
@@ -91,7 +98,7 @@ def add_verbose_flag(parser):
     parser.set_defaults(verbose=True)
 
 
-def add_scale_flag(parser, required=True):
+def add_scale_flag(parser: argparse.ArgumentParser, required: bool = True) -> None:
     parser.add_argument(
         "--scale",
         "-s",
@@ -101,7 +108,7 @@ def add_scale_flag(parser, required=True):
     )
 
 
-def add_isotropic_flag(parser):
+def add_isotropic_flag(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--isotropic",
         help="Activates isotropic downsampling. The default is anisotropic downsampling. "
@@ -112,7 +119,7 @@ def add_isotropic_flag(parser):
     )
 
 
-def add_interpolation_flag(parser):
+def add_interpolation_flag(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--interpolation_mode",
         "-i",
@@ -121,15 +128,14 @@ def add_interpolation_flag(parser):
     )
 
 
-def setup_logging(args):
-
+def setup_logging(args: argparse.Namespace) -> None:
     logging.basicConfig(
         level=(logging.DEBUG if args.verbose else logging.INFO),
         format="%(asctime)s %(levelname)s %(message)s",
     )
 
 
-def find_files(source_path, extensions):
+def find_files(source_path: str, extensions: Iterable[str]) -> Generator[str, Any, None]:
     # Find all files with a matching file extension
     return (
         f
@@ -138,20 +144,20 @@ def find_files(source_path, extensions):
     )
 
 
-def get_chunks(arr, chunk_size):
+def get_chunks(arr: List[Any], chunk_size: int) -> Iterable[List[Any]]:
     for i in range(0, len(arr), chunk_size):
         yield arr[i : i + chunk_size]
 
 
 # min_z and max_z are both inclusive
-def get_regular_chunks(min_z, max_z, chunk_size):
+def get_regular_chunks(min_z: int, max_z: int, chunk_size: int) -> Iterable[Iterable[int]]:
     i = floor(min_z / chunk_size) * chunk_size
     while i < ceil((max_z + 1) / chunk_size) * chunk_size:
         yield range(i, i + chunk_size)
         i += chunk_size
 
 
-def add_distribution_flags(parser):
+def add_distribution_flags(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--jobs",
         "-j",
@@ -174,7 +180,7 @@ def add_distribution_flags(parser):
     )
 
 
-def add_batch_size_flag(parser):
+def add_batch_size_flag(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--batch_size",
         "-b",
@@ -184,7 +190,7 @@ def add_batch_size_flag(parser):
     )
 
 
-def get_executor_for_args(args):
+def get_executor_for_args(args: Optional[Union[argparse.Namespace, FallbackArgs]]) -> Union[ClusterExecutor, cluster_tools.WrappedProcessPoolExecutor]:
     if args is None:
         # For backwards compatibility with code from other packages
         # we allow args to be None. In this case we are defaulting
@@ -229,19 +235,19 @@ def get_executor_for_args(args):
 times = {}
 
 
-def time_start(identifier):
+def time_start(identifier: str) -> None:
     times[identifier] = time.time()
 
 
-def time_stop(identifier):
+def time_stop(identifier: str) -> None:
     _time = times.pop(identifier)
     logging.debug("{} took {:.8f}s".format(identifier, time.time() - _time))
 
 
 # Waits for all futures to complete and raises an exception
 # as soon as a future resolves with an error.
-def wait_and_ensure_success(futures):
-    for fut in concurrent.futures.as_completed(futures):
+def wait_and_ensure_success(futures: List[Future]) -> None:
+    for fut in as_completed(futures):
         fut.result()
 
 
@@ -250,7 +256,7 @@ class BufferedSliceWriter(object):
         self,
         dataset_path: str,
         layer_name: str,
-        dtype,
+        dtype: np.dtype,
         origin: Union[Tuple[int, int, int], List[int]],
         # buffer_size specifies, how many slices should be aggregated until they are flushed.
         buffer_size: int = 32,
@@ -272,11 +278,11 @@ class BufferedSliceWriter(object):
         )
         self.origin = origin
 
-        self.buffer = []
-        self.current_z = None
-        self.buffer_start_z = None
+        self.buffer: List[np.ndarray] = []
+        self.current_z: Optional[int] = None
+        self.buffer_start_z: int = -1
 
-    def write_slice(self, z: int, data: np.ndarray):
+    def write_slice(self, z: int, data: np.ndarray) -> None:
         """Takes in a slice in [y, x] shape, writes to WKW file."""
 
         if len(self.buffer) == 0:
@@ -293,7 +299,7 @@ class BufferedSliceWriter(object):
         if self.current_z % self.buffer_size == 0:
             self._write_buffer()
 
-    def _write_buffer(self):
+    def _write_buffer(self) -> None:
 
         if len(self.buffer) == 0:
             return
@@ -359,19 +365,19 @@ class BufferedSliceWriter(object):
         finally:
             self.buffer = []
 
-    def close(self):
+    def close(self) -> None:
 
         self._write_buffer()
         self.dataset.close()
 
-    def __enter__(self):
+    def __enter__(self) -> 'BufferedSliceWriter':
         return self
 
-    def __exit__(self, _type, _value, _tb):
+    def __exit__(self, _type: Optional[Type[BaseException]], _value: Optional[BaseException], _tb: Optional[TracebackType]) -> None:
         self.close()
 
 
-def log_memory_consumption(additional_output=""):
+def log_memory_consumption(additional_output: str = "") -> None:
     pid = os.getpid()
     process = psutil.Process(pid)
     logging.info(
@@ -385,7 +391,7 @@ def log_memory_consumption(additional_output=""):
     )
 
 
-def pad_or_crop_to_size_and_topleft(cube_data, target_size, target_topleft):
+def pad_or_crop_to_size_and_topleft(cube_data: np.ndarray, target_size: np.ndarray, target_topleft: np.ndarray) -> np.ndarray:
     """
     Given an numpy array and a target_size/target_topleft, the array
     will be padded so that it is within the bounding box descriped by topleft and size.

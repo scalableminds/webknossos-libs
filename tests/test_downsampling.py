@@ -1,4 +1,6 @@
 import logging
+from typing import Tuple
+
 import numpy as np
 from wkcuber.downsampling import (
     InterpolationModes,
@@ -20,7 +22,7 @@ source_info = WkwDatasetInfo("testdata/WT1_wkw", "color", 1, wkw.Header(np.uint8
 target_info = WkwDatasetInfo("testoutput/WT1_wkw", "color", 2, wkw.Header(np.uint8))
 
 
-def read_wkw(wkw_info, offset, size):
+def read_wkw(wkw_info: WkwDatasetInfo, offset: Tuple[int, int, int], size: Tuple[int, int, int]):
     with open_wkw(wkw_info) as wkw_dataset:
         return wkw_dataset.read(offset, size)
 
@@ -120,7 +122,7 @@ def downsample_test_helper(use_compress):
 
     assert np.all(
         target_buffer
-        == downsample_cube(source_buffer, (2, 2, 2), InterpolationModes.MAX)
+        == downsample_cube(source_buffer, [2, 2, 2], InterpolationModes.MAX)
     )
 
 
@@ -180,7 +182,7 @@ def test_downsample_multi_channel():
     for channel_index in range(num_channels):
         channels.append(
             downsample_cube(
-                source_data[channel_index], (2, 2, 2), InterpolationModes.MAX
+                source_data[channel_index], [2, 2, 2], InterpolationModes.MAX
             )
         )
     joined_buffer = np.stack(channels)

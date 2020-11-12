@@ -2,7 +2,7 @@ import time
 import wkw
 import shutil
 import logging
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
 from os import path, makedirs
 from uuid import uuid4
 from .mag import Mag
@@ -17,12 +17,12 @@ from .utils import (
     setup_logging,
 )
 from .metadata import detect_resolutions, convert_element_class_to_dtype
-from typing import List
+from typing import List, Tuple
 
 BACKUP_EXT = ".bak"
 
 
-def create_parser():
+def create_parser() -> ArgumentParser:
     parser = ArgumentParser()
 
     parser.add_argument(
@@ -53,7 +53,7 @@ def create_parser():
     return parser
 
 
-def compress_file_job(args):
+def compress_file_job(args: Tuple[str, str]) -> None:
     source_path, target_path = args
     try:
         logging.debug("Compressing '{}' to '{}'".format(source_path, target_path))
@@ -75,7 +75,7 @@ def compress_file_job(args):
         raise exc
 
 
-def compress_mag(source_path, layer_name, target_path, mag: Mag, args=None):
+def compress_mag(source_path: str, layer_name: str, target_path: str, mag: Mag, args: Namespace = None) -> None:
     if path.exists(path.join(target_path, layer_name, str(mag))):
         logging.error("Target path '{}' already exists".format(target_path))
         exit(1)
@@ -103,7 +103,7 @@ def compress_mag(source_path, layer_name, target_path, mag: Mag, args=None):
     logging.info("Mag {0} successfully compressed".format(str(mag)))
 
 
-def compress_mag_inplace(target_path, layer_name, mag: Mag, args=None):
+def compress_mag_inplace(target_path: str, layer_name: str, mag: Mag, args: Namespace = None) -> None:
     compress_target_path = "{}.compress-{}".format(target_path, uuid4())
     compress_mag(target_path, layer_name, compress_target_path, mag, args)
 
@@ -116,19 +116,21 @@ def compress_mag_inplace(target_path, layer_name, mag: Mag, args=None):
 
 
 def compress_mags(
-    source_path, layer_name, target_path=None, mags: List[Mag] = None, args=None
-):
-    with_tmp_dir = target_path is None
-    target_path = source_path + ".tmp" if with_tmp_dir else target_path
+    source_path: str, layer_name: str, target_path: str = None, mags: List[Mag] = None, args: Namespace = None
+) -> None:
+    if target_path is None:
+        target = source_path + ".tmp"
+    else:
+        target = target_path
 
     if mags is None:
         mags = list(detect_resolutions(source_path, layer_name))
     mags.sort()
 
     for mag in mags:
-        compress_mag(source_path, layer_name, target_path, mag, args)
+        compress_mag(source_path, layer_name, target, mag, args)
 
-    if with_tmp_dir:
+    if target_path is None:
         makedirs(path.join(source_path + BACKUP_EXT, layer_name), exist_ok=True)
         for mag in mags:
             shutil.move(
@@ -136,10 +138,10 @@ def compress_mags(
                 path.join(source_path + BACKUP_EXT, layer_name, str(mag)),
             )
             shutil.move(
-                path.join(target_path, layer_name, str(mag)),
+                path.join(target, layer_name, str(mag)),
                 path.join(source_path, layer_name, str(mag)),
             )
-        shutil.rmtree(target_path)
+        shutil.rmtree(target)
         logging.info(
             "Old files are still present in '{0}.bak'. Please remove them when not required anymore.".format(
                 source_path

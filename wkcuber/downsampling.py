@@ -1,9 +1,10 @@
 import logging
 import math
+from typing import Any, Tuple, Callable, Iterable, List, cast
 
 import wkw
 import numpy as np
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
 import os
 from scipy.ndimage.interpolation import zoom
 from itertools import product
@@ -30,23 +31,23 @@ from .utils import (
 DEFAULT_EDGE_LEN = 256
 
 
-def determine_buffer_edge_len(dataset):
+def determine_buffer_edge_len(dataset: wkw.Dataset) -> int:
     return min(DEFAULT_EDGE_LEN, dataset.header.file_len * dataset.header.block_len)
 
 
-def extend_wkw_dataset_info_header(wkw_info, **kwargs):
+def extend_wkw_dataset_info_header(wkw_info: WkwDatasetInfo, **kwargs: Any) -> None:
     for key, value in kwargs.items():
         setattr(wkw_info.header, key, value)
 
 
-def calculate_virtual_scale_for_target_mag(target_mag):
+def calculate_virtual_scale_for_target_mag(target_mag: Mag) -> Tuple[float, float, float]:
     """
     This scale is not the actual scale of the dataset
     The virtual scale is used for downsample_mags_anisotropic.
     """
     max_target_value = max(list(target_mag.to_array()))
     scale_array = max_target_value / np.array(target_mag.to_array())
-    return tuple(scale_array)
+    return cast(Tuple[float, float, float], tuple(scale_array))
 
 
 class InterpolationModes(Enum):
@@ -59,7 +60,7 @@ class InterpolationModes(Enum):
     MIN = 6
 
 
-def create_parser():
+def create_parser() -> ArgumentParser:
     parser = ArgumentParser()
 
     parser.add_argument("path", help="Directory containing the dataset.")
@@ -126,15 +127,15 @@ def create_parser():
 
 
 def downsample(
-    source_wkw_info,
-    target_wkw_info,
+    source_wkw_info: WkwDatasetInfo,
+    target_wkw_info: WkwDatasetInfo,
     source_mag: Mag,
     target_mag: Mag,
-    interpolation_mode,
-    compress,
-    buffer_edge_len=None,
-    args=None,
-):
+    interpolation_mode: InterpolationModes,
+    compress: bool,
+    buffer_edge_len: int = None,
+    args: Namespace = None,
+) -> None:
 
     assert source_mag < target_mag
     logging.info("Downsampling mag {} from mag {}".format(target_mag, source_mag))
@@ -215,7 +216,7 @@ def downsample(
     logging.info("Mag {0} successfully cubed".format(target_mag))
 
 
-def downsample_cube_job(args):
+def downsample_cube_job(args: Tuple[WkwDatasetInfo, WkwDatasetInfo, List[int], InterpolationModes, Tuple[int, int, int], int, bool, bool]) -> None:
     (
         source_wkw_info,
         target_wkw_info,
@@ -308,7 +309,7 @@ def downsample_cube_job(args):
         raise exc
 
 
-def non_linear_filter_3d(data, factors, func):
+def non_linear_filter_3d(data: np.ndarray, factors: List[int], func: Callable[[np.ndarray], np.ndarray]) -> np.ndarray:
     ds = data.shape
     assert not any((d % factor > 0 for (d, factor) in zip(ds, factors)))
     data = data.reshape((ds[0], factors[1], ds[1] // factors[1], ds[2]), order="F")
@@ -337,10 +338,10 @@ def non_linear_filter_3d(data, factors, func):
     return data
 
 
-def linear_filter_3d(data, factors, order):
-    factors = np.array(factors)
+def linear_filter_3d(data: np.ndarray, factors: List[int], order: int) -> np.ndarray:
+    factors_np = np.array(factors)
 
-    if not np.all(factors == factors[0]):
+    if not np.all(factors_np == factors[0]):
         logging.debug(
             "the selected filtering strategy does not support anisotropic downsampling. Selecting {} as uniform downsampling factor".format(
                 factors[0]
@@ -365,19 +366,19 @@ def linear_filter_3d(data, factors, order):
     )
 
 
-def _max(x):
+def _max(x: np.ndarray) -> np.ndarray:
     return np.max(x, axis=0)
 
 
-def _min(x):
+def _min(x: np.ndarray) -> np.ndarray:
     return np.min(x, axis=0)
 
 
-def _median(x):
+def _median(x: np.ndarray) -> np.ndarray:
     return np.median(x, axis=0).astype(x.dtype)
 
 
-def _mode(x):
+def _mode(x: np.ndarray) -> np.ndarray:
     """
     Fast mode implementation from: https://stackoverflow.com/a/35674754
     """
@@ -424,7 +425,7 @@ def _mode(x):
     return sort[tuple(index)]
 
 
-def downsample_cube(cube_buffer, factors, interpolation_mode):
+def downsample_cube(cube_buffer: np.ndarray, factors: List[int], interpolation_mode: InterpolationModes) -> np.ndarray:
     if interpolation_mode == InterpolationModes.MODE:
         return non_linear_filter_3d(cube_buffer, factors, _mode)
     elif interpolation_mode == InterpolationModes.MEDIAN:
@@ -443,7 +444,7 @@ def downsample_cube(cube_buffer, factors, interpolation_mode):
         raise Exception("Invalid interpolation mode: {}".format(interpolation_mode))
 
 
-def downsample_unpadded_data(buffer, target_mag, interpolation_mode):
+def downsample_unpadded_data(buffer: np.ndarray, target_mag: Mag, interpolation_mode: InterpolationModes) -> np.ndarray:
     logging.info(
         f"Downsampling buffer of size {buffer.shape} to mag {target_mag.to_layer_name()}"
     )
@@ -467,16 +468,16 @@ def downsample_unpadded_data(buffer, target_mag, interpolation_mode):
 
 
 def downsample_mag(
-    path,
-    layer_name,
+    path: str,
+    layer_name: str,
     source_mag: Mag,
     target_mag: Mag,
-    interpolation_mode="default",
-    compress=False,
-    buffer_edge_len=None,
-    args=None,
-):
-    interpolation_mode = parse_interpolation_mode(interpolation_mode, layer_name)
+    interpolation_mode: str = "default",
+    compress: bool = False,
+    buffer_edge_len: int = None,
+    args: Namespace = None,
+) -> None:
+    parsed_interpolation_mode = parse_interpolation_mode(interpolation_mode, layer_name)
 
     source_wkw_info = WkwDatasetInfo(path, layer_name, source_mag.to_layer_name(), None)
     with open_wkw(source_wkw_info) as source:
@@ -492,14 +493,14 @@ def downsample_mag(
         target_wkw_info,
         source_mag,
         target_mag,
-        interpolation_mode,
+        parsed_interpolation_mode,
         compress,
         buffer_edge_len,
         args,
     )
 
 
-def parse_interpolation_mode(interpolation_mode, layer_name):
+def parse_interpolation_mode(interpolation_mode: str, layer_name: str) -> InterpolationModes:
     if interpolation_mode.upper() == "DEFAULT":
         return (
             InterpolationModes.MEDIAN
@@ -518,9 +519,9 @@ def downsample_mags(
     interpolation_mode: str = "default",
     buffer_edge_len: int = None,
     compress: bool = True,
-    args=None,
+    args: Namespace = None,
     anisotropic: bool = True,
-):
+) -> None:
     assert layer_name and from_mag or not layer_name and not from_mag, (
         "You provided only one of the following "
         "parameters: layer_name, from_mag but both "
@@ -572,15 +573,15 @@ def downsample_mags(
 
 
 def downsample_mags_isotropic(
-    path,
-    layer_name,
+    path: str,
+    layer_name: str,
     from_mag: Mag,
     max_mag: Mag,
-    interpolation_mode,
-    compress,
-    buffer_edge_len=None,
-    args=None,
-):
+    interpolation_mode: str,
+    compress: bool,
+    buffer_edge_len: int = None,
+    args: Namespace = None,
+) -> None:
 
     target_mag = from_mag.scaled_by(2)
     while target_mag <= max_mag:
@@ -599,16 +600,16 @@ def downsample_mags_isotropic(
 
 
 def downsample_mags_anisotropic(
-    path,
-    layer_name,
+    path: str,
+    layer_name: str,
     from_mag: Mag,
     max_mag: Mag,
-    scale,
-    interpolation_mode,
-    compress,
-    buffer_edge_len=None,
-    args=None,
-):
+    scale: Tuple[float, float, float],
+    interpolation_mode: str,
+    compress: bool,
+    buffer_edge_len: int = None,
+    args: Namespace = None,
+) -> None:
 
     prev_mag = from_mag
     target_mag = get_next_anisotropic_mag(from_mag, scale)
@@ -628,7 +629,7 @@ def downsample_mags_anisotropic(
         target_mag = get_next_anisotropic_mag(target_mag, scale)
 
 
-def get_next_anisotropic_mag(mag, scale):
+def get_next_anisotropic_mag(mag: Mag, scale: Tuple[float, float, float]) -> Mag:
     max_index, min_index = detect_larger_and_smaller_dimension(scale)
     mag_array = mag.to_array()
     scale_increase = [1, 1, 1]
@@ -650,7 +651,7 @@ def get_next_anisotropic_mag(mag, scale):
     )
 
 
-def detect_larger_and_smaller_dimension(scale):
+def detect_larger_and_smaller_dimension(scale: Tuple[float, float, float]) -> Tuple[int, int]:
     scale_np = np.array(scale)
     return np.argmax(scale_np), np.argmin(scale_np)
 
