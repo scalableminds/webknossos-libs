@@ -78,7 +78,7 @@ def check_equality(source_path: str, target_path: str, args: Namespace = None) -
     logging.info(f"Comparing {source_path} with {target_path}")
 
     wk_src_dataset = WKDataset(source_path)
-    src_layer_names = wk_src_dataset.layers.keys()
+    src_layer_names = list(wk_src_dataset.layers.keys())
     target_layer_names = [
         layer["name"] for layer in detect_layers(target_path, 0, False)
     ]

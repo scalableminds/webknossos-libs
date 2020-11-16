@@ -190,16 +190,16 @@ def add_batch_size_flag(parser: argparse.ArgumentParser) -> None:
     )
 
 
-def get_executor_for_args(args: Optional[Union[argparse.Namespace, FallbackArgs]]) -> Union[ClusterExecutor, cluster_tools.WrappedProcessPoolExecutor]:
+def get_executor_for_args(args: Optional[argparse.Namespace]) -> Union[ClusterExecutor, cluster_tools.WrappedProcessPoolExecutor]:
+    executor = None
     if args is None:
         # For backwards compatibility with code from other packages
         # we allow args to be None. In this case we are defaulting
         # to these values:
-        args = FallbackArgs("multiprocessing", cpu_count())
-
-    executor = None
-
-    if args.distribution_strategy == "multiprocessing":
+        jobs = cpu_count()
+        executor = cluster_tools.get_executor("multiprocessing", max_workers=jobs)
+        logging.info("Using pool of {} workers.".format(jobs))
+    elif args.distribution_strategy == "multiprocessing":
         # Also accept "processes" instead of job to be compatible with segmentation-tools.
         # In the long run, the args should be unified and provided by the clustertools.
         if "jobs" in args:

@@ -2,7 +2,7 @@ import logging
 import time
 from argparse import ArgumentParser
 from pathlib import Path
-from typing import Tuple, Optional, Union
+from typing import Tuple, Optional, Union, cast
 
 import nibabel as nib
 import numpy as np
@@ -200,8 +200,8 @@ def convert_nifti(
     )
 
     if write_tiff:
-        ds = TiffDataset.get_or_create(target_path, scale=scale or (1, 1, 1))
-        layer = ds.get_or_add_layer(
+        tiff_ds = TiffDataset.get_or_create(target_path, scale=cast(Tuple[float, float, float], scale or (1, 1, 1)))
+        layer = tiff_ds.get_or_add_layer(
             layer_name,
             category_type,
             dtype_per_layer=np.dtype(dtype),
@@ -211,8 +211,8 @@ def convert_nifti(
 
         mag.write(cube_data.squeeze())
     else:
-        ds = WKDataset.get_or_create(target_path, scale=scale or (1, 1, 1))
-        layer = ds.get_or_add_layer(
+        wk_ds = WKDataset.get_or_create(target_path, scale=cast(Tuple[float, float, float], scale or (1, 1, 1)))
+        layer = wk_ds.get_or_add_layer(
             layer_name,
             category_type,
             dtype_per_layer=np.dtype(dtype),

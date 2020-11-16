@@ -1,12 +1,15 @@
 from os.path import join, dirname, isfile
+from pathlib import Path
+from typing import Tuple, Type, Union, Any, Dict, List, Optional, cast
 
 from wkw import wkw
 
+from wkcuber.api.Properties.ResolutionProperties import Resolution
 from wkcuber.mag import Mag
 from wkcuber.api.bounding_box import BoundingBox
 
 
-def extract_num_channels(num_channels_in_properties, path, layer, mag):
+def extract_num_channels(num_channels_in_properties: Optional[int], path: Union[str, Path], layer: str, mag: Optional[Dict[str, int]]) -> int:
     # if a wk dataset is not created with this API, then it most likely doesn't have the attribute 'num_channels' in the
     # datasource-properties.json. In this case we need to extract the 'num_channels' from the 'header.wkw'.
     if num_channels_in_properties is not None:
@@ -38,13 +41,13 @@ def extract_num_channels(num_channels_in_properties, path, layer, mag):
 class LayerProperties:
     def __init__(
         self,
-        name,
-        category,
-        element_class,
-        data_format,
-        num_channels,
-        bounding_box=None,
-        resolutions=None,
+        name: str,
+        category: str,
+        element_class: str,
+        data_format: str,
+        num_channels: int,
+        bounding_box: Dict[str, Union[int, Tuple[int, int, int]]] = None,
+        resolutions: List[Resolution] = None,
     ):
         self._name = name
         self._category = category
@@ -57,9 +60,9 @@ class LayerProperties:
             "height": 0,
             "depth": 0,
         }
-        self._wkw_magnifications = resolutions or []
+        self._wkw_magnifications: List[Resolution] = resolutions or []
 
-    def _to_json(self):
+    def _to_json(self) -> Dict[str, Any]:
         return {
             "name": self.name,
             "category": self.category,
@@ -78,7 +81,7 @@ class LayerProperties:
         }
 
     @classmethod
-    def _from_json(cls, json_data, resolution_type, dataset_path):
+    def _from_json(cls, json_data: Dict[str, Any], resolution_type: Type[Resolution], dataset_path: Union[str, Path]) -> 'LayerProperties':
         # create LayerProperties without resolutions
         layer_properties = cls(
             json_data["name"],
@@ -102,10 +105,10 @@ class LayerProperties:
 
         return layer_properties
 
-    def _add_resolution(self, resolution):
+    def _add_resolution(self, resolution: Resolution) -> None:
         self._wkw_magnifications.append(resolution)
 
-    def _delete_resolution(self, resolution):
+    def _delete_resolution(self, resolution: str) -> None:
         resolutions_to_delete = [
             res for res in self._wkw_magnifications if res.mag == Mag(resolution)
         ]
@@ -116,25 +119,25 @@ class LayerProperties:
 
         return BoundingBox(self.get_bounding_box_offset(), self.get_bounding_box_size())
 
-    def get_bounding_box_size(self) -> tuple:
+    def get_bounding_box_size(self) -> Tuple[int, int, int]:
         return (
             self.bounding_box["width"],
             self.bounding_box["height"],
             self.bounding_box["depth"],
         )
 
-    def get_bounding_box_offset(self) -> tuple:
-        return tuple(self.bounding_box["topLeft"])
+    def get_bounding_box_offset(self) -> Tuple[int, int, int]:
+        return cast(Tuple[int, int, int], tuple(self.bounding_box["topLeft"]))
 
-    def _set_bounding_box_size(self, size):
+    def _set_bounding_box_size(self, size: Tuple[int, int, int]) -> None:
         # Cast to int in case the provided parameter contains numpy integer
         self._bounding_box["width"] = int(size[0])
         self._bounding_box["height"] = int(size[1])
         self._bounding_box["depth"] = int(size[2])
 
-    def _set_bounding_box_offset(self, offset):
+    def _set_bounding_box_offset(self, offset: Tuple[int, int, int]) -> None:
         # Cast to int in case the provided parameter contains numpy integer
-        self._bounding_box["topLeft"] = tuple(map(int, offset))
+        self._bounding_box["topLeft"] = cast(Tuple[int, int, int], tuple(map(int, offset)))
 
     @property
     def name(self) -> str:
@@ -145,11 +148,11 @@ class LayerProperties:
         return self._category
 
     @property
-    def element_class(self):
+    def element_class(self) -> str:
         return self._element_class
 
     @property
-    def data_format(self):
+    def data_format(self) -> str:
         return self._data_format
 
     @property
@@ -161,23 +164,23 @@ class LayerProperties:
         return self._bounding_box
 
     @property
-    def wkw_magnifications(self) -> dict:
+    def wkw_magnifications(self) -> List[Resolution]:
         return self._wkw_magnifications
 
 
 class SegmentationLayerProperties(LayerProperties):
     def __init__(
         self,
-        name,
-        category,
-        element_class,
-        data_format,
-        num_channels,
-        bounding_box=None,
-        resolutions=None,
-        largest_segment_id=None,
-        mappings=None,
-    ):
+        name: str,
+        category: str,
+        element_class: str,
+        data_format: str,
+        num_channels: int,
+        bounding_box: Dict[str, Union[int, Tuple[int, int, int]]] = None,
+        resolutions: List[Resolution] = None,
+        largest_segment_id: int = None,
+        mappings: List[str] = None,
+    ) -> None:
         super().__init__(
             name,
             category,
@@ -190,7 +193,7 @@ class SegmentationLayerProperties(LayerProperties):
         self._largest_segment_id = largest_segment_id
         self._mappings = mappings
 
-    def _to_json(self):
+    def _to_json(self) -> Dict[str, Any]:
         json_properties = super()._to_json()
         json_properties["largestSegmentId"] = self._largest_segment_id
         if self._mappings is not None:
@@ -198,7 +201,7 @@ class SegmentationLayerProperties(LayerProperties):
         return json_properties
 
     @classmethod
-    def _from_json(cls, json_data, resolution_type, dataset_path):
+    def _from_json(cls, json_data: Dict[str, Any], resolution_type: Type[Resolution], dataset_path: Union[str, Path]) -> 'SegmentationLayerProperties':
         # create LayerProperties without resolutions
         layer_properties = cls(
             json_data["name"],
@@ -225,8 +228,9 @@ class SegmentationLayerProperties(LayerProperties):
 
     @property
     def largest_segment_id(self) -> int:
+        assert self._largest_segment_id is not None
         return self._largest_segment_id
 
     @property
-    def mappings(self) -> list:
+    def mappings(self) -> Optional[List[str]]:
         return self._mappings

@@ -1,7 +1,7 @@
 # mypy: allow-untyped-defs
 import json
 import re
-from typing import Dict, Generator, Iterable, List, Optional, Tuple, Union, NamedTuple
+from typing import Dict, Generator, Iterable, List, Optional, Tuple, Union, NamedTuple, cast
 
 import numpy as np
 
@@ -71,14 +71,14 @@ class BoundingBox:
             match is not None
         ), f"Could not extract bounding box from {checkpoint_name}"
         bbox_tuple = tuple(int(value) for value in match.group().split("_"))
-        topleft = bbox_tuple[:3]
-        size = bbox_tuple[3:6]
+        topleft = cast(Tuple[int, int, int], bbox_tuple[:3])
+        size = cast(Tuple[int, int, int], bbox_tuple[3:6])
         return BoundingBox.from_tuple2((topleft, size))
 
     @staticmethod
     def from_csv(csv_bbox: str) -> "BoundingBox":
         bbox_tuple = tuple(int(x) for x in csv_bbox.split(","))
-        return BoundingBox.from_tuple6(bbox_tuple)
+        return BoundingBox.from_tuple6(cast(Tuple[int, int, int, int, int, int], bbox_tuple))
 
     @staticmethod
     def from_auto(obj) -> "BoundingBox":

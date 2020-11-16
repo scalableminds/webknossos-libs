@@ -67,7 +67,7 @@ class Dm4ImageReader:
 
         return image_data_tag, image_tag
 
-    def _read_dimensions(self, dm4file: DM4File, image_data_tag: DM4File.DM4TagDir):
+    def _read_dimensions(self, dm4file: DM4File, image_data_tag: DM4File.DM4TagDir) -> Tuple[int, int]:
         width = dm4file.read_tag_data(
             image_data_tag.named_subdirs["Dimensions"].unnamed_tags[0]
         )
@@ -91,7 +91,7 @@ class Dm4ImageReader:
 
         return data
 
-    def read_dimensions(self, file_name: str):
+    def read_dimensions(self, file_name: str) -> Tuple[int, int]:
 
         dm4file = DM4File.open(file_name)
         image_data_tag, _ = self._read_tags(dm4file)
