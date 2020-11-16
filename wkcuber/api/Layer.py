@@ -1,13 +1,14 @@
 from shutil import rmtree
 from os.path import join
 from os import makedirs
-from typing import Tuple, Type, Union, Dict, Any
+from typing import Tuple, Type, Union, Dict, Any, TYPE_CHECKING
 
 import numpy as np
 
 from wkw import wkw
 
-from wkcuber.api.Dataset import AbstractDataset, TiffDataset
+if TYPE_CHECKING:
+    from wkcuber.api.Dataset import AbstractDataset, TiffDataset
 from wkcuber.api.MagDataset import (
     MagDataset,
     WKMagDataset,
@@ -27,7 +28,7 @@ class Layer:
     def __init__(
         self,
         name: str,
-        dataset: AbstractDataset,
+        dataset: "AbstractDataset",
         dtype_per_channel: np.dtype,
         num_channels: int,
     ) -> None:
@@ -175,7 +176,7 @@ class WKLayer(Layer):
 
 
 class TiffLayer(Layer):
-    dataset: TiffDataset
+    dataset: "TiffDataset"
 
     def add_mag(self, mag: Union[str, Mag]) -> MagDataset:
         # normalize the name of the mag

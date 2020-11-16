@@ -144,8 +144,14 @@ class View:
         for chunk in BoundingBox(self.global_offset, self.size).chunk(
             chunk_size, list(chunk_size)
         ):
-            relative_offset = np.array(chunk.topleft) - np.array(self.global_offset)
-            view = self.get_view(size=chunk.size, relative_offset=relative_offset)
+            relative_offset = cast(
+                Tuple[int, int, int],
+                tuple(np.array(chunk.topleft) - np.array(self.global_offset)),
+            )
+            view = self.get_view(
+                size=cast(Tuple[int, int, int], tuple(chunk.size)),
+                relative_offset=relative_offset,
+            )
             view.is_bounded = True
             job_args.append((view, job_args_per_chunk))
 

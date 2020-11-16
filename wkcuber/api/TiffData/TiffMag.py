@@ -210,7 +210,6 @@ class TiffMag:
     def read(self, off: Tuple[int, int, int], shape: Tuple[int, int, int]) -> np.array:
         # modify the shape to also include the num_channels
         shape_with_num_channels = shape + (self.header.num_channels,)
-
         data = np.zeros(
             shape=shape_with_num_channels, dtype=self.header.dtype_per_channel
         )
@@ -305,11 +304,13 @@ class TiffMag:
         return
 
     def calculate_relevant_slices(
-        self, offset: Tuple[int, int, int], shape: Tuple[int, int, int, int]
+        self,
+        offset: Tuple[int, int, int],
+        shape: Union[Tuple[int, int, int, int], Tuple[int, int, int]],
     ) -> Iterator[
         Tuple[
             Tuple[Optional[int], Optional[int], int],
-            Tuple[int, int, int],
+            Tuple[int, ...],
             Tuple[int, int],
             Tuple[int, int],
         ]
@@ -348,7 +349,7 @@ class TiffMag:
             for y in y_indices:
                 for z in range(offset[2], offset[2] + shape[2]):
                     # calculate the offsets and the size for the x and y coordinate
-                    tile_shape = (shape[0], shape[1], shape[3])
+                    tile_shape = shape[0:2] + shape[3:4]
                     offset_in_output_data = tuple(
                         offset[0:2] * np.equal((x, y), (x_first_index, y_first_index))
                     )
@@ -369,10 +370,9 @@ class TiffMag:
                             (np.array(offset[0:2]) - shape_top_left_corner)
                             * np.equal((x, y), (x_first_index, y_first_index))
                         )
-                        tile_shape = (
-                            shape_bottom_right - shape_top_left_corner[0],
-                            shape_bottom_right - shape_top_left_corner[1],
-                        ) + (shape[3],)
+                        tile_shape = tuple(
+                            shape_bottom_right - shape_top_left_corner
+                        ) + shape[3:4]
 
                     yield (
                         (x, y, z),

@@ -1,13 +1,15 @@
 import os
 from os.path import join
 from pathlib import Path
-from typing import Type, Tuple, Union, cast
+from typing import Type, Tuple, Union, cast, TYPE_CHECKING
 
 from wkw import wkw
 import numpy as np
 
 import wkcuber.api as api
-from wkcuber.api.Layer import TiffLayer, WKLayer, Layer
+
+if TYPE_CHECKING:
+    from wkcuber.api.Layer import TiffLayer, WKLayer, Layer
 from wkcuber.api.View import WKView, TiffView, View
 from wkcuber.api.TiffData.TiffMag import TiffMagHeader
 from wkcuber.mag import Mag
@@ -26,7 +28,7 @@ def find_mag_path_on_disk(
 
 
 class MagDataset:
-    def __init__(self, layer: Layer, name: str) -> None:
+    def __init__(self, layer: "Layer", name: str) -> None:
         self.layer = layer
         self.name = name
         self.header = self.get_header()
@@ -157,7 +159,12 @@ class WKMagDataset(MagDataset):
     header: wkw.Header
 
     def __init__(
-        self, layer: WKLayer, name: str, block_len: int, file_len: int, block_type: int
+        self,
+        layer: "WKLayer",
+        name: str,
+        block_len: int,
+        file_len: int,
+        block_type: int,
     ) -> None:
         self.block_len = block_len
         self.file_len = file_len
@@ -176,7 +183,7 @@ class WKMagDataset(MagDataset):
 
     @classmethod
     def create(
-        cls, layer: WKLayer, name: str, block_len: int, file_len: int, block_type: int
+        cls, layer: "WKLayer", name: str, block_len: int, file_len: int, block_type: int
     ) -> "WKMagDataset":
         mag_dataset = cls(layer, name, block_len, file_len, block_type)
         wkw.Dataset.create(
@@ -190,9 +197,9 @@ class WKMagDataset(MagDataset):
 
 
 class TiffMagDataset(MagDataset):
-    layer: TiffLayer
+    layer: "TiffLayer"
 
-    def __init__(self, layer: TiffLayer, name: str, pattern: str) -> None:
+    def __init__(self, layer: "TiffLayer", name: str, pattern: str) -> None:
         self.pattern = pattern
         super().__init__(layer, name)
 
@@ -205,7 +212,7 @@ class TiffMagDataset(MagDataset):
         )
 
     @classmethod
-    def create(cls, layer: TiffLayer, name: str, pattern: str) -> "TiffMagDataset":
+    def create(cls, layer: "TiffLayer", name: str, pattern: str) -> "TiffMagDataset":
         mag_dataset = cls(layer, name, pattern)
         return mag_dataset
 
