@@ -31,7 +31,7 @@ class View:
         self.is_bounded = is_bounded
         self._is_opened = False
 
-    def open(self) -> 'View':
+    def open(self) -> "View":
         pass
 
     def close(self) -> None:
@@ -43,16 +43,22 @@ class View:
             self.dataset = None
             self._is_opened = False
 
-    def write(self, data: np.ndarray, relative_offset: Tuple[int, int, int] = (0, 0, 0), allow_compressed_write: bool = False) -> None:
+    def write(
+        self,
+        data: np.ndarray,
+        relative_offset: Tuple[int, int, int] = (0, 0, 0),
+        allow_compressed_write: bool = False,
+    ) -> None:
         was_opened = self._is_opened
         # assert the size of the parameter data is not in conflict with the attribute self.size
         assert_non_negative_offset(relative_offset)
         self.assert_bounds(relative_offset, data.shape[-3:])
 
         # calculate the absolute offset
-        absolute_offset = cast(Tuple[int, int, int], tuple(
-            sum(x) for x in zip(self.global_offset, relative_offset)
-        ))
+        absolute_offset = cast(
+            Tuple[int, int, int],
+            tuple(sum(x) for x in zip(self.global_offset, relative_offset)),
+        )
 
         if self._is_compressed() and allow_compressed_write:
             absolute_offset, data = self._handle_compressed_write(absolute_offset, data)
@@ -66,7 +72,11 @@ class View:
         if not was_opened:
             self.close()
 
-    def read(self, offset: Tuple[int, int, int] = (0, 0, 0), size: Tuple[int, int, int] = None) -> np.array:
+    def read(
+        self,
+        offset: Tuple[int, int, int] = (0, 0, 0),
+        size: Tuple[int, int, int] = None,
+    ) -> np.array:
         was_opened = self._is_opened
         size = self.size if size is None else size
 
@@ -87,9 +97,15 @@ class View:
 
         return data
 
-    def get_view(self, size: Tuple[int, int, int], relative_offset: Tuple[int, int, int] = (0, 0, 0)) -> 'View':
+    def get_view(
+        self,
+        size: Tuple[int, int, int],
+        relative_offset: Tuple[int, int, int] = (0, 0, 0),
+    ) -> "View":
         self.assert_bounds(relative_offset, size)
-        view_offset = cast(Tuple[int, int, int], tuple(self.global_offset + np.array(relative_offset)))
+        view_offset = cast(
+            Tuple[int, int, int], tuple(self.global_offset + np.array(relative_offset))
+        )
         return type(self)(
             self.path,
             self.header,
@@ -98,19 +114,29 @@ class View:
             is_bounded=self.is_bounded,
         )
 
-    def check_bounds(self, offset: Tuple[int, int, int], size: Tuple[int, int, int]) -> bool:
+    def check_bounds(
+        self, offset: Tuple[int, int, int], size: Tuple[int, int, int]
+    ) -> bool:
         for s1, s2, off in zip(self.size, size, offset):
             if s2 + off > s1 and self.is_bounded:
                 return False
         return True
 
-    def assert_bounds(self, offset: Tuple[int, int, int], size: Tuple[int, int, int]) -> None:
+    def assert_bounds(
+        self, offset: Tuple[int, int, int], size: Tuple[int, int, int]
+    ) -> None:
         if not self.check_bounds(offset, size):
             raise AssertionError(
                 f"Accessing data out of bounds: The passed parameter 'size' {size} exceeds the size of the current view ({self.size})"
             )
 
-    def for_each_chunk(self, work_on_chunk: Callable[[List[Any]], None], job_args_per_chunk: Any, chunk_size: Tuple[int, int, int], executor: Union[ClusterExecutor, cluster_tools.WrappedProcessPoolExecutor]) -> None:
+    def for_each_chunk(
+        self,
+        work_on_chunk: Callable[[List[Any]], None],
+        job_args_per_chunk: Any,
+        chunk_size: Tuple[int, int, int],
+        executor: Union[ClusterExecutor, cluster_tools.WrappedProcessPoolExecutor],
+    ) -> None:
         self._check_chunk_size(chunk_size)
 
         job_args = []
@@ -132,13 +158,20 @@ class View:
     def _is_compressed(self) -> bool:
         return False
 
-    def _handle_compressed_write(self, absolute_offset: Tuple[int, int, int], data: np.ndarray) -> Tuple[Tuple[int, int, int], np.ndarray]:
+    def _handle_compressed_write(
+        self, absolute_offset: Tuple[int, int, int], data: np.ndarray
+    ) -> Tuple[Tuple[int, int, int], np.ndarray]:
         return absolute_offset, data
 
-    def __enter__(self) -> 'View':
+    def __enter__(self) -> "View":
         return self
 
-    def __exit__(self, _type: Optional[Type[BaseException]], _value: Optional[BaseException], _tb: Optional[TracebackType]) -> None:
+    def __exit__(
+        self,
+        _type: Optional[Type[BaseException]],
+        _value: Optional[BaseException],
+        _tb: Optional[TracebackType],
+    ) -> None:
         self.close()
 
 
@@ -179,7 +212,9 @@ class WKView(View):
             or self.header.block_type == wkw.Header.BLOCK_TYPE_LZ4HC
         )
 
-    def _handle_compressed_write(self, absolute_offset: Tuple[int, int, int], data: np.ndarray) -> Tuple[Tuple[int, int, int], np.ndarray]:
+    def _handle_compressed_write(
+        self, absolute_offset: Tuple[int, int, int], data: np.ndarray
+    ) -> Tuple[Tuple[int, int, int], np.ndarray]:
         # calculate aligned bounding box
         file_bb = np.full(3, self.header.file_len * self.header.block_len)
         absolute_offset_np = np.array(absolute_offset)

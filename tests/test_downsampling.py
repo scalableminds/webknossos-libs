@@ -22,7 +22,9 @@ source_info = WkwDatasetInfo("testdata/WT1_wkw", "color", 1, wkw.Header(np.uint8
 target_info = WkwDatasetInfo("testoutput/WT1_wkw", "color", 2, wkw.Header(np.uint8))
 
 
-def read_wkw(wkw_info: WkwDatasetInfo, offset: Tuple[int, int, int], size: Tuple[int, int, int]):
+def read_wkw(
+    wkw_info: WkwDatasetInfo, offset: Tuple[int, int, int], size: Tuple[int, int, int]
+):
     with open_wkw(wkw_info) as wkw_dataset:
         return wkw_dataset.read(offset, size)
 

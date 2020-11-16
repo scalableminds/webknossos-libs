@@ -1,5 +1,5 @@
 from types import TracebackType
-from typing import Tuple, Union, Any, Generator, Iterator, Optional, List, Type
+from typing import Tuple, Any, Generator, Iterator, Optional, Type
 
 import numpy as np
 import os
@@ -18,7 +18,9 @@ class KnossosDataset:
         self.root = root
         self.dtype = dtype
 
-    def read(self, offset: Tuple[int, int, int], shape: Tuple[int, int, int]) -> np.ndarray:
+    def read(
+        self, offset: Tuple[int, int, int], shape: Tuple[int, int, int]
+    ) -> np.ndarray:
         assert offset[0] % CUBE_EDGE_LEN == 0
         assert offset[1] % CUBE_EDGE_LEN == 0
         assert offset[2] % CUBE_EDGE_LEN == 0
@@ -96,11 +98,16 @@ class KnossosDataset:
         pass
 
     @staticmethod
-    def open(root: str, dtype: Optional[np.dtype]) -> 'KnossosDataset':
+    def open(root: str, dtype: Optional[np.dtype]) -> "KnossosDataset":
         return KnossosDataset(root, dtype)
 
-    def __enter__(self) -> 'KnossosDataset':
+    def __enter__(self) -> "KnossosDataset":
         return self
 
-    def __exit__(self, _type: Optional[Type[BaseException]], _value: Optional[BaseException], _tb: Optional[TracebackType]) -> None:
+    def __exit__(
+        self,
+        _type: Optional[Type[BaseException]],
+        _value: Optional[BaseException],
+        _tb: Optional[TracebackType],
+    ) -> None:
         self.close()

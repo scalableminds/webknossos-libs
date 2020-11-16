@@ -1,6 +1,6 @@
 import logging
 import math
-from typing import Any, Tuple, Callable, Iterable, List, cast
+from typing import Any, Tuple, Callable, List, cast
 
 import wkw
 import numpy as np
@@ -40,7 +40,9 @@ def extend_wkw_dataset_info_header(wkw_info: WkwDatasetInfo, **kwargs: Any) -> N
         setattr(wkw_info.header, key, value)
 
 
-def calculate_virtual_scale_for_target_mag(target_mag: Mag) -> Tuple[float, float, float]:
+def calculate_virtual_scale_for_target_mag(
+    target_mag: Mag
+) -> Tuple[float, float, float]:
     """
     This scale is not the actual scale of the dataset
     The virtual scale is used for downsample_mags_anisotropic.
@@ -216,7 +218,18 @@ def downsample(
     logging.info("Mag {0} successfully cubed".format(target_mag))
 
 
-def downsample_cube_job(args: Tuple[WkwDatasetInfo, WkwDatasetInfo, List[int], InterpolationModes, Tuple[int, int, int], int, bool, bool]) -> None:
+def downsample_cube_job(
+    args: Tuple[
+        WkwDatasetInfo,
+        WkwDatasetInfo,
+        List[int],
+        InterpolationModes,
+        Tuple[int, int, int],
+        int,
+        bool,
+        bool,
+    ]
+) -> None:
     (
         source_wkw_info,
         target_wkw_info,
@@ -309,7 +322,9 @@ def downsample_cube_job(args: Tuple[WkwDatasetInfo, WkwDatasetInfo, List[int], I
         raise exc
 
 
-def non_linear_filter_3d(data: np.ndarray, factors: List[int], func: Callable[[np.ndarray], np.ndarray]) -> np.ndarray:
+def non_linear_filter_3d(
+    data: np.ndarray, factors: List[int], func: Callable[[np.ndarray], np.ndarray]
+) -> np.ndarray:
     ds = data.shape
     assert not any((d % factor > 0 for (d, factor) in zip(ds, factors)))
     data = data.reshape((ds[0], factors[1], ds[1] // factors[1], ds[2]), order="F")
@@ -425,7 +440,9 @@ def _mode(x: np.ndarray) -> np.ndarray:
     return sort[tuple(index)]
 
 
-def downsample_cube(cube_buffer: np.ndarray, factors: List[int], interpolation_mode: InterpolationModes) -> np.ndarray:
+def downsample_cube(
+    cube_buffer: np.ndarray, factors: List[int], interpolation_mode: InterpolationModes
+) -> np.ndarray:
     if interpolation_mode == InterpolationModes.MODE:
         return non_linear_filter_3d(cube_buffer, factors, _mode)
     elif interpolation_mode == InterpolationModes.MEDIAN:
@@ -444,7 +461,9 @@ def downsample_cube(cube_buffer: np.ndarray, factors: List[int], interpolation_m
         raise Exception("Invalid interpolation mode: {}".format(interpolation_mode))
 
 
-def downsample_unpadded_data(buffer: np.ndarray, target_mag: Mag, interpolation_mode: InterpolationModes) -> np.ndarray:
+def downsample_unpadded_data(
+    buffer: np.ndarray, target_mag: Mag, interpolation_mode: InterpolationModes
+) -> np.ndarray:
     logging.info(
         f"Downsampling buffer of size {buffer.shape} to mag {target_mag.to_layer_name()}"
     )
@@ -500,7 +519,9 @@ def downsample_mag(
     )
 
 
-def parse_interpolation_mode(interpolation_mode: str, layer_name: str) -> InterpolationModes:
+def parse_interpolation_mode(
+    interpolation_mode: str, layer_name: str
+) -> InterpolationModes:
     if interpolation_mode.upper() == "DEFAULT":
         return (
             InterpolationModes.MEDIAN
@@ -542,7 +563,7 @@ def downsample_mags(
                 scale = read_datasource_properties(path)["scale"]
             except Exception as exc:
                 logging.error(
-                    f"Could not get the scale from the datasource-properties.json. Probably your path is wrong. "
+                    "Could not get the scale from the datasource-properties.json. Probably your path is wrong. "
                     "If you do not provide the layer_name or from_mag, they need to be included in the path."
                     "(e.g. dataset/color/1). Otherwise the path should just point at the dataset directory."
                     "the path: {path}"
@@ -651,7 +672,9 @@ def get_next_anisotropic_mag(mag: Mag, scale: Tuple[float, float, float]) -> Mag
     )
 
 
-def detect_larger_and_smaller_dimension(scale: Tuple[float, float, float]) -> Tuple[int, int]:
+def detect_larger_and_smaller_dimension(
+    scale: Tuple[float, float, float]
+) -> Tuple[int, int]:
     scale_np = np.array(scale)
     return np.argmax(scale_np), np.argmin(scale_np)
 

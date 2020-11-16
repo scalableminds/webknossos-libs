@@ -24,7 +24,13 @@ class Layer:
     COLOR_TYPE = "color"
     SEGMENTATION_TYPE = "segmentation"
 
-    def __init__(self, name: str, dataset: AbstractDataset, dtype_per_channel: np.dtype, num_channels: int) -> None:
+    def __init__(
+        self,
+        name: str,
+        dataset: AbstractDataset,
+        dtype_per_channel: np.dtype,
+        num_channels: int,
+    ) -> None:
         self.name = name
         self.dataset = dataset
         self.dtype_per_channel = dtype_per_channel
@@ -77,18 +83,18 @@ class Layer:
         self.set_bounding_box_size(size)
 
     def set_bounding_box_offset(self, offset: Tuple[int, int, int]) -> None:
-        size: Tuple[int, int, int] = self.dataset.properties.data_layers["color"].get_bounding_box_size()
-        self.dataset.properties._set_bounding_box_of_layer(
-            self.name, offset, size
-        )
+        size: Tuple[int, int, int] = self.dataset.properties.data_layers[
+            "color"
+        ].get_bounding_box_size()
+        self.dataset.properties._set_bounding_box_of_layer(self.name, offset, size)
         for _, mag in self.mags.items():
             mag.view.global_offset = offset
 
     def set_bounding_box_size(self, size: Tuple[int, int, int]) -> None:
-        offset: Tuple[int, int, int] = self.dataset.properties.data_layers["color"].get_bounding_box_offset()
-        self.dataset.properties._set_bounding_box_of_layer(
-            self.name, offset, size
-        )
+        offset: Tuple[int, int, int] = self.dataset.properties.data_layers[
+            "color"
+        ].get_bounding_box_offset()
+        self.dataset.properties._set_bounding_box_of_layer(self.name, offset, size)
         for _, mag in self.mags.items():
             mag.view.size = size
 
@@ -100,7 +106,11 @@ class WKLayer(Layer):
     mags: Dict[str, WKMagDataset]
 
     def add_mag(
-        self, mag: Union[str, Mag], block_len: int = None, file_len: int = None, block_type: int = None
+        self,
+        mag: Union[str, Mag],
+        block_len: int = None,
+        file_len: int = None,
+        block_type: int = None,
     ) -> MagDataset:
         if block_len is None:
             block_len = 32
@@ -116,7 +126,9 @@ class WKLayer(Layer):
         self._create_dir_for_mag(mag)
 
         self.mags[mag] = WKMagDataset.create(self, mag, block_len, file_len, block_type)
-        self.dataset.properties._add_mag(self.name, mag, cube_length=block_len * file_len)
+        self.dataset.properties._add_mag(
+            self.name, mag, cube_length=block_len * file_len
+        )
 
         return self.mags[mag]
 

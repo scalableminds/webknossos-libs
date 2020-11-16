@@ -75,7 +75,13 @@ def compress_file_job(args: Tuple[str, str]) -> None:
         raise exc
 
 
-def compress_mag(source_path: str, layer_name: str, target_path: str, mag: Mag, args: Namespace = None) -> None:
+def compress_mag(
+    source_path: str,
+    layer_name: str,
+    target_path: str,
+    mag: Mag,
+    args: Namespace = None,
+) -> None:
     if path.exists(path.join(target_path, layer_name, str(mag))):
         logging.error("Target path '{}' already exists".format(target_path))
         exit(1)
@@ -103,7 +109,9 @@ def compress_mag(source_path: str, layer_name: str, target_path: str, mag: Mag, 
     logging.info("Mag {0} successfully compressed".format(str(mag)))
 
 
-def compress_mag_inplace(target_path: str, layer_name: str, mag: Mag, args: Namespace = None) -> None:
+def compress_mag_inplace(
+    target_path: str, layer_name: str, mag: Mag, args: Namespace = None
+) -> None:
     compress_target_path = "{}.compress-{}".format(target_path, uuid4())
     compress_mag(target_path, layer_name, compress_target_path, mag, args)
 
@@ -116,7 +124,11 @@ def compress_mag_inplace(target_path: str, layer_name: str, mag: Mag, args: Name
 
 
 def compress_mags(
-    source_path: str, layer_name: str, target_path: str = None, mags: List[Mag] = None, args: Namespace = None
+    source_path: str,
+    layer_name: str,
+    target_path: str = None,
+    mags: List[Mag] = None,
+    args: Namespace = None,
 ) -> None:
     if target_path is None:
         target = source_path + ".tmp"

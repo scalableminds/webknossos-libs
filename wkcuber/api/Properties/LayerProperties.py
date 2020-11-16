@@ -9,7 +9,12 @@ from wkcuber.mag import Mag
 from wkcuber.api.bounding_box import BoundingBox
 
 
-def extract_num_channels(num_channels_in_properties: Optional[int], path: Union[str, Path], layer: str, mag: Optional[Dict[str, int]]) -> int:
+def extract_num_channels(
+    num_channels_in_properties: Optional[int],
+    path: Union[str, Path],
+    layer: str,
+    mag: Optional[Dict[str, int]],
+) -> int:
     # if a wk dataset is not created with this API, then it most likely doesn't have the attribute 'num_channels' in the
     # datasource-properties.json. In this case we need to extract the 'num_channels' from the 'header.wkw'.
     if num_channels_in_properties is not None:
@@ -81,7 +86,12 @@ class LayerProperties:
         }
 
     @classmethod
-    def _from_json(cls, json_data: Dict[str, Any], resolution_type: Type[Resolution], dataset_path: Union[str, Path]) -> 'LayerProperties':
+    def _from_json(
+        cls,
+        json_data: Dict[str, Any],
+        resolution_type: Type[Resolution],
+        dataset_path: Union[str, Path],
+    ) -> "LayerProperties":
         # create LayerProperties without resolutions
         layer_properties = cls(
             json_data["name"],
@@ -137,7 +147,9 @@ class LayerProperties:
 
     def _set_bounding_box_offset(self, offset: Tuple[int, int, int]) -> None:
         # Cast to int in case the provided parameter contains numpy integer
-        self._bounding_box["topLeft"] = cast(Tuple[int, int, int], tuple(map(int, offset)))
+        self._bounding_box["topLeft"] = cast(
+            Tuple[int, int, int], tuple(map(int, offset))
+        )
 
     @property
     def name(self) -> str:
@@ -201,7 +213,12 @@ class SegmentationLayerProperties(LayerProperties):
         return json_properties
 
     @classmethod
-    def _from_json(cls, json_data: Dict[str, Any], resolution_type: Type[Resolution], dataset_path: Union[str, Path]) -> 'SegmentationLayerProperties':
+    def _from_json(
+        cls,
+        json_data: Dict[str, Any],
+        resolution_type: Type[Resolution],
+        dataset_path: Union[str, Path],
+    ) -> "SegmentationLayerProperties":
         # create LayerProperties without resolutions
         layer_properties = cls(
             json_data["name"],

@@ -1,6 +1,6 @@
 import re
 import time
-from concurrent.futures._base import Executor, Future
+from concurrent.futures._base import Future
 from types import TracebackType
 
 import wkw
@@ -135,7 +135,9 @@ def setup_logging(args: argparse.Namespace) -> None:
     )
 
 
-def find_files(source_path: str, extensions: Iterable[str]) -> Generator[str, Any, None]:
+def find_files(
+    source_path: str, extensions: Iterable[str]
+) -> Generator[str, Any, None]:
     # Find all files with a matching file extension
     return (
         f
@@ -150,7 +152,9 @@ def get_chunks(arr: List[Any], chunk_size: int) -> Iterable[List[Any]]:
 
 
 # min_z and max_z are both inclusive
-def get_regular_chunks(min_z: int, max_z: int, chunk_size: int) -> Iterable[Iterable[int]]:
+def get_regular_chunks(
+    min_z: int, max_z: int, chunk_size: int
+) -> Iterable[Iterable[int]]:
     i = floor(min_z / chunk_size) * chunk_size
     while i < ceil((max_z + 1) / chunk_size) * chunk_size:
         yield range(i, i + chunk_size)
@@ -190,7 +194,9 @@ def add_batch_size_flag(parser: argparse.ArgumentParser) -> None:
     )
 
 
-def get_executor_for_args(args: Optional[argparse.Namespace]) -> Union[ClusterExecutor, cluster_tools.WrappedProcessPoolExecutor]:
+def get_executor_for_args(
+    args: Optional[argparse.Namespace]
+) -> Union[ClusterExecutor, cluster_tools.WrappedProcessPoolExecutor]:
     executor = None
     if args is None:
         # For backwards compatibility with code from other packages
@@ -370,10 +376,15 @@ class BufferedSliceWriter(object):
         self._write_buffer()
         self.dataset.close()
 
-    def __enter__(self) -> 'BufferedSliceWriter':
+    def __enter__(self) -> "BufferedSliceWriter":
         return self
 
-    def __exit__(self, _type: Optional[Type[BaseException]], _value: Optional[BaseException], _tb: Optional[TracebackType]) -> None:
+    def __exit__(
+        self,
+        _type: Optional[Type[BaseException]],
+        _value: Optional[BaseException],
+        _tb: Optional[TracebackType],
+    ) -> None:
         self.close()
 
 
@@ -391,7 +402,9 @@ def log_memory_consumption(additional_output: str = "") -> None:
     )
 
 
-def pad_or_crop_to_size_and_topleft(cube_data: np.ndarray, target_size: np.ndarray, target_topleft: np.ndarray) -> np.ndarray:
+def pad_or_crop_to_size_and_topleft(
+    cube_data: np.ndarray, target_size: np.ndarray, target_topleft: np.ndarray
+) -> np.ndarray:
     """
     Given an numpy array and a target_size/target_topleft, the array
     will be padded so that it is within the bounding box descriped by topleft and size.

@@ -178,7 +178,18 @@ def find_file_with_dimensions(
     return None
 
 
-def tile_cubing_job(args: Tuple[WkwDatasetInfo, List[int], str, int, Tuple[int, int, int], Dict[str, int], Dict[str, int], Dict[str, int]]) -> None:
+def tile_cubing_job(
+    args: Tuple[
+        WkwDatasetInfo,
+        List[int],
+        str,
+        int,
+        Tuple[int, int, int],
+        Dict[str, int],
+        Dict[str, int],
+        Dict[str, int],
+    ]
+) -> None:
     (
         target_wkw_info,
         z_batches,
@@ -251,7 +262,12 @@ def tile_cubing_job(args: Tuple[WkwDatasetInfo, List[int], str, int, Tuple[int, 
 
 
 def tile_cubing(
-    target_path: str, layer_name: str, dtype: str, batch_size: int, input_path_pattern: str, args: Namespace = None
+    target_path: str,
+    layer_name: str,
+    dtype: str,
+    batch_size: int,
+    input_path_pattern: str,
+    args: Namespace = None,
 ) -> None:
     decimal_lengths = get_digit_counts_for_dimensions(input_path_pattern)
     (

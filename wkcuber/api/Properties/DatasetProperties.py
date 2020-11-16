@@ -15,7 +15,14 @@ class Properties:
 
     FILE_NAME = "datasource-properties.json"
 
-    def __init__(self, path: Union[str, Path], name: str, scale: Tuple[float, float, float], team: str = "", data_layers: Dict[str, LayerProperties] = None) -> None:
+    def __init__(
+        self,
+        path: Union[str, Path],
+        name: str,
+        scale: Tuple[float, float, float],
+        team: str = "",
+        data_layers: Dict[str, LayerProperties] = None,
+    ) -> None:
         self._path = str(path)
         self._name = name
         self._team = team
@@ -33,7 +40,13 @@ class Properties:
         pass
 
     def _add_layer(
-        self, layer_name: str, category: str, element_class: str, data_format: str, num_channels: int = 1, **kwargs: Dict[str, Any]
+        self,
+        layer_name: str,
+        category: str,
+        element_class: str,
+        data_format: str,
+        num_channels: int = 1,
+        **kwargs: Dict[str, Any]
     ) -> None:
         # this layer is already in data_layers in case we reconstruct the dataset from a datasource-properties.json
         if layer_name not in self.data_layers:
@@ -67,7 +80,9 @@ class Properties:
         self._data_layers[layer_name]._delete_resolution(mag)
         self._export_as_json()
 
-    def _set_bounding_box_of_layer(self, layer_name: str, offset: Tuple[int, int, int], size: Tuple[int, int, int]) -> None:
+    def _set_bounding_box_of_layer(
+        self, layer_name: str, offset: Tuple[int, int, int], size: Tuple[int, int, int]
+    ) -> None:
         self._data_layers[layer_name]._set_bounding_box_size(size)
         self._data_layers[layer_name]._set_bounding_box_offset(offset)
         self._export_as_json()
@@ -137,14 +152,21 @@ class WKProperties(Properties):
             ]
         ):
             self._data_layers[layer_name]._add_resolution(
-                WkResolution(mag, kwargs['cube_length'])
+                WkResolution(mag, kwargs["cube_length"])
             )
             self._export_as_json()
 
 
 class TiffProperties(Properties):
     def __init__(
-        self, path: Union[str, Path], name: str, scale: Tuple[float, float, float], pattern: str, team: str = "", data_layers: Dict[str, LayerProperties] = None, tile_size: Optional[Tuple[int, int]] = (32, 32)
+        self,
+        path: Union[str, Path],
+        name: str,
+        scale: Tuple[float, float, float],
+        pattern: str,
+        team: str = "",
+        data_layers: Dict[str, LayerProperties] = None,
+        tile_size: Optional[Tuple[int, int]] = (32, 32),
     ) -> None:
         super().__init__(path, name, scale, team, data_layers)
         self.pattern = pattern

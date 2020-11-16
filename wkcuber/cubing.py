@@ -1,6 +1,6 @@
 import time
 import logging
-from typing import List, Tuple, Any
+from typing import List, Tuple
 
 import numpy as np
 import wkw
@@ -9,7 +9,11 @@ from os import path
 from natsort import natsorted
 
 from .mag import Mag
-from .downsampling import parse_interpolation_mode, downsample_unpadded_data, InterpolationModes
+from .downsampling import (
+    parse_interpolation_mode,
+    downsample_unpadded_data,
+    InterpolationModes,
+)
 from .utils import (
     get_chunks,
     find_files,
@@ -113,7 +117,9 @@ def read_image_file(file_name: str, dtype: type) -> np.ndarray:
         raise exc
 
 
-def prepare_slices_for_wkw(slices: List[np.ndarray], num_channels: int = None) -> np.ndarray:
+def prepare_slices_for_wkw(
+    slices: List[np.ndarray], num_channels: int = None
+) -> np.ndarray:
     # Write batch buffer which will have shape (x, y, channel_count, z)
     # since we concat along the last axis (z)
     buffer = np.concatenate(slices, axis=-1)
@@ -127,7 +133,18 @@ def prepare_slices_for_wkw(slices: List[np.ndarray], num_channels: int = None) -
     return buffer
 
 
-def cubing_job(args: Tuple[WkwDatasetInfo, List[int], Mag, InterpolationModes, List[str], int, Tuple[int, int], bool]) -> None:
+def cubing_job(
+    args: Tuple[
+        WkwDatasetInfo,
+        List[int],
+        Mag,
+        InterpolationModes,
+        List[str],
+        int,
+        Tuple[int, int],
+        bool,
+    ]
+) -> None:
     (
         target_wkw_info,
         z_batches,
@@ -212,7 +229,14 @@ def cubing_job(args: Tuple[WkwDatasetInfo, List[int], Mag, InterpolationModes, L
                 raise exc
 
 
-def cubing(source_path: str, target_path: str, layer_name: str, dtype: str, batch_size: int, args: Namespace) -> dict:
+def cubing(
+    source_path: str,
+    target_path: str,
+    layer_name: str,
+    dtype: str,
+    batch_size: int,
+    args: Namespace,
+) -> dict:
 
     source_files = find_source_filenames(source_path)
 

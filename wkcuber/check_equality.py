@@ -1,7 +1,6 @@
 import logging
 from argparse import ArgumentParser, Namespace
-from collections import Callable
-from typing import Any
+from typing import Any, Callable
 
 from wkcuber.api.Dataset import WKDataset
 from wkcuber.api.bounding_box import BoundingBox, BoundingBoxNamedTuple
@@ -57,7 +56,11 @@ def create_parser() -> ArgumentParser:
 
 
 def assert_equality_for_chunk(
-    source_path: str, target_path: str, layer_name: str, mag: Mag, sub_box: BoundingBoxNamedTuple
+    source_path: str,
+    target_path: str,
+    layer_name: str,
+    mag: Mag,
+    sub_box: BoundingBoxNamedTuple,
 ) -> None:
     wk_dataset = WKDataset(source_path)
     layer = wk_dataset.layers[layer_name]

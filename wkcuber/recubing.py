@@ -73,7 +73,12 @@ def next_higher_divisible_by(number: int, divisor: int) -> int:
 
 
 def recube(
-    source_path: str, target_path: str, layer_name: str, dtype: str, wkw_file_len: int = 32, compression: bool = True
+    source_path: str,
+    target_path: str,
+    layer_name: str,
+    dtype: str,
+    wkw_file_len: int = 32,
+    compression: bool = True,
 ) -> None:
     if compression:
         block_type = wkw.Header.BLOCK_TYPE_LZ4
@@ -143,7 +148,11 @@ def recube(
     logging.info(f"{layer_name} successfully resampled!")
 
 
-def recubing_cube_job(args: Tuple[WkwDatasetInfo, WkwDatasetInfo, List[int], List[int], int, Tuple[int, int, int]]) -> None:
+def recubing_cube_job(
+    args: Tuple[
+        WkwDatasetInfo, WkwDatasetInfo, List[int], List[int], int, Tuple[int, int, int]
+    ]
+) -> None:
     (
         source_wkw_info,
         target_wkw_info,

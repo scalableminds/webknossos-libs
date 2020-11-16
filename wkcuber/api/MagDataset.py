@@ -13,7 +13,9 @@ from wkcuber.api.TiffData.TiffMag import TiffMagHeader
 from wkcuber.mag import Mag
 
 
-def find_mag_path_on_disk(dataset_path: Union[str, Path], layer_name: str, mag_name: str) -> str:
+def find_mag_path_on_disk(
+    dataset_path: Union[str, Path], layer_name: str, mag_name: str
+) -> str:
     mag = Mag(mag_name)
     short_mag_file_path = join(dataset_path, layer_name, mag.to_layer_name())
     long_mag_file_path = join(dataset_path, layer_name, mag.to_long_layer_name())
@@ -37,10 +39,19 @@ class MagDataset:
     def close(self) -> None:
         self.view.close()
 
-    def read(self, offset: Tuple[int, int, int] = (0, 0, 0), size: Tuple[int, int, int] = None) -> np.array:
+    def read(
+        self,
+        offset: Tuple[int, int, int] = (0, 0, 0),
+        size: Tuple[int, int, int] = None,
+    ) -> np.array:
         return self.view.read(offset, size)
 
-    def write(self, data: np.ndarray, offset: Tuple[int, int, int] = (0, 0, 0), allow_compressed_write: bool = False) -> None:
+    def write(
+        self,
+        data: np.ndarray,
+        offset: Tuple[int, int, int] = (0, 0, 0),
+        allow_compressed_write: bool = False,
+    ) -> None:
         self._assert_valid_num_channels(data.shape)
         self.view.write(data, offset, allow_compressed_write)
         layer_properties = self.layer.dataset.properties.data_layers[self.layer.name]
@@ -71,13 +82,20 @@ class MagDataset:
         self.view.size = cast(Tuple[int, int, int], tuple(total_size))
 
         self.layer.dataset.properties._set_bounding_box_of_layer(
-            self.layer.name, cast(Tuple[int, int, int], tuple(new_offset_in_mag1)), cast(Tuple[int, int, int], tuple(total_size_in_mag1))
+            self.layer.name,
+            cast(Tuple[int, int, int], tuple(new_offset_in_mag1)),
+            cast(Tuple[int, int, int], tuple(total_size_in_mag1)),
         )
 
     def get_header(self) -> Union[TiffMagHeader, wkw.Header]:
         raise NotImplementedError
 
-    def get_view(self, size: Tuple[int, int, int] = None, offset: Tuple[int, int, int] = None, is_bounded: bool = True) -> View:
+    def get_view(
+        self,
+        size: Tuple[int, int, int] = None,
+        offset: Tuple[int, int, int] = None,
+        is_bounded: bool = True,
+    ) -> View:
         size_in_properties = self.layer.dataset.properties.data_layers[
             self.layer.name
         ].get_bounding_box_size()
@@ -138,7 +156,9 @@ class MagDataset:
 class WKMagDataset(MagDataset):
     header: wkw.Header
 
-    def __init__(self, layer: WKLayer, name: str, block_len: int, file_len: int, block_type: int) -> None:
+    def __init__(
+        self, layer: WKLayer, name: str, block_len: int, file_len: int, block_type: int
+    ) -> None:
         self.block_len = block_len
         self.file_len = file_len
         self.block_type = block_type
@@ -155,7 +175,9 @@ class WKMagDataset(MagDataset):
         )
 
     @classmethod
-    def create(cls, layer: WKLayer, name: str, block_len: int, file_len: int, block_type: int) -> "WKMagDataset":
+    def create(
+        cls, layer: WKLayer, name: str, block_len: int, file_len: int, block_type: int
+    ) -> "WKMagDataset":
         mag_dataset = cls(layer, name, block_len, file_len, block_type)
         wkw.Dataset.create(
             join(layer.dataset.path, layer.name, mag_dataset.name), mag_dataset.header

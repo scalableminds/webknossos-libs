@@ -1,7 +1,17 @@
 # mypy: allow-untyped-defs
 import json
 import re
-from typing import Dict, Generator, Iterable, List, Optional, Tuple, Union, NamedTuple, cast
+from typing import (
+    Dict,
+    Generator,
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+    Union,
+    NamedTuple,
+    cast,
+)
 
 import numpy as np
 
@@ -78,7 +88,9 @@ class BoundingBox:
     @staticmethod
     def from_csv(csv_bbox: str) -> "BoundingBox":
         bbox_tuple = tuple(int(x) for x in csv_bbox.split(","))
-        return BoundingBox.from_tuple6(cast(Tuple[int, int, int, int, int, int], bbox_tuple))
+        return BoundingBox.from_tuple6(
+            cast(Tuple[int, int, int, int, int, int], bbox_tuple)
+        )
 
     @staticmethod
     def from_auto(obj) -> "BoundingBox":

@@ -54,7 +54,9 @@ def create_parser() -> ArgumentParser:
     return parser
 
 
-def convert_cube_job(args: Tuple[Tuple[int, int, int], KnossosDatasetInfo, WkwDatasetInfo]) -> None:
+def convert_cube_job(
+    args: Tuple[Tuple[int, int, int], KnossosDatasetInfo, WkwDatasetInfo]
+) -> None:
     cube_xyz, source_knossos_info, target_wkw_info = args
     logging.info("Converting {},{},{}".format(cube_xyz[0], cube_xyz[1], cube_xyz[2]))
     ref_time = time.time()
@@ -73,7 +75,14 @@ def convert_cube_job(args: Tuple[Tuple[int, int, int], KnossosDatasetInfo, WkwDa
     )
 
 
-def convert_knossos(source_path: str, target_path: str, layer_name: str, dtype: str, mag: int = 1, args: Namespace = None) -> None:
+def convert_knossos(
+    source_path: str,
+    target_path: str,
+    layer_name: str,
+    dtype: str,
+    mag: int = 1,
+    args: Namespace = None,
+) -> None:
     source_knossos_info = KnossosDatasetInfo(source_path, dtype)
     target_wkw_info = WkwDatasetInfo(
         target_path, layer_name, mag, wkw.Header(convert_element_class_to_dtype(dtype))

@@ -153,7 +153,9 @@ def detect_value(
     return []
 
 
-def to_file_name(pattern: str, x: Optional[int], y: Optional[int], z: Optional[int]) -> str:
+def to_file_name(
+    pattern: str, x: Optional[int], y: Optional[int], z: Optional[int]
+) -> str:
     file_name = pattern
     if x is not None:
         file_name = replace_coordinate(file_name, "x", x)
@@ -185,10 +187,18 @@ class TiffMag:
         self.tiffs = dict()
         self.header = header
 
-        detected_z_range, detected_x_range, detected_y_range = detect_tile_ranges(self.root, self.header.pattern)
-        z_range: List[Optional[int]] = [None] if detected_z_range == range(0, 0) else list(detected_z_range)
-        y_range: List[Optional[int]] = [None] if detected_y_range == range(0, 0) else list(detected_y_range)
-        x_range: List[Optional[int]] = [None] if detected_x_range == range(0, 0) else list(detected_x_range)
+        detected_z_range, detected_x_range, detected_y_range = detect_tile_ranges(
+            self.root, self.header.pattern
+        )
+        z_range: List[Optional[int]] = [None] if detected_z_range == range(
+            0, 0
+        ) else list(detected_z_range)
+        y_range: List[Optional[int]] = [None] if detected_y_range == range(
+            0, 0
+        ) else list(detected_y_range)
+        x_range: List[Optional[int]] = [None] if detected_x_range == range(
+            0, 0
+        ) else list(detected_x_range)
         available_tiffs = list(itertools.product(x_range, y_range, z_range))
 
         for xyz in available_tiffs:
@@ -201,7 +211,9 @@ class TiffMag:
         # modify the shape to also include the num_channels
         shape_with_num_channels = shape + (self.header.num_channels,)
 
-        data = np.zeros(shape=shape_with_num_channels, dtype=self.header.dtype_per_channel)
+        data = np.zeros(
+            shape=shape_with_num_channels, dtype=self.header.dtype_per_channel
+        )
         for (
             xyz,
             _,
@@ -216,8 +228,10 @@ class TiffMag:
                 loaded_data = np.array(
                     self.tiffs[xyz].read(), self.header.dtype_per_channel
                 )[
-                    offset_in_output_data[0] : offset_in_output_data[0] + shape_with_num_channels[0],
-                    offset_in_output_data[1] : offset_in_output_data[1] + shape_with_num_channels[1],
+                    offset_in_output_data[0] : offset_in_output_data[0]
+                    + shape_with_num_channels[0],
+                    offset_in_output_data[1] : offset_in_output_data[1]
+                    + shape_with_num_channels[1],
                 ]
 
                 index_slice = [
@@ -290,7 +304,16 @@ class TiffMag:
     def close(self) -> None:
         return
 
-    def calculate_relevant_slices(self, offset: Tuple[int, int, int], shape: Tuple[int, int, int, int]) -> Iterator[Tuple[Tuple[Optional[int], Optional[int], int], Tuple[int, int, int], Tuple[int, int], Tuple[int, int]]]:
+    def calculate_relevant_slices(
+        self, offset: Tuple[int, int, int], shape: Tuple[int, int, int, int]
+    ) -> Iterator[
+        Tuple[
+            Tuple[Optional[int], Optional[int], int],
+            Tuple[int, int, int],
+            Tuple[int, int],
+            Tuple[int, int],
+        ]
+    ]:
         """
         The purpose of this method is to find out which tiles need to be touched.
         Each tile is specified by its (x, y, z)-dimensions.
@@ -348,15 +371,15 @@ class TiffMag:
                         )
                         tile_shape = (
                             shape_bottom_right - shape_top_left_corner[0],
-                            shape_bottom_right - shape_top_left_corner[1]
+                            shape_bottom_right - shape_top_left_corner[1],
                         ) + (shape[3],)
 
                     yield (
-                            (x, y, z),
-                            tile_shape,
-                            cast(Tuple[int, int], offset_in_output_data),
-                            offset_in_input_data,
-                        )
+                        (x, y, z),
+                        tile_shape,
+                        cast(Tuple[int, int], offset_in_output_data),
+                        offset_in_input_data,
+                    )
 
     def has_only_one_channel(self) -> bool:
         return self.header.num_channels == 1
@@ -381,20 +404,27 @@ class TiffMag:
                 f"The type of the provided data does not match the expected type. (Expected np.array of type {self.header.dtype_per_channel.name})"
             )
 
-    def get_file_name_for_layer(self, xyz: Tuple[Optional[int], Optional[int], Optional[int]]) -> str:
+    def get_file_name_for_layer(
+        self, xyz: Tuple[Optional[int], Optional[int], Optional[int]]
+    ) -> str:
         x, y, z = xyz
         return os.path.join(self.root, to_file_name(self.header.pattern, x, y, z))
 
     @staticmethod
-    def open(root: str, header: TiffMagHeader = None) -> 'TiffMag':
+    def open(root: str, header: TiffMagHeader = None) -> "TiffMag":
         if header is None:
             header = TiffMagHeader()
         return TiffMag(root, header)
 
-    def __enter__(self) -> 'TiffMag':
+    def __enter__(self) -> "TiffMag":
         return self
 
-    def __exit__(self, _type: Optional[Type[BaseException]], _value: Optional[BaseException], _tb: Optional[TracebackType]) -> None:
+    def __exit__(
+        self,
+        _type: Optional[Type[BaseException]],
+        _value: Optional[BaseException],
+        _tb: Optional[TracebackType],
+    ) -> None:
         self.close()
 
 
@@ -412,13 +442,13 @@ class TiffReader:
         self.file_name = file_name
 
     @classmethod
-    def init_tiff(cls, pixels: np.ndarray, file_name: str) -> 'TiffReader':
+    def init_tiff(cls, pixels: np.ndarray, file_name: str) -> "TiffReader":
         tr = TiffReader(file_name)
         tr.write(pixels)
         return tr
 
     @classmethod
-    def open(cls, file_name: str) -> 'TiffReader':
+    def open(cls, file_name: str) -> "TiffReader":
         return cls(file_name)
 
     def read(self) -> np.array:
@@ -429,7 +459,9 @@ class TiffReader:
         os.makedirs(os.path.dirname(self.file_name), exist_ok=True)
         io.imsave(self.file_name, transpose_for_skimage(pixels), check_contrast=False)
 
-    def merge_with_image(self, foreground_pixels: np.ndarray, offset: Tuple[int, int]) -> None:
+    def merge_with_image(
+        self, foreground_pixels: np.ndarray, offset: Tuple[int, int]
+    ) -> None:
         background_pixels = self.read()
         bg_shape = background_pixels.shape
         fg_shape = foreground_pixels.shape

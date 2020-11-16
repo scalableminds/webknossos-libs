@@ -216,7 +216,7 @@ def export_tiff_stack(
         num_slices = ceil(bbox["size"][2] / batch_size)
         slices = range(0, num_slices)
 
-        logging.info(f"starting jobs")
+        logging.info("starting jobs")
         futures = executor.map_to_futures(
             partial(
                 export_tiff_slice,
@@ -239,7 +239,9 @@ def export_wkw_as_tiff(args: Namespace) -> None:
         logging.basicConfig(level=logging.DEBUG)
 
     if args.bbox is None:
-        _, _, bbox_dim, origin = read_metadata_for_layer(args.source_path, args.layer_name)
+        _, _, bbox_dim, origin = read_metadata_for_layer(
+            args.source_path, args.layer_name
+        )
         bbox = {"topleft": origin, "size": bbox_dim}
     else:
         bbox = {"topleft": list(args.bbox.topleft), "size": list(args.bbox.size)}

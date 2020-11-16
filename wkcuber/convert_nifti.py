@@ -200,7 +200,9 @@ def convert_nifti(
     )
 
     if write_tiff:
-        tiff_ds = TiffDataset.get_or_create(target_path, scale=cast(Tuple[float, float, float], scale or (1, 1, 1)))
+        tiff_ds = TiffDataset.get_or_create(
+            target_path, scale=cast(Tuple[float, float, float], scale or (1, 1, 1))
+        )
         layer = tiff_ds.get_or_add_layer(
             layer_name,
             category_type,
@@ -211,7 +213,9 @@ def convert_nifti(
 
         mag.write(cube_data.squeeze())
     else:
-        wk_ds = WKDataset.get_or_create(target_path, scale=cast(Tuple[float, float, float], scale or (1, 1, 1)))
+        wk_ds = WKDataset.get_or_create(
+            target_path, scale=cast(Tuple[float, float, float], scale or (1, 1, 1))
+        )
         layer = wk_ds.get_or_add_layer(
             layer_name,
             category_type,
@@ -265,11 +269,41 @@ def convert_folder_nifti(
 
     for path in paths:
         if path == color_path:
-            convert_nifti(path, target_path, "color", "uint8", scale, write_tiff, bbox_to_enforce, use_orientation_header, flip_axes=flip_axes)
+            convert_nifti(
+                path,
+                target_path,
+                "color",
+                "uint8",
+                scale,
+                write_tiff,
+                bbox_to_enforce,
+                use_orientation_header,
+                flip_axes=flip_axes,
+            )
         elif path == segmentation_path:
-            convert_nifti(path, target_path, "segmentation", "uint8", scale, write_tiff, bbox_to_enforce, use_orientation_header, flip_axes=flip_axes)
+            convert_nifti(
+                path,
+                target_path,
+                "segmentation",
+                "uint8",
+                scale,
+                write_tiff,
+                bbox_to_enforce,
+                use_orientation_header,
+                flip_axes=flip_axes,
+            )
         else:
-            convert_nifti(path, target_path, path.stem, "uint8", scale, write_tiff, bbox_to_enforce, use_orientation_header, flip_axes=flip_axes)
+            convert_nifti(
+                path,
+                target_path,
+                path.stem,
+                "uint8",
+                scale,
+                write_tiff,
+                bbox_to_enforce,
+                use_orientation_header,
+                flip_axes=flip_axes,
+            )
 
 
 def main() -> None:

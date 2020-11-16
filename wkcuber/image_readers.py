@@ -1,4 +1,4 @@
-from typing import Tuple, Any, Dict, Union
+from typing import Tuple, Dict, Union
 
 import numpy as np
 import logging
@@ -67,7 +67,9 @@ class Dm4ImageReader:
 
         return image_data_tag, image_tag
 
-    def _read_dimensions(self, dm4file: DM4File, image_data_tag: DM4File.DM4TagDir) -> Tuple[int, int]:
+    def _read_dimensions(
+        self, dm4file: DM4File, image_data_tag: DM4File.DM4TagDir
+    ) -> Tuple[int, int]:
         width = dm4file.read_tag_data(
             image_data_tag.named_subdirs["Dimensions"].unnamed_tags[0]
         )
@@ -107,7 +109,9 @@ class Dm4ImageReader:
 
 class ImageReader:
     def __init__(self) -> None:
-        self.readers: Dict[str, Union[PillowImageReader, Dm3ImageReader, Dm4ImageReader]] = {
+        self.readers: Dict[
+            str, Union[PillowImageReader, Dm3ImageReader, Dm4ImageReader]
+        ] = {
             ".tif": PillowImageReader(),
             ".tiff": PillowImageReader(),
             ".jpg": PillowImageReader(),

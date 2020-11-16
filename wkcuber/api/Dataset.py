@@ -32,7 +32,11 @@ def is_int(s: str) -> bool:
         return False
 
 
-def convert_dtypes(dtype: Union[str, np.dtype], num_channels: int, dtype_per_layer_to_dtype_per_channel: bool) -> str:
+def convert_dtypes(
+    dtype: Union[str, np.dtype],
+    num_channels: int,
+    dtype_per_layer_to_dtype_per_channel: bool,
+) -> str:
     op = operator.truediv if dtype_per_layer_to_dtype_per_channel else operator.mul
 
     # split the dtype into the actual type and the number of bits
@@ -46,7 +50,9 @@ def convert_dtypes(dtype: Union[str, np.dtype], num_channels: int, dtype_per_lay
     return "".join(converted_dtype_parts)
 
 
-def dtype_per_layer_to_dtype_per_channel(dtype_per_layer: Union[str, np.dtype], num_channels: int) -> np.dtype:
+def dtype_per_layer_to_dtype_per_channel(
+    dtype_per_layer: Union[str, np.dtype], num_channels: int
+) -> np.dtype:
     try:
         return np.dtype(
             convert_dtypes(
@@ -60,7 +66,9 @@ def dtype_per_layer_to_dtype_per_channel(dtype_per_layer: Union[str, np.dtype], 
         )
 
 
-def dtype_per_channel_to_dtype_per_layer(dtype_per_channel: Union[str, np.dtype], num_channels: int) -> str:
+def dtype_per_channel_to_dtype_per_layer(
+    dtype_per_channel: Union[str, np.dtype], num_channels: int
+) -> str:
     return convert_dtypes(
         np.dtype(dtype_per_channel),
         num_channels,
@@ -92,7 +100,7 @@ class AbstractDataset(ABC):
                 self.layers[layer_name].setup_mag(resolution.mag.to_layer_name())
 
     @classmethod
-    def create_with_properties(cls, properties: Properties) -> 'AbstractDataset':
+    def create_with_properties(cls, properties: Properties) -> "AbstractDataset":
         dataset_path = path.dirname(properties.path)
 
         if os.path.exists(dataset_path):
@@ -203,12 +211,12 @@ class AbstractDataset(ABC):
             )
         if layer_name in self.layers.keys():
             assert (
-                    num_channels is None
-                    or self.layers[layer_name].num_channels == num_channels
+                num_channels is None
+                or self.layers[layer_name].num_channels == num_channels
             ), (
-                    f"Cannot get_or_add_layer: The layer '{layer_name}' already exists, but the number of channels do not match. "
-                    + f"The number of channels of the existing layer are '{self.layers[layer_name].num_channels}' "
-                    + f"and the passed parameter is '{num_channels}'."
+                f"Cannot get_or_add_layer: The layer '{layer_name}' already exists, but the number of channels do not match. "
+                + f"The number of channels of the existing layer are '{self.layers[layer_name].num_channels}' "
+                + f"and the passed parameter is '{num_channels}'."
             )
             assert self.properties.data_layers[layer_name].category == category, (
                 f"Cannot get_or_add_layer: The layer '{layer_name}' already exists, but the categories do not match. "
@@ -217,8 +225,12 @@ class AbstractDataset(ABC):
             )
 
             if dtype_per_channel is not None or dtype_per_layer is not None:
-                dtype_per_channel = dtype_per_channel or dtype_per_layer_to_dtype_per_channel(
-                    dtype_per_layer, num_channels or self.layers[layer_name].num_channels
+                dtype_per_channel = (
+                    dtype_per_channel
+                    or dtype_per_layer_to_dtype_per_channel(
+                        dtype_per_layer,
+                        num_channels or self.layers[layer_name].num_channels,
+                    )
                 )
                 assert (
                     dtype_per_channel is None
@@ -277,13 +289,22 @@ class AbstractDataset(ABC):
             self.layers[layer_name].setup_mag(resolution.mag.to_layer_name())
         return self.layers[layer_name]
 
-    def get_view(self, layer_name: str, mag: Union[str, Mag], size: Tuple[int, int, int], offset: Tuple[int, int, int] = None, is_bounded: bool = True) -> View:
+    def get_view(
+        self,
+        layer_name: str,
+        mag: Union[str, Mag],
+        size: Tuple[int, int, int],
+        offset: Tuple[int, int, int] = None,
+        is_bounded: bool = True,
+    ) -> View:
         layer = self.get_layer(layer_name)
         mag_ds = layer.get_mag(mag)
 
         return mag_ds.get_view(size=size, offset=offset, is_bounded=is_bounded)
 
-    def _create_layer(self, layer_name: str, dtype_per_channel: np.dtype, num_channels: int) -> Layer:
+    def _create_layer(
+        self, layer_name: str, dtype_per_channel: np.dtype, num_channels: int
+    ) -> Layer:
         raise NotImplementedError
 
     @abstractmethod
@@ -297,13 +318,17 @@ class AbstractDataset(ABC):
 
 class WKDataset(AbstractDataset):
     @classmethod
-    def create(cls, dataset_path: Union[str, Path], scale: Tuple[float, float, float]) -> "WKDataset":
+    def create(
+        cls, dataset_path: Union[str, Path], scale: Tuple[float, float, float]
+    ) -> "WKDataset":
         name = basename(normpath(dataset_path))
         properties = WKProperties(join(dataset_path, Properties.FILE_NAME), name, scale)
         return cast(WKDataset, WKDataset.create_with_properties(properties))
 
     @classmethod
-    def get_or_create(cls, dataset_path: Union[str, Path], scale: Tuple[float, float, float]) -> "WKDataset":
+    def get_or_create(
+        cls, dataset_path: Union[str, Path], scale: Tuple[float, float, float]
+    ) -> "WKDataset":
         if os.path.exists(
             join(dataset_path, Properties.FILE_NAME)
         ):  # use the properties file to check if the Dataset exists
@@ -323,7 +348,9 @@ class WKDataset(AbstractDataset):
     def to_tiff_dataset(self, new_dataset_path: Union[str, Path]) -> "TiffDataset":
         raise NotImplementedError  # TODO; implement
 
-    def _create_layer(self, layer_name: str, dtype_per_channel: np.dtype, num_channels: int) -> Layer:
+    def _create_layer(
+        self, layer_name: str, dtype_per_channel: np.dtype, num_channels: int
+    ) -> Layer:
         return WKLayer(layer_name, self, dtype_per_channel, num_channels)
 
     def _get_properties_type(self) -> Type[WKProperties]:
@@ -337,7 +364,12 @@ class TiffDataset(AbstractDataset):
     properties: TiffProperties
 
     @classmethod
-    def create(cls, dataset_path: Union[str, Path], scale: Tuple[float, float, float], pattern: str = "{zzzzz}.tif") -> "TiffDataset":
+    def create(
+        cls,
+        dataset_path: Union[str, Path],
+        scale: Tuple[float, float, float],
+        pattern: str = "{zzzzz}.tif",
+    ) -> "TiffDataset":
         validate_pattern(pattern)
         name = basename(normpath(dataset_path))
         properties = TiffProperties(
@@ -350,7 +382,12 @@ class TiffDataset(AbstractDataset):
         return cast(TiffDataset, TiffDataset.create_with_properties(properties))
 
     @classmethod
-    def get_or_create(cls, dataset_path: Union[str, Path], scale: Tuple[float, float, float], pattern: str = None) -> "TiffDataset":
+    def get_or_create(
+        cls,
+        dataset_path: Union[str, Path],
+        scale: Tuple[float, float, float],
+        pattern: str = None,
+    ) -> "TiffDataset":
         if os.path.exists(
             join(dataset_path, Properties.FILE_NAME)
         ):  # use the properties file to check if the Dataset exists
@@ -377,7 +414,9 @@ class TiffDataset(AbstractDataset):
     def to_wk_dataset(self, new_dataset_path: Union[str, Path]) -> WKDataset:
         raise NotImplementedError  # TODO; implement
 
-    def _create_layer(self, layer_name: str, dtype_per_channel: np.dtype, num_channels: int) -> Layer:
+    def _create_layer(
+        self, layer_name: str, dtype_per_channel: np.dtype, num_channels: int
+    ) -> Layer:
         return TiffLayer(layer_name, self, dtype_per_channel, num_channels)
 
     def _get_properties_type(self) -> Type[TiffProperties]:
@@ -392,7 +431,11 @@ class TiledTiffDataset(AbstractDataset):
 
     @classmethod
     def create(
-        cls, dataset_path: Union[str, Path], scale: Tuple[float, float, float], tile_size: Tuple[int, int], pattern: str = "{xxxxx}/{yyyyy}/{zzzzz}.tif"
+        cls,
+        dataset_path: Union[str, Path],
+        scale: Tuple[float, float, float],
+        tile_size: Tuple[int, int],
+        pattern: str = "{xxxxx}/{yyyyy}/{zzzzz}.tif",
     ) -> "TiledTiffDataset":
         validate_pattern(pattern)
         name = basename(normpath(dataset_path))
@@ -403,10 +446,18 @@ class TiledTiffDataset(AbstractDataset):
             pattern=pattern,
             tile_size=tile_size,
         )
-        return cast(TiledTiffDataset, TiledTiffDataset.create_with_properties(properties))
+        return cast(
+            TiledTiffDataset, TiledTiffDataset.create_with_properties(properties)
+        )
 
     @classmethod
-    def get_or_create(cls, dataset_path: Union[str, Path], scale: Tuple[float, float, float], tile_size: Tuple[int, int], pattern: str = None) -> "TiledTiffDataset":
+    def get_or_create(
+        cls,
+        dataset_path: Union[str, Path],
+        scale: Tuple[float, float, float],
+        tile_size: Tuple[int, int],
+        pattern: str = None,
+    ) -> "TiledTiffDataset":
         if os.path.exists(
             join(dataset_path, Properties.FILE_NAME)
         ):  # use the properties file to check if the Dataset exists
@@ -437,7 +488,9 @@ class TiledTiffDataset(AbstractDataset):
         self.data_format = "tiled_tiff"
         assert isinstance(self.properties, TiffProperties)
 
-    def _create_layer(self, layer_name: str, dtype_per_channel: np.dtype, num_channels: int) -> Layer:
+    def _create_layer(
+        self, layer_name: str, dtype_per_channel: np.dtype, num_channels: int
+    ) -> Layer:
         return TiledTiffLayer(layer_name, self, dtype_per_channel, num_channels)
 
     def _get_properties_type(self) -> Type[TiffProperties]:

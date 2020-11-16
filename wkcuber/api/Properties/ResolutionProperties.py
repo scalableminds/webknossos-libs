@@ -11,7 +11,7 @@ class Resolution:
         return {"resolution": self.mag.to_array()}
 
     @classmethod
-    def _from_json(cls, json_data: Dict[str, Any]) -> 'Resolution':
+    def _from_json(cls, json_data: Dict[str, Any]) -> "Resolution":
         return cls(json_data["resolution"])
 
     @property
@@ -28,7 +28,7 @@ class WkResolution(Resolution):
         return {"resolution": self.mag.to_array(), "cubeLength": self.cube_length}
 
     @classmethod
-    def _from_json(cls, json_data: Dict[str, Any]) -> 'WkResolution':
+    def _from_json(cls, json_data: Dict[str, Any]) -> "WkResolution":
         return cls(json_data["resolution"], json_data["cubeLength"])
 
     @property

@@ -8,7 +8,7 @@ import glob
 from argparse import ArgumentParser
 from glob import iglob
 from os import path, listdir
-from typing import Optional, Dict, Tuple, Iterable, Generator
+from typing import Optional, Tuple, Iterable, Generator
 from .mag import Mag
 from typing import List
 from .utils import add_verbose_flag, setup_logging, add_scale_flag
@@ -87,7 +87,10 @@ def write_webknossos_metadata(
 
 
 def refresh_metadata(
-    wkw_path: str, max_id: int = 0, compute_max_id: bool = False, exact_bounding_box: Optional[dict] = None
+    wkw_path: str,
+    max_id: int = 0,
+    compute_max_id: bool = False,
+    exact_bounding_box: Optional[dict] = None,
 ) -> None:
     """
     Updates the datasource-properties.json file for a given dataset.
@@ -143,7 +146,9 @@ def convert_element_class_to_dtype(elementClass: str) -> np.dtype:
     return conversion_map.get(elementClass, default_dtype)
 
 
-def read_metadata_for_layer(wkw_path: str, layer_name: str) -> Tuple[dict, np.dtype, List[int], List[int]]:
+def read_metadata_for_layer(
+    wkw_path: str, layer_name: str
+) -> Tuple[dict, np.dtype, List[int], List[int]]:
     datasource_properties = read_datasource_properties(wkw_path)
 
     layers = datasource_properties["dataLayers"]
@@ -194,7 +199,9 @@ def detect_dtype(dataset_path: str, layer: str, mag: Mag = Mag(1)) -> str:
                 return "uint" + str(8 * num_channels)
             else:
                 return convert_dtype_to_element_class(voxel_size)
-    raise RuntimeError(f"Failed to detect dtype (for {dataset_path}, {layer}, {mag}) because the layer_path is None")
+    raise RuntimeError(
+        f"Failed to detect dtype (for {dataset_path}, {layer}, {mag}) because the layer_path is None"
+    )
 
 
 def detect_cubeLength(dataset_path: str, layer: str, mag: Mag = Mag(1)) -> int:
@@ -202,7 +209,9 @@ def detect_cubeLength(dataset_path: str, layer: str, mag: Mag = Mag(1)) -> int:
     if layer_path is not None:
         with wkw.Dataset.open(layer_path) as dataset:
             return dataset.header.block_len * dataset.header.file_len
-    raise RuntimeError(f"Failed to detect the cube length (for {dataset_path}, {layer}, {mag}) because the layer_path is None")
+    raise RuntimeError(
+        f"Failed to detect the cube length (for {dataset_path}, {layer}, {mag}) because the layer_path is None"
+    )
 
 
 def detect_bbox(dataset_path: str, layer: str, mag: Mag = Mag(1)) -> Optional[dict]:
@@ -251,7 +260,10 @@ def detect_resolutions(dataset_path: str, layer: str) -> Generator:
 
 
 def detect_standard_layer(
-    dataset_path: str, layer_name: str, exact_bounding_box: Optional[dict] = None, category: str = "color"
+    dataset_path: str,
+    layer_name: str,
+    exact_bounding_box: Optional[dict] = None,
+    category: str = "color",
 ) -> dict:
     # Perform metadata detection for well-known layers
 
@@ -309,7 +321,11 @@ def detect_mappings(dataset_path: str, layer_name: str) -> List[str]:
 
 
 def detect_segmentation_layer(
-    dataset_path: str, layer_name: str, max_id: int, compute_max_id: bool = False, exact_bounding_box: dict = None
+    dataset_path: str,
+    layer_name: str,
+    max_id: int,
+    compute_max_id: bool = False,
+    exact_bounding_box: dict = None,
 ) -> dict:
     layer_info = detect_standard_layer(
         dataset_path, layer_name, exact_bounding_box, category="segmentation"
@@ -340,7 +356,12 @@ def detect_segmentation_layer(
     return layer_info
 
 
-def detect_layers(dataset_path: str, max_id: int, compute_max_id: bool, exact_bounding_box: Optional[dict] = None) -> Iterable[dict]:
+def detect_layers(
+    dataset_path: str,
+    max_id: int,
+    compute_max_id: bool,
+    exact_bounding_box: Optional[dict] = None,
+) -> Iterable[dict]:
     # Detect metadata for well-known layers (i.e., color, prediction and segmentation)
     if path.exists(path.join(dataset_path, "color")):
         yield detect_standard_layer(dataset_path, "color", exact_bounding_box)

@@ -65,7 +65,7 @@ class Mag(object):
     def to_array(self) -> List[int]:
         return self.mag
 
-    def scaled_by(self, factor: int) -> 'Mag':
+    def scaled_by(self, factor: int) -> "Mag":
         return Mag([mag * factor for mag in self.mag])
 
     def scale_by(self, factor: int) -> None:
@@ -77,7 +77,7 @@ class Mag(object):
     def divide_by(self, d: int) -> None:
         self.mag = [mag // d for mag in self.mag]
 
-    def divided_by(self, d: int) -> 'Mag':
+    def divided_by(self, d: int) -> "Mag":
         return Mag([mag // d for mag in self.mag])
 
     def as_np(self) -> np.ndarray:
