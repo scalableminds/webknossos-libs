@@ -370,9 +370,10 @@ class TiffMag:
                             (np.array(offset[0:2]) - shape_top_left_corner)
                             * np.equal((x, y), (x_first_index, y_first_index))
                         )
-                        tile_shape = tuple(
-                            shape_bottom_right - shape_top_left_corner
-                        ) + shape[3:4]
+                        tile_shape = (
+                            tuple(shape_bottom_right - shape_top_left_corner)
+                            + shape[3:4]
+                        )
 
                     yield (
                         (x, y, z),
