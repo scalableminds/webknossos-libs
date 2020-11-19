@@ -286,7 +286,7 @@ class BufferedSliceWriter(object):
 
         self.buffer: List[np.ndarray] = []
         self.current_z: Optional[int] = None
-        self.buffer_start_z: int = -1
+        self.buffer_start_z: Optional[int] = None
 
     def write_slice(self, z: int, data: np.ndarray) -> None:
         """Takes in a slice in [y, x] shape, writes to WKW file."""
@@ -331,6 +331,9 @@ class BufferedSliceWriter(object):
         log_memory_consumption()
 
         try:
+            assert (
+                self.buffer_start_z is not None
+            ), "Failed to write buffer: The buffer_start_z is not set."
             origin_with_offset = list(self.origin)
             origin_with_offset[2] = self.buffer_start_z
             x_max = max(slice.shape[0] for slice in self.buffer)
