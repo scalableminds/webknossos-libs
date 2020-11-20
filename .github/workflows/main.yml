@@ -34,9 +34,6 @@ jobs:
 
     - name: Lint code
       run: python -m pylint -j4 wkcuber
-
-    - name: Check typing
-      run: ./typecheck.sh
       
     - name: Python tests
       run: py.test tests
