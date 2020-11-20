@@ -38,9 +38,6 @@ jobs:
     - name: Check typing
       run: |
         ./typecheck.sh
-
-    - name: Check typing
-      run: git status
       
     - name: Python tests
       run: py.test tests
