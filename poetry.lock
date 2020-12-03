@@ -149,6 +149,20 @@ optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 
 [[package]]
+name = "imagecodecs"
+version = "2020.5.30"
+description = "Image transformation, compression, and decompression codecs"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+numpy = ">=1.15.1"
+
+[package.extras]
+all = ["matplotlib (>=3.1)", "tifffile (>=2020.5.25)"]
+
+[[package]]
 name = "imageio"
 version = "2.6.1"
 description = "Library for reading and writing a wide range of image, video, scientific, and volumetric data formats."
@@ -587,7 +601,7 @@ testing = ["pathlib2", "contextlib2", "unittest2"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "068aa75d4a00b5eda80bebaeb4c82b709fe914e7e74ffb38e9255e693df8c904"
+content-hash = "5c033c48978abf4b98e452eb9867102c88c81e7a2bca2d913ae5ef3b7372a1b8"
 
 [metadata.files]
 appdirs = [
@@ -679,6 +693,29 @@ decorator = [
 idna = [
     {file = "idna-2.8-py2.py3-none-any.whl", hash = "sha256:ea8b7f6188e6fa117537c3df7da9fc686d485087abf6ac197f9c46432f7e4a3c"},
     {file = "idna-2.8.tar.gz", hash = "sha256:c357b3f628cf53ae2c4c05627ecc484553142ca23264e593d327bcde5e9c3407"},
+]
+imagecodecs = [
+    {file = "imagecodecs-2020.5.30-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:110318270910b3b62941da60fed009dd669434d6344675c48d25df5207cdafa1"},
+    {file = "imagecodecs-2020.5.30-cp36-cp36m-manylinux2010_i686.whl", hash = "sha256:916862eb43e69dfeb27205d6f0cc05a39cadad1df98a29f8162326d9c986dc49"},
+    {file = "imagecodecs-2020.5.30-cp36-cp36m-manylinux2010_x86_64.whl", hash = "sha256:e649942e921ada0a16da0aabd4b731be879e620bfe9b1db0ed7dac008e4eaa2b"},
+    {file = "imagecodecs-2020.5.30-cp36-cp36m-manylinux2014_x86_64.whl", hash = "sha256:d291527b4870095b45c457e1afafca812b6b9e6953c7802a37acd9bc8979bd66"},
+    {file = "imagecodecs-2020.5.30-cp36-cp36m-win32.whl", hash = "sha256:4e60edca9a8e6e1373f5e4a7409a30fc6ba4b698829825d178479a474e8b11ce"},
+    {file = "imagecodecs-2020.5.30-cp36-cp36m-win_amd64.whl", hash = "sha256:9d881e607322da66cd3d86f242fef6b2da484a413f98fef017032e6e86975ec5"},
+    {file = "imagecodecs-2020.5.30-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:db8f8f7742d29455cb6f537a15b8703afb74ba3b97ad465cd876460aaf8d5393"},
+    {file = "imagecodecs-2020.5.30-cp37-cp37m-manylinux2010_i686.whl", hash = "sha256:8fb63b74511e06d8ba57332f051fc7648d10f0fc3d984b6236f5db58a0535e66"},
+    {file = "imagecodecs-2020.5.30-cp37-cp37m-manylinux2010_x86_64.whl", hash = "sha256:b980b8cb082d7c4aaa22cd339648a749a4e5c5e017743dec49ffebea3eaf96ee"},
+    {file = "imagecodecs-2020.5.30-cp37-cp37m-manylinux2014_x86_64.whl", hash = "sha256:779ed32c215f9d0b41172e64d80e5968a6382204cdb658404519b09972177a60"},
+    {file = "imagecodecs-2020.5.30-cp37-cp37m-win32.whl", hash = "sha256:3ba80aa03d859aa4e86e5576e5790885d4e9af23bb7109f69f77d83327b3aaa1"},
+    {file = "imagecodecs-2020.5.30-cp37-cp37m-win_amd64.whl", hash = "sha256:d4d5dcfbb55058f7a186ec8a4355b4f05e71968c3d4f092e67bc75ca233a0859"},
+    {file = "imagecodecs-2020.5.30-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:7a6e06c7c8d8f3272da01987ad757dc0b657d87034d76081648a9b0dc3668499"},
+    {file = "imagecodecs-2020.5.30-cp38-cp38-manylinux2010_i686.whl", hash = "sha256:594a1b53de13cbc0f26ad6a2a3742d29351edcb7de34b19bf000254ef2755e29"},
+    {file = "imagecodecs-2020.5.30-cp38-cp38-manylinux2010_x86_64.whl", hash = "sha256:0332d45a3f4d469df14a59eee1e9aa1c35d078b7fcfefd12b542b033cc80b1ae"},
+    {file = "imagecodecs-2020.5.30-cp38-cp38-manylinux2014_x86_64.whl", hash = "sha256:9f2f011a482925d20f3e777fb6533f9784b4cf55f14292fe29405098cfb63ab3"},
+    {file = "imagecodecs-2020.5.30-cp38-cp38-win32.whl", hash = "sha256:9c98b48fa4c28bb7a142f2df034bd50b2b9fb893090297bb7f158073f23c1c02"},
+    {file = "imagecodecs-2020.5.30-cp38-cp38-win_amd64.whl", hash = "sha256:a00d7405066b85bab92300c2e4bd51b3a1a75aa8bca449acf1079ae3b30d381f"},
+    {file = "imagecodecs-2020.5.30-cp39-cp39-win32.whl", hash = "sha256:36bee5410f8ed9c9e3a69a3d08b314a6d15b82b4f3a65a278a3b6dfa9ce013fe"},
+    {file = "imagecodecs-2020.5.30-cp39-cp39-win_amd64.whl", hash = "sha256:68077c9ae5d3f06c8aa37b1ebdc007dc0bea3f47c627950c235f4e0b0a871118"},
+    {file = "imagecodecs-2020.5.30.tar.gz", hash = "sha256:c8c776922d3a60824d8d3d31ba674a250d1b4d429e81349b5c88c34d4353ddb5"},
 ]
 imageio = [
     {file = "imageio-2.6.1-py3-none-any.whl", hash = "sha256:c9763e5c187ecf74091c845626b0bdcc6130a20a0de7a86ae0108e2b5335ed3f"},
