@@ -8,7 +8,7 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: [3.6, 3.7]
+        python-version: [3.7]
 
     steps:
     - uses: actions/checkout@v1
@@ -25,19 +25,19 @@ jobs:
       run: |
         pip install poetry
         poetry install
-      
+
     - name: Decompress test data
       run: tar -xzvf testdata/WT1_wkw.tar.gz
-      
+
     - name: Check formatting
       run: black --check .
 
     - name: Lint code
       run: python -m pylint -j4 wkcuber
-      
+
     - name: Python tests
       run: py.test tests
-      
+
     - name: Smoke test docker
       run: |
         docker run --rm \
@@ -55,19 +55,19 @@ jobs:
 
     - name: Test tile cubing
       run: tests/scripts/tile_cubing.sh
-      
+
     - name: Test simple tiff cubing
       run: tests/scripts/simple_tiff_cubing.sh
-      
+
     - name: Test simple tiff cubing (no compression)
       run: tests/scripts/simple_tiff_cubing_no_compression.sh
-      
+
     - name: Test metadata generation
       run: tests/scripts/meta_generation.sh
-      
+
     - name: Test KNOSSOS conversion
       run: tests/scripts/knossos_conversion.sh
-      
+
     - name: Decompress reference magnification data
       run: |
         mkdir -p testdata/tiff_mag_2_reference
@@ -94,7 +94,7 @@ jobs:
         DOCKER_PASS: ${{ secrets.DOCKER_PASS }}
       run: |
         echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-    
+
     - name: Push docker images
       run: |
         docker push scalableminds/webknossos-cuber:$GITHUB_SHA
