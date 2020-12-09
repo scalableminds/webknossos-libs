@@ -8,6 +8,7 @@ from .schedulers.pbs import PBSExecutor
 from .util import random_string, call, enrich_future_with_uncaught_warning
 from . import pickling
 import importlib
+import multiprocessing
 
 def get_existent_kwargs_subset(whitelist, kwargs):
     new_kwargs = {}
@@ -23,6 +24,10 @@ class WrappedProcessPoolExecutor(ProcessPoolExecutor):
     def __init__(self, **kwargs):
         new_kwargs = get_existent_kwargs_subset(PROCESS_POOL_KWARGS_WHITELIST, kwargs)
 
+        # For the purpose of these cluster tools, it shouldn't make a significant difference
+        # whether we use spawn or fork. However, TensorFlow is not fork-safe, see:
+        # https://github.com/tensorflow/tensorflow/issues/5448#issuecomment-258934405
+        multiprocessing.set_start_method("spawn", force=True)
         ProcessPoolExecutor.__init__(self, **new_kwargs)
 
     def submit(self, *args, **kwargs):
