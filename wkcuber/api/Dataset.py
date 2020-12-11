@@ -114,9 +114,6 @@ class AbstractDataset(ABC):
         # initialize object
         return cls(dataset_path)
 
-    def downsample(self, layer, target_mag_shape, source_mag):
-        raise NotImplemented()
-
     def get_properties(self) -> Properties:
         return self.properties
 

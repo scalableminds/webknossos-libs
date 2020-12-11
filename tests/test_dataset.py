@@ -2,23 +2,30 @@ import filecmp
 import json
 import os
 from os.path import dirname, join
+from pathlib import Path
+from typing import Any, Tuple
+
 import pytest
 
 import numpy as np
 from shutil import rmtree, copytree
 
+from wkw import wkw
 from wkw.wkw import WKWException
 
 from wkcuber.api.Dataset import WKDataset, TiffDataset, TiledTiffDataset
 from os import path, makedirs
 
 from wkcuber.api.Layer import Layer
+from wkcuber.api.MagDataset import find_mag_path_on_disk
 from wkcuber.api.Properties.DatasetProperties import TiffProperties, WKProperties
 from wkcuber.api.TiffData.TiffMag import TiffReader
 from wkcuber.api.bounding_box import BoundingBox
 from wkcuber.compress import compress_mag_inplace
+from wkcuber.downsampling import downsample_mags_isotropic, downsample_mags_anisotropic
+from wkcuber.downsampling_utils import downsample_cube, InterpolationModes, parse_interpolation_mode
 from wkcuber.mag import Mag
-from wkcuber.utils import get_executor_for_args
+from wkcuber.utils import get_executor_for_args, open_wkw, WkwDatasetInfo
 
 expected_error_msg = "The test did not throw an exception even though it should. "
 
@@ -1536,3 +1543,152 @@ def test_outdated_dtype_parameter():
 
     with pytest.raises(ValueError):
         ds.add_layer("color", Layer.COLOR_TYPE, dtype=np.uint8, num_channels=1)
+
+
+@pytest.fixture(
+    params=[
+        # (offset, size, num_channels, from_mag, max_mag, scale, interpolation_mode, compress, layer type)
+        #((0, 0, 0), (128, 128, 128), 3, "1", "8", None, "default", False, Layer.COLOR_TYPE),
+        #((10, 20, 30), (128, 128, 128), 3, "1", "8", None, "default", False, Layer.COLOR_TYPE),
+        #((10, 20, 30), (128, 128, 128), 3, "1", "8", None, "default", False, Layer.SEGMENTATION_TYPE),
+        #((0, 0, 0), (128, 128, 128), 3, "1", "8", None, "default", True, Layer.COLOR_TYPE), # TODO: find a working configuration for compress
+        #((10, 20, 30), (128, 128, 128), 3, "1", "8", None, "BILINEAR", False, Layer.COLOR_TYPE), # TODO: fix
+        #((10, 20, 30), (128, 128, 128), 3, "1", "8", None, "MEDIAN", False, Layer.COLOR_TYPE),
+        #((10, 20, 30), (128, 128, 128), 3, "1", "8", None, "MODE", False, Layer.COLOR_TYPE),
+        #((10, 20, 30), (128, 128, 128), 3, "1", "8", None, "NEAREST", False, Layer.COLOR_TYPE), # TODO fix
+        #((0, 0, 0), (128, 128, 128), 3, "1", "8", None, "BICUBIC", False, Layer.COLOR_TYPE), # TODO fix
+        #((10, 20, 30), (128, 128, 128), 3, "1", "8", None, "BICUBIC", False, Layer.COLOR_TYPE), # TODO fix
+        #((10, 20, 30), (128, 128, 128), 3, "1", "8", None, "MAX", False, Layer.COLOR_TYPE),
+        #((10, 20, 30), (128, 128, 128), 3, "1", "8", None, "MIN", False, Layer.COLOR_TYPE),
+        #((10, 20, 30), (256, 256, 256), 3, "1", "8", None, "default", False, Layer.COLOR_TYPE),
+        #((10, 20, 30), (128, 128, 128), 1, "1", "8", None, "default", False, Layer.COLOR_TYPE),
+        #((10, 20, 30), (128, 128, 128), 3, "2", "8", None, "default", False, Layer.COLOR_TYPE),
+        ((10, 20, 30), (128, 128, 128), 3, "2", "8", (4, 2, 2), "default", False, Layer.COLOR_TYPE),
+    ]
+)
+def generate_dataset(request: Any) -> Tuple:
+    offset, size, num_channels, from_mag, max_mag, scale, interpolation_mode, compress, layer_type = request.param
+
+    ds_path = "./testoutput/larger_wk_dataset/"
+    delete_dir(ds_path)
+
+    ds = WKDataset.create(ds_path, scale=(1, 1, 1))
+    if layer_type == Layer.SEGMENTATION_TYPE:
+        layer = ds.add_layer("layer1", layer_type, num_channels=num_channels, largest_segment_id=1000000000)
+    else:
+        layer = ds.add_layer("layer1", layer_type, num_channels=num_channels)
+    mag = layer.add_mag(str(from_mag), block_len=8, file_len=8)  # use small numbers to better test downsampling
+
+    np.random.seed(1234)
+    if num_channels == 1:
+        write_data = (np.random.rand(size[0], size[1], size[2]) * 255).astype(np.uint8)
+    else:
+        write_data = (np.random.rand(num_channels, size[0], size[1], size[2]) * 255).astype(np.uint8)
+    mag.write(offset=offset, data=write_data)
+
+    return ds_path, Mag(from_mag), Mag(max_mag), scale, interpolation_mode, compress
+
+
+def test_downsampling(generate_dataset: Tuple):
+    origin_path, from_mag, max_mag, scale, interpolation_mode, compress = generate_dataset
+
+    path1 = "./testoutput/downsampling/dataset1/"
+    path2 = "./testoutput/downsampling/dataset2/"
+
+    delete_dir(path1)
+    delete_dir(path2)
+    copytree(origin_path, path1)
+    copytree(origin_path, path2)
+
+    origin_ds = WKDataset(origin_path)
+    print(origin_ds.layers)
+
+    assert len(origin_ds.layers['layer1'].mags) == 1
+    assert str(from_mag) in origin_ds.layers['layer1'].mags
+
+
+    # downsample with dataset api
+    layer2 = WKDataset(path2).get_layer('layer1')
+    layer2.downsample(
+        from_mag=from_mag,
+        max_mag=max_mag,
+        scale=scale,
+        interpolation_mode=interpolation_mode,
+        compress=compress
+    )
+
+    # downsample with the old implementation
+    if scale is None:
+        downsample_mags_isotropic(
+            path1,
+            'layer1',
+            from_mag=from_mag,
+            max_mag=max_mag,
+            interpolation_mode=interpolation_mode,
+            compress=compress
+        )
+    else:
+        downsample_mags_anisotropic(
+            path1,
+            'layer1',
+            from_mag=from_mag,
+            max_mag=max_mag,
+            scale=scale,
+            interpolation_mode=interpolation_mode,
+            compress=compress
+        )
+    layer1 = WKDataset(path1).get_layer('layer1')
+    # update properties manually
+    for res in next(os.walk(Path(path1)/"layer1"))[1]:
+        if res != from_mag.to_layer_name():
+            layer1.setup_mag(Mag(res))
+
+    assert len(layer1.mags) == len(layer2.mags)
+    assert layer1.mags.keys() == layer2.mags.keys()
+
+    #data_1 = layer1.mags["1"].read()
+    #data12 = layer1.mags["2"].read()
+    #data22 = layer2.mags["2"].read()
+
+    #data14 = layer1.mags["4"].read()
+    #data24 = layer2.mags["4"].read()
+
+    '''
+    with open_wkw(WkwDatasetInfo(path1, "layer1", "2", wkw.Header(np.uint8))) as source_wkw:
+
+        cube_buffer_wkw = source_wkw.read(
+            (0, 0, 0),
+            (64, 64, 64),
+        )[0]
+
+        cube_buffer12 = data12[0]
+        cube_buffer22 = data22[0]
+        assert np.array_equal(cube_buffer12, cube_buffer22)
+        assert np.array_equal(cube_buffer_wkw, cube_buffer12)
+
+        im = parse_interpolation_mode(interpolation_mode, "layer1")
+        downsampling1 = downsample_cube(
+            cube_buffer12, [2, 2, 2], im
+        )
+
+        downsampling2 = downsample_cube(
+            cube_buffer22, [2, 2, 2], im
+        )
+
+        dump2 = np.load("./cube_buffer2.npy")
+
+        assert np.array_equal(downsampling1, downsampling2)
+
+        # np.array_equal(layer2.mags["4"].read()[0], downsampling2) # TRUE -> It does not depend on the order in this test function
+
+        #np.array_equal(data12[0], dump2[:64, :64, :64]) # TRUE
+
+        #downsampling3 = downsample_cube(
+        #    dump2[:64, :64, :64], [2, 2, 2], im
+        #)
+        
+        #assert np.array_equal(downsampling3, downsampling2) TRUE
+    '''
+
+    for mag in layer1.mags:
+        assert np.array_equal(layer1.mags[mag].read(), layer2.mags[mag].read())

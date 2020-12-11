@@ -90,8 +90,8 @@ class View:
         )
 
     def check_bounds(self, offset, size) -> bool:
-        for s1, s2, off in zip(self.size, size, offset):
-            if s2 + off > s1 and self.is_bounded:
+        for s1, s2, off1, off2 in zip(self.size, size, self.global_offset, offset):
+            if s2 + off2 > s1 + off1 and self.is_bounded:
                 return False
         return True
 

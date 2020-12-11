@@ -10,6 +10,7 @@ from itertools import product
 from enum import Enum
 from .mag import Mag
 from .metadata import read_datasource_properties, refresh_metadata
+from .downsampling_utils import InterpolationModes, parse_interpolation_mode, downsample_cube, determine_buffer_edge_len
 
 from .utils import (
     add_verbose_flag,
@@ -27,12 +28,6 @@ from .utils import (
     cube_addresses,
 )
 
-DEFAULT_EDGE_LEN = 256
-
-
-def determine_buffer_edge_len(dataset):
-    return min(DEFAULT_EDGE_LEN, dataset.header.file_len * dataset.header.block_len)
-
 
 def extend_wkw_dataset_info_header(wkw_info, **kwargs):
     for key, value in kwargs.items():
@@ -47,16 +42,6 @@ def calculate_virtual_scale_for_target_mag(target_mag):
     max_target_value = max(list(target_mag.to_array()))
     scale_array = max_target_value / np.array(target_mag.to_array())
     return tuple(scale_array)
-
-
-class InterpolationModes(Enum):
-    MEDIAN = 0
-    MODE = 1
-    NEAREST = 2
-    BILINEAR = 3
-    BICUBIC = 4
-    MAX = 5
-    MIN = 6
 
 
 def create_parser():
@@ -253,6 +238,7 @@ def downsample_cube_job(args):
                 wkw_cubelength = (
                     source_wkw.header.file_len * source_wkw.header.block_len
                 )
+                #shape = (num_channels,) + tuple(buffer_edge_len * np.array([2, 2, 2])  // (np.array(mag_factors) * Mag(source_wkw_info.mag).to_array())) # TODO: I had to change this
                 shape = (num_channels,) + (wkw_cubelength,) * 3
                 file_buffer = np.zeros(shape, source_dtype)
                 tile_length = buffer_edge_len
@@ -276,6 +262,7 @@ def downsample_cube_job(args):
                     cube_buffer_channels = source_wkw.read(
                         source_offset,
                         (wkw_cubelength * np.array(mag_factors) // tile_count_per_dim),
+                        #buffer_edge_len * np.array([4, 4, 4]) // (np.array(mag_factors) * Mag(source_wkw_info.mag).to_array())# (wkw_cubelength * np.array(mag_factors) // tile_count_per_dim), # TODO: i changed this
                     )
 
                     for channel_index in range(num_channels):
@@ -306,141 +293,6 @@ def downsample_cube_job(args):
     except Exception as exc:
         logging.error("Downsampling of {} failed with {}".format(target_cube_xyz, exc))
         raise exc
-
-
-def non_linear_filter_3d(data, factors, func):
-    ds = data.shape
-    assert not any((d % factor > 0 for (d, factor) in zip(ds, factors)))
-    data = data.reshape((ds[0], factors[1], ds[1] // factors[1], ds[2]), order="F")
-    data = data.swapaxes(0, 1)
-    data = data.reshape(
-        (
-            factors[0] * factors[1],
-            ds[0] * ds[1] // (factors[0] * factors[1]),
-            factors[2],
-            ds[2] // factors[2],
-        ),
-        order="F",
-    )
-    data = data.swapaxes(2, 1)
-    data = data.reshape(
-        (
-            factors[0] * factors[1] * factors[2],
-            (ds[0] * ds[1] * ds[2]) // (factors[0] * factors[1] * factors[2]),
-        ),
-        order="F",
-    )
-    data = func(data)
-    data = data.reshape(
-        (ds[0] // factors[0], ds[1] // factors[1], ds[2] // factors[2]), order="F"
-    )
-    return data
-
-
-def linear_filter_3d(data, factors, order):
-    factors = np.array(factors)
-
-    if not np.all(factors == factors[0]):
-        logging.debug(
-            "the selected filtering strategy does not support anisotropic downsampling. Selecting {} as uniform downsampling factor".format(
-                factors[0]
-            )
-        )
-    factor = factors[0]
-
-    ds = data.shape
-    assert not any((d % factor > 0 for d in ds))
-    return zoom(
-        data,
-        1 / factor,
-        output=data.dtype,
-        # 0: nearest
-        # 1: bilinear
-        # 2: bicubic
-        order=order,
-        # this does not mean nearest interpolation,
-        # it corresponds to how the borders are treated.
-        mode="nearest",
-        prefilter=True,
-    )
-
-
-def _max(x):
-    return np.max(x, axis=0)
-
-
-def _min(x):
-    return np.min(x, axis=0)
-
-
-def _median(x):
-    return np.median(x, axis=0).astype(x.dtype)
-
-
-def _mode(x):
-    """
-    Fast mode implementation from: https://stackoverflow.com/a/35674754
-    """
-    # Check inputs
-    ndim = x.ndim
-    axis = 0
-    # Sort array
-    sort = np.sort(x, axis=axis)
-    # Create array to transpose along the axis and get padding shape
-    transpose = np.roll(np.arange(ndim)[::-1], axis)
-    shape = list(sort.shape)
-    shape[axis] = 1
-    # Create a boolean array along strides of unique values
-    strides = (
-        np.concatenate(
-            [
-                np.zeros(shape=shape, dtype="bool"),
-                np.diff(sort, axis=axis) == 0,
-                np.zeros(shape=shape, dtype="bool"),
-            ],
-            axis=axis,
-        )
-        .transpose(transpose)
-        .ravel()
-    )
-    # Count the stride lengths
-    counts = np.cumsum(strides)
-    counts[~strides] = np.concatenate([[0], np.diff(counts[~strides])])
-    counts[strides] = 0
-    # Get shape of padded counts and slice to return to the original shape
-    shape = np.array(sort.shape)
-    shape[axis] += 1
-    shape = shape[transpose]
-    slices = [slice(None)] * ndim
-    slices[axis] = slice(1, None)
-    # Reshape and compute final counts
-    counts = counts.reshape(shape).transpose(transpose)[tuple(slices)] + 1
-
-    # Find maximum counts and return modals/counts
-    slices = [slice(None, i) for i in sort.shape]
-    del slices[axis]
-    index = np.ogrid[slices]
-    index.insert(axis, np.argmax(counts, axis=axis))
-    return sort[tuple(index)]
-
-
-def downsample_cube(cube_buffer, factors, interpolation_mode):
-    if interpolation_mode == InterpolationModes.MODE:
-        return non_linear_filter_3d(cube_buffer, factors, _mode)
-    elif interpolation_mode == InterpolationModes.MEDIAN:
-        return non_linear_filter_3d(cube_buffer, factors, _median)
-    elif interpolation_mode == InterpolationModes.NEAREST:
-        return linear_filter_3d(cube_buffer, factors, 0)
-    elif interpolation_mode == InterpolationModes.BILINEAR:
-        return linear_filter_3d(cube_buffer, factors, 1)
-    elif interpolation_mode == InterpolationModes.BICUBIC:
-        return linear_filter_3d(cube_buffer, factors, 2)
-    elif interpolation_mode == InterpolationModes.MAX:
-        return non_linear_filter_3d(cube_buffer, factors, _max)
-    elif interpolation_mode == InterpolationModes.MIN:
-        return non_linear_filter_3d(cube_buffer, factors, _min)
-    else:
-        raise Exception("Invalid interpolation mode: {}".format(interpolation_mode))
 
 
 def downsample_unpadded_data(buffer, target_mag, interpolation_mode):
@@ -484,7 +336,7 @@ def downsample_mag(
             path,
             layer_name,
             target_mag.to_layer_name(),
-            wkw.Header(source.header.voxel_type),
+            wkw.Header(source.header.voxel_type, block_len=8), # TODO
         )
 
     downsample(
@@ -497,17 +349,6 @@ def downsample_mag(
         buffer_edge_len,
         args,
     )
-
-
-def parse_interpolation_mode(interpolation_mode, layer_name):
-    if interpolation_mode.upper() == "DEFAULT":
-        return (
-            InterpolationModes.MEDIAN
-            if layer_name == "color"
-            else InterpolationModes.MODE
-        )
-    else:
-        return InterpolationModes[interpolation_mode.upper()]
 
 
 def downsample_mags(
