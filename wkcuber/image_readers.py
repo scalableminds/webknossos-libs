@@ -31,7 +31,7 @@ class PillowImageReader:
             else:
                 return this_layer.shape[-1]  # pylint: disable=unsubscriptable-object
 
-    def read_z_slices_per_file(self, file_name):
+    def read_z_slices_per_file(self):
         return 1
 
 
@@ -57,7 +57,7 @@ class Dm3ImageReader:
         logging.info("Assuming single channel for DM3 data")
         return 1
 
-    def read_z_slices_per_file(self, file_name):
+    def read_z_slices_per_file(self):
         return 1
 
 
@@ -113,7 +113,7 @@ class Dm4ImageReader:
         logging.info("Assuming single channel for DM4 data")
         return 1
 
-    def read_z_slices_per_file(self, file_name):
+    def read_z_slices_per_file(self):
         return 1
 
 
