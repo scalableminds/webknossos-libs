@@ -9,6 +9,7 @@ from .util import random_string, call, enrich_future_with_uncaught_warning
 from . import pickling
 import importlib
 import multiprocessing
+import logging
 
 def get_existent_kwargs_subset(whitelist, kwargs):
     new_kwargs = {}
@@ -24,11 +25,25 @@ class WrappedProcessPoolExecutor(ProcessPoolExecutor):
     def __init__(self, **kwargs):
         new_kwargs = get_existent_kwargs_subset(PROCESS_POOL_KWARGS_WHITELIST, kwargs)
 
-        # For the purpose of these cluster tools, it shouldn't make a significant difference
-        # whether we use spawn or fork. However, TensorFlow is not fork-safe, see:
-        # https://github.com/tensorflow/tensorflow/issues/5448#issuecomment-258934405
-        multiprocessing.set_start_method("spawn", force=True)
+        self.did_overwrite_start_method = False
+        if kwargs.get("start_method", None) is not None:
+            self.did_overwrite_start_method = True
+            self.old_start_method = multiprocessing.get_start_method()
+            start_method = kwargs["start_method"]
+            logging.info(f"Overwriting start_method to {start_method}. Previous value: {self.old_start_method}")
+            multiprocessing.set_start_method(start_method, force=True)
+
         ProcessPoolExecutor.__init__(self, **new_kwargs)
+
+    def shutdown(self, *args, **kwargs):
+
+        super().shutdown(*args, **kwargs)
+
+        if self.did_overwrite_start_method:
+            logging.info(f"Restoring start_method to original value: {self.old_start_method}.")
+            multiprocessing.set_start_method(self.old_start_method, force=True)
+            self.old_start_method = None
+            self.did_overwrite_start_method = False
 
     def submit(self, *args, **kwargs):
 

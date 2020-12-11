@@ -11,6 +11,7 @@ import pytest
 import shutil
 import contextlib
 import io
+import multiprocessing as mp
 
 # "Worker" functions.
 def square(n):
@@ -169,6 +170,28 @@ def test_map():
     for exc in get_executors():
         run_map(exc)
 
+
+def expect_fork():
+    assert mp.get_start_method() == "fork"
+    return True
+
+def expect_spawn():
+    assert mp.get_start_method() == "spawn"
+    return True
+
+def test_map_with_spawn():
+
+    with cluster_tools.get_executor("multiprocessing", max_workers=5) as executor:
+        assert executor.submit(expect_fork).result(), "Multiprocessing should use fork by default"
+
+    with cluster_tools.get_executor("multiprocessing", max_workers=5, start_method=None) as executor:
+        assert executor.submit(expect_fork).result(), "Multiprocessing should use fork if start_method is None"
+
+    with cluster_tools.get_executor("multiprocessing", max_workers=5, start_method="spawn") as executor:
+        assert executor.submit(expect_spawn).result(), "Multiprocessing should use spawn if requested"
+    
+    with cluster_tools.get_executor("slurm", max_workers=5, start_method="spawn") as executor:
+        assert executor.submit(expect_fork).result(), "Slurm should ignore provided start_method"
 
 def test_map_lazy():
     def run_map(executor):
