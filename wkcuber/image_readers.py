@@ -11,8 +11,22 @@ from tifffile import TiffFile
 Image.MAX_IMAGE_PIXELS = None
 
 
-class PillowImageReader:
-    def read_array(self, file_name, dtype):
+class ImageReader:
+    def read_array(self, file_name, dtype, z_slice):
+        pass
+
+    def read_dimensions(self, file_name):
+        pass
+
+    def read_channel_count(self, file_name):
+        pass
+
+    def read_z_slices_per_file(self, file_name):
+        return 1
+
+
+class PillowImageReader(ImageReader):
+    def read_array(self, file_name, dtype, z_slice):
         this_layer = np.array(Image.open(file_name), dtype)
         this_layer = this_layer.swapaxes(0, 1)
         this_layer = this_layer.reshape(this_layer.shape + (1,))
@@ -31,18 +45,14 @@ class PillowImageReader:
             else:
                 return this_layer.shape[-1]  # pylint: disable=unsubscriptable-object
 
-    def read_z_slices_per_file(self):
-        return 1
-
 
 def to_target_datatype(data: np.ndarray, target_dtype) -> np.ndarray:
-
     factor = (1 + np.iinfo(data.dtype).max) / (1 + np.iinfo(target_dtype).max)
     return (data / factor).astype(target_dtype)
 
 
-class Dm3ImageReader:
-    def read_array(self, file_name, dtype):
+class Dm3ImageReader(ImageReader):
+    def read_array(self, file_name, dtype, z_slice):
         dm3_file = DM3(file_name)
         this_layer = to_target_datatype(dm3_file.imagedata, dtype)
         this_layer = this_layer.swapaxes(0, 1)
@@ -57,13 +67,9 @@ class Dm3ImageReader:
         logging.info("Assuming single channel for DM3 data")
         return 1
 
-    def read_z_slices_per_file(self):
-        return 1
 
-
-class Dm4ImageReader:
+class Dm4ImageReader(ImageReader):
     def _read_tags(self, dm4file):
-
         tags = dm4file.read_directory()
         image_data_tag = (
             tags.named_subdirs["ImageList"]
@@ -75,7 +81,6 @@ class Dm4ImageReader:
         return image_data_tag, image_tag
 
     def _read_dimensions(self, dm4file, image_data_tag):
-
         width = dm4file.read_tag_data(
             image_data_tag.named_subdirs["Dimensions"].unnamed_tags[0]
         )
@@ -84,8 +89,7 @@ class Dm4ImageReader:
         )
         return width, height
 
-    def read_array(self, file_name, dtype):
-
+    def read_array(self, file_name, dtype, z_slice):
         dm4file = DM4File.open(file_name)
         image_data_tag, image_tag = self._read_tags(dm4file)
         width, height = self._read_dimensions(dm4file, image_data_tag)
@@ -101,7 +105,6 @@ class Dm4ImageReader:
         return data
 
     def read_dimensions(self, file_name):
-
         dm4file = DM4File.open(file_name)
         image_data_tag, _ = self._read_tags(dm4file)
         dimensions = self._read_dimensions(dm4file, image_data_tag)
@@ -113,11 +116,8 @@ class Dm4ImageReader:
         logging.info("Assuming single channel for DM4 data")
         return 1
 
-    def read_z_slices_per_file(self):
-        return 1
 
-
-class TiffImageReader:
+class TiffImageReader(ImageReader):
     def read_array(self, file_name, dtype, z_slice):
         tif_file = TiffFile(file_name)
         if len(tif_file.pages) > 1:
@@ -148,7 +148,7 @@ class TiffImageReader:
         return len(tif_file.pages)
 
 
-class ImageReader:
+class ImageReaderManager:
     def __init__(self):
         self.readers = {
             ".tif": TiffImageReader(),
@@ -184,4 +184,4 @@ class ImageReader:
         return self.readers[ext].read_z_slices_per_file(file_name)
 
 
-image_reader = ImageReader()
+image_reader = ImageReaderManager()
