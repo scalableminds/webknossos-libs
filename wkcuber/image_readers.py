@@ -5,6 +5,7 @@ from PIL import Image
 
 from .vendor.dm3 import DM3
 from .vendor.dm4 import DM4File
+from tifffile import TiffFile
 
 # Disable PIL's maximum image limit.
 Image.MAX_IMAGE_PIXELS = None
@@ -30,6 +31,9 @@ class PillowImageReader:
             else:
                 return this_layer.shape[-1]  # pylint: disable=unsubscriptable-object
 
+    def read_z_slices_per_file(self, file_name):
+        return 1
+
 
 def to_target_datatype(data: np.ndarray, target_dtype) -> np.ndarray:
 
@@ -51,6 +55,9 @@ class Dm3ImageReader:
 
     def read_channel_count(self, _file_name):
         logging.info("Assuming single channel for DM3 data")
+        return 1
+
+    def read_z_slices_per_file(self, file_name):
         return 1
 
 
@@ -106,12 +113,44 @@ class Dm4ImageReader:
         logging.info("Assuming single channel for DM4 data")
         return 1
 
+    def read_z_slices_per_file(self, file_name):
+        return 1
+
+class TiffImageReader:
+    def read_array(self, file_name, dtype, z_slice):
+        tif_file = TiffFile(file_name)
+        data = np.array(tif_file.pages[z_slice].asarray(), dtype)
+        data = data.swapaxes(0, 1)
+        data = data.reshape(data.shape + (1,))
+        tif_file.close()
+        return data
+
+    def read_dimensions(self, file_name):
+        tif_file = TiffFile(file_name)
+        page_number = len(tif_file.pages)
+        if page_number > 0:
+            shape = tif_file.pages[0].shape
+            return shape[1], shape[0]
+
+    def read_channel_count(self, file_name):
+        tif_file = TiffFile(file_name)
+        shape = tif_file.pages[0].shape
+        if len(shape) == 2:
+            # For two-dimensional data, the channel count is one
+            return 1
+        else:
+            return shape.shape[-1]  # pylint: disable=unsubscriptable-object
+
+    def read_z_slices_per_file(self, file_name):
+        tif_file = TiffFile(file_name)
+        return len(tif_file.pages)
+
 
 class ImageReader:
     def __init__(self):
         self.readers = {
-            ".tif": PillowImageReader(),
-            ".tiff": PillowImageReader(),
+            ".tif": TiffImageReader(),
+            ".tiff": TiffImageReader(),
             ".jpg": PillowImageReader(),
             ".jpeg": PillowImageReader(),
             ".png": PillowImageReader(),
@@ -119,11 +158,11 @@ class ImageReader:
             ".dm4": Dm4ImageReader(),
         }
 
-    def read_array(self, file_name, dtype):
+    def read_array(self, file_name, dtype, z_slice):
         _, ext = path.splitext(file_name)
 
         # Image shape will be (x, y, channel_count, z=1) or (x, y, z=1)
-        image = self.readers[ext].read_array(file_name, dtype)
+        image = self.readers[ext].read_array(file_name, dtype, z_slice)
         # Standardize the image shape to (x, y, channel_count, z=1)
         if image.ndim == 3:
             image = image.reshape(image.shape + (1,))
@@ -137,6 +176,10 @@ class ImageReader:
     def read_channel_count(self, file_name):
         _, ext = path.splitext(file_name)
         return self.readers[ext].read_channel_count(file_name)
+
+    def read_z_slices_per_file(self, file_name):
+        _, ext = path.splitext(file_name)
+        return self.readers[ext].read_z_slices_per_file(file_name)
 
 
 image_reader = ImageReader()

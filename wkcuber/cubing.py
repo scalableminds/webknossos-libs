@@ -67,8 +67,8 @@ def create_parser():
     parser.add_argument(
         "--pad",
         help="Automatically pad image files at the bottom and right borders. "
-        "Use this, when the input images don't have a common size, but have "
-        "their origin at (0, 0).",
+             "Use this, when the input images don't have a common size, but have "
+             "their origin at (0, 0).",
         default=False,
         action="store_true",
     )
@@ -76,8 +76,8 @@ def create_parser():
     parser.add_argument(
         "--target_mag",
         help="Automatically downsamples the cubed images to the provided "
-        "magnification before writing to disk. The magnification can "
-        "be provided like 2-2-1.",
+             "magnification before writing to disk. The magnification can "
+             "be provided like 2-2-1.",
         default="1",
     )
 
@@ -94,18 +94,18 @@ def find_source_filenames(source_path):
         find_files(path.join(source_path, "*"), image_reader.readers.keys())
     )
     assert len(source_files) > 0, (
-        "No image files found in path "
-        + source_path
-        + ". Supported suffixes are "
-        + str(image_reader.readers.keys())
-        + "."
+            "No image files found in path "
+            + source_path
+            + ". Supported suffixes are "
+            + str(image_reader.readers.keys())
+            + "."
     )
     return natsorted(source_files)
 
 
-def read_image_file(file_name, dtype):
+def read_image_file(file_name, dtype, z_slice):
     try:
-        return image_reader.read_array(file_name, dtype)
+        return image_reader.read_array(file_name, dtype, z_slice)
     except Exception as exc:
         logging.error("Reading of file={} failed with {}".format(file_name, exc))
         raise exc
@@ -146,8 +146,8 @@ def cubing_job(args):
         # The batches have a maximum size of `batch_size`
         # Batched iterations allows to utilize IO more efficiently
         for z_batch, source_file_batch in zip(
-            get_chunks(z_batches, batch_size),
-            get_chunks(source_file_batches, batch_size),
+                get_chunks(z_batches, batch_size),
+                get_chunks(source_file_batches, batch_size),
         ):
             try:
                 ref_time = time.time()
@@ -157,11 +157,11 @@ def cubing_job(args):
                 for z, file_name in zip(z_batch, source_file_batch):
                     # Image shape will be (x, y, channel_count, z=1)
                     image = read_image_file(
-                        file_name, target_wkw_info.header.voxel_type
+                        file_name, target_wkw_info.header.voxel_type, z
                     )
                     if not pad:
                         assert (
-                            image.shape[0:2] == image_size
+                                image.shape[0:2] == image_size
                         ), "Section z={} has the wrong dimensions: {} (expected {}). Consider using --pad.".format(
                             z, image.shape, image_size
                         )
@@ -210,13 +210,17 @@ def cubing_job(args):
 
 
 def cubing(source_path, target_path, layer_name, dtype, batch_size, args) -> dict:
-
     source_files = find_source_filenames(source_path)
 
     # All images are assumed to have equal dimensions
     num_x, num_y = image_reader.read_dimensions(source_files[0])
     num_channels = image_reader.read_channel_count(source_files[0])
-    num_z = len(source_files)
+    num_z_slices_per_file = image_reader.read_z_slices_per_file(source_files[0])
+    assert num_z_slices_per_file == 1 or len(source_files) == 1, "Multi page TIFF support only for single files"
+    if num_z_slices_per_file > 1:
+        num_z = num_z_slices_per_file
+    else:
+        num_z = len(source_files)
 
     target_mag = Mag(args.target_mag)
     target_wkw_info = WkwDatasetInfo(
@@ -250,6 +254,11 @@ def cubing(source_path, target_path, layer_name, dtype, batch_size, args) -> dic
             # Prepare z batches
             max_z = min(num_z + start_z, z + BLOCK_LEN)
             z_batch = list(range(z, max_z))
+            # Prepare source files array
+            if len(source_files) > 1:
+                source_files_array = source_files[z - start_z : max_z - start_z]
+            else:
+                source_files_array = source_files * (max_z - z)
             # Prepare job
             job_args.append(
                 (
@@ -257,7 +266,7 @@ def cubing(source_path, target_path, layer_name, dtype, batch_size, args) -> dic
                     z_batch,
                     target_mag,
                     interpolation_mode,
-                    source_files[z - start_z : max_z - start_z],
+                    source_files_array,
                     batch_size,
                     (num_x, num_y),
                     args.pad,
