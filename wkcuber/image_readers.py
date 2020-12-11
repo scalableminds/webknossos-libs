@@ -131,10 +131,8 @@ class TiffImageReader:
 
     def read_dimensions(self, file_name):
         tif_file = TiffFile(file_name)
-        page_number = len(tif_file.pages)
-        if page_number > 0:
-            shape = tif_file.pages[0].shape
-            return shape[1], shape[0]
+        shape = tif_file.pages[0].shape
+        return shape[1], shape[0]
 
     def read_channel_count(self, file_name):
         tif_file = TiffFile(file_name)
