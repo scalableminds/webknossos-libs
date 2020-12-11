@@ -120,7 +120,10 @@ class Dm4ImageReader:
 class TiffImageReader:
     def read_array(self, file_name, dtype, z_slice):
         tif_file = TiffFile(file_name)
-        data = np.array(tif_file.pages[z_slice].asarray(), dtype)
+        if len(tif_file.pages) > 1:
+            data = np.array(tif_file.pages[z_slice].asarray(), dtype)
+        else:
+            data = np.array(tif_file.pages[0].asarray(), dtype)
         data = data.swapaxes(0, 1)
         data = data.reshape(data.shape + (1,))
         tif_file.close()
