@@ -116,6 +116,7 @@ class Dm4ImageReader:
     def read_z_slices_per_file(self, file_name):
         return 1
 
+
 class TiffImageReader:
     def read_array(self, file_name, dtype, z_slice):
         tif_file = TiffFile(file_name)
