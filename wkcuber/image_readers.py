@@ -21,7 +21,7 @@ class ImageReader:
     def read_channel_count(self, file_name):
         pass
 
-    def read_z_slices_per_file(self, file_name):
+    def read_z_slices_per_file(self, file_name):  # pylint: disable=unused-argument
         return 1
 
 
