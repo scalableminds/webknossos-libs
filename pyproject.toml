@@ -22,7 +22,7 @@ scikit-image = "^0.16.2"
 [tool.poetry.dev-dependencies]
 pylint = "^2.6.0"
 black = "^20.8b1"
-pytest = "^5.3.2"
+pytest = "^6.2.1"
 setuptools-scm = "^3.3.3"
 
 [build-system]
