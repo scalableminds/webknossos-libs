@@ -887,9 +887,11 @@ class DM3(object):
                 tn_path = tn_file
         # - save tn file
         try:
-            self.thumbnail.save(tn_path, "PNG")
-            if self._debug > 0:
-                print("Thumbnail saved as '%s'." % tn_path)
+            if hasattr(self, "thumbnail"):
+                # pylint: disable=no-member
+                self.thumbnail.save(tn_path, "PNG")
+                if self._debug > 0:
+                    print("Thumbnail saved as '%s'." % tn_path)
         except:
             print("Warning: could not save thumbnail.")
 
