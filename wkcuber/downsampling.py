@@ -544,7 +544,8 @@ def downsample_mags(
                     "Could not get the scale from the datasource-properties.json. Probably your path is wrong. "
                     "If you do not provide the layer_name or from_mag, they need to be included in the path."
                     "(e.g. dataset/color/1). Otherwise the path should just point at the dataset directory."
-                    "the path: %s", path
+                    "the path: %s",
+                    path,
                 )
                 raise exc
         downsample_mags_anisotropic(
