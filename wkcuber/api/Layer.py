@@ -21,10 +21,19 @@ from wkcuber.api.MagDataset import (
     find_mag_path_on_disk,
 )
 from wkcuber.downsampling_utils import get_next_mag, parse_interpolation_mode, downsample_cube_job, \
-    determine_buffer_edge_len, DEFAULT_EDGE_LEN
+    determine_buffer_edge_len, DEFAULT_EDGE_LEN, use_logging
 from wkcuber.mag import Mag
 from wkcuber.utils import DEFAULT_WKW_FILE_LEN, get_executor_for_args, cube_addresses, parse_cube_file_name
 
+
+def test(job_count_per_log, global_offset, num_chunks_per_dim):
+    def f(offset: Tuple[int, int, int], size: Tuple[int, int, int]):
+        # calculate if a specific chunk should log its results
+        #chunk_xzy_idx = (np.array(offset) - np.array(global_offset)) // size
+        #i = sum([idx * num_chunks for idx, num_chunks in zip(chunk_xzy_idx, num_chunks_per_dim)])
+
+        return False
+    return f
 
 class Layer:
 
@@ -113,8 +122,7 @@ class Layer:
             args: Namespace = None,
     ):
         # if 'scale' is set, the data gets downsampled anisotropic
-        interpolation_mode = parse_interpolation_mode(interpolation_mode,
-                                                      self.name)  # TODO: does this really require the layer name or the layer type?
+        interpolation_mode = parse_interpolation_mode(interpolation_mode, self.name)
         prev_mag = from_mag
         target_mag = get_next_mag(prev_mag, scale)
         while target_mag <= max_mag:
@@ -129,11 +137,14 @@ class Layer:
 
             # initialize empty target mag
             target_mag_ds = self._initialize_mag_from_other_mag(target_mag, prev_mag_ds, compress)
+            target_mag_view = target_mag_ds.get_view()
 
             # perform downsampling
             with get_executor_for_args(args) as executor:
-                #voxel_count_per_cube = (prev_mag_ds.file_len * prev_mag_ds.block_len) ** 3
-                #job_count_per_log = math.ceil(1024 ** 3 / voxel_count_per_cube)  # log every gigavoxel of processed data # TODO
+                voxel_count_per_cube = np.prod(prev_mag_ds._get_file_dimensions())
+                job_count_per_log = math.ceil(1024 ** 3 / voxel_count_per_cube)  # log every gigavoxel of processed data
+
+                num_chunks_per_dim = [math.ceil(s1/s2) for s1, s2 in zip(target_mag_view.size, target_mag_ds._get_file_dimensions())]
 
                 if buffer_edge_len is None:
                     buffer_edge_len = determine_buffer_edge_len(prev_mag_ds.view) # DEFAULT_EDGE_LEN
@@ -144,13 +155,16 @@ class Layer:
                     buffer_edge_len,
                     compress,
                     target_mag_ds._get_file_dimensions(),
-                    False,  # TODO: make this better
+                    job_count_per_log,
+                    target_mag_view.global_offset,
+                    num_chunks_per_dim,
+                    use_logging,
                 )
-                target_mag_ds.get_view().for_each_chunk(
+                target_mag_view.for_each_chunk(
                     # this view is restricted to the bounding box specified in the properties
                     downsample_cube_job,
                     job_args_per_chunk=job_args,
-                    chunk_size=target_mag_ds._get_file_dimensions(), # TODO
+                    chunk_size=target_mag_ds._get_file_dimensions(),
                     executor=executor,
                 )
 
@@ -224,7 +238,7 @@ class WKLayer(Layer):
 
     def _initialize_mag_from_other_mag(self, new_mag_name, other_mag, compress):
         block_type = wkw.Header.BLOCK_TYPE_LZ4HC if compress else wkw.Header.BLOCK_TYPE_RAW
-        return self.add_mag(new_mag_name, other_mag.block_len, other_mag.file_len, block_type) # TODO: I use the same block_len. In the previous implemetaion this always defaults to 32
+        return self.add_mag(new_mag_name, other_mag.block_len, other_mag.file_len, block_type)
 
 
 class TiffLayer(Layer):

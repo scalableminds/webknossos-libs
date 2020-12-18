@@ -25,6 +25,15 @@ class InterpolationModes(Enum):
 DEFAULT_EDGE_LEN = 256
 
 
+def use_logging(offset: Tuple[int, int, int], size: Tuple[int, int, int], job_count_per_log, global_offset, num_chunks_per_dim):
+    # calculate if a specific chunk should log its results
+    chunk_xzy_idx = (np.array(offset) - np.array(global_offset)) // size
+    i = chunk_xzy_idx[2] * num_chunks_per_dim[0] * num_chunks_per_dim[1] + \
+        chunk_xzy_idx[1] * num_chunks_per_dim[1] + \
+        chunk_xzy_idx[0]
+
+    return i % job_count_per_log == 0
+
 def determine_buffer_edge_len(dataset):
     if hasattr(dataset.header, 'file_len') and hasattr(dataset.header, 'block_len'):
         return min(DEFAULT_EDGE_LEN, dataset.header.file_len * dataset.header.block_len)
@@ -216,8 +225,11 @@ def downsample_cube_job(args):
             interpolation_mode,
             buffer_edge_len,
             compress,
-            chunck_size,
-            use_logging,
+            chunk_size,
+            job_count_per_log,
+            global_offset,
+            num_chunks_per_dim,
+            use_logging_func,
         )
     ) = args
 
@@ -228,7 +240,7 @@ def downsample_cube_job(args):
     source_cube_size = tuple(dim * mag_factor for (dim, mag_factor) in zip(target_view.size, mag_factors))
     source_view.global_offset = source_cube_xyz
     source_view.size = source_cube_size
-    print(target_view)
+    use_logging = use_logging_func(target_view.global_offset, chunk_size, job_count_per_log, global_offset, num_chunks_per_dim)
 
     if use_logging:
         logging.info("Downsampling of {}".format(target_view.global_offset))
@@ -237,22 +249,11 @@ def downsample_cube_job(args):
         if use_logging:
             time_start("Downsampling of {}".format(target_view.global_offset))
 
-        #wkw_cubelength = (
-        #            source_view.header.file_len * source_view.header.block_len # TODO
-        #        )
         num_channels = target_view.header.num_channels
         shape = (num_channels,) + tuple(target_view.size)
         file_buffer = np.zeros(shape, target_view.get_dtype())
 
-        #assert (
-        #    wkw_cubelength % buffer_edge_len == 0
-        #), "buffer_cube_size must be a divisor of wkw cube length"
-
-        #tile_indices = list(range(0, wkw_cubelength // buffer_edge_len))
-        #tile_indices = list(range(0, target_view.size // buffer_edge_len))
-        #tiles = product(tile_indices, tile_indices, tile_indices)
-        #tiles = product(*list([list(range(0, len)) for len in np.array(chunck_size) // buffer_edge_len]))
-        tiles = product(*list([list(range(0, math.ceil(len))) for len in np.array(chunck_size) / buffer_edge_len]))
+        tiles = product(*list([list(range(0, math.ceil(len))) for len in np.array(chunk_size) / buffer_edge_len]))
 
         source_view.open()
 
