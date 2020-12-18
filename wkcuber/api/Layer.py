@@ -26,15 +26,6 @@ from wkcuber.mag import Mag
 from wkcuber.utils import DEFAULT_WKW_FILE_LEN, get_executor_for_args, cube_addresses, parse_cube_file_name
 
 
-def test(job_count_per_log, global_offset, num_chunks_per_dim):
-    def f(offset: Tuple[int, int, int], size: Tuple[int, int, int]):
-        # calculate if a specific chunk should log its results
-        #chunk_xzy_idx = (np.array(offset) - np.array(global_offset)) // size
-        #i = sum([idx * num_chunks for idx, num_chunks in zip(chunk_xzy_idx, num_chunks_per_dim)])
-
-        return False
-    return f
-
 class Layer:
 
     COLOR_TYPE = "color"
