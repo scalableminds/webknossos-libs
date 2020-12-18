@@ -21,7 +21,7 @@ from wkcuber.api.MagDataset import (
     find_mag_path_on_disk,
 )
 from wkcuber.downsampling_utils import get_next_mag, parse_interpolation_mode, downsample_cube_job, \
-    determine_buffer_edge_len
+    determine_buffer_edge_len, DEFAULT_EDGE_LEN
 from wkcuber.mag import Mag
 from wkcuber.utils import DEFAULT_WKW_FILE_LEN, get_executor_for_args, cube_addresses, parse_cube_file_name
 
@@ -99,6 +99,9 @@ class Layer:
     def setup_mag(self, mag: Mag) -> None:
         raise NotImplemented
 
+    def _initialize_mag_from_other_mag(self, new_mag_name, other_mag, compress):
+        raise NotImplemented
+
     def downsample(
             self,
             from_mag: Mag,
@@ -109,7 +112,52 @@ class Layer:
             buffer_edge_len=None,
             args: Namespace = None,
     ):
-        pass
+        # if 'scale' is set, the data gets downsampled anisotropic
+        interpolation_mode = parse_interpolation_mode(interpolation_mode,
+                                                      self.name)  # TODO: does this really require the layer name or the layer type?
+        prev_mag = from_mag
+        target_mag = get_next_mag(prev_mag, scale)
+        while target_mag <= max_mag:
+            assert prev_mag < target_mag
+            assert target_mag.to_layer_name() not in self.mags
+
+            prev_mag_ds = self.mags[prev_mag.to_layer_name()]
+
+            mag_factors = [
+                t // s for (t, s) in zip(target_mag.to_array(), prev_mag.to_array())
+            ]
+
+            # initialize empty target mag
+            target_mag_ds = self._initialize_mag_from_other_mag(target_mag, prev_mag_ds, compress)
+
+            # perform downsampling
+            with get_executor_for_args(args) as executor:
+                #voxel_count_per_cube = (prev_mag_ds.file_len * prev_mag_ds.block_len) ** 3
+                #job_count_per_log = math.ceil(1024 ** 3 / voxel_count_per_cube)  # log every gigavoxel of processed data # TODO
+
+                if buffer_edge_len is None:
+                    buffer_edge_len = determine_buffer_edge_len(prev_mag_ds.view) # DEFAULT_EDGE_LEN
+                job_args = (
+                    prev_mag_ds.get_view(),  # the offset and size of the view need to be set from inside the job
+                    mag_factors,
+                    interpolation_mode,
+                    buffer_edge_len,
+                    compress,
+                    target_mag_ds._get_file_dimensions(),
+                    False,  # TODO: make this better
+                )
+                target_mag_ds.get_view().for_each_chunk(
+                    # this view is restricted to the bounding box specified in the properties
+                    downsample_cube_job,
+                    job_args_per_chunk=job_args,
+                    chunk_size=target_mag_ds._get_file_dimensions(), # TODO
+                    executor=executor,
+                )
+
+            logging.info("Mag {0} successfully cubed".format(target_mag))
+
+            prev_mag = target_mag
+            target_mag = get_next_mag(target_mag, scale)
 
 
 class WKLayer(Layer):
@@ -174,92 +222,9 @@ class WKLayer(Layer):
             self.name, mag, wk_header.block_len * wk_header.file_len
         )
 
-    def downsample(
-            self,
-            from_mag: Mag,
-            max_mag: Mag,
-            interpolation_mode: str,
-            compress: bool,
-            scale: Tuple[float, float, float] = None,
-            buffer_edge_len=None,
-            args: Namespace = None,
-    ):
-        # if 'scale' is set, the data gets downsampled anisotropic
-        interpolation_mode = parse_interpolation_mode(interpolation_mode, self.name) # TODO: does this really require the layer name or the layer type?
-        prev_mag = from_mag
-        target_mag = get_next_mag(prev_mag, scale)
-        while target_mag <= max_mag:
-            assert prev_mag < target_mag
-            assert target_mag.to_layer_name() not in self.mags
-
-            prev_mag_ds = self.mags[prev_mag.to_layer_name()]
-
-            mag_factors = [
-                t // s for (t, s) in zip(target_mag.to_array(), prev_mag.to_array())
-            ]
-
-            # initialize empty target mag
-            block_type = wkw.Header.BLOCK_TYPE_LZ4HC if compress else wkw.Header.BLOCK_TYPE_RAW
-            file_size = (prev_mag_ds.file_len * prev_mag_ds.block_len,) * 3
-            target_mag_ds = self.add_mag(target_mag, prev_mag_ds.block_len, prev_mag_ds.file_len, block_type)  # TODO: I use the same block_len. In the previous implemetaion this always defaults to 32
-
-            # perform downsampling
-            with get_executor_for_args(args) as executor:
-                '''
-                job_args = []
-                #voxel_count_per_cube = (
-                #                               source_wkw.header.file_len * source_wkw.header.block_len
-                #                       ) ** 3
-                '''
-                voxel_count_per_cube = (prev_mag_ds.file_len * prev_mag_ds.block_len) ** 3
-                job_count_per_log = math.ceil(1024 ** 3 / voxel_count_per_cube)  # log every gigavoxel of processed data
-                ''' 
-                for i, target_cube_xyz in enumerate(target_cube_addresses):
-                    use_logging = i % job_count_per_log == 0
-
-                    job_args.append(
-                        (
-                            mag_factors,
-                            interpolation_mode,
-                            target_cube_xyz,
-                            buffer_edge_len,
-                            compress,
-                            use_logging,
-                        )
-                    )
-                '''
-                if buffer_edge_len is None:
-                    buffer_edge_len = determine_buffer_edge_len(prev_mag_ds.view)
-                job_args = (
-                            prev_mag_ds.get_view(), # create blueprint for source view (the offset and size need to be set from inside the job)
-                            mag_factors,
-                            interpolation_mode,
-                            buffer_edge_len,
-                            compress,
-                            False, # TODO: make this better
-                        )
-                #wait_and_ensure_success(executor.map_to_futures(downsample_cube_job, job_args))
-                target_mag_ds.get_view().for_each_chunk(  # this view is restricted to the bounding box specified in the properties
-                    downsample_cube_job,
-                    job_args_per_chunk=job_args,
-                    chunk_size=file_size,
-                    executor=executor,
-                )
-
-            logging.info("Mag {0} successfully cubed".format(target_mag))
-            '''
-            self.mags[prev_mag.to_layer_name()]._downsample(
-                target_mag,
-                interpolation_mode,
-                compress,
-                buffer_edge_len,
-                args
-            )
-            '''
-            # self.setup_mag(target_mag)
-
-            prev_mag = target_mag
-            target_mag = get_next_mag(target_mag, scale)
+    def _initialize_mag_from_other_mag(self, new_mag_name, other_mag, compress):
+        block_type = wkw.Header.BLOCK_TYPE_LZ4HC if compress else wkw.Header.BLOCK_TYPE_RAW
+        return self.add_mag(new_mag_name, other_mag.block_len, other_mag.file_len, block_type) # TODO: I use the same block_len. In the previous implemetaion this always defaults to 32
 
 
 class TiffLayer(Layer):
@@ -301,6 +266,9 @@ class TiffLayer(Layer):
 
     def _get_mag_dataset_class(self):
         return TiffMagDataset
+
+    def _initialize_mag_from_other_mag(self, new_mag_name, other_mag, compress):
+        return self.add_mag(new_mag_name)
 
 
 class TiledTiffLayer(TiffLayer):

@@ -1,4 +1,5 @@
 import math
+from random import shuffle
 
 import numpy as np
 from wkw import Dataset, wkw
@@ -126,6 +127,9 @@ class View:
     def _handle_compressed_write(self, absolute_offset, data):
         return absolute_offset, data
 
+    def get_dtype(self):
+        raise NotImplemented
+
     def __enter__(self):
         return self
 
@@ -207,6 +211,9 @@ class WKView(View):
         else:
             return absolute_offset, data
 
+    def get_dtype(self):
+        return self.header.voxel_type
+
 
 class TiffView(View):
     def open(self):
@@ -227,7 +234,7 @@ class TiffView(View):
 
         if self.header.tile_size is None:
             # non tiled tiff dataset
-            if self.size[0:2] != chunk_size[0:2]:
+            if tuple(self.size[0:2]) != tuple(chunk_size[0:2]):
                 raise AssertionError(
                     f"The x- and y-length of the passed parameter 'chunk_size' {chunk_size} do not match with the size of the view {self.size}."
                 )
@@ -240,6 +247,9 @@ class TiffView(View):
                 raise AssertionError(
                     f"The passed parameter 'chunk_size' {chunk_size} must be a multiple of the file size {file_dim}"
                 )
+
+    def get_dtype(self):
+        return self.header.dtype_per_channel
 
 
 def assert_non_negative_offset(offset):

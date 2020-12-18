@@ -1,5 +1,6 @@
 import copy
 import logging
+import math
 from enum import Enum
 from itertools import product
 from typing import Optional, Tuple
@@ -25,7 +26,9 @@ DEFAULT_EDGE_LEN = 256
 
 
 def determine_buffer_edge_len(dataset):
-    return min(DEFAULT_EDGE_LEN, dataset.header.file_len * dataset.header.block_len)
+    if hasattr(dataset.header, 'file_len') and hasattr(dataset.header, 'block_len'):
+        return min(DEFAULT_EDGE_LEN, dataset.header.file_len * dataset.header.block_len)
+    return DEFAULT_EDGE_LEN
 
 
 def detect_larger_and_smaller_dimension(scale):
@@ -208,11 +211,12 @@ def downsample_cube_job(args):
     (
         target_view,
         (
-            bluepint_target_view,
+            source_view,
             mag_factors,
             interpolation_mode,
             buffer_edge_len,
             compress,
+            chunck_size,
             use_logging,
         )
     ) = args
@@ -222,7 +226,6 @@ def downsample_cube_job(args):
     # By passing it as a view, this method does not need to know whether it is a WKView or a TiffView
     source_cube_xyz = tuple(dim * mag_factor for (dim, mag_factor) in zip(target_view.global_offset, mag_factors))
     source_cube_size = tuple(dim * mag_factor for (dim, mag_factor) in zip(target_view.size, mag_factors))
-    source_view = copy.deepcopy(bluepint_target_view)  # TODO: check if deepcopy is necessary or if the argument is passed as a copy
     source_view.global_offset = source_cube_xyz
     source_view.size = source_cube_size
     print(target_view)
@@ -234,19 +237,22 @@ def downsample_cube_job(args):
         if use_logging:
             time_start("Downsampling of {}".format(target_view.global_offset))
 
-        wkw_cubelength = (
-                    source_view.header.file_len * source_view.header.block_len
-                )
+        #wkw_cubelength = (
+        #            source_view.header.file_len * source_view.header.block_len # TODO
+        #        )
         num_channels = target_view.header.num_channels
         shape = (num_channels,) + tuple(target_view.size)
-        file_buffer = np.zeros(shape, target_view.header.voxel_type)  # TODO: this is named differently for TiffMagHeader -> create method for View that returns the type
+        file_buffer = np.zeros(shape, target_view.get_dtype())
 
-        assert (
-            wkw_cubelength % buffer_edge_len == 0
-        ), "buffer_cube_size must be a divisor of wkw cube length"
+        #assert (
+        #    wkw_cubelength % buffer_edge_len == 0
+        #), "buffer_cube_size must be a divisor of wkw cube length"
 
-        tile_indices = list(range(0, wkw_cubelength // buffer_edge_len))
-        tiles = product(tile_indices, tile_indices, tile_indices)
+        #tile_indices = list(range(0, wkw_cubelength // buffer_edge_len))
+        #tile_indices = list(range(0, target_view.size // buffer_edge_len))
+        #tiles = product(tile_indices, tile_indices, tile_indices)
+        #tiles = product(*list([list(range(0, len)) for len in np.array(chunck_size) // buffer_edge_len]))
+        tiles = product(*list([list(range(0, math.ceil(len))) for len in np.array(chunck_size) / buffer_edge_len]))
 
         source_view.open()
 
@@ -259,7 +265,7 @@ def downsample_cube_job(args):
             # Read source buffer
             cube_buffer_channels = source_view.read(
                 source_offset,
-                np.minimum(buffer_edge_len * np.array(mag_factors), source_view.size), # TODO : I am not sure if "buffer_edge_len * np.array(mag_factors)" is correct
+                np.minimum(buffer_edge_len, source_view.size),
             )
 
             for channel_index in range(num_channels):
@@ -283,6 +289,8 @@ def downsample_cube_job(args):
 
         source_view.close()
         # Write the downsampled buffer to target
+        if source_view.header.num_channels == 1:
+            file_buffer = file_buffer[0]  # remove channel dimension
         target_view.write(file_buffer)
         if use_logging:
             time_stop("Downsampling of {}".format(target_view.global_offset))

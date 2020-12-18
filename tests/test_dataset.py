@@ -1545,6 +1545,86 @@ def test_outdated_dtype_parameter():
         ds.add_layer("color", Layer.COLOR_TYPE, dtype=np.uint8, num_channels=1)
 
 
+def test_dataset_conversion():
+    origin_wk_ds_path = "./testoutput/conversion/origin_wk/"
+    origin_tiff_ds_path = "./testoutput/conversion/origin_tiff/"
+
+    wk_to_tiff_ds_path = "./testoutput/conversion/wk_to_tiff/"
+    tiff_to_wk_ds_path = "./testoutput/conversion/tiff_to_wk/"
+
+    wk_to_tiff_to_wk_ds_path = "./testoutput/conversion/wk_to_tiff_to_wk/"
+    tiff_to_wk_to_tiff_ds_path = "./testoutput/conversion/tiff_to_wk_to_tiff/"
+
+    delete_dir(origin_wk_ds_path)
+    delete_dir(origin_tiff_ds_path)
+    delete_dir(wk_to_tiff_ds_path)
+    delete_dir(tiff_to_wk_ds_path)
+    delete_dir(wk_to_tiff_to_wk_ds_path)
+    delete_dir(tiff_to_wk_to_tiff_ds_path)
+
+    # create example dataset
+    origin_wk_ds = WKDataset.create(origin_wk_ds_path, scale=(1, 1, 1))
+    wk_seg_layer = origin_wk_ds.add_layer("layer1", Layer.SEGMENTATION_TYPE, num_channels=1, largest_segment_id=1000000000)
+    wk_seg_layer.add_mag("1", block_len=8, file_len=16)\
+        .write(offset=(10, 20, 30), data=(np.random.rand(128, 128, 256) * 255).astype(np.uint8))
+    wk_seg_layer.add_mag("2", block_len=8, file_len=16)\
+        .write(offset=(5, 10, 15), data=(np.random.rand(64, 64, 128) * 255).astype(np.uint8))
+    wk_color_layer = origin_wk_ds.add_layer("layer2", Layer.COLOR_TYPE, num_channels=3)
+    wk_color_layer.add_mag("1", block_len=8, file_len=16)\
+        .write(offset=(10, 20, 30), data=(np.random.rand(3, 128, 128, 256) * 255).astype(np.uint8))
+    wk_color_layer.add_mag("2", block_len=8, file_len=16)\
+        .write(offset=(5, 10, 15), data=(np.random.rand(3, 64, 64, 128) * 255).astype(np.uint8))
+
+    wk_to_tiff_ds = origin_wk_ds.to_tiff_dataset(wk_to_tiff_ds_path)
+    wk_to_tiff_to_wk_ds = wk_to_tiff_ds.to_wk_dataset(wk_to_tiff_to_wk_ds_path)
+
+    assert origin_wk_ds.layers.keys() == wk_to_tiff_to_wk_ds.layers.keys()
+    for layer_name in origin_wk_ds.layers:
+        assert origin_wk_ds.layers[layer_name].mags.keys() == wk_to_tiff_to_wk_ds.layers[layer_name].mags.keys()
+        for mag in origin_wk_ds.layers[layer_name].mags:
+            origin_header = origin_wk_ds.layers[layer_name].mags[mag].header
+            converted_header = wk_to_tiff_to_wk_ds.layers[layer_name].mags[mag].header
+            assert origin_header.voxel_type == converted_header.voxel_type
+            assert origin_header.num_channels == converted_header.num_channels
+            assert origin_header.block_type == converted_header.block_type
+            # the block_length and file_length might differ because the conversion from tiff to wk uses the defaults
+            assert np.array_equal(
+                origin_wk_ds.layers[layer_name].mags[mag].read(),
+                wk_to_tiff_to_wk_ds.layers[layer_name].mags[mag].read()
+            )
+
+    # create example dataset
+    origin_tiff_ds = TiffDataset.create(origin_tiff_ds_path, scale=(1, 1, 1), pattern="z_dim_{zzzzz}.tif")
+    tiff_seg_layer = origin_tiff_ds.add_layer("layer1", Layer.SEGMENTATION_TYPE, num_channels=1, largest_segment_id=1000000000)
+    tiff_seg_layer.add_mag("1") \
+        .write(offset=(10, 20, 30), data=(np.random.rand(128, 128, 256) * 255).astype(np.uint8))
+    tiff_seg_layer.add_mag("2") \
+        .write(offset=(5, 10, 15), data=(np.random.rand(64, 64, 128) * 255).astype(np.uint8))
+    tiff_color_layer = origin_tiff_ds.add_layer("layer2", Layer.COLOR_TYPE, num_channels=3)
+    tiff_color_layer.add_mag("1") \
+        .write(offset=(10, 20, 30), data=(np.random.rand(3, 128, 128, 256) * 255).astype(np.uint8))
+    tiff_color_layer.add_mag("2") \
+        .write(offset=(5, 10, 15), data=(np.random.rand(3, 64, 64, 128) * 255).astype(np.uint8))
+
+    tiff_to_wk_ds = origin_tiff_ds.to_wk_dataset(tiff_to_wk_ds_path)
+    tiff_to_wk_to_tiff = tiff_to_wk_ds.to_tiff_dataset(tiff_to_wk_to_tiff_ds_path, pattern="different_pattern_{zzzzz}.tif")
+
+    assert origin_tiff_ds.layers.keys() == tiff_to_wk_to_tiff.layers.keys()
+    for layer_name in origin_tiff_ds.layers:
+        assert origin_tiff_ds.layers[layer_name].mags.keys() == tiff_to_wk_to_tiff.layers[layer_name].mags.keys()
+        for mag in origin_tiff_ds.layers[layer_name].mags:
+            origin_header = origin_tiff_ds.layers[layer_name].mags[mag].header
+            converted_header = tiff_to_wk_to_tiff.layers[layer_name].mags[mag].header
+            assert origin_header.dtype_per_channel == converted_header.dtype_per_channel
+            assert origin_header.num_channels == converted_header.num_channels
+            assert origin_header.tile_size == converted_header.tile_size
+            # the pattern of the datasets does not match because I intentionally used two different paths in this test
+            assert np.array_equal(
+                origin_tiff_ds.layers[layer_name].mags[mag].read(),
+                tiff_to_wk_to_tiff.layers[layer_name].mags[mag].read()
+            )
+
+
 @pytest.fixture(
     params=[
         # (offset, size, num_channels, from_mag, max_mag, scale, interpolation_mode, compress, layer type)
@@ -1594,13 +1674,16 @@ def test_downsampling(generate_dataset: Tuple):
 
     path1 = "./testoutput/downsampling/dataset1/"
     path2 = "./testoutput/downsampling/dataset2/"
+    path3 = "./testoutput/downsampling/dataset3/"
 
     delete_dir(path1)
     delete_dir(path2)
+    delete_dir(path3)
     copytree(origin_path, path1)
     copytree(origin_path, path2)
 
     origin_ds = WKDataset(origin_path)
+    origin_ds.to_tiff_dataset(path3)
     print(origin_ds.layers)
 
     assert len(origin_ds.layers['layer1'].mags) == 1
@@ -1608,7 +1691,8 @@ def test_downsampling(generate_dataset: Tuple):
 
 
     # downsample with dataset api
-    layer2 = WKDataset(path2).get_layer('layer1')
+    layer2 = TiffDataset(path3).get_layer('layer1')
+    #layer2 =WKDataset(path2).get_layer('layer1')
     layer2.downsample(
         from_mag=from_mag,
         max_mag=max_mag,

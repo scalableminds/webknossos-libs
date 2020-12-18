@@ -317,8 +317,23 @@ class WKDataset(AbstractDataset):
         self.data_format = "wkw"
         assert isinstance(self.properties, WKProperties)
 
-    def to_tiff_dataset(self, new_dataset_path):
-        raise NotImplementedError  # TODO; implement
+    def to_tiff_dataset(self, new_dataset_path, pattern="{zzzzz}.tif"):
+        tiff_dataset = TiffDataset.create(new_dataset_path, self.properties.scale, pattern)
+
+        for layer_name, layer in self.layers.items():
+            largest_segment_id = None
+            if self.properties.data_layers[layer_name].category == Layer.SEGMENTATION_TYPE:
+                largest_segment_id = self.properties.data_layers[layer_name].largest_segment_id
+            tiff_layer = tiff_dataset.add_layer(layer_name, self.properties.data_layers[layer_name].category, dtype_per_channel=layer.dtype_per_channel, num_channels=layer.num_channels, largest_segment_id=largest_segment_id)
+
+            for mag_name, mag in layer.mags.items():
+                tiff_mag = tiff_layer.add_mag(mag_name)
+                data = mag.read()
+                if layer.num_channels == 1:
+                    data = data[0]  # remove channel dimension
+                tiff_mag.write(data)
+
+        return tiff_dataset
 
     def _create_layer(self, layer_name, dtype_per_channel, num_channels) -> Layer:
         return WKLayer(layer_name, self, dtype_per_channel, num_channels)
@@ -370,7 +385,24 @@ class TiffDataset(AbstractDataset):
         assert isinstance(self.properties, TiffProperties)
 
     def to_wk_dataset(self, new_dataset_path):
-        raise NotImplementedError  # TODO; implement
+        wk_dataset = WKDataset.create(new_dataset_path, self.properties.scale)
+
+        for layer_name, layer in self.layers.items():
+            largest_segment_id = None
+            if self.properties.data_layers[layer_name].category == Layer.SEGMENTATION_TYPE:
+                largest_segment_id = self.properties.data_layers[layer_name].largest_segment_id
+            tiff_layer = wk_dataset.add_layer(layer_name, self.properties.data_layers[layer_name].category,
+                                                dtype_per_channel=layer.dtype_per_channel,
+                                                num_channels=layer.num_channels, largest_segment_id=largest_segment_id)
+
+            for mag_name, mag in layer.mags.items():
+                tiff_mag = tiff_layer.add_mag(mag_name)
+                data = mag.read()
+                if layer.num_channels == 1:
+                    data = data[0]  # remove channel dimension
+                tiff_mag.write(data)
+
+        return wk_dataset
 
     def _create_layer(self, layer_name, dtype_per_channel, num_channels) -> Layer:
         return TiffLayer(layer_name, self, dtype_per_channel, num_channels)

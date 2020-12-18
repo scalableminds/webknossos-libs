@@ -1,5 +1,6 @@
 import itertools
 import re
+from pathlib import Path
 from typing import Optional, List, Tuple, Set
 
 from skimage import io
@@ -49,7 +50,7 @@ def detect_tile_ranges(
         logger.info(
             f"Auto-detected tile ranges from tif directory structure: z {detected_z_range} x {detected_x_range} y {detected_y_range}"
         )
-        return (detected_z_range, detected_x_range, detected_y_range)
+        return detected_z_range, detected_x_range, detected_y_range
 
     raise Exception("Couldn't auto-detect tile ranges from wkw or tile path pattern")
 
@@ -178,9 +179,11 @@ class TiffMag:
 
         for xyz in available_tiffs:
             if xyz != (None, None, None):
-                self.tiffs[xyz] = TiffReader.open(
-                    self.get_file_name_for_layer(xyz)
-                )  # open is lazy
+                filename = self.get_file_name_for_layer(xyz)
+                if Path(filename).is_file():
+                    self.tiffs[xyz] = TiffReader.open(
+                        self.get_file_name_for_layer(xyz)
+                    )  # open is lazy
 
     def read(self, off, shape) -> np.array:
         # modify the shape to also include the num_channels

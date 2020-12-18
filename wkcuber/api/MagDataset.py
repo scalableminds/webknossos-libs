@@ -1,14 +1,13 @@
 import logging
 import os
 from os.path import join
+from typing import Tuple
 
 from wkw import wkw
 import numpy as np
 
-import wkcuber.api as api
 from wkcuber.api.View import WKView, TiffView
 from wkcuber.api.TiffData.TiffMag import TiffMagHeader
-from wkcuber.downsampling_utils import InterpolationModes
 from wkcuber.mag import Mag
 
 
@@ -137,92 +136,6 @@ class MagDataset:
             assert (
                 num_channels == write_data_shape[0]
             ), f"The number of channels of the dataset ({num_channels}) does not match the number of channels of the passed data ({write_data_shape[0]})"
-    '''
-    def _downsample(
-            self,
-            target_mag: Mag,
-            interpolation_mode: InterpolationModes,
-            compress: bool,
-            buffer_edge_len=None,
-            args=None,
-    ):
-        logging.info("Downsampling mag {} from mag {}".format(target_mag, self.name))
-
-        mag_factors = [
-            t // s for (t, s) in zip(target_mag.to_array(), Mag(self.name).to_array())
-        ]
-        # Detect the cubes that we want to downsample
-        source_cube_addresses = cube_addresses(source_wkw_info)
-
-        target_cube_addresses = list(
-            set(
-                tuple(dim // mag_factor for (dim, mag_factor) in zip(xyz, mag_factors))
-                for xyz in source_cube_addresses
-            )
-        )
-        target_cube_addresses.sort()
-        with open_wkw(source_wkw_info) as source_wkw:
-            if buffer_edge_len is None:
-                buffer_edge_len = determine_buffer_edge_len(source_wkw)
-            logging.debug(
-                "Found source cubes: count={} size={} min={} max={}".format(
-                    len(source_cube_addresses),
-                    (buffer_edge_len,) * 3,
-                    min(source_cube_addresses),
-                    max(source_cube_addresses),
-                )
-            )
-            logging.debug(
-                "Found target cubes: count={} size={} min={} max={}".format(
-                    len(target_cube_addresses),
-                    (buffer_edge_len,) * 3,
-                    min(target_cube_addresses),
-                    max(target_cube_addresses),
-                )
-            )
-
-        with open_wkw(source_wkw_info) as source_wkw:
-            num_channels = source_wkw.header.num_channels
-            header_block_type = (
-                wkw.Header.BLOCK_TYPE_LZ4HC if compress else wkw.Header.BLOCK_TYPE_RAW
-            )
-
-            extend_wkw_dataset_info_header(
-                target_wkw_info,
-                num_channels=num_channels,
-                file_len=source_wkw.header.file_len,
-                block_type=header_block_type,
-            )
-
-            ensure_wkw(target_wkw_info)
-
-        with get_executor_for_args(args) as executor:
-            job_args = []
-            voxel_count_per_cube = (
-                                           source_wkw.header.file_len * source_wkw.header.block_len
-                                   ) ** 3
-            job_count_per_log = math.ceil(
-                1024 ** 3 / voxel_count_per_cube
-            )  # log every gigavoxel of processed data
-            for i, target_cube_xyz in enumerate(target_cube_addresses):
-                use_logging = i % job_count_per_log == 0
-
-                job_args.append(
-                    (
-                        source_wkw_info,
-                        target_wkw_info,
-                        mag_factors,
-                        interpolation_mode,
-                        target_cube_xyz,
-                        buffer_edge_len,
-                        compress,
-                        use_logging,
-                    )
-                )
-            wait_and_ensure_success(executor.map_to_futures(downsample_cube_job, job_args))
-
-        logging.info("Mag {0} successfully cubed".format(target_mag))
-    '''
 
 
 class WKMagDataset(MagDataset):
@@ -254,6 +167,9 @@ class WKMagDataset(MagDataset):
     def _get_view_type(self):
         return WKView
 
+    def _get_file_dimensions(self) -> Tuple[int, int, int]:
+        return (self.file_len * self.block_len,) * 3
+
 
 class TiffMagDataset(MagDataset):
     def __init__(self, layer, name, pattern):
@@ -275,6 +191,12 @@ class TiffMagDataset(MagDataset):
 
     def _get_view_type(self):
         return TiffView
+
+    def _get_file_dimensions(self) -> Tuple[int, int, int]:
+        if self.layer.dataset.properties.tile_size:
+            return self.layer.dataset.properties.tile_size + (1,)
+
+        return self.view.size[0], self.view.size[1], 1 # TODO: find better chunk size
 
 
 class TiledTiffMagDataset(TiffMagDataset):
