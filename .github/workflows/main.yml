@@ -8,7 +8,7 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: [3.6, 3.7]
+        python-version: [3.6, 3.7, 3.8]
 
     steps:
     - uses: actions/checkout@v1
@@ -30,13 +30,13 @@ jobs:
       run: tar -xzvf testdata/WT1_wkw.tar.gz
       
     - name: Check formatting
-      run: black --check .
+      run: poetry run black --check .
 
     - name: Lint code
-      run: python -m pylint -j4 wkcuber
+      run: poetry run pylint -j4 wkcuber
       
     - name: Python tests
-      run: py.test tests
+      run: poetry run pytest tests
       
     - name: Smoke test docker
       run: |

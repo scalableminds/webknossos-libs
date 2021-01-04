@@ -162,7 +162,7 @@ def export_tiff_slice(
 
                 image = wkw_slice_to_image(tiff_data[:, :, :, slice_index], downsample)
                 image.save(tiff_file_path)
-                logging.info(f"saved slice {slice_name_number}")
+                logging.info("Saved slice %s", slice_name_number)
 
             else:
                 for y_tile_index in range(ceil(tiff_bbox["size"][1] / tiling_size[1])):
@@ -216,7 +216,7 @@ def export_tiff_stack(
         num_slices = ceil(bbox["size"][2] / batch_size)
         slices = range(0, num_slices)
 
-        logging.info(f"starting jobs")
+        logging.info("starting jobs")
         futures = executor.map_to_futures(
             partial(
                 export_tiff_slice,

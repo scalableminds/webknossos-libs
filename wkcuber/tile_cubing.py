@@ -42,9 +42,9 @@ def check_input_pattern(input_pattern: str) -> str:
 def replace_coordinates(
     pattern: str, coord_ids_with_replacement_info: Dict[str, Tuple[int, int]]
 ) -> str:
-    """ Replaces the coordinates with a specific length. 
-    The coord_ids_with_replacement_info is a Dict that maps a dimension 
-    to a tuple of the coordinate value and the desired length. """
+    """Replaces the coordinates with a specific length.
+    The coord_ids_with_replacement_info is a Dict that maps a dimension
+    to a tuple of the coordinate value and the desired length."""
     occurrences = re.findall("({x+}|{y+}|{z+})", pattern)
     for occurrence in occurrences:
         coord = occurrence[1]
