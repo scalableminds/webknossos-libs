@@ -33,7 +33,7 @@ The tools are modular components to allow easy integration into existing pipelin
 
 ## Installation
 ### Python 3 with pip from PyPi
-- `wkcuber`requires at least Python 3.6+
+- `wkcuber` requires at least Python 3.6+
 
 ```
 # Make sure to have lz4 installed:
