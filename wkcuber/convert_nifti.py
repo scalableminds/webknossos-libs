@@ -2,6 +2,7 @@ import logging
 import time
 from argparse import ArgumentParser
 from pathlib import Path
+from sklearn.preprocessing import LabelEncoder
 
 import nibabel as nib
 import numpy as np
@@ -36,6 +37,15 @@ def create_parser():
         "-l",
         help="Name of the cubed layer (color or segmentation).",
         default="color",
+    )
+
+    parser.add_argument(
+        "--is_segmentation_layer",
+        "-s",
+        help="When converting one layer, signals whether layer is segmentation layer. "
+             "When converting a folder, this option is ignored",
+        default=False,
+        action="store_true",
     )
 
     parser.add_argument(
@@ -88,13 +98,13 @@ def create_parser():
 
 
 def to_target_datatype(
-    data: np.ndarray, target_dtype, is_probably_binary: bool
+    data: np.ndarray, target_dtype, is_segmentation_layer: bool
 ) -> np.ndarray:
-    if is_probably_binary:
-        logging.info(
-            f"Casting directly to {target_dtype}, as input seems to be binary."
-        )
-        return data.astype(np.dtype(target_dtype))
+
+    if is_segmentation_layer:
+        original_shape = data.shape
+        label_encoder = LabelEncoder()
+        return label_encoder.fit_transform(data.ravel()).reshape(original_shape).astype(np.dtype(target_dtype))
 
     if data.dtype == np.dtype("float32"):
         factor = data.max()
@@ -117,6 +127,7 @@ def convert_nifti(
     dtype,
     scale,
     mag=1,
+    is_segmentation_layer=False,
     file_len=DEFAULT_WKW_FILE_LEN,
     bbox_to_enforce=None,
     write_tiff=False,
@@ -137,13 +148,13 @@ def convert_nifti(
     cube_data = np.array(source_nifti.get_fdata())
 
     is_probably_binary = np.unique(cube_data).shape[0] == 2
-    assume_segmentation_layer = False  # Since webKnossos does not support multiple segmention layers, this is hardcoded to False right now.
+
     max_cell_id_args = (
         {"largest_segment_id": int(np.max(cube_data) + 1)}
-        if assume_segmentation_layer
+        if is_segmentation_layer
         else {}
     )
-    category_type = "segmentation" if assume_segmentation_layer else "color"
+    category_type = "segmentation" if is_segmentation_layer else "color"
     logging.debug(f"Assuming {category_type} as layer type for {layer_name}")
 
     if len(source_nifti.shape) == 3:
@@ -170,8 +181,9 @@ def convert_nifti(
 
     if scale is None:
         scale = tuple(map(float, source_nifti.header["pixdim"][:3]))
+
     logging.info(f"Using scale: {scale}")
-    cube_data = to_target_datatype(cube_data, dtype, is_probably_binary)
+    cube_data = to_target_datatype(cube_data, dtype, is_segmentation_layer)
 
     # everything needs to be padded to
     if bbox_to_enforce is not None:
@@ -269,11 +281,11 @@ def convert_folder_nifti(
     }
     for path in paths:
         if path == color_path:
-            convert_nifti(path, target_path, "color", "uint8", **conversion_args)
+            convert_nifti(path, target_path, "color", "uint8", is_segmentation_layer=False, **conversion_args)
         elif path == segmentation_path:
-            convert_nifti(path, target_path, "segmentation", "uint8", **conversion_args)
+            convert_nifti(path, target_path, "segmentation", "uint8", is_segmentation_layer=True, **conversion_args)
         else:
-            convert_nifti(path, target_path, path.stem, "uint8", **conversion_args)
+            convert_nifti(path, target_path, path.stem, "uint8", is_segmentation_layer=False, **conversion_args)
 
 
 def main():
@@ -312,6 +324,7 @@ def main():
             Path(args.target_path),
             args.layer_name,
             args.dtype,
+            is_segmentation_layer=args.is_segmentation_layer,
             **conversion_args,
         )
 
