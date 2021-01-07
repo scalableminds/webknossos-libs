@@ -119,9 +119,10 @@ class Dm4ImageReader(ImageReader):
 
 class TiffImageReader(ImageReader):
     def read_array(self, file_name, dtype, z_slice):
+        channel = 0
         tif_file = TiffFile(file_name)
         if len(tif_file.pages) > 1:
-            data = np.array(tif_file.pages[z_slice].asarray(), dtype)
+            data = np.array(tif_file.pages[z_slice * tif_file.series[0].shape[1] + channel].asarray(), dtype)
         else:
             data = np.array(tif_file.pages[0].asarray(), dtype)
         data = data.swapaxes(0, 1)
@@ -145,7 +146,7 @@ class TiffImageReader(ImageReader):
 
     def read_z_slices_per_file(self, file_name):
         tif_file = TiffFile(file_name)
-        return len(tif_file.pages)
+        return tif_file.series[0].shape[0]
 
 
 class ImageReaderManager:
