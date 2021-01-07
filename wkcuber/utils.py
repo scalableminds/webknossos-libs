@@ -1,22 +1,24 @@
 import re
 import time
-import wkw
-import numpy as np
 import logging
 import argparse
+import wkw
+import numpy as np
 import cluster_tools
 import json
 import os
 import psutil
+import traceback
+import concurrent
+
 from typing import List, Tuple, Union
 from glob import iglob
 from collections import namedtuple
 from multiprocessing import cpu_count
-import concurrent
 from os import path, getpid
 from math import floor, ceil
 from logging import getLogger
-import traceback
+
 from wkcuber.api.bounding_box import BoundingBox
 
 from .knossos import KnossosDataset
@@ -68,15 +70,15 @@ def parse_scale(scale):
     try:
         scale = tuple(float(x) for x in scale.split(","))
         return scale
-    except Exception:
-        raise argparse.ArgumentTypeError("The scale could not be parsed")
+    except Exception as e:
+        raise argparse.ArgumentTypeError("The scale could not be parsed") from e
 
 
 def parse_bounding_box(bbox_str):
     try:
         return BoundingBox.from_csv(bbox_str)
-    except Exception:
-        raise argparse.ArgumentTypeError("The bounding box could not be parsed.")
+    except Exception as e:
+        raise argparse.ArgumentTypeError("The bounding box could not be parsed.") from e
 
 
 def open_knossos(info):

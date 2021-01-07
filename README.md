@@ -1,12 +1,12 @@
-# webKnossos cuber
+# webKnossos cuber (wkcuber)
+[![PyPI version](https://img.shields.io/pypi/v/wkcuber)](https://pypi.python.org/pypi/wkcuber)
+[![Supported Python Versions](https://img.shields.io/pypi/pyversions/wkcuber.svg)](https://pypi.python.org/pypi/wkcuber)
+[![Build Status](https://img.shields.io/github/workflow/status/scalableminds/wkcuber/CI/master)](https://github.com/scalableminds/wkcuber/actions?query=workflow%3A%22CI%22)
+[![Code Style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-[![CircleCI Status](https://circleci.com/gh/scalableminds/webknossos-cuber.svg?&style=shield)](https://circleci.com/gh/scalableminds/webknossos-cuber)
-
-Easily create [WKW](https://github.com/scalableminds/webknossos-wrap) datasets for [webKnossos](https://webknossos.org).
+Python library for creating and working with [webKnossos](https://webknossos.org) [WKW](https://github.com/scalableminds/webknossos-wrap) datasets. WKW is a container format for efficiently storing large, scale 3D image data as found in (electron) microscopy.
 
 The tools are modular components to allow easy integration into existing pipelines and workflows.
-
-Created with [Python3](https://www.python.org/).
 
 ## Features
 
@@ -32,7 +32,9 @@ Created with [Python3](https://www.python.org/).
 * NIFTI files
 
 ## Installation
-### Python3 with pip
+### Python 3 with pip from PyPi
+- `wkcuber` requires at least Python 3.6+
+
 ```
 # Make sure to have lz4 installed:
 # Mac: brew install lz4
@@ -99,11 +101,32 @@ python -m wkcuber.check_equality /data/source /data/target
 
 Most tasks can be configured to be executed in a parallelized manner. Via `--distribution_strategy` you can pass `multiprocessing` or `slurm`. The first can be further configured with `--jobs` and the latter via `--job_resources='{"mem": "10M"}'`. Use `--help` to get more information.
 
-## Test data credits
+## Development
+Make sure to install all the required dependencies using Poetry:
+```
+pip install poetry
+poetry install
+```
+
+Please, format, lint, and unit test your code changes before merging them.
+```
+poetry run black .
+poetry run pylint -j4 wkcuber
+poetry run pytest tests
+```
+
+Please, run the extended test suite:
+```
+tests/scripts/all_tests.sh
+```
+
+PyPi releases are automatically pushed when creating a new Git tag/Github release. 
+
+## Test Data Credits
 Excerpts for testing purposes have been sampled from:
 - Dow Jacobo Hossain Siletti Hudspeth (2018). **Connectomics of the zebrafish's lateral-line neuromast reveals wiring and miswiring in a simple microcircuit.** eLife. [DOI:10.7554/eLife.33988](https://elifesciences.org/articles/33988)
 - Zheng Lauritzen Perlman Robinson Nichols Milkie Torrens Price Fisher Sharifi Calle-Schuler Kmecova Ali Karsh Trautman Bogovic Hanslovsky Jefferis Kazhdan Khairy Saalfeld Fetter Bock (2018). **A Complete Electron Microscopy Volume of the Brain of Adult Drosophila melanogaster.** Cell. [DOI:10.1016/j.cell.2018.06.019](https://www.cell.com/cell/fulltext/S0092-8674(18)30787-6). License: [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/)
 
 ## License
-AGPLv3  
+AGPLv3
 Copyright scalable minds
