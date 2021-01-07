@@ -43,7 +43,7 @@ def create_parser():
         "--is_segmentation_layer",
         "-s",
         help="When converting one layer, signals whether layer is segmentation layer. "
-             "When converting a folder, this option is ignored",
+        "When converting a folder, this option is ignored",
         default=False,
         action="store_true",
     )
@@ -104,7 +104,11 @@ def to_target_datatype(
     if is_segmentation_layer:
         original_shape = data.shape
         label_encoder = LabelEncoder()
-        return label_encoder.fit_transform(data.ravel()).reshape(original_shape).astype(np.dtype(target_dtype))
+        return (
+            label_encoder.fit_transform(data.ravel())
+            .reshape(original_shape)
+            .astype(np.dtype(target_dtype))
+        )
 
     if data.dtype == np.dtype("float32"):
         factor = data.max()
@@ -281,11 +285,32 @@ def convert_folder_nifti(
     }
     for path in paths:
         if path == color_path:
-            convert_nifti(path, target_path, "color", "uint8", is_segmentation_layer=False, **conversion_args)
+            convert_nifti(
+                path,
+                target_path,
+                "color",
+                "uint8",
+                is_segmentation_layer=False,
+                **conversion_args,
+            )
         elif path == segmentation_path:
-            convert_nifti(path, target_path, "segmentation", "uint8", is_segmentation_layer=True, **conversion_args)
+            convert_nifti(
+                path,
+                target_path,
+                "segmentation",
+                "uint8",
+                is_segmentation_layer=True,
+                **conversion_args,
+            )
         else:
-            convert_nifti(path, target_path, path.stem, "uint8", is_segmentation_layer=False, **conversion_args)
+            convert_nifti(
+                path,
+                target_path,
+                path.stem,
+                "uint8",
+                is_segmentation_layer=False,
+                **conversion_args,
+            )
 
 
 def main():
