@@ -117,6 +117,16 @@ class Dm4ImageReader(ImageReader):
         return 1
 
 
+def find_count_of_axis(tif_file, axis):
+    assert len(tif_file.series) == 1, "only single tif series are supported"
+    tif_series = tif_file.series[0]
+    index = tif_series.axes.find(axis)
+    if index == -1:
+        return 1
+    else:
+        return tif_series.shape[index]  # pylint: disable=unsubscriptable-object
+
+
 class TiffImageReader(ImageReader):
     def read_array(self, file_name, dtype, z_slice):
         channel = 0
@@ -138,21 +148,14 @@ class TiffImageReader(ImageReader):
 
     def read_dimensions(self, file_name):
         tif_file = TiffFile(file_name)
-        shape = tif_file.pages[0].shape
-        return shape[1], shape[0]
+        return find_count_of_axis(tif_file, "X"), find_count_of_axis(tif_file, "Y")
 
     def read_channel_count(self, file_name):
-        tif_file = TiffFile(file_name)
-        shape = tif_file.pages[0].shape
-        if len(shape) == 2:
-            # For two-dimensional data, the channel count is one
-            return 1
-        else:
-            return shape.shape[-1]  # pylint: disable=unsubscriptable-object
+        return 1
+        # return find_count_of_axis(TiffFile(file_name), "C")
 
     def read_z_slices_per_file(self, file_name):
-        tif_file = TiffFile(file_name)
-        return tif_file.series[0].shape[0]  # pylint: disable=unsubscriptable-object
+        return find_count_of_axis(TiffFile(file_name), "Z")
 
 
 class ImageReaderManager:
