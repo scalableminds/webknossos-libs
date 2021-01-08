@@ -162,7 +162,7 @@ def export_tiff_slice(
 
                 image = wkw_slice_to_image(tiff_data[:, :, :, slice_index], downsample)
                 image.save(tiff_file_path)
-                logging.info(f"saved slice {slice_name_number}")
+                logging.info("Saved slice %s", slice_name_number)
 
             else:
                 for y_tile_index in range(ceil(tiff_bbox["size"][1] / tiling_size[1])):

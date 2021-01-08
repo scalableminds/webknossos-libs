@@ -73,8 +73,7 @@ class BoundingBox:
 
     @staticmethod
     def from_checkpoint_name(checkpoint_name: str) -> "BoundingBox":
-        """ This function extracts a bounding box in the format x_y_z_sx_sy_xz which is contained in a string.
-        """
+        """This function extracts a bounding box in the format x_y_z_sx_sy_xz which is contained in a string."""
         regex = r"(([0-9]+_){5}([0-9]+))"
         match = re.search(regex, checkpoint_name)
         assert (
@@ -255,10 +254,10 @@ class BoundingBox:
     ) -> Generator["BoundingBox", None, None]:
         """Decompose the bounding box into smaller chunks of size `chunk_size`.
 
-    Chunks at the border of the bounding box might be smaller than chunk_size.
-    If `chunk_border_alignment` is set, all border coordinates
-    *between two chunks* will be divisible by that value.
-    """
+        Chunks at the border of the bounding box might be smaller than chunk_size.
+        If `chunk_border_alignment` is set, all border coordinates
+        *between two chunks* will be divisible by that value.
+        """
 
         start = self.topleft.copy()
         chunk_size = np.array(chunk_size)
