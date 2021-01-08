@@ -113,9 +113,66 @@ class Layer:
             args: Namespace = None,
     ):
         # if 'scale' is set, the data gets downsampled anisotropic
+
+        # pad all existing mags if necessary
+        # during each downsampling step, the data shape or offset of the new mag should never need to be rounded
+        existing_mags = sorted([Mag(mag) for mag in self.mags.keys()])
+        all_mags_after_downsampling = existing_mags.copy()
+        cur_mag = get_next_mag(from_mag, scale)
+        while cur_mag <= max_mag:
+            all_mags_after_downsampling += [cur_mag]
+            cur_mag = get_next_mag(cur_mag, scale)
+
+        # calculate the product of all mag_factors from mag 1 to the lowest mag
+        cur_mag = Mag("1")
+        last_mag_factor = [1,1,1]
+        mag_factors_product = np.array(last_mag_factor)
+        for mag in all_mags_after_downsampling:
+            last_mag_factor = mag.as_np() // cur_mag.as_np()
+            mag_factors_product *= last_mag_factor
+            cur_mag = mag
+
+        # calculate aligned offset and size for lowest mag
+        offset_in_mag1 = self.dataset.properties.data_layers[self.name].get_bounding_box_offset()
+        size_in_mag1 = self.dataset.properties.data_layers[self.name].get_bounding_box_size()
+        offset_in_lowest_mag = offset_in_mag1 // all_mags_after_downsampling[-1].as_np()
+        end_offset_in_lowest_mag = -((np.array(offset_in_mag1) + size_in_mag1) // -all_mags_after_downsampling[-1].as_np())  # ceil div
+        aligned_offset_in_lowest_mag = last_mag_factor * (offset_in_lowest_mag // last_mag_factor)  # floor div
+        aligned_size_in_lowest_mag = (last_mag_factor * (-(-end_offset_in_lowest_mag // last_mag_factor))) - aligned_offset_in_lowest_mag  # ceil div
+        # translate alignment into mag 1
+        aligned_offset_in_mag1 = mag_factors_product * aligned_offset_in_lowest_mag
+        aligned_size_in_mag1 = mag_factors_product * aligned_size_in_lowest_mag
+
+        # pad the existing mags
+        for mag_name in existing_mags:
+            mag = self.mags[mag_name.to_layer_name()]
+            aligned_offset = aligned_offset_in_mag1 // mag_name.as_np()
+            aligned_size = aligned_size_in_mag1 // mag_name.as_np()
+            current_offset = mag.get_view().global_offset
+            current_size = mag.get_view().size
+
+            shape = list((self.num_channels,) + tuple(aligned_size))
+            # pad (left + right) and (top + bottom) and (front + back)
+            for i in range(0, 3):
+                # pad left / top / front
+                buffer_width = (np.array(current_offset) - aligned_offset)[i]
+                if buffer_width > 0:
+                    padding_shape = shape
+                    padding_shape[i+1] = buffer_width
+                    mag.write(data=np.zeros(padding_shape, dtype=mag.get_dtype()), offset=aligned_offset)
+                # pad right / bottom / back
+                buffer_width = ((aligned_offset + aligned_size) - (np.array(current_offset) + np.array(current_size)))[i]
+                if buffer_width > 0:
+                    padding_shape = shape
+                    padding_shape[i+1] = buffer_width
+                    right_offset = aligned_offset
+                    right_offset[i] = current_offset[i] + current_size[i]
+                    mag.write(data=np.zeros(padding_shape, dtype=mag.get_dtype()), offset=right_offset)
+
         interpolation_mode = parse_interpolation_mode(interpolation_mode, self.name)
         prev_mag = from_mag
         target_mag = get_next_mag(prev_mag, scale)
+
         while target_mag <= max_mag:
             assert prev_mag < target_mag
             assert target_mag.to_layer_name() not in self.mags
@@ -126,37 +183,37 @@ class Layer:
                 t // s for (t, s) in zip(target_mag.to_array(), prev_mag.to_array())
             ]
 
-            # initialize empty target mag
+            # initialize the new mag
             target_mag_ds = self._initialize_mag_from_other_mag(target_mag, prev_mag_ds, compress)
-            target_mag_view = target_mag_ds.get_view()
+
+            # Get target view (aligned with mag_factors)
+            true_target_offset = target_mag_ds.get_view().global_offset
+            aligned_target_offset = mag_factors * (np.array(true_target_offset) // mag_factors)
+            target_mag_view = target_mag_ds.get_view(offset=aligned_target_offset, is_bounded=False)
 
             # perform downsampling
             with get_executor_for_args(args) as executor:
                 voxel_count_per_cube = np.prod(prev_mag_ds._get_file_dimensions())
                 job_count_per_log = math.ceil(1024 ** 3 / voxel_count_per_cube)  # log every gigavoxel of processed data
 
-                num_chunks_per_dim = [math.ceil(s1/s2) for s1, s2 in zip(target_mag_view.size, target_mag_ds._get_file_dimensions())]
-
                 if buffer_edge_len is None:
                     buffer_edge_len = determine_buffer_edge_len(prev_mag_ds.view) # DEFAULT_EDGE_LEN
                 job_args = (
-                    prev_mag_ds.get_view(),  # the offset and size of the view need to be set from inside the job
                     mag_factors,
                     interpolation_mode,
                     buffer_edge_len,
                     compress,
                     target_mag_ds._get_file_dimensions(),
                     job_count_per_log,
-                    target_mag_view.global_offset,
-                    num_chunks_per_dim,
-                    use_logging,
                 )
-                target_mag_view.for_each_chunk(
+                prev_mag_ds.get_view().for_zipped_chunks(
                     # this view is restricted to the bounding box specified in the properties
                     downsample_cube_job,
+                    target_view=target_mag_view,
                     job_args_per_chunk=job_args,
-                    chunk_size=target_mag_ds._get_file_dimensions(),
-                    executor=executor,
+                    source_chunk_size=np.array(target_mag_ds._get_file_dimensions()) * mag_factors,
+                    target_chunk_size=target_mag_ds._get_file_dimensions(),
+                    executor=executor
                 )
 
             logging.info("Mag {0} successfully cubed".format(target_mag))
@@ -279,3 +336,15 @@ class TiffLayer(Layer):
 class TiledTiffLayer(TiffLayer):
     def _get_mag_dataset_class(self):
         return TiledTiffMagDataset
+
+    def downsample(
+            self,
+            from_mag: Mag,
+            max_mag: Mag,
+            interpolation_mode: str,
+            compress: bool,
+            scale: Tuple[float, float, float] = None,
+            buffer_edge_len=None,
+            args: Namespace = None,
+    ):
+        raise NotImplemented

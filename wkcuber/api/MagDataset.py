@@ -66,13 +66,17 @@ class MagDataset:
         total_size_in_mag1 = max_end_offset_in_mag1 - np.array(new_offset_in_mag1)
         total_size = total_size_in_mag1 // mag_np
 
-        self.view.size = tuple(total_size)
+        #self.view.size = tuple(total_size)
+        self.view.size = tuple(max_end_offset_in_mag1 // mag_np)  # the view of a MagDataset always starts at (0, 0, 0)
 
         self.layer.dataset.properties._set_bounding_box_of_layer(
             self.layer.name, tuple(new_offset_in_mag1), tuple(total_size_in_mag1)
         )
 
     def get_header(self):
+        raise NotImplementedError
+
+    def get_dtype(self):
         raise NotImplementedError
 
     def get_view(self, size=None, offset=None, is_bounded=True):
@@ -90,10 +94,10 @@ class MagDataset:
         mag_np = Mag(self.name).as_np()
 
         if offset is None:
-            offset = mag1_offset_in_properties // mag_np
+            offset = mag1_offset_in_properties // mag_np  # ceil div
 
-        properties_size_in_current_mag = np.array(mag1_size_in_properties) // mag_np
-        properties_offset_in_current_mag = np.array(mag1_offset_in_properties) // mag_np
+        properties_size_in_current_mag = -(-np.array(mag1_size_in_properties) // mag_np)  # ceil div
+        properties_offset_in_current_mag = np.array(mag1_offset_in_properties) // mag_np  # floor div
 
         if size is None:
             size = properties_size_in_current_mag - (
@@ -155,6 +159,9 @@ class WKMagDataset(MagDataset):
             block_type=self.block_type,
         )
 
+    def get_dtype(self):
+        return self.header.voxel_type
+
     @classmethod
     def create(cls, layer, name, block_len, file_len, block_type):
         mag_dataset = cls(layer, name, block_len, file_len, block_type)
@@ -183,6 +190,9 @@ class TiffMagDataset(MagDataset):
             num_channels=self.layer.num_channels,
             tile_size=self.layer.dataset.properties.tile_size,
         )
+
+    def get_dtype(self):
+        return self.header.dtype_per_channel
 
     @classmethod
     def create(cls, layer, name, pattern):

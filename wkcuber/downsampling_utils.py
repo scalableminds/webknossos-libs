@@ -34,6 +34,7 @@ def use_logging(offset: Tuple[int, int, int], size: Tuple[int, int, int], job_co
 
     return i % job_count_per_log == 0
 
+
 def determine_buffer_edge_len(dataset):
     if hasattr(dataset.header, 'file_len') and hasattr(dataset.header, 'block_len'):
         return min(DEFAULT_EDGE_LEN, dataset.header.file_len * dataset.header.block_len)
@@ -218,29 +219,20 @@ def downsample_cube(cube_buffer, factors, interpolation_mode):
 
 def downsample_cube_job(args):
     (
+        source_view,
         target_view,
+        i,
         (
-            source_view,
             mag_factors,
             interpolation_mode,
             buffer_edge_len,
             compress,
             chunk_size,
             job_count_per_log,
-            global_offset,
-            num_chunks_per_dim,
-            use_logging_func,
         )
     ) = args
 
-    # Build the target view
-    # The blueprint view contains information about the header and the path
-    # By passing it as a view, this method does not need to know whether it is a WKView or a TiffView
-    source_cube_xyz = tuple(dim * mag_factor for (dim, mag_factor) in zip(target_view.global_offset, mag_factors))
-    source_cube_size = tuple(dim * mag_factor for (dim, mag_factor) in zip(target_view.size, mag_factors))
-    source_view.global_offset = source_cube_xyz
-    source_view.size = source_cube_size
-    use_logging = use_logging_func(target_view.global_offset, chunk_size, job_count_per_log, global_offset, num_chunks_per_dim)
+    use_logging = i % job_count_per_log == 0
 
     if use_logging:
         logging.info("Downsampling of {}".format(target_view.global_offset))
@@ -263,10 +255,32 @@ def downsample_cube_job(args):
             ) * buffer_edge_len
             source_offset = mag_factors * target_offset
 
+            '''
+            # Initialize source buffer with 0s to pad around the read data
+            # The downsample_cube method requires the data to have a shape that is a multiple of mag_factors
+            source_offset_floor = mag_factors * (np.array(source_view.global_offset) // mag_factors)
+            source_end_ceil = mag_factors * (-(-np.array(source_view.global_offset + source_view.size) // mag_factors))
+            rounded_source_size = source_end_ceil - source_offset_floor
+            read_shape = np.minimum(buffer_edge_len * np.array(mag_factors), source_view.size)
+            #buffer_shape = (num_channels,) + mag_factors * (-(-read_shape // mag_factors))  # round to next multiple of mag_factors
+            buffer_shape = (num_channels,) + tuple(np.minimum(buffer_edge_len * np.array(mag_factors), rounded_source_size))
+            cube_buffer_channels = np.zeros(buffer_shape)
+            offset_difference = source_view.global_offset - source_offset_floor
+
             # Read source buffer
+            cube_buffer_channels[
+                :,
+                offset_difference[0] : offset_difference[0] + read_shape[0],
+                offset_difference[1] : offset_difference[1] + read_shape[1],
+                offset_difference[2] : offset_difference[2] + read_shape[2]
+            ] = source_view.read(
+                source_offset,
+                read_shape,
+            )
+            '''
             cube_buffer_channels = source_view.read(
                 source_offset,
-                np.minimum(buffer_edge_len, source_view.size),
+                np.minimum(np.array(mag_factors) * buffer_edge_len, source_view.size),  # TODO: maybe the buffer_edge_length should limit the size of the source instead of the target
             )
 
             for channel_index in range(num_channels):
@@ -279,7 +293,7 @@ def downsample_cube_job(args):
                     )
 
                     buffer_offset = target_offset
-                    buffer_end = buffer_offset + buffer_edge_len
+                    buffer_end = buffer_offset + data_cube.shape
 
                     file_buffer[
                         channel_index,

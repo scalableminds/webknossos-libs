@@ -1,5 +1,6 @@
 import math
 from random import shuffle
+from typing import Tuple
 
 import numpy as np
 from wkw import Dataset, wkw
@@ -116,6 +117,53 @@ class View:
             job_args.append((view, job_args_per_chunk))
 
         # execute the work for each chunk
+        wait_and_ensure_success(executor.map_to_futures(work_on_chunk, job_args))
+
+    def for_zipped_chunks(self, work_on_chunk, job_args_per_chunk, target_view: "View", source_chunk_size: Tuple[int, int, int], target_chunk_size: Tuple[int, int, int], executor):
+        '''
+        This method is similar to 'for_each_chunk' in the sense, that it delegates work to smaller chunks.
+        However, this method also takes another view as a parameter. Both views are chunked simultaneously
+        and a matching pair of chunks is then passed to the function that shall be executed.
+        This is useful if data from one view should be (transformed and) written to a different view,
+        assuming that the transformation of the data can be handled on chunk-level.
+        Additionally to the two views and the job_args, the counter 'i' is passed to the 'work_on_chunk',
+        which can be used for logging.
+        '''
+        source_offset = np.array(self.global_offset)
+        target_offset = np.array(target_view.global_offset)
+        source_chunk_size_np = np.array(source_chunk_size)
+        target_chunk_size_np = np.array(target_chunk_size)
+        assert not np.any(source_chunk_size_np % target_chunk_size_np), f"Calling 'for_zipped_chunks' failed because the source_chunk_size ({source_chunk_size} must be divisible by the target_chunk_size ({target_chunk_size}))"
+        source_to_target_scale_np = source_chunk_size_np // target_chunk_size_np
+
+        calculated_target_size = -(-np.array(self.size) // source_to_target_scale_np)  # ceil div
+
+        if not target_view.check_bounds(target_offset, calculated_target_size):
+            raise AssertionError(
+                f"Calling 'for_zipped_chunks' failed because the size of the target_view ({target_view.size}) must be at least {calculated_target_size} or the view must be not bounded."
+            )
+
+        job_args = []
+        source_chunks = BoundingBox(source_offset, self.size).chunk(
+            source_chunk_size_np, list(source_chunk_size_np)
+        )
+        target_chunks = BoundingBox(target_offset, calculated_target_size).chunk(
+            target_chunk_size, list(target_chunk_size)
+        )
+
+        for i, (source_chunk, target_chunk) in enumerate(zip(source_chunks, target_chunks)):
+            # source chunk
+            relative_source_offset = np.array(source_chunk.topleft) - source_offset
+            source_chunk_view = self.get_view(size=source_chunk.size, relative_offset=relative_source_offset)
+            source_chunk_view.is_bounded = True
+            # target chunk
+            relative_target_offset = np.array(target_chunk.topleft) - target_offset
+            target_chunk_view = target_view.get_view(size=target_chunk.size, relative_offset=relative_target_offset)
+            target_chunk_view.is_bounded = True
+
+            job_args.append((source_chunk_view, target_chunk_view, i, job_args_per_chunk))
+
+        # execute the work for each pair of chunks
         wait_and_ensure_success(executor.map_to_futures(work_on_chunk, job_args))
 
     def _check_chunk_size(self, chunk_size):

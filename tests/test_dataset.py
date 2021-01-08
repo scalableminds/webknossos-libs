@@ -17,9 +17,10 @@ from wkcuber.api.Dataset import WKDataset, TiffDataset, TiledTiffDataset
 from os import path, makedirs
 
 from wkcuber.api.Layer import Layer
-from wkcuber.api.MagDataset import find_mag_path_on_disk
+from wkcuber.api.MagDataset import find_mag_path_on_disk, MagDataset
 from wkcuber.api.Properties.DatasetProperties import TiffProperties, WKProperties
 from wkcuber.api.TiffData.TiffMag import TiffReader
+from wkcuber.api.View import View
 from wkcuber.api.bounding_box import BoundingBox
 from wkcuber.compress import compress_mag_inplace
 from wkcuber.downsampling import downsample_mags_isotropic, downsample_mags_anisotropic
@@ -121,6 +122,23 @@ def for_each_chunking_advanced(ds, view):
             * np.uint8(sum(chunk.global_offset)),
             chunk_data,
         )
+
+
+def copy_and_transform_job(args):
+    (source_view, target_view, i, (parameter1, parameter2)) = args
+    # This method simply takes the data from the source_view, transforms it and writes it to the target_view
+
+    # These assertions are just to demonstrate how the passed parameters can be accessed inside this method
+    assert parameter1 == "test1"
+    assert parameter2 == 42
+
+    # increment the color value of each voxel
+    data = source_view.read(size=source_view.size)
+    if data.shape[0] == 1:
+        data = data[0, :, :, :]
+    data += 50
+    target_view.write(data)
+
 
 
 def get_multichanneled_data(dtype):
@@ -1689,10 +1707,9 @@ def test_downsampling(generate_dataset: Tuple):
     assert len(origin_ds.layers['layer1'].mags) == 1
     assert str(from_mag) in origin_ds.layers['layer1'].mags
 
-
     # downsample with dataset api
-    layer2 = TiffDataset(path3).get_layer('layer1')
-    #layer2 =WKDataset(path2).get_layer('layer1')
+    #layer2 = TiffDataset(path3).get_layer('layer1')
+    layer2 =WKDataset(path2).get_layer('layer1')
     layer2.downsample(
         from_mag=from_mag,
         max_mag=max_mag,
@@ -1730,49 +1747,48 @@ def test_downsampling(generate_dataset: Tuple):
     assert len(layer1.mags) == len(layer2.mags)
     assert layer1.mags.keys() == layer2.mags.keys()
 
-    #data_1 = layer1.mags["1"].read()
-    #data12 = layer1.mags["2"].read()
-    #data22 = layer2.mags["2"].read()
-
-    #data14 = layer1.mags["4"].read()
-    #data24 = layer2.mags["4"].read()
-
-    '''
-    with open_wkw(WkwDatasetInfo(path1, "layer1", "2", wkw.Header(np.uint8))) as source_wkw:
-
-        cube_buffer_wkw = source_wkw.read(
-            (0, 0, 0),
-            (64, 64, 64),
-        )[0]
-
-        cube_buffer12 = data12[0]
-        cube_buffer22 = data22[0]
-        assert np.array_equal(cube_buffer12, cube_buffer22)
-        assert np.array_equal(cube_buffer_wkw, cube_buffer12)
-
-        im = parse_interpolation_mode(interpolation_mode, "layer1")
-        downsampling1 = downsample_cube(
-            cube_buffer12, [2, 2, 2], im
-        )
-
-        downsampling2 = downsample_cube(
-            cube_buffer22, [2, 2, 2], im
-        )
-
-        dump2 = np.load("./cube_buffer2.npy")
-
-        assert np.array_equal(downsampling1, downsampling2)
-
-        # np.array_equal(layer2.mags["4"].read()[0], downsampling2) # TRUE -> It does not depend on the order in this test function
-
-        #np.array_equal(data12[0], dump2[:64, :64, :64]) # TRUE
-
-        #downsampling3 = downsample_cube(
-        #    dump2[:64, :64, :64], [2, 2, 2], im
-        #)
-        
-        #assert np.array_equal(downsampling3, downsampling2) TRUE
-    '''
-
     for mag in layer1.mags:
-        assert np.array_equal(layer1.mags[mag].read(), layer2.mags[mag].read())
+        data1 = layer1.mags[mag].read()
+        data2 = layer2.mags[mag].read()  # this array might be padded with extra 0s
+        s = data1.shape
+        assert np.array_equal(data1, data2[:s[0], :s[1], :s[2], :s[3]])
+
+
+def test_for_zipped_chunks():
+    delete_dir("./testoutput/zipped_chunking_source/")
+    delete_dir("./testoutput/zipped_chunking_target/")
+    copytree("./testdata/simple_wk_dataset/", "./testoutput/zipped_chunking_source/")
+
+    source_view = WKDataset("./testoutput/zipped_chunking_source/").get_view(
+        "color", "1", size=(256, 256, 256), is_bounded=False
+    )
+
+    target_mag: MagDataset = WKDataset.create("./testoutput/zipped_chunking_target/", scale=(1, 1, 1))\
+        .get_or_add_layer("color", Layer.COLOR_TYPE, dtype_per_channel="uint8", num_channels=3)\
+        .get_or_add_mag("1", block_len=8, file_len=4)
+    target_mag.layer.dataset.properties._set_bounding_box_of_layer("color", offset=(0, 0, 0), size=(256, 256, 256)) # TODO: make this not so hacky
+    target_view = target_mag.get_view(is_bounded=False)
+
+    with get_executor_for_args(None) as executor:
+        source_view.for_zipped_chunks(
+            copy_and_transform_job,
+            job_args_per_chunk=("test1", 42),
+            target_view=target_view,
+            source_chunk_size=(64, 64, 64),
+            target_chunk_size=(64, 64, 64),
+            executor=executor
+        )
+
+
+    assert np.array_equal(source_view.read(size=source_view.size) + 50, target_view.read(size=target_view.size))
+
+def test_tiled():
+    ds_path = "./testoutput/larger_wk_dataset/"
+    delete_dir(ds_path)
+
+    ds = TiledTiffDataset.create(ds_path, scale=(1, 1, 1), tile_size=(32, 32))
+    layer = ds.add_layer("color", "color")
+    mag1 = layer.add_mag("1")
+    mag1.write((np.random.rand(64, 64, 10) * 255).astype(np.uint8))
+    mag1 = layer.add_mag("2")
+    mag1.write((np.random.rand(64, 64, 10) * 255).astype(np.uint8))
