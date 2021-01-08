@@ -202,6 +202,9 @@ class SegmentationLayerProperties(LayerProperties):
             bounding_box,
             resolutions,
         )
+        # The parameter largest_segment_id is in fact not optional.
+        # However, specifying the parameter as not optional, would require to change the parameter order
+        assert largest_segment_id is not None
         self._largest_segment_id = largest_segment_id
         self._mappings = mappings
 
