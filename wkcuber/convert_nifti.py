@@ -2,11 +2,13 @@ import logging
 import time
 from argparse import ArgumentParser
 from pathlib import Path
+from typing import Tuple, Optional, Union, cast
 
 import nibabel as nib
 import numpy as np
 
 from wkcuber.api.Dataset import TiffDataset, WKDataset
+from wkcuber.api.bounding_box import BoundingBox
 from wkcuber.utils import (
     DEFAULT_WKW_FILE_LEN,
     DEFAULT_WKW_VOXELS_PER_BLOCK,
@@ -18,7 +20,7 @@ from wkcuber.utils import (
 )
 
 
-def create_parser():
+def create_parser() -> ArgumentParser:
     parser = ArgumentParser()
 
     parser.add_argument(
@@ -88,7 +90,7 @@ def create_parser():
 
 
 def to_target_datatype(
-    data: np.ndarray, target_dtype, is_probably_binary: bool
+    data: np.ndarray, target_dtype: str, is_probably_binary: bool
 ) -> np.ndarray:
     if is_probably_binary:
         logging.info(
@@ -111,18 +113,17 @@ def to_target_datatype(
 
 
 def convert_nifti(
-    source_nifti_path,
-    target_path,
-    layer_name,
-    dtype,
-    scale,
-    mag=1,
-    file_len=DEFAULT_WKW_FILE_LEN,
-    bbox_to_enforce=None,
-    write_tiff=False,
-    use_orientation_header=False,
-    flip_axes=None,
-):
+    source_nifti_path: Path,
+    target_path: Path,
+    layer_name: str,
+    dtype: str,
+    scale: Tuple[float, ...],
+    file_len: int = DEFAULT_WKW_FILE_LEN,
+    bbox_to_enforce: BoundingBox = None,
+    write_tiff: bool = False,
+    use_orientation_header: bool = False,
+    flip_axes: Optional[Union[int, Tuple[int, ...]]] = None,
+) -> None:
     voxels_per_cube = file_len * DEFAULT_WKW_VOXELS_PER_BLOCK
     ref_time = time.time()
 
@@ -197,8 +198,10 @@ def convert_nifti(
     )
 
     if write_tiff:
-        ds = TiffDataset.get_or_create(target_path, scale=scale or (1, 1, 1))
-        layer = ds.get_or_add_layer(
+        tiff_ds = TiffDataset.get_or_create(
+            target_path, scale=cast(Tuple[float, float, float], scale or (1, 1, 1))
+        )
+        layer = tiff_ds.get_or_add_layer(
             layer_name,
             category_type,
             dtype_per_layer=np.dtype(dtype),
@@ -208,8 +211,10 @@ def convert_nifti(
 
         mag.write(cube_data.squeeze())
     else:
-        ds = WKDataset.get_or_create(target_path, scale=scale or (1, 1, 1))
-        layer = ds.get_or_add_layer(
+        wk_ds = WKDataset.get_or_create(
+            target_path, scale=cast(Tuple[float, float, float], scale or (1, 1, 1))
+        )
+        layer = wk_ds.get_or_add_layer(
             layer_name,
             category_type,
             dtype_per_layer=np.dtype(dtype),
@@ -226,16 +231,16 @@ def convert_nifti(
 
 
 def convert_folder_nifti(
-    source_folder_path,
-    target_path,
-    color_subpath,
-    segmentation_subpath,
-    scale,
-    use_orientation_header=False,
-    bbox_to_enforce=None,
-    write_tiff=False,
-    flip_axes=None,
-):
+    source_folder_path: Path,
+    target_path: Path,
+    color_subpath: str,
+    segmentation_subpath: str,
+    scale: Tuple[float, ...],
+    use_orientation_header: bool = False,
+    bbox_to_enforce: BoundingBox = None,
+    write_tiff: bool = False,
+    flip_axes: Optional[Union[int, Tuple[int, ...]]] = None,
+) -> None:
     paths = list(source_folder_path.rglob("**/*.nii"))
 
     color_path = None
@@ -260,23 +265,46 @@ def convert_folder_nifti(
 
     logging.info("Segmentation file will also use uint8 as a datatype.")
 
-    conversion_args = {
-        "scale": scale,
-        "write_tiff": write_tiff,
-        "bbox_to_enforce": bbox_to_enforce,
-        "use_orientation_header": use_orientation_header,
-        "flip_axes": flip_axes,
-    }
     for path in paths:
         if path == color_path:
-            convert_nifti(path, target_path, "color", "uint8", **conversion_args)
+            convert_nifti(
+                path,
+                target_path,
+                "color",
+                "uint8",
+                scale,
+                write_tiff,
+                bbox_to_enforce,
+                use_orientation_header,
+                flip_axes=flip_axes,
+            )
         elif path == segmentation_path:
-            convert_nifti(path, target_path, "segmentation", "uint8", **conversion_args)
+            convert_nifti(
+                path,
+                target_path,
+                "segmentation",
+                "uint8",
+                scale,
+                write_tiff,
+                bbox_to_enforce,
+                use_orientation_header,
+                flip_axes=flip_axes,
+            )
         else:
-            convert_nifti(path, target_path, path.stem, "uint8", **conversion_args)
+            convert_nifti(
+                path,
+                target_path,
+                path.stem,
+                "uint8",
+                scale,
+                write_tiff,
+                bbox_to_enforce,
+                use_orientation_header,
+                flip_axes=flip_axes,
+            )
 
 
-def main():
+def main() -> None:
     args = create_parser().parse_args()
     setup_logging(args)
 

@@ -8,7 +8,7 @@ import glob
 from argparse import ArgumentParser
 from glob import iglob
 from os import path, listdir
-from typing import Optional
+from typing import Optional, Tuple, Iterable, Generator
 from .mag import Mag
 from typing import List
 from .utils import add_verbose_flag, setup_logging, add_scale_flag
@@ -16,11 +16,11 @@ from pathlib import Path
 from os.path import basename, normpath
 
 
-def get_datasource_path(dataset_path):
+def get_datasource_path(dataset_path: str) -> str:
     return path.join(dataset_path, "datasource-properties.json")
 
 
-def create_parser():
+def create_parser() -> ArgumentParser:
     parser = ArgumentParser()
 
     parser.add_argument("path", help="Directory containing the dataset.")
@@ -45,13 +45,13 @@ def create_parser():
     return parser
 
 
-def write_datasource_properties(dataset_path, datasource_properties):
+def write_datasource_properties(dataset_path: str, datasource_properties: dict) -> None:
     datasource_properties_path = get_datasource_path(dataset_path)
     with open(datasource_properties_path, "wt") as datasource_properties_file:
         json.dump(datasource_properties, datasource_properties_file, indent=2)
 
 
-def read_datasource_properties(dataset_path):
+def read_datasource_properties(dataset_path: str) -> dict:
     with open(get_datasource_path(dataset_path), "r") as datasource_properties_file:
         return json.load(datasource_properties_file)
 
@@ -59,11 +59,11 @@ def read_datasource_properties(dataset_path):
 def write_webknossos_metadata(
     dataset_path: str,
     name: str,
-    scale,
-    max_id=0,
-    compute_max_id=False,
+    scale: Tuple[float, float, float],
+    max_id: int = 0,
+    compute_max_id: bool = False,
     exact_bounding_box: Optional[dict] = None,
-):
+) -> None:
     """
     Creates a datasource-properties.json file with the specified properties
     for the given dataset path. Common layers are detected automatically.
@@ -87,8 +87,11 @@ def write_webknossos_metadata(
 
 
 def refresh_metadata(
-    wkw_path, max_id=0, compute_max_id=False, exact_bounding_box: Optional[dict] = None
-):
+    wkw_path: str,
+    max_id: int = 0,
+    compute_max_id: bool = False,
+    exact_bounding_box: Optional[dict] = None,
+) -> None:
     """
     Updates the datasource-properties.json file for a given dataset.
     Use this method if you added (or removed) layers and/or changed magnifications for
@@ -130,7 +133,7 @@ def refresh_metadata(
     write_datasource_properties(wkw_path, datasource_properties)
 
 
-def convert_element_class_to_dtype(elementClass):
+def convert_element_class_to_dtype(elementClass: str) -> np.dtype:
     default_dtype = np.uint8 if "uint" in elementClass else np.dtype(elementClass)
     conversion_map = {
         "float": np.float32,
@@ -143,7 +146,9 @@ def convert_element_class_to_dtype(elementClass):
     return conversion_map.get(elementClass, default_dtype)
 
 
-def read_metadata_for_layer(wkw_path, layer_name):
+def read_metadata_for_layer(
+    wkw_path: str, layer_name: str
+) -> Tuple[dict, np.dtype, List[int], List[int]]:
     datasource_properties = read_datasource_properties(wkw_path)
 
     layers = datasource_properties["dataLayers"]
@@ -161,7 +166,7 @@ def read_metadata_for_layer(wkw_path, layer_name):
     return layer_info, dtype, bounding_box, origin
 
 
-def convert_dtype_to_element_class(dtype):
+def convert_dtype_to_element_class(dtype: np.dtype) -> str:
     element_class_to_dtype_map = {
         "float": np.float32,
         "double": np.float64,
@@ -174,7 +179,7 @@ def convert_dtype_to_element_class(dtype):
     return conversion_map.get(dtype, str(dtype))
 
 
-def detect_mag_path(dataset_path, layer, mag: Mag = Mag(1)):
+def detect_mag_path(dataset_path: str, layer: str, mag: Mag = Mag(1)) -> Optional[str]:
     layer_path = path.join(dataset_path, layer, str(mag))
     if path.exists(layer_path):
         return layer_path
@@ -184,7 +189,7 @@ def detect_mag_path(dataset_path, layer, mag: Mag = Mag(1)):
     return None
 
 
-def detect_dtype(dataset_path, layer, mag: Mag = Mag(1)):
+def detect_dtype(dataset_path: str, layer: str, mag: Mag = Mag(1)) -> str:
     layer_path = detect_mag_path(dataset_path, layer, mag)
     if layer_path is not None:
         with wkw.Dataset.open(layer_path) as dataset:
@@ -194,31 +199,39 @@ def detect_dtype(dataset_path, layer, mag: Mag = Mag(1)):
                 return "uint" + str(8 * num_channels)
             else:
                 return convert_dtype_to_element_class(voxel_size)
+    raise RuntimeError(
+        f"Failed to detect dtype (for {dataset_path}, {layer}, {mag}) because the layer_path is None"
+    )
 
 
-def detect_cubeLength(dataset_path, layer, mag: Mag = Mag(1)):
+def detect_cubeLength(dataset_path: str, layer: str, mag: Mag = Mag(1)) -> int:
     layer_path = detect_mag_path(dataset_path, layer, mag)
     if layer_path is not None:
         with wkw.Dataset.open(layer_path) as dataset:
             return dataset.header.block_len * dataset.header.file_len
+    raise RuntimeError(
+        f"Failed to detect the cube length (for {dataset_path}, {layer}, {mag}) because the layer_path is None"
+    )
 
 
-def detect_bbox(dataset_path, layer, mag: Mag = Mag(1)):
+def detect_bbox(dataset_path: str, layer: str, mag: Mag = Mag(1)) -> Optional[dict]:
     # Detect the coarse bounding box of a dataset by iterating
     # over the WKW cubes
     layer_path = detect_mag_path(dataset_path, layer, mag)
     if layer_path is None:
         return None
 
-    def list_files(layer_path):
+    def list_files(layer_path: str) -> Iterable[str]:
         return iglob(path.join(layer_path, "*", "*", "*.wkw"), recursive=True)
 
-    def parse_cube_file_name(filename):
+    def parse_cube_file_name(filename: str) -> Tuple[int, int, int]:
         CUBE_REGEX = re.compile(r"z(\d+)/y(\d+)/x(\d+)(\.wkw)$")
         m = CUBE_REGEX.search(filename)
-        return (int(m.group(3)), int(m.group(2)), int(m.group(1)))
+        if m is not None:
+            return int(m.group(3)), int(m.group(2)), int(m.group(1))
+        raise RuntimeError(f"Failed to parse cube file name from {filename}")
 
-    def list_cubes(layer_path):
+    def list_cubes(layer_path: str) -> Iterable[Tuple[int, int, int]]:
         return (parse_cube_file_name(f) for f in list_files(layer_path))
 
     xs, ys, zs = list(zip(*list_cubes(layer_path)))
@@ -238,7 +251,7 @@ def detect_bbox(dataset_path, layer, mag: Mag = Mag(1)):
     }
 
 
-def detect_resolutions(dataset_path, layer) -> List[Mag]:
+def detect_resolutions(dataset_path: str, layer: str) -> Generator:
     for mag in listdir(path.join(dataset_path, layer)):
         try:
             yield Mag(mag)
@@ -247,8 +260,11 @@ def detect_resolutions(dataset_path, layer) -> List[Mag]:
 
 
 def detect_standard_layer(
-    dataset_path, layer_name, exact_bounding_box=None, category="color"
-):
+    dataset_path: str,
+    layer_name: str,
+    exact_bounding_box: Optional[dict] = None,
+    category: str = "color",
+) -> dict:
     # Perform metadata detection for well-known layers
 
     mags = list(detect_resolutions(dataset_path, layer_name))
@@ -297,7 +313,7 @@ def detect_standard_layer(
     }
 
 
-def detect_mappings(dataset_path, layer_name):
+def detect_mappings(dataset_path: str, layer_name: str) -> List[str]:
     pattern = path.join(dataset_path, layer_name, "mappings", "*.json")
     mapping_files = glob.glob(pattern)
     mapping_file_names = [path.basename(mapping_file) for mapping_file in mapping_files]
@@ -305,8 +321,12 @@ def detect_mappings(dataset_path, layer_name):
 
 
 def detect_segmentation_layer(
-    dataset_path, layer_name, max_id, compute_max_id=False, exact_bounding_box=None
-):
+    dataset_path: str,
+    layer_name: str,
+    max_id: int,
+    compute_max_id: bool = False,
+    exact_bounding_box: dict = None,
+) -> dict:
     layer_info = detect_standard_layer(
         dataset_path, layer_name, exact_bounding_box, category="segmentation"
     )
@@ -336,7 +356,12 @@ def detect_segmentation_layer(
     return layer_info
 
 
-def detect_layers(dataset_path: str, max_id, compute_max_id, exact_bounding_box=None):
+def detect_layers(
+    dataset_path: str,
+    max_id: int,
+    compute_max_id: bool,
+    exact_bounding_box: Optional[dict] = None,
+) -> Iterable[dict]:
     # Detect metadata for well-known layers (i.e., color, prediction and segmentation)
     if path.exists(path.join(dataset_path, "color")):
         yield detect_standard_layer(dataset_path, "color", exact_bounding_box)
@@ -353,6 +378,7 @@ def detect_layers(dataset_path: str, max_id, compute_max_id, exact_bounding_box=
     for layer_name in available_layer_names:
         # color and segmentation are already checked explicitly to ensure downwards compatibility (some older datasets don't have the header.wkw file)
         if layer_name not in ["color", "segmentation"]:
+            layer_info = None
             try:
                 layer_info = detect_standard_layer(
                     dataset_path, layer_name, exact_bounding_box

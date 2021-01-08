@@ -100,3 +100,6 @@ testdata/tiff_mag_2_reference
 
 # VSCode
 .vscode/
+
+# MyPy
+.mypy_cache/

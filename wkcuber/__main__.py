@@ -4,9 +4,10 @@ from .compress import compress_mag_inplace
 from .metadata import write_webknossos_metadata, refresh_metadata
 from .utils import add_isotropic_flag, setup_logging, add_scale_flag
 from .mag import Mag
+from argparse import Namespace, ArgumentParser
 
 
-def create_parser():
+def create_parser() -> ArgumentParser:
     parser = create_cubing_parser()
 
     parser.add_argument(
@@ -32,7 +33,7 @@ def create_parser():
     return parser
 
 
-def main(args):
+def main(args: Namespace) -> None:
     setup_logging(args)
 
     bounding_box = cubing(
@@ -82,5 +83,5 @@ def main(args):
 
 
 if __name__ == "__main__":
-    parsed_args = create_parser().parse_args()
+    parsed_args: Namespace = create_parser().parse_args()
     main(parsed_args)
