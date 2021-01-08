@@ -1,10 +1,12 @@
+from typing import Tuple, Dict, Union
+
 import numpy as np
 import logging
 from os import path
 from PIL import Image
 
 from .vendor.dm3 import DM3
-from .vendor.dm4 import DM4File
+from .vendor.dm4 import DM4File, DM4TagHeader
 from tifffile import TiffFile
 
 # Disable PIL's maximum image limit.
@@ -25,18 +27,18 @@ class ImageReader:
         return 1
 
 
-class PillowImageReader(ImageReader):
-    def read_array(self, file_name, dtype, z_slice):
+class PillowImageReader:
+    def read_array(self, file_name: str, dtype: np.dtype, z_slice: int) -> np.ndarray:
         this_layer = np.array(Image.open(file_name), dtype)
         this_layer = this_layer.swapaxes(0, 1)
         this_layer = this_layer.reshape(this_layer.shape + (1,))
         return this_layer
 
-    def read_dimensions(self, file_name):
+    def read_dimensions(self, file_name: str) -> Tuple[int, int]:
         with Image.open(file_name) as test_img:
-            return (test_img.width, test_img.height)
+            return test_img.width, test_img.height
 
-    def read_channel_count(self, file_name):
+    def read_channel_count(self, file_name: str) -> int:
         with Image.open(file_name) as test_img:
             this_layer = np.array(test_img)
             if this_layer.ndim == 2:
@@ -46,30 +48,30 @@ class PillowImageReader(ImageReader):
                 return this_layer.shape[-1]  # pylint: disable=unsubscriptable-object
 
 
-def to_target_datatype(data: np.ndarray, target_dtype) -> np.ndarray:
+def to_target_datatype(data: np.ndarray, target_dtype: np.dtype) -> np.ndarray:
     factor = (1 + np.iinfo(data.dtype).max) / (1 + np.iinfo(target_dtype).max)
     return (data / factor).astype(target_dtype)
 
 
-class Dm3ImageReader(ImageReader):
-    def read_array(self, file_name, dtype, z_slice):
+class Dm3ImageReader:
+    def read_array(self, file_name: str, dtype: np.dtype, z_slice: int) -> np.ndarray:
         dm3_file = DM3(file_name)
         this_layer = to_target_datatype(dm3_file.imagedata, dtype)
         this_layer = this_layer.swapaxes(0, 1)
         this_layer = this_layer.reshape(this_layer.shape + (1,))
         return this_layer
 
-    def read_dimensions(self, file_name):
+    def read_dimensions(self, file_name: str) -> Tuple[int, int]:
         test_img = DM3(file_name)
-        return (test_img.width, test_img.height)
+        return test_img.width, test_img.height
 
-    def read_channel_count(self, _file_name):
+    def read_channel_count(self, _file_name: str) -> int:
         logging.info("Assuming single channel for DM3 data")
         return 1
 
 
-class Dm4ImageReader(ImageReader):
-    def _read_tags(self, dm4file):
+class Dm4ImageReader:
+    def _read_tags(self, dm4file: DM4File) -> Tuple[DM4File.DM4TagDir, DM4TagHeader]:
         tags = dm4file.read_directory()
         image_data_tag = (
             tags.named_subdirs["ImageList"]
@@ -80,7 +82,9 @@ class Dm4ImageReader(ImageReader):
 
         return image_data_tag, image_tag
 
-    def _read_dimensions(self, dm4file, image_data_tag):
+    def _read_dimensions(
+        self, dm4file: DM4File, image_data_tag: DM4File.DM4TagDir
+    ) -> Tuple[int, int]:
         width = dm4file.read_tag_data(
             image_data_tag.named_subdirs["Dimensions"].unnamed_tags[0]
         )
@@ -89,7 +93,7 @@ class Dm4ImageReader(ImageReader):
         )
         return width, height
 
-    def read_array(self, file_name, dtype, z_slice):
+    def read_array(self, file_name: str, dtype: np.dtype, z_slice: int) -> np.ndarray:
         dm4file = DM4File.open(file_name)
         image_data_tag, image_tag = self._read_tags(dm4file)
         width, height = self._read_dimensions(dm4file, image_data_tag)
@@ -104,7 +108,7 @@ class Dm4ImageReader(ImageReader):
 
         return data
 
-    def read_dimensions(self, file_name):
+    def read_dimensions(self, file_name: str) -> Tuple[int, int]:
         dm4file = DM4File.open(file_name)
         image_data_tag, _ = self._read_tags(dm4file)
         dimensions = self._read_dimensions(dm4file, image_data_tag)
@@ -112,7 +116,7 @@ class Dm4ImageReader(ImageReader):
 
         return dimensions
 
-    def read_channel_count(self, _file_name):
+    def read_channel_count(self, _file_name: str) -> int:
         logging.info("Assuming single channel for DM4 data")
         return 1
 
@@ -159,8 +163,11 @@ class TiffImageReader(ImageReader):
 
 
 class ImageReaderManager:
-    def __init__(self):
-        self.readers = {
+    def __init__(self) -> None:
+        self.readers: Dict[
+            str,
+            Union[TiffImageReader, PillowImageReader, Dm3ImageReader, Dm4ImageReader],
+        ] = {
             ".tif": TiffImageReader(),
             ".tiff": TiffImageReader(),
             ".jpg": PillowImageReader(),
@@ -170,7 +177,7 @@ class ImageReaderManager:
             ".dm4": Dm4ImageReader(),
         }
 
-    def read_array(self, file_name, dtype, z_slice):
+    def read_array(self, file_name: str, dtype: np.dtype, z_slice: int) -> np.ndarray:
         _, ext = path.splitext(file_name)
 
         # Image shape will be (x, y, channel_count, z=1) or (x, y, z=1)
@@ -181,11 +188,11 @@ class ImageReaderManager:
 
         return image
 
-    def read_dimensions(self, file_name):
+    def read_dimensions(self, file_name: str) -> Tuple[int, int]:
         _, ext = path.splitext(file_name)
         return self.readers[ext].read_dimensions(file_name)
 
-    def read_channel_count(self, file_name):
+    def read_channel_count(self, file_name: str) -> int:
         _, ext = path.splitext(file_name)
         return self.readers[ext].read_channel_count(file_name)
 

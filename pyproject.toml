@@ -20,6 +20,7 @@ nibabel = "^2.5.1"
 scikit-image = "^0.16.2"
 tifffile = "^2020.11.26"
 imagecodecs = "^2020.5.30"
+mypy = "^0.770"
 
 [tool.poetry.dev-dependencies]
 pylint = "^2.6.0"

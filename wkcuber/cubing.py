@@ -1,13 +1,19 @@
 import time
 import logging
+from typing import List, Tuple
+
 import numpy as np
 import wkw
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
 from os import path
 from natsort import natsorted
 
 from .mag import Mag
-from .downsampling import parse_interpolation_mode, downsample_unpadded_data
+from .downsampling import (
+    parse_interpolation_mode,
+    downsample_unpadded_data,
+    InterpolationModes,
+)
 from .utils import (
     get_chunks,
     find_files,
@@ -28,7 +34,7 @@ from .metadata import convert_element_class_to_dtype
 BLOCK_LEN = 32
 
 
-def create_parser():
+def create_parser() -> ArgumentParser:
     parser = ArgumentParser()
 
     parser.add_argument("source_path", help="Directory containing the input images.")
@@ -88,7 +94,7 @@ def create_parser():
     return parser
 
 
-def find_source_filenames(source_path):
+def find_source_filenames(source_path: str) -> List[str]:
     # Find all files in a folder that have a matching file extension
     source_files = list(
         find_files(path.join(source_path, "*"), image_reader.readers.keys())
@@ -103,7 +109,7 @@ def find_source_filenames(source_path):
     return natsorted(source_files)
 
 
-def read_image_file(file_name, dtype, z_slice):
+def read_image_file(file_name: str, dtype: type, z_slice: int) -> np.ndarray:
     try:
         return image_reader.read_array(file_name, dtype, z_slice)
     except Exception as exc:
@@ -111,7 +117,9 @@ def read_image_file(file_name, dtype, z_slice):
         raise exc
 
 
-def prepare_slices_for_wkw(slices, num_channels=None):
+def prepare_slices_for_wkw(
+    slices: List[np.ndarray], num_channels: int = None
+) -> np.ndarray:
     # Write batch buffer which will have shape (x, y, channel_count, z)
     # since we concat along the last axis (z)
     buffer = np.concatenate(slices, axis=-1)
@@ -125,7 +133,18 @@ def prepare_slices_for_wkw(slices, num_channels=None):
     return buffer
 
 
-def cubing_job(args):
+def cubing_job(
+    args: Tuple[
+        WkwDatasetInfo,
+        List[int],
+        Mag,
+        InterpolationModes,
+        List[str],
+        int,
+        Tuple[int, int],
+        bool,
+    ]
+) -> None:
     (
         target_wkw_info,
         z_batches,
@@ -159,6 +178,7 @@ def cubing_job(args):
                     image = read_image_file(
                         file_name, target_wkw_info.header.voxel_type, z
                     )
+
                     if not pad:
                         assert (
                             image.shape[0:2] == image_size
@@ -209,7 +229,14 @@ def cubing_job(args):
                 raise exc
 
 
-def cubing(source_path, target_path, layer_name, dtype, batch_size, args) -> dict:
+def cubing(
+    source_path: str,
+    target_path: str,
+    layer_name: str,
+    dtype: str,
+    batch_size: int,
+    args: Namespace,
+) -> dict:
     source_files = find_source_filenames(source_path)
 
     # All images are assumed to have equal dimensions

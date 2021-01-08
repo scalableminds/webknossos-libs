@@ -35,6 +35,10 @@ jobs:
     - name: Lint code
       run: poetry run pylint -j4 wkcuber
 
+    - name: Check typing
+      run: |
+        ./typecheck.sh
+
     - name: Python tests
       run: poetry run pytest tests
 
