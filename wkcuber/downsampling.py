@@ -41,7 +41,7 @@ def extend_wkw_dataset_info_header(wkw_info: WkwDatasetInfo, **kwargs: Any) -> N
 
 
 def calculate_virtual_scale_for_target_mag(
-    target_mag: Mag
+    target_mag: Mag,
 ) -> Tuple[float, float, float]:
     """
     This scale is not the actual scale of the dataset

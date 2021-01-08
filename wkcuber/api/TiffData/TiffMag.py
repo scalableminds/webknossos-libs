@@ -190,15 +190,15 @@ class TiffMag:
         detected_z_range, detected_x_range, detected_y_range = detect_tile_ranges(
             self.root, self.header.pattern
         )
-        z_range: List[Optional[int]] = [None] if detected_z_range == range(
-            0, 0
-        ) else list(detected_z_range)
-        y_range: List[Optional[int]] = [None] if detected_y_range == range(
-            0, 0
-        ) else list(detected_y_range)
-        x_range: List[Optional[int]] = [None] if detected_x_range == range(
-            0, 0
-        ) else list(detected_x_range)
+        z_range: List[Optional[int]] = (
+            [None] if detected_z_range == range(0, 0) else list(detected_z_range)
+        )
+        y_range: List[Optional[int]] = (
+            [None] if detected_y_range == range(0, 0) else list(detected_y_range)
+        )
+        x_range: List[Optional[int]] = (
+            [None] if detected_x_range == range(0, 0) else list(detected_x_range)
+        )
         available_tiffs = list(itertools.product(x_range, y_range, z_range))
 
         for xyz in available_tiffs:

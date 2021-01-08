@@ -197,7 +197,7 @@ def add_batch_size_flag(parser: argparse.ArgumentParser) -> None:
 
 
 def get_executor_for_args(
-    args: Optional[argparse.Namespace]
+    args: Optional[argparse.Namespace],
 ) -> Union[ClusterExecutor, cluster_tools.WrappedProcessPoolExecutor]:
     executor = None
     if args is None:
