@@ -122,10 +122,10 @@ class TiffImageReader(ImageReader):
         channel = 0
         tif_file = TiffFile(file_name)
         if len(tif_file.pages) > 1:
+            # pylint: disable=unsubscriptable-object
             data = np.array(
                 tif_file.pages[
-                    z_slice * tif_file.series[0].shape[1]
-                    + channel  # pylint: disable=unsubscriptable-object
+                    z_slice * tif_file.series[0].shape[1] + channel
                 ].asarray(),
                 dtype,
             )
