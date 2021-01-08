@@ -14,20 +14,22 @@ Image.MAX_IMAGE_PIXELS = None
 
 
 class ImageReader:
-    def read_array(self, file_name, dtype, z_slice):
+    def read_array(self, file_name: str, dtype: np.dtype, z_slice: int) -> np.ndarray:
         pass
 
-    def read_dimensions(self, file_name):
+    def read_dimensions(self, file_name: str) -> Tuple[int, int]:
         pass
 
-    def read_channel_count(self, file_name):
+    def read_channel_count(self, file_name: str) -> int:
         pass
 
-    def read_z_slices_per_file(self, file_name):  # pylint: disable=unused-argument
+    def read_z_slices_per_file(
+        self, file_name: str  # pylint: disable=unused-argument
+    ) -> int:
         return 1
 
 
-class PillowImageReader:
+class PillowImageReader(ImageReader):
     def read_array(self, file_name: str, dtype: np.dtype, z_slice: int) -> np.ndarray:
         this_layer = np.array(Image.open(file_name), dtype)
         this_layer = this_layer.swapaxes(0, 1)
@@ -53,7 +55,7 @@ def to_target_datatype(data: np.ndarray, target_dtype: np.dtype) -> np.ndarray:
     return (data / factor).astype(target_dtype)
 
 
-class Dm3ImageReader:
+class Dm3ImageReader(ImageReader):
     def read_array(self, file_name: str, dtype: np.dtype, z_slice: int) -> np.ndarray:
         dm3_file = DM3(file_name)
         this_layer = to_target_datatype(dm3_file.imagedata, dtype)
@@ -70,7 +72,7 @@ class Dm3ImageReader:
         return 1
 
 
-class Dm4ImageReader:
+class Dm4ImageReader(ImageReader):
     def _read_tags(self, dm4file: DM4File) -> Tuple[DM4File.DM4TagDir, DM4TagHeader]:
         tags = dm4file.read_directory()
         image_data_tag = (
@@ -121,7 +123,7 @@ class Dm4ImageReader:
         return 1
 
 
-def find_count_of_axis(tif_file, axis):
+def find_count_of_axis(tif_file: TiffFile, axis: str) -> int:
     assert len(tif_file.series) == 1, "only single tif series are supported"
     tif_series = tif_file.series[0]
     index = tif_series.axes.find(axis)
@@ -132,7 +134,7 @@ def find_count_of_axis(tif_file, axis):
 
 
 class TiffImageReader(ImageReader):
-    def read_array(self, file_name, dtype, z_slice):
+    def read_array(self, file_name: str, dtype: np.dtype, z_slice: int) -> np.ndarray:
         channel = 0
         tif_file = TiffFile(file_name)
         if len(tif_file.pages) > 1:
@@ -150,15 +152,15 @@ class TiffImageReader(ImageReader):
         tif_file.close()
         return data
 
-    def read_dimensions(self, file_name):
+    def read_dimensions(self, file_name: str) -> Tuple[int, int]:
         tif_file = TiffFile(file_name)
         return find_count_of_axis(tif_file, "X"), find_count_of_axis(tif_file, "Y")
 
-    def read_channel_count(self, file_name):
+    def read_channel_count(self, file_name: str) -> int:
         return 1
         # return find_count_of_axis(TiffFile(file_name), "C")
 
-    def read_z_slices_per_file(self, file_name):
+    def read_z_slices_per_file(self, file_name: str) -> int:
         return find_count_of_axis(TiffFile(file_name), "Z")
 
 
@@ -196,7 +198,7 @@ class ImageReaderManager:
         _, ext = path.splitext(file_name)
         return self.readers[ext].read_channel_count(file_name)
 
-    def read_z_slices_per_file(self, file_name):
+    def read_z_slices_per_file(self, file_name: str) -> int:
         _, ext = path.splitext(file_name)
         return self.readers[ext].read_z_slices_per_file(file_name)
 
