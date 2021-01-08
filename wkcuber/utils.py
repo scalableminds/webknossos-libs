@@ -3,8 +3,6 @@ import time
 from concurrent.futures._base import Future
 from types import TracebackType
 
-import wkw
-import numpy as np
 import logging
 import argparse
 import wkw
