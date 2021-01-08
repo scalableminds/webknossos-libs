@@ -122,7 +122,12 @@ class TiffImageReader(ImageReader):
         channel = 0
         tif_file = TiffFile(file_name)
         if len(tif_file.pages) > 1:
-            data = np.array(tif_file.pages[z_slice * tif_file.series[0].shape[1] + channel].asarray(), dtype)
+            data = np.array(
+                tif_file.pages[
+                    z_slice * tif_file.series[0].shape[1] + channel
+                ].asarray(),
+                dtype,
+            )
         else:
             data = np.array(tif_file.pages[0].asarray(), dtype)
         data = data.swapaxes(0, 1)
