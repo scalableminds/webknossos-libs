@@ -287,10 +287,10 @@ def convert_folder_nifti(
                 "color",
                 "uint8",
                 scale,
-                write_tiff,
-                bbox_to_enforce,
-                use_orientation_header,
                 is_segmentation_layer=False,
+                write_tiff=write_tiff,
+                bbox_to_enforce=bbox_to_enforce,
+                use_orientation_header=use_orientation_header,
                 flip_axes=flip_axes,
             )
         elif path == segmentation_path:
@@ -300,10 +300,10 @@ def convert_folder_nifti(
                 "segmentation",
                 "uint8",
                 scale,
-                write_tiff,
-                bbox_to_enforce,
-                use_orientation_header,
                 is_segmentation_layer=True,
+                write_tiff=write_tiff,
+                bbox_to_enforce=bbox_to_enforce,
+                use_orientation_header=use_orientation_header,
                 flip_axes=flip_axes,
             )
         else:
@@ -313,10 +313,10 @@ def convert_folder_nifti(
                 path.stem,
                 "uint8",
                 scale,
-                write_tiff,
-                bbox_to_enforce,
-                use_orientation_header,
                 is_segmentation_layer=False,
+                write_tiff=write_tiff,
+                bbox_to_enforce=bbox_to_enforce,
+                use_orientation_header=use_orientation_header,
                 flip_axes=flip_axes,
             )
 
