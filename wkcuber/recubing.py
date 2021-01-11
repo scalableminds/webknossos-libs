@@ -1,4 +1,6 @@
 import logging
+from typing import List, Tuple
+
 import wkw
 import numpy as np
 from argparse import ArgumentParser
@@ -18,7 +20,7 @@ from .utils import (
 )
 
 
-def create_parser():
+def create_parser() -> ArgumentParser:
     parser = ArgumentParser()
 
     parser.add_argument(
@@ -60,19 +62,24 @@ def create_parser():
     return parser
 
 
-def next_lower_divisible_by(number, divisor) -> int:
+def next_lower_divisible_by(number: int, divisor: int) -> int:
     remainder = number % divisor
     return number - remainder
 
 
-def next_higher_divisible_by(number, divisor) -> int:
+def next_higher_divisible_by(number: int, divisor: int) -> int:
     remainder = number % divisor
     return number - remainder + divisor
 
 
 def recube(
-    source_path, target_path, layer_name, dtype, wkw_file_len=32, compression=True
-):
+    source_path: str,
+    target_path: str,
+    layer_name: str,
+    dtype: str,
+    wkw_file_len: int = 32,
+    compression: bool = True,
+) -> None:
     if compression:
         block_type = wkw.Header.BLOCK_TYPE_LZ4
     else:
@@ -88,6 +95,9 @@ def recube(
     ensure_wkw(target_wkw_info)
 
     bounding_box_dict = detect_bbox(source_wkw_info.dataset_path, layer_name)
+    if bounding_box_dict is None:
+        raise ValueError("Failed to detect bounding box.")
+
     bounding_box = (
         bounding_box_dict["topLeft"],
         [
@@ -138,7 +148,11 @@ def recube(
     logging.info(f"{layer_name} successfully resampled!")
 
 
-def recubing_cube_job(args):
+def recubing_cube_job(
+    args: Tuple[
+        WkwDatasetInfo, WkwDatasetInfo, List[int], List[int], int, Tuple[int, int, int]
+    ]
+) -> None:
     (
         source_wkw_info,
         target_wkw_info,
