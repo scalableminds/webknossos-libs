@@ -151,8 +151,6 @@ def convert_nifti(
 
     cube_data = np.array(source_nifti.get_fdata())
 
-    is_probably_binary = np.unique(cube_data).shape[0] == 2
-
     max_cell_id_args = (
         {"largest_segment_id": int(np.max(cube_data) + 1)}
         if is_segmentation_layer
