@@ -238,7 +238,6 @@ def downsample_cube_job(args):
                 wkw_cubelength = (
                     source_wkw.header.file_len * source_wkw.header.block_len
                 )
-                #shape = (num_channels,) + tuple(buffer_edge_len * np.array([2, 2, 2])  // (np.array(mag_factors) * Mag(source_wkw_info.mag).to_array())) # TODO: I had to change this
                 shape = (num_channels,) + (wkw_cubelength,) * 3
                 file_buffer = np.zeros(shape, source_dtype)
                 tile_length = buffer_edge_len
@@ -262,7 +261,6 @@ def downsample_cube_job(args):
                     cube_buffer_channels = source_wkw.read(
                         source_offset,
                         (wkw_cubelength * np.array(mag_factors) // tile_count_per_dim),
-                        #buffer_edge_len * np.array([4, 4, 4]) // (np.array(mag_factors) * Mag(source_wkw_info.mag).to_array())# (wkw_cubelength * np.array(mag_factors) // tile_count_per_dim), # TODO: i changed this
                     )
 
                     for channel_index in range(num_channels):

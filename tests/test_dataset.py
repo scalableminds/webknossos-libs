@@ -10,6 +10,7 @@ import pytest
 import numpy as np
 from shutil import rmtree, copytree
 
+from scipy.ndimage import zoom
 from wkw import wkw
 from wkw.wkw import WKWException
 
@@ -1593,8 +1594,10 @@ def test_dataset_conversion():
     wk_color_layer.add_mag("2", block_len=8, file_len=16)\
         .write(offset=(5, 10, 15), data=(np.random.rand(3, 64, 64, 128) * 255).astype(np.uint8))
 
-    wk_to_tiff_ds = origin_wk_ds.to_tiff_dataset(wk_to_tiff_ds_path)
-    wk_to_tiff_to_wk_ds = wk_to_tiff_ds.to_wk_dataset(wk_to_tiff_to_wk_ds_path)
+    wk_to_tiff_ds = TiffDataset.create(wk_to_tiff_ds_path, 1)
+    origin_wk_ds.copy_dataset(wk_to_tiff_ds)
+    wk_to_tiff_to_wk_ds = WKDataset.create(wk_to_tiff_to_wk_ds_path, 1)
+    wk_to_tiff_ds.copy_dataset(wk_to_tiff_to_wk_ds)
 
     assert origin_wk_ds.layers.keys() == wk_to_tiff_to_wk_ds.layers.keys()
     for layer_name in origin_wk_ds.layers:
@@ -1624,8 +1627,10 @@ def test_dataset_conversion():
     tiff_color_layer.add_mag("2") \
         .write(offset=(5, 10, 15), data=(np.random.rand(3, 64, 64, 128) * 255).astype(np.uint8))
 
-    tiff_to_wk_ds = origin_tiff_ds.to_wk_dataset(tiff_to_wk_ds_path)
-    tiff_to_wk_to_tiff = tiff_to_wk_ds.to_tiff_dataset(tiff_to_wk_to_tiff_ds_path, pattern="different_pattern_{zzzzz}.tif")
+    tiff_to_wk_ds = WKDataset.create(tiff_to_wk_ds_path, 1)
+    origin_tiff_ds.copy_dataset(tiff_to_wk_ds)
+    tiff_to_wk_to_tiff = TiffDataset.create(tiff_to_wk_to_tiff_ds_path, 1, pattern="different_pattern_{zzzzz}.tif")
+    tiff_to_wk_ds.copy_dataset(tiff_to_wk_to_tiff)
 
     assert origin_tiff_ds.layers.keys() == tiff_to_wk_to_tiff.layers.keys()
     for layer_name in origin_tiff_ds.layers:
@@ -1646,21 +1651,21 @@ def test_dataset_conversion():
 @pytest.fixture(
     params=[
         # (offset, size, num_channels, from_mag, max_mag, scale, interpolation_mode, compress, layer type)
-        #((0, 0, 0), (128, 128, 128), 3, "1", "8", None, "default", False, Layer.COLOR_TYPE),
-        #((10, 20, 30), (128, 128, 128), 3, "1", "8", None, "default", False, Layer.COLOR_TYPE),
-        #((10, 20, 30), (128, 128, 128), 3, "1", "8", None, "default", False, Layer.SEGMENTATION_TYPE),
+        ((0, 0, 0), (128, 128, 128), 3, "1", "8", None, "default", False, Layer.COLOR_TYPE),
+        ((10, 20, 30), (128, 128, 128), 3, "1", "8", None, "default", False, Layer.COLOR_TYPE),
+        ((10, 20, 30), (128, 128, 128), 3, "1", "8", None, "default", False, Layer.SEGMENTATION_TYPE),
         #((0, 0, 0), (128, 128, 128), 3, "1", "8", None, "default", True, Layer.COLOR_TYPE), # TODO: find a working configuration for compress
         #((10, 20, 30), (128, 128, 128), 3, "1", "8", None, "BILINEAR", False, Layer.COLOR_TYPE), # TODO: fix
-        #((10, 20, 30), (128, 128, 128), 3, "1", "8", None, "MEDIAN", False, Layer.COLOR_TYPE),
-        #((10, 20, 30), (128, 128, 128), 3, "1", "8", None, "MODE", False, Layer.COLOR_TYPE),
+        ((10, 20, 30), (128, 128, 128), 3, "1", "8", None, "MEDIAN", False, Layer.COLOR_TYPE),
+        ((10, 20, 30), (128, 128, 128), 3, "1", "8", None, "MODE", False, Layer.COLOR_TYPE),
         #((10, 20, 30), (128, 128, 128), 3, "1", "8", None, "NEAREST", False, Layer.COLOR_TYPE), # TODO fix
         #((0, 0, 0), (128, 128, 128), 3, "1", "8", None, "BICUBIC", False, Layer.COLOR_TYPE), # TODO fix
         #((10, 20, 30), (128, 128, 128), 3, "1", "8", None, "BICUBIC", False, Layer.COLOR_TYPE), # TODO fix
-        #((10, 20, 30), (128, 128, 128), 3, "1", "8", None, "MAX", False, Layer.COLOR_TYPE),
-        #((10, 20, 30), (128, 128, 128), 3, "1", "8", None, "MIN", False, Layer.COLOR_TYPE),
-        #((10, 20, 30), (256, 256, 256), 3, "1", "8", None, "default", False, Layer.COLOR_TYPE),
-        #((10, 20, 30), (128, 128, 128), 1, "1", "8", None, "default", False, Layer.COLOR_TYPE),
-        #((10, 20, 30), (128, 128, 128), 3, "2", "8", None, "default", False, Layer.COLOR_TYPE),
+        ((10, 20, 30), (128, 128, 128), 3, "1", "8", None, "MAX", False, Layer.COLOR_TYPE),
+        ((10, 20, 30), (128, 128, 128), 3, "1", "8", None, "MIN", False, Layer.COLOR_TYPE),
+        ((10, 20, 30), (256, 256, 256), 3, "1", "8", None, "default", False, Layer.COLOR_TYPE),
+        ((10, 20, 30), (128, 128, 128), 1, "1", "8", None, "default", False, Layer.COLOR_TYPE),
+        ((10, 20, 30), (128, 128, 128), 3, "2", "8", None, "default", False, Layer.COLOR_TYPE),
         ((10, 20, 30), (128, 128, 128), 3, "2", "8", (4, 2, 2), "default", False, Layer.COLOR_TYPE),
     ]
 )
@@ -1701,7 +1706,8 @@ def test_downsampling(generate_dataset: Tuple):
     copytree(origin_path, path2)
 
     origin_ds = WKDataset(origin_path)
-    origin_ds.to_tiff_dataset(path3)
+    tiff_ds = TiffDataset.create(path3, 1)
+    origin_ds.copy_dataset(tiff_ds)
     print(origin_ds.layers)
 
     assert len(origin_ds.layers['layer1'].mags) == 1
@@ -1747,7 +1753,7 @@ def test_downsampling(generate_dataset: Tuple):
     assert len(layer1.mags) == len(layer2.mags)
     assert layer1.mags.keys() == layer2.mags.keys()
 
-    for mag in layer1.mags:
+    for mag in sorted(layer1.mags):
         data1 = layer1.mags[mag].read()
         data2 = layer2.mags[mag].read()  # this array might be padded with extra 0s
         s = data1.shape
@@ -1766,7 +1772,7 @@ def test_for_zipped_chunks():
     target_mag: MagDataset = WKDataset.create("./testoutput/zipped_chunking_target/", scale=(1, 1, 1))\
         .get_or_add_layer("color", Layer.COLOR_TYPE, dtype_per_channel="uint8", num_channels=3)\
         .get_or_add_mag("1", block_len=8, file_len=4)
-    target_mag.layer.dataset.properties._set_bounding_box_of_layer("color", offset=(0, 0, 0), size=(256, 256, 256)) # TODO: make this not so hacky
+    target_mag.layer.dataset.properties._set_bounding_box_of_layer("color", offset=(0, 0, 0), size=(256, 256, 256))
     target_view = target_mag.get_view(is_bounded=False)
 
     with get_executor_for_args(None) as executor:
@@ -1774,21 +1780,62 @@ def test_for_zipped_chunks():
             copy_and_transform_job,
             job_args_per_chunk=("test1", 42),
             target_view=target_view,
-            source_chunk_size=(64, 64, 64),
-            target_chunk_size=(64, 64, 64),
+            source_chunk_size=(64, 64, 64),  # multiple of (wkw_file_len,) * 3
+            target_chunk_size=(64, 64, 64),  # multiple of (wkw_file_len,) * 3
             executor=executor
         )
 
 
     assert np.array_equal(source_view.read(size=source_view.size) + 50, target_view.read(size=target_view.size))
 
-def test_tiled():
-    ds_path = "./testoutput/larger_wk_dataset/"
-    delete_dir(ds_path)
 
-    ds = TiledTiffDataset.create(ds_path, scale=(1, 1, 1), tile_size=(32, 32))
-    layer = ds.add_layer("color", "color")
-    mag1 = layer.add_mag("1")
-    mag1.write((np.random.rand(64, 64, 10) * 255).astype(np.uint8))
-    mag1 = layer.add_mag("2")
-    mag1.write((np.random.rand(64, 64, 10) * 255).astype(np.uint8))
+def test_zoom():
+    # This test visualizes why some testcases for downsampling fail
+    factor = 2
+    order = 0
+
+    old_offset = (10, 20, 30)
+    old_data = np.zeros(shape=(128, 128, 128), dtype=np.uint8)
+    for i in range(old_offset[2], old_data.shape[2]):
+        old_data[old_offset[0]:, old_offset[1]:, i] = np.ones(shape=(old_data.shape[0] - old_offset[0], old_data.shape[1] - old_offset[1]), dtype=np.uint8) * (i - old_offset[2] + 100)
+
+    old_downsampled_data = zoom(
+        old_data,
+        1 / factor,
+        output=old_data.dtype,
+        # 0: nearest
+        # 1: bilinear
+        # 2: bicubic
+        order=order,
+        # this does not mean nearest interpolation,
+        # it corresponds to how the borders are treated.
+        mode="nearest",
+        prefilter=True,
+    )
+
+    print(old_downsampled_data.shape)
+
+
+    # -------------------
+
+    new_offset = (10, 4, 14)
+    new_data = np.zeros(shape=(128, 112, 112), dtype=np.uint8)
+    for i in range(new_offset[2], new_data.shape[2]):
+        new_data[new_offset[0]:, new_offset[1]:, i] = np.ones(shape=(new_data.shape[0] - new_offset[0], new_data.shape[1] - new_offset[1]), dtype=np.uint8) * (i - new_offset[2] + 100)
+
+    new_downsampled_data = zoom(
+        new_data,
+        1 / factor,
+        output=new_data.dtype,
+        # 0: nearest
+        # 1: bilinear
+        # 2: bicubic
+        order=order,
+        # this does not mean nearest interpolation,
+        # it corresponds to how the borders are treated.
+        mode="nearest",
+        prefilter=True,
+    )
+
+    print(new_downsampled_data.shape)
+    assert np.array_equal(old_downsampled_data[:, 8:, 8:], new_downsampled_data)

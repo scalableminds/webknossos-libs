@@ -255,32 +255,9 @@ def downsample_cube_job(args):
             ) * buffer_edge_len
             source_offset = mag_factors * target_offset
 
-            '''
-            # Initialize source buffer with 0s to pad around the read data
-            # The downsample_cube method requires the data to have a shape that is a multiple of mag_factors
-            source_offset_floor = mag_factors * (np.array(source_view.global_offset) // mag_factors)
-            source_end_ceil = mag_factors * (-(-np.array(source_view.global_offset + source_view.size) // mag_factors))
-            rounded_source_size = source_end_ceil - source_offset_floor
-            read_shape = np.minimum(buffer_edge_len * np.array(mag_factors), source_view.size)
-            #buffer_shape = (num_channels,) + mag_factors * (-(-read_shape // mag_factors))  # round to next multiple of mag_factors
-            buffer_shape = (num_channels,) + tuple(np.minimum(buffer_edge_len * np.array(mag_factors), rounded_source_size))
-            cube_buffer_channels = np.zeros(buffer_shape)
-            offset_difference = source_view.global_offset - source_offset_floor
-
-            # Read source buffer
-            cube_buffer_channels[
-                :,
-                offset_difference[0] : offset_difference[0] + read_shape[0],
-                offset_difference[1] : offset_difference[1] + read_shape[1],
-                offset_difference[2] : offset_difference[2] + read_shape[2]
-            ] = source_view.read(
-                source_offset,
-                read_shape,
-            )
-            '''
             cube_buffer_channels = source_view.read(
                 source_offset,
-                np.minimum(np.array(mag_factors) * buffer_edge_len, source_view.size),  # TODO: maybe the buffer_edge_length should limit the size of the source instead of the target
+                source_view.size
             )
 
             for channel_index in range(num_channels):

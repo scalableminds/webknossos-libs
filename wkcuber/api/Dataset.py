@@ -8,7 +8,8 @@ import numpy as np
 import os
 import re
 
-from wkcuber.utils import logger
+from wkcuber.mag import Mag
+from wkcuber.utils import logger, get_executor_for_args
 
 from wkcuber.api.Properties.DatasetProperties import (
     WKProperties,
@@ -65,6 +66,16 @@ def dtype_per_channel_to_dtype_per_layer(dtype_per_channel, num_channels):
         num_channels,
         dtype_per_layer_to_dtype_per_channel=False,
     )
+
+
+def copy_job(args):
+    # Copy the data form one view to the other in a buffered fashion
+    (source_view, target_view, i, _) = args
+
+    data = source_view.read()
+    if len(data.shape) == 4 and data.shape[0] == 1:
+        data = data[0]  # remove channel dimension
+    target_view.write(data)
 
 
 class AbstractDataset(ABC):
@@ -283,6 +294,47 @@ class AbstractDataset(ABC):
     def _create_layer(self, layer_name, dtype_per_channel, num_channels) -> Layer:
         raise NotImplementedError
 
+    def copy_dataset(self, empty_target_ds: "AbstractDataset", args=None):
+        assert len(empty_target_ds.layers) == 0, f"Converting dataset failed. The target dataset must be empty."
+        with get_executor_for_args(args) as executor:
+            for layer_name, layer in self.layers.items():
+                largest_segment_id = None
+                if self.properties.data_layers[layer_name].category == Layer.SEGMENTATION_TYPE:
+                    largest_segment_id = self.properties.data_layers[layer_name].largest_segment_id
+                target_layer = empty_target_ds.add_layer(
+                    layer_name,
+                    self.properties.data_layers[layer_name].category,
+                    dtype_per_channel=layer.dtype_per_channel,
+                    num_channels=layer.num_channels,
+                    largest_segment_id=largest_segment_id
+                )
+
+                for mag_name, mag in layer.mags.items():
+                    target_mag = target_layer.add_mag(mag_name)
+
+                    # The bounding box needs to be updated manually because chunked views do not have a reference to the dataset itself
+                    bbox = mag.layer.dataset.properties.get_bounding_box_of_layer(layer_name)
+                    target_mag.view.offset = (0, 0, 0)  # The view of a MagDataset always starts at (0, 0, 0)
+                    target_mag.view.size = tuple(-(-(np.array(bbox[0]) + np.array(bbox[1])) // Mag(mag_name).as_np()))  # ceil div
+                    target_mag.layer.dataset.properties._set_bounding_box_of_layer(
+                        layer_name,
+                        offset=bbox[0],
+                        size=bbox[1]
+                    )
+
+                    # The data gets written to the tiff_mag.
+                    # Therefore, the chunk size is determined by the target_mag to prevent concurrent writes
+                    mag.view.for_zipped_chunks(
+                        work_on_chunk=copy_job,
+                        job_args_per_chunk=(),
+                        target_view=target_mag.view,
+                        source_chunk_size=target_mag._get_file_dimensions(),
+                        target_chunk_size=target_mag._get_file_dimensions(),
+                        executor=executor
+                    )
+
+            return empty_target_ds
+
     @abstractmethod
     def _get_properties_type(self):
         pass
@@ -317,23 +369,6 @@ class WKDataset(AbstractDataset):
         self.data_format = "wkw"
         assert isinstance(self.properties, WKProperties)
 
-    def to_tiff_dataset(self, new_dataset_path, pattern="{zzzzz}.tif"):
-        tiff_dataset = TiffDataset.create(new_dataset_path, self.properties.scale, pattern)
-
-        for layer_name, layer in self.layers.items():
-            largest_segment_id = None
-            if self.properties.data_layers[layer_name].category == Layer.SEGMENTATION_TYPE:
-                largest_segment_id = self.properties.data_layers[layer_name].largest_segment_id
-            tiff_layer = tiff_dataset.add_layer(layer_name, self.properties.data_layers[layer_name].category, dtype_per_channel=layer.dtype_per_channel, num_channels=layer.num_channels, largest_segment_id=largest_segment_id)
-
-            for mag_name, mag in layer.mags.items():
-                tiff_mag = tiff_layer.add_mag(mag_name)
-                data = mag.read()
-                if layer.num_channels == 1:
-                    data = data[0]  # remove channel dimension
-                tiff_mag.write(data)
-
-        return tiff_dataset
 
     def _create_layer(self, layer_name, dtype_per_channel, num_channels) -> Layer:
         return WKLayer(layer_name, self, dtype_per_channel, num_channels)
@@ -384,26 +419,6 @@ class TiffDataset(AbstractDataset):
         self.data_format = "tiff"
         assert isinstance(self.properties, TiffProperties)
 
-    def to_wk_dataset(self, new_dataset_path):
-        wk_dataset = WKDataset.create(new_dataset_path, self.properties.scale)
-
-        for layer_name, layer in self.layers.items():
-            largest_segment_id = None
-            if self.properties.data_layers[layer_name].category == Layer.SEGMENTATION_TYPE:
-                largest_segment_id = self.properties.data_layers[layer_name].largest_segment_id
-            tiff_layer = wk_dataset.add_layer(layer_name, self.properties.data_layers[layer_name].category,
-                                                dtype_per_channel=layer.dtype_per_channel,
-                                                num_channels=layer.num_channels, largest_segment_id=largest_segment_id)
-
-            for mag_name, mag in layer.mags.items():
-                tiff_mag = tiff_layer.add_mag(mag_name)
-                data = mag.read()
-                if layer.num_channels == 1:
-                    data = data[0]  # remove channel dimension
-                tiff_mag.write(data)
-
-        return wk_dataset
-
     def _create_layer(self, layer_name, dtype_per_channel, num_channels) -> Layer:
         return TiffLayer(layer_name, self, dtype_per_channel, num_channels)
 
@@ -452,9 +467,6 @@ class TiledTiffDataset(AbstractDataset):
                 return cls.create(dataset_path, scale, tile_size)
             else:
                 return cls.create(dataset_path, scale, tile_size, pattern)
-
-    def to_wk_dataset(self, new_dataset_path):
-        raise NotImplementedError  # TODO; implement
 
     def __init__(self, dataset_path):
         super().__init__(dataset_path)

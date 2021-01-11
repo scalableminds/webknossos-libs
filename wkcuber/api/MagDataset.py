@@ -64,9 +64,7 @@ class MagDataset:
             [old_end_offset_in_mag1, new_end_offset_in_mag1]
         ).max(axis=0)
         total_size_in_mag1 = max_end_offset_in_mag1 - np.array(new_offset_in_mag1)
-        total_size = total_size_in_mag1 // mag_np
 
-        #self.view.size = tuple(total_size)
         self.view.size = tuple(max_end_offset_in_mag1 // mag_np)  # the view of a MagDataset always starts at (0, 0, 0)
 
         self.layer.dataset.properties._set_bounding_box_of_layer(
