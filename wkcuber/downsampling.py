@@ -1,37 +1,20 @@
 import logging
-import math
 
-import wkw
 import numpy as np
 from argparse import ArgumentParser
 import os
-from scipy.ndimage.interpolation import zoom
-from itertools import product
-from enum import Enum
+
+from wkcuber.api.Dataset import WKDataset
 from .mag import Mag
-from .metadata import read_datasource_properties, refresh_metadata
-from .downsampling_utils import InterpolationModes, parse_interpolation_mode, downsample_cube, determine_buffer_edge_len
+from .metadata import read_datasource_properties
 
 from .utils import (
     add_verbose_flag,
-    open_wkw,
-    WkwDatasetInfo,
-    ensure_wkw,
-    time_start,
-    time_stop,
     add_distribution_flags,
     add_interpolation_flag,
-    get_executor_for_args,
-    wait_and_ensure_success,
     add_isotropic_flag,
     setup_logging,
-    cube_addresses,
 )
-
-
-def extend_wkw_dataset_info_header(wkw_info, **kwargs):
-    for key, value in kwargs.items():
-        setattr(wkw_info.header, key, value)
 
 
 def calculate_virtual_scale_for_target_mag(target_mag):
@@ -110,245 +93,6 @@ def create_parser():
     return parser
 
 
-def downsample(
-    source_wkw_info,
-    target_wkw_info,
-    source_mag: Mag,
-    target_mag: Mag,
-    interpolation_mode,
-    compress,
-    buffer_edge_len=None,
-    args=None,
-):
-
-    assert source_mag < target_mag
-    logging.info("Downsampling mag {} from mag {}".format(target_mag, source_mag))
-
-    mag_factors = [
-        t // s for (t, s) in zip(target_mag.to_array(), source_mag.to_array())
-    ]
-    # Detect the cubes that we want to downsample
-    source_cube_addresses = cube_addresses(source_wkw_info)
-
-    target_cube_addresses = list(
-        set(
-            tuple(dim // mag_factor for (dim, mag_factor) in zip(xyz, mag_factors))
-            for xyz in source_cube_addresses
-        )
-    )
-    target_cube_addresses.sort()
-    with open_wkw(source_wkw_info) as source_wkw:
-        if buffer_edge_len is None:
-            buffer_edge_len = determine_buffer_edge_len(source_wkw)
-        logging.debug(
-            "Found source cubes: count={} size={} min={} max={}".format(
-                len(source_cube_addresses),
-                (buffer_edge_len,) * 3,
-                min(source_cube_addresses),
-                max(source_cube_addresses),
-            )
-        )
-        logging.debug(
-            "Found target cubes: count={} size={} min={} max={}".format(
-                len(target_cube_addresses),
-                (buffer_edge_len,) * 3,
-                min(target_cube_addresses),
-                max(target_cube_addresses),
-            )
-        )
-
-    with open_wkw(source_wkw_info) as source_wkw:
-        num_channels = source_wkw.header.num_channels
-        header_block_type = (
-            wkw.Header.BLOCK_TYPE_LZ4HC if compress else wkw.Header.BLOCK_TYPE_RAW
-        )
-
-        extend_wkw_dataset_info_header(
-            target_wkw_info,
-            num_channels=num_channels,
-            file_len=source_wkw.header.file_len,
-            block_type=header_block_type,
-        )
-
-        ensure_wkw(target_wkw_info)
-
-    with get_executor_for_args(args) as executor:
-        job_args = []
-        voxel_count_per_cube = (
-            source_wkw.header.file_len * source_wkw.header.block_len
-        ) ** 3
-        job_count_per_log = math.ceil(
-            1024 ** 3 / voxel_count_per_cube
-        )  # log every gigavoxel of processed data
-        for i, target_cube_xyz in enumerate(target_cube_addresses):
-            use_logging = i % job_count_per_log == 0
-
-            job_args.append(
-                (
-                    source_wkw_info,
-                    target_wkw_info,
-                    mag_factors,
-                    interpolation_mode,
-                    target_cube_xyz,
-                    buffer_edge_len,
-                    compress,
-                    use_logging,
-                )
-            )
-        wait_and_ensure_success(executor.map_to_futures(downsample_cube_job, job_args))
-
-    logging.info("Mag {0} successfully cubed".format(target_mag))
-
-
-def downsample_cube_job(args):
-    (
-        source_wkw_info,
-        target_wkw_info,
-        mag_factors,
-        interpolation_mode,
-        target_cube_xyz,
-        buffer_edge_len,
-        compress,
-        use_logging,
-    ) = args
-
-    if use_logging:
-        logging.info("Downsampling of {}".format(target_cube_xyz))
-
-    try:
-        if use_logging:
-            time_start("Downsampling of {}".format(target_cube_xyz))
-        header_block_type = (
-            wkw.Header.BLOCK_TYPE_LZ4HC if compress else wkw.Header.BLOCK_TYPE_RAW
-        )
-
-        with open_wkw(source_wkw_info) as source_wkw:
-            num_channels = source_wkw.header.num_channels
-            source_dtype = source_wkw.header.voxel_type
-
-            extend_wkw_dataset_info_header(
-                target_wkw_info,
-                voxel_type=source_dtype,
-                num_channels=num_channels,
-                file_len=source_wkw.header.file_len,
-                block_type=header_block_type,
-            )
-
-            with open_wkw(target_wkw_info) as target_wkw:
-                wkw_cubelength = (
-                    source_wkw.header.file_len * source_wkw.header.block_len
-                )
-                shape = (num_channels,) + (wkw_cubelength,) * 3
-                file_buffer = np.zeros(shape, source_dtype)
-                tile_length = buffer_edge_len
-                tile_count_per_dim = wkw_cubelength // tile_length
-
-                assert (
-                    wkw_cubelength % buffer_edge_len == 0
-                ), "buffer_cube_size must be a divisor of wkw cube length"
-
-                tile_indices = list(range(0, tile_count_per_dim))
-                tiles = product(tile_indices, tile_indices, tile_indices)
-                file_offset = wkw_cubelength * np.array(target_cube_xyz)
-
-                for tile in tiles:
-                    target_offset = np.array(
-                        tile
-                    ) * tile_length + wkw_cubelength * np.array(target_cube_xyz)
-                    source_offset = mag_factors * target_offset
-
-                    # Read source buffer
-                    cube_buffer_channels = source_wkw.read(
-                        source_offset,
-                        (wkw_cubelength * np.array(mag_factors) // tile_count_per_dim),
-                    )
-
-                    for channel_index in range(num_channels):
-                        cube_buffer = cube_buffer_channels[channel_index]
-
-                        if not np.all(cube_buffer == 0):
-                            # Downsample the buffer
-
-                            data_cube = downsample_cube(
-                                cube_buffer, mag_factors, interpolation_mode
-                            )
-
-                            buffer_offset = target_offset - file_offset
-                            buffer_end = buffer_offset + tile_length
-
-                            file_buffer[
-                                channel_index,
-                                buffer_offset[0] : buffer_end[0],
-                                buffer_offset[1] : buffer_end[1],
-                                buffer_offset[2] : buffer_end[2],
-                            ] = data_cube
-
-                # Write the downsampled buffer to target
-                target_wkw.write(file_offset, file_buffer)
-        if use_logging:
-            time_stop("Downsampling of {}".format(target_cube_xyz))
-
-    except Exception as exc:
-        logging.error("Downsampling of {} failed with {}".format(target_cube_xyz, exc))
-        raise exc
-
-
-def downsample_unpadded_data(buffer, target_mag, interpolation_mode):
-    logging.info(
-        f"Downsampling buffer of size {buffer.shape} to mag {target_mag.to_layer_name()}"
-    )
-    target_mag_np = np.array(target_mag.to_array())
-    current_dimension_size = np.array(buffer.shape[1:])
-    padding_size_for_downsampling = (
-        target_mag_np - (current_dimension_size % target_mag_np) % target_mag_np
-    )
-    padding_size_for_downsampling = list(zip([0, 0, 0], padding_size_for_downsampling))
-    buffer = np.pad(
-        buffer, pad_width=[(0, 0)] + padding_size_for_downsampling, mode="constant"
-    )
-    dimension_decrease = np.array([1] + target_mag.to_array())
-    downsampled_buffer_shape = np.array(buffer.shape) // dimension_decrease
-    downsampled_buffer = np.empty(dtype=buffer.dtype, shape=downsampled_buffer_shape)
-    for channel in range(buffer.shape[0]):
-        downsampled_buffer[channel] = downsample_cube(
-            buffer[channel], target_mag.to_array(), interpolation_mode
-        )
-    return downsampled_buffer
-
-
-def downsample_mag(
-    path,
-    layer_name,
-    source_mag: Mag,
-    target_mag: Mag,
-    interpolation_mode="default",
-    compress=False,
-    buffer_edge_len=None,
-    args=None,
-):
-    interpolation_mode = parse_interpolation_mode(interpolation_mode, layer_name)
-
-    source_wkw_info = WkwDatasetInfo(path, layer_name, source_mag.to_layer_name(), None)
-    with open_wkw(source_wkw_info) as source:
-        target_wkw_info = WkwDatasetInfo(
-            path,
-            layer_name,
-            target_mag.to_layer_name(),
-            wkw.Header(source.header.voxel_type, block_len=8), # TODO
-        )
-
-    downsample(
-        source_wkw_info,
-        target_wkw_info,
-        source_mag,
-        target_mag,
-        interpolation_mode,
-        compress,
-        buffer_edge_len,
-        args,
-    )
-
-
 def downsample_mags(
     path: str,
     layer_name: str = None,
@@ -386,28 +130,16 @@ def downsample_mags(
                     "the path: {path}"
                 )
                 raise exc
-        downsample_mags_anisotropic(
-            path,
-            layer_name,
-            from_mag,
-            max_mag,
-            scale,
-            interpolation_mode,
-            compress,
-            buffer_edge_len,
-            args,
-        )
-    else:
-        downsample_mags_isotropic(
-            path,
-            layer_name,
-            from_mag,
-            max_mag,
-            interpolation_mode,
-            compress,
-            buffer_edge_len,
-            args,
-        )
+
+    WKDataset(path).get_layer(layer_name).downsample(
+        from_mag=from_mag,
+        max_mag=max_mag,
+        interpolation_mode=interpolation_mode,
+        compress=compress,
+        scale=scale,
+        buffer_edge_len=buffer_edge_len,
+        args=args
+    )
 
 
 def downsample_mags_isotropic(
@@ -421,20 +153,15 @@ def downsample_mags_isotropic(
     args=None,
 ):
 
-    target_mag = from_mag.scaled_by(2)
-    while target_mag <= max_mag:
-        source_mag = target_mag.divided_by(2)
-        downsample_mag(
-            path,
-            layer_name,
-            source_mag,
-            target_mag,
-            interpolation_mode,
-            compress,
-            buffer_edge_len,
-            args,
-        )
-        target_mag.scale_by(2)
+    WKDataset(path).get_layer(layer_name).downsample(
+        from_mag=from_mag,
+        max_mag=max_mag,
+        interpolation_mode=interpolation_mode,
+        compress=compress,
+        scale=None,
+        buffer_edge_len=buffer_edge_len,
+        args=args
+    )
 
 
 def downsample_mags_anisotropic(
@@ -448,50 +175,15 @@ def downsample_mags_anisotropic(
     buffer_edge_len=None,
     args=None,
 ):
-
-    prev_mag = from_mag
-    target_mag = get_next_anisotropic_mag(from_mag, scale)
-    while target_mag <= max_mag:
-        source_mag = prev_mag
-        downsample_mag(
-            path,
-            layer_name,
-            source_mag,
-            target_mag,
-            interpolation_mode,
-            compress,
-            buffer_edge_len,
-            args,
-        )
-        prev_mag = target_mag
-        target_mag = get_next_anisotropic_mag(target_mag, scale)
-
-
-def get_next_anisotropic_mag(mag, scale):
-    max_index, min_index = detect_larger_and_smaller_dimension(scale)
-    mag_array = mag.to_array()
-    scale_increase = [1, 1, 1]
-
-    if (
-        mag_array[min_index] * scale[min_index]
-        < mag_array[max_index] * scale[max_index]
-    ):
-        for i in range(len(scale_increase)):
-            scale_increase[i] = 1 if scale[i] == scale[max_index] else 2
-    else:
-        scale_increase = [2, 2, 2]
-    return Mag(
-        [
-            mag_array[0] * scale_increase[0],
-            mag_array[1] * scale_increase[1],
-            mag_array[2] * scale_increase[2],
-        ]
+    WKDataset(path).get_layer(layer_name).downsample(
+        from_mag=from_mag,
+        max_mag=max_mag,
+        interpolation_mode=interpolation_mode,
+        compress=compress,
+        scale=scale,
+        buffer_edge_len=buffer_edge_len,
+        args=args
     )
-
-
-def detect_larger_and_smaller_dimension(scale):
-    scale_np = np.array(scale)
-    return np.argmax(scale_np), np.argmin(scale_np)
 
 
 if __name__ == "__main__":
@@ -549,4 +241,3 @@ if __name__ == "__main__":
             args,
         )
 
-    refresh_metadata(args.path)

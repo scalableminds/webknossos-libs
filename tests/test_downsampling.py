@@ -1,16 +1,17 @@
 import logging
 import numpy as np
-from wkcuber.downsampling import (
+
+from wkcuber.api.Dataset import WKDataset
+from wkcuber.downsampling_utils import (
     InterpolationModes,
     downsample_cube,
     downsample_cube_job,
-    cube_addresses,
-    get_next_anisotropic_mag,
+    get_next_mag,
 )
 import wkw
 from wkcuber.mag import Mag
 from wkcuber.utils import WkwDatasetInfo, open_wkw
-from wkcuber.downsampling import _mode, non_linear_filter_3d
+from wkcuber.downsampling_utils import _mode, non_linear_filter_3d
 import shutil
 
 WKW_CUBE_SIZE = 1024
@@ -71,14 +72,6 @@ def test_non_linear_filter_reshape():
     assert a_filtered.dtype == np.uint32
     expected_result = [1, 3]
     assert np.all(expected_result == a_filtered)
-
-
-def test_cube_addresses():
-    addresses = cube_addresses(source_info)
-    assert len(addresses) == 5 * 5 * 1
-
-    assert min(addresses) == (0, 0, 0)
-    assert max(addresses) == (4, 4, 0)
 
 
 def downsample_test_helper(use_compress):
@@ -212,10 +205,60 @@ def test_anisotropic_mag_calculation():
     ]
 
     for i in range(len(mag_tests)):
-        next_mag = get_next_anisotropic_mag(mag_tests[i][1], mag_tests[i][0])
+        next_mag = get_next_mag(mag_tests[i][1], mag_tests[i][0])
         assert mag_tests[i][2] == next_mag, (
             "The next anisotropic"
             f" Magnification of {mag_tests[i][1]} with "
             f"the size {mag_tests[i][0]} should be {mag_tests[i][2]} "
             f"and not {next_mag}"
         )
+
+
+def test_downsampling_padding():
+    ds_path = "./testoutput/larger_wk_dataset/"
+    try:
+        shutil.rmtree(ds_path)
+    except:
+        pass
+
+    ds = WKDataset.create(ds_path, scale=(1, 1, 1))
+    layer = ds.add_layer("layer1", "segmentation", num_channels=3, largest_segment_id=1000000000)
+    mag1 = layer.add_mag("1", block_len=8, file_len=8)
+    mag2 = layer.add_mag("2", block_len=8, file_len=8)
+
+    # write some random data to mag 1 and mag 2
+    mag1.write(
+        offset=(10, 20, 30),
+        data=(np.random.rand(3, 128, 148, 168) * 255).astype(np.uint8)
+    )
+
+    mag2.write(
+        offset=(5, 10, 15),
+        data=(np.random.rand(3, 64, 74, 84) * 255).astype(np.uint8)
+    )
+
+    assert np.array_equal(mag1.get_view().global_offset, (10, 20, 30))
+    assert np.array_equal(mag1.get_view().size, (128, 148, 168))
+    assert np.array_equal(mag2.get_view().global_offset, (5, 10, 15))
+    assert np.array_equal(mag2.get_view().size, (64, 74, 84))
+
+    layer.downsample(
+        from_mag=Mag(2),
+        max_mag=Mag(8),
+        scale=(4, 2, 2),
+        interpolation_mode="default",
+        compress=False
+    )
+
+    # The data gets padded in a way that it is always possible to divide the offset and the size by 2
+    assert np.array_equal(layer.get_mag("4-8-8").get_view().global_offset, (2, 2, 3))
+    assert np.array_equal(layer.get_mag("2-4-4").get_view().global_offset, (4, 4, 6))
+    assert np.array_equal(mag2.get_view().global_offset, (4, 8, 12))
+    assert np.array_equal(mag1.get_view().global_offset, (8, 16, 24))
+    # The 'end_offset' of the data in mag 1 is: (10, 20, 30) + (128, 148, 168) = (138, 168, 198)
+    # Then 'end_offset' of mag 4-8-8 is: (35, 21, 25)  ->  size=(33, 19, 23)
+    assert np.array_equal(layer.get_mag("4-8-8").get_view().size, (33, 19, 22))
+    assert np.array_equal(layer.get_mag("2-4-4").get_view().size, (66, 38, 44))
+    assert np.array_equal(mag2.get_view().size, (66, 76, 88))
+    assert np.array_equal(mag1.get_view().size, (132, 152, 176))
+
