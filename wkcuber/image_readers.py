@@ -135,33 +135,49 @@ def find_count_of_axis(tif_file: TiffFile, axis: str) -> int:
 
 class TiffImageReader(ImageReader):
     def read_array(self, file_name: str, dtype: np.dtype, z_slice: int) -> np.ndarray:
-        channel = 0
-        tif_file = TiffFile(file_name)
-        if len(tif_file.pages) > 1:
-            # pylint: disable=unsubscriptable-object
-            data = np.array(
-                tif_file.pages[
-                    z_slice * tif_file.series[0].shape[1] + channel
-                ].asarray(),
-                dtype,
+        with TiffFile(file_name) as tif_file:
+            num_channels = find_count_of_axis(tif_file, "C")
+            if len(tif_file.pages) > num_channels:
+                data = np.array(
+                    list(
+                        map(
+                            lambda x: x.asarray(),
+                            tif_file.pages[
+                                z_slice * num_channels : z_slice * num_channels
+                                + num_channels
+                            ],
+                        )
+                    ),
+                    dtype,
+                )
+            else:
+                data = np.array(
+                    list(map(lambda x: x.asarray(), tif_file.pages[0:num_channels])),
+                    dtype,
+                )
+            # transpose data to shape(x, y, channel_count)
+            data = np.transpose(
+                data,
+                (
+                    tif_file.pages[0].axes.find("X") + 1,
+                    tif_file.pages[0].axes.find("Y") + 1,
+                    0,
+                ),
             )
-        else:
-            data = np.array(tif_file.pages[0].asarray(), dtype)
-        data = data.swapaxes(0, 1)
-        data = data.reshape(data.shape + (1,))
-        tif_file.close()
-        return data
+            data = data.reshape(data.shape + (1,))
+            return data
 
     def read_dimensions(self, file_name: str) -> Tuple[int, int]:
-        tif_file = TiffFile(file_name)
-        return find_count_of_axis(tif_file, "X"), find_count_of_axis(tif_file, "Y")
+        with TiffFile(file_name) as tif_file:
+            return find_count_of_axis(tif_file, "X"), find_count_of_axis(tif_file, "Y")
 
     def read_channel_count(self, file_name: str) -> int:
-        return 1
-        # return find_count_of_axis(TiffFile(file_name), "C")
+        with TiffFile(file_name) as tif_file:
+            return find_count_of_axis(tif_file, "C")
 
     def read_z_slices_per_file(self, file_name: str) -> int:
-        return find_count_of_axis(TiffFile(file_name), "Z")
+        with TiffFile(file_name) as tif_file:
+            return find_count_of_axis(tif_file, "Z")
 
 
 class ImageReaderManager:
