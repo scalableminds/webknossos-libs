@@ -1659,6 +1659,9 @@ def test_dataset_conversion():
         ((10, 20, 30), (128, 128, 128), 3, "1", "8", None, "MEDIAN", False, Layer.COLOR_TYPE),
         ((10, 20, 30), (128, 128, 128), 3, "1", "8", None, "MODE", False, Layer.COLOR_TYPE),
         #((10, 20, 30), (128, 128, 128), 3, "1", "8", None, "NEAREST", False, Layer.COLOR_TYPE), # TODO fix
+        ((0, 0, 0), (512, 512, 512), 3, "1", "8", None, "NEAREST", False, Layer.COLOR_TYPE),
+        ((0, 0, 0), (512, 512, 512), 3, "1", "8", None, "BICUBIC", False, Layer.COLOR_TYPE),
+        ((0, 0, 0), (512, 512, 512), 3, "1", "8", None, "BILINEAR", False, Layer.COLOR_TYPE),
         #((0, 0, 0), (128, 128, 128), 3, "1", "8", None, "BICUBIC", False, Layer.COLOR_TYPE), # TODO fix
         #((10, 20, 30), (128, 128, 128), 3, "1", "8", None, "BICUBIC", False, Layer.COLOR_TYPE), # TODO fix
         ((10, 20, 30), (128, 128, 128), 3, "1", "8", None, "MAX", False, Layer.COLOR_TYPE),
@@ -1721,7 +1724,8 @@ def test_downsampling(generate_dataset: Tuple):
         max_mag=max_mag,
         scale=scale,
         interpolation_mode=interpolation_mode,
-        compress=compress
+        compress=compress,
+        buffer_edge_len=32
     )
 
     # downsample with the old implementation
@@ -1732,7 +1736,8 @@ def test_downsampling(generate_dataset: Tuple):
             from_mag=from_mag,
             max_mag=max_mag,
             interpolation_mode=interpolation_mode,
-            compress=compress
+            compress=compress,
+            buffer_edge_len=32
         )
     else:
         downsample_mags_anisotropic(
@@ -1742,7 +1747,8 @@ def test_downsampling(generate_dataset: Tuple):
             max_mag=max_mag,
             scale=scale,
             interpolation_mode=interpolation_mode,
-            compress=compress
+            compress=compress,
+            buffer_edge_len=32
         )
     layer1 = WKDataset(path1).get_layer('layer1')
     # update properties manually
@@ -1758,6 +1764,54 @@ def test_downsampling(generate_dataset: Tuple):
         data2 = layer2.mags[mag].read()  # this array might be padded with extra 0s
         s = data1.shape
         assert np.array_equal(data1, data2[:s[0], :s[1], :s[2], :s[3]])
+
+
+def test_downsampling_padding():
+    ds_path = "./testoutput/larger_wk_dataset/"
+    delete_dir(ds_path)
+
+    ds = WKDataset.create(ds_path, scale=(1, 1, 1))
+    layer = ds.add_layer("layer1", "segmentation", num_channels=3, largest_segment_id=1000000000)
+    mag1 = layer.add_mag("1", block_len=8, file_len=8)
+    mag2 = layer.add_mag("2", block_len=8, file_len=8)
+
+    # write some random data to mag 1 and mag 2
+    mag1.write(
+        offset=(10, 20, 30),
+        data=(np.random.rand(3, 128, 148, 168) * 255).astype(np.uint8)
+    )
+
+    mag2.write(
+        offset=(5, 10, 15),
+        data=(np.random.rand(3, 64, 74, 84) * 255).astype(np.uint8)
+    )
+
+    assert np.array_equal(mag1.get_view().global_offset, (10, 20, 30))
+    assert np.array_equal(mag1.get_view().size, (128, 148, 168))
+    assert np.array_equal(mag2.get_view().global_offset, (5, 10, 15))
+    assert np.array_equal(mag2.get_view().size, (64, 74, 84))
+
+    layer.downsample(
+        from_mag=Mag(2),
+        max_mag=Mag(8),
+        scale=(4, 2, 2),
+        interpolation_mode="default",
+        compress=False
+    )
+
+    # The data gets padded in a way that it is always possible to divide the offset and the size by 2
+    assert np.array_equal(layer.get_mag("4-8-8").get_view().global_offset, (2, 2, 3))
+    assert np.array_equal(layer.get_mag("2-4-4").get_view().global_offset, (4, 4, 6))
+    assert np.array_equal(mag2.get_view().global_offset, (4, 8, 12))
+    assert np.array_equal(mag1.get_view().global_offset, (8, 16, 24))
+    # The 'end_offset' of the data in mag 1 is: (10, 20, 30) + (128, 148, 168) = (138, 168, 198)
+    # Then 'end_offset' of mag 4-8-8 is: (35, 21, 25)  ->  size=(33, 19, 23)
+    assert np.array_equal(layer.get_mag("4-8-8").get_view().size, (33, 19, 22))
+    assert np.array_equal(layer.get_mag("2-4-4").get_view().size, (66, 38, 44))
+    assert np.array_equal(mag2.get_view().size, (66, 76, 88))
+    assert np.array_equal(mag1.get_view().size, (132, 152, 176))
+
+
 
 
 def test_for_zipped_chunks():
@@ -1814,7 +1868,6 @@ def test_zoom():
     )
 
     print(old_downsampled_data.shape)
-
 
     # -------------------
 

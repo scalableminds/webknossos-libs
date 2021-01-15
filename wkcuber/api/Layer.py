@@ -123,25 +123,16 @@ class Layer:
             all_mags_after_downsampling += [cur_mag]
             cur_mag = get_next_mag(cur_mag, scale)
 
-        # calculate the product of all mag_factors from mag 1 to the lowest mag
-        cur_mag = Mag("1")
-        last_mag_factor = [1,1,1]
-        mag_factors_product = np.array(last_mag_factor)
-        for mag in all_mags_after_downsampling:
-            last_mag_factor = mag.as_np() // cur_mag.as_np()
-            mag_factors_product *= last_mag_factor
-            cur_mag = mag
+        lowest_mag = all_mags_after_downsampling[-1].as_np()
 
         # calculate aligned offset and size for lowest mag
         offset_in_mag1 = self.dataset.properties.data_layers[self.name].get_bounding_box_offset()
         size_in_mag1 = self.dataset.properties.data_layers[self.name].get_bounding_box_size()
         offset_in_lowest_mag = offset_in_mag1 // all_mags_after_downsampling[-1].as_np()
         end_offset_in_lowest_mag = -((np.array(offset_in_mag1) + size_in_mag1) // -all_mags_after_downsampling[-1].as_np())  # ceil div
-        aligned_offset_in_lowest_mag = last_mag_factor * (offset_in_lowest_mag // last_mag_factor)  # floor div
-        aligned_size_in_lowest_mag = (last_mag_factor * (-(-end_offset_in_lowest_mag // last_mag_factor))) - aligned_offset_in_lowest_mag  # ceil div
         # translate alignment into mag 1
-        aligned_offset_in_mag1 = mag_factors_product * aligned_offset_in_lowest_mag
-        aligned_size_in_mag1 = mag_factors_product * aligned_size_in_lowest_mag
+        aligned_offset_in_mag1 = lowest_mag * offset_in_lowest_mag
+        aligned_size_in_mag1 = lowest_mag * (end_offset_in_lowest_mag - offset_in_lowest_mag)
 
         # pad the existing mags
         for mag_name in existing_mags:
@@ -186,10 +177,8 @@ class Layer:
             # initialize the new mag
             target_mag_ds = self._initialize_mag_from_other_mag(target_mag, prev_mag_ds, compress)
 
-            # Get target view (aligned with mag_factors)
-            true_target_offset = target_mag_ds.get_view().global_offset
-            aligned_target_offset = mag_factors * (np.array(true_target_offset) // mag_factors)
-            target_mag_view = target_mag_ds.get_view(offset=aligned_target_offset, is_bounded=False)
+            # Get target view
+            target_mag_view = target_mag_ds.get_view(is_bounded=False)
 
             # perform downsampling
             with get_executor_for_args(args) as executor:
@@ -203,7 +192,6 @@ class Layer:
                     interpolation_mode,
                     buffer_edge_len,
                     compress,
-                    target_mag_ds._get_file_dimensions(),
                     job_count_per_log,
                 )
                 prev_mag_ds.get_view().for_zipped_chunks(

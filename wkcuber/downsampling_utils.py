@@ -227,7 +227,6 @@ def downsample_cube_job(args):
             interpolation_mode,
             buffer_edge_len,
             compress,
-            chunk_size,
             job_count_per_log,
         )
     ) = args
@@ -245,7 +244,7 @@ def downsample_cube_job(args):
         shape = (num_channels,) + tuple(target_view.size)
         file_buffer = np.zeros(shape, target_view.get_dtype())
 
-        tiles = product(*list([list(range(0, math.ceil(len))) for len in np.array(chunk_size) / buffer_edge_len]))
+        tiles = product(*list([list(range(0, math.ceil(len))) for len in np.array(target_view.size) / buffer_edge_len]))
 
         source_view.open()
 
@@ -254,10 +253,17 @@ def downsample_cube_job(args):
                 tile
             ) * buffer_edge_len
             source_offset = mag_factors * target_offset
+            source_size = [
+                min(a, b)
+                for a, b in zip(
+                    np.array(mag_factors) * buffer_edge_len,
+                    source_view.size-source_offset
+                )
+            ]
 
             cube_buffer_channels = source_view.read(
                 source_offset,
-                source_view.size
+                source_size
             )
 
             for channel_index in range(num_channels):
