@@ -142,7 +142,7 @@ def downsample_mags(
         compress=compress,
         scale=scale,
         buffer_edge_len=buffer_edge_len,
-        args=args
+        args=args,
     )
 
 
@@ -164,7 +164,7 @@ def downsample_mags_isotropic(
         compress=compress,
         scale=None,
         buffer_edge_len=buffer_edge_len,
-        args=args
+        args=args,
     )
 
 
@@ -186,7 +186,7 @@ def downsample_mags_anisotropic(
         compress=compress,
         scale=scale,
         buffer_edge_len=buffer_edge_len,
-        args=args
+        args=args,
     )
 
 
@@ -244,4 +244,3 @@ if __name__ == "__main__":
             args.buffer_cube_size,
             args,
         )
-

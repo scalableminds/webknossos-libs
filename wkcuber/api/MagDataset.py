@@ -79,7 +79,9 @@ class MagDataset:
         ).max(axis=0)
         total_size_in_mag1 = max_end_offset_in_mag1 - np.array(new_offset_in_mag1)
 
-        self.view.size = cast(Tuple[int, int, int], tuple(max_end_offset_in_mag1 // mag_np))  # the view of a MagDataset always starts at (0, 0, 0)
+        self.view.size = cast(
+            Tuple[int, int, int], tuple(max_end_offset_in_mag1 // mag_np)
+        )  # the view of a MagDataset always starts at (0, 0, 0)
 
         self.layer.dataset.properties._set_bounding_box_of_layer(
             self.layer.name,
@@ -115,10 +117,18 @@ class MagDataset:
 
         mag_np = Mag(self.name).as_np()
 
-        view_offset = offset if offset is not None else cast(Tuple[int, int, int], tuple(mag1_offset_in_properties // mag_np))
+        view_offset = (
+            offset
+            if offset is not None
+            else cast(Tuple[int, int, int], tuple(mag1_offset_in_properties // mag_np))
+        )
 
-        properties_size_in_current_mag = -(-np.array(mag1_size_in_properties) // mag_np)  # ceil div
-        properties_offset_in_current_mag = np.array(mag1_offset_in_properties) // mag_np  # floor div
+        properties_size_in_current_mag = -(
+            -np.array(mag1_size_in_properties) // mag_np
+        )  # ceil div
+        properties_offset_in_current_mag = (
+            np.array(mag1_offset_in_properties) // mag_np
+        )  # floor div
 
         if size is None:
             size = properties_size_in_current_mag - (
@@ -133,7 +143,12 @@ class MagDataset:
                         f"The passed parameter 'offset' {view_offset} is outside the bounding box from the properties.json. "
                         f"Use is_bounded=False if you intend to write outside out the existing bounding box."
                     )
-            for s1, s2, off1, off2 in zip(properties_size_in_current_mag, size, properties_offset_in_current_mag, view_offset):
+            for s1, s2, off1, off2 in zip(
+                properties_size_in_current_mag,
+                size,
+                properties_offset_in_current_mag,
+                view_offset,
+            ):
                 if s2 + off2 > s1 + off1:
                     raise AssertionError(
                         f"The combination of the passed parameter 'size' {size} and 'offset' {view_offset} are not compatible with the "
@@ -234,7 +249,7 @@ class TiffMagDataset(MagDataset):
         if self.layer.dataset.properties.tile_size:
             return self.layer.dataset.properties.tile_size + (1,)
 
-        return self.view.size[0], self.view.size[1], 1 # TODO: find better chunk size
+        return self.view.size[0], self.view.size[1], 1  # TODO: find better chunk size
 
 
 class TiledTiffMagDataset(TiffMagDataset):

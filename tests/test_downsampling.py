@@ -4,6 +4,7 @@ from typing import Tuple
 import numpy as np
 
 from wkcuber.api.Dataset import WKDataset
+from wkcuber.api.Layer import Layer
 from wkcuber.downsampling_utils import (
     InterpolationModes,
     downsample_cube,
@@ -34,7 +35,7 @@ def test_downsample_cube():
     buffer = np.zeros((CUBE_EDGE_LEN,) * 3, dtype=np.uint8)
     buffer[:, :, :] = np.arange(0, CUBE_EDGE_LEN)
 
-    output = downsample_cube(buffer, (2, 2, 2), InterpolationModes.MODE)
+    output = downsample_cube(buffer, [2, 2, 2], InterpolationModes.MODE)
 
     assert output.shape == (CUBE_EDGE_LEN // 2,) * 3
     assert buffer[0, 0, 0] == 0
@@ -138,38 +139,34 @@ def test_downsample_multi_channel():
     ).astype("uint8")
     file_len = 32
 
-    source_info = WkwDatasetInfo(
-        "testoutput/multi-channel-test",
-        "color",
-        1,
-        wkw.Header(np.uint8, num_channels, file_len=file_len),
-    )
-    target_info = WkwDatasetInfo(
-        "testoutput/multi-channel-test",
-        "color",
-        2,
-        wkw.Header(np.uint8, file_len=file_len),
-    )
     try:
-        shutil.rmtree(source_info.dataset_path)
-        shutil.rmtree(target_info.dataset_path)
+        shutil.rmtree("testoutput/multi-channel-test")
     except:
         pass
 
-    with open_wkw(source_info) as wkw_dataset:
-        print("writing source_data shape", source_data.shape)
-        wkw_dataset.write(offset, source_data)
+    ds = WKDataset.create("testoutput/multi-channel-test", (1, 1, 1))
+    l = ds.add_layer(
+        "color", Layer.COLOR_TYPE, dtype_per_channel="uint8", num_channels=num_channels
+    )
+    mag1 = l.add_mag("1", file_len=file_len)
+
+    print("writing source_data shape", source_data.shape)
+    mag1.write(source_data, offset=offset)
     assert np.any(source_data != 0)
 
+    mag2 = l._initialize_mag_from_other_mag("2", mag1, False)
+
     downsample_args = (
-        source_info,
-        target_info,
-        (2, 2, 2),
-        InterpolationModes.MAX,
-        tuple(a * WKW_CUBE_SIZE for a in offset),
-        CUBE_EDGE_LEN,
-        False,
-        True,
+        l.get_mag("1").get_view(),
+        l.get_mag("2").get_view(is_bounded=False),
+        0,
+        (
+            [2, 2, 2],
+            InterpolationModes.MAX,
+            CUBE_EDGE_LEN,
+            False,
+            100,
+        ),
     )
     downsample_cube_job(downsample_args)
 
@@ -182,13 +179,8 @@ def test_downsample_multi_channel():
         )
     joined_buffer = np.stack(channels)
 
-    target_buffer = read_wkw(
-        target_info,
-        tuple(a * WKW_CUBE_SIZE for a in offset),
-        list(map(lambda x: x // 2, size)),
-    )
+    target_buffer = mag2.read(offset=offset)
     assert np.any(target_buffer != 0)
-
     assert np.all(target_buffer == joined_buffer)
 
 
@@ -226,19 +218,20 @@ def test_downsampling_padding():
         pass
 
     ds = WKDataset.create(ds_path, scale=(1, 1, 1))
-    layer = ds.add_layer("layer1", "segmentation", num_channels=3, largest_segment_id=1000000000)
+    layer = ds.add_layer(
+        "layer1", "segmentation", num_channels=3, largest_segment_id=1000000000
+    )
     mag1 = layer.add_mag("1", block_len=8, file_len=8)
     mag2 = layer.add_mag("2", block_len=8, file_len=8)
 
     # write some random data to mag 1 and mag 2
     mag1.write(
         offset=(10, 20, 30),
-        data=(np.random.rand(3, 128, 148, 168) * 255).astype(np.uint8)
+        data=(np.random.rand(3, 128, 148, 168) * 255).astype(np.uint8),
     )
 
     mag2.write(
-        offset=(5, 10, 15),
-        data=(np.random.rand(3, 64, 74, 84) * 255).astype(np.uint8)
+        offset=(5, 10, 15), data=(np.random.rand(3, 64, 74, 84) * 255).astype(np.uint8)
     )
 
     assert np.array_equal(mag1.get_view().global_offset, (10, 20, 30))
@@ -251,7 +244,7 @@ def test_downsampling_padding():
         max_mag=Mag(8),
         scale=(4, 2, 2),
         interpolation_mode="default",
-        compress=False
+        compress=False,
     )
 
     # The data gets padded in a way that it is always possible to divide the offset and the size by 2
@@ -265,4 +258,3 @@ def test_downsampling_padding():
     assert np.array_equal(layer.get_mag("2-4-4").get_view().size, (66, 38, 44))
     assert np.array_equal(mag2.get_view().size, (66, 76, 88))
     assert np.array_equal(mag1.get_view().size, (132, 152, 176))
-

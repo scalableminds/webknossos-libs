@@ -1,4 +1,3 @@
-import copy
 import logging
 import math
 from enum import Enum
@@ -27,23 +26,33 @@ class InterpolationModes(Enum):
 DEFAULT_EDGE_LEN = 256
 
 
-def use_logging(offset: Tuple[int, int, int], size: Tuple[int, int, int], job_count_per_log: int, global_offset: Tuple[int, int, int], num_chunks_per_dim: Tuple[int, int, int]) -> bool:
+def use_logging(
+    offset: Tuple[int, int, int],
+    size: Tuple[int, int, int],
+    job_count_per_log: int,
+    global_offset: Tuple[int, int, int],
+    num_chunks_per_dim: Tuple[int, int, int],
+) -> bool:
     # calculate if a specific chunk should log its results
     chunk_xzy_idx = (np.array(offset) - np.array(global_offset)) // size
-    i = chunk_xzy_idx[2] * num_chunks_per_dim[0] * num_chunks_per_dim[1] + \
-        chunk_xzy_idx[1] * num_chunks_per_dim[1] + \
-        chunk_xzy_idx[0]
+    i = (
+        chunk_xzy_idx[2] * num_chunks_per_dim[0] * num_chunks_per_dim[1]
+        + chunk_xzy_idx[1] * num_chunks_per_dim[1]
+        + chunk_xzy_idx[0]
+    )
 
     return i % job_count_per_log == 0
 
 
 def determine_buffer_edge_len(dataset: wkw.Dataset) -> int:
-    if hasattr(dataset.header, 'file_len') and hasattr(dataset.header, 'block_len'):
+    if hasattr(dataset.header, "file_len") and hasattr(dataset.header, "block_len"):
         return min(DEFAULT_EDGE_LEN, dataset.header.file_len * dataset.header.block_len)
     return DEFAULT_EDGE_LEN
 
 
-def detect_larger_and_smaller_dimension(scale: Tuple[float, float, float]) -> Tuple[int, int]:
+def detect_larger_and_smaller_dimension(
+    scale: Tuple[float, float, float]
+) -> Tuple[int, int]:
     scale_np = np.array(scale)
     return np.argmax(scale_np), np.argmin(scale_np)
 
@@ -73,7 +82,9 @@ def get_next_mag(mag: Mag, scale: Optional[Tuple[float, float, float]]) -> Mag:
         )
 
 
-def parse_interpolation_mode(interpolation_mode: str, layer_name: str) -> InterpolationModes:
+def parse_interpolation_mode(
+    interpolation_mode: str, layer_name: str
+) -> InterpolationModes:
     if interpolation_mode.upper() == "DEFAULT":
         return (
             InterpolationModes.MEDIAN
@@ -113,7 +124,7 @@ def linear_filter_3d(data: np.ndarray, factors: List[int], order: int) -> np.nda
 
 
 def non_linear_filter_3d(
-        data: np.ndarray, factors: List[int], func: Callable[[np.ndarray], np.ndarray]
+    data: np.ndarray, factors: List[int], func: Callable[[np.ndarray], np.ndarray]
 ) -> np.ndarray:
     ds = data.shape
     assert not any((d % factor > 0 for (d, factor) in zip(ds, factors)))
@@ -228,7 +239,7 @@ def downsample_unpadded_data(
 
 
 def downsample_cube(
-        cube_buffer: np.ndarray, factors: List[int], interpolation_mode: InterpolationModes
+    cube_buffer: np.ndarray, factors: List[int], interpolation_mode: InterpolationModes
 ) -> np.ndarray:
     if interpolation_mode == InterpolationModes.MODE:
         return non_linear_filter_3d(cube_buffer, factors, _mode)
@@ -249,18 +260,7 @@ def downsample_cube(
 
 
 def downsample_cube_job(
-        args: Tuple[
-            View,
-            View,
-            int,
-            Tuple[
-                List[int],
-                InterpolationModes,
-                int,
-                bool,
-                int
-            ]
-        ]
+    args: Tuple[View, View, int, Tuple[List[int], InterpolationModes, int, bool, int]]
 ) -> None:
     (
         source_view,
@@ -272,7 +272,7 @@ def downsample_cube_job(
             buffer_edge_len,
             compress,
             job_count_per_log,
-        )
+        ),
     ) = args
 
     use_logging = i % job_count_per_log == 0
@@ -288,27 +288,34 @@ def downsample_cube_job(
         shape = (num_channels,) + tuple(target_view.size)
         file_buffer = np.zeros(shape, target_view.get_dtype())
 
-        tiles = product(*list([list(range(0, math.ceil(len))) for len in np.array(target_view.size) / buffer_edge_len]))
+        tiles = product(
+            *list(
+                [
+                    list(range(0, math.ceil(len)))
+                    for len in np.array(target_view.size) / buffer_edge_len
+                ]
+            )
+        )
 
         source_view.open()
 
         for tile in tiles:
-            target_offset = np.array(
-                tile
-            ) * buffer_edge_len
+            target_offset = np.array(tile) * buffer_edge_len
             source_offset = mag_factors * target_offset
-            source_size = cast(Tuple[int, int, int], tuple([
-                min(a, b)
-                for a, b in zip(
-                    np.array(mag_factors) * buffer_edge_len,
-                    source_view.size-source_offset
-                )
-            ]))
-
-            cube_buffer_channels = source_view.read(
-                source_offset,
-                source_size
+            source_size = cast(
+                Tuple[int, int, int],
+                tuple(
+                    [
+                        min(a, b)
+                        for a, b in zip(
+                            np.array(mag_factors) * buffer_edge_len,
+                            source_view.size - source_offset,
+                        )
+                    ]
+                ),
             )
+
+            cube_buffer_channels = source_view.read(source_offset, source_size)
 
             for channel_index in range(num_channels):
                 cube_buffer = cube_buffer_channels[channel_index]
@@ -324,20 +331,21 @@ def downsample_cube_job(
 
                     file_buffer[
                         channel_index,
-                        buffer_offset[0]: buffer_end[0],
-                        buffer_offset[1]: buffer_end[1],
-                        buffer_offset[2]: buffer_end[2],
+                        buffer_offset[0] : buffer_end[0],
+                        buffer_offset[1] : buffer_end[1],
+                        buffer_offset[2] : buffer_end[2],
                     ] = data_cube
 
         source_view.close()
         # Write the downsampled buffer to target
         if source_view.header.num_channels == 1:
             file_buffer = file_buffer[0]  # remove channel dimension
-        target_view.write(file_buffer)
+        target_view.write(file_buffer, allow_compressed_write=compress)
         if use_logging:
             time_stop("Downsampling of {}".format(target_view.global_offset))
 
     except Exception as exc:
-        logging.error("Downsampling of {} failed with {}".format(target_view.global_offset, exc))
+        logging.error(
+            "Downsampling of {} failed with {}".format(target_view.global_offset, exc)
+        )
         raise exc
-

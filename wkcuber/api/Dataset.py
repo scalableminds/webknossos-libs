@@ -318,32 +318,53 @@ class AbstractDataset(ABC):
     ) -> Layer:
         raise NotImplementedError
 
-    def copy_dataset(self, empty_target_ds: "AbstractDataset", args: Namespace = None) -> None:
-        assert len(empty_target_ds.layers) == 0, f"Converting dataset failed. The target dataset must be empty."
+    def copy_dataset(
+        self, empty_target_ds: "AbstractDataset", args: Namespace = None
+    ) -> None:
+        assert (
+            len(empty_target_ds.layers) == 0
+        ), f"Converting dataset failed. The target dataset must be empty."
         with get_executor_for_args(args) as executor:
             for layer_name, layer in self.layers.items():
                 largest_segment_id = None
-                if self.properties.data_layers[layer_name].category == Layer.SEGMENTATION_TYPE:
-                    largest_segment_id = self.properties.data_layers[layer_name].largest_segment_id
+                if (
+                    self.properties.data_layers[layer_name].category
+                    == Layer.SEGMENTATION_TYPE
+                ):
+                    largest_segment_id = self.properties.data_layers[
+                        layer_name
+                    ].largest_segment_id
                 target_layer = empty_target_ds.add_layer(
                     layer_name,
                     self.properties.data_layers[layer_name].category,
                     dtype_per_channel=layer.dtype_per_channel,
                     num_channels=layer.num_channels,
-                    largest_segment_id=largest_segment_id
+                    largest_segment_id=largest_segment_id,
                 )
 
                 for mag_name, mag in layer.mags.items():
                     target_mag = target_layer.add_mag(mag_name)
 
                     # The bounding box needs to be updated manually because chunked views do not have a reference to the dataset itself
-                    bbox = mag.layer.dataset.properties.get_bounding_box_of_layer(layer_name)
-                    target_mag.view.global_offset = (0, 0, 0)  # The view of a MagDataset always starts at (0, 0, 0)
-                    target_mag.view.size = cast(Tuple[int, int, int], tuple(-(-(np.array(bbox[0]) + np.array(bbox[1])) // Mag(mag_name).as_np())))  # ceil div
+                    bbox = mag.layer.dataset.properties.get_bounding_box_of_layer(
+                        layer_name
+                    )
+                    target_mag.view.global_offset = (
+                        0,
+                        0,
+                        0,
+                    )  # The view of a MagDataset always starts at (0, 0, 0)
+                    target_mag.view.size = cast(
+                        Tuple[int, int, int],
+                        tuple(
+                            -(
+                                -(np.array(bbox[0]) + np.array(bbox[1]))
+                                // Mag(mag_name).as_np()
+                            )
+                        ),
+                    )  # ceil div
                     target_mag.layer.dataset.properties._set_bounding_box_of_layer(
-                        layer_name,
-                        offset=bbox[0],
-                        size=bbox[1]
+                        layer_name, offset=bbox[0], size=bbox[1]
                     )
 
                     # The data gets written to the tiff_mag.
@@ -354,7 +375,7 @@ class AbstractDataset(ABC):
                         target_view=target_mag.view,
                         source_chunk_size=target_mag._get_file_dimensions(),
                         target_chunk_size=target_mag._get_file_dimensions(),
-                        executor=executor
+                        executor=executor,
                     )
 
     @abstractmethod

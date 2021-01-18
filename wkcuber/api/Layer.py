@@ -19,10 +19,21 @@ from wkcuber.api.MagDataset import (
     TiledTiffMagDataset,
     find_mag_path_on_disk,
 )
-from wkcuber.downsampling_utils import get_next_mag, parse_interpolation_mode, downsample_cube_job, \
-    determine_buffer_edge_len, DEFAULT_EDGE_LEN, use_logging
+from wkcuber.downsampling_utils import (
+    get_next_mag,
+    parse_interpolation_mode,
+    downsample_cube_job,
+    determine_buffer_edge_len,
+    DEFAULT_EDGE_LEN,
+    use_logging,
+)
 from wkcuber.mag import Mag
-from wkcuber.utils import DEFAULT_WKW_FILE_LEN, get_executor_for_args, cube_addresses, parse_cube_file_name
+from wkcuber.utils import (
+    DEFAULT_WKW_FILE_LEN,
+    get_executor_for_args,
+    cube_addresses,
+    parse_cube_file_name,
+)
 
 
 class Layer:
@@ -107,18 +118,20 @@ class Layer:
         for _, mag in self.mags.items():
             mag.view.size = size
 
-    def _initialize_mag_from_other_mag(self, new_mag_name: Union[str, Mag], other_mag: MagDataset, compress: bool) -> MagDataset:
+    def _initialize_mag_from_other_mag(
+        self, new_mag_name: Union[str, Mag], other_mag: MagDataset, compress: bool
+    ) -> MagDataset:
         raise NotImplemented
 
     def downsample(
-            self,
-            from_mag: Mag,
-            max_mag: Mag,
-            interpolation_mode: str,
-            compress: bool,
-            scale: Tuple[float, float, float] = None,
-            buffer_edge_len: int = None,
-            args: Namespace = None,
+        self,
+        from_mag: Mag,
+        max_mag: Mag,
+        interpolation_mode: str,
+        compress: bool,
+        scale: Tuple[float, float, float] = None,
+        buffer_edge_len: int = None,
+        args: Namespace = None,
     ) -> None:
         # if 'scale' is set, the data gets downsampled anisotropic
 
@@ -134,13 +147,22 @@ class Layer:
         lowest_mag = all_mags_after_downsampling[-1].as_np()
 
         # calculate aligned offset and size for lowest mag
-        offset_in_mag1 = self.dataset.properties.data_layers[self.name].get_bounding_box_offset()
-        size_in_mag1 = self.dataset.properties.data_layers[self.name].get_bounding_box_size()
+        offset_in_mag1 = self.dataset.properties.data_layers[
+            self.name
+        ].get_bounding_box_offset()
+        size_in_mag1 = self.dataset.properties.data_layers[
+            self.name
+        ].get_bounding_box_size()
         offset_in_lowest_mag = offset_in_mag1 // all_mags_after_downsampling[-1].as_np()
-        end_offset_in_lowest_mag = -((np.array(offset_in_mag1) + size_in_mag1) // -all_mags_after_downsampling[-1].as_np())  # ceil div
+        end_offset_in_lowest_mag = -(
+            (np.array(offset_in_mag1) + size_in_mag1)
+            // -all_mags_after_downsampling[-1].as_np()
+        )  # ceil div
         # translate alignment into mag 1
         aligned_offset_in_mag1 = lowest_mag * offset_in_lowest_mag
-        aligned_size_in_mag1 = lowest_mag * (end_offset_in_lowest_mag - offset_in_lowest_mag)
+        aligned_size_in_mag1 = lowest_mag * (
+            end_offset_in_lowest_mag - offset_in_lowest_mag
+        )
 
         # pad the existing mags
         for mag_name in existing_mags:
@@ -157,18 +179,29 @@ class Layer:
                 buffer_width = (np.array(current_offset) - aligned_offset)[i]
                 if buffer_width > 0:
                     padding_shape = shape
-                    padding_shape[i+1] = buffer_width
-                    mag.write(data=np.zeros(padding_shape, dtype=mag.get_dtype()), offset=aligned_offset)
+                    padding_shape[i + 1] = buffer_width
+                    mag.write(
+                        data=np.zeros(padding_shape, dtype=mag.get_dtype()),
+                        offset=aligned_offset,
+                    )
                 # pad right / bottom / back
-                buffer_width = ((aligned_offset + aligned_size) - (np.array(current_offset) + np.array(current_size)))[i]
+                buffer_width = (
+                    (aligned_offset + aligned_size)
+                    - (np.array(current_offset) + np.array(current_size))
+                )[i]
                 if buffer_width > 0:
                     padding_shape = shape
-                    padding_shape[i+1] = buffer_width
+                    padding_shape[i + 1] = buffer_width
                     right_offset = aligned_offset
                     right_offset[i] = current_offset[i] + current_size[i]
-                    mag.write(data=np.zeros(padding_shape, dtype=mag.get_dtype()), offset=right_offset)
+                    mag.write(
+                        data=np.zeros(padding_shape, dtype=mag.get_dtype()),
+                        offset=right_offset,
+                    )
 
-        parsed_interpolation_mode = parse_interpolation_mode(interpolation_mode, self.name)
+        parsed_interpolation_mode = parse_interpolation_mode(
+            interpolation_mode, self.name
+        )
         prev_mag = from_mag
         target_mag = get_next_mag(prev_mag, scale)
 
@@ -183,7 +216,9 @@ class Layer:
             ]
 
             # initialize the new mag
-            target_mag_ds = self._initialize_mag_from_other_mag(target_mag, prev_mag_ds, compress)
+            target_mag_ds = self._initialize_mag_from_other_mag(
+                target_mag, prev_mag_ds, compress
+            )
 
             # Get target view
             target_mag_view = target_mag_ds.get_view(is_bounded=False)
@@ -191,10 +226,14 @@ class Layer:
             # perform downsampling
             with get_executor_for_args(args) as executor:
                 voxel_count_per_cube = np.prod(prev_mag_ds._get_file_dimensions())
-                job_count_per_log = math.ceil(1024 ** 3 / voxel_count_per_cube)  # log every gigavoxel of processed data
+                job_count_per_log = math.ceil(
+                    1024 ** 3 / voxel_count_per_cube
+                )  # log every gigavoxel of processed data
 
                 if buffer_edge_len is None:
-                    buffer_edge_len = determine_buffer_edge_len(prev_mag_ds.view) # DEFAULT_EDGE_LEN
+                    buffer_edge_len = determine_buffer_edge_len(
+                        prev_mag_ds.view
+                    )  # DEFAULT_EDGE_LEN
                 job_args = (
                     mag_factors,
                     parsed_interpolation_mode,
@@ -207,9 +246,10 @@ class Layer:
                     downsample_cube_job,
                     target_view=target_mag_view,
                     job_args_per_chunk=job_args,
-                    source_chunk_size=np.array(target_mag_ds._get_file_dimensions()) * mag_factors,
+                    source_chunk_size=np.array(target_mag_ds._get_file_dimensions())
+                    * mag_factors,
                     target_chunk_size=target_mag_ds._get_file_dimensions(),
-                    executor=executor
+                    executor=executor,
                 )
 
             logging.info("Mag {0} successfully cubed".format(target_mag))
@@ -224,11 +264,7 @@ class Layer:
 class WKLayer(Layer):
     mags: Dict[str, WKMagDataset]
 
-    def add_mag(
-        self,
-        mag: Union[str, Mag],
-        **kwargs: Any
-    ) -> MagDataset:
+    def add_mag(self, mag: Union[str, Mag], **kwargs: Any) -> MagDataset:
         block_len: int = kwargs.get("block_len", None)
         file_len: int = kwargs.get("file_len", None)
         block_type: int = kwargs.get("block_type", None)
@@ -272,7 +308,9 @@ class WKLayer(Layer):
             ), f"Cannot get_or_add_mag: The mag {mag} already exists, but the block types do not match"
             return self.get_mag(mag)
         else:
-            return self.add_mag(mag, block_len=block_len, file_len=file_len, block_type=block_type)
+            return self.add_mag(
+                mag, block_len=block_len, file_len=file_len, block_type=block_type
+            )
 
     def setup_mag(self, mag: Union[str, Mag]) -> None:
         # This method is used to initialize the mag when opening the Dataset. This does not create e.g. the wk_header.
@@ -294,10 +332,21 @@ class WKLayer(Layer):
             self.name, mag, cube_length=wk_header.block_len * wk_header.file_len
         )
 
-    def _initialize_mag_from_other_mag(self, new_mag_name: Union[str, Mag], other_mag: MagDataset, compress: bool) -> MagDataset:
-        block_type = wkw.Header.BLOCK_TYPE_LZ4HC if compress else wkw.Header.BLOCK_TYPE_RAW
-        other_wk_mag = cast(WKMagDataset, other_mag)  # This method is only used in the context of creating a new magnification by using the same meta data as another magnification of the same dataset
-        return self.add_mag(new_mag_name, block_len=other_wk_mag.block_len, file_len=other_wk_mag.file_len, block_type=block_type)
+    def _initialize_mag_from_other_mag(
+        self, new_mag_name: Union[str, Mag], other_mag: MagDataset, compress: bool
+    ) -> MagDataset:
+        block_type = (
+            wkw.Header.BLOCK_TYPE_LZ4HC if compress else wkw.Header.BLOCK_TYPE_RAW
+        )
+        other_wk_mag = cast(
+            WKMagDataset, other_mag
+        )  # This method is only used in the context of creating a new magnification by using the same meta data as another magnification of the same dataset
+        return self.add_mag(
+            new_mag_name,
+            block_len=other_wk_mag.block_len,
+            file_len=other_wk_mag.file_len,
+            block_type=block_type,
+        )
 
 
 class TiffLayer(Layer):
@@ -342,7 +391,9 @@ class TiffLayer(Layer):
     def _get_mag_dataset_class(self) -> Type[TiffMagDataset]:
         return TiffMagDataset
 
-    def _initialize_mag_from_other_mag(self, new_mag_name: Union[str, Mag], other_mag: MagDataset, compress: bool) -> MagDataset:
+    def _initialize_mag_from_other_mag(
+        self, new_mag_name: Union[str, Mag], other_mag: MagDataset, compress: bool
+    ) -> MagDataset:
         return self.add_mag(new_mag_name)
 
 
@@ -351,13 +402,13 @@ class TiledTiffLayer(TiffLayer):
         return TiledTiffMagDataset
 
     def downsample(
-            self,
-            from_mag: Mag,
-            max_mag: Mag,
-            interpolation_mode: str,
-            compress: bool,
-            scale: Tuple[float, float, float] = None,
-            buffer_edge_len:int = None,
-            args: Namespace = None,
+        self,
+        from_mag: Mag,
+        max_mag: Mag,
+        interpolation_mode: str,
+        compress: bool,
+        scale: Tuple[float, float, float] = None,
+        buffer_edge_len: int = None,
+        args: Namespace = None,
     ) -> None:
         raise NotImplemented

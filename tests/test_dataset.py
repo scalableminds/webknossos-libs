@@ -25,7 +25,11 @@ from wkcuber.api.View import View
 from wkcuber.api.bounding_box import BoundingBox
 from wkcuber.compress import compress_mag_inplace
 from wkcuber.downsampling import downsample_mags_isotropic, downsample_mags_anisotropic
-from wkcuber.downsampling_utils import downsample_cube, InterpolationModes, parse_interpolation_mode
+from wkcuber.downsampling_utils import (
+    downsample_cube,
+    InterpolationModes,
+    parse_interpolation_mode,
+)
 from wkcuber.mag import Mag
 from wkcuber.utils import get_executor_for_args, open_wkw, WkwDatasetInfo
 
@@ -139,7 +143,6 @@ def copy_and_transform_job(args):
         data = data[0, :, :, :]
     data += 50
     target_view.write(data)
-
 
 
 def get_multichanneled_data(dtype):
@@ -1583,16 +1586,23 @@ def test_dataset_conversion():
 
     # create example dataset
     origin_wk_ds = WKDataset.create(origin_wk_ds_path, scale=(1, 1, 1))
-    wk_seg_layer = origin_wk_ds.add_layer("layer1", Layer.SEGMENTATION_TYPE, num_channels=1, largest_segment_id=1000000000)
-    wk_seg_layer.add_mag("1", block_len=8, file_len=16)\
-        .write(offset=(10, 20, 30), data=(np.random.rand(128, 128, 256) * 255).astype(np.uint8))
-    wk_seg_layer.add_mag("2", block_len=8, file_len=16)\
-        .write(offset=(5, 10, 15), data=(np.random.rand(64, 64, 128) * 255).astype(np.uint8))
+    wk_seg_layer = origin_wk_ds.add_layer(
+        "layer1", Layer.SEGMENTATION_TYPE, num_channels=1, largest_segment_id=1000000000
+    )
+    wk_seg_layer.add_mag("1", block_len=8, file_len=16).write(
+        offset=(10, 20, 30), data=(np.random.rand(128, 128, 256) * 255).astype(np.uint8)
+    )
+    wk_seg_layer.add_mag("2", block_len=8, file_len=16).write(
+        offset=(5, 10, 15), data=(np.random.rand(64, 64, 128) * 255).astype(np.uint8)
+    )
     wk_color_layer = origin_wk_ds.add_layer("layer2", Layer.COLOR_TYPE, num_channels=3)
-    wk_color_layer.add_mag("1", block_len=8, file_len=16)\
-        .write(offset=(10, 20, 30), data=(np.random.rand(3, 128, 128, 256) * 255).astype(np.uint8))
-    wk_color_layer.add_mag("2", block_len=8, file_len=16)\
-        .write(offset=(5, 10, 15), data=(np.random.rand(3, 64, 64, 128) * 255).astype(np.uint8))
+    wk_color_layer.add_mag("1", block_len=8, file_len=16).write(
+        offset=(10, 20, 30),
+        data=(np.random.rand(3, 128, 128, 256) * 255).astype(np.uint8),
+    )
+    wk_color_layer.add_mag("2", block_len=8, file_len=16).write(
+        offset=(5, 10, 15), data=(np.random.rand(3, 64, 64, 128) * 255).astype(np.uint8)
+    )
 
     wk_to_tiff_ds = TiffDataset.create(wk_to_tiff_ds_path, 1)
     origin_wk_ds.copy_dataset(wk_to_tiff_ds)
@@ -1601,7 +1611,10 @@ def test_dataset_conversion():
 
     assert origin_wk_ds.layers.keys() == wk_to_tiff_to_wk_ds.layers.keys()
     for layer_name in origin_wk_ds.layers:
-        assert origin_wk_ds.layers[layer_name].mags.keys() == wk_to_tiff_to_wk_ds.layers[layer_name].mags.keys()
+        assert (
+            origin_wk_ds.layers[layer_name].mags.keys()
+            == wk_to_tiff_to_wk_ds.layers[layer_name].mags.keys()
+        )
         for mag in origin_wk_ds.layers[layer_name].mags:
             origin_header = origin_wk_ds.layers[layer_name].mags[mag].header
             converted_header = wk_to_tiff_to_wk_ds.layers[layer_name].mags[mag].header
@@ -1611,30 +1624,46 @@ def test_dataset_conversion():
             # the block_length and file_length might differ because the conversion from tiff to wk uses the defaults
             assert np.array_equal(
                 origin_wk_ds.layers[layer_name].mags[mag].read(),
-                wk_to_tiff_to_wk_ds.layers[layer_name].mags[mag].read()
+                wk_to_tiff_to_wk_ds.layers[layer_name].mags[mag].read(),
             )
 
     # create example dataset
-    origin_tiff_ds = TiffDataset.create(origin_tiff_ds_path, scale=(1, 1, 1), pattern="z_dim_{zzzzz}.tif")
-    tiff_seg_layer = origin_tiff_ds.add_layer("layer1", Layer.SEGMENTATION_TYPE, num_channels=1, largest_segment_id=1000000000)
-    tiff_seg_layer.add_mag("1") \
-        .write(offset=(10, 20, 30), data=(np.random.rand(128, 128, 256) * 255).astype(np.uint8))
-    tiff_seg_layer.add_mag("2") \
-        .write(offset=(5, 10, 15), data=(np.random.rand(64, 64, 128) * 255).astype(np.uint8))
-    tiff_color_layer = origin_tiff_ds.add_layer("layer2", Layer.COLOR_TYPE, num_channels=3)
-    tiff_color_layer.add_mag("1") \
-        .write(offset=(10, 20, 30), data=(np.random.rand(3, 128, 128, 256) * 255).astype(np.uint8))
-    tiff_color_layer.add_mag("2") \
-        .write(offset=(5, 10, 15), data=(np.random.rand(3, 64, 64, 128) * 255).astype(np.uint8))
+    origin_tiff_ds = TiffDataset.create(
+        origin_tiff_ds_path, scale=(1, 1, 1), pattern="z_dim_{zzzzz}.tif"
+    )
+    tiff_seg_layer = origin_tiff_ds.add_layer(
+        "layer1", Layer.SEGMENTATION_TYPE, num_channels=1, largest_segment_id=1000000000
+    )
+    tiff_seg_layer.add_mag("1").write(
+        offset=(10, 20, 30), data=(np.random.rand(128, 128, 256) * 255).astype(np.uint8)
+    )
+    tiff_seg_layer.add_mag("2").write(
+        offset=(5, 10, 15), data=(np.random.rand(64, 64, 128) * 255).astype(np.uint8)
+    )
+    tiff_color_layer = origin_tiff_ds.add_layer(
+        "layer2", Layer.COLOR_TYPE, num_channels=3
+    )
+    tiff_color_layer.add_mag("1").write(
+        offset=(10, 20, 30),
+        data=(np.random.rand(3, 128, 128, 256) * 255).astype(np.uint8),
+    )
+    tiff_color_layer.add_mag("2").write(
+        offset=(5, 10, 15), data=(np.random.rand(3, 64, 64, 128) * 255).astype(np.uint8)
+    )
 
     tiff_to_wk_ds = WKDataset.create(tiff_to_wk_ds_path, 1)
     origin_tiff_ds.copy_dataset(tiff_to_wk_ds)
-    tiff_to_wk_to_tiff = TiffDataset.create(tiff_to_wk_to_tiff_ds_path, 1, pattern="different_pattern_{zzzzz}.tif")
+    tiff_to_wk_to_tiff = TiffDataset.create(
+        tiff_to_wk_to_tiff_ds_path, 1, pattern="different_pattern_{zzzzz}.tif"
+    )
     tiff_to_wk_ds.copy_dataset(tiff_to_wk_to_tiff)
 
     assert origin_tiff_ds.layers.keys() == tiff_to_wk_to_tiff.layers.keys()
     for layer_name in origin_tiff_ds.layers:
-        assert origin_tiff_ds.layers[layer_name].mags.keys() == tiff_to_wk_to_tiff.layers[layer_name].mags.keys()
+        assert (
+            origin_tiff_ds.layers[layer_name].mags.keys()
+            == tiff_to_wk_to_tiff.layers[layer_name].mags.keys()
+        )
         for mag in origin_tiff_ds.layers[layer_name].mags:
             origin_header = origin_tiff_ds.layers[layer_name].mags[mag].header
             converted_header = tiff_to_wk_to_tiff.layers[layer_name].mags[mag].header
@@ -1644,7 +1673,7 @@ def test_dataset_conversion():
             # the pattern of the datasets does not match because I intentionally used two different paths in this test
             assert np.array_equal(
                 origin_tiff_ds.layers[layer_name].mags[mag].read(),
-                tiff_to_wk_to_tiff.layers[layer_name].mags[mag].read()
+                tiff_to_wk_to_tiff.layers[layer_name].mags[mag].read(),
             )
 
 
@@ -1657,10 +1686,16 @@ def test_for_zipped_chunks():
         "color", "1", size=(256, 256, 256), is_bounded=False
     )
 
-    target_mag: MagDataset = WKDataset.create("./testoutput/zipped_chunking_target/", scale=(1, 1, 1))\
-        .get_or_add_layer("color", Layer.COLOR_TYPE, dtype_per_channel="uint8", num_channels=3)\
+    target_mag: MagDataset = (
+        WKDataset.create("./testoutput/zipped_chunking_target/", scale=(1, 1, 1))
+        .get_or_add_layer(
+            "color", Layer.COLOR_TYPE, dtype_per_channel="uint8", num_channels=3
+        )
         .get_or_add_mag("1", block_len=8, file_len=4)
-    target_mag.layer.dataset.properties._set_bounding_box_of_layer("color", offset=(0, 0, 0), size=(256, 256, 256))
+    )
+    target_mag.layer.dataset.properties._set_bounding_box_of_layer(
+        "color", offset=(0, 0, 0), size=(256, 256, 256)
+    )
     target_view = target_mag.get_view(is_bounded=False)
 
     with get_executor_for_args(None) as executor:
@@ -1670,8 +1705,10 @@ def test_for_zipped_chunks():
             target_view=target_view,
             source_chunk_size=(64, 64, 64),  # multiple of (wkw_file_len,) * 3
             target_chunk_size=(64, 64, 64),  # multiple of (wkw_file_len,) * 3
-            executor=executor
+            executor=executor,
         )
 
-    assert np.array_equal(source_view.read(size=source_view.size) + 50, target_view.read(size=target_view.size))
-
+    assert np.array_equal(
+        source_view.read(size=source_view.size) + 50,
+        target_view.read(size=target_view.size),
+    )
