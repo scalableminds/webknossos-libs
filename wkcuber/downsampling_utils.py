@@ -3,11 +3,13 @@ import logging
 import math
 from enum import Enum
 from itertools import product
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List, Callable, cast
 
 import numpy as np
 from scipy.ndimage import zoom
+from wkw import wkw
 
+from wkcuber.api.View import View
 from wkcuber.mag import Mag
 from wkcuber.utils import time_start, time_stop
 
@@ -25,7 +27,7 @@ class InterpolationModes(Enum):
 DEFAULT_EDGE_LEN = 256
 
 
-def use_logging(offset: Tuple[int, int, int], size: Tuple[int, int, int], job_count_per_log, global_offset, num_chunks_per_dim):
+def use_logging(offset: Tuple[int, int, int], size: Tuple[int, int, int], job_count_per_log: int, global_offset: Tuple[int, int, int], num_chunks_per_dim: Tuple[int, int, int]) -> bool:
     # calculate if a specific chunk should log its results
     chunk_xzy_idx = (np.array(offset) - np.array(global_offset)) // size
     i = chunk_xzy_idx[2] * num_chunks_per_dim[0] * num_chunks_per_dim[1] + \
@@ -35,18 +37,18 @@ def use_logging(offset: Tuple[int, int, int], size: Tuple[int, int, int], job_co
     return i % job_count_per_log == 0
 
 
-def determine_buffer_edge_len(dataset):
+def determine_buffer_edge_len(dataset: wkw.Dataset) -> int:
     if hasattr(dataset.header, 'file_len') and hasattr(dataset.header, 'block_len'):
         return min(DEFAULT_EDGE_LEN, dataset.header.file_len * dataset.header.block_len)
     return DEFAULT_EDGE_LEN
 
 
-def detect_larger_and_smaller_dimension(scale):
+def detect_larger_and_smaller_dimension(scale: Tuple[float, float, float]) -> Tuple[int, int]:
     scale_np = np.array(scale)
     return np.argmax(scale_np), np.argmin(scale_np)
 
 
-def get_next_mag(mag, scale: Optional[Tuple[float, float, float]]) -> Mag:
+def get_next_mag(mag: Mag, scale: Optional[Tuple[float, float, float]]) -> Mag:
     if scale is None:
         return mag.scaled_by(2)
     else:
@@ -71,7 +73,7 @@ def get_next_mag(mag, scale: Optional[Tuple[float, float, float]]) -> Mag:
         )
 
 
-def parse_interpolation_mode(interpolation_mode, layer_name):
+def parse_interpolation_mode(interpolation_mode: str, layer_name: str) -> InterpolationModes:
     if interpolation_mode.upper() == "DEFAULT":
         return (
             InterpolationModes.MEDIAN
@@ -82,10 +84,10 @@ def parse_interpolation_mode(interpolation_mode, layer_name):
         return InterpolationModes[interpolation_mode.upper()]
 
 
-def linear_filter_3d(data, factors, order):
-    factors = np.array(factors)
+def linear_filter_3d(data: np.ndarray, factors: List[int], order: int) -> np.ndarray:
+    factors_np = np.array(factors)
 
-    if not np.all(factors == factors[0]):
+    if not np.all(factors_np == factors[0]):
         logging.debug(
             "the selected filtering strategy does not support anisotropic downsampling. Selecting {} as uniform downsampling factor".format(
                 factors[0]
@@ -110,7 +112,9 @@ def linear_filter_3d(data, factors, order):
     )
 
 
-def non_linear_filter_3d(data, factors, func):
+def non_linear_filter_3d(
+        data: np.ndarray, factors: List[int], func: Callable[[np.ndarray], np.ndarray]
+) -> np.ndarray:
     ds = data.shape
     assert not any((d % factor > 0 for (d, factor) in zip(ds, factors)))
     data = data.reshape((ds[0], factors[1], ds[1] // factors[1], ds[2]), order="F")
@@ -139,19 +143,19 @@ def non_linear_filter_3d(data, factors, func):
     return data
 
 
-def _max(x):
+def _max(x: np.ndarray) -> np.ndarray:
     return np.max(x, axis=0)
 
 
-def _min(x):
+def _min(x: np.ndarray) -> np.ndarray:
     return np.min(x, axis=0)
 
 
-def _median(x):
+def _median(x: np.ndarray) -> np.ndarray:
     return np.median(x, axis=0).astype(x.dtype)
 
 
-def _mode(x):
+def _mode(x: np.ndarray) -> np.ndarray:
     """
     Fast mode implementation from: https://stackoverflow.com/a/35674754
     """
@@ -198,7 +202,34 @@ def _mode(x):
     return sort[tuple(index)]
 
 
-def downsample_cube(cube_buffer, factors, interpolation_mode):
+def downsample_unpadded_data(
+    buffer: np.ndarray, target_mag: Mag, interpolation_mode: InterpolationModes
+) -> np.ndarray:
+    logging.info(
+        f"Downsampling buffer of size {buffer.shape} to mag {target_mag.to_layer_name()}"
+    )
+    target_mag_np = np.array(target_mag.to_array())
+    current_dimension_size = np.array(buffer.shape[1:])
+    padding_size_for_downsampling = (
+        target_mag_np - (current_dimension_size % target_mag_np) % target_mag_np
+    )
+    padding_size_for_downsampling = list(zip([0, 0, 0], padding_size_for_downsampling))
+    buffer = np.pad(
+        buffer, pad_width=[(0, 0)] + padding_size_for_downsampling, mode="constant"
+    )
+    dimension_decrease = np.array([1] + target_mag.to_array())
+    downsampled_buffer_shape = np.array(buffer.shape) // dimension_decrease
+    downsampled_buffer = np.empty(dtype=buffer.dtype, shape=downsampled_buffer_shape)
+    for channel in range(buffer.shape[0]):
+        downsampled_buffer[channel] = downsample_cube(
+            buffer[channel], target_mag.to_array(), interpolation_mode
+        )
+    return downsampled_buffer
+
+
+def downsample_cube(
+        cube_buffer: np.ndarray, factors: List[int], interpolation_mode: InterpolationModes
+) -> np.ndarray:
     if interpolation_mode == InterpolationModes.MODE:
         return non_linear_filter_3d(cube_buffer, factors, _mode)
     elif interpolation_mode == InterpolationModes.MEDIAN:
@@ -217,7 +248,20 @@ def downsample_cube(cube_buffer, factors, interpolation_mode):
         raise Exception("Invalid interpolation mode: {}".format(interpolation_mode))
 
 
-def downsample_cube_job(args):
+def downsample_cube_job(
+        args: Tuple[
+            View,
+            View,
+            int,
+            Tuple[
+                List[int],
+                InterpolationModes,
+                int,
+                bool,
+                int
+            ]
+        ]
+) -> None:
     (
         source_view,
         target_view,
@@ -253,13 +297,13 @@ def downsample_cube_job(args):
                 tile
             ) * buffer_edge_len
             source_offset = mag_factors * target_offset
-            source_size = [
+            source_size = cast(Tuple[int, int, int], tuple([
                 min(a, b)
                 for a, b in zip(
                     np.array(mag_factors) * buffer_edge_len,
                     source_view.size-source_offset
                 )
-            ]
+            ]))
 
             cube_buffer_channels = source_view.read(
                 source_offset,

@@ -1,7 +1,17 @@
 # mypy: allow-untyped-defs
 import json
 import re
-from typing import Dict, Generator, Iterable, List, Optional, Tuple, Union, NamedTuple
+from typing import (
+    Dict,
+    Generator,
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+    Union,
+    NamedTuple,
+    cast,
+)
 
 import numpy as np
 
@@ -63,22 +73,23 @@ class BoundingBox:
 
     @staticmethod
     def from_checkpoint_name(checkpoint_name: str) -> "BoundingBox":
-        """ This function extracts a bounding box in the format x_y_z_sx_sy_xz which is contained in a string.
-        """
+        """This function extracts a bounding box in the format x_y_z_sx_sy_xz which is contained in a string."""
         regex = r"(([0-9]+_){5}([0-9]+))"
         match = re.search(regex, checkpoint_name)
         assert (
             match is not None
         ), f"Could not extract bounding box from {checkpoint_name}"
         bbox_tuple = tuple(int(value) for value in match.group().split("_"))
-        topleft = bbox_tuple[:3]
-        size = bbox_tuple[3:6]
+        topleft = cast(Tuple[int, int, int], bbox_tuple[:3])
+        size = cast(Tuple[int, int, int], bbox_tuple[3:6])
         return BoundingBox.from_tuple2((topleft, size))
 
     @staticmethod
     def from_csv(csv_bbox: str) -> "BoundingBox":
         bbox_tuple = tuple(int(x) for x in csv_bbox.split(","))
-        return BoundingBox.from_tuple6(bbox_tuple)
+        return BoundingBox.from_tuple6(
+            cast(Tuple[int, int, int, int, int, int], bbox_tuple)
+        )
 
     @staticmethod
     def from_auto(obj) -> "BoundingBox":
@@ -243,10 +254,10 @@ class BoundingBox:
     ) -> Generator["BoundingBox", None, None]:
         """Decompose the bounding box into smaller chunks of size `chunk_size`.
 
-    Chunks at the border of the bounding box might be smaller than chunk_size.
-    If `chunk_border_alignment` is set, all border coordinates
-    *between two chunks* will be divisible by that value.
-    """
+        Chunks at the border of the bounding box might be smaller than chunk_size.
+        If `chunk_border_alignment` is set, all border coordinates
+        *between two chunks* will be divisible by that value.
+        """
 
         start = self.topleft.copy()
         chunk_size = np.array(chunk_size)

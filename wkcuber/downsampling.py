@@ -1,7 +1,8 @@
 import logging
+from typing import Tuple, cast
 
 import numpy as np
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
 import os
 
 from wkcuber.api.Dataset import WKDataset
@@ -17,17 +18,19 @@ from .utils import (
 )
 
 
-def calculate_virtual_scale_for_target_mag(target_mag):
+def calculate_virtual_scale_for_target_mag(
+    target_mag: Mag,
+) -> Tuple[float, float, float]:
     """
     This scale is not the actual scale of the dataset
     The virtual scale is used for downsample_mags_anisotropic.
     """
     max_target_value = max(list(target_mag.to_array()))
     scale_array = max_target_value / np.array(target_mag.to_array())
-    return tuple(scale_array)
+    return cast(Tuple[float, float, float], tuple(scale_array))
 
 
-def create_parser():
+def create_parser() -> ArgumentParser:
     parser = ArgumentParser()
 
     parser.add_argument("path", help="Directory containing the dataset.")
@@ -101,9 +104,9 @@ def downsample_mags(
     interpolation_mode: str = "default",
     buffer_edge_len: int = None,
     compress: bool = True,
-    args=None,
+    args: Namespace = None,
     anisotropic: bool = True,
-):
+) -> None:
     assert layer_name and from_mag or not layer_name and not from_mag, (
         "You provided only one of the following "
         "parameters: layer_name, from_mag but both "
@@ -124,10 +127,11 @@ def downsample_mags(
                 scale = read_datasource_properties(path)["scale"]
             except Exception as exc:
                 logging.error(
-                    f"Could not get the scale from the datasource-properties.json. Probably your path is wrong. "
+                    "Could not get the scale from the datasource-properties.json. Probably your path is wrong. "
                     "If you do not provide the layer_name or from_mag, they need to be included in the path."
                     "(e.g. dataset/color/1). Otherwise the path should just point at the dataset directory."
-                    "the path: {path}"
+                    "the path: %s",
+                    path,
                 )
                 raise exc
 
@@ -143,15 +147,15 @@ def downsample_mags(
 
 
 def downsample_mags_isotropic(
-    path,
-    layer_name,
+    path: str,
+    layer_name: str,
     from_mag: Mag,
     max_mag: Mag,
-    interpolation_mode,
-    compress,
-    buffer_edge_len=None,
-    args=None,
-):
+    interpolation_mode: str,
+    compress: bool,
+    buffer_edge_len: int = None,
+    args: Namespace = None,
+) -> None:
 
     WKDataset(path).get_layer(layer_name).downsample(
         from_mag=from_mag,
@@ -165,16 +169,16 @@ def downsample_mags_isotropic(
 
 
 def downsample_mags_anisotropic(
-    path,
-    layer_name,
+    path: str,
+    layer_name: str,
     from_mag: Mag,
     max_mag: Mag,
-    scale,
-    interpolation_mode,
-    compress,
-    buffer_edge_len=None,
-    args=None,
-):
+    scale: Tuple[float, float, float],
+    interpolation_mode: str,
+    compress: bool,
+    buffer_edge_len: int = None,
+    args: Namespace = None,
+) -> None:
     WKDataset(path).get_layer(layer_name).downsample(
         from_mag=from_mag,
         max_mag=max_mag,

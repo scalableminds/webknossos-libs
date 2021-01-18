@@ -1,18 +1,17 @@
 import logging
 import math
 from argparse import Namespace
-from glob import iglob
 from shutil import rmtree
 from os.path import join
 from os import makedirs
-from typing import Tuple
-import os
+from typing import Tuple, Type, Union, Dict, Any, TYPE_CHECKING, cast
 
 import numpy as np
 
 from wkw import wkw
 
-from wkcuber import downsample_mag
+if TYPE_CHECKING:
+    from wkcuber.api.Dataset import AbstractDataset, TiffDataset
 from wkcuber.api.MagDataset import (
     MagDataset,
     WKMagDataset,
@@ -31,23 +30,35 @@ class Layer:
     COLOR_TYPE = "color"
     SEGMENTATION_TYPE = "segmentation"
 
-    def __init__(self, name, dataset, dtype_per_channel, num_channels):
+    def __init__(
+        self,
+        name: str,
+        dataset: "AbstractDataset",
+        dtype_per_channel: np.dtype,
+        num_channels: int,
+    ) -> None:
         self.name = name
         self.dataset = dataset
         self.dtype_per_channel = dtype_per_channel
         self.num_channels = num_channels
-        self.mags = {}
+        self.mags: Dict[str, Any] = {}
 
         full_path = join(dataset.path, name)
         makedirs(full_path, exist_ok=True)
 
-    def get_mag(self, mag) -> MagDataset:
+    def get_mag(self, mag: Union[str, Mag]) -> MagDataset:
         mag = Mag(mag).to_layer_name()
         if mag not in self.mags.keys():
             raise IndexError("The mag {} is not a mag of this layer".format(mag))
         return self.mags[mag]
 
-    def delete_mag(self, mag):
+    def add_mag(self, mag: Union[str, Mag], **kwargs: Any) -> MagDataset:
+        pass
+
+    def get_or_add_mag(self, mag: Union[str, Mag], **kwargs: Any) -> MagDataset:
+        pass
+
+    def delete_mag(self, mag: Union[str, Mag]) -> None:
         mag = Mag(mag).to_layer_name()
         if mag not in self.mags.keys():
             raise IndexError(
@@ -60,12 +71,12 @@ class Layer:
         full_path = find_mag_path_on_disk(self.dataset.path, self.name, mag)
         rmtree(full_path)
 
-    def _create_dir_for_mag(self, mag):
+    def _create_dir_for_mag(self, mag: Union[str, Mag]) -> None:
         mag = Mag(mag).to_layer_name()
         full_path = join(self.dataset.path, self.name, mag)
         makedirs(full_path, exist_ok=True)
 
-    def _assert_mag_does_not_exist_yet(self, mag):
+    def _assert_mag_does_not_exist_yet(self, mag: Union[str, Mag]) -> None:
         mag = Mag(mag).to_layer_name()
         if mag in self.mags.keys():
             raise IndexError(
@@ -76,30 +87,27 @@ class Layer:
 
     def set_bounding_box(
         self, offset: Tuple[int, int, int], size: Tuple[int, int, int]
-    ):
+    ) -> None:
         self.set_bounding_box_offset(offset)
         self.set_bounding_box_size(size)
 
-    def set_bounding_box_offset(self, offset: Tuple[int, int, int]):
-        size = self.dataset.properties.data_layers["color"].get_bounding_box_size()
-        self.dataset.properties._set_bounding_box_of_layer(
-            self.name, tuple(offset), tuple(size)
-        )
+    def set_bounding_box_offset(self, offset: Tuple[int, int, int]) -> None:
+        size: Tuple[int, int, int] = self.dataset.properties.data_layers[
+            "color"
+        ].get_bounding_box_size()
+        self.dataset.properties._set_bounding_box_of_layer(self.name, offset, size)
         for _, mag in self.mags.items():
             mag.view.global_offset = offset
 
-    def set_bounding_box_size(self, size: Tuple[int, int, int]):
-        offset = self.dataset.properties.data_layers["color"].get_bounding_box_offset()
-        self.dataset.properties._set_bounding_box_of_layer(
-            self.name, tuple(offset), tuple(size)
-        )
+    def set_bounding_box_size(self, size: Tuple[int, int, int]) -> None:
+        offset: Tuple[int, int, int] = self.dataset.properties.data_layers[
+            "color"
+        ].get_bounding_box_offset()
+        self.dataset.properties._set_bounding_box_of_layer(self.name, offset, size)
         for _, mag in self.mags.items():
             mag.view.size = size
 
-    def setup_mag(self, mag: Mag) -> None:
-        raise NotImplemented
-
-    def _initialize_mag_from_other_mag(self, new_mag_name, other_mag, compress):
+    def _initialize_mag_from_other_mag(self, new_mag_name: Union[str, Mag], other_mag: MagDataset, compress: bool) -> MagDataset:
         raise NotImplemented
 
     def downsample(
@@ -109,9 +117,9 @@ class Layer:
             interpolation_mode: str,
             compress: bool,
             scale: Tuple[float, float, float] = None,
-            buffer_edge_len=None,
+            buffer_edge_len: int = None,
             args: Namespace = None,
-    ):
+    ) -> None:
         # if 'scale' is set, the data gets downsampled anisotropic
 
         # pad all existing mags if necessary
@@ -160,7 +168,7 @@ class Layer:
                     right_offset[i] = current_offset[i] + current_size[i]
                     mag.write(data=np.zeros(padding_shape, dtype=mag.get_dtype()), offset=right_offset)
 
-        interpolation_mode = parse_interpolation_mode(interpolation_mode, self.name)
+        parsed_interpolation_mode = parse_interpolation_mode(interpolation_mode, self.name)
         prev_mag = from_mag
         target_mag = get_next_mag(prev_mag, scale)
 
@@ -189,7 +197,7 @@ class Layer:
                     buffer_edge_len = determine_buffer_edge_len(prev_mag_ds.view) # DEFAULT_EDGE_LEN
                 job_args = (
                     mag_factors,
-                    interpolation_mode,
+                    parsed_interpolation_mode,
                     buffer_edge_len,
                     compress,
                     job_count_per_log,
@@ -209,11 +217,22 @@ class Layer:
             prev_mag = target_mag
             target_mag = get_next_mag(target_mag, scale)
 
+    def setup_mag(self, mag: Union[str, Mag]) -> None:
+        pass
+
 
 class WKLayer(Layer):
+    mags: Dict[str, WKMagDataset]
+
     def add_mag(
-        self, mag, block_len=None, file_len=None, block_type=None
-    ) -> WKMagDataset:
+        self,
+        mag: Union[str, Mag],
+        **kwargs: Any
+    ) -> MagDataset:
+        block_len: int = kwargs.get("block_len", None)
+        file_len: int = kwargs.get("file_len", None)
+        block_type: int = kwargs.get("block_type", None)
+
         if block_len is None:
             block_len = 32
         if file_len is None:
@@ -228,15 +247,18 @@ class WKLayer(Layer):
         self._create_dir_for_mag(mag)
 
         self.mags[mag] = WKMagDataset.create(self, mag, block_len, file_len, block_type)
-        self.dataset.properties._add_mag(self.name, mag, block_len * file_len)
+        self.dataset.properties._add_mag(
+            self.name, mag, cube_length=block_len * file_len
+        )
 
         return self.mags[mag]
 
-    def get_or_add_mag(
-        self, mag, block_len=None, file_len=None, block_type=None
-    ) -> WKMagDataset:
+    def get_or_add_mag(self, mag: Union[str, Mag], **kwargs: Any) -> MagDataset:
         # normalize the name of the mag
         mag = Mag(mag).to_layer_name()
+        block_len: int = kwargs.get("block_len", None)
+        file_len: int = kwargs.get("file_len", None)
+        block_type: int = kwargs.get("block_type", None)
 
         if mag in self.mags.keys():
             assert (
@@ -250,9 +272,9 @@ class WKLayer(Layer):
             ), f"Cannot get_or_add_mag: The mag {mag} already exists, but the block types do not match"
             return self.get_mag(mag)
         else:
-            return self.add_mag(mag, block_len, file_len, block_type)
+            return self.add_mag(mag, block_len=block_len, file_len=file_len, block_type=block_type)
 
-    def setup_mag(self, mag):
+    def setup_mag(self, mag: Union[str, Mag]) -> None:
         # This method is used to initialize the mag when opening the Dataset. This does not create e.g. the wk_header.
 
         # normalize the name of the mag
@@ -269,16 +291,19 @@ class WKLayer(Layer):
             self, mag, wk_header.block_len, wk_header.file_len, wk_header.block_type
         )
         self.dataset.properties._add_mag(
-            self.name, mag, wk_header.block_len * wk_header.file_len
+            self.name, mag, cube_length=wk_header.block_len * wk_header.file_len
         )
 
-    def _initialize_mag_from_other_mag(self, new_mag_name, other_mag, compress):
+    def _initialize_mag_from_other_mag(self, new_mag_name: Union[str, Mag], other_mag: MagDataset, compress: bool) -> MagDataset:
         block_type = wkw.Header.BLOCK_TYPE_LZ4HC if compress else wkw.Header.BLOCK_TYPE_RAW
-        return self.add_mag(new_mag_name, other_mag.block_len, other_mag.file_len, block_type)
+        other_wk_mag = cast(WKMagDataset, other_mag)  # This method is only used in the context of creating a new magnification by using the same meta data as another magnification of the same dataset
+        return self.add_mag(new_mag_name, block_len=other_wk_mag.block_len, file_len=other_wk_mag.file_len, block_type=block_type)
 
 
 class TiffLayer(Layer):
-    def add_mag(self, mag) -> MagDataset:
+    dataset: "TiffDataset"
+
+    def add_mag(self, mag: Union[str, Mag], **kwargs: Any) -> MagDataset:
         # normalize the name of the mag
         mag = Mag(mag).to_layer_name()
 
@@ -292,7 +317,7 @@ class TiffLayer(Layer):
 
         return self.mags[mag]
 
-    def get_or_add_mag(self, mag) -> MagDataset:
+    def get_or_add_mag(self, mag: Union[str, Mag], **kwargs: Any) -> MagDataset:
         # normalize the name of the mag
         mag = Mag(mag).to_layer_name()
 
@@ -301,7 +326,7 @@ class TiffLayer(Layer):
         else:
             return self.add_mag(mag)
 
-    def setup_mag(self, mag):
+    def setup_mag(self, mag: Union[str, Mag]) -> None:
         # This method is used to initialize the mag when opening the Dataset. This does not create e.g. folders.
 
         # normalize the name of the mag
@@ -314,15 +339,15 @@ class TiffLayer(Layer):
         )
         self.dataset.properties._add_mag(self.name, mag)
 
-    def _get_mag_dataset_class(self):
+    def _get_mag_dataset_class(self) -> Type[TiffMagDataset]:
         return TiffMagDataset
 
-    def _initialize_mag_from_other_mag(self, new_mag_name, other_mag, compress):
+    def _initialize_mag_from_other_mag(self, new_mag_name: Union[str, Mag], other_mag: MagDataset, compress: bool) -> MagDataset:
         return self.add_mag(new_mag_name)
 
 
 class TiledTiffLayer(TiffLayer):
-    def _get_mag_dataset_class(self):
+    def _get_mag_dataset_class(self) -> Type[TiledTiffMagDataset]:
         return TiledTiffMagDataset
 
     def downsample(
@@ -332,7 +357,7 @@ class TiledTiffLayer(TiffLayer):
             interpolation_mode: str,
             compress: bool,
             scale: Tuple[float, float, float] = None,
-            buffer_edge_len=None,
+            buffer_edge_len:int = None,
             args: Namespace = None,
-    ):
+    ) -> None:
         raise NotImplemented

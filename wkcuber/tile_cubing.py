@@ -1,11 +1,11 @@
 import time
 import logging
 import numpy as np
-from typing import Dict, Tuple, Union
+from typing import Dict, Tuple, Union, List, Optional
 import os
 from glob import glob
 import re
-from argparse import ArgumentTypeError
+from argparse import ArgumentTypeError, ArgumentParser, Namespace
 import wkw
 
 from .utils import (
@@ -42,9 +42,9 @@ def check_input_pattern(input_pattern: str) -> str:
 def replace_coordinates(
     pattern: str, coord_ids_with_replacement_info: Dict[str, Tuple[int, int]]
 ) -> str:
-    """ Replaces the coordinates with a specific length. 
-    The coord_ids_with_replacement_info is a Dict that maps a dimension 
-    to a tuple of the coordinate value and the desired length. """
+    """Replaces the coordinates with a specific length.
+    The coord_ids_with_replacement_info is a Dict that maps a dimension
+    to a tuple of the coordinate value and the desired length."""
     occurrences = re.findall("({x+}|{y+}|{z+})", pattern)
     for occurrence in occurrences:
         coord = occurrence[1]
@@ -82,7 +82,7 @@ def replace_coordinates_with_glob_regex(pattern: str, coord_ids: Dict[str, int])
     return pattern
 
 
-def get_digit_counts_for_dimensions(pattern):
+def get_digit_counts_for_dimensions(pattern: str) -> Dict[str, int]:
     """ Counts how many digits the dimensions x, y and z occupy in the given pattern. """
     occurrences = re.findall("({x+}|{y+}|{z+})", pattern)
     decimal_lengths = {"x": 0, "y": 0, "z": 0}
@@ -98,14 +98,14 @@ def get_digit_counts_for_dimensions(pattern):
 
 def detect_interval_for_dimensions(
     file_path_pattern: str, decimal_lengths: Dict[str, int]
-) -> Tuple[Dict[str, int], Dict[str, int], str, int]:
+) -> Tuple[Dict[str, int], Dict[str, int], Optional[str], int]:
     arbitrary_file = None
     file_count = 0
     # dictionary that maps the dimension string to the current dimension length
     # used to avoid distinction of dimensions with if statements
     current_decimal_length = {"x": 0, "y": 0, "z": 0}
     max_dimensions = {"x": 0, "y": 0, "z": 0}
-    min_dimensions = {"x": None, "y": None, "z": None}
+    min_dimensions: Dict[str, int] = {}
 
     # find all files by trying all combinations of dimension lengths
     for x in range(decimal_lengths["x"] + 1):
@@ -131,13 +131,13 @@ def detect_interval_for_dimensions(
                     # Use that index to look up the actual value within the file name
                     for current_dimension in ["x", "y", "z"]:
                         idx = applied_fpp.index(current_dimension)
-                        coordinate_value = file_name[
+                        coordinate_value_str = file_name[
                             idx : idx + current_decimal_length[current_dimension]
                         ]
-                        coordinate_value = int(coordinate_value)
+                        coordinate_value = int(coordinate_value_str)
                         assert coordinate_value
                         min_dimensions[current_dimension] = min(
-                            min_dimensions[current_dimension] or coordinate_value,
+                            min_dimensions.get(current_dimension, coordinate_value),
                             coordinate_value,
                         )
                         max_dimensions[current_dimension] = max(
@@ -178,7 +178,18 @@ def find_file_with_dimensions(
     return None
 
 
-def tile_cubing_job(args):
+def tile_cubing_job(
+    args: Tuple[
+        WkwDatasetInfo,
+        List[int],
+        str,
+        int,
+        Tuple[int, int, int],
+        Dict[str, int],
+        Dict[str, int],
+        Dict[str, int],
+    ]
+) -> None:
     (
         target_wkw_info,
         z_batches,
@@ -251,8 +262,13 @@ def tile_cubing_job(args):
 
 
 def tile_cubing(
-    target_path, layer_name, dtype, batch_size, input_path_pattern, args=None
-):
+    target_path: str,
+    layer_name: str,
+    dtype: str,
+    batch_size: int,
+    input_path_pattern: str,
+    args: Namespace = None,
+) -> None:
     decimal_lengths = get_digit_counts_for_dimensions(input_path_pattern)
     (
         min_dimensions,
@@ -270,7 +286,6 @@ def tile_cubing(
     # Determine tile size from first matching file
     tile_size = image_reader.read_dimensions(arbitrary_file)
     num_channels = image_reader.read_channel_count(arbitrary_file)
-    tile_size = (tile_size[0], tile_size[1], num_channels)
     logging.info(
         "Found source files: count={} with tile_size={}x{}".format(
             file_count, tile_size[0], tile_size[1]
@@ -296,7 +311,7 @@ def tile_cubing(
                     list(z_batch),
                     input_path_pattern,
                     batch_size,
-                    tile_size,
+                    (tile_size[0], tile_size[1], num_channels),
                     min_dimensions,
                     max_dimensions,
                     decimal_lengths,
@@ -305,7 +320,7 @@ def tile_cubing(
         wait_and_ensure_success(executor.map_to_futures(tile_cubing_job, job_args))
 
 
-def create_parser():
+def create_parser() -> ArgumentParser:
     parser = create_cubing_parser()
 
     parser.add_argument(

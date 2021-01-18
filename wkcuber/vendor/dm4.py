@@ -104,7 +104,7 @@ def _get_struct_endian_str(endian):
 
 def read_root_tag_dir_header_dm4(dmfile, endian):
     """Read the root directory information from a dm4 file.
-       File seek position is left at end of root_tag_dir_header"""
+    File seek position is left at end of root_tag_dir_header"""
     if not isinstance(endian, str):
         endian = _get_struct_endian_str(endian)
 
