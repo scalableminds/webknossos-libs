@@ -39,7 +39,13 @@ def worker(workerid, job_array_index, cfut_dir):
 
         custom_main_path = get_custom_main_path(workerid)
         with open(input_file_name, "rb") as f:
-            fun, args, kwargs, meta_data = pickling.load(f, custom_main_path)
+            unpickled_tuple = pickling.load(f, custom_main_path)
+            if len(unpickled_tuple) == 4:
+                fun, args, kwargs, meta_data = unpickled_tuple
+                output_pickle_path = executor.format_outfile_name(cfut_dir, workerid_with_idx)
+            else:
+                assert len(unpickled_tuple) == 5, "Unexpected encoding"
+                fun, args, kwargs, meta_data, output_pickle_path = unpickled_tuple
 
         if type(fun) == str:
             with open(fun, "rb") as function_file:
@@ -59,8 +65,8 @@ def worker(workerid, job_array_index, cfut_dir):
         logging.info("Job computation failed.")
         out = pickling.dumps(result)
 
-    destfile = executor.format_outfile_name(cfut_dir, workerid_with_idx)
-    tempfile = destfile + ".tmp"
+    destfile = output_pickle_path
+    tempfile = str(destfile) + ".tmp"
     with open(tempfile, "wb") as f:
         f.write(out)
     logging.info("Pickle file written to {}.".format(tempfile))

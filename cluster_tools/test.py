@@ -12,6 +12,8 @@ import shutil
 import contextlib
 import io
 import multiprocessing as mp
+from pathlib import Path
+import tempfile
 
 # "Worker" functions.
 def square(n):
@@ -160,6 +162,54 @@ def test_map_to_futures():
 
             for duration, result in zip(durations, results):
                 assert result == duration
+
+
+def output_pickle_path_getter(tmp_dir, chunk):
+
+    return Path(tmp_dir) / f"test_{chunk}.pickle"
+
+def test_map_to_futures_with_pickle_paths():
+
+    dir_path = Path("").resolve()
+
+    for exc in get_executors():
+        with tempfile.TemporaryDirectory(dir=".") as tmp_dir:
+            with exc:
+                durations = [2, 1]
+                futures = exc.map_to_futures(sleep, durations, output_pickle_path_getter=partial(output_pickle_path_getter, tmp_dir))
+                results = []
+
+                for i, duration in enumerate(concurrent.futures.as_completed(futures)):
+                    results.append(duration.result())
+
+                assert 2 in results
+                assert 1 in results
+
+            for duration in durations:
+                assert Path(output_pickle_path_getter(tmp_dir, duration)).exists(), f"File for chunk {duration} should exist."
+
+
+def test_submit_with_pickle_paths():
+    for (idx, exc) in enumerate(get_executors()):
+        with tempfile.TemporaryDirectory(dir=".") as tmp_dir:
+            def run_square_numbers(idx, executor):
+                with executor:
+                    job_count = 3
+                    job_range = range(job_count)
+
+                    futures = []
+                    for n in job_range:
+                        output_path = Path(tmp_dir) / f"{idx}_{n}.pickle"
+                        cfut_options = {"output_pickle_path": output_path}
+                        futures.append(executor.submit(square, n, __cfut_options=cfut_options))
+
+                    for future, job_index in zip(futures, job_range):
+                        assert future.result() == square(job_index)
+                    return output_path
+
+            output_path = run_square_numbers(idx, exc)
+            assert output_path.exists(), "Output pickle file should exist."
+
 
 def test_map():
     def run_map(executor):

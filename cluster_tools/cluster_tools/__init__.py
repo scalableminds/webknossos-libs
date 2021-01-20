@@ -47,9 +47,36 @@ class WrappedProcessPoolExecutor(ProcessPoolExecutor):
 
     def submit(self, *args, **kwargs):
 
-        fut = super().submit(*args, **kwargs)
+        output_pickle_path = None
+        if "__cfut_options" in kwargs:
+            output_pickle_path = kwargs["__cfut_options"]["output_pickle_path"]
+            del kwargs["__cfut_options"]
+
+        if output_pickle_path is not None:
+            fut = super().submit(
+                WrappedProcessPoolExecutor._execute_and_persist_function,
+                output_pickle_path,
+                *args,
+                **kwargs
+            )
+        else:
+            fut = super().submit(*args, **kwargs)
+
         enrich_future_with_uncaught_warning(fut)
         return fut
+
+    @staticmethod
+    def _execute_and_persist_function(output_pickle_path, *args, **kwargs):
+
+        func = args[0]
+        args = args[1:]
+
+        result = func(*args, **kwargs)
+
+        with open(output_pickle_path, "wb") as file:
+            pickling.dump(result, file)
+
+        return result
 
     def map_unordered(self, func, args):
 
@@ -64,9 +91,20 @@ class WrappedProcessPoolExecutor(ProcessPoolExecutor):
 
         return result_generator()
 
-    def map_to_futures(self, func, args):
+    def map_to_futures(self, func, args, output_pickle_path_getter=None):
 
-        futs = [self.submit(func, arg) for arg in args]
+        if output_pickle_path_getter is not None:
+            futs = [
+                self.submit(
+                    func,
+                    arg,
+                    __cfut_options={"output_pickle_path": output_pickle_path_getter(arg)},
+                )
+                for arg in args
+            ]
+        else:
+            futs = [self.submit(func, arg) for arg in args]
+
         return futs
 
     def forward_log(self, fut):
