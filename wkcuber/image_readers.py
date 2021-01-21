@@ -136,7 +136,7 @@ def find_count_of_axis(tif_file: TiffFile, axis: str) -> int:
 class TiffImageReader(ImageReader):
     def read_array(self, file_name: str, dtype: np.dtype, z_slice: int) -> np.ndarray:
         with TiffFile(file_name) as tif_file:
-            num_channels = find_count_of_axis(tif_file, "C")
+            num_channels = self.read_channel_count(file_name)
             if len(tif_file.pages) > num_channels:
                 data = np.array(
                     list(
