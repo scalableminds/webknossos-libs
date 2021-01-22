@@ -17,8 +17,9 @@ from .utils import (
     wait_and_ensure_success,
     setup_logging,
     get_regular_chunks,
+    add_base_flags,
 )
-from .cubing import create_parser as create_cubing_parser
+from .cubing import add_cubing_arguments
 from .cubing import read_image_file, prepare_slices_for_wkw
 from .image_readers import image_reader
 from .metadata import convert_element_class_to_dtype
@@ -154,7 +155,6 @@ def find_file_with_dimensions(
     z_value: int,
     decimal_lengths: Dict[str, int],
 ) -> Union[str, None]:
-
     file_path_unpadded = replace_coordinates(
         file_path_pattern, {"z": (z_value, 0), "y": (y_value, 0), "x": (x_value, 0)}
     )
@@ -321,7 +321,9 @@ def tile_cubing(
 
 
 def create_parser() -> ArgumentParser:
-    parser = create_cubing_parser()
+    parser = ArgumentParser()
+    add_base_flags(parser)
+    add_cubing_arguments(parser)
 
     parser.add_argument(
         "--input_path_pattern",

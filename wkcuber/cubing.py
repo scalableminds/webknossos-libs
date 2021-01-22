@@ -18,7 +18,6 @@ from .downsampling import (
 from .utils import (
     get_chunks,
     find_files,
-    add_verbose_flag,
     add_batch_size_flag,
     add_base_flags,
     open_wkw,

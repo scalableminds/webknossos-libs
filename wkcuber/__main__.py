@@ -2,7 +2,7 @@ from .cubing import cubing, add_cubing_arguments
 from .downsampling import downsample_mags_isotropic, downsample_mags_anisotropic
 from .compress import compress_mag_inplace
 from .metadata import write_webknossos_metadata, refresh_metadata
-from .utils import add_isotropic_flag, setup_logging, add_scale_flag, add_base_flags
+from .utils import add_isotropic_flag, setup_logging, add_base_flags
 from .mag import Mag
 from argparse import Namespace, ArgumentParser
 from os import path
@@ -81,7 +81,7 @@ def find_source_filenames(source_path: str) -> List[str]:
     return source_files
 
 
-def detect_conversion_type(args: Namespace):
+def detect_conversion_type(args: Namespace) -> None:
     source_files = find_source_filenames(args.source_path)
 
     _, ext = path.splitext(source_files[0])
