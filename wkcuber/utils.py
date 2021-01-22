@@ -34,7 +34,6 @@ WkwDatasetInfo = namedtuple(
 KnossosDatasetInfo = namedtuple("KnossosDatasetInfo", ("dataset_path", "dtype"))
 FallbackArgs = namedtuple("FallbackArgs", ("distribution_strategy", "jobs"))
 
-
 BLOCK_LEN = 32
 DEFAULT_WKW_FILE_LEN = 32
 DEFAULT_WKW_VOXELS_PER_BLOCK = 32
@@ -88,6 +87,27 @@ def parse_bounding_box(bbox_str: str) -> BoundingBox:
 
 def open_knossos(info: KnossosDatasetInfo) -> KnossosDataset:
     return KnossosDataset.open(info.dataset_path, np.dtype(info.dtype))
+
+
+def add_base_flags(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
+    parser.add_argument(
+        "source_path", help="Input file or directory containing the input files."
+    )
+    parser.add_argument(
+        "target_path", help="Output directory for the generated dataset."
+    )
+    parser.add_argument(
+        "--layer_name",
+        "-l",
+        help="Name of the cubed layer (color or segmentation)",
+        default="color",
+    )
+    parser.add_argument(
+        "--dtype", "-d", help="Target datatype (e.g. uint8, uint16).", default="uint8"
+    )
+    add_scale_flag(parser)
+    add_verbose_flag(parser)
+    return parser
 
 
 def add_verbose_flag(parser: argparse.ArgumentParser) -> None:

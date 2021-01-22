@@ -1,6 +1,6 @@
 import logging
 import time
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from sklearn.preprocessing import LabelEncoder
 from typing import Tuple, Optional, Union, cast
@@ -13,45 +13,21 @@ from wkcuber.api.bounding_box import BoundingBox
 from wkcuber.utils import (
     DEFAULT_WKW_FILE_LEN,
     DEFAULT_WKW_VOXELS_PER_BLOCK,
-    add_scale_flag,
-    add_verbose_flag,
+    add_base_flags,
     pad_or_crop_to_size_and_topleft,
     parse_bounding_box,
     setup_logging,
 )
 
 
-def create_parser() -> ArgumentParser:
-    parser = ArgumentParser()
-
-    parser.add_argument(
-        "source_path",
-        help="Path to NIFTY file or to a directory if multiple NIFTI files should be converted. "
-        "In the latter case, also see --color_file and --segmentation_file.",
-    )
-
-    parser.add_argument(
-        "target_path", help="Output directory for the generated WKW dataset."
-    )
-
-    parser.add_argument(
-        "--layer_name",
-        "-l",
-        help="Name of the cubed layer (color or segmentation).",
-        default="color",
-    )
-
+def add_nifti_arguments(parser: ArgumentParser) -> ArgumentParser:
     parser.add_argument(
         "--is_segmentation_layer",
-        "-s",
+        "-sl",
         help="When converting one layer, signals whether layer is segmentation layer. "
-        "When converting a folder, this option is ignored",
+             "When converting a folder, this option is ignored",
         default=False,
         action="store_true",
-    )
-
-    parser.add_argument(
-        "--dtype", "-d", help="Target datatype (e.g. uint8, uint16).", default="uint8"
     )
 
     parser.add_argument(
@@ -93,23 +69,19 @@ def create_parser() -> ArgumentParser:
         default=None,
     )
 
-    add_scale_flag(parser, required=False)
-    add_verbose_flag(parser)
-
     return parser
 
 
 def to_target_datatype(
-    data: np.ndarray, target_dtype: str, is_segmentation_layer: bool
+        data: np.ndarray, target_dtype: str, is_segmentation_layer: bool
 ) -> np.ndarray:
-
     if is_segmentation_layer:
         original_shape = data.shape
         label_encoder = LabelEncoder()
         return (
             label_encoder.fit_transform(data.ravel())
-            .reshape(original_shape)
-            .astype(np.dtype(target_dtype))
+                .reshape(original_shape)
+                .astype(np.dtype(target_dtype))
         )
 
     if data.dtype == np.dtype("float32"):
@@ -127,17 +99,17 @@ def to_target_datatype(
 
 
 def convert_nifti(
-    source_nifti_path: Path,
-    target_path: Path,
-    layer_name: str,
-    dtype: str,
-    scale: Tuple[float, ...],
-    is_segmentation_layer: bool = False,
-    file_len: int = DEFAULT_WKW_FILE_LEN,
-    bbox_to_enforce: BoundingBox = None,
-    write_tiff: bool = False,
-    use_orientation_header: bool = False,
-    flip_axes: Optional[Union[int, Tuple[int, ...]]] = None,
+        source_nifti_path: Path,
+        target_path: Path,
+        layer_name: str,
+        dtype: str,
+        scale: Tuple[float, ...],
+        is_segmentation_layer: bool = False,
+        file_len: int = DEFAULT_WKW_FILE_LEN,
+        bbox_to_enforce: BoundingBox = None,
+        write_tiff: bool = False,
+        use_orientation_header: bool = False,
+        flip_axes: Optional[Union[int, Tuple[int, ...]]] = None,
 ) -> None:
     voxels_per_cube = file_len * DEFAULT_WKW_VOXELS_PER_BLOCK
     ref_time = time.time()
@@ -245,15 +217,15 @@ def convert_nifti(
 
 
 def convert_folder_nifti(
-    source_folder_path: Path,
-    target_path: Path,
-    color_subpath: str,
-    segmentation_subpath: str,
-    scale: Tuple[float, ...],
-    use_orientation_header: bool = False,
-    bbox_to_enforce: BoundingBox = None,
-    write_tiff: bool = False,
-    flip_axes: Optional[Union[int, Tuple[int, ...]]] = None,
+        source_folder_path: Path,
+        target_path: Path,
+        color_subpath: str,
+        segmentation_subpath: str,
+        scale: Tuple[float, ...],
+        use_orientation_header: bool = False,
+        bbox_to_enforce: BoundingBox = None,
+        write_tiff: bool = False,
+        flip_axes: Optional[Union[int, Tuple[int, ...]]] = None,
 ) -> None:
     paths = list(source_folder_path.rglob("**/*.nii"))
 
@@ -321,10 +293,7 @@ def convert_folder_nifti(
             )
 
 
-def main() -> None:
-    args = create_parser().parse_args()
-    setup_logging(args)
-
+def main(args: Namespace) -> None:
     source_path = Path(args.source_path)
 
     flip_axes = None
@@ -332,7 +301,7 @@ def main() -> None:
         flip_axes = tuple(int(x) for x in args.flip_axes.split(","))
         for index in flip_axes:
             assert (
-                0 <= index <= 3
+                    0 <= index <= 3
             ), "flip_axes parameter must only contain indices between 0 and 3."
 
     conversion_args = {
@@ -363,4 +332,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    args = add_nifti_arguments(add_base_flags(ArgumentParser())).parse_args()
+    setup_logging(args)
+
+    main(args)
