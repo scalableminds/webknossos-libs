@@ -20,9 +20,6 @@ import shutil
 WKW_CUBE_SIZE = 1024
 CUBE_EDGE_LEN = 256
 
-source_info = WkwDatasetInfo("testdata/WT1_wkw", "color", 1, wkw.Header(np.uint8))
-target_info = WkwDatasetInfo("testoutput/WT1_wkw", "color", 2, wkw.Header(np.uint8))
-
 
 def read_wkw(
     wkw_info: WkwDatasetInfo, offset: Tuple[int, int, int], size: Tuple[int, int, int]
@@ -80,39 +77,47 @@ def test_non_linear_filter_reshape():
 
 
 def downsample_test_helper(use_compress):
+    source_path = "testdata/WT1_wkw"
+    target_path = "testoutput/WT1_wkw"
+
     try:
-        shutil.rmtree(target_info.dataset_path)
+        shutil.rmtree(target_path)
     except:
         pass
 
-    offset = (1, 2, 0)
-    source_buffer = read_wkw(
-        source_info,
-        tuple(a * WKW_CUBE_SIZE * 2 for a in offset),
-        (CUBE_EDGE_LEN * 2,) * 3,
+    source_ds = WKDataset(source_path)
+    source_layer = source_ds.get_layer("color")
+    mag1 = source_layer.get_mag("1")
+
+    target_ds = WKDataset.create(target_path, scale=(1, 1, 1))
+    target_layer = target_ds.add_layer(
+        "color", Layer.COLOR_TYPE, dtype_per_channel="uint8"
+    )
+    mag2 = target_layer._initialize_mag_from_other_mag("2", mag1, use_compress)
+
+    offset = (WKW_CUBE_SIZE, 2 * WKW_CUBE_SIZE, 0)
+    source_buffer = mag1.read(
+        offset=offset,
+        size=(CUBE_EDGE_LEN * 2,) * 3,
     )[0]
     assert np.any(source_buffer != 0)
 
     downsample_args = (
-        source_info,
-        target_info,
-        (2, 2, 2),
-        InterpolationModes.MAX,
-        offset,
-        CUBE_EDGE_LEN,
-        use_compress,
-        True,
+        mag1.get_view(offset=offset, size=(CUBE_EDGE_LEN * 2,) * 3),
+        mag2.get_view(
+            offset=tuple([o // 2 for o in offset]),
+            size=(CUBE_EDGE_LEN,) * 3,
+            is_bounded=False,
+        ),
+        0,
+        ([2, 2, 2], InterpolationModes.MAX, CUBE_EDGE_LEN, use_compress, 100),
     )
     downsample_cube_job(downsample_args)
 
     assert np.any(source_buffer != 0)
-    block_type = (
-        wkw.Header.BLOCK_TYPE_LZ4HC if use_compress else wkw.Header.BLOCK_TYPE_RAW
-    )
-    target_info.header.block_type = block_type
 
-    target_buffer = read_wkw(
-        target_info, tuple(a * WKW_CUBE_SIZE for a in offset), (CUBE_EDGE_LEN,) * 3
+    target_buffer = mag2.read(
+        offset=tuple([o // 2 for o in offset]), size=(CUBE_EDGE_LEN,) * 3
     )[0]
     assert np.any(target_buffer != 0)
 
