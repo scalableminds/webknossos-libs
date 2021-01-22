@@ -2,7 +2,7 @@ import numpy as np
 from wkcuber.utils import pad_or_crop_to_size_and_topleft
 
 
-def test_pad_or_crop_to_size_and_topleft():
+def test_pad_or_crop_to_size_and_topleft() -> None:
     target_topleft = np.array((0, 50, 36, 1))
     target_size = np.array((1, 156, 112, 30))
 

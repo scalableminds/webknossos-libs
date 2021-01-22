@@ -41,16 +41,23 @@ class Layer:
         full_path = join(dataset.path, name)
         makedirs(full_path, exist_ok=True)
 
-    def get_mag(self, mag: Union[str, Mag]) -> MagDataset:
+    def get_mag(self, mag: Union[int, str, list, tuple, np.ndarray, Mag]) -> MagDataset:
         mag = Mag(mag).to_layer_name()
         if mag not in self.mags.keys():
             raise IndexError("The mag {} is not a mag of this layer".format(mag))
         return self.mags[mag]
 
-    def get_or_add_mag(self, mag: Union[str, Mag], **kwargs: Any) -> MagDataset:
+    def add_mag(
+        self, mag: Union[int, str, list, tuple, np.ndarray, Mag], **kwargs: Any
+    ) -> MagDataset:
         pass
 
-    def delete_mag(self, mag: Union[str, Mag]) -> None:
+    def get_or_add_mag(
+        self, mag: Union[int, str, list, tuple, np.ndarray, Mag], **kwargs: Any
+    ) -> MagDataset:
+        pass
+
+    def delete_mag(self, mag: Union[int, str, list, tuple, np.ndarray, Mag]) -> None:
         mag = Mag(mag).to_layer_name()
         if mag not in self.mags.keys():
             raise IndexError(
@@ -63,12 +70,16 @@ class Layer:
         full_path = find_mag_path_on_disk(self.dataset.path, self.name, mag)
         rmtree(full_path)
 
-    def _create_dir_for_mag(self, mag: Union[str, Mag]) -> None:
+    def _create_dir_for_mag(
+        self, mag: Union[int, str, list, tuple, np.ndarray, Mag]
+    ) -> None:
         mag = Mag(mag).to_layer_name()
         full_path = join(self.dataset.path, self.name, mag)
         makedirs(full_path, exist_ok=True)
 
-    def _assert_mag_does_not_exist_yet(self, mag: Union[str, Mag]) -> None:
+    def _assert_mag_does_not_exist_yet(
+        self, mag: Union[int, str, list, tuple, np.ndarray, Mag]
+    ) -> None:
         mag = Mag(mag).to_layer_name()
         if mag in self.mags.keys():
             raise IndexError(
@@ -107,12 +118,12 @@ class WKLayer(Layer):
     mags: Dict[str, WKMagDataset]
 
     def add_mag(
-        self,
-        mag: Union[str, Mag],
-        block_len: int = None,
-        file_len: int = None,
-        block_type: int = None,
+        self, mag: Union[int, str, list, tuple, np.ndarray, Mag], **kwargs: Any
     ) -> MagDataset:
+        block_len: int = kwargs.get("block_len", None)
+        file_len: int = kwargs.get("file_len", None)
+        block_type: int = kwargs.get("block_type", None)
+
         if block_len is None:
             block_len = 32
         if file_len is None:
@@ -133,7 +144,9 @@ class WKLayer(Layer):
 
         return self.mags[mag]
 
-    def get_or_add_mag(self, mag: Union[str, Mag], **kwargs: Any) -> MagDataset:
+    def get_or_add_mag(
+        self, mag: Union[int, str, list, tuple, np.ndarray, Mag], **kwargs: Any
+    ) -> MagDataset:
         # normalize the name of the mag
         mag = Mag(mag).to_layer_name()
         block_len: int = kwargs.get("block_len", None)
@@ -152,7 +165,9 @@ class WKLayer(Layer):
             ), f"Cannot get_or_add_mag: The mag {mag} already exists, but the block types do not match"
             return self.get_mag(mag)
         else:
-            return self.add_mag(mag, block_len, file_len, block_type)
+            return self.add_mag(
+                mag, block_len=block_len, file_len=file_len, block_type=block_type
+            )
 
     def setup_mag(self, mag: str) -> None:
         # This method is used to initialize the mag when opening the Dataset. This does not create e.g. the wk_header.
@@ -178,7 +193,9 @@ class WKLayer(Layer):
 class TiffLayer(Layer):
     dataset: "TiffDataset"
 
-    def add_mag(self, mag: Union[str, Mag]) -> MagDataset:
+    def add_mag(
+        self, mag: Union[int, str, list, tuple, np.ndarray, Mag], **kwargs: Any
+    ) -> MagDataset:
         # normalize the name of the mag
         mag = Mag(mag).to_layer_name()
 
@@ -192,7 +209,9 @@ class TiffLayer(Layer):
 
         return self.mags[mag]
 
-    def get_or_add_mag(self, mag: Union[str, Mag], **kwargs: Any) -> MagDataset:
+    def get_or_add_mag(
+        self, mag: Union[int, str, list, tuple, np.ndarray, Mag], **kwargs: Any
+    ) -> MagDataset:
         # normalize the name of the mag
         mag = Mag(mag).to_layer_name()
 

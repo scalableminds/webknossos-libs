@@ -292,7 +292,7 @@ class AbstractDataset(ABC):
     def get_view(
         self,
         layer_name: str,
-        mag: Union[str, Mag],
+        mag: Union[int, str, list, tuple, np.ndarray, Mag],
         size: Tuple[int, int, int],
         offset: Tuple[int, int, int] = None,
         is_bounded: bool = True,
