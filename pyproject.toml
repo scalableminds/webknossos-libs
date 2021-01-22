@@ -7,7 +7,7 @@ readme = "README.md"
 license = "AGPL-3.0"
 
 [tool.poetry.dependencies]
-python = "^3.6"
+python = "^3.7"
 scipy = "^1.4.0"
 numpy = "^1.17.4"
 pillow = "^6.2.1"
@@ -19,6 +19,8 @@ psutil = "^5.6.7"
 nibabel = "^2.5.1"
 scikit-image = "^0.16.2"
 scikit-learn = "^0.24.0"
+tifffile = "^2020.11.26"
+imagecodecs = "^2020.5.30"
 
 [tool.poetry.dev-dependencies]
 pylint = "^2.6.0"
