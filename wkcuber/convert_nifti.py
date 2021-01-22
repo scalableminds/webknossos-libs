@@ -25,7 +25,7 @@ def add_nifti_arguments(parser: ArgumentParser) -> ArgumentParser:
         "--is_segmentation_layer",
         "-sl",
         help="When converting one layer, signals whether layer is segmentation layer. "
-             "When converting a folder, this option is ignored",
+        "When converting a folder, this option is ignored",
         default=False,
         action="store_true",
     )
@@ -73,15 +73,15 @@ def add_nifti_arguments(parser: ArgumentParser) -> ArgumentParser:
 
 
 def to_target_datatype(
-        data: np.ndarray, target_dtype: str, is_segmentation_layer: bool
+    data: np.ndarray, target_dtype: str, is_segmentation_layer: bool
 ) -> np.ndarray:
     if is_segmentation_layer:
         original_shape = data.shape
         label_encoder = LabelEncoder()
         return (
             label_encoder.fit_transform(data.ravel())
-                .reshape(original_shape)
-                .astype(np.dtype(target_dtype))
+            .reshape(original_shape)
+            .astype(np.dtype(target_dtype))
         )
 
     if data.dtype == np.dtype("float32"):
@@ -99,17 +99,17 @@ def to_target_datatype(
 
 
 def convert_nifti(
-        source_nifti_path: Path,
-        target_path: Path,
-        layer_name: str,
-        dtype: str,
-        scale: Tuple[float, ...],
-        is_segmentation_layer: bool = False,
-        file_len: int = DEFAULT_WKW_FILE_LEN,
-        bbox_to_enforce: BoundingBox = None,
-        write_tiff: bool = False,
-        use_orientation_header: bool = False,
-        flip_axes: Optional[Union[int, Tuple[int, ...]]] = None,
+    source_nifti_path: Path,
+    target_path: Path,
+    layer_name: str,
+    dtype: str,
+    scale: Tuple[float, ...],
+    is_segmentation_layer: bool = False,
+    file_len: int = DEFAULT_WKW_FILE_LEN,
+    bbox_to_enforce: BoundingBox = None,
+    write_tiff: bool = False,
+    use_orientation_header: bool = False,
+    flip_axes: Optional[Union[int, Tuple[int, ...]]] = None,
 ) -> None:
     voxels_per_cube = file_len * DEFAULT_WKW_VOXELS_PER_BLOCK
     ref_time = time.time()
@@ -217,15 +217,15 @@ def convert_nifti(
 
 
 def convert_folder_nifti(
-        source_folder_path: Path,
-        target_path: Path,
-        color_subpath: str,
-        segmentation_subpath: str,
-        scale: Tuple[float, ...],
-        use_orientation_header: bool = False,
-        bbox_to_enforce: BoundingBox = None,
-        write_tiff: bool = False,
-        flip_axes: Optional[Union[int, Tuple[int, ...]]] = None,
+    source_folder_path: Path,
+    target_path: Path,
+    color_subpath: str,
+    segmentation_subpath: str,
+    scale: Tuple[float, ...],
+    use_orientation_header: bool = False,
+    bbox_to_enforce: BoundingBox = None,
+    write_tiff: bool = False,
+    flip_axes: Optional[Union[int, Tuple[int, ...]]] = None,
 ) -> None:
     paths = list(source_folder_path.rglob("**/*.nii"))
 
@@ -301,7 +301,7 @@ def main(args: Namespace) -> None:
         flip_axes = tuple(int(x) for x in args.flip_axes.split(","))
         for index in flip_axes:
             assert (
-                    0 <= index <= 3
+                0 <= index <= 3
             ), "flip_axes parameter must only contain indices between 0 and 3."
 
     conversion_args = {

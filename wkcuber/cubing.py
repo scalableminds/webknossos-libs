@@ -53,8 +53,8 @@ def add_cubing_arguments(parser: ArgumentParser) -> ArgumentParser:
     parser.add_argument(
         "--pad",
         help="Automatically pad image files at the bottom and right borders. "
-             "Use this, when the input images don't have a common size, but have "
-             "their origin at (0, 0).",
+        "Use this, when the input images don't have a common size, but have "
+        "their origin at (0, 0).",
         default=False,
         action="store_true",
     )
@@ -62,8 +62,8 @@ def add_cubing_arguments(parser: ArgumentParser) -> ArgumentParser:
     parser.add_argument(
         "--target_mag",
         help="Automatically downsamples the cubed images to the provided "
-             "magnification before writing to disk. The magnification can "
-             "be provided like 2-2-1.",
+        "magnification before writing to disk. The magnification can "
+        "be provided like 2-2-1.",
         default="1",
     )
 
@@ -86,11 +86,11 @@ def find_source_filenames(source_path: str) -> List[str]:
     source_files = list(find_files(joined_path, image_reader.readers.keys()))
 
     assert len(source_files) > 0, (
-            "No image files found in path "
-            + source_path
-            + ". Supported suffixes are "
-            + str(image_reader.readers.keys())
-            + "."
+        "No image files found in path "
+        + source_path
+        + ". Supported suffixes are "
+        + str(image_reader.readers.keys())
+        + "."
     )
 
     return natsorted(source_files)
@@ -105,7 +105,7 @@ def read_image_file(file_name: str, dtype: type, z_slice: int) -> np.ndarray:
 
 
 def prepare_slices_for_wkw(
-        slices: List[np.ndarray], num_channels: int = None
+    slices: List[np.ndarray], num_channels: int = None
 ) -> np.ndarray:
     # Write batch buffer which will have shape (x, y, channel_count, z)
     # since we concat along the last axis (z)
@@ -121,16 +121,16 @@ def prepare_slices_for_wkw(
 
 
 def cubing_job(
-        args: Tuple[
-            WkwDatasetInfo,
-            List[int],
-            Mag,
-            InterpolationModes,
-            List[str],
-            int,
-            Tuple[int, int],
-            bool,
-        ]
+    args: Tuple[
+        WkwDatasetInfo,
+        List[int],
+        Mag,
+        InterpolationModes,
+        List[str],
+        int,
+        Tuple[int, int],
+        bool,
+    ]
 ) -> None:
     (
         target_wkw_info,
@@ -152,8 +152,8 @@ def cubing_job(
         # The batches have a maximum size of `batch_size`
         # Batched iterations allows to utilize IO more efficiently
         for z_batch, source_file_batch in zip(
-                get_chunks(z_batches, batch_size),
-                get_chunks(source_file_batches, batch_size),
+            get_chunks(z_batches, batch_size),
+            get_chunks(source_file_batches, batch_size),
         ):
             try:
                 ref_time = time.time()
@@ -168,7 +168,7 @@ def cubing_job(
 
                     if not pad:
                         assert (
-                                image.shape[0:2] == image_size
+                            image.shape[0:2] == image_size
                         ), "Section z={} has the wrong dimensions: {} (expected {}). Consider using --pad.".format(
                             z, image.shape, image_size
                         )
@@ -217,12 +217,12 @@ def cubing_job(
 
 
 def cubing(
-        source_path: str,
-        target_path: str,
-        layer_name: str,
-        dtype: str,
-        batch_size: int,
-        args: Namespace,
+    source_path: str,
+    target_path: str,
+    layer_name: str,
+    dtype: str,
+    batch_size: int,
+    args: Namespace,
 ) -> dict:
     source_files = find_source_filenames(source_path)
 
@@ -231,7 +231,7 @@ def cubing(
     num_channels = image_reader.read_channel_count(source_files[0])
     num_z_slices_per_file = image_reader.read_z_slices_per_file(source_files[0])
     assert (
-            num_z_slices_per_file == 1 or len(source_files) == 1
+        num_z_slices_per_file == 1 or len(source_files) == 1
     ), "Multi page TIFF support only for single files"
     if num_z_slices_per_file > 1:
         num_z = num_z_slices_per_file
@@ -272,7 +272,7 @@ def cubing(
             z_batch = list(range(z, max_z))
             # Prepare source files array
             if len(source_files) > 1:
-                source_files_array = source_files[z - start_z: max_z - start_z]
+                source_files_array = source_files[z - start_z : max_z - start_z]
             else:
                 source_files_array = source_files * (max_z - z)
             # Prepare job

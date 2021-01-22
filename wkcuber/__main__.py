@@ -65,11 +65,11 @@ def find_source_filenames(source_path: str) -> List[str]:
     source_files = list(find_files(joined_path, SUPPORTED_FILE_TYPES))
 
     assert len(source_files) > 0, (
-            "No image files found in path "
-            + source_path
-            + ". Supported suffixes are "
-            + str(SUPPORTED_FILE_TYPES)
-            + "."
+        "No image files found in path "
+        + source_path
+        + ". Supported suffixes are "
+        + str(SUPPORTED_FILE_TYPES)
+        + "."
     )
 
     _, ext = path.splitext(source_files[0])
