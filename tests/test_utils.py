@@ -3,8 +3,14 @@ from wkcuber.utils import get_chunks, get_regular_chunks, BufferedSliceWriter
 import wkw
 from wkcuber.mag import Mag
 import os
+from shutil import rmtree
 
 BLOCK_LEN = 32
+
+
+def delete_dir(relative_path: str) -> None:
+    if os.path.exists(relative_path) and os.path.isdir(relative_path):
+        rmtree(relative_path)
 
 
 def test_get_chunks() -> None:
@@ -41,6 +47,8 @@ def test_buffered_slice_writer() -> None:
     layer_name = "color"
     mag = Mag(1)
     dataset_path = os.path.join(dataset_dir, layer_name, mag.to_layer_name())
+
+    delete_dir(dataset_dir)
 
     with BufferedSliceWriter(dataset_dir, layer_name, dtype, origin, mag=mag) as writer:
         for i in range(13):
