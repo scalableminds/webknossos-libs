@@ -19,6 +19,7 @@ psutil = "^5.6.7"
 nibabel = "^2.5.1"
 scikit-image = "^0.16.2"
 scikit-learn = "^0.21.3"
+Cython = "^0.29.21"
 
 [tool.poetry.dev-dependencies]
 pylint = "^2.6.0"
