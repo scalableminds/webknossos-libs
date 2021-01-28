@@ -14,6 +14,7 @@ from wkcuber.utils import (
     DEFAULT_WKW_FILE_LEN,
     DEFAULT_WKW_VOXELS_PER_BLOCK,
     add_base_flags,
+    add_scale_flag,
     pad_or_crop_to_size_and_topleft,
     parse_bounding_box,
     setup_logging,
@@ -68,6 +69,8 @@ def add_nifti_arguments(parser: ArgumentParser) -> ArgumentParser:
         help="The axes at which should be flipped. Input format is a comma separated list of axis indices. For example, 1,2,3 will flip the x, y and z axes.",
         default=None,
     )
+
+    add_scale_flag(parser)
 
     return parser
 

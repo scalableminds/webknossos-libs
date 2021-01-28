@@ -105,7 +105,6 @@ def add_base_flags(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
     parser.add_argument(
         "--dtype", "-d", help="Target datatype (e.g. uint8, uint16).", default="uint8"
     )
-    add_scale_flag(parser)
     add_verbose_flag(parser)
     return parser
 
