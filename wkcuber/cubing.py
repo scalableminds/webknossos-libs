@@ -19,7 +19,7 @@ from .utils import (
     get_chunks,
     find_files,
     add_batch_size_flag,
-    add_base_flags,
+    add_verbose_flag,
     open_wkw,
     ensure_wkw,
     WkwDatasetInfo,
@@ -35,9 +35,31 @@ from .metadata import convert_element_class_to_dtype
 BLOCK_LEN = 32
 
 
-def add_cubing_arguments(parser: ArgumentParser) -> ArgumentParser:
+def create_parser() -> ArgumentParser:
+    parser = ArgumentParser()
+
+    parser.add_argument("source_path", help="Directory containing the input images.")
+
+    parser.add_argument(
+        "target_path", help="Output directory for the generated dataset."
+    )
+
+    parser.add_argument(
+        "--layer_name",
+        "-l",
+        help="Name of the cubed layer (color or segmentation)",
+        default="color",
+    )
+
     parser.add_argument(
         "--start_z", help="The z coordinate of the first slice", default=0, type=int
+    )
+
+    parser.add_argument(
+        "--dtype",
+        "-d",
+        help="Target datatype (e.g. uint8, uint16, uint32)",
+        default="uint8",
     )
 
     parser.add_argument(
@@ -67,6 +89,7 @@ def add_cubing_arguments(parser: ArgumentParser) -> ArgumentParser:
     )
 
     add_interpolation_flag(parser)
+    add_verbose_flag(parser)
     add_distribution_flags(parser)
 
     return parser
@@ -295,7 +318,7 @@ def cubing(
 
 
 if __name__ == "__main__":
-    args = add_cubing_arguments(add_base_flags(ArgumentParser())).parse_args()
+    args = create_parser().parse_args()
     setup_logging(args)
 
     cubing(

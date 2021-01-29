@@ -17,9 +17,8 @@ from .utils import (
     wait_and_ensure_success,
     setup_logging,
     get_regular_chunks,
-    add_base_flags,
 )
-from .cubing import add_cubing_arguments
+from .cubing import create_parser as create_cubing_parser
 from .cubing import read_image_file, prepare_slices_for_wkw
 from .image_readers import image_reader
 from .metadata import convert_element_class_to_dtype
@@ -321,9 +320,7 @@ def tile_cubing(
 
 
 def create_parser() -> ArgumentParser:
-    parser = ArgumentParser()
-    add_base_flags(parser)
-    add_cubing_arguments(parser)
+    parser = create_cubing_parser()
 
     parser.add_argument(
         "--input_path_pattern",

@@ -13,7 +13,7 @@ from wkcuber.api.bounding_box import BoundingBox
 from wkcuber.utils import (
     DEFAULT_WKW_FILE_LEN,
     DEFAULT_WKW_VOXELS_PER_BLOCK,
-    add_base_flags,
+    add_verbose_flag,
     add_scale_flag,
     pad_or_crop_to_size_and_topleft,
     parse_bounding_box,
@@ -21,14 +21,37 @@ from wkcuber.utils import (
 )
 
 
-def add_nifti_arguments(parser: ArgumentParser) -> ArgumentParser:
+def create_parser() -> ArgumentParser:
+    parser = ArgumentParser()
+
+    parser.add_argument(
+        "source_path",
+        help="Path to NIFTY file or to a directory if multiple NIFTI files should be converted. "
+        "In the latter case, also see --color_file and --segmentation_file.",
+    )
+
+    parser.add_argument(
+        "target_path", help="Output directory for the generated WKW dataset."
+    )
+
+    parser.add_argument(
+        "--layer_name",
+        "-l",
+        help="Name of the cubed layer (color or segmentation).",
+        default="color",
+    )
+
     parser.add_argument(
         "--is_segmentation_layer",
-        "-sl",
+        "-s",
         help="When converting one layer, signals whether layer is segmentation layer. "
         "When converting a folder, this option is ignored",
         default=False,
         action="store_true",
+    )
+
+    parser.add_argument(
+        "--dtype", "-d", help="Target datatype (e.g. uint8, uint16).", default="uint8"
     )
 
     parser.add_argument(
@@ -70,7 +93,8 @@ def add_nifti_arguments(parser: ArgumentParser) -> ArgumentParser:
         default=None,
     )
 
-    add_scale_flag(parser)
+    add_scale_flag(parser, required=False)
+    add_verbose_flag(parser)
 
     return parser
 
@@ -335,7 +359,7 @@ def main(args: Namespace) -> None:
 
 
 if __name__ == "__main__":
-    args = add_nifti_arguments(add_base_flags(ArgumentParser())).parse_args()
+    args = create_parser().parse_args()
     setup_logging(args)
 
     main(args)
