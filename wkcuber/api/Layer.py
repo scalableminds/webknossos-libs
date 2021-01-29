@@ -1,7 +1,8 @@
+from abc import ABC, abstractmethod
 from shutil import rmtree
 from os.path import join
 from os import makedirs
-from typing import Tuple, Type, Union, Dict, Any, TYPE_CHECKING
+from typing import Tuple, Type, Union, Dict, Any, TYPE_CHECKING, TypeVar, Generic
 
 import numpy as np
 
@@ -15,12 +16,16 @@ from wkcuber.api.MagDataset import (
     TiffMagDataset,
     TiledTiffMagDataset,
     find_mag_path_on_disk,
+    GenericTiffMagDataset,
 )
 from wkcuber.mag import Mag
 from wkcuber.utils import DEFAULT_WKW_FILE_LEN
 
 
-class Layer:
+MagT = TypeVar("MagT", bound=MagDataset)
+
+
+class Layer(Generic[MagT]):
 
     COLOR_TYPE = "color"
     SEGMENTATION_TYPE = "segmentation"
@@ -36,25 +41,23 @@ class Layer:
         self.dataset = dataset
         self.dtype_per_channel = dtype_per_channel
         self.num_channels = num_channels
-        self.mags: Dict[str, Any] = {}
+        self.mags: Dict[str, MagT] = {}
 
         full_path = join(dataset.path, name)
         makedirs(full_path, exist_ok=True)
 
-    def get_mag(self, mag: Union[int, str, list, tuple, np.ndarray, Mag]) -> MagDataset:
+    def get_mag(self, mag: Union[int, str, list, tuple, np.ndarray, Mag]) -> MagT:
         mag = Mag(mag).to_layer_name()
         if mag not in self.mags.keys():
             raise IndexError("The mag {} is not a mag of this layer".format(mag))
         return self.mags[mag]
 
-    def add_mag(
-        self, mag: Union[int, str, list, tuple, np.ndarray, Mag], **kwargs: Any
-    ) -> MagDataset:
+    def add_mag(self, mag: Union[int, str, list, tuple, np.ndarray, Mag]) -> MagT:
         pass
 
     def get_or_add_mag(
-        self, mag: Union[int, str, list, tuple, np.ndarray, Mag], **kwargs: Any
-    ) -> MagDataset:
+        self, mag: Union[int, str, list, tuple, np.ndarray, Mag]
+    ) -> MagT:
         pass
 
     def delete_mag(self, mag: Union[int, str, list, tuple, np.ndarray, Mag]) -> None:
@@ -114,30 +117,25 @@ class Layer:
         pass
 
 
-class WKLayer(Layer):
+class WKLayer(Layer[WKMagDataset]):
     mags: Dict[str, WKMagDataset]
 
     def add_mag(
-        self, mag: Union[int, str, list, tuple, np.ndarray, Mag], **kwargs: Any
-    ) -> MagDataset:
-        block_len: int = kwargs.get("block_len", None)
-        file_len: int = kwargs.get("file_len", None)
-        block_type: int = kwargs.get("block_type", None)
-
-        if block_len is None:
-            block_len = 32
-        if file_len is None:
-            file_len = DEFAULT_WKW_FILE_LEN
-        if block_type is None:
-            block_type = wkw.Header.BLOCK_TYPE_RAW
-
+        self,
+        mag: Union[int, str, list, tuple, np.ndarray, Mag],
+        block_len: int = 32,
+        file_len: int = DEFAULT_WKW_FILE_LEN,
+        block_type: int = wkw.Header.BLOCK_TYPE_RAW,
+    ) -> WKMagDataset:
         # normalize the name of the mag
         mag = Mag(mag).to_layer_name()
 
         self._assert_mag_does_not_exist_yet(mag)
         self._create_dir_for_mag(mag)
 
-        self.mags[mag] = WKMagDataset.create(self, mag, block_len, file_len, block_type)
+        self.mags[mag] = WKMagDataset(
+            self, mag, block_len, file_len, block_type, exists=False
+        )
         self.dataset.properties._add_mag(
             self.name, mag, cube_length=block_len * file_len
         )
@@ -145,13 +143,14 @@ class WKLayer(Layer):
         return self.mags[mag]
 
     def get_or_add_mag(
-        self, mag: Union[int, str, list, tuple, np.ndarray, Mag], **kwargs: Any
-    ) -> MagDataset:
+        self,
+        mag: Union[int, str, list, tuple, np.ndarray, Mag],
+        block_len: int = 32,
+        file_len: int = DEFAULT_WKW_FILE_LEN,
+        block_type: int = wkw.Header.BLOCK_TYPE_RAW,
+    ) -> WKMagDataset:
         # normalize the name of the mag
         mag = Mag(mag).to_layer_name()
-        block_len: int = kwargs.get("block_len", None)
-        file_len: int = kwargs.get("file_len", None)
-        block_type: int = kwargs.get("block_type", None)
 
         if mag in self.mags.keys():
             assert (
@@ -190,19 +189,20 @@ class WKLayer(Layer):
         )
 
 
-class TiffLayer(Layer):
+TiffMagT = TypeVar("TiffMagT", bound=GenericTiffMagDataset)
+
+
+class GenericTiffLayer(Layer[TiffMagT], ABC):
     dataset: "TiffDataset"
 
-    def add_mag(
-        self, mag: Union[int, str, list, tuple, np.ndarray, Mag], **kwargs: Any
-    ) -> MagDataset:
+    def add_mag(self, mag: Union[int, str, list, tuple, np.ndarray, Mag]) -> TiffMagT:
         # normalize the name of the mag
         mag = Mag(mag).to_layer_name()
 
         self._assert_mag_does_not_exist_yet(mag)
         self._create_dir_for_mag(mag)
 
-        self.mags[mag] = self._get_mag_dataset_class().create(
+        self.mags[mag] = self._get_mag_dataset_class()(
             self, mag, self.dataset.properties.pattern
         )
         self.dataset.properties._add_mag(self.name, mag)
@@ -210,8 +210,8 @@ class TiffLayer(Layer):
         return self.mags[mag]
 
     def get_or_add_mag(
-        self, mag: Union[int, str, list, tuple, np.ndarray, Mag], **kwargs: Any
-    ) -> MagDataset:
+        self, mag: Union[int, str, list, tuple, np.ndarray, Mag]
+    ) -> TiffMagT:
         # normalize the name of the mag
         mag = Mag(mag).to_layer_name()
 
@@ -233,10 +233,16 @@ class TiffLayer(Layer):
         )
         self.dataset.properties._add_mag(self.name, mag)
 
+    @abstractmethod
+    def _get_mag_dataset_class(self) -> Type[TiffMagT]:
+        pass
+
+
+class TiffLayer(GenericTiffLayer[TiffMagDataset]):
     def _get_mag_dataset_class(self) -> Type[TiffMagDataset]:
         return TiffMagDataset
 
 
-class TiledTiffLayer(TiffLayer):
+class TiledTiffLayer(GenericTiffLayer[TiledTiffMagDataset]):
     def _get_mag_dataset_class(self) -> Type[TiledTiffMagDataset]:
         return TiledTiffMagDataset

@@ -726,10 +726,7 @@ def test_tiled_tiff_read_and_write() -> None:
         pattern="{xxx}_{yyy}_{zzz}.tif",
     )
 
-    mag = cast(
-        TiledTiffMagDataset,
-        tiled_tiff_ds.add_layer("color", Layer.COLOR_TYPE).add_mag("1"),
-    )
+    mag = tiled_tiff_ds.add_layer("color", Layer.COLOR_TYPE).add_mag("1")
 
     data = np.zeros((250, 200, 10), dtype=np.uint8)
     for h in range(10):
