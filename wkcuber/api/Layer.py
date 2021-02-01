@@ -4,7 +4,7 @@ from argparse import Namespace
 from shutil import rmtree
 from os.path import join
 from os import makedirs
-from typing import Tuple, Type, Union, Dict, Any, TYPE_CHECKING, cast
+from typing import Tuple, Type, Union, Dict, Any, TYPE_CHECKING, cast, Optional
 
 import numpy as np
 
@@ -121,7 +121,7 @@ class Layer:
     ) -> MagDataset:
         raise NotImplemented
 
-    def _padd_existing_mags_for_downsampling(self, from_mag, max_mag, scale):
+    def _pad_existing_mags_for_downsampling(self, from_mag, max_mag, scale):
         # pad all existing mags if necessary
         # during each downsampling step, the data shape or offset of the new mag should never need to be rounded
         existing_mags = sorted([Mag(mag) for mag in self.mags.keys()])
@@ -192,15 +192,20 @@ class Layer:
         max_mag: Mag,
         interpolation_mode: str,
         compress: bool,
-        scale: Tuple[float, float, float] = None,
-        buffer_edge_len: int = None,
-        args: Namespace = None,
+        anisotropic: Optional[bool] = None,
+        scale: Optional[Tuple[float, float, float]] = None,
+        buffer_edge_len: Optional[int] = None,
+        args: Optional[Namespace] = None,
     ) -> None:
-        # if 'scale' is set, the data gets downsampled anisotropic
-        self._padd_existing_mags_for_downsampling(from_mag, max_mag, scale)
+        anisotropic = anisotropic or scale is not None
+        if anisotropic:
+            if scale is None:
+                scale = self.dataset.properties.scale
+
+        self._pad_existing_mags_for_downsampling(from_mag, max_mag, scale)
 
         parsed_interpolation_mode = parse_interpolation_mode(
-            interpolation_mode, self.name
+            interpolation_mode, self.dataset.properties.data_layers[self.name].category
         )
         prev_mag = from_mag
         target_mag = get_next_mag(prev_mag, scale)

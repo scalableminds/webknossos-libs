@@ -54,6 +54,9 @@ class View:
         assert_non_negative_offset(relative_offset)
         self.assert_bounds(relative_offset, data.shape[-3:])
 
+        if len(data.shape) == 4 and data.shape[0] == 1:
+            data = data[0]  # remove channel dimension
+
         # calculate the absolute offset
         absolute_offset = cast(
             Tuple[int, int, int],

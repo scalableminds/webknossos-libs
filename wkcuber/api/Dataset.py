@@ -80,11 +80,7 @@ def dtype_per_channel_to_dtype_per_layer(
 def copy_job(args: Tuple[View, View, int]) -> None:
     # Copy the data form one view to the other in a buffered fashion
     (source_view, target_view, i) = args
-
-    data = source_view.read()
-    if len(data.shape) == 4 and data.shape[0] == 1:
-        data = data[0]  # remove channel dimension
-    target_view.write(data)
+    target_view.write(source_view.read())
 
 
 class AbstractDataset(ABC):

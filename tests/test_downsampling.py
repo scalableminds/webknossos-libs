@@ -216,50 +216,35 @@ def test_anisotropic_mag_calculation():
 
 
 def test_downsampling_padding():
-    ds_path = "./testoutput/larger_wk_dataset/"
-    try:
-        shutil.rmtree(ds_path)
-    except:
-        pass
+    # offset, size, max_mag, scale, expected_offset, expected_size
+    padding_tests = [
+        ((0, 0, 0), (128, 128, 256), Mag(4), (1, 1, 1), (0, 0, 0), (128, 128, 256)),  # no padding in this case
+        ((10, 0, 0), (118, 128, 256), Mag(4), (1, 1, 1), (8, 0, 0), (120, 128, 256)),
+        ((10, 20, 30), (128, 148, 168), Mag(8), (2, 1, 1), (8, 16, 24), (132, 152, 176)),
+    ]
+    for args in padding_tests:
+        ds_path = "./testoutput/larger_wk_dataset/"
+        try:
+            shutil.rmtree(ds_path)
+        except:
+            pass
 
-    ds = WKDataset.create(ds_path, scale=(1, 1, 1))
-    layer = ds.add_layer(
-        "layer1", "segmentation", num_channels=3, largest_segment_id=1000000000
-    )
-    mag1 = layer.add_mag("1", block_len=8, file_len=8)
-    mag2 = layer.add_mag("2", block_len=8, file_len=8)
+        (offset, size, max_mag, scale, expected_offset, expected_size) = args
 
-    # write some random data to mag 1 and mag 2
-    mag1.write(
-        offset=(10, 20, 30),
-        data=(np.random.rand(3, 128, 148, 168) * 255).astype(np.uint8),
-    )
+        ds = WKDataset.create(ds_path, scale=scale)
+        layer = ds.add_layer(
+            "layer1", "segmentation", num_channels=1, largest_segment_id=1000000000
+        )
+        mag1 = layer.add_mag("1", block_len=8, file_len=8)
 
-    mag2.write(
-        offset=(5, 10, 15), data=(np.random.rand(3, 64, 74, 84) * 255).astype(np.uint8)
-    )
+        # write random data to mag 1 to set the initial offset and size
+        mag1.write(
+            offset=offset,
+            data=(np.random.rand(*size) * 255).astype(np.uint8),
+        )
 
-    assert np.array_equal(mag1.get_view().global_offset, (10, 20, 30))
-    assert np.array_equal(mag1.get_view().size, (128, 148, 168))
-    assert np.array_equal(mag2.get_view().global_offset, (5, 10, 15))
-    assert np.array_equal(mag2.get_view().size, (64, 74, 84))
+        layer._pad_existing_mags_for_downsampling(Mag(1), max_mag, scale)
 
-    layer.downsample(
-        from_mag=Mag(2),
-        max_mag=Mag(8),
-        scale=(4, 2, 2),
-        interpolation_mode="default",
-        compress=False,
-    )
+        assert np.array_equal(mag1.get_view().size, expected_size)
+        assert np.array_equal(mag1.get_view().global_offset, expected_offset)
 
-    # The data gets padded in a way that it is always possible to divide the offset and the size by 2
-    assert np.array_equal(layer.get_mag("4-8-8").get_view().global_offset, (2, 2, 3))
-    assert np.array_equal(layer.get_mag("2-4-4").get_view().global_offset, (4, 4, 6))
-    assert np.array_equal(mag2.get_view().global_offset, (4, 8, 12))
-    assert np.array_equal(mag1.get_view().global_offset, (8, 16, 24))
-    # The 'end_offset' of the data in mag 1 is: (10, 20, 30) + (128, 148, 168) = (138, 168, 198)
-    # Then 'end_offset' of mag 4-8-8 is: (35, 21, 25)  ->  size=(33, 19, 23)
-    assert np.array_equal(layer.get_mag("4-8-8").get_view().size, (33, 19, 22))
-    assert np.array_equal(layer.get_mag("2-4-4").get_view().size, (66, 38, 44))
-    assert np.array_equal(mag2.get_view().size, (66, 76, 88))
-    assert np.array_equal(mag1.get_view().size, (132, 152, 176))

@@ -121,25 +121,12 @@ def downsample_mags(
         from_mag = Mag(os.path.basename(path))
         path = os.path.dirname(os.path.dirname(path))
 
-    if anisotropic:
-        if scale is None:
-            try:
-                scale = read_datasource_properties(path)["scale"]
-            except Exception as exc:
-                logging.error(
-                    "Could not get the scale from the datasource-properties.json. Probably your path is wrong. "
-                    "If you do not provide the layer_name or from_mag, they need to be included in the path."
-                    "(e.g. dataset/color/1). Otherwise the path should just point at the dataset directory."
-                    "the path: %s",
-                    path,
-                )
-                raise exc
-
     WKDataset(path).get_layer(layer_name).downsample(
         from_mag=from_mag,
         max_mag=max_mag,
         interpolation_mode=interpolation_mode,
         compress=compress,
+        anisotropic=anisotropic,
         scale=scale,
         buffer_edge_len=buffer_edge_len,
         args=args,
@@ -162,6 +149,7 @@ def downsample_mags_isotropic(
         max_mag=max_mag,
         interpolation_mode=interpolation_mode,
         compress=compress,
+        anisotropic=False,
         scale=None,
         buffer_edge_len=buffer_edge_len,
         args=args,
@@ -184,6 +172,7 @@ def downsample_mags_anisotropic(
         max_mag=max_mag,
         interpolation_mode=interpolation_mode,
         compress=compress,
+        anisotropic=True,
         scale=scale,
         buffer_edge_len=buffer_edge_len,
         args=args,
