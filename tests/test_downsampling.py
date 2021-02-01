@@ -102,17 +102,22 @@ def downsample_test_helper(use_compress):
     )[0]
     assert np.any(source_buffer != 0)
 
-    downsample_args = (
-        mag1.get_view(offset=offset, size=(CUBE_EDGE_LEN * 2,) * 3),
-        mag2.get_view(
-            offset=tuple([o // 2 for o in offset]),
-            size=(CUBE_EDGE_LEN,) * 3,
-            is_bounded=False,
+    downsample_cube_job(
+        (
+            mag1.get_view(offset=offset, size=(CUBE_EDGE_LEN * 2,) * 3),
+            mag2.get_view(
+                offset=tuple([o // 2 for o in offset]),
+                size=(CUBE_EDGE_LEN,) * 3,
+                is_bounded=False,
+            ),
+            0
         ),
-        0,
-        ([2, 2, 2], InterpolationModes.MAX, CUBE_EDGE_LEN, use_compress, 100),
+        [2, 2, 2],
+        InterpolationModes.MAX,
+        CUBE_EDGE_LEN,
+        use_compress,
+        100
     )
-    downsample_cube_job(downsample_args)
 
     assert np.any(source_buffer != 0)
 
@@ -161,19 +166,14 @@ def test_downsample_multi_channel():
 
     mag2 = l._initialize_mag_from_other_mag("2", mag1, False)
 
-    downsample_args = (
-        l.get_mag("1").get_view(),
-        l.get_mag("2").get_view(is_bounded=False),
-        0,
-        (
-            [2, 2, 2],
-            InterpolationModes.MAX,
-            CUBE_EDGE_LEN,
-            False,
-            100,
-        ),
+    downsample_cube_job(
+        (l.get_mag("1").get_view(), l.get_mag("2").get_view(is_bounded=False), 0),
+        [2, 2, 2],
+        InterpolationModes.MAX,
+        CUBE_EDGE_LEN,
+        False,
+        100
     )
-    downsample_cube_job(downsample_args)
 
     channels = []
     for channel_index in range(num_channels):

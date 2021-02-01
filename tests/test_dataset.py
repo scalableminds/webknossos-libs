@@ -31,7 +31,7 @@ from wkcuber.downsampling_utils import (
     parse_interpolation_mode,
 )
 from wkcuber.mag import Mag
-from wkcuber.utils import get_executor_for_args, open_wkw, WkwDatasetInfo
+from wkcuber.utils import get_executor_for_args, open_wkw, WkwDatasetInfo, named_partial
 
 expected_error_msg = "The test did not throw an exception even though it should. "
 
@@ -42,7 +42,7 @@ def delete_dir(relative_path):
 
 
 def chunk_job(args):
-    view, additional_args = args
+    view, i = args
 
     # increment the color value of each voxel
     data = view.read(size=view.size)
@@ -52,12 +52,12 @@ def chunk_job(args):
     view.write(data)
 
 
-def advanced_chunk_job(args):
-    view, additional_args = args
+def advanced_chunk_job(args, type):
+    view, i = args
 
     # write different data for each chunk (depending on the global_offset of the chunk)
     data = view.read(size=view.size)
-    data = np.ones(data.shape, dtype=np.uint8) * np.uint8(sum(view.global_offset))
+    data = np.ones(data.shape, dtype=type) * type(sum(view.global_offset))
     view.write(data)
 
 
@@ -66,7 +66,6 @@ def for_each_chunking_with_wrong_chunk_size(view):
         try:
             view.for_each_chunk(
                 chunk_job,
-                job_args_per_chunk="test",
                 chunk_size=(0, 64, 64),
                 executor=executor,
             )
@@ -79,7 +78,6 @@ def for_each_chunking_with_wrong_chunk_size(view):
         try:
             view.for_each_chunk(
                 chunk_job,
-                job_args_per_chunk="test",
                 chunk_size=(16, 64, 64),
                 executor=executor,
             )
@@ -90,7 +88,6 @@ def for_each_chunking_with_wrong_chunk_size(view):
         try:
             view.for_each_chunk(
                 chunk_job,
-                job_args_per_chunk="test",
                 chunk_size=(100, 64, 64),
                 executor=executor,
             )
@@ -102,9 +99,9 @@ def for_each_chunking_with_wrong_chunk_size(view):
 def for_each_chunking_advanced(ds, view):
     chunk_size = (64, 64, 64)
     with get_executor_for_args(None) as executor:
+        func = named_partial(advanced_chunk_job, type=np.uint8)
         view.for_each_chunk(
-            advanced_chunk_job,
-            job_args_per_chunk="test",
+            func,
             chunk_size=chunk_size,
             executor=executor,
         )
@@ -129,13 +126,13 @@ def for_each_chunking_advanced(ds, view):
         )
 
 
-def copy_and_transform_job(args):
-    (source_view, target_view, i, (parameter1, parameter2)) = args
+def copy_and_transform_job(args, name: str, val: int):
+    (source_view, target_view, i) = args
     # This method simply takes the data from the source_view, transforms it and writes it to the target_view
 
     # These assertions are just to demonstrate how the passed parameters can be accessed inside this method
-    assert parameter1 == "test1"
-    assert parameter2 == 42
+    assert name == "foo"
+    assert val == 42
 
     # increment the color value of each voxel
     data = source_view.read(size=source_view.size)
@@ -904,7 +901,6 @@ def test_chunking_wk():
     with get_executor_for_args(None) as executor:
         view.for_each_chunk(
             chunk_job,
-            job_args_per_chunk="test",
             chunk_size=(64, 64, 64),
             executor=executor,
         )
@@ -952,7 +948,6 @@ def test_chunking_tiff():
     with get_executor_for_args(None) as executor:
         view.for_each_chunk(
             chunk_job,
-            job_args_per_chunk="test",
             chunk_size=(265, 265, 1),
             executor=executor,
         )
@@ -1603,11 +1598,8 @@ def test_dataset_conversion():
     wk_color_layer.add_mag("2", block_len=8, file_len=16).write(
         offset=(5, 10, 15), data=(np.random.rand(3, 64, 64, 128) * 255).astype(np.uint8)
     )
-
-    wk_to_tiff_ds = TiffDataset.create(wk_to_tiff_ds_path, 1)
-    origin_wk_ds.copy_dataset(wk_to_tiff_ds)
-    wk_to_tiff_to_wk_ds = WKDataset.create(wk_to_tiff_to_wk_ds_path, 1)
-    wk_to_tiff_ds.copy_dataset(wk_to_tiff_to_wk_ds)
+    wk_to_tiff_ds = origin_wk_ds.to_tiff_dataset(wk_to_tiff_ds_path)
+    wk_to_tiff_to_wk_ds = wk_to_tiff_ds.to_wk_dataset(wk_to_tiff_to_wk_ds_path)
 
     assert origin_wk_ds.layers.keys() == wk_to_tiff_to_wk_ds.layers.keys()
     for layer_name in origin_wk_ds.layers:
@@ -1651,12 +1643,8 @@ def test_dataset_conversion():
         offset=(5, 10, 15), data=(np.random.rand(3, 64, 64, 128) * 255).astype(np.uint8)
     )
 
-    tiff_to_wk_ds = WKDataset.create(tiff_to_wk_ds_path, 1)
-    origin_tiff_ds.copy_dataset(tiff_to_wk_ds)
-    tiff_to_wk_to_tiff = TiffDataset.create(
-        tiff_to_wk_to_tiff_ds_path, 1, pattern="different_pattern_{zzzzz}.tif"
-    )
-    tiff_to_wk_ds.copy_dataset(tiff_to_wk_to_tiff)
+    tiff_to_wk_ds = origin_tiff_ds.to_wk_dataset(tiff_to_wk_ds_path)
+    tiff_to_wk_to_tiff = tiff_to_wk_ds.to_tiff_dataset(tiff_to_wk_to_tiff_ds_path, pattern="different_pattern_{zzzzz}.tif")
 
     assert origin_tiff_ds.layers.keys() == tiff_to_wk_to_tiff.layers.keys()
     for layer_name in origin_tiff_ds.layers:
@@ -1699,9 +1687,9 @@ def test_for_zipped_chunks():
     target_view = target_mag.get_view(is_bounded=False)
 
     with get_executor_for_args(None) as executor:
+        func = named_partial(copy_and_transform_job, name="foo", val=42)  # curry the function with further arguments
         source_view.for_zipped_chunks(
-            copy_and_transform_job,
-            job_args_per_chunk=("test1", 42),
+            func,
             target_view=target_view,
             source_chunk_size=(64, 64, 64),  # multiple of (wkw_file_len,) * 3
             target_chunk_size=(64, 64, 64),  # multiple of (wkw_file_len,) * 3

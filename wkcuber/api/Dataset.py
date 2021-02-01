@@ -12,7 +12,7 @@ import os
 import re
 
 from wkcuber.mag import Mag
-from wkcuber.utils import logger, get_executor_for_args
+from wkcuber.utils import logger, get_executor_for_args, ceil_div_np
 
 from wkcuber.api.Properties.DatasetProperties import (
     WKProperties,
@@ -42,7 +42,7 @@ def convert_dtypes(
 
     # split the dtype into the actual type and the number of bits
     # example: "uint24" -> ["uint", "24"]
-    dtype_parts = re.split("(\d+)", str(dtype))
+    dtype_parts = re.split(r"(\d+)", str(dtype))
     # calculate number of bits for dtype_per_channel
     converted_dtype_parts = [
         (str(int(op(int(part), num_channels))) if is_int(part) else part)
@@ -77,9 +77,9 @@ def dtype_per_channel_to_dtype_per_layer(
     )
 
 
-def copy_job(args: Tuple[View, View, int, Any]) -> None:
+def copy_job(args: Tuple[View, View, int]) -> None:
     # Copy the data form one view to the other in a buffered fashion
-    (source_view, target_view, i, _) = args
+    (source_view, target_view, i) = args
 
     data = source_view.read()
     if len(data.shape) == 4 and data.shape[0] == 1:
@@ -319,11 +319,11 @@ class AbstractDataset(ABC):
         raise NotImplementedError
 
     def copy_dataset(
-        self, empty_target_ds: "AbstractDataset", args: Namespace = None
+        self, empty_target_ds: "AbstractDataset", args: Optional[Namespace] = None
     ) -> None:
         assert (
             len(empty_target_ds.layers) == 0
-        ), f"Converting dataset failed. The target dataset must be empty."
+        ), f"Copying dataset failed. The target dataset must be empty."
         with get_executor_for_args(args) as executor:
             for layer_name, layer in self.layers.items():
                 largest_segment_id = None
@@ -349,34 +349,46 @@ class AbstractDataset(ABC):
                     bbox = mag.layer.dataset.properties.get_bounding_box_of_layer(
                         layer_name
                     )
-                    target_mag.view.global_offset = (
-                        0,
-                        0,
-                        0,
-                    )  # The view of a MagDataset always starts at (0, 0, 0)
+                    # The base view of a MagDataset always starts at (0, 0, 0)
+                    target_mag.view.global_offset = (0, 0, 0)
                     target_mag.view.size = cast(
                         Tuple[int, int, int],
-                        tuple(
-                            -(
-                                -(np.array(bbox[0]) + np.array(bbox[1]))
-                                // Mag(mag_name).as_np()
-                            )
-                        ),
-                    )  # ceil div
+                        tuple(ceil_div_np(np.array(bbox[0]) + np.array(bbox[1]), Mag(mag_name).as_np()))
+                    )
                     target_mag.layer.dataset.properties._set_bounding_box_of_layer(
                         layer_name, offset=bbox[0], size=bbox[1]
                     )
 
-                    # The data gets written to the tiff_mag.
+                    # The data gets written to the target_mag.
                     # Therefore, the chunk size is determined by the target_mag to prevent concurrent writes
                     mag.view.for_zipped_chunks(
                         work_on_chunk=copy_job,
-                        job_args_per_chunk=(),
                         target_view=target_mag.view,
                         source_chunk_size=target_mag._get_file_dimensions(),
                         target_chunk_size=target_mag._get_file_dimensions(),
                         executor=executor,
                     )
+
+    def to_wk_dataset(self, new_dataset_path: Union[str, Path], scale: Optional[Tuple[float, float, float]] = None) -> "WKDataset":
+        if scale is None:
+            scale = self.properties.scale
+        new_ds = WKDataset.create(new_dataset_path, scale=scale)
+        self.copy_dataset(new_ds)
+        return new_ds
+
+    def to_tiff_dataset(self, new_dataset_path: Union[str, Path], scale: Optional[Tuple[float, float, float]] = None, pattern: Optional[str] = None) -> "TiffDataset":
+        if scale is None:
+            scale = self.properties.scale
+        new_ds = TiffDataset.create(new_dataset_path, scale=scale, pattern=pattern)
+        self.copy_dataset(new_ds)
+        return new_ds
+
+    def to_tiled_tiff_dataset(self, new_dataset_path: Union[str, Path], scale: Optional[Tuple[float, float, float]] = None, tile_size: Optional[Tuple[int, int]] = None, pattern: Optional[str] = None) -> "TiledTiffDataset":
+        if scale is None:
+            scale = self.properties.scale
+        new_ds = TiledTiffDataset.create(new_dataset_path, scale=scale, tile_size=tile_size, pattern=pattern)
+        self.copy_dataset(new_ds)
+        return new_ds
 
     @abstractmethod
     def _get_properties_type(self) -> Type[Properties]:
@@ -436,8 +448,10 @@ class TiffDataset(AbstractDataset):
         cls,
         dataset_path: Union[str, Path],
         scale: Tuple[float, float, float],
-        pattern: str = "{zzzzz}.tif",
+        pattern: Optional[str] = None,
     ) -> "TiffDataset":
+        if pattern is None:
+            pattern = "{zzzzz}.tif"
         validate_pattern(pattern)
         name = basename(normpath(dataset_path))
         properties = TiffProperties(
@@ -500,8 +514,10 @@ class TiledTiffDataset(AbstractDataset):
         dataset_path: Union[str, Path],
         scale: Tuple[float, float, float],
         tile_size: Tuple[int, int],
-        pattern: str = "{xxxxx}/{yyyyy}/{zzzzz}.tif",
+        pattern: Optional[str] = None,
     ) -> "TiledTiffDataset":
+        if pattern is None:
+            pattern = "{xxxxx}/{yyyyy}/{zzzzz}.tif"
         validate_pattern(pattern)
         name = basename(normpath(dataset_path))
         properties = TiffProperties(

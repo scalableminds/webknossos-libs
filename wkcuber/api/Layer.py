@@ -24,15 +24,13 @@ from wkcuber.downsampling_utils import (
     parse_interpolation_mode,
     downsample_cube_job,
     determine_buffer_edge_len,
-    DEFAULT_EDGE_LEN,
-    use_logging,
 )
 from wkcuber.mag import Mag
 from wkcuber.utils import (
     DEFAULT_WKW_FILE_LEN,
     get_executor_for_args,
     cube_addresses,
-    parse_cube_file_name,
+    parse_cube_file_name, ceil_div_np, named_partial, convert_mag1_offset, convert_mag1_size,
 )
 
 
@@ -123,18 +121,7 @@ class Layer:
     ) -> MagDataset:
         raise NotImplemented
 
-    def downsample(
-        self,
-        from_mag: Mag,
-        max_mag: Mag,
-        interpolation_mode: str,
-        compress: bool,
-        scale: Tuple[float, float, float] = None,
-        buffer_edge_len: int = None,
-        args: Namespace = None,
-    ) -> None:
-        # if 'scale' is set, the data gets downsampled anisotropic
-
+    def _padd_existing_mags_for_downsampling(self, from_mag, max_mag, scale):
         # pad all existing mags if necessary
         # during each downsampling step, the data shape or offset of the new mag should never need to be rounded
         existing_mags = sorted([Mag(mag) for mag in self.mags.keys()])
@@ -153,22 +140,22 @@ class Layer:
         size_in_mag1 = self.dataset.properties.data_layers[
             self.name
         ].get_bounding_box_size()
-        offset_in_lowest_mag = offset_in_mag1 // all_mags_after_downsampling[-1].as_np()
-        end_offset_in_lowest_mag = -(
-            (np.array(offset_in_mag1) + size_in_mag1)
-            // -all_mags_after_downsampling[-1].as_np()
-        )  # ceil div
+        offset_in_lowest_mag = convert_mag1_offset(offset_in_mag1, all_mags_after_downsampling[-1])
+        end_offset_in_lowest_mag = ceil_div_np(
+            np.array(offset_in_mag1) + size_in_mag1,
+            all_mags_after_downsampling[-1].as_np()
+        )
         # translate alignment into mag 1
         aligned_offset_in_mag1 = lowest_mag * offset_in_lowest_mag
         aligned_size_in_mag1 = lowest_mag * (
-            end_offset_in_lowest_mag - offset_in_lowest_mag
+                end_offset_in_lowest_mag - offset_in_lowest_mag
         )
 
         # pad the existing mags
         for mag_name in existing_mags:
             mag = self.mags[mag_name.to_layer_name()]
-            aligned_offset = aligned_offset_in_mag1 // mag_name.as_np()
-            aligned_size = aligned_size_in_mag1 // mag_name.as_np()
+            aligned_offset = convert_mag1_offset(aligned_offset_in_mag1, mag_name)
+            aligned_size = convert_mag1_size(aligned_size_in_mag1, mag_name)
             current_offset = mag.get_view().global_offset
             current_size = mag.get_view().size
 
@@ -186,8 +173,8 @@ class Layer:
                     )
                 # pad right / bottom / back
                 buffer_width = (
-                    (aligned_offset + aligned_size)
-                    - (np.array(current_offset) + np.array(current_size))
+                        (aligned_offset + aligned_size)
+                        - (np.array(current_offset) + np.array(current_size))
                 )[i]
                 if buffer_width > 0:
                     padding_shape = shape
@@ -198,6 +185,19 @@ class Layer:
                         data=np.zeros(padding_shape, dtype=mag.get_dtype()),
                         offset=right_offset,
                     )
+
+    def downsample(
+        self,
+        from_mag: Mag,
+        max_mag: Mag,
+        interpolation_mode: str,
+        compress: bool,
+        scale: Tuple[float, float, float] = None,
+        buffer_edge_len: int = None,
+        args: Namespace = None,
+    ) -> None:
+        # if 'scale' is set, the data gets downsampled anisotropic
+        self._padd_existing_mags_for_downsampling(from_mag, max_mag, scale)
 
         parsed_interpolation_mode = parse_interpolation_mode(
             interpolation_mode, self.name
@@ -234,18 +234,18 @@ class Layer:
                     buffer_edge_len = determine_buffer_edge_len(
                         prev_mag_ds.view
                     )  # DEFAULT_EDGE_LEN
-                job_args = (
-                    mag_factors,
-                    parsed_interpolation_mode,
-                    buffer_edge_len,
-                    compress,
-                    job_count_per_log,
+                func = named_partial(
+                    downsample_cube_job,
+                    mag_factors=mag_factors,
+                    interpolation_mode=parsed_interpolation_mode,
+                    buffer_edge_len=buffer_edge_len,
+                    compress=compress,
+                    job_count_per_log=job_count_per_log
                 )
                 prev_mag_ds.get_view().for_zipped_chunks(
                     # this view is restricted to the bounding box specified in the properties
-                    downsample_cube_job,
+                    func,
                     target_view=target_mag_view,
-                    job_args_per_chunk=job_args,
                     source_chunk_size=np.array(target_mag_ds._get_file_dimensions())
                     * mag_factors,
                     target_chunk_size=target_mag_ds._get_file_dimensions(),

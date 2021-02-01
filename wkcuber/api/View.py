@@ -11,7 +11,7 @@ from wkw import Dataset, wkw
 
 from wkcuber.api.TiffData.TiffMag import TiffMag, TiffMagHeader
 from wkcuber.api.bounding_box import BoundingBox
-from wkcuber.utils import wait_and_ensure_success
+from wkcuber.utils import wait_and_ensure_success, ceil_div_np
 
 
 class View:
@@ -101,7 +101,12 @@ class View:
         self,
         size: Tuple[int, int, int],
         relative_offset: Tuple[int, int, int] = (0, 0, 0),
+        is_bounded: Optional[bool] = None
     ) -> "View":
+        if is_bounded is None:
+            is_bounded = self.is_bounded
+        assert is_bounded or is_bounded == self.is_bounded, \
+            f"Failed to get subview. The calling view is bounded. Therefore, the subview also has to be bounded."
         self.assert_bounds(relative_offset, size)
         view_offset = cast(
             Tuple[int, int, int], tuple(self.global_offset + np.array(relative_offset))
@@ -111,7 +116,7 @@ class View:
             self.header,
             size=size,
             global_offset=view_offset,
-            is_bounded=self.is_bounded,
+            is_bounded=is_bounded,
         )
 
     def check_bounds(
@@ -133,7 +138,6 @@ class View:
     def for_each_chunk(
         self,
         work_on_chunk: Callable[[List[Any]], None],
-        job_args_per_chunk: Any,
         chunk_size: Tuple[int, int, int],
         executor: Union[ClusterExecutor, cluster_tools.WrappedProcessPoolExecutor],
     ) -> None:
@@ -141,9 +145,9 @@ class View:
 
         job_args = []
 
-        for chunk in BoundingBox(self.global_offset, self.size).chunk(
+        for i, chunk in enumerate(BoundingBox(self.global_offset, self.size).chunk(
             chunk_size, list(chunk_size)
-        ):
+        )):
             relative_offset = cast(
                 Tuple[int, int, int],
                 tuple(np.array(chunk.topleft) - np.array(self.global_offset)),
@@ -153,7 +157,7 @@ class View:
                 relative_offset=relative_offset,
             )
             view.is_bounded = True
-            job_args.append((view, job_args_per_chunk))
+            job_args.append((view, i))
 
         # execute the work for each chunk
         wait_and_ensure_success(executor.map_to_futures(work_on_chunk, job_args))
@@ -161,7 +165,6 @@ class View:
     def for_zipped_chunks(
         self,
         work_on_chunk: Callable[[List[Any]], None],
-        job_args_per_chunk: Any,
         target_view: "View",
         source_chunk_size: Tuple[int, int, int],
         target_chunk_size: Tuple[int, int, int],
@@ -173,7 +176,7 @@ class View:
         and a matching pair of chunks is then passed to the function that shall be executed.
         This is useful if data from one view should be (transformed and) written to a different view,
         assuming that the transformation of the data can be handled on chunk-level.
-        Additionally to the two views and the job_args, the counter 'i' is passed to the 'work_on_chunk',
+        Additionally to the two views, the counter 'i' is passed to the 'work_on_chunk',
         which can be used for logging.
         """
         source_offset = np.array(self.global_offset)
@@ -185,9 +188,7 @@ class View:
         ), f"Calling 'for_zipped_chunks' failed because the source_chunk_size ({source_chunk_size} must be divisible by the target_chunk_size ({target_chunk_size}))"
         source_to_target_scale_np = source_chunk_size_np // target_chunk_size_np
 
-        calculated_target_size = -(
-            -np.array(self.size) // source_to_target_scale_np
-        )  # ceil div
+        calculated_target_size = ceil_div_np(np.array(self.size), source_to_target_scale_np)
 
         if not target_view.check_bounds(target_offset, calculated_target_size):
             raise AssertionError(
@@ -212,8 +213,8 @@ class View:
                 relative_offset=cast(
                     Tuple[int, int, int], tuple(relative_source_offset)
                 ),
+                is_bounded=True
             )
-            source_chunk_view.is_bounded = True
             # target chunk
             relative_target_offset = np.array(target_chunk.topleft) - target_offset
             target_chunk_view = target_view.get_view(
@@ -221,11 +222,11 @@ class View:
                 relative_offset=cast(
                     Tuple[int, int, int], tuple(relative_target_offset)
                 ),
+                is_bounded=True
             )
-            target_chunk_view.is_bounded = True
 
             job_args.append(
-                (source_chunk_view, target_chunk_view, i, job_args_per_chunk)
+                (source_chunk_view, target_chunk_view, i)
             )
 
         # execute the work for each pair of chunks

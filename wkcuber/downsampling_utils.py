@@ -2,12 +2,13 @@ import logging
 import math
 from enum import Enum
 from itertools import product
-from typing import Optional, Tuple, List, Callable, cast
+from typing import Optional, Tuple, List, Callable, cast, Union
 
 import numpy as np
 from scipy.ndimage import zoom
 from wkw import wkw
 
+from wkcuber.api.TiffData.TiffMag import TiffMag
 from wkcuber.api.View import View
 from wkcuber.mag import Mag
 from wkcuber.utils import time_start, time_stop
@@ -26,26 +27,8 @@ class InterpolationModes(Enum):
 DEFAULT_EDGE_LEN = 256
 
 
-def use_logging(
-    offset: Tuple[int, int, int],
-    size: Tuple[int, int, int],
-    job_count_per_log: int,
-    global_offset: Tuple[int, int, int],
-    num_chunks_per_dim: Tuple[int, int, int],
-) -> bool:
-    # calculate if a specific chunk should log its results
-    chunk_xzy_idx = (np.array(offset) - np.array(global_offset)) // size
-    i = (
-        chunk_xzy_idx[2] * num_chunks_per_dim[0] * num_chunks_per_dim[1]
-        + chunk_xzy_idx[1] * num_chunks_per_dim[1]
-        + chunk_xzy_idx[0]
-    )
-
-    return i % job_count_per_log == 0
-
-
-def determine_buffer_edge_len(dataset: wkw.Dataset) -> int:
-    if hasattr(dataset.header, "file_len") and hasattr(dataset.header, "block_len"):
+def determine_buffer_edge_len(dataset: Union[wkw.Dataset, TiffMag]) -> int:
+    if isinstance(dataset, wkw.Dataset):
         return min(DEFAULT_EDGE_LEN, dataset.header.file_len * dataset.header.block_len)
     return DEFAULT_EDGE_LEN
 
@@ -260,19 +243,12 @@ def downsample_cube(
 
 
 def downsample_cube_job(
-    args: Tuple[View, View, int, Tuple[List[int], InterpolationModes, int, bool, int]]
+    args: Tuple[View, View, int], mag_factors: List[int], interpolation_mode: InterpolationModes, buffer_edge_len: int, compress: bool, job_count_per_log: int
 ) -> None:
     (
         source_view,
         target_view,
-        i,
-        (
-            mag_factors,
-            interpolation_mode,
-            buffer_edge_len,
-            compress,
-            job_count_per_log,
-        ),
+        i
     ) = args
 
     use_logging = i % job_count_per_log == 0

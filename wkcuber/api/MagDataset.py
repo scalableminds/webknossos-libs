@@ -7,6 +7,8 @@ from typing import Type, Tuple, Union, cast, TYPE_CHECKING
 from wkw import wkw
 import numpy as np
 
+from wkcuber.utils import ceil_div_np, convert_mag1_size
+
 if TYPE_CHECKING:
     from wkcuber.api.Layer import TiffLayer, WKLayer, Layer
 from wkcuber.api.View import WKView, TiffView, View
@@ -81,7 +83,7 @@ class MagDataset:
 
         self.view.size = cast(
             Tuple[int, int, int], tuple(max_end_offset_in_mag1 // mag_np)
-        )  # the view of a MagDataset always starts at (0, 0, 0)
+        )  # The base view of a MagDataset always starts at (0, 0, 0)
 
         self.layer.dataset.properties._set_bounding_box_of_layer(
             self.layer.name,
@@ -123,15 +125,10 @@ class MagDataset:
             else cast(Tuple[int, int, int], tuple(mag1_offset_in_properties // mag_np))
         )
 
-        properties_size_in_current_mag = -(
-            -np.array(mag1_size_in_properties) // mag_np
-        )  # ceil div
-        properties_offset_in_current_mag = (
-            np.array(mag1_offset_in_properties) // mag_np
-        )  # floor div
+        properties_offset_in_current_mag = convert_mag1_size(mag1_offset_in_properties, Mag(self.name))
 
         if size is None:
-            size = properties_size_in_current_mag - (
+            size = convert_mag1_size(mag1_size_in_properties, Mag(self.name)) - (
                 np.array(view_offset) - properties_offset_in_current_mag
             )
 
@@ -144,7 +141,7 @@ class MagDataset:
                         f"Use is_bounded=False if you intend to write outside out the existing bounding box."
                     )
             for s1, s2, off1, off2 in zip(
-                properties_size_in_current_mag,
+                convert_mag1_size(mag1_size_in_properties, Mag(self.name)),
                 size,
                 properties_offset_in_current_mag,
                 view_offset,

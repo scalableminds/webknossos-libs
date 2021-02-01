@@ -1,3 +1,4 @@
+import functools
 import re
 import time
 from concurrent.futures._base import Future
@@ -14,7 +15,7 @@ import psutil
 import traceback
 from cluster_tools.schedulers.cluster_executor import ClusterExecutor
 
-from typing import List, Tuple, Union, Iterable, Generator, Any, Optional, Type
+from typing import List, Tuple, Union, Iterable, Generator, Any, Optional, Type, Callable
 from glob import iglob
 from collections import namedtuple
 from multiprocessing import cpu_count
@@ -455,3 +456,33 @@ def pad_or_crop_to_size_and_topleft(
     )
 
     return cube_data
+
+
+def ceil_div_np(numerator: np.ndarray, denominator: np.ndarray) -> np.ndarray:
+    return -(-numerator // denominator)
+
+
+F = Callable[..., Any]
+
+
+def named_partial(func: F, *args: Any, **kwargs: Any) -> F:
+    # Propagate __name__ and __doc__ attributes to partial function
+    partial_func = functools.partial(func, *args, **kwargs)
+    functools.update_wrapper(partial_func, func)
+    if hasattr(func, "__annotations__"):
+        # Generic types cannot be pickled in Python <= 3.6, see https://github.com/python/typing/issues/511
+        partial_func.__annotations__ = {}
+    return partial_func
+
+
+def convert_mag1_size(mag1_size, target_mag: Mag):
+    return ceil_div_np(
+        np.array(mag1_size),
+        target_mag.as_np()
+    )
+
+
+def convert_mag1_offset(mag1_offset, target_mag: Mag):
+    return (
+        np.array(mag1_offset) // target_mag.as_np()
+    )  # floor div
