@@ -1,3 +1,4 @@
+import sys
 from argparse import ArgumentParser, Namespace
 from os import path
 from pathlib import Path
@@ -15,14 +16,19 @@ from .__main__ import (
 from .image_readers import image_reader
 
 
-def create_source_path_parser() -> ArgumentParser:
-    parser = ArgumentParser()
+def find_first_positional_argument() -> str:
+    should_continue = False
+    for i, arg in enumerate(sys.argv):
+        if i == 0:
+            continue
+        elif should_continue:
+            should_continue = False
+        elif arg.startswith("-"):
+            should_continue = True
+        else:
+            return arg
 
-    parser.add_argument(
-        "source_path", help="Input file or directory containing the input files."
-    )
-
-    return parser
+    raise Exception("No input path found!")
 
 
 def get_source_files(
@@ -129,11 +135,11 @@ class ConverterManager:
 converter_manager = ConverterManager()
 
 if __name__ == "__main__":
-    parsed_args, _ = create_source_path_parser().parse_known_args()
+    source_path = find_first_positional_argument()
 
     fitting_converters = list(
         filter(
-            lambda c: c.accepts_input(parsed_args.source_path),
+            lambda c: c.accepts_input(source_path),
             converter_manager.converter,
         )
     )
@@ -150,7 +156,7 @@ if __name__ == "__main__":
         exit(1)
 
     converter = fitting_converters[0]
-    print("Choosing the ", converter.__class__.__name__)
+    print("Choosing the", converter.__class__.__name__)
     argument_parser: ArgumentParser = converter.get_argument_parser()
     args, _ = argument_parser.parse_known_args()
 

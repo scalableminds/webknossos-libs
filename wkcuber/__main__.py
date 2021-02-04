@@ -2,10 +2,9 @@ from .cubing import cubing, create_parser as create_cubing_parser
 from .downsampling import downsample_mags_isotropic, downsample_mags_anisotropic
 from .compress import compress_mag_inplace
 from .metadata import write_webknossos_metadata, refresh_metadata
-from .utils import add_isotropic_flag, setup_logging
+from .utils import add_isotropic_flag, setup_logging, add_scale_flag
 from .mag import Mag
 from argparse import Namespace, ArgumentParser
-from .utils import add_scale_flag
 
 
 def create_parser() -> ArgumentParser:
