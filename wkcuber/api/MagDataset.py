@@ -171,13 +171,13 @@ class WKMagDataset(MagDataset):
         block_len: int,
         file_len: int,
         block_type: int,
-        exists: bool = True,
+        create: bool = False,
     ) -> None:
         self.block_len = block_len
         self.file_len = file_len
         self.block_type = block_type
         super().__init__(layer, name)
-        if not exists:
+        if create:
             wkw.Dataset.create(
                 join(layer.dataset.path, layer.name, self.name), self.header
             )

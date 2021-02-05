@@ -134,7 +134,7 @@ class WKLayer(Layer[WKMagDataset]):
         self._create_dir_for_mag(mag)
 
         self.mags[mag] = WKMagDataset(
-            self, mag, block_len, file_len, block_type, exists=False
+            self, mag, block_len, file_len, block_type, create=True
         )
         self.dataset.properties._add_mag(
             self.name, mag, cube_length=block_len * file_len
