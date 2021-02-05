@@ -79,7 +79,7 @@ class KnossosDataset:
         return raw_files[0] if len(raw_files) > 0 else None
 
     def list_files(self) -> Iterator[str]:
-        return iglob(path.join(self.root, "**", "*.raw"), recursive=True)
+        return iglob(path.join(self.root, "*", "*", "*", "*.raw"), recursive=True)
 
     def __parse_cube_file_name(self, filename: str) -> Optional[Tuple[int, int, int]]:
         m = CUBE_REGEX.search(filename)

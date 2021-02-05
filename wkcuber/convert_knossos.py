@@ -94,7 +94,9 @@ def convert_knossos(
         with get_executor_for_args(args) as executor:
             knossos_cubes = list(source_knossos.list_cubes())
             if len(knossos_cubes) == 0:
-                logging.error("No input KNOSSOS cubes found.")
+                logging.error(
+                    "No input KNOSSOS cubes found. Make sure to pass the path which points to a KNOSSOS magnification (e.g., testdata/knossos/color/1)."
+                )
                 exit(1)
 
             knossos_cubes.sort()
