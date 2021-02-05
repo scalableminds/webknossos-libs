@@ -186,23 +186,17 @@ class View:
         target_offset = np.array(target_view.global_offset)
         source_chunk_size_np = np.array(source_chunk_size)
         target_chunk_size_np = np.array(target_chunk_size)
-        assert not np.any(
-            source_chunk_size_np % target_chunk_size_np
-        ), f"Calling 'for_zipped_chunks' failed because the source_chunk_size ({source_chunk_size} must be divisible by the target_chunk_size ({target_chunk_size}))"
-        source_to_target_scale_np = source_chunk_size_np // target_chunk_size_np
-
-        calculated_target_size = ceil_div_np(np.array(self.size), source_to_target_scale_np)
-
-        if not target_view.check_bounds(target_offset, calculated_target_size):
-            raise AssertionError(
-                f"Calling 'for_zipped_chunks' failed because the size of the target_view ({target_view.size}) must be at least {calculated_target_size} or the view must be not bounded."
-            )
+        assert np.all(np.array(self.size)), f"Calling 'for_zipped_chunks' failed because the size of the source view contains a 0."
+        assert np.all(np.array(target_view.size)), f"Calling 'for_zipped_chunks' failed because the size of the target view contains a 0."
+        assert np.array_equal(
+            np.array(self.size) / np.array(target_view.size), source_chunk_size_np / target_chunk_size_np
+        ), f"Calling 'for_zipped_chunks' failed because the ratio of the view sizes (source size = {self.size}, target size = {target_view.size}) must be equal to the ratio of the chunk sizes (source_chunk_size = {source_chunk_size}, source_chunk_size = {target_chunk_size}))"
 
         job_args = []
         source_chunks = BoundingBox(source_offset, self.size).chunk(
             source_chunk_size_np, list(source_chunk_size_np)
         )
-        target_chunks = BoundingBox(target_offset, calculated_target_size).chunk(
+        target_chunks = BoundingBox(target_offset, target_view.size).chunk(
             target_chunk_size, list(target_chunk_size)
         )
 

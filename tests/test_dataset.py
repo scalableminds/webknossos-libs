@@ -1684,7 +1684,7 @@ def test_for_zipped_chunks():
     target_mag.layer.dataset.properties._set_bounding_box_of_layer(
         "color", offset=(0, 0, 0), size=(256, 256, 256)
     )
-    target_view = target_mag.get_view(is_bounded=False)
+    target_view = target_mag.get_view(size=(256, 256, 256))
 
     with get_executor_for_args(None) as executor:
         func = named_partial(copy_and_transform_job, name="foo", val=42)  # curry the function with further arguments

@@ -151,40 +151,18 @@ class Layer:
                 end_offset_in_lowest_mag - offset_in_lowest_mag
         )
 
-        # pad the existing mags
+        self.dataset.properties._set_bounding_box_of_layer(
+            self.name,
+            cast(Tuple[int, int, int], tuple(aligned_offset_in_mag1)),
+            cast(Tuple[int, int, int], tuple(aligned_size_in_mag1)),
+        )
+
         for mag_name in existing_mags:
             mag = self.mags[mag_name.to_layer_name()]
             aligned_offset = convert_mag1_offset(aligned_offset_in_mag1, mag_name)
             aligned_size = convert_mag1_size(aligned_size_in_mag1, mag_name)
-            current_offset = mag.get_view().global_offset
-            current_size = mag.get_view().size
-
-            shape = list((self.num_channels,) + tuple(aligned_size))
-            # pad (left + right) and (top + bottom) and (front + back)
-            for i in range(0, 3):
-                # pad left / top / front
-                buffer_width = (np.array(current_offset) - aligned_offset)[i]
-                if buffer_width > 0:
-                    padding_shape = shape
-                    padding_shape[i + 1] = buffer_width
-                    mag.write(
-                        data=np.zeros(padding_shape, dtype=mag.get_dtype()),
-                        offset=aligned_offset,
-                    )
-                # pad right / bottom / back
-                buffer_width = (
-                        (aligned_offset + aligned_size)
-                        - (np.array(current_offset) + np.array(current_size))
-                )[i]
-                if buffer_width > 0:
-                    padding_shape = shape
-                    padding_shape[i + 1] = buffer_width
-                    right_offset = aligned_offset
-                    right_offset[i] = current_offset[i] + current_size[i]
-                    mag.write(
-                        data=np.zeros(padding_shape, dtype=mag.get_dtype()),
-                        offset=right_offset,
-                    )
+            # The base view of a MagDataset always starts at (0, 0, 0)
+            mag.view.size = cast(Tuple[int, int, int], tuple(aligned_offset + aligned_size))
 
     def downsample(
         self,

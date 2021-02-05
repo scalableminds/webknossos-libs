@@ -7,7 +7,7 @@ from typing import Type, Tuple, Union, cast, TYPE_CHECKING
 from wkw import wkw
 import numpy as np
 
-from wkcuber.utils import ceil_div_np, convert_mag1_size
+from wkcuber.utils import ceil_div_np, convert_mag1_size, convert_mag1_offset
 
 if TYPE_CHECKING:
     from wkcuber.api.Layer import TiffLayer, WKLayer, Layer
@@ -82,7 +82,7 @@ class MagDataset:
         total_size_in_mag1 = max_end_offset_in_mag1 - np.array(new_offset_in_mag1)
 
         self.view.size = cast(
-            Tuple[int, int, int], tuple(max_end_offset_in_mag1 // mag_np)
+            Tuple[int, int, int], tuple(convert_mag1_offset(max_end_offset_in_mag1, mag))
         )  # The base view of a MagDataset always starts at (0, 0, 0)
 
         self.layer.dataset.properties._set_bounding_box_of_layer(
@@ -117,12 +117,10 @@ class MagDataset:
         if mag1_offset_in_properties == (-1, -1, -1):
             mag1_offset_in_properties = (0, 0, 0)
 
-        mag_np = Mag(self.name).as_np()
-
         view_offset = (
             offset
             if offset is not None
-            else cast(Tuple[int, int, int], tuple(mag1_offset_in_properties // mag_np))
+            else cast(Tuple[int, int, int], tuple(convert_mag1_offset(mag1_offset_in_properties, Mag(self.name))))
         )
 
         properties_offset_in_current_mag = convert_mag1_size(mag1_offset_in_properties, Mag(self.name))
@@ -157,7 +155,7 @@ class MagDataset:
             self.layer.dataset.path, self.layer.name, self.name
         )
         return self._get_view_type()(
-            mag_file_path, self.header, size, view_offset, is_bounded
+            mag_file_path, self.header, tuple(size), view_offset, is_bounded
         )
 
     def _get_view_type(self) -> Type[View]:
@@ -246,7 +244,7 @@ class TiffMagDataset(MagDataset):
         if self.layer.dataset.properties.tile_size:
             return self.layer.dataset.properties.tile_size + (1,)
 
-        return self.view.size[0], self.view.size[1], 1  # TODO: find better chunk size
+        return self.view.size[0], self.view.size[1], 1
 
 
 class TiledTiffMagDataset(TiffMagDataset):
