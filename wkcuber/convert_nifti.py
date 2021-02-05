@@ -43,7 +43,7 @@ def create_parser() -> ArgumentParser:
 
     parser.add_argument(
         "--is_segmentation_layer",
-        "-s",
+        "-sl",
         help="When converting one layer, signals whether layer is segmentation layer. "
         "When converting a folder, this option is ignored",
         default=False,

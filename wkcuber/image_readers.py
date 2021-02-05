@@ -28,6 +28,9 @@ class ImageReader:
     ) -> int:
         return 1
 
+    def read_dtype(self, file_name: str) -> str:  # pylint: disable=unused-argument
+        return "uint8"
+
 
 class PillowImageReader(ImageReader):
     def read_array(self, file_name: str, dtype: np.dtype, z_slice: int) -> np.ndarray:
@@ -179,6 +182,12 @@ class TiffImageReader(ImageReader):
         with TiffFile(file_name) as tif_file:
             return find_count_of_axis(tif_file, "Z")
 
+    def read_dtype(self, file_name: str) -> str:
+        with TiffFile(file_name) as tif_file:
+            return tif_file.series[  # pylint: disable=unsubscriptable-object
+                0
+            ].dtype.name
+
 
 class ImageReaderManager:
     def __init__(self) -> None:
@@ -217,6 +226,10 @@ class ImageReaderManager:
     def read_z_slices_per_file(self, file_name: str) -> int:
         _, ext = path.splitext(file_name)
         return self.readers[ext].read_z_slices_per_file(file_name)
+
+    def read_dtype(self, file_name: str) -> str:
+        _, ext = path.splitext(file_name)
+        return self.readers[ext].read_dtype(file_name)
 
 
 image_reader = ImageReaderManager()

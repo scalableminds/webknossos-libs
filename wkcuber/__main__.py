@@ -39,8 +39,8 @@ def main(args: Namespace) -> None:
         args.source_path,
         args.target_path,
         args.layer_name,
-        args.dtype,
-        args.batch_size,
+        args.dtype if "dtype" in args else None,
+        args.batch_size if "batch_size" in args else None,
         args,
     )
 

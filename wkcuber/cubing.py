@@ -1,6 +1,6 @@
 import time
 import logging
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 import numpy as np
 import wkw
@@ -59,7 +59,7 @@ def create_parser() -> ArgumentParser:
         "--dtype",
         "-d",
         help="Target datatype (e.g. uint8, uint16, uint32)",
-        default="uint8",
+        default=None,
     )
 
     parser.add_argument(
@@ -242,8 +242,8 @@ def cubing(
     source_path: str,
     target_path: str,
     layer_name: str,
-    dtype: str,
-    batch_size: int,
+    dtype: Optional[str],
+    batch_size: Optional[int],
     args: Namespace,
 ) -> dict:
     source_files = find_source_filenames(source_path)
@@ -259,6 +259,12 @@ def cubing(
         num_z = num_z_slices_per_file
     else:
         num_z = len(source_files)
+
+    if dtype is None:
+        dtype = image_reader.read_dtype(source_files[0])
+
+    if batch_size is None:
+        batch_size = BLOCK_LEN
 
     target_mag = Mag(args.target_mag)
     target_wkw_info = WkwDatasetInfo(
