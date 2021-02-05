@@ -2,7 +2,7 @@ import logging
 import os
 from os.path import join
 from pathlib import Path
-from typing import Type, Tuple, Union, cast, TYPE_CHECKING
+from typing import Type, Tuple, Union, cast, TYPE_CHECKING, TypeVar, Generic, Any
 
 from wkw import wkw
 import numpy as np
@@ -10,7 +10,13 @@ import numpy as np
 from wkcuber.utils import ceil_div_np, convert_mag1_size, convert_mag1_offset
 
 if TYPE_CHECKING:
-    from wkcuber.api.Layer import TiffLayer, WKLayer, Layer
+    from wkcuber.api.Layer import (
+        WKLayer,
+        Layer,
+        GenericTiffLayer,
+        TiffLayer,
+        TiledTiffLayer,
+    )
 from wkcuber.api.View import WKView, TiffView, View
 from wkcuber.api.TiffData.TiffMag import TiffMagHeader
 from wkcuber.mag import Mag
@@ -82,7 +88,8 @@ class MagDataset:
         total_size_in_mag1 = max_end_offset_in_mag1 - np.array(new_offset_in_mag1)
 
         self.view.size = cast(
-            Tuple[int, int, int], tuple(convert_mag1_offset(max_end_offset_in_mag1, mag))
+            Tuple[int, int, int],
+            tuple(convert_mag1_offset(max_end_offset_in_mag1, mag)),
         )  # The base view of a MagDataset always starts at (0, 0, 0)
 
         self.layer.dataset.properties._set_bounding_box_of_layer(
@@ -120,10 +127,15 @@ class MagDataset:
         view_offset = (
             offset
             if offset is not None
-            else cast(Tuple[int, int, int], tuple(convert_mag1_offset(mag1_offset_in_properties, Mag(self.name))))
+            else cast(
+                Tuple[int, int, int],
+                tuple(convert_mag1_offset(mag1_offset_in_properties, Mag(self.name))),
+            )
         )
 
-        properties_offset_in_current_mag = convert_mag1_size(mag1_offset_in_properties, Mag(self.name))
+        properties_offset_in_current_mag = convert_mag1_size(
+            mag1_offset_in_properties, Mag(self.name)
+        )
 
         if size is None:
             size = convert_mag1_size(mag1_size_in_properties, Mag(self.name)) - (
@@ -155,7 +167,11 @@ class MagDataset:
             self.layer.dataset.path, self.layer.name, self.name
         )
         return self._get_view_type()(
-            mag_file_path, self.header, tuple(size), view_offset, is_bounded
+            mag_file_path,
+            self.header,
+            cast(Tuple[int, int, int], tuple(size)),
+            view_offset,
+            is_bounded,
         )
 
     def _get_view_type(self) -> Type[View]:
@@ -183,11 +199,16 @@ class WKMagDataset(MagDataset):
         block_len: int,
         file_len: int,
         block_type: int,
+        create: bool = False,
     ) -> None:
         self.block_len = block_len
         self.file_len = file_len
         self.block_type = block_type
         super().__init__(layer, name)
+        if create:
+            wkw.Dataset.create(
+                join(layer.dataset.path, layer.name, self.name), self.header
+            )
 
     def get_header(self) -> wkw.Header:
         return wkw.Header(
@@ -199,17 +220,6 @@ class WKMagDataset(MagDataset):
             block_type=self.block_type,
         )
 
-    @classmethod
-    def create(
-        cls, layer: "WKLayer", name: str, block_len: int, file_len: int, block_type: int
-    ) -> "WKMagDataset":
-        mag_dataset = cls(layer, name, block_len, file_len, block_type)
-        wkw.Dataset.create(
-            join(layer.dataset.path, layer.name, mag_dataset.name), mag_dataset.header
-        )
-
-        return mag_dataset
-
     def _get_view_type(self) -> Type[WKView]:
         return WKView
 
@@ -217,10 +227,13 @@ class WKMagDataset(MagDataset):
         return cast(Tuple[int, int, int], (self.file_len * self.block_len,) * 3)
 
 
-class TiffMagDataset(MagDataset):
-    layer: "TiffLayer"
+TiffLayerT = TypeVar("TiffLayerT", bound="GenericTiffLayer")
 
-    def __init__(self, layer: "TiffLayer", name: str, pattern: str) -> None:
+
+class GenericTiffMagDataset(MagDataset, Generic[TiffLayerT]):
+    layer: TiffLayerT
+
+    def __init__(self, layer: TiffLayerT, name: str, pattern: str) -> None:
         self.pattern = pattern
         super().__init__(layer, name)
 
@@ -232,11 +245,6 @@ class TiffMagDataset(MagDataset):
             tile_size=self.layer.dataset.properties.tile_size,
         )
 
-    @classmethod
-    def create(cls, layer: "TiffLayer", name: str, pattern: str) -> "TiffMagDataset":
-        mag_dataset = cls(layer, name, pattern)
-        return mag_dataset
-
     def _get_view_type(self) -> Type[TiffView]:
         return TiffView
 
@@ -247,7 +255,11 @@ class TiffMagDataset(MagDataset):
         return self.view.size[0], self.view.size[1], 1
 
 
-class TiledTiffMagDataset(TiffMagDataset):
+class TiffMagDataset(GenericTiffMagDataset["TiffLayer"]):
+    pass
+
+
+class TiledTiffMagDataset(GenericTiffMagDataset["TiledTiffLayer"]):
     def get_tile(self, x_index: int, y_index: int, z_index: int) -> np.array:
         tile_size = self.layer.dataset.properties.tile_size
         assert tile_size is not None

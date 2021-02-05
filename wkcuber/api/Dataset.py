@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from os import makedirs, path
 from os.path import join, normpath, basename
 from pathlib import Path
-from typing import Type, Tuple, Union, Dict, Any, Optional, cast
+from typing import Type, Tuple, Union, Dict, Any, Optional, cast, TypeVar, Generic
 
 import numpy as np
 import os
@@ -78,21 +78,24 @@ def dtype_per_channel_to_dtype_per_layer(
 
 
 def copy_job(args: Tuple[View, View, int]) -> None:
-    # Copy the data form one view to the other in a buffered fashion
     (source_view, target_view, i) = args
+    # Copy the data form one view to the other in a buffered fashion
     target_view.write(source_view.read())
 
 
-class AbstractDataset(ABC):
+LayerT = TypeVar("LayerT", bound=Layer)
+
+
+class AbstractDataset(Generic[LayerT]):
     @abstractmethod
     def __init__(self, dataset_path: Union[str, Path]) -> None:
         properties: Properties = self._get_properties_type()._from_json(
             join(dataset_path, Properties.FILE_NAME)
         )
-        self.layers: Dict[str, Layer] = {}
+        self.layers: Dict[str, LayerT] = {}
         self.path = Path(properties.path).parent
         self.properties = properties
-        self.data_format = "abstract"
+        self._data_format = "abstract"
 
         # construct self.layer
         for layer_name in self.properties.data_layers:
@@ -133,7 +136,7 @@ class AbstractDataset(ABC):
     def get_properties(self) -> Properties:
         return self.properties
 
-    def get_layer(self, layer_name: str) -> Layer:
+    def get_layer(self, layer_name: str) -> LayerT:
         if layer_name not in self.layers.keys():
             raise IndexError(
                 "The layer {} is not a layer of this dataset".format(layer_name)
@@ -148,7 +151,7 @@ class AbstractDataset(ABC):
         dtype_per_channel: Union[str, np.dtype] = None,
         num_channels: int = None,
         **kwargs: Any,
-    ) -> Layer:
+    ) -> LayerT:
         if "dtype" in kwargs:
             raise ValueError(
                 f"Called Dataset.add_layer with 'dtype'={kwargs['dtype']}. This parameter is deprecated. Use 'dtype_per_layer' or 'dtype_per_channel' instead."
@@ -194,7 +197,7 @@ class AbstractDataset(ABC):
             layer_name,
             category,
             dtype_per_layer,
-            self.data_format,
+            self._data_format,
             num_channels,
             **kwargs,
         )
@@ -211,7 +214,7 @@ class AbstractDataset(ABC):
         dtype_per_channel: Union[str, np.dtype] = None,
         num_channels: int = None,
         **kwargs: Any,
-    ) -> Layer:
+    ) -> LayerT:
         if "dtype" in kwargs:
             raise ValueError(
                 f"Called Dataset.get_or_add_layer with 'dtype'={kwargs['dtype']}. This parameter is deprecated. Use 'dtype_per_layer' or 'dtype_per_channel' instead."
@@ -268,7 +271,7 @@ class AbstractDataset(ABC):
         # delete files on disk
         rmtree(join(self.path, layer_name))
 
-    def add_symlink_layer(self, foreign_layer_path: Union[str, Path]) -> Layer:
+    def add_symlink_layer(self, foreign_layer_path: Union[str, Path]) -> LayerT:
         foreign_layer_path = os.path.abspath(foreign_layer_path)
         layer_name = os.path.basename(os.path.normpath(foreign_layer_path))
         if layer_name in self.layers.keys():
@@ -299,7 +302,7 @@ class AbstractDataset(ABC):
     def get_view(
         self,
         layer_name: str,
-        mag: Union[str, Mag],
+        mag: Union[int, str, list, tuple, np.ndarray, Mag],
         size: Tuple[int, int, int],
         offset: Tuple[int, int, int] = None,
         is_bounded: bool = True,
@@ -311,7 +314,7 @@ class AbstractDataset(ABC):
 
     def _create_layer(
         self, layer_name: str, dtype_per_channel: np.dtype, num_channels: int
-    ) -> Layer:
+    ) -> LayerT:
         raise NotImplementedError
 
     def copy_dataset(
@@ -349,7 +352,12 @@ class AbstractDataset(ABC):
                     target_mag.view.global_offset = (0, 0, 0)
                     target_mag.view.size = cast(
                         Tuple[int, int, int],
-                        tuple(ceil_div_np(np.array(bbox[0]) + np.array(bbox[1]), Mag(mag_name).as_np()))
+                        tuple(
+                            ceil_div_np(
+                                np.array(bbox[0]) + np.array(bbox[1]),
+                                Mag(mag_name).as_np(),
+                            )
+                        ),
                     )
                     target_mag.layer.dataset.properties._set_bounding_box_of_layer(
                         layer_name, offset=bbox[0], size=bbox[1]
@@ -365,24 +373,41 @@ class AbstractDataset(ABC):
                         executor=executor,
                     )
 
-    def to_wk_dataset(self, new_dataset_path: Union[str, Path], scale: Optional[Tuple[float, float, float]] = None) -> "WKDataset":
+    def to_wk_dataset(
+        self,
+        new_dataset_path: Union[str, Path],
+        scale: Optional[Tuple[float, float, float]] = None,
+    ) -> "WKDataset":
         if scale is None:
             scale = self.properties.scale
         new_ds = WKDataset.create(new_dataset_path, scale=scale)
         self.copy_dataset(new_ds)
         return new_ds
 
-    def to_tiff_dataset(self, new_dataset_path: Union[str, Path], scale: Optional[Tuple[float, float, float]] = None, pattern: Optional[str] = None) -> "TiffDataset":
+    def to_tiff_dataset(
+        self,
+        new_dataset_path: Union[str, Path],
+        scale: Optional[Tuple[float, float, float]] = None,
+        pattern: Optional[str] = None,
+    ) -> "TiffDataset":
         if scale is None:
             scale = self.properties.scale
         new_ds = TiffDataset.create(new_dataset_path, scale=scale, pattern=pattern)
         self.copy_dataset(new_ds)
         return new_ds
 
-    def to_tiled_tiff_dataset(self, new_dataset_path: Union[str, Path], scale: Optional[Tuple[float, float, float]] = None, tile_size: Optional[Tuple[int, int]] = None, pattern: Optional[str] = None) -> "TiledTiffDataset":
+    def to_tiled_tiff_dataset(
+        self,
+        new_dataset_path: Union[str, Path],
+        tile_size: Tuple[int, int],
+        scale: Optional[Tuple[float, float, float]] = None,
+        pattern: Optional[str] = None,
+    ) -> "TiledTiffDataset":
         if scale is None:
             scale = self.properties.scale
-        new_ds = TiledTiffDataset.create(new_dataset_path, scale=scale, tile_size=tile_size, pattern=pattern)
+        new_ds = TiledTiffDataset.create(
+            new_dataset_path, scale=scale, tile_size=tile_size, pattern=pattern
+        )
         self.copy_dataset(new_ds)
         return new_ds
 
@@ -395,7 +420,7 @@ class AbstractDataset(ABC):
         pass
 
 
-class WKDataset(AbstractDataset):
+class WKDataset(AbstractDataset[WKLayer]):
     @classmethod
     def create(
         cls, dataset_path: Union[str, Path], scale: Tuple[float, float, float]
@@ -421,12 +446,12 @@ class WKDataset(AbstractDataset):
 
     def __init__(self, dataset_path: Union[str, Path]) -> None:
         super().__init__(dataset_path)
-        self.data_format = "wkw"
+        self._data_format = "wkw"
         assert isinstance(self.properties, WKProperties)
 
     def _create_layer(
         self, layer_name: str, dtype_per_channel: np.dtype, num_channels: int
-    ) -> Layer:
+    ) -> WKLayer:
         return WKLayer(layer_name, self, dtype_per_channel, num_channels)
 
     def _get_properties_type(self) -> Type[WKProperties]:
@@ -436,7 +461,7 @@ class WKDataset(AbstractDataset):
         return WKDataset
 
 
-class TiffDataset(AbstractDataset):
+class TiffDataset(AbstractDataset[TiffLayer]):
     properties: TiffProperties
 
     @classmethod
@@ -491,7 +516,7 @@ class TiffDataset(AbstractDataset):
 
     def _create_layer(
         self, layer_name: str, dtype_per_channel: np.dtype, num_channels: int
-    ) -> Layer:
+    ) -> TiffLayer:
         return TiffLayer(layer_name, self, dtype_per_channel, num_channels)
 
     def _get_properties_type(self) -> Type[TiffProperties]:
@@ -501,7 +526,7 @@ class TiffDataset(AbstractDataset):
         return TiffDataset
 
 
-class TiledTiffDataset(AbstractDataset):
+class TiledTiffDataset(AbstractDataset[TiledTiffLayer]):
     properties: TiffProperties
 
     @classmethod
@@ -564,7 +589,7 @@ class TiledTiffDataset(AbstractDataset):
 
     def _create_layer(
         self, layer_name: str, dtype_per_channel: np.dtype, num_channels: int
-    ) -> Layer:
+    ) -> TiledTiffLayer:
         return TiledTiffLayer(layer_name, self, dtype_per_channel, num_channels)
 
     def _get_properties_type(self) -> Type[TiffProperties]:

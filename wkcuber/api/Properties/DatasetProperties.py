@@ -107,7 +107,7 @@ class Properties:
         return self._team
 
     @property
-    def scale(self) -> tuple:
+    def scale(self) -> Tuple[float, float, float]:
         return self._scale
 
     @property

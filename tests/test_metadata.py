@@ -13,7 +13,7 @@ from wkcuber.metadata import (
 )
 
 
-def test_element_class_conversion():
+def test_element_class_conversion() -> None:
     test_wkw_path = os.path.join("testoutput", "test_metadata")
     prediction_layer_name = "prediction"
     prediction_wkw_info = WkwDatasetInfo(
@@ -25,7 +25,7 @@ def test_element_class_conversion():
     write_webknossos_metadata(
         test_wkw_path,
         "test_metadata",
-        [11.24, 11.24, 28],
+        (11.24, 11.24, 28),
         compute_max_id=True,
         exact_bounding_box={"topLeft": [0, 0, 0], "width": 4, "height": 4, "depth": 4},
     )
@@ -40,8 +40,11 @@ def test_element_class_conversion():
 
 
 def check_element_class_of_layer(
-    test_wkw_path, layer_name, expected_element_class, expected_dtype
-):
+    test_wkw_path: str,
+    layer_name: str,
+    expected_element_class: str,
+    expected_dtype: type,
+) -> None:
     datasource_properties = read_datasource_properties(test_wkw_path)
     layer_to_check = None
     for layer in datasource_properties["dataLayers"]:
@@ -56,7 +59,9 @@ def check_element_class_of_layer(
     assert converted_dtype == expected_dtype
 
 
-def write_custom_layer(target_path, layer_name, dtype, num_channels):
+def write_custom_layer(
+    target_path: str, layer_name: str, dtype: type, num_channels: int
+) -> None:
     data = (
         np.arange(4 * 4 * 4 * num_channels)
         .reshape((num_channels, 4, 4, 4))
@@ -70,7 +75,7 @@ def write_custom_layer(target_path, layer_name, dtype, num_channels):
         dataset.write(off=(0, 0, 0), data=data)
 
 
-def test_mapping_detection():
+def test_mapping_detection() -> None:
     # NOTE: the mappings do not match do the actual wkw data. Therefore do not use them
     expected_mappings = [
         "test_mapping_1.json",

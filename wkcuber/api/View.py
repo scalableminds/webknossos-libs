@@ -104,12 +104,13 @@ class View:
         self,
         size: Tuple[int, int, int],
         relative_offset: Tuple[int, int, int] = (0, 0, 0),
-        is_bounded: Optional[bool] = None
+        is_bounded: Optional[bool] = None,
     ) -> "View":
         if is_bounded is None:
             is_bounded = self.is_bounded
-        assert is_bounded or is_bounded == self.is_bounded, \
-            f"Failed to get subview. The calling view is bounded. Therefore, the subview also has to be bounded."
+        assert (
+            is_bounded or is_bounded == self.is_bounded
+        ), f"Failed to get subview. The calling view is bounded. Therefore, the subview also has to be bounded."
         self.assert_bounds(relative_offset, size)
         view_offset = cast(
             Tuple[int, int, int], tuple(self.global_offset + np.array(relative_offset))
@@ -140,7 +141,7 @@ class View:
 
     def for_each_chunk(
         self,
-        work_on_chunk: Callable[[List[Any]], None],
+        work_on_chunk: Callable[[Tuple["View", int]], None],
         chunk_size: Tuple[int, int, int],
         executor: Union[ClusterExecutor, cluster_tools.WrappedProcessPoolExecutor],
     ) -> None:
@@ -148,9 +149,11 @@ class View:
 
         job_args = []
 
-        for i, chunk in enumerate(BoundingBox(self.global_offset, self.size).chunk(
-            chunk_size, list(chunk_size)
-        )):
+        for i, chunk in enumerate(
+            BoundingBox(self.global_offset, self.size).chunk(
+                chunk_size, list(chunk_size)
+            )
+        ):
             relative_offset = cast(
                 Tuple[int, int, int],
                 tuple(np.array(chunk.topleft) - np.array(self.global_offset)),
@@ -167,7 +170,7 @@ class View:
 
     def for_zipped_chunks(
         self,
-        work_on_chunk: Callable[[List[Any]], None],
+        work_on_chunk: Callable[[Tuple["View", "View", int]], None],
         target_view: "View",
         source_chunk_size: Tuple[int, int, int],
         target_chunk_size: Tuple[int, int, int],
@@ -186,10 +189,15 @@ class View:
         target_offset = np.array(target_view.global_offset)
         source_chunk_size_np = np.array(source_chunk_size)
         target_chunk_size_np = np.array(target_chunk_size)
-        assert np.all(np.array(self.size)), f"Calling 'for_zipped_chunks' failed because the size of the source view contains a 0."
-        assert np.all(np.array(target_view.size)), f"Calling 'for_zipped_chunks' failed because the size of the target view contains a 0."
+        assert np.all(
+            np.array(self.size)
+        ), f"Calling 'for_zipped_chunks' failed because the size of the source view contains a 0."
+        assert np.all(
+            np.array(target_view.size)
+        ), f"Calling 'for_zipped_chunks' failed because the size of the target view contains a 0."
         assert np.array_equal(
-            np.array(self.size) / np.array(target_view.size), source_chunk_size_np / target_chunk_size_np
+            np.array(self.size) / np.array(target_view.size),
+            source_chunk_size_np / target_chunk_size_np,
         ), f"Calling 'for_zipped_chunks' failed because the ratio of the view sizes (source size = {self.size}, target size = {target_view.size}) must be equal to the ratio of the chunk sizes (source_chunk_size = {source_chunk_size}, source_chunk_size = {target_chunk_size}))"
 
         job_args = []
@@ -210,7 +218,7 @@ class View:
                 relative_offset=cast(
                     Tuple[int, int, int], tuple(relative_source_offset)
                 ),
-                is_bounded=True
+                is_bounded=True,
             )
             # target chunk
             relative_target_offset = np.array(target_chunk.topleft) - target_offset
@@ -219,12 +227,10 @@ class View:
                 relative_offset=cast(
                     Tuple[int, int, int], tuple(relative_target_offset)
                 ),
-                is_bounded=True
+                is_bounded=True,
             )
 
-            job_args.append(
-                (source_chunk_view, target_chunk_view, i)
-            )
+            job_args.append((source_chunk_view, target_chunk_view, i))
 
         # execute the work for each pair of chunks
         wait_and_ensure_success(executor.map_to_futures(work_on_chunk, job_args))

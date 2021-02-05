@@ -109,9 +109,9 @@ def find_source_filenames(source_path: str) -> List[str]:
     return natsorted(source_files)
 
 
-def read_image_file(file_name: str, dtype: type) -> np.ndarray:
+def read_image_file(file_name: str, dtype: type, z_slice: int) -> np.ndarray:
     try:
-        return image_reader.read_array(file_name, dtype)
+        return image_reader.read_array(file_name, dtype, z_slice)
     except Exception as exc:
         logging.error("Reading of file={} failed with {}".format(file_name, exc))
         raise exc
@@ -176,7 +176,7 @@ def cubing_job(
                 for z, file_name in zip(z_batch, source_file_batch):
                     # Image shape will be (x, y, channel_count, z=1)
                     image = read_image_file(
-                        file_name, target_wkw_info.header.voxel_type
+                        file_name, target_wkw_info.header.voxel_type, z
                     )
 
                     if not pad:
@@ -237,13 +237,19 @@ def cubing(
     batch_size: int,
     args: Namespace,
 ) -> dict:
-
     source_files = find_source_filenames(source_path)
 
     # All images are assumed to have equal dimensions
     num_x, num_y = image_reader.read_dimensions(source_files[0])
     num_channels = image_reader.read_channel_count(source_files[0])
-    num_z = len(source_files)
+    num_z_slices_per_file = image_reader.read_z_slices_per_file(source_files[0])
+    assert (
+        num_z_slices_per_file == 1 or len(source_files) == 1
+    ), "Multi page TIFF support only for single files"
+    if num_z_slices_per_file > 1:
+        num_z = num_z_slices_per_file
+    else:
+        num_z = len(source_files)
 
     target_mag = Mag(args.target_mag)
     target_wkw_info = WkwDatasetInfo(
@@ -277,6 +283,11 @@ def cubing(
             # Prepare z batches
             max_z = min(num_z + start_z, z + BLOCK_LEN)
             z_batch = list(range(z, max_z))
+            # Prepare source files array
+            if len(source_files) > 1:
+                source_files_array = source_files[z - start_z : max_z - start_z]
+            else:
+                source_files_array = source_files * (max_z - z)
             # Prepare job
             job_args.append(
                 (
@@ -284,7 +295,7 @@ def cubing(
                     z_batch,
                     target_mag,
                     interpolation_mode,
-                    source_files[z - start_z : max_z - start_z],
+                    source_files_array,
                     batch_size,
                     (num_x, num_y),
                     args.pad,

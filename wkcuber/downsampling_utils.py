@@ -243,14 +243,14 @@ def downsample_cube(
 
 
 def downsample_cube_job(
-    args: Tuple[View, View, int], mag_factors: List[int], interpolation_mode: InterpolationModes, buffer_edge_len: int, compress: bool, job_count_per_log: int
+    args: Tuple[View, View, int],
+    mag_factors: List[int],
+    interpolation_mode: InterpolationModes,
+    buffer_edge_len: int,
+    compress: bool,
+    job_count_per_log: int,
 ) -> None:
-    (
-        source_view,
-        target_view,
-        i
-    ) = args
-
+    (source_view, target_view, i) = args
     use_logging = i % job_count_per_log == 0
 
     if use_logging:

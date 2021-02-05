@@ -2,7 +2,7 @@ import numpy as np
 from wkcuber.convert_nifti import to_target_datatype
 
 
-def test_to_target_datatype_segmentation_layer():
+def test_to_target_datatype_segmentation_layer() -> None:
     data = np.array(
         [
             [

@@ -15,7 +15,17 @@ import psutil
 import traceback
 from cluster_tools.schedulers.cluster_executor import ClusterExecutor
 
-from typing import List, Tuple, Union, Iterable, Generator, Any, Optional, Type, Callable
+from typing import (
+    List,
+    Tuple,
+    Union,
+    Iterable,
+    Generator,
+    Any,
+    Optional,
+    Type,
+    Callable,
+)
 from glob import iglob
 from collections import namedtuple
 from multiprocessing import cpu_count
@@ -475,14 +485,13 @@ def named_partial(func: F, *args: Any, **kwargs: Any) -> F:
     return partial_func
 
 
-def convert_mag1_size(mag1_size, target_mag: Mag):
-    return ceil_div_np(
-        np.array(mag1_size),
-        target_mag.as_np()
-    )
+def convert_mag1_size(
+    mag1_size: Union[List, np.ndarray], target_mag: Mag
+) -> np.ndarray:
+    return ceil_div_np(np.array(mag1_size), target_mag.as_np())
 
 
-def convert_mag1_offset(mag1_offset, target_mag: Mag):
-    return (
-        np.array(mag1_offset) // target_mag.as_np()
-    )  # floor div
+def convert_mag1_offset(
+    mag1_offset: Union[List, np.ndarray], target_mag: Mag
+) -> np.ndarray:
+    return np.array(mag1_offset) // target_mag.as_np()  # floor div
