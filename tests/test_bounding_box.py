@@ -2,7 +2,7 @@ from wkcuber.api.bounding_box import BoundingBox, Mag
 import pytest
 
 
-def test_align_with_mag_ceiled():
+def test_align_with_mag_ceiled() -> None:
 
     assert BoundingBox((1, 1, 1), (10, 10, 10)).align_with_mag(
         Mag(2), ceil=True
@@ -18,7 +18,7 @@ def test_align_with_mag_ceiled():
     ) == BoundingBox(topleft=(0, 2, 2), size=(10, 10, 10))
 
 
-def test_align_with_mag_floored():
+def test_align_with_mag_floored() -> None:
 
     assert BoundingBox((1, 1, 1), (10, 10, 10)).align_with_mag(Mag(2)) == BoundingBox(
         topleft=(2, 2, 2), size=(8, 8, 8)
@@ -34,7 +34,7 @@ def test_align_with_mag_floored():
     )
 
 
-def test_in_mag():
+def test_in_mag() -> None:
 
     with pytest.raises(AssertionError):
         BoundingBox((1, 2, 3), (9, 9, 9)).in_mag(Mag(2))
