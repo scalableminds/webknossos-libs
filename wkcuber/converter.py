@@ -2,7 +2,7 @@ from argparse import ArgumentParser, Namespace
 from os import path, cpu_count
 from pathlib import Path
 from .utils import find_files, add_scale_flag
-from typing import Iterable, List, Any, Tuple
+from typing import Iterable, List, Any, Tuple, cast
 from .convert_nifti import main as convert_nifti
 from .convert_knossos import main as convert_knossos
 from .__main__ import main as convert_image_stack
@@ -48,7 +48,7 @@ def get_source_files(
 
 
 class Converter:
-    def accepts_input(self, source_path) -> bool:
+    def accepts_input(self, source_path: str) -> bool:
         pass
 
     def convert_input(self, args: Namespace) -> None:
@@ -56,7 +56,7 @@ class Converter:
 
 
 class WkwConverter(Converter):
-    def accepts_input(self, source_path) -> bool:
+    def accepts_input(self, source_path: str) -> bool:
         source_files = get_source_files(source_path, {".wkw"}, False)
         return len(source_files) > 0
 
@@ -65,7 +65,7 @@ class WkwConverter(Converter):
 
 
 class NiftiConverter(Converter):
-    def accepts_input(self, source_path) -> bool:
+    def accepts_input(self, source_path: str) -> bool:
         source_files = get_source_files(source_path, {".nii"}, True)
         return len(source_files) > 0
 
@@ -75,7 +75,7 @@ class NiftiConverter(Converter):
 
 
 class KnossosConverter(Converter):
-    def accepts_input(self, source_path) -> bool:
+    def accepts_input(self, source_path: str) -> bool:
         source_files = get_source_files(source_path, {".raw"}, False)
         return len(source_files) > 0
 
@@ -85,11 +85,11 @@ class KnossosConverter(Converter):
 
 
 class ImageStackConverter(Converter):
-    def __init__(self):
+    def __init__(self) -> None:
         self.source_files: List[str] = []
         self.args: Namespace = Namespace()
 
-    def accepts_input(self, source_path) -> bool:
+    def accepts_input(self, source_path: str) -> bool:
         source_files = get_source_files(source_path, image_reader.readers.keys(), True)
 
         if len(source_files) == 0:
@@ -163,7 +163,7 @@ class ImageStackConverter(Converter):
         else:
             dataset_name = path.basename(dataset_name)
             paths.add(one_path)
-            layer_names = list(map(path.basename, paths))
+            layer_names = list(map(lambda p: cast(str, path.basename(p)), paths))
             return dataset_name, layer_names
 
 

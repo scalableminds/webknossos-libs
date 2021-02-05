@@ -277,6 +277,7 @@ def cubing(
             file_len=args.wkw_file_len,
         ),
     )
+    # TODO I think this uses a different layer category guessing method
     interpolation_mode = parse_interpolation_mode(
         args.interpolation_mode, target_wkw_info.layer_name
     )
