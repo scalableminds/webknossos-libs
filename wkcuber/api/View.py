@@ -306,7 +306,7 @@ class WKView(View):
         margin_to_top_left = absolute_offset_np % file_bb
         aligned_offset = absolute_offset_np - margin_to_top_left
         bottom_right = absolute_offset_np + np.array(data.shape[-3:])
-        margin_to_bottom_right = file_bb - (bottom_right % file_bb)
+        margin_to_bottom_right = (file_bb - (bottom_right % file_bb)) % file_bb
         aligned_bottom_right = bottom_right + margin_to_bottom_right
         aligned_shape = aligned_bottom_right - aligned_offset
 

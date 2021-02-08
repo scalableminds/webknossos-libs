@@ -210,6 +210,9 @@ class Layer(Generic[MagT]):
         buffer_edge_len: Optional[int] = None,
         args: Optional[Namespace] = None,
     ) -> None:
+        assert (
+            from_mag.to_layer_name() in self.mags.keys()
+        ), f"Failed to downsample data. The from_mag ({from_mag}) does not exist."
         anisotropic = anisotropic or scale is not None
         if anisotropic:
             if scale is None:
