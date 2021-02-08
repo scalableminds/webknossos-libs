@@ -226,7 +226,7 @@ class View:
                 size=cast(Tuple[int, int, int], tuple(target_chunk.size)),
                 relative_offset=cast(
                     Tuple[int, int, int], tuple(relative_target_offset)
-                )
+                ),
             )
 
             job_args.append((source_chunk_view, target_chunk_view, i))
