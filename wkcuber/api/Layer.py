@@ -239,7 +239,7 @@ class Layer(Generic[MagT]):
             )
 
             # Get target view
-            target_mag_view = target_mag_ds.get_view(is_bounded=False)
+            target_mag_view = target_mag_ds.get_view(is_bounded=not compress)
 
             # perform downsampling
             with get_executor_for_args(args) as executor:
