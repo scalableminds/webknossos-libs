@@ -1689,13 +1689,14 @@ def test_for_zipped_chunks() -> None:
         "color", "1", size=(256, 256, 256), is_bounded=False
     )
 
-    target_mag: MagDataset = (
+    target_mag = (
         WKDataset.create("./testoutput/zipped_chunking_target/", scale=(1, 1, 1))
         .get_or_add_layer(
             "color", Layer.COLOR_TYPE, dtype_per_channel="uint8", num_channels=3
         )
         .get_or_add_mag("1", block_len=8, file_len=4)
     )
+
     target_mag.layer.dataset.properties._set_bounding_box_of_layer(
         "color", offset=(0, 0, 0), size=(256, 256, 256)
     )
@@ -1717,3 +1718,117 @@ def test_for_zipped_chunks() -> None:
         source_view.read(size=source_view.size) + 50,
         target_view.read(size=target_view.size),
     )
+
+
+def test_for_zipped_chunks_invalid_target_chunk_size_wk() -> None:
+    delete_dir("./testoutput/zipped_chunking_source_invalid/")
+
+    test_cases_wk = [
+        (10, 20, 30),
+        (64, 64, 100),
+        (64, 50, 64),
+        (200, 128, 128),
+    ]
+
+    layer = WKDataset.create(
+        "./testoutput/zipped_chunking_source_invalid/", scale=(1, 1, 1)
+    ).get_or_add_layer("color", Layer.COLOR_TYPE)
+    source_mag_dataset = layer.get_or_add_mag(1, block_len=8, file_len=8)
+    target_mag_dataset = layer.get_or_add_mag(2, block_len=8, file_len=8)
+    source_mag_dataset.write(
+        data=(np.random.rand(1, 300, 300, 300) * 255).astype(np.uint8)
+    )
+    source_view = source_mag_dataset.get_view()
+    target_view = target_mag_dataset.get_view(size=source_view.size, is_bounded=False)
+
+    def func(args: Tuple[View, View, int]) -> None:
+        (s, t, i) = args
+
+    with get_executor_for_args(None) as executor:
+        for test_case in test_cases_wk:
+            with pytest.raises(AssertionError):
+                source_view.for_zipped_chunks(
+                    work_on_chunk=func,
+                    target_view=target_view,
+                    source_chunk_size=test_case,
+                    target_chunk_size=test_case,
+                    executor=executor,
+                )
+
+
+def test_for_zipped_chunks_invalid_target_chunk_size_tiled_tiff() -> None:
+    delete_dir("./testoutput/zipped_chunking_source_invalid/")
+
+    test_cases = [
+        (10, 20, 10),
+        (64, 50, 5),
+        (200, 128, 12),
+    ]
+
+    layer = TiledTiffDataset.create(
+        "./testoutput/zipped_chunking_source_invalid/",
+        scale=(1, 1, 1),
+        tile_size=(64, 64),
+    ).get_or_add_layer("color", Layer.COLOR_TYPE)
+    source_mag_dataset = layer.get_or_add_mag(1)
+    target_mag_dataset = layer.get_or_add_mag(2)
+    source_mag_dataset.write(
+        data=(np.random.rand(1, 300, 300, 10) * 255).astype(np.uint8)
+    )
+    source_view = source_mag_dataset.get_view()
+    target_view = target_mag_dataset.get_view(size=source_view.size, is_bounded=False)
+
+    def func(args: Tuple[View, View, int]) -> None:
+        (s, t, i) = args
+
+    with get_executor_for_args(None) as executor:
+        for test_case in test_cases:
+            with pytest.raises(AssertionError):
+                source_view.for_zipped_chunks(
+                    work_on_chunk=func,
+                    target_view=target_view,
+                    source_chunk_size=test_case,
+                    target_chunk_size=test_case,
+                    executor=executor,
+                )
+
+
+def test_for_zipped_chunks_invalid_target_chunk_size_tiff() -> None:
+
+    test_cases = [  # offset, size, chunk_size
+        ((0, 0, 0), (64, 64, 10), (32, 64, 5)),
+        ((14, 14, 5), (46, 46, 5), (32, 32, 5)),
+    ]
+
+    def func(args: Tuple[View, View, int]) -> None:
+        (s, t, i) = args
+
+    for offset, size, chunk_size in test_cases:
+        delete_dir("./testoutput/zipped_chunking_source_invalid/")
+
+        ds = TiffDataset.create(
+            "./testoutput/zipped_chunking_source_invalid/", scale=(1, 1, 1)
+        )
+        color_layer = ds.get_or_add_layer("color", Layer.COLOR_TYPE)
+        seg_layer = ds.get_or_add_layer(
+            "seg", Layer.SEGMENTATION_TYPE, largest_segment_id=10000000
+        )
+        source_mag_dataset = color_layer.get_or_add_mag(1)
+        target_mag_dataset = seg_layer.get_or_add_mag(1)
+        source_mag_dataset.write(
+            data=(np.random.rand(1, *size) * 255).astype(np.uint8), offset=offset
+        )
+        source_view = source_mag_dataset.get_view()
+        target_view = target_mag_dataset.get_view(
+            size=source_view.size, is_bounded=False
+        )
+
+        with get_executor_for_args(None) as executor:
+            with pytest.raises(AssertionError):
+                source_view.for_zipped_chunks(
+                    work_on_chunk=func,
+                    target_view=target_view,
+                    source_chunk_size=chunk_size,
+                    target_chunk_size=chunk_size,
+                    executor=executor,
+                )

@@ -184,6 +184,16 @@ class View:
         assuming that the transformation of the data can be handled on chunk-level.
         Additionally to the two views, the counter 'i' is passed to the 'work_on_chunk',
         which can be used for logging.
+        The mapping of chunks from the source view to the target is bijective.
+        The ratio between the size of the source_view (self) and the source_chunk_size must be equal to
+        the ratio between the target_view and the target_chunk_size. This guarantees that the number of chunks
+        in the source_view is equal to the number of chunks in the target_view.
+
+        Example use case: downsampling
+        size of source_view (Mag 1): (16384, 16384, 16384)
+        size of target_view (Mag 2): (8192, 8192, 8192)
+        source_chunk_size: (2048, 2048, 2048)
+        target_chunk_size: (1024, 1024, 1024) // this must be a multiple of the file size on disk to avoid concurrent writes
         """
         source_offset = np.array(self.global_offset)
         target_offset = np.array(target_view.global_offset)
@@ -203,13 +213,24 @@ class View:
         if isinstance(target_view.header, wkw.Header):
             assert not any(
                 target_chunk_size_np
-                % target_view.header.file_len
-                * target_view.header.block_len
+                % (target_view.header.file_len * target_view.header.block_len)
             ), f"Calling for_zipped_chunks failed. The target_chunk_size ({target_chunk_size}) must be a multiple of file_len*block_len of the target view ({target_view.header.file_len * target_view.header.block_len})"
         else:
-            assert not any(
-                target_chunk_size_np % target_view.header.tile_size + (1,)
-            ), f"Calling for_zipped_chunks failed. The target_chunk_size ({target_chunk_size}) must be a multiple of the tiff dimensions of the target view ({target_view.header.tile_size + (1,)})"
+            if target_view.header.tile_size is None:
+                # TiffDataset
+                assert np.array_equal(
+                    ceil_div_np(
+                        (target_offset + np.array(target_view.size))[:2],
+                        np.array(target_chunk_size[:2]),
+                    )
+                    - (target_offset[:2] // target_chunk_size[:2]),
+                    [1, 1],
+                ), f"Calling for_zipped_chunks failed. There can only be a single chunk per z-slice for TiffDatasets. Choose a different 'target_chunk_size'."
+            else:
+                # TiledTiffDataset
+                assert not any(
+                    target_chunk_size_np % (tuple(target_view.header.tile_size) + (1,))
+                ), f"Calling for_zipped_chunks failed. The target_chunk_size ({target_chunk_size}) must be a multiple of the tiff size of the target view ({tuple(target_view.header.tile_size) + (1,)})"
 
         job_args = []
         source_chunks = BoundingBox(source_offset, self.size).chunk(
