@@ -200,6 +200,17 @@ class View:
             source_chunk_size_np / target_chunk_size_np,
         ), f"Calling 'for_zipped_chunks' failed because the ratio of the view sizes (source size = {self.size}, target size = {target_view.size}) must be equal to the ratio of the chunk sizes (source_chunk_size = {source_chunk_size}, source_chunk_size = {target_chunk_size}))"
 
+        if isinstance(target_view.header, wkw.Header):
+            assert not any(
+                target_chunk_size_np
+                % target_view.header.file_len
+                * target_view.header.block_len
+            ), f"Calling for_zipped_chunks failed. The target_chunk_size ({target_chunk_size}) must be a multiple of file_len*block_len of the target view ({target_view.header.file_len * target_view.header.block_len})"
+        else:
+            assert not any(
+                target_chunk_size_np % target_view.header.tile_size + (1,)
+            ), f"Calling for_zipped_chunks failed. The target_chunk_size ({target_chunk_size}) must be a multiple of the tiff dimensions of the target view ({target_view.header.tile_size + (1,)})"
+
         job_args = []
         source_chunks = BoundingBox(source_offset, self.size).chunk(
             source_chunk_size_np, list(source_chunk_size_np)
