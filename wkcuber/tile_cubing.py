@@ -289,14 +289,16 @@ def tile_cubing(
             file_count, tile_size[0], tile_size[1]
         )
     )
-    if not hasattr(args, "dtype") or args.dtype is None:
-        args.dtype = image_reader.read_dtype(arbitrary_file)
+    if args is None or not hasattr(args, "dtype") or args.dtype is None:
+        dtype = image_reader.read_dtype(arbitrary_file)
+        if args is not None:
+            args.dtype = dtype
 
     target_wkw_info = WkwDatasetInfo(
         target_path,
         layer_name,
         1,
-        wkw.Header(convert_element_class_to_dtype(args.dtype), num_channels),
+        wkw.Header(convert_element_class_to_dtype(dtype), num_channels),
     )
     ensure_wkw(target_wkw_info)
     with get_executor_for_args(args) as executor:
