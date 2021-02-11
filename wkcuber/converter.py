@@ -128,9 +128,8 @@ class ImageStackConverter(Converter):
 
         self.args = args
 
-        # we can detect the layer names correctly, but we currently do not split the source files accordingly
+        # TODO we can detect the layer names correctly, but we currently do not split the source files accordingly
         args.layer_name = layer_names[0]
-        print(args)
         convert_image_stack(args)
 
     def detect_dataset_and_layer_names(self) -> Tuple[str, List[str]]:
