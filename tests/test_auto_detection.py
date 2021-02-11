@@ -6,7 +6,7 @@ TEST_NAMESPACE = Namespace()
 TEST_NAMESPACE.target_path = "a/random/path"
 
 
-def test_tiff_dataset_name_and_layer_name_detection():
+def test_tiff_dataset_name_and_layer_name_detection() -> None:
     converter = ImageStackConverter()
 
     # test if ds name and layer name are correctly detected
