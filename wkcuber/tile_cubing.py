@@ -263,7 +263,7 @@ def tile_cubing_job(
 def tile_cubing(
     target_path: str,
     layer_name: str,
-    dtype: str,
+    dtype: Optional[str],
     batch_size: int,
     input_path_pattern: str,
     args: Namespace = None,
@@ -290,6 +290,8 @@ def tile_cubing(
             file_count, tile_size[0], tile_size[1]
         )
     )
+    if dtype is None:
+        dtype = image_reader.read_dtype(arbitrary_file)
 
     target_wkw_info = WkwDatasetInfo(
         target_path,
