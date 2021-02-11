@@ -242,7 +242,6 @@ def cubing(
     source_path: str,
     target_path: str,
     layer_name: str,
-    dtype: Optional[str],
     batch_size: Optional[int],
     args: Namespace,
 ) -> dict:
@@ -260,8 +259,8 @@ def cubing(
     else:
         num_z = len(source_files)
 
-    if dtype is None:
-        dtype = image_reader.read_dtype(source_files[0])
+    if not hasattr(args, "dtype") or args.dtype is None:
+        args.dtype = image_reader.read_dtype(source_files[0])
 
     if batch_size is None:
         batch_size = BLOCK_LEN
@@ -272,7 +271,7 @@ def cubing(
         layer_name,
         target_mag,
         wkw.Header(
-            convert_element_class_to_dtype(dtype),
+            convert_element_class_to_dtype(args.dtype),
             num_channels,
             file_len=args.wkw_file_len,
         ),
@@ -332,7 +331,6 @@ if __name__ == "__main__":
         args.source_path,
         args.target_path,
         args.layer_name,
-        args.dtype,
         args.batch_size,
         args=args,
     )
