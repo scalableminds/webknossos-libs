@@ -132,7 +132,7 @@ class View:
 
     def for_each_chunk(
         self,
-        work_on_chunk: Callable[[List[Any]], None],
+        work_on_chunk: Callable[[Tuple["View", Tuple[Any, ...]]], None],
         job_args_per_chunk: Any,
         chunk_size: Tuple[int, int, int],
         executor: Union[ClusterExecutor, cluster_tools.WrappedProcessPoolExecutor],

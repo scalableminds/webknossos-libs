@@ -11,7 +11,7 @@ ds_name = "simple_wk_dataset"
 source_path = os.path.join("testdata", ds_name)
 
 
-def test_export_tiff_stack():
+def test_export_tiff_stack() -> None:
     destination_path = os.path.join("testoutput", ds_name + "_tiff")
     bbox = BoundingBox((100, 100, 10), (100, 500, 50))
     bbox_dict = bbox.as_config()
@@ -64,7 +64,7 @@ def test_export_tiff_stack():
             )
 
 
-def test_export_tiff_stack_tile_size():
+def test_export_tiff_stack_tile_size() -> None:
     destination_path = os.path.join("testoutput", ds_name + "_tile_size")
     args_list = [
         "--source_path",
@@ -128,7 +128,7 @@ def test_export_tiff_stack_tile_size():
                     )
 
 
-def test_export_tiff_stack_tiles_per_dimension():
+def test_export_tiff_stack_tiles_per_dimension() -> None:
     destination_path = os.path.join("testoutput", ds_name + "_tiles_per_dimension")
     args_list = [
         "--source_path",

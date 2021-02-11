@@ -1,5 +1,5 @@
 import logging
-from typing import Tuple
+from typing import Tuple, cast
 
 import numpy as np
 from wkcuber.downsampling import (
@@ -24,16 +24,16 @@ target_info = WkwDatasetInfo("testoutput/WT1_wkw", "color", 2, wkw.Header(np.uin
 
 def read_wkw(
     wkw_info: WkwDatasetInfo, offset: Tuple[int, int, int], size: Tuple[int, int, int]
-):
+) -> np.array:
     with open_wkw(wkw_info) as wkw_dataset:
         return wkw_dataset.read(offset, size)
 
 
-def test_downsample_cube():
+def test_downsample_cube() -> None:
     buffer = np.zeros((CUBE_EDGE_LEN,) * 3, dtype=np.uint8)
     buffer[:, :, :] = np.arange(0, CUBE_EDGE_LEN)
 
-    output = downsample_cube(buffer, (2, 2, 2), InterpolationModes.MODE)
+    output = downsample_cube(buffer, [2, 2, 2], InterpolationModes.MODE)
 
     assert output.shape == (CUBE_EDGE_LEN // 2,) * 3
     assert buffer[0, 0, 0] == 0
@@ -41,7 +41,7 @@ def test_downsample_cube():
     assert np.all(output[:, :, :] == np.arange(0, CUBE_EDGE_LEN, 2))
 
 
-def test_downsample_mode():
+def test_downsample_mode() -> None:
 
     a = np.array([[1, 3, 4, 2, 2, 7], [5, 2, 2, 1, 4, 1], [3, 3, 2, 2, 1, 1]])
 
@@ -51,7 +51,7 @@ def test_downsample_mode():
     assert np.all(result == expected_result)
 
 
-def test_downsample_median():
+def test_downsample_median() -> None:
 
     a = np.array([[1, 3, 4, 2, 2, 7], [5, 2, 2, 1, 4, 1], [3, 3, 2, 2, 1, 1]])
 
@@ -61,7 +61,7 @@ def test_downsample_median():
     assert np.all(result == expected_result)
 
 
-def test_non_linear_filter_reshape():
+def test_non_linear_filter_reshape() -> None:
     a = np.array([[[1, 3], [1, 4]], [[4, 2], [3, 1]]], dtype=np.uint8)
 
     a_filtered = non_linear_filter_3d(a, [2, 2, 2], _mode)
@@ -77,7 +77,7 @@ def test_non_linear_filter_reshape():
     assert np.all(expected_result == a_filtered)
 
 
-def test_cube_addresses():
+def test_cube_addresses() -> None:
     addresses = cube_addresses(source_info)
     assert len(addresses) == 5 * 5 * 1
 
@@ -85,7 +85,7 @@ def test_cube_addresses():
     assert max(addresses) == (4, 4, 0)
 
 
-def downsample_test_helper(use_compress):
+def downsample_test_helper(use_compress: bool) -> None:
     try:
         shutil.rmtree(target_info.dataset_path)
     except:
@@ -94,15 +94,15 @@ def downsample_test_helper(use_compress):
     offset = (1, 2, 0)
     source_buffer = read_wkw(
         source_info,
-        tuple(a * WKW_CUBE_SIZE * 2 for a in offset),
-        (CUBE_EDGE_LEN * 2,) * 3,
+        cast(Tuple[int, int, int], tuple(a * WKW_CUBE_SIZE * 2 for a in offset)),
+        (CUBE_EDGE_LEN * 2, CUBE_EDGE_LEN * 2, CUBE_EDGE_LEN * 2),
     )[0]
     assert np.any(source_buffer != 0)
 
     downsample_args = (
         source_info,
         target_info,
-        (2, 2, 2),
+        [2, 2, 2],
         InterpolationModes.MAX,
         offset,
         CUBE_EDGE_LEN,
@@ -118,7 +118,9 @@ def downsample_test_helper(use_compress):
     target_info.header.block_type = block_type
 
     target_buffer = read_wkw(
-        target_info, tuple(a * WKW_CUBE_SIZE for a in offset), (CUBE_EDGE_LEN,) * 3
+        target_info,
+        cast(Tuple[int, int, int], tuple(a * WKW_CUBE_SIZE for a in offset)),
+        (CUBE_EDGE_LEN, CUBE_EDGE_LEN, CUBE_EDGE_LEN),
     )[0]
     assert np.any(target_buffer != 0)
 
@@ -128,15 +130,15 @@ def downsample_test_helper(use_compress):
     )
 
 
-def test_downsample_cube_job():
+def test_downsample_cube_job() -> None:
     downsample_test_helper(False)
 
 
-def test_compressed_downsample_cube_job():
+def test_compressed_downsample_cube_job() -> None:
     downsample_test_helper(True)
 
 
-def test_downsample_multi_channel():
+def test_downsample_multi_channel() -> None:
     offset = (0, 0, 0)
     num_channels = 3
     size = (32, 32, 10)
@@ -171,9 +173,9 @@ def test_downsample_multi_channel():
     downsample_args = (
         source_info,
         target_info,
-        (2, 2, 2),
+        [2, 2, 2],
         InterpolationModes.MAX,
-        tuple(a * WKW_CUBE_SIZE for a in offset),
+        offset,
         CUBE_EDGE_LEN,
         False,
         True,
@@ -191,28 +193,28 @@ def test_downsample_multi_channel():
 
     target_buffer = read_wkw(
         target_info,
-        tuple(a * WKW_CUBE_SIZE for a in offset),
-        list(map(lambda x: x // 2, size)),
+        offset,
+        cast(Tuple[int, int, int], tuple([x // 2 for x in size])),
     )
     assert np.any(target_buffer != 0)
 
     assert np.all(target_buffer == joined_buffer)
 
 
-def test_anisotropic_mag_calculation():
+def test_anisotropic_mag_calculation() -> None:
     mag_tests = [
-        [(10.5, 10.5, 24), Mag(1), Mag((2, 2, 1))],
-        [(10.5, 10.5, 21), Mag(1), Mag((2, 2, 1))],
-        [(10.5, 24, 10.5), Mag(1), Mag((2, 1, 2))],
-        [(24, 10.5, 10.5), Mag(1), Mag((1, 2, 2))],
-        [(10.5, 10.5, 10.5), Mag(1), Mag((2, 2, 2))],
-        [(10.5, 10.5, 24), Mag((2, 2, 1)), Mag((4, 4, 1))],
-        [(10.5, 10.5, 21), Mag((2, 2, 1)), Mag((4, 4, 2))],
-        [(10.5, 24, 10.5), Mag((2, 1, 2)), Mag((4, 1, 4))],
-        [(24, 10.5, 10.5), Mag((1, 2, 2)), Mag((1, 4, 4))],
-        [(10.5, 10.5, 10.5), Mag(2), Mag(4)],
-        [(320, 320, 200), Mag(1), Mag((1, 1, 2))],
-        [(320, 320, 200), Mag((1, 1, 2)), Mag((2, 2, 4))],
+        ((10.5, 10.5, 24), Mag(1), Mag((2, 2, 1))),
+        ((10.5, 10.5, 21), Mag(1), Mag((2, 2, 1))),
+        ((10.5, 24, 10.5), Mag(1), Mag((2, 1, 2))),
+        ((24, 10.5, 10.5), Mag(1), Mag((1, 2, 2))),
+        ((10.5, 10.5, 10.5), Mag(1), Mag((2, 2, 2))),
+        ((10.5, 10.5, 24), Mag((2, 2, 1)), Mag((4, 4, 1))),
+        ((10.5, 10.5, 21), Mag((2, 2, 1)), Mag((4, 4, 2))),
+        ((10.5, 24, 10.5), Mag((2, 1, 2)), Mag((4, 1, 4))),
+        ((24, 10.5, 10.5), Mag((1, 2, 2)), Mag((1, 4, 4))),
+        ((10.5, 10.5, 10.5), Mag(2), Mag(4)),
+        ((320, 320, 200), Mag(1), Mag((1, 1, 2))),
+        ((320, 320, 200), Mag((1, 1, 2)), Mag((2, 2, 4))),
     ]
 
     for i in range(len(mag_tests)):

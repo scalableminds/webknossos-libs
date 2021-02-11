@@ -214,27 +214,27 @@ def convert_nifti(
         tiff_ds = TiffDataset.get_or_create(
             target_path, scale=cast(Tuple[float, float, float], scale or (1, 1, 1))
         )
-        layer = tiff_ds.get_or_add_layer(
+        tiff_layer = tiff_ds.get_or_add_layer(
             layer_name,
             category_type,
             dtype_per_layer=np.dtype(dtype),
             **max_cell_id_args,
         )
-        mag = layer.get_or_add_mag("1")
+        tiff_mag = tiff_layer.get_or_add_mag("1")
 
-        mag.write(cube_data.squeeze())
+        tiff_mag.write(cube_data.squeeze())
     else:
         wk_ds = WKDataset.get_or_create(
             target_path, scale=cast(Tuple[float, float, float], scale or (1, 1, 1))
         )
-        layer = wk_ds.get_or_add_layer(
+        wk_layer = wk_ds.get_or_add_layer(
             layer_name,
             category_type,
             dtype_per_layer=np.dtype(dtype),
             **max_cell_id_args,
         )
-        mag = layer.get_or_add_mag("1", file_len=file_len)
-        mag.write(cube_data)
+        wk_mag = wk_layer.get_or_add_mag("1", file_len=file_len)
+        wk_mag.write(cube_data)
 
     logging.debug(
         "Converting of {} took {:.8f}s".format(
