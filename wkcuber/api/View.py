@@ -22,6 +22,7 @@ class View:
         size: Tuple[int, int, int],
         global_offset: Tuple[int, int, int] = (0, 0, 0),
         is_bounded: bool = True,
+        read_only: bool = False,
     ):
         self.dataset: Optional[Dataset] = None
         self.path = path_to_mag_dataset
@@ -29,6 +30,7 @@ class View:
         self.size = size
         self.global_offset = global_offset
         self.is_bounded = is_bounded
+        self.read_only = read_only
         self._is_opened = False
 
     def open(self) -> "View":
@@ -49,6 +51,8 @@ class View:
         relative_offset: Tuple[int, int, int] = (0, 0, 0),
         allow_compressed_write: bool = False,
     ) -> None:
+        assert not self.read_only, f"Cannot write data to an read_only View"
+
         was_opened = self._is_opened
         # assert the size of the parameter data is not in conflict with the attribute self.size
         assert_non_negative_offset(relative_offset)
@@ -105,12 +109,18 @@ class View:
         size: Tuple[int, int, int],
         relative_offset: Tuple[int, int, int] = (0, 0, 0),
         is_bounded: Optional[bool] = None,
+        read_only: Optional[bool] = None,
     ) -> "View":
         if is_bounded is None:
             is_bounded = self.is_bounded
         assert (
             is_bounded or is_bounded == self.is_bounded
         ), f"Failed to get subview. The calling view is bounded. Therefore, the subview also has to be bounded."
+        if read_only is None:
+            read_only = self.read_only
+        assert (
+            read_only or read_only == self.read_only
+        ), f"Failed to get subview. The calling view is read_only. Therefore, the subview also has to be read_only."
         self.assert_bounds(relative_offset, size)
         view_offset = cast(
             Tuple[int, int, int], tuple(self.global_offset + np.array(relative_offset))
@@ -121,6 +131,7 @@ class View:
             size=size,
             global_offset=view_offset,
             is_bounded=is_bounded,
+            read_only=read_only,
         )
 
     def check_bounds(
@@ -251,6 +262,7 @@ class View:
                     Tuple[int, int, int], tuple(relative_source_offset)
                 ),
                 is_bounded=True,
+                read_only=True,
             )
             # target chunk
             relative_target_offset = np.array(target_chunk.topleft) - target_offset

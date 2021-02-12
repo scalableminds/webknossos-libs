@@ -112,6 +112,7 @@ class MagDataset:
         size: Tuple[int, int, int] = None,
         offset: Tuple[int, int, int] = None,
         is_bounded: bool = True,
+        read_only: bool = False,
     ) -> View:
         mag1_size_in_properties = self.layer.dataset.properties.data_layers[
             self.layer.name
@@ -172,6 +173,7 @@ class MagDataset:
             cast(Tuple[int, int, int], tuple(size)),
             view_offset,
             is_bounded,
+            read_only,
         )
 
     def _get_view_type(self) -> Type[View]:

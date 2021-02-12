@@ -306,11 +306,14 @@ class AbstractDataset(Generic[LayerT]):
         size: Tuple[int, int, int],
         offset: Tuple[int, int, int] = None,
         is_bounded: bool = True,
+        read_only: bool = False,
     ) -> View:
         layer = self.get_layer(layer_name)
         mag_ds = layer.get_mag(mag)
 
-        return mag_ds.get_view(size=size, offset=offset, is_bounded=is_bounded)
+        return mag_ds.get_view(
+            size=size, offset=offset, is_bounded=is_bounded, read_only=read_only
+        )
 
     def _create_layer(
         self, layer_name: str, dtype_per_channel: np.dtype, num_channels: int

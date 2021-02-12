@@ -1832,3 +1832,20 @@ def test_for_zipped_chunks_invalid_target_chunk_size_tiff() -> None:
                     target_chunk_size=chunk_size,
                     executor=executor,
                 )
+
+
+def test_read_only_view() -> None:
+    delete_dir("./testoutput/read_only_view/")
+    ds = WKDataset.create("./testoutput/read_only_view/", scale=(1, 1, 1))
+    mag = ds.get_or_add_layer("color", Layer.COLOR_TYPE).get_or_add_mag("1")
+    mag.write(
+        data=(np.random.rand(1, 10, 10, 10) * 255).astype(np.uint8), offset=(10, 20, 30)
+    )
+    v_write = mag.get_view()
+    v_read = mag.get_view(read_only=True)
+
+    new_data = (np.random.rand(1, 5, 6, 7) * 255).astype(np.uint8)
+    with pytest.raises(AssertionError):
+        v_read.write(data=new_data)
+
+    v_write.write(data=new_data)
