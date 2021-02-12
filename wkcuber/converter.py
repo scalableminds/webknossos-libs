@@ -1,8 +1,9 @@
 from argparse import ArgumentParser, Namespace
-from os import path, cpu_count
+from os import path, cpu_count, sep
 from pathlib import Path
+from natsort import natsorted
 from .utils import find_files, add_scale_flag
-from typing import Iterable, List, Any, Tuple, cast
+from typing import Iterable, List, Any, Tuple, cast, Dict
 from .convert_nifti import main as convert_nifti
 from .convert_knossos import main as convert_knossos
 from .__main__ import main as convert_image_stack
@@ -10,7 +11,7 @@ from .__main__ import main as convert_image_stack
 from .image_readers import image_reader
 
 
-def get_converter_parser() -> ArgumentParser:
+def create_parser() -> ArgumentParser:
     parser = ArgumentParser()
 
     parser.add_argument(
@@ -30,6 +31,13 @@ def put_default_if_not_present(args: Namespace, name: str, default: Any) -> None
     dictionary = vars(args)
     if name not in dictionary:
         dictionary[name] = default
+
+
+def add_or_update_if_present(dictionary: dict, name: str, value: Any) -> None:
+    if name not in dictionary:
+        dictionary[name] = {value}
+    else:
+        dictionary[name].add(value)
 
 
 def get_source_files(
@@ -75,13 +83,83 @@ class NiftiConverter(Converter):
 
 
 class KnossosConverter(Converter):
+    def __init__(self) -> None:
+        self.source_files: List[str] = []
+
     def accepts_input(self, source_path: str) -> bool:
         source_files = get_source_files(source_path, {".raw"}, False)
+        self.source_files = source_files
+
         return len(source_files) > 0
 
     def convert_input(self, args: Namespace) -> None:
         print("Converting KNOSSOS dataset")
-        convert_knossos(args)
+
+        # add missing config attributes with defaults
+        put_default_if_not_present(args, "mag", 1)
+        put_default_if_not_present(args, "verbose", True)
+        put_default_if_not_present(args, "jobs", cpu_count())
+        put_default_if_not_present(args, "distribution_strategy", "multiprocessing")
+        put_default_if_not_present(
+            args, "dtype", "uint8"
+        )  # TODO can we autodetect this better?
+
+        (
+            dataset_name,
+            layer_paths_and_mag,
+        ) = self.detect_dataset_and_layer_paths_with_mag()
+
+        for layer_path, mag in layer_paths_and_mag.items():
+            args.source_path = path.join(layer_path, mag)
+            args.layer_name = "color" if layer_path == "" else path.basename(layer_path)
+            args.name = dataset_name
+
+            convert_knossos(args)
+
+    def detect_dataset_and_layer_paths_with_mag(self) -> Tuple[str, Dict[str, str]]:
+        # Path structure for knossos is .../(dataset_name)/(layer_name)/(mag)folder/x0000/y0000/z0000/filename.raw
+        layers: Dict[str, set] = dict()
+        dataset_names = set()
+        for f in self.source_files:
+            split_path = path.normpath(f).split(sep)
+            starts_with_root = split_path[0] == ""
+            if starts_with_root:
+                split_path = split_path[1:]
+            assert (
+                len(split_path) >= 4
+            ), "Input Format is unreadable. Make sure to pass the path which points at least to a KNOSSOS magnification (e.g., testdata/knossos/color/1)."
+
+            if len(split_path) == 4:
+                # already inside the mag folder
+                add_or_update_if_present(layers, "", "")
+                dataset_names.add("dataset")
+            elif len(split_path) == 5:
+                # only the mag folder is given, therefore the layer path is empty
+                add_or_update_if_present(layers, "", split_path[0])
+                dataset_names.add("dataset")
+            elif len(split_path) == 6:
+                # additionally the layer folder is given, that should indicate a single layer as well
+                add_or_update_if_present(layers, split_path[0], split_path[1])
+                dataset_names.add("dataset")
+            else:
+                # also a dataset folder is given
+                layer_path = sep.join(split_path[0:-5])
+                if starts_with_root:
+                    layer_path = "/" + layer_path
+                add_or_update_if_present(layers, layer_path, split_path[-5])
+                dataset_names.add(split_path[-7])
+
+        assert (
+            len(dataset_names) == 1
+        ), "More than one dataset found. Stopping conversion..."
+        assert len(layers) > 0, "No layers found. Stopping conversion..."
+
+        layer_names_and_mags = dict()
+
+        for layer, mags in layers.items():
+            layer_names_and_mags[layer] = natsorted(list(mags))[0]
+
+        return dataset_names.pop(), layer_names_and_mags
 
 
 class ImageStackConverter(Converter):
@@ -179,7 +257,7 @@ class ConverterManager:
 converter_manager = ConverterManager()
 
 if __name__ == "__main__":
-    args = get_converter_parser().parse_args()
+    args = create_parser().parse_args()
 
     fitting_converters = list(
         filter(
