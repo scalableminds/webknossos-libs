@@ -9,7 +9,7 @@ from os import path
 from natsort import natsorted
 
 from .mag import Mag
-from .downsampling import (
+from .downsampling_utils import (
     parse_interpolation_mode,
     downsample_unpadded_data,
     InterpolationModes,

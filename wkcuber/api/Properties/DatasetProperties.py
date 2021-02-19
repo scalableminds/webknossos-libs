@@ -87,6 +87,13 @@ class Properties:
         self._data_layers[layer_name]._set_bounding_box_offset(offset)
         self._export_as_json()
 
+    def get_bounding_box_of_layer(
+        self, layer_name: str
+    ) -> Tuple[Tuple[int, int, int], Tuple[int, int, int]]:
+        offset = self._data_layers[layer_name].get_bounding_box_offset()
+        size = self._data_layers[layer_name].get_bounding_box_size()
+        return offset, size
+
     @property
     def name(self) -> str:
         return self._name
@@ -100,7 +107,7 @@ class Properties:
         return self._team
 
     @property
-    def scale(self) -> tuple:
+    def scale(self) -> Tuple[float, float, float]:
         return self._scale
 
     @property
