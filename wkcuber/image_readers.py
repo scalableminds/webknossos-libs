@@ -29,7 +29,7 @@ class ImageReader:
         return 1
 
     def read_dtype(self, file_name: str) -> str:  # pylint: disable=unused-argument
-        return "uint8"
+        return "uint8"  # TODO: Implement dtype method for all readers
 
 
 class PillowImageReader(ImageReader):

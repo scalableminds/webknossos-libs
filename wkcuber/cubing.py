@@ -101,7 +101,7 @@ def find_source_filenames(source_path: str) -> List[str]:
     input_path = Path(source_path)
 
     if input_path.is_dir():
-        joined_path = path.join(source_path, "**")
+        joined_path = path.join(source_path, "*")
     else:
         joined_path = source_path
 

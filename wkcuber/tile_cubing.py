@@ -291,8 +291,6 @@ def tile_cubing(
     )
     if args is None or not hasattr(args, "dtype") or args.dtype is None:
         dtype = image_reader.read_dtype(arbitrary_file)
-        if args is not None:
-            args.dtype = dtype
 
     target_wkw_info = WkwDatasetInfo(
         target_path,

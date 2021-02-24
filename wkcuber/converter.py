@@ -2,7 +2,7 @@ from argparse import ArgumentParser, Namespace
 from os import path, cpu_count, sep
 from pathlib import Path
 from natsort import natsorted
-from .utils import find_files, add_scale_flag
+from .utils import find_files, add_scale_flag, logger
 from typing import Iterable, List, Any, Tuple, cast, Dict
 from .convert_nifti import main as convert_nifti
 from .convert_knossos import main as convert_knossos
@@ -34,18 +34,14 @@ def put_default_if_not_present(args: Namespace, name: str, default: Any) -> None
 
 
 def add_or_update_if_present(dictionary: dict, name: str, value: Any) -> None:
-    if name not in dictionary:
-        dictionary[name] = {value}
-    else:
-        dictionary[name].add(value)
+    dictionary.setdefault(name, set())
+    dictionary[name].add(value)
 
 
 def get_source_files(
     input_path: str, extensions: Iterable[str], allows_single_file_input: bool
 ) -> List[str]:
-    source_path = Path(input_path)
-
-    if source_path.is_dir():
+    if Path(input_path).is_dir():
         input_path = path.join(input_path, "**")
     elif not allows_single_file_input:
         return []
@@ -100,19 +96,19 @@ class KnossosConverter(Converter):
         put_default_if_not_present(args, "verbose", True)
         put_default_if_not_present(args, "jobs", cpu_count())
         put_default_if_not_present(args, "distribution_strategy", "multiprocessing")
-        put_default_if_not_present(
-            args, "dtype", "uint8"
-        )  # TODO can we autodetect this better?
+        if not hasattr(args, "dtype"):
+            logger.info("Assumed data type is uint8")
+        put_default_if_not_present(args, "dtype", "uint8")
 
         (
             dataset_name,
             layer_paths_and_mag,
         ) = self.detect_dataset_and_layer_paths_with_mag()
+        args.name = dataset_name
 
         for layer_path, mag in layer_paths_and_mag.items():
             args.source_path = path.join(layer_path, mag)
             args.layer_name = "color" if layer_path == "" else path.basename(layer_path)
-            args.name = dataset_name
 
             convert_knossos(args)
 
@@ -201,16 +197,14 @@ class ImageStackConverter(Converter):
         put_default_if_not_present(args, "verbose", True)
 
         # detect layer and ds name
-        dataset_name, layer_names = self.detect_dataset_and_layer_names()
+        dataset_name, layer_names = self.detect_dataset_and_layer_names(args)
         put_default_if_not_present(args, "name", dataset_name)
-
-        self.args = args
 
         # TODO we can detect the layer names correctly, but we currently do not split the source files accordingly
         args.layer_name = layer_names[0]
         convert_image_stack(args)
 
-    def detect_dataset_and_layer_names(self) -> Tuple[str, List[str]]:
+    def detect_dataset_and_layer_names(self, args: Namespace) -> Tuple[str, List[str]]:
         paths = set()
         for f in self.source_files:
             p = path.dirname(f)
@@ -230,7 +224,7 @@ class ImageStackConverter(Converter):
             # this means that all source files are from one folder
             dataset_name = path.basename(one_path)
             if dataset_name in ["color", "segmentation", "mask"]:
-                return path.basename(self.args.target_path), [dataset_name]
+                return path.basename(args.target_path), [dataset_name]
             elif len(self.source_files) == 1:
                 return dataset_name, [
                     path.splitext(path.basename(self.source_files[0]))[0]
@@ -254,30 +248,33 @@ class ConverterManager:
         ]
 
 
-converter_manager = ConverterManager()
-
-if __name__ == "__main__":
-    args = create_parser().parse_args()
-
-    fitting_converters = list(
+def main(args: Namespace):
+    matching_converters = list(
         filter(
             lambda c: c.accepts_input(args.source_path),
             converter_manager.converter,
         )
     )
 
-    if len(fitting_converters) == 0:
+    if len(matching_converters) == 0:
         print(
             "No converter found. Please specify which converter you want to use or check the source path."
         )
         exit(1)
-    elif len(fitting_converters) > 1:
+    elif len(matching_converters) > 1:
         print(
             "Multiple converters found. Check if your source path contains multiple datasets."
         )
         exit(1)
 
-    converter = fitting_converters[0]
+    converter = matching_converters[0]
     print("Choosing the", converter.__class__.__name__)
 
     converter.convert_input(args)
+
+
+if __name__ == "__main__":
+    args = create_parser().parse_args()
+    converter_manager = ConverterManager()
+
+    main(args)
