@@ -1,9 +1,4 @@
-from argparse import Namespace
-
 from wkcuber.converter import ImageStackConverter, KnossosConverter
-
-TEST_NAMESPACE = Namespace()
-TEST_NAMESPACE.target_path = "a/random/path"
 
 
 def test_tiff_dataset_name_and_layer_name_detection() -> None:
@@ -15,10 +10,11 @@ def test_tiff_dataset_name_and_layer_name_detection() -> None:
         "test/color/002.tif",
         "test/color/003.tif",
     ]
-    dataset_name, layer_names = converter.detect_dataset_and_layer_names()
+    dataset_name, layer_path_to_layer_name = converter.detect_dataset_name_and_layer_path_to_layer_name()
     assert dataset_name == "test"
-    assert len(layer_names) == 1
-    assert layer_names[0] == "color"
+    assert len(layer_path_to_layer_name) == 1
+    assert list(layer_path_to_layer_name)[0] == "test/color"
+    assert list(layer_path_to_layer_name.values())[0] == "color"
 
     # test if in subfolder
     converter.source_files = [
@@ -26,10 +22,11 @@ def test_tiff_dataset_name_and_layer_name_detection() -> None:
         "superfolder/test/color/002.tif",
         "superfolder/test/color/003.tif",
     ]
-    dataset_name, layer_names = converter.detect_dataset_and_layer_names()
+    dataset_name, layer_path_to_layer_name = converter.detect_dataset_name_and_layer_path_to_layer_name()
     assert dataset_name == "test"
-    assert len(layer_names) == 1
-    assert layer_names[0] == "color"
+    assert len(layer_path_to_layer_name) == 1
+    assert list(layer_path_to_layer_name)[0] == "superfolder/test/color"
+    assert list(layer_path_to_layer_name.values())[0] == "color"
 
     # test for multiple layers
     converter.source_files = [
@@ -40,11 +37,13 @@ def test_tiff_dataset_name_and_layer_name_detection() -> None:
         "test/segmentation/002.tif",
         "test/segmentation/003.tif",
     ]
-    dataset_name, layer_names = converter.detect_dataset_and_layer_names()
+    dataset_name, layer_path_to_layer_name = converter.detect_dataset_name_and_layer_path_to_layer_name()
     assert dataset_name == "test"
-    assert len(layer_names) == 2
-    assert "color" in layer_names
-    assert "segmentation" in layer_names
+    assert len(layer_path_to_layer_name) == 2
+    assert "test/color" in layer_path_to_layer_name.keys()
+    assert "test/segmentation" in layer_path_to_layer_name.keys()
+    assert "color" in layer_path_to_layer_name.values()
+    assert "segmentation" in layer_path_to_layer_name.values()
 
     # test if in single folder and folder name is layer name
     converter.source_files = [
@@ -52,11 +51,11 @@ def test_tiff_dataset_name_and_layer_name_detection() -> None:
         "color/002.tif",
         "color/003.tif",
     ]
-    converter.args = TEST_NAMESPACE
-    dataset_name, layer_names = converter.detect_dataset_and_layer_names()
-    assert dataset_name == "path"
-    assert len(layer_names) == 1
-    assert layer_names[0] == "color"
+    dataset_name, layer_path_to_layer_name = converter.detect_dataset_name_and_layer_path_to_layer_name()
+    assert dataset_name == "dataset"
+    assert len(layer_path_to_layer_name) == 1
+    assert list(layer_path_to_layer_name)[0] == "color"
+    assert list(layer_path_to_layer_name.values())[0] == "color"
 
     # test if in single folder and folder name is ds name
     converter.source_files = [
@@ -64,24 +63,27 @@ def test_tiff_dataset_name_and_layer_name_detection() -> None:
         "dataset/002.tif",
         "dataset/003.tif",
     ]
-    dataset_name, layer_names = converter.detect_dataset_and_layer_names()
+    dataset_name, layer_path_to_layer_name = converter.detect_dataset_name_and_layer_path_to_layer_name()
     assert dataset_name == "dataset"
-    assert len(layer_names) == 1
-    assert layer_names[0] == "color"
+    assert len(layer_path_to_layer_name) == 1
+    assert list(layer_path_to_layer_name)[0] == "dataset"
+    assert list(layer_path_to_layer_name.values())[0] == "color"
 
     # test if single file in folder
     converter.source_files = ["dataset/brain.tif"]
-    dataset_name, layer_names = converter.detect_dataset_and_layer_names()
+    dataset_name, layer_path_to_layer_name = converter.detect_dataset_name_and_layer_path_to_layer_name()
     assert dataset_name == "dataset"
-    assert len(layer_names) == 1
-    assert layer_names[0] == "brain"
+    assert len(layer_path_to_layer_name) == 1
+    assert list(layer_path_to_layer_name)[0] == "dataset"
+    assert list(layer_path_to_layer_name.values())[0] == "brain"
 
     # test if single file
     converter.source_files = ["brain.tif"]
-    dataset_name, layer_names = converter.detect_dataset_and_layer_names()
+    dataset_name, layer_path_to_layer_name = converter.detect_dataset_name_and_layer_path_to_layer_name()
     assert dataset_name == "brain"
-    assert len(layer_names) == 1
-    assert layer_names[0] == "color"
+    assert len(layer_path_to_layer_name) == 1
+    assert list(layer_path_to_layer_name)[0] == ""
+    assert list(layer_path_to_layer_name.values())[0] == "color"
 
 
 def test_knossos_dataset_name_and_layer_path_detection() -> None:
