@@ -10,6 +10,10 @@ from . import pickling
 import importlib
 import multiprocessing
 import logging
+import shutil
+import tempfile
+from pathlib import Path
+from functools import partial
 
 def get_existent_kwargs_subset(whitelist, kwargs):
     new_kwargs = {}
@@ -52,18 +56,61 @@ class WrappedProcessPoolExecutor(ProcessPoolExecutor):
             output_pickle_path = kwargs["__cfut_options"]["output_pickle_path"]
             del kwargs["__cfut_options"]
 
+        if os.environ.get("MULTIPROCESSING_VIA_IO"):
+            # If MULTIPROCESSING_VIA_IO is set, _submit_via_io is used to
+            # workaround size constraints in pythons multiprocessing
+            # implementation. Also see https://github.com/python/cpython/pull/10305/files
+            # This should be fixed in python 3.8
+            submit_fn =  self._submit_via_io
+        else:
+            submit_fn = super().submit
+
         if output_pickle_path is not None:
-            fut = super().submit(
+            fut = submit_fn(
                 WrappedProcessPoolExecutor._execute_and_persist_function,
                 output_pickle_path,
                 *args,
                 **kwargs
             )
         else:
-            fut = super().submit(*args, **kwargs)
+            fut = submit_fn(*args, **kwargs)
 
         enrich_future_with_uncaught_warning(fut)
         return fut
+
+    def _submit_via_io(self, *args, **kwargs):
+
+        func = args[0]
+        args = args[1:]
+
+        opt_tmp_dir = os.environ.get("MULTIPROCESSING_VIA_IO_TMP_DIR")
+        if opt_tmp_dir is not None:
+            dirpath = tempfile.mkdtemp(dir=opt_tmp_dir)
+        else:
+            dirpath = tempfile.mkdtemp()
+
+        output_pickle_path = Path(dirpath) / "jobdescription.pickle"
+
+        with open(output_pickle_path, "wb") as file:
+            pickling.dump((func, args, kwargs), file)
+
+        future = super().submit(WrappedProcessPoolExecutor._execute_via_io, output_pickle_path)
+
+        future.add_done_callback(partial(WrappedProcessPoolExecutor._remove_tmp_file, dirpath))
+
+        return future
+
+    @staticmethod
+    def _remove_tmp_file(path, _future):
+
+        shutil.rmtree(path)
+
+    @staticmethod
+    def _execute_via_io(serialized_function_info_path):
+
+        with open(serialized_function_info_path, "rb") as file:
+            (func, args, kwargs) = pickling.load(file)
+        return func(*args, **kwargs)
 
     @staticmethod
     def _execute_and_persist_function(output_pickle_path, *args, **kwargs):

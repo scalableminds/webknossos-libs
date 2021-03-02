@@ -24,7 +24,7 @@ if __name__ == '__main__':
 
 ```
 cd dockered-slurm
-docker build -t slurm-docker-cluster:17.02.11 .
+docker build -t slurm-docker-cluster:latest .
 docker-compose up -d
 docker exec -it slurmctld bash
 docker exec -it c1 bash

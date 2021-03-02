@@ -373,6 +373,27 @@ def test_dereferencing_main():
         futs = executor.map_to_futures(deref_fun_helper, [(TestClass, TestClass(), 1, 2)])
         futs[0].result()
 
+
+
+def accept_high_mem(data):
+    return len(data)
+
+@pytest.mark.skip(reason="This test is does not pass on the CI. Probably because the machine does not have enough RAM.")
+def test_high_ram_usage():
+    very_long_string = ' ' * 10**6 * 2500
+
+    os.environ["MULTIPROCESSING_VIA_IO"] = "True"
+
+    with cluster_tools.get_executor("multiprocessing") as executor:
+        fut1 = executor.submit(accept_high_mem, very_long_string, __cfut_options={"output_pickle_path": "/tmp/test.pickle"})
+        assert fut1.result() == len(very_long_string)
+        
+        os.environ["MULTIPROCESSING_VIA_IO_TMP_DIR"] = "."
+        fut2 = executor.submit(accept_high_mem, very_long_string)
+        assert fut2.result() == len(very_long_string)
+    
+    del os.environ["MULTIPROCESSING_VIA_IO"]
+
 if __name__ == "__main__":
     # Validate that slurm_executor.submit also works when being called from a __main__ module
     test_dereferencing_main()

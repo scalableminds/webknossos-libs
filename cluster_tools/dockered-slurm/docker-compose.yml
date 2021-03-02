@@ -15,7 +15,7 @@ services:
       - ..:/cluster_tools
 
   slurmdbd:
-    image: slurm-docker-cluster:17.02.11
+    image: slurm-docker-cluster:latest
     command: ["slurmdbd"]
     container_name: slurmdbd
     hostname: slurmdbd
@@ -29,7 +29,7 @@ services:
       - mysql
 
   slurmctld:
-    image: slurm-docker-cluster:17.02.11
+    image: slurm-docker-cluster:latest
     command: ["slurmctld"]
     container_name: slurmctld
     hostname: slurmctld
@@ -46,7 +46,7 @@ services:
       - "slurmdbd"
 
   c1:
-    image: slurm-docker-cluster:17.02.11
+    image: slurm-docker-cluster:latest
     command: ["slurmd"]
     hostname: c1
     container_name: c1
@@ -62,7 +62,7 @@ services:
       - "slurmctld"
 
   c2:
-    image: slurm-docker-cluster:17.02.11
+    image: slurm-docker-cluster:latest
     command: ["slurmd"]
     hostname: c2
     container_name: c2

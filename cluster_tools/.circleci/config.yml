@@ -10,12 +10,13 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Build dockered-slurm image
+          name: Build/pull dockered-slurm image
           command: |
             cd ./dockered-slurm
 
             # Build image
-            docker build -t slurm-docker-cluster:17.02.11 .
+            docker build -t slurm-docker-cluster:latest .
+
             docker-compose up -d
 
             # Register cluster (with retry)
