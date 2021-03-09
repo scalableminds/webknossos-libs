@@ -1,7 +1,7 @@
 from argparse import ArgumentParser, Namespace
 from os import path, sep
 from pathlib import Path
-from typing import Iterable, List, Any, Tuple, cast, Dict
+from typing import Iterable, List, Any, Tuple, Dict, Set, Callable, cast
 
 from natsort import natsorted
 
@@ -41,7 +41,7 @@ def put_default_if_not_present(args: Namespace, name: str, default: Any) -> None
 
 
 def put_default_from_argparser_if_not_present(
-        args: Namespace, argparser: ArgumentParser, name: str
+    args: Namespace, argparser: ArgumentParser, name: str
 ) -> None:
     put_default_if_not_present(args, name, argparser.get_default(name))
 
@@ -52,7 +52,7 @@ def add_to_set_in_dictionary(dictionary: dict, key: str, value: Any) -> None:
 
 
 def get_source_files(
-        input_path: str, extensions: Iterable[str], allows_single_file_input: bool
+    input_path: str, extensions: Iterable[str], allows_single_file_input: bool
 ) -> List[str]:
     if Path(input_path).is_dir():
         input_path = path.join(input_path, "**")
@@ -65,11 +65,44 @@ def get_source_files(
 
 
 class Converter:
+    def __init__(self) -> None:
+        self.source_files: List[str] = []
+        self.prefix = ""
+
     def accepts_input(self, source_path: str) -> bool:
         pass
 
     def convert_input(self, args: Namespace) -> None:
         pass
+
+    # returns [prefix, traversal_depth]
+    def check_path_length_and_set_prefix(self) -> int:
+        first_split_path = self.source_files[0].split(sep)
+        traversal_depth = len(first_split_path)
+        self.prefix = ""
+        if first_split_path[0] == "":
+            self.prefix = "/"
+        elif first_split_path[0] == "..":
+            self.prefix = "../"
+
+        assert all(
+            map(
+                lambda p: len(p.split(sep)) == traversal_depth,
+                self.source_files,
+            )
+        )
+
+        return traversal_depth
+
+    def apply_handle_function(
+        self, handle_function: Callable, starts_with_prefix: bool
+    ) -> None:
+        for f in self.source_files:
+            split_path = f.split(sep)
+            if starts_with_prefix:
+                split_path = split_path[1:]
+
+            handle_function(split_path)
 
 
 class WkwConverter(Converter):
@@ -93,13 +126,18 @@ class NiftiConverter(Converter):
 
 class KnossosConverter(Converter):
     def __init__(self) -> None:
-        self.source_files: List[str] = []
+        super().__init__()
+        self.layer_path_to_mag_set: Dict[str, set] = dict()
+        self.dataset_names: Set[str] = set()
+        self.prefix: str = ""
 
     def accepts_input(self, source_path: str) -> bool:
         source_files = get_source_files(source_path, {".raw"}, False)
-        self.source_files = source_files
+        self.source_files = list(
+            map(lambda p: cast(str, path.normpath(p)), source_files)
+        )
 
-        return len(source_files) > 0
+        return len(self.source_files) > 0
 
     def convert_input(self, args: Namespace) -> None:
         logger.info("Converting KNOSSOS dataset")
@@ -126,120 +164,99 @@ class KnossosConverter(Converter):
 
         for layer_path, mag in layer_paths_and_mag.items():
             args.source_path = path.join(layer_path, mag)
-            args.layer_name = "color" if layer_path == "" or layer_path == ".." else path.basename(layer_path)
+            args.layer_name = (
+                "color"
+                if layer_path == "" or layer_path == ".."
+                else path.basename(layer_path)
+            )
 
             convert_knossos(args)
 
     def detect_dataset_and_layer_paths_with_mag(self) -> Tuple[str, Dict[str, str]]:
         # Path structure for knossos is .../(dataset_name)/(layer_name)/(mag)folder/x0000/y0000/z0000/filename.raw
-        layer_path_to_mag_set: Dict[str, set] = dict()
-        dataset_names = set()
-
-        first_split_path = path.normpath(self.source_files[0]).split(sep)
-        traversal_depth = len(first_split_path)
-        starts_with_root = first_split_path[0] == ""
+        traversal_depth = self.check_path_length_and_set_prefix()
+        starts_with_prefix = self.prefix != ""
 
         assert (
-            traversal_depth >= 4 if not starts_with_root else traversal_depth >= 5
+            traversal_depth >= 4 if not starts_with_prefix else traversal_depth >= 5
         ), "Input Format is unreadable. Make sure to pass the path which points at least to a KNOSSOS magnification (e.g., testdata/knossos/color/1)."
-        assert all(map(lambda p: len(path.normpath(p).split(sep)) == traversal_depth, self.source_files))
+        assert all(
+            map(
+                lambda p: len(p.split(sep)) == traversal_depth,
+                self.source_files,
+            )
+        )
 
-        handle_function = self.handle_path_length_longer
+        if starts_with_prefix:
+            traversal_depth = traversal_depth - 1
+
         if traversal_depth == 4:
-            handle_function = self.handle_path_length_4
+            self.apply_handle_function(self.handle_path_length_4, starts_with_prefix)
         elif traversal_depth == 5:
-            handle_function = self.handle_path_length_5
+            self.apply_handle_function(self.handle_path_length_5, starts_with_prefix)
         elif traversal_depth == 6:
-            handle_function = self.handle_path_length_6
-
-        for f in self.source_files:
-            split_path = path.normpath(f).split(sep)
-            if starts_with_root:
-                split_path = split_path[1:]
-
-            handle_function(
-                split_path, layer_path_to_mag_set, dataset_names, starts_with_root
+            self.apply_handle_function(self.handle_path_length_6, starts_with_prefix)
+        else:
+            self.apply_handle_function(
+                self.handle_path_length_longer, starts_with_prefix
             )
 
         assert (
-                len(dataset_names) == 1
+            len(self.dataset_names) == 1
         ), "More than one dataset found. Stopping conversion..."
-        assert len(layer_path_to_mag_set) > 0, "No layers found. Stopping conversion..."
+        assert (
+            len(self.layer_path_to_mag_set) > 0
+        ), "No layers found. Stopping conversion..."
 
         layer_path_to_mag = dict()
 
-        for layer, mags in layer_path_to_mag_set.items():
+        for layer, mags in self.layer_path_to_mag_set.items():
             layer_path_to_mag[layer] = natsorted(list(mags))[0]
 
-        return dataset_names.pop(), layer_path_to_mag
+        return self.dataset_names.pop(), layer_path_to_mag
 
     def handle_path_length_4(
-            self,
-            split_path: List[str],  # pylint: disable=unused-argument
-            layer_path_to_mag_set: Dict[str, set],
-            dataset_names: set,
-            starts_with_root: bool,
-    ):
+        self,
+        split_path: List[str],  # pylint: disable=unused-argument
+    ) -> None:
         # already inside the mag folder => (/)x0000/y0000/z0000/filename.raw
-        layer_path = self.get_layer_name_with_root_if_needed("", starts_with_root)
-        add_to_set_in_dictionary(layer_path_to_mag_set, layer_path, "")
-        dataset_names.add("dataset")
+        add_to_set_in_dictionary(self.layer_path_to_mag_set, self.prefix, "")
+        self.dataset_names.add("dataset")
 
     def handle_path_length_5(
-            self,
-            split_path: List[str],
-            layer_path_to_mag_set: Dict[str, set],
-            dataset_names: set,
-            starts_with_root: bool,
-    ):
+        self,
+        split_path: List[str],
+    ) -> None:
         # only the mag folder is given, therefore the layer path is empty => (/)mag/x0000/y0000/z0000/filename.raw
-        layer_path = self.get_layer_name_with_root_if_needed("", starts_with_root)
-        add_to_set_in_dictionary(layer_path_to_mag_set, layer_path, split_path[0])
-        dataset_names.add("dataset")
+        add_to_set_in_dictionary(self.layer_path_to_mag_set, self.prefix, split_path[0])
+        self.dataset_names.add("dataset")
 
     def handle_path_length_6(
-            self,
-            split_path: List[str],
-            layer_path_to_mag_set: Dict[str, set],
-            dataset_names: set,
-            starts_with_root: bool,
-    ):
+        self,
+        split_path: List[str],
+    ) -> None:
         # additionally the layer folder is given, that should indicate a single layer as well => (/)layer/mag/x0000/y0000/z0000/filename.raw
-        layer_path = split_path[0]
-        layer_path = self.get_layer_name_with_root_if_needed(
-            layer_path, starts_with_root
+        add_to_set_in_dictionary(
+            self.layer_path_to_mag_set, self.prefix + split_path[0], split_path[1]
         )
-        add_to_set_in_dictionary(layer_path_to_mag_set, layer_path, split_path[1])
-        dataset_names.add("dataset")
+        self.dataset_names.add("dataset")
 
     def handle_path_length_longer(
-            self,
-            split_path: List[str],
-            layer_path_to_mag_set: Dict[str, set],
-            dataset_names: set,
-            starts_with_root: bool,
-    ):
-        # additionally the layer folder is given, that should indicate a single layer as well => (/../)dataset_name/layer/mag/x0000/y0000/z0000/filename.raw
-        # also a dataset folder is given
-        layer_path = sep.join(split_path[0:-5])
-        layer_path = self.get_layer_name_with_root_if_needed(
-            layer_path, starts_with_root
-        )
-        add_to_set_in_dictionary(layer_path_to_mag_set, layer_path, split_path[-5])
-        dataset_names.add(split_path[-7])
-
-    def get_layer_name_with_root_if_needed(
-            self, layer_path: str, starts_with_root: bool
-    ) -> str:
-        if starts_with_root:
-            layer_path = "/" + layer_path
-        return layer_path
+        self,
+        split_path: List[str],
+    ) -> None:
+        # also a dataset folder is given => (/../)dataset_name/layer/mag/x0000/y0000/z0000/filename.raw
+        layer_path = self.prefix + sep.join(split_path[0:-5])
+        add_to_set_in_dictionary(self.layer_path_to_mag_set, layer_path, split_path[-5])
+        self.dataset_names.add(split_path[-7])
 
 
 class ImageStackConverter(Converter):
     def __init__(self) -> None:
-        self.source_files: List[str] = []
+        super().__init__()
         self.args: Namespace = Namespace()
+        self.layer_path_to_layer_name: Dict[str, str] = dict()
+        self.dataset_names: Set[str] = set()
 
     def accepts_input(self, source_path: str) -> bool:
         source_files = get_source_files(source_path, image_reader.readers.keys(), True)
@@ -253,7 +270,9 @@ class ImageStackConverter(Converter):
             map(lambda p: path.splitext(p)[1] == ext, source_files)
         ), "Not all image files are of the same type"
 
-        self.source_files = source_files
+        self.source_files = list(
+            map(lambda p: cast(str, path.normpath(p)), source_files)
+        )
 
         return True
 
@@ -288,7 +307,10 @@ class ImageStackConverter(Converter):
         put_default_from_argparser_if_not_present(args, image_stack_parser, "verbose")
 
         # detect layer and ds name
-        dataset_name, layer_path_to_name = self.detect_dataset_name_and_layer_path_to_layer_name()
+        (
+            dataset_name,
+            layer_path_to_name,
+        ) = self.detect_dataset_name_and_layer_path_to_layer_name()
         put_default_if_not_present(args, "name", dataset_name)
 
         for layer_path, layer_name in layer_path_to_name.items():
@@ -296,42 +318,69 @@ class ImageStackConverter(Converter):
             args.source_path = layer_path
             convert_image_stack(args)
 
-    def detect_dataset_name_and_layer_path_to_layer_name(self) -> Tuple[str, Dict[str, str]]:
-        parent_paths_of_images = set()
-        for f in self.source_files:
-            p = path.dirname(f)
-            if p != "":  # p can only be empty for a single file inside the current working directory
-                parent_paths_of_images.add(p)
+    def detect_dataset_name_and_layer_path_to_layer_name(
+        self,
+    ) -> Tuple[str, Dict[str, str]]:
+        # path format is (.../)(dataset_name/)(layer_name/)file_name.ending
+        traversal_depth = self.check_path_length_and_set_prefix()
 
-        if len(parent_paths_of_images) == 0:
-            # if no parent folder is found, it is implicitly clear that there is only one source file
-            return path.splitext(path.basename(self.source_files[0]))[0], {"": "color"}
+        starts_with_prefix = self.prefix != ""
+        if starts_with_prefix:
+            traversal_depth = traversal_depth - 1
 
-        one_path = parent_paths_of_images.pop()
-        dataset_path = path.dirname(one_path)
-        assert all(
-            map(lambda p: path.dirname(p) == dataset_path, parent_paths_of_images)
-        ), "Not all image files can be mapped to a sound layer structure"
-
-        if dataset_path == "":
-            # this means that all source files are from one folder
-            dataset_name = path.basename(one_path)
-            if dataset_name in ["color", "segmentation", "mask"]:
-                return "dataset", {one_path: dataset_name}
-            elif len(self.source_files) == 1:
-                return dataset_name, {
-                    one_path: path.splitext(path.basename(self.source_files[0]))[0]
-                }
-            else:
-                return dataset_name, {one_path: "color"}
+        if traversal_depth == 1:
+            self.apply_handle_function(self.handle_path_length_1, starts_with_prefix)
+        elif traversal_depth == 2:
+            self.apply_handle_function(self.handle_path_length_2, starts_with_prefix)
         else:
-            dataset_name = path.basename(dataset_path)
-            parent_paths_of_images.add(one_path)
-            layer_path_to_layer_name: Dict[str, str] = dict()
-            for p in parent_paths_of_images:
-                layer_path_to_layer_name[p] = path.basename(p)
+            self.apply_handle_function(
+                self.handle_path_length_longer, starts_with_prefix
+            )
 
-            return dataset_name, layer_path_to_layer_name
+        assert (
+            len(self.dataset_names) == 1
+        ), "More than one dataset found. Stopping conversion..."
+        assert (
+            len(self.layer_path_to_layer_name) > 0
+        ), "No layers found. Stopping conversion..."
+
+        return self.dataset_names.pop(), self.layer_path_to_layer_name
+
+    def handle_path_length_1(
+        self,
+        split_path: List[str],
+    ) -> None:
+        if len(self.source_files) == 1:
+            self.dataset_names.add(path.splitext(split_path[0])[0])
+        else:
+            self.dataset_names.add("dataset")
+
+        self.layer_path_to_layer_name[self.prefix] = "color"
+
+    def handle_path_length_2(
+        self,
+        split_path: List[str],
+    ) -> None:
+        if split_path[0] in ["color", "segmentation", "mask"]:
+            self.layer_path_to_layer_name[self.prefix + split_path[0]] = split_path[0]
+            self.dataset_names.add("dataset")
+        else:
+            if len(self.source_files) == 1:
+                self.layer_path_to_layer_name[
+                    self.prefix + split_path[0]
+                ] = path.splitext(split_path[1])[0]
+            else:
+                self.layer_path_to_layer_name[self.prefix + split_path[0]] = "color"
+            self.dataset_names.add(split_path[0])
+
+    def handle_path_length_longer(
+        self,
+        split_path: List[str],
+    ) -> None:
+        self.dataset_names.add(split_path[-3])
+        self.layer_path_to_layer_name[
+            self.prefix + sep.join(split_path[0:-1])
+        ] = split_path[-2]
 
 
 class ConverterManager:
@@ -344,7 +393,7 @@ class ConverterManager:
         ]
 
 
-def main(args: Namespace):
+def main(args: Namespace) -> None:
     matching_converters = list(
         filter(
             lambda c: c.accepts_input(args.source_path),
@@ -353,9 +402,7 @@ def main(args: Namespace):
     )
 
     if len(matching_converters) == 0:
-        logger.info(
-            "No converter found. Please check the source path."
-        )
+        logger.info("No converter found. Please check the source path.")
         exit(1)
     elif len(matching_converters) > 1:
         logger.info(
