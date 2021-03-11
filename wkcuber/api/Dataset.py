@@ -1,4 +1,5 @@
 import operator
+from argparse import Namespace
 from shutil import rmtree
 from abc import ABC, abstractmethod
 from os import makedirs, path
@@ -11,7 +12,7 @@ import os
 import re
 
 from wkcuber.mag import Mag
-from wkcuber.utils import logger
+from wkcuber.utils import logger, get_executor_for_args, ceil_div_np
 
 from wkcuber.api.Properties.DatasetProperties import (
     WKProperties,
@@ -41,7 +42,7 @@ def convert_dtypes(
 
     # split the dtype into the actual type and the number of bits
     # example: "uint24" -> ["uint", "24"]
-    dtype_parts = re.split("(\d+)", str(dtype))
+    dtype_parts = re.split(r"(\d+)", str(dtype))
     # calculate number of bits for dtype_per_channel
     converted_dtype_parts = [
         (str(int(op(int(part), num_channels))) if is_int(part) else part)
@@ -74,6 +75,12 @@ def dtype_per_channel_to_dtype_per_layer(
         num_channels,
         dtype_per_layer_to_dtype_per_channel=False,
     )
+
+
+def copy_job(args: Tuple[View, View, int]) -> None:
+    (source_view, target_view, i) = args
+    # Copy the data form one view to the other in a buffered fashion
+    target_view.write(source_view.read())
 
 
 LayerT = TypeVar("LayerT", bound=Layer)
@@ -299,16 +306,113 @@ class AbstractDataset(Generic[LayerT]):
         size: Tuple[int, int, int],
         offset: Tuple[int, int, int] = None,
         is_bounded: bool = True,
+        read_only: bool = False,
     ) -> View:
         layer = self.get_layer(layer_name)
         mag_ds = layer.get_mag(mag)
 
-        return mag_ds.get_view(size=size, offset=offset, is_bounded=is_bounded)
+        return mag_ds.get_view(
+            size=size, offset=offset, is_bounded=is_bounded, read_only=read_only
+        )
 
     def _create_layer(
         self, layer_name: str, dtype_per_channel: np.dtype, num_channels: int
     ) -> LayerT:
         raise NotImplementedError
+
+    def copy_dataset(
+        self, empty_target_ds: "AbstractDataset", args: Optional[Namespace] = None
+    ) -> None:
+        assert (
+            len(empty_target_ds.layers) == 0
+        ), f"Copying dataset failed. The target dataset must be empty."
+        with get_executor_for_args(args) as executor:
+            for layer_name, layer in self.layers.items():
+                largest_segment_id = None
+                if (
+                    self.properties.data_layers[layer_name].category
+                    == Layer.SEGMENTATION_TYPE
+                ):
+                    largest_segment_id = self.properties.data_layers[
+                        layer_name
+                    ].largest_segment_id
+                target_layer = empty_target_ds.add_layer(
+                    layer_name,
+                    self.properties.data_layers[layer_name].category,
+                    dtype_per_channel=layer.dtype_per_channel,
+                    num_channels=layer.num_channels,
+                    largest_segment_id=largest_segment_id,
+                )
+
+                for mag_name, mag in layer.mags.items():
+                    target_mag = target_layer.add_mag(mag_name)
+
+                    # The bounding box needs to be updated manually because chunked views do not have a reference to the dataset itself
+                    bbox = mag.layer.dataset.properties.get_bounding_box_of_layer(
+                        layer_name
+                    )
+                    # The base view of a MagDataset always starts at (0, 0, 0)
+                    target_mag.view.global_offset = (0, 0, 0)
+                    target_mag.view.size = cast(
+                        Tuple[int, int, int],
+                        tuple(
+                            ceil_div_np(
+                                np.array(bbox[0]) + np.array(bbox[1]),
+                                Mag(mag_name).as_np(),
+                            )
+                        ),
+                    )
+                    target_mag.layer.dataset.properties._set_bounding_box_of_layer(
+                        layer_name, offset=bbox[0], size=bbox[1]
+                    )
+
+                    # The data gets written to the target_mag.
+                    # Therefore, the chunk size is determined by the target_mag to prevent concurrent writes
+                    mag.view.for_zipped_chunks(
+                        work_on_chunk=copy_job,
+                        target_view=target_mag.view,
+                        source_chunk_size=target_mag._get_file_dimensions(),
+                        target_chunk_size=target_mag._get_file_dimensions(),
+                        executor=executor,
+                    )
+
+    def to_wk_dataset(
+        self,
+        new_dataset_path: Union[str, Path],
+        scale: Optional[Tuple[float, float, float]] = None,
+    ) -> "WKDataset":
+        if scale is None:
+            scale = self.properties.scale
+        new_ds = WKDataset.create(new_dataset_path, scale=scale)
+        self.copy_dataset(new_ds)
+        return new_ds
+
+    def to_tiff_dataset(
+        self,
+        new_dataset_path: Union[str, Path],
+        scale: Optional[Tuple[float, float, float]] = None,
+        pattern: Optional[str] = None,
+    ) -> "TiffDataset":
+        if scale is None:
+            scale = self.properties.scale
+        new_ds = TiffDataset.create(new_dataset_path, scale=scale, pattern=pattern)
+        self.copy_dataset(new_ds)
+        return new_ds
+
+    def to_tiled_tiff_dataset(
+        self,
+        new_dataset_path: Union[str, Path],
+        tile_size: Tuple[int, int],
+        scale: Optional[Tuple[float, float, float]] = None,
+        pattern: Optional[str] = None,
+    ) -> "TiledTiffDataset":
+        if scale is None:
+            scale = self.properties.scale
+        new_ds = TiledTiffDataset.create(
+            new_dataset_path, scale=scale, tile_size=tile_size, pattern=pattern
+        )
+        self.copy_dataset(new_ds)
+        return new_ds
 
     @abstractmethod
     def _get_properties_type(self) -> Type[Properties]:
@@ -348,9 +452,6 @@ class WKDataset(AbstractDataset[WKLayer]):
         self._data_format = "wkw"
         assert isinstance(self.properties, WKProperties)
 
-    def to_tiff_dataset(self, new_dataset_path: Union[str, Path]) -> "TiffDataset":
-        raise NotImplementedError  # TODO; implement
-
     def _create_layer(
         self, layer_name: str, dtype_per_channel: np.dtype, num_channels: int
     ) -> WKLayer:
@@ -371,8 +472,10 @@ class TiffDataset(AbstractDataset[TiffLayer]):
         cls,
         dataset_path: Union[str, Path],
         scale: Tuple[float, float, float],
-        pattern: str = "{zzzzz}.tif",
+        pattern: Optional[str] = None,
     ) -> "TiffDataset":
+        if pattern is None:
+            pattern = "{zzzzz}.tif"
         validate_pattern(pattern)
         name = basename(normpath(dataset_path))
         properties = TiffProperties(
@@ -414,9 +517,6 @@ class TiffDataset(AbstractDataset[TiffLayer]):
         self.data_format = "tiff"
         assert isinstance(self.properties, TiffProperties)
 
-    def to_wk_dataset(self, new_dataset_path: Union[str, Path]) -> WKDataset:
-        raise NotImplementedError  # TODO; implement
-
     def _create_layer(
         self, layer_name: str, dtype_per_channel: np.dtype, num_channels: int
     ) -> TiffLayer:
@@ -438,8 +538,10 @@ class TiledTiffDataset(AbstractDataset[TiledTiffLayer]):
         dataset_path: Union[str, Path],
         scale: Tuple[float, float, float],
         tile_size: Tuple[int, int],
-        pattern: str = "{xxxxx}/{yyyyy}/{zzzzz}.tif",
+        pattern: Optional[str] = None,
     ) -> "TiledTiffDataset":
+        if pattern is None:
+            pattern = "{xxxxx}/{yyyyy}/{zzzzz}.tif"
         validate_pattern(pattern)
         name = basename(normpath(dataset_path))
         properties = TiffProperties(
@@ -482,9 +584,6 @@ class TiledTiffDataset(AbstractDataset[TiledTiffLayer]):
                 return cls.create(dataset_path, scale, tile_size)
             else:
                 return cls.create(dataset_path, scale, tile_size, pattern)
-
-    def to_wk_dataset(self, new_dataset_path: str) -> WKDataset:
-        raise NotImplementedError  # TODO; implement
 
     def __init__(self, dataset_path: Union[str, Path]) -> None:
         super().__init__(dataset_path)

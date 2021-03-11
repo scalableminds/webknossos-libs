@@ -11,7 +11,7 @@ from wkw import Dataset, wkw
 
 from wkcuber.api.TiffData.TiffMag import TiffMag, TiffMagHeader
 from wkcuber.api.bounding_box import BoundingBox
-from wkcuber.utils import wait_and_ensure_success
+from wkcuber.utils import wait_and_ensure_success, ceil_div_np
 
 
 class View:
@@ -22,6 +22,7 @@ class View:
         size: Tuple[int, int, int],
         global_offset: Tuple[int, int, int] = (0, 0, 0),
         is_bounded: bool = True,
+        read_only: bool = False,
     ):
         self.dataset: Optional[Dataset] = None
         self.path = path_to_mag_dataset
@@ -29,6 +30,7 @@ class View:
         self.size = size
         self.global_offset = global_offset
         self.is_bounded = is_bounded
+        self.read_only = read_only
         self._is_opened = False
 
     def open(self) -> "View":
@@ -49,10 +51,15 @@ class View:
         relative_offset: Tuple[int, int, int] = (0, 0, 0),
         allow_compressed_write: bool = False,
     ) -> None:
+        assert not self.read_only, f"Cannot write data to an read_only View"
+
         was_opened = self._is_opened
         # assert the size of the parameter data is not in conflict with the attribute self.size
         assert_non_negative_offset(relative_offset)
         self.assert_bounds(relative_offset, data.shape[-3:])
+
+        if len(data.shape) == 4 and data.shape[0] == 1:
+            data = data[0]  # remove channel dimension
 
         # calculate the absolute offset
         absolute_offset = cast(
@@ -101,7 +108,19 @@ class View:
         self,
         size: Tuple[int, int, int],
         relative_offset: Tuple[int, int, int] = (0, 0, 0),
+        is_bounded: Optional[bool] = None,
+        read_only: Optional[bool] = None,
     ) -> "View":
+        if is_bounded is None:
+            is_bounded = self.is_bounded
+        assert (
+            is_bounded or is_bounded == self.is_bounded
+        ), f"Failed to get subview. The calling view is bounded. Therefore, the subview also has to be bounded."
+        if read_only is None:
+            read_only = self.read_only
+        assert (
+            read_only or read_only == self.read_only
+        ), f"Failed to get subview. The calling view is read_only. Therefore, the subview also has to be read_only."
         self.assert_bounds(relative_offset, size)
         view_offset = cast(
             Tuple[int, int, int], tuple(self.global_offset + np.array(relative_offset))
@@ -111,7 +130,8 @@ class View:
             self.header,
             size=size,
             global_offset=view_offset,
-            is_bounded=self.is_bounded,
+            is_bounded=is_bounded,
+            read_only=read_only,
         )
 
     def check_bounds(
@@ -132,8 +152,7 @@ class View:
 
     def for_each_chunk(
         self,
-        work_on_chunk: Callable[[Tuple["View", Tuple[Any, ...]]], None],
-        job_args_per_chunk: Any,
+        work_on_chunk: Callable[[Tuple["View", int]], None],
         chunk_size: Tuple[int, int, int],
         executor: Union[ClusterExecutor, cluster_tools.WrappedProcessPoolExecutor],
     ) -> None:
@@ -141,8 +160,10 @@ class View:
 
         job_args = []
 
-        for chunk in BoundingBox(self.global_offset, self.size).chunk(
-            chunk_size, list(chunk_size)
+        for i, chunk in enumerate(
+            BoundingBox(self.global_offset, self.size).chunk(
+                chunk_size, list(chunk_size)
+            )
         ):
             relative_offset = cast(
                 Tuple[int, int, int],
@@ -153,9 +174,108 @@ class View:
                 relative_offset=relative_offset,
             )
             view.is_bounded = True
-            job_args.append((view, job_args_per_chunk))
+            job_args.append((view, i))
 
         # execute the work for each chunk
+        wait_and_ensure_success(executor.map_to_futures(work_on_chunk, job_args))
+
+    def for_zipped_chunks(
+        self,
+        work_on_chunk: Callable[[Tuple["View", "View", int]], None],
+        target_view: "View",
+        source_chunk_size: Tuple[int, int, int],
+        target_chunk_size: Tuple[int, int, int],
+        executor: Union[ClusterExecutor, cluster_tools.WrappedProcessPoolExecutor],
+    ) -> None:
+        """
+        This method is similar to 'for_each_chunk' in the sense, that it delegates work to smaller chunks.
+        However, this method also takes another view as a parameter. Both views are chunked simultaneously
+        and a matching pair of chunks is then passed to the function that shall be executed.
+        This is useful if data from one view should be (transformed and) written to a different view,
+        assuming that the transformation of the data can be handled on chunk-level.
+        Additionally to the two views, the counter 'i' is passed to the 'work_on_chunk',
+        which can be used for logging.
+        The mapping of chunks from the source view to the target is bijective.
+        The ratio between the size of the source_view (self) and the source_chunk_size must be equal to
+        the ratio between the target_view and the target_chunk_size. This guarantees that the number of chunks
+        in the source_view is equal to the number of chunks in the target_view.
+
+        Example use case: downsampling
+        size of source_view (Mag 1): (16384, 16384, 16384)
+        size of target_view (Mag 2): (8192, 8192, 8192)
+        source_chunk_size: (2048, 2048, 2048)
+        target_chunk_size: (1024, 1024, 1024) // this must be a multiple of the file size on disk to avoid concurrent writes
+        """
+        source_offset = np.array(self.global_offset)
+        target_offset = np.array(target_view.global_offset)
+        source_chunk_size_np = np.array(source_chunk_size)
+        target_chunk_size_np = np.array(target_chunk_size)
+        assert np.all(
+            np.array(self.size)
+        ), f"Calling 'for_zipped_chunks' failed because the size of the source view contains a 0."
+        assert np.all(
+            np.array(target_view.size)
+        ), f"Calling 'for_zipped_chunks' failed because the size of the target view contains a 0."
+        assert np.array_equal(
+            np.array(self.size) / np.array(target_view.size),
+            source_chunk_size_np / target_chunk_size_np,
+        ), f"Calling 'for_zipped_chunks' failed because the ratio of the view sizes (source size = {self.size}, target size = {target_view.size}) must be equal to the ratio of the chunk sizes (source_chunk_size = {source_chunk_size}, source_chunk_size = {target_chunk_size}))"
+
+        if isinstance(target_view.header, wkw.Header):
+            assert not any(
+                target_chunk_size_np
+                % (target_view.header.file_len * target_view.header.block_len)
+            ), f"Calling for_zipped_chunks failed. The target_chunk_size ({target_chunk_size}) must be a multiple of file_len*block_len of the target view ({target_view.header.file_len * target_view.header.block_len})"
+        else:
+            if target_view.header.tile_size is None:
+                # TiffDataset
+                assert np.array_equal(
+                    ceil_div_np(
+                        (target_offset + np.array(target_view.size))[:2],
+                        np.array(target_chunk_size[:2]),
+                    )
+                    - (target_offset[:2] // target_chunk_size[:2]),
+                    [1, 1],
+                ), f"Calling for_zipped_chunks failed. There can only be a single chunk per z-slice for TiffDatasets. Choose a different 'target_chunk_size'."
+            else:
+                # TiledTiffDataset
+                assert not any(
+                    target_chunk_size_np % (tuple(target_view.header.tile_size) + (1,))
+                ), f"Calling for_zipped_chunks failed. The target_chunk_size ({target_chunk_size}) must be a multiple of the tiff size of the target view ({tuple(target_view.header.tile_size) + (1,)})"
+
+        job_args = []
+        source_chunks = BoundingBox(source_offset, self.size).chunk(
+            source_chunk_size_np, list(source_chunk_size_np)
+        )
+        target_chunks = BoundingBox(target_offset, target_view.size).chunk(
+            target_chunk_size, list(target_chunk_size)
+        )
+
+        for i, (source_chunk, target_chunk) in enumerate(
+            zip(source_chunks, target_chunks)
+        ):
+            # source chunk
+            relative_source_offset = np.array(source_chunk.topleft) - source_offset
+            source_chunk_view = self.get_view(
+                size=cast(Tuple[int, int, int], tuple(source_chunk.size)),
+                relative_offset=cast(
+                    Tuple[int, int, int], tuple(relative_source_offset)
+                ),
+                is_bounded=True,
+                read_only=True,
+            )
+            # target chunk
+            relative_target_offset = np.array(target_chunk.topleft) - target_offset
+            target_chunk_view = target_view.get_view(
+                size=cast(Tuple[int, int, int], tuple(target_chunk.size)),
+                relative_offset=cast(
+                    Tuple[int, int, int], tuple(relative_target_offset)
+                ),
+            )
+
+            job_args.append((source_chunk_view, target_chunk_view, i))
+
+        # execute the work for each pair of chunks
         wait_and_ensure_success(executor.map_to_futures(work_on_chunk, job_args))
 
     def _check_chunk_size(self, chunk_size: Tuple[int, int, int]) -> None:
@@ -168,6 +288,9 @@ class View:
         self, absolute_offset: Tuple[int, int, int], data: np.ndarray
     ) -> Tuple[Tuple[int, int, int], np.ndarray]:
         return absolute_offset, data
+
+    def get_dtype(self) -> type:
+        raise NotImplemented
 
     def __enter__(self) -> "View":
         return self
@@ -227,7 +350,7 @@ class WKView(View):
         margin_to_top_left = absolute_offset_np % file_bb
         aligned_offset = absolute_offset_np - margin_to_top_left
         bottom_right = absolute_offset_np + np.array(data.shape[-3:])
-        margin_to_bottom_right = file_bb - (bottom_right % file_bb)
+        margin_to_bottom_right = (file_bb - (bottom_right % file_bb)) % file_bb
         aligned_bottom_right = bottom_right + margin_to_bottom_right
         aligned_shape = aligned_bottom_right - aligned_offset
 
@@ -259,6 +382,9 @@ class WKView(View):
         else:
             return absolute_offset, data
 
+    def get_dtype(self) -> type:
+        return self.header.voxel_type
+
 
 class TiffView(View):
     def open(self) -> "TiffView":
@@ -279,7 +405,7 @@ class TiffView(View):
 
         if self.header.tile_size is None:
             # non tiled tiff dataset
-            if self.size[0:2] != chunk_size[0:2]:
+            if tuple(self.size[0:2]) != tuple(chunk_size[0:2]):
                 raise AssertionError(
                     f"The x- and y-length of the passed parameter 'chunk_size' {chunk_size} do not match with the size of the view {self.size}."
                 )
@@ -292,6 +418,9 @@ class TiffView(View):
                 raise AssertionError(
                     f"The passed parameter 'chunk_size' {chunk_size} must be a multiple of the file size {file_dim}"
                 )
+
+    def get_dtype(self) -> type:
+        return self.header.dtype_per_channel
 
 
 def assert_non_negative_offset(offset: Tuple[int, int, int]) -> None:

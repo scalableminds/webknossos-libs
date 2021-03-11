@@ -2,24 +2,23 @@ import logging
 from typing import Tuple, cast
 
 import numpy as np
-from wkcuber.downsampling import (
+
+from wkcuber.api.Dataset import WKDataset
+from wkcuber.api.Layer import Layer
+from wkcuber.downsampling_utils import (
     InterpolationModes,
     downsample_cube,
     downsample_cube_job,
-    cube_addresses,
-    get_next_anisotropic_mag,
+    get_next_mag,
 )
 import wkw
 from wkcuber.mag import Mag
 from wkcuber.utils import WkwDatasetInfo, open_wkw
-from wkcuber.downsampling import _mode, non_linear_filter_3d
+from wkcuber.downsampling_utils import _mode, non_linear_filter_3d
 import shutil
 
 WKW_CUBE_SIZE = 1024
 CUBE_EDGE_LEN = 256
-
-source_info = WkwDatasetInfo("testdata/WT1_wkw", "color", 1, wkw.Header(np.uint8))
-target_info = WkwDatasetInfo("testoutput/WT1_wkw", "color", 2, wkw.Header(np.uint8))
 
 
 def read_wkw(
@@ -77,51 +76,55 @@ def test_non_linear_filter_reshape() -> None:
     assert np.all(expected_result == a_filtered)
 
 
-def test_cube_addresses() -> None:
-    addresses = cube_addresses(source_info)
-    assert len(addresses) == 5 * 5 * 1
-
-    assert min(addresses) == (0, 0, 0)
-    assert max(addresses) == (4, 4, 0)
-
-
 def downsample_test_helper(use_compress: bool) -> None:
+    source_path = "testdata/WT1_wkw"
+    target_path = "testoutput/WT1_wkw"
+
     try:
-        shutil.rmtree(target_info.dataset_path)
+        shutil.rmtree(target_path)
     except:
         pass
 
-    offset = (1, 2, 0)
-    source_buffer = read_wkw(
-        source_info,
-        cast(Tuple[int, int, int], tuple(a * WKW_CUBE_SIZE * 2 for a in offset)),
-        (CUBE_EDGE_LEN * 2, CUBE_EDGE_LEN * 2, CUBE_EDGE_LEN * 2),
+    source_ds = WKDataset(source_path)
+    source_layer = source_ds.get_layer("color")
+    mag1 = source_layer.get_mag("1")
+
+    target_ds = WKDataset.create(target_path, scale=(1, 1, 1))
+    target_layer = target_ds.add_layer(
+        "color", Layer.COLOR_TYPE, dtype_per_channel="uint8"
+    )
+    mag2 = target_layer._initialize_mag_from_other_mag("2", mag1, use_compress)
+
+    offset = (WKW_CUBE_SIZE, 2 * WKW_CUBE_SIZE, 0)
+    target_offset = cast(Tuple[int, int, int], tuple([o // 2 for o in offset]))
+    source_size = cast(Tuple[int, int, int], (CUBE_EDGE_LEN * 2,) * 3)
+    target_size = cast(Tuple[int, int, int], (CUBE_EDGE_LEN,) * 3)
+    source_buffer = mag1.read(
+        offset=offset,
+        size=source_size,
     )[0]
     assert np.any(source_buffer != 0)
 
-    downsample_args = (
-        source_info,
-        target_info,
+    downsample_cube_job(
+        (
+            mag1.get_view(offset=offset, size=source_size),
+            mag2.get_view(
+                offset=target_offset,
+                size=target_size,
+                is_bounded=False,
+            ),
+            0,
+        ),
         [2, 2, 2],
         InterpolationModes.MAX,
-        offset,
         CUBE_EDGE_LEN,
         use_compress,
-        True,
+        100,
     )
-    downsample_cube_job(downsample_args)
 
     assert np.any(source_buffer != 0)
-    block_type = (
-        wkw.Header.BLOCK_TYPE_LZ4HC if use_compress else wkw.Header.BLOCK_TYPE_RAW
-    )
-    target_info.header.block_type = block_type
 
-    target_buffer = read_wkw(
-        target_info,
-        cast(Tuple[int, int, int], tuple(a * WKW_CUBE_SIZE for a in offset)),
-        (CUBE_EDGE_LEN, CUBE_EDGE_LEN, CUBE_EDGE_LEN),
-    )[0]
+    target_buffer = mag2.read(offset=target_offset, size=target_size)[0]
     assert np.any(target_buffer != 0)
 
     assert np.all(
@@ -147,40 +150,31 @@ def test_downsample_multi_channel() -> None:
     ).astype("uint8")
     file_len = 32
 
-    source_info = WkwDatasetInfo(
-        "testoutput/multi-channel-test",
-        "color",
-        1,
-        wkw.Header(np.uint8, num_channels, file_len=file_len),
-    )
-    target_info = WkwDatasetInfo(
-        "testoutput/multi-channel-test",
-        "color",
-        2,
-        wkw.Header(np.uint8, file_len=file_len),
-    )
     try:
-        shutil.rmtree(source_info.dataset_path)
-        shutil.rmtree(target_info.dataset_path)
+        shutil.rmtree("testoutput/multi-channel-test")
     except:
         pass
 
-    with open_wkw(source_info) as wkw_dataset:
-        print("writing source_data shape", source_data.shape)
-        wkw_dataset.write(offset, source_data)
+    ds = WKDataset.create("testoutput/multi-channel-test", (1, 1, 1))
+    l = ds.add_layer(
+        "color", Layer.COLOR_TYPE, dtype_per_channel="uint8", num_channels=num_channels
+    )
+    mag1 = l.add_mag("1", file_len=file_len)
+
+    print("writing source_data shape", source_data.shape)
+    mag1.write(source_data, offset=offset)
     assert np.any(source_data != 0)
 
-    downsample_args = (
-        source_info,
-        target_info,
+    mag2 = l._initialize_mag_from_other_mag("2", mag1, False)
+
+    downsample_cube_job(
+        (l.get_mag("1").get_view(), l.get_mag("2").get_view(is_bounded=False), 0),
         [2, 2, 2],
         InterpolationModes.MAX,
-        offset,
         CUBE_EDGE_LEN,
         False,
-        True,
+        100,
     )
-    downsample_cube_job(downsample_args)
 
     channels = []
     for channel_index in range(num_channels):
@@ -191,13 +185,8 @@ def test_downsample_multi_channel() -> None:
         )
     joined_buffer = np.stack(channels)
 
-    target_buffer = read_wkw(
-        target_info,
-        offset,
-        cast(Tuple[int, int, int], tuple([x // 2 for x in size])),
-    )
+    target_buffer = mag2.read(offset=offset)
     assert np.any(target_buffer != 0)
-
     assert np.all(target_buffer == joined_buffer)
 
 
@@ -218,10 +207,58 @@ def test_anisotropic_mag_calculation() -> None:
     ]
 
     for i in range(len(mag_tests)):
-        next_mag = get_next_anisotropic_mag(mag_tests[i][1], mag_tests[i][0])
+        next_mag = get_next_mag(mag_tests[i][1], mag_tests[i][0])
         assert mag_tests[i][2] == next_mag, (
             "The next anisotropic"
             f" Magnification of {mag_tests[i][1]} with "
             f"the size {mag_tests[i][0]} should be {mag_tests[i][2]} "
             f"and not {next_mag}"
         )
+
+
+def test_downsampling_padding() -> None:
+    # offset, size, max_mag, scale, expected_offset, expected_size
+    padding_tests = [
+        (
+            (0, 0, 0),
+            (128, 128, 256),
+            Mag(4),
+            (1, 1, 1),
+            (0, 0, 0),
+            (128, 128, 256),
+        ),  # no padding in this case
+        ((10, 0, 0), (118, 128, 256), Mag(4), (1, 1, 1), (8, 0, 0), (120, 128, 256)),
+        (
+            (10, 20, 30),
+            (128, 148, 168),
+            Mag(8),
+            (2, 1, 1),
+            (8, 16, 24),
+            (132, 152, 176),
+        ),
+    ]
+    for args in padding_tests:
+        ds_path = "./testoutput/larger_wk_dataset/"
+        try:
+            shutil.rmtree(ds_path)
+        except:
+            pass
+
+        (offset, size, max_mag, scale, expected_offset, expected_size) = args
+
+        ds = WKDataset.create(ds_path, scale=scale)
+        layer = ds.add_layer(
+            "layer1", "segmentation", num_channels=1, largest_segment_id=1000000000
+        )
+        mag1 = layer.add_mag("1", block_len=8, file_len=8)
+
+        # write random data to mag 1 to set the initial offset and size
+        mag1.write(
+            offset=offset,
+            data=(np.random.rand(*size) * 255).astype(np.uint8),
+        )
+
+        layer._pad_existing_mags_for_downsampling(Mag(1), max_mag, scale)
+
+        assert np.array_equal(mag1.get_view().size, expected_size)
+        assert np.array_equal(mag1.get_view().global_offset, expected_offset)

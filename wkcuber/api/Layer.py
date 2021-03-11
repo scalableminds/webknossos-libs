@@ -1,8 +1,25 @@
+import logging
+import math
+from argparse import Namespace
+from shutil import rmtree
+from os.path import join
+from os import makedirs
 from abc import ABC, abstractmethod
 from shutil import rmtree
 from os.path import join
 from os import makedirs
-from typing import Tuple, Type, Union, Dict, Any, TYPE_CHECKING, TypeVar, Generic
+from typing import (
+    Tuple,
+    Type,
+    Union,
+    Dict,
+    Any,
+    TYPE_CHECKING,
+    TypeVar,
+    Generic,
+    cast,
+    Optional,
+)
 
 import numpy as np
 
@@ -18,8 +35,23 @@ from wkcuber.api.MagDataset import (
     find_mag_path_on_disk,
     GenericTiffMagDataset,
 )
+from wkcuber.downsampling_utils import (
+    get_next_mag,
+    parse_interpolation_mode,
+    downsample_cube_job,
+    determine_buffer_edge_len,
+)
 from wkcuber.mag import Mag
-from wkcuber.utils import DEFAULT_WKW_FILE_LEN
+from wkcuber.utils import (
+    DEFAULT_WKW_FILE_LEN,
+    get_executor_for_args,
+    cube_addresses,
+    parse_cube_file_name,
+    ceil_div_np,
+    named_partial,
+    convert_mag1_offset,
+    convert_mag1_size,
+)
 
 
 MagT = TypeVar("MagT", bound=MagDataset)
@@ -113,7 +145,140 @@ class Layer(Generic[MagT]):
         for _, mag in self.mags.items():
             mag.view.size = size
 
-    def setup_mag(self, mag: str) -> None:
+    def _initialize_mag_from_other_mag(
+        self, new_mag_name: Union[str, Mag], other_mag: MagDataset, compress: bool
+    ) -> MagDataset:
+        raise NotImplemented
+
+    def _pad_existing_mags_for_downsampling(
+        self, from_mag: Mag, max_mag: Mag, scale: Optional[Tuple[float, float, float]]
+    ) -> None:
+        # pad all existing mags if necessary
+        # during each downsampling step, the data shape or offset of the new mag should never need to be rounded
+        existing_mags = sorted([Mag(mag) for mag in self.mags.keys()])
+        all_mags_after_downsampling = existing_mags.copy()
+        cur_mag = get_next_mag(from_mag, scale)
+        while cur_mag <= max_mag:
+            all_mags_after_downsampling += [cur_mag]
+            cur_mag = get_next_mag(cur_mag, scale)
+
+        lowest_mag = all_mags_after_downsampling[-1].as_np()
+
+        # calculate aligned offset and size for lowest mag
+        offset_in_mag1 = self.dataset.properties.data_layers[
+            self.name
+        ].get_bounding_box_offset()
+        size_in_mag1 = self.dataset.properties.data_layers[
+            self.name
+        ].get_bounding_box_size()
+        offset_in_lowest_mag = convert_mag1_offset(
+            offset_in_mag1, all_mags_after_downsampling[-1]
+        )
+        end_offset_in_lowest_mag = ceil_div_np(
+            np.array(offset_in_mag1) + size_in_mag1,
+            all_mags_after_downsampling[-1].as_np(),
+        )
+        # translate alignment into mag 1
+        aligned_offset_in_mag1 = lowest_mag * offset_in_lowest_mag
+        aligned_size_in_mag1 = lowest_mag * (
+            end_offset_in_lowest_mag - offset_in_lowest_mag
+        )
+
+        self.dataset.properties._set_bounding_box_of_layer(
+            self.name,
+            cast(Tuple[int, int, int], tuple(aligned_offset_in_mag1)),
+            cast(Tuple[int, int, int], tuple(aligned_size_in_mag1)),
+        )
+
+        for mag_name in existing_mags:
+            mag = self.mags[mag_name.to_layer_name()]
+            aligned_offset = convert_mag1_offset(aligned_offset_in_mag1, mag_name)
+            aligned_size = convert_mag1_size(aligned_size_in_mag1, mag_name)
+            # The base view of a MagDataset always starts at (0, 0, 0)
+            mag.view.size = cast(
+                Tuple[int, int, int], tuple(aligned_offset + aligned_size)
+            )
+
+    def downsample(
+        self,
+        from_mag: Mag,
+        max_mag: Mag,
+        interpolation_mode: str,
+        compress: bool,
+        anisotropic: Optional[bool] = None,
+        scale: Optional[Tuple[float, float, float]] = None,
+        buffer_edge_len: Optional[int] = None,
+        args: Optional[Namespace] = None,
+    ) -> None:
+        assert (
+            from_mag.to_layer_name() in self.mags.keys()
+        ), f"Failed to downsample data. The from_mag ({from_mag}) does not exist."
+        anisotropic = anisotropic or scale is not None
+        if anisotropic:
+            if scale is None:
+                scale = self.dataset.properties.scale
+
+        self._pad_existing_mags_for_downsampling(from_mag, max_mag, scale)
+
+        parsed_interpolation_mode = parse_interpolation_mode(
+            interpolation_mode, self.dataset.properties.data_layers[self.name].category
+        )
+        prev_mag = from_mag
+        target_mag = get_next_mag(prev_mag, scale)
+
+        while target_mag <= max_mag:
+            assert prev_mag < target_mag
+            assert target_mag.to_layer_name() not in self.mags
+
+            prev_mag_ds = self.mags[prev_mag.to_layer_name()]
+
+            mag_factors = [
+                t // s for (t, s) in zip(target_mag.to_array(), prev_mag.to_array())
+            ]
+
+            # initialize the new mag
+            target_mag_ds = self._initialize_mag_from_other_mag(
+                target_mag, prev_mag_ds, compress
+            )
+
+            # Get target view
+            target_mag_view = target_mag_ds.get_view(is_bounded=not compress)
+
+            # perform downsampling
+            with get_executor_for_args(args) as executor:
+                voxel_count_per_cube = np.prod(prev_mag_ds._get_file_dimensions())
+                job_count_per_log = math.ceil(
+                    1024 ** 3 / voxel_count_per_cube
+                )  # log every gigavoxel of processed data
+
+                if buffer_edge_len is None:
+                    buffer_edge_len = determine_buffer_edge_len(
+                        prev_mag_ds.view
+                    )  # DEFAULT_EDGE_LEN
+                func = named_partial(
+                    downsample_cube_job,
+                    mag_factors=mag_factors,
+                    interpolation_mode=parsed_interpolation_mode,
+                    buffer_edge_len=buffer_edge_len,
+                    compress=compress,
+                    job_count_per_log=job_count_per_log,
+                )
+                prev_mag_ds.get_view().for_zipped_chunks(
+                    # this view is restricted to the bounding box specified in the properties
+                    func,
+                    target_view=target_mag_view,
+                    source_chunk_size=np.array(target_mag_ds._get_file_dimensions())
+                    * mag_factors,
+                    target_chunk_size=target_mag_ds._get_file_dimensions(),
+                    executor=executor,
+                )
+
+            logging.info("Mag {0} successfully cubed".format(target_mag))
+
+            prev_mag = target_mag
+            target_mag = get_next_mag(target_mag, scale)
+
+    def setup_mag(self, mag: Union[str, Mag]) -> None:
         pass
 
 
@@ -168,7 +333,7 @@ class WKLayer(Layer[WKMagDataset]):
                 mag, block_len=block_len, file_len=file_len, block_type=block_type
             )
 
-    def setup_mag(self, mag: str) -> None:
+    def setup_mag(self, mag: Union[str, Mag]) -> None:
         # This method is used to initialize the mag when opening the Dataset. This does not create e.g. the wk_header.
 
         # normalize the name of the mag
@@ -186,6 +351,22 @@ class WKLayer(Layer[WKMagDataset]):
         )
         self.dataset.properties._add_mag(
             self.name, mag, cube_length=wk_header.block_len * wk_header.file_len
+        )
+
+    def _initialize_mag_from_other_mag(
+        self, new_mag_name: Union[str, Mag], other_mag: MagDataset, compress: bool
+    ) -> MagDataset:
+        block_type = (
+            wkw.Header.BLOCK_TYPE_LZ4HC if compress else wkw.Header.BLOCK_TYPE_RAW
+        )
+        other_wk_mag = cast(
+            WKMagDataset, other_mag
+        )  # This method is only used in the context of creating a new magnification by using the same meta data as another magnification of the same dataset
+        return self.add_mag(
+            new_mag_name,
+            block_len=other_wk_mag.block_len,
+            file_len=other_wk_mag.file_len,
+            block_type=block_type,
         )
 
 
@@ -220,7 +401,7 @@ class GenericTiffLayer(Layer[TiffMagT], ABC):
         else:
             return self.add_mag(mag)
 
-    def setup_mag(self, mag: str) -> None:
+    def setup_mag(self, mag: Union[str, Mag]) -> None:
         # This method is used to initialize the mag when opening the Dataset. This does not create e.g. folders.
 
         # normalize the name of the mag
@@ -242,7 +423,25 @@ class TiffLayer(GenericTiffLayer[TiffMagDataset]):
     def _get_mag_dataset_class(self) -> Type[TiffMagDataset]:
         return TiffMagDataset
 
+    def _initialize_mag_from_other_mag(
+        self, new_mag_name: Union[str, Mag], other_mag: MagDataset, compress: bool
+    ) -> MagDataset:
+        return self.add_mag(new_mag_name)
+
 
 class TiledTiffLayer(GenericTiffLayer[TiledTiffMagDataset]):
     def _get_mag_dataset_class(self) -> Type[TiledTiffMagDataset]:
         return TiledTiffMagDataset
+
+    def downsample(
+        self,
+        from_mag: Mag,
+        max_mag: Mag,
+        interpolation_mode: str,
+        compress: bool,
+        anisotropic: Optional[bool] = None,
+        scale: Optional[Tuple[float, float, float]] = None,
+        buffer_edge_len: Optional[int] = None,
+        args: Optional[Namespace] = None,
+    ) -> None:
+        raise NotImplemented

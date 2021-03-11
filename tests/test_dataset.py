@@ -2,13 +2,16 @@ import filecmp
 import json
 import os
 from os.path import dirname, join
-from typing import Tuple, cast
+from pathlib import Path
+from typing import Any, Tuple, cast
 
 import pytest
 
 import numpy as np
 from shutil import rmtree, copytree
 
+from scipy.ndimage import zoom
+from wkw import wkw
 from wkw.wkw import WKWException
 
 from wkcuber.api.Dataset import (
@@ -20,14 +23,24 @@ from wkcuber.api.Dataset import (
 from os import path, makedirs
 
 from wkcuber.api.Layer import Layer
-from wkcuber.api.MagDataset import TiledTiffMagDataset
+from wkcuber.api.MagDataset import (
+    find_mag_path_on_disk,
+    MagDataset,
+    TiledTiffMagDataset,
+)
 from wkcuber.api.Properties.DatasetProperties import TiffProperties, WKProperties
 from wkcuber.api.TiffData.TiffMag import TiffReader
 from wkcuber.api.View import View
 from wkcuber.api.bounding_box import BoundingBox
 from wkcuber.compress import compress_mag_inplace
+from wkcuber.downsampling import downsample_mags_isotropic, downsample_mags_anisotropic
+from wkcuber.downsampling_utils import (
+    downsample_cube,
+    InterpolationModes,
+    parse_interpolation_mode,
+)
 from wkcuber.mag import Mag
-from wkcuber.utils import get_executor_for_args
+from wkcuber.utils import get_executor_for_args, open_wkw, WkwDatasetInfo, named_partial
 
 expected_error_msg = "The test did not throw an exception even though it should. "
 
@@ -37,9 +50,8 @@ def delete_dir(relative_path: str) -> None:
         rmtree(relative_path)
 
 
-def chunk_job(args: Tuple[View, tuple]) -> None:
-    view, additional_args = args
-
+def chunk_job(args: Tuple[View, int]) -> None:
+    (view, i) = args
     # increment the color value of each voxel
     data = view.read(size=view.size)
     if data.shape[0] == 1:
@@ -48,12 +60,12 @@ def chunk_job(args: Tuple[View, tuple]) -> None:
     view.write(data)
 
 
-def advanced_chunk_job(args: Tuple[View, tuple]) -> None:
-    view, additional_args = args
+def advanced_chunk_job(args: Tuple[View, int], type: type) -> None:
+    view, i = args
 
     # write different data for each chunk (depending on the global_offset of the chunk)
     data = view.read(size=view.size)
-    data = np.ones(data.shape, dtype=np.uint8) * np.uint8(sum(view.global_offset))
+    data = np.ones(data.shape, dtype=type) * type(sum(view.global_offset))
     view.write(data)
 
 
@@ -62,7 +74,6 @@ def for_each_chunking_with_wrong_chunk_size(view: View) -> None:
         try:
             view.for_each_chunk(
                 chunk_job,
-                job_args_per_chunk="test",
                 chunk_size=(0, 64, 64),
                 executor=executor,
             )
@@ -75,7 +86,6 @@ def for_each_chunking_with_wrong_chunk_size(view: View) -> None:
         try:
             view.for_each_chunk(
                 chunk_job,
-                job_args_per_chunk="test",
                 chunk_size=(16, 64, 64),
                 executor=executor,
             )
@@ -86,7 +96,6 @@ def for_each_chunking_with_wrong_chunk_size(view: View) -> None:
         try:
             view.for_each_chunk(
                 chunk_job,
-                job_args_per_chunk="test",
                 chunk_size=(100, 64, 64),
                 executor=executor,
             )
@@ -98,9 +107,9 @@ def for_each_chunking_with_wrong_chunk_size(view: View) -> None:
 def for_each_chunking_advanced(ds: AbstractDataset, view: View) -> None:
     chunk_size = (64, 64, 64)
     with get_executor_for_args(None) as executor:
+        func = named_partial(advanced_chunk_job, type=np.uint8)
         view.for_each_chunk(
-            advanced_chunk_job,
-            job_args_per_chunk="test",
+            func,
             chunk_size=chunk_size,
             executor=executor,
         )
@@ -123,6 +132,22 @@ def for_each_chunking_advanced(ds: AbstractDataset, view: View) -> None:
             * np.uint8(sum(chunk.global_offset)),
             chunk_data,
         )
+
+
+def copy_and_transform_job(args: Tuple[View, View, int], name: str, val: int) -> None:
+    (source_view, target_view, i) = args
+    # This method simply takes the data from the source_view, transforms it and writes it to the target_view
+
+    # These assertions are just to demonstrate how the passed parameters can be accessed inside this method
+    assert name == "foo"
+    assert val == 42
+
+    # increment the color value of each voxel
+    data = source_view.read(size=source_view.size)
+    if data.shape[0] == 1:
+        data = data[0, :, :, :]
+    data += 50
+    target_view.write(data)
 
 
 def get_multichanneled_data(dtype: type) -> np.ndarray:
@@ -884,7 +909,6 @@ def test_chunking_wk() -> None:
     with get_executor_for_args(None) as executor:
         view.for_each_chunk(
             chunk_job,
-            job_args_per_chunk="test",
             chunk_size=(64, 64, 64),
             executor=executor,
         )
@@ -932,7 +956,6 @@ def test_chunking_tiff() -> None:
     with get_executor_for_args(None) as executor:
         view.for_each_chunk(
             chunk_job,
-            job_args_per_chunk="test",
             chunk_size=(265, 265, 1),
             executor=executor,
         )
@@ -1550,3 +1573,279 @@ def test_outdated_dtype_parameter() -> None:
 
     with pytest.raises(ValueError):
         ds.add_layer("color", Layer.COLOR_TYPE, dtype=np.uint8, num_channels=1)
+
+
+def test_dataset_conversion() -> None:
+    origin_wk_ds_path = "./testoutput/conversion/origin_wk/"
+    origin_tiff_ds_path = "./testoutput/conversion/origin_tiff/"
+
+    wk_to_tiff_ds_path = "./testoutput/conversion/wk_to_tiff/"
+    tiff_to_wk_ds_path = "./testoutput/conversion/tiff_to_wk/"
+
+    wk_to_tiff_to_wk_ds_path = "./testoutput/conversion/wk_to_tiff_to_wk/"
+    tiff_to_wk_to_tiff_ds_path = "./testoutput/conversion/tiff_to_wk_to_tiff/"
+
+    delete_dir(origin_wk_ds_path)
+    delete_dir(origin_tiff_ds_path)
+    delete_dir(wk_to_tiff_ds_path)
+    delete_dir(tiff_to_wk_ds_path)
+    delete_dir(wk_to_tiff_to_wk_ds_path)
+    delete_dir(tiff_to_wk_to_tiff_ds_path)
+
+    # create example dataset
+    origin_wk_ds = WKDataset.create(origin_wk_ds_path, scale=(1, 1, 1))
+    wk_seg_layer = origin_wk_ds.add_layer(
+        "layer1", Layer.SEGMENTATION_TYPE, num_channels=1, largest_segment_id=1000000000
+    )
+    wk_seg_layer.add_mag("1", block_len=8, file_len=16).write(
+        offset=(10, 20, 30), data=(np.random.rand(128, 128, 256) * 255).astype(np.uint8)
+    )
+    wk_seg_layer.add_mag("2", block_len=8, file_len=16).write(
+        offset=(5, 10, 15), data=(np.random.rand(64, 64, 128) * 255).astype(np.uint8)
+    )
+    wk_color_layer = origin_wk_ds.add_layer("layer2", Layer.COLOR_TYPE, num_channels=3)
+    wk_color_layer.add_mag("1", block_len=8, file_len=16).write(
+        offset=(10, 20, 30),
+        data=(np.random.rand(3, 128, 128, 256) * 255).astype(np.uint8),
+    )
+    wk_color_layer.add_mag("2", block_len=8, file_len=16).write(
+        offset=(5, 10, 15), data=(np.random.rand(3, 64, 64, 128) * 255).astype(np.uint8)
+    )
+    wk_to_tiff_ds = origin_wk_ds.to_tiff_dataset(wk_to_tiff_ds_path)
+    wk_to_tiff_to_wk_ds = wk_to_tiff_ds.to_wk_dataset(wk_to_tiff_to_wk_ds_path)
+
+    assert origin_wk_ds.layers.keys() == wk_to_tiff_to_wk_ds.layers.keys()
+    for layer_name in origin_wk_ds.layers:
+        assert (
+            origin_wk_ds.layers[layer_name].mags.keys()
+            == wk_to_tiff_to_wk_ds.layers[layer_name].mags.keys()
+        )
+        for mag in origin_wk_ds.layers[layer_name].mags:
+            origin_header = origin_wk_ds.layers[layer_name].mags[mag].header
+            converted_header = wk_to_tiff_to_wk_ds.layers[layer_name].mags[mag].header
+            assert origin_header.voxel_type == converted_header.voxel_type
+            assert origin_header.num_channels == converted_header.num_channels
+            assert origin_header.block_type == converted_header.block_type
+            # the block_length and file_length might differ because the conversion from tiff to wk uses the defaults
+            assert np.array_equal(
+                origin_wk_ds.layers[layer_name].mags[mag].read(),
+                wk_to_tiff_to_wk_ds.layers[layer_name].mags[mag].read(),
+            )
+
+    # create example dataset
+    origin_tiff_ds = TiffDataset.create(
+        origin_tiff_ds_path, scale=(1, 1, 1), pattern="z_dim_{zzzzz}.tif"
+    )
+    tiff_seg_layer = origin_tiff_ds.add_layer(
+        "layer1", Layer.SEGMENTATION_TYPE, num_channels=1, largest_segment_id=1000000000
+    )
+    tiff_seg_layer.add_mag("1").write(
+        offset=(10, 20, 30), data=(np.random.rand(128, 128, 256) * 255).astype(np.uint8)
+    )
+    tiff_seg_layer.add_mag("2").write(
+        offset=(5, 10, 15), data=(np.random.rand(64, 64, 128) * 255).astype(np.uint8)
+    )
+    tiff_color_layer = origin_tiff_ds.add_layer(
+        "layer2", Layer.COLOR_TYPE, num_channels=3
+    )
+    tiff_color_layer.add_mag("1").write(
+        offset=(10, 20, 30),
+        data=(np.random.rand(3, 128, 128, 256) * 255).astype(np.uint8),
+    )
+    tiff_color_layer.add_mag("2").write(
+        offset=(5, 10, 15), data=(np.random.rand(3, 64, 64, 128) * 255).astype(np.uint8)
+    )
+
+    tiff_to_wk_ds = origin_tiff_ds.to_wk_dataset(tiff_to_wk_ds_path)
+    tiff_to_wk_to_tiff = tiff_to_wk_ds.to_tiff_dataset(
+        tiff_to_wk_to_tiff_ds_path, pattern="different_pattern_{zzzzz}.tif"
+    )
+
+    assert origin_tiff_ds.layers.keys() == tiff_to_wk_to_tiff.layers.keys()
+    for layer_name in origin_tiff_ds.layers:
+        assert (
+            origin_tiff_ds.layers[layer_name].mags.keys()
+            == tiff_to_wk_to_tiff.layers[layer_name].mags.keys()
+        )
+        for mag in origin_tiff_ds.layers[layer_name].mags:
+            origin_header = origin_tiff_ds.layers[layer_name].mags[mag].header
+            converted_header = tiff_to_wk_to_tiff.layers[layer_name].mags[mag].header
+            assert origin_header.dtype_per_channel == converted_header.dtype_per_channel
+            assert origin_header.num_channels == converted_header.num_channels
+            assert origin_header.tile_size == converted_header.tile_size
+            # the pattern of the datasets does not match because I intentionally used two different paths in this test
+            assert np.array_equal(
+                origin_tiff_ds.layers[layer_name].mags[mag].read(),
+                tiff_to_wk_to_tiff.layers[layer_name].mags[mag].read(),
+            )
+
+
+def test_for_zipped_chunks() -> None:
+    delete_dir("./testoutput/zipped_chunking_source/")
+    delete_dir("./testoutput/zipped_chunking_target/")
+    copytree("./testdata/simple_wk_dataset/", "./testoutput/zipped_chunking_source/")
+
+    source_view = WKDataset("./testoutput/zipped_chunking_source/").get_view(
+        "color", "1", size=(256, 256, 256), is_bounded=False
+    )
+
+    target_mag = (
+        WKDataset.create("./testoutput/zipped_chunking_target/", scale=(1, 1, 1))
+        .get_or_add_layer(
+            "color", Layer.COLOR_TYPE, dtype_per_channel="uint8", num_channels=3
+        )
+        .get_or_add_mag("1", block_len=8, file_len=4)
+    )
+
+    target_mag.layer.dataset.properties._set_bounding_box_of_layer(
+        "color", offset=(0, 0, 0), size=(256, 256, 256)
+    )
+    target_view = target_mag.get_view(size=(256, 256, 256))
+
+    with get_executor_for_args(None) as executor:
+        func = named_partial(
+            copy_and_transform_job, name="foo", val=42
+        )  # curry the function with further arguments
+        source_view.for_zipped_chunks(
+            func,
+            target_view=target_view,
+            source_chunk_size=(64, 64, 64),  # multiple of (wkw_file_len,) * 3
+            target_chunk_size=(64, 64, 64),  # multiple of (wkw_file_len,) * 3
+            executor=executor,
+        )
+
+    assert np.array_equal(
+        source_view.read(size=source_view.size) + 50,
+        target_view.read(size=target_view.size),
+    )
+
+
+def test_for_zipped_chunks_invalid_target_chunk_size_wk() -> None:
+    delete_dir("./testoutput/zipped_chunking_source_invalid/")
+
+    test_cases_wk = [
+        (10, 20, 30),
+        (64, 64, 100),
+        (64, 50, 64),
+        (200, 128, 128),
+    ]
+
+    layer = WKDataset.create(
+        "./testoutput/zipped_chunking_source_invalid/", scale=(1, 1, 1)
+    ).get_or_add_layer("color", Layer.COLOR_TYPE)
+    source_mag_dataset = layer.get_or_add_mag(1, block_len=8, file_len=8)
+    target_mag_dataset = layer.get_or_add_mag(2, block_len=8, file_len=8)
+    source_mag_dataset.write(
+        data=(np.random.rand(1, 300, 300, 300) * 255).astype(np.uint8)
+    )
+    source_view = source_mag_dataset.get_view()
+    target_view = target_mag_dataset.get_view(size=source_view.size, is_bounded=False)
+
+    def func(args: Tuple[View, View, int]) -> None:
+        (s, t, i) = args
+
+    with get_executor_for_args(None) as executor:
+        for test_case in test_cases_wk:
+            with pytest.raises(AssertionError):
+                source_view.for_zipped_chunks(
+                    work_on_chunk=func,
+                    target_view=target_view,
+                    source_chunk_size=test_case,
+                    target_chunk_size=test_case,
+                    executor=executor,
+                )
+
+
+def test_for_zipped_chunks_invalid_target_chunk_size_tiled_tiff() -> None:
+    delete_dir("./testoutput/zipped_chunking_source_invalid/")
+
+    test_cases = [
+        (10, 20, 10),
+        (64, 50, 5),
+        (200, 128, 12),
+    ]
+
+    layer = TiledTiffDataset.create(
+        "./testoutput/zipped_chunking_source_invalid/",
+        scale=(1, 1, 1),
+        tile_size=(64, 64),
+    ).get_or_add_layer("color", Layer.COLOR_TYPE)
+    source_mag_dataset = layer.get_or_add_mag(1)
+    target_mag_dataset = layer.get_or_add_mag(2)
+    source_mag_dataset.write(
+        data=(np.random.rand(1, 300, 300, 10) * 255).astype(np.uint8)
+    )
+    source_view = source_mag_dataset.get_view()
+    target_view = target_mag_dataset.get_view(size=source_view.size, is_bounded=False)
+
+    def func(args: Tuple[View, View, int]) -> None:
+        (s, t, i) = args
+
+    with get_executor_for_args(None) as executor:
+        for test_case in test_cases:
+            with pytest.raises(AssertionError):
+                source_view.for_zipped_chunks(
+                    work_on_chunk=func,
+                    target_view=target_view,
+                    source_chunk_size=test_case,
+                    target_chunk_size=test_case,
+                    executor=executor,
+                )
+
+
+def test_for_zipped_chunks_invalid_target_chunk_size_tiff() -> None:
+
+    test_cases = [  # offset, size, chunk_size
+        ((0, 0, 0), (64, 64, 10), (32, 64, 5)),
+        ((14, 14, 5), (46, 46, 5), (32, 32, 5)),
+    ]
+
+    def func(args: Tuple[View, View, int]) -> None:
+        (s, t, i) = args
+
+    for offset, size, chunk_size in test_cases:
+        delete_dir("./testoutput/zipped_chunking_source_invalid/")
+
+        ds = TiffDataset.create(
+            "./testoutput/zipped_chunking_source_invalid/", scale=(1, 1, 1)
+        )
+        color_layer = ds.get_or_add_layer("color", Layer.COLOR_TYPE)
+        seg_layer = ds.get_or_add_layer(
+            "seg", Layer.SEGMENTATION_TYPE, largest_segment_id=10000000
+        )
+        source_mag_dataset = color_layer.get_or_add_mag(1)
+        target_mag_dataset = seg_layer.get_or_add_mag(1)
+        source_mag_dataset.write(
+            data=(np.random.rand(1, *size) * 255).astype(np.uint8), offset=offset
+        )
+        source_view = source_mag_dataset.get_view()
+        target_view = target_mag_dataset.get_view(
+            size=source_view.size, is_bounded=False
+        )
+
+        with get_executor_for_args(None) as executor:
+            with pytest.raises(AssertionError):
+                source_view.for_zipped_chunks(
+                    work_on_chunk=func,
+                    target_view=target_view,
+                    source_chunk_size=chunk_size,
+                    target_chunk_size=chunk_size,
+                    executor=executor,
+                )
+
+
+def test_read_only_view() -> None:
+    delete_dir("./testoutput/read_only_view/")
+    ds = WKDataset.create("./testoutput/read_only_view/", scale=(1, 1, 1))
+    mag = ds.get_or_add_layer("color", Layer.COLOR_TYPE).get_or_add_mag("1")
+    mag.write(
+        data=(np.random.rand(1, 10, 10, 10) * 255).astype(np.uint8), offset=(10, 20, 30)
+    )
+    v_write = mag.get_view()
+    v_read = mag.get_view(read_only=True)
+
+    new_data = (np.random.rand(1, 5, 6, 7) * 255).astype(np.uint8)
+    with pytest.raises(AssertionError):
+        v_read.write(data=new_data)
+
+    v_write.write(data=new_data)

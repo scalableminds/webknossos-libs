@@ -1,3 +1,4 @@
+import logging
 import os
 from os.path import join
 from pathlib import Path
@@ -6,7 +7,7 @@ from typing import Type, Tuple, Union, cast, TYPE_CHECKING, TypeVar, Generic, An
 from wkw import wkw
 import numpy as np
 
-import wkcuber.api as api
+from wkcuber.utils import ceil_div_np, convert_mag1_size, convert_mag1_offset
 
 if TYPE_CHECKING:
     from wkcuber.api.Layer import (
@@ -85,9 +86,11 @@ class MagDataset:
             [old_end_offset_in_mag1, new_end_offset_in_mag1]
         ).max(axis=0)
         total_size_in_mag1 = max_end_offset_in_mag1 - np.array(new_offset_in_mag1)
-        total_size = total_size_in_mag1 / mag_np
 
-        self.view.size = cast(Tuple[int, int, int], tuple(total_size))
+        self.view.size = cast(
+            Tuple[int, int, int],
+            tuple(convert_mag1_offset(max_end_offset_in_mag1, mag)),
+        )  # The base view of a MagDataset always starts at (0, 0, 0)
 
         self.layer.dataset.properties._set_bounding_box_of_layer(
             self.layer.name,
@@ -98,44 +101,66 @@ class MagDataset:
     def get_header(self) -> Union[TiffMagHeader, wkw.Header]:
         raise NotImplementedError
 
+    def get_dtype(self) -> type:
+        return self.view.get_dtype()
+
+    def _get_file_dimensions(self) -> Tuple[int, int, int]:
+        raise NotImplementedError
+
     def get_view(
         self,
         size: Tuple[int, int, int] = None,
         offset: Tuple[int, int, int] = None,
         is_bounded: bool = True,
+        read_only: bool = False,
     ) -> View:
-        size_in_properties = self.layer.dataset.properties.data_layers[
+        mag1_size_in_properties = self.layer.dataset.properties.data_layers[
             self.layer.name
         ].get_bounding_box_size()
 
-        offset_in_properties = self.layer.dataset.properties.data_layers[
+        mag1_offset_in_properties = self.layer.dataset.properties.data_layers[
             self.layer.name
         ].get_bounding_box_offset()
 
-        if offset_in_properties == (-1, -1, -1):
-            offset_in_properties = (0, 0, 0)
+        if mag1_offset_in_properties == (-1, -1, -1):
+            mag1_offset_in_properties = (0, 0, 0)
 
-        if offset is None:
-            offset = offset_in_properties
+        view_offset = (
+            offset
+            if offset is not None
+            else cast(
+                Tuple[int, int, int],
+                tuple(convert_mag1_offset(mag1_offset_in_properties, Mag(self.name))),
+            )
+        )
+
+        properties_offset_in_current_mag = convert_mag1_size(
+            mag1_offset_in_properties, Mag(self.name)
+        )
 
         if size is None:
-            size = np.array(size_in_properties) - (
-                np.array(offset) - np.array(offset_in_properties)
+            size = convert_mag1_size(mag1_size_in_properties, Mag(self.name)) - (
+                np.array(view_offset) - properties_offset_in_current_mag
             )
 
         # assert that the parameters size and offset are valid
         if is_bounded:
-            for off_prop, off in zip(offset_in_properties, offset):
+            for off_prop, off in zip(properties_offset_in_current_mag, view_offset):
                 if off < off_prop:
                     raise AssertionError(
-                        f"The passed parameter 'offset' {offset} is outside the bounding box from the properties.json. "
+                        f"The passed parameter 'offset' {view_offset} is outside the bounding box from the properties.json. "
                         f"Use is_bounded=False if you intend to write outside out the existing bounding box."
                     )
-            for s1, s2, off in zip(size_in_properties, size, offset):
-                if s2 + off > s1:
+            for s1, s2, off1, off2 in zip(
+                convert_mag1_size(mag1_size_in_properties, Mag(self.name)),
+                size,
+                properties_offset_in_current_mag,
+                view_offset,
+            ):
+                if s2 + off2 > s1 + off1:
                     raise AssertionError(
-                        f"The combination of the passed parameter 'size' {size} and 'offset' {offset} are not compatible with the "
-                        f"size ({size_in_properties}) from the properties.json.  "
+                        f"The combination of the passed parameter 'size' {size} and 'offset' {view_offset} are not compatible with the "
+                        f"size ({mag1_size_in_properties}) from the properties.json.  "
                         f"Use is_bounded=False if you intend to write outside out the existing bounding box."
                     )
 
@@ -143,7 +168,12 @@ class MagDataset:
             self.layer.dataset.path, self.layer.name, self.name
         )
         return self._get_view_type()(
-            mag_file_path, self.header, size, offset, is_bounded
+            mag_file_path,
+            self.header,
+            cast(Tuple[int, int, int], tuple(size)),
+            view_offset,
+            is_bounded,
+            read_only,
         )
 
     def _get_view_type(self) -> Type[View]:
@@ -195,6 +225,9 @@ class WKMagDataset(MagDataset):
     def _get_view_type(self) -> Type[WKView]:
         return WKView
 
+    def _get_file_dimensions(self) -> Tuple[int, int, int]:
+        return cast(Tuple[int, int, int], (self.file_len * self.block_len,) * 3)
+
 
 TiffLayerT = TypeVar("TiffLayerT", bound="GenericTiffLayer")
 
@@ -216,6 +249,12 @@ class GenericTiffMagDataset(MagDataset, Generic[TiffLayerT]):
 
     def _get_view_type(self) -> Type[TiffView]:
         return TiffView
+
+    def _get_file_dimensions(self) -> Tuple[int, int, int]:
+        if self.layer.dataset.properties.tile_size:
+            return self.layer.dataset.properties.tile_size + (1,)
+
+        return self.view.size[0], self.view.size[1], 1
 
 
 class TiffMagDataset(GenericTiffMagDataset["TiffLayer"]):

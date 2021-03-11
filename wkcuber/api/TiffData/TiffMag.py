@@ -1,7 +1,8 @@
 import itertools
 import re
+from pathlib import Path
 from types import TracebackType
-from typing import Optional, List, Tuple, Set, Type, Iterator, Sequence, cast, Union
+from typing import Optional, List, Tuple, Set, Type, Iterator, cast, Union
 
 from skimage import io
 import numpy as np
@@ -203,9 +204,11 @@ class TiffMag:
 
         for xyz in available_tiffs:
             if xyz != (None, None, None):
-                self.tiffs[xyz] = TiffReader.open(
-                    self.get_file_name_for_layer(xyz)
-                )  # open is lazy
+                filename = self.get_file_name_for_layer(xyz)
+                if Path(filename).is_file():
+                    self.tiffs[xyz] = TiffReader.open(
+                        self.get_file_name_for_layer(xyz)
+                    )  # open is lazy
 
     def read(self, off: Tuple[int, int, int], shape: Tuple[int, int, int]) -> np.array:
         # modify the shape to also include the num_channels
