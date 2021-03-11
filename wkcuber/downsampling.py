@@ -138,7 +138,6 @@ def downsample(
     buffer_edge_len: int = None,
     args: Namespace = None,
 ) -> None:
-
     assert source_mag < target_mag
     logging.info("Downsampling mag {} from mag {}".format(target_mag, source_mag))
 
@@ -524,9 +523,9 @@ def parse_interpolation_mode(
 ) -> InterpolationModes:
     if interpolation_mode.upper() == "DEFAULT":
         return (
-            InterpolationModes.MEDIAN
-            if layer_name == "color"
-            else InterpolationModes.MODE
+            InterpolationModes.MODE
+            if layer_name == "segmentation"
+            else InterpolationModes.MEDIAN
         )
     else:
         return InterpolationModes[interpolation_mode.upper()]
@@ -604,7 +603,6 @@ def downsample_mags_isotropic(
     buffer_edge_len: int = None,
     args: Namespace = None,
 ) -> None:
-
     target_mag = from_mag.scaled_by(2)
     while target_mag <= max_mag:
         source_mag = target_mag.divided_by(2)
@@ -632,7 +630,6 @@ def downsample_mags_anisotropic(
     buffer_edge_len: int = None,
     args: Namespace = None,
 ) -> None:
-
     prev_mag = from_mag
     target_mag = get_next_anisotropic_mag(from_mag, scale)
     while target_mag <= max_mag:

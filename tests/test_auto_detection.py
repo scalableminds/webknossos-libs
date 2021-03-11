@@ -100,7 +100,7 @@ def test_tiff_dataset_name_and_layer_name_detection() -> None:
         ) = converter.detect_dataset_name_and_layer_path_to_layer_name()
         assert dataset_name == "test_dataset"
         assert len(layer_path_to_layer_name) == 1
-        assert list(layer_path_to_layer_name)[0] == prefix + "test_dataset"
+        assert list(layer_path_to_layer_name)[0] == prefix + "test_dataset/brain.tif"
         assert list(layer_path_to_layer_name.values())[0] == "brain"
 
         # test if single file
@@ -112,7 +112,7 @@ def test_tiff_dataset_name_and_layer_name_detection() -> None:
         ) = converter.detect_dataset_name_and_layer_path_to_layer_name()
         assert dataset_name == "brain"
         assert len(layer_path_to_layer_name) == 1
-        assert list(layer_path_to_layer_name)[0] == prefix
+        assert list(layer_path_to_layer_name)[0] == prefix + "brain.tif"
         assert list(layer_path_to_layer_name.values())[0] == "color"
 
         # test for multiple files with no parent directory

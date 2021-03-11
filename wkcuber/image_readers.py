@@ -28,8 +28,8 @@ class ImageReader:
     ) -> int:
         return 1
 
-    def read_dtype(self, file_name: str) -> str:  # pylint: disable=unused-argument
-        return "uint8"  # TODO: Implement dtype method for all readers
+    def read_dtype(self, file_name: str) -> str:
+        pass
 
 
 class PillowImageReader(ImageReader):
@@ -52,6 +52,9 @@ class PillowImageReader(ImageReader):
             else:
                 return this_layer.shape[-1]  # pylint: disable=unsubscriptable-object
 
+    def read_dtype(self, file_name: str) -> str:
+        return np.array(Image.open(file_name)).dtype.name
+
 
 def to_target_datatype(data: np.ndarray, target_dtype: np.dtype) -> np.ndarray:
     factor = (1 + np.iinfo(data.dtype).max) / (1 + np.iinfo(target_dtype).max)
@@ -73,6 +76,9 @@ class Dm3ImageReader(ImageReader):
     def read_channel_count(self, _file_name: str) -> int:
         logging.info("Assuming single channel for DM3 data")
         return 1
+
+    def read_dtype(self, file_name: str) -> str:
+        return DM3(file_name).imagedata.dtype.name
 
 
 class Dm4ImageReader(ImageReader):
@@ -124,6 +130,10 @@ class Dm4ImageReader(ImageReader):
     def read_channel_count(self, _file_name: str) -> int:
         logging.info("Assuming single channel for DM4 data")
         return 1
+
+    def read_dtype(self, file_name: str) -> str:  # pylint: disable=unused-argument
+        # DM4 standard input type is uint16
+        return "uint16"
 
 
 def find_count_of_axis(tif_file: TiffFile, axis: str) -> int:

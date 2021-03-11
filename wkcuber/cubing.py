@@ -98,14 +98,10 @@ def create_parser() -> ArgumentParser:
 def find_source_filenames(source_path: str) -> List[str]:
     # Find all source files that have a matching file extension
 
-    input_path = Path(source_path)
+    if Path(source_path).is_dir():
+        source_path = path.join(source_path, "*")
 
-    if input_path.is_dir():
-        joined_path = path.join(source_path, "*")
-    else:
-        joined_path = source_path
-
-    source_files = list(find_files(joined_path, image_reader.readers.keys()))
+    source_files = list(find_files(source_path, image_reader.readers.keys()))
 
     assert len(source_files) > 0, (
         "No image files found in path "
@@ -276,7 +272,6 @@ def cubing(
             file_len=args.wkw_file_len,
         ),
     )
-    # TODO I think this uses a different layer category guessing method
     interpolation_mode = parse_interpolation_mode(
         args.interpolation_mode, target_wkw_info.layer_name
     )

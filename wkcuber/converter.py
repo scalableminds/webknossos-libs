@@ -352,35 +352,41 @@ class ImageStackConverter(Converter):
     ) -> None:
         if len(self.source_files) == 1:
             self.dataset_names.add(path.splitext(split_path[0])[0])
+            self.layer_path_to_layer_name[self.prefix + split_path[0]] = "color"
         else:
             self.dataset_names.add("dataset")
-
-        self.layer_path_to_layer_name[self.prefix] = "color"
+            self.layer_path_to_layer_name[self.prefix] = "color"
 
     def handle_path_length_2(
         self,
         split_path: List[str],
     ) -> None:
         if split_path[0] in ["color", "segmentation", "mask"]:
-            self.layer_path_to_layer_name[self.prefix + split_path[0]] = split_path[0]
+            layer_name = split_path[0]
             self.dataset_names.add("dataset")
         else:
-            if len(self.source_files) == 1:
-                self.layer_path_to_layer_name[
-                    self.prefix + split_path[0]
-                ] = path.splitext(split_path[1])[0]
-            else:
-                self.layer_path_to_layer_name[self.prefix + split_path[0]] = "color"
             self.dataset_names.add(split_path[0])
+            if len(self.source_files) == 1:
+                layer_name = path.splitext(split_path[1])[0]
+            else:
+                layer_name = "color"
+
+        if len(self.source_files) == 1:
+            self.layer_path_to_layer_name[self.source_files[0]] = layer_name
+        else:
+            self.layer_path_to_layer_name[self.prefix + split_path[0]] = layer_name
 
     def handle_path_length_longer(
         self,
         split_path: List[str],
     ) -> None:
         self.dataset_names.add(split_path[-3])
-        self.layer_path_to_layer_name[
-            self.prefix + sep.join(split_path[0:-1])
-        ] = split_path[-2]
+        if len(self.source_files) == 1:
+            self.layer_path_to_layer_name[self.source_files[0]] = split_path[-2]
+        else:
+            self.layer_path_to_layer_name[
+                self.prefix + sep.join(split_path[0:-1])
+            ] = split_path[-2]
 
 
 class ConverterManager:
