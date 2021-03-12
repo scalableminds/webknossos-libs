@@ -13,7 +13,7 @@ from .convert_knossos import (
     main as convert_knossos,
     create_parser as create_knossos_parser,
 )
-from .convert_nifti import main as convert_nifti
+from .convert_nifti import main as convert_nifti, create_parser as create_nifti_parser
 from .image_readers import image_reader
 from .utils import find_files, add_scale_flag, logger
 
@@ -67,7 +67,7 @@ def get_source_files(
 class Converter:
     def __init__(self) -> None:
         self.source_files: List[str] = []
-        self.prefix = ""
+        self.prefix: str = ""
 
     def accepts_input(self, source_path: str) -> bool:
         pass
@@ -117,10 +117,45 @@ class WkwConverter(Converter):
 class NiftiConverter(Converter):
     def accepts_input(self, source_path: str) -> bool:
         source_files = get_source_files(source_path, {".nii"}, True)
+        self.source_files = source_files
         return len(source_files) > 0
 
     def convert_input(self, args: Namespace) -> None:
         logger.info("Converting Nifti dataset")
+
+        # add missing config attributes with defaults
+        nifti_parser = create_nifti_parser()
+        if not hasattr(args, "dtype"):
+            logger.info("Assumed data type is uint8")
+        put_default_from_argparser_if_not_present(args, nifti_parser, "write_tiff")
+        put_default_from_argparser_if_not_present(args, nifti_parser, "dtype")
+        put_default_from_argparser_if_not_present(
+            args, nifti_parser, "use_orientation_header"
+        )
+        put_default_from_argparser_if_not_present(
+            args, nifti_parser, "enforce_bounding_box"
+        )
+        put_default_from_argparser_if_not_present(args, nifti_parser, "flip_axes")
+        put_default_from_argparser_if_not_present(args, nifti_parser, "verbose")
+
+        if len(self.source_files) == 1:
+            source_file = self.source_files[0]
+            layer_name = path.splitext(path.basename(source_file))[0]
+            put_default_if_not_present(
+                args, "is_segmentation_layer", layer_name == "segmentation"
+            )
+            args.layer_name = layer_name
+            args.source_path = source_file
+        else:
+            # We do not explicitly set the "color_file" option since we could not guess it any better than the internal algorithm
+            for p in self.source_files:
+                layer_name = path.splitext(path.basename(p))[0]
+                if layer_name == "segmentation":
+                    put_default_if_not_present(
+                        args, "segmentation_file", path.relpath(p, args.source_path)
+                    )
+                    break
+
         convert_nifti(args)
 
 
