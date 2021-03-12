@@ -5,6 +5,7 @@ import numpy as np
 
 from wkcuber.api.Dataset import WKDataset
 from wkcuber.api.Layer import Layer
+from wkcuber.downsampling import calculate_default_max_mag
 from wkcuber.downsampling_utils import (
     InterpolationModes,
     downsample_cube,
@@ -262,3 +263,22 @@ def test_downsampling_padding() -> None:
 
         assert np.array_equal(mag1.get_view().size, expected_size)
         assert np.array_equal(mag1.get_view().global_offset, expected_offset)
+
+
+def test_default_max_mag() -> None:
+
+    assert calculate_default_max_mag(
+        dataset_size=(65536, 65536, 65536), cube_length=4096
+    ) == Mag([16, 16, 16])
+    assert calculate_default_max_mag(
+        dataset_size=(4096, 4096, 4096), cube_length=4096
+    ) == Mag([16, 16, 16])
+    assert calculate_default_max_mag(
+        dataset_size=(131072, 262144, 262144), cube_length=4096
+    ) == Mag([32, 64, 64])
+    assert calculate_default_max_mag(
+        dataset_size=(32768, 32768, 32768), cube_length=64
+    ) == Mag([512, 512, 512])
+    assert calculate_default_max_mag(
+        dataset_size=(16384, 65536, 65536), cube_length=64
+    ) == Mag([256, 512, 512])

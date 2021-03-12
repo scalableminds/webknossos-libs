@@ -1,4 +1,5 @@
 import logging
+import math
 from typing import Tuple, cast
 
 import numpy as np
@@ -28,6 +29,27 @@ def calculate_virtual_scale_for_target_mag(
     max_target_value = max(list(target_mag.to_array()))
     scale_array = max_target_value / np.array(target_mag.to_array())
     return cast(Tuple[float, float, float], tuple(scale_array))
+
+
+def calculate_default_max_mag_for_dataset(dataset_path: str, layer_name: str) -> Mag:
+    ds = WKDataset(dataset_path)
+    ds_size = ds.properties.data_layers[layer_name].get_bounding_box_size()
+    cube_length = (
+        ds.properties.data_layers[layer_name].wkw_magnifications[0].cube_length
+    )
+    return calculate_default_max_mag(ds_size, cube_length)
+
+
+def calculate_default_max_mag(
+    dataset_size: Tuple[int, int, int], cube_length: int
+) -> Mag:
+    cubes_per_dim = -(-np.array(dataset_size) // np.array(cube_length))
+    magnification = [
+        int(math.pow(2, int(math.log(s, 2)))) for s in cubes_per_dim
+    ]  # highest power of 2 smaller than cubes_per_dim
+    return Mag(
+        [min(max(m, 16), 512) for m in magnification]
+    )  # at least 16 and at most 512
 
 
 def create_parser() -> ArgumentParser:
@@ -61,7 +83,7 @@ def create_parser() -> ArgumentParser:
         "x, y, z. For example, a maximum mag value of 8 (or 8-8-8) will stop the downsampling as soon as a "
         "magnification is produced for which one dimension is equal or larger than 8.",
         type=int,
-        default=512,
+        default=None,
     )
 
     group.add_argument(
@@ -184,7 +206,10 @@ if __name__ == "__main__":
     setup_logging(args)
 
     from_mag = Mag(args.from_mag)
-    max_mag = Mag(args.max)
+    if args.max is None:
+        max_mag = calculate_default_max_mag_for_dataset(args.path, args.layer_name)
+    else:
+        max_mag = Mag(args.max)
     if args.anisotropic_target_mag:
         anisotropic_target_mag = Mag(args.anisotropic_target_mag)
 
