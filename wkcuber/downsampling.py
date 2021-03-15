@@ -173,13 +173,13 @@ if __name__ == "__main__":
     max_mag = None if args.max is None else Mag(args.max)
 
     if args.anisotropic_target_mag or not args.isotropic:
-        anisotropic_target_mag = Mag(args.anisotropic_target_mag)
-
         downsample_mags_anisotropic(
             args.path,
             args.layer_name,
             from_mag,
-            anisotropic_target_mag if args.anisotropic_target_mag else max_mag,
+            Mag(args.anisotropic_target_mag)
+            if args.anisotropic_target_mag
+            else max_mag,
             scale=None,
             interpolation_mode=args.interpolation_mode,
             compress=not args.no_compress,
