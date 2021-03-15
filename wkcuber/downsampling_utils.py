@@ -78,11 +78,13 @@ def calculate_virtual_scale_for_target_mag(
 
 
 def calculate_default_max_mag(dataset_size: Tuple[int, int, int]) -> Mag:
-    # The lowest mag should have a size of ~ 100vx**3
+    # The lowest mag should have a size of ~ 100vx**2 per slice
     max_x_y = max(dataset_size[0], dataset_size[1])
     # highest power of 2 larger (or equal) than max_x_y divided by 100
+    # The calculated factor will be used for x, y and z here. If anisotropic downsampling takes place,
+    # the dimensions can still be downsampled independently according to the scale.
     return Mag(
-        max(int(math.pow(2, math.ceil(math.log(max_x_y / 100, 2)))), 4)
+        max(2**math.ceil(math.log(max_x_y / 100, 2)), 4)
     )  # at least 4
 
 
