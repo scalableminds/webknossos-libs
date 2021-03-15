@@ -5,12 +5,12 @@ import numpy as np
 
 from wkcuber.api.Dataset import WKDataset
 from wkcuber.api.Layer import Layer
-from wkcuber.downsampling import calculate_default_max_mag
 from wkcuber.downsampling_utils import (
     InterpolationModes,
     downsample_cube,
     downsample_cube_job,
     get_next_mag,
+    calculate_default_max_mag,
 )
 import wkw
 from wkcuber.mag import Mag

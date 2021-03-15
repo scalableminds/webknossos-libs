@@ -25,6 +25,11 @@ import numpy as np
 
 from wkw import wkw
 
+from wkcuber.downsampling_utils import (
+    calculate_virtual_scale_for_target_mag,
+    calculate_default_max_mag,
+)
+
 if TYPE_CHECKING:
     from wkcuber.api.Dataset import AbstractDataset, TiffDataset
 from wkcuber.api.MagDataset import (
@@ -202,7 +207,7 @@ class Layer(Generic[MagT]):
     def downsample(
         self,
         from_mag: Mag,
-        max_mag: Mag,
+        max_mag: Optional[Mag],
         interpolation_mode: str,
         compress: bool,
         anisotropic: Optional[bool] = None,
@@ -213,10 +218,17 @@ class Layer(Generic[MagT]):
         assert (
             from_mag.to_layer_name() in self.mags.keys()
         ), f"Failed to downsample data. The from_mag ({from_mag}) does not exist."
-        anisotropic = anisotropic or scale is not None
-        if anisotropic:
-            if scale is None:
+
+        if max_mag is None:
+            max_mag = calculate_default_max_mag(
+                self.dataset.properties.data_layers[self.name].get_bounding_box_size()
+            )
+
+        if anisotropic and scale is None:
+            if max_mag is None:
                 scale = self.dataset.properties.scale
+            else:
+                scale = calculate_virtual_scale_for_target_mag(max_mag)
 
         self._pad_existing_mags_for_downsampling(from_mag, max_mag, scale)
 
@@ -436,7 +448,7 @@ class TiledTiffLayer(GenericTiffLayer[TiledTiffMagDataset]):
     def downsample(
         self,
         from_mag: Mag,
-        max_mag: Mag,
+        max_mag: Optional[Mag],
         interpolation_mode: str,
         compress: bool,
         anisotropic: Optional[bool] = None,
