@@ -34,22 +34,16 @@ def calculate_virtual_scale_for_target_mag(
 def calculate_default_max_mag_for_dataset(dataset_path: str, layer_name: str) -> Mag:
     ds = WKDataset(dataset_path)
     ds_size = ds.properties.data_layers[layer_name].get_bounding_box_size()
-    cube_length = (
-        ds.properties.data_layers[layer_name].wkw_magnifications[0].cube_length
-    )
-    return calculate_default_max_mag(ds_size, cube_length)
+    return calculate_default_max_mag(ds_size)
 
 
-def calculate_default_max_mag(
-    dataset_size: Tuple[int, int, int], cube_length: int
-) -> Mag:
-    cubes_per_dim = -(-np.array(dataset_size) // np.array(cube_length))
-    magnification = [
-        int(math.pow(2, int(math.log(s, 2)))) for s in cubes_per_dim
-    ]  # highest power of 2 smaller than cubes_per_dim
+def calculate_default_max_mag(dataset_size: Tuple[int, int, int]) -> Mag:
+    # The lowest mag should have a size of ~ 100vx**3
+    max_x_y = max(dataset_size[0], dataset_size[1])
+    # highest power of 2 larger (or equal) than max_x_y divided by 100
     return Mag(
-        [min(max(m, 16), 512) for m in magnification]
-    )  # at least 16 and at most 512
+        max(int(math.pow(2, math.ceil(math.log(max_x_y / 100, 2)))), 4)
+    )  # at least 4
 
 
 def create_parser() -> ArgumentParser:
@@ -81,7 +75,9 @@ def create_parser() -> ArgumentParser:
         help="Max resolution to be downsampled. In case of anisotropic downsampling, the process is considered "
         "done when max(current_mag) >= max(max_mag) where max takes the largest dimension of the mag tuple "
         "x, y, z. For example, a maximum mag value of 8 (or 8-8-8) will stop the downsampling as soon as a "
-        "magnification is produced for which one dimension is equal or larger than 8.",
+        "magnification is produced for which one dimension is equal or larger than 8. "
+        "The default value is calculated depending on the dataset size. In the lowest Mag, the size will be "
+        "smaller than 100vx per dimension",
         type=int,
         default=None,
     )

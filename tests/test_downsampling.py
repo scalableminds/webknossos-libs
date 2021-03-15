@@ -266,19 +266,10 @@ def test_downsampling_padding() -> None:
 
 
 def test_default_max_mag() -> None:
-
-    assert calculate_default_max_mag(
-        dataset_size=(65536, 65536, 65536), cube_length=4096
-    ) == Mag([16, 16, 16])
-    assert calculate_default_max_mag(
-        dataset_size=(4096, 4096, 4096), cube_length=4096
-    ) == Mag([16, 16, 16])
-    assert calculate_default_max_mag(
-        dataset_size=(131072, 262144, 262144), cube_length=4096
-    ) == Mag([32, 64, 64])
-    assert calculate_default_max_mag(
-        dataset_size=(32768, 32768, 32768), cube_length=64
-    ) == Mag([512, 512, 512])
-    assert calculate_default_max_mag(
-        dataset_size=(16384, 65536, 65536), cube_length=64
-    ) == Mag([256, 512, 512])
+    assert calculate_default_max_mag(dataset_size=(65536, 65536, 65536)) == Mag(1024)
+    assert calculate_default_max_mag(dataset_size=(4096, 4096, 4096)) == Mag(64)
+    assert calculate_default_max_mag(dataset_size=(131072, 262144, 262144)) == Mag(4096)
+    assert calculate_default_max_mag(dataset_size=(32768, 32768, 32768)) == Mag(512)
+    assert calculate_default_max_mag(dataset_size=(16384, 65536, 65536)) == Mag(1024)
+    assert calculate_default_max_mag(dataset_size=(16384, 65536, 16384)) == Mag(1024)
+    assert calculate_default_max_mag(dataset_size=(256, 256, 256)) == Mag([4, 4, 4])
