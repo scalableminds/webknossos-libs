@@ -70,9 +70,9 @@ def parse_interpolation_mode(
 ) -> InterpolationModes:
     if interpolation_mode.upper() == "DEFAULT":
         return (
-            InterpolationModes.MEDIAN
-            if layer_name == "color"
-            else InterpolationModes.MODE
+            InterpolationModes.MODE
+            if layer_name == "segmentation"
+            else InterpolationModes.MEDIAN
         )
     else:
         return InterpolationModes[interpolation_mode.upper()]
