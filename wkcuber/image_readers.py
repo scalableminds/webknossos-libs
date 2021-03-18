@@ -29,7 +29,7 @@ class ImageReader:
         return 1
 
     def read_dtype(self, file_name: str) -> str:
-        pass
+        raise NotImplementedError()
 
 
 class PillowImageReader(ImageReader):

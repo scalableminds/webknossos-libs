@@ -75,7 +75,6 @@ class Converter:
     def convert_input(self, args: Namespace) -> None:
         pass
 
-    # returns [prefix, traversal_depth]
     def check_path_length_and_set_prefix(self) -> int:
         first_split_path = self.source_files[0].split(sep)
         traversal_depth = len(first_split_path)
@@ -90,7 +89,7 @@ class Converter:
                 lambda p: len(p.split(sep)) == traversal_depth,
                 self.source_files,
             )
-        )
+        ), "Cannot detect correct layer format. Please check the input directory."
 
         return traversal_depth
 
@@ -215,12 +214,6 @@ class KnossosConverter(Converter):
         assert (
             traversal_depth >= 4 if not starts_with_prefix else traversal_depth >= 5
         ), "Input Format is unreadable. Make sure to pass the path which points at least to a KNOSSOS magnification (e.g., testdata/knossos/color/1)."
-        assert all(
-            map(
-                lambda p: len(p.split(sep)) == traversal_depth,
-                self.source_files,
-            )
-        )
 
         if starts_with_prefix:
             traversal_depth = traversal_depth - 1
@@ -435,6 +428,8 @@ class ConverterManager:
 
 
 def main(args: Namespace) -> None:
+    converter_manager = ConverterManager()
+
     matching_converters = list(
         filter(
             lambda c: c.accepts_input(args.source_path),
@@ -456,6 +451,5 @@ def main(args: Namespace) -> None:
 
 if __name__ == "__main__":
     parsed_args = create_parser().parse_args()
-    converter_manager = ConverterManager()
 
     main(parsed_args)
