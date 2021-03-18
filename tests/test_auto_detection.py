@@ -145,7 +145,7 @@ def test_knossos_dataset_name_and_layer_path_detection() -> None:
         assert dataset_name == "knossos"
         assert len(layer_paths) == 1
         assert list(layer_paths.keys())[0] == prefix + "knossos/color"
-        assert list(layer_paths.values())[0] == "1"
+        assert list(layer_paths.values())[0] == {"1"}
 
         # test if in subfolder
         converter = KnossosConverter()
@@ -160,7 +160,7 @@ def test_knossos_dataset_name_and_layer_path_detection() -> None:
             list(layer_paths.keys())[0]
             == prefix + "superfolder/superfolder/knossos/color"
         )
-        assert list(layer_paths.values())[0] == "1"
+        assert list(layer_paths.values())[0] == {"1"}
 
         # test for multiple layer
         converter = KnossosConverter()
@@ -175,7 +175,7 @@ def test_knossos_dataset_name_and_layer_path_detection() -> None:
         assert len(layer_paths) == 2
         assert prefix + "knossos/color" in layer_paths.keys()
         assert prefix + "knossos/segmentation" in layer_paths.keys()
-        assert all(map(lambda m: m == "1", layer_paths.values()))
+        assert all(map(lambda m: m == {"1"}, layer_paths.values()))
 
         # test if only layer folder given
         converter = KnossosConverter()
@@ -186,7 +186,7 @@ def test_knossos_dataset_name_and_layer_path_detection() -> None:
         assert dataset_name == "dataset"
         assert len(layer_paths) == 1
         assert list(layer_paths.keys())[0] == prefix + "color"
-        assert list(layer_paths.values())[0] == "1"
+        assert list(layer_paths.values())[0] == {"1"}
 
         # test if only mag folder given
         converter = KnossosConverter()
@@ -197,7 +197,7 @@ def test_knossos_dataset_name_and_layer_path_detection() -> None:
         assert dataset_name == "dataset"
         assert len(layer_paths) == 1
         assert list(layer_paths.keys())[0] == prefix
-        assert list(layer_paths.values())[0] == "1"
+        assert list(layer_paths.values())[0] == {"1"}
 
         # test if already in mag folder
         converter = KnossosConverter()
@@ -208,7 +208,7 @@ def test_knossos_dataset_name_and_layer_path_detection() -> None:
         assert dataset_name == "dataset"
         assert len(layer_paths) == 1
         assert list(layer_paths.keys())[0] == prefix
-        assert list(layer_paths.values())[0] == ""
+        assert list(layer_paths.values())[0] == {""}
 
         # test if too short path gets detected
         converter = KnossosConverter()
@@ -234,4 +234,4 @@ def test_knossos_dataset_name_and_layer_path_detection() -> None:
         assert dataset_name == "knossos"
         assert len(layer_paths) == 1
         assert list(layer_paths.keys())[0] == prefix + "knossos/color"
-        assert list(layer_paths.values())[0] == "2"
+        assert list(layer_paths.values())[0] == {"2", "4"}

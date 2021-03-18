@@ -3,10 +3,8 @@ from os import path, sep
 from pathlib import Path
 from typing import Iterable, List, Any, Tuple, Dict, Set, Callable, cast
 
-from natsort import natsorted
-
-from .__main__ import (
-    main as convert_image_stack,
+from .cubing import (
+    cubing as cube_image_stack,
     create_parser as create_image_stack_parser,
 )
 from .convert_knossos import (
@@ -15,11 +13,14 @@ from .convert_knossos import (
 )
 from .convert_nifti import main as convert_nifti, create_parser as create_nifti_parser
 from .image_readers import image_reader
-from .utils import find_files, add_scale_flag, logger
+from .utils import find_files, add_scale_flag, logger, add_verbose_flag, setup_logging
+from .metadata import write_webknossos_metadata
 
 
 def create_parser() -> ArgumentParser:
-    parser = ArgumentParser()
+    parser = ArgumentParser(
+        epilog="If you want to pass more specific config values, please use the individual converters. See the readme for a complete overview."
+    )
 
     parser.add_argument(
         "source_path", help="Input file or directory containing the input files."
@@ -30,13 +31,14 @@ def create_parser() -> ArgumentParser:
     )
 
     add_scale_flag(parser)
+    add_verbose_flag(parser)
 
     return parser
 
 
 def put_default_if_not_present(args: Namespace, name: str, default: Any) -> None:
     dictionary = vars(args)
-    if name not in dictionary:
+    if name not in dictionary or dictionary[name] is None:
         dictionary[name] = default
 
 
@@ -70,10 +72,11 @@ class Converter:
         self.prefix: str = ""
 
     def accepts_input(self, source_path: str) -> bool:
-        pass
+        raise NotImplementedError()
 
-    def convert_input(self, args: Namespace) -> None:
-        pass
+    def convert_input(self, args: Namespace) -> bool:
+        # returns True if metadata should be written after the conversion
+        raise NotImplementedError()
 
     def check_path_length_and_set_prefix(self) -> int:
         first_split_path = self.source_files[0].split(sep)
@@ -109,8 +112,9 @@ class WkwConverter(Converter):
         source_files = get_source_files(source_path, {".wkw"}, False)
         return len(source_files) > 0
 
-    def convert_input(self, args: Namespace) -> None:
+    def convert_input(self, args: Namespace) -> bool:
         logger.info("Already a WKW dataset. No conversion necessary...")
+        return False
 
 
 class NiftiConverter(Converter):
@@ -119,7 +123,7 @@ class NiftiConverter(Converter):
         self.source_files = source_files
         return len(source_files) > 0
 
-    def convert_input(self, args: Namespace) -> None:
+    def convert_input(self, args: Namespace) -> bool:
         logger.info("Converting Nifti dataset")
 
         # add missing config attributes with defaults
@@ -157,6 +161,8 @@ class NiftiConverter(Converter):
 
         convert_nifti(args)
 
+        return False
+
 
 class KnossosConverter(Converter):
     def __init__(self) -> None:
@@ -173,12 +179,11 @@ class KnossosConverter(Converter):
 
         return len(self.source_files) > 0
 
-    def convert_input(self, args: Namespace) -> None:
+    def convert_input(self, args: Namespace) -> bool:
         logger.info("Converting KNOSSOS dataset")
 
         # add missing config attributes with defaults
         knossos_parser = create_knossos_parser()
-        put_default_from_argparser_if_not_present(args, knossos_parser, "mag")
         put_default_from_argparser_if_not_present(args, knossos_parser, "verbose")
         put_default_from_argparser_if_not_present(args, knossos_parser, "jobs")
         put_default_from_argparser_if_not_present(
@@ -192,21 +197,34 @@ class KnossosConverter(Converter):
 
         (
             dataset_name,
-            layer_paths_and_mag,
+            layer_paths_and_mags,
         ) = self.detect_dataset_and_layer_paths_with_mag()
-        args.name = dataset_name if dataset_name != ".." else "dataset"
+        put_default_if_not_present(args, "name", dataset_name)
 
-        for layer_path, mag in layer_paths_and_mag.items():
-            args.source_path = path.join(layer_path, mag)
-            args.layer_name = (
-                "color"
-                if layer_path == "" or layer_path == ".."
-                else path.basename(layer_path)
-            )
+        for layer_path, mags in layer_paths_and_mags.items():
+            for mag in mags:
+                # if the mag path is empty, we are already inside the mag folder, so there is only mag. We guess that this is mag 1.
+                if mag != "":
+                    try:
+                        mag_int = int(mag)
+                    except ValueError:
+                        continue
+                else:
+                    mag_int = 1
+                args.mag = mag_int
+                args.source_path = path.join(layer_path, mag)
+                args.layer_name = (
+                    "color"
+                    if path.basename(layer_path) == ""
+                    else path.basename(layer_path)
+                )
+                convert_knossos(args)
 
-            convert_knossos(args)
+        return True
 
-    def detect_dataset_and_layer_paths_with_mag(self) -> Tuple[str, Dict[str, str]]:
+    def detect_dataset_and_layer_paths_with_mag(
+        self,
+    ) -> Tuple[str, Dict[str, Set[str]]]:
         # Path structure for knossos is .../(dataset_name)/(layer_name)/(mag)folder/x0000/y0000/z0000/filename.raw
         traversal_depth = self.check_path_length_and_set_prefix()
         starts_with_prefix = self.prefix != ""
@@ -236,12 +254,7 @@ class KnossosConverter(Converter):
             len(self.layer_path_to_mag_set) > 0
         ), "No layers found. Stopping conversion..."
 
-        layer_path_to_mag = dict()
-
-        for layer, mags in self.layer_path_to_mag_set.items():
-            layer_path_to_mag[layer] = natsorted(list(mags))[0]
-
-        return self.dataset_names.pop(), layer_path_to_mag
+        return self.dataset_names.pop(), self.layer_path_to_mag_set
 
     def handle_path_length_4(
         self,
@@ -304,7 +317,7 @@ class ImageStackConverter(Converter):
 
         return True
 
-    def convert_input(self, args: Namespace) -> None:
+    def convert_input(self, args: Namespace) -> bool:
         logger.info("Converting image stack")
 
         # add missing config attributes with defaults
@@ -344,7 +357,15 @@ class ImageStackConverter(Converter):
         for layer_path, layer_name in layer_path_to_name.items():
             args.layer_name = layer_name
             args.source_path = layer_path
-            convert_image_stack(args)
+            cube_image_stack(
+                args.source_path,
+                args.target_path,
+                args.layer_name,
+                args.batch_size if "batch_size" in args else None,
+                args,
+            )
+
+        return True
 
     def detect_dataset_name_and_layer_path_to_layer_name(
         self,
@@ -446,10 +467,13 @@ def main(args: Namespace) -> None:
         )
         exit(1)
 
-    matching_converters[0].convert_input(args)
+    should_write_metadata = matching_converters[0].convert_input(args)
+    if should_write_metadata:
+        write_webknossos_metadata(args.target_path, args.name, args.scale)
 
 
 if __name__ == "__main__":
     parsed_args = create_parser().parse_args()
+    setup_logging(parsed_args)
 
     main(parsed_args)
