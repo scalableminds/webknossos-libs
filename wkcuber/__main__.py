@@ -101,4 +101,5 @@ def main(args: Namespace) -> None:
 
 if __name__ == "__main__":
     args = create_parser().parse_args()
+    setup_logging(args)
     main(args)
