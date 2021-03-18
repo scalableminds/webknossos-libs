@@ -1,6 +1,6 @@
 set -xe
 mkdir -p testoutput/tiff3
-python -m wkcuber \
+python -m wkcuber.convert_image_stack_to_wkw \
   --jobs 2 \
   --batch_size 8 \
   --layer_name color \
