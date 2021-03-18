@@ -70,11 +70,11 @@ def main(args: Namespace) -> None:
     if not args.isotropic:
         for (layer_path, mags) in layer_path_to_mags.items():
             layer_name = layer_path.stem
-            mags.sort(reverse=True)
+            mags.sort()
             downsample_mags_anisotropic(
                 args.target_path,
                 layer_name,
-                mags[0],
+                mags[-1],
                 Mag(args.max_mag),
                 args.scale,
                 "default",
@@ -85,11 +85,11 @@ def main(args: Namespace) -> None:
     else:
         for (layer_path, mags) in layer_path_to_mags.items():
             layer_name = layer_path.stem
-            mags.sort(reverse=True)
+            mags.sort()
             downsample_mags_isotropic(
                 args.target_path,
                 layer_name,
-                mags[0],
+                mags[-1],
                 Mag(args.max_mag),
                 "default",
                 not args.no_compress,
