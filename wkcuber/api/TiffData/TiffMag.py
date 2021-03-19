@@ -298,10 +298,9 @@ class TiffMag:
 
     def list_files(self) -> Iterator[str]:
         _, file_extension = os.path.splitext(self.header.pattern)
-        file_paths = list(iglob(os.path.join(self.root, "*" + file_extension)))
-
-        for file_path in file_paths:
-            yield os.path.relpath(os.path.normpath(file_path), self.root)
+        return iglob(
+            self.root + "/" + re.sub(r"{.*?}", "*", self.header.pattern), recursive=True
+        )
 
     def close(self) -> None:
         return
