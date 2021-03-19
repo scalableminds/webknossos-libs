@@ -1,6 +1,6 @@
 import logging
 import time
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from sklearn.preprocessing import LabelEncoder
 from typing import Tuple, Optional, Union, cast
@@ -13,8 +13,8 @@ from wkcuber.api.bounding_box import BoundingBox
 from wkcuber.utils import (
     DEFAULT_WKW_FILE_LEN,
     DEFAULT_WKW_VOXELS_PER_BLOCK,
-    add_scale_flag,
     add_verbose_flag,
+    add_scale_flag,
     pad_or_crop_to_size_and_topleft,
     parse_bounding_box,
     setup_logging,
@@ -43,7 +43,7 @@ def create_parser() -> ArgumentParser:
 
     parser.add_argument(
         "--is_segmentation_layer",
-        "-s",
+        "-sl",
         help="When converting one layer, signals whether layer is segmentation layer. "
         "When converting a folder, this option is ignored",
         default=False,
@@ -102,7 +102,6 @@ def create_parser() -> ArgumentParser:
 def to_target_datatype(
     data: np.ndarray, target_dtype: str, is_segmentation_layer: bool
 ) -> np.ndarray:
-
     if is_segmentation_layer:
         original_shape = data.shape
         label_encoder = LabelEncoder()
@@ -321,10 +320,7 @@ def convert_folder_nifti(
             )
 
 
-def main() -> None:
-    args = create_parser().parse_args()
-    setup_logging(args)
-
+def main(args: Namespace) -> None:
     source_path = Path(args.source_path)
 
     flip_axes = None
@@ -363,4 +359,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    args = create_parser().parse_args()
+    setup_logging(args)
+
+    main(args)

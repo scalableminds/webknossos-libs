@@ -154,7 +154,6 @@ def find_file_with_dimensions(
     z_value: int,
     decimal_lengths: Dict[str, int],
 ) -> Union[str, None]:
-
     file_path_unpadded = replace_coordinates(
         file_path_pattern, {"z": (z_value, 0), "y": (y_value, 0), "x": (x_value, 0)}
     )
@@ -264,7 +263,6 @@ def tile_cubing_job(
 def tile_cubing(
     target_path: str,
     layer_name: str,
-    dtype: str,
     batch_size: int,
     input_path_pattern: str,
     args: Namespace = None,
@@ -291,6 +289,8 @@ def tile_cubing(
             file_count, tile_size[0], tile_size[1]
         )
     )
+    if args is None or not hasattr(args, "dtype") or args.dtype is None:
+        dtype = image_reader.read_dtype(arbitrary_file)
 
     target_wkw_info = WkwDatasetInfo(
         target_path,
@@ -341,7 +341,6 @@ if __name__ == "__main__":
     tile_cubing(
         args.target_path,
         args.layer_name,
-        args.dtype,
         int(args.batch_size),
         input_path_pattern,
         args,

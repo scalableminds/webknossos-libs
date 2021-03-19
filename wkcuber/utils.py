@@ -45,7 +45,6 @@ WkwDatasetInfo = namedtuple(
 KnossosDatasetInfo = namedtuple("KnossosDatasetInfo", ("dataset_path", "dtype"))
 FallbackArgs = namedtuple("FallbackArgs", ("distribution_strategy", "jobs"))
 
-
 BLOCK_LEN = 32
 DEFAULT_WKW_FILE_LEN = 32
 DEFAULT_WKW_VOXELS_PER_BLOCK = 32
@@ -153,7 +152,7 @@ def find_files(
     return (
         f
         for f in iglob(source_path, recursive=True)
-        if any([f.endswith(suffix) for suffix in extensions])
+        if any([f.lower().endswith(suffix) for suffix in extensions])
     )
 
 

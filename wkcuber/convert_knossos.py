@@ -107,10 +107,14 @@ def convert_knossos(
             wait_and_ensure_success(executor.map_to_futures(convert_cube_job, job_args))
 
 
+def main(args: Namespace) -> None:
+    convert_knossos(
+        args.source_path, args.target_path, args.layer_name, args.dtype, args.mag, args
+    )
+
+
 if __name__ == "__main__":
     args = create_parser().parse_args()
     setup_logging(args)
 
-    convert_knossos(
-        args.source_path, args.target_path, args.layer_name, args.dtype, args.mag, args
-    )
+    main(args)
