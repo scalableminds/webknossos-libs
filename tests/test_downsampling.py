@@ -10,6 +10,7 @@ from wkcuber.downsampling_utils import (
     downsample_cube,
     downsample_cube_job,
     get_next_mag,
+    calculate_default_max_mag,
 )
 import wkw
 from wkcuber.mag import Mag
@@ -262,3 +263,13 @@ def test_downsampling_padding() -> None:
 
         assert np.array_equal(mag1.get_view().size, expected_size)
         assert np.array_equal(mag1.get_view().global_offset, expected_offset)
+
+
+def test_default_max_mag() -> None:
+    assert calculate_default_max_mag(dataset_size=(65536, 65536, 65536)) == Mag(1024)
+    assert calculate_default_max_mag(dataset_size=(4096, 4096, 4096)) == Mag(64)
+    assert calculate_default_max_mag(dataset_size=(131072, 262144, 262144)) == Mag(4096)
+    assert calculate_default_max_mag(dataset_size=(32768, 32768, 32768)) == Mag(512)
+    assert calculate_default_max_mag(dataset_size=(16384, 65536, 65536)) == Mag(1024)
+    assert calculate_default_max_mag(dataset_size=(16384, 65536, 16384)) == Mag(1024)
+    assert calculate_default_max_mag(dataset_size=(256, 256, 256)) == Mag([4, 4, 4])

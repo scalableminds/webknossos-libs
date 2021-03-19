@@ -1,13 +1,10 @@
-import logging
-from typing import Tuple, cast
+from typing import Optional, Tuple
 
-import numpy as np
 from argparse import ArgumentParser, Namespace
 import os
 
 from wkcuber.api.Dataset import WKDataset
 from .mag import Mag
-from .metadata import read_datasource_properties
 
 from .utils import (
     add_verbose_flag,
@@ -16,18 +13,6 @@ from .utils import (
     add_isotropic_flag,
     setup_logging,
 )
-
-
-def calculate_virtual_scale_for_target_mag(
-    target_mag: Mag,
-) -> Tuple[float, float, float]:
-    """
-    This scale is not the actual scale of the dataset
-    The virtual scale is used for downsample_mags_anisotropic.
-    """
-    max_target_value = max(list(target_mag.to_array()))
-    scale_array = max_target_value / np.array(target_mag.to_array())
-    return cast(Tuple[float, float, float], tuple(scale_array))
 
 
 def create_parser() -> ArgumentParser:
@@ -59,9 +44,11 @@ def create_parser() -> ArgumentParser:
         help="Max resolution to be downsampled. In case of anisotropic downsampling, the process is considered "
         "done when max(current_mag) >= max(max_mag) where max takes the largest dimension of the mag tuple "
         "x, y, z. For example, a maximum mag value of 8 (or 8-8-8) will stop the downsampling as soon as a "
-        "magnification is produced for which one dimension is equal or larger than 8.",
+        "magnification is produced for which one dimension is equal or larger than 8. "
+        "The default value is calculated depending on the dataset size. In the lowest Mag, the size will be "
+        "smaller than 100vx per dimension",
         type=int,
-        default=512,
+        default=None,
     )
 
     group.add_argument(
@@ -137,7 +124,7 @@ def downsample_mags_isotropic(
     path: str,
     layer_name: str,
     from_mag: Mag,
-    max_mag: Mag,
+    max_mag: Optional[Mag],
     interpolation_mode: str,
     compress: bool,
     buffer_edge_len: int = None,
@@ -150,7 +137,6 @@ def downsample_mags_isotropic(
         interpolation_mode=interpolation_mode,
         compress=compress,
         anisotropic=False,
-        scale=None,
         buffer_edge_len=buffer_edge_len,
         args=args,
     )
@@ -160,8 +146,8 @@ def downsample_mags_anisotropic(
     path: str,
     layer_name: str,
     from_mag: Mag,
-    max_mag: Mag,
-    scale: Tuple[float, float, float],
+    max_mag: Optional[Mag],
+    scale: Optional[Tuple[float, float, float]],
     interpolation_mode: str,
     compress: bool,
     buffer_edge_len: int = None,
@@ -184,42 +170,20 @@ if __name__ == "__main__":
     setup_logging(args)
 
     from_mag = Mag(args.from_mag)
-    max_mag = Mag(args.max)
-    if args.anisotropic_target_mag:
-        anisotropic_target_mag = Mag(args.anisotropic_target_mag)
+    max_mag = None if args.max is None else Mag(args.max)
 
-        scale = calculate_virtual_scale_for_target_mag(anisotropic_target_mag)
-
+    if args.anisotropic_target_mag or not args.isotropic:
         downsample_mags_anisotropic(
             args.path,
             args.layer_name,
             from_mag,
-            anisotropic_target_mag,
-            scale,
-            args.interpolation_mode,
-            not args.no_compress,
-            args.buffer_cube_size,
-            args,
-        )
-    elif not args.isotropic:
-        try:
-            scale = read_datasource_properties(args.path)["scale"]
-        except Exception as exc:
-            logging.error(
-                "Could not determine scale which is necessary "
-                "to find target magnifications for anisotropic downsampling. "
-                "Does the provided dataset have a datasource-properties.json file?"
-            )
-            raise exc
-
-        downsample_mags_anisotropic(
-            args.path,
-            args.layer_name,
-            from_mag,
-            max_mag,
-            scale,
-            args.interpolation_mode,
-            not args.no_compress,
+            Mag(args.anisotropic_target_mag)
+            if args.anisotropic_target_mag
+            else max_mag,
+            scale=None,
+            interpolation_mode=args.interpolation_mode,
+            compress=not args.no_compress,
+            buffer_edge_len=args.buffer_cube_size,
             args=args,
         )
     else:
