@@ -222,7 +222,7 @@ class MagDataset:
         if not was_opened:
             self.close()
 
-    def _extract_file_index(self, file: str) -> Tuple[int, int, int]:
+    def _extract_file_index(self, file_path: str) -> Tuple[int, int, int]:
         raise NotImplementedError
 
 
@@ -263,8 +263,8 @@ class WKMagDataset(MagDataset):
     def _get_file_dimensions(self) -> Tuple[int, int, int]:
         return cast(Tuple[int, int, int], (self.file_len * self.block_len,) * 3)
 
-    def _extract_file_index(self, file: str) -> Tuple[int, int, int]:
-        zyx_index = [int(el[1:]) for el in file.split("/")]
+    def _extract_file_index(self, file_path: str) -> Tuple[int, int, int]:
+        zyx_index = [int(el[1:]) for el in file_path.split("/")]
         return zyx_index[2], zyx_index[1], zyx_index[0]
 
 
@@ -295,10 +295,10 @@ class GenericTiffMagDataset(MagDataset, Generic[TiffLayerT]):
 
         return self.view.size[0], self.view.size[1], 1
 
-    def _extract_file_index(self, file: str) -> Tuple[int, int, int]:
-        x_list = detect_value(self.pattern, file, "x", ["y", "z"])
-        y_list = detect_value(self.pattern, file, "y", ["x", "z"])
-        z_list = detect_value(self.pattern, file, "z", ["x", "y"])
+    def _extract_file_index(self, file_path: str) -> Tuple[int, int, int]:
+        x_list = detect_value(self.pattern, file_path, "x", ["y", "z"])
+        y_list = detect_value(self.pattern, file_path, "y", ["x", "z"])
+        z_list = detect_value(self.pattern, file_path, "z", ["x", "y"])
         x = x_list[0] if len(x_list) == 1 else 0
         y = y_list[0] if len(y_list) == 1 else 0
         z = z_list[0] if len(z_list) == 1 else 0

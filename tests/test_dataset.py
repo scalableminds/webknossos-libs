@@ -1865,9 +1865,9 @@ def create_dataset(request: Any) -> Generator[MagDataset, None, None]:
     dataset_type = request.param
     with tempfile.TemporaryDirectory() as temp_dir:
         if dataset_type == TiledTiffDataset:
-            ds = dataset_type.create(temp_dir, scale=(1, 1, 1), tile_size=(64, 64))
+            ds = dataset_type.create(temp_dir, scale=(2, 2, 1), tile_size=(64, 32))
         else:
-            ds = dataset_type.create(temp_dir, scale=(1, 1, 1))
+            ds = dataset_type.create(temp_dir, scale=(2, 2, 1))
 
         if dataset_type == WKDataset:
             mag = ds.add_layer("color", "color").add_mag(
