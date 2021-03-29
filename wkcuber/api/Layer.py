@@ -25,6 +25,7 @@ import numpy as np
 
 from wkw import wkw
 
+from wkcuber.SafeBoundingBox import VecAnyMagWithMag, VecMag1
 from wkcuber.downsampling_utils import (
     calculate_virtual_scale_for_target_mag,
     calculate_default_max_mag,
@@ -170,35 +171,34 @@ class Layer(Generic[MagT]):
         lowest_mag = all_mags_after_downsampling[-1].as_np()
 
         # calculate aligned offset and size for lowest mag
-        offset_in_mag1 = self.dataset.properties.data_layers[
-            self.name
-        ].get_bounding_box_offset()
-        size_in_mag1 = self.dataset.properties.data_layers[
-            self.name
-        ].get_bounding_box_size()
-        offset_in_lowest_mag = convert_mag1_offset(
-            offset_in_mag1, all_mags_after_downsampling[-1]
+        offset_in_mag1 = VecMag1(
+            self.dataset.properties.data_layers[self.name].get_bounding_box_offset()
         )
-        end_offset_in_lowest_mag = ceil_div_np(
-            np.array(offset_in_mag1) + size_in_mag1,
-            all_mags_after_downsampling[-1].as_np(),
+        size_in_mag1 = VecMag1(
+            self.dataset.properties.data_layers[self.name].get_bounding_box_size()
         )
+
+        offset_in_lowest_mag = offset_in_mag1.to_mag(all_mags_after_downsampling[-1])
+        end_offset_in_lowest_mag = (offset_in_mag1 + size_in_mag1).to_mag(
+            all_mags_after_downsampling[-1], floor=False
+        )
+
         # translate alignment into mag 1
-        aligned_offset_in_mag1 = lowest_mag * offset_in_lowest_mag
-        aligned_size_in_mag1 = lowest_mag * (
-            end_offset_in_lowest_mag - offset_in_lowest_mag
+        aligned_offset_in_mag1 = offset_in_lowest_mag.to_mag(1)
+        aligned_size_in_mag1 = (end_offset_in_lowest_mag - offset_in_lowest_mag).to_mag(
+            1, floor=False
         )
 
         self.dataset.properties._set_bounding_box_of_layer(
             self.name,
-            cast(Tuple[int, int, int], tuple(aligned_offset_in_mag1)),
-            cast(Tuple[int, int, int], tuple(aligned_size_in_mag1)),
+            cast(Tuple[int, int, int], tuple(aligned_offset_in_mag1.a)),
+            cast(Tuple[int, int, int], tuple(aligned_size_in_mag1.a)),
         )
 
         for mag_name in existing_mags:
             mag = self.mags[mag_name.to_layer_name()]
-            aligned_offset = convert_mag1_offset(aligned_offset_in_mag1, mag_name)
-            aligned_size = convert_mag1_size(aligned_size_in_mag1, mag_name)
+            aligned_offset = aligned_offset_in_mag1.to_mag(mag_name).a
+            aligned_size = aligned_size_in_mag1.to_mag(mag_name).a
             # The base view of a MagDataset always starts at (0, 0, 0)
             mag.view.size = cast(
                 Tuple[int, int, int], tuple(aligned_offset + aligned_size)
