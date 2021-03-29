@@ -4,6 +4,7 @@ from typing import Tuple, Type, Union, Any, Dict, List, Optional, cast
 
 from wkw import wkw
 
+from wkcuber.SafeBoundingBox import VecMag1
 from wkcuber.api.Properties.ResolutionProperties import Resolution
 from wkcuber.mag import Mag
 from wkcuber.api.bounding_box import BoundingBox
@@ -136,8 +137,20 @@ class LayerProperties:
             self.bounding_box["depth"],
         )
 
+    def get_bounding_box_size2(self) -> VecMag1:
+        return VecMag1(
+            (
+                self.bounding_box["width"],
+                self.bounding_box["height"],
+                self.bounding_box["depth"],
+            )
+        )
+
     def get_bounding_box_offset(self) -> Tuple[int, int, int]:
         return cast(Tuple[int, int, int], tuple(self.bounding_box["topLeft"]))
+
+    def get_bounding_box_offset2(self) -> VecMag1:
+        return VecMag1(self.bounding_box["topLeft"])
 
     def _set_bounding_box_size(self, size: Tuple[int, int, int]) -> None:
         # Cast to int in case the provided parameter contains numpy integer

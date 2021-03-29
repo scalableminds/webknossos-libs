@@ -2,6 +2,7 @@ from typing import Any, Optional, overload
 
 import numpy as np
 from copy import copy
+
 from wkcuber.mag import Mag
 
 
@@ -61,12 +62,14 @@ class VecAnyMagWithMag(VecAnyMag):
         else:
             return VecAnyMagWithMag(-(-np.array(self.a) // factor), target_mag)
 
-    def __add__(self, other: "VecAnyMagWithMag"):
-        assert self.mag == other.mag
+    def __add__(self, other: "VecAnyMag") -> "VecAnyMag":
+        if isinstance(other, type(self)):
+            assert self.mag == other.mag
         return VecAnyMagWithMag(self.a + other.a, self.mag)
 
-    def __sub__(self, other: "VecAnyMagWithMag"):
-        assert self.mag == other.mag
+    def __sub__(self, other: "VecAnyMag") -> "VecAnyMag":
+        if isinstance(other, type(self)):
+            assert self.mag == other.mag
         return VecAnyMagWithMag(self.a - other.a, self.mag)
 
 

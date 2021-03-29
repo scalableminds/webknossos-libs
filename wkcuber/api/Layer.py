@@ -168,15 +168,10 @@ class Layer(Generic[MagT]):
             all_mags_after_downsampling += [cur_mag]
             cur_mag = get_next_mag(cur_mag, scale)
 
-        lowest_mag = all_mags_after_downsampling[-1].as_np()
-
         # calculate aligned offset and size for lowest mag
-        offset_in_mag1 = VecMag1(
-            self.dataset.properties.data_layers[self.name].get_bounding_box_offset()
-        )
-        size_in_mag1 = VecMag1(
-            self.dataset.properties.data_layers[self.name].get_bounding_box_size()
-        )
+        properties_layer = self.dataset.properties.data_layers[self.name]
+        offset_in_mag1 = properties_layer.get_bounding_box_offset2()
+        size_in_mag1 = properties_layer.get_bounding_box_size2()
 
         offset_in_lowest_mag = offset_in_mag1.to_mag(all_mags_after_downsampling[-1])
         end_offset_in_lowest_mag = (offset_in_mag1 + size_in_mag1).to_mag(
