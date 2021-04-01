@@ -295,7 +295,7 @@ class CziImageReader(ImageReader):
                     )
 
                 # transpose format to x, y, channel_count
-                np.transpose(output, (1, 2, 0))
+                output = np.transpose(output, (1, 2, 0))
                 return output
             else:
                 return self._read_array_all_channels(czi_file, dtype, z_slice)
