@@ -5,7 +5,7 @@ rm -r testoutput/tiff_upsampling/color/1
 python -m wkcuber.upsampling \
   --jobs 2 \
   --from_mag 2-2-2 \
-  --target_mag 1-1-1 \
+  --target_mag 1 \
   --buffer_cube_size 1024 \
   --layer_name color \
   testoutput/tiff_upsampling
@@ -14,7 +14,7 @@ rm -r testoutput/tiff_upsampling/color/2
 
 python -m wkcuber.downsampling \
   --jobs 2 \
-  --from_mag 1-1-1 \
+  --from_mag 1 \
   --max 2 \
   --isotropic \
   --buffer_cube_size 256 \

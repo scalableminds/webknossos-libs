@@ -323,12 +323,14 @@ def downsample_cube_job(
             interpolation_mode is not None
         ), "Downsampling requires an interpolation_mode"
 
+    sampling_variant = "Upsampling" if upsample else "Downsampling"
+
     if use_logging:
-        logging.info("Downsampling of {}".format(target_view.global_offset))
+        logging.info(f"{sampling_variant} of {target_view.global_offset}")
 
     try:
         if use_logging:
-            time_start("Downsampling of {}".format(target_view.global_offset))
+            time_start(f"{sampling_variant} of {target_view.global_offset}")
 
         num_channels = target_view.header.num_channels
         shape = (num_channels,) + tuple(target_view.size)
@@ -398,10 +400,10 @@ def downsample_cube_job(
             file_buffer = file_buffer[0]  # remove channel dimension
         target_view.write(file_buffer, allow_compressed_write=compress)
         if use_logging:
-            time_stop("Downsampling of {}".format(target_view.global_offset))
+            time_stop(f"{sampling_variant} of {target_view.global_offset}")
 
     except Exception as exc:
         logging.error(
-            "Downsampling of {} failed with {}".format(target_view.global_offset, exc)
+            f"{sampling_variant} of {target_view.global_offset} failed with {exc}"
         )
         raise exc
