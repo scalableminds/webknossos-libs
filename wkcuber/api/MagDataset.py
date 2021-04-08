@@ -1,8 +1,20 @@
+import glob
 import logging
 import os
+import re
 from os.path import join
 from pathlib import Path
-from typing import Type, Tuple, Union, cast, TYPE_CHECKING, TypeVar, Generic, Any
+from typing import (
+    Type,
+    Tuple,
+    Union,
+    cast,
+    TYPE_CHECKING,
+    TypeVar,
+    Generic,
+    Any,
+    Generator,
+)
 
 from wkw import wkw
 import numpy as np
@@ -18,7 +30,7 @@ if TYPE_CHECKING:
         TiledTiffLayer,
     )
 from wkcuber.api.View import WKView, TiffView, View
-from wkcuber.api.TiffData.TiffMag import TiffMagHeader
+from wkcuber.api.TiffData.TiffMag import TiffMagHeader, detect_tile_ranges, detect_value
 from wkcuber.mag import Mag
 
 
@@ -190,6 +202,29 @@ class MagDataset:
                 num_channels == write_data_shape[0]
             ), f"The number of channels of the dataset ({num_channels}) does not match the number of channels of the passed data ({write_data_shape[0]})"
 
+    def get_bounding_boxes_on_disk(
+        self,
+    ) -> Generator[Tuple[Tuple[int, int, int], Tuple[int, int, int]], None, None]:
+        cube_size = self._get_file_dimensions()
+        was_opened = self.view._is_opened
+
+        if not was_opened:
+            self.open()  # opening the view is necessary to set the dataset
+
+        assert self.view.dataset is not None
+        for filename in self.view.dataset.list_files():
+            file_path = os.path.relpath(os.path.splitext(filename)[0], self.view.path)
+            cube_index = self._extract_file_index(file_path)
+            cube_offset = [idx * size for idx, size in zip(cube_index, cube_size)]
+
+            yield (cube_offset[0], cube_offset[1], cube_offset[2]), cube_size
+
+        if not was_opened:
+            self.close()
+
+    def _extract_file_index(self, file_path: str) -> Tuple[int, int, int]:
+        raise NotImplementedError
+
 
 class WKMagDataset(MagDataset):
     header: wkw.Header
@@ -228,6 +263,10 @@ class WKMagDataset(MagDataset):
     def _get_file_dimensions(self) -> Tuple[int, int, int]:
         return cast(Tuple[int, int, int], (self.file_len * self.block_len,) * 3)
 
+    def _extract_file_index(self, file_path: str) -> Tuple[int, int, int]:
+        zyx_index = [int(el[1:]) for el in file_path.split("/")]
+        return zyx_index[2], zyx_index[1], zyx_index[0]
+
 
 TiffLayerT = TypeVar("TiffLayerT", bound="GenericTiffLayer")
 
@@ -255,6 +294,15 @@ class GenericTiffMagDataset(MagDataset, Generic[TiffLayerT]):
             return self.layer.dataset.properties.tile_size + (1,)
 
         return self.view.size[0], self.view.size[1], 1
+
+    def _extract_file_index(self, file_path: str) -> Tuple[int, int, int]:
+        x_list = detect_value(self.pattern, file_path, "x", ["y", "z"])
+        y_list = detect_value(self.pattern, file_path, "y", ["x", "z"])
+        z_list = detect_value(self.pattern, file_path, "z", ["x", "y"])
+        x = x_list[0] if len(x_list) == 1 else 0
+        y = y_list[0] if len(y_list) == 1 else 0
+        z = z_list[0] if len(z_list) == 1 else 0
+        return x, y, z
 
 
 class TiffMagDataset(GenericTiffMagDataset["TiffLayer"]):

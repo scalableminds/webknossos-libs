@@ -1,9 +1,11 @@
 import filecmp
+import itertools
 import json
 import os
+import tempfile
 from os.path import dirname, join
 from pathlib import Path
-from typing import Any, Tuple, cast
+from typing import Any, Tuple, cast, Generator
 
 import pytest
 
@@ -14,6 +16,7 @@ from scipy.ndimage import zoom
 from wkw import wkw
 from wkw.wkw import WKWException
 
+from wkcuber.api import Dataset
 from wkcuber.api.Dataset import (
     WKDataset,
     TiffDataset,
@@ -1849,3 +1852,64 @@ def test_read_only_view() -> None:
         v_read.write(data=new_data)
 
     v_write.write(data=new_data)
+
+
+@pytest.fixture(
+    params=[
+        WKDataset,
+        TiffDataset,
+        TiledTiffDataset,
+    ]
+)
+def create_dataset(request: Any) -> Generator[MagDataset, None, None]:
+    dataset_type = request.param
+    with tempfile.TemporaryDirectory() as temp_dir:
+        if dataset_type == TiledTiffDataset:
+            ds = dataset_type.create(temp_dir, scale=(2, 2, 1), tile_size=(64, 32))
+        else:
+            ds = dataset_type.create(temp_dir, scale=(2, 2, 1))
+
+        if dataset_type == WKDataset:
+            mag = ds.add_layer("color", "color").add_mag(
+                "2-2-1", block_len=8, file_len=8
+            )  # cube_size = 8*8 = 64
+        else:
+            mag = ds.add_layer("color", "color").add_mag("2-2-1")
+        yield mag
+
+
+def test_bounding_box_on_disk(create_dataset: MagDataset) -> None:
+    mag = create_dataset
+
+    write_positions = [(0, 0, 0), (20, 80, 120), (1000, 2000, 4000)]
+    data_size = (10, 20, 30)
+    write_data = (np.random.rand(*data_size) * 255).astype(np.uint8)
+    for offset in write_positions:
+        mag.write(offset=offset, data=write_data)
+
+    bounding_boxes_on_disk = list(mag.get_bounding_boxes_on_disk())
+    file_size = mag._get_file_dimensions()
+
+    expected_results = set()
+    for offset in write_positions:
+        # enumerate all bounding boxes of the current write operation
+        x_range = range(
+            offset[0] // file_size[0] * file_size[0],
+            offset[0] + data_size[0],
+            file_size[0],
+        )
+        y_range = range(
+            offset[1] // file_size[1] * file_size[1],
+            offset[1] + data_size[1],
+            file_size[1],
+        )
+        z_range = range(
+            offset[2] // file_size[2] * file_size[2],
+            offset[2] + data_size[2],
+            file_size[2],
+        )
+
+        for bb_offset in itertools.product(x_range, y_range, z_range):
+            expected_results.add((bb_offset, file_size))
+
+    assert set(bounding_boxes_on_disk) == expected_results
