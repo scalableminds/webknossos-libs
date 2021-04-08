@@ -65,6 +65,31 @@ def get_next_mag(mag: Mag, scale: Optional[Tuple[float, float, float]]) -> Mag:
         )
 
 
+def get_previous_mag(mag: Mag, scale: Optional[Tuple[float, float, float]]) -> Mag:
+    if scale is None:
+        return mag.divided_by(2)
+    else:
+        max_index, min_index = detect_larger_and_smaller_dimension(scale)
+        mag_array = mag.to_array()
+        scale_increase = [1, 1, 1]
+
+        if (
+            mag_array[min_index] // scale[min_index]
+            > mag_array[max_index] // scale[max_index]
+        ):
+            for i in range(len(scale_increase)):
+                scale_increase[i] = 1 if scale[i] == scale[max_index] else 2
+        else:
+            scale_increase = [2, 2, 2]
+        return Mag(
+            [
+                max(mag_array[0] // scale_increase[0], 1),
+                max(mag_array[1] // scale_increase[1], 1),
+                max(mag_array[2] // scale_increase[2], 1),
+            ]
+        )
+
+
 def calculate_virtual_scale_for_target_mag(
     target_mag: Mag,
 ) -> Tuple[float, float, float]:
@@ -263,16 +288,40 @@ def downsample_cube(
         raise Exception("Invalid interpolation mode: {}".format(interpolation_mode))
 
 
+def upsample_cube(cube_buffer: np.ndarray, factors: List[int]) -> np.ndarray:
+    ds = cube_buffer.shape
+    out_buf = np.zeros(tuple(s * f for s, f in zip(ds, factors)), cube_buffer.dtype)
+    for dx in (0, factors[0] - 1):
+        for dy in (0, factors[1] - 1):
+            for dz in (0, factors[2] - 1):
+                out_buf[
+                    dx : out_buf.shape[0] : factors[0],
+                    dy : out_buf.shape[1] : factors[1],
+                    dz : out_buf.shape[2] : factors[2],
+                ] = cube_buffer
+    return out_buf
+
+
 def downsample_cube_job(
     args: Tuple[View, View, int],
-    mag_factors: List[int],
-    interpolation_mode: InterpolationModes,
+    mag_factors: Union[List[float], List[int]],
+    interpolation_mode: Optional[InterpolationModes],
     buffer_edge_len: int,
     compress: bool,
     job_count_per_log: int,
+    upsample: bool = False,
 ) -> None:
     (source_view, target_view, i) = args
     use_logging = i % job_count_per_log == 0
+
+    if upsample:
+        assert all(
+            1 >= f for f in mag_factors
+        ), f"mag_factors ({mag_factors}) for upsampling must be smaller than 1"
+    else:
+        assert (
+            interpolation_mode is not None
+        ), "Downsampling requires an interpolation_mode"
 
     if use_logging:
         logging.info("Downsampling of {}".format(target_view.global_offset))
@@ -298,12 +347,12 @@ def downsample_cube_job(
 
         for tile in tiles:
             target_offset = np.array(tile) * buffer_edge_len
-            source_offset = mag_factors * target_offset
+            source_offset = (mag_factors * target_offset).astype(int)
             source_size = cast(
                 Tuple[int, int, int],
                 tuple(
                     [
-                        min(a, b)
+                        int(min(a, b))
                         for a, b in zip(
                             np.array(mag_factors) * buffer_edge_len,
                             source_view.size - source_offset,
@@ -318,10 +367,20 @@ def downsample_cube_job(
                 cube_buffer = cube_buffer_channels[channel_index]
 
                 if not np.all(cube_buffer == 0):
-                    # Downsample the buffer
-                    data_cube = downsample_cube(
-                        cube_buffer, mag_factors, interpolation_mode
-                    )
+                    if upsample:
+                        # Upsample the buffer
+                        inverse_factors = [int(1 / f) for f in mag_factors]
+                        data_cube = upsample_cube(cube_buffer, inverse_factors)
+                    else:
+                        # Downsample the buffer
+                        assert (
+                            interpolation_mode is not None
+                        ), "Downsampling reqiures an Interpolation Mode"
+                        data_cube = downsample_cube(
+                            cube_buffer,
+                            cast(List[int], mag_factors),
+                            interpolation_mode,
+                        )
 
                     buffer_offset = target_offset
                     buffer_end = buffer_offset + data_cube.shape

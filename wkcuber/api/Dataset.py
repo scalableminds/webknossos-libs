@@ -11,6 +11,7 @@ import numpy as np
 import os
 import re
 
+from wkcuber.api.bounding_box import BoundingBox
 from wkcuber.mag import Mag
 from wkcuber.utils import logger, get_executor_for_args, ceil_div_np
 
@@ -344,22 +345,21 @@ class AbstractDataset(Generic[LayerT]):
                     largest_segment_id=largest_segment_id,
                 )
 
+                bbox = self.properties.get_bounding_box_of_layer(layer_name)
+
                 for mag_name, mag in layer.mags.items():
                     target_mag = target_layer.add_mag(mag_name)
 
                     # The bounding box needs to be updated manually because chunked views do not have a reference to the dataset itself
-                    bbox = mag.layer.dataset.properties.get_bounding_box_of_layer(
-                        layer_name
-                    )
                     # The base view of a MagDataset always starts at (0, 0, 0)
                     target_mag.view.global_offset = (0, 0, 0)
                     target_mag.view.size = cast(
                         Tuple[int, int, int],
                         tuple(
-                            ceil_div_np(
-                                np.array(bbox[0]) + np.array(bbox[1]),
-                                Mag(mag_name).as_np(),
-                            )
+                            BoundingBox(topleft=bbox[0], size=bbox[1])
+                            .align_with_mag(Mag(mag_name), ceil=True)
+                            .in_mag(Mag(mag_name))
+                            .bottomright
                         ),
                     )
                     target_mag.layer.dataset.properties._set_bounding_box_of_layer(
