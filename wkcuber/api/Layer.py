@@ -417,7 +417,7 @@ class WKLayer(Layer[WKMagDataset]):
 
         try:
             with wkw.Dataset.open(
-                    find_mag_path_on_disk(self.dataset.path, self.name, mag)
+                find_mag_path_on_disk(self.dataset.path, self.name, mag)
             ) as wkw_dataset:
                 wk_header = wkw_dataset.header
 
@@ -429,7 +429,9 @@ class WKLayer(Layer[WKMagDataset]):
                 self.name, mag, cube_length=wk_header.block_len * wk_header.file_len
             )
         except wkw.WKWException:
-            logging.error(f"Failed to setup magnification {str(mag)}, which is specified in the datasource-properties.json")
+            logging.error(
+                f"Failed to setup magnification {str(mag)}, which is specified in the datasource-properties.json"
+            )
 
     def _initialize_mag_from_other_mag(
         self, new_mag_name: Union[str, Mag], other_mag: MagDataset, compress: bool
