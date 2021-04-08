@@ -282,7 +282,6 @@ class Layer(Generic[MagT]):
         min_mag: Optional[Mag],
         compress: bool,
         anisotropic: Optional[bool] = None,
-        scale: Optional[Tuple[float, float, float]] = None,
         buffer_edge_len: Optional[int] = None,
         args: Optional[Namespace] = None,
     ) -> None:
@@ -293,11 +292,10 @@ class Layer(Generic[MagT]):
         if min_mag is None:
             min_mag = Mag(1)
 
-        if anisotropic and scale is None:
-            if min_mag is None:
-                scale = self.dataset.properties.scale
-            else:
-                scale = calculate_virtual_scale_for_target_mag(min_mag)
+        scale = self.dataset.properties.scale
+
+        if anisotropic and min_mag is not None:
+            scale = calculate_virtual_scale_for_target_mag(min_mag)
 
         prev_mag = from_mag
         target_mag = get_previous_mag(prev_mag, scale)

@@ -97,7 +97,6 @@ def upsample_mags(
         "argument with the mag and layer to upsample"
         " (e.g dataset/color/1)."
     )
-    scale = getattr(args, "scale", None) if args else None
     if not layer_name or not from_mag:
         layer_name = os.path.basename(os.path.dirname(path))
         from_mag = Mag(os.path.basename(path))
@@ -108,7 +107,6 @@ def upsample_mags(
         min_mag=target_mag,
         compress=compress,
         anisotropic=anisotropic,
-        scale=scale,
         buffer_edge_len=buffer_edge_len,
         args=args,
     )

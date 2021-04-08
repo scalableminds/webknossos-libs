@@ -27,7 +27,6 @@ def test_upsampling() -> None:
             min_mag=Mag(1),
             compress=False,
             anisotropic=True,
-            scale=(1, 1, 2),
             buffer_edge_len=64,
             args=None,
         )
