@@ -196,6 +196,9 @@ class TiffProperties(Properties):
                         layer, Resolution, path
                     )
 
+            tile_size = data.get("tile_size")
+            if tile_size is not None:
+                tile_size = (tile_size[0], tile_size[1])
             return cls(
                 path=path,
                 name=data["id"]["name"],
@@ -203,7 +206,7 @@ class TiffProperties(Properties):
                 pattern=data["pattern"],
                 team=data["id"]["team"],
                 data_layers=data_layers,
-                tile_size=data.get("tile_size"),
+                tile_size=tile_size,
             )
 
     def _export_as_json(self) -> None:
