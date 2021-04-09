@@ -270,7 +270,6 @@ class CziImageReader(ImageReader):
     def read_array(self, file_name: str, dtype: np.dtype, z_slice: int) -> np.ndarray:
         with CziFile(file_name) as czi_file:
             channel_index = czi_file.axes.find("C")  # pylint: disable=no-member
-            x_count, y_count = self.read_dimensions(file_name)
             channel_count = self.read_channel_count(file_name)
             # we assume the tile shape is constant, so we can cache it
             if self.tile_shape is None:
@@ -287,6 +286,7 @@ class CziImageReader(ImageReader):
 
             # we assume either all channel are in one tile or each tile is single channel
             if self.tile_shape[channel_index] != channel_count:
+                x_count, y_count = self.read_dimensions(file_name)
                 output = np.empty((channel_count, x_count, y_count), dtype)
                 # format is (channel_count, x, y)
                 for i in range(0, channel_count):
