@@ -88,6 +88,14 @@ def create_parser() -> ArgumentParser:
         default="1",
     )
 
+    parser.add_argument(
+        "--channel_index",
+        "-c",
+        type=int,
+        default=None,
+        help="Select a single channel to be cubed. This can be helpful if webKnossos does not support the multiple channel format of the input files.",
+    )
+
     add_interpolation_flag(parser)
     add_verbose_flag(parser)
     add_distribution_flags(parser)
@@ -114,9 +122,11 @@ def find_source_filenames(source_path: str) -> List[str]:
     return natsorted(source_files)
 
 
-def read_image_file(file_name: str, dtype: type, z_slice: int) -> np.ndarray:
+def read_image_file(
+    file_name: str, dtype: type, z_slice: int, channel_index: Optional[int]
+) -> np.ndarray:
     try:
-        return image_reader.read_array(file_name, dtype, z_slice)
+        return image_reader.read_array(file_name, dtype, z_slice, channel_index)
     except Exception as exc:
         logging.error("Reading of file={} failed with {}".format(file_name, exc))
         raise exc
@@ -148,6 +158,7 @@ def cubing_job(
         int,
         Tuple[int, int],
         bool,
+        Optional[int],
     ]
 ) -> None:
     (
@@ -159,6 +170,7 @@ def cubing_job(
         batch_size,
         image_size,
         pad,
+        channel_index,
     ) = args
     if len(z_batches) == 0:
         return
@@ -181,7 +193,7 @@ def cubing_job(
                 for z, file_name in zip(z_batch, source_file_batch):
                     # Image shape will be (x, y, channel_count, z=1)
                     image = read_image_file(
-                        file_name, target_wkw_info.header.voxel_type, z
+                        file_name, target_wkw_info.header.voxel_type, z, channel_index
                     )
 
                     if not pad:
@@ -234,6 +246,13 @@ def cubing_job(
                 raise exc
 
 
+def get_channel_count_and_dtype(source_path: str) -> Tuple[int, str]:
+    source_files = find_source_filenames(source_path)
+    return image_reader.read_channel_count(source_files[0]), image_reader.read_dtype(
+        source_files[0]
+    )
+
+
 def cubing(
     source_path: str,
     target_path: str,
@@ -246,6 +265,11 @@ def cubing(
     # All images are assumed to have equal dimensions
     num_x, num_y = image_reader.read_dimensions(source_files[0])
     num_channels = image_reader.read_channel_count(source_files[0])
+    if hasattr(args, "channel_index") and args.channel_index is not None:
+        assert (
+            args.channel_index < num_channels
+        ), "Selected channel is not present in the input files"
+        num_channels = 1
     num_z_slices_per_file = image_reader.read_z_slices_per_file(source_files[0])
     assert (
         num_z_slices_per_file == 1 or len(source_files) == 1
@@ -309,6 +333,7 @@ def cubing(
                     batch_size,
                     (num_x, num_y),
                     args.pad,
+                    args.channel_index,
                 )
             )
 

@@ -1,4 +1,4 @@
-from typing import Tuple, Dict, Union
+from typing import Tuple, Dict, Union, Optional
 
 import numpy as np
 import logging
@@ -15,7 +15,13 @@ Image.MAX_IMAGE_PIXELS = None
 
 
 class ImageReader:
-    def read_array(self, file_name: str, dtype: np.dtype, z_slice: int) -> np.ndarray:
+    def read_array(
+        self,
+        file_name: str,
+        dtype: np.dtype,
+        z_slice: int,
+        channel_index: Optional[int],
+    ) -> np.ndarray:
         pass
 
     def read_dimensions(self, file_name: str) -> Tuple[int, int]:
@@ -34,9 +40,17 @@ class ImageReader:
 
 
 class PillowImageReader(ImageReader):
-    def read_array(self, file_name: str, dtype: np.dtype, z_slice: int) -> np.ndarray:
+    def read_array(
+        self,
+        file_name: str,
+        dtype: np.dtype,
+        z_slice: int,
+        channel_index: Optional[int],
+    ) -> np.ndarray:
         this_layer = np.array(Image.open(file_name), dtype)
         this_layer = this_layer.swapaxes(0, 1)
+        if channel_index is not None:
+            this_layer = this_layer[:, :, channel_index]
         this_layer = this_layer.reshape(this_layer.shape + (1,))
         return this_layer
 
@@ -63,7 +77,13 @@ def to_target_datatype(data: np.ndarray, target_dtype: np.dtype) -> np.ndarray:
 
 
 class Dm3ImageReader(ImageReader):
-    def read_array(self, file_name: str, dtype: np.dtype, z_slice: int) -> np.ndarray:
+    def read_array(
+        self,
+        file_name: str,
+        dtype: np.dtype,
+        z_slice: int,
+        channel_index: Optional[int],
+    ) -> np.ndarray:
         dm3_file = DM3(file_name)
         this_layer = to_target_datatype(dm3_file.imagedata, dtype)
         this_layer = this_layer.swapaxes(0, 1)
@@ -105,7 +125,13 @@ class Dm4ImageReader(ImageReader):
         )
         return width, height
 
-    def read_array(self, file_name: str, dtype: np.dtype, z_slice: int) -> np.ndarray:
+    def read_array(
+        self,
+        file_name: str,
+        dtype: np.dtype,
+        z_slice: int,
+        channel_index: Optional[int],
+    ) -> np.ndarray:
         dm4file = DM4File.open(file_name)
         image_data_tag, image_tag = self._read_tags(dm4file)
         width, height = self._read_dimensions(dm4file, image_data_tag)
@@ -148,16 +174,29 @@ class TiffImageReader(ImageReader):
         else:
             return tif_series.shape[index]  # pylint: disable=unsubscriptable-object
 
-    def read_array(self, file_name: str, dtype: np.dtype, z_slice: int) -> np.ndarray:
+    def read_array(
+        self,
+        file_name: str,
+        dtype: np.dtype,
+        z_slice: int,
+        channel_index: Optional[int],
+    ) -> np.ndarray:
         with TiffFile(file_name) as tif_file:
             num_channels = self.read_channel_count(file_name)
+            channel_offset = 0
+            if channel_index is not None:
+                channel_offset = channel_index
+            # if channel_index is not None, then num_channels is one
             if len(tif_file.pages) > num_channels:
+                # multi-page, single input file
                 data = np.array(
                     list(
                         map(
                             lambda x: x.asarray(),
                             tif_file.pages[
-                                z_slice * num_channels : z_slice * num_channels
+                                z_slice * num_channels
+                                + channel_offset : z_slice * num_channels
+                                + channel_offset
                                 + num_channels
                             ],
                         )
@@ -165,8 +204,16 @@ class TiffImageReader(ImageReader):
                     dtype,
                 )
             else:
+                # multiple input files
                 data = np.array(
-                    list(map(lambda x: x.asarray(), tif_file.pages[0:num_channels])),
+                    list(
+                        map(
+                            lambda x: x.asarray(),
+                            tif_file.pages[
+                                channel_offset : channel_offset + num_channels
+                            ],
+                        )
+                    ),
                     dtype,
                 )
             # transpose data to shape(x, y, channel_count)
@@ -276,9 +323,15 @@ class CziImageReader(ImageReader):
                 data = to_target_datatype(data, dtype)
                 return data
 
-    def read_array(self, file_name: str, dtype: np.dtype, z_slice: int) -> np.ndarray:
+    def read_array(
+        self,
+        file_name: str,
+        dtype: np.dtype,
+        z_slice: int,
+        channel_index: Optional[int],
+    ) -> np.ndarray:
         with CziFile(file_name) as czi_file:
-            channel_index = czi_file.axes.find("C")  # pylint: disable=no-member
+            c_index = czi_file.axes.find("C")  # pylint: disable=no-member
             channel_count = self.read_channel_count(file_name)
             # we assume the tile shape is constant, so we can cache it
             if self.tile_shape is None:
@@ -293,8 +346,14 @@ class CziImageReader(ImageReader):
 
             assert self.tile_shape is not None, "Cannot read tile shape format."
 
+            if channel_index is not None:
+                data = self._read_array_single_channel(
+                    czi_file, channel_index, dtype, z_slice
+                )
+                data = data.reshape(data.shape + (1,))
+                return data
             # we assume either all channel are in one tile or each tile is single channel
-            if self.tile_shape[channel_index] != channel_count:
+            elif self.tile_shape[c_index] != channel_count:
                 x_count, y_count = self.read_dimensions(file_name)
                 output = np.empty((channel_count, x_count, y_count), dtype)
                 # format is (channel_count, x, y)
@@ -351,11 +410,17 @@ class ImageReaderManager:
             ".czi": CziImageReader(),
         }
 
-    def read_array(self, file_name: str, dtype: np.dtype, z_slice: int) -> np.ndarray:
+    def read_array(
+        self,
+        file_name: str,
+        dtype: np.dtype,
+        z_slice: int,
+        channel_index: Optional[int],
+    ) -> np.ndarray:
         _, ext = path.splitext(file_name)
 
         # Image shape will be (x, y, channel_count, z=1) or (x, y, z=1)
-        image = self.readers[ext].read_array(file_name, dtype, z_slice)
+        image = self.readers[ext].read_array(file_name, dtype, z_slice, channel_index)
         # Standardize the image shape to (x, y, channel_count, z=1)
         if image.ndim == 3:
             image = image.reshape(image.shape + (1,))

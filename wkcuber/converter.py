@@ -1,11 +1,12 @@
 from argparse import ArgumentParser, Namespace
 from os import path, sep
 from pathlib import Path
-from typing import Iterable, List, Any, Tuple, Dict, Set, Callable, cast
+from typing import Iterable, List, Any, Tuple, Dict, Set, Callable, cast, Optional
 
 from .cubing import (
     cubing as cube_image_stack,
     create_parser as create_image_stack_parser,
+    get_channel_count_and_dtype,
 )
 from .convert_knossos import (
     main as convert_knossos,
@@ -299,6 +300,20 @@ class ImageStackConverter(Converter):
         self.layer_path_to_layer_name: Dict[str, str] = dict()
         self.dataset_names: Set[str] = set()
 
+    @staticmethod
+    def get_view_configuration(index: int) -> Optional[dict]:
+        color = None
+        if index == 0:
+            color = [255, 0, 0]
+        elif index == 1:
+            color = [0, 255, 0]
+        elif index == 2:
+            color = [0, 0, 255]
+        if color is not None:
+            return {"color": color}
+        else:
+            return None
+
     def accepts_input(self, source_path: str) -> bool:
         source_files = get_source_files(source_path, image_reader.readers.keys(), True)
 
@@ -354,18 +369,45 @@ class ImageStackConverter(Converter):
         ) = self.detect_dataset_name_and_layer_path_to_layer_name()
         put_default_if_not_present(args, "name", dataset_name)
 
+        bounding_box = None
+        view_configuration = dict()
         for layer_path, layer_name in layer_path_to_name.items():
-            args.layer_name = layer_name
             args.source_path = layer_path
-            cube_image_stack(
-                args.source_path,
-                args.target_path,
-                args.layer_name,
-                args.batch_size if "batch_size" in args else None,
-                args,
-            )
+            channel_count, dtype = get_channel_count_and_dtype(layer_path)
+            if channel_count > 1 and not (channel_count == 3 and dtype == "uint8"):
+                for i in range(channel_count):
+                    args.layer_name = layer_name + str(i)
+                    args.channel_index = i
+                    bounding_box = cube_image_stack(
+                        args.source_path,
+                        args.target_path,
+                        args.layer_name,
+                        args.batch_size if "batch_size" in args else None,
+                        args,
+                    )
+                    view_configuration[
+                        args.layer_name
+                    ] = ImageStackConverter.get_view_configuration(i)
 
-        return True
+            else:
+                args.layer_name = layer_name
+                bounding_box = cube_image_stack(
+                    args.source_path,
+                    args.target_path,
+                    args.layer_name,
+                    args.batch_size if "batch_size" in args else None,
+                    args,
+                )
+
+        write_webknossos_metadata(
+            args.target_path,
+            args.name,
+            args.scale,
+            exact_bounding_box=bounding_box,
+            view_configuration=view_configuration,
+        )
+
+        return False
 
     def detect_dataset_name_and_layer_path_to_layer_name(
         self,

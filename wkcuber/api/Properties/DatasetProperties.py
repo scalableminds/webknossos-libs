@@ -22,6 +22,7 @@ class Properties:
         scale: Tuple[float, float, float],
         team: str = "",
         data_layers: Dict[str, LayerProperties] = None,
+        default_view_configuration: Optional[dict] = None,
     ) -> None:
         self._path = str(path)
         self._name = name
@@ -31,6 +32,7 @@ class Properties:
             self._data_layers = {}
         else:
             self._data_layers = data_layers
+        self._default_view_configuration = default_view_configuration
 
     @classmethod
     def _from_json(cls, path: Union[str, Path]) -> "Properties":
@@ -114,6 +116,10 @@ class Properties:
     def data_layers(self) -> dict:
         return self._data_layers
 
+    @property
+    def default_view_configuration(self) -> Optional[dict]:
+        return self._default_view_configuration
+
 
 class WKProperties(Properties):
     @classmethod
@@ -134,7 +140,12 @@ class WKProperties(Properties):
                     )
 
             return cls(
-                path, data["id"]["name"], data["scale"], data["id"]["team"], data_layers
+                path,
+                data["id"]["name"],
+                data["scale"],
+                data["id"]["team"],
+                data_layers,
+                data.get("defaultViewConfiguration"),
             )
 
     def _export_as_json(self) -> None:
