@@ -137,25 +137,17 @@ class Dm4ImageReader(ImageReader):
         return "uint16"
 
 
-def find_count_of_axis(tif_file: TiffFile, axis: str) -> int:
-    assert len(tif_file.series) == 1, "only single tif series are supported"
-    tif_series = tif_file.series[0]
-    index = tif_series.axes.find(axis)
-    if index == -1:
-        return 1
-    else:
-        return tif_series.shape[index]  # pylint: disable=unsubscriptable-object
-
-
-def find_count_of_czi_axis(czi_file: CziFile, axis: str) -> int:
-    index = czi_file.axes.find(axis)
-    if index == -1:
-        return 1
-    else:
-        return czi_file.shape[index]
-
-
 class TiffImageReader(ImageReader):
+    @staticmethod
+    def find_count_of_axis(tif_file: TiffFile, axis: str) -> int:
+        assert len(tif_file.series) == 1, "only single tif series are supported"
+        tif_series = tif_file.series[0]
+        index = tif_series.axes.find(axis)
+        if index == -1:
+            return 1
+        else:
+            return tif_series.shape[index]  # pylint: disable=unsubscriptable-object
+
     def read_array(self, file_name: str, dtype: np.dtype, z_slice: int) -> np.ndarray:
         with TiffFile(file_name) as tif_file:
             num_channels = self.read_channel_count(file_name)
@@ -191,15 +183,18 @@ class TiffImageReader(ImageReader):
 
     def read_dimensions(self, file_name: str) -> Tuple[int, int]:
         with TiffFile(file_name) as tif_file:
-            return find_count_of_axis(tif_file, "X"), find_count_of_axis(tif_file, "Y")
+            return (
+                TiffImageReader.find_count_of_axis(tif_file, "X"),
+                TiffImageReader.find_count_of_axis(tif_file, "Y"),
+            )
 
     def read_channel_count(self, file_name: str) -> int:
         with TiffFile(file_name) as tif_file:
-            return find_count_of_axis(tif_file, "C")
+            return TiffImageReader.find_count_of_axis(tif_file, "C")
 
     def read_z_slices_per_file(self, file_name: str) -> int:
         with TiffFile(file_name) as tif_file:
-            return find_count_of_axis(tif_file, "Z")
+            return TiffImageReader.find_count_of_axis(tif_file, "Z")
 
     def read_dtype(self, file_name: str) -> str:
         with TiffFile(file_name) as tif_file:
@@ -211,6 +206,14 @@ class TiffImageReader(ImageReader):
 class CziImageReader(ImageReader):
     def __init__(self) -> None:
         self.tile_shape = None
+
+    @staticmethod
+    def find_count_of_axis(czi_file: CziFile, axis: str) -> int:
+        index = czi_file.axes.find(axis)
+        if index == -1:
+            return 1
+        else:
+            return czi_file.shape[index]
 
     # returns format (X, Y)
     def _read_array_single_channel(
@@ -227,7 +230,9 @@ class CziImageReader(ImageReader):
                 entry.start[z_index] - z_file_start == z_slice
                 and entry.start[channel_index] - channel_file_start == channel_slice
             ):
+                # This case assumes that the data-segment contains a single channel and a single z slice
                 data = entry.data_segment().data()
+                # We are not sure if the order of the X and Y dimensions is always the same, so we check that we always produce the correct output format
                 if x_index > y_index:
                     data = data.reshape(data.shape[y_index], data.shape[x_index])
                     data = data.swapaxes(0, 1)
@@ -240,22 +245,26 @@ class CziImageReader(ImageReader):
     def _read_array_all_channels(
         self, czi_file: CziFile, dtype: np.dtype, z_slice: int
     ) -> np.ndarray:
+        # There can be a lot of axes in the czi_file, but we are only interested in the x, y and c indices
         x_index = czi_file.axes.find("X")
         y_index = czi_file.axes.find("Y")
         z_index = czi_file.axes.find("Z")
         c_index = czi_file.axes.find("C")
         indices = [(x_index, "X"), (y_index, "Y"), (c_index, "C")]
+        # We are not sure, which ordering these indices have, so we order them to correctly reshape the data
         indices.sort()
 
         z_start = czi_file.start[z_index]
         for entry in czi_file.filtered_subblock_directory:
             if entry.start[z_index] - z_start == z_slice:
                 data = entry.data_segment().data()
+                # Reshaping the data to the shape of the selected axes from above
                 data = data.reshape(
                     data.shape[indices[0][0]],
                     data.shape[indices[1][0]],
                     data.shape[indices[2][0]],
                 )
+                # After reshaping the data to the ordered indices, we now change the format to (X, Y, channel_count)
                 data = np.transpose(
                     data,
                     (
@@ -302,17 +311,18 @@ class CziImageReader(ImageReader):
 
     def read_dimensions(self, file_name: str) -> Tuple[int, int]:
         with CziFile(file_name) as czi_file:
-            return find_count_of_czi_axis(czi_file, "X"), find_count_of_czi_axis(
-                czi_file, "Y"
+            return (
+                CziImageReader.find_count_of_axis(czi_file, "X"),
+                CziImageReader.find_count_of_axis(czi_file, "Y"),
             )
 
     def read_channel_count(self, file_name: str) -> int:
         with CziFile(file_name) as czi_file:
-            return find_count_of_czi_axis(czi_file, "C")
+            return CziImageReader.find_count_of_axis(czi_file, "C")
 
     def read_z_slices_per_file(self, file_name: str) -> int:
         with CziFile(file_name) as czi_file:
-            return find_count_of_czi_axis(czi_file, "Z")
+            return CziImageReader.find_count_of_axis(czi_file, "Z")
 
     def read_dtype(self, file_name: str) -> str:
         with CziFile(file_name) as czi_file:
