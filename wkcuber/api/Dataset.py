@@ -276,7 +276,7 @@ class AbstractDataset(Generic[LayerT]):
         layer_name = foreign_layer_path.name
         if layer_name in self.layers.keys():
             raise IndexError(
-                f"Cannot create symlink to {str(foreign_layer_path)}. This dataset already has a layer called {layer_name}."
+                f"Cannot create symlink to {foreign_layer_path}. This dataset already has a layer called {layer_name}."
             )
 
         os.symlink(foreign_layer_path, join(self.path, layer_name))

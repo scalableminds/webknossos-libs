@@ -133,7 +133,7 @@ def compress_mags(
     args: Namespace = None,
 ) -> None:
     if target_path is None:
-        target = source_path.with_suffix(source_path.suffix + ".tmp")
+        target = source_path.with_suffix(".tmp")
     else:
         target = target_path
 

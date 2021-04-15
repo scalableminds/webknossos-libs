@@ -56,7 +56,7 @@ logger = getLogger(__name__)
 
 def open_wkw(info: WkwDatasetInfo) -> wkw.Dataset:
     ds = wkw.Dataset.open(
-        path.join(info.dataset_path, info.layer_name, str(info.mag)), info.header
+        str(info.dataset_path / info.layer_name / str(info.mag)), info.header
     )
     return ds
 

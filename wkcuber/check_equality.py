@@ -65,7 +65,7 @@ def assert_equality_for_chunk(
 ) -> None:
     wk_dataset = WKDataset(source_path)
     layer = wk_dataset.layers[layer_name]
-    backup_wkw_info = WkwDatasetInfo(str(target_path), layer_name, mag, header=None)
+    backup_wkw_info = WkwDatasetInfo(target_path, layer_name, mag, header=None)
     with open_wkw(backup_wkw_info) as backup_wkw:
         mag_ds = layer.get_mag(mag)
         logging.info(f"Checking sub_box: {sub_box}")
