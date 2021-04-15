@@ -167,4 +167,6 @@ def compress_mags(
 if __name__ == "__main__":
     args = create_parser().parse_args()
     setup_logging(args)
-    compress_mags(Path(args.source_path), args.layer_name, Path(args.target_path), args.mag, args)
+    compress_mags(
+        Path(args.source_path), args.layer_name, Path(args.target_path), args.mag, args
+    )
