@@ -345,7 +345,7 @@ if __name__ == "__main__":
     input_path_pattern = os.path.join(args.source_path, args.input_path_pattern)
 
     tile_cubing(
-        args.target_path,
+        Path(args.target_path),
         args.layer_name,
         int(args.batch_size),
         input_path_pattern,

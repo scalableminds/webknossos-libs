@@ -110,7 +110,12 @@ def convert_knossos(
 
 def main(args: Namespace) -> None:
     convert_knossos(
-        args.source_path, args.target_path, args.layer_name, args.dtype, args.mag, args
+        Path(args.source_path),
+        Path(args.target_path),
+        args.layer_name,
+        args.dtype,
+        args.mag,
+        args,
     )
 
 

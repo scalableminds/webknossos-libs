@@ -324,8 +324,8 @@ if __name__ == "__main__":
     setup_logging(args)
 
     cubing(
-        args.source_path,
-        args.target_path,
+        Path(args.source_path),
+        Path(args.target_path),
         args.layer_name,
         args.batch_size,
         args=args,

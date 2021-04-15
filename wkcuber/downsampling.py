@@ -175,7 +175,7 @@ if __name__ == "__main__":
 
     if args.anisotropic_target_mag or not args.isotropic:
         downsample_mags_anisotropic(
-            args.path,
+            Path(args.path),
             args.layer_name,
             from_mag,
             Mag(args.anisotropic_target_mag)
@@ -189,7 +189,7 @@ if __name__ == "__main__":
         )
     else:
         downsample_mags_isotropic(
-            args.path,
+            Path(args.path),
             args.layer_name,
             from_mag,
             max_mag,

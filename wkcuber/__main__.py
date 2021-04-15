@@ -73,7 +73,7 @@ def main(args: Namespace) -> None:
             layer_name = layer_path.stem
             mags.sort()
             downsample_mags_anisotropic(
-                args.target_path,
+                Path(args.target_path),
                 layer_name,
                 mags[-1],
                 Mag(args.max_mag),
@@ -88,7 +88,7 @@ def main(args: Namespace) -> None:
             layer_name = layer_path.stem
             mags.sort()
             downsample_mags_isotropic(
-                args.target_path,
+                Path(args.target_path),
                 layer_name,
                 mags[-1],
                 Mag(args.max_mag),

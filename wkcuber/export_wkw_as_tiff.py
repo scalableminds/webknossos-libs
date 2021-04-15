@@ -242,7 +242,7 @@ def export_wkw_as_tiff(args: Namespace) -> None:
 
     if args.bbox is None:
         _, _, bbox_dim, origin = read_metadata_for_layer(
-            args.source_path, args.layer_name
+            Path(args.source_path), args.layer_name
         )
         bbox = {"topleft": origin, "size": bbox_dim}
     else:

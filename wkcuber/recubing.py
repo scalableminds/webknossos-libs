@@ -185,8 +185,8 @@ if __name__ == "__main__":
     setup_logging(args)
 
     recube(
-        args.source_path,
-        args.target_path,
+        Path(args.source_path),
+        Path(args.target_path),
         args.layer_name,
         args.dtype,
         args.wkw_file_len,
