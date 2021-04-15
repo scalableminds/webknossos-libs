@@ -48,6 +48,7 @@ from wkcuber.downsampling_utils import (
     downsample_cube_job,
     determine_buffer_edge_len,
 )
+from wkcuber.upsampling_utils import upsample_cube_job
 from wkcuber.mag import Mag
 from wkcuber.utils import (
     DEFAULT_WKW_FILE_LEN,
@@ -330,13 +331,11 @@ class Layer(Generic[MagT]):
                         prev_mag_ds.view
                     )  # DEFAULT_EDGE_LEN
                 func = named_partial(
-                    downsample_cube_job,
+                    upsample_cube_job,
                     mag_factors=mag_factors,
-                    interpolation_mode=None,
                     buffer_edge_len=buffer_edge_len,
                     compress=compress,
                     job_count_per_log=job_count_per_log,
-                    upsample=True,
                 )
                 prev_mag_ds.get_view().for_zipped_chunks(
                     # this view is restricted to the bounding box specified in the properties

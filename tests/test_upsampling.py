@@ -4,7 +4,7 @@ from typing import Tuple, cast
 
 from wkcuber.api.Dataset import WKDataset
 from wkcuber.api.Layer import Layer
-from wkcuber.downsampling_utils import upsample_cube, downsample_cube_job
+from wkcuber.upsampling_utils import upsample_cube, upsample_cube_job
 from wkcuber.mag import Mag
 import numpy as np
 
@@ -71,7 +71,7 @@ def upsample_test_helper(use_compress: bool) -> None:
         )[0]
         assert np.any(source_buffer != 0)
 
-        downsample_cube_job(
+        upsample_cube_job(
             (
                 mag2.get_view(offset=source_offset, size=source_size),
                 mag1.get_view(
@@ -82,11 +82,9 @@ def upsample_test_helper(use_compress: bool) -> None:
                 0,
             ),
             [0.5, 0.5, 1.0],
-            None,
             CUBE_EDGE_LEN,
             use_compress,
             100,
-            upsample=True,
         )
 
         assert np.any(source_buffer != 0)
@@ -129,14 +127,12 @@ def test_upsample_multi_channel() -> None:
 
     l._initialize_mag_from_other_mag("1", mag2, False)
 
-    downsample_cube_job(
+    upsample_cube_job(
         (mag2.get_view(), l.get_mag("1").get_view(is_bounded=False), 0),
         [0.5, 0.5, 0.5],
-        None,
         CUBE_EDGE_LEN,
         False,
         100,
-        upsample=True,
     )
 
     channels = []

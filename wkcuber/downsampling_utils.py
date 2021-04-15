@@ -288,49 +288,23 @@ def downsample_cube(
         raise Exception("Invalid interpolation mode: {}".format(interpolation_mode))
 
 
-def upsample_cube(cube_buffer: np.ndarray, factors: List[int]) -> np.ndarray:
-    ds = cube_buffer.shape
-    out_buf = np.zeros(tuple(s * f for s, f in zip(ds, factors)), cube_buffer.dtype)
-    for dx in (0, factors[0] - 1):
-        for dy in (0, factors[1] - 1):
-            for dz in (0, factors[2] - 1):
-                out_buf[
-                    dx : out_buf.shape[0] : factors[0],
-                    dy : out_buf.shape[1] : factors[1],
-                    dz : out_buf.shape[2] : factors[2],
-                ] = cube_buffer
-    return out_buf
-
-
 def downsample_cube_job(
     args: Tuple[View, View, int],
-    mag_factors: Union[List[float], List[int]],
-    interpolation_mode: Optional[InterpolationModes],
+    mag_factors: List[int],
+    interpolation_mode: InterpolationModes,
     buffer_edge_len: int,
     compress: bool,
     job_count_per_log: int,
-    upsample: bool = False,
 ) -> None:
     (source_view, target_view, i) = args
     use_logging = i % job_count_per_log == 0
 
-    if upsample:
-        assert all(
-            1 >= f for f in mag_factors
-        ), f"mag_factors ({mag_factors}) for upsampling must be smaller than 1"
-    else:
-        assert (
-            interpolation_mode is not None
-        ), "Downsampling requires an interpolation_mode"
-
-    sampling_variant = "Upsampling" if upsample else "Downsampling"
-
     if use_logging:
-        logging.info(f"{sampling_variant} of {target_view.global_offset}")
+        logging.info(f"Downsampling of {target_view.global_offset}")
 
     try:
         if use_logging:
-            time_start(f"{sampling_variant} of {target_view.global_offset}")
+            time_start(f"Downsampling of {target_view.global_offset}")
 
         num_channels = target_view.header.num_channels
         shape = (num_channels,) + tuple(target_view.size)
@@ -369,20 +343,12 @@ def downsample_cube_job(
                 cube_buffer = cube_buffer_channels[channel_index]
 
                 if not np.all(cube_buffer == 0):
-                    if upsample:
-                        # Upsample the buffer
-                        inverse_factors = [int(1 / f) for f in mag_factors]
-                        data_cube = upsample_cube(cube_buffer, inverse_factors)
-                    else:
-                        # Downsample the buffer
-                        assert (
-                            interpolation_mode is not None
-                        ), "Downsampling reqiures an Interpolation Mode"
-                        data_cube = downsample_cube(
-                            cube_buffer,
-                            cast(List[int], mag_factors),
-                            interpolation_mode,
-                        )
+                    # Downsample the buffer
+                    data_cube = downsample_cube(
+                        cube_buffer,
+                        mag_factors,
+                        interpolation_mode,
+                    )
 
                     buffer_offset = target_offset
                     buffer_end = buffer_offset + data_cube.shape
@@ -400,10 +366,8 @@ def downsample_cube_job(
             file_buffer = file_buffer[0]  # remove channel dimension
         target_view.write(file_buffer, allow_compressed_write=compress)
         if use_logging:
-            time_stop(f"{sampling_variant} of {target_view.global_offset}")
+            time_stop(f"Downsampling of {target_view.global_offset}")
 
     except Exception as exc:
-        logging.error(
-            f"{sampling_variant} of {target_view.global_offset} failed with {exc}"
-        )
+        logging.error(f"Downsampling of {target_view.global_offset} failed with {exc}")
         raise exc
