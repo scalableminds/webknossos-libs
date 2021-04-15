@@ -65,6 +65,31 @@ def get_next_mag(mag: Mag, scale: Optional[Tuple[float, float, float]]) -> Mag:
         )
 
 
+def get_previous_mag(mag: Mag, scale: Optional[Tuple[float, float, float]]) -> Mag:
+    if scale is None:
+        return mag.divided_by(2)
+    else:
+        max_index, min_index = detect_larger_and_smaller_dimension(scale)
+        mag_array = mag.to_array()
+        scale_increase = [1, 1, 1]
+
+        if (
+            mag_array[min_index] // scale[min_index]
+            > mag_array[max_index] // scale[max_index]
+        ):
+            for i in range(len(scale_increase)):
+                scale_increase[i] = 1 if scale[i] == scale[max_index] else 2
+        else:
+            scale_increase = [2, 2, 2]
+        return Mag(
+            [
+                max(mag_array[0] // scale_increase[0], 1),
+                max(mag_array[1] // scale_increase[1], 1),
+                max(mag_array[2] // scale_increase[2], 1),
+            ]
+        )
+
+
 def calculate_virtual_scale_for_target_mag(
     target_mag: Mag,
 ) -> Tuple[float, float, float]:
@@ -275,11 +300,11 @@ def downsample_cube_job(
     use_logging = i % job_count_per_log == 0
 
     if use_logging:
-        logging.info("Downsampling of {}".format(target_view.global_offset))
+        logging.info(f"Downsampling of {target_view.global_offset}")
 
     try:
         if use_logging:
-            time_start("Downsampling of {}".format(target_view.global_offset))
+            time_start(f"Downsampling of {target_view.global_offset}")
 
         num_channels = target_view.header.num_channels
         shape = (num_channels,) + tuple(target_view.size)
@@ -298,12 +323,12 @@ def downsample_cube_job(
 
         for tile in tiles:
             target_offset = np.array(tile) * buffer_edge_len
-            source_offset = mag_factors * target_offset
+            source_offset = (mag_factors * target_offset).astype(int)
             source_size = cast(
                 Tuple[int, int, int],
                 tuple(
                     [
-                        min(a, b)
+                        int(min(a, b))
                         for a, b in zip(
                             np.array(mag_factors) * buffer_edge_len,
                             source_view.size - source_offset,
@@ -320,7 +345,9 @@ def downsample_cube_job(
                 if not np.all(cube_buffer == 0):
                     # Downsample the buffer
                     data_cube = downsample_cube(
-                        cube_buffer, mag_factors, interpolation_mode
+                        cube_buffer,
+                        mag_factors,
+                        interpolation_mode,
                     )
 
                     buffer_offset = target_offset
@@ -339,10 +366,8 @@ def downsample_cube_job(
             file_buffer = file_buffer[0]  # remove channel dimension
         target_view.write(file_buffer, allow_compressed_write=compress)
         if use_logging:
-            time_stop("Downsampling of {}".format(target_view.global_offset))
+            time_stop(f"Downsampling of {target_view.global_offset}")
 
     except Exception as exc:
-        logging.error(
-            "Downsampling of {} failed with {}".format(target_view.global_offset, exc)
-        )
+        logging.error(f"Downsampling of {target_view.global_offset} failed with {exc}")
         raise exc

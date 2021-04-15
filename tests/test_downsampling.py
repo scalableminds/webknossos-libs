@@ -11,6 +11,7 @@ from wkcuber.downsampling_utils import (
     downsample_cube_job,
     get_next_mag,
     calculate_default_max_mag,
+    get_previous_mag,
 )
 import wkw
 from wkcuber.mag import Mag
@@ -214,6 +215,15 @@ def test_anisotropic_mag_calculation() -> None:
             f" Magnification of {mag_tests[i][1]} with "
             f"the size {mag_tests[i][0]} should be {mag_tests[i][2]} "
             f"and not {next_mag}"
+        )
+
+    for i in range(len(mag_tests)):
+        previous_mag = get_previous_mag(mag_tests[i][2], mag_tests[i][0])
+        assert mag_tests[i][1] == previous_mag, (
+            "The previous anisotropic"
+            f" Magnification of {mag_tests[i][2]} with "
+            f"the size {mag_tests[i][0]} should be {mag_tests[i][1]} "
+            f"and not {previous_mag}"
         )
 
 
