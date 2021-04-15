@@ -1,5 +1,6 @@
 import time
 import logging
+from pathlib import Path
 from typing import Tuple, cast
 
 import wkw
@@ -76,8 +77,8 @@ def convert_cube_job(
 
 
 def convert_knossos(
-    source_path: str,
-    target_path: str,
+    source_path: Path,
+    target_path: Path,
     layer_name: str,
     dtype: str,
     mag: int = 1,

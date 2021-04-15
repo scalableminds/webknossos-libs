@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 from typing import List, Tuple
 
 import wkw
@@ -73,8 +74,8 @@ def next_higher_divisible_by(number: int, divisor: int) -> int:
 
 
 def recube(
-    source_path: str,
-    target_path: str,
+    source_path: Path,
+    target_path: Path,
     layer_name: str,
     dtype: str,
     wkw_file_len: int = 32,

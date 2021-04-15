@@ -89,9 +89,9 @@ LayerT = TypeVar("LayerT", bound=Layer)
 
 class AbstractDataset(Generic[LayerT]):
     @abstractmethod
-    def __init__(self, dataset_path: Union[str, Path]) -> None:
+    def __init__(self, dataset_path: Path) -> None:
         properties: Properties = self._get_properties_type()._from_json(
-            join(dataset_path, Properties.FILE_NAME)
+            dataset_path / Properties.FILE_NAME
         )
         self.layers: Dict[str, LayerT] = {}
         self.path = Path(properties.path).parent
@@ -112,27 +112,26 @@ class AbstractDataset(Generic[LayerT]):
 
     @classmethod
     def create_with_properties(cls, properties: Properties) -> "AbstractDataset":
-        dataset_path = path.dirname(properties.path)
-
-        if os.path.exists(dataset_path):
-            assert os.path.isdir(
-                dataset_path
-            ), f"Creation of Dataset at {dataset_path} failed, because a file already exists at this path."
+        dataset_dir = properties.path.parent
+        if dataset_dir.exists():
+            assert (
+                dataset_dir.is_dir()
+            ), f"Creation of Dataset at {dataset_dir} failed, because a file already exists at this path."
             assert not os.listdir(
-                dataset_path
-            ), f"Creation of Dataset at {dataset_path} failed, because a non-empty folder already exists at this path."
+                dataset_dir
+            ), f"Creation of Dataset at {dataset_dir} failed, because a non-empty folder already exists at this path."
 
         # create directories on disk and write datasource-properties.json
         try:
-            makedirs(dataset_path, exist_ok=True)
+            makedirs(dataset_dir, exist_ok=True)
             properties._export_as_json()
         except OSError as e:
             raise type(e)(
-                "Creation of Dataset {} failed. ".format(dataset_path) + repr(e)
+                "Creation of Dataset {} failed. ".format(dataset_dir) + repr(e)
             )
 
         # initialize object
-        return cls(dataset_path)
+        return cls(dataset_dir)
 
     def get_properties(self) -> Properties:
         return self.properties
@@ -272,19 +271,19 @@ class AbstractDataset(Generic[LayerT]):
         # delete files on disk
         rmtree(join(self.path, layer_name))
 
-    def add_symlink_layer(self, foreign_layer_path: Union[str, Path]) -> LayerT:
-        foreign_layer_path = os.path.abspath(foreign_layer_path)
-        layer_name = os.path.basename(os.path.normpath(foreign_layer_path))
+    def add_symlink_layer(self, foreign_layer_path: Path) -> LayerT:
+        foreign_layer_path = Path(os.path.abspath(foreign_layer_path))
+        layer_name = foreign_layer_path.name
         if layer_name in self.layers.keys():
             raise IndexError(
-                f"Cannot create symlink to {foreign_layer_path}. This dataset already has a layer called {layer_name}."
+                f"Cannot create symlink to {str(foreign_layer_path)}. This dataset already has a layer called {layer_name}."
             )
 
         os.symlink(foreign_layer_path, join(self.path, layer_name))
 
         # copy the properties of the layer into the properties of this dataset
         layer_properties = self._get_type()(
-            Path(foreign_layer_path).parent
+            foreign_layer_path.parent
         ).properties.data_layers[layer_name]
         self.properties.data_layers[layer_name] = layer_properties
         self.properties._export_as_json()
@@ -378,7 +377,7 @@ class AbstractDataset(Generic[LayerT]):
 
     def to_wk_dataset(
         self,
-        new_dataset_path: Union[str, Path],
+        new_dataset_path: Path,
         scale: Optional[Tuple[float, float, float]] = None,
     ) -> "WKDataset":
         if scale is None:
@@ -389,7 +388,7 @@ class AbstractDataset(Generic[LayerT]):
 
     def to_tiff_dataset(
         self,
-        new_dataset_path: Union[str, Path],
+        new_dataset_path: Path,
         scale: Optional[Tuple[float, float, float]] = None,
         pattern: Optional[str] = None,
     ) -> "TiffDataset":
@@ -401,7 +400,7 @@ class AbstractDataset(Generic[LayerT]):
 
     def to_tiled_tiff_dataset(
         self,
-        new_dataset_path: Union[str, Path],
+        new_dataset_path: Path,
         tile_size: Tuple[int, int],
         scale: Optional[Tuple[float, float, float]] = None,
         pattern: Optional[str] = None,
@@ -426,19 +425,19 @@ class AbstractDataset(Generic[LayerT]):
 class WKDataset(AbstractDataset[WKLayer]):
     @classmethod
     def create(
-        cls, dataset_path: Union[str, Path], scale: Tuple[float, float, float]
+        cls, dataset_path: Path, scale: Tuple[float, float, float]
     ) -> "WKDataset":
         name = basename(normpath(dataset_path))
-        properties = WKProperties(join(dataset_path, Properties.FILE_NAME), name, scale)
+        properties = WKProperties(dataset_path / Properties.FILE_NAME, name, scale)
         return cast(WKDataset, WKDataset.create_with_properties(properties))
 
     @classmethod
     def get_or_create(
-        cls, dataset_path: Union[str, Path], scale: Tuple[float, float, float]
+        cls, dataset_path: Path, scale: Tuple[float, float, float]
     ) -> "WKDataset":
-        if os.path.exists(
-            join(dataset_path, Properties.FILE_NAME)
-        ):  # use the properties file to check if the Dataset exists
+        if (
+            dataset_path / Properties.FILE_NAME
+        ).exists():  # use the properties file to check if the Dataset exists
             ds = WKDataset(dataset_path)
             assert tuple(ds.properties.scale) == tuple(
                 scale
@@ -447,7 +446,7 @@ class WKDataset(AbstractDataset[WKLayer]):
         else:
             return cls.create(dataset_path, scale)
 
-    def __init__(self, dataset_path: Union[str, Path]) -> None:
+    def __init__(self, dataset_path: Path) -> None:
         super().__init__(dataset_path)
         self._data_format = "wkw"
         assert isinstance(self.properties, WKProperties)
@@ -470,16 +469,16 @@ class TiffDataset(AbstractDataset[TiffLayer]):
     @classmethod
     def create(
         cls,
-        dataset_path: Union[str, Path],
+        dataset_path: Path,
         scale: Tuple[float, float, float],
         pattern: Optional[str] = None,
     ) -> "TiffDataset":
         if pattern is None:
             pattern = "{zzzzz}.tif"
         validate_pattern(pattern)
-        name = basename(normpath(dataset_path))
+        name = dataset_path.name
         properties = TiffProperties(
-            join(dataset_path, "datasource-properties.json"),
+            dataset_path / "datasource-properties.json",
             name,
             scale,
             pattern=pattern,
@@ -490,7 +489,7 @@ class TiffDataset(AbstractDataset[TiffLayer]):
     @classmethod
     def get_or_create(
         cls,
-        dataset_path: Union[str, Path],
+        dataset_path: Path,
         scale: Tuple[float, float, float],
         pattern: str = None,
     ) -> "TiffDataset":
@@ -512,7 +511,7 @@ class TiffDataset(AbstractDataset[TiffLayer]):
             else:
                 return cls.create(dataset_path, scale, pattern)
 
-    def __init__(self, dataset_path: Union[str, Path]) -> None:
+    def __init__(self, dataset_path: Path) -> None:
         super().__init__(dataset_path)
         self.data_format = "tiff"
         assert isinstance(self.properties, TiffProperties)
@@ -535,7 +534,7 @@ class TiledTiffDataset(AbstractDataset[TiledTiffLayer]):
     @classmethod
     def create(
         cls,
-        dataset_path: Union[str, Path],
+        dataset_path: Path,
         scale: Tuple[float, float, float],
         tile_size: Tuple[int, int],
         pattern: Optional[str] = None,
@@ -543,9 +542,9 @@ class TiledTiffDataset(AbstractDataset[TiledTiffLayer]):
         if pattern is None:
             pattern = "{xxxxx}/{yyyyy}/{zzzzz}.tif"
         validate_pattern(pattern)
-        name = basename(normpath(dataset_path))
+        name = dataset_path.name
         properties = TiffProperties(
-            join(dataset_path, "datasource-properties.json"),
+            dataset_path / "datasource-properties.json",
             name,
             scale,
             pattern=pattern,
@@ -558,7 +557,7 @@ class TiledTiffDataset(AbstractDataset[TiledTiffLayer]):
     @classmethod
     def get_or_create(
         cls,
-        dataset_path: Union[str, Path],
+        dataset_path: Path,
         scale: Tuple[float, float, float],
         tile_size: Tuple[int, int],
         pattern: str = None,
@@ -585,7 +584,7 @@ class TiledTiffDataset(AbstractDataset[TiledTiffLayer]):
             else:
                 return cls.create(dataset_path, scale, tile_size, pattern)
 
-    def __init__(self, dataset_path: Union[str, Path]) -> None:
+    def __init__(self, dataset_path: Path) -> None:
         super().__init__(dataset_path)
         self.data_format = "tiled_tiff"
         assert isinstance(self.properties, TiffProperties)

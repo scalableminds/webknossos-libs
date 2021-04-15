@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from .cubing import cubing, create_parser as create_cubing_parser
 from .downsampling import downsample_mags_isotropic, downsample_mags_anisotropic
 from .compress import compress_mag_inplace
@@ -36,15 +38,15 @@ def main(args: Namespace) -> None:
     setup_logging(args)
 
     bounding_box = cubing(
-        args.source_path,
-        args.target_path,
+        Path(args.source_path),
+        Path(args.target_path),
         args.layer_name,
         args.batch_size if "batch_size" in args else None,
         args,
     )
 
     write_webknossos_metadata(
-        args.target_path,
+        Path(args.target_path),
         args.name,
         args.scale,
         compute_max_id=False,
@@ -56,7 +58,7 @@ def main(args: Namespace) -> None:
 
     if not args.isotropic:
         downsample_mags_anisotropic(
-            args.target_path,
+            Path(args.target_path),
             args.layer_name,
             Mag(1),
             Mag(args.max_mag),
@@ -68,7 +70,7 @@ def main(args: Namespace) -> None:
 
     else:
         downsample_mags_isotropic(
-            args.target_path,
+            Path(args.target_path),
             args.layer_name,
             Mag(1),
             Mag(args.max_mag),
@@ -77,7 +79,7 @@ def main(args: Namespace) -> None:
             args=args,
         )
 
-    refresh_metadata(args.target_path)
+    refresh_metadata(Path(args.target_path))
 
 
 if __name__ == "__main__":

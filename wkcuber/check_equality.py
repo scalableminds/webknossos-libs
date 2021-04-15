@@ -1,5 +1,6 @@
 import logging
 from argparse import ArgumentParser, Namespace
+from pathlib import Path
 from typing import Any, Callable
 
 from wkcuber.api.Dataset import WKDataset
@@ -56,15 +57,15 @@ def create_parser() -> ArgumentParser:
 
 
 def assert_equality_for_chunk(
-    source_path: str,
-    target_path: str,
+    source_path: Path,
+    target_path: Path,
     layer_name: str,
     mag: Mag,
     sub_box: BoundingBoxNamedTuple,
 ) -> None:
     wk_dataset = WKDataset(source_path)
     layer = wk_dataset.layers[layer_name]
-    backup_wkw_info = WkwDatasetInfo(target_path, layer_name, mag, header=None)
+    backup_wkw_info = WkwDatasetInfo(str(target_path), layer_name, mag, header=None)
     with open_wkw(backup_wkw_info) as backup_wkw:
         mag_ds = layer.get_mag(mag)
         logging.info(f"Checking sub_box: {sub_box}")
@@ -76,7 +77,9 @@ def assert_equality_for_chunk(
         ), f"Data differs in bounding box {sub_box} for layer {layer_name} with mag {mag}"
 
 
-def check_equality(source_path: str, target_path: str, args: Namespace = None) -> None:
+def check_equality(
+    source_path: Path, target_path: Path, args: Namespace = None
+) -> None:
 
     logging.info(f"Comparing {source_path} with {target_path}")
 

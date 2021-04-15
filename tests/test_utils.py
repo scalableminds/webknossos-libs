@@ -1,3 +1,6 @@
+from pathlib import Path
+from typing import Union
+
 import numpy as np
 from wkcuber.utils import get_chunks, get_regular_chunks, BufferedSliceWriter
 import wkw
@@ -8,7 +11,7 @@ from shutil import rmtree
 BLOCK_LEN = 32
 
 
-def delete_dir(relative_path: str) -> None:
+def delete_dir(relative_path: Union[str, Path]) -> None:
     if os.path.exists(relative_path) and os.path.isdir(relative_path):
         rmtree(relative_path)
 
@@ -43,17 +46,17 @@ def test_buffered_slice_writer() -> None:
     dtype = test_img.dtype
     bbox = {"topleft": (0, 0, 0), "size": (24, 24, 35)}
     origin = [0, 0, 0]
-    dataset_dir = "testoutput/buffered_slice_writer"
+    dataset_dir = Path("testoutput/buffered_slice_writer")
     layer_name = "color"
     mag = Mag(1)
-    dataset_path = os.path.join(dataset_dir, layer_name, mag.to_layer_name())
+    dataset_path = dataset_dir / layer_name / mag.to_layer_name()
 
     delete_dir(dataset_dir)
 
     with BufferedSliceWriter(dataset_dir, layer_name, dtype, origin, mag=mag) as writer:
         for i in range(13):
             writer.write_slice(i, test_img)
-        with wkw.Dataset.open(dataset_path, wkw.Header(dtype)) as data:
+        with wkw.Dataset.open(str(dataset_path), wkw.Header(dtype)) as data:
             try:
                 read_data = data.read(origin, (24, 24, 13))
                 if read_data[read_data.nonzero()].size != 0:
@@ -67,7 +70,7 @@ def test_buffered_slice_writer() -> None:
 
         for i in range(13, 32):
             writer.write_slice(i, test_img)
-        with wkw.Dataset.open(dataset_path, wkw.Header(dtype)) as data:
+        with wkw.Dataset.open(str(dataset_path), wkw.Header(dtype)) as data:
             read_data = data.read(origin, (24, 24, 32))
             assert np.squeeze(read_data).shape == (24, 24, 32), (
                 "The read data should have the shape: (24, 24, 32) "
@@ -80,7 +83,7 @@ def test_buffered_slice_writer() -> None:
         for i in range(32, 35):
             writer.write_slice(i, test_img)
 
-    with wkw.Dataset.open(dataset_path, wkw.Header(dtype)) as data:
+    with wkw.Dataset.open(str(dataset_path), wkw.Header(dtype)) as data:
         read_data = data.read(origin, (24, 24, 35))
         read_data = np.squeeze(read_data)
         assert read_data.shape == (24, 24, 35), (

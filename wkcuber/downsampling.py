@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Optional, Tuple
 
 from argparse import ArgumentParser, Namespace
@@ -84,7 +85,7 @@ def create_parser() -> ArgumentParser:
 
 
 def downsample_mags(
-    path: str,
+    path: Path,
     layer_name: str = None,
     from_mag: Mag = None,
     max_mag: Mag = Mag(32),
@@ -106,7 +107,7 @@ def downsample_mags(
     if not layer_name or not from_mag:
         layer_name = os.path.basename(os.path.dirname(path))
         from_mag = Mag(os.path.basename(path))
-        path = os.path.dirname(os.path.dirname(path))
+        path = path.parent.parent
 
     WKDataset(path).get_layer(layer_name).downsample(
         from_mag=from_mag,
@@ -121,7 +122,7 @@ def downsample_mags(
 
 
 def downsample_mags_isotropic(
-    path: str,
+    path: Path,
     layer_name: str,
     from_mag: Mag,
     max_mag: Optional[Mag],
@@ -143,7 +144,7 @@ def downsample_mags_isotropic(
 
 
 def downsample_mags_anisotropic(
-    path: str,
+    path: Path,
     layer_name: str,
     from_mag: Mag,
     max_mag: Optional[Mag],

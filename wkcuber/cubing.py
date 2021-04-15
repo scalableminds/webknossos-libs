@@ -95,17 +95,18 @@ def create_parser() -> ArgumentParser:
     return parser
 
 
-def find_source_filenames(source_path: str) -> List[str]:
+def find_source_filenames(source_path: Path) -> List[Path]:
     # Find all source files that have a matching file extension
+    if source_path.is_dir():
+        source_path_str = path.join(source_path, "*")
+    else:
+        source_path_str = str(source_path)
 
-    if Path(source_path).is_dir():
-        source_path = path.join(source_path, "*")
-
-    source_files = list(find_files(source_path, image_reader.readers.keys()))
+    source_files = list(find_files(source_path_str, image_reader.readers.keys()))
 
     assert len(source_files) > 0, (
         "No image files found in path "
-        + source_path
+        + source_path_str
         + ". Supported suffixes are "
         + str(image_reader.readers.keys())
         + "."
@@ -114,7 +115,7 @@ def find_source_filenames(source_path: str) -> List[str]:
     return natsorted(source_files)
 
 
-def read_image_file(file_name: str, dtype: type, z_slice: int) -> np.ndarray:
+def read_image_file(file_name: Path, dtype: type, z_slice: int) -> np.ndarray:
     try:
         return image_reader.read_array(file_name, dtype, z_slice)
     except Exception as exc:
@@ -235,8 +236,8 @@ def cubing_job(
 
 
 def cubing(
-    source_path: str,
-    target_path: str,
+    source_path: Path,
+    target_path: Path,
     layer_name: str,
     batch_size: Optional[int],
     args: Namespace,

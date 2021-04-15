@@ -358,8 +358,8 @@ class ImageStackConverter(Converter):
             args.layer_name = layer_name
             args.source_path = layer_path
             cube_image_stack(
-                args.source_path,
-                args.target_path,
+                Path(args.source_path),
+                Path(args.target_path),
                 args.layer_name,
                 args.batch_size if "batch_size" in args else None,
                 args,

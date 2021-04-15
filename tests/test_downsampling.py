@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 from typing import Tuple, cast
 
 import numpy as np
@@ -79,8 +80,8 @@ def test_non_linear_filter_reshape() -> None:
 
 
 def downsample_test_helper(use_compress: bool) -> None:
-    source_path = "testdata/WT1_wkw"
-    target_path = "testoutput/WT1_wkw"
+    source_path = Path("testdata/WT1_wkw")
+    target_path = Path("testoutput/WT1_wkw")
 
     try:
         shutil.rmtree(target_path)
@@ -157,7 +158,7 @@ def test_downsample_multi_channel() -> None:
     except:
         pass
 
-    ds = WKDataset.create("testoutput/multi-channel-test", (1, 1, 1))
+    ds = WKDataset.create(Path("testoutput/multi-channel-test"), (1, 1, 1))
     l = ds.add_layer(
         "color", Layer.COLOR_TYPE, dtype_per_channel="uint8", num_channels=num_channels
     )
@@ -249,7 +250,7 @@ def test_downsampling_padding() -> None:
         ),
     ]
     for args in padding_tests:
-        ds_path = "./testoutput/larger_wk_dataset/"
+        ds_path = Path("./testoutput/larger_wk_dataset/")
         try:
             shutil.rmtree(ds_path)
         except:

@@ -1,5 +1,6 @@
 from argparse import ArgumentParser, Namespace
 import os
+from pathlib import Path
 
 from wkcuber.api.Dataset import WKDataset
 from .mag import Mag
@@ -80,7 +81,7 @@ def create_parser() -> ArgumentParser:
 
 
 def upsample_mags(
-    path: str,
+    path: Path,
     layer_name: str = None,
     from_mag: Mag = None,
     target_mag: Mag = Mag(1),
@@ -100,7 +101,7 @@ def upsample_mags(
     if not layer_name or not from_mag:
         layer_name = os.path.basename(os.path.dirname(path))
         from_mag = Mag(os.path.basename(path))
-        path = os.path.dirname(os.path.dirname(path))
+        path = path.parent.parent
 
     WKDataset(path).get_layer(layer_name).upsample(
         from_mag=from_mag,

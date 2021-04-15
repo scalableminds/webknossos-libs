@@ -2,6 +2,7 @@ import functools
 import re
 import time
 from concurrent.futures._base import Future
+from pathlib import Path
 from types import TracebackType
 
 import logging
@@ -270,7 +271,7 @@ def wait_and_ensure_success(futures: List[Future]) -> None:
 class BufferedSliceWriter(object):
     def __init__(
         self,
-        dataset_path: str,
+        dataset_path: Path,
         layer_name: str,
         dtype: np.dtype,
         origin: Union[Tuple[int, int, int], List[int]],

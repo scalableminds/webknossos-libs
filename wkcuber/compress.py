@@ -1,4 +1,6 @@
 import time
+from pathlib import Path
+
 import wkw
 import shutil
 import logging
@@ -76,9 +78,9 @@ def compress_file_job(args: Tuple[str, str]) -> None:
 
 
 def compress_mag(
-    source_path: str,
+    source_path: Path,
     layer_name: str,
-    target_path: str,
+    target_path: Path,
     mag: Mag,
     args: Namespace = None,
 ) -> None:
@@ -110,9 +112,9 @@ def compress_mag(
 
 
 def compress_mag_inplace(
-    target_path: str, layer_name: str, mag: Mag, args: Namespace = None
+    target_path: Path, layer_name: str, mag: Mag, args: Namespace = None
 ) -> None:
-    compress_target_path = "{}.compress-{}".format(target_path, uuid4())
+    compress_target_path = Path("{}.compress-{}".format(target_path, uuid4()))
     compress_mag(target_path, layer_name, compress_target_path, mag, args)
 
     shutil.rmtree(path.join(target_path, layer_name, str(mag)))
@@ -124,14 +126,14 @@ def compress_mag_inplace(
 
 
 def compress_mags(
-    source_path: str,
+    source_path: Path,
     layer_name: str,
-    target_path: str = None,
+    target_path: Path = None,
     mags: List[Mag] = None,
     args: Namespace = None,
 ) -> None:
     if target_path is None:
-        target = source_path + ".tmp"
+        target = source_path.with_suffix(source_path.suffix + ".tmp")
     else:
         target = target_path
 
@@ -143,15 +145,16 @@ def compress_mags(
         compress_mag(source_path, layer_name, target, mag, args)
 
     if target_path is None:
-        makedirs(path.join(source_path + BACKUP_EXT, layer_name), exist_ok=True)
+        backup_dir = source_path.with_suffix(BACKUP_EXT)
+        makedirs(backup_dir / layer_name, exist_ok=True)
         for mag in mags:
             shutil.move(
-                path.join(source_path, layer_name, str(mag)),
-                path.join(source_path + BACKUP_EXT, layer_name, str(mag)),
+                str(source_path / layer_name / str(mag)),
+                str(backup_dir / layer_name / str(mag)),
             )
             shutil.move(
-                path.join(target, layer_name, str(mag)),
-                path.join(source_path, layer_name, str(mag)),
+                str(target / layer_name / str(mag)),
+                str(source_path / layer_name / str(mag)),
             )
         shutil.rmtree(target)
         logging.info(

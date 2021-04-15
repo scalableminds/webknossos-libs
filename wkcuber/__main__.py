@@ -13,10 +13,9 @@ from argparse import Namespace, ArgumentParser
 from pathlib import Path
 
 
-def detect_present_mags(target_path: str) -> Dict[Path, List[Mag]]:
+def detect_present_mags(target_path: Path) -> Dict[Path, List[Mag]]:
     layer_path_to_mags: Dict[Path, List[Mag]] = dict()
-    dataset_path = Path(target_path)
-    layer_paths = list([p for p in dataset_path.iterdir() if p.is_dir()])
+    layer_paths = list([p for p in target_path.iterdir() if p.is_dir()])
     for layer_p in layer_paths:
         layer_path_to_mags.setdefault(layer_p, list())
         mag_paths = list([p for p in layer_p.iterdir() if p.is_dir()])
@@ -59,7 +58,9 @@ def main(args: Namespace) -> None:
 
     auto_detect_and_run_conversion(args)
 
-    layer_path_to_mags: Dict[Path, List[Mag]] = detect_present_mags(args.target_path)
+    layer_path_to_mags: Dict[Path, List[Mag]] = detect_present_mags(
+        Path(args.target_path)
+    )
 
     if not args.no_compress:
         for (layer_path, mags) in layer_path_to_mags.items():
