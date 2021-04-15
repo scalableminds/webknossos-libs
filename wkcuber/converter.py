@@ -469,7 +469,7 @@ def main(args: Namespace) -> None:
 
     should_write_metadata = matching_converters[0].convert_input(args)
     if should_write_metadata:
-        write_webknossos_metadata(args.target_path, args.name, args.scale)
+        write_webknossos_metadata(Path(args.target_path), args.name, args.scale)
 
 
 if __name__ == "__main__":

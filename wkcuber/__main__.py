@@ -66,7 +66,7 @@ def main(args: Namespace) -> None:
         for (layer_path, mags) in layer_path_to_mags.items():
             layer_name = layer_path.stem
             for mag in mags:
-                compress_mag_inplace(args.target_path, layer_name, mag, args)
+                compress_mag_inplace(Path(args.target_path), layer_name, mag, args)
 
     if not args.isotropic:
         for (layer_path, mags) in layer_path_to_mags.items():
@@ -97,7 +97,7 @@ def main(args: Namespace) -> None:
                 args=args,
             )
 
-    refresh_metadata(args.target_path)
+    refresh_metadata(Path(args.target_path))
 
 
 if __name__ == "__main__":

@@ -54,7 +54,7 @@ def main(args: Namespace) -> None:
     )
 
     if not args.no_compress:
-        compress_mag_inplace(args.target_path, args.layer_name, Mag(1), args)
+        compress_mag_inplace(Path(args.target_path), args.layer_name, Mag(1), args)
 
     if not args.isotropic:
         downsample_mags_anisotropic(

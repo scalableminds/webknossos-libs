@@ -407,11 +407,11 @@ if __name__ == "__main__":
             args.name is not None
         ), "Please provide a name via --name to create meta data."
         write_webknossos_metadata(
-            args.path, args.name, args.scale, args.max_id, args.compute_max_id
+            Path(args.path), args.name, args.scale, args.max_id, args.compute_max_id
         )
     else:
         if args.name is not None:
             logging.warning(
                 "The --name argument is ignored, since --refresh was provided."
             )
-        refresh_metadata(args.path, args.max_id, args.compute_max_id)
+        refresh_metadata(Path(args.path), args.max_id, args.compute_max_id)

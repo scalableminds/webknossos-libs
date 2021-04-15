@@ -156,4 +156,4 @@ if __name__ == "__main__":
         target_path = args.source_path + BACKUP_EXT
     else:
         target_path = args.target_path
-    check_equality(args.source_path, target_path, args)
+    check_equality(Path(args.source_path), Path(target_path), args)
