@@ -80,6 +80,9 @@ jobs:
     - name: Test downsampling
       run: tests/scripts/downsampling.sh
 
+    - name: Test upsampling
+      run: tests/scripts/upsampling.sh
+
     - name: Test anisotropic downsampling
       run: tests/scripts/anisotropic_downsampling.sh
 
