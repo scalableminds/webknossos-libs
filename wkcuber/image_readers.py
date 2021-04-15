@@ -1,4 +1,4 @@
-from typing import Tuple, Dict, Union
+from typing import Tuple, Dict, Union, Optional
 
 import numpy as np
 import logging
@@ -138,9 +138,9 @@ class Dm4ImageReader(ImageReader):
 
 
 class TiffImageReader(ImageReader):
-    def __init__(self):
-        self.is_page_multi_channel = None
-        self.num_channels = None
+    def __init__(self) -> None:
+        self.is_page_multi_channel: Optional[bool] = None
+        self.num_channels: Optional[int] = None
 
     @staticmethod
     def find_count_of_axis(tif_file: TiffFile, axis: str) -> int:
@@ -214,9 +214,15 @@ class TiffImageReader(ImageReader):
 
     def read_channel_count(self, file_name: str) -> int:
         with TiffFile(file_name) as tif_file:
-            return TiffImageReader.find_count_of_axis(
-                tif_file, "C"
-            ) * TiffImageReader.find_count_of_axis(tif_file, "S")
+            c_count = TiffImageReader.find_count_of_axis(tif_file, "C")
+            s_count = TiffImageReader.find_count_of_axis(tif_file, "S")
+            assert not (
+                c_count > 1 and s_count > 1
+            ), "This file format is currently not supported."
+            if s_count > 1:
+                return s_count
+            else:
+                return c_count
 
     def read_z_slices_per_file(self, file_name: str) -> int:
         with TiffFile(file_name) as tif_file:
