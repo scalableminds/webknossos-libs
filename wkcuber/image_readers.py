@@ -346,27 +346,31 @@ class CziImageReader(ImageReader):
 
             assert self.tile_shape is not None, "Cannot read tile shape format."
 
-            if channel_index is not None:
-                data = self._read_array_single_channel(
-                    czi_file, channel_index, dtype, z_slice
-                )
-                data = data.reshape(data.shape + (1,))
-                return data
             # we assume either all channel are in one tile or each tile is single channel
-            elif self.tile_shape[c_index] != channel_count:
-                x_count, y_count = self.read_dimensions(file_name)
-                output = np.empty((channel_count, x_count, y_count), dtype)
-                # format is (channel_count, x, y)
-                for i in range(0, channel_count):
-                    output[i] = self._read_array_single_channel(
-                        czi_file, i, dtype, z_slice
+            if self.tile_shape[c_index] != channel_count:
+                if channel_index is not None:
+                    data = self._read_array_single_channel(
+                        czi_file, channel_index, dtype, z_slice
                     )
+                    data = data.reshape(data.shape + (1,))
+                    return data
+                else:
+                    x_count, y_count = self.read_dimensions(file_name)
+                    output = np.empty((channel_count, x_count, y_count), dtype)
+                    # format is (channel_count, x, y)
+                    for i in range(0, channel_count):
+                        output[i] = self._read_array_single_channel(
+                            czi_file, i, dtype, z_slice
+                        )
 
-                # transpose format to x, y, channel_count
-                output = np.transpose(output, (1, 2, 0))
-                return output
+                    # transpose format to x, y, channel_count
+                    output = np.transpose(output, (1, 2, 0))
+                    return output
             else:
-                return self._read_array_all_channels(czi_file, dtype, z_slice)
+                data = self._read_array_all_channels(czi_file, dtype, z_slice)
+                if channel_index is not None:
+                    data = data[:, :, channel_index : channel_index + 1]
+                return data
 
     def read_dimensions(self, file_name: str) -> Tuple[int, int]:
         with CziFile(file_name) as czi_file:
