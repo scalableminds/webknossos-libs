@@ -190,7 +190,7 @@ class TiffImageReader(ImageReader):
 
             # if the pages are multi-channel, then we'll have 4 dimensions here because of [x:x+1] notation, so we reshape the data
             if self.is_page_multi_channel:
-                data = data.reshape((data.shape[1], data.shape[2], data.shape[3]))
+                data = data[0]
                 x_index = tif_file.pages[0].axes.find("X")
                 y_index = tif_file.pages[0].axes.find("Y")
                 c_index = tif_file.pages[0].axes.find("S")
