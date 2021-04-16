@@ -7,12 +7,12 @@ import nibabel as nib
 import numpy as np
 
 from wkcuber.api.Dataset import WKDataset
+from wkcuber.api.bounding_box import BoundingBox
 from wkcuber.mag import Mag
 from wkcuber.metadata import read_metadata_for_layer
 from wkcuber.utils import (
     add_verbose_flag,
     add_distribution_flags,
-    add_batch_size_flag,
     parse_bounding_box,
 )
 
@@ -50,7 +50,7 @@ def create_parser() -> ArgumentParser:
         "--downsample", help="Downsample each tiff image", default=1, type=int
     )
 
-    add_batch_size_flag(parser)
+    # add_batch_size_flag(parser)
 
     add_verbose_flag(parser)
     add_distribution_flags(parser)
@@ -86,7 +86,7 @@ def export_layer_to_nifti(
 
 def export_nifti(
     wkw_file_path: Path,
-    bbox: Dict,
+    bbox: BoundingBox,
     mag: Mag,
     destination_path: Path,
     name: str,
@@ -95,6 +95,16 @@ def export_nifti(
     layers = wk_ds.layers
 
     for layer_name in layers:
+        if bbox is None:
+            _, _, bbox_dim, origin = read_metadata_for_layer(
+                str(wkw_file_path), layer_name
+            )
+            bbox = {"topleft": origin, "size": bbox_dim}
+        else:
+            bbox = {"topleft": list(bbox.topleft), "size": list(bbox.size)}
+
+        logging.info(f"Starting tiff export for bounding box: {bbox}")
+
         export_layer_to_nifti(
             wkw_file_path,
             bbox,
@@ -109,19 +119,9 @@ def export_wkw_as_nifti(args: Namespace) -> None:
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG)
 
-    if args.bbox is None:
-        _, _, bbox_dim, origin = read_metadata_for_layer(
-            args.source_path, args.layer_name
-        )
-        bbox = {"topleft": origin, "size": bbox_dim}
-    else:
-        bbox = {"topleft": list(args.bbox.topleft), "size": list(args.bbox.size)}
-
-    logging.info(f"Starting tiff export for bounding box: {bbox}")
-
     export_nifti(
-        wkw_file_path=args.source_path,
-        bbox=bbox,
+        wkw_file_path=Path(args.source_path),
+        bbox=args.bbox,
         mag=Mag(args.mag),
         destination_path=Path(args.destination_path),
         name=args.name,
