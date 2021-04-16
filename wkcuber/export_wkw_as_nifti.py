@@ -5,8 +5,6 @@ from typing import List, Dict
 
 import nibabel as nib
 import numpy as np
-from PIL import Image
-from scipy.ndimage.interpolation import zoom
 
 from wkcuber.api.Dataset import WKDataset
 from wkcuber.mag import Mag
