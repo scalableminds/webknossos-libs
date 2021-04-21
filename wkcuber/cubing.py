@@ -93,7 +93,7 @@ def create_parser() -> ArgumentParser:
         "-c",
         type=int,
         default=None,
-        help="Select a single channel to be cubed. This can be helpful if webKnossos does not support the multiple channel format of the input files.",
+        help="Select a single channel to be cubed into a layer. This can be helpful if several channels should be converted to multiple data layers. Note that webKnossos only supports multiple channels if these are three uint8 channels. If this is not the case, use --channel_index to create a layer per channel.",
     )
 
     add_interpolation_flag(parser)
