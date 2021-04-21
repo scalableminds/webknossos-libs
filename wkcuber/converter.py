@@ -376,7 +376,7 @@ class ImageStackConverter(Converter):
             channel_count, dtype = get_channel_count_and_dtype(layer_path)
             if channel_count > 1 and not (channel_count == 3 and dtype == "uint8"):
                 for i in range(channel_count):
-                    args.layer_name = layer_name + str(i)
+                    args.layer_name = f"{layer_name}_{i}"
                     args.channel_index = i
                     bounding_box = cube_image_stack(
                         args.source_path,
