@@ -1,4 +1,4 @@
-from typing import Tuple, Dict, Union
+from typing import Tuple, Dict, Union, Optional
 
 import numpy as np
 import logging
@@ -138,6 +138,10 @@ class Dm4ImageReader(ImageReader):
 
 
 class TiffImageReader(ImageReader):
+    def __init__(self) -> None:
+        self.is_page_multi_channel: Optional[bool] = None
+        self.num_channels: Optional[int] = None
+
     @staticmethod
     def find_count_of_axis(tif_file: TiffFile, axis: str) -> int:
         assert len(tif_file.series) == 1, "only single tif series are supported"
@@ -150,15 +154,25 @@ class TiffImageReader(ImageReader):
 
     def read_array(self, file_name: str, dtype: np.dtype, z_slice: int) -> np.ndarray:
         with TiffFile(file_name) as tif_file:
-            num_channels = self.read_channel_count(file_name)
-            if len(tif_file.pages) > num_channels:
+            if self.num_channels is None:
+                self.num_channels = self.read_channel_count(file_name)
+            if self.is_page_multi_channel is None:
+                # we assume all tif pages have the same dimensions
+                self.is_page_multi_channel = tif_file.pages[0].ndim == 3
+
+            if self.is_page_multi_channel:
+                self.num_channels = 1
+
+            if len(tif_file.pages) > self.num_channels:
                 data = np.array(
                     list(
                         map(
                             lambda x: x.asarray(),
                             tif_file.pages[
-                                z_slice * num_channels : z_slice * num_channels
-                                + num_channels
+                                z_slice
+                                * self.num_channels : z_slice
+                                * self.num_channels
+                                + self.num_channels
                             ],
                         )
                     ),
@@ -166,18 +180,28 @@ class TiffImageReader(ImageReader):
                 )
             else:
                 data = np.array(
-                    list(map(lambda x: x.asarray(), tif_file.pages[0:num_channels])),
+                    list(
+                        map(
+                            lambda x: x.asarray(), tif_file.pages[0 : self.num_channels]
+                        )
+                    ),
                     dtype,
                 )
+
+            # if the pages are multi-channel, then we'll have 4 dimensions here because of [x:x+1] notation, so we reshape the data
+            if self.is_page_multi_channel:
+                data = data[0]
+                x_index = tif_file.pages[0].axes.find("X")
+                y_index = tif_file.pages[0].axes.find("Y")
+                c_index = tif_file.pages[0].axes.find("S")
+            else:
+                # if each page is a channel, there is no c_index in the page axes and through our selection the c_index is always 0 and therefore the other indices have to be incremented
+                c_index = 0
+                x_index = tif_file.pages[0].axes.find("X") + 1
+                y_index = tif_file.pages[0].axes.find("Y") + 1
+
             # transpose data to shape(x, y, channel_count)
-            data = np.transpose(
-                data,
-                (
-                    tif_file.pages[0].axes.find("X") + 1,
-                    tif_file.pages[0].axes.find("Y") + 1,
-                    0,
-                ),
-            )
+            data = data.transpose((x_index, y_index, c_index))
             data = data.reshape(data.shape + (1,))
             return data
 
@@ -190,7 +214,15 @@ class TiffImageReader(ImageReader):
 
     def read_channel_count(self, file_name: str) -> int:
         with TiffFile(file_name) as tif_file:
-            return TiffImageReader.find_count_of_axis(tif_file, "C")
+            c_count = TiffImageReader.find_count_of_axis(tif_file, "C")
+            s_count = TiffImageReader.find_count_of_axis(tif_file, "S")
+            assert not (
+                c_count > 1 and s_count > 1
+            ), "This file format is currently not supported."
+            if s_count > 1:
+                return s_count
+            else:
+                return c_count
 
     def read_z_slices_per_file(self, file_name: str) -> int:
         with TiffFile(file_name) as tif_file:
