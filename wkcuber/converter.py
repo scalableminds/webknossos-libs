@@ -355,11 +355,6 @@ class ImageStackConverter(Converter):
             args, image_stack_parser, "job_resources"
         )
         put_default_from_argparser_if_not_present(args, image_stack_parser, "pad")
-        put_default_from_argparser_if_not_present(args, image_stack_parser, "max_mag")
-        put_default_from_argparser_if_not_present(
-            args, image_stack_parser, "no_compress"
-        )
-        put_default_from_argparser_if_not_present(args, image_stack_parser, "isotropic")
         put_default_from_argparser_if_not_present(args, image_stack_parser, "verbose")
 
         # detect layer and ds name
@@ -372,30 +367,44 @@ class ImageStackConverter(Converter):
         bounding_box = None
         view_configuration = dict()
         for layer_path, layer_name in layer_path_to_name.items():
-            args.source_path = layer_path
             channel_count, dtype = get_channel_count_and_dtype(layer_path)
             if channel_count > 1 and not (channel_count == 3 and dtype == "uint8"):
                 for i in range(channel_count):
-                    args.layer_name = f"{layer_name}_{i}"
-                    args.channel_index = i
+                    layer_name = f"{layer_name}_{i}"
+                    arg_dict = vars(args)
+
                     bounding_box = cube_image_stack(
-                        args.source_path,
+                        layer_path,
                         args.target_path,
-                        args.layer_name,
-                        args.batch_size if "batch_size" in args else None,
+                        layer_name,
+                        arg_dict.get("batch_size"),
+                        i,  # channel index
+                        arg_dict.get("dtype"),
+                        args.target_mag,
+                        args.wkw_file_len,
+                        args.interpolation_mode,
+                        args.start_z,
+                        args.pad,
                         args,
                     )
-                    view_configuration[
-                        args.layer_name
-                    ] = ImageStackConverter.get_view_configuration(i)
 
+                    view_configuration[
+                        layer_name
+                    ] = ImageStackConverter.get_view_configuration(i)
             else:
-                args.layer_name = layer_name
+                arg_dict = vars(args)
                 bounding_box = cube_image_stack(
-                    args.source_path,
+                    layer_path,
                     args.target_path,
-                    args.layer_name,
-                    args.batch_size if "batch_size" in args else None,
+                    layer_name,
+                    arg_dict.get("batch_size"),
+                    arg_dict.get("channel_index"),
+                    arg_dict.get("dtype"),
+                    args.target_mag,
+                    args.wkw_file_len,
+                    args.interpolation_mode,
+                    args.start_z,
+                    args.pad,
                     args,
                 )
 
