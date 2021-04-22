@@ -284,7 +284,7 @@ class WKMagDataset(MagDataset):
         # The data gets compressed inplace, if target_path is None.
         # Otherwise it is written to target_path/layer_name/mag.
 
-        uncompressed_path = (
+        uncompressed_full_path = (
             Path(self.layer.dataset.path) / self.layer.name / str(Mag(self.name))
         )
         compressed_path = (
@@ -292,13 +292,18 @@ class WKMagDataset(MagDataset):
             if target_path is not None
             else Path("{}.compress-{}".format(self.layer.dataset.path, uuid4()))
         )
+        compressed_full_path = compressed_path / self.layer.name / str(Mag(self.name))
 
-        if compressed_path.exists():
-            logging.error("Target path '{}' already exists".format(compressed_path))
+        if compressed_full_path.exists():
+            logging.error(
+                "Target path '{}' already exists".format(compressed_full_path)
+            )
             exit(1)
 
         logging.info(
-            "Compressing mag {0} in '{1}'".format(self.name, str(uncompressed_path))
+            "Compressing mag {0} in '{1}'".format(
+                self.name, str(uncompressed_full_path)
+            )
         )
 
         was_opened = self.view._is_opened
@@ -307,7 +312,7 @@ class WKMagDataset(MagDataset):
         assert self.view.dataset is not None
 
         # create empty wkw.Dataset
-        self.view.dataset.compress(str(compressed_path / self.layer.name / self.name))
+        self.view.dataset.compress(str(compressed_full_path))
 
         # compress all files to and move them to 'compressed_path'
         with get_executor_for_args(args) as executor:
@@ -326,10 +331,8 @@ class WKMagDataset(MagDataset):
             self.close()
 
         if target_path is None:
-            shutil.rmtree(uncompressed_path)
-            shutil.move(
-                str(compressed_path / self.layer.name / self.name), uncompressed_path
-            )
+            shutil.rmtree(uncompressed_full_path)
+            shutil.move(str(compressed_full_path), uncompressed_full_path)
             shutil.rmtree(compressed_path)
 
             # update the handle to the new dataset
