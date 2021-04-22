@@ -17,7 +17,7 @@ from .utils import (
 def create_parser() -> ArgumentParser:
     parser = ArgumentParser()
 
-    parser.add_argument("path", help="Directory containing the dataset.")
+    parser.add_argument("path", help="Directory containing the dataset.", type=Path)
 
     parser.add_argument(
         "--layer_name",

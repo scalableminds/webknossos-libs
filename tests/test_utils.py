@@ -46,7 +46,7 @@ def test_buffered_slice_writer() -> None:
     dtype = test_img.dtype
     bbox = {"topleft": (0, 0, 0), "size": (24, 24, 35)}
     origin = [0, 0, 0]
-    dataset_dir = Path("testoutput/buffered_slice_writer")
+    dataset_dir = Path("testoutput", "buffered_slice_writer")
     layer_name = "color"
     mag = Mag(1)
     dataset_path = dataset_dir / layer_name / mag.to_layer_name()

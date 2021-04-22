@@ -113,11 +113,11 @@ def test_upsample_multi_channel() -> None:
     file_len = 32
 
     try:
-        shutil.rmtree("testoutput/multi-channel-test")
+        shutil.rmtree(Path("testoutput", "multi-channel-test"))
     except:
         pass
 
-    ds = WKDataset.create(Path("testoutput/multi-channel-test"), (1, 1, 1))
+    ds = WKDataset.create(Path("testoutput", "multi-channel-test"), (1, 1, 1))
     l = ds.add_layer(
         "color", Layer.COLOR_TYPE, dtype_per_channel="uint8", num_channels=num_channels
     )
