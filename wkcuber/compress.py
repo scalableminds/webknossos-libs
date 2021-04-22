@@ -1,23 +1,19 @@
-import time
-import wkw
+from pathlib import Path
+
 import shutil
 import logging
 from argparse import ArgumentParser, Namespace
 from os import path, makedirs
-from uuid import uuid4
+
+from wkcuber.api.Dataset import WKDataset
 from .mag import Mag
 
 from .utils import (
     add_verbose_flag,
-    open_wkw,
-    WkwDatasetInfo,
     add_distribution_flags,
-    get_executor_for_args,
-    wait_and_ensure_success,
     setup_logging,
 )
-from .metadata import detect_resolutions, convert_element_class_to_dtype
-from typing import List, Tuple
+from typing import List
 
 BACKUP_EXT = ".bak"
 
@@ -53,28 +49,6 @@ def create_parser() -> ArgumentParser:
     return parser
 
 
-def compress_file_job(args: Tuple[str, str]) -> None:
-    source_path, target_path = args
-    try:
-        logging.debug("Compressing '{}' to '{}'".format(source_path, target_path))
-        ref_time = time.time()
-
-        makedirs(path.dirname(target_path), exist_ok=True)
-        wkw.File.compress(source_path, target_path)
-
-        if not path.exists(target_path):
-            raise Exception("Did not create compressed file {}".format(target_path))
-
-        logging.debug(
-            "Compressing of '{}' took {:.8f}s".format(
-                source_path, time.time() - ref_time
-            )
-        )
-    except Exception as exc:
-        logging.error("Compressing of '{}' failed with {}".format(source_path, exc))
-        raise exc
-
-
 def compress_mag(
     source_path: str,
     layer_name: str,
@@ -82,45 +56,15 @@ def compress_mag(
     mag: Mag,
     args: Namespace = None,
 ) -> None:
-    if path.exists(path.join(target_path, layer_name, str(mag))):
-        logging.error("Target path '{}' already exists".format(target_path))
-        exit(1)
-
-    if args is not None and hasattr(args, "dtype"):
-        header = wkw.Header(convert_element_class_to_dtype(args.dtype))
-    else:
-        header = None
-    source_wkw_info = WkwDatasetInfo(source_path, layer_name, mag, header)
-    target_mag_path = path.join(target_path, layer_name, str(mag))
-    logging.info("Compressing mag {0} in '{1}'".format(str(mag), target_mag_path))
-
-    with open_wkw(source_wkw_info) as source_wkw:
-        source_wkw.compress(target_mag_path)
-        with get_executor_for_args(args) as executor:
-            job_args = []
-            for file in source_wkw.list_files():
-                rel_file = path.relpath(file, source_wkw.root)
-                job_args.append((file, path.join(target_mag_path, rel_file)))
-
-            wait_and_ensure_success(
-                executor.map_to_futures(compress_file_job, job_args)
-            )
-
-    logging.info("Mag {0} successfully compressed".format(str(mag)))
+    WKDataset(source_path).get_layer(layer_name).get_mag(mag).compress(
+        target_path=Path(target_path), args=args
+    )
 
 
 def compress_mag_inplace(
     target_path: str, layer_name: str, mag: Mag, args: Namespace = None
 ) -> None:
-    compress_target_path = "{}.compress-{}".format(target_path, uuid4())
-    compress_mag(target_path, layer_name, compress_target_path, mag, args)
-
-    shutil.rmtree(path.join(target_path, layer_name, str(mag)))
-    shutil.move(
-        path.join(compress_target_path, layer_name, str(mag)),
-        path.join(target_path, layer_name, str(mag)),
-    )
-    shutil.rmtree(compress_target_path)
+    WKDataset(target_path).get_layer(layer_name).get_mag(mag).compress(args=args)
 
 
 def compress_mags(
@@ -135,12 +79,13 @@ def compress_mags(
     else:
         target = target_path
 
+    layer = WKDataset(source_path).get_layer(layer_name)
     if mags is None:
-        mags = list(detect_resolutions(source_path, layer_name))
-    mags.sort()
+        mags = [Mag(mag_name) for mag_name in layer.mags.keys()]
 
-    for mag in mags:
-        compress_mag(source_path, layer_name, target, mag, args)
+    for mag_name, mag_ds in WKDataset(source_path).get_layer(layer_name).mags.items():
+        if Mag(mag_name) in mags:
+            mag_ds.compress(target_path=Path(target), args=args)
 
     if target_path is None:
         makedirs(path.join(source_path + BACKUP_EXT, layer_name), exist_ok=True)
