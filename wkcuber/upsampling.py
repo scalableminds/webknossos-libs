@@ -125,7 +125,7 @@ if __name__ == "__main__":
     )
 
     upsample_mags(
-        Path(args.path),
+        args.path,
         args.layer_name,
         from_mag,
         target_mag,

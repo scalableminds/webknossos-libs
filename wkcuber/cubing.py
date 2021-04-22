@@ -38,10 +38,12 @@ BLOCK_LEN = 32
 def create_parser() -> ArgumentParser:
     parser = ArgumentParser()
 
-    parser.add_argument("source_path", help="Directory containing the input images.")
+    parser.add_argument(
+        "source_path", help="Directory containing the input images.", type=Path
+    )
 
     parser.add_argument(
-        "target_path", help="Output directory for the generated dataset."
+        "target_path", help="Output directory for the generated dataset.", type=Path
     )
 
     parser.add_argument(
@@ -324,8 +326,8 @@ if __name__ == "__main__":
     setup_logging(args)
 
     cubing(
-        Path(args.source_path),
-        Path(args.target_path),
+        args.source_path,
+        args.target_path,
         args.layer_name,
         args.batch_size,
         args=args,

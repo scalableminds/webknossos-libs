@@ -27,7 +27,11 @@ def create_parser() -> ArgumentParser:
     parser = ArgumentParser()
 
     parser.add_argument(
-        "--source_path", "-s", help="Directory containing the wkw file.", required=True
+        "--source_path",
+        "-s",
+        help="Directory containing the wkw file.",
+        required=True,
+        type=Path,
     )
 
     parser.add_argument(
@@ -35,6 +39,7 @@ def create_parser() -> ArgumentParser:
         "-d",
         help="Output directory for the generated tiff files.",
         required=True,
+        type=Path,
     )
 
     parser.add_argument(
@@ -242,7 +247,7 @@ def export_wkw_as_tiff(args: Namespace) -> None:
 
     if args.bbox is None:
         _, _, bbox_dim, origin = read_metadata_for_layer(
-            Path(args.source_path), args.layer_name
+            args.source_path, args.layer_name
         )
         bbox = {"topleft": origin, "size": bbox_dim}
     else:
@@ -268,11 +273,11 @@ def export_wkw_as_tiff(args: Namespace) -> None:
     args.batch_size = int(args.batch_size)
 
     export_tiff_stack(
-        wkw_file_path=Path(args.source_path),
+        wkw_file_path=args.source_path,
         wkw_layer=args.layer_name,
         bbox=bbox,
         mag=Mag(args.mag),
-        destination_path=Path(args.destination_path),
+        destination_path=args.destination_path,
         name=args.name,
         tiling_slice_size=args.tile_size,
         batch_size=args.batch_size,

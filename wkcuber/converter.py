@@ -23,11 +23,13 @@ def create_parser() -> ArgumentParser:
     )
 
     parser.add_argument(
-        "source_path", help="Input file or directory containing the input files."
+        "source_path",
+        help="Input file or directory containing the input files.",
+        type=Path,
     )
 
     parser.add_argument(
-        "target_path", help="Output directory for the generated dataset."
+        "target_path", help="Output directory for the generated dataset.", type=Path
     )
 
     add_scale_flag(parser)
@@ -356,10 +358,10 @@ class ImageStackConverter(Converter):
 
         for layer_path, layer_name in layer_path_to_name.items():
             args.layer_name = layer_name
-            args.source_path = layer_path
+            args.source_path = Path(layer_path)
             cube_image_stack(
-                Path(args.source_path),
-                Path(args.target_path),
+                args.source_path,
+                args.target_path,
                 args.layer_name,
                 args.batch_size if "batch_size" in args else None,
                 args,
@@ -469,7 +471,7 @@ def main(args: Namespace) -> None:
 
     should_write_metadata = matching_converters[0].convert_input(args)
     if should_write_metadata:
-        write_webknossos_metadata(Path(args.target_path), args.name, args.scale)
+        write_webknossos_metadata(args.target_path, args.name, args.scale)
 
 
 if __name__ == "__main__":

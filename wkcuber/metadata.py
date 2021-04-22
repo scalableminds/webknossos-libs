@@ -23,7 +23,7 @@ def get_datasource_path(dataset_path: Path) -> Path:
 def create_parser() -> ArgumentParser:
     parser = ArgumentParser()
 
-    parser.add_argument("path", help="Directory containing the dataset.")
+    parser.add_argument("path", help="Directory containing the dataset.", type=Path)
 
     parser.add_argument("--name", "-n", help="Name of the dataset", default=None)
 
@@ -407,11 +407,11 @@ if __name__ == "__main__":
             args.name is not None
         ), "Please provide a name via --name to create meta data."
         write_webknossos_metadata(
-            Path(args.path), args.name, args.scale, args.max_id, args.compute_max_id
+            args.path, args.name, args.scale, args.max_id, args.compute_max_id
         )
     else:
         if args.name is not None:
             logging.warning(
                 "The --name argument is ignored, since --refresh was provided."
             )
-        refresh_metadata(Path(args.path), args.max_id, args.compute_max_id)
+        refresh_metadata(args.path, args.max_id, args.compute_max_id)

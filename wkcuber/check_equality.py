@@ -37,10 +37,12 @@ def named_partial(func: Callable, *args: Any, **kwargs: Any) -> Callable:
 def create_parser() -> ArgumentParser:
     parser = ArgumentParser()
 
-    parser.add_argument("source_path", help="Path to input WKW dataset")
+    parser.add_argument("source_path", help="Path to input WKW dataset", type=Path)
 
     parser.add_argument(
-        "target_path", help="WKW dataset with which to compare the input dataset."
+        "target_path",
+        help="WKW dataset with which to compare the input dataset.",
+        type=Path,
     )
 
     parser.add_argument(
@@ -156,4 +158,4 @@ if __name__ == "__main__":
         target_path = args.source_path + BACKUP_EXT
     else:
         target_path = args.target_path
-    check_equality(Path(args.source_path), Path(target_path), args)
+    check_equality(args.source_path, target_path, args)

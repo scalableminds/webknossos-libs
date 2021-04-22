@@ -26,11 +26,13 @@ def create_parser() -> ArgumentParser:
     parser = ArgumentParser()
 
     parser.add_argument(
-        "source_path", help="Directory containing the source KNOSSOS dataset."
+        "source_path",
+        help="Directory containing the source KNOSSOS dataset.",
+        type=Path,
     )
 
     parser.add_argument(
-        "target_path", help="Output directory for the generated WKW dataset."
+        "target_path", help="Output directory for the generated WKW dataset.", type=Path
     )
 
     parser.add_argument(
@@ -110,8 +112,8 @@ def convert_knossos(
 
 def main(args: Namespace) -> None:
     convert_knossos(
-        Path(args.source_path),
-        Path(args.target_path),
+        args.source_path,
+        args.target_path,
         args.layer_name,
         args.dtype,
         args.mag,

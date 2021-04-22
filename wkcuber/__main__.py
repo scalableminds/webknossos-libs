@@ -58,22 +58,20 @@ def main(args: Namespace) -> None:
 
     auto_detect_and_run_conversion(args)
 
-    layer_path_to_mags: Dict[Path, List[Mag]] = detect_present_mags(
-        Path(args.target_path)
-    )
+    layer_path_to_mags: Dict[Path, List[Mag]] = detect_present_mags(args.target_path)
 
     if not args.no_compress:
         for (layer_path, mags) in layer_path_to_mags.items():
             layer_name = layer_path.stem
             for mag in mags:
-                compress_mag_inplace(Path(args.target_path), layer_name, mag, args)
+                compress_mag_inplace(args.target_path, layer_name, mag, args)
 
     if not args.isotropic:
         for (layer_path, mags) in layer_path_to_mags.items():
             layer_name = layer_path.stem
             mags.sort()
             downsample_mags_anisotropic(
-                Path(args.target_path),
+                args.target_path,
                 layer_name,
                 mags[-1],
                 Mag(args.max_mag),
@@ -88,7 +86,7 @@ def main(args: Namespace) -> None:
             layer_name = layer_path.stem
             mags.sort()
             downsample_mags_isotropic(
-                Path(args.target_path),
+                args.target_path,
                 layer_name,
                 mags[-1],
                 Mag(args.max_mag),
@@ -97,7 +95,7 @@ def main(args: Namespace) -> None:
                 args=args,
             )
 
-    refresh_metadata(Path(args.target_path))
+    refresh_metadata(args.target_path)
 
 
 if __name__ == "__main__":

@@ -28,7 +28,7 @@ def create_parser() -> ArgumentParser:
     parser = ArgumentParser()
 
     parser.add_argument(
-        "source_path", help="Directory containing the source WKW dataset."
+        "source_path", help="Directory containing the source WKW dataset.", type=Path
     )
 
     parser.add_argument(
@@ -36,6 +36,7 @@ def create_parser() -> ArgumentParser:
         help="Output directory for the compressed WKW dataset.",
         nargs="?",
         default=None,
+        type=Path,
     )
 
     parser.add_argument(
@@ -167,6 +168,4 @@ def compress_mags(
 if __name__ == "__main__":
     args = create_parser().parse_args()
     setup_logging(args)
-    compress_mags(
-        Path(args.source_path), args.layer_name, Path(args.target_path), args.mag, args
-    )
+    compress_mags(args.source_path, args.layer_name, args.target_path, args.mag, args)
