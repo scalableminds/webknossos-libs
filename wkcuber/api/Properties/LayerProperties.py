@@ -253,7 +253,7 @@ class SegmentationLayerProperties(LayerProperties):
             None,
             json_data["largestSegmentId"],
             json_data.get("mappings"),
-            json_data.get("defaultViewConfiguration")
+            json_data.get("defaultViewConfiguration"),
         )
 
         # add resolutions to LayerProperties

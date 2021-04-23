@@ -195,13 +195,13 @@ class TiffImageReader(ImageReader):
                     1 if self.is_page_multi_channel else self.num_pages_for_all_channels
                 )
 
+            channel_selected = channel_index is not None
+
             # we need to set the channel_offset for multi-channel pages because reading will fail otherwise and we handle the channel selection elsewhere
             if channel_index is None or self.is_page_multi_channel:
                 channel_offset = 0
-                channel_selected = False
             else:
                 channel_offset = channel_index
-                channel_selected = True
 
             if len(tif_file.pages) > self.num_pages_for_all_channels:
                 # single multi-page input file
@@ -457,7 +457,7 @@ class ImageReaderManager:
         file_name: str,
         dtype: np.dtype,
         z_slice: int,
-        channel_index: Optional[int],
+        channel_index: Optional[int] = None,
     ) -> np.ndarray:
         _, ext = path.splitext(file_name)
 

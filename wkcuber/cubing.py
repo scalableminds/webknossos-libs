@@ -248,7 +248,9 @@ def cubing_job(
 
 def get_channel_count_and_dtype(source_path: str) -> Tuple[int, str]:
     source_files = find_source_filenames(source_path)
-    assert len(source_files) > 0, f"Failed to detect channel count and dtype. No sources found in {source_path}"
+    assert (
+        len(source_files) > 0
+    ), f"Failed to detect channel count and dtype. No sources found in {source_path}"
     return image_reader.read_channel_count(source_files[0]), image_reader.read_dtype(
         source_files[0]
     )
