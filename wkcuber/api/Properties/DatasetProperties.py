@@ -157,6 +157,9 @@ class WKProperties(Properties):
                 for layer_name in self.data_layers
             ],
         }
+        if self.default_view_configuration is not None:
+            data["defaultViewConfiguration"] = self.default_view_configuration
+
         with open(self.path, "w") as outfile:
             json.dump(data, outfile, indent=4, separators=(",", ": "))
 

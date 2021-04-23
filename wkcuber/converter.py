@@ -301,7 +301,7 @@ class ImageStackConverter(Converter):
         self.dataset_names: Set[str] = set()
 
     @staticmethod
-    def get_view_configuration(index: int) -> Optional[dict]:
+    def get_view_configuration(index: int) -> Optional[Dict[str, List[int]]]:
         color = None
         if index == 0:
             color = [255, 0, 0]

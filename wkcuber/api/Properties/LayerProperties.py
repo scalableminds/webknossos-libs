@@ -252,7 +252,8 @@ class SegmentationLayerProperties(LayerProperties):
             json_data["boundingBox"],
             None,
             json_data["largestSegmentId"],
-            json_data["mappings"] if "mappings" in json_data else None,
+            json_data.get("mappings"),
+            json_data.get("defaultViewConfiguration")
         )
 
         # add resolutions to LayerProperties
