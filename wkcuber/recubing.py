@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 from typing import List, Tuple
 
 import wkw
@@ -24,11 +25,11 @@ def create_parser() -> ArgumentParser:
     parser = ArgumentParser()
 
     parser.add_argument(
-        "source_path", help="Directory containing the datasource properties."
+        "source_path", help="Directory containing the datasource properties.", type=Path
     )
 
     parser.add_argument(
-        "target_path", help="Output directory for the generated dataset."
+        "target_path", help="Output directory for the generated dataset.", type=Path
     )
 
     parser.add_argument(
@@ -73,8 +74,8 @@ def next_higher_divisible_by(number: int, divisor: int) -> int:
 
 
 def recube(
-    source_path: str,
-    target_path: str,
+    source_path: Path,
+    target_path: Path,
     layer_name: str,
     dtype: str,
     wkw_file_len: int = 32,

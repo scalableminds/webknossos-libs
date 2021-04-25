@@ -453,7 +453,7 @@ class WKLayer(Layer[WKMagDataset]):
 
         try:
             with wkw.Dataset.open(
-                find_mag_path_on_disk(self.dataset.path, self.name, mag)
+                str(find_mag_path_on_disk(self.dataset.path, self.name, mag))
             ) as wkw_dataset:
                 wk_header = wkw_dataset.header
 

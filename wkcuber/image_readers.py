@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Tuple, Dict, Union, Optional
 
 import numpy as np
@@ -15,36 +16,36 @@ Image.MAX_IMAGE_PIXELS = None
 
 
 class ImageReader:
-    def read_array(self, file_name: str, dtype: np.dtype, z_slice: int) -> np.ndarray:
+    def read_array(self, file_name: Path, dtype: np.dtype, z_slice: int) -> np.ndarray:
         pass
 
-    def read_dimensions(self, file_name: str) -> Tuple[int, int]:
+    def read_dimensions(self, file_name: Path) -> Tuple[int, int]:
         pass
 
-    def read_channel_count(self, file_name: str) -> int:
+    def read_channel_count(self, file_name: Path) -> int:
         pass
 
     def read_z_slices_per_file(
-        self, file_name: str  # pylint: disable=unused-argument
+        self, file_name: Path  # pylint: disable=unused-argument
     ) -> int:
         return 1
 
-    def read_dtype(self, file_name: str) -> str:
+    def read_dtype(self, file_name: Path) -> str:
         raise NotImplementedError()
 
 
 class PillowImageReader(ImageReader):
-    def read_array(self, file_name: str, dtype: np.dtype, z_slice: int) -> np.ndarray:
+    def read_array(self, file_name: Path, dtype: np.dtype, z_slice: int) -> np.ndarray:
         this_layer = np.array(Image.open(file_name), dtype)
         this_layer = this_layer.swapaxes(0, 1)
         this_layer = this_layer.reshape(this_layer.shape + (1,))
         return this_layer
 
-    def read_dimensions(self, file_name: str) -> Tuple[int, int]:
+    def read_dimensions(self, file_name: Path) -> Tuple[int, int]:
         with Image.open(file_name) as test_img:
             return test_img.width, test_img.height
 
-    def read_channel_count(self, file_name: str) -> int:
+    def read_channel_count(self, file_name: Path) -> int:
         with Image.open(file_name) as test_img:
             this_layer = np.array(test_img)
             if this_layer.ndim == 2:
@@ -53,7 +54,7 @@ class PillowImageReader(ImageReader):
             else:
                 return this_layer.shape[-1]  # pylint: disable=unsubscriptable-object
 
-    def read_dtype(self, file_name: str) -> str:
+    def read_dtype(self, file_name: Path) -> str:
         return np.array(Image.open(file_name)).dtype.name
 
 
@@ -63,22 +64,22 @@ def to_target_datatype(data: np.ndarray, target_dtype: np.dtype) -> np.ndarray:
 
 
 class Dm3ImageReader(ImageReader):
-    def read_array(self, file_name: str, dtype: np.dtype, z_slice: int) -> np.ndarray:
+    def read_array(self, file_name: Path, dtype: np.dtype, z_slice: int) -> np.ndarray:
         dm3_file = DM3(file_name)
         this_layer = to_target_datatype(dm3_file.imagedata, dtype)
         this_layer = this_layer.swapaxes(0, 1)
         this_layer = this_layer.reshape(this_layer.shape + (1,))
         return this_layer
 
-    def read_dimensions(self, file_name: str) -> Tuple[int, int]:
+    def read_dimensions(self, file_name: Path) -> Tuple[int, int]:
         test_img = DM3(file_name)
         return test_img.width, test_img.height
 
-    def read_channel_count(self, _file_name: str) -> int:
+    def read_channel_count(self, _file_name: Path) -> int:
         logging.info("Assuming single channel for DM3 data")
         return 1
 
-    def read_dtype(self, file_name: str) -> str:
+    def read_dtype(self, file_name: Path) -> str:
         return DM3(file_name).imagedata.dtype.name
 
 
@@ -105,7 +106,7 @@ class Dm4ImageReader(ImageReader):
         )
         return width, height
 
-    def read_array(self, file_name: str, dtype: np.dtype, z_slice: int) -> np.ndarray:
+    def read_array(self, file_name: Path, dtype: np.dtype, z_slice: int) -> np.ndarray:
         dm4file = DM4File.open(file_name)
         image_data_tag, image_tag = self._read_tags(dm4file)
         width, height = self._read_dimensions(dm4file, image_data_tag)
@@ -120,7 +121,7 @@ class Dm4ImageReader(ImageReader):
 
         return data
 
-    def read_dimensions(self, file_name: str) -> Tuple[int, int]:
+    def read_dimensions(self, file_name: Path) -> Tuple[int, int]:
         dm4file = DM4File.open(file_name)
         image_data_tag, _ = self._read_tags(dm4file)
         dimensions = self._read_dimensions(dm4file, image_data_tag)
@@ -128,11 +129,11 @@ class Dm4ImageReader(ImageReader):
 
         return dimensions
 
-    def read_channel_count(self, _file_name: str) -> int:
+    def read_channel_count(self, _file_name: Path) -> int:
         logging.info("Assuming single channel for DM4 data")
         return 1
 
-    def read_dtype(self, file_name: str) -> str:  # pylint: disable=unused-argument
+    def read_dtype(self, file_name: Path) -> str:  # pylint: disable=unused-argument
         # DM4 standard input type is uint16
         return "uint16"
 
@@ -152,7 +153,7 @@ class TiffImageReader(ImageReader):
         else:
             return tif_series.shape[index]  # pylint: disable=unsubscriptable-object
 
-    def read_array(self, file_name: str, dtype: np.dtype, z_slice: int) -> np.ndarray:
+    def read_array(self, file_name: Path, dtype: np.dtype, z_slice: int) -> np.ndarray:
         with TiffFile(file_name) as tif_file:
             if self.num_channels is None:
                 self.num_channels = self.read_channel_count(file_name)
@@ -205,14 +206,14 @@ class TiffImageReader(ImageReader):
             data = data.reshape(data.shape + (1,))
             return data
 
-    def read_dimensions(self, file_name: str) -> Tuple[int, int]:
+    def read_dimensions(self, file_name: Path) -> Tuple[int, int]:
         with TiffFile(file_name) as tif_file:
             return (
                 TiffImageReader.find_count_of_axis(tif_file, "X"),
                 TiffImageReader.find_count_of_axis(tif_file, "Y"),
             )
 
-    def read_channel_count(self, file_name: str) -> int:
+    def read_channel_count(self, file_name: Path) -> int:
         with TiffFile(file_name) as tif_file:
             c_count = TiffImageReader.find_count_of_axis(tif_file, "C")
             s_count = TiffImageReader.find_count_of_axis(tif_file, "S")
@@ -224,11 +225,11 @@ class TiffImageReader(ImageReader):
             else:
                 return c_count
 
-    def read_z_slices_per_file(self, file_name: str) -> int:
+    def read_z_slices_per_file(self, file_name: Path) -> int:
         with TiffFile(file_name) as tif_file:
             return TiffImageReader.find_count_of_axis(tif_file, "Z")
 
-    def read_dtype(self, file_name: str) -> str:
+    def read_dtype(self, file_name: Path) -> str:
         with TiffFile(file_name) as tif_file:
             return tif_file.series[  # pylint: disable=unsubscriptable-object
                 0
@@ -308,7 +309,7 @@ class CziImageReader(ImageReader):
                 data = to_target_datatype(data, dtype)
                 return data
 
-    def read_array(self, file_name: str, dtype: np.dtype, z_slice: int) -> np.ndarray:
+    def read_array(self, file_name: Path, dtype: np.dtype, z_slice: int) -> np.ndarray:
         with CziFile(file_name) as czi_file:
             channel_index = czi_file.axes.find("C")  # pylint: disable=no-member
             channel_count = self.read_channel_count(file_name)
@@ -341,22 +342,22 @@ class CziImageReader(ImageReader):
             else:
                 return self._read_array_all_channels(czi_file, dtype, z_slice)
 
-    def read_dimensions(self, file_name: str) -> Tuple[int, int]:
+    def read_dimensions(self, file_name: Path) -> Tuple[int, int]:
         with CziFile(file_name) as czi_file:
             return (
                 CziImageReader.find_count_of_axis(czi_file, "X"),
                 CziImageReader.find_count_of_axis(czi_file, "Y"),
             )
 
-    def read_channel_count(self, file_name: str) -> int:
+    def read_channel_count(self, file_name: Path) -> int:
         with CziFile(file_name) as czi_file:
             return CziImageReader.find_count_of_axis(czi_file, "C")
 
-    def read_z_slices_per_file(self, file_name: str) -> int:
+    def read_z_slices_per_file(self, file_name: Path) -> int:
         with CziFile(file_name) as czi_file:
             return CziImageReader.find_count_of_axis(czi_file, "Z")
 
-    def read_dtype(self, file_name: str) -> str:
+    def read_dtype(self, file_name: Path) -> str:
         with CziFile(file_name) as czi_file:
             return czi_file.dtype.name  # pylint: disable=no-member
 
@@ -383,7 +384,7 @@ class ImageReaderManager:
             ".czi": CziImageReader(),
         }
 
-    def read_array(self, file_name: str, dtype: np.dtype, z_slice: int) -> np.ndarray:
+    def read_array(self, file_name: Path, dtype: np.dtype, z_slice: int) -> np.ndarray:
         _, ext = path.splitext(file_name)
 
         # Image shape will be (x, y, channel_count, z=1) or (x, y, z=1)
@@ -394,19 +395,19 @@ class ImageReaderManager:
 
         return image
 
-    def read_dimensions(self, file_name: str) -> Tuple[int, int]:
+    def read_dimensions(self, file_name: Path) -> Tuple[int, int]:
         _, ext = path.splitext(file_name)
         return self.readers[ext].read_dimensions(file_name)
 
-    def read_channel_count(self, file_name: str) -> int:
+    def read_channel_count(self, file_name: Path) -> int:
         _, ext = path.splitext(file_name)
         return self.readers[ext].read_channel_count(file_name)
 
-    def read_z_slices_per_file(self, file_name: str) -> int:
+    def read_z_slices_per_file(self, file_name: Path) -> int:
         _, ext = path.splitext(file_name)
         return self.readers[ext].read_z_slices_per_file(file_name)
 
-    def read_dtype(self, file_name: str) -> str:
+    def read_dtype(self, file_name: Path) -> str:
         _, ext = path.splitext(file_name)
         return self.readers[ext].read_dtype(file_name)
 

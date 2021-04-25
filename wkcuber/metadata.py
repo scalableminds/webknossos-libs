@@ -16,14 +16,14 @@ from pathlib import Path
 from os.path import basename, normpath
 
 
-def get_datasource_path(dataset_path: str) -> str:
-    return path.join(dataset_path, "datasource-properties.json")
+def get_datasource_path(dataset_path: Path) -> Path:
+    return dataset_path / "datasource-properties.json"
 
 
 def create_parser() -> ArgumentParser:
     parser = ArgumentParser()
 
-    parser.add_argument("path", help="Directory containing the dataset.")
+    parser.add_argument("path", help="Directory containing the dataset.", type=Path)
 
     parser.add_argument("--name", "-n", help="Name of the dataset", default=None)
 
@@ -45,19 +45,21 @@ def create_parser() -> ArgumentParser:
     return parser
 
 
-def write_datasource_properties(dataset_path: str, datasource_properties: dict) -> None:
+def write_datasource_properties(
+    dataset_path: Path, datasource_properties: dict
+) -> None:
     datasource_properties_path = get_datasource_path(dataset_path)
     with open(datasource_properties_path, "wt") as datasource_properties_file:
         json.dump(datasource_properties, datasource_properties_file, indent=2)
 
 
-def read_datasource_properties(dataset_path: str) -> dict:
+def read_datasource_properties(dataset_path: Path) -> dict:
     with open(get_datasource_path(dataset_path), "r") as datasource_properties_file:
         return json.load(datasource_properties_file)
 
 
 def write_webknossos_metadata(
-    dataset_path: str,
+    dataset_path: Path,
     name: str,
     scale: Tuple[float, float, float],
     max_id: int = 0,
@@ -69,7 +71,7 @@ def write_webknossos_metadata(
     for the given dataset path. Common layers are detected automatically.
     """
     if name == None:
-        name = path.basename(dataset_path)
+        name = dataset_path.name
 
     # Generate a metadata file for webKnossos
     # Currently includes no source of information for team
@@ -87,7 +89,7 @@ def write_webknossos_metadata(
 
 
 def refresh_metadata(
-    wkw_path: str,
+    wkw_path: Path,
     max_id: int = 0,
     compute_max_id: bool = False,
     exact_bounding_box: Optional[dict] = None,
@@ -147,7 +149,7 @@ def convert_element_class_to_dtype(elementClass: str) -> np.dtype:
 
 
 def read_metadata_for_layer(
-    wkw_path: str, layer_name: str
+    wkw_path: Path, layer_name: str
 ) -> Tuple[dict, np.dtype, List[int], List[int]]:
     datasource_properties = read_datasource_properties(wkw_path)
 
@@ -179,20 +181,22 @@ def convert_dtype_to_element_class(dtype: np.dtype) -> str:
     return conversion_map.get(dtype, str(dtype))
 
 
-def detect_mag_path(dataset_path: str, layer: str, mag: Mag = Mag(1)) -> Optional[str]:
-    layer_path = path.join(dataset_path, layer, str(mag))
-    if path.exists(layer_path):
+def detect_mag_path(
+    dataset_path: Path, layer: str, mag: Mag = Mag(1)
+) -> Optional[Path]:
+    layer_path = dataset_path / layer / str(mag)
+    if layer_path.exists():
         return layer_path
-    layer_path = path.join(dataset_path, layer, mag.to_long_layer_name())
-    if path.exists(layer_path):
+    layer_path = dataset_path / layer / mag.to_long_layer_name()
+    if layer_path.exists():
         return layer_path
     return None
 
 
-def detect_dtype(dataset_path: str, layer: str, mag: Mag = Mag(1)) -> str:
+def detect_dtype(dataset_path: Path, layer: str, mag: Mag = Mag(1)) -> str:
     layer_path = detect_mag_path(dataset_path, layer, mag)
     if layer_path is not None:
-        with wkw.Dataset.open(layer_path) as dataset:
+        with wkw.Dataset.open(str(layer_path)) as dataset:
             voxel_size = dataset.header.voxel_type
             num_channels = dataset.header.num_channels
             if voxel_size == np.uint8 and num_channels > 1:
@@ -204,17 +208,17 @@ def detect_dtype(dataset_path: str, layer: str, mag: Mag = Mag(1)) -> str:
     )
 
 
-def detect_cubeLength(dataset_path: str, layer: str, mag: Mag = Mag(1)) -> int:
+def detect_cubeLength(dataset_path: Path, layer: str, mag: Mag = Mag(1)) -> int:
     layer_path = detect_mag_path(dataset_path, layer, mag)
     if layer_path is not None:
-        with wkw.Dataset.open(layer_path) as dataset:
+        with wkw.Dataset.open(str(layer_path)) as dataset:
             return dataset.header.block_len * dataset.header.file_len
     raise RuntimeError(
         f"Failed to detect the cube length (for {dataset_path}, {layer}, {mag}) because the layer_path is None"
     )
 
 
-def detect_bbox(dataset_path: str, layer: str, mag: Mag = Mag(1)) -> Optional[dict]:
+def detect_bbox(dataset_path: Path, layer: str, mag: Mag = Mag(1)) -> Optional[dict]:
     # Detect the coarse bounding box of a dataset by iterating
     # over the WKW cubes
     layer_path = detect_mag_path(dataset_path, layer, mag)
@@ -234,7 +238,7 @@ def detect_bbox(dataset_path: str, layer: str, mag: Mag = Mag(1)) -> Optional[di
     def list_cubes(layer_path: str) -> Iterable[Tuple[int, int, int]]:
         return (parse_cube_file_name(f) for f in list_files(layer_path))
 
-    xs, ys, zs = list(zip(*list_cubes(layer_path)))
+    xs, ys, zs = list(zip(*list_cubes(str(layer_path))))
 
     min_x, min_y, min_z = min(xs), min(ys), min(zs)
     max_x, max_y, max_z = max(xs), max(ys), max(zs)
@@ -251,7 +255,7 @@ def detect_bbox(dataset_path: str, layer: str, mag: Mag = Mag(1)) -> Optional[di
     }
 
 
-def detect_resolutions(dataset_path: str, layer: str) -> Generator:
+def detect_resolutions(dataset_path: Path, layer: str) -> Generator:
     for mag in listdir(path.join(dataset_path, layer)):
         try:
             yield Mag(mag)
@@ -260,7 +264,7 @@ def detect_resolutions(dataset_path: str, layer: str) -> Generator:
 
 
 def detect_standard_layer(
-    dataset_path: str,
+    dataset_path: Path,
     layer_name: str,
     exact_bounding_box: Optional[dict] = None,
     category: str = "color",
@@ -313,15 +317,15 @@ def detect_standard_layer(
     }
 
 
-def detect_mappings(dataset_path: str, layer_name: str) -> List[str]:
-    pattern = path.join(dataset_path, layer_name, "mappings", "*.json")
-    mapping_files = glob.glob(pattern)
+def detect_mappings(dataset_path: Path, layer_name: str) -> List[str]:
+    pattern = dataset_path / layer_name / "mappings" / "*.json"
+    mapping_files = glob.glob(str(pattern))
     mapping_file_names = [path.basename(mapping_file) for mapping_file in mapping_files]
     return mapping_file_names
 
 
 def detect_segmentation_layer(
-    dataset_path: str,
+    dataset_path: Path,
     layer_name: str,
     max_id: int,
     compute_max_id: bool = False,
@@ -337,7 +341,7 @@ def detect_segmentation_layer(
         logging.info("Computing max id of layer={}".format(layer_name))
         # Computing the current largest segment id
         # This may take very long due to IO load
-        layer_path = detect_mag_path(dataset_path, layer_name, Mag(1))
+        layer_path = str(detect_mag_path(dataset_path, layer_name, Mag(1)))
         with wkw.Dataset.open(layer_path) as dataset:
             bbox = layer_info["boundingBox"]
             layer_info["largestSegmentId"] = int(
@@ -357,7 +361,7 @@ def detect_segmentation_layer(
 
 
 def detect_layers(
-    dataset_path: str,
+    dataset_path: Path,
     max_id: int,
     compute_max_id: bool,
     exact_bounding_box: Optional[dict] = None,

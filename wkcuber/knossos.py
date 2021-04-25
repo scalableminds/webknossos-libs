@@ -1,5 +1,6 @@
+from pathlib import Path
 from types import TracebackType
-from typing import Tuple, Any, Generator, Iterator, Optional, Type
+from typing import Tuple, Any, Generator, Iterator, Optional, Type, Union
 
 import numpy as np
 import os
@@ -14,8 +15,8 @@ CUBE_REGEX = re.compile(r"x(\d+)/y(\d+)/z(\d+)/(.*\.raw)$")
 
 
 class KnossosDataset:
-    def __init__(self, root: str, dtype: np.dtype = np.uint8):
-        self.root = root
+    def __init__(self, root: Union[str, Path], dtype: np.dtype = np.uint8):
+        self.root = str(root)
         self.dtype = dtype
 
     def read(
@@ -98,8 +99,8 @@ class KnossosDataset:
         pass
 
     @staticmethod
-    def open(root: str, dtype: Optional[np.dtype]) -> "KnossosDataset":
-        return KnossosDataset(root, dtype)
+    def open(root: Union[str, Path], dtype: Optional[np.dtype]) -> "KnossosDataset":
+        return KnossosDataset(str(root), dtype)
 
     def __enter__(self) -> "KnossosDataset":
         return self
