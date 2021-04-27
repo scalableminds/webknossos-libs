@@ -196,27 +196,26 @@ class TiffImageReader(ImageReader):
                 )
 
             channel_selected = channel_index is not None
+            num_pages_in_result = (
+                1 if channel_selected else self.num_pages_for_all_channels
+            )
 
             # we need to set the channel_offset for multi-channel pages because reading will fail otherwise and we handle the channel selection elsewhere
-            if channel_index is None or self.is_page_multi_channel:
-                channel_offset = 0
-            else:
-                channel_offset = channel_index
+            channel_offset = (
+                0
+                if channel_index is None or self.is_page_multi_channel
+                else channel_index
+            )
 
             if len(tif_file.pages) > self.num_pages_for_all_channels:
+                page_index = z_slice * self.num_pages_for_all_channels + channel_offset
                 # single multi-page input file
                 data = np.array(
                     list(
                         map(
                             lambda x: x.asarray(),
                             tif_file.pages[
-                                z_slice * self.num_pages_for_all_channels
-                                + channel_offset : z_slice
-                                * self.num_pages_for_all_channels
-                                + channel_offset
-                                + 1
-                                if channel_selected
-                                else self.num_pages_for_all_channels
+                                page_index : page_index + num_pages_in_result
                             ],
                         )
                     ),
@@ -229,9 +228,7 @@ class TiffImageReader(ImageReader):
                         map(
                             lambda x: x.asarray(),
                             tif_file.pages[
-                                channel_offset : channel_offset + 1
-                                if channel_selected
-                                else self.num_pages_for_all_channels
+                                channel_offset : channel_offset + num_pages_in_result
                             ],
                         )
                     ),
@@ -279,6 +276,9 @@ class TiffImageReader(ImageReader):
 
     def read_z_slices_per_file(self, file_name: str) -> int:
         with TiffFile(file_name) as tif_file:
+            i_count = TiffImageReader.find_count_of_axis(tif_file, "I")
+            if i_count > 1:
+                return i_count
             return TiffImageReader.find_count_of_axis(tif_file, "Z")
 
     def read_dtype(self, file_name: str) -> str:
