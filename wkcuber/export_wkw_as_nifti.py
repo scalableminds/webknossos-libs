@@ -1,7 +1,7 @@
 import logging
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import nibabel as nib
 import numpy as np
@@ -82,7 +82,7 @@ def export_layer_to_nifti(
 
 def export_nifti(
     wkw_file_path: Path,
-    bbox: BoundingBox,
+    bbox: Optional[BoundingBox],
     mag: Mag,
     destination_path: Path,
     name: str,
@@ -92,9 +92,7 @@ def export_nifti(
 
     for layer_name in layers:
         if bbox is None:
-            _, _, bbox_dim, origin = read_metadata_for_layer(
-                str(wkw_file_path), layer_name
-            )
+            _, _, bbox_dim, origin = read_metadata_for_layer(wkw_file_path, layer_name)
             bbox_dict = {"topleft": origin, "size": bbox_dim}
         else:
             bbox_dict = {"topleft": list(bbox.topleft), "size": list(bbox.size)}
