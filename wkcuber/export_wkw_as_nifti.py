@@ -90,7 +90,7 @@ def export_nifti(
     mag: Mag,
     destination_path: Path,
     name: str,
-):
+) -> None:
     wk_ds = WKDataset(wkw_file_path)
     layers = wk_ds.layers
 
@@ -99,15 +99,15 @@ def export_nifti(
             _, _, bbox_dim, origin = read_metadata_for_layer(
                 str(wkw_file_path), layer_name
             )
-            bbox = {"topleft": origin, "size": bbox_dim}
+            bbox_dict = {"topleft": origin, "size": bbox_dim}
         else:
-            bbox = {"topleft": list(bbox.topleft), "size": list(bbox.size)}
+            bbox_dict = {"topleft": list(bbox.topleft), "size": list(bbox.size)}
 
         logging.info(f"Starting tiff export for bounding box: {bbox}")
 
         export_layer_to_nifti(
             wkw_file_path,
-            bbox,
+            bbox_dict,
             mag,
             layer_name,
             destination_path,
