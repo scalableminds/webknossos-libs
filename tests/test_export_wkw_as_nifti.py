@@ -1,11 +1,13 @@
-from wkcuber.api.Dataset import WKDataset
-from wkcuber.api.bounding_box import BoundingBox
 import os
+from pathlib import Path
 
+import nibabel as nib
+import numpy as np
+
+from wkcuber.api.bounding_box import BoundingBox
+from wkcuber.api.Dataset import WKDataset
 from wkcuber.export_wkw_as_nifti import run
 from wkcuber.mag import Mag
-import numpy as np
-import nibabel as nib
 
 ds_name = "simple_wk_dataset"
 source_path = os.path.join("testdata", ds_name)
@@ -32,7 +34,7 @@ def test_export_nifti_file() -> None:
 
     run(args_list)
 
-    wk_ds = WKDataset(source_path)
+    wk_ds = WKDataset(Path(source_path))
 
     layer_names = wk_ds.layers
 

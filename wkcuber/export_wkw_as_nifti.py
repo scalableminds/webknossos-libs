@@ -1,20 +1,17 @@
 import logging
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
-from typing import List, Dict
+from typing import Dict, List
 
 import nibabel as nib
 import numpy as np
 
-from wkcuber.api.Dataset import WKDataset
 from wkcuber.api.bounding_box import BoundingBox
+from wkcuber.api.Dataset import WKDataset
 from wkcuber.mag import Mag
 from wkcuber.metadata import read_metadata_for_layer
-from wkcuber.utils import (
-    add_verbose_flag,
-    add_distribution_flags,
-    parse_bounding_box,
-)
+from wkcuber.utils import (add_distribution_flags, add_verbose_flag,
+                           parse_bounding_box)
 
 
 def create_parser() -> ArgumentParser:
