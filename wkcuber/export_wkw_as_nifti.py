@@ -23,15 +23,15 @@ def create_parser() -> ArgumentParser:
     parser.add_argument(
         "--destination_path",
         "-d",
-        help="Output directory for the generated tiff files.",
+        help="Output directory for the generated nifti files.",
         required=True,
     )
 
-    parser.add_argument("--name", "-n", help="Name of the tiffs", default="")
+    parser.add_argument("--name", "-n", help="Name of the nifti", default="")
 
     parser.add_argument(
         "--bbox",
-        help="The BoundingBox of which the tiff stack should be generated."
+        help="The BoundingBox of which the nifti file should be generated."
         "The input format is x,y,z,width,height,depth."
         "(By default, data for the full bounding box of the dataset is generated)",
         default=None,
@@ -43,7 +43,7 @@ def create_parser() -> ArgumentParser:
     )
 
     parser.add_argument(
-        "--downsample", help="Downsample each tiff image", default=1, type=int
+        "--downsample", help="Downsample each nifti image", default=1, type=int
     )
 
     # add_batch_size_flag(parser)
@@ -97,7 +97,7 @@ def export_nifti(
         else:
             bbox_dict = {"topleft": list(bbox.topleft), "size": list(bbox.size)}
 
-        logging.info(f"Starting tiff export for bounding box: {bbox}")
+        logging.info(f"Starting nifti export for bounding box: {bbox}")
 
         export_layer_to_nifti(
             wkw_file_path,
