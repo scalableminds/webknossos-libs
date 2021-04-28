@@ -1,6 +1,8 @@
 from argparse import ArgumentParser, Namespace
 from functools import partial
 import logging
+from pathlib import Path
+
 import wkw
 import os
 from math import ceil
@@ -25,7 +27,11 @@ def create_parser() -> ArgumentParser:
     parser = ArgumentParser()
 
     parser.add_argument(
-        "--source_path", "-s", help="Directory containing the wkw file.", required=True
+        "--source_path",
+        "-s",
+        help="Directory containing the wkw file.",
+        required=True,
+        type=Path,
     )
 
     parser.add_argument(
@@ -33,6 +39,7 @@ def create_parser() -> ArgumentParser:
         "-d",
         help="Output directory for the generated tiff files.",
         required=True,
+        type=Path,
     )
 
     parser.add_argument(
@@ -119,9 +126,9 @@ def wkw_slice_to_image(data_slice: np.ndarray, downsample: int = 1) -> Image:
 
 def export_tiff_slice(
     tiff_bbox: Dict[str, Tuple[int, int, int]],
-    dest_path: str,
+    dest_path: Path,
     name: str,
-    dataset_path: str,
+    dataset_path: Path,
     tiling_size: Union[None, Tuple[int, int]],
     batch_size: int,
     downsample: int,
@@ -144,7 +151,7 @@ def export_tiff_slice(
         (tiff_bbox["topleft"][2] + batch_number * batch_size) // mag.mag[2],
     )
 
-    with wkw.Dataset.open(dataset_path) as dataset:
+    with wkw.Dataset.open(str(dataset_path)) as dataset:
         if tiling_size is None:
             tiff_data = dataset.read(tiff_bbox["topleft"], tiff_bbox["size"])
         else:
@@ -158,7 +165,7 @@ def export_tiff_slice(
             slice_name_number = batch_number * batch_size + slice_index + 1
             if tiling_size is None:
                 tiff_file_name = wkw_name_and_bbox_to_tiff_name(name, slice_name_number)
-                tiff_file_path = os.path.join(dest_path, tiff_file_name)
+                tiff_file_path = dest_path / tiff_file_name
 
                 image = wkw_slice_to_image(tiff_data[:, :, :, slice_index], downsample)
                 image.save(tiff_file_path)
@@ -166,8 +173,8 @@ def export_tiff_slice(
 
             else:
                 for y_tile_index in range(ceil(tiff_bbox["size"][1] / tiling_size[1])):
-                    tile_tiff_path = os.path.join(
-                        dest_path, str(slice_name_number), str(y_tile_index + 1)
+                    tile_tiff_path = (
+                        dest_path / str(slice_name_number) / str(y_tile_index + 1)
                     )
                     os.makedirs(tile_tiff_path, exist_ok=True)
                     for x_tile_index in range(
@@ -198,11 +205,11 @@ def export_tiff_slice(
 
 
 def export_tiff_stack(
-    wkw_file_path: str,
+    wkw_file_path: Path,
     wkw_layer: str,
     bbox: Dict[str, List[int]],
     mag: Mag,
-    destination_path: str,
+    destination_path: Path,
     name: str,
     tiling_slice_size: Union[None, Tuple[int, int]],
     batch_size: int,
@@ -210,7 +217,7 @@ def export_tiff_stack(
     args: Namespace,
 ) -> None:
     os.makedirs(destination_path, exist_ok=True)
-    dataset_path = os.path.join(wkw_file_path, wkw_layer, mag.to_layer_name())
+    dataset_path = wkw_file_path / wkw_layer / mag.to_layer_name()
 
     with get_executor_for_args(args) as executor:
         num_slices = ceil(bbox["size"][2] / batch_size)

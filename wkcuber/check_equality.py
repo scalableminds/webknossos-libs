@@ -1,5 +1,6 @@
 import logging
 from argparse import ArgumentParser, Namespace
+from pathlib import Path
 from typing import Any, Callable
 
 from wkcuber.api.Dataset import WKDataset
@@ -36,10 +37,12 @@ def named_partial(func: Callable, *args: Any, **kwargs: Any) -> Callable:
 def create_parser() -> ArgumentParser:
     parser = ArgumentParser()
 
-    parser.add_argument("source_path", help="Path to input WKW dataset")
+    parser.add_argument("source_path", help="Path to input WKW dataset", type=Path)
 
     parser.add_argument(
-        "target_path", help="WKW dataset with which to compare the input dataset."
+        "target_path",
+        help="WKW dataset with which to compare the input dataset.",
+        type=Path,
     )
 
     parser.add_argument(
@@ -56,8 +59,8 @@ def create_parser() -> ArgumentParser:
 
 
 def assert_equality_for_chunk(
-    source_path: str,
-    target_path: str,
+    source_path: Path,
+    target_path: Path,
     layer_name: str,
     mag: Mag,
     sub_box: BoundingBoxNamedTuple,
@@ -76,7 +79,9 @@ def assert_equality_for_chunk(
         ), f"Data differs in bounding box {sub_box} for layer {layer_name} with mag {mag}"
 
 
-def check_equality(source_path: str, target_path: str, args: Namespace = None) -> None:
+def check_equality(
+    source_path: Path, target_path: Path, args: Namespace = None
+) -> None:
 
     logging.info(f"Comparing {source_path} with {target_path}")
 

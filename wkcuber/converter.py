@@ -23,11 +23,13 @@ def create_parser() -> ArgumentParser:
     )
 
     parser.add_argument(
-        "source_path", help="Input file or directory containing the input files."
+        "source_path",
+        help="Input file or directory containing the input files.",
+        type=Path,
     )
 
     parser.add_argument(
-        "target_path", help="Output directory for the generated dataset."
+        "target_path", help="Output directory for the generated dataset.", type=Path
     )
 
     add_scale_flag(parser)
@@ -356,7 +358,7 @@ class ImageStackConverter(Converter):
 
         for layer_path, layer_name in layer_path_to_name.items():
             args.layer_name = layer_name
-            args.source_path = layer_path
+            args.source_path = Path(layer_path)
             cube_image_stack(
                 args.source_path,
                 args.target_path,

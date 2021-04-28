@@ -1,5 +1,6 @@
+from pathlib import Path
+
 import numpy as np
-import os
 import wkw
 
 from wkcuber.cubing import ensure_wkw
@@ -14,7 +15,7 @@ from wkcuber.metadata import (
 
 
 def test_element_class_conversion() -> None:
-    test_wkw_path = os.path.join("testoutput", "test_metadata")
+    test_wkw_path = Path("testoutput", "test_metadata")
     prediction_layer_name = "prediction"
     prediction_wkw_info = WkwDatasetInfo(
         test_wkw_path, prediction_layer_name, 1, wkw.Header(np.float32, num_channels=3)
@@ -40,7 +41,7 @@ def test_element_class_conversion() -> None:
 
 
 def check_element_class_of_layer(
-    test_wkw_path: str,
+    test_wkw_path: Path,
     layer_name: str,
     expected_element_class: str,
     expected_dtype: type,
@@ -60,7 +61,7 @@ def check_element_class_of_layer(
 
 
 def write_custom_layer(
-    target_path: str, layer_name: str, dtype: type, num_channels: int
+    target_path: Path, layer_name: str, dtype: type, num_channels: int
 ) -> None:
     data = (
         np.arange(4 * 4 * 4 * num_channels)
@@ -84,7 +85,7 @@ def test_mapping_detection() -> None:
         "test_mapping_4.json",
         "test_mapping_5.json",
     ]
-    datapath_with_mappings = "testdata/test_metadata"
+    datapath_with_mappings = Path("testdata", "test_metadata")
     layer_name_with_mapping = "segmentation"
     detected_mappings = detect_mappings(datapath_with_mappings, layer_name_with_mapping)
 
@@ -97,7 +98,7 @@ def test_mapping_detection() -> None:
         detected_mappings
     ), "Did not find all mappings."
 
-    datapath_without_mappings = "testdata/WT1_wkw"
+    datapath_without_mappings = Path("testdata", "WT1_wkw")
     layer_name_without_mapping = "color"
     detected_mappings = detect_mappings(
         datapath_without_mappings, layer_name_without_mapping
