@@ -13,6 +13,8 @@ source_path = os.path.join("testdata", ds_name)
 
 def test_export_nifti_file() -> None:
     destination_path = os.path.join("testoutput", ds_name + "_nifti")
+    os.mkdir(destination_path)
+
     bbox = BoundingBox((100, 100, 10), (100, 500, 50))
     bbox_dict = bbox.as_config()
     args_list = [
