@@ -233,7 +233,9 @@ class MagDataset:
     def _extract_file_index(self, file_path: Path) -> Tuple[int, int, int]:
         raise NotImplementedError
 
-    def compress(self, target_path: Path = None, args: Namespace = None) -> None:
+    def compress(
+        self, target_path: Union[str, Path] = None, args: Namespace = None
+    ) -> None:
         pass
 
 
@@ -278,9 +280,13 @@ class WKMagDataset(MagDataset):
         zyx_index = [int(el[1:]) for el in file_path.parts]
         return zyx_index[2], zyx_index[1], zyx_index[0]
 
-    def compress(self, target_path: Path = None, args: Namespace = None) -> None:
+    def compress(
+        self, target_path: Union[str, Path] = None, args: Namespace = None
+    ) -> None:
         # The data gets compressed inplace, if target_path is None.
         # Otherwise it is written to target_path/layer_name/mag.
+        if target_path is not None:
+            target_path = Path(target_path)
 
         uncompressed_full_path = (
             Path(self.layer.dataset.path) / self.layer.name / str(Mag(self.name))
