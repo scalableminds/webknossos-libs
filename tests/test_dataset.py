@@ -681,6 +681,13 @@ def test_get_or_add_layer() -> None:
         pass
 
 
+def test_get_or_add_layer_idempotence() -> None:
+    delete_dir(TESTOUTPUT_DIR / "wk_dataset")
+    ds = WKDataset.create(TESTOUTPUT_DIR / "wk_dataset", scale=(1, 1, 1))
+    ds.get_or_add_layer("color2", "color", np.uint8).get_or_add_mag("1")
+    ds.get_or_add_layer("color2", "color", np.uint8).get_or_add_mag("1")
+
+
 def test_get_or_add_mag_for_wk() -> None:
     delete_dir(TESTOUTPUT_DIR / "wk_dataset")
 
