@@ -188,8 +188,11 @@ class TiffProperties(Properties):
         team: str = "",
         data_layers: Dict[str, LayerProperties] = None,
         tile_size: Optional[Tuple[int, int]] = (32, 32),
+        default_view_configuration: Optional[dict] = None,
     ) -> None:
-        super().__init__(path, name, scale, team, data_layers)
+        super().__init__(
+            path, name, scale, team, data_layers, default_view_configuration
+        )
         self.pattern = pattern
         self.tile_size = tile_size
 
@@ -221,6 +224,7 @@ class TiffProperties(Properties):
                 team=data["id"]["team"],
                 data_layers=data_layers,
                 tile_size=tile_size,
+                default_view_configuration=data.get("defaultViewConfiguration"),
             )
 
     def _export_as_json(self) -> None:
@@ -235,6 +239,9 @@ class TiffProperties(Properties):
         }
         if self.tile_size is not None:
             data["tile_size"] = self.tile_size
+
+        if self.default_view_configuration is not None:
+            data["defaultViewConfiguration"] = self.default_view_configuration
 
         with open(self.path, "w") as outfile:
             json.dump(data, outfile, indent=4, separators=(",", ": "))

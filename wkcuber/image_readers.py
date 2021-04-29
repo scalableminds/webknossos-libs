@@ -186,21 +186,22 @@ class TiffImageReader(ImageReader):
         channel_index: Optional[int],
     ) -> np.ndarray:
         with TiffFile(file_name) as tif_file:
+            # We are caching 'num_pages_for_all_channels' and 'is_page_multi_channel'
+            # because they are the same for all tiffs
             if self.num_pages_for_all_channels is None:
                 self.num_pages_for_all_channels = self.read_channel_count(file_name)
             if self.is_page_multi_channel is None:
-                # we assume all tif pages have the same dimensions
                 self.is_page_multi_channel = tif_file.pages[0].ndim == 3
-                self.num_pages_for_all_channels = (
-                    1 if self.is_page_multi_channel else self.num_pages_for_all_channels
-                )
+                if self.is_page_multi_channel:
+                    self.num_pages_for_all_channels = 1
 
             channel_selected = channel_index is not None
             num_pages_in_result = (
                 1 if channel_selected else self.num_pages_for_all_channels
             )
 
-            # we need to set the channel_offset for multi-channel pages because reading will fail otherwise and we handle the channel selection elsewhere
+            # we need to set the channel_offset for multi-channel pages
+            # because reading will fail otherwise and we handle the channel selection elsewhere
             channel_offset = (
                 0
                 if channel_index is None or self.is_page_multi_channel

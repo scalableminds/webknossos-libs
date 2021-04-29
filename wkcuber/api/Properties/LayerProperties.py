@@ -247,7 +247,9 @@ class SegmentationLayerProperties(LayerProperties):
                 json_data.get("num_channels"),
                 dataset_path,
                 json_data["name"],
-                json_data["wkwResolutions"][0],
+                json_data["wkwResolutions"][0]
+                if len(json_data["wkwResolutions"]) > 0
+                else None,
             ),
             json_data["boundingBox"],
             None,
