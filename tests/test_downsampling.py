@@ -307,3 +307,20 @@ def test_default_parameter() -> None:
 
     # The max_mag is Mag(4) in this case (see test_default_max_mag)
     assert sorted(layer.mags.keys()) == ["2", "4"]
+
+
+def test_default_anisotropic_scale() -> None:
+    try:
+        shutil.rmtree(TESTOUTPUT_DIR / "default_anisotropic_scale")
+    except:
+        pass
+
+    ds = WKDataset.create(
+        TESTOUTPUT_DIR / "default_anisotropic_scale", scale=(85, 85, 346)
+    )
+    layer = ds.add_layer("color", Layer.COLOR_TYPE)
+    mag = layer.add_mag(1)
+    mag.write(data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8))
+
+    layer.downsample(Mag(1), None, "median", True)
+    assert sorted(layer.mags.keys()) == ["1", "2-2-1", "4-4-1"]

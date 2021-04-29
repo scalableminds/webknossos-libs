@@ -218,16 +218,16 @@ class Layer(Generic[MagT]):
             from_mag.to_layer_name() in self.mags.keys()
         ), f"Failed to downsample data. The from_mag ({from_mag}) does not exist."
 
+        if scale is None:
+            scale = self.dataset.properties.scale
+
+        if anisotropic and max_mag is not None:
+            scale = calculate_virtual_scale_for_target_mag(max_mag)
+
         if max_mag is None:
             max_mag = calculate_default_max_mag(
                 self.dataset.properties.data_layers[self.name].get_bounding_box_size()
             )
-
-        if anisotropic and scale is None:
-            if max_mag is None:
-                scale = self.dataset.properties.scale
-            else:
-                scale = calculate_virtual_scale_for_target_mag(max_mag)
 
         self._pad_existing_mags_for_downsampling(from_mag, max_mag, scale)
 
