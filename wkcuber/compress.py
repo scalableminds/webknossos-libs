@@ -89,7 +89,7 @@ def compress_mag(
         logging.error("Target path '{}' already exists".format(target_path))
         exit(1)
 
-    if args is not None and hasattr(args, "dtype"):
+    if args is not None and hasattr(args, "dtype") and args.dtype is not None:
         header = wkw.Header(convert_element_class_to_dtype(args.dtype))
     else:
         header = None

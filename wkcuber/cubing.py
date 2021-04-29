@@ -294,7 +294,6 @@ def cubing(
 
     if dtype is None:
         dtype = image_reader.read_dtype(source_files[0])
-        executor_args.dtype = dtype
 
     if batch_size is None:
         batch_size = BLOCK_LEN

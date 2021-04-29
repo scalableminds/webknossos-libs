@@ -303,6 +303,14 @@ class ImageStackConverter(Converter):
         self.dataset_names: Set[str] = set()
 
     @staticmethod
+    def get_executor_args(global_args: Namespace) -> Namespace:
+        executor_args = Namespace()
+        executor_args.jobs = global_args.jobs
+        executor_args.distribution_strategy = global_args.distribution_strategy
+        executor_args.job_resources = global_args.job_resources
+        return executor_args
+
+    @staticmethod
     def get_view_configuration(index: int) -> Optional[Dict[str, List[int]]]:
         color = None
         if index == 0:
@@ -359,6 +367,8 @@ class ImageStackConverter(Converter):
         put_default_from_argparser_if_not_present(args, image_stack_parser, "pad")
         put_default_from_argparser_if_not_present(args, image_stack_parser, "verbose")
 
+        executor_args = ImageStackConverter.get_executor_args(args)
+
         # detect layer and ds name
         (
             dataset_name,
@@ -387,7 +397,7 @@ class ImageStackConverter(Converter):
                         args.interpolation_mode,
                         args.start_z,
                         args.pad,
-                        args,
+                        executor_args,
                     )
 
                     view_configuration[
@@ -407,7 +417,7 @@ class ImageStackConverter(Converter):
                     args.interpolation_mode,
                     args.start_z,
                     args.pad,
-                    args,
+                    executor_args,
                 )
 
         write_webknossos_metadata(
