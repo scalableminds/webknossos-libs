@@ -1,5 +1,6 @@
 import time
 import logging
+from pathlib import Path
 from typing import Tuple, cast
 
 import wkw
@@ -25,11 +26,13 @@ def create_parser() -> ArgumentParser:
     parser = ArgumentParser()
 
     parser.add_argument(
-        "source_path", help="Directory containing the source KNOSSOS dataset."
+        "source_path",
+        help="Directory containing the source KNOSSOS dataset.",
+        type=Path,
     )
 
     parser.add_argument(
-        "target_path", help="Output directory for the generated WKW dataset."
+        "target_path", help="Output directory for the generated WKW dataset.", type=Path
     )
 
     parser.add_argument(
@@ -76,8 +79,8 @@ def convert_cube_job(
 
 
 def convert_knossos(
-    source_path: str,
-    target_path: str,
+    source_path: Path,
+    target_path: Path,
     layer_name: str,
     dtype: str,
     mag: int = 1,
@@ -109,7 +112,12 @@ def convert_knossos(
 
 def main(args: Namespace) -> None:
     convert_knossos(
-        args.source_path, args.target_path, args.layer_name, args.dtype, args.mag, args
+        args.source_path,
+        args.target_path,
+        args.layer_name,
+        args.dtype,
+        args.mag,
+        args,
     )
 
 

@@ -44,12 +44,10 @@ from wkcuber.api.TiffData.TiffMag import TiffMagHeader, detect_tile_ranges, dete
 from wkcuber.mag import Mag
 
 
-def find_mag_path_on_disk(
-    dataset_path: Union[str, Path], layer_name: str, mag_name: str
-) -> str:
+def find_mag_path_on_disk(dataset_path: Path, layer_name: str, mag_name: str) -> Path:
     mag = Mag(mag_name)
-    short_mag_file_path = join(dataset_path, layer_name, mag.to_layer_name())
-    long_mag_file_path = join(dataset_path, layer_name, mag.to_long_layer_name())
+    short_mag_file_path = dataset_path / layer_name / mag.to_layer_name()
+    long_mag_file_path = dataset_path / layer_name / mag.to_long_layer_name()
     if os.path.exists(short_mag_file_path):
         return short_mag_file_path
     else:
@@ -223,7 +221,7 @@ class MagDataset:
 
         assert self.view.dataset is not None
         for filename in self.view.dataset.list_files():
-            file_path = os.path.relpath(os.path.splitext(filename)[0], self.view.path)
+            file_path = Path(os.path.splitext(filename)[0]).relative_to(self.view.path)
             cube_index = self._extract_file_index(file_path)
             cube_offset = [idx * size for idx, size in zip(cube_index, cube_size)]
 
@@ -232,7 +230,7 @@ class MagDataset:
         if not was_opened:
             self.close()
 
-    def _extract_file_index(self, file_path: str) -> Tuple[int, int, int]:
+    def _extract_file_index(self, file_path: Path) -> Tuple[int, int, int]:
         raise NotImplementedError
 
     def compress(self, target_path: Path = None, args: Namespace = None) -> None:
@@ -276,8 +274,8 @@ class WKMagDataset(MagDataset):
     def _get_file_dimensions(self) -> Tuple[int, int, int]:
         return cast(Tuple[int, int, int], (self.file_len * self.block_len,) * 3)
 
-    def _extract_file_index(self, file_path: str) -> Tuple[int, int, int]:
-        zyx_index = [int(el[1:]) for el in file_path.split("/")]
+    def _extract_file_index(self, file_path: Path) -> Tuple[int, int, int]:
+        zyx_index = [int(el[1:]) for el in file_path.parts]
         return zyx_index[2], zyx_index[1], zyx_index[0]
 
     def compress(self, target_path: Path = None, args: Namespace = None) -> None:
@@ -366,10 +364,10 @@ class GenericTiffMagDataset(MagDataset, Generic[TiffLayerT]):
 
         return self.view.size[0], self.view.size[1], 1
 
-    def _extract_file_index(self, file_path: str) -> Tuple[int, int, int]:
-        x_list = detect_value(self.pattern, file_path, "x", ["y", "z"])
-        y_list = detect_value(self.pattern, file_path, "y", ["x", "z"])
-        z_list = detect_value(self.pattern, file_path, "z", ["x", "y"])
+    def _extract_file_index(self, file_path: Path) -> Tuple[int, int, int]:
+        x_list = detect_value(self.pattern, str(file_path), "x", ["y", "z"])
+        y_list = detect_value(self.pattern, str(file_path), "y", ["x", "z"])
+        z_list = detect_value(self.pattern, str(file_path), "z", ["x", "y"])
         x = x_list[0] if len(x_list) == 1 else 0
         y = y_list[0] if len(y_list) == 1 else 0
         z = z_list[0] if len(z_list) == 1 else 0

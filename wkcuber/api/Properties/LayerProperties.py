@@ -11,7 +11,7 @@ from wkcuber.api.bounding_box import BoundingBox
 
 def extract_num_channels(
     num_channels_in_properties: Optional[int],
-    path: Union[str, Path],
+    path: Path,
     layer: str,
     mag: Optional[Dict[str, int]],
 ) -> int:
@@ -90,7 +90,7 @@ class LayerProperties:
         cls,
         json_data: Dict[str, Any],
         resolution_type: Type[Resolution],
-        dataset_path: Union[str, Path],
+        dataset_path: Path,
     ) -> "LayerProperties":
         # create LayerProperties without resolutions
         layer_properties = cls(
@@ -220,7 +220,7 @@ class SegmentationLayerProperties(LayerProperties):
         cls,
         json_data: Dict[str, Any],
         resolution_type: Type[Resolution],
-        dataset_path: Union[str, Path],
+        dataset_path: Path,
     ) -> "SegmentationLayerProperties":
         # create LayerProperties without resolutions
         layer_properties = cls(
