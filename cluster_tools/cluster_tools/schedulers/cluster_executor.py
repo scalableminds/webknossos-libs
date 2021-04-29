@@ -10,9 +10,7 @@ import time
 from abc import abstractmethod
 import logging
 from typing import Union
-from ..util import local_filename
 from cluster_tools.tailf import Tail
-from logging import getLogger
 
 class RemoteException(Exception):
     def __init__(self, error, job_id):
@@ -249,6 +247,9 @@ class ClusterExecutor(futures.Executor):
     def map_to_futures(self, fun, allArgs, output_pickle_path_getter=None):
         self.ensure_not_shutdown()
         allArgs = list(allArgs)
+        if len(allArgs) == 0:
+            return []
+
         should_keep_output = output_pickle_path_getter is not None
 
         futs_with_output_paths = []

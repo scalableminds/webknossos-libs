@@ -1,8 +1,6 @@
 import cluster_tools
-import subprocess
 import concurrent.futures
 import time
-import sys
 import logging
 from enum import Enum
 from functools import partial
@@ -163,14 +161,18 @@ def test_map_to_futures():
             for duration, result in zip(durations, results):
                 assert result == duration
 
+def test_empty_map_to_futures():
+    for exc in get_executors():
+        with exc:
+            futures = exc.map_to_futures(sleep, [])
+            results = [f.result() for f in futures]
+            assert len(results) == 0
 
 def output_pickle_path_getter(tmp_dir, chunk):
 
     return Path(tmp_dir) / f"test_{chunk}.pickle"
 
 def test_map_to_futures_with_pickle_paths():
-
-    dir_path = Path("").resolve()
 
     for exc in get_executors():
         with tempfile.TemporaryDirectory(dir=".") as tmp_dir:
