@@ -1,11 +1,9 @@
-import time
 from pathlib import Path
 
-import wkw
 import shutil
 import logging
 from argparse import ArgumentParser, Namespace
-from os import path, makedirs
+from os import makedirs
 
 from wkcuber.api.Dataset import WKDataset
 from .mag import Mag

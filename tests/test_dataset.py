@@ -1938,7 +1938,7 @@ def test_bounding_box_on_disk(create_dataset: MagDataset) -> None:
 
 def test_compression() -> None:
     temp_ds_path = Path("testoutput") / "compressed_ds"
-    delete_dir(str(temp_ds_path))
+    delete_dir(temp_ds_path)
     copytree(Path("testdata", "simple_wk_dataset"), temp_ds_path)
 
     mag1 = WKDataset(temp_ds_path).get_layer("color").get_mag(1)
