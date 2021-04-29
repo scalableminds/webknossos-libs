@@ -5,7 +5,7 @@ import os
 import tempfile
 from os.path import dirname, join
 from pathlib import Path
-from typing import Any, Tuple, cast, Generator
+from typing import Any, Tuple, cast, Generator, Union
 
 import pytest
 
@@ -47,9 +47,12 @@ from wkcuber.utils import get_executor_for_args, open_wkw, WkwDatasetInfo, named
 
 expected_error_msg = "The test did not throw an exception even though it should. "
 
+TESTDATA_DIR = Path("testdata")
+TESTOUTPUT_DIR = Path("testoutput")
 
-def delete_dir(relative_path: str) -> None:
-    if path.exists(relative_path) and path.isdir(relative_path):
+
+def delete_dir(relative_path: Path) -> None:
+    if relative_path.exists() and relative_path.is_dir():
         rmtree(relative_path)
 
 
@@ -165,32 +168,32 @@ def get_multichanneled_data(dtype: type) -> np.ndarray:
 
 
 def test_create_wk_dataset_with_layer_and_mag() -> None:
-    delete_dir("./testoutput/wk_dataset")
+    delete_dir(TESTOUTPUT_DIR / "wk_dataset")
 
-    ds = WKDataset.create("./testoutput/wk_dataset", scale=(1, 1, 1))
+    ds = WKDataset.create(TESTOUTPUT_DIR / "wk_dataset", scale=(1, 1, 1))
     ds.add_layer("color", "color")
 
     ds.get_layer("color").add_mag("1")
     ds.get_layer("color").add_mag("2-2-1")
 
-    assert path.exists("./testoutput/wk_dataset/color/1")
-    assert path.exists("./testoutput/wk_dataset/color/2-2-1")
+    assert (TESTOUTPUT_DIR / "wk_dataset" / "color" / "1").exists()
+    assert (TESTOUTPUT_DIR / "wk_dataset" / "color" / "2-2-1").exists()
 
     assert len(ds.properties.data_layers) == 1
     assert len(ds.properties.data_layers["color"].wkw_magnifications) == 2
 
 
 def test_create_wk_dataset_with_explicit_header_fields() -> None:
-    delete_dir("./testoutput/wk_dataset_advanced")
+    delete_dir(TESTOUTPUT_DIR / "wk_dataset_advanced")
 
-    ds = WKDataset.create("./testoutput/wk_dataset_advanced", scale=(1, 1, 1))
+    ds = WKDataset.create(TESTOUTPUT_DIR / "wk_dataset_advanced", scale=(1, 1, 1))
     ds.add_layer("color", Layer.COLOR_TYPE, dtype_per_layer="uint48", num_channels=3)
 
     ds.get_layer("color").add_mag("1", block_len=64, file_len=64)
     ds.get_layer("color").add_mag("2-2-1")
 
-    assert path.exists("./testoutput/wk_dataset_advanced/color/1")
-    assert path.exists("./testoutput/wk_dataset_advanced/color/2-2-1")
+    assert (TESTOUTPUT_DIR / "wk_dataset_advanced" / "color" / "1").exists()
+    assert (TESTOUTPUT_DIR / "wk_dataset_advanced" / "color" / "2-2-1").exists()
 
     assert len(ds.properties.data_layers) == 1
     assert len(ds.properties.data_layers["color"].wkw_magnifications) == 2
@@ -209,37 +212,37 @@ def test_create_wk_dataset_with_explicit_header_fields() -> None:
 def test_create_tiff_dataset_with_layer_and_mag() -> None:
     # This test would be the same for WKDataset
 
-    delete_dir("./testoutput/tiff_dataset")
+    delete_dir(TESTOUTPUT_DIR / "tiff_dataset")
 
-    ds = WKDataset.create("./testoutput/tiff_dataset", scale=(1, 1, 1))
+    ds = WKDataset.create(TESTOUTPUT_DIR / "tiff_dataset", scale=(1, 1, 1))
     ds.add_layer("color", Layer.COLOR_TYPE)
 
     ds.get_layer("color").add_mag("1")
     ds.get_layer("color").add_mag("2-2-1")
 
-    assert path.exists("./testoutput/tiff_dataset/color/1")
-    assert path.exists("./testoutput/tiff_dataset/color/2-2-1")
+    assert (TESTOUTPUT_DIR / "tiff_dataset" / "color" / "1").exists()
+    assert (TESTOUTPUT_DIR / "tiff_dataset" / "color" / "2-2-1").exists()
 
     assert len(ds.properties.data_layers) == 1
     assert len(ds.properties.data_layers["color"].wkw_magnifications) == 2
 
 
 def test_open_wk_dataset() -> None:
-    ds = WKDataset("./testdata/simple_wk_dataset")
+    ds = WKDataset(TESTDATA_DIR / "simple_wk_dataset")
 
     assert len(ds.properties.data_layers) == 1
     assert len(ds.properties.data_layers["color"].wkw_magnifications) == 1
 
 
 def test_open_tiff_dataset() -> None:
-    ds = TiffDataset("./testdata/simple_tiff_dataset")
+    ds = TiffDataset(TESTDATA_DIR / "simple_tiff_dataset")
 
     assert len(ds.properties.data_layers) == 1
     assert len(ds.properties.data_layers["color"].wkw_magnifications) == 1
 
 
 def test_view_read_with_open() -> None:
-    wk_view = WKDataset("./testdata/simple_wk_dataset/").get_view(
+    wk_view = WKDataset(TESTDATA_DIR / "simple_wk_dataset").get_view(
         "color", "1", size=(16, 16, 16)
     )
 
@@ -255,7 +258,7 @@ def test_view_read_with_open() -> None:
 
 
 def test_tiff_mag_read_with_open() -> None:
-    tiff_dataset = TiffDataset("./testdata/simple_tiff_dataset/")
+    tiff_dataset = TiffDataset(TESTDATA_DIR / "simple_tiff_dataset")
     layer = tiff_dataset.get_layer("color")
     mag = layer.get_mag("1")
     mag.open()
@@ -266,7 +269,7 @@ def test_tiff_mag_read_with_open() -> None:
 def test_view_read_without_open() -> None:
     # This test would be the same for TiffDataset
 
-    wk_view = WKDataset("./testdata/simple_wk_dataset/").get_view(
+    wk_view = WKDataset(TESTDATA_DIR / "simple_wk_dataset").get_view(
         "color", "1", size=(16, 16, 16)
     )
 
@@ -280,10 +283,10 @@ def test_view_read_without_open() -> None:
 
 
 def test_view_wk_write() -> None:
-    delete_dir("./testoutput/simple_wk_dataset/")
-    copytree("./testdata/simple_wk_dataset/", "./testoutput/simple_wk_dataset/")
+    delete_dir(TESTOUTPUT_DIR / "simple_wk_dataset")
+    copytree(TESTDATA_DIR / "simple_wk_dataset", TESTOUTPUT_DIR / "simple_wk_dataset")
 
-    wk_view = WKDataset("./testoutput/simple_wk_dataset/").get_view(
+    wk_view = WKDataset(TESTOUTPUT_DIR / "simple_wk_dataset").get_view(
         "color", "1", size=(16, 16, 16)
     )
 
@@ -298,10 +301,12 @@ def test_view_wk_write() -> None:
 
 
 def test_view_tiff_write() -> None:
-    delete_dir("./testoutput/simple_tiff_dataset/")
-    copytree("./testdata/simple_tiff_dataset/", "./testoutput/simple_tiff_dataset/")
+    delete_dir(TESTOUTPUT_DIR / "simple_tiff_dataset")
+    copytree(
+        TESTDATA_DIR / "simple_tiff_dataset", TESTOUTPUT_DIR / "simple_tiff_dataset"
+    )
 
-    tiff_view = TiffDataset("./testoutput/simple_tiff_dataset/").get_view(
+    tiff_view = TiffDataset(TESTOUTPUT_DIR / "simple_tiff_dataset").get_view(
         "color", "1", size=(16, 16, 10)
     )
 
@@ -317,10 +322,10 @@ def test_view_tiff_write() -> None:
 
 
 def test_view_tiff_write_out_of_bounds() -> None:
-    new_dataset_path = "./testoutput/tiff_view_dataset_out_of_bounds/"
+    new_dataset_path = TESTOUTPUT_DIR / "tiff_view_dataset_out_of_bounds"
 
     delete_dir(new_dataset_path)
-    copytree("./testdata/simple_tiff_dataset/", new_dataset_path)
+    copytree(TESTDATA_DIR / "simple_tiff_dataset", new_dataset_path)
 
     tiff_view = TiffDataset(new_dataset_path).get_view(
         "color", "1", size=(100, 100, 10)
@@ -339,10 +344,10 @@ def test_view_tiff_write_out_of_bounds() -> None:
 
 
 def test_view_wk_write_out_of_bounds() -> None:
-    new_dataset_path = "./testoutput/wk_view_dataset_out_of_bounds/"
+    new_dataset_path = TESTOUTPUT_DIR / "wk_view_dataset_out_of_bounds"
 
     delete_dir(new_dataset_path)
-    copytree("./testdata/simple_wk_dataset/", new_dataset_path)
+    copytree(TESTDATA_DIR / "simple_wk_dataset", new_dataset_path)
 
     tiff_view = WKDataset(new_dataset_path).get_view("color", "1", size=(16, 16, 16))
 
@@ -361,7 +366,7 @@ def test_view_wk_write_out_of_bounds() -> None:
 def test_wk_view_out_of_bounds() -> None:
     try:
         # The size of the mag is (24, 24, 24). Trying to get an bigger view should throw an error
-        WKDataset("./testdata/simple_wk_dataset/").get_view(
+        WKDataset(TESTDATA_DIR / "simple_wk_dataset").get_view(
             "color", "1", size=(100, 100, 100)
         )
         raise Exception(
@@ -374,7 +379,7 @@ def test_wk_view_out_of_bounds() -> None:
 def test_tiff_view_out_of_bounds() -> None:
     try:
         # The size of the mag is (24, 24, 24). Trying to get an bigger view should throw an error
-        TiffDataset("./testdata/simple_tiff_dataset/").get_view(
+        TiffDataset(TESTDATA_DIR / "simple_tiff_dataset").get_view(
             "color", "1", size=(100, 100, 100)
         )
         raise Exception(
@@ -385,10 +390,10 @@ def test_tiff_view_out_of_bounds() -> None:
 
 
 def test_tiff_write_out_of_bounds() -> None:
-    new_dataset_path = "./testoutput/simple_tiff_dataset_out_of_bounds/"
+    new_dataset_path = TESTOUTPUT_DIR / "simple_tiff_dataset_out_of_bounds"
 
     delete_dir(new_dataset_path)
-    copytree("./testdata/simple_tiff_dataset/", new_dataset_path)
+    copytree(TESTDATA_DIR / "simple_tiff_dataset", new_dataset_path)
 
     ds = TiffDataset(new_dataset_path)
     mag_dataset = ds.get_layer("color").get_mag("1")
@@ -401,10 +406,10 @@ def test_tiff_write_out_of_bounds() -> None:
 
 
 def test_wk_write_out_of_bounds() -> None:
-    new_dataset_path = "./testoutput/simple_wk_dataset_out_of_bounds/"
+    new_dataset_path = TESTOUTPUT_DIR / "simple_wk_dataset_out_of_bounds"
 
     delete_dir(new_dataset_path)
-    copytree("./testdata/simple_wk_dataset/", new_dataset_path)
+    copytree(TESTDATA_DIR / "simple_wk_dataset", new_dataset_path)
 
     ds = WKDataset(new_dataset_path)
     mag_dataset = ds.get_layer("color").get_mag("1")
@@ -417,10 +422,10 @@ def test_wk_write_out_of_bounds() -> None:
 
 
 def test_wk_write_out_of_bounds_mag2() -> None:
-    new_dataset_path = "./testoutput/simple_wk_dataset_out_of_bounds/"
+    new_dataset_path = TESTOUTPUT_DIR / "simple_wk_dataset_out_of_bounds"
 
     delete_dir(new_dataset_path)
-    copytree("./testdata/simple_wk_dataset/", new_dataset_path)
+    copytree(TESTDATA_DIR / "simple_wk_dataset", new_dataset_path)
 
     ds = WKDataset(new_dataset_path)
     mag_dataset = ds.get_layer("color").get_or_add_mag("2-2-1")
@@ -437,9 +442,9 @@ def test_wk_write_out_of_bounds_mag2() -> None:
 def test_update_new_bounding_box_offset() -> None:
     # This test would be the same for WKDataset
 
-    delete_dir("./testoutput/tiff_dataset")
+    delete_dir(TESTOUTPUT_DIR / "tiff_dataset")
 
-    ds = TiffDataset.create("./testoutput/tiff_dataset", scale=(1, 1, 1))
+    ds = TiffDataset.create(TESTOUTPUT_DIR / "tiff_dataset", scale=(1, 1, 1))
     mag = ds.add_layer("color", Layer.COLOR_TYPE).add_mag("1")
 
     assert ds.properties.data_layers["color"].bounding_box["topLeft"] == (-1, -1, -1)
@@ -461,10 +466,10 @@ def test_other_file_extensions_for_tiff_dataset() -> None:
     # The TiffDataset also works with other file extensions (in this case .png)
     # It also works with .jpg but this format uses lossy compression
 
-    delete_dir("./testoutput/png_dataset")
+    delete_dir(TESTOUTPUT_DIR / "png_dataset")
 
     ds = TiffDataset.create(
-        "./testoutput/png_dataset", scale=(1, 1, 1), pattern="{zzz}.png"
+        TESTOUTPUT_DIR / "png_dataset", scale=(1, 1, 1), pattern="{zzz}.png"
     )
     mag = ds.add_layer("color", Layer.COLOR_TYPE).add_mag("1")
 
@@ -475,7 +480,7 @@ def test_other_file_extensions_for_tiff_dataset() -> None:
 
 
 def test_tiff_write_multi_channel_uint8() -> None:
-    dataset_path = "./testoutput/tiff_multichannel/"
+    dataset_path = TESTOUTPUT_DIR / "tiff_multichannel"
     delete_dir(dataset_path)
 
     ds_tiff = TiffDataset.create(dataset_path, scale=(1, 1, 1))
@@ -490,7 +495,7 @@ def test_tiff_write_multi_channel_uint8() -> None:
 
 
 def test_wk_write_multi_channel_uint8() -> None:
-    dataset_path = "./testoutput/wk_multichannel/"
+    dataset_path = TESTOUTPUT_DIR / "wk_multichannel"
     delete_dir(dataset_path)
 
     ds_tiff = WKDataset.create(dataset_path, scale=(1, 1, 1))
@@ -505,7 +510,7 @@ def test_wk_write_multi_channel_uint8() -> None:
 
 
 def test_tiff_write_multi_channel_uint16() -> None:
-    dataset_path = "./testoutput/tiff_multichannel/"
+    dataset_path = TESTOUTPUT_DIR / "tiff_multichannel"
     delete_dir(dataset_path)
 
     ds_tiff = TiffDataset.create(dataset_path, scale=(1, 1, 1))
@@ -525,7 +530,7 @@ def test_tiff_write_multi_channel_uint16() -> None:
 
 
 def test_wk_write_multi_channel_uint16() -> None:
-    dataset_path = "./testoutput/wk_multichannel/"
+    dataset_path = TESTOUTPUT_DIR / "wk_multichannel"
     delete_dir(dataset_path)
 
     ds_tiff = WKDataset.create(dataset_path, scale=(1, 1, 1))
@@ -543,7 +548,7 @@ def test_wk_write_multi_channel_uint16() -> None:
 
 
 def test_wkw_empty_read() -> None:
-    filename = "./testoutput/empty_wk_dataset"
+    filename = TESTOUTPUT_DIR / "empty_wk_dataset"
     delete_dir(filename)
 
     mag = (
@@ -557,7 +562,7 @@ def test_wkw_empty_read() -> None:
 
 
 def test_tiff_empty_read() -> None:
-    filename = "./testoutput/empty_tiff_dataset"
+    filename = TESTOUTPUT_DIR / "empty_tiff_dataset"
     delete_dir(filename)
 
     mag = (
@@ -571,7 +576,7 @@ def test_tiff_empty_read() -> None:
 
 
 def test_tiff_read_padded_data() -> None:
-    filename = "./testoutput/empty_tiff_dataset"
+    filename = TESTOUTPUT_DIR / "empty_tiff_dataset"
     delete_dir(filename)
 
     mag = (
@@ -587,7 +592,7 @@ def test_tiff_read_padded_data() -> None:
 
 
 def test_wk_read_padded_data() -> None:
-    filename = "./testoutput/empty_wk_dataset"
+    filename = TESTOUTPUT_DIR / "empty_wk_dataset"
     delete_dir(filename)
 
     mag = (
@@ -603,10 +608,12 @@ def test_wk_read_padded_data() -> None:
 
 
 def test_read_and_write_of_properties() -> None:
-    destination_path = "./testoutput/read_write_properties/"
+    destination_path = TESTOUTPUT_DIR / "read_write_properties"
     delete_dir(destination_path)
-    source_file_name = "./testdata/simple_tiff_dataset/datasource-properties.json"
-    destination_file_name = destination_path + "datasource-properties.json"
+    source_file_name = (
+        TESTDATA_DIR / "simple_tiff_dataset" / "datasource-properties.json"
+    )
+    destination_file_name = destination_path / "datasource-properties.json"
 
     imported_properties = TiffProperties._from_json(source_file_name)
     imported_properties._path = destination_file_name
@@ -621,10 +628,10 @@ def test_read_and_write_of_properties() -> None:
 
 
 def test_read_and_write_of_view_configuration() -> None:
-    destination_path = "./testoutput/read_write_view_configuration/"
+    destination_path = TESTOUTPUT_DIR / "read_write_view_configuration"
     delete_dir(destination_path)
-    source_file_name = "./testdata/simple_wk_dataset/datasource-properties.json"
-    destination_file_name = destination_path + "datasource-properties.json"
+    source_file_name = TESTDATA_DIR / "simple_wk_dataset" / "datasource-properties.json"
+    destination_file_name = destination_path / "datasource-properties.json"
 
     imported_properties = WKProperties._from_json(source_file_name)
     imported_properties._path = destination_file_name
@@ -639,9 +646,9 @@ def test_read_and_write_of_view_configuration() -> None:
 
 
 def test_num_channel_mismatch_assertion() -> None:
-    delete_dir("./testoutput/wk_dataset")
+    delete_dir(TESTOUTPUT_DIR / "wk_dataset")
 
-    ds = WKDataset.create("./testoutput/wk_dataset", scale=(1, 1, 1))
+    ds = WKDataset.create(TESTOUTPUT_DIR / "wk_dataset", scale=(1, 1, 1))
     mag = ds.add_layer("color", Layer.COLOR_TYPE, num_channels=1).add_mag(
         "1"
     )  # num_channel=1 is also the default
@@ -661,9 +668,9 @@ def test_num_channel_mismatch_assertion() -> None:
 def test_get_or_add_layer() -> None:
     # This test would be the same for TiffDataset
 
-    delete_dir("./testoutput/wk_dataset")
+    delete_dir(TESTOUTPUT_DIR / "wk_dataset")
 
-    ds = WKDataset.create("./testoutput/wk_dataset", scale=(1, 1, 1))
+    ds = WKDataset.create(TESTOUTPUT_DIR / "wk_dataset", scale=(1, 1, 1))
 
     assert "color" not in ds.layers.keys()
 
@@ -695,9 +702,9 @@ def test_get_or_add_layer() -> None:
 
 
 def test_get_or_add_mag_for_wk() -> None:
-    delete_dir("./testoutput/wk_dataset")
+    delete_dir(TESTOUTPUT_DIR / "wk_dataset")
 
-    layer = WKDataset.create("./testoutput/wk_dataset", scale=(1, 1, 1)).add_layer(
+    layer = WKDataset.create(TESTOUTPUT_DIR / "wk_dataset", scale=(1, 1, 1)).add_layer(
         "color", Layer.COLOR_TYPE
     )
 
@@ -725,11 +732,11 @@ def test_get_or_add_mag_for_wk() -> None:
 
 
 def test_get_or_add_mag_for_tiff() -> None:
-    delete_dir("./testoutput/wk_dataset")
+    delete_dir(TESTOUTPUT_DIR / "wk_dataset")
 
-    layer = TiffDataset.create("./testoutput/wk_dataset", scale=(1, 1, 1)).add_layer(
-        "color", Layer.COLOR_TYPE
-    )
+    layer = TiffDataset.create(
+        TESTOUTPUT_DIR / "wk_dataset", scale=(1, 1, 1)
+    ).add_layer("color", Layer.COLOR_TYPE)
 
     assert "1" not in layer.mags.keys()
 
@@ -745,9 +752,9 @@ def test_get_or_add_mag_for_tiff() -> None:
 
 
 def test_tiled_tiff_read_and_write_multichannel() -> None:
-    delete_dir("./testoutput/TiledTiffDataset")
+    delete_dir(TESTOUTPUT_DIR / "TiledTiffDataset")
     tiled_tiff_ds = TiledTiffDataset.create(
-        "./testoutput/TiledTiffDataset",
+        TESTOUTPUT_DIR / "TiledTiffDataset",
         scale=(1, 1, 1),
         tile_size=(32, 64),
         pattern="{xxx}_{yyy}_{zzz}.tif",
@@ -766,9 +773,9 @@ def test_tiled_tiff_read_and_write_multichannel() -> None:
 
 
 def test_tiled_tiff_read_and_write() -> None:
-    delete_dir("./testoutput/tiled_tiff_dataset")
+    delete_dir(TESTOUTPUT_DIR / "tiled_tiff_dataset")
     tiled_tiff_ds = TiledTiffDataset.create(
-        "./testoutput/tiled_tiff_dataset",
+        TESTOUTPUT_DIR / "tiled_tiff_dataset",
         scale=(1, 1, 1),
         tile_size=(32, 64),
         pattern="{xxx}_{yyy}_{zzz}.tif",
@@ -790,40 +797,44 @@ def test_tiled_tiff_read_and_write() -> None:
     assert mag.get_tile(1, 1, 6).shape == (1, 32, 64, 1)
     assert np.array_equal(
         mag.get_tile(1, 2, 6)[0, :, :, 0],
-        TiffReader("./testoutput/tiled_tiff_dataset/color/1/001_002_006.tif").read(),
+        TiffReader(
+            TESTOUTPUT_DIR / "tiled_tiff_dataset" / "color" / "1" / "001_002_006.tif"
+        ).read(),
     )
 
     assert np.array_equal(
         data[(32 * 1) - 5 : (32 * 2) - 5, (64 * 2) - 5 : (64 * 3) - 5, 6],
-        TiffReader("./testoutput/tiled_tiff_dataset/color/1/001_002_006.tif").read(),
+        TiffReader(
+            TESTOUTPUT_DIR / "tiled_tiff_dataset" / "color" / "1" / "001_002_006.tif"
+        ).read(),
     )
 
 
 def test_open_dataset_without_num_channels_in_properties() -> None:
-    delete_dir("./testoutput/old_wk_dataset/")
-    copytree("./testdata/old_wk_dataset/", "./testoutput/old_wk_dataset/")
+    delete_dir(TESTOUTPUT_DIR / "old_wk_dataset")
+    copytree(TESTDATA_DIR / "old_wk_dataset", TESTOUTPUT_DIR / "old_wk_dataset")
 
     with open(
-        "./testoutput/old_wk_dataset/datasource-properties.json"
+        TESTOUTPUT_DIR / "old_wk_dataset" / "datasource-properties.json"
     ) as datasource_properties:
         data = json.load(datasource_properties)
         assert data["dataLayers"][0].get("num_channels") is None
 
-    ds = WKDataset("./testoutput/old_wk_dataset/")
+    ds = WKDataset(TESTOUTPUT_DIR / "old_wk_dataset")
     assert ds.properties.data_layers["color"].num_channels == 1
     ds.properties._export_as_json()
 
     with open(
-        "./testoutput/old_wk_dataset/datasource-properties.json"
+        TESTOUTPUT_DIR / "old_wk_dataset" / "datasource-properties.json"
     ) as datasource_properties:
         data = json.load(datasource_properties)
         assert data["dataLayers"][0].get("num_channels") == 1
 
 
 def test_advanced_pattern() -> None:
-    delete_dir("./testoutput/tiff_dataset_advanced_pattern")
+    delete_dir(TESTOUTPUT_DIR / "tiff_dataset_advanced_pattern")
     ds = TiledTiffDataset.create(
-        "./testoutput/tiff_dataset_advanced_pattern",
+        TESTOUTPUT_DIR / "tiff_dataset_advanced_pattern",
         scale=(1, 1, 1),
         tile_size=(32, 32),
         pattern="{xxxx}/{yyyy}/{zzzz}.tif",
@@ -836,10 +847,10 @@ def test_advanced_pattern() -> None:
 
 
 def test_invalid_pattern() -> None:
-    delete_dir("./testoutput/tiff_invalid_dataset")
+    delete_dir(TESTOUTPUT_DIR / "tiff_invalid_dataset")
     try:
         TiledTiffDataset.create(
-            "./testoutput/tiff_invalid_dataset",
+            TESTOUTPUT_DIR / "tiff_invalid_dataset",
             scale=(1, 1, 1),
             tile_size=(32, 32),
             pattern="{xxxx}/{yyyy}/{zzzz.tif",
@@ -852,7 +863,7 @@ def test_invalid_pattern() -> None:
 
     try:
         TiledTiffDataset.create(
-            "./testoutput/tiff_invalid_dataset",
+            TESTOUTPUT_DIR / "tiff_invalid_dataset",
             scale=(1, 1, 1),
             tile_size=(32, 32),
             pattern="zzzz.tif",
@@ -865,7 +876,7 @@ def test_invalid_pattern() -> None:
 
 
 def test_largest_segment_id_requirement() -> None:
-    path = "./testoutput/largest_segment_id"
+    path = TESTOUTPUT_DIR / "largest_segment_id"
     delete_dir(path)
     ds = WKDataset.create(path, scale=(10, 10, 10))
 
@@ -885,8 +896,12 @@ def test_largest_segment_id_requirement() -> None:
 
 
 def test_properties_with_segmentation() -> None:
-    input_json_path = "./testdata/complex_property_ds/datasource-properties.json"
-    output_json_path = "./testoutput/complex_property_ds/datasource-properties.json"
+    input_json_path = (
+        TESTDATA_DIR / "complex_property_ds" / "datasource-properties.json"
+    )
+    output_json_path = (
+        TESTOUTPUT_DIR / "complex_property_ds" / "datasource-properties.json"
+    )
     properties = WKProperties._from_json(input_json_path)
 
     # the attributes 'largest_segment_id' and 'mappings' only exist if it is a SegmentationLayer
@@ -919,10 +934,10 @@ def test_properties_with_segmentation() -> None:
 
 
 def test_chunking_wk() -> None:
-    delete_dir("./testoutput/chunking_dataset_wk/")
-    copytree("./testdata/simple_wk_dataset/", "./testoutput/chunking_dataset_wk/")
+    delete_dir(TESTOUTPUT_DIR / "chunking_dataset_wk")
+    copytree(TESTDATA_DIR / "simple_wk_dataset", TESTOUTPUT_DIR / "chunking_dataset_wk")
 
-    view = WKDataset("./testoutput/chunking_dataset_wk/").get_view(
+    view = WKDataset(TESTOUTPUT_DIR / "chunking_dataset_wk").get_view(
         "color", "1", size=(256, 256, 256), is_bounded=False
     )
 
@@ -939,12 +954,13 @@ def test_chunking_wk() -> None:
 
 
 def test_chunking_wk_advanced() -> None:
-    delete_dir("./testoutput/chunking_dataset_wk_advanced/")
+    delete_dir(TESTOUTPUT_DIR / "chunking_dataset_wk_advanced")
     copytree(
-        "./testdata/simple_wk_dataset/", "./testoutput/chunking_dataset_wk_advanced/"
+        TESTDATA_DIR / "simple_wk_dataset",
+        TESTOUTPUT_DIR / "chunking_dataset_wk_advanced",
     )
 
-    ds = WKDataset("./testoutput/chunking_dataset_wk_advanced/")
+    ds = WKDataset(TESTOUTPUT_DIR / "chunking_dataset_wk_advanced")
     view = ds.get_view(
         "color", "1", size=(150, 150, 54), offset=(10, 10, 10), is_bounded=False
     )
@@ -952,24 +968,26 @@ def test_chunking_wk_advanced() -> None:
 
 
 def test_chunking_wk_wrong_chunk_size() -> None:
-    delete_dir("./testoutput/chunking_dataset_wk_with_wrong_chunk_size/")
+    delete_dir(TESTOUTPUT_DIR / "chunking_dataset_wk_with_wrong_chunk_size")
     copytree(
-        "./testdata/simple_wk_dataset/",
-        "./testoutput/chunking_dataset_wk_with_wrong_chunk_size/",
+        TESTDATA_DIR / "simple_wk_dataset",
+        TESTOUTPUT_DIR / "chunking_dataset_wk_with_wrong_chunk_size",
     )
 
     view = WKDataset(
-        "./testoutput/chunking_dataset_wk_with_wrong_chunk_size/"
+        TESTOUTPUT_DIR / "chunking_dataset_wk_with_wrong_chunk_size"
     ).get_view("color", "1", size=(256, 256, 256), is_bounded=False)
 
     for_each_chunking_with_wrong_chunk_size(view)
 
 
 def test_chunking_tiff() -> None:
-    delete_dir("./testoutput/chunking_dataset_tiff/")
-    copytree("./testdata/simple_tiff_dataset/", "./testoutput/chunking_dataset_tiff/")
+    delete_dir(TESTOUTPUT_DIR / "chunking_dataset_tiff")
+    copytree(
+        TESTDATA_DIR / "simple_tiff_dataset", TESTOUTPUT_DIR / "chunking_dataset_tiff"
+    )
 
-    view = TiffDataset("./testoutput/chunking_dataset_tiff/").get_view(
+    view = TiffDataset(TESTOUTPUT_DIR / "chunking_dataset_tiff").get_view(
         "color", "1", size=(265, 265, 10)
     )
 
@@ -987,24 +1005,24 @@ def test_chunking_tiff() -> None:
 
 
 def test_chunking_tiff_wrong_chunk_size() -> None:
-    delete_dir("./testoutput/chunking_dataset_tiff_with_wrong_chunk_size/")
+    delete_dir(TESTOUTPUT_DIR / "chunking_dataset_tiff_with_wrong_chunk_size")
     copytree(
-        "./testdata/simple_tiff_dataset/",
-        "./testoutput/chunking_dataset_tiff_with_wrong_chunk_size/",
+        TESTDATA_DIR / "simple_tiff_dataset",
+        TESTOUTPUT_DIR / "chunking_dataset_tiff_with_wrong_chunk_size",
     )
 
     view = TiffDataset(
-        "./testoutput/chunking_dataset_tiff_with_wrong_chunk_size/"
+        TESTOUTPUT_DIR / "chunking_dataset_tiff_with_wrong_chunk_size"
     ).get_view("color", "1", size=(256, 256, 256), is_bounded=False)
 
     for_each_chunking_with_wrong_chunk_size(view)
 
 
 def test_chunking_tiled_tiff_wrong_chunk_size() -> None:
-    delete_dir("./testoutput/chunking_dataset_tiled_tiff_with_wrong_chunk_size/")
+    delete_dir(TESTOUTPUT_DIR / "chunking_dataset_tiled_tiff_with_wrong_chunk_size")
 
     ds = TiledTiffDataset.create(
-        "./testoutput/chunking_dataset_tiled_tiff_with_wrong_chunk_size/",
+        TESTOUTPUT_DIR / "chunking_dataset_tiled_tiff_with_wrong_chunk_size",
         scale=(1, 1, 1),
         tile_size=(32, 32),
         pattern="{xxxx}/{yyyy}/{zzzz}.tif",
@@ -1016,13 +1034,13 @@ def test_chunking_tiled_tiff_wrong_chunk_size() -> None:
 
 
 def test_chunking_tiled_tiff_advanced() -> None:
-    delete_dir("./testoutput/chunking_dataset_tiled_tiff_advanced/")
+    delete_dir(TESTOUTPUT_DIR / "chunking_dataset_tiled_tiff_advanced")
     copytree(
-        "./testdata/simple_wk_dataset/",
-        "./testoutput/chunking_dataset_tiled_tiff_advanced/",
+        TESTDATA_DIR / "simple_wk_dataset",
+        TESTOUTPUT_DIR / "chunking_dataset_tiled_tiff_advanced",
     )
 
-    ds = WKDataset("./testoutput/chunking_dataset_tiled_tiff_advanced/")
+    ds = WKDataset(TESTOUTPUT_DIR / "chunking_dataset_tiled_tiff_advanced")
     view = ds.get_view(
         "color", "1", size=(150, 150, 54), offset=(10, 10, 10), is_bounded=False
     )
@@ -1031,9 +1049,9 @@ def test_chunking_tiled_tiff_advanced() -> None:
 
 
 def test_tiled_tiff_inverse_pattern() -> None:
-    delete_dir("./testoutput/tiled_tiff_dataset_inverse")
+    delete_dir(TESTOUTPUT_DIR / "tiled_tiff_dataset_inverse")
     tiled_tiff_ds = TiledTiffDataset.create(
-        "./testoutput/tiled_tiff_dataset_inverse",
+        TESTOUTPUT_DIR / "tiled_tiff_dataset_inverse",
         scale=(1, 1, 1),
         tile_size=(32, 64),
         pattern="{zzz}/{xxx}/{yyy}.tif",
@@ -1059,24 +1077,36 @@ def test_tiled_tiff_inverse_pattern() -> None:
     assert np.array_equal(
         mag.get_tile(1, 2, 6)[0, :, :, 0],
         TiffReader(
-            "./testoutput/tiled_tiff_dataset_inverse/color/1/006/001/002.tif"
+            TESTOUTPUT_DIR
+            / "tiled_tiff_dataset_inverse"
+            / "color"
+            / "1"
+            / "006"
+            / "001"
+            / "002.tif"
         ).read(),
     )
 
     assert np.array_equal(
         data[(32 * 1) - 5 : (32 * 2) - 5, (64 * 2) - 5 : (64 * 3) - 5, 6],
         TiffReader(
-            "./testoutput/tiled_tiff_dataset_inverse/color/1/006/001/002.tif"
+            TESTOUTPUT_DIR
+            / "tiled_tiff_dataset_inverse"
+            / "color"
+            / "1"
+            / "006"
+            / "001"
+            / "002.tif"
         ).read(),
     )
 
 
 def test_view_write_without_open() -> None:
     # This test would be the same for TiffDataset
+    ds_path = TESTOUTPUT_DIR / "wk_dataset_write_without_open"
+    delete_dir(ds_path)
 
-    delete_dir("./testoutput/wk_dataset_write_without_open")
-
-    ds = WKDataset.create("./testoutput/wk_dataset_write_without_open", scale=(1, 1, 1))
+    ds = WKDataset.create(ds_path, scale=(1, 1, 1))
     ds.add_layer("color", Layer.COLOR_TYPE)
 
     ds.get_layer("color").add_mag("1")
@@ -1092,7 +1122,7 @@ def test_view_write_without_open() -> None:
 
 
 def test_typing_of_get_mag() -> None:
-    ds = WKDataset("./testdata/simple_wk_dataset")
+    ds = WKDataset(TESTDATA_DIR / "simple_wk_dataset")
     layer = ds.get_layer("color")
     assert layer.get_mag("1") == layer.get_mag(1)
     assert layer.get_mag("1") == layer.get_mag((1, 1, 1))
@@ -1102,54 +1132,44 @@ def test_typing_of_get_mag() -> None:
 
 
 def test_wk_dataset_get_or_create() -> None:
-    delete_dir("./testoutput/wk_dataset_get_or_create")
+    ds_path = TESTOUTPUT_DIR / "wk_dataset_get_or_create"
+    delete_dir(ds_path)
 
     # dataset does not exists yet
-    ds1 = WKDataset.get_or_create(
-        "./testoutput/wk_dataset_get_or_create", scale=(1, 1, 1)
-    )
+    ds1 = WKDataset.get_or_create(ds_path, scale=(1, 1, 1))
     assert "color" not in ds1.layers.keys()
     ds1.add_layer("color", Layer.COLOR_TYPE)
     assert "color" in ds1.layers.keys()
 
     # dataset already exists
-    ds2 = WKDataset.get_or_create(
-        "./testoutput/wk_dataset_get_or_create", scale=(1, 1, 1)
-    )
+    ds2 = WKDataset.get_or_create(ds_path, scale=(1, 1, 1))
     assert "color" in ds2.layers.keys()
 
     try:
         # dataset already exists, but with a different scale
-        WKDataset.get_or_create(
-            "./testoutput/wk_dataset_get_or_create", scale=(2, 2, 2)
-        )
+        WKDataset.get_or_create(ds_path, scale=(2, 2, 2))
         raise Exception(expected_error_msg)
     except AssertionError:
         pass
 
 
 def test_tiff_dataset_get_or_create() -> None:
-    delete_dir("./testoutput/tiff_dataset_get_or_create")
+    ds_path = TESTOUTPUT_DIR / "tiff_dataset_get_or_create"
+    delete_dir(ds_path)
 
     # dataset does not exists yet
-    ds1 = TiffDataset.get_or_create(
-        "./testoutput/tiff_dataset_get_or_create", scale=(1, 1, 1)
-    )
+    ds1 = TiffDataset.get_or_create(ds_path, scale=(1, 1, 1))
     assert "color" not in ds1.layers.keys()
     ds1.add_layer("color", Layer.COLOR_TYPE)
     assert "color" in ds1.layers.keys()
 
     # dataset already exists
-    ds2 = TiffDataset.get_or_create(
-        "./testoutput/tiff_dataset_get_or_create", scale=(1, 1, 1)
-    )
+    ds2 = TiffDataset.get_or_create(ds_path, scale=(1, 1, 1))
     assert "color" in ds2.layers.keys()
 
     try:
         # dataset already exists, but with a different scale
-        TiffDataset.get_or_create(
-            "./testoutput/tiff_dataset_get_or_create", scale=(2, 2, 2)
-        )
+        TiffDataset.get_or_create(ds_path, scale=(2, 2, 2))
         raise Exception(expected_error_msg)
     except AssertionError:
         pass
@@ -1157,7 +1177,7 @@ def test_tiff_dataset_get_or_create() -> None:
     try:
         # dataset already exists, but with a different pattern
         TiffDataset.get_or_create(
-            "./testoutput/tiff_dataset_get_or_create",
+            ds_path,
             scale=(1, 1, 1),
             pattern="ds_{zzz}.tif",
         )
@@ -1167,11 +1187,12 @@ def test_tiff_dataset_get_or_create() -> None:
 
 
 def test_tiled_tiff_dataset_get_or_create() -> None:
-    delete_dir("./testoutput/tiled_tiff_dataset_get_or_create")
+    delete_dir(TESTOUTPUT_DIR / "tiled_tiff_dataset_get_or_create")
 
+    ds_path = TESTOUTPUT_DIR / "tiled_tiff_dataset_get_or_create"
     # dataset does not exists yet
     ds1 = TiledTiffDataset.get_or_create(
-        "./testoutput/tiled_tiff_dataset_get_or_create",
+        ds_path,
         scale=(1, 1, 1),
         tile_size=(32, 64),
     )
@@ -1181,7 +1202,7 @@ def test_tiled_tiff_dataset_get_or_create() -> None:
 
     # dataset already exists
     ds2 = TiledTiffDataset.get_or_create(
-        "./testoutput/tiled_tiff_dataset_get_or_create",
+        ds_path,
         scale=(1, 1, 1),
         tile_size=(32, 64),
     )
@@ -1190,7 +1211,7 @@ def test_tiled_tiff_dataset_get_or_create() -> None:
     try:
         # dataset already exists, but with a different scale
         TiledTiffDataset.get_or_create(
-            "./testoutput/tiled_tiff_dataset_get_or_create",
+            ds_path,
             scale=(2, 2, 2),
             tile_size=(32, 64),
         )
@@ -1201,7 +1222,7 @@ def test_tiled_tiff_dataset_get_or_create() -> None:
     try:
         # dataset already exists, but with a different tile_size
         TiledTiffDataset.get_or_create(
-            "./testoutput/tiled_tiff_dataset_get_or_create",
+            TESTOUTPUT_DIR / "tiled_tiff_dataset_get_or_create",
             scale=(1, 1, 1),
             tile_size=(100, 100),
         )
@@ -1212,7 +1233,7 @@ def test_tiled_tiff_dataset_get_or_create() -> None:
     try:
         # dataset already exists, but with a different pattern
         TiledTiffDataset.get_or_create(
-            "./testoutput/tiled_tiff_dataset_get_or_create",
+            TESTOUTPUT_DIR / "tiled_tiff_dataset_get_or_create",
             scale=(1, 1, 1),
             tile_size=(32, 64),
             pattern="ds_{zzz}.tif",
@@ -1223,13 +1244,13 @@ def test_tiled_tiff_dataset_get_or_create() -> None:
 
 
 def test_changing_layer_bounding_box() -> None:
-    delete_dir("./testoutput/test_changing_layer_bounding_box/")
+    delete_dir(TESTOUTPUT_DIR / "test_changing_layer_bounding_box")
     copytree(
-        "./testdata/simple_tiff_dataset/",
-        "./testoutput/test_changing_layer_bounding_box/",
+        TESTDATA_DIR / "simple_tiff_dataset",
+        TESTOUTPUT_DIR / "test_changing_layer_bounding_box",
     )
 
-    ds = TiffDataset("./testoutput/test_changing_layer_bounding_box/")
+    ds = TiffDataset(TESTOUTPUT_DIR / "test_changing_layer_bounding_box")
     layer = ds.get_layer("color")
     mag = layer.get_mag("1")
 
@@ -1272,9 +1293,9 @@ def test_changing_layer_bounding_box() -> None:
 
 
 def test_view_offsets() -> None:
-    delete_dir("./testoutput/wk_offset_tests")
+    delete_dir(TESTOUTPUT_DIR / "wk_offset_tests")
 
-    ds = WKDataset.create("./testoutput/wk_offset_tests", scale=(1, 1, 1))
+    ds = WKDataset.create(TESTOUTPUT_DIR / "wk_offset_tests", scale=(1, 1, 1))
     mag = ds.add_layer("color", Layer.COLOR_TYPE).add_mag("1")
 
     # The dataset is new -> no data has been written.
@@ -1344,9 +1365,9 @@ def test_view_offsets() -> None:
 
 
 def test_adding_layer_with_invalid_dtype_per_layer() -> None:
-    delete_dir("./testoutput/invalid_dtype")
+    delete_dir(TESTOUTPUT_DIR / "invalid_dtype")
 
-    ds = WKDataset.create("./testoutput/invalid_dtype", scale=(1, 1, 1))
+    ds = WKDataset.create(TESTOUTPUT_DIR / "invalid_dtype", scale=(1, 1, 1))
     with pytest.raises(TypeError):
         # this would lead to a dtype_per_channel of "uint10", but that is not a valid dtype
         ds.add_layer(
@@ -1361,9 +1382,9 @@ def test_adding_layer_with_invalid_dtype_per_layer() -> None:
 
 
 def test_adding_layer_with_valid_dtype_per_layer() -> None:
-    delete_dir("./testoutput/valid_dtype")
+    delete_dir(TESTOUTPUT_DIR / "valid_dtype")
 
-    ds = WKDataset.create("./testoutput/valid_dtype", scale=(1, 1, 1))
+    ds = WKDataset.create(TESTOUTPUT_DIR / "valid_dtype", scale=(1, 1, 1))
     ds.add_layer("color1", Layer.COLOR_TYPE, dtype_per_layer="uint24", num_channels=3)
     ds.add_layer("color2", Layer.COLOR_TYPE, dtype_per_layer=np.uint8, num_channels=1)
     ds.add_layer("color3", Layer.COLOR_TYPE, dtype_per_channel=np.uint8, num_channels=3)
@@ -1371,28 +1392,24 @@ def test_adding_layer_with_valid_dtype_per_layer() -> None:
 
 
 def test_writing_subset_of_compressed_data_multi_channel() -> None:
-    delete_dir("./testoutput/compressed_data/")
+    delete_dir(TESTOUTPUT_DIR / "compressed_data")
 
     # create uncompressed dataset
     write_data1 = (np.random.rand(3, 20, 40, 60) * 255).astype(np.uint8)
-    WKDataset.create(
-        os.path.abspath("./testoutput/compressed_data"), scale=(1, 1, 1)
-    ).add_layer("color", Layer.COLOR_TYPE, num_channels=3).add_mag(
-        "1", block_len=8, file_len=8
-    ).write(
-        write_data1
-    )
+    WKDataset.create(TESTOUTPUT_DIR / "compressed_data", scale=(1, 1, 1)).add_layer(
+        "color", Layer.COLOR_TYPE, num_channels=3
+    ).add_mag("1", block_len=8, file_len=8).write(write_data1)
 
     # compress data
     compress_mag_inplace(
-        os.path.abspath("./testoutput/compressed_data/"),
+        (TESTOUTPUT_DIR / "compressed_data").resolve(),
         layer_name="color",
         mag=Mag("1"),
     )
 
     # open compressed dataset
     compressed_mag = (
-        WKDataset("./testoutput/compressed_data").get_layer("color").get_mag("1")
+        WKDataset(TESTOUTPUT_DIR / "compressed_data").get_layer("color").get_mag("1")
     )
 
     write_data2 = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
@@ -1410,26 +1427,24 @@ def test_writing_subset_of_compressed_data_multi_channel() -> None:
 
 
 def test_writing_subset_of_compressed_data_single_channel() -> None:
-    delete_dir("./testoutput/compressed_data/")
+    delete_dir(TESTOUTPUT_DIR / "compressed_data")
 
     # create uncompressed dataset
     write_data1 = (np.random.rand(20, 40, 60) * 255).astype(np.uint8)
-    WKDataset.create(
-        os.path.abspath("./testoutput/compressed_data"), scale=(1, 1, 1)
-    ).add_layer("color", Layer.COLOR_TYPE).add_mag("1", block_len=8, file_len=8).write(
-        write_data1
-    )
+    WKDataset.create(TESTOUTPUT_DIR / "compressed_data", scale=(1, 1, 1)).add_layer(
+        "color", Layer.COLOR_TYPE
+    ).add_mag("1", block_len=8, file_len=8).write(write_data1)
 
     # compress data
     compress_mag_inplace(
-        os.path.abspath("./testoutput/compressed_data/"),
+        TESTOUTPUT_DIR / "compressed_data",
         layer_name="color",
         mag=Mag("1"),
     )
 
     # open compressed dataset
     compressed_mag = (
-        WKDataset("./testoutput/compressed_data").get_layer("color").get_mag("1")
+        WKDataset(TESTOUTPUT_DIR / "compressed_data").get_layer("color").get_mag("1")
     )
 
     write_data2 = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
@@ -1447,25 +1462,25 @@ def test_writing_subset_of_compressed_data_single_channel() -> None:
 
 
 def test_writing_subset_of_compressed_data() -> None:
-    delete_dir("./testoutput/compressed_data/")
+    delete_dir(TESTOUTPUT_DIR / "compressed_data")
 
     # create uncompressed dataset
-    WKDataset.create(
-        os.path.abspath("./testoutput/compressed_data"), scale=(1, 1, 1)
-    ).add_layer("color", Layer.COLOR_TYPE).add_mag("1", block_len=8, file_len=8).write(
+    WKDataset.create(TESTOUTPUT_DIR / "compressed_data", scale=(1, 1, 1)).add_layer(
+        "color", Layer.COLOR_TYPE
+    ).add_mag("1", block_len=8, file_len=8).write(
         (np.random.rand(20, 40, 60) * 255).astype(np.uint8)
     )
 
     # compress data
     compress_mag_inplace(
-        os.path.abspath("./testoutput/compressed_data/"),
+        (TESTOUTPUT_DIR / "compressed_data").resolve(),
         layer_name="color",
         mag=Mag("1"),
     )
 
     # open compressed dataset
     compressed_mag = (
-        WKDataset("./testoutput/compressed_data").get_layer("color").get_mag("1")
+        WKDataset(TESTOUTPUT_DIR / "compressed_data").get_layer("color").get_mag("1")
     )
 
     with pytest.raises(WKWException):
@@ -1477,25 +1492,23 @@ def test_writing_subset_of_compressed_data() -> None:
 
 
 def test_writing_subset_of_chunked_compressed_data() -> None:
-    delete_dir("./testoutput/compressed_data/")
+    delete_dir(TESTOUTPUT_DIR / "compressed_data")
 
     # create uncompressed dataset
     write_data1 = (np.random.rand(100, 200, 300) * 255).astype(np.uint8)
-    WKDataset.create(
-        os.path.abspath("./testoutput/compressed_data"), scale=(1, 1, 1)
-    ).add_layer("color", Layer.COLOR_TYPE).add_mag("1", block_len=8, file_len=8).write(
-        write_data1
-    )
+    WKDataset.create(TESTOUTPUT_DIR / "compressed_data", scale=(1, 1, 1)).add_layer(
+        "color", Layer.COLOR_TYPE
+    ).add_mag("1", block_len=8, file_len=8).write(write_data1)
 
     # compress data
     compress_mag_inplace(
-        os.path.abspath("./testoutput/compressed_data/"),
+        TESTOUTPUT_DIR / "compressed_data",
         layer_name="color",
         mag=Mag("1"),
     )
 
     # open compressed dataset
-    compressed_view = WKDataset("./testoutput/compressed_data").get_view(
+    compressed_view = WKDataset(TESTOUTPUT_DIR / "compressed_data").get_view(
         "color", "1", size=(100, 200, 300), is_bounded=True
     )
 
@@ -1523,21 +1536,25 @@ def test_writing_subset_of_chunked_compressed_data() -> None:
 
 
 def test_add_symlink_layer() -> None:
-    delete_dir("./testoutput/wk_dataset_with_symlink")
-    delete_dir("./testoutput/simple_wk_dataset_copy")
-    copytree("./testdata/simple_wk_dataset/", "./testoutput/simple_wk_dataset_copy/")
+    delete_dir(TESTOUTPUT_DIR / "wk_dataset_with_symlink")
+    delete_dir(TESTOUTPUT_DIR / "simple_wk_dataset_copy")
+    copytree(
+        TESTDATA_DIR / "simple_wk_dataset", TESTOUTPUT_DIR / "simple_wk_dataset_copy"
+    )
 
     original_mag = (
-        WKDataset("./testoutput/simple_wk_dataset_copy/")
+        WKDataset(TESTOUTPUT_DIR / "simple_wk_dataset_copy")
         .get_layer("color")
         .get_mag("1")
     )
 
-    ds = WKDataset.create("./testoutput/wk_dataset_with_symlink", scale=(1, 1, 1))
-    symlink_layer = ds.add_symlink_layer("./testoutput/simple_wk_dataset_copy/color/")
+    ds = WKDataset.create(TESTOUTPUT_DIR / "wk_dataset_with_symlink", scale=(1, 1, 1))
+    symlink_layer = ds.add_symlink_layer(
+        TESTOUTPUT_DIR / "simple_wk_dataset_copy" / "color"
+    )
     mag = symlink_layer.get_mag("1")
 
-    assert path.exists("./testoutput/wk_dataset_with_symlink/color/1")
+    assert (TESTOUTPUT_DIR / "wk_dataset_with_symlink" / "color" / "1").exists()
 
     assert len(ds.properties.data_layers) == 1
     assert len(ds.properties.data_layers["color"].wkw_magnifications) == 1
@@ -1551,9 +1568,9 @@ def test_add_symlink_layer() -> None:
 
 
 def test_search_dataset_also_for_long_layer_name() -> None:
-    delete_dir("./testoutput/long_layer_name")
+    delete_dir(TESTOUTPUT_DIR / "long_layer_name")
 
-    ds = WKDataset.create("./testoutput/long_layer_name", scale=(1, 1, 1))
+    ds = WKDataset.create(TESTOUTPUT_DIR / "long_layer_name", scale=(1, 1, 1))
     mag = ds.add_layer("color", Layer.COLOR_TYPE).add_mag("2")
 
     assert mag.name == "2"
@@ -1578,7 +1595,7 @@ def test_search_dataset_also_for_long_layer_name() -> None:
         mag.read(offset=(10, 10, 10), size=(10, 10, 10))
 
     # when opening the dataset, it searches both for the long and the short path
-    layer = WKDataset("./testoutput/long_layer_name").get_layer("color")
+    layer = WKDataset(TESTOUTPUT_DIR / "long_layer_name").get_layer("color")
     mag = layer.get_mag("2")
     assert np.array_equal(
         mag.read(offset=(10, 10, 10), size=(10, 10, 10)), np.expand_dims(write_data, 0)
@@ -1587,9 +1604,9 @@ def test_search_dataset_also_for_long_layer_name() -> None:
 
 
 def test_outdated_dtype_parameter() -> None:
-    delete_dir("./testoutput/outdated_dtype")
+    delete_dir(TESTOUTPUT_DIR / "outdated_dtype")
 
-    ds = WKDataset.create("./testoutput/outdated_dtype", scale=(1, 1, 1))
+    ds = WKDataset.create(TESTOUTPUT_DIR / "outdated_dtype", scale=(1, 1, 1))
     with pytest.raises(ValueError):
         ds.get_or_add_layer("color", Layer.COLOR_TYPE, dtype=np.uint8, num_channels=1)
 
@@ -1598,14 +1615,14 @@ def test_outdated_dtype_parameter() -> None:
 
 
 def test_dataset_conversion() -> None:
-    origin_wk_ds_path = "./testoutput/conversion/origin_wk/"
-    origin_tiff_ds_path = "./testoutput/conversion/origin_tiff/"
+    origin_wk_ds_path = TESTOUTPUT_DIR / "conversion" / "origin_wk"
+    origin_tiff_ds_path = TESTOUTPUT_DIR / "conversion" / "origin_tiff"
 
-    wk_to_tiff_ds_path = "./testoutput/conversion/wk_to_tiff/"
-    tiff_to_wk_ds_path = "./testoutput/conversion/tiff_to_wk/"
+    wk_to_tiff_ds_path = TESTOUTPUT_DIR / "conversion" / "wk_to_tiff"
+    tiff_to_wk_ds_path = TESTOUTPUT_DIR / "conversion" / "tiff_to_wk"
 
-    wk_to_tiff_to_wk_ds_path = "./testoutput/conversion/wk_to_tiff_to_wk/"
-    tiff_to_wk_to_tiff_ds_path = "./testoutput/conversion/tiff_to_wk_to_tiff/"
+    wk_to_tiff_to_wk_ds_path = TESTOUTPUT_DIR / "conversion" / "wk_to_tiff_to_wk"
+    tiff_to_wk_to_tiff_ds_path = TESTOUTPUT_DIR / "conversion" / "tiff_to_wk_to_tiff"
 
     delete_dir(origin_wk_ds_path)
     delete_dir(origin_tiff_ds_path)
@@ -1703,16 +1720,18 @@ def test_dataset_conversion() -> None:
 
 
 def test_for_zipped_chunks() -> None:
-    delete_dir("./testoutput/zipped_chunking_source/")
-    delete_dir("./testoutput/zipped_chunking_target/")
-    copytree("./testdata/simple_wk_dataset/", "./testoutput/zipped_chunking_source/")
+    delete_dir(TESTOUTPUT_DIR / "zipped_chunking_source")
+    delete_dir(TESTOUTPUT_DIR / "zipped_chunking_target")
+    copytree(
+        TESTDATA_DIR / "simple_wk_dataset", TESTOUTPUT_DIR / "zipped_chunking_source"
+    )
 
-    source_view = WKDataset("./testoutput/zipped_chunking_source/").get_view(
+    source_view = WKDataset(TESTOUTPUT_DIR / "zipped_chunking_source").get_view(
         "color", "1", size=(256, 256, 256), is_bounded=False
     )
 
     target_mag = (
-        WKDataset.create("./testoutput/zipped_chunking_target/", scale=(1, 1, 1))
+        WKDataset.create(TESTOUTPUT_DIR / "zipped_chunking_target", scale=(1, 1, 1))
         .get_or_add_layer(
             "color", Layer.COLOR_TYPE, dtype_per_channel="uint8", num_channels=3
         )
@@ -1743,7 +1762,7 @@ def test_for_zipped_chunks() -> None:
 
 
 def test_for_zipped_chunks_invalid_target_chunk_size_wk() -> None:
-    delete_dir("./testoutput/zipped_chunking_source_invalid/")
+    delete_dir(TESTOUTPUT_DIR / "zipped_chunking_source_invalid")
 
     test_cases_wk = [
         (10, 20, 30),
@@ -1753,7 +1772,7 @@ def test_for_zipped_chunks_invalid_target_chunk_size_wk() -> None:
     ]
 
     layer = WKDataset.create(
-        "./testoutput/zipped_chunking_source_invalid/", scale=(1, 1, 1)
+        TESTOUTPUT_DIR / "zipped_chunking_source_invalid", scale=(1, 1, 1)
     ).get_or_add_layer("color", Layer.COLOR_TYPE)
     source_mag_dataset = layer.get_or_add_mag(1, block_len=8, file_len=8)
     target_mag_dataset = layer.get_or_add_mag(2, block_len=8, file_len=8)
@@ -1779,7 +1798,7 @@ def test_for_zipped_chunks_invalid_target_chunk_size_wk() -> None:
 
 
 def test_for_zipped_chunks_invalid_target_chunk_size_tiled_tiff() -> None:
-    delete_dir("./testoutput/zipped_chunking_source_invalid/")
+    delete_dir(TESTOUTPUT_DIR / "zipped_chunking_source_invalid")
 
     test_cases = [
         (10, 20, 10),
@@ -1788,7 +1807,7 @@ def test_for_zipped_chunks_invalid_target_chunk_size_tiled_tiff() -> None:
     ]
 
     layer = TiledTiffDataset.create(
-        "./testoutput/zipped_chunking_source_invalid/",
+        TESTOUTPUT_DIR / "zipped_chunking_source_invalid",
         scale=(1, 1, 1),
         tile_size=(64, 64),
     ).get_or_add_layer("color", Layer.COLOR_TYPE)
@@ -1825,10 +1844,10 @@ def test_for_zipped_chunks_invalid_target_chunk_size_tiff() -> None:
         (s, t, i) = args
 
     for offset, size, chunk_size in test_cases:
-        delete_dir("./testoutput/zipped_chunking_source_invalid/")
+        delete_dir(TESTOUTPUT_DIR / "zipped_chunking_source_invalid")
 
         ds = TiffDataset.create(
-            "./testoutput/zipped_chunking_source_invalid/", scale=(1, 1, 1)
+            TESTOUTPUT_DIR / "zipped_chunking_source_invalid", scale=(1, 1, 1)
         )
         color_layer = ds.get_or_add_layer("color", Layer.COLOR_TYPE)
         seg_layer = ds.get_or_add_layer(
@@ -1856,8 +1875,8 @@ def test_for_zipped_chunks_invalid_target_chunk_size_tiff() -> None:
 
 
 def test_read_only_view() -> None:
-    delete_dir("./testoutput/read_only_view/")
-    ds = WKDataset.create("./testoutput/read_only_view/", scale=(1, 1, 1))
+    delete_dir(TESTOUTPUT_DIR / "read_only_view")
+    ds = WKDataset.create(TESTOUTPUT_DIR / "read_only_view", scale=(1, 1, 1))
     mag = ds.get_or_add_layer("color", Layer.COLOR_TYPE).get_or_add_mag("1")
     mag.write(
         data=(np.random.rand(1, 10, 10, 10) * 255).astype(np.uint8), offset=(10, 20, 30)
@@ -1883,9 +1902,11 @@ def create_dataset(request: Any) -> Generator[MagDataset, None, None]:
     dataset_type = request.param
     with tempfile.TemporaryDirectory() as temp_dir:
         if dataset_type == TiledTiffDataset:
-            ds = dataset_type.create(temp_dir, scale=(2, 2, 1), tile_size=(64, 32))
+            ds = dataset_type.create(
+                Path(temp_dir), scale=(2, 2, 1), tile_size=(64, 32)
+            )
         else:
-            ds = dataset_type.create(temp_dir, scale=(2, 2, 1))
+            ds = dataset_type.create(Path(temp_dir), scale=(2, 2, 1))
 
         if dataset_type == WKDataset:
             mag = ds.add_layer("color", "color").add_mag(

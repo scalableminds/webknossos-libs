@@ -24,11 +24,13 @@ def create_parser() -> ArgumentParser:
     )
 
     parser.add_argument(
-        "source_path", help="Input file or directory containing the input files."
+        "source_path",
+        help="Input file or directory containing the input files.",
+        type=Path,
     )
 
     parser.add_argument(
-        "target_path", help="Output directory for the generated dataset."
+        "target_path", help="Output directory for the generated dataset.", type=Path
     )
 
     add_scale_flag(parser)
@@ -367,14 +369,14 @@ class ImageStackConverter(Converter):
         bounding_box = None
         view_configuration = dict()
         for layer_path, layer_name in layer_path_to_name.items():
-            channel_count, dtype = get_channel_count_and_dtype(layer_path)
+            channel_count, dtype = get_channel_count_and_dtype(Path(layer_path))
             if channel_count > 1 and not (channel_count == 3 and dtype == "uint8"):
                 for i in range(channel_count):
                     layer_name = f"{layer_name}_{i}"
                     arg_dict = vars(args)
 
                     bounding_box = cube_image_stack(
-                        layer_path,
+                        Path(layer_path),
                         args.target_path,
                         layer_name,
                         arg_dict.get("batch_size"),
@@ -394,7 +396,7 @@ class ImageStackConverter(Converter):
             else:
                 arg_dict = vars(args)
                 bounding_box = cube_image_stack(
-                    layer_path,
+                    Path(layer_path),
                     args.target_path,
                     layer_name,
                     arg_dict.get("batch_size"),

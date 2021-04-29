@@ -38,10 +38,12 @@ BLOCK_LEN = 32
 def create_parser() -> ArgumentParser:
     parser = ArgumentParser()
 
-    parser.add_argument("source_path", help="Directory containing the input images.")
+    parser.add_argument(
+        "source_path", help="Directory containing the input images.", type=Path
+    )
 
     parser.add_argument(
-        "target_path", help="Output directory for the generated dataset."
+        "target_path", help="Output directory for the generated dataset.", type=Path
     )
 
     parser.add_argument(
@@ -103,17 +105,18 @@ def create_parser() -> ArgumentParser:
     return parser
 
 
-def find_source_filenames(source_path: str) -> List[str]:
+def find_source_filenames(source_path: Path) -> List[Path]:
     # Find all source files that have a matching file extension
+    if source_path.is_dir():
+        source_path_str = path.join(source_path, "*")
+    else:
+        source_path_str = str(source_path)
 
-    if Path(source_path).is_dir():
-        source_path = path.join(source_path, "*")
-
-    source_files = list(find_files(source_path, image_reader.readers.keys()))
+    source_files = list(find_files(source_path_str, image_reader.readers.keys()))
 
     assert len(source_files) > 0, (
         "No image files found in path "
-        + source_path
+        + source_path_str
         + ". Supported suffixes are "
         + str(image_reader.readers.keys())
         + "."
@@ -123,7 +126,7 @@ def find_source_filenames(source_path: str) -> List[str]:
 
 
 def read_image_file(
-    file_name: str, dtype: type, z_slice: int, channel_index: Optional[int]
+    file_name: Path, dtype: type, z_slice: int, channel_index: Optional[int]
 ) -> np.ndarray:
     try:
         return image_reader.read_array(file_name, dtype, z_slice, channel_index)
@@ -246,7 +249,7 @@ def cubing_job(
                 raise exc
 
 
-def get_channel_count_and_dtype(source_path: str) -> Tuple[int, str]:
+def get_channel_count_and_dtype(source_path: Path) -> Tuple[int, str]:
     source_files = find_source_filenames(source_path)
     assert (
         len(source_files) > 0
@@ -257,8 +260,8 @@ def get_channel_count_and_dtype(source_path: str) -> Tuple[int, str]:
 
 
 def cubing(
-    source_path: str,
-    target_path: str,
+    source_path: Path,
+    target_path: Path,
     layer_name: str,
     batch_size: Optional[int],
     channel_index: Optional[int],

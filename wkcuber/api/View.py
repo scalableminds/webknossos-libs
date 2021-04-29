@@ -17,7 +17,7 @@ from wkcuber.utils import wait_and_ensure_success, ceil_div_np
 class View:
     def __init__(
         self,
-        path_to_mag_dataset: str,
+        path_to_mag_dataset: Path,
         header: Union[TiffMagHeader, wkw.Header],
         size: Tuple[int, int, int],
         global_offset: Tuple[int, int, int] = (0, 0, 0),
@@ -312,7 +312,7 @@ class WKView(View):
             raise Exception("Cannot open view: the view is already opened")
         else:
             self.dataset = Dataset.open(
-                self.path
+                str(self.path)
             )  # No need to pass the header to the wkw.Dataset
             self._is_opened = True
         return self

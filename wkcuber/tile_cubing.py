@@ -1,5 +1,7 @@
 import time
 import logging
+from pathlib import Path
+
 import numpy as np
 from typing import Dict, Tuple, Union, List, Optional
 import os
@@ -98,7 +100,7 @@ def get_digit_counts_for_dimensions(pattern: str) -> Dict[str, int]:
 
 def detect_interval_for_dimensions(
     file_path_pattern: str, decimal_lengths: Dict[str, int]
-) -> Tuple[Dict[str, int], Dict[str, int], Optional[str], int]:
+) -> Tuple[Dict[str, int], Dict[str, int], Optional[Path], int]:
     arbitrary_file = None
     file_count = 0
     # dictionary that maps the dimension string to the current dimension length
@@ -120,7 +122,7 @@ def detect_interval_for_dimensions(
                 found_files = glob(specific_pattern)
                 file_count += len(found_files)
                 for file_name in found_files:
-                    arbitrary_file = file_name
+                    arbitrary_file = Path(file_name)
                     # Turn a pattern {xxx}/{yyy}/{zzzzzz} for given dimension counts into (e.g., 2, 2, 3) into
                     # something like xx/yy/zzz (note that the curly braces are gone)
                     applied_fpp = replace_pattern_to_specific_length_without_brackets(
@@ -153,25 +155,29 @@ def find_file_with_dimensions(
     y_value: int,
     z_value: int,
     decimal_lengths: Dict[str, int],
-) -> Union[str, None]:
-    file_path_unpadded = replace_coordinates(
-        file_path_pattern, {"z": (z_value, 0), "y": (y_value, 0), "x": (x_value, 0)}
+) -> Union[Path, None]:
+    file_path_unpadded = Path(
+        replace_coordinates(
+            file_path_pattern, {"z": (z_value, 0), "y": (y_value, 0), "x": (x_value, 0)}
+        )
     )
 
-    file_path_padded = replace_coordinates(
-        file_path_pattern,
-        {
-            "z": (z_value, decimal_lengths["z"]),
-            "y": (y_value, decimal_lengths["y"]),
-            "x": (x_value, decimal_lengths["x"]),
-        },
+    file_path_padded = Path(
+        replace_coordinates(
+            file_path_pattern,
+            {
+                "z": (z_value, decimal_lengths["z"]),
+                "y": (y_value, decimal_lengths["y"]),
+                "x": (x_value, decimal_lengths["x"]),
+            },
+        )
     )
 
     # the unpadded file pattern has a higher precedence
-    if os.path.isfile(file_path_unpadded):
+    if file_path_unpadded.is_file():
         return file_path_unpadded
 
-    if os.path.isfile(file_path_padded):
+    if file_path_padded.is_file():
         return file_path_padded
 
     return None
@@ -264,7 +270,7 @@ def tile_cubing_job(
 
 
 def tile_cubing(
-    target_path: str,
+    target_path: Path,
     layer_name: str,
     batch_size: int,
     input_path_pattern: str,

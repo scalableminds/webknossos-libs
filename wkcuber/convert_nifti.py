@@ -28,10 +28,11 @@ def create_parser() -> ArgumentParser:
         "source_path",
         help="Path to NIFTY file or to a directory if multiple NIFTI files should be converted. "
         "In the latter case, also see --color_file and --segmentation_file.",
+        type=Path,
     )
 
     parser.add_argument(
-        "target_path", help="Output directory for the generated WKW dataset."
+        "target_path", help="Output directory for the generated WKW dataset.", type=Path
     )
 
     parser.add_argument(
@@ -321,7 +322,7 @@ def convert_folder_nifti(
 
 
 def main(args: Namespace) -> None:
-    source_path = Path(args.source_path)
+    source_path = args.source_path
 
     flip_axes = None
     if args.flip_axes is not None:
@@ -342,7 +343,7 @@ def main(args: Namespace) -> None:
     if source_path.is_dir():
         convert_folder_nifti(
             source_path,
-            Path(args.target_path),
+            args.target_path,
             args.color_file,
             args.segmentation_file,
             **conversion_args,
@@ -350,7 +351,7 @@ def main(args: Namespace) -> None:
     else:
         convert_nifti(
             source_path,
-            Path(args.target_path),
+            args.target_path,
             args.layer_name,
             args.dtype,
             is_segmentation_layer=args.is_segmentation_layer,

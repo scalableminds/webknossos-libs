@@ -26,7 +26,7 @@ def replace_coordinate(pattern: str, coord_id: str, coord: int) -> str:
 
 
 def detect_tile_ranges(
-    tiled_dataset_path_parent: Optional[str], tiled_dataset_path_pattern: Optional[str]
+    tiled_dataset_path_parent: Optional[Path], tiled_dataset_path_pattern: Optional[str]
 ) -> Tuple[range, range, range]:
     if tiled_dataset_path_pattern is not None:
         if tiled_dataset_path_parent is not None:
@@ -182,7 +182,7 @@ class TiffMagHeader:
 
 
 class TiffMag:
-    def __init__(self, root: str, header: TiffMagHeader) -> None:
+    def __init__(self, root: Path, header: TiffMagHeader) -> None:
 
         self.root = root
         self.tiffs = dict()
@@ -299,7 +299,8 @@ class TiffMag:
     def list_files(self) -> Iterator[str]:
         _, file_extension = os.path.splitext(self.header.pattern)
         return iglob(
-            self.root + "/" + re.sub(r"{.*?}", "*", self.header.pattern), recursive=True
+            str(self.root) + "/" + re.sub(r"{.*?}", "*", self.header.pattern),
+            recursive=True,
         )
 
     def close(self) -> None:
@@ -409,12 +410,12 @@ class TiffMag:
 
     def get_file_name_for_layer(
         self, xyz: Tuple[Optional[int], Optional[int], Optional[int]]
-    ) -> str:
+    ) -> Path:
         x, y, z = xyz
-        return os.path.join(self.root, to_file_name(self.header.pattern, x, y, z))
+        return self.root / to_file_name(self.header.pattern, x, y, z)
 
     @staticmethod
-    def open(root: str, header: TiffMagHeader = None) -> "TiffMag":
+    def open(root: Path, header: TiffMagHeader = None) -> "TiffMag":
         if header is None:
             header = TiffMagHeader()
         return TiffMag(root, header)
@@ -441,26 +442,28 @@ def transpose_for_skimage(data: np.ndarray) -> np.ndarray:
 
 
 class TiffReader:
-    def __init__(self, file_name: str):
+    def __init__(self, file_name: Path):
         self.file_name = file_name
 
     @classmethod
-    def init_tiff(cls, pixels: np.ndarray, file_name: str) -> "TiffReader":
+    def init_tiff(cls, pixels: np.ndarray, file_name: Path) -> "TiffReader":
         tr = TiffReader(file_name)
         tr.write(pixels)
         return tr
 
     @classmethod
-    def open(cls, file_name: str) -> "TiffReader":
+    def open(cls, file_name: Path) -> "TiffReader":
         return cls(file_name)
 
     def read(self) -> np.array:
-        data = io.imread(self.file_name)
+        data = io.imread(str(self.file_name))
         return transpose_for_skimage(data)
 
     def write(self, pixels: np.ndarray) -> None:
-        os.makedirs(os.path.dirname(self.file_name), exist_ok=True)
-        io.imsave(self.file_name, transpose_for_skimage(pixels), check_contrast=False)
+        os.makedirs(self.file_name.parent, exist_ok=True)
+        io.imsave(
+            str(self.file_name), transpose_for_skimage(pixels), check_contrast=False
+        )
 
     def merge_with_image(
         self, foreground_pixels: np.ndarray, offset: Tuple[int, int]

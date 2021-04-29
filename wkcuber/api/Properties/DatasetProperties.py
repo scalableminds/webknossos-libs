@@ -17,14 +17,14 @@ class Properties:
 
     def __init__(
         self,
-        path: Union[str, Path],
+        path: Path,
         name: str,
         scale: Tuple[float, float, float],
         team: str = "",
         data_layers: Dict[str, LayerProperties] = None,
         default_view_configuration: Optional[dict] = None,
     ) -> None:
-        self._path = str(path)
+        self._path = path
         self._name = name
         self._team = team
         self._scale = scale
@@ -35,7 +35,7 @@ class Properties:
         self._default_view_configuration = default_view_configuration
 
     @classmethod
-    def _from_json(cls, path: Union[str, Path]) -> "Properties":
+    def _from_json(cls, path: Path) -> "Properties":
         pass
 
     def _export_as_json(self) -> None:
@@ -101,7 +101,7 @@ class Properties:
         return self._name
 
     @property
-    def path(self) -> str:
+    def path(self) -> Path:
         return self._path
 
     @property
@@ -123,7 +123,7 @@ class Properties:
 
 class WKProperties(Properties):
     @classmethod
-    def _from_json(cls, path: Union[str, Path]) -> "WKProperties":
+    def _from_json(cls, path: Path) -> "WKProperties":
         with open(path) as datasource_properties:
             data = json.load(datasource_properties)
 
@@ -181,7 +181,7 @@ class WKProperties(Properties):
 class TiffProperties(Properties):
     def __init__(
         self,
-        path: Union[str, Path],
+        path: Path,
         name: str,
         scale: Tuple[float, float, float],
         pattern: str,
@@ -197,7 +197,7 @@ class TiffProperties(Properties):
         self.tile_size = tile_size
 
     @classmethod
-    def _from_json(cls, path: Union[str, Path]) -> Properties:
+    def _from_json(cls, path: Path) -> Properties:
         with open(path) as datasource_properties:
             data = json.load(datasource_properties)
 

@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 from typing import Tuple, cast
 
 import numpy as np
@@ -21,6 +22,8 @@ import shutil
 
 WKW_CUBE_SIZE = 1024
 CUBE_EDGE_LEN = 256
+
+TESTOUTPUT_DIR = Path("testoutput")
 
 
 def read_wkw(
@@ -79,8 +82,8 @@ def test_non_linear_filter_reshape() -> None:
 
 
 def downsample_test_helper(use_compress: bool) -> None:
-    source_path = "testdata/WT1_wkw"
-    target_path = "testoutput/WT1_wkw"
+    source_path = Path("testdata", "WT1_wkw")
+    target_path = TESTOUTPUT_DIR / "WT1_wkw"
 
     try:
         shutil.rmtree(target_path)
@@ -153,11 +156,11 @@ def test_downsample_multi_channel() -> None:
     file_len = 32
 
     try:
-        shutil.rmtree("testoutput/multi-channel-test")
+        shutil.rmtree(TESTOUTPUT_DIR / "multi-channel-test")
     except:
         pass
 
-    ds = WKDataset.create("testoutput/multi-channel-test", (1, 1, 1))
+    ds = WKDataset.create(TESTOUTPUT_DIR / "multi-channel-test", (1, 1, 1))
     l = ds.add_layer(
         "color", Layer.COLOR_TYPE, dtype_per_channel="uint8", num_channels=num_channels
     )
@@ -249,7 +252,7 @@ def test_downsampling_padding() -> None:
         ),
     ]
     for args in padding_tests:
-        ds_path = "./testoutput/larger_wk_dataset/"
+        ds_path = TESTOUTPUT_DIR / "larger_wk_dataset"
         try:
             shutil.rmtree(ds_path)
         except:
