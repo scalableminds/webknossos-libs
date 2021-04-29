@@ -199,15 +199,21 @@ class Layer(Generic[MagT]):
 
     def downsample(
         self,
-        from_mag: Mag,
-        max_mag: Optional[Mag],
-        interpolation_mode: str,
-        compress: bool,
+        from_mag: Optional[Mag] = None,
+        max_mag: Optional[Mag] = None,
+        interpolation_mode: str = "default",
+        compress: bool = True,
         anisotropic: Optional[bool] = None,
         scale: Optional[Tuple[float, float, float]] = None,
         buffer_edge_len: Optional[int] = None,
         args: Optional[Namespace] = None,
     ) -> None:
+        if from_mag is None:
+            assert (
+                len(self.mags.keys()) > 0
+            ), "Failed to downsample data. The mag exists that could be used as 'from_mag'"
+            from_mag = Mag(min(self.mags.keys()))
+
         assert (
             from_mag.to_layer_name() in self.mags.keys()
         ), f"Failed to downsample data. The from_mag ({from_mag}) does not exist."
@@ -246,8 +252,8 @@ class Layer(Generic[MagT]):
         self,
         from_mag: Mag,
         target_mag: Mag,
-        interpolation_mode: str,
-        compress: bool,
+        interpolation_mode: str = "default",
+        compress: bool = True,
         buffer_edge_len: Optional[int] = None,
         pad_data: bool = True,
         args: Optional[Namespace] = None,
@@ -551,13 +557,25 @@ class TiledTiffLayer(GenericTiffLayer[TiledTiffMagDataset]):
 
     def downsample(
         self,
-        from_mag: Mag,
-        max_mag: Optional[Mag],
-        interpolation_mode: str,
-        compress: bool,
+        from_mag: Optional[Mag] = None,
+        max_mag: Optional[Mag] = None,
+        interpolation_mode: str = "default",
+        compress: bool = True,
         anisotropic: Optional[bool] = None,
         scale: Optional[Tuple[float, float, float]] = None,
         buffer_edge_len: Optional[int] = None,
+        args: Optional[Namespace] = None,
+    ) -> None:
+        raise NotImplemented
+
+    def downsample_mag(
+        self,
+        from_mag: Mag,
+        target_mag: Mag,
+        interpolation_mode: str = "default",
+        compress: bool = True,
+        buffer_edge_len: Optional[int] = None,
+        pad_data: bool = True,
         args: Optional[Namespace] = None,
     ) -> None:
         raise NotImplemented

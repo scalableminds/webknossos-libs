@@ -24,6 +24,7 @@ WKW_CUBE_SIZE = 1024
 CUBE_EDGE_LEN = 256
 
 TESTOUTPUT_DIR = Path("testoutput")
+TESTDATA_DIR = Path("testdata")
 
 
 def read_wkw(
@@ -286,3 +287,23 @@ def test_default_max_mag() -> None:
     assert calculate_default_max_mag(dataset_size=(16384, 65536, 65536)) == Mag(1024)
     assert calculate_default_max_mag(dataset_size=(16384, 65536, 16384)) == Mag(1024)
     assert calculate_default_max_mag(dataset_size=(256, 256, 256)) == Mag([4, 4, 4])
+
+
+def test_default_parameter() -> None:
+    target_path = TESTOUTPUT_DIR / "downsaple_default"
+
+    try:
+        shutil.rmtree(target_path)
+    except:
+        pass
+
+    ds = WKDataset.create(target_path, scale=(1, 1, 1))
+    layer = ds.add_layer(
+        "color", Layer.COLOR_TYPE, dtype_per_channel="uint8", num_channels=3
+    )
+    mag = layer.add_mag("2")
+    mag.write(data=(np.random.rand(3, 10, 20, 30) * 255).astype(np.uint8))
+    layer.downsample()
+
+    # The max_mag is Mag(4) in this case (see test_default_max_mag)
+    assert sorted(layer.mags.keys()) == ["2", "4"]
