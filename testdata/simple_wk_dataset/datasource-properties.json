@@ -6,6 +6,13 @@
     "scale": [
         1
     ],
+    "defaultViewConfiguration": {
+        "position": [
+            12,
+            12,
+            12
+        ]
+    },
     "dataLayers": [
         {
             "dataFormat": "wkw",
@@ -32,7 +39,14 @@
                     ],
                     "cubeLength": 32
                 }
-            ]
+            ],
+            "defaultViewConfiguration": {
+                "color": [
+                    255,
+                    0,
+                    0
+                ]
+            }
         }
     ]
 }
