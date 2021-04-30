@@ -681,6 +681,13 @@ def test_get_or_add_layer() -> None:
         pass
 
 
+def test_get_or_add_layer_idempotence() -> None:
+    delete_dir(TESTOUTPUT_DIR / "wk_dataset")
+    ds = WKDataset.create(TESTOUTPUT_DIR / "wk_dataset", scale=(1, 1, 1))
+    ds.get_or_add_layer("color2", "color", np.uint8).get_or_add_mag("1")
+    ds.get_or_add_layer("color2", "color", np.uint8).get_or_add_mag("1")
+
+
 def test_get_or_add_mag_for_wk() -> None:
     delete_dir(TESTOUTPUT_DIR / "wk_dataset")
 
@@ -1934,3 +1941,23 @@ def test_bounding_box_on_disk(create_dataset: MagDataset) -> None:
             expected_results.add((bb_offset, file_size))
 
     assert set(bounding_boxes_on_disk) == expected_results
+
+
+def test_compression() -> None:
+    temp_ds_path = Path("testoutput") / "compressed_ds"
+    delete_dir(temp_ds_path)
+    copytree(Path("testdata", "simple_wk_dataset"), temp_ds_path)
+
+    mag1 = WKDataset(temp_ds_path).get_layer("color").get_mag(1)
+
+    # writing unaligned data to an uncompressed dataset
+    write_data = (np.random.rand(3, 10, 20, 30) * 255).astype(np.uint8)
+    mag1.write(write_data)
+
+    mag1.compress()
+
+    assert np.array_equal(write_data, mag1.read(size=(10, 20, 30)))
+
+    with pytest.raises(wkw.WKWException):
+        # writing unaligned data to a compressed dataset
+        mag1.write((np.random.rand(3, 10, 20, 30) * 255).astype(np.uint8))
