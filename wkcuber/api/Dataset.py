@@ -52,6 +52,28 @@ def convert_dtypes(
     return "".join(converted_dtype_parts)
 
 
+def normalize_dtype_per_channel(
+    dtype_per_channel: Union[str, np.dtype, type]
+) -> np.dtype:
+    try:
+        return np.dtype(dtype_per_channel)
+    except TypeError as e:
+        raise TypeError(
+            "Cannot add layer. The specified 'dtype_per_channel' must be a valid dtype. "
+            + str(e)
+        )
+
+
+def normalize_dtype_per_layer(
+    dtype_per_layer: Union[str, np.dtype, type]
+) -> Union[str, np.dtype]:
+    try:
+        dtype_per_layer = str(np.dtype(dtype_per_layer))
+    except Exception:
+        pass  # casting to np.dtype fails if the user specifies a special dtype like "uint24"
+    return dtype_per_layer
+
+
 def dtype_per_layer_to_dtype_per_channel(
     dtype_per_layer: Union[str, np.dtype], num_channels: int
 ) -> np.dtype:
@@ -148,8 +170,8 @@ class AbstractDataset(Generic[LayerT]):
         self,
         layer_name: str,
         category: str,
-        dtype_per_layer: Union[str, np.dtype] = None,
-        dtype_per_channel: Union[str, np.dtype] = None,
+        dtype_per_layer: Union[str, np.dtype, type] = None,
+        dtype_per_channel: Union[str, np.dtype, type] = None,
         num_channels: int = None,
         **kwargs: Any,
     ) -> LayerT:
@@ -165,21 +187,12 @@ class AbstractDataset(Generic[LayerT]):
                 "Cannot add layer. Specifying both 'dtype_per_layer' and 'dtype_per_channel' is not allowed"
             )
         elif dtype_per_channel is not None:
-            try:
-                dtype_per_channel = np.dtype(dtype_per_channel)
-            except TypeError as e:
-                raise TypeError(
-                    "Cannot add layer. The specified 'dtype_per_channel' must be a valid dtype. "
-                    + str(e)
-                )
+            dtype_per_channel = normalize_dtype_per_channel(dtype_per_channel)
             dtype_per_layer = dtype_per_channel_to_dtype_per_layer(
                 dtype_per_channel, num_channels
             )
         elif dtype_per_layer is not None:
-            try:
-                dtype_per_layer = str(np.dtype(dtype_per_layer))
-            except Exception:
-                pass  # casting to np.dtype fails if the user specifies a special dtype like "uint24"
+            dtype_per_layer = normalize_dtype_per_layer(dtype_per_layer)
             dtype_per_channel = dtype_per_layer_to_dtype_per_channel(
                 dtype_per_layer, num_channels
             )
@@ -211,8 +224,8 @@ class AbstractDataset(Generic[LayerT]):
         self,
         layer_name: str,
         category: str,
-        dtype_per_layer: Union[str, np.dtype] = None,
-        dtype_per_channel: Union[str, np.dtype] = None,
+        dtype_per_layer: Union[str, np.dtype, type] = None,
+        dtype_per_channel: Union[str, np.dtype, type] = None,
         num_channels: int = None,
         **kwargs: Any,
     ) -> LayerT:
@@ -234,6 +247,12 @@ class AbstractDataset(Generic[LayerT]):
                 + f"The category of the existing layer is '{self.properties.data_layers[layer_name].category}' "
                 + f"and the passed parameter is '{category}'."
             )
+
+            if dtype_per_channel is not None:
+                dtype_per_channel = normalize_dtype_per_channel(dtype_per_channel)
+
+            if dtype_per_layer is not None:
+                dtype_per_layer = normalize_dtype_per_layer(dtype_per_layer)
 
             if dtype_per_channel is not None or dtype_per_layer is not None:
                 dtype_per_channel = (
