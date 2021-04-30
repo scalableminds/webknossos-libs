@@ -8,11 +8,7 @@ from os import makedirs
 from wkcuber.api.Dataset import WKDataset
 from .mag import Mag
 
-from .utils import (
-    add_verbose_flag,
-    add_distribution_flags,
-    setup_logging,
-)
+from .utils import add_verbose_flag, add_distribution_flags, setup_logging
 from typing import List
 
 BACKUP_EXT = ".bak"
