@@ -6,6 +6,7 @@ from . import pickling
 import logging
 from cluster_tools.schedulers.slurm import SlurmExecutor
 from cluster_tools.schedulers.pbs import PBSExecutor
+from cluster_tools.util import with_preliminary_postfix
 
 def get_executor_class():
     for executor in [SlurmExecutor, PBSExecutor]:
@@ -65,7 +66,13 @@ def worker(workerid, job_array_index, cfut_dir):
         logging.info("Job computation failed.")
         out = pickling.dumps(result)
 
-    destfile = output_pickle_path
+    # The .preliminary postfix is added since the output can
+    # contain a serialized exception. If that is the case,
+    # the file should not be used as a checkpoint by users
+    # of the clustertools. Therefore, the postfix is only
+    # removed by the polling party (ClusterExecutor) after
+    # the success case was recognized.
+    destfile = with_preliminary_postfix(output_pickle_path)
     tempfile = str(destfile) + ".tmp"
     with open(tempfile, "wb") as f:
         f.write(out)

@@ -186,3 +186,7 @@ def enrich_future_with_uncaught_warning(f):
     if not hasattr(f, "is_wrapped_by_cluster_tools"):
         f.is_wrapped_by_cluster_tools = True
         f.add_done_callback(warn_on_exception)
+
+
+def with_preliminary_postfix(name):
+    return f"{name}.preliminary"

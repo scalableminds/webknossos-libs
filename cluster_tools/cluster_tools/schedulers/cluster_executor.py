@@ -1,6 +1,6 @@
 from concurrent import futures
 import os
-from cluster_tools.util import random_string, FileWaitThread, enrich_future_with_uncaught_warning, get_function_name
+from cluster_tools.util import random_string, FileWaitThread, enrich_future_with_uncaught_warning, get_function_name, with_preliminary_postfix
 import threading
 import signal
 import sys
@@ -142,6 +142,7 @@ class ClusterExecutor(futures.Executor):
         if self.debug:
             print("job completed: {}".format(jobid), file=sys.stderr)
 
+        preliminary_outfile_name = with_preliminary_postfix(outfile_name)
         if failed_early:
             # If the code which should be executed on a node wasn't even
             # started (e.g., because python isn't installed or the cluster_tools
@@ -153,11 +154,17 @@ class ClusterExecutor(futures.Executor):
                 self.format_log_file_path(jobid)
             )
         else:
-            with open(outfile_name, "rb") as f:
+            with open(preliminary_outfile_name, "rb") as f:
                 outdata = f.read()
             success, result = pickling.loads(outdata)
 
         if success:
+            # Remove the .preliminary postfix since the job was finished
+            # successfully. # Therefore, the result can be used as a checkpoint
+            # by users of the clustertools.
+            os.rename(preliminary_outfile_name, outfile_name)
+            logging.info("Pickle file renamed to {}.".format(outfile_name))
+
             fut.set_result(result)
         else:
             fut.set_exception(RemoteException(result, jobid))
@@ -219,7 +226,7 @@ class ClusterExecutor(futures.Executor):
             print("job submitted: %i" % jobid, file=sys.stderr)
 
         # Thread will wait for it to finish.
-        self.wait_thread.waitFor(output_pickle_path, jobid)
+        self.wait_thread.waitFor(with_preliminary_postfix(output_pickle_path), jobid)
 
         with self.jobs_lock:
             self.jobs[jobid] = (fut, workerid, output_pickle_path, should_keep_output)
@@ -297,7 +304,7 @@ class ClusterExecutor(futures.Executor):
 
                 outfile_name = output_pickle_path
                 self.wait_thread.waitFor(
-                    outfile_name, jobid_with_index
+                    with_preliminary_postfix(outfile_name), jobid_with_index
                 )
 
                 fut.cluster_jobid = jobid
