@@ -66,7 +66,7 @@ def main(args: Namespace) -> None:
         compress_mag_inplace(args.target_path, args.layer_name, Mag(1), args)
 
     downsample_mags(
-        path=args.path,
+        path=args.target_path,
         layer_name=args.layer_name,
         from_mag=Mag(1),
         max_mag=Mag(args.max_mag),
