@@ -11,6 +11,7 @@ from abc import abstractmethod
 import logging
 from typing import Union
 from cluster_tools.tailf import Tail
+import shutil
 
 class RemoteException(Exception):
     def __init__(self, error, job_id):
@@ -219,6 +220,11 @@ class ClusterExecutor(futures.Executor):
 
         self.store_main_path_to_meta_file(workerid)
 
+        preliminary_output_pickle_path = with_preliminary_postfix(output_pickle_path)
+        if os.path.exists(preliminary_output_pickle_path):
+            logging.warning(f"Deleting stale output file at {preliminary_output_pickle_path}...")
+            os.unlink(preliminary_output_pickle_path)
+
         job_name = get_function_name(fun)
         jobid = self._start(workerid, job_name=job_name)
 
@@ -226,7 +232,7 @@ class ClusterExecutor(futures.Executor):
             print("job submitted: %i" % jobid, file=sys.stderr)
 
         # Thread will wait for it to finish.
-        self.wait_thread.waitFor(with_preliminary_postfix(output_pickle_path), jobid)
+        self.wait_thread.waitFor(preliminary_output_pickle_path, jobid)
 
         with self.jobs_lock:
             self.jobs[jobid] = (fut, workerid, output_pickle_path, should_keep_output)
@@ -277,6 +283,11 @@ class ClusterExecutor(futures.Executor):
                 output_pickle_path = self.format_outfile_name(self.cfut_dir, workerid_with_index)
             else:
                 output_pickle_path = output_pickle_path_getter(arg)
+
+            preliminary_output_pickle_path = with_preliminary_postfix(output_pickle_path)
+            if os.path.exists(preliminary_output_pickle_path):
+                logging.warning(f"Deleting stale output file at {preliminary_output_pickle_path}...")
+                os.unlink(preliminary_output_pickle_path)
 
             # Start the job.
             serialized_function_info = pickling.dumps((pickled_function_path, [arg], {}, self.meta_data, output_pickle_path))

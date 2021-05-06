@@ -396,6 +396,62 @@ def test_high_ram_usage():
     
     del os.environ["MULTIPROCESSING_VIA_IO"]
 
+
+def fail(val):
+    raise Exception("Fail()")
+
+
+def test_preliminary_file_submit():
+
+    with tempfile.TemporaryDirectory(dir=".") as tmp_dir:
+        output_pickle_path = Path(tmp_dir) / "test.pickle"
+        preliminary_output_path = Path(tmp_dir) / "test.pickle.preliminary"
+
+        with cluster_tools.get_executor("slurm", debug=True, job_resources={"mem": "10M"}) as executor:
+            # Schedule failing job and verify that only a preliminary output exists
+            fut = executor.submit(partial(fail, None), __cfut_options={"output_pickle_path": str(output_pickle_path)})
+            with pytest.raises(Exception):
+                fut.result()
+            assert preliminary_output_path.exists(), "Preliminary output file should exist"
+            assert not output_pickle_path.exists(), "Final output file should not exist"
+
+            # Schedule succeeding job with same output path
+            fut = executor.submit(square, 3, __cfut_options={"output_pickle_path": str(output_pickle_path)})
+            assert fut.result() == 9
+            assert output_pickle_path.exists(), "Final output file should exist"
+            assert not preliminary_output_path.exists(), "Preliminary output file should not exist anymore"
+
+
+def test_preliminary_file_map():
+
+    a_range = range(1, 4)
+
+    with tempfile.TemporaryDirectory(dir=".") as tmp_dir:
+        with cluster_tools.get_executor("slurm", debug=True, job_resources={"mem": "10M"}) as executor:
+            # Schedule failing jobs and verify that only a preliminary output exists
+
+            futs = executor.map_to_futures(fail, list(a_range), output_pickle_path_getter=partial(output_pickle_path_getter, tmp_dir))
+            with pytest.raises(Exception):
+                [fut.result() for fut in futs]
+
+            for idx in a_range:
+                output_pickle_path = Path(output_pickle_path_getter(tmp_dir, idx))
+                preliminary_output_path = Path(f"{output_pickle_path}.preliminary")
+
+                assert preliminary_output_path.exists(), "Preliminary output file should exist"
+                assert not output_pickle_path.exists(), "Final output file should not exist"
+
+            # Schedule succeeding jobs with same output paths
+            futs = executor.map_to_futures(square, list(a_range), output_pickle_path_getter=partial(output_pickle_path_getter, tmp_dir))
+            for (fut, job_index) in zip(futs, a_range):
+                fut.result() == square(job_index)
+
+            for idx in a_range:
+                output_pickle_path = Path(output_pickle_path_getter(tmp_dir, idx))
+                preliminary_output_path = Path(f"{output_pickle_path}.preliminary")
+                assert output_pickle_path.exists(), "Final output file should exist"
+                assert not preliminary_output_path.exists(), "Preliminary output file should not exist anymore"
+
 if __name__ == "__main__":
     # Validate that slurm_executor.submit also works when being called from a __main__ module
     test_dereferencing_main()
