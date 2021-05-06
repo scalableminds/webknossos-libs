@@ -2,7 +2,7 @@ set -xe
 python -m wkcuber.downsampling \
   --jobs 2 \
   --from 1 \
-  --max_mag 2 \
+  --max 2 \
   --sampling_mode fix_z \
   --buffer_cube_size 128 \
   --layer_name color \
@@ -11,7 +11,7 @@ python -m wkcuber.downsampling \
 python -m wkcuber.downsampling \
   --jobs 2 \
   --from 2-2-1 \
-  --max_mag 4 \
+  --max 4 \
   --sampling_mode fix_z \
   --buffer_cube_size 128 \
   --layer_name color \
