@@ -1,9 +1,9 @@
 from typing import List, Dict
 
-from .downsampling import downsample_mags_isotropic, downsample_mags_anisotropic
+from wkcuber import downsample_mags
 from .compress import compress_mag_inplace
 from .metadata import refresh_metadata
-from .utils import add_isotropic_flag, setup_logging
+from .utils import add_isotropic_flag, setup_logging, add_sampling_mode_flag
 from .mag import Mag
 from .converter import (
     create_parser as create_conversion_parser,
@@ -49,12 +49,18 @@ def create_parser() -> ArgumentParser:
 
     parser.add_argument("--name", "-n", help="Name of the dataset", default=None)
     add_isotropic_flag(parser)
+    add_sampling_mode_flag(parser)
 
     return parser
 
 
 def main(args: Namespace) -> None:
     setup_logging(args)
+
+    if args.isotropic is not None:
+        raise DeprecationWarning(
+            "The flag 'isotropic' is deprecated. Consider using 'sampling_mode' instead."
+        )
 
     auto_detect_and_run_conversion(args)
 
@@ -66,34 +72,19 @@ def main(args: Namespace) -> None:
             for mag in mags:
                 compress_mag_inplace(args.target_path, layer_name, mag, args)
 
-    if not args.isotropic:
-        for (layer_path, mags) in layer_path_to_mags.items():
-            layer_name = layer_path.stem
-            mags.sort()
-            downsample_mags_anisotropic(
-                args.target_path,
-                layer_name,
-                mags[-1],
-                Mag(args.max_mag),
-                args.scale,
-                "default",
-                not args.no_compress,
-                args=args,
-            )
-
-    else:
-        for (layer_path, mags) in layer_path_to_mags.items():
-            layer_name = layer_path.stem
-            mags.sort()
-            downsample_mags_isotropic(
-                args.target_path,
-                layer_name,
-                mags[-1],
-                Mag(args.max_mag),
-                "default",
-                not args.no_compress,
-                args=args,
-            )
+    for (layer_path, mags) in layer_path_to_mags.items():
+        layer_name = layer_path.stem
+        mags.sort()
+        downsample_mags(
+            path=args.target_path,
+            layer_name=layer_name,
+            from_mag=mags[-1],
+            max_mag=Mag(args.max_mag),
+            interpolation_mode="default",
+            compress=not args.no_compress,
+            sampling_mode=args.sampling_mode,
+            args=args,
+        )
 
     refresh_metadata(args.target_path)
 

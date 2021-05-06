@@ -1,6 +1,7 @@
 import logging
 import math
 from argparse import Namespace
+from enum import Enum
 from shutil import rmtree
 from os.path import join
 from os import makedirs
@@ -19,6 +20,7 @@ from typing import (
     Generic,
     cast,
     Optional,
+    List,
 )
 
 import numpy as np
@@ -30,6 +32,7 @@ from wkcuber.downsampling_utils import (
     calculate_virtual_scale_for_target_mag,
     calculate_default_max_mag,
     get_previous_mag,
+    SamplingModes,
 )
 
 if TYPE_CHECKING:
@@ -203,30 +206,37 @@ class Layer(Generic[MagT]):
         max_mag: Optional[Mag] = None,
         interpolation_mode: str = "default",
         compress: bool = True,
-        anisotropic: Optional[bool] = None,
-        scale: Optional[Tuple[float, float, float]] = None,
+        sampling_mode: str = SamplingModes.AUTOMATIC,
         buffer_edge_len: Optional[int] = None,
         args: Optional[Namespace] = None,
     ) -> None:
         if from_mag is None:
             assert (
                 len(self.mags.keys()) > 0
-            ), "Failed to downsample data. The mag exists that could be used as 'from_mag'"
-            from_mag = Mag(min(self.mags.keys()))
+            ), "Failed to downsample data because no existing mag was found."
+            from_mag = Mag(max(self.mags.keys()))
 
         assert (
             from_mag.to_layer_name() in self.mags.keys()
         ), f"Failed to downsample data. The from_mag ({from_mag}) does not exist."
 
-        if scale is None:
-            scale = self.dataset.properties.scale
-
-        if anisotropic and max_mag is not None:
-            scale = calculate_virtual_scale_for_target_mag(max_mag)
-
         if max_mag is None:
             max_mag = calculate_default_max_mag(
                 self.dataset.properties.data_layers[self.name].get_bounding_box_size()
+            )
+
+        if sampling_mode == SamplingModes.AUTOMATIC:
+            scale = self.dataset.properties.scale
+        elif sampling_mode == SamplingModes.ISOTROPIC:
+            scale = (1, 1, 1)
+        elif sampling_mode == SamplingModes.FIX_Z:
+            max_mag_with_fixed_z = max_mag.to_array()
+            max_mag_with_fixed_z[2] = from_mag.to_array()[2]
+            max_mag = Mag(max_mag_with_fixed_z)
+            scale = calculate_virtual_scale_for_target_mag(max_mag)
+        else:
+            raise AttributeError(
+                f"Downsampling failed: {sampling_mode} is not a valid SamplingMode ({SamplingModes.AUTOMATIC}, {SamplingModes.ISOTROPIC}, {SamplingModes.FIX_Z})"
             )
 
         self._pad_existing_mags_for_downsampling(from_mag, max_mag, scale)
@@ -271,7 +281,7 @@ class Layer(Generic[MagT]):
             interpolation_mode, self.dataset.properties.data_layers[self.name].category
         )
 
-        assert from_mag < target_mag
+        assert from_mag <= target_mag
         assert target_mag.to_layer_name() not in self.mags
 
         prev_mag_ds = self.mags[from_mag.to_layer_name()]
@@ -319,6 +329,46 @@ class Layer(Generic[MagT]):
 
         logging.info("Mag {0} successfully cubed".format(target_mag))
 
+    def downsample_mag_list(
+        self,
+        from_mag: Mag,
+        target_mags: List[Mag],
+        interpolation_mode: str = "default",
+        compress: bool = True,
+        buffer_edge_len: Optional[int] = None,
+        args: Optional[Namespace] = None,
+    ) -> None:
+        assert (
+            from_mag.to_layer_name() in self.mags.keys()
+        ), f"Failed to downsample data. The from_mag ({from_mag}) does not exist."
+
+        target_mags = sorted(target_mags, key=lambda m: m.to_array())
+
+        for i in range(len(target_mags) - 1):
+            assert np.less_equal(
+                target_mags[i].as_np(), target_mags[i + 1].as_np()
+            ).all(), (
+                f"Downsampling failed: cannot downsample {target_mags[i].to_layer_name()} to {target_mags[i+1].to_layer_name()}. "
+                f"Check 'target_mags' ({', '.join([str(mag) for mag in target_mags])}): each pair of adjacent Mags results in a downsampling step."
+            )
+
+        self._pad_existing_mags_for_downsampling(
+            from_mag, target_mags[-1], None, only_max_mag=True
+        )
+
+        source_mag = from_mag
+        for target_mag in target_mags:
+            self.downsample_mag(
+                source_mag,
+                target_mag,
+                interpolation_mode=interpolation_mode,
+                compress=compress,
+                buffer_edge_len=buffer_edge_len,
+                pad_data=False,
+                args=args,
+            )
+            source_mag = target_mag
+
     def setup_mag(self, mag: Union[str, Mag]) -> None:
         pass
 
@@ -327,7 +377,7 @@ class Layer(Generic[MagT]):
         from_mag: Mag,
         min_mag: Optional[Mag],
         compress: bool,
-        anisotropic: Optional[bool] = None,
+        sampling_mode: str = SamplingModes.AUTOMATIC,
         buffer_edge_len: Optional[int] = None,
         args: Optional[Namespace] = None,
     ) -> None:
@@ -338,10 +388,19 @@ class Layer(Generic[MagT]):
         if min_mag is None:
             min_mag = Mag(1)
 
-        scale = self.dataset.properties.scale
-
-        if anisotropic and min_mag is not None:
+        if sampling_mode == SamplingModes.AUTOMATIC:
+            scale = self.dataset.properties.scale
+        elif sampling_mode == SamplingModes.ISOTROPIC:
+            scale = (1, 1, 1)
+        elif sampling_mode == SamplingModes.FIX_Z:
+            min_mag_with_fixed_z = min_mag.to_array()
+            min_mag_with_fixed_z[2] = from_mag.to_array()[2]
+            min_mag = Mag(min_mag_with_fixed_z)
             scale = calculate_virtual_scale_for_target_mag(min_mag)
+        else:
+            raise AttributeError(
+                f"Upsampling failed: {sampling_mode} is not a valid UpsamplingMode ({SamplingModes.AUTOMATIC}, {SamplingModes.ISOTROPIC}, {SamplingModes.FIX_Z})"
+            )
 
         prev_mag = from_mag
         target_mag = get_previous_mag(prev_mag, scale)
@@ -561,8 +620,7 @@ class TiledTiffLayer(GenericTiffLayer[TiledTiffMagDataset]):
         max_mag: Optional[Mag] = None,
         interpolation_mode: str = "default",
         compress: bool = True,
-        anisotropic: Optional[bool] = None,
-        scale: Optional[Tuple[float, float, float]] = None,
+        sampling_mode: str = SamplingModes.AUTOMATIC,
         buffer_edge_len: Optional[int] = None,
         args: Optional[Namespace] = None,
     ) -> None:
@@ -576,6 +634,17 @@ class TiledTiffLayer(GenericTiffLayer[TiledTiffMagDataset]):
         compress: bool = True,
         buffer_edge_len: Optional[int] = None,
         pad_data: bool = True,
+        args: Optional[Namespace] = None,
+    ) -> None:
+        raise NotImplemented
+
+    def downsample_mag_list(
+        self,
+        from_mag: Mag,
+        target_mags: List[Mag],
+        interpolation_mode: str = "default",
+        compress: bool = True,
+        buffer_edge_len: Optional[int] = None,
         args: Optional[Namespace] = None,
     ) -> None:
         raise NotImplemented

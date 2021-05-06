@@ -125,7 +125,7 @@ def add_isotropic_flag(parser: argparse.ArgumentParser) -> None:
         help="Activates isotropic downsampling. The default is anisotropic downsampling. "
         "Isotropic downsampling will always downsample each dimension with the factor 2.",
         dest="isotropic",
-        default=False,
+        default=None,
         action="store_true",
     )
 
@@ -136,6 +136,17 @@ def add_interpolation_flag(parser: argparse.ArgumentParser) -> None:
         "-i",
         help="Interpolation mode (median, mode, nearest, bilinear or bicubic)",
         default="default",
+    )
+
+
+def add_sampling_mode_flag(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--sampling_mode",
+        help="There are three different types: "
+        "'automatic' - the scale is extracted from the datasource-properties.json; "
+        "'isotropic' - regardless of the scale in the datasource-properties.json, (1, 1, 1) is used as scale; "
+        "'fix_z' - the z component will not be downsampled",
+        default="automatic",
     )
 
 

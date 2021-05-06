@@ -1,8 +1,13 @@
+from wkcuber import downsample_mags
 from .cubing import cubing, create_parser as create_cubing_parser
-from .downsampling import downsample_mags_isotropic, downsample_mags_anisotropic
 from .compress import compress_mag_inplace
 from .metadata import write_webknossos_metadata, refresh_metadata
-from .utils import add_isotropic_flag, setup_logging, add_scale_flag
+from .utils import (
+    add_isotropic_flag,
+    setup_logging,
+    add_scale_flag,
+    add_sampling_mode_flag,
+)
 from .mag import Mag
 from argparse import Namespace, ArgumentParser
 
@@ -28,12 +33,18 @@ def create_parser() -> ArgumentParser:
     parser.add_argument("--name", "-n", help="Name of the dataset", default=None)
     add_scale_flag(parser)
     add_isotropic_flag(parser)
+    add_sampling_mode_flag(parser)
 
     return parser
 
 
 def main(args: Namespace) -> None:
     setup_logging(args)
+
+    if args.isotropic is not None:
+        raise DeprecationWarning(
+            "The flag 'isotropic' is deprecated. Consider using 'sampling_mode' instead."
+        )
 
     bounding_box = cubing(
         args.source_path,
@@ -54,28 +65,16 @@ def main(args: Namespace) -> None:
     if not args.no_compress:
         compress_mag_inplace(args.target_path, args.layer_name, Mag(1), args)
 
-    if not args.isotropic:
-        downsample_mags_anisotropic(
-            args.target_path,
-            args.layer_name,
-            Mag(1),
-            Mag(args.max_mag),
-            args.scale,
-            "default",
-            not args.no_compress,
-            args=args,
-        )
-
-    else:
-        downsample_mags_isotropic(
-            args.target_path,
-            args.layer_name,
-            Mag(1),
-            Mag(args.max_mag),
-            "default",
-            not args.no_compress,
-            args=args,
-        )
+    downsample_mags(
+        path=args.path,
+        layer_name=args.layer_name,
+        from_mag=Mag(1),
+        max_mag=Mag(args.max_mag),
+        interpolation_mode="default",
+        compress=not args.no_compress,
+        sampling_mode=args.sampling_mode,
+        args=args,
+    )
 
     refresh_metadata(args.target_path)
 

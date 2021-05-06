@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 
 from wkcuber.api.Dataset import WKDataset
+from wkcuber.downsampling_utils import SamplingModes
 from .mag import Mag
 
 from .utils import (
@@ -11,6 +12,7 @@ from .utils import (
     add_interpolation_flag,
     add_isotropic_flag,
     setup_logging,
+    add_sampling_mode_flag,
 )
 
 
@@ -75,6 +77,7 @@ def create_parser() -> ArgumentParser:
     add_interpolation_flag(parser)
     add_verbose_flag(parser)
     add_isotropic_flag(parser)
+    add_sampling_mode_flag(parser)
     add_distribution_flags(parser)
 
     return parser
@@ -88,7 +91,7 @@ def upsample_mags(
     buffer_edge_len: int = None,
     compress: bool = True,
     args: Namespace = None,
-    anisotropic: bool = True,
+    sampling_mode: str = SamplingModes.AUTOMATIC,
 ) -> None:
     assert layer_name and from_mag or not layer_name and not from_mag, (
         "You provided only one of the following "
@@ -107,7 +110,7 @@ def upsample_mags(
         from_mag=from_mag,
         min_mag=target_mag,
         compress=compress,
-        anisotropic=anisotropic,
+        sampling_mode=sampling_mode,
         buffer_edge_len=buffer_edge_len,
         args=args,
     )
@@ -117,12 +120,18 @@ if __name__ == "__main__":
     args = create_parser().parse_args()
     setup_logging(args)
 
+    if args.isotropic is not None:
+        raise DeprecationWarning(
+            "The flag 'isotropic' is deprecated. Consider using 'sampling_mode' instead."
+        )
+
+    if args.anisotropic_target_mag is not None:
+        raise DeprecationWarning(
+            "The 'anisotropic_target_mag' flag is deprecated. Use 'target_mag' instead (and consider changing the 'sampling_mode')"
+        )
+
     from_mag = Mag(args.from_mag)
-    target_mag = (
-        Mag(args.anisotropic_target_mag)
-        if args.anisotropic_target_mag
-        else Mag(args.target_mag)
-    )
+    target_mag = Mag(args.target_mag)
 
     upsample_mags(
         args.path,
@@ -131,6 +140,6 @@ if __name__ == "__main__":
         target_mag,
         buffer_edge_len=args.buffer_cube_size,
         compress=not args.no_compress,
-        anisotropic=not args.isotropic,
+        sampling_mode=args.sampling_mode,
         args=args,
     )
