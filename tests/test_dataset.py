@@ -32,6 +32,8 @@ from wkcuber.api.MagDataset import (
     TiledTiffMagDataset,
 )
 from wkcuber.api.Properties.DatasetProperties import TiffProperties, WKProperties
+from wkcuber.api.Properties.LayerProperties import SegmentationLayerProperties
+from wkcuber.api.Properties.ResolutionProperties import WkResolution
 from wkcuber.api.TiffData.TiffMag import TiffReader
 from wkcuber.api.View import View
 from wkcuber.api.bounding_box import BoundingBox
@@ -200,11 +202,17 @@ def test_create_wk_dataset_with_explicit_header_fields() -> None:
 
     assert ds.properties.data_layers["color"].element_class == "uint48"
     assert (
-        ds.properties.data_layers["color"].wkw_magnifications[0].cube_length == 64 * 64
+        cast(
+            WkResolution, ds.properties.data_layers["color"].wkw_magnifications[0]
+        ).cube_length
+        == 64 * 64
     )  # mag "1"
     assert ds.properties.data_layers["color"].wkw_magnifications[0].mag == Mag("1")
     assert (
-        ds.properties.data_layers["color"].wkw_magnifications[1].cube_length == 32 * 32
+        cast(
+            WkResolution, ds.properties.data_layers["color"].wkw_magnifications[1]
+        ).cube_length
+        == 32 * 32
     )  # mag "2-2-1" (defaults are used)
     assert ds.properties.data_layers["color"].wkw_magnifications[1].mag == Mag("2-2-1")
 
@@ -897,7 +905,9 @@ def test_largest_segment_id_requirement() -> None:
 
     ds = WKDataset(path)
     assert (
-        ds.properties.data_layers["segmentation"].largest_segment_id
+        cast(
+            SegmentationLayerProperties, ds.properties.data_layers["segmentation"]
+        ).largest_segment_id
         == largest_segment_id
     )
 
@@ -912,8 +922,11 @@ def test_properties_with_segmentation() -> None:
     properties = WKProperties._from_json(input_json_path)
 
     # the attributes 'largest_segment_id' and 'mappings' only exist if it is a SegmentationLayer
-    assert properties.data_layers["segmentation"].largest_segment_id == 1000000000
-    assert properties.data_layers["segmentation"].mappings == [
+    segmentation_layer = cast(
+        SegmentationLayerProperties, properties.data_layers["segmentation"]
+    )
+    assert segmentation_layer.largest_segment_id == 1000000000
+    assert segmentation_layer.mappings == [
         "larger5um1",
         "axons",
         "astrocyte-ge-7",
