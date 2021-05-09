@@ -1370,6 +1370,68 @@ def test_adding_layer_with_valid_dtype_per_layer() -> None:
     ds.add_layer("color2", Layer.COLOR_TYPE, dtype_per_layer=np.uint8, num_channels=1)
     ds.add_layer("color3", Layer.COLOR_TYPE, dtype_per_channel=np.uint8, num_channels=3)
     ds.add_layer("color4", Layer.COLOR_TYPE, dtype_per_channel="uint8", num_channels=3)
+    ds.add_layer(
+        "seg1",
+        Layer.SEGMENTATION_TYPE,
+        dtype_per_channel="float",
+        num_channels=1,
+        largest_segment_id=100000,
+    )
+    ds.add_layer(
+        "seg2",
+        Layer.SEGMENTATION_TYPE,
+        dtype_per_channel=np.float,
+        num_channels=1,
+        largest_segment_id=100000,
+    )
+    ds.add_layer(
+        "seg3",
+        Layer.SEGMENTATION_TYPE,
+        dtype_per_channel=float,
+        num_channels=1,
+        largest_segment_id=100000,
+    )
+    ds.add_layer(
+        "seg4",
+        Layer.SEGMENTATION_TYPE,
+        dtype_per_channel="double",
+        num_channels=1,
+        largest_segment_id=100000,
+    )
+    ds.add_layer(
+        "seg5",
+        Layer.SEGMENTATION_TYPE,
+        dtype_per_channel="float",
+        num_channels=3,
+        largest_segment_id=100000,
+    )
+
+    with open(TESTOUTPUT_DIR / "valid_dtype" / "datasource-properties.json", "r") as f:
+        data = json.load(f)
+        # The order of the layers in the properties equals the order of creation
+        assert data["dataLayers"][0]["elementClass"] == "uint24"
+        assert data["dataLayers"][1]["elementClass"] == "uint8"
+        assert data["dataLayers"][2]["elementClass"] == "uint24"
+        assert data["dataLayers"][3]["elementClass"] == "uint24"
+        assert data["dataLayers"][4]["elementClass"] == "float"
+        assert data["dataLayers"][5]["elementClass"] == "float"
+        assert data["dataLayers"][6]["elementClass"] == "float"
+        assert data["dataLayers"][7]["elementClass"] == "double"
+        assert data["dataLayers"][8]["elementClass"] == "float96"
+
+    ds = WKDataset(
+        TESTOUTPUT_DIR / "valid_dtype"
+    )  # reopen the dataset to check if the data is read from the properties correctly
+    assert ds.properties.data_layers["color1"].element_class == "uint24"
+    assert ds.properties.data_layers["color2"].element_class == "uint8"
+    assert ds.properties.data_layers["color3"].element_class == "uint24"
+    assert ds.properties.data_layers["color4"].element_class == "uint24"
+    # Note that 'float' and 'double' are stored as 'float32' and 'float64'
+    assert ds.properties.data_layers["seg1"].element_class == "float32"
+    assert ds.properties.data_layers["seg2"].element_class == "float32"
+    assert ds.properties.data_layers["seg3"].element_class == "float32"
+    assert ds.properties.data_layers["seg4"].element_class == "float64"
+    assert ds.properties.data_layers["seg5"].element_class == "float96"
 
 
 def test_writing_subset_of_compressed_data_multi_channel() -> None:

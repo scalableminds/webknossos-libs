@@ -11,6 +11,9 @@ import numpy as np
 import os
 import re
 
+from wkcuber.api.Properties.LayerProperties import (
+    properties_floating_type_to_python_type,
+)
 from wkcuber.api.bounding_box import BoundingBox
 from wkcuber.mag import Mag
 from wkcuber.utils import logger, get_executor_for_args, ceil_div_np
@@ -147,8 +150,8 @@ class AbstractDataset(Generic[LayerT]):
         self,
         layer_name: str,
         category: str,
-        dtype_per_layer: Union[str, np.dtype] = None,
-        dtype_per_channel: Union[str, np.dtype] = None,
+        dtype_per_layer: Union[str, np.dtype, type] = None,
+        dtype_per_channel: Union[str, np.dtype, type] = None,
         num_channels: int = None,
         **kwargs: Any,
     ) -> LayerT:
@@ -165,6 +168,9 @@ class AbstractDataset(Generic[LayerT]):
             )
         elif dtype_per_channel is not None:
             try:
+                dtype_per_channel = properties_floating_type_to_python_type.get(
+                    dtype_per_channel, dtype_per_channel
+                )
                 dtype_per_channel = np.dtype(dtype_per_channel)
             except TypeError as e:
                 raise TypeError(
@@ -176,6 +182,9 @@ class AbstractDataset(Generic[LayerT]):
             )
         elif dtype_per_layer is not None:
             try:
+                dtype_per_layer = properties_floating_type_to_python_type.get(
+                    dtype_per_layer, dtype_per_layer
+                )
                 dtype_per_layer = str(np.dtype(dtype_per_layer))
             except Exception:
                 pass  # casting to np.dtype fails if the user specifies a special dtype like "uint24"
