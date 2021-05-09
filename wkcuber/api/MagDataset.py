@@ -2,6 +2,10 @@ import glob
 import logging
 import os
 import re
+import shutil
+from argparse import Namespace
+from copy import deepcopy
+from email.header import Header
 from os.path import join
 from pathlib import Path
 from typing import (
@@ -12,14 +16,20 @@ from typing import (
     TYPE_CHECKING,
     TypeVar,
     Generic,
-    Any,
     Generator,
 )
+from uuid import uuid4
 
 from wkw import wkw
 import numpy as np
 
-from wkcuber.utils import ceil_div_np, convert_mag1_size, convert_mag1_offset
+from wkcuber.compress_utils import compress_file_job
+from wkcuber.utils import (
+    convert_mag1_size,
+    convert_mag1_offset,
+    get_executor_for_args,
+    wait_and_ensure_success,
+)
 
 if TYPE_CHECKING:
     from wkcuber.api.Layer import (
@@ -223,6 +233,11 @@ class MagDataset:
     def _extract_file_index(self, file_path: Path) -> Tuple[int, int, int]:
         raise NotImplementedError
 
+    def compress(
+        self, target_path: Union[str, Path] = None, args: Namespace = None
+    ) -> None:
+        pass
+
 
 class WKMagDataset(MagDataset):
     header: wkw.Header
@@ -264,6 +279,68 @@ class WKMagDataset(MagDataset):
     def _extract_file_index(self, file_path: Path) -> Tuple[int, int, int]:
         zyx_index = [int(el[1:]) for el in file_path.parts]
         return zyx_index[2], zyx_index[1], zyx_index[0]
+
+    def compress(
+        self, target_path: Union[str, Path] = None, args: Namespace = None
+    ) -> None:
+        # The data gets compressed inplace, if target_path is None.
+        # Otherwise it is written to target_path/layer_name/mag.
+        if target_path is not None:
+            target_path = Path(target_path)
+
+        uncompressed_full_path = (
+            Path(self.layer.dataset.path) / self.layer.name / str(Mag(self.name))
+        )
+        compressed_path = (
+            target_path
+            if target_path is not None
+            else Path("{}.compress-{}".format(self.layer.dataset.path, uuid4()))
+        )
+        compressed_full_path = compressed_path / self.layer.name / str(Mag(self.name))
+
+        if compressed_full_path.exists():
+            logging.error(
+                "Target path '{}' already exists".format(compressed_full_path)
+            )
+            exit(1)
+
+        logging.info(
+            "Compressing mag {0} in '{1}'".format(
+                self.name, str(uncompressed_full_path)
+            )
+        )
+
+        was_opened = self.view._is_opened
+        if not was_opened:
+            self.open()  # opening the view is necessary to set the dataset
+        assert self.view.dataset is not None
+
+        # create empty wkw.Dataset
+        self.view.dataset.compress(str(compressed_full_path))
+
+        # compress all files to and move them to 'compressed_path'
+        with get_executor_for_args(args) as executor:
+            job_args = []
+            for file in self.view.dataset.list_files():
+                rel_file = Path(file).relative_to(self.layer.dataset.path)
+                job_args.append((Path(file), compressed_path / rel_file))
+
+            wait_and_ensure_success(
+                executor.map_to_futures(compress_file_job, job_args)
+            )
+
+        logging.info("Mag {0} successfully compressed".format(self.name))
+
+        if not was_opened:
+            self.close()
+
+        if target_path is None:
+            shutil.rmtree(uncompressed_full_path)
+            shutil.move(str(compressed_full_path), uncompressed_full_path)
+            shutil.rmtree(compressed_path)
+
+            # update the handle to the new dataset
+            self.view = self.get_view(offset=(0, 0, 0), is_bounded=False)
 
 
 TiffLayerT = TypeVar("TiffLayerT", bound="GenericTiffLayer")

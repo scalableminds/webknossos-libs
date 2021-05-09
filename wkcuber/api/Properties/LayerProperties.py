@@ -67,6 +67,7 @@ class LayerProperties:
         num_channels: int,
         bounding_box: Dict[str, Union[int, Tuple[int, int, int]]] = None,
         resolutions: List[Resolution] = None,
+        default_view_configuration: Optional[dict] = None,
     ):
         self._name = name
         self._category = category
@@ -80,9 +81,10 @@ class LayerProperties:
             "depth": 0,
         }
         self._wkw_magnifications: List[Resolution] = resolutions or []
+        self._default_view_configuration = default_view_configuration
 
     def _to_json(self) -> Dict[str, Any]:
-        return {
+        layer_properties = {
             "name": self.name,
             "category": self.category,
             "elementClass": python_floating_type_to_properties_type.get(
@@ -100,6 +102,12 @@ class LayerProperties:
             },
             "wkwResolutions": [r._to_json() for r in self.wkw_magnifications],
         }
+        if self.default_view_configuration is not None:
+            layer_properties[
+                "defaultViewConfiguration"
+            ] = self.default_view_configuration
+
+        return layer_properties
 
     @classmethod
     def _from_json(
@@ -125,6 +133,7 @@ class LayerProperties:
                 else None,
             ),
             json_data["boundingBox"],
+            default_view_configuration=json_data.get("defaultViewConfiguration"),
         )
 
         # add resolutions to LayerProperties
@@ -197,6 +206,10 @@ class LayerProperties:
     def wkw_magnifications(self) -> List[Resolution]:
         return self._wkw_magnifications
 
+    @property
+    def default_view_configuration(self) -> Optional[dict]:
+        return self._default_view_configuration
+
 
 class SegmentationLayerProperties(LayerProperties):
     def __init__(
@@ -210,6 +223,7 @@ class SegmentationLayerProperties(LayerProperties):
         resolutions: List[Resolution] = None,
         largest_segment_id: int = None,
         mappings: List[str] = None,
+        default_view_configuration: Optional[dict] = None,
     ) -> None:
         super().__init__(
             name,
@@ -219,6 +233,7 @@ class SegmentationLayerProperties(LayerProperties):
             num_channels,
             bounding_box,
             resolutions,
+            default_view_configuration,
         )
         # The parameter largest_segment_id is in fact not optional.
         # However, specifying the parameter as not optional, would require to change the parameter order
@@ -259,7 +274,8 @@ class SegmentationLayerProperties(LayerProperties):
             json_data["boundingBox"],
             None,
             json_data["largestSegmentId"],
-            json_data["mappings"] if "mappings" in json_data else None,
+            json_data.get("mappings"),
+            json_data.get("defaultViewConfiguration"),
         )
 
         # add resolutions to LayerProperties

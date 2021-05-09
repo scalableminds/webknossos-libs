@@ -35,11 +35,20 @@ def create_parser() -> ArgumentParser:
 def main(args: Namespace) -> None:
     setup_logging(args)
 
+    arg_dict = vars(args)
+
     bounding_box = cubing(
         args.source_path,
         args.target_path,
         args.layer_name,
-        args.batch_size if "batch_size" in args else None,
+        arg_dict.get("batch_size"),
+        arg_dict.get("channel_index"),
+        arg_dict.get("dtype"),
+        args.target_mag,
+        args.wkw_file_len,
+        args.interpolation_mode,
+        args.start_z,
+        args.pad,
         args,
     )
 

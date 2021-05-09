@@ -13,6 +13,7 @@ import re
 
 from wkcuber.api.Properties.LayerProperties import (
     properties_floating_type_to_python_type,
+    SegmentationLayerProperties,
 )
 from wkcuber.api.bounding_box import BoundingBox
 from wkcuber.mag import Mag
@@ -55,6 +56,28 @@ def convert_dtypes(
     return "".join(converted_dtype_parts)
 
 
+def normalize_dtype_per_channel(
+    dtype_per_channel: Union[str, np.dtype, type]
+) -> np.dtype:
+    try:
+        return np.dtype(dtype_per_channel)
+    except TypeError as e:
+        raise TypeError(
+            "Cannot add layer. The specified 'dtype_per_channel' must be a valid dtype. "
+            + str(e)
+        )
+
+
+def normalize_dtype_per_layer(
+    dtype_per_layer: Union[str, np.dtype, type]
+) -> Union[str, np.dtype]:
+    try:
+        dtype_per_layer = str(np.dtype(dtype_per_layer))
+    except Exception:
+        pass  # casting to np.dtype fails if the user specifies a special dtype like "uint24"
+    return dtype_per_layer
+
+
 def dtype_per_layer_to_dtype_per_channel(
     dtype_per_layer: Union[str, np.dtype], num_channels: int
 ) -> np.dtype:
@@ -92,7 +115,8 @@ LayerT = TypeVar("LayerT", bound=Layer)
 
 class AbstractDataset(Generic[LayerT]):
     @abstractmethod
-    def __init__(self, dataset_path: Path) -> None:
+    def __init__(self, dataset_path: Union[str, Path]) -> None:
+        dataset_path = Path(dataset_path)
         properties: Properties = self._get_properties_type()._from_json(
             dataset_path / Properties.FILE_NAME
         )
@@ -167,27 +191,18 @@ class AbstractDataset(Generic[LayerT]):
                 "Cannot add layer. Specifying both 'dtype_per_layer' and 'dtype_per_channel' is not allowed"
             )
         elif dtype_per_channel is not None:
-            try:
-                dtype_per_channel = properties_floating_type_to_python_type.get(
-                    dtype_per_channel, dtype_per_channel
-                )
-                dtype_per_channel = np.dtype(dtype_per_channel)
-            except TypeError as e:
-                raise TypeError(
-                    "Cannot add layer. The specified 'dtype_per_channel' must be a valid dtype. "
-                    + str(e)
-                )
+            dtype_per_channel = properties_floating_type_to_python_type.get(
+                dtype_per_channel, dtype_per_channel
+            )
+            dtype_per_channel = normalize_dtype_per_channel(dtype_per_channel)
             dtype_per_layer = dtype_per_channel_to_dtype_per_layer(
                 dtype_per_channel, num_channels
             )
         elif dtype_per_layer is not None:
-            try:
-                dtype_per_layer = properties_floating_type_to_python_type.get(
-                    dtype_per_layer, dtype_per_layer
-                )
-                dtype_per_layer = str(np.dtype(dtype_per_layer))
-            except Exception:
-                pass  # casting to np.dtype fails if the user specifies a special dtype like "uint24"
+            dtype_per_layer = properties_floating_type_to_python_type.get(
+                dtype_per_layer, dtype_per_layer
+            )
+            dtype_per_layer = normalize_dtype_per_layer(dtype_per_layer)
             dtype_per_channel = dtype_per_layer_to_dtype_per_channel(
                 dtype_per_layer, num_channels
             )
@@ -219,8 +234,8 @@ class AbstractDataset(Generic[LayerT]):
         self,
         layer_name: str,
         category: str,
-        dtype_per_layer: Union[str, np.dtype] = None,
-        dtype_per_channel: Union[str, np.dtype] = None,
+        dtype_per_layer: Union[str, np.dtype, type] = None,
+        dtype_per_channel: Union[str, np.dtype, type] = None,
         num_channels: int = None,
         **kwargs: Any,
     ) -> LayerT:
@@ -242,6 +257,12 @@ class AbstractDataset(Generic[LayerT]):
                 + f"The category of the existing layer is '{self.properties.data_layers[layer_name].category}' "
                 + f"and the passed parameter is '{category}'."
             )
+
+            if dtype_per_channel is not None:
+                dtype_per_channel = normalize_dtype_per_channel(dtype_per_channel)
+
+            if dtype_per_layer is not None:
+                dtype_per_layer = normalize_dtype_per_layer(dtype_per_layer)
 
             if dtype_per_channel is not None or dtype_per_layer is not None:
                 dtype_per_channel = (
@@ -280,7 +301,7 @@ class AbstractDataset(Generic[LayerT]):
         # delete files on disk
         rmtree(join(self.path, layer_name))
 
-    def add_symlink_layer(self, foreign_layer_path: Path) -> LayerT:
+    def add_symlink_layer(self, foreign_layer_path: Union[str, Path]) -> LayerT:
         foreign_layer_path = Path(os.path.abspath(foreign_layer_path))
         layer_name = foreign_layer_path.name
         if layer_name in self.layers.keys():
@@ -342,9 +363,10 @@ class AbstractDataset(Generic[LayerT]):
                     self.properties.data_layers[layer_name].category
                     == Layer.SEGMENTATION_TYPE
                 ):
-                    largest_segment_id = self.properties.data_layers[
-                        layer_name
-                    ].largest_segment_id
+                    largest_segment_id = cast(
+                        SegmentationLayerProperties,
+                        self.properties.data_layers[layer_name],
+                    ).largest_segment_id
                 target_layer = empty_target_ds.add_layer(
                     layer_name,
                     self.properties.data_layers[layer_name].category,
@@ -386,9 +408,10 @@ class AbstractDataset(Generic[LayerT]):
 
     def to_wk_dataset(
         self,
-        new_dataset_path: Path,
+        new_dataset_path: Union[str, Path],
         scale: Optional[Tuple[float, float, float]] = None,
     ) -> "WKDataset":
+        new_dataset_path = Path(new_dataset_path)
         if scale is None:
             scale = self.properties.scale
         new_ds = WKDataset.create(new_dataset_path, scale=scale)
@@ -397,10 +420,11 @@ class AbstractDataset(Generic[LayerT]):
 
     def to_tiff_dataset(
         self,
-        new_dataset_path: Path,
+        new_dataset_path: Union[str, Path],
         scale: Optional[Tuple[float, float, float]] = None,
         pattern: Optional[str] = None,
     ) -> "TiffDataset":
+        new_dataset_path = Path(new_dataset_path)
         if scale is None:
             scale = self.properties.scale
         new_ds = TiffDataset.create(new_dataset_path, scale=scale, pattern=pattern)
@@ -409,11 +433,12 @@ class AbstractDataset(Generic[LayerT]):
 
     def to_tiled_tiff_dataset(
         self,
-        new_dataset_path: Path,
+        new_dataset_path: Union[str, Path],
         tile_size: Tuple[int, int],
         scale: Optional[Tuple[float, float, float]] = None,
         pattern: Optional[str] = None,
     ) -> "TiledTiffDataset":
+        new_dataset_path = Path(new_dataset_path)
         if scale is None:
             scale = self.properties.scale
         new_ds = TiledTiffDataset.create(
@@ -434,16 +459,18 @@ class AbstractDataset(Generic[LayerT]):
 class WKDataset(AbstractDataset[WKLayer]):
     @classmethod
     def create(
-        cls, dataset_path: Path, scale: Tuple[float, float, float]
+        cls, dataset_path: Union[str, Path], scale: Tuple[float, float, float]
     ) -> "WKDataset":
+        dataset_path = Path(dataset_path)
         name = basename(normpath(dataset_path))
         properties = WKProperties(dataset_path / Properties.FILE_NAME, name, scale)
         return cast(WKDataset, WKDataset.create_with_properties(properties))
 
     @classmethod
     def get_or_create(
-        cls, dataset_path: Path, scale: Tuple[float, float, float]
+        cls, dataset_path: Union[str, Path], scale: Tuple[float, float, float]
     ) -> "WKDataset":
+        dataset_path = Path(dataset_path)
         if (
             dataset_path / Properties.FILE_NAME
         ).exists():  # use the properties file to check if the Dataset exists
@@ -455,7 +482,7 @@ class WKDataset(AbstractDataset[WKLayer]):
         else:
             return cls.create(dataset_path, scale)
 
-    def __init__(self, dataset_path: Path) -> None:
+    def __init__(self, dataset_path: Union[str, Path]) -> None:
         super().__init__(dataset_path)
         self._data_format = "wkw"
         assert isinstance(self.properties, WKProperties)
@@ -478,10 +505,11 @@ class TiffDataset(AbstractDataset[TiffLayer]):
     @classmethod
     def create(
         cls,
-        dataset_path: Path,
+        dataset_path: Union[str, Path],
         scale: Tuple[float, float, float],
         pattern: Optional[str] = None,
     ) -> "TiffDataset":
+        dataset_path = Path(dataset_path)
         if pattern is None:
             pattern = "{zzzzz}.tif"
         validate_pattern(pattern)
@@ -498,13 +526,13 @@ class TiffDataset(AbstractDataset[TiffLayer]):
     @classmethod
     def get_or_create(
         cls,
-        dataset_path: Path,
+        dataset_path: Union[str, Path],
         scale: Tuple[float, float, float],
         pattern: str = None,
     ) -> "TiffDataset":
-        if os.path.exists(
-            join(dataset_path, Properties.FILE_NAME)
-        ):  # use the properties file to check if the Dataset exists
+        dataset_path = Path(dataset_path)
+        if (dataset_path / Properties.FILE_NAME).exists():
+            # use the properties file to check if the Dataset exists
             ds = TiffDataset(dataset_path)
             assert tuple(ds.properties.scale) == tuple(
                 scale
@@ -520,7 +548,7 @@ class TiffDataset(AbstractDataset[TiffLayer]):
             else:
                 return cls.create(dataset_path, scale, pattern)
 
-    def __init__(self, dataset_path: Path) -> None:
+    def __init__(self, dataset_path: Union[str, Path]) -> None:
         super().__init__(dataset_path)
         self.data_format = "tiff"
         assert isinstance(self.properties, TiffProperties)
@@ -543,11 +571,12 @@ class TiledTiffDataset(AbstractDataset[TiledTiffLayer]):
     @classmethod
     def create(
         cls,
-        dataset_path: Path,
+        dataset_path: Union[str, Path],
         scale: Tuple[float, float, float],
         tile_size: Tuple[int, int],
         pattern: Optional[str] = None,
     ) -> "TiledTiffDataset":
+        dataset_path = Path(dataset_path)
         if pattern is None:
             pattern = "{xxxxx}/{yyyyy}/{zzzzz}.tif"
         validate_pattern(pattern)
@@ -566,14 +595,14 @@ class TiledTiffDataset(AbstractDataset[TiledTiffLayer]):
     @classmethod
     def get_or_create(
         cls,
-        dataset_path: Path,
+        dataset_path: Union[str, Path],
         scale: Tuple[float, float, float],
         tile_size: Tuple[int, int],
         pattern: str = None,
     ) -> "TiledTiffDataset":
-        if os.path.exists(
-            join(dataset_path, Properties.FILE_NAME)
-        ):  # use the properties file to check if the Dataset exists
+        dataset_path = Path(dataset_path)
+        if (dataset_path / Properties.FILE_NAME).exists():
+            # use the properties file to check if the Dataset exists
             ds = TiledTiffDataset(dataset_path)
             assert tuple(ds.properties.scale) == tuple(
                 scale
@@ -593,7 +622,7 @@ class TiledTiffDataset(AbstractDataset[TiledTiffLayer]):
             else:
                 return cls.create(dataset_path, scale, tile_size, pattern)
 
-    def __init__(self, dataset_path: Path) -> None:
+    def __init__(self, dataset_path: Union[str, Path]) -> None:
         super().__init__(dataset_path)
         self.data_format = "tiled_tiff"
         assert isinstance(self.properties, TiffProperties)

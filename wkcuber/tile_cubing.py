@@ -228,7 +228,10 @@ def tile_cubing_job(
                             if file_name:
                                 # read the image
                                 image = read_image_file(
-                                    file_name, target_wkw_info.header.voxel_type, z
+                                    file_name,
+                                    target_wkw_info.header.voxel_type,
+                                    z,
+                                    None,
                                 )
                                 slices.append(image)
                             else:
