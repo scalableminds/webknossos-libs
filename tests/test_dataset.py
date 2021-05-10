@@ -236,7 +236,6 @@ def test_open_tiff_dataset() -> None:
 
 
 def test_view_read_with_open() -> None:
-
     wk_view = WKDataset(TESTDATA_DIR / "simple_wk_dataset").get_view(
         "color", "1", size=(16, 16, 16)
     )
@@ -253,7 +252,6 @@ def test_view_read_with_open() -> None:
 
 
 def test_tiff_mag_read_with_open() -> None:
-
     tiff_dataset = TiffDataset(TESTDATA_DIR / "simple_tiff_dataset")
     layer = tiff_dataset.get_layer("color")
     mag = layer.get_mag("1")
@@ -612,11 +610,33 @@ def test_read_and_write_of_properties() -> None:
     destination_file_name = destination_path / "datasource-properties.json"
 
     imported_properties = TiffProperties._from_json(source_file_name)
-    imported_properties._path = str(destination_file_name)
+    imported_properties._path = destination_file_name
     makedirs(destination_path)
     imported_properties._export_as_json()
 
-    filecmp.cmp(source_file_name, destination_file_name)
+    with open(source_file_name) as source_stream:
+        source_data = json.load(source_stream)
+        with open(destination_file_name) as destination_stream:
+            destination_data = json.load(destination_stream)
+            assert source_data == destination_data
+
+
+def test_read_and_write_of_view_configuration() -> None:
+    destination_path = TESTOUTPUT_DIR / "read_write_view_configuration"
+    delete_dir(destination_path)
+    source_file_name = TESTDATA_DIR / "simple_wk_dataset" / "datasource-properties.json"
+    destination_file_name = destination_path / "datasource-properties.json"
+
+    imported_properties = WKProperties._from_json(source_file_name)
+    imported_properties._path = destination_file_name
+    makedirs(destination_path)
+    imported_properties._export_as_json()
+
+    with open(source_file_name) as source_stream:
+        source_data = json.load(source_stream)
+        with open(destination_file_name) as destination_stream:
+            destination_data = json.load(destination_stream)
+            assert source_data == destination_data
 
 
 def test_num_channel_mismatch_assertion() -> None:
@@ -673,6 +693,13 @@ def test_get_or_add_layer() -> None:
         )
     except AssertionError:
         pass
+
+
+def test_get_or_add_layer_idempotence() -> None:
+    delete_dir(TESTOUTPUT_DIR / "wk_dataset")
+    ds = WKDataset.create(TESTOUTPUT_DIR / "wk_dataset", scale=(1, 1, 1))
+    ds.get_or_add_layer("color2", "color", np.uint8).get_or_add_mag("1")
+    ds.get_or_add_layer("color2", "color", np.uint8).get_or_add_mag("1")
 
 
 def test_get_or_add_mag_for_wk() -> None:
@@ -821,7 +848,6 @@ def test_advanced_pattern() -> None:
 
 
 def test_invalid_pattern() -> None:
-
     delete_dir(TESTOUTPUT_DIR / "tiff_invalid_dataset")
     try:
         TiledTiffDataset.create(
@@ -892,7 +918,7 @@ def test_properties_with_segmentation() -> None:
 
     # export the json under a new name
     makedirs(dirname(output_json_path), exist_ok=True)
-    properties._path = str(output_json_path)
+    properties._path = output_json_path
     properties._export_as_json()
 
     # validate if contents match
@@ -1810,7 +1836,6 @@ def test_for_zipped_chunks_invalid_target_chunk_size_tiled_tiff() -> None:
 
 
 def test_for_zipped_chunks_invalid_target_chunk_size_tiff() -> None:
-
     test_cases = [  # offset, size, chunk_size
         ((0, 0, 0), (64, 64, 10), (32, 64, 5)),
         ((14, 14, 5), (46, 46, 5), (32, 32, 5)),
@@ -1928,3 +1953,23 @@ def test_bounding_box_on_disk(create_dataset: MagDataset) -> None:
             expected_results.add((bb_offset, file_size))
 
     assert set(bounding_boxes_on_disk) == expected_results
+
+
+def test_compression() -> None:
+    temp_ds_path = Path("testoutput") / "compressed_ds"
+    delete_dir(temp_ds_path)
+    copytree(Path("testdata", "simple_wk_dataset"), temp_ds_path)
+
+    mag1 = WKDataset(temp_ds_path).get_layer("color").get_mag(1)
+
+    # writing unaligned data to an uncompressed dataset
+    write_data = (np.random.rand(3, 10, 20, 30) * 255).astype(np.uint8)
+    mag1.write(write_data)
+
+    mag1.compress()
+
+    assert np.array_equal(write_data, mag1.read(size=(10, 20, 30)))
+
+    with pytest.raises(wkw.WKWException):
+        # writing unaligned data to a compressed dataset
+        mag1.write((np.random.rand(3, 10, 20, 30) * 255).astype(np.uint8))

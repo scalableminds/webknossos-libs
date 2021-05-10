@@ -14,6 +14,7 @@ from .utils import (
     add_isotropic_flag,
     setup_logging,
     add_sampling_mode_flag,
+    get_executor_args,
 )
 
 
@@ -147,5 +148,5 @@ if __name__ == "__main__":
         compress=not args.no_compress,
         sampling_mode=args.sampling_mode,
         buffer_edge_len=args.buffer_cube_size,
-        args=args,
+        args=get_executor_args(args),
     )

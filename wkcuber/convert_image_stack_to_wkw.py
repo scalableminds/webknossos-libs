@@ -7,6 +7,7 @@ from .utils import (
     setup_logging,
     add_scale_flag,
     add_sampling_mode_flag,
+    get_executor_args,
 )
 from .mag import Mag
 from argparse import Namespace, ArgumentParser
@@ -46,11 +47,20 @@ def main(args: Namespace) -> None:
             "The flag 'isotropic' is deprecated. Consider using '--sampling_mode isotropic' instead."
         )
 
+    arg_dict = vars(args)
+
     bounding_box = cubing(
         args.source_path,
         args.target_path,
         args.layer_name,
-        args.batch_size if "batch_size" in args else None,
+        arg_dict.get("batch_size"),
+        arg_dict.get("channel_index"),
+        arg_dict.get("dtype"),
+        args.target_mag,
+        args.wkw_file_len,
+        args.interpolation_mode,
+        args.start_z,
+        args.pad,
         args,
     )
 
@@ -73,7 +83,7 @@ def main(args: Namespace) -> None:
         interpolation_mode="default",
         compress=not args.no_compress,
         sampling_mode=args.sampling_mode,
-        args=args,
+        args=get_executor_args(args),
     )
 
     refresh_metadata(args.target_path)

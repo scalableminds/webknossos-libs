@@ -506,3 +506,11 @@ def convert_mag1_offset(
     mag1_offset: Union[List, np.ndarray], target_mag: Mag
 ) -> np.ndarray:
     return np.array(mag1_offset) // target_mag.as_np()  # floor div
+
+
+def get_executor_args(global_args: argparse.Namespace) -> argparse.Namespace:
+    executor_args = argparse.Namespace()
+    executor_args.jobs = global_args.jobs
+    executor_args.distribution_strategy = global_args.distribution_strategy
+    executor_args.job_resources = global_args.job_resources
+    return executor_args
