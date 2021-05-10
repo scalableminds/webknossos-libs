@@ -43,7 +43,7 @@ def main(args: Namespace) -> None:
 
     if args.isotropic is not None:
         raise DeprecationWarning(
-            "The flag 'isotropic' is deprecated. Consider using 'sampling_mode' instead."
+            "The flag 'isotropic' is deprecated. Consider using '--sampling_mode isotropic' instead."
         )
 
     bounding_box = cubing(
