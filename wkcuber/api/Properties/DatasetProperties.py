@@ -9,6 +9,7 @@ from wkcuber.api.Properties.LayerProperties import (
 )
 from wkcuber.api.Properties.ResolutionProperties import WkResolution, Resolution
 from wkcuber.mag import Mag
+import numpy as np
 
 
 class Properties:
@@ -113,7 +114,7 @@ class Properties:
         return self._scale
 
     @property
-    def data_layers(self) -> dict:
+    def data_layers(self) -> Dict[str, LayerProperties]:
         return self._data_layers
 
     @property
