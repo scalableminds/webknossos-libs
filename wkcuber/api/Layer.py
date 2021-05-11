@@ -206,7 +206,7 @@ class Layer(Generic[MagT]):
         max_mag: Optional[Mag] = None,
         interpolation_mode: str = "default",
         compress: bool = True,
-        sampling_mode: str = SamplingModes.AUTOMATIC,
+        sampling_mode: str = SamplingModes.AUTO,
         buffer_edge_len: Optional[int] = None,
         args: Optional[Namespace] = None,
     ) -> None:
@@ -225,18 +225,18 @@ class Layer(Generic[MagT]):
                 self.dataset.properties.data_layers[self.name].get_bounding_box_size()
             )
 
-        if sampling_mode == SamplingModes.AUTOMATIC:
+        if sampling_mode == SamplingModes.AUTO:
             scale = self.dataset.properties.scale
         elif sampling_mode == SamplingModes.ISOTROPIC:
             scale = (1, 1, 1)
-        elif sampling_mode == SamplingModes.FIX_Z:
+        elif sampling_mode == SamplingModes.CONSTANT_Z:
             max_mag_with_fixed_z = max_mag.to_array()
             max_mag_with_fixed_z[2] = from_mag.to_array()[2]
             max_mag = Mag(max_mag_with_fixed_z)
             scale = calculate_virtual_scale_for_target_mag(max_mag)
         else:
             raise AttributeError(
-                f"Downsampling failed: {sampling_mode} is not a valid SamplingMode ({SamplingModes.AUTOMATIC}, {SamplingModes.ISOTROPIC}, {SamplingModes.FIX_Z})"
+                f"Downsampling failed: {sampling_mode} is not a valid SamplingMode ({SamplingModes.AUTO}, {SamplingModes.ISOTROPIC}, {SamplingModes.CONSTANT_Z})"
             )
 
         self._pad_existing_mags_for_downsampling(from_mag, max_mag, scale)
@@ -342,6 +342,7 @@ class Layer(Generic[MagT]):
             from_mag.to_layer_name() in self.mags.keys()
         ), f"Failed to downsample data. The from_mag ({from_mag}) does not exist."
 
+        # The lambda function is important because 'sorted(target_mags)' would only sort by the maximum element per mag
         target_mags = sorted(target_mags, key=lambda m: m.to_array())
 
         for i in range(len(target_mags) - 1):
@@ -377,7 +378,7 @@ class Layer(Generic[MagT]):
         from_mag: Mag,
         min_mag: Optional[Mag],
         compress: bool,
-        sampling_mode: str = SamplingModes.AUTOMATIC,
+        sampling_mode: str = SamplingModes.AUTO,
         buffer_edge_len: Optional[int] = None,
         args: Optional[Namespace] = None,
     ) -> None:
@@ -388,18 +389,18 @@ class Layer(Generic[MagT]):
         if min_mag is None:
             min_mag = Mag(1)
 
-        if sampling_mode == SamplingModes.AUTOMATIC:
+        if sampling_mode == SamplingModes.AUTO:
             scale = self.dataset.properties.scale
         elif sampling_mode == SamplingModes.ISOTROPIC:
             scale = (1, 1, 1)
-        elif sampling_mode == SamplingModes.FIX_Z:
+        elif sampling_mode == SamplingModes.CONSTANT_Z:
             min_mag_with_fixed_z = min_mag.to_array()
             min_mag_with_fixed_z[2] = from_mag.to_array()[2]
             min_mag = Mag(min_mag_with_fixed_z)
             scale = calculate_virtual_scale_for_target_mag(min_mag)
         else:
             raise AttributeError(
-                f"Upsampling failed: {sampling_mode} is not a valid UpsamplingMode ({SamplingModes.AUTOMATIC}, {SamplingModes.ISOTROPIC}, {SamplingModes.FIX_Z})"
+                f"Upsampling failed: {sampling_mode} is not a valid UpsamplingMode ({SamplingModes.AUTO}, {SamplingModes.ISOTROPIC}, {SamplingModes.CONSTANT_Z})"
             )
 
         prev_mag = from_mag
@@ -620,7 +621,7 @@ class TiledTiffLayer(GenericTiffLayer[TiledTiffMagDataset]):
         max_mag: Optional[Mag] = None,
         interpolation_mode: str = "default",
         compress: bool = True,
-        sampling_mode: str = SamplingModes.AUTOMATIC,
+        sampling_mode: str = SamplingModes.AUTO,
         buffer_edge_len: Optional[int] = None,
         args: Optional[Namespace] = None,
     ) -> None:

@@ -96,7 +96,7 @@ def downsample_mags(
     buffer_edge_len: int = None,
     compress: bool = True,
     args: Namespace = None,
-    sampling_mode: str = SamplingModes.AUTOMATIC,
+    sampling_mode: str = SamplingModes.AUTO,
 ) -> None:
     assert layer_name and from_mag or not layer_name and not from_mag, (
         "You provided only one of the following "

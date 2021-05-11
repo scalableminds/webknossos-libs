@@ -15,9 +15,9 @@ from wkcuber.utils import time_start, time_stop
 
 
 class SamplingModes:
-    AUTOMATIC = "automatic"
+    AUTO = "auto"
     ISOTROPIC = "isotropic"
-    FIX_Z = "fix_z"
+    CONSTANT_Z = "constant_z"
 
 
 class InterpolationModes(Enum):
