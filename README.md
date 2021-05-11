@@ -52,8 +52,13 @@ Use the CI-built image: [scalableminds/webknossos-cuber](https://hub.docker.com/
 ## Usage
 
 ```
-# Convert image stacks into wkw datasets
+# Convert arbitrary, supported input files into wkw datasets. This sets reasonable defaults, but see other commands for customization.
 python -m wkcuber \
+  --scale 11.24,11.24,25 \
+  data/source data/target
+
+# Convert image stacks into wkw datasets
+python -m wkcuber.convert_image_stack_to_wkw \
   --layer_name color \
   --scale 11.24,11.24,25 \
   --name great_dataset \
