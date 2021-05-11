@@ -380,8 +380,12 @@ class ImageStackConverter(Converter):
         view_configuration = dict()
         converted_layers = 0
         for layer_path, layer_name in layer_path_to_name.items():
-            if not all_files_of_same_type(get_source_files(layer_path, image_reader.readers.keys(), True)):
-                logger.warn(f"Not converting {layer_name} because not all image files are of the same type")
+            if not all_files_of_same_type(
+                get_source_files(layer_path, image_reader.readers.keys(), True)
+            ):
+                logger.info(
+                    f"Not converting {layer_name} because not all image files are of the same type"
+                )
                 continue
 
             converted_layers += 1
