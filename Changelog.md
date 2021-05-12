@@ -11,13 +11,28 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 
 ### Breaking Changes in Config & CLI
 - The interface for `downsamping` was completely reworked. The flags `anisotropic_target_mag` and `isotropic` are now deprecated. Use `max` and `sampling_mode` instead. [#304](https://github.com/scalableminds/webknossos-cuber/pull/304)
-- The dataset API now interprets `float` as 32bit. `double` can be passed as a string to use a floatingpoint with 64bit as dtype (specifying the dtype explicitly, e.g. `np.float64`, still works). The `datasource-properties.json` stores 32bit floats as `"float"` and 64bit floats as `"double"`. [#316](https://github.com/scalableminds/webknossos-cuber/pull/316)
 
 ### Added
 
 ### Changed
 
 ### Fixed
+
+## [0.6.4](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.6.4) - 2021-05-12
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.6.3...v0.6.4)
+
+### Fixed
+- Fixed PEP 561 compatibility for type support
+
+## [0.6.3](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.6.3) - 2021-05-12
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.6.2...v0.6.3)
+
+### Breaking Changes in Config & CLI
+- The dataset API now interprets `float` as 32bit. `double` can be passed as a string to use a floatingpoint with 64bit as dtype (specifying the dtype explicitly, e.g. `np.float64`, still works). The `datasource-properties.json` stores 32bit floats as `"float"` and 64bit floats as `"double"`. [#316](https://github.com/scalableminds/webknossos-cuber/pull/316)
+
+### Added
+- Added `py.typed` to conform PEP 561 for type support
+
 
 
 ## [0.6.2](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.6.2) - 2021-05-10
