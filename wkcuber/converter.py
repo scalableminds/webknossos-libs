@@ -76,6 +76,12 @@ def get_source_files(
     return source_files
 
 
+def all_files_of_same_type(input_files: List[str]) -> bool:
+    _, ext = path.splitext(input_files[0])
+
+    return all(map(lambda p: path.splitext(p)[1] == ext, input_files))
+
+
 class Converter:
     def __init__(self) -> None:
         self.source_files: List[str] = []
@@ -329,12 +335,6 @@ class ImageStackConverter(Converter):
         if len(source_files) == 0:
             return False
 
-        _, ext = path.splitext(source_files[0])
-
-        assert all(
-            map(lambda p: path.splitext(p)[1] == ext, source_files)
-        ), "Not all image files are of the same type"
-
         self.source_files = list(
             map(lambda p: cast(str, path.normpath(p)), source_files)
         )
@@ -377,7 +377,17 @@ class ImageStackConverter(Converter):
 
         bounding_box = None
         view_configuration = dict()
+        converted_layers = 0
         for layer_path, layer_name in layer_path_to_name.items():
+            if not all_files_of_same_type(
+                get_source_files(layer_path, image_reader.readers.keys(), True)
+            ):
+                logger.info(
+                    f"Not converting {layer_name} because not all image files are of the same type"
+                )
+                continue
+
+            converted_layers += 1
             channel_count, dtype = get_channel_count_and_dtype(Path(layer_path))
             if channel_count > 1 and not (channel_count == 3 and dtype == "uint8"):
                 for i in range(channel_count):
@@ -418,6 +428,8 @@ class ImageStackConverter(Converter):
                     args.pad,
                     executor_args,
                 )
+
+        assert converted_layers > 0, "No layer could be converted!"
 
         write_webknossos_metadata(
             args.target_path,
