@@ -1,10 +1,10 @@
 from pathlib import Path
-from typing import Optional, Tuple
 
 from argparse import ArgumentParser, Namespace
 import os
 
 from wkcuber.api.Dataset import WKDataset
+from wkcuber.downsampling_utils import SamplingModes
 from .mag import Mag
 
 from .utils import (
@@ -13,6 +13,8 @@ from .utils import (
     add_interpolation_flag,
     add_isotropic_flag,
     setup_logging,
+    add_sampling_mode_flag,
+    get_executor_args,
 )
 
 
@@ -37,15 +39,16 @@ def create_parser() -> ArgumentParser:
         default="1",
     )
 
-    # Either provide the maximum resolution to be downsampled OR a specific, anisotropic magnification.
+    # Either provide the maximum resolution to be upsampled OR a specific, anisotropic magnification.
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
         "--max",
         "-m",
-        help="Max resolution to be downsampled. In case of anisotropic downsampling, the process is considered "
-        "done when max(current_mag) >= max(max_mag) where max takes the largest dimension of the mag tuple "
-        "x, y, z. For example, a maximum mag value of 8 (or 8-8-8) will stop the downsampling as soon as a "
-        "magnification is produced for which one dimension is equal or larger than 8. "
+        help="Max resolution to be downsampled. Needs to be a power of 2. In case of anisotropic downsampling, "
+        "the process is considered done when max(current_mag) >= max(max_mag) where max takes the "
+        "largest dimension of the mag tuple x, y, z. For example, a maximum mag value of 8 (or 8-8-8) "
+        "will stop the downsampling as soon as a magnification is produced for which one dimension is "
+        "equal or larger than 8. "
         "The default value is calculated depending on the dataset size. In the lowest Mag, the size will be "
         "smaller than 100vx per dimension",
         type=int,
@@ -54,7 +57,7 @@ def create_parser() -> ArgumentParser:
 
     group.add_argument(
         "--anisotropic_target_mag",
-        help="Specify an explicit anisotropic target magnification (e.g., --anisotropic_target_mag 16-16-4)."
+        help="Specify an explicit anisotropic target magnification (e.g., --anisotropic_target_mag 2-2-1)."
         "All magnifications until this target magnification will be created. Consider using --anisotropic "
         "instead which automatically creates multiple anisotropic magnifications depending "
         "on the dataset's scale",
@@ -78,6 +81,7 @@ def create_parser() -> ArgumentParser:
 
     add_interpolation_flag(parser)
     add_verbose_flag(parser)
+    add_sampling_mode_flag(parser)
     add_isotropic_flag(parser)
     add_distribution_flags(parser)
 
@@ -88,12 +92,12 @@ def downsample_mags(
     path: Path,
     layer_name: str = None,
     from_mag: Mag = None,
-    max_mag: Mag = Mag(32),
+    max_mag: Mag = None,
     interpolation_mode: str = "default",
     buffer_edge_len: int = None,
     compress: bool = True,
     args: Namespace = None,
-    anisotropic: bool = True,
+    sampling_mode: str = SamplingModes.AUTO,
 ) -> None:
     assert layer_name and from_mag or not layer_name and not from_mag, (
         "You provided only one of the following "
@@ -103,7 +107,6 @@ def downsample_mags(
         "argument with the mag and layer to downsample"
         " (e.g dataset/color/1)."
     )
-    scale = getattr(args, "scale", None) if args else None
     if not layer_name or not from_mag:
         layer_name = os.path.basename(os.path.dirname(path))
         from_mag = Mag(os.path.basename(path))
@@ -114,53 +117,7 @@ def downsample_mags(
         max_mag=max_mag,
         interpolation_mode=interpolation_mode,
         compress=compress,
-        anisotropic=anisotropic,
-        scale=scale,
-        buffer_edge_len=buffer_edge_len,
-        args=args,
-    )
-
-
-def downsample_mags_isotropic(
-    path: Path,
-    layer_name: str,
-    from_mag: Mag,
-    max_mag: Optional[Mag],
-    interpolation_mode: str,
-    compress: bool,
-    buffer_edge_len: int = None,
-    args: Namespace = None,
-) -> None:
-
-    WKDataset(path).get_layer(layer_name).downsample(
-        from_mag=from_mag,
-        max_mag=max_mag,
-        interpolation_mode=interpolation_mode,
-        compress=compress,
-        anisotropic=False,
-        buffer_edge_len=buffer_edge_len,
-        args=args,
-    )
-
-
-def downsample_mags_anisotropic(
-    path: Path,
-    layer_name: str,
-    from_mag: Mag,
-    max_mag: Optional[Mag],
-    scale: Optional[Tuple[float, float, float]],
-    interpolation_mode: str,
-    compress: bool,
-    buffer_edge_len: int = None,
-    args: Namespace = None,
-) -> None:
-    WKDataset(path).get_layer(layer_name).downsample(
-        from_mag=from_mag,
-        max_mag=max_mag,
-        interpolation_mode=interpolation_mode,
-        compress=compress,
-        anisotropic=True,
-        scale=scale,
+        sampling_mode=sampling_mode,
         buffer_edge_len=buffer_edge_len,
         args=args,
     )
@@ -170,31 +127,27 @@ if __name__ == "__main__":
     args = create_parser().parse_args()
     setup_logging(args)
 
+    if args.isotropic is not None:
+        raise DeprecationWarning(
+            "The flag 'isotropic' is deprecated. Consider using '--sampling_mode isotropic' instead."
+        )
+
+    if args.anisotropic_target_mag is not None:
+        raise DeprecationWarning(
+            "The 'anisotropic_target_mag' flag is deprecated. Use 'target_mag' instead (and consider changing the 'sampling_mode')"
+        )
+
     from_mag = Mag(args.from_mag)
     max_mag = None if args.max is None else Mag(args.max)
 
-    if args.anisotropic_target_mag or not args.isotropic:
-        downsample_mags_anisotropic(
-            args.path,
-            args.layer_name,
-            from_mag,
-            Mag(args.anisotropic_target_mag)
-            if args.anisotropic_target_mag
-            else max_mag,
-            scale=None,
-            interpolation_mode=args.interpolation_mode,
-            compress=not args.no_compress,
-            buffer_edge_len=args.buffer_cube_size,
-            args=args,
-        )
-    else:
-        downsample_mags_isotropic(
-            args.path,
-            args.layer_name,
-            from_mag,
-            max_mag,
-            args.interpolation_mode,
-            not args.no_compress,
-            args.buffer_cube_size,
-            args,
-        )
+    downsample_mags(
+        path=args.path,
+        layer_name=args.layer_name,
+        from_mag=from_mag,
+        max_mag=max_mag,
+        interpolation_mode=args.interpolation_mode,
+        compress=not args.no_compress,
+        sampling_mode=args.sampling_mode,
+        buffer_edge_len=args.buffer_cube_size,
+        args=get_executor_args(args),
+    )

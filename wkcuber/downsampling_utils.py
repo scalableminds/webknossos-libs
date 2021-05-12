@@ -14,6 +14,12 @@ from wkcuber.mag import Mag
 from wkcuber.utils import time_start, time_stop
 
 
+class SamplingModes:
+    AUTO = "auto"
+    ISOTROPIC = "isotropic"
+    CONSTANT_Z = "constant_z"
+
+
 class InterpolationModes(Enum):
     MEDIAN = 0
     MODE = 1

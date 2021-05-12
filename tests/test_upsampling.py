@@ -5,6 +5,7 @@ from typing import Tuple, cast
 
 from wkcuber.api.Dataset import WKDataset
 from wkcuber.api.Layer import Layer
+from wkcuber.downsampling_utils import SamplingModes
 from wkcuber.upsampling_utils import upsample_cube, upsample_cube_job
 from wkcuber.mag import Mag
 import numpy as np
@@ -27,7 +28,7 @@ def test_upsampling() -> None:
             from_mag=Mag([4, 4, 2]),
             min_mag=Mag(1),
             compress=False,
-            anisotropic=True,
+            sampling_mode=SamplingModes.AUTO,
             buffer_edge_len=64,
             args=None,
         )

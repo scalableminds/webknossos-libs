@@ -14,7 +14,14 @@ from .convert_knossos import (
 )
 from .convert_nifti import main as convert_nifti, create_parser as create_nifti_parser
 from .image_readers import image_reader
-from .utils import find_files, add_scale_flag, logger, add_verbose_flag, setup_logging
+from .utils import (
+    find_files,
+    add_scale_flag,
+    logger,
+    add_verbose_flag,
+    setup_logging,
+    get_executor_args,
+)
 from .metadata import write_webknossos_metadata
 
 
@@ -303,14 +310,6 @@ class ImageStackConverter(Converter):
         self.dataset_names: Set[str] = set()
 
     @staticmethod
-    def get_executor_args(global_args: Namespace) -> Namespace:
-        executor_args = Namespace()
-        executor_args.jobs = global_args.jobs
-        executor_args.distribution_strategy = global_args.distribution_strategy
-        executor_args.job_resources = global_args.job_resources
-        return executor_args
-
-    @staticmethod
     def get_view_configuration(index: int) -> Optional[Dict[str, List[int]]]:
         color = None
         if index == 0:
@@ -367,7 +366,7 @@ class ImageStackConverter(Converter):
         put_default_from_argparser_if_not_present(args, image_stack_parser, "pad")
         put_default_from_argparser_if_not_present(args, image_stack_parser, "verbose")
 
-        executor_args = ImageStackConverter.get_executor_args(args)
+        executor_args = get_executor_args(args)
 
         # detect layer and ds name
         (

@@ -38,12 +38,6 @@ from wkcuber.api.TiffData.TiffMag import TiffReader
 from wkcuber.api.View import View
 from wkcuber.api.bounding_box import BoundingBox
 from wkcuber.compress import compress_mag_inplace
-from wkcuber.downsampling import downsample_mags_isotropic, downsample_mags_anisotropic
-from wkcuber.downsampling_utils import (
-    downsample_cube,
-    InterpolationModes,
-    parse_interpolation_mode,
-)
 from wkcuber.mag import Mag
 from wkcuber.utils import get_executor_for_args, open_wkw, WkwDatasetInfo, named_partial
 

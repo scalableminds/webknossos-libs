@@ -2,7 +2,8 @@ set -xe
 python -m wkcuber.downsampling \
   --jobs 2 \
   --from 1 \
-  --anisotropic_target_mag 2-2-1 \
+  --max 2 \
+  --sampling_mode constant_z \
   --buffer_cube_size 128 \
   --layer_name color \
   testoutput/tiff
@@ -10,7 +11,8 @@ python -m wkcuber.downsampling \
 python -m wkcuber.downsampling \
   --jobs 2 \
   --from 2-2-1 \
-  --anisotropic_target_mag 4-4-1 \
+  --max 4 \
+  --sampling_mode constant_z \
   --buffer_cube_size 128 \
   --layer_name color \
   testoutput/tiff
