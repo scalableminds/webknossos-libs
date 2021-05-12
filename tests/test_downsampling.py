@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Tuple, cast
 
 import numpy as np
+import pytest
 
 from wkcuber.api.Dataset import WKDataset
 from wkcuber.api.Layer import Layer
@@ -24,6 +25,7 @@ WKW_CUBE_SIZE = 1024
 CUBE_EDGE_LEN = 256
 
 TESTOUTPUT_DIR = Path("testoutput")
+TESTDATA_DIR = Path("testdata")
 
 
 def read_wkw(
@@ -286,3 +288,77 @@ def test_default_max_mag() -> None:
     assert calculate_default_max_mag(dataset_size=(16384, 65536, 65536)) == Mag(1024)
     assert calculate_default_max_mag(dataset_size=(16384, 65536, 16384)) == Mag(1024)
     assert calculate_default_max_mag(dataset_size=(256, 256, 256)) == Mag([4, 4, 4])
+
+
+def test_default_parameter() -> None:
+    target_path = TESTOUTPUT_DIR / "downsaple_default"
+
+    try:
+        shutil.rmtree(target_path)
+    except:
+        pass
+
+    ds = WKDataset.create(target_path, scale=(1, 1, 1))
+    layer = ds.add_layer(
+        "color", Layer.COLOR_TYPE, dtype_per_channel="uint8", num_channels=3
+    )
+    mag = layer.add_mag("2")
+    mag.write(data=(np.random.rand(3, 10, 20, 30) * 255).astype(np.uint8))
+    layer.downsample()
+
+    # The max_mag is Mag(4) in this case (see test_default_max_mag)
+    assert sorted(layer.mags.keys()) == ["2", "4"]
+
+
+def test_default_anisotropic_scale() -> None:
+    try:
+        shutil.rmtree(TESTOUTPUT_DIR / "default_anisotropic_scale")
+    except:
+        pass
+
+    ds = WKDataset.create(
+        TESTOUTPUT_DIR / "default_anisotropic_scale", scale=(85, 85, 346)
+    )
+    layer = ds.add_layer("color", Layer.COLOR_TYPE)
+    mag = layer.add_mag(1)
+    mag.write(data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8))
+
+    layer.downsample(Mag(1), None, "median", True)
+    assert sorted(layer.mags.keys()) == ["1", "2-2-1", "4-4-1"]
+
+
+def test_downsample_mag_list() -> None:
+    try:
+        shutil.rmtree(TESTOUTPUT_DIR / "downsample_mag_list")
+    except:
+        pass
+
+    ds = WKDataset.create(TESTOUTPUT_DIR / "downsample_mag_list", scale=(1, 1, 2))
+    layer = ds.add_layer("color", Layer.COLOR_TYPE)
+    mag = layer.add_mag(1)
+    mag.write(data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8))
+
+    target_mags = [Mag([4, 4, 8]), Mag(2), Mag([32, 32, 8]), Mag(32)]  # unsorted list
+
+    layer.downsample_mag_list(from_mag=Mag(1), target_mags=target_mags)
+
+    for m in target_mags:
+        assert m.to_layer_name() in layer.mags
+
+
+def test_downsample_with_invalid_mag_list() -> None:
+    try:
+        shutil.rmtree(TESTOUTPUT_DIR / "downsample_mag_list")
+    except:
+        pass
+
+    ds = WKDataset.create(TESTOUTPUT_DIR / "downsample_mag_list", scale=(1, 1, 2))
+    layer = ds.add_layer("color", Layer.COLOR_TYPE)
+    mag = layer.add_mag(1)
+    mag.write(data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8))
+
+    with pytest.raises(AssertionError):
+        layer.downsample_mag_list(
+            from_mag=Mag(1),
+            target_mags=[Mag(1), Mag([1, 1, 2]), Mag([2, 2, 1]), Mag(2)],
+        )
