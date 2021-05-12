@@ -44,10 +44,11 @@ def create_parser() -> ArgumentParser:
     group.add_argument(
         "--max",
         "-m",
-        help="Max resolution to be downsampled. In case of anisotropic downsampling, the process is considered "
-        "done when max(current_mag) >= max(max_mag) where max takes the largest dimension of the mag tuple "
-        "x, y, z. For example, a maximum mag value of 8 (or 8-8-8) will stop the downsampling as soon as a "
-        "magnification is produced for which one dimension is equal or larger than 8. "
+        help="Max resolution to be downsampled. Needs to be a power of 2. In case of anisotropic downsampling, "
+        "the process is considered done when max(current_mag) >= max(max_mag) where max takes the "
+        "largest dimension of the mag tuple x, y, z. For example, a maximum mag value of 8 (or 8-8-8) "
+        "will stop the downsampling as soon as a magnification is produced for which one dimension is "
+        "equal or larger than 8. "
         "The default value is calculated depending on the dataset size. In the lowest Mag, the size will be "
         "smaller than 100vx per dimension",
         type=int,

@@ -35,9 +35,15 @@ def create_parser() -> ArgumentParser:
     parser.add_argument(
         "--max_mag",
         "-m",
-        help="Max resolution to be downsampled. Needs to be a power of 2.",
+        help="Max resolution to be downsampled. Needs to be a power of 2. In case of anisotropic downsampling, "
+        "the process is considered done when max(current_mag) >= max(max_mag) where max takes the "
+        "largest dimension of the mag tuple x, y, z. For example, a maximum mag value of 8 (or 8-8-8) "
+        "will stop the downsampling as soon as a magnification is produced for which one dimension is "
+        "equal or larger than 8. "
+        "The default value is calculated depending on the dataset size. In the lowest Mag, the size will be "
+        "smaller than 100vx per dimension",
         type=int,
-        default=32,
+        default=None,
     )
 
     parser.add_argument(
@@ -79,7 +85,7 @@ def main(args: Namespace) -> None:
             path=args.target_path,
             layer_name=layer_name,
             from_mag=mags[-1],
-            max_mag=Mag(args.max_mag),
+            max_mag=None if args.max_mag is None else Mag(args.max_mag),
             interpolation_mode="default",
             compress=not args.no_compress,
             sampling_mode=args.sampling_mode,
