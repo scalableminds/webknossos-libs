@@ -14,6 +14,18 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 - The dataset API now interprets `float` as 32bit. `double` can be passed as a string to use a floatingpoint with 64bit as dtype (specifying the dtype explicitly, e.g. `np.float64`, still works). The `datasource-properties.json` stores 32bit floats as `"float"` and 64bit floats as `"double"`. [#316](https://github.com/scalableminds/webknossos-cuber/pull/316)
 
 ### Added
+
+### Changed
+
+### Fixed
+
+
+## [0.6.2](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.6.2) - 2021-05-10
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.6.1...v0.6.2)
+
+### Breaking Changes in Config & CLI
+
+### Added
 - Added method to Dataset API to compress `WKMagDatasets`. [#296](https://github.com/scalableminds/webknossos-cuber/pull/296)
 - This PR allows the auto-conversion to select one channel at a time for conversion to create multiple layer. Thus, more channel formats are supported. [#291](https://github.com/scalableminds/webknossos-cuber/pull/291)
 
