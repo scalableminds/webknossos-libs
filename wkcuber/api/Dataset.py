@@ -11,6 +11,10 @@ import numpy as np
 import os
 import re
 
+from wkcuber.api.Properties.LayerProperties import (
+    properties_floating_type_to_python_type,
+    SegmentationLayerProperties,
+)
 from wkcuber.api.bounding_box import BoundingBox
 from wkcuber.mag import Mag
 from wkcuber.utils import logger, get_executor_for_args, ceil_div_np
@@ -187,11 +191,17 @@ class AbstractDataset(Generic[LayerT]):
                 "Cannot add layer. Specifying both 'dtype_per_layer' and 'dtype_per_channel' is not allowed"
             )
         elif dtype_per_channel is not None:
+            dtype_per_channel = properties_floating_type_to_python_type.get(
+                dtype_per_channel, dtype_per_channel
+            )
             dtype_per_channel = normalize_dtype_per_channel(dtype_per_channel)
             dtype_per_layer = dtype_per_channel_to_dtype_per_layer(
                 dtype_per_channel, num_channels
             )
         elif dtype_per_layer is not None:
+            dtype_per_layer = properties_floating_type_to_python_type.get(
+                dtype_per_layer, dtype_per_layer
+            )
             dtype_per_layer = normalize_dtype_per_layer(dtype_per_layer)
             dtype_per_channel = dtype_per_layer_to_dtype_per_channel(
                 dtype_per_layer, num_channels
@@ -353,9 +363,10 @@ class AbstractDataset(Generic[LayerT]):
                     self.properties.data_layers[layer_name].category
                     == Layer.SEGMENTATION_TYPE
                 ):
-                    largest_segment_id = self.properties.data_layers[
-                        layer_name
-                    ].largest_segment_id
+                    largest_segment_id = cast(
+                        SegmentationLayerProperties,
+                        self.properties.data_layers[layer_name],
+                    ).largest_segment_id
                 target_layer = empty_target_ds.add_layer(
                     layer_name,
                     self.properties.data_layers[layer_name].category,

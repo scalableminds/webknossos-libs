@@ -32,6 +32,8 @@ from wkcuber.api.MagDataset import (
     TiledTiffMagDataset,
 )
 from wkcuber.api.Properties.DatasetProperties import TiffProperties, WKProperties
+from wkcuber.api.Properties.LayerProperties import SegmentationLayerProperties
+from wkcuber.api.Properties.ResolutionProperties import WkResolution
 from wkcuber.api.TiffData.TiffMag import TiffReader
 from wkcuber.api.View import View
 from wkcuber.api.bounding_box import BoundingBox
@@ -194,11 +196,17 @@ def test_create_wk_dataset_with_explicit_header_fields() -> None:
 
     assert ds.properties.data_layers["color"].element_class == "uint48"
     assert (
-        ds.properties.data_layers["color"].wkw_magnifications[0].cube_length == 64 * 64
+        cast(
+            WkResolution, ds.properties.data_layers["color"].wkw_magnifications[0]
+        ).cube_length
+        == 64 * 64
     )  # mag "1"
     assert ds.properties.data_layers["color"].wkw_magnifications[0].mag == Mag("1")
     assert (
-        ds.properties.data_layers["color"].wkw_magnifications[1].cube_length == 32 * 32
+        cast(
+            WkResolution, ds.properties.data_layers["color"].wkw_magnifications[1]
+        ).cube_length
+        == 32 * 32
     )  # mag "2-2-1" (defaults are used)
     assert ds.properties.data_layers["color"].wkw_magnifications[1].mag == Mag("2-2-1")
 
@@ -891,7 +899,9 @@ def test_largest_segment_id_requirement() -> None:
 
     ds = WKDataset(path)
     assert (
-        ds.properties.data_layers["segmentation"].largest_segment_id
+        cast(
+            SegmentationLayerProperties, ds.properties.data_layers["segmentation"]
+        ).largest_segment_id
         == largest_segment_id
     )
 
@@ -906,8 +916,11 @@ def test_properties_with_segmentation() -> None:
     properties = WKProperties._from_json(input_json_path)
 
     # the attributes 'largest_segment_id' and 'mappings' only exist if it is a SegmentationLayer
-    assert properties.data_layers["segmentation"].largest_segment_id == 1000000000
-    assert properties.data_layers["segmentation"].mappings == [
+    segmentation_layer = cast(
+        SegmentationLayerProperties, properties.data_layers["segmentation"]
+    )
+    assert segmentation_layer.largest_segment_id == 1000000000
+    assert segmentation_layer.mappings == [
         "larger5um1",
         "axons",
         "astrocyte-ge-7",
@@ -1390,6 +1403,68 @@ def test_adding_layer_with_valid_dtype_per_layer() -> None:
     ds.add_layer("color2", Layer.COLOR_TYPE, dtype_per_layer=np.uint8, num_channels=1)
     ds.add_layer("color3", Layer.COLOR_TYPE, dtype_per_channel=np.uint8, num_channels=3)
     ds.add_layer("color4", Layer.COLOR_TYPE, dtype_per_channel="uint8", num_channels=3)
+    ds.add_layer(
+        "seg1",
+        Layer.SEGMENTATION_TYPE,
+        dtype_per_channel="float",
+        num_channels=1,
+        largest_segment_id=100000,
+    )
+    ds.add_layer(
+        "seg2",
+        Layer.SEGMENTATION_TYPE,
+        dtype_per_channel=np.float,
+        num_channels=1,
+        largest_segment_id=100000,
+    )
+    ds.add_layer(
+        "seg3",
+        Layer.SEGMENTATION_TYPE,
+        dtype_per_channel=float,
+        num_channels=1,
+        largest_segment_id=100000,
+    )
+    ds.add_layer(
+        "seg4",
+        Layer.SEGMENTATION_TYPE,
+        dtype_per_channel="double",
+        num_channels=1,
+        largest_segment_id=100000,
+    )
+    ds.add_layer(
+        "seg5",
+        Layer.SEGMENTATION_TYPE,
+        dtype_per_channel="float",
+        num_channels=3,
+        largest_segment_id=100000,
+    )
+
+    with open(TESTOUTPUT_DIR / "valid_dtype" / "datasource-properties.json", "r") as f:
+        data = json.load(f)
+        # The order of the layers in the properties equals the order of creation
+        assert data["dataLayers"][0]["elementClass"] == "uint24"
+        assert data["dataLayers"][1]["elementClass"] == "uint8"
+        assert data["dataLayers"][2]["elementClass"] == "uint24"
+        assert data["dataLayers"][3]["elementClass"] == "uint24"
+        assert data["dataLayers"][4]["elementClass"] == "float"
+        assert data["dataLayers"][5]["elementClass"] == "float"
+        assert data["dataLayers"][6]["elementClass"] == "float"
+        assert data["dataLayers"][7]["elementClass"] == "double"
+        assert data["dataLayers"][8]["elementClass"] == "float96"
+
+    ds = WKDataset(
+        TESTOUTPUT_DIR / "valid_dtype"
+    )  # reopen the dataset to check if the data is read from the properties correctly
+    assert ds.properties.data_layers["color1"].element_class == "uint24"
+    assert ds.properties.data_layers["color2"].element_class == "uint8"
+    assert ds.properties.data_layers["color3"].element_class == "uint24"
+    assert ds.properties.data_layers["color4"].element_class == "uint24"
+    # Note that 'float' and 'double' are stored as 'float32' and 'float64'
+    assert ds.properties.data_layers["seg1"].element_class == "float32"
+    assert ds.properties.data_layers["seg2"].element_class == "float32"
+    assert ds.properties.data_layers["seg3"].element_class == "float32"
+    assert ds.properties.data_layers["seg4"].element_class == "float64"
+    assert ds.properties.data_layers["seg5"].element_class == "float96"
 
 
 def test_writing_subset_of_compressed_data_multi_channel() -> None:

@@ -1,6 +1,7 @@
 from os.path import join, dirname, isfile
 from pathlib import Path
 from typing import Tuple, Type, Union, Any, Dict, List, Optional, cast
+import numpy as np
 
 from wkw import wkw
 
@@ -43,6 +44,19 @@ def extract_num_channels(
     return wkw_ds.header.num_channels
 
 
+properties_floating_type_to_python_type = {
+    "float": np.dtype("float32"),
+    np.float: np.dtype("float32"),
+    float: np.dtype("float32"),
+    "double": np.dtype("float64"),
+}
+
+python_floating_type_to_properties_type = {
+    "float32": "float",
+    "float64": "double",
+}
+
+
 class LayerProperties:
     def __init__(
         self,
@@ -73,7 +87,9 @@ class LayerProperties:
         layer_properties = {
             "name": self.name,
             "category": self.category,
-            "elementClass": self.element_class,
+            "elementClass": python_floating_type_to_properties_type.get(
+                self.element_class, self.element_class
+            ),
             "dataFormat": self._data_format,
             "num_channels": self.num_channels,
             "boundingBox": {}
@@ -104,7 +120,9 @@ class LayerProperties:
         layer_properties = cls(
             json_data["name"],
             json_data["category"],
-            json_data["elementClass"],
+            properties_floating_type_to_python_type.get(
+                json_data["elementClass"], json_data["elementClass"]
+            ),
             json_data["dataFormat"],
             extract_num_channels(
                 json_data.get("num_channels"),
@@ -241,7 +259,9 @@ class SegmentationLayerProperties(LayerProperties):
         layer_properties = cls(
             json_data["name"],
             json_data["category"],
-            json_data["elementClass"],
+            properties_floating_type_to_python_type.get(
+                json_data["elementClass"], json_data["elementClass"]
+            ),
             json_data["dataFormat"],
             extract_num_channels(
                 json_data.get("num_channels"),
