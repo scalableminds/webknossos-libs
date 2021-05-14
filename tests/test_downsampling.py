@@ -232,54 +232,6 @@ def test_anisotropic_mag_calculation() -> None:
         )
 
 
-def test_downsampling_padding() -> None:
-    # offset, size, max_mag, scale, expected_offset, expected_size
-    padding_tests = [
-        (
-            (0, 0, 0),
-            (128, 128, 256),
-            Mag(4),
-            (1, 1, 1),
-            (0, 0, 0),
-            (128, 128, 256),
-        ),  # no padding in this case
-        ((10, 0, 0), (118, 128, 256), Mag(4), (1, 1, 1), (8, 0, 0), (120, 128, 256)),
-        (
-            (10, 20, 30),
-            (128, 148, 168),
-            Mag(8),
-            (2, 1, 1),
-            (8, 16, 24),
-            (132, 152, 176),
-        ),
-    ]
-    for args in padding_tests:
-        ds_path = TESTOUTPUT_DIR / "larger_wk_dataset"
-        try:
-            shutil.rmtree(ds_path)
-        except:
-            pass
-
-        (offset, size, max_mag, scale, expected_offset, expected_size) = args
-
-        ds = WKDataset.create(ds_path, scale=scale)
-        layer = ds.add_layer(
-            "layer1", "segmentation", num_channels=1, largest_segment_id=1000000000
-        )
-        mag1 = layer.add_mag("1", block_len=8, file_len=8)
-
-        # write random data to mag 1 to set the initial offset and size
-        mag1.write(
-            offset=offset,
-            data=(np.random.rand(*size) * 255).astype(np.uint8),
-        )
-
-        layer._pad_existing_mags_for_downsampling(Mag(1), max_mag, scale)
-
-        assert np.array_equal(mag1.get_view().size, expected_size)
-        assert np.array_equal(mag1.get_view().global_offset, expected_offset)
-
-
 def test_default_max_mag() -> None:
     assert calculate_default_max_mag(dataset_size=(65536, 65536, 65536)) == Mag(1024)
     assert calculate_default_max_mag(dataset_size=(4096, 4096, 4096)) == Mag(64)
