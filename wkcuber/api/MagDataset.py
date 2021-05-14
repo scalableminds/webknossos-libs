@@ -73,7 +73,7 @@ class MagDataset:
         offset: Tuple[int, int, int] = (0, 0, 0),
         size: Tuple[int, int, int] = None,
     ) -> np.array:
-        return self.view.read(offset, size)
+        return self.get_view().read(offset, size)
 
     def write(
         self,
@@ -82,7 +82,7 @@ class MagDataset:
         allow_compressed_write: bool = False,
     ) -> None:
         self._assert_valid_num_channels(data.shape)
-        self.view.write(data, offset, allow_compressed_write)
+        self.get_view().write(data, offset, allow_compressed_write)
         layer_properties = self.layer.dataset.properties.data_layers[self.layer.name]
         current_offset_in_mag1 = layer_properties.get_bounding_box_offset()
         current_size_in_mag1 = layer_properties.get_bounding_box_size()
