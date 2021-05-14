@@ -30,7 +30,7 @@ from wkcuber.api.View import View
 DEFAULT_BIT_DEPTH = 8
 
 
-def is_int(s: str) -> bool:
+def _is_int(s: str) -> bool:
     try:
         int(s)
         return True
@@ -38,7 +38,7 @@ def is_int(s: str) -> bool:
         return False
 
 
-def convert_dtypes(
+def _convert_dtypes(
     dtype: Union[str, np.dtype],
     num_channels: int,
     dtype_per_layer_to_dtype_per_channel: bool,
@@ -50,13 +50,13 @@ def convert_dtypes(
     dtype_parts = re.split(r"(\d+)", str(dtype))
     # calculate number of bits for dtype_per_channel
     converted_dtype_parts = [
-        (str(int(op(int(part), num_channels))) if is_int(part) else part)
+        (str(int(op(int(part), num_channels))) if _is_int(part) else part)
         for part in dtype_parts
     ]
     return "".join(converted_dtype_parts)
 
 
-def normalize_dtype_per_channel(
+def _normalize_dtype_per_channel(
     dtype_per_channel: Union[str, np.dtype, type]
 ) -> np.dtype:
     try:
@@ -68,7 +68,7 @@ def normalize_dtype_per_channel(
         )
 
 
-def normalize_dtype_per_layer(
+def _normalize_dtype_per_layer(
     dtype_per_layer: Union[str, np.dtype, type]
 ) -> Union[str, np.dtype]:
     try:
@@ -78,12 +78,12 @@ def normalize_dtype_per_layer(
     return dtype_per_layer
 
 
-def dtype_per_layer_to_dtype_per_channel(
+def _dtype_per_layer_to_dtype_per_channel(
     dtype_per_layer: Union[str, np.dtype], num_channels: int
 ) -> np.dtype:
     try:
         return np.dtype(
-            convert_dtypes(
+            _convert_dtypes(
                 dtype_per_layer, num_channels, dtype_per_layer_to_dtype_per_channel=True
             )
         )
@@ -94,17 +94,17 @@ def dtype_per_layer_to_dtype_per_channel(
         )
 
 
-def dtype_per_channel_to_dtype_per_layer(
+def _dtype_per_channel_to_dtype_per_layer(
     dtype_per_channel: Union[str, np.dtype], num_channels: int
 ) -> str:
-    return convert_dtypes(
+    return _convert_dtypes(
         np.dtype(dtype_per_channel),
         num_channels,
         dtype_per_layer_to_dtype_per_channel=False,
     )
 
 
-def copy_job(args: Tuple[View, View, int]) -> None:
+def _copy_job(args: Tuple[View, View, int]) -> None:
     (source_view, target_view, i) = args
     # Copy the data form one view to the other in a buffered fashion
     target_view.write(source_view.read())
@@ -114,6 +114,13 @@ LayerT = TypeVar("LayerT", bound=Layer)
 
 
 class AbstractDataset(Generic[LayerT]):
+    """
+    A dataset is the most high-level class of this API. Most of its functionality is implemented in the AbstractDataset,
+    which cannot be initiated. `WKDataset`, `TiffDataset` and `TiledTiffDataset` refine this class.
+
+    The dataset stores an `wkcuber.api.DatasetProperties` object and 
+    """
+
     @abstractmethod
     def __init__(self, dataset_path: Union[str, Path]) -> None:
         dataset_path = Path(dataset_path)
@@ -138,7 +145,7 @@ class AbstractDataset(Generic[LayerT]):
                 self.layers[layer_name].setup_mag(resolution.mag.to_layer_name())
 
     @classmethod
-    def create_with_properties(cls, properties: Properties) -> "AbstractDataset":
+    def _create_with_properties(cls, properties: Properties) -> "AbstractDataset":
         dataset_dir = properties.path.parent
         if dataset_dir.exists():
             assert (
@@ -194,16 +201,16 @@ class AbstractDataset(Generic[LayerT]):
             dtype_per_channel = properties_floating_type_to_python_type.get(
                 dtype_per_channel, dtype_per_channel
             )
-            dtype_per_channel = normalize_dtype_per_channel(dtype_per_channel)
-            dtype_per_layer = dtype_per_channel_to_dtype_per_layer(
+            dtype_per_channel = _normalize_dtype_per_channel(dtype_per_channel)
+            dtype_per_layer = _dtype_per_channel_to_dtype_per_layer(
                 dtype_per_channel, num_channels
             )
         elif dtype_per_layer is not None:
             dtype_per_layer = properties_floating_type_to_python_type.get(
                 dtype_per_layer, dtype_per_layer
             )
-            dtype_per_layer = normalize_dtype_per_layer(dtype_per_layer)
-            dtype_per_channel = dtype_per_layer_to_dtype_per_channel(
+            dtype_per_layer = _normalize_dtype_per_layer(dtype_per_layer)
+            dtype_per_channel = _dtype_per_layer_to_dtype_per_channel(
                 dtype_per_layer, num_channels
             )
         else:
@@ -259,15 +266,15 @@ class AbstractDataset(Generic[LayerT]):
             )
 
             if dtype_per_channel is not None:
-                dtype_per_channel = normalize_dtype_per_channel(dtype_per_channel)
+                dtype_per_channel = _normalize_dtype_per_channel(dtype_per_channel)
 
             if dtype_per_layer is not None:
-                dtype_per_layer = normalize_dtype_per_layer(dtype_per_layer)
+                dtype_per_layer = _normalize_dtype_per_layer(dtype_per_layer)
 
             if dtype_per_channel is not None or dtype_per_layer is not None:
                 dtype_per_channel = (
-                    dtype_per_channel
-                    or dtype_per_layer_to_dtype_per_channel(
+                        dtype_per_channel
+                        or _dtype_per_layer_to_dtype_per_channel(
                         dtype_per_layer,
                         num_channels or self.layers[layer_name].num_channels,
                     )
@@ -320,7 +327,7 @@ class AbstractDataset(Generic[LayerT]):
 
         self.layers[layer_name] = self._create_layer(
             layer_name,
-            dtype_per_layer_to_dtype_per_channel(
+            _dtype_per_layer_to_dtype_per_channel(
                 layer_properties.element_class, layer_properties.num_channels
             ),
             layer_properties.num_channels,
@@ -399,7 +406,7 @@ class AbstractDataset(Generic[LayerT]):
                     # The data gets written to the target_mag.
                     # Therefore, the chunk size is determined by the target_mag to prevent concurrent writes
                     mag.view.for_zipped_chunks(
-                        work_on_chunk=copy_job,
+                        work_on_chunk=_copy_job,
                         target_view=target_mag.view,
                         source_chunk_size=target_mag._get_file_dimensions(),
                         target_chunk_size=target_mag._get_file_dimensions(),
@@ -464,7 +471,7 @@ class WKDataset(AbstractDataset[WKLayer]):
         dataset_path = Path(dataset_path)
         name = basename(normpath(dataset_path))
         properties = WKProperties(dataset_path / Properties.FILE_NAME, name, scale)
-        return cast(WKDataset, WKDataset.create_with_properties(properties))
+        return cast(WKDataset, WKDataset._create_with_properties(properties))
 
     @classmethod
     def get_or_create(
@@ -512,7 +519,7 @@ class TiffDataset(AbstractDataset[TiffLayer]):
         dataset_path = Path(dataset_path)
         if pattern is None:
             pattern = "{zzzzz}.tif"
-        validate_pattern(pattern)
+        _validate_pattern(pattern)
         name = dataset_path.name
         properties = TiffProperties(
             dataset_path / "datasource-properties.json",
@@ -521,7 +528,7 @@ class TiffDataset(AbstractDataset[TiffLayer]):
             pattern=pattern,
             tile_size=None,
         )
-        return cast(TiffDataset, TiffDataset.create_with_properties(properties))
+        return cast(TiffDataset, TiffDataset._create_with_properties(properties))
 
     @classmethod
     def get_or_create(
@@ -579,7 +586,7 @@ class TiledTiffDataset(AbstractDataset[TiledTiffLayer]):
         dataset_path = Path(dataset_path)
         if pattern is None:
             pattern = "{xxxxx}/{yyyyy}/{zzzzz}.tif"
-        validate_pattern(pattern)
+        _validate_pattern(pattern)
         name = dataset_path.name
         properties = TiffProperties(
             dataset_path / "datasource-properties.json",
@@ -589,7 +596,7 @@ class TiledTiffDataset(AbstractDataset[TiledTiffLayer]):
             tile_size=tile_size,
         )
         return cast(
-            TiledTiffDataset, TiledTiffDataset.create_with_properties(properties)
+            TiledTiffDataset, TiledTiffDataset._create_with_properties(properties)
         )
 
     @classmethod
@@ -639,7 +646,7 @@ class TiledTiffDataset(AbstractDataset[TiledTiffLayer]):
         return TiledTiffDataset
 
 
-def validate_pattern(pattern: str) -> None:
+def _validate_pattern(pattern: str) -> None:
     assert pattern.count("{") > 0 and pattern.count("}") > 0, (
         f"The provided pattern {pattern} is invalid."
         + " It needs to contain at least one '{' and one '}'."

@@ -123,6 +123,9 @@ tests/scripts/all_tests.sh
 
 PyPi releases are automatically pushed when creating a new Git tag/Github release. 
 
+## Generate the API documentation
+Run `docs/api.sh` to open a server displaying the API docs. `docs/api.sh --persist` persists the html to `docs/api`.
+
 ## Test Data Credits
 Excerpts for testing purposes have been sampled from:
 - Dow Jacobo Hossain Siletti Hudspeth (2018). **Connectomics of the zebrafish's lateral-line neuromast reveals wiring and miswiring in a simple microcircuit.** eLife. [DOI:10.7554/eLife.33988](https://elifesciences.org/articles/33988)
