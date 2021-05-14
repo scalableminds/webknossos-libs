@@ -154,7 +154,7 @@ class MagDataset:
             )
         )
 
-        properties_offset_in_current_mag = convert_mag1_size(
+        properties_offset_in_current_mag = convert_mag1_offset(
             mag1_offset_in_properties, Mag(self.name)
         )
 

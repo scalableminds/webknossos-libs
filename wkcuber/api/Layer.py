@@ -132,24 +132,30 @@ class Layer(Generic[MagT]):
     def set_bounding_box(
         self, offset: Tuple[int, int, int], size: Tuple[int, int, int]
     ) -> None:
-        self.set_bounding_box_offset(offset)
-        self.set_bounding_box_size(size)
+        self.dataset.properties._set_bounding_box_of_layer(self.name, offset, size)
+        bounding_box = BoundingBox(offset, size)
+
+        for mag_name, mag in self.mags.items():
+            mag.view.size = cast(
+                Tuple[int, int, int],
+                tuple(
+                    bounding_box.align_with_mag(Mag(mag_name), ceil=True)
+                    .in_mag(Mag(mag_name))
+                    .bottomright
+                ),
+            )
 
     def set_bounding_box_offset(self, offset: Tuple[int, int, int]) -> None:
-        size: Tuple[int, int, int] = self.dataset.properties.data_layers[
-            "color"
-        ].get_bounding_box_size()
-        self.dataset.properties._set_bounding_box_of_layer(self.name, offset, size)
-        for _, mag in self.mags.items():
-            mag.view.global_offset = offset
+        size: Tuple[int, int, int] = self.dataset.properties.get_bounding_box_of_layer(
+            self.name
+        )[1]
+        self.set_bounding_box(offset, size)
 
     def set_bounding_box_size(self, size: Tuple[int, int, int]) -> None:
-        offset: Tuple[int, int, int] = self.dataset.properties.data_layers[
-            "color"
-        ].get_bounding_box_offset()
-        self.dataset.properties._set_bounding_box_of_layer(self.name, offset, size)
-        for _, mag in self.mags.items():
-            mag.view.size = size
+        offset: Tuple[
+            int, int, int
+        ] = self.dataset.properties.get_bounding_box_of_layer(self.name)[0]
+        self.set_bounding_box(offset, size)
 
     def _initialize_mag_from_other_mag(
         self, new_mag_name: Union[str, Mag], other_mag: MagDataset, compress: bool
@@ -239,6 +245,9 @@ class Layer(Generic[MagT]):
                 f"Downsampling failed: {sampling_mode} is not a valid SamplingMode ({SamplingModes.AUTO}, {SamplingModes.ISOTROPIC}, {SamplingModes.CONSTANT_Z})"
             )
 
+        original_bounding_box = self.dataset.properties.get_bounding_box_of_layer(
+            self.name
+        )
         self._pad_existing_mags_for_downsampling(from_mag, max_mag, scale)
 
         prev_mag = from_mag
@@ -257,6 +266,8 @@ class Layer(Generic[MagT]):
 
             prev_mag = target_mag
             target_mag = get_next_mag(target_mag, scale)
+
+        self.set_bounding_box(original_bounding_box[0], original_bounding_box[1])
 
     def downsample_mag(
         self,
@@ -349,7 +360,7 @@ class Layer(Generic[MagT]):
             assert np.less_equal(
                 target_mags[i].as_np(), target_mags[i + 1].as_np()
             ).all(), (
-                f"Downsampling failed: cannot downsample {target_mags[i].to_layer_name()} to {target_mags[i+1].to_layer_name()}. "
+                f"Downsampling failed: cannot downsample {target_mags[i].to_layer_name()} to {target_mags[i + 1].to_layer_name()}. "
                 f"Check 'target_mags' ({', '.join([str(mag) for mag in target_mags])}): each pair of adjacent Mags results in a downsampling step."
             )
 

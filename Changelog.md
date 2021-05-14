@@ -7,16 +7,30 @@ and this project adheres to [Calendar Versioning](http://calver.org/) `0Y.0M.MIC
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.6.1...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.6.6...HEAD)
 
 ### Breaking Changes in Config & CLI
-- The interface for `downsamping` was completely reworked. The flags `anisotropic_target_mag` and `isotropic` are now deprecated. Use `max` and `sampling_mode` instead. [#304](https://github.com/scalableminds/webknossos-cuber/pull/304)
 
 ### Added
 
 ### Changed
 
 ### Fixed
+
+## [0.6.6](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.6.6) - 2021-05-14
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.6.5...v0.6.6)
+
+### Fixed
+- After downsampling data, the bounding box gets saved correctly to the `datasource-properties.json`.
+
+## [0.6.5](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.6.5) - 2021-05-12
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.6.4...v0.6.5)
+
+### Breaking Changes in Config & CLI
+- The interface for `downsampling` was completely reworked. The flags `anisotropic_target_mag` and `isotropic` are now deprecated. Use `max` and `sampling_mode` instead. [#304](https://github.com/scalableminds/webknossos-cuber/pull/304)
+
+### Changed
+- Relaxes the constraint that all input files need to have the same type when auto-converting. [#317](https://github.com/scalableminds/webknossos-cuber/pull/317)
 
 ## [0.6.4](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.6.4) - 2021-05-12
 [Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.6.3...v0.6.4)
