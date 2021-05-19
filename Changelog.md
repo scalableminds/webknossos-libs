@@ -21,7 +21,8 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 [Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.6.5...v0.6.6)
 
 ### Fixed
-- After downsampling data, the bounding box gets saved correctly to the `datasource-properties.json`.
+- After downsampling data, the bounding box gets saved correctly to the `datasource-properties.json`. [#320](https://github.com/scalableminds/webknossos-cuber/pull/320)
+
 
 ## [0.6.5](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.6.5) - 2021-05-12
 [Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.6.4...v0.6.5)
