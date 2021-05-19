@@ -1293,17 +1293,28 @@ def test_changing_layer_bounding_box() -> None:
 
     assert ds.properties.data_layers["color"].get_bounding_box_offset() == (0, 0, 0)
 
-    layer.set_bounding_box(
-        offset=(10, 10, 0), size=(255, 255, 10)
-    )  # change offset and size
+    # Move the offset from (0, 0, 0) to (10, 10, 0)
+    # Note that the bottom right coordinate of the dataset is still at (265, 265, 10)
+    layer.set_bounding_box(offset=(10, 10, 0), size=(255, 255, 10))
 
     new_bbox_offset = ds.properties.data_layers["color"].get_bounding_box_offset()
     new_bbox_size = ds.properties.data_layers["color"].get_bounding_box_size()
     assert new_bbox_offset == (10, 10, 0)
     assert new_bbox_size == (255, 255, 10)
-    new_data = mag.read(size=new_bbox_size)
+    # Note that even though the offset was changed (in the properties), the offset of 'mag.read()' still refers to the absolute position (relative to (0, 0, 0)).
+    # The default offset is (0, 0, 0). Since the bottom right did not change, the read data equals 'original_data'.
+    assert np.array_equal(original_data, mag.read())
+
+    assert np.array_equal(
+        original_data[:, 10:, 10:, :], mag.read(offset=(10, 10, 0), size=(255, 255, 10))
+    )
+
+    # resetting the offset to (0, 0, 0)
+    # Note that the size did not change. Therefore, the new bottom right is now at (255, 255, 10)
+    layer.set_bounding_box_offset((0, 0, 0))
+    new_data = mag.read()
     assert new_data.shape == (1, 255, 255, 10)
-    assert np.array_equal(original_data[:, 10:, 10:, :], new_data)
+    assert np.array_equal(original_data[:, :255, :255, :], new_data)
 
 
 def test_view_offsets() -> None:
