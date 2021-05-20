@@ -14,7 +14,14 @@ from .convert_knossos import (
 )
 from .convert_nifti import main as convert_nifti, create_parser as create_nifti_parser
 from .image_readers import image_reader
-from .utils import find_files, add_scale_flag, logger, add_verbose_flag, setup_logging
+from .utils import (
+    find_files,
+    add_scale_flag,
+    logger,
+    add_verbose_flag,
+    setup_logging,
+    get_executor_args,
+)
 from .metadata import write_webknossos_metadata
 
 
@@ -67,6 +74,12 @@ def get_source_files(
     source_files = list(find_files(input_path, extensions))
 
     return source_files
+
+
+def all_files_of_same_type(input_files: List[str]) -> bool:
+    _, ext = path.splitext(input_files[0])
+
+    return all(map(lambda p: path.splitext(p)[1] == ext, input_files))
 
 
 class Converter:
@@ -303,14 +316,6 @@ class ImageStackConverter(Converter):
         self.dataset_names: Set[str] = set()
 
     @staticmethod
-    def get_executor_args(global_args: Namespace) -> Namespace:
-        executor_args = Namespace()
-        executor_args.jobs = global_args.jobs
-        executor_args.distribution_strategy = global_args.distribution_strategy
-        executor_args.job_resources = global_args.job_resources
-        return executor_args
-
-    @staticmethod
     def get_view_configuration(index: int) -> Optional[Dict[str, List[int]]]:
         color = None
         if index == 0:
@@ -329,12 +334,6 @@ class ImageStackConverter(Converter):
 
         if len(source_files) == 0:
             return False
-
-        _, ext = path.splitext(source_files[0])
-
-        assert all(
-            map(lambda p: path.splitext(p)[1] == ext, source_files)
-        ), "Not all image files are of the same type"
 
         self.source_files = list(
             map(lambda p: cast(str, path.normpath(p)), source_files)
@@ -367,7 +366,7 @@ class ImageStackConverter(Converter):
         put_default_from_argparser_if_not_present(args, image_stack_parser, "pad")
         put_default_from_argparser_if_not_present(args, image_stack_parser, "verbose")
 
-        executor_args = ImageStackConverter.get_executor_args(args)
+        executor_args = get_executor_args(args)
 
         # detect layer and ds name
         (
@@ -378,7 +377,17 @@ class ImageStackConverter(Converter):
 
         bounding_box = None
         view_configuration = dict()
+        converted_layers = 0
         for layer_path, layer_name in layer_path_to_name.items():
+            if not all_files_of_same_type(
+                get_source_files(layer_path, image_reader.readers.keys(), True)
+            ):
+                logger.info(
+                    f"Not converting {layer_name} because not all image files are of the same type"
+                )
+                continue
+
+            converted_layers += 1
             channel_count, dtype = get_channel_count_and_dtype(Path(layer_path))
             if channel_count > 1 and not (channel_count == 3 and dtype == "uint8"):
                 for i in range(channel_count):
@@ -419,6 +428,8 @@ class ImageStackConverter(Converter):
                     args.pad,
                     executor_args,
                 )
+
+        assert converted_layers > 0, "No layer could be converted!"
 
         write_webknossos_metadata(
             args.target_path,

@@ -125,7 +125,7 @@ def add_isotropic_flag(parser: argparse.ArgumentParser) -> None:
         help="Activates isotropic downsampling. The default is anisotropic downsampling. "
         "Isotropic downsampling will always downsample each dimension with the factor 2.",
         dest="isotropic",
-        default=False,
+        default=None,
         action="store_true",
     )
 
@@ -136,6 +136,17 @@ def add_interpolation_flag(parser: argparse.ArgumentParser) -> None:
         "-i",
         help="Interpolation mode (median, mode, nearest, bilinear or bicubic)",
         default="default",
+    )
+
+
+def add_sampling_mode_flag(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--sampling_mode",
+        help="There are three different types: "
+        "'auto' - The next magnification is chosen so that the width, height and depth of a downsampled voxel assimilate. For example, if the z resolution is worse than the x/y resolution, z won't be downsampled in the first downsampling step(s). As a basis for this method, the scale from the datasource-properties.json is used. "
+        "'isotropic' - Each dimension is downsampled equally. "
+        "'constant_z' - The x and y dimensions are downsampled equally, but the z dimension remains the same.",
+        default="auto",
     )
 
 
@@ -495,3 +506,11 @@ def convert_mag1_offset(
     mag1_offset: Union[List, np.ndarray], target_mag: Mag
 ) -> np.ndarray:
     return np.array(mag1_offset) // target_mag.as_np()  # floor div
+
+
+def get_executor_args(global_args: argparse.Namespace) -> argparse.Namespace:
+    executor_args = argparse.Namespace()
+    executor_args.jobs = global_args.jobs
+    executor_args.distribution_strategy = global_args.distribution_strategy
+    executor_args.job_resources = global_args.job_resources
+    return executor_args

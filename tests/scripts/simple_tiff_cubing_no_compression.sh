@@ -8,7 +8,7 @@ python -m wkcuber.convert_image_stack_to_wkw \
   --no_compress \
   --scale 11.24,11.24,25 \
   --name awesome_data \
-  --isotropic \
+  --sampling_mode isotropic \
   testdata/tiff testoutput/tiff3
 [ -d testoutput/tiff3/color ]
 [ -d testoutput/tiff3/color/1 ]

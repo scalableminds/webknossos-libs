@@ -1,6 +1,7 @@
 import logging
 import math
 from argparse import Namespace
+from enum import Enum
 from shutil import rmtree
 from os.path import join
 from os import makedirs
@@ -19,6 +20,7 @@ from typing import (
     Generic,
     cast,
     Optional,
+    List,
 )
 
 import numpy as np
@@ -30,6 +32,7 @@ from wkcuber.downsampling_utils import (
     calculate_virtual_scale_for_target_mag,
     calculate_default_max_mag,
     get_previous_mag,
+    SamplingModes,
 )
 
 if TYPE_CHECKING:
@@ -129,85 +132,52 @@ class Layer(Generic[MagT]):
     def set_bounding_box(
         self, offset: Tuple[int, int, int], size: Tuple[int, int, int]
     ) -> None:
-        self.set_bounding_box_offset(offset)
-        self.set_bounding_box_size(size)
+        self.dataset.properties._set_bounding_box_of_layer(self.name, offset, size)
+        bounding_box = BoundingBox(offset, size)
+
+        for mag_name, mag in self.mags.items():
+            mag.view.size = cast(
+                Tuple[int, int, int],
+                tuple(
+                    bounding_box.align_with_mag(Mag(mag_name), ceil=True)
+                    .in_mag(Mag(mag_name))
+                    .bottomright
+                ),
+            )
 
     def set_bounding_box_offset(self, offset: Tuple[int, int, int]) -> None:
-        size: Tuple[int, int, int] = self.dataset.properties.data_layers[
-            "color"
-        ].get_bounding_box_size()
-        self.dataset.properties._set_bounding_box_of_layer(self.name, offset, size)
-        for _, mag in self.mags.items():
-            mag.view.global_offset = offset
+        size: Tuple[int, int, int] = self.dataset.properties.get_bounding_box_of_layer(
+            self.name
+        )[1]
+        self.set_bounding_box(offset, size)
 
     def set_bounding_box_size(self, size: Tuple[int, int, int]) -> None:
-        offset: Tuple[int, int, int] = self.dataset.properties.data_layers[
-            "color"
-        ].get_bounding_box_offset()
-        self.dataset.properties._set_bounding_box_of_layer(self.name, offset, size)
-        for _, mag in self.mags.items():
-            mag.view.size = size
+        offset: Tuple[
+            int, int, int
+        ] = self.dataset.properties.get_bounding_box_of_layer(self.name)[0]
+        self.set_bounding_box(offset, size)
 
     def _initialize_mag_from_other_mag(
         self, new_mag_name: Union[str, Mag], other_mag: MagDataset, compress: bool
     ) -> MagDataset:
         raise NotImplemented
 
-    def _pad_existing_mags_for_downsampling(
-        self,
-        from_mag: Mag,
-        max_mag: Mag,
-        scale: Optional[Tuple[float, float, float]],
-        only_max_mag: bool = False,
-    ) -> None:
-        # pad all existing mags if necessary
-        # during each downsampling step, the data shape or offset of the new mag should never need to be rounded
-        existing_mags = sorted([Mag(mag) for mag in self.mags.keys()])
-        all_mags_after_downsampling = existing_mags.copy()
-        if only_max_mag:
-            all_mags_after_downsampling += [max_mag]
-        else:
-            cur_mag = get_next_mag(from_mag, scale)
-            while cur_mag <= max_mag:
-                all_mags_after_downsampling += [cur_mag]
-                cur_mag = get_next_mag(cur_mag, scale)
-
-        all_mags_after_downsampling = sorted(all_mags_after_downsampling)
-
-        bb_mag1 = BoundingBox(
-            topleft=self.dataset.properties.data_layers[
-                self.name
-            ].get_bounding_box_offset(),
-            size=self.dataset.properties.data_layers[self.name].get_bounding_box_size(),
-        )
-
-        aligned_bb = bb_mag1.align_with_mag(all_mags_after_downsampling[-1], ceil=True)
-
-        self.dataset.properties._set_bounding_box_of_layer(
-            self.name,
-            cast(Tuple[int, int, int], tuple(aligned_bb.topleft)),
-            cast(Tuple[int, int, int], tuple(aligned_bb.size)),
-        )
-
-        for mag_name in existing_mags:
-            mag = self.mags[mag_name.to_layer_name()]
-            # The base view of a MagDataset always starts at (0, 0, 0)
-            mag.view.size = cast(
-                Tuple[int, int, int],
-                tuple(aligned_bb.in_mag(Mag(mag_name)).bottomright),
-            )
-
     def downsample(
         self,
-        from_mag: Mag,
-        max_mag: Optional[Mag],
-        interpolation_mode: str,
-        compress: bool,
-        anisotropic: Optional[bool] = None,
-        scale: Optional[Tuple[float, float, float]] = None,
+        from_mag: Optional[Mag] = None,
+        max_mag: Optional[Mag] = None,
+        interpolation_mode: str = "default",
+        compress: bool = True,
+        sampling_mode: str = SamplingModes.AUTO,
         buffer_edge_len: Optional[int] = None,
         args: Optional[Namespace] = None,
     ) -> None:
+        if from_mag is None:
+            assert (
+                len(self.mags.keys()) > 0
+            ), "Failed to downsample data because no existing mag was found."
+            from_mag = Mag(max(self.mags.keys()))
+
         assert (
             from_mag.to_layer_name() in self.mags.keys()
         ), f"Failed to downsample data. The from_mag ({from_mag}) does not exist."
@@ -217,13 +187,19 @@ class Layer(Generic[MagT]):
                 self.dataset.properties.data_layers[self.name].get_bounding_box_size()
             )
 
-        if anisotropic and scale is None:
-            if max_mag is None:
-                scale = self.dataset.properties.scale
-            else:
-                scale = calculate_virtual_scale_for_target_mag(max_mag)
-
-        self._pad_existing_mags_for_downsampling(from_mag, max_mag, scale)
+        if sampling_mode == SamplingModes.AUTO:
+            scale = self.dataset.properties.scale
+        elif sampling_mode == SamplingModes.ISOTROPIC:
+            scale = (1, 1, 1)
+        elif sampling_mode == SamplingModes.CONSTANT_Z:
+            max_mag_with_fixed_z = max_mag.to_array()
+            max_mag_with_fixed_z[2] = from_mag.to_array()[2]
+            max_mag = Mag(max_mag_with_fixed_z)
+            scale = calculate_virtual_scale_for_target_mag(max_mag)
+        else:
+            raise AttributeError(
+                f"Downsampling failed: {sampling_mode} is not a valid SamplingMode ({SamplingModes.AUTO}, {SamplingModes.ISOTROPIC}, {SamplingModes.CONSTANT_Z})"
+            )
 
         prev_mag = from_mag
         target_mag = get_next_mag(prev_mag, scale)
@@ -235,7 +211,6 @@ class Layer(Generic[MagT]):
                 interpolation_mode=interpolation_mode,
                 compress=compress,
                 buffer_edge_len=buffer_edge_len,
-                pad_data=False,
                 args=args,
             )
 
@@ -246,26 +221,20 @@ class Layer(Generic[MagT]):
         self,
         from_mag: Mag,
         target_mag: Mag,
-        interpolation_mode: str,
-        compress: bool,
+        interpolation_mode: str = "default",
+        compress: bool = True,
         buffer_edge_len: Optional[int] = None,
-        pad_data: bool = True,
         args: Optional[Namespace] = None,
     ) -> None:
         assert (
             from_mag.to_layer_name() in self.mags.keys()
         ), f"Failed to downsample data. The from_mag ({from_mag}) does not exist."
 
-        if pad_data:
-            self._pad_existing_mags_for_downsampling(
-                from_mag, target_mag, None, only_max_mag=True
-            )
-
         parsed_interpolation_mode = parse_interpolation_mode(
             interpolation_mode, self.dataset.properties.data_layers[self.name].category
         )
 
-        assert from_mag < target_mag
+        assert from_mag <= target_mag
         assert target_mag.to_layer_name() not in self.mags
 
         prev_mag_ds = self.mags[from_mag.to_layer_name()]
@@ -279,8 +248,39 @@ class Layer(Generic[MagT]):
             target_mag, prev_mag_ds, compress
         )
 
+        bb_mag1 = BoundingBox(
+            topleft=self.dataset.properties.data_layers[
+                self.name
+            ].get_bounding_box_offset(),
+            size=self.dataset.properties.data_layers[self.name].get_bounding_box_size(),
+        )
+
+        aligned_source_bb = bb_mag1.align_with_mag(target_mag, ceil=True).in_mag(
+            from_mag
+        )
+        aligned_target_bb = bb_mag1.align_with_mag(target_mag, ceil=True).in_mag(
+            target_mag
+        )
+
         # Get target view
-        target_mag_view = target_mag_ds.get_view(is_bounded=not compress)
+        target_mag_view = target_mag_ds.get_view(
+            offset=aligned_target_bb.topleft,
+            size=aligned_target_bb.size,
+            is_bounded=not compress,
+        )
+
+        # Source view
+        # Setting "is_bounded" first to "False" and the to "True" temporarily disables the "bounds check".
+        # This is not ideal, but we know what we are doing.
+        # The reason why there might be an error otherwise is that the view is aligned with the target_mag
+        # (not just with the from_mag). In this case we want that the view is aligned to the target_mag
+        # because this makes it very easy to downsample data from the source to the target.
+        source_view = prev_mag_ds.get_view(
+            offset=aligned_source_bb.topleft,
+            size=aligned_source_bb.size,
+            is_bounded=False,
+        )
+        source_view.is_bounded = True
 
         # perform downsampling
         with get_executor_for_args(args) as executor:
@@ -301,7 +301,8 @@ class Layer(Generic[MagT]):
                 compress=compress,
                 job_count_per_log=job_count_per_log,
             )
-            prev_mag_ds.get_view().for_zipped_chunks(
+
+            source_view.for_zipped_chunks(
                 # this view is restricted to the bounding box specified in the properties
                 func,
                 target_view=target_mag_view,
@@ -313,6 +314,42 @@ class Layer(Generic[MagT]):
 
         logging.info("Mag {0} successfully cubed".format(target_mag))
 
+    def downsample_mag_list(
+        self,
+        from_mag: Mag,
+        target_mags: List[Mag],
+        interpolation_mode: str = "default",
+        compress: bool = True,
+        buffer_edge_len: Optional[int] = None,
+        args: Optional[Namespace] = None,
+    ) -> None:
+        assert (
+            from_mag.to_layer_name() in self.mags.keys()
+        ), f"Failed to downsample data. The from_mag ({from_mag}) does not exist."
+
+        # The lambda function is important because 'sorted(target_mags)' would only sort by the maximum element per mag
+        target_mags = sorted(target_mags, key=lambda m: m.to_array())
+
+        for i in range(len(target_mags) - 1):
+            assert np.less_equal(
+                target_mags[i].as_np(), target_mags[i + 1].as_np()
+            ).all(), (
+                f"Downsampling failed: cannot downsample {target_mags[i].to_layer_name()} to {target_mags[i + 1].to_layer_name()}. "
+                f"Check 'target_mags' ({', '.join([str(mag) for mag in target_mags])}): each pair of adjacent Mags results in a downsampling step."
+            )
+
+        source_mag = from_mag
+        for target_mag in target_mags:
+            self.downsample_mag(
+                source_mag,
+                target_mag,
+                interpolation_mode=interpolation_mode,
+                compress=compress,
+                buffer_edge_len=buffer_edge_len,
+                args=args,
+            )
+            source_mag = target_mag
+
     def setup_mag(self, mag: Union[str, Mag]) -> None:
         pass
 
@@ -321,7 +358,7 @@ class Layer(Generic[MagT]):
         from_mag: Mag,
         min_mag: Optional[Mag],
         compress: bool,
-        anisotropic: Optional[bool] = None,
+        sampling_mode: str = SamplingModes.AUTO,
         buffer_edge_len: Optional[int] = None,
         args: Optional[Namespace] = None,
     ) -> None:
@@ -332,10 +369,19 @@ class Layer(Generic[MagT]):
         if min_mag is None:
             min_mag = Mag(1)
 
-        scale = self.dataset.properties.scale
-
-        if anisotropic and min_mag is not None:
+        if sampling_mode == SamplingModes.AUTO:
+            scale = self.dataset.properties.scale
+        elif sampling_mode == SamplingModes.ISOTROPIC:
+            scale = (1, 1, 1)
+        elif sampling_mode == SamplingModes.CONSTANT_Z:
+            min_mag_with_fixed_z = min_mag.to_array()
+            min_mag_with_fixed_z[2] = from_mag.to_array()[2]
+            min_mag = Mag(min_mag_with_fixed_z)
             scale = calculate_virtual_scale_for_target_mag(min_mag)
+        else:
+            raise AttributeError(
+                f"Upsampling failed: {sampling_mode} is not a valid UpsamplingMode ({SamplingModes.AUTO}, {SamplingModes.ISOTROPIC}, {SamplingModes.CONSTANT_Z})"
+            )
 
         prev_mag = from_mag
         target_mag = get_previous_mag(prev_mag, scale)
@@ -551,12 +597,33 @@ class TiledTiffLayer(GenericTiffLayer[TiledTiffMagDataset]):
 
     def downsample(
         self,
+        from_mag: Optional[Mag] = None,
+        max_mag: Optional[Mag] = None,
+        interpolation_mode: str = "default",
+        compress: bool = True,
+        sampling_mode: str = SamplingModes.AUTO,
+        buffer_edge_len: Optional[int] = None,
+        args: Optional[Namespace] = None,
+    ) -> None:
+        raise NotImplemented
+
+    def downsample_mag(
+        self,
         from_mag: Mag,
-        max_mag: Optional[Mag],
-        interpolation_mode: str,
-        compress: bool,
-        anisotropic: Optional[bool] = None,
-        scale: Optional[Tuple[float, float, float]] = None,
+        target_mag: Mag,
+        interpolation_mode: str = "default",
+        compress: bool = True,
+        buffer_edge_len: Optional[int] = None,
+        args: Optional[Namespace] = None,
+    ) -> None:
+        raise NotImplemented
+
+    def downsample_mag_list(
+        self,
+        from_mag: Mag,
+        target_mags: List[Mag],
+        interpolation_mode: str = "default",
+        compress: bool = True,
         buffer_edge_len: Optional[int] = None,
         args: Optional[Namespace] = None,
     ) -> None:
