@@ -1,11 +1,7 @@
-import glob
 import logging
 import os
-import re
 import shutil
 from argparse import Namespace
-from copy import deepcopy
-from email.header import Header
 from os.path import join
 from pathlib import Path
 from typing import (
@@ -35,16 +31,16 @@ if TYPE_CHECKING:
     from wkcuber.api.Layer import (
         WKLayer,
         Layer,
-        GenericTiffLayer,
+        _GenericTiffLayer,
         TiffLayer,
         TiledTiffLayer,
     )
 from wkcuber.api.View import WKView, TiffView, View
-from wkcuber.api.TiffData.TiffMag import TiffMagHeader, detect_tile_ranges, detect_value
+from wkcuber.api.TiffData.TiffMag import TiffMagHeader, detect_value
 from wkcuber.mag import Mag
 
 
-def find_mag_path_on_disk(dataset_path: Path, layer_name: str, mag_name: str) -> Path:
+def _find_mag_path_on_disk(dataset_path: Path, layer_name: str, mag_name: str) -> Path:
     mag = Mag(mag_name)
     short_mag_file_path = dataset_path / layer_name / mag.to_layer_name()
     long_mag_file_path = dataset_path / layer_name / mag.to_long_layer_name()
@@ -55,6 +51,10 @@ def find_mag_path_on_disk(dataset_path: Path, layer_name: str, mag_name: str) ->
 
 
 class MagDataset:
+    """
+    A `MagDataset` contains all information about the data of a single magnification of a `wkcuber.api.Layer.Layer`.
+    """
+
     def __init__(self, layer: "Layer", name: str) -> None:
         self.layer = layer
         self.name = name
@@ -63,9 +63,21 @@ class MagDataset:
         self.view = self.get_view(offset=(0, 0, 0), is_bounded=False)
 
     def open(self) -> None:
+        """
+        Opens the actual handles to the data on disk.
+        A `MagDataset` has to be opened before it can be read or written to. However, the user does not
+        have to open it explicitly because the API automatically opens it when it is needed.
+        The user can choose to open it explicitly to avoid that handles are opened and closed automatically
+        each time data is read or written.
+        """
         self.view.open()
 
     def close(self) -> None:
+        """
+        Complementary to `open`, this closes the handles to the data.
+
+        See `open` for more information.
+        """
         self.view.close()
 
     def read(
@@ -73,6 +85,14 @@ class MagDataset:
         offset: Tuple[int, int, int] = (0, 0, 0),
         size: Tuple[int, int, int] = None,
     ) -> np.array:
+        """
+        The user can specify the `offset` and the `size` of the requested data.
+        The `offset` refers to the absolute position, regardless of the offset in the properties.
+        If no `size` is specified, the offset from the properties + the size of the properties is used.
+        If the specified bounding box exceeds the data on disk, the rest is padded with `0`.
+
+        Retruns the specified data as a `np.array`.
+        """
         return self.view.read(offset, size)
 
     def write(
@@ -81,6 +101,14 @@ class MagDataset:
         offset: Tuple[int, int, int] = (0, 0, 0),
         allow_compressed_write: bool = False,
     ) -> None:
+        """
+        Writes the `data` at the specified `offset` to disk.
+        The `offset` refers to the absolute position, regardless of the offset in the properties.
+        If the data exceeds the previous bounding box, the properties are updated.
+        If the data on disk is compressed, the passed `data` either has to be aligned with the files on disk
+        or `allow_compressed_write` has to be `True`. If `allow_compressed_write` is `True`, `data` is padded by
+        first reading the necessary padding from disk.
+        """
         self._assert_valid_num_channels(data.shape)
         self.view.write(data, offset, allow_compressed_write)
         layer_properties = self.layer.dataset.properties.data_layers[self.layer.name]
@@ -119,9 +147,15 @@ class MagDataset:
         )
 
     def get_header(self) -> Union[TiffMagHeader, wkw.Header]:
+        """
+        Returns a header with metadata about the current `MagDataset`.
+        """
         raise NotImplementedError
 
     def get_dtype(self) -> type:
+        """
+        Returns the dtype per channel of the data. For example `uint8`.
+        """
         return self.view.get_dtype()
 
     def _get_file_dimensions(self) -> Tuple[int, int, int]:
@@ -134,6 +168,15 @@ class MagDataset:
         is_bounded: bool = True,
         read_only: bool = False,
     ) -> View:
+        """
+        Returns a view that is limited to the specified bounding box.
+        The default value for `offset` is the offset that is specified in the properties.
+        The default value for `size` is calculated so that the bounding box ends where the bounding box from the
+        properties ends.
+        Therefore, if both (`offset` and `size`) are not specified, then the bounding box of the view is equal to the
+        bounding box specified in the properties.
+        If `is_bounded` is `True`, reading or writing outside of this bounding box is not allowed.
+        """
         mag1_size_in_properties = self.layer.dataset.properties.data_layers[
             self.layer.name
         ].get_bounding_box_size()
@@ -184,7 +227,7 @@ class MagDataset:
                         f"Use is_bounded=False if you intend to write outside out the existing bounding box."
                     )
 
-        mag_file_path = find_mag_path_on_disk(
+        mag_file_path = _find_mag_path_on_disk(
             self.layer.dataset.path, self.layer.name, self.name
         )
         return self._get_view_type()(
@@ -213,6 +256,14 @@ class MagDataset:
     def get_bounding_boxes_on_disk(
         self,
     ) -> Generator[Tuple[Tuple[int, int, int], Tuple[int, int, int]], None, None]:
+        """
+        Returns a bounding box for each file on disk.
+        A bounding box is represented as a tuple of the offset and the size.
+
+        This differs from the bounding box in the properties in two ways:
+        - the bounding box in the properties is always specified in mag 1
+        - the bounding box in the properties is an "overall" bounding box, which abstracts from the files on disk
+        """
         cube_size = self._get_file_dimensions()
         was_opened = self.view._is_opened
 
@@ -236,6 +287,11 @@ class MagDataset:
     def compress(
         self, target_path: Union[str, Path] = None, args: Namespace = None
     ) -> None:
+        """
+        Compresses the files on disk. This has consequences for writing data (see `write`).
+
+        Note: this functionality is currently only supported for `WKMagDataset`.
+        """
         pass
 
 
@@ -343,10 +399,10 @@ class WKMagDataset(MagDataset):
             self.view = self.get_view(offset=(0, 0, 0), is_bounded=False)
 
 
-TiffLayerT = TypeVar("TiffLayerT", bound="GenericTiffLayer")
+TiffLayerT = TypeVar("TiffLayerT", bound="_GenericTiffLayer")
 
 
-class GenericTiffMagDataset(MagDataset, Generic[TiffLayerT]):
+class _GenericTiffMagDataset(MagDataset, Generic[TiffLayerT]):
     layer: TiffLayerT
 
     def __init__(self, layer: TiffLayerT, name: str, pattern: str) -> None:
@@ -380,12 +436,15 @@ class GenericTiffMagDataset(MagDataset, Generic[TiffLayerT]):
         return x, y, z
 
 
-class TiffMagDataset(GenericTiffMagDataset["TiffLayer"]):
+class TiffMagDataset(_GenericTiffMagDataset["TiffLayer"]):
     pass
 
 
-class TiledTiffMagDataset(GenericTiffMagDataset["TiledTiffLayer"]):
+class TiledTiffMagDataset(_GenericTiffMagDataset["TiledTiffLayer"]):
     def get_tile(self, x_index: int, y_index: int, z_index: int) -> np.array:
+        """
+        Returns the data that is stored in a specific tiff tile on disk.
+        """
         tile_size = self.layer.dataset.properties.tile_size
         assert tile_size is not None
         size = (tile_size[0], tile_size[1], 1)

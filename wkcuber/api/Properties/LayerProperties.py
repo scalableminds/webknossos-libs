@@ -10,7 +10,7 @@ from wkcuber.mag import Mag
 from wkcuber.api.bounding_box import BoundingBox
 
 
-def extract_num_channels(
+def _extract_num_channels(
     num_channels_in_properties: Optional[int],
     path: Path,
     layer: str,
@@ -124,7 +124,7 @@ class LayerProperties:
                 json_data["elementClass"], json_data["elementClass"]
             ),
             json_data["dataFormat"],
-            extract_num_channels(
+            _extract_num_channels(
                 json_data.get("num_channels"),
                 dataset_path,
                 json_data["name"],
@@ -263,7 +263,7 @@ class SegmentationLayerProperties(LayerProperties):
                 json_data["elementClass"], json_data["elementClass"]
             ),
             json_data["dataFormat"],
-            extract_num_channels(
+            _extract_num_channels(
                 json_data.get("num_channels"),
                 dataset_path,
                 json_data["name"],

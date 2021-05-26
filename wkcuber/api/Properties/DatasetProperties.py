@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import Union, Tuple, Optional, Dict, Any, cast
+from typing import Tuple, Optional, Dict, Any, cast
 
 from wkcuber.api.Layer import Layer
 from wkcuber.api.Properties.LayerProperties import (
@@ -9,7 +9,6 @@ from wkcuber.api.Properties.LayerProperties import (
 )
 from wkcuber.api.Properties.ResolutionProperties import WkResolution, Resolution
 from wkcuber.mag import Mag
-import numpy as np
 
 
 class Properties:

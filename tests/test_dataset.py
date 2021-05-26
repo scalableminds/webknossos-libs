@@ -27,7 +27,7 @@ from os import path, makedirs
 
 from wkcuber.api.Layer import Layer
 from wkcuber.api.MagDataset import (
-    find_mag_path_on_disk,
+    _find_mag_path_on_disk,
     MagDataset,
     TiledTiffMagDataset,
 )
