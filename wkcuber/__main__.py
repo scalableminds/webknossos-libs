@@ -95,6 +95,7 @@ def main(args: Namespace) -> None:
             interpolation_mode="default",
             compress=not args.no_compress,
             sampling_mode=args.sampling_mode,
+            args=args,
         )
 
     refresh_metadata(args.target_path)
