@@ -12,6 +12,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes in Config & CLI
 
 ### Added
+- Adds distribution flags to `wkcuber` in order to limit the parallel jobs or use a cluster scheduler. [#323](https://github.com/scalableminds/webknossos-cuber/pull/323)
 
 ### Changed
 
