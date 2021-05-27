@@ -2050,11 +2050,16 @@ def test_compression() -> None:
 
     # writing unaligned data to an uncompressed dataset
     write_data = (np.random.rand(3, 10, 20, 30) * 255).astype(np.uint8)
-    mag1.write(write_data)
+
+    # Writing compressed data directly to "mag1" also works, but using a View here covers an additional edge case
+    view = mag1.get_view(offset=(50, 60, 70), is_bounded=False)
+    view.write(write_data, relative_offset=(10, 20, 30))
 
     mag1.compress()
 
-    assert np.array_equal(write_data, mag1.read(size=(10, 20, 30)))
+    assert np.array_equal(
+        write_data, mag1.read(offset=(60, 80, 100), size=(10, 20, 30))
+    )
 
     with pytest.raises(wkw.WKWException):
         # writing unaligned data to a compressed dataset

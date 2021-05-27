@@ -16,6 +16,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+- Fixed a bug for writing compressed data. This previously caused an error when downsampling certain datasets. [#326](https://github.com/scalableminds/webknossos-cuber/pull/326)
 
 ## [0.6.6](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.6.6) - 2021-05-14
 [Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.6.5...v0.6.6)

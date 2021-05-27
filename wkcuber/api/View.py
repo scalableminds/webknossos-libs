@@ -369,7 +369,9 @@ class WKView(View):
                 # However, this view has its own global_offset (which might or might not be equal to (0, 0, 0))
                 # The parameter `offset` of the read-function of a View is always relative (unlike MagDataset.read where the offset is absolute)
                 # Therefore, we need to calculate the relative offset
-                aligned_data = self.read(offset=aligned_offset-self.global_offset, size=aligned_shape)
+                aligned_data = self.read(
+                    offset=aligned_offset - self.global_offset, size=aligned_shape
+                )
             except AssertionError as e:
                 raise AssertionError(
                     f"Writing compressed data failed. The compressed file is not fully inside the bounding box of the view (offset={self.global_offset}, size={self.size}). "
