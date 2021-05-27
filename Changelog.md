@@ -12,6 +12,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes in Config & CLI
 
 ### Added
+- Added a function for converting `BoundingBox` to `BoundingBoxNamedTuple`. [#324](https://github.com/scalableminds/webknossos-cuber/pull/324)
 
 ### Changed
 
