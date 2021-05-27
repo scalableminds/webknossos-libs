@@ -143,6 +143,12 @@ class BoundingBox:
 
         return ",".join(map(str, self.as_tuple6()))
 
+    def as_named_tuple(self) -> BoundingBoxNamedTuple:
+        return BoundingBoxNamedTuple(
+            topleft=cast(Tuple[int, int, int], tuple(self.topleft)),
+            size=cast(Tuple[int, int, int], tuple(self.size)),
+        )
+
     def __repr__(self) -> str:
 
         return "BoundingBox(topleft={}, size={})".format(
