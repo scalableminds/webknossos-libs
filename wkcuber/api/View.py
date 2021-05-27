@@ -55,7 +55,6 @@ class View:
 
         was_opened = self._is_opened
         # assert the size of the parameter data is not in conflict with the attribute self.size
-        assert_non_negative_offset(relative_offset)
         self.assert_bounds(relative_offset, data.shape[-3:])
 
         if len(data.shape) == 4 and data.shape[0] == 1:
@@ -374,9 +373,8 @@ class WKView(View):
                 )
             except AssertionError as e:
                 raise AssertionError(
-                    f"Writing compressed data failed. The compressed file is not fully inside the bounding box of the view (offset={self.global_offset}, size={self.size}). "
-                    + str(e)
-                )
+                    f"Reading compressed data failed. The compressed file is not fully inside the bounding box of the view (offset={self.global_offset}, size={self.size})."
+                ) from e
             index_slice = (
                 slice(None, None),
                 *(
@@ -431,13 +429,3 @@ class TiffView(View):
 
     def get_dtype(self) -> type:
         return self.header.dtype_per_channel
-
-
-def assert_non_negative_offset(offset: Tuple[int, int, int]) -> None:
-    all_positive = all(i >= 0 for i in offset)
-    if not all_positive:
-        raise Exception(
-            "All elements of the offset need to be positive: %s" % "("
-            + ",".join(map(str, offset))
-            + ")"
-        )

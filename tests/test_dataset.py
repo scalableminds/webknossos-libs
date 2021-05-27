@@ -1482,7 +1482,7 @@ def test_writing_subset_of_compressed_data_multi_channel() -> None:
     delete_dir(TESTOUTPUT_DIR / "compressed_data")
 
     # create uncompressed dataset
-    write_data1 = (np.random.rand(3, 20, 40, 60) * 255).astype(np.uint8)
+    write_data1 = (np.random.rand(3, 100, 120, 140) * 255).astype(np.uint8)
     WKDataset.create(TESTOUTPUT_DIR / "compressed_data", scale=(1, 1, 1)).add_layer(
         "color", Layer.COLOR_TYPE, num_channels=3
     ).add_mag("1", block_len=8, file_len=8).write(write_data1)
@@ -1500,16 +1500,17 @@ def test_writing_subset_of_compressed_data_multi_channel() -> None:
     )
 
     write_data2 = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
-    compressed_mag.write(
-        offset=(10, 20, 30), data=write_data2, allow_compressed_write=True
+    # Writing compressed data directly to "compressed_mag" also works, but using a View here covers an additional edge case
+    compressed_mag.get_view(offset=(50, 60, 70), is_bounded=False).write(
+        relative_offset=(10, 20, 30), data=write_data2, allow_compressed_write=True
     )
 
-    np.array_equal(
-        write_data2, compressed_mag.read(offset=(10, 20, 30), size=(10, 10, 10))
+    assert np.array_equal(
+        write_data2, compressed_mag.read(offset=(60, 80, 100), size=(10, 10, 10))
     )  # the new data was written
-    np.array_equal(
-        write_data1[:, :10, :20, :30],
-        compressed_mag.read(offset=(0, 0, 0), size=(10, 20, 30)),
+    assert np.array_equal(
+        write_data1[:, :60, :80, :100],
+        compressed_mag.read(offset=(0, 0, 0), size=(60, 80, 100)),
     )  # the old data is still there
 
 
@@ -1517,7 +1518,7 @@ def test_writing_subset_of_compressed_data_single_channel() -> None:
     delete_dir(TESTOUTPUT_DIR / "compressed_data")
 
     # create uncompressed dataset
-    write_data1 = (np.random.rand(20, 40, 60) * 255).astype(np.uint8)
+    write_data1 = (np.random.rand(100, 120, 140) * 255).astype(np.uint8)
     WKDataset.create(TESTOUTPUT_DIR / "compressed_data", scale=(1, 1, 1)).add_layer(
         "color", Layer.COLOR_TYPE
     ).add_mag("1", block_len=8, file_len=8).write(write_data1)
@@ -1535,16 +1536,17 @@ def test_writing_subset_of_compressed_data_single_channel() -> None:
     )
 
     write_data2 = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
-    compressed_mag.write(
-        offset=(10, 20, 30), data=write_data2, allow_compressed_write=True
+    # Writing compressed data directly to "compressed_mag" also works, but using a View here covers an additional edge case
+    compressed_mag.get_view(offset=(50, 60, 70), is_bounded=False).write(
+        relative_offset=(10, 20, 30), data=write_data2, allow_compressed_write=True
     )
 
-    np.array_equal(
-        write_data2, compressed_mag.read(offset=(10, 20, 30), size=(10, 10, 10))
+    assert np.array_equal(
+        write_data2, compressed_mag.read(offset=(60, 80, 100), size=(10, 10, 10))[0]
     )  # the new data was written
-    np.array_equal(
-        write_data1[:10, :20, :30],
-        compressed_mag.read(offset=(0, 0, 0), size=(10, 20, 30)),
+    assert np.array_equal(
+        write_data1[:60, :80, :100],
+        compressed_mag.read(offset=(0, 0, 0), size=(60, 80, 100))[0],
     )  # the old data is still there
 
 
@@ -2050,10 +2052,7 @@ def test_compression() -> None:
 
     # writing unaligned data to an uncompressed dataset
     write_data = (np.random.rand(3, 10, 20, 30) * 255).astype(np.uint8)
-
-    # Writing compressed data directly to "mag1" also works, but using a View here covers an additional edge case
-    view = mag1.get_view(offset=(50, 60, 70), is_bounded=False)
-    view.write(write_data, relative_offset=(10, 20, 30))
+    mag1.write(write_data, offset=(60, 80, 100))
 
     mag1.compress()
 
