@@ -114,7 +114,11 @@ class BoundingBox:
 
     def as_wkw(self) -> dict:
 
-        width, height, depth = self.size.tolist()
+        (
+            width,
+            height,
+            depth,
+        ) = self.size.tolist()  # pylint: disable=unbalanced-tuple-unpacking
 
         return {
             "topLeft": self.topleft.tolist(),

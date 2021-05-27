@@ -205,7 +205,7 @@ class Layer(Generic[MagT]):
     def _initialize_mag_from_other_mag(
         self, new_mag_name: Union[str, Mag], other_mag: MagDataset, compress: bool
     ) -> MagDataset:
-        raise NotImplemented
+        raise NotImplementedError
 
     def downsample(
         self,
@@ -695,7 +695,7 @@ class TiledTiffLayer(_GenericTiffLayer[TiledTiffMagDataset]):
         """
         Downsampling is currently not supported for TiledTiffLayers. Use `wkcuber.api.Dataset.TiffDataset`s (which has `TiffLayer`s) instead.
         """
-        raise NotImplemented
+        raise NotImplementedError
 
     def downsample_mag(
         self,
@@ -709,7 +709,7 @@ class TiledTiffLayer(_GenericTiffLayer[TiledTiffMagDataset]):
         """
         Downsampling is currently not supported for TiledTiffLayers. Use `wkcuber.api.Dataset.TiffDataset`s (which has `TiffLayer`s) instead.
         """
-        raise NotImplemented
+        raise NotImplementedError
 
     def downsample_mag_list(
         self,
@@ -723,4 +723,4 @@ class TiledTiffLayer(_GenericTiffLayer[TiledTiffMagDataset]):
         """
         Downsampling is currently not supported for TiledTiffLayers. Use `wkcuber.api.Dataset.TiffDataset`s (which has `TiffLayer`s) instead.
         """
-        raise NotImplemented
+        raise NotImplementedError

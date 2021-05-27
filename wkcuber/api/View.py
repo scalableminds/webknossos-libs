@@ -289,7 +289,7 @@ class View:
         return absolute_offset, data
 
     def get_dtype(self) -> type:
-        raise NotImplemented
+        raise NotImplementedError
 
     def __enter__(self) -> "View":
         return self
@@ -363,9 +363,8 @@ class WKView(View):
                 aligned_data = self.read(offset=aligned_offset, size=aligned_shape)
             except AssertionError as e:
                 raise AssertionError(
-                    f"Writing compressed data failed. The compressed file is not fully inside the bounding box of the view (offset={self.global_offset}, size={self.size}). "
-                    + str(e)
-                )
+                    f"Writing compressed data failed. The compressed file is not fully inside the bounding box of the view (offset={self.global_offset}, size={self.size})."
+                ) from e
             index_slice = (
                 slice(None, None),
                 *(
