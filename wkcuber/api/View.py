@@ -140,6 +140,8 @@ class View:
         for s1, s2, off in zip(self.size, size, offset):
             if s2 + off > s1 and self.is_bounded:
                 return False
+        if self.is_bounded and any(x < 0 for x in offset):
+            return False
         return True
 
     def assert_bounds(
@@ -210,6 +212,7 @@ class View:
         target_offset = np.array(target_view.global_offset)
         source_chunk_size_np = np.array(source_chunk_size)
         target_chunk_size_np = np.array(target_chunk_size)
+
         assert np.all(
             np.array(self.size)
         ), f"Calling 'for_zipped_chunks' failed because the size of the source view contains a 0."
@@ -361,7 +364,12 @@ class WKView(View):
             # the data is not aligned
             # read the aligned bounding box
             try:
-                aligned_data = self.read(offset=aligned_offset, size=aligned_shape)
+                # The absolute offset might be outside of the current view.
+                # We want to read the data at the absolute offset.
+                # However, this view has its own global_offset (which might or might not be equal to (0, 0, 0))
+                # The parameter `offset` of the read-function of a View is always relative (unlike MagDataset.read where the offset is absolute)
+                # Therefore, we need to calculate the relative offset
+                aligned_data = self.read(offset=aligned_offset-self.global_offset, size=aligned_shape)
             except AssertionError as e:
                 raise AssertionError(
                     f"Writing compressed data failed. The compressed file is not fully inside the bounding box of the view (offset={self.global_offset}, size={self.size}). "
