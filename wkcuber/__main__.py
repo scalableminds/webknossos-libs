@@ -3,7 +3,12 @@ from typing import List, Dict
 from wkcuber import downsample_mags
 from .compress import compress_mag_inplace
 from .metadata import refresh_metadata
-from .utils import add_isotropic_flag, setup_logging, add_sampling_mode_flag
+from .utils import (
+    add_distribution_flags,
+    add_isotropic_flag,
+    setup_logging,
+    add_sampling_mode_flag,
+)
 from .mag import Mag
 from .converter import (
     create_parser as create_conversion_parser,
@@ -56,6 +61,7 @@ def create_parser() -> ArgumentParser:
     parser.add_argument("--name", "-n", help="Name of the dataset", default=None)
     add_isotropic_flag(parser)
     add_sampling_mode_flag(parser)
+    add_distribution_flags(parser)
 
     return parser
 
@@ -89,6 +95,7 @@ def main(args: Namespace) -> None:
             interpolation_mode="default",
             compress=not args.no_compress,
             sampling_mode=args.sampling_mode,
+            args=args,
         )
 
     refresh_metadata(args.target_path)
