@@ -186,7 +186,7 @@ class AbstractDataset(Generic[LayerT]):
 
     def get_layer(self, layer_name: str) -> LayerT:
         """
-        Returns the layer called `layer_name` of this dataset. The return type is `wkcuber.api.Layer`.
+        Returns the layer called `layer_name` of this dataset. The return type is `wkcuber.api.Layer.Layer.Layer`.
 
         This function raises an `IndexError` if the specified `layer_name` does not exist.
         """

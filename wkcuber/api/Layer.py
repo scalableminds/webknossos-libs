@@ -77,7 +77,7 @@ class Layer(Generic[MagT]):
         num_channels: int,
     ) -> None:
         """
-        Creates the folder `name` in the directory if the `dataset`.
+        Creates the folder `name` in the directory of `dataset`.
 
         A `Layer` cannot exist without a dataset. The desired procedure to create a new layer for a dataset is to call
         `wkcuber.api.Dataset.AbstractDataset.add_layer` instead of creating and then adding it manually.

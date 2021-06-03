@@ -1,17 +1,14 @@
 """
-# High Level Dataset API
+# Dataset API
 
-The high level Dataset API is a set of classes that encapsulate the main functionalities for interacting with a dataset.
-The aim is to make the experience for the user easy as possible, by automatically reading important meta information
-from the `datasource-properties.json` for any dataset and updating this file if necessary.
+The high-level dataset API automatically reads and writes meta information for any dataset and updates them if necessary, such as the `datasource-properties.json`.
 
-A dataset is the most high-level class of this API.
-There are three types of datasets:
-- `wkcuber.api.Dataset.WKDataset`
+A dataset is the entry-point for this API. All datasets are subclassing the abstract `wkcuber.api.Dataset.AbstractDataset` class, which implements most of the functionality.
+
+The following concrete implementations are available, differing in the way they store the data on disk:
+- `wkcuber.api.Dataset.WKDataset` (for [webknossos-wrap (wkw)](https://github.com/scalableminds/webknossos-wrap) datasets)
 - `wkcuber.api.Dataset.TiffDataset`
 - `wkcuber.api.Dataset.TiledTiffDataset`
 
-Each of these datasets derives from `wkcuber.api.Dataset.WKDataset.AbstractDataset`, which implements most of the functionality.
-The datasets differ in the way they store the data on disc.
-In practice, most of the time `wkcuber.api.Dataset.WKDataset` is used because wkw-files are our go-to file format.
+Each dataset consists of one or more layers (wkcuber.api.Layer.Layer), which themselves can comprise multiple magnifications (wkcuber.api.MagDataset.MagDataset).
 """
