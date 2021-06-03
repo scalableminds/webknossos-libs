@@ -31,7 +31,7 @@ from wkcuber.downsampling_utils import (
 )
 
 if TYPE_CHECKING:
-    from wkcuber.api.Dataset import AbstractDataset, TiffDataset
+    from wkcuber.api.dataset import WKDataset
 from wkcuber.api.MagDataset import (
     MagDataset,
     WKMagDataset,

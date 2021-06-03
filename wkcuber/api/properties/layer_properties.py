@@ -5,7 +5,7 @@ import numpy as np
 
 from wkw import wkw
 
-from wkcuber.api.Properties.ResolutionProperties import Resolution
+from wkcuber.api.properties.ResolutionProperties import Resolution
 from wkcuber.mag import Mag
 from wkcuber.api.bounding_box import BoundingBox
 

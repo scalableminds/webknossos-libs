@@ -28,7 +28,7 @@ from wkcuber.utils import (
 )
 
 if TYPE_CHECKING:
-    from wkcuber.api.Layer import (
+    from wkcuber.api.layer import (
         WKLayer,
         Layer,
         _GenericTiffLayer,
