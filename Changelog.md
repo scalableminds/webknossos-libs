@@ -7,7 +7,7 @@ and this project adheres to [Calendar Versioning](http://calver.org/) `0Y.0M.MIC
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.6.6...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.6.7...HEAD)
 
 ### Breaking Changes in Config & CLI
 
@@ -16,6 +16,20 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+
+## [0.6.7](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.6.7) - 2021-05-28
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.6.6...v0.6.7)
+
+### Breaking Changes in Config & CLI
+
+### Added
+- Added distribution flags to `wkcuber` in order to limit the parallel jobs or use a cluster scheduler. [#323](https://github.com/scalableminds/webknossos-cuber/pull/323)
+- Added a function for converting `BoundingBox` to `BoundingBoxNamedTuple`. [#324](https://github.com/scalableminds/webknossos-cuber/pull/324)
+
+### Changed
+
+### Fixed
+- Fixed a bug for writing compressed data. This previously caused an error when downsampling certain datasets. [#326](https://github.com/scalableminds/webknossos-cuber/pull/326)
 
 ## [0.6.6](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.6.6) - 2021-05-14
 [Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.6.5...v0.6.6)
