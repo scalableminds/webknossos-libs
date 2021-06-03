@@ -212,7 +212,7 @@ class AbstractDataset(Generic[LayerT]):
         When creating a `wkcuber.api.Layer.SegmentationLayer` (category="segmentation"),
         the parameter `largest_segment_id` also has to be specified.
 
-        The return type is `wkcuber.api.Layer`.
+        The return type is `wkcuber.api.Layer.Layer`.
 
         This function raises an `IndexError` if the specified `layer_name` already exists.
         """
