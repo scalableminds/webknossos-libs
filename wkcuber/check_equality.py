@@ -3,7 +3,7 @@ from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from typing import Any, Callable
 
-from wkcuber.api.Dataset import WKDataset
+from wkcuber.api.dataset import WKDataset
 from wkcuber.api.bounding_box import BoundingBox, BoundingBoxNamedTuple
 import numpy as np
 

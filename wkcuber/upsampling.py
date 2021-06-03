@@ -2,7 +2,7 @@ from argparse import ArgumentParser, Namespace
 import os
 from pathlib import Path
 
-from wkcuber.api.Dataset import WKDataset
+from wkcuber.api.dataset import WKDataset
 from wkcuber.downsampling_utils import SamplingModes
 from .mag import Mag
 

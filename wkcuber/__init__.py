@@ -6,7 +6,7 @@ The documentation is currently limited to the Dataset API in `wkcuber.api`. For 
 refer to the `README.md`.
 """
 
-from .api.Dataset import WKDataset
+from .api.dataset import WKDataset
 from .cubing import cubing
 from .downsampling import downsample_mags
 from .compress import compress_mag

@@ -5,7 +5,7 @@ import logging
 from argparse import ArgumentParser, Namespace
 from os import makedirs
 
-from wkcuber.api.Dataset import WKDataset
+from wkcuber.api.dataset import WKDataset
 from .mag import Mag
 
 from .utils import add_verbose_flag, add_distribution_flags, setup_logging

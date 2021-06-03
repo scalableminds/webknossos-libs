@@ -5,8 +5,8 @@ from typing import Tuple, cast
 import numpy as np
 import pytest
 
-from wkcuber.api.Dataset import WKDataset
-from wkcuber.api.Layer import Layer
+from wkcuber.api.dataset import WKDataset
+from wkcuber.api.layer import Layer
 from wkcuber.downsampling_utils import (
     InterpolationModes,
     downsample_cube,

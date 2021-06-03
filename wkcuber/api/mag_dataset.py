@@ -5,13 +5,10 @@ from argparse import Namespace
 from os.path import join
 from pathlib import Path
 from typing import (
-    Type,
     Tuple,
     Union,
     cast,
     TYPE_CHECKING,
-    TypeVar,
-    Generic,
     Generator,
 )
 from uuid import uuid4
@@ -29,14 +26,9 @@ from wkcuber.utils import (
 
 if TYPE_CHECKING:
     from wkcuber.api.layer import (
-        WKLayer,
         Layer,
-        _GenericTiffLayer,
-        TiffLayer,
-        TiledTiffLayer,
     )
-from wkcuber.api.View import WKView, TiffView, View
-from wkcuber.api.TiffData.TiffMag import TiffMagHeader, detect_value
+from wkcuber.api.view import View
 from wkcuber.mag import Mag
 
 
@@ -50,17 +42,40 @@ def _find_mag_path_on_disk(dataset_path: Path, layer_name: str, mag_name: str) -
         return long_mag_file_path
 
 
-class MagDataset:
+class WKMagDataset:
     """
-    A `MagDataset` contains all information about the data of a single magnification of a `wkcuber.api.Layer.Layer`.
+    A `WKMagDataset` contains all information about the data of a single magnification of a `wkcuber.api.layer.Layer`.
     """
 
-    def __init__(self, layer: "Layer", name: str) -> None:
+    def __init__(
+        self,
+        layer: "Layer",
+        name: str,
+        block_len: int,
+        file_len: int,
+        block_type: int,
+        create: bool = False,
+    ) -> None:
         self.layer = layer
         self.name = name
-        self.header = self.get_header()
+        self.block_len = block_len
+        self.file_len = file_len
+        self.block_type = block_type
+        self.header: wkw.Header = wkw.Header(
+            voxel_type=self.layer.dtype_per_channel,
+            num_channels=self.layer.num_channels,
+            version=1,
+            block_len=self.block_len,
+            file_len=self.file_len,
+            block_type=self.block_type,
+        )
 
         self.view = self.get_view(offset=(0, 0, 0), is_bounded=False)
+
+        if create:
+            wkw.Dataset.create(
+                join(layer.dataset.path, layer.name, self.name), self.header
+            )
 
     def open(self) -> None:
         """
@@ -146,21 +161,6 @@ class MagDataset:
             cast(Tuple[int, int, int], tuple(total_size_in_mag1)),
         )
 
-    def get_header(self) -> Union[TiffMagHeader, wkw.Header]:
-        """
-        Returns a header with metadata about the current `MagDataset`.
-        """
-        raise NotImplementedError
-
-    def get_dtype(self) -> type:
-        """
-        Returns the dtype per channel of the data. For example `uint8`.
-        """
-        return self.view.get_dtype()
-
-    def _get_file_dimensions(self) -> Tuple[int, int, int]:
-        raise NotImplementedError
-
     def get_view(
         self,
         size: Tuple[int, int, int] = None,
@@ -230,7 +230,7 @@ class MagDataset:
         mag_file_path = _find_mag_path_on_disk(
             self.layer.dataset.path, self.layer.name, self.name
         )
-        return self._get_view_type()(
+        return View(
             mag_file_path,
             self.header,
             cast(Tuple[int, int, int], tuple(size)),
@@ -238,9 +238,6 @@ class MagDataset:
             is_bounded,
             read_only,
         )
-
-    def _get_view_type(self) -> Type[View]:
-        raise NotImplementedError
 
     def _assert_valid_num_channels(self, write_data_shape: Tuple[int, ...]) -> None:
         num_channels = self.layer.num_channels
@@ -273,7 +270,7 @@ class MagDataset:
         assert self.view.dataset is not None
         for filename in self.view.dataset.list_files():
             file_path = Path(os.path.splitext(filename)[0]).relative_to(self.view.path)
-            cube_index = self._extract_file_index(file_path)
+            cube_index = _extract_file_index(file_path)
             cube_offset = [idx * size for idx, size in zip(cube_index, cube_size)]
 
             yield (cube_offset[0], cube_offset[1], cube_offset[2]), cube_size
@@ -281,66 +278,16 @@ class MagDataset:
         if not was_opened:
             self.close()
 
-    def _extract_file_index(self, file_path: Path) -> Tuple[int, int, int]:
-        raise NotImplementedError
-
     def compress(
         self, target_path: Union[str, Path] = None, args: Namespace = None
     ) -> None:
         """
         Compresses the files on disk. This has consequences for writing data (see `write`).
 
-        Note: this functionality is currently only supported for `WKMagDataset`.
+        The data gets compressed inplace, if target_path is None.
+        Otherwise it is written to target_path/layer_name/mag.
         """
-        pass
 
-
-class WKMagDataset(MagDataset):
-    header: wkw.Header
-
-    def __init__(
-        self,
-        layer: "WKLayer",
-        name: str,
-        block_len: int,
-        file_len: int,
-        block_type: int,
-        create: bool = False,
-    ) -> None:
-        self.block_len = block_len
-        self.file_len = file_len
-        self.block_type = block_type
-        super().__init__(layer, name)
-        if create:
-            wkw.Dataset.create(
-                join(layer.dataset.path, layer.name, self.name), self.header
-            )
-
-    def get_header(self) -> wkw.Header:
-        return wkw.Header(
-            voxel_type=self.layer.dtype_per_channel,
-            num_channels=self.layer.num_channels,
-            version=1,
-            block_len=self.block_len,
-            file_len=self.file_len,
-            block_type=self.block_type,
-        )
-
-    def _get_view_type(self) -> Type[WKView]:
-        return WKView
-
-    def _get_file_dimensions(self) -> Tuple[int, int, int]:
-        return cast(Tuple[int, int, int], (self.file_len * self.block_len,) * 3)
-
-    def _extract_file_index(self, file_path: Path) -> Tuple[int, int, int]:
-        zyx_index = [int(el[1:]) for el in file_path.parts]
-        return zyx_index[2], zyx_index[1], zyx_index[0]
-
-    def compress(
-        self, target_path: Union[str, Path] = None, args: Namespace = None
-    ) -> None:
-        # The data gets compressed inplace, if target_path is None.
-        # Otherwise it is written to target_path/layer_name/mag.
         if target_path is not None:
             target_path = Path(target_path)
 
@@ -398,57 +345,10 @@ class WKMagDataset(MagDataset):
             # update the handle to the new dataset
             self.view = self.get_view(offset=(0, 0, 0), is_bounded=False)
 
-
-TiffLayerT = TypeVar("TiffLayerT", bound="_GenericTiffLayer")
-
-
-class _GenericTiffMagDataset(MagDataset, Generic[TiffLayerT]):
-    layer: TiffLayerT
-
-    def __init__(self, layer: TiffLayerT, name: str, pattern: str) -> None:
-        self.pattern = pattern
-        super().__init__(layer, name)
-
-    def get_header(self) -> TiffMagHeader:
-        return TiffMagHeader(
-            pattern=self.pattern,
-            dtype_per_channel=self.layer.dtype_per_channel,
-            num_channels=self.layer.num_channels,
-            tile_size=self.layer.dataset.properties.tile_size,
-        )
-
-    def _get_view_type(self) -> Type[TiffView]:
-        return TiffView
-
     def _get_file_dimensions(self) -> Tuple[int, int, int]:
-        if self.layer.dataset.properties.tile_size:
-            return self.layer.dataset.properties.tile_size + (1,)
-
-        return self.view.size[0], self.view.size[1], 1
-
-    def _extract_file_index(self, file_path: Path) -> Tuple[int, int, int]:
-        x_list = detect_value(self.pattern, str(file_path), "x", ["y", "z"])
-        y_list = detect_value(self.pattern, str(file_path), "y", ["x", "z"])
-        z_list = detect_value(self.pattern, str(file_path), "z", ["x", "y"])
-        x = x_list[0] if len(x_list) == 1 else 0
-        y = y_list[0] if len(y_list) == 1 else 0
-        z = z_list[0] if len(z_list) == 1 else 0
-        return x, y, z
+        return cast(Tuple[int, int, int], (self.file_len * self.block_len,) * 3)
 
 
-class TiffMagDataset(_GenericTiffMagDataset["TiffLayer"]):
-    pass
-
-
-class TiledTiffMagDataset(_GenericTiffMagDataset["TiledTiffLayer"]):
-    def get_tile(self, x_index: int, y_index: int, z_index: int) -> np.array:
-        """
-        Returns the data that is stored in a specific tiff tile on disk.
-        """
-        tile_size = self.layer.dataset.properties.tile_size
-        assert tile_size is not None
-        size = (tile_size[0], tile_size[1], 1)
-        offset = np.array((0, 0, 0)) + np.array(size) * np.array(
-            (x_index, y_index, z_index)
-        )
-        return self.read(offset, size)
+def _extract_file_index(file_path: Path) -> Tuple[int, int, int]:
+    zyx_index = [int(el[1:]) for el in file_path.parts]
+    return zyx_index[2], zyx_index[1], zyx_index[0]

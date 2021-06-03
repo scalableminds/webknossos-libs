@@ -8,7 +8,7 @@ from typing import Tuple, Optional, Union, cast
 import nibabel as nib
 import numpy as np
 
-from wkcuber.api.Dataset import TiffDataset, WKDataset
+from wkcuber.api.dataset import WKDataset
 from wkcuber.api.bounding_box import BoundingBox
 from wkcuber.utils import (
     DEFAULT_WKW_FILE_LEN,
@@ -65,13 +65,6 @@ def create_parser() -> ArgumentParser:
         "--segmentation_file",
         help="When converting folder, name of file to become segmentation layer",
         default=None,
-    )
-
-    parser.add_argument(
-        "--write_tiff",
-        help="Output tiff dataset instead of wkw.",
-        default=False,
-        action="store_true",
     )
 
     parser.add_argument(
@@ -135,7 +128,6 @@ def convert_nifti(
     is_segmentation_layer: bool = False,
     file_len: int = DEFAULT_WKW_FILE_LEN,
     bbox_to_enforce: BoundingBox = None,
-    write_tiff: bool = False,
     use_orientation_header: bool = False,
     flip_axes: Optional[Union[int, Tuple[int, ...]]] = None,
 ) -> None:
@@ -211,31 +203,17 @@ def convert_nifti(
         ),
     )
 
-    if write_tiff:
-        tiff_ds = TiffDataset.get_or_create(
-            target_path, scale=cast(Tuple[float, float, float], scale or (1, 1, 1))
-        )
-        tiff_layer = tiff_ds.get_or_add_layer(
-            layer_name,
-            category_type,
-            dtype_per_layer=np.dtype(dtype),
-            **max_cell_id_args,
-        )
-        tiff_mag = tiff_layer.get_or_add_mag("1")
-
-        tiff_mag.write(cube_data.squeeze())
-    else:
-        wk_ds = WKDataset.get_or_create(
-            target_path, scale=cast(Tuple[float, float, float], scale or (1, 1, 1))
-        )
-        wk_layer = wk_ds.get_or_add_layer(
-            layer_name,
-            category_type,
-            dtype_per_layer=np.dtype(dtype),
-            **max_cell_id_args,
-        )
-        wk_mag = wk_layer.get_or_add_mag("1", file_len=file_len)
-        wk_mag.write(cube_data)
+    wk_ds = WKDataset.get_or_create(
+        target_path, scale=cast(Tuple[float, float, float], scale or (1, 1, 1))
+    )
+    wk_layer = wk_ds.get_or_add_layer(
+        layer_name,
+        category_type,
+        dtype_per_layer=np.dtype(dtype),
+        **max_cell_id_args,
+    )
+    wk_mag = wk_layer.get_or_add_mag("1", file_len=file_len)
+    wk_mag.write(cube_data)
 
     logging.debug(
         "Converting of {} took {:.8f}s".format(
@@ -252,7 +230,6 @@ def convert_folder_nifti(
     scale: Tuple[float, ...],
     use_orientation_header: bool = False,
     bbox_to_enforce: BoundingBox = None,
-    write_tiff: bool = False,
     flip_axes: Optional[Union[int, Tuple[int, ...]]] = None,
 ) -> None:
     paths = list(source_folder_path.rglob("**/*.nii"))
@@ -288,7 +265,6 @@ def convert_folder_nifti(
                 "uint8",
                 scale,
                 is_segmentation_layer=False,
-                write_tiff=write_tiff,
                 bbox_to_enforce=bbox_to_enforce,
                 use_orientation_header=use_orientation_header,
                 flip_axes=flip_axes,
@@ -301,7 +277,6 @@ def convert_folder_nifti(
                 "uint8",
                 scale,
                 is_segmentation_layer=True,
-                write_tiff=write_tiff,
                 bbox_to_enforce=bbox_to_enforce,
                 use_orientation_header=use_orientation_header,
                 flip_axes=flip_axes,
@@ -314,7 +289,6 @@ def convert_folder_nifti(
                 "uint8",
                 scale,
                 is_segmentation_layer=False,
-                write_tiff=write_tiff,
                 bbox_to_enforce=bbox_to_enforce,
                 use_orientation_header=use_orientation_header,
                 flip_axes=flip_axes,
@@ -334,7 +308,6 @@ def main(args: Namespace) -> None:
 
     conversion_args = {
         "scale": args.scale,
-        "write_tiff": args.write_tiff,
         "bbox_to_enforce": args.enforce_bounding_box,
         "use_orientation_header": args.use_orientation_header,
         "flip_axes": flip_axes,

@@ -3,8 +3,8 @@ import tempfile
 from pathlib import Path
 from typing import Tuple, cast
 
-from wkcuber.api.Dataset import WKDataset
-from wkcuber.api.Layer import Layer
+from wkcuber.api.dataset import WKDataset
+from wkcuber.api.layer import Layer
 from wkcuber.downsampling_utils import SamplingModes
 from wkcuber.upsampling_utils import upsample_cube, upsample_cube_job
 from wkcuber.mag import Mag

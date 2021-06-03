@@ -4,15 +4,11 @@ from argparse import Namespace
 from shutil import rmtree
 from os.path import join
 from os import makedirs
-from abc import ABC, abstractmethod
 from typing import (
     Tuple,
-    Type,
     Union,
     Dict,
     TYPE_CHECKING,
-    TypeVar,
-    Generic,
     cast,
     Optional,
     List,
@@ -32,13 +28,9 @@ from wkcuber.downsampling_utils import (
 
 if TYPE_CHECKING:
     from wkcuber.api.dataset import WKDataset
-from wkcuber.api.MagDataset import (
-    MagDataset,
+from wkcuber.api.mag_dataset import (
     WKMagDataset,
-    TiffMagDataset,
-    TiledTiffMagDataset,
     _find_mag_path_on_disk,
-    _GenericTiffMagDataset,
 )
 from wkcuber.downsampling_utils import (
     get_next_mag,
@@ -55,12 +47,22 @@ from wkcuber.utils import (
 )
 
 
-MagT = TypeVar("MagT", bound=MagDataset)
-
-
-class Layer(Generic[MagT]):
+class Layer:
     """
     A `Layer` consists of multiple `wkcuber.api.MagDataset`s, which store the same data in different magnifications.
+
+    ## Examples
+
+    ### Adding layer to dataset
+    ```python
+    from wkcuber.api.dataset import WKDataset
+
+    dataset = WKDataset(<path_to_dataset>)
+    # Adds a new layer
+    layer = dataset.get_layer("color")
+    ```
+
+    ## Functions
     """
 
     COLOR_TYPE = "color"
@@ -72,7 +74,7 @@ class Layer(Generic[MagT]):
     def __init__(
         self,
         name: str,
-        dataset: "AbstractDataset",
+        dataset: "WKDataset",
         dtype_per_channel: np.dtype,
         num_channels: int,
     ) -> None:
@@ -86,19 +88,21 @@ class Layer(Generic[MagT]):
         self.dataset = dataset
         self.dtype_per_channel = dtype_per_channel
         self.num_channels = num_channels
-        self._mags: Dict[str, MagT] = {}
+        self._mags: Dict[str, WKMagDataset] = {}
 
         full_path = join(dataset.path, name)
         makedirs(full_path, exist_ok=True)
 
     @property
-    def mags(self) -> Dict[str, MagT]:
+    def mags(self) -> Dict[str, WKMagDataset]:
         """
         Getter for dictionary containing all mags.
         """
         return self._mags
 
-    def get_mag(self, mag: Union[int, str, list, tuple, np.ndarray, Mag]) -> MagT:
+    def get_mag(
+        self, mag: Union[int, str, list, tuple, np.ndarray, Mag]
+    ) -> WKMagDataset:
         """
         Returns the MagDataset called `mag` of this layer. The return type is `wkcuber.api.MagDataset`.
 
@@ -109,25 +113,69 @@ class Layer(Generic[MagT]):
             raise IndexError("The mag {} is not a mag of this layer".format(mag))
         return self.mags[mag]
 
-    def add_mag(self, mag: Union[int, str, list, tuple, np.ndarray, Mag]) -> MagT:
+    def add_mag(
+        self,
+        mag: Union[int, str, list, tuple, np.ndarray, Mag],
+        block_len: int = 32,
+        file_len: int = DEFAULT_WKW_FILE_LEN,
+        block_type: int = wkw.Header.BLOCK_TYPE_RAW,
+    ) -> WKMagDataset:
         """
         Creates a new mag called and adds it to the layer.
-        The return type is `wkcuber.api.MagDataset.MagDataset`.
+        The parameter `block_len`, `file_len` and `block_type` can be
+        specified to adjust how the data is stored on disk.
+
+        The return type is `wkcuber.api.mag_dataset.WKMagDataset`.
 
         Raises an IndexError if the specified `mag` already exists.
         """
-        pass
+        # normalize the name of the mag
+        mag = Mag(mag).to_layer_name()
+
+        self._assert_mag_does_not_exist_yet(mag)
+        self._create_dir_for_mag(mag)
+
+        self._mags[mag] = WKMagDataset(
+            self, mag, block_len, file_len, block_type, create=True
+        )
+        self.dataset.properties._add_mag(
+            self.name, mag, cube_length=block_len * file_len
+        )
+
+        return self._mags[mag]
 
     def get_or_add_mag(
-        self, mag: Union[int, str, list, tuple, np.ndarray, Mag]
-    ) -> MagT:
+        self,
+        mag: Union[int, str, list, tuple, np.ndarray, Mag],
+        block_len: int = 32,
+        file_len: int = DEFAULT_WKW_FILE_LEN,
+        block_type: int = wkw.Header.BLOCK_TYPE_RAW,
+    ) -> WKMagDataset:
         """
         Creates a new mag called and adds it to the dataset, in case it did not exist before.
         Then, returns the mag.
 
         See `add_mag` for more information.
         """
-        pass
+
+        # normalize the name of the mag
+        mag = Mag(mag).to_layer_name()
+
+        if mag in self._mags.keys():
+            assert (
+                block_len is None or self._mags[mag].header.block_len == block_len
+            ), f"Cannot get_or_add_mag: The mag {mag} already exists, but the block lengths do not match"
+            assert (
+                file_len is None or self._mags[mag].header.file_len == file_len
+            ), f"Cannot get_or_add_mag: The mag {mag} already exists, but the file lengths do not match"
+            assert (
+                block_type is None or self._mags[mag].header.block_type == block_type
+            ), f"Cannot get_or_add_mag: The mag {mag} already exists, but the block types do not match"
+            return self.get_mag(mag)
+        else:
+            return self.add_mag(
+                mag, block_len=block_len, file_len=file_len, block_type=block_type
+            )
 
     def delete_mag(self, mag: Union[int, str, list, tuple, np.ndarray, Mag]) -> None:
         """
@@ -201,11 +249,6 @@ class Layer(Generic[MagT]):
             int, int, int
         ] = self.dataset.properties.get_bounding_box_of_layer(self.name)[0]
         self.set_bounding_box(offset, size)
-
-    def _initialize_mag_from_other_mag(
-        self, new_mag_name: Union[str, Mag], other_mag: MagDataset, compress: bool
-    ) -> MagDataset:
-        raise NotImplementedError
 
     def downsample(
         self,
@@ -421,9 +464,6 @@ class Layer(Generic[MagT]):
             )
             source_mag = target_mag
 
-    def _setup_mag(self, mag: Union[str, Mag]) -> None:
-        pass
-
     def upsample(
         self,
         from_mag: Mag,
@@ -515,67 +555,6 @@ class Layer(Generic[MagT]):
             prev_mag = target_mag
             target_mag = get_previous_mag(target_mag, scale)
 
-
-class WKLayer(Layer[WKMagDataset]):
-    _mags: Dict[str, WKMagDataset]
-
-    def add_mag(
-        self,
-        mag: Union[int, str, list, tuple, np.ndarray, Mag],
-        block_len: int = 32,
-        file_len: int = DEFAULT_WKW_FILE_LEN,
-        block_type: int = wkw.Header.BLOCK_TYPE_RAW,
-    ) -> WKMagDataset:
-        """
-        Creates a new mag called and adds it to the layer.
-        The parameter `block_len`, `file_len` and `block_type` can be
-        specified to adjust how the data is stored on disk.
-
-        The return type is `wkcuber.api.MagDataset.WKMagDataset`.
-
-        Raises an IndexError if the specified `mag` already exists.
-        """
-        # normalize the name of the mag
-        mag = Mag(mag).to_layer_name()
-
-        self._assert_mag_does_not_exist_yet(mag)
-        self._create_dir_for_mag(mag)
-
-        self._mags[mag] = WKMagDataset(
-            self, mag, block_len, file_len, block_type, create=True
-        )
-        self.dataset.properties._add_mag(
-            self.name, mag, cube_length=block_len * file_len
-        )
-
-        return self._mags[mag]
-
-    def get_or_add_mag(
-        self,
-        mag: Union[int, str, list, tuple, np.ndarray, Mag],
-        block_len: int = 32,
-        file_len: int = DEFAULT_WKW_FILE_LEN,
-        block_type: int = wkw.Header.BLOCK_TYPE_RAW,
-    ) -> WKMagDataset:
-        # normalize the name of the mag
-        mag = Mag(mag).to_layer_name()
-
-        if mag in self._mags.keys():
-            assert (
-                block_len is None or self._mags[mag].header.block_len == block_len
-            ), f"Cannot get_or_add_mag: The mag {mag} already exists, but the block lengths do not match"
-            assert (
-                file_len is None or self._mags[mag].header.file_len == file_len
-            ), f"Cannot get_or_add_mag: The mag {mag} already exists, but the file lengths do not match"
-            assert (
-                block_type is None or self._mags[mag].header.block_type == block_type
-            ), f"Cannot get_or_add_mag: The mag {mag} already exists, but the block types do not match"
-            return self.get_mag(mag)
-        else:
-            return self.add_mag(
-                mag, block_len=block_len, file_len=file_len, block_type=block_type
-            )
-
     def _setup_mag(self, mag: Union[str, Mag]) -> None:
         # This method is used to initialize the mag when opening the Dataset. This does not create e.g. the wk_header.
 
@@ -603,8 +582,8 @@ class WKLayer(Layer[WKMagDataset]):
             )
 
     def _initialize_mag_from_other_mag(
-        self, new_mag_name: Union[str, Mag], other_mag: MagDataset, compress: bool
-    ) -> MagDataset:
+        self, new_mag_name: Union[str, Mag], other_mag: WKMagDataset, compress: bool
+    ) -> WKMagDataset:
         block_type = (
             wkw.Header.BLOCK_TYPE_LZ4HC if compress else wkw.Header.BLOCK_TYPE_RAW
         )
@@ -617,110 +596,3 @@ class WKLayer(Layer[WKMagDataset]):
             file_len=other_wk_mag.file_len,
             block_type=block_type,
         )
-
-
-TiffMagT = TypeVar("TiffMagT", bound=_GenericTiffMagDataset)
-
-
-class _GenericTiffLayer(Layer[TiffMagT], ABC):
-    dataset: "TiffDataset"
-
-    def add_mag(self, mag: Union[int, str, list, tuple, np.ndarray, Mag]) -> TiffMagT:
-        # normalize the name of the mag
-        mag = Mag(mag).to_layer_name()
-
-        self._assert_mag_does_not_exist_yet(mag)
-        self._create_dir_for_mag(mag)
-
-        self._mags[mag] = self._get_mag_dataset_class()(
-            self, mag, self.dataset.properties.pattern
-        )
-        self.dataset.properties._add_mag(self.name, mag)
-
-        return self.mags[mag]
-
-    def get_or_add_mag(
-        self, mag: Union[int, str, list, tuple, np.ndarray, Mag]
-    ) -> TiffMagT:
-        # normalize the name of the mag
-        mag = Mag(mag).to_layer_name()
-
-        if mag in self.mags.keys():
-            return self.get_mag(mag)
-        else:
-            return self.add_mag(mag)
-
-    def _setup_mag(self, mag: Union[str, Mag]) -> None:
-        # This method is used to initialize the mag when opening the Dataset. This does not create e.g. folders.
-
-        # normalize the name of the mag
-        mag = Mag(mag).to_layer_name()
-
-        self._assert_mag_does_not_exist_yet(mag)
-
-        self._mags[mag] = self._get_mag_dataset_class()(
-            self, mag, self.dataset.properties.pattern
-        )
-        self.dataset.properties._add_mag(self.name, mag)
-
-    @abstractmethod
-    def _get_mag_dataset_class(self) -> Type[TiffMagT]:
-        pass
-
-
-class TiffLayer(_GenericTiffLayer[TiffMagDataset]):
-    def _get_mag_dataset_class(self) -> Type[TiffMagDataset]:
-        return TiffMagDataset
-
-    def _initialize_mag_from_other_mag(
-        self, new_mag_name: Union[str, Mag], other_mag: MagDataset, compress: bool
-    ) -> MagDataset:
-        return self.add_mag(new_mag_name)
-
-
-class TiledTiffLayer(_GenericTiffLayer[TiledTiffMagDataset]):
-    def _get_mag_dataset_class(self) -> Type[TiledTiffMagDataset]:
-        return TiledTiffMagDataset
-
-    def downsample(
-        self,
-        from_mag: Optional[Mag] = None,
-        max_mag: Optional[Mag] = None,
-        interpolation_mode: str = "default",
-        compress: bool = True,
-        sampling_mode: str = SamplingModes.AUTO,
-        buffer_edge_len: Optional[int] = None,
-        args: Optional[Namespace] = None,
-    ) -> None:
-        """
-        Downsampling is currently not supported for TiledTiffLayers. Use `wkcuber.api.Dataset.TiffDataset`s (which has `TiffLayer`s) instead.
-        """
-        raise NotImplementedError
-
-    def downsample_mag(
-        self,
-        from_mag: Mag,
-        target_mag: Mag,
-        interpolation_mode: str = "default",
-        compress: bool = True,
-        buffer_edge_len: Optional[int] = None,
-        args: Optional[Namespace] = None,
-    ) -> None:
-        """
-        Downsampling is currently not supported for TiledTiffLayers. Use `wkcuber.api.Dataset.TiffDataset`s (which has `TiffLayer`s) instead.
-        """
-        raise NotImplementedError
-
-    def downsample_mag_list(
-        self,
-        from_mag: Mag,
-        target_mags: List[Mag],
-        interpolation_mode: str = "default",
-        compress: bool = True,
-        buffer_edge_len: Optional[int] = None,
-        args: Optional[Namespace] = None,
-    ) -> None:
-        """
-        Downsampling is currently not supported for TiledTiffLayers. Use `wkcuber.api.Dataset.TiffDataset`s (which has `TiffLayer`s) instead.
-        """
-        raise NotImplementedError

@@ -5,7 +5,7 @@ from typing import Tuple, List, cast
 
 import numpy as np
 
-from wkcuber.api.View import View
+from wkcuber.api.view import View
 from wkcuber.utils import time_start, time_stop
 
 

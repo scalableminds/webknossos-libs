@@ -8,16 +8,15 @@ import numpy as np
 from cluster_tools.schedulers.cluster_executor import ClusterExecutor
 from wkw import Dataset, wkw
 
-from wkcuber.api.TiffData.TiffMag import TiffMag, TiffMagHeader
 from wkcuber.api.bounding_box import BoundingBox
-from wkcuber.utils import wait_and_ensure_success, ceil_div_np
+from wkcuber.utils import wait_and_ensure_success
 
 
 class View:
     def __init__(
         self,
         path_to_mag_dataset: Path,
-        header: Union[TiffMagHeader, wkw.Header],
+        header: wkw.Header,
         size: Tuple[int, int, int],
         global_offset: Tuple[int, int, int] = (0, 0, 0),
         is_bounded: bool = True,
@@ -25,7 +24,7 @@ class View:
     ):
         self.dataset: Optional[Dataset] = None
         self.path = path_to_mag_dataset
-        self.header = header
+        self.header: wkw.Header = header
         self.size = size
         self.global_offset = global_offset
         self.is_bounded = is_bounded
@@ -33,9 +32,28 @@ class View:
         self._is_opened = False
 
     def open(self) -> "View":
-        pass
+        """
+        Opens the actual handles to the data on disk.
+        A `MagDataset` has to be opened before it can be read or written to. However, the user does not
+        have to open it explicitly because the API automatically opens it when it is needed.
+        The user can choose to open it explicitly to avoid that handles are opened and closed automatically
+        each time data is read or written.
+        """
+        if self._is_opened:
+            raise Exception("Cannot open view: the view is already opened")
+        else:
+            self.dataset = Dataset.open(
+                str(self.path)
+            )  # No need to pass the header to the wkw.Dataset
+            self._is_opened = True
+        return self
 
     def close(self) -> None:
+        """
+        Complementary to `open`, this closes the handles to the data.
+
+        See `open` for more information.
+        """
         if not self._is_opened:
             raise Exception("Cannot close View: the view is not opened")
         else:
@@ -82,6 +100,15 @@ class View:
         offset: Tuple[int, int, int] = (0, 0, 0),
         size: Tuple[int, int, int] = None,
     ) -> np.array:
+        """
+        The user can specify the `offset` and the `size` of the requested data.
+        The `offset` refers to the absolute position, regardless of the offset in the properties.
+        If no `size` is specified, the offset from the properties + the size of the properties is used.
+        If the specified bounding box exceeds the data on disk, the rest is padded with `0`.
+
+        Retruns the specified data as a `np.array`.
+        """
+
         was_opened = self._is_opened
         size = self.size if size is None else size
 
@@ -222,27 +249,10 @@ class View:
             source_chunk_size_np / target_chunk_size_np,
         ), f"Calling 'for_zipped_chunks' failed because the ratio of the view sizes (source size = {self.size}, target size = {target_view.size}) must be equal to the ratio of the chunk sizes (source_chunk_size = {source_chunk_size}, source_chunk_size = {target_chunk_size}))"
 
-        if isinstance(target_view.header, wkw.Header):
-            assert not any(
-                target_chunk_size_np
-                % (target_view.header.file_len * target_view.header.block_len)
-            ), f"Calling for_zipped_chunks failed. The target_chunk_size ({target_chunk_size}) must be a multiple of file_len*block_len of the target view ({target_view.header.file_len * target_view.header.block_len})"
-        else:
-            if target_view.header.tile_size is None:
-                # TiffDataset
-                assert np.array_equal(
-                    ceil_div_np(
-                        (target_offset + np.array(target_view.size))[:2],
-                        np.array(target_chunk_size[:2]),
-                    )
-                    - (target_offset[:2] // target_chunk_size[:2]),
-                    [1, 1],
-                ), "Calling for_zipped_chunks failed. There can only be a single chunk per z-slice for TiffDatasets. Choose a different 'target_chunk_size'."
-            else:
-                # TiledTiffDataset
-                assert not any(
-                    target_chunk_size_np % (tuple(target_view.header.tile_size) + (1,))
-                ), f"Calling for_zipped_chunks failed. The target_chunk_size ({target_chunk_size}) must be a multiple of the tiff size of the target view ({tuple(target_view.header.tile_size) + (1,)})"
+        assert not any(
+            target_chunk_size_np
+            % (target_view.header.file_len * target_view.header.block_len)
+        ), f"Calling for_zipped_chunks failed. The target_chunk_size ({target_chunk_size}) must be a multiple of file_len*block_len of the target view ({target_view.header.file_len * target_view.header.block_len})"
 
         job_args = []
         source_chunks = BoundingBox(source_offset, self.size).chunk(
@@ -278,45 +288,6 @@ class View:
 
         # execute the work for each pair of chunks
         wait_and_ensure_success(executor.map_to_futures(work_on_chunk, job_args))
-
-    def _check_chunk_size(self, chunk_size: Tuple[int, int, int]) -> None:
-        raise NotImplementedError
-
-    def _is_compressed(self) -> bool:
-        return False
-
-    def _handle_compressed_write(
-        self, absolute_offset: Tuple[int, int, int], data: np.ndarray
-    ) -> Tuple[Tuple[int, int, int], np.ndarray]:
-        return absolute_offset, data
-
-    def get_dtype(self) -> type:
-        raise NotImplementedError
-
-    def __enter__(self) -> "View":
-        return self
-
-    def __exit__(
-        self,
-        _type: Optional[Type[BaseException]],
-        _value: Optional[BaseException],
-        _tb: Optional[TracebackType],
-    ) -> None:
-        self.close()
-
-
-class WKView(View):
-    header: wkw.Header
-
-    def open(self) -> "WKView":
-        if self._is_opened:
-            raise Exception("Cannot open view: the view is already opened")
-        else:
-            self.dataset = Dataset.open(
-                str(self.path)
-            )  # No need to pass the header to the wkw.Dataset
-            self._is_opened = True
-        return self
 
     def _check_chunk_size(self, chunk_size: Tuple[int, int, int]) -> None:
         assert chunk_size is not None
@@ -390,41 +361,18 @@ class WKView(View):
             return absolute_offset, data
 
     def get_dtype(self) -> type:
+        """
+        Returns the dtype per channel of the data. For example `uint8`.
+        """
         return self.header.voxel_type
 
-
-class TiffView(View):
-    def open(self) -> "TiffView":
-        if self._is_opened:
-            raise Exception("Cannot open view: the view is already opened")
-        else:
-            self.dataset = TiffMag.open(self.path, self.header)
-            self._is_opened = True
+    def __enter__(self) -> "View":
         return self
 
-    def _check_chunk_size(self, chunk_size: Tuple[int, int, int]) -> None:
-        assert chunk_size is not None
-
-        if 0 in chunk_size:
-            raise AssertionError(
-                f"The passed parameter 'chunk_size' {chunk_size} contains at least one 0. This is not allowed."
-            )
-
-        if self.header.tile_size is None:
-            # non tiled tiff dataset
-            if tuple(self.size[0:2]) != tuple(chunk_size[0:2]):
-                raise AssertionError(
-                    f"The x- and y-length of the passed parameter 'chunk_size' {chunk_size} do not match with the size of the view {self.size}."
-                )
-        else:
-            # tiled tiff dataset
-            file_dim = tuple(self.header.tile_size) + (
-                1,
-            )  # the z-dimension of an image is 1
-            if (np.array(chunk_size) % file_dim).any():
-                raise AssertionError(
-                    f"The passed parameter 'chunk_size' {chunk_size} must be a multiple of the file size {file_dim}"
-                )
-
-    def get_dtype(self) -> type:
-        return self.header.dtype_per_channel
+    def __exit__(
+        self,
+        _type: Optional[Type[BaseException]],
+        _value: Optional[BaseException],
+        _tb: Optional[TracebackType],
+    ) -> None:
+        self.close()

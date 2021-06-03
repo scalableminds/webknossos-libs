@@ -1,6 +1,6 @@
 from wkcuber import Mag, WKDataset
 from wkcuber.mag import Mag as _Mag
-from wkcuber.api.Dataset import WKDataset as _WKDataset
+from wkcuber.api.dataset import WKDataset as _WKDataset
 
 
 def test_reexport_classes() -> None:

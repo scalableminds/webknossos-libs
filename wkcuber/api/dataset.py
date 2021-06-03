@@ -1,17 +1,16 @@
 import operator
 from argparse import Namespace
 from shutil import rmtree
-from abc import abstractmethod
 from os import makedirs
 from os.path import join, normpath, basename
 from pathlib import Path
-from typing import Type, Tuple, Union, Dict, Any, Optional, cast, TypeVar, Generic
+from typing import Tuple, Union, Dict, Any, Optional, cast
 
 import numpy as np
 import os
 import re
 
-from wkcuber.api.properties.LayerProperties import (
+from wkcuber.api.properties.layer_properties import (
     properties_floating_type_to_python_type,
     SegmentationLayerProperties,
 )
@@ -19,13 +18,9 @@ from wkcuber.api.bounding_box import BoundingBox
 from wkcuber.mag import Mag
 from wkcuber.utils import get_executor_for_args
 
-from wkcuber.api.properties.DatasetProperties import (
-    WKProperties,
-    TiffProperties,
-    Properties,
-)
-from wkcuber.api.Layer import Layer, WKLayer, TiffLayer, TiledTiffLayer
-from wkcuber.api.View import View
+from wkcuber.api.properties.dataset_properties import Properties
+from wkcuber.api.layer import Layer
+from wkcuber.api.view import View
 
 DEFAULT_BIT_DEPTH = 8
 
@@ -114,6 +109,48 @@ class WKDataset:
     or new datasets can be created.
 
     A `WKDataset` stores the data in `.wkw` files on disk.
+
+    ## Examples
+
+    ### Creating Datasets
+    ```python
+    from wkcuber.api.dataset import WKDataset
+
+    dataset = WKDataset.create(<path_to_new_dataset>, scale=(1, 1, 1))
+    # Adds a new layer
+    layer = dataset.add_layer(
+        layer_name="color",
+        category=Layer.COLOR_TYPE,
+        dtype_per_channel="uint8",
+        num_channels=3
+    )
+    # Adds an existing layer from a different dataset
+    sym_layer = dataset.add_symlink_layer(<foreign_layer_path>)
+    ```
+
+    ### Opening Datasets
+    ```python
+    from wkcuber.api.dataset import WKDataset
+
+    dataset = WKDataset(<path_to_dataset>)
+    # Assuming that the dataset has a layer called 'color'
+    layer = dataset.get_layer("color")
+    ```
+
+    ### Copying Datasets
+    ```python
+    from wkcuber.api.dataset import WKDataset
+
+    dataset = WKDataset(<path_to_dataset>)
+    # Copying the dataset with different block_len and file_len
+    copy_of_dataset = dataset.copy_dataset(
+        <path_to_new_dataset>,
+        block_len=8,
+        file_len=8
+    )
+    ```
+
+    ## Functions
     """
 
     def __init__(self, dataset_path: Union[str, Path]) -> None:
@@ -129,7 +166,7 @@ class WKDataset:
         self.path = Path(dataset_path)
         """Location of the dataset"""
 
-        self.properties: Properties = WKProperties._from_json(
+        self.properties: Properties = Properties._from_json(
             self.path / Properties.FILE_NAME
         )
         """
@@ -184,7 +221,7 @@ class WKDataset:
 
     def get_layer(self, layer_name: str) -> Layer:
         """
-        Returns the layer called `layer_name` of this dataset. The return type is `wkcuber.api.Layer.Layer`.
+        Returns the layer called `layer_name` of this dataset. The return type is `wkcuber.api.layer.Layer`.
 
         This function raises an `IndexError` if the specified `layer_name` does not exist.
         """
@@ -207,10 +244,10 @@ class WKDataset:
         Creates a new layer called `layer_name` and adds it to the dataset.
         The dtype can either be specified per layer or per channel.
         If neither of them are specified, `uint8` per channel is used as default.
-        When creating a `wkcuber.api.Layer.SegmentationLayer` (category="segmentation"),
+        When creating a `wkcuber.api.layer.SegmentationLayer` (category="segmentation"),
         the parameter `largest_segment_id` also has to be specified.
 
-        The return type is `wkcuber.api.Layer.Layer`.
+        The return type is `wkcuber.api.layer.Layer`.
 
         This function raises an `IndexError` if the specified `layer_name` already exists.
         """
@@ -364,9 +401,9 @@ class WKDataset:
         os.symlink(foreign_layer_path, join(self.path, layer_name))
 
         # copy the properties of the layer into the properties of this dataset
-        layer_properties = WKDataset(
-            foreign_layer_path.parent
-        ).properties.data_layers[layer_name]
+        layer_properties = WKDataset(foreign_layer_path.parent).properties.data_layers[
+            layer_name
+        ]
         self.properties.data_layers[layer_name] = layer_properties
         self.properties._export_as_json()
 
@@ -381,38 +418,27 @@ class WKDataset:
             self.get_layer(layer_name)._setup_mag(resolution.mag.to_layer_name())
         return self.layers[layer_name]
 
-    def get_view(
-        self,
-        layer_name: str,
-        mag: Union[int, str, list, tuple, np.ndarray, Mag],
-        size: Tuple[int, int, int],
-        offset: Tuple[int, int, int] = None,
-        is_bounded: bool = True,
-        read_only: bool = False,
-    ) -> View:
-        """
-        Returns a view of the specified `wkcuber.api.MagDataset.MagDataset`.
-        This is a shorthand for `dataset.get_layer(layer_name).get_mag(mag).get_view(...)`
-
-        See `wkcuber.api.MagDataset.get_view` for more details.
-        """
-        layer = self.get_layer(layer_name)
-        mag_ds = layer.get_mag(mag)
-
-        return mag_ds.get_view(
-            size=size, offset=offset, is_bounded=is_bounded, read_only=read_only
-        )
-
     def copy_dataset(
-        self, empty_target_ds: "WKDataset", args: Optional[Namespace] = None
-    ) -> None:
+        self,
+        new_dataset_path: Union[str, Path],
+        scale: Optional[Tuple[float, float, float]] = None,
+        block_len: int = None,
+        file_len: int = None,
+        block_type: int = None,
+        args: Optional[Namespace] = None,
+    ) -> "WKDataset":
         """
-        Copies the data from the current dataset to `empty_target_ds`. The types of the two datasets can differ
-        (e.g. on dataset can be `WKDataset` and the other can be `TiffDataset`).
-        Therefore, this method can be used to convert from one type to the other.
+        Creates a new dataset at `new_dataset_path` and copies the data from the current dataset to `empty_target_ds`.
+        If not specified otherwise, the `scale`, `block_len`, `file_len` and `block_type` of the current dataset are also used for the new dataset.
         """
+
+        new_dataset_path = Path(new_dataset_path)
+        if scale is None:
+            scale = self.properties.scale
+        new_ds = WKDataset.create(new_dataset_path, scale=scale)
+
         assert (
-            len(empty_target_ds.layers) == 0
+            len(new_ds.layers) == 0
         ), "Copying dataset failed. The target dataset must be empty."
         with get_executor_for_args(args) as executor:
             for layer_name, layer in self.layers.items():
@@ -425,7 +451,7 @@ class WKDataset:
                         SegmentationLayerProperties,
                         self.properties.data_layers[layer_name],
                     ).largest_segment_id
-                target_layer = empty_target_ds.add_layer(
+                target_layer = new_ds.add_layer(
                     layer_name,
                     self.properties.data_layers[layer_name].category,
                     dtype_per_channel=layer.dtype_per_channel,
@@ -436,7 +462,14 @@ class WKDataset:
                 bbox = self.properties.get_bounding_box_of_layer(layer_name)
 
                 for mag_name, mag in layer.mags.items():
-                    target_mag = target_layer.add_mag(mag_name)
+                    block_len = block_len if block_len is not None else mag.block_len
+                    block_type = (
+                        block_type if block_type is not None else mag.block_type
+                    )
+                    file_len = file_len if file_len is not None else mag.file_len
+                    target_mag = target_layer.add_mag(
+                        mag_name, block_len, file_len, block_type
+                    )
 
                     # The bounding box needs to be updated manually because chunked views do not have a reference to the dataset itself
                     # The base view of a MagDataset always starts at (0, 0, 0)
@@ -463,22 +496,6 @@ class WKDataset:
                         target_chunk_size=target_mag._get_file_dimensions(),
                         executor=executor,
                     )
-
-    def to_wk_dataset(
-        self,
-        new_dataset_path: Union[str, Path],
-        scale: Optional[Tuple[float, float, float]] = None,
-    ) -> "WKDataset":
-        """
-        Creates a new `WKDataset` at `new_dataset_path` and copies the data from this dataset to the new dataset.
-
-        This is a shorthand for creating an empty `WKDataset` and then calling `WKDataset.copy_dataset`
-        """
-        new_dataset_path = Path(new_dataset_path)
-        if scale is None:
-            scale = self.properties.scale
-        new_ds = WKDataset.create(new_dataset_path, scale=scale)
-        self.copy_dataset(new_ds)
         return new_ds
 
     @classmethod
@@ -490,8 +507,8 @@ class WKDataset:
         """
         dataset_path = Path(dataset_path)
         name = basename(normpath(dataset_path))
-        properties = WKProperties(dataset_path / Properties.FILE_NAME, name, scale)
-        return cast(WKDataset, WKDataset._create_with_properties(properties))
+        properties = Properties(dataset_path / Properties.FILE_NAME, name, scale)
+        return WKDataset._create_with_properties(properties)
 
     @classmethod
     def get_or_create(
@@ -515,16 +532,5 @@ class WKDataset:
 
     def _create_layer(
         self, layer_name: str, dtype_per_channel: np.dtype, num_channels: int
-    ) -> WKLayer:
-        return WKLayer(layer_name, self, dtype_per_channel, num_channels)
-
-
-def _validate_pattern(pattern: str) -> None:
-    assert pattern.count("{") > 0 and pattern.count("}") > 0, (
-        f"The provided pattern {pattern} is invalid."
-        + " It needs to contain at least one '{' and one '}'."
-    )
-    assert pattern.count("{") == pattern.count("}"), (
-        f"The provided pattern {pattern} is invalid."
-        + " The number of '{' does not match the number of '}'."
-    )
+    ) -> Layer:
+        return Layer(layer_name, self, dtype_per_channel, num_channels)
