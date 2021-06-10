@@ -1,8 +1,7 @@
 import math
-from concurrent.futures._base import Executor
 from pathlib import Path
 from types import TracebackType
-from typing import Tuple, Optional, Type, Callable, Any, Union, List, cast
+from typing import Tuple, Optional, Type, Callable, Union, cast
 
 import cluster_tools
 import numpy as np
@@ -51,7 +50,7 @@ class View:
         relative_offset: Tuple[int, int, int] = (0, 0, 0),
         allow_compressed_write: bool = False,
     ) -> None:
-        assert not self.read_only, f"Cannot write data to an read_only View"
+        assert not self.read_only, "Cannot write data to an read_only View"
 
         was_opened = self._is_opened
         # assert the size of the parameter data is not in conflict with the attribute self.size
@@ -114,12 +113,12 @@ class View:
             is_bounded = self.is_bounded
         assert (
             is_bounded or is_bounded == self.is_bounded
-        ), f"Failed to get subview. The calling view is bounded. Therefore, the subview also has to be bounded."
+        ), "Failed to get subview. The calling view is bounded. Therefore, the subview also has to be bounded."
         if read_only is None:
             read_only = self.read_only
         assert (
             read_only or read_only == self.read_only
-        ), f"Failed to get subview. The calling view is read_only. Therefore, the subview also has to be read_only."
+        ), "Failed to get subview. The calling view is read_only. Therefore, the subview also has to be read_only."
         self.assert_bounds(relative_offset, size)
         view_offset = cast(
             Tuple[int, int, int], tuple(self.global_offset + np.array(relative_offset))
@@ -214,10 +213,10 @@ class View:
 
         assert np.all(
             np.array(self.size)
-        ), f"Calling 'for_zipped_chunks' failed because the size of the source view contains a 0."
+        ), "Calling 'for_zipped_chunks' failed because the size of the source view contains a 0."
         assert np.all(
             np.array(target_view.size)
-        ), f"Calling 'for_zipped_chunks' failed because the size of the target view contains a 0."
+        ), "Calling 'for_zipped_chunks' failed because the size of the target view contains a 0."
         assert np.array_equal(
             np.array(self.size) / np.array(target_view.size),
             source_chunk_size_np / target_chunk_size_np,
@@ -238,7 +237,7 @@ class View:
                     )
                     - (target_offset[:2] // target_chunk_size[:2]),
                     [1, 1],
-                ), f"Calling for_zipped_chunks failed. There can only be a single chunk per z-slice for TiffDatasets. Choose a different 'target_chunk_size'."
+                ), "Calling for_zipped_chunks failed. There can only be a single chunk per z-slice for TiffDatasets. Choose a different 'target_chunk_size'."
             else:
                 # TiledTiffDataset
                 assert not any(
@@ -292,7 +291,7 @@ class View:
         return absolute_offset, data
 
     def get_dtype(self) -> type:
-        raise NotImplemented
+        raise NotImplementedError
 
     def __enter__(self) -> "View":
         return self
@@ -373,7 +372,7 @@ class WKView(View):
                 )
             except AssertionError as e:
                 raise AssertionError(
-                    f"Reading compressed data failed. The compressed file is not fully inside the bounding box of the view (offset={self.global_offset}, size={self.size})."
+                    f"Writing compressed data failed. The compressed file is not fully inside the bounding box of the view (offset={self.global_offset}, size={self.size})."
                 ) from e
             index_slice = (
                 slice(None, None),

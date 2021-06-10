@@ -12,6 +12,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes in Config & CLI
 
 ### Added
+- Added `docs/api.sh` which opens a server displaying the docs. It can also be used to persist the html to `docs/api` by invoking `docs/api.sh --persist`. [#322](https://github.com/scalableminds/webknossos-cuber/pull/322)
 
 ### Changed
 
