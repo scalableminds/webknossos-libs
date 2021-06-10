@@ -13,6 +13,13 @@ from wkcuber.utils import wait_and_ensure_success
 
 
 class View:
+    """
+    A `View` is essentially a bounding box to a section of a specific `wkw.Dataset` that also provides functionality.
+    Read- and write-operations are restricted to the bounding box.
+    `View`s are designed to be easily passed around as parameters.
+    A `View`, in its most basic form, does not have a reference to the `wkcuber.api.dataset.WKDataset`.
+    """
+
     def __init__(
         self,
         path_to_mag_dataset: Path,
@@ -22,12 +29,20 @@ class View:
         is_bounded: bool = True,
         read_only: bool = False,
     ):
+        """
+        Initializes a `View`. If `create` is `True`, a `wkw.Dataset` is created (see [webknossos-wrap (wkw)](https://github.com/scalableminds/webknossos-wrap)).
+
+        Most of the time the `View` is used in the context of the dataset API, even though it could also be used without it.
+
+        In the context of the dataset API, `View`s appear for example in the form of `wkcuber.api.mag_dataset.WKMagDataset` (which are also `View`s).
+        Sub-views can be created with `View.get_view()`.
+        """
         self.dataset: Optional[Dataset] = None
         self.path = path_to_mag_dataset
         self.header: wkw.Header = header
         self.size = size
-        self.global_offset = global_offset
-        self.is_bounded = is_bounded
+        self.global_offset: Tuple[int, int, int] = global_offset
+        self._is_bounded = is_bounded
         self.read_only = read_only
         self._is_opened = False
 
@@ -68,11 +83,20 @@ class View:
         relative_offset: Tuple[int, int, int] = (0, 0, 0),
         allow_compressed_write: bool = False,
     ) -> None:
+        """
+        Writes the `data` at the specified `offset` to disk.
+        The `offset` is relative to `global_offset`.
+
+        If the data on disk is compressed, the passed `data` either has to be aligned with the files on disk
+        or `allow_compressed_write` has to be `True`. If `allow_compressed_write` is `True`, `data` is padded by
+        first reading the necessary padding from disk.
+        In this particular case, reading data from outside the bounding box is allowed.
+        """
         assert not self.read_only, "Cannot write data to an read_only View"
 
         was_opened = self._is_opened
         # assert the size of the parameter data is not in conflict with the attribute self.size
-        self.assert_bounds(relative_offset, data.shape[-3:])
+        self._assert_bounds(relative_offset, data.shape[-3:])
 
         if len(data.shape) == 4 and data.shape[0] == 1:
             data = data[0]  # remove channel dimension
@@ -102,22 +126,52 @@ class View:
     ) -> np.array:
         """
         The user can specify the `offset` and the `size` of the requested data.
-        The `offset` refers to the absolute position, regardless of the offset in the properties.
-        If no `size` is specified, the offset from the properties + the size of the properties is used.
+        The `offset` is relative to `global_offset`.
+        If no `size` is specified, the size of the view is used.
         If the specified bounding box exceeds the data on disk, the rest is padded with `0`.
 
         Retruns the specified data as a `np.array`.
+
+
+        Example:
+        ```python
+        import numpy as np
+
+        # ...
+        # let 'mag1' be a `WKMagDataset`
+        view = mag1.get_view(offset(10, 20, 30), size=(100, 200, 300))
+
+        assert np.array_equal(
+            view.read(offset=(0, 0, 0), size=(100, 200, 300)),
+            view.read(),
+        )
+
+        # works because the specified data is completely in the bounding box of the view
+        some_data = view.read(offset=(50, 60, 70), size=(10, 120, 230))
+
+        # fails because the specified data is not completely in the bounding box of the view
+        more_data = view.read(offset=(50, 60, 70), size=(999, 120, 230))
+        ```
         """
 
-        was_opened = self._is_opened
         size = self.size if size is None else size
 
         # assert the parameter size is not in conflict with the attribute self.size
-        self.assert_bounds(offset, size)
+        self._assert_bounds(offset, size)
 
         # calculate the absolute offset
         absolute_offset = tuple(sum(x) for x in zip(self.global_offset, offset))
 
+        return self._read_without_checks(
+            cast(Tuple[int, int, int], absolute_offset), size
+        )
+
+    def _read_without_checks(
+        self,
+        absolute_offset: Tuple[int, int, int],
+        size: Tuple[int, int, int],
+    ) -> np.array:
+        was_opened = self._is_opened
         if not was_opened:
             self.open()
         assert self.dataset is not None  # because the View was opened
@@ -131,48 +185,71 @@ class View:
 
     def get_view(
         self,
-        size: Tuple[int, int, int],
-        relative_offset: Tuple[int, int, int] = (0, 0, 0),
-        is_bounded: Optional[bool] = None,
-        read_only: Optional[bool] = None,
+        offset: Tuple[int, int, int] = None,
+        size: Tuple[int, int, int] = None,
+        read_only: bool = None,
     ) -> "View":
-        if is_bounded is None:
-            is_bounded = self.is_bounded
-        assert (
-            is_bounded or is_bounded == self.is_bounded
-        ), "Failed to get subview. The calling view is bounded. Therefore, the subview also has to be bounded."
+        """
+        Returns a view that is limited to the specified bounding box.
+        The `offset` is relative to `global_offset`.
+        If no `size` is specified, the size of the view is used.
+
+        If `read_only` is `True`, write operations are not allowed for the returned sub-view.
+
+        Example:
+        ```python
+        # ...
+        # let 'mag1' be a `WKMagDataset`
+        view = mag1.get_view(offset(10, 20, 30), size=(100, 200, 300))
+
+        # works because the specified sub-view is completely in the bounding box of the view
+        sub_view = view.get_view(offset=(50, 60, 70), size=(10, 120, 230))
+
+        # fails because the specified sub-view is not completely in the bounding box of the view
+        invalid_sub_view = view.get_view(offset=(50, 60, 70), size=(999, 120, 230))
+        ```
+        """
         if read_only is None:
             read_only = self.read_only
         assert (
             read_only or read_only == self.read_only
         ), "Failed to get subview. The calling view is read_only. Therefore, the subview also has to be read_only."
-        self.assert_bounds(relative_offset, size)
+
+        if offset is None:
+            offset = (0, 0, 0)
+
+        if size is None:
+            size = self.size
+
+        self._assert_bounds(offset, size)
         view_offset = cast(
-            Tuple[int, int, int], tuple(self.global_offset + np.array(relative_offset))
+            Tuple[int, int, int], tuple(self.global_offset + np.array(offset))
         )
-        return type(self)(
+        return View(
             self.path,
             self.header,
             size=size,
             global_offset=view_offset,
-            is_bounded=is_bounded,
+            is_bounded=True,
             read_only=read_only,
         )
 
-    def check_bounds(
+    def _check_bounds(
         self, offset: Tuple[int, int, int], size: Tuple[int, int, int]
     ) -> bool:
         for s1, s2, off in zip(self.size, size, offset):
-            if s2 + off > s1 and self.is_bounded:
+            if s2 + off > s1 and self._is_bounded:
                 return False
-        if self.is_bounded and any(x < 0 for x in offset):
+        if any(x < 0 for x in offset):
+            return False
+        if any(x < 0 for x in size):
             return False
         return True
 
-    def assert_bounds(
+    def _assert_bounds(
         self, offset: Tuple[int, int, int], size: Tuple[int, int, int]
     ) -> None:
-        if not self.check_bounds(offset, size):
+        if not self._check_bounds(offset, size):
             raise AssertionError(
                 f"Accessing data out of bounds: The passed parameter 'size' {size} exceeds the size of the current view ({self.size})"
             )
@@ -183,6 +260,35 @@ class View:
         chunk_size: Tuple[int, int, int],
         executor: Union[ClusterExecutor, cluster_tools.WrappedProcessPoolExecutor],
     ) -> None:
+        """
+        The view is chunked into multiple sub-views of size `chunk_size`.
+        Then, `work_on_chunk` is performed on each sub-view.
+        Besides the view, the counter 'i' is passed to the 'work_on_chunk',
+        which can be used for logging. additional parameter for 'work_on_chunk' can be specified.
+        The computation of each chunk has to be independent of each other.
+        Therefore, the work can be parallelized with `executor`.
+
+        Example:
+        ```python
+        from wkcuber.utils import get_executor_for_args, named_partial
+
+        def some_work(args: Tuple[View, int], some_parameter: int) -> None:
+            view_of_single_chunk, i = args
+            # perform operations on the view
+            ...
+
+        # ...
+        # let 'mag1' be a `WKMagDataset`
+        view = mag1.get_view()
+        with get_executor_for_args(None) as executor:
+            func = named_partial(advanced_chunk_job, some_parameter=42)
+            view.for_each_chunk(
+                func,
+                chunk_size=(100, 100, 100),  # Use mag1._get_file_dimensions() if the size of the chunks should match the size of the files on disk
+                executor=executor,
+            )
+        ```
+        """
         self._check_chunk_size(chunk_size)
 
         job_args = []
@@ -197,10 +303,10 @@ class View:
                 tuple(np.array(chunk.topleft) - np.array(self.global_offset)),
             )
             view = self.get_view(
+                offset=relative_offset,
                 size=cast(Tuple[int, int, int], tuple(chunk.size)),
-                relative_offset=relative_offset,
             )
-            view.is_bounded = True
+            view._is_bounded = True
             job_args.append((view, i))
 
         # execute the work for each chunk
@@ -227,11 +333,11 @@ class View:
         the ratio between the target_view and the target_chunk_size. This guarantees that the number of chunks
         in the source_view is equal to the number of chunks in the target_view.
 
-        Example use case: downsampling
-        size of source_view (Mag 1): (16384, 16384, 16384)
-        size of target_view (Mag 2): (8192, 8192, 8192)
-        source_chunk_size: (2048, 2048, 2048)
-        target_chunk_size: (1024, 1024, 1024) // this must be a multiple of the file size on disk to avoid concurrent writes
+        Example use case: downsampling:
+        - size of source_view (Mag 1): (16384, 16384, 16384)
+        - size of target_view (Mag 2): (8192, 8192, 8192)
+        - source_chunk_size: (2048, 2048, 2048)
+        - target_chunk_size: (1024, 1024, 1024) // this must be a multiple of the file size on disk to avoid concurrent writes
         """
         source_offset = np.array(self.global_offset)
         target_offset = np.array(target_view.global_offset)
@@ -268,20 +374,15 @@ class View:
             # source chunk
             relative_source_offset = np.array(source_chunk.topleft) - source_offset
             source_chunk_view = self.get_view(
+                offset=cast(Tuple[int, int, int], tuple(relative_source_offset)),
                 size=cast(Tuple[int, int, int], tuple(source_chunk.size)),
-                relative_offset=cast(
-                    Tuple[int, int, int], tuple(relative_source_offset)
-                ),
-                is_bounded=True,
                 read_only=True,
             )
             # target chunk
             relative_target_offset = np.array(target_chunk.topleft) - target_offset
             target_chunk_view = target_view.get_view(
                 size=cast(Tuple[int, int, int], tuple(target_chunk.size)),
-                relative_offset=cast(
-                    Tuple[int, int, int], tuple(relative_target_offset)
-                ),
+                offset=cast(Tuple[int, int, int], tuple(relative_target_offset)),
             )
 
             job_args.append((source_chunk_view, target_chunk_view, i))
@@ -333,14 +434,11 @@ class View:
             # the data is not aligned
             # read the aligned bounding box
             try:
-                # The absolute offset might be outside of the current view.
                 # We want to read the data at the absolute offset.
-                # However, this view has its own global_offset (which might or might not be equal to (0, 0, 0))
-                # The parameter `offset` of the read-function of a View is always relative (unlike MagDataset.read where the offset is absolute)
-                # Therefore, we need to calculate the relative offset
-                aligned_data = self.read(
-                    offset=aligned_offset - self.global_offset, size=aligned_shape
-                )
+                # The absolute offset might be outside of the current view.
+                # That is the case if the data is compressed but the view does not include the whole file on disk.
+                # In this case we avoid checking the bounds because the aligned_offset and aligned_shape are calculated internally.
+                aligned_data = self._read_without_checks(aligned_offset, aligned_shape)
             except AssertionError as e:
                 raise AssertionError(
                     f"Writing compressed data failed. The compressed file is not fully inside the bounding box of the view (offset={self.global_offset}, size={self.size})."

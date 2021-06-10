@@ -42,9 +42,15 @@ def _find_mag_path_on_disk(dataset_path: Path, layer_name: str, mag_name: str) -
         return long_mag_file_path
 
 
-class WKMagDataset:
+class WKMagDataset(View):
     """
     A `WKMagDataset` contains all information about the data of a single magnification of a `wkcuber.api.layer.Layer`.
+    `WKMagDataset` inherits from `wkcuber.api.view.View`.
+    The main difference between them is that a `WKMagDataset` does have a reference to a `wkcuber.api.layer.Layer` (while `View` does not).
+    This means that a `WKMagDataset` can only exist in the context of the dataset API.
+    The benefit of the `WKMagDataset` is that the properties can be automatically updated if it is necessary (e.g. the bounding box changed).
+    The other major difference is that (unlike basic Views) `WKMagDataset` are allowed to read/write outside of their specified bounding box.
+    If this happens, the bounding box gets updated.
     """
 
     def __init__(
@@ -56,59 +62,40 @@ class WKMagDataset:
         block_type: int,
         create: bool = False,
     ) -> None:
-        self.layer = layer
-        self.name = name
-        self.block_len = block_len
-        self.file_len = file_len
-        self.block_type = block_type
-        self.header: wkw.Header = wkw.Header(
-            voxel_type=self.layer.dtype_per_channel,
-            num_channels=self.layer.num_channels,
+        """
+        Initializes a `WKMagDataset`. If `create` is `True`, a `wkw.Dataset` is created (see [webknossos-wrap (wkw)](https://github.com/scalableminds/webknossos-wrap)).
+        The global_offset of a `WKMagDataset` is always `(0, 0, 0)` and its size is chosen so that the bounding box from the properties is fully inside this View.
+
+        A `WKMagDataset` cannot exist without a layer. The desired procedure to create a new `WKMagDataset` is to call
+        `wkcuber.api.layer.Layer.add_mag` instead of creating and then adding it manually.
+        """
+        header = wkw.Header(
+            voxel_type=layer.dtype_per_channel,
+            num_channels=layer.num_channels,
             version=1,
-            block_len=self.block_len,
-            file_len=self.file_len,
-            block_type=self.block_type,
+            block_len=block_len,
+            file_len=file_len,
+            block_type=block_type,
+        )
+        super().__init__(
+            _find_mag_path_on_disk(layer.dataset.path, layer.name, name),
+            header,
+            cast(
+                Tuple[int, int, int],
+                tuple(convert_mag1_size(layer.get_bounding_box().size, Mag(name))),
+            ),
+            (0, 0, 0),
+            False,
+            False,
         )
 
-        self.view = self.get_view(offset=(0, 0, 0), is_bounded=False)
+        self.layer = layer
+        self.name = name
 
         if create:
             wkw.Dataset.create(
                 join(layer.dataset.path, layer.name, self.name), self.header
             )
-
-    def open(self) -> None:
-        """
-        Opens the actual handles to the data on disk.
-        A `MagDataset` has to be opened before it can be read or written to. However, the user does not
-        have to open it explicitly because the API automatically opens it when it is needed.
-        The user can choose to open it explicitly to avoid that handles are opened and closed automatically
-        each time data is read or written.
-        """
-        self.view.open()
-
-    def close(self) -> None:
-        """
-        Complementary to `open`, this closes the handles to the data.
-
-        See `open` for more information.
-        """
-        self.view.close()
-
-    def read(
-        self,
-        offset: Tuple[int, int, int] = (0, 0, 0),
-        size: Tuple[int, int, int] = None,
-    ) -> np.array:
-        """
-        The user can specify the `offset` and the `size` of the requested data.
-        The `offset` refers to the absolute position, regardless of the offset in the properties.
-        If no `size` is specified, the offset from the properties + the size of the properties is used.
-        If the specified bounding box exceeds the data on disk, the rest is padded with `0`.
-
-        Retruns the specified data as a `np.array`.
-        """
-        return self.view.read(offset, size)
 
     def write(
         self,
@@ -117,15 +104,17 @@ class WKMagDataset:
         allow_compressed_write: bool = False,
     ) -> None:
         """
-        Writes the `data` at the specified `offset` to disk.
-        The `offset` refers to the absolute position, regardless of the offset in the properties.
-        If the data exceeds the previous bounding box, the properties are updated.
+        Writes the `data` at the specified `offset` to disk (like `wkcuber.api.view.View.write()`).
+
+        The `offset` refers to the absolute position, regardless of the offset in the properties (because the global_offset is set to (0, 0, 0)).
+        If the data exceeds the original bounding box, the properties are updated.
+
         If the data on disk is compressed, the passed `data` either has to be aligned with the files on disk
         or `allow_compressed_write` has to be `True`. If `allow_compressed_write` is `True`, `data` is padded by
         first reading the necessary padding from disk.
         """
         self._assert_valid_num_channels(data.shape)
-        self.view.write(data, offset, allow_compressed_write)
+        super().write(data, offset, allow_compressed_write)
         layer_properties = self.layer.dataset.properties.data_layers[self.layer.name]
         current_offset_in_mag1 = layer_properties.get_bounding_box_offset()
         current_size_in_mag1 = layer_properties.get_bounding_box_size()
@@ -150,7 +139,7 @@ class WKMagDataset:
         ).max(axis=0)
         total_size_in_mag1 = max_end_offset_in_mag1 - np.array(new_offset_in_mag1)
 
-        self.view.size = cast(
+        self.size = cast(
             Tuple[int, int, int],
             tuple(convert_mag1_offset(max_end_offset_in_mag1, mag)),
         )  # The base view of a MagDataset always starts at (0, 0, 0)
@@ -163,79 +152,54 @@ class WKMagDataset:
 
     def get_view(
         self,
-        size: Tuple[int, int, int] = None,
         offset: Tuple[int, int, int] = None,
-        is_bounded: bool = True,
-        read_only: bool = False,
+        size: Tuple[int, int, int] = None,
+        read_only: bool = None,
     ) -> View:
         """
         Returns a view that is limited to the specified bounding box.
+
+        The `offset` refers to the absolute position, regardless of the offset in the properties (because the global_offset is set to (0, 0, 0)).
         The default value for `offset` is the offset that is specified in the properties.
         The default value for `size` is calculated so that the bounding box ends where the bounding box from the
         properties ends.
         Therefore, if both (`offset` and `size`) are not specified, then the bounding box of the view is equal to the
         bounding box specified in the properties.
-        If `is_bounded` is `True`, reading or writing outside of this bounding box is not allowed.
+
+        If `read_only` is `True`, write operations are not allowed for the returned sub-view.
+
+        Example:
+        ```python
+        # ...
+        # let 'mag1' be a `WKMagDataset` with offset (0, 0, 0) and size (100, 200, 300)
+
+        # properties are used to determine the default parameter
+        view_with_bb_from_properties = mag1.get_view()
+
+        # sub-view where the specified bounding box is completely in the bounding box of the WKMagDataset
+        sub_view1 = mag1.get_view(offset=(50, 60, 70), size=(10, 120, 230))
+
+        # sub-view where the specified bounding box is NOT completely in the bounding box of the WKMagDataset
+        # this still works because operation on a WKMagDataset may exceed the specified bounding box
+        sub_view2 = mag1.get_view(offset=(50, 60, 70), size=(999, 120, 230))
+        ```
         """
-        mag1_size_in_properties = self.layer.dataset.properties.data_layers[
-            self.layer.name
-        ].get_bounding_box_size()
 
-        mag1_offset_in_properties = self.layer.dataset.properties.data_layers[
-            self.layer.name
-        ].get_bounding_box_offset()
+        bb = self.layer.get_bounding_box()
 
-        if mag1_offset_in_properties == (-1, -1, -1):
-            mag1_offset_in_properties = (0, 0, 0)
+        if tuple(bb.topleft) == (-1, -1, -1):
+            bb.topleft = np.array((0, 0, 0))
 
-        view_offset = (
-            offset
-            if offset is not None
-            else cast(
-                Tuple[int, int, int],
-                tuple(convert_mag1_offset(mag1_offset_in_properties, Mag(self.name))),
-            )
-        )
+        bb.align_with_mag(Mag(self.name), ceil=True)
 
-        properties_offset_in_current_mag = convert_mag1_offset(
-            mag1_offset_in_properties, Mag(self.name)
-        )
+        view_offset = offset if offset is not None else tuple(bb.topleft)
 
         if size is None:
-            size = convert_mag1_size(mag1_size_in_properties, Mag(self.name)) - (
-                np.array(view_offset) - properties_offset_in_current_mag
-            )
+            size = cast(Tuple[int, int, int], tuple(bb.size))
 
-        # assert that the parameters size and offset are valid
-        if is_bounded:
-            for off_prop, off in zip(properties_offset_in_current_mag, view_offset):
-                if off < off_prop:
-                    raise AssertionError(
-                        f"The passed parameter 'offset' {view_offset} is outside the bounding box from the properties.json. "
-                        f"Use is_bounded=False if you intend to write outside out the existing bounding box."
-                    )
-            for s1, s2, off1, off2 in zip(
-                convert_mag1_size(mag1_size_in_properties, Mag(self.name)),
-                size,
-                properties_offset_in_current_mag,
-                view_offset,
-            ):
-                if s2 + off2 > s1 + off1:
-                    raise AssertionError(
-                        f"The combination of the passed parameter 'size' {size} and 'offset' {view_offset} are not compatible with the "
-                        f"size ({mag1_size_in_properties}) from the properties.json.  "
-                        f"Use is_bounded=False if you intend to write outside out the existing bounding box."
-                    )
-
-        mag_file_path = _find_mag_path_on_disk(
-            self.layer.dataset.path, self.layer.name, self.name
-        )
-        return View(
-            mag_file_path,
-            self.header,
+        return super().get_view(
+            cast(Tuple[int, int, int], view_offset),
             cast(Tuple[int, int, int], tuple(size)),
-            view_offset,
-            is_bounded,
             read_only,
         )
 
@@ -262,14 +226,14 @@ class WKMagDataset:
         - the bounding box in the properties is an "overall" bounding box, which abstracts from the files on disk
         """
         cube_size = self._get_file_dimensions()
-        was_opened = self.view._is_opened
+        was_opened = self._is_opened
 
         if not was_opened:
             self.open()  # opening the view is necessary to set the dataset
 
-        assert self.view.dataset is not None
-        for filename in self.view.dataset.list_files():
-            file_path = Path(os.path.splitext(filename)[0]).relative_to(self.view.path)
+        assert self.dataset is not None
+        for filename in self.dataset.list_files():
+            file_path = Path(os.path.splitext(filename)[0]).relative_to(self.path)
             cube_index = _extract_file_index(file_path)
             cube_offset = [idx * size for idx, size in zip(cube_index, cube_size)]
 
@@ -313,18 +277,18 @@ class WKMagDataset:
             )
         )
 
-        was_opened = self.view._is_opened
+        was_opened = self._is_opened
         if not was_opened:
             self.open()  # opening the view is necessary to set the dataset
-        assert self.view.dataset is not None
+        assert self.dataset is not None
 
         # create empty wkw.Dataset
-        self.view.dataset.compress(str(compressed_full_path))
+        self.dataset.compress(str(compressed_full_path))
 
         # compress all files to and move them to 'compressed_path'
         with get_executor_for_args(args) as executor:
             job_args = []
-            for file in self.view.dataset.list_files():
+            for file in self.dataset.list_files():
                 rel_file = Path(file).relative_to(self.layer.dataset.path)
                 job_args.append((Path(file), compressed_path / rel_file))
 
@@ -343,10 +307,19 @@ class WKMagDataset:
             shutil.rmtree(compressed_path)
 
             # update the handle to the new dataset
-            self.view = self.get_view(offset=(0, 0, 0), is_bounded=False)
+            WKMagDataset.__init__(
+                self,
+                self.layer,
+                self.name,
+                self.header.block_len,
+                self.header.file_len,
+                wkw.Header.BLOCK_TYPE_LZ4HC,
+            )
 
     def _get_file_dimensions(self) -> Tuple[int, int, int]:
-        return cast(Tuple[int, int, int], (self.file_len * self.block_len,) * 3)
+        return cast(
+            Tuple[int, int, int], (self.header.file_len * self.header.block_len,) * 3
+        )
 
 
 def _extract_file_index(file_path: Path) -> Tuple[int, int, int]:

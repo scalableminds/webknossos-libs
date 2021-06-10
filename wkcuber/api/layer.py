@@ -49,7 +49,7 @@ from wkcuber.utils import (
 
 class Layer:
     """
-    A `Layer` consists of multiple `wkcuber.api.MagDataset`s, which store the same data in different magnifications.
+    A `Layer` consists of multiple `wkcuber.api.mag_dataset.WKMagDataset`s, which store the same data in different magnifications.
 
     ## Examples
 
@@ -82,7 +82,7 @@ class Layer:
         Creates the folder `name` in the directory of `dataset`.
 
         A `Layer` cannot exist without a dataset. The desired procedure to create a new layer for a dataset is to call
-        `wkcuber.api.Dataset.AbstractDataset.add_layer` instead of creating and then adding it manually.
+        `wkcuber.api.dataset.WKDataset.add_layer` instead of creating and then adding it manually.
         """
         self.name = name
         self.dataset = dataset
@@ -223,7 +223,7 @@ class Layer:
         bounding_box = BoundingBox(offset, size)
 
         for mag_name, mag in self.mags.items():
-            mag.view.size = cast(
+            mag.size = cast(
                 Tuple[int, int, int],
                 tuple(
                     bounding_box.align_with_mag(Mag(mag_name), ceil=True)
@@ -250,6 +250,9 @@ class Layer:
         ] = self.dataset.properties.get_bounding_box_of_layer(self.name)[0]
         self.set_bounding_box(offset, size)
 
+    def get_bounding_box(self) -> BoundingBox:
+        return self.dataset.properties.data_layers[self.name].get_bounding_box()
+
     def downsample(
         self,
         from_mag: Optional[Mag] = None,
@@ -268,6 +271,23 @@ class Layer:
         - 'constant_z' - The x and y dimensions are downsampled equally, but the z dimension remains the same.
 
         See `downsample_mag` for more information.
+
+        Example:
+        ```python
+        from wkcuber.downsampling_utils import SamplingModes
+
+        # ...
+        # let 'layer' be a `Layer` with only `Mag(1)`
+        assert "1" in self.mags.keys()
+
+        layer.downsample(
+            max_mag=Mag(4),
+            sampling_mode=SamplingModes.ISOTROPIC
+        )
+
+        assert "2" in self.mags.keys()
+        assert "4" in self.mags.keys()
+        ```
         """
         if from_mag is None:
             assert (
@@ -375,21 +395,11 @@ class Layer:
         target_mag_view = target_mag_ds.get_view(
             offset=aligned_target_bb.topleft,
             size=aligned_target_bb.size,
-            is_bounded=not compress,
         )
 
-        # Source view
-        # Setting "is_bounded" first to "False" and the to "True" temporarily disables the "bounds check".
-        # This is not ideal, but we know what we are doing.
-        # The reason why there might be an error otherwise is that the view is aligned with the target_mag
-        # (not just with the from_mag). In this case we want that the view is aligned to the target_mag
-        # because this makes it very easy to downsample data from the source to the target.
         source_view = prev_mag_ds.get_view(
-            offset=aligned_source_bb.topleft,
-            size=aligned_source_bb.size,
-            is_bounded=False,
+            offset=aligned_source_bb.topleft, size=aligned_source_bb.size
         )
-        source_view.is_bounded = True
 
         # perform downsampling
         with get_executor_for_args(args) as executor:
@@ -400,7 +410,7 @@ class Layer:
 
             if buffer_edge_len is None:
                 buffer_edge_len = determine_buffer_edge_len(
-                    prev_mag_ds.view
+                    prev_mag_ds
                 )  # DEFAULT_EDGE_LEN
             func = named_partial(
                 downsample_cube_job,
@@ -520,7 +530,7 @@ class Layer:
             )
 
             # Get target view
-            target_mag_view = target_mag_ds.get_view(is_bounded=not compress)
+            target_mag_view = target_mag_ds.get_view()
 
             # perform upsampling
             with get_executor_for_args(args) as executor:
@@ -531,7 +541,7 @@ class Layer:
 
                 if buffer_edge_len is None:
                     buffer_edge_len = determine_buffer_edge_len(
-                        prev_mag_ds.view
+                        prev_mag_ds
                     )  # DEFAULT_EDGE_LEN
                 func = named_partial(
                     upsample_cube_job,
@@ -592,7 +602,7 @@ class Layer:
         )  # This method is only used in the context of creating a new magnification by using the same meta data as another magnification of the same dataset
         return self.add_mag(
             new_mag_name,
-            block_len=other_wk_mag.block_len,
-            file_len=other_wk_mag.file_len,
+            block_len=other_wk_mag.header.block_len,
+            file_len=other_wk_mag.header.file_len,
             block_type=block_type,
         )

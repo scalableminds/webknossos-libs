@@ -79,7 +79,6 @@ def upsample_test_helper(use_compress: bool) -> None:
                 mag1.get_view(
                     offset=target_offset,
                     size=target_size,
-                    is_bounded=False,
                 ),
                 0,
             ),
@@ -130,7 +129,7 @@ def test_upsample_multi_channel() -> None:
     l._initialize_mag_from_other_mag("1", mag2, False)
 
     upsample_cube_job(
-        (mag2.get_view(), l.get_mag("1").get_view(is_bounded=False), 0),
+        (mag2.get_view(), l.get_mag("1").get_view(), 0),
         [0.5, 0.5, 0.5],
         CUBE_EDGE_LEN,
         False,

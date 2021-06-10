@@ -99,11 +99,7 @@ def for_each_chunking_advanced(ds: WKDataset, view: View) -> None:
         ((128, 64, 10), (32, 64, 54)),
         ((128, 128, 10), (32, 32, 54)),
     ]:
-        chunk = (
-            ds.get_layer("color")
-            .get_mag("1")
-            .get_view(size=size, offset=offset, is_bounded=False)
-        )
+        chunk = ds.get_layer("color").get_mag("1").get_view(size=size, offset=offset)
         chunk_data = chunk.read(size=chunk.size)
         assert np.array_equal(
             np.ones(chunk_data.shape, dtype=np.uint8)
@@ -297,11 +293,11 @@ def test_view_wk_write_out_of_bounds() -> None:
 
 
 def test_wk_view_out_of_bounds() -> None:
-    with pytest.raises(AssertionError):
-        # The size of the mag is (24, 24, 24). Trying to get an bigger view should throw an error
-        WKDataset(TESTDATA_DIR / "simple_wk_dataset").get_layer("color").get_mag(
-            "1"
-        ).get_view(size=(100, 100, 100))
+    # The size of the mag is (24, 24, 24).
+    # This still works because operation on a WKMagDataset may exceed the specified bounding box (unlike basic Views)
+    WKDataset(TESTDATA_DIR / "simple_wk_dataset").get_layer("color").get_mag(
+        "1"
+    ).get_view(size=(100, 100, 100))
 
 
 def test_wk_write_out_of_bounds() -> None:
@@ -643,7 +639,7 @@ def test_chunking_wk() -> None:
         WKDataset(TESTOUTPUT_DIR / "chunking_dataset_wk")
         .get_layer("color")
         .get_mag("1")
-        .get_view(size=(256, 256, 256), is_bounded=False)
+        .get_view(size=(256, 256, 256))
     )
 
     original_data = view.read(size=view.size)
@@ -669,7 +665,7 @@ def test_chunking_wk_advanced() -> None:
     view = (
         ds.get_layer("color")
         .get_mag("1")
-        .get_view(size=(150, 150, 54), offset=(10, 10, 10), is_bounded=False)
+        .get_view(size=(150, 150, 54), offset=(10, 10, 10))
     )
     for_each_chunking_advanced(ds, view)
 
@@ -685,7 +681,7 @@ def test_chunking_wk_wrong_chunk_size() -> None:
         WKDataset(TESTOUTPUT_DIR / "chunking_dataset_wk_with_wrong_chunk_size")
         .get_layer("color")
         .get_mag("1")
-        .get_view(size=(256, 256, 256), is_bounded=False)
+        .get_view(size=(256, 256, 256))
     )
 
     for_each_chunking_with_wrong_chunk_size(view)
@@ -701,9 +697,7 @@ def test_view_write_without_open() -> None:
 
     ds.get_layer("color").add_mag("1")
 
-    wk_view = (
-        ds.get_layer("color").get_mag("1").get_view(size=(32, 64, 16), is_bounded=False)
-    )
+    wk_view = ds.get_layer("color").get_mag("1").get_view(size=(32, 64, 16))
 
     assert not wk_view._is_opened
 
@@ -810,18 +804,13 @@ def test_view_offsets() -> None:
     # Therefore, the size of the bounding box in the properties.json is (0, 0, 0)
 
     # Creating this view works because the size is set to (0, 0, 0)
-    # However, in practice such a view would not make sense because 'is_bounded' is set to 'True'
-    wk_view = mag.get_view(size=(0, 0, 0), is_bounded=True)
+    # However, in practice a view with size (0, 0, 0) would not make sense
+    wk_view = mag.get_view(size=(0, 0, 0))
     assert wk_view.global_offset == tuple((0, 0, 0))
     assert wk_view.size == tuple((0, 0, 0))
 
-    with pytest.raises(AssertionError):
-        # Creating this view does not work because the size (16, 16, 16) would exceed the boundingbox from the properties.json
-        mag.get_view(size=(16, 16, 16), is_bounded=True)
-
-    # This works because 'is_bounded' is set to 'False'
-    # Therefore, the bounding box of the view can be larger than the bounding box from the properties.json
-    wk_view = mag.get_view(size=(16, 16, 16), is_bounded=False)
+    # This works because "mag" is "WKMagDataset" which can create views which exceed the bounding box from the properties.json
+    wk_view = mag.get_view(size=(16, 16, 16))
     assert wk_view.global_offset == tuple((0, 0, 0))
     assert wk_view.size == tuple((16, 16, 16))
 
@@ -831,32 +820,32 @@ def test_view_offsets() -> None:
 
     # The bounding box of the dataset was updated according to the written data
     # Therefore, creating a view with a size of (16, 16, 16) is now allowed
-    wk_view = mag.get_view(size=(16, 16, 16), is_bounded=True)
+    wk_view = mag.get_view(size=(16, 16, 16))
     assert wk_view.global_offset == tuple((10, 20, 30))
     assert wk_view.size == tuple((16, 16, 16))
 
     with pytest.raises(AssertionError):
         # Creating this view does not work because the offset (0, 0, 0) would be outside of the boundingbox from the properties.json
-        mag.get_view(size=(16, 16, 16), offset=(0, 0, 0), is_bounded=True)
+        mag.get_view(size=(16, 16, 16), offset=(0, 0, 0))
 
     # Creating this view works, even though the offset (0, 0, 0) is outside of the boundingbox from the properties.json, because 'is_bounded' is set to 'False'
-    wk_view = mag.get_view(size=(16, 16, 16), offset=(0, 0, 0), is_bounded=False)
+    wk_view = mag.get_view(size=(16, 16, 16), offset=(0, 0, 0))
     assert wk_view.global_offset == tuple((0, 0, 0))
     assert wk_view.size == tuple((16, 16, 16))
 
     # Creating this view works because the bounding box of the view is inside the bounding box from the properties.json
-    wk_view = mag.get_view(size=(16, 16, 16), offset=(20, 30, 40), is_bounded=True)
+    wk_view = mag.get_view(size=(16, 16, 16), offset=(20, 30, 40))
     assert wk_view.global_offset == tuple((20, 30, 40))
     assert wk_view.size == tuple((16, 16, 16))
 
     # Creating this subview works because the subview is completely inside the 'wk_view'
-    sub_view = wk_view.get_view(size=(8, 8, 8), relative_offset=(8, 8, 8))
+    sub_view = wk_view.get_view(offset=(8, 8, 8), size=(8, 8, 8))
     assert sub_view.global_offset == tuple((28, 38, 48))
     assert sub_view.size == tuple((8, 8, 8))
 
     with pytest.raises(AssertionError):
         # Creating this subview does not work because it is not completely inside the 'wk_view'
-        wk_view.get_view(size=(10, 10, 10), relative_offset=(8, 8, 8))
+        wk_view.get_view(offset=(8, 8, 8), size=(10, 10, 10))
 
 
 def test_adding_layer_with_invalid_dtype_per_layer() -> None:
@@ -971,7 +960,7 @@ def test_writing_subset_of_compressed_data_multi_channel() -> None:
 
     write_data2 = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
     # Writing compressed data directly to "compressed_mag" also works, but using a View here covers an additional edge case
-    compressed_mag.get_view(offset=(50, 60, 70), is_bounded=False).write(
+    compressed_mag.get_view(offset=(50, 60, 70)).write(
         relative_offset=(10, 20, 30), data=write_data2, allow_compressed_write=True
     )
 
@@ -1007,7 +996,7 @@ def test_writing_subset_of_compressed_data_single_channel() -> None:
 
     write_data2 = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
     # Writing compressed data directly to "compressed_mag" also works, but using a View here covers an additional edge case
-    compressed_mag.get_view(offset=(50, 60, 70), is_bounded=False).write(
+    compressed_mag.get_view(offset=(50, 60, 70)).write(
         relative_offset=(10, 20, 30), data=write_data2, allow_compressed_write=True
     )
 
@@ -1071,21 +1060,22 @@ def test_writing_subset_of_chunked_compressed_data() -> None:
         WKDataset(TESTOUTPUT_DIR / "compressed_data")
         .get_layer("color")
         .get_mag("1")
-        .get_view(size=(100, 200, 300), is_bounded=True)
+        .get_view(size=(100, 200, 300))
     )
 
-    with pytest.raises(AssertionError):
-        # the aligned data (offset=(0,0,0), size=(128, 128, 128)) is NOT fully within the bounding box of the view
-        compressed_view.write(
-            relative_offset=(10, 20, 30),
-            data=(np.random.rand(90, 80, 70) * 255).astype(np.uint8),
-            allow_compressed_write=True,
-        )
-
-    # the aligned data (offset=(0,0,0), size=(64, 64, 64)) IS fully within the bounding box of the view
+    # Easy case:
+    # The aligned data (offset=(0,0,0), size=(64, 64, 64)) IS fully within the bounding box of the view
     write_data2 = (np.random.rand(50, 40, 30) * 255).astype(np.uint8)
     compressed_view.write(
         relative_offset=(10, 20, 30), data=write_data2, allow_compressed_write=True
+    )
+
+    # Advanced case:
+    # The aligned data (offset=(0,0,0), size=(128, 128, 128)) is NOT fully within the bounding box of the view
+    compressed_view.write(
+        relative_offset=(10, 20, 30),
+        data=(np.random.rand(90, 80, 70) * 255).astype(np.uint8),
+        allow_compressed_write=True,
     )
 
     np.array_equal(
@@ -1234,7 +1224,7 @@ def test_for_zipped_chunks() -> None:
         WKDataset(TESTOUTPUT_DIR / "zipped_chunking_source")
         .get_layer("color")
         .get_mag("1")
-        .get_view(size=(256, 256, 256), is_bounded=False)
+        .get_view(size=(256, 256, 256))
     )
 
     target_mag = (
@@ -1287,7 +1277,7 @@ def test_for_zipped_chunks_invalid_target_chunk_size_wk() -> None:
         data=(np.random.rand(1, 300, 300, 300) * 255).astype(np.uint8)
     )
     source_view = source_mag_dataset.get_view()
-    target_view = target_mag_dataset.get_view(size=source_view.size, is_bounded=False)
+    target_view = target_mag_dataset.get_view(size=source_view.size)
 
     def func(args: Tuple[View, View, int]) -> None:
         (s, t, i) = args
@@ -1382,7 +1372,9 @@ def test_compression() -> None:
     write_data = (np.random.rand(3, 10, 20, 30) * 255).astype(np.uint8)
     mag1.write(write_data, offset=(60, 80, 100))
 
+    assert not mag1._is_compressed()
     mag1.compress()
+    assert mag1._is_compressed()
 
     assert np.array_equal(
         write_data, mag1.read(offset=(60, 80, 100), size=(10, 20, 30))
@@ -1391,3 +1383,8 @@ def test_compression() -> None:
     with pytest.raises(wkw.WKWException):
         # writing unaligned data to a compressed dataset
         mag1.write((np.random.rand(3, 10, 20, 30) * 255).astype(np.uint8))
+
+    mag1.write(
+        (np.random.rand(3, 10, 20, 30) * 255).astype(np.uint8),
+        allow_compressed_write=True,
+    )

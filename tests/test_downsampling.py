@@ -118,7 +118,6 @@ def downsample_test_helper(use_compress: bool) -> None:
             mag2.get_view(
                 offset=target_offset,
                 size=target_size,
-                is_bounded=False,
             ),
             0,
         ),
@@ -175,7 +174,7 @@ def test_downsample_multi_channel() -> None:
     mag2 = l._initialize_mag_from_other_mag("2", mag1, False)
 
     downsample_cube_job(
-        (l.get_mag("1").get_view(), l.get_mag("2").get_view(is_bounded=False), 0),
+        (l.get_mag("1").get_view(), l.get_mag("2").get_view(), 0),
         [2, 2, 2],
         InterpolationModes.MAX,
         CUBE_EDGE_LEN,
@@ -314,3 +313,33 @@ def test_downsample_with_invalid_mag_list() -> None:
             from_mag=Mag(1),
             target_mags=[Mag(1), Mag([1, 1, 2]), Mag([2, 2, 1]), Mag(2)],
         )
+
+
+def test_downsample_compressed() -> None:
+    try:
+        shutil.rmtree(TESTOUTPUT_DIR / "downsample_compressed")
+    except:
+        pass
+
+    ds = WKDataset.create(TESTOUTPUT_DIR / "downsample_compressed", scale=(1, 1, 2))
+    layer = ds.add_layer("color", Layer.COLOR_TYPE)
+    mag = layer.add_mag(1, block_len=8, file_len=8)
+    mag.write(data=(np.random.rand(80, 240, 15) * 255).astype(np.uint8))
+
+    assert not mag._is_compressed()
+    mag.compress()
+    assert mag._is_compressed()
+
+    layer.downsample(
+        from_mag=Mag(1),
+        max_mag=Mag(
+            4
+        ),  # Setting max_mag to "4" covers an edge case because the z-dimension (15) has to be rounded
+    )
+
+    # Note: this test does not check if the data is correct. This is already covered by other test cases.
+
+    assert len(layer.mags) == 3
+    assert "1" in layer.mags.keys()
+    assert "2-2-1" in layer.mags.keys()
+    assert "4-4-2" in layer.mags.keys()

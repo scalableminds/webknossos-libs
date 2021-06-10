@@ -244,7 +244,7 @@ class WKDataset:
         Creates a new layer called `layer_name` and adds it to the dataset.
         The dtype can either be specified per layer or per channel.
         If neither of them are specified, `uint8` per channel is used as default.
-        When creating a `wkcuber.api.layer.SegmentationLayer` (category="segmentation"),
+        When creating a `wkcuber.api.layer.SegmentationLayer` (`category="segmentation"`),
         the parameter `largest_segment_id` also has to be specified.
 
         The return type is `wkcuber.api.layer.Layer`.
@@ -437,9 +437,6 @@ class WKDataset:
             scale = self.properties.scale
         new_ds = WKDataset.create(new_dataset_path, scale=scale)
 
-        assert (
-            len(new_ds.layers) == 0
-        ), "Copying dataset failed. The target dataset must be empty."
         with get_executor_for_args(args) as executor:
             for layer_name, layer in self.layers.items():
                 largest_segment_id = None
@@ -462,19 +459,21 @@ class WKDataset:
                 bbox = self.properties.get_bounding_box_of_layer(layer_name)
 
                 for mag_name, mag in layer.mags.items():
-                    block_len = block_len if block_len is not None else mag.block_len
-                    block_type = (
-                        block_type if block_type is not None else mag.block_type
+                    block_len = (
+                        block_len if block_len is not None else mag.header.block_len
                     )
-                    file_len = file_len if file_len is not None else mag.file_len
+                    block_type = (
+                        block_type if block_type is not None else mag.header.block_type
+                    )
+                    file_len = file_len if file_len is not None else mag.header.file_len
                     target_mag = target_layer.add_mag(
                         mag_name, block_len, file_len, block_type
                     )
 
                     # The bounding box needs to be updated manually because chunked views do not have a reference to the dataset itself
                     # The base view of a MagDataset always starts at (0, 0, 0)
-                    target_mag.view.global_offset = (0, 0, 0)
-                    target_mag.view.size = cast(
+                    target_mag.global_offset = (0, 0, 0)
+                    target_mag.size = cast(
                         Tuple[int, int, int],
                         tuple(
                             BoundingBox(topleft=bbox[0], size=bbox[1])
@@ -489,9 +488,11 @@ class WKDataset:
 
                     # The data gets written to the target_mag.
                     # Therefore, the chunk size is determined by the target_mag to prevent concurrent writes
-                    mag.view.for_zipped_chunks(
+                    mag.for_zipped_chunks(
                         work_on_chunk=_copy_job,
-                        target_view=target_mag.view,
+                        target_view=target_mag.get_view(
+                            target_mag.global_offset, target_mag.size
+                        ),
                         source_chunk_size=target_mag._get_file_dimensions(),
                         target_chunk_size=target_mag._get_file_dimensions(),
                         executor=executor,
