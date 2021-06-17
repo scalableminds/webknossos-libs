@@ -5,7 +5,7 @@ from typing import Tuple, cast
 import numpy as np
 import pytest
 
-from wkcuber.api.dataset import WKDataset
+from wkcuber.api.dataset import Dataset
 from wkcuber.api.layer import Layer
 from wkcuber.downsampling_utils import (
     InterpolationModes,
@@ -92,11 +92,11 @@ def downsample_test_helper(use_compress: bool) -> None:
     except:
         pass
 
-    source_ds = WKDataset(source_path)
+    source_ds = Dataset(source_path)
     source_layer = source_ds.get_layer("color")
     mag1 = source_layer.get_mag("1")
 
-    target_ds = WKDataset.create(target_path, scale=(1, 1, 1))
+    target_ds = Dataset.create(target_path, scale=(1, 1, 1))
     target_layer = target_ds.add_layer(
         "color", Layer.COLOR_TYPE, dtype_per_channel="uint8"
     )
@@ -161,7 +161,7 @@ def test_downsample_multi_channel() -> None:
     except:
         pass
 
-    ds = WKDataset.create(TESTOUTPUT_DIR / "multi-channel-test", (1, 1, 1))
+    ds = Dataset.create(TESTOUTPUT_DIR / "multi-channel-test", (1, 1, 1))
     l = ds.add_layer(
         "color", Layer.COLOR_TYPE, dtype_per_channel="uint8", num_channels=num_channels
     )
@@ -249,7 +249,7 @@ def test_default_parameter() -> None:
     except:
         pass
 
-    ds = WKDataset.create(target_path, scale=(1, 1, 1))
+    ds = Dataset.create(target_path, scale=(1, 1, 1))
     layer = ds.add_layer(
         "color", Layer.COLOR_TYPE, dtype_per_channel="uint8", num_channels=3
     )
@@ -267,7 +267,7 @@ def test_default_anisotropic_scale() -> None:
     except:
         pass
 
-    ds = WKDataset.create(
+    ds = Dataset.create(
         TESTOUTPUT_DIR / "default_anisotropic_scale", scale=(85, 85, 346)
     )
     layer = ds.add_layer("color", Layer.COLOR_TYPE)
@@ -284,7 +284,7 @@ def test_downsample_mag_list() -> None:
     except:
         pass
 
-    ds = WKDataset.create(TESTOUTPUT_DIR / "downsample_mag_list", scale=(1, 1, 2))
+    ds = Dataset.create(TESTOUTPUT_DIR / "downsample_mag_list", scale=(1, 1, 2))
     layer = ds.add_layer("color", Layer.COLOR_TYPE)
     mag = layer.add_mag(1)
     mag.write(data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8))
@@ -303,7 +303,7 @@ def test_downsample_with_invalid_mag_list() -> None:
     except:
         pass
 
-    ds = WKDataset.create(TESTOUTPUT_DIR / "downsample_mag_list", scale=(1, 1, 2))
+    ds = Dataset.create(TESTOUTPUT_DIR / "downsample_mag_list", scale=(1, 1, 2))
     layer = ds.add_layer("color", Layer.COLOR_TYPE)
     mag = layer.add_mag(1)
     mag.write(data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8))
@@ -321,7 +321,7 @@ def test_downsample_compressed() -> None:
     except:
         pass
 
-    ds = WKDataset.create(TESTOUTPUT_DIR / "downsample_compressed", scale=(1, 1, 2))
+    ds = Dataset.create(TESTOUTPUT_DIR / "downsample_compressed", scale=(1, 1, 2))
     layer = ds.add_layer("color", Layer.COLOR_TYPE)
     mag = layer.add_mag(1, block_len=8, file_len=8)
     mag.write(data=(np.random.rand(80, 240, 15) * 255).astype(np.uint8))

@@ -42,14 +42,14 @@ def _find_mag_path_on_disk(dataset_path: Path, layer_name: str, mag_name: str) -
         return long_mag_file_path
 
 
-class WKMagDataset(View):
+class MagView(View):
     """
-    A `WKMagDataset` contains all information about the data of a single magnification of a `wkcuber.api.layer.Layer`.
-    `WKMagDataset` inherits from `wkcuber.api.view.View`.
-    The main difference between them is that a `WKMagDataset` does have a reference to a `wkcuber.api.layer.Layer` (while `View` does not).
-    This means that a `WKMagDataset` can only exist in the context of the dataset API.
-    The benefit of the `WKMagDataset` is that the properties can be automatically updated if it is necessary (e.g. the bounding box changed).
-    The other major difference is that (unlike basic Views) `WKMagDataset` are allowed to read/write outside of their specified bounding box.
+    A `MagView` contains all information about the data of a single magnification of a `wkcuber.api.layer.Layer`.
+    `MagView` inherits from `wkcuber.api.view.View`.
+    The main difference between them is that a `MagView` does have a reference to a `wkcuber.api.layer.Layer` (while `View` does not).
+    This means that a `MagView` can only exist in the context of the dataset API.
+    The benefit of the `MagView` is that the properties can be automatically updated if it is necessary (e.g. the bounding box changed).
+    The other major difference is that (unlike basic Views) `MagView` are allowed to read/write outside of their specified bounding box.
     If this happens, the bounding box gets updated.
     """
 
@@ -63,10 +63,10 @@ class WKMagDataset(View):
         create: bool = False,
     ) -> None:
         """
-        Initializes a `WKMagDataset`. If `create` is `True`, a `wkw.Dataset` is created (see [webknossos-wrap (wkw)](https://github.com/scalableminds/webknossos-wrap)).
-        The global_offset of a `WKMagDataset` is always `(0, 0, 0)` and its size is chosen so that the bounding box from the properties is fully inside this View.
+        Initializes a `MagView`. If `create` is `True`, a `wkw.Dataset` is created (see [webknossos-wrap (wkw)](https://github.com/scalableminds/webknossos-wrap)).
+        The global_offset of a `MagView` is always `(0, 0, 0)` and its size is chosen so that the bounding box from the properties is fully inside this View.
 
-        A `WKMagDataset` cannot exist without a layer. The desired procedure to create a new `WKMagDataset` is to call
+        A `MagView` cannot exist without a layer. The desired procedure to create a new `MagView` is to call
         `wkcuber.api.layer.Layer.add_mag` instead of creating and then adding it manually.
         """
         header = wkw.Header(
@@ -171,16 +171,16 @@ class WKMagDataset(View):
         Example:
         ```python
         # ...
-        # let 'mag1' be a `WKMagDataset` with offset (0, 0, 0) and size (100, 200, 300)
+        # let 'mag1' be a `MagView` with offset (0, 0, 0) and size (100, 200, 300)
 
         # properties are used to determine the default parameter
         view_with_bb_from_properties = mag1.get_view()
 
-        # sub-view where the specified bounding box is completely in the bounding box of the WKMagDataset
+        # sub-view where the specified bounding box is completely in the bounding box of the MagView
         sub_view1 = mag1.get_view(offset=(50, 60, 70), size=(10, 120, 230))
 
-        # sub-view where the specified bounding box is NOT completely in the bounding box of the WKMagDataset
-        # this still works because operation on a WKMagDataset may exceed the specified bounding box
+        # sub-view where the specified bounding box is NOT completely in the bounding box of the MagView
+        # this still works because operation on a MagView may exceed the specified bounding box
         sub_view2 = mag1.get_view(offset=(50, 60, 70), size=(999, 120, 230))
         ```
         """
@@ -307,7 +307,7 @@ class WKMagDataset(View):
             shutil.rmtree(compressed_path)
 
             # update the handle to the new dataset
-            WKMagDataset.__init__(
+            MagView.__init__(
                 self,
                 self.layer,
                 self.name,

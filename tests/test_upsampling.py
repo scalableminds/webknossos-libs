@@ -3,7 +3,7 @@ import tempfile
 from pathlib import Path
 from typing import Tuple, cast
 
-from wkcuber.api.dataset import WKDataset
+from wkcuber.api.dataset import Dataset
 from wkcuber.api.layer import Layer
 from wkcuber.downsampling_utils import SamplingModes
 from wkcuber.upsampling_utils import upsample_cube, upsample_cube_job
@@ -17,7 +17,7 @@ CUBE_EDGE_LEN = 256
 
 def test_upsampling() -> None:
     with tempfile.TemporaryDirectory() as temp_dir:
-        ds = WKDataset.create(Path(temp_dir), scale=(1, 1, 1))
+        ds = Dataset.create(Path(temp_dir), scale=(1, 1, 1))
         layer = ds.add_layer("color", "COLOR")
         mag = layer.add_mag([4, 4, 2])
         mag.write(
@@ -50,7 +50,7 @@ def test_upsample_cube() -> None:
 
 def upsample_test_helper(use_compress: bool) -> None:
     with tempfile.TemporaryDirectory() as temp_dir:
-        ds = WKDataset.create(Path(temp_dir), scale=(10.5, 10.5, 5))
+        ds = Dataset.create(Path(temp_dir), scale=(10.5, 10.5, 5))
         layer = ds.add_layer("color", "COLOR")
         mag2 = layer.add_mag([2, 2, 2])
 
@@ -117,7 +117,7 @@ def test_upsample_multi_channel() -> None:
     except:
         pass
 
-    ds = WKDataset.create(Path("testoutput", "multi-channel-test"), (1, 1, 1))
+    ds = Dataset.create(Path("testoutput", "multi-channel-test"), (1, 1, 1))
     l = ds.add_layer(
         "color", Layer.COLOR_TYPE, dtype_per_channel="uint8", num_channels=num_channels
     )

@@ -103,20 +103,20 @@ def _copy_job(args: Tuple[View, View, int]) -> None:
     target_view.write(source_view.read())
 
 
-class WKDataset:
+class Dataset:
     """
     A dataset is the entry point of the Dataset API. An existing dataset on disk can be opened
     or new datasets can be created.
 
-    A `WKDataset` stores the data in `.wkw` files on disk.
+    A `Dataset` stores the data in `.wkw` files on disk.
 
     ## Examples
 
     ### Creating Datasets
     ```python
-    from wkcuber.api.dataset import WKDataset
+    from wkcuber.api.dataset import Dataset
 
-    dataset = WKDataset.create(<path_to_new_dataset>, scale=(1, 1, 1))
+    dataset = Dataset.create(<path_to_new_dataset>, scale=(1, 1, 1))
     # Adds a new layer
     layer = dataset.add_layer(
         layer_name="color",
@@ -130,18 +130,18 @@ class WKDataset:
 
     ### Opening Datasets
     ```python
-    from wkcuber.api.dataset import WKDataset
+    from wkcuber.api.dataset import Dataset
 
-    dataset = WKDataset(<path_to_dataset>)
+    dataset = Dataset(<path_to_dataset>)
     # Assuming that the dataset has a layer called 'color'
     layer = dataset.get_layer("color")
     ```
 
     ### Copying Datasets
     ```python
-    from wkcuber.api.dataset import WKDataset
+    from wkcuber.api.dataset import Dataset
 
-    dataset = WKDataset(<path_to_dataset>)
+    dataset = Dataset(<path_to_dataset>)
     # Copying the dataset with different block_len and file_len
     copy_of_dataset = dataset.copy_dataset(
         <path_to_new_dataset>,
@@ -155,7 +155,7 @@ class WKDataset:
 
     def __init__(self, dataset_path: Union[str, Path]) -> None:
         """
-        To open an existing dataset on disk, simply call the constructor of the appropriate dataset type (e.g. `WKDataset`).
+        To open an existing dataset on disk, simply call the constructor of `Dataset`.
         This requires that the `datasource-properties.json` exists. Based on the `datasource-properties.json`,
         a dataset object is constructed. Only layers and magnifications that are listed in the properties are loaded
         (even though there might exists more layer or magnifications on disk).
@@ -197,7 +197,7 @@ class WKDataset:
         return self._layers
 
     @classmethod
-    def _create_with_properties(cls, properties: Properties) -> "WKDataset":
+    def _create_with_properties(cls, properties: Properties) -> "Dataset":
         dataset_dir = properties.path.parent
         if dataset_dir.exists():
             assert (
@@ -401,7 +401,7 @@ class WKDataset:
         os.symlink(foreign_layer_path, join(self.path, layer_name))
 
         # copy the properties of the layer into the properties of this dataset
-        layer_properties = WKDataset(foreign_layer_path.parent).properties.data_layers[
+        layer_properties = Dataset(foreign_layer_path.parent).properties.data_layers[
             layer_name
         ]
         self.properties.data_layers[layer_name] = layer_properties
@@ -426,7 +426,7 @@ class WKDataset:
         file_len: int = None,
         block_type: int = None,
         args: Optional[Namespace] = None,
-    ) -> "WKDataset":
+    ) -> "Dataset":
         """
         Creates a new dataset at `new_dataset_path` and copies the data from the current dataset to `empty_target_ds`.
         If not specified otherwise, the `scale`, `block_len`, `file_len` and `block_type` of the current dataset are also used for the new dataset.
@@ -435,7 +435,7 @@ class WKDataset:
         new_dataset_path = Path(new_dataset_path)
         if scale is None:
             scale = self.properties.scale
-        new_ds = WKDataset.create(new_dataset_path, scale=scale)
+        new_ds = Dataset.create(new_dataset_path, scale=scale)
 
         with get_executor_for_args(args) as executor:
             for layer_name, layer in self.layers.items():
@@ -502,31 +502,31 @@ class WKDataset:
     @classmethod
     def create(
         cls, dataset_path: Union[str, Path], scale: Tuple[float, float, float]
-    ) -> "WKDataset":
+    ) -> "Dataset":
         """
         Creates a new dataset and the associated `datasource-properties.json`.
         """
         dataset_path = Path(dataset_path)
         name = basename(normpath(dataset_path))
         properties = Properties(dataset_path / Properties.FILE_NAME, name, scale)
-        return WKDataset._create_with_properties(properties)
+        return Dataset._create_with_properties(properties)
 
     @classmethod
     def get_or_create(
         cls, dataset_path: Union[str, Path], scale: Tuple[float, float, float]
-    ) -> "WKDataset":
+    ) -> "Dataset":
         """
-        Creates a new `WKDataset`, in case it did not exist before, and then returns it.
+        Creates a new `Dataset`, in case it did not exist before, and then returns it.
         The `datasource-properties.json` is used to check if the dataset already exist.
         """
         dataset_path = Path(dataset_path)
         if (
             dataset_path / Properties.FILE_NAME
         ).exists():  # use the properties file to check if the Dataset exists
-            ds = WKDataset(dataset_path)
+            ds = Dataset(dataset_path)
             assert tuple(ds.properties.scale) == tuple(
                 scale
-            ), f"Cannot get_or_create WKDataset: The dataset {dataset_path} already exists, but the scales do not match ({ds.properties.scale} != {scale})"
+            ), f"Cannot get_or_create Dataset: The dataset {dataset_path} already exists, but the scales do not match ({ds.properties.scale} != {scale})"
             return ds
         else:
             return cls.create(dataset_path, scale)

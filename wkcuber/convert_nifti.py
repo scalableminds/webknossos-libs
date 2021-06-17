@@ -8,7 +8,7 @@ from typing import Tuple, Optional, Union, cast
 import nibabel as nib
 import numpy as np
 
-from wkcuber.api.dataset import WKDataset
+from wkcuber.api.dataset import Dataset
 from wkcuber.api.bounding_box import BoundingBox
 from wkcuber.utils import (
     DEFAULT_WKW_FILE_LEN,
@@ -203,7 +203,7 @@ def convert_nifti(
         ),
     )
 
-    wk_ds = WKDataset.get_or_create(
+    wk_ds = Dataset.get_or_create(
         target_path, scale=cast(Tuple[float, float, float], scale or (1, 1, 1))
     )
     wk_layer = wk_ds.get_or_add_layer(

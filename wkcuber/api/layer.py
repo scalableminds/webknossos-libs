@@ -27,9 +27,9 @@ from wkcuber.downsampling_utils import (
 )
 
 if TYPE_CHECKING:
-    from wkcuber.api.dataset import WKDataset
-from wkcuber.api.mag_dataset import (
-    WKMagDataset,
+    from wkcuber.api.dataset import Dataset
+from wkcuber.api.mag_view import (
+    MagView,
     _find_mag_path_on_disk,
 )
 from wkcuber.downsampling_utils import (
@@ -49,15 +49,15 @@ from wkcuber.utils import (
 
 class Layer:
     """
-    A `Layer` consists of multiple `wkcuber.api.mag_dataset.WKMagDataset`s, which store the same data in different magnifications.
+    A `Layer` consists of multiple `wkcuber.api.mag_view.MagView`s, which store the same data in different magnifications.
 
     ## Examples
 
     ### Adding layer to dataset
     ```python
-    from wkcuber.api.dataset import WKDataset
+    from wkcuber.api.dataset import Dataset
 
-    dataset = WKDataset(<path_to_dataset>)
+    dataset = Dataset(<path_to_dataset>)
     # Adds a new layer
     layer = dataset.get_layer("color")
     ```
@@ -74,7 +74,7 @@ class Layer:
     def __init__(
         self,
         name: str,
-        dataset: "WKDataset",
+        dataset: "Dataset",
         dtype_per_channel: np.dtype,
         num_channels: int,
     ) -> None:
@@ -82,27 +82,25 @@ class Layer:
         Creates the folder `name` in the directory of `dataset`.
 
         A `Layer` cannot exist without a dataset. The desired procedure to create a new layer for a dataset is to call
-        `wkcuber.api.dataset.WKDataset.add_layer` instead of creating and then adding it manually.
+        `wkcuber.api.dataset.Dataset.add_layer` instead of creating and then adding it manually.
         """
         self.name = name
         self.dataset = dataset
         self.dtype_per_channel = dtype_per_channel
         self.num_channels = num_channels
-        self._mags: Dict[str, WKMagDataset] = {}
+        self._mags: Dict[str, MagView] = {}
 
         full_path = join(dataset.path, name)
         makedirs(full_path, exist_ok=True)
 
     @property
-    def mags(self) -> Dict[str, WKMagDataset]:
+    def mags(self) -> Dict[str, MagView]:
         """
         Getter for dictionary containing all mags.
         """
         return self._mags
 
-    def get_mag(
-        self, mag: Union[int, str, list, tuple, np.ndarray, Mag]
-    ) -> WKMagDataset:
+    def get_mag(self, mag: Union[int, str, list, tuple, np.ndarray, Mag]) -> MagView:
         """
         Returns the MagDataset called `mag` of this layer. The return type is `wkcuber.api.MagDataset`.
 
@@ -119,13 +117,13 @@ class Layer:
         block_len: int = 32,
         file_len: int = DEFAULT_WKW_FILE_LEN,
         block_type: int = wkw.Header.BLOCK_TYPE_RAW,
-    ) -> WKMagDataset:
+    ) -> MagView:
         """
         Creates a new mag called and adds it to the layer.
         The parameter `block_len`, `file_len` and `block_type` can be
         specified to adjust how the data is stored on disk.
 
-        The return type is `wkcuber.api.mag_dataset.WKMagDataset`.
+        The return type is `wkcuber.api.mag_view.MagView`.
 
         Raises an IndexError if the specified `mag` already exists.
         """
@@ -135,7 +133,7 @@ class Layer:
         self._assert_mag_does_not_exist_yet(mag)
         self._create_dir_for_mag(mag)
 
-        self._mags[mag] = WKMagDataset(
+        self._mags[mag] = MagView(
             self, mag, block_len, file_len, block_type, create=True
         )
         self.dataset.properties._add_mag(
@@ -150,7 +148,7 @@ class Layer:
         block_len: int = 32,
         file_len: int = DEFAULT_WKW_FILE_LEN,
         block_type: int = wkw.Header.BLOCK_TYPE_RAW,
-    ) -> WKMagDataset:
+    ) -> MagView:
         """
         Creates a new mag called and adds it to the dataset, in case it did not exist before.
         Then, returns the mag.
@@ -579,7 +577,7 @@ class Layer:
             ) as wkw_dataset:
                 wk_header = wkw_dataset.header
 
-            self._mags[mag] = WKMagDataset(
+            self._mags[mag] = MagView(
                 self, mag, wk_header.block_len, wk_header.file_len, wk_header.block_type
             )
 
@@ -592,13 +590,13 @@ class Layer:
             )
 
     def _initialize_mag_from_other_mag(
-        self, new_mag_name: Union[str, Mag], other_mag: WKMagDataset, compress: bool
-    ) -> WKMagDataset:
+        self, new_mag_name: Union[str, Mag], other_mag: MagView, compress: bool
+    ) -> MagView:
         block_type = (
             wkw.Header.BLOCK_TYPE_LZ4HC if compress else wkw.Header.BLOCK_TYPE_RAW
         )
         other_wk_mag = cast(
-            WKMagDataset, other_mag
+            MagView, other_mag
         )  # This method is only used in the context of creating a new magnification by using the same meta data as another magnification of the same dataset
         return self.add_mag(
             new_mag_name,

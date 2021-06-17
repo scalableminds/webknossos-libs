@@ -17,12 +17,12 @@ class View:
     A `View` is essentially a bounding box to a section of a specific `wkw.Dataset` that also provides functionality.
     Read- and write-operations are restricted to the bounding box.
     `View`s are designed to be easily passed around as parameters.
-    A `View`, in its most basic form, does not have a reference to the `wkcuber.api.dataset.WKDataset`.
+    A `View`, in its most basic form, does not have a reference to the `wkcuber.api.dataset.Dataset`.
     """
 
     def __init__(
         self,
-        path_to_mag_dataset: Path,
+        path_to_mag_view: Path,
         header: wkw.Header,
         size: Tuple[int, int, int],
         global_offset: Tuple[int, int, int] = (0, 0, 0),
@@ -34,11 +34,11 @@ class View:
 
         Most of the time the `View` is used in the context of the dataset API, even though it could also be used without it.
 
-        In the context of the dataset API, `View`s appear for example in the form of `wkcuber.api.mag_dataset.WKMagDataset` (which are also `View`s).
+        In the context of the dataset API, `View`s appear for example in the form of `wkcuber.api.mag_view.MagView` (which are also `View`s).
         Sub-views can be created with `View.get_view()`.
         """
         self.dataset: Optional[Dataset] = None
-        self.path = path_to_mag_dataset
+        self.path = path_to_mag_view
         self.header: wkw.Header = header
         self.size = size
         self.global_offset: Tuple[int, int, int] = global_offset
@@ -138,7 +138,7 @@ class View:
         import numpy as np
 
         # ...
-        # let 'mag1' be a `WKMagDataset`
+        # let 'mag1' be a `MagView`
         view = mag1.get_view(offset(10, 20, 30), size=(100, 200, 300))
 
         assert np.array_equal(
@@ -199,7 +199,7 @@ class View:
         Example:
         ```python
         # ...
-        # let 'mag1' be a `WKMagDataset`
+        # let 'mag1' be a `MagView`
         view = mag1.get_view(offset(10, 20, 30), size=(100, 200, 300))
 
         # works because the specified sub-view is completely in the bounding box of the view
@@ -278,7 +278,7 @@ class View:
             ...
 
         # ...
-        # let 'mag1' be a `WKMagDataset`
+        # let 'mag1' be a `MagView`
         view = mag1.get_view()
         with get_executor_for_args(None) as executor:
             func = named_partial(advanced_chunk_job, some_parameter=42)

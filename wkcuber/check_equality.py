@@ -3,7 +3,7 @@ from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from typing import Any, Callable
 
-from wkcuber.api.dataset import WKDataset
+from wkcuber.api.dataset import Dataset
 from wkcuber.api.bounding_box import BoundingBox, BoundingBoxNamedTuple
 import numpy as np
 
@@ -65,7 +65,7 @@ def assert_equality_for_chunk(
     mag: Mag,
     sub_box: BoundingBoxNamedTuple,
 ) -> None:
-    wk_dataset = WKDataset(source_path)
+    wk_dataset = Dataset(source_path)
     layer = wk_dataset.get_layer(layer_name)
     backup_wkw_info = WkwDatasetInfo(target_path, layer_name, mag, header=None)
     with open_wkw(backup_wkw_info) as backup_wkw:
@@ -85,7 +85,7 @@ def check_equality(
 
     logging.info(f"Comparing {source_path} with {target_path}")
 
-    wk_src_dataset = WKDataset(source_path)
+    wk_src_dataset = Dataset(source_path)
     src_layer_names = list(wk_src_dataset.layers.keys())
     target_layer_names = [
         layer["name"] for layer in detect_layers(target_path, 0, False)
