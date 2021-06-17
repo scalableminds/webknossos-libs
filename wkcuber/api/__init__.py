@@ -6,7 +6,7 @@ The high-level dataset API automatically reads and writes meta information for a
 A dataset (`wkcuber.api.dataset.Dataset`) is the entry-point for this API.
 The dataset stores the data on disk in `.wkw`-files (see [webknossos-wrap (wkw)](https://github.com/scalableminds/webknossos-wrap)).
 
-Each dataset consists of one or more layers (wkcuber.api.layer.Layer), which themselves can comprise multiple magnifications (wkcuber.api.MagDataset.MagDataset).
+Each dataset consists of one or more layers (wkcuber.api.layer.Layer), which themselves can comprise multiple magnifications (wkcuber.api.mag_view.MagView).
 
 ## Examples
 ### Opening Datasets
@@ -27,7 +27,7 @@ from wkcuber.api.layer import Layer
 dataset = Dataset.create(<path_to_new_dataset>, scale=(1, 1, 1))
 layer = dataset.add_layer(
     layer_name="color",
-    category=Layer.COLOR_TYPE,
+    category=LayerTypes.COLOR_TYPE,
     dtype_per_channel="uint8",
     num_channels=3
 )

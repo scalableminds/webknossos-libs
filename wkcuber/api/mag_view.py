@@ -16,6 +16,7 @@ from uuid import uuid4
 from wkw import wkw
 import numpy as np
 
+from wkcuber.api.bounding_box import BoundingBox
 from wkcuber.compress_utils import compress_file_job
 from wkcuber.utils import (
     convert_mag1_size,
@@ -166,22 +167,27 @@ class MagView(View):
         Therefore, if both (`offset` and `size`) are not specified, then the bounding box of the view is equal to the
         bounding box specified in the properties.
 
+        The `offset` and `size` may only exceed the bounding box from the properties, if `read_only` is set to `True`.
+
         If `read_only` is `True`, write operations are not allowed for the returned sub-view.
 
         Example:
         ```python
         # ...
-        # let 'mag1' be a `MagView` with offset (0, 0, 0) and size (100, 200, 300)
+        # Let 'mag1' be a `MagView` with offset (0, 0, 0) and size (100, 200, 300)
 
-        # properties are used to determine the default parameter
+        # Properties are used to determine the default parameter
         view_with_bb_from_properties = mag1.get_view()
 
-        # sub-view where the specified bounding box is completely in the bounding box of the MagView
+        # Sub-view where the specified bounding box is completely in the bounding box of the MagView
         sub_view1 = mag1.get_view(offset=(50, 60, 70), size=(10, 120, 230))
 
-        # sub-view where the specified bounding box is NOT completely in the bounding box of the MagView
-        # this still works because operation on a MagView may exceed the specified bounding box
-        sub_view2 = mag1.get_view(offset=(50, 60, 70), size=(999, 120, 230))
+        # Fails because the specified view is not completely in the bounding box from the properties.
+        sub_view2 = mag1.get_view(offset=(50, 60, 70), size=(999, 120, 230), read_only=True)
+
+        # Sub-view where the specified bounding box is NOT completely in the bounding box of the MagView.
+        # This still works because `read_only=True`.
+        sub_view2 = mag1.get_view(offset=(50, 60, 70), size=(999, 120, 230), read_only=True)
         ```
         """
 
@@ -191,14 +197,21 @@ class MagView(View):
             bb.topleft = np.array((0, 0, 0))
 
         bb.align_with_mag(Mag(self.name), ceil=True)
+        bb = bb.in_mag(Mag(self.name))
 
-        view_offset = offset if offset is not None else tuple(bb.topleft)
+        view_offset = cast(
+            Tuple[int, int, int],
+            tuple(offset if offset is not None else tuple(bb.topleft)),
+        )
 
         if size is None:
-            size = cast(Tuple[int, int, int], tuple(bb.size))
+            size = cast(
+                Tuple[int, int, int], tuple(bb.bottomright - np.array(view_offset))
+            )
 
+        assert bb.contains_bbox(BoundingBox(view_offset, size)) or read_only
         return super().get_view(
-            cast(Tuple[int, int, int], view_offset),
+            view_offset,
             cast(Tuple[int, int, int], tuple(size)),
             read_only,
         )

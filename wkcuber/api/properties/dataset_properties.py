@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 from typing import Tuple, Optional, Dict, Any, cast
 
-from wkcuber.api.layer import Layer
+from wkcuber.api.layer import Layer, LayerTypes
 from wkcuber.api.properties.layer_properties import (
     SegmentationLayerProperties,
     LayerProperties,
@@ -45,7 +45,7 @@ class Properties:
     ) -> None:
         # this layer is already in data_layers in case we reconstruct the dataset from a datasource-properties.json
         if layer_name not in self.data_layers:
-            if category == Layer.SEGMENTATION_TYPE:
+            if category == LayerTypes.SEGMENTATION_TYPE:
                 assert (
                     "largest_segment_id" in kwargs
                 ), "When adding a segmentation layer, largest_segment_id has to be supplied."
@@ -118,7 +118,7 @@ class Properties:
             # reconstruct data_layers
             data_layers: Dict[str, LayerProperties] = {}
             for layer in data["dataLayers"]:
-                if layer["category"] == Layer.SEGMENTATION_TYPE:
+                if layer["category"] == LayerTypes.SEGMENTATION_TYPE:
                     data_layers[layer["name"]] = SegmentationLayerProperties._from_json(
                         layer, Resolution, path
                     )

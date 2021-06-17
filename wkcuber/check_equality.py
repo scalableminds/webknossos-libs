@@ -69,10 +69,10 @@ def assert_equality_for_chunk(
     layer = wk_dataset.get_layer(layer_name)
     backup_wkw_info = WkwDatasetInfo(target_path, layer_name, mag, header=None)
     with open_wkw(backup_wkw_info) as backup_wkw:
-        mag_ds = layer.get_mag(mag)
+        mag_view = layer.get_mag(mag)
         logging.info(f"Checking sub_box: {sub_box}")
 
-        data = mag_ds.read(sub_box.topleft, sub_box.size)
+        data = mag_view.read(sub_box.topleft, sub_box.size)
         backup_data = backup_wkw.read(sub_box.topleft, sub_box.size)
         assert np.all(
             data == backup_data

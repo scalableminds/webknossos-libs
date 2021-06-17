@@ -80,9 +80,9 @@ def compress_mags(
     if mags is None:
         mags = [Mag(mag_name) for mag_name in layer.mags.keys()]
 
-    for mag_name, mag_ds in Dataset(source_path).get_layer(layer_name).mags.items():
+    for mag_name, mag_view in Dataset(source_path).get_layer(layer_name).mags.items():
         if Mag(mag_name) in mags:
-            mag_ds.compress(target_path=Path(target), args=args)
+            mag_view.compress(target_path=Path(target), args=args)
 
     if target_path is None:
         backup_dir = source_path.with_suffix(BACKUP_EXT)

@@ -65,12 +65,6 @@ class Layer:
     ## Functions
     """
 
-    COLOR_TYPE = "color"
-    SEGMENTATION_TYPE = "segmentation"
-    """
-    There are two different types (`COLOR_TYPE`, `SEGMENTATION_TYPE`).
-    """
-
     def __init__(
         self,
         name: str,
@@ -364,15 +358,15 @@ class Layer:
         assert from_mag <= target_mag
         assert target_mag.to_layer_name() not in self.mags
 
-        prev_mag_ds = self.mags[from_mag.to_layer_name()]
+        prev_mag_view = self.mags[from_mag.to_layer_name()]
 
         mag_factors = [
             t // s for (t, s) in zip(target_mag.to_array(), from_mag.to_array())
         ]
 
         # initialize the new mag
-        target_mag_ds = self._initialize_mag_from_other_mag(
-            target_mag, prev_mag_ds, compress
+        target_mag_view = self._initialize_mag_from_other_mag(
+            target_mag, prev_mag_view, compress
         )
 
         bb_mag1 = BoundingBox(
@@ -390,25 +384,25 @@ class Layer:
         )
 
         # Get target view
-        target_mag_view = target_mag_ds.get_view(
+        target_view = target_mag_view.get_view(
             offset=aligned_target_bb.topleft,
             size=aligned_target_bb.size,
         )
 
-        source_view = prev_mag_ds.get_view(
+        source_view = prev_mag_view.get_view(
             offset=aligned_source_bb.topleft, size=aligned_source_bb.size
         )
 
         # perform downsampling
         with get_executor_for_args(args) as executor:
-            voxel_count_per_cube = np.prod(prev_mag_ds._get_file_dimensions())
+            voxel_count_per_cube = np.prod(prev_mag_view._get_file_dimensions())
             job_count_per_log = math.ceil(
                 1024 ** 3 / voxel_count_per_cube
             )  # log every gigavoxel of processed data
 
             if buffer_edge_len is None:
                 buffer_edge_len = determine_buffer_edge_len(
-                    prev_mag_ds
+                    prev_mag_view
                 )  # DEFAULT_EDGE_LEN
             func = named_partial(
                 downsample_cube_job,
@@ -422,10 +416,10 @@ class Layer:
             source_view.for_zipped_chunks(
                 # this view is restricted to the bounding box specified in the properties
                 func,
-                target_view=target_mag_view,
-                source_chunk_size=np.array(target_mag_ds._get_file_dimensions())
+                target_view=target_view,
+                source_chunk_size=np.array(target_mag_view._get_file_dimensions())
                 * mag_factors,
-                target_chunk_size=target_mag_ds._get_file_dimensions(),
+                target_chunk_size=target_mag_view._get_file_dimensions(),
                 executor=executor,
             )
 
@@ -516,30 +510,30 @@ class Layer:
             assert prev_mag > target_mag
             assert target_mag.to_layer_name() not in self.mags
 
-            prev_mag_ds = self.mags[prev_mag.to_layer_name()]
+            prev_mag_view = self.mags[prev_mag.to_layer_name()]
 
             mag_factors = [
                 t / s for (t, s) in zip(target_mag.to_array(), prev_mag.to_array())
             ]
 
             # initialize the new mag
-            target_mag_ds = self._initialize_mag_from_other_mag(
-                target_mag, prev_mag_ds, compress
+            target_mag_view = self._initialize_mag_from_other_mag(
+                target_mag, prev_mag_view, compress
             )
 
             # Get target view
-            target_mag_view = target_mag_ds.get_view()
+            target_view = target_mag_view.get_view()
 
             # perform upsampling
             with get_executor_for_args(args) as executor:
-                voxel_count_per_cube = np.prod(prev_mag_ds._get_file_dimensions())
+                voxel_count_per_cube = np.prod(prev_mag_view._get_file_dimensions())
                 job_count_per_log = math.ceil(
                     1024 ** 3 / voxel_count_per_cube
                 )  # log every gigavoxel of processed data
 
                 if buffer_edge_len is None:
                     buffer_edge_len = determine_buffer_edge_len(
-                        prev_mag_ds
+                        prev_mag_view
                     )  # DEFAULT_EDGE_LEN
                 func = named_partial(
                     upsample_cube_job,
@@ -548,12 +542,12 @@ class Layer:
                     compress=compress,
                     job_count_per_log=job_count_per_log,
                 )
-                prev_mag_ds.get_view().for_zipped_chunks(
+                prev_mag_view.get_view().for_zipped_chunks(
                     # this view is restricted to the bounding box specified in the properties
                     func,
-                    target_view=target_mag_view,
-                    source_chunk_size=target_mag_ds._get_file_dimensions(),
-                    target_chunk_size=target_mag_ds._get_file_dimensions()
+                    target_view=target_view,
+                    source_chunk_size=target_mag_view._get_file_dimensions(),
+                    target_chunk_size=target_mag_view._get_file_dimensions()
                     * np.array([int(1 / f) for f in mag_factors]),
                     executor=executor,
                 )
@@ -604,3 +598,20 @@ class Layer:
             file_len=other_wk_mag.header.file_len,
             block_type=block_type,
         )
+
+
+class LayerTypes:
+    """
+    There are two different types of layers.
+    This class can be used to specify the type of a layer during creation:
+    ```python
+    from wkcuber.api.dataset import Dataset
+
+    dataset = Dataset(<path_to_dataset>)
+    # Adds a new layer
+    layer = dataset.add_layer("color", LayerTypes.COLOR_TYPE)
+    ```
+    """
+
+    COLOR_TYPE = "color"
+    SEGMENTATION_TYPE = "segmentation"

@@ -96,6 +96,7 @@ class View:
 
         was_opened = self._is_opened
         # assert the size of the parameter data is not in conflict with the attribute self.size
+        _assert_positive_dimensions(relative_offset, data.shape[-3:])
         self._assert_bounds(relative_offset, data.shape[-3:])
 
         if len(data.shape) == 4 and data.shape[0] == 1:
@@ -157,6 +158,7 @@ class View:
         size = self.size if size is None else size
 
         # assert the parameter size is not in conflict with the attribute self.size
+        _assert_positive_dimensions(offset, size)
         self._assert_bounds(offset, size)
 
         # calculate the absolute offset
@@ -194,6 +196,9 @@ class View:
         The `offset` is relative to `global_offset`.
         If no `size` is specified, the size of the view is used.
 
+        The `offset` and `size` may only exceed the bounding box of the current view, if `read_only` is set to `True`.
+
+
         If `read_only` is `True`, write operations are not allowed for the returned sub-view.
 
         Example:
@@ -207,6 +212,9 @@ class View:
 
         # fails because the specified sub-view is not completely in the bounding box of the view
         invalid_sub_view = view.get_view(offset=(50, 60, 70), size=(999, 120, 230))
+
+        # works because `read_only=True`
+        invalid_sub_view = view.get_view(offset=(50, 60, 70), size=(999, 120, 230), read_only=True)
         ```
         """
         if read_only is None:
@@ -221,7 +229,8 @@ class View:
         if size is None:
             size = self.size
 
-        self._assert_bounds(offset, size)
+        _assert_positive_dimensions(offset, size)
+        self._assert_bounds(offset, size, not read_only)
         view_offset = cast(
             Tuple[int, int, int], tuple(self.global_offset + np.array(offset))
         )
@@ -234,22 +243,17 @@ class View:
             read_only=read_only,
         )
 
-    def _check_bounds(
-        self, offset: Tuple[int, int, int], size: Tuple[int, int, int]
-    ) -> bool:
-        for s1, s2, off in zip(self.size, size, offset):
-            if s2 + off > s1 and self._is_bounded:
-                return False
-        if any(x < 0 for x in offset):
-            return False
-        if any(x < 0 for x in size):
-            return False
-        return True
-
     def _assert_bounds(
-        self, offset: Tuple[int, int, int], size: Tuple[int, int, int]
+        self,
+        offset: Tuple[int, int, int],
+        size: Tuple[int, int, int],
+        strict: bool = None,
     ) -> None:
-        if not self._check_bounds(offset, size):
+        if strict is None:
+            strict = self._is_bounded
+        if strict and not BoundingBox((0, 0, 0), self.size).contains_bbox(
+            BoundingBox(offset, size)
+        ):
             raise AssertionError(
                 f"Accessing data out of bounds: The passed parameter 'size' {size} exceeds the size of the current view ({self.size})"
             )
@@ -474,3 +478,16 @@ class View:
         _tb: Optional[TracebackType],
     ) -> None:
         self.close()
+
+
+def _assert_positive_dimensions(
+    offset: Tuple[int, int, int], size: Tuple[int, int, int]
+) -> None:
+    if any(x < 0 for x in offset):
+        raise AssertionError(
+            f"The offset ({offset}) contains a negative value. All dimensions must be larger or equal to '0'."
+        )
+    if any(x <= 0 for x in size):
+        raise AssertionError(
+            f"The size ({size}) contains a negative value (or zeros). All dimensions must be strictly larger than '0'."
+        )

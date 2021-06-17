@@ -19,7 +19,7 @@ from wkcuber.mag import Mag
 from wkcuber.utils import get_executor_for_args
 
 from wkcuber.api.properties.dataset_properties import Properties
-from wkcuber.api.layer import Layer
+from wkcuber.api.layer import Layer, LayerTypes
 from wkcuber.api.view import View
 
 DEFAULT_BIT_DEPTH = 8
@@ -120,7 +120,7 @@ class Dataset:
     # Adds a new layer
     layer = dataset.add_layer(
         layer_name="color",
-        category=Layer.COLOR_TYPE,
+        category=LayerTypes.COLOR_TYPE,
         dtype_per_channel="uint8",
         num_channels=3
     )
@@ -442,7 +442,7 @@ class Dataset:
                 largest_segment_id = None
                 if (
                     self.properties.data_layers[layer_name].category
-                    == Layer.SEGMENTATION_TYPE
+                    == LayerTypes.SEGMENTATION_TYPE
                 ):
                     largest_segment_id = cast(
                         SegmentationLayerProperties,
@@ -482,17 +482,13 @@ class Dataset:
                             .bottomright
                         ),
                     )
-                    target_mag.layer.dataset.properties._set_bounding_box_of_layer(
-                        layer_name, offset=bbox[0], size=bbox[1]
-                    )
+                    target_mag.layer.set_bounding_box(offset=bbox[0], size=bbox[1])
 
                     # The data gets written to the target_mag.
                     # Therefore, the chunk size is determined by the target_mag to prevent concurrent writes
-                    mag.for_zipped_chunks(
+                    mag.get_view().for_zipped_chunks(
                         work_on_chunk=_copy_job,
-                        target_view=target_mag.get_view(
-                            target_mag.global_offset, target_mag.size
-                        ),
+                        target_view=target_mag.get_view(),
                         source_chunk_size=target_mag._get_file_dimensions(),
                         target_chunk_size=target_mag._get_file_dimensions(),
                         executor=executor,

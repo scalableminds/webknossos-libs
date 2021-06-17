@@ -2,7 +2,6 @@ import filecmp
 import itertools
 import json
 import os
-import tempfile
 from os.path import dirname, join
 from pathlib import Path
 from typing import Any, Tuple, cast, Generator
@@ -18,7 +17,7 @@ from wkw.wkw import WKWException
 from wkcuber.api.dataset import Dataset
 from os import makedirs
 
-from wkcuber.api.layer import Layer
+from wkcuber.api.layer import Layer, LayerTypes
 from wkcuber.api.mag_view import MagView
 from wkcuber.api.properties.dataset_properties import Properties
 from wkcuber.api.properties.layer_properties import SegmentationLayerProperties
@@ -57,20 +56,20 @@ def advanced_chunk_job(args: Tuple[View, int], type: type) -> None:
 
 
 def for_each_chunking_with_wrong_chunk_size(view: View) -> None:
-    with pytest.raises(AssertionError):
-        with get_executor_for_args(None) as executor:
+    with get_executor_for_args(None) as executor:
+        with pytest.raises(AssertionError):
             view.for_each_chunk(
                 chunk_job,
                 chunk_size=(0, 64, 64),
                 executor=executor,
             )
-
+        with pytest.raises(AssertionError):
             view.for_each_chunk(
                 chunk_job,
                 chunk_size=(16, 64, 64),
                 executor=executor,
             )
-
+        with pytest.raises(AssertionError):
             view.for_each_chunk(
                 chunk_job,
                 chunk_size=(100, 64, 64),
@@ -135,7 +134,7 @@ def get_multichanneled_data(dtype: type) -> np.ndarray:
     return data
 
 
-def test_create_wk_dataset_with_layer_and_mag() -> None:
+def test_create_dataset_with_layer_and_mag() -> None:
     delete_dir(TESTOUTPUT_DIR / "wk_dataset")
 
     ds = Dataset.create(TESTOUTPUT_DIR / "wk_dataset", scale=(1, 1, 1))
@@ -151,11 +150,13 @@ def test_create_wk_dataset_with_layer_and_mag() -> None:
     assert len(ds.properties.data_layers["color"].wkw_magnifications) == 2
 
 
-def test_create_wk_dataset_with_explicit_header_fields() -> None:
+def test_create_dataset_with_explicit_header_fields() -> None:
     delete_dir(TESTOUTPUT_DIR / "wk_dataset_advanced")
 
     ds = Dataset.create(TESTOUTPUT_DIR / "wk_dataset_advanced", scale=(1, 1, 1))
-    ds.add_layer("color", Layer.COLOR_TYPE, dtype_per_layer="uint48", num_channels=3)
+    ds.add_layer(
+        "color", LayerTypes.COLOR_TYPE, dtype_per_layer="uint48", num_channels=3
+    )
 
     ds.get_layer("color").add_mag("1", block_len=64, file_len=64)
     ds.get_layer("color").add_mag("2-2-1")
@@ -183,23 +184,7 @@ def test_create_wk_dataset_with_explicit_header_fields() -> None:
     assert ds.properties.data_layers["color"].wkw_magnifications[1].mag == Mag("2-2-1")
 
 
-def test_create_dataset_with_layer_and_mag() -> None:
-    delete_dir(TESTOUTPUT_DIR / "create_dataset")
-
-    ds = Dataset.create(TESTOUTPUT_DIR / "create_dataset", scale=(1, 1, 1))
-    ds.add_layer("color", Layer.COLOR_TYPE)
-
-    ds.get_layer("color").add_mag("1")
-    ds.get_layer("color").add_mag("2-2-1")
-
-    assert (TESTOUTPUT_DIR / "create_dataset" / "color" / "1").exists()
-    assert (TESTOUTPUT_DIR / "create_dataset" / "color" / "2-2-1").exists()
-
-    assert len(ds.properties.data_layers) == 1
-    assert len(ds.properties.data_layers["color"].wkw_magnifications) == 2
-
-
-def test_open_wk_dataset() -> None:
+def test_open_dataset() -> None:
     ds = Dataset(TESTDATA_DIR / "simple_wk_dataset")
 
     assert len(ds.properties.data_layers) == 1
@@ -242,7 +227,7 @@ def test_view_read_without_open() -> None:
     assert not wk_view._is_opened
 
 
-def test_view_wk_write() -> None:
+def test_view_write() -> None:
     delete_dir(TESTOUTPUT_DIR / "simple_wk_dataset")
     copytree(TESTDATA_DIR / "simple_wk_dataset", TESTOUTPUT_DIR / "simple_wk_dataset")
 
@@ -263,7 +248,7 @@ def test_view_wk_write() -> None:
         assert np.array_equal(data, write_data)
 
 
-def test_view_wk_write_out_of_bounds() -> None:
+def test_view_write_out_of_bounds() -> None:
     new_dataset_path = TESTOUTPUT_DIR / "wk_view_dataset_out_of_bounds"
 
     delete_dir(new_dataset_path)
@@ -277,26 +262,13 @@ def test_view_wk_write_out_of_bounds() -> None:
     )
 
     with view.open():
-        try:
+        with pytest.raises(AssertionError):
             view.write(
                 np.zeros((200, 200, 5), dtype=np.uint8)
             )  # this is bigger than the bounding_box
-            raise Exception(
-                "The test 'test_view_wk_write_out_of_bounds' did not throw an exception even though it should"
-            )
-        except AssertionError:
-            pass
 
 
-def test_wk_view_out_of_bounds() -> None:
-    # The size of the mag is (24, 24, 24).
-    # This still works because operation on a MagView may exceed the specified bounding box (unlike basic Views)
-    Dataset(TESTDATA_DIR / "simple_wk_dataset").get_layer("color").get_mag(
-        "1"
-    ).get_view(size=(100, 100, 100))
-
-
-def test_wk_write_out_of_bounds() -> None:
+def test_mag_view_write_out_of_bounds() -> None:
     new_dataset_path = TESTOUTPUT_DIR / "simple_wk_dataset_out_of_bounds"
 
     delete_dir(new_dataset_path)
@@ -312,7 +284,7 @@ def test_wk_write_out_of_bounds() -> None:
     assert ds.properties.data_layers["color"].get_bounding_box_size() == (24, 24, 48)
 
 
-def test_wk_write_out_of_bounds_mag2() -> None:
+def test_mag_view_write_out_of_bounds_mag2() -> None:
     new_dataset_path = TESTOUTPUT_DIR / "simple_wk_dataset_out_of_bounds"
 
     delete_dir(new_dataset_path)
@@ -334,7 +306,7 @@ def test_update_new_bounding_box_offset() -> None:
     delete_dir(TESTOUTPUT_DIR / "wk_dataset")
 
     ds = Dataset.create(TESTOUTPUT_DIR / "wk_dataset", scale=(1, 1, 1))
-    mag = ds.add_layer("color", Layer.COLOR_TYPE).add_mag("1")
+    mag = ds.add_layer("color", LayerTypes.COLOR_TYPE).add_mag("1")
 
     assert ds.properties.data_layers["color"].bounding_box["topLeft"] == (-1, -1, -1)
 
@@ -343,22 +315,23 @@ def test_update_new_bounding_box_offset() -> None:
     mag.write(
         write_data, offset=(10, 10, 10)
     )  # the write method of MagDataset does always use the relative offset to (0, 0, 0)
-    assert ds.properties.data_layers["color"].bounding_box["topLeft"] == (10, 10, 10)
+    assert ds.properties.data_layers["color"].get_bounding_box_offset() == (10, 10, 10)
+    assert ds.properties.data_layers["color"].get_bounding_box_size() == (10, 10, 10)
 
     mag.write(
         write_data, offset=(5, 5, 20)
     )  # the write method of MagDataset does always use the relative offset to (0, 0, 0)
-    assert ds.properties.data_layers["color"].bounding_box["topLeft"] == (5, 5, 10)
+    assert ds.properties.data_layers["color"].get_bounding_box_offset() == (5, 5, 10)
+    assert ds.properties.data_layers["color"].get_bounding_box_size() == (15, 15, 20)
 
 
-def test_wk_write_multi_channel_uint8() -> None:
-    dataset_path = TESTOUTPUT_DIR / "wk_multichannel"
+def test_write_multi_channel_uint8() -> None:
+    dataset_path = TESTOUTPUT_DIR / "multichannel"
     delete_dir(dataset_path)
 
     ds = Dataset.create(dataset_path, scale=(1, 1, 1))
-    mag = ds.add_layer("color", Layer.COLOR_TYPE, num_channels=3).add_mag("1")
+    mag = ds.add_layer("color", LayerTypes.COLOR_TYPE, num_channels=3).add_mag("1")
 
-    # 10 images (z-layers), each 250x200, dtype=np.uint8
     data = get_multichanneled_data(np.uint8)
 
     ds.get_layer("color").get_mag("1").write(data)
@@ -367,15 +340,14 @@ def test_wk_write_multi_channel_uint8() -> None:
 
 
 def test_wk_write_multi_channel_uint16() -> None:
-    dataset_path = TESTOUTPUT_DIR / "wk_multichannel"
+    dataset_path = TESTOUTPUT_DIR / "multichannel"
     delete_dir(dataset_path)
 
     ds = Dataset.create(dataset_path, scale=(1, 1, 1))
     mag = ds.add_layer(
-        "color", Layer.COLOR_TYPE, num_channels=3, dtype_per_layer="uint48"
+        "color", LayerTypes.COLOR_TYPE, num_channels=3, dtype_per_layer="uint48"
     ).add_mag("1")
 
-    # 10 images (z-layers), each 250x200, dtype=np.uint16
     data = get_multichanneled_data(np.uint16)
 
     mag.write(data)
@@ -384,27 +356,27 @@ def test_wk_write_multi_channel_uint16() -> None:
     assert np.array_equal(data, written_data)
 
 
-def test_wkw_empty_read() -> None:
+def test_empty_read() -> None:
     filename = TESTOUTPUT_DIR / "empty_wk_dataset"
     delete_dir(filename)
 
     mag = (
         Dataset.create(filename, scale=(1, 1, 1))
-        .add_layer("color", Layer.COLOR_TYPE)
+        .add_layer("color", LayerTypes.COLOR_TYPE)
         .add_mag("1")
     )
-    data = mag.read(offset=(1, 1, 1), size=(0, 0, 0))
+    with pytest.raises(AssertionError):
+        # size
+        mag.read(offset=(0, 0, 0), size=(0, 0, 0))
 
-    assert data.shape == (1, 0, 0, 0)
 
-
-def test_wk_read_padded_data() -> None:
+def test_read_padded_data() -> None:
     filename = TESTOUTPUT_DIR / "empty_wk_dataset"
     delete_dir(filename)
 
     mag = (
         Dataset.create(filename, scale=(1, 1, 1))
-        .add_layer("color", Layer.COLOR_TYPE, num_channels=3)
+        .add_layer("color", LayerTypes.COLOR_TYPE, num_channels=3)
         .add_mag("1")
     )
     # there is no data yet, however, this should not fail but pad the data with zeros
@@ -454,20 +426,15 @@ def test_num_channel_mismatch_assertion() -> None:
     delete_dir(TESTOUTPUT_DIR / "wk_dataset")
 
     ds = Dataset.create(TESTOUTPUT_DIR / "wk_dataset", scale=(1, 1, 1))
-    mag = ds.add_layer("color", Layer.COLOR_TYPE, num_channels=1).add_mag(
+    mag = ds.add_layer("color", LayerTypes.COLOR_TYPE, num_channels=1).add_mag(
         "1"
     )  # num_channel=1 is also the default
 
     np.random.seed(1234)
     write_data = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)  # 3 channels
 
-    try:
+    with pytest.raises(AssertionError):
         mag.write(write_data)  # there is a mismatch between the number of channels
-        raise Exception(
-            "The test 'test_num_channel_mismatch_assertion' did not throw an exception even though it should"
-        )
-    except AssertionError:
-        pass
 
 
 def test_get_or_add_layer() -> None:
@@ -479,29 +446,23 @@ def test_get_or_add_layer() -> None:
 
     # layer did not exist before
     layer = ds.get_or_add_layer(
-        "color", Layer.COLOR_TYPE, dtype_per_layer="uint8", num_channels=1
+        "color", LayerTypes.COLOR_TYPE, dtype_per_layer="uint8", num_channels=1
     )
     assert "color" in ds.layers.keys()
     assert layer.name == "color"
 
     # layer did exist before
     layer = ds.get_or_add_layer(
-        "color", Layer.COLOR_TYPE, dtype_per_layer="uint8", num_channels=1
+        "color", LayerTypes.COLOR_TYPE, dtype_per_layer="uint8", num_channels=1
     )
     assert "color" in ds.layers.keys()
     assert layer.name == "color"
 
-    try:
-        # layer did exist before but with another 'dtype_per_layer' (this would work the same for 'category' and 'num_channels')
-        layer = ds.get_or_add_layer(
-            "color", Layer.COLOR_TYPE, dtype_per_layer="uint16", num_channels=1
+    with pytest.raises(AssertionError):
+        # The layer "color" did exist before but with another 'dtype_per_layer' (this would work the same for 'category' and 'num_channels')
+        ds.get_or_add_layer(
+            "color", LayerTypes.COLOR_TYPE, dtype_per_layer="uint16", num_channels=1
         )
-
-        raise Exception(
-            "The test 'test_get_or_add_layer' did not throw an exception even though it should"
-        )
-    except AssertionError:
-        pass
 
 
 def test_get_or_add_layer_idempotence() -> None:
@@ -511,11 +472,11 @@ def test_get_or_add_layer_idempotence() -> None:
     ds.get_or_add_layer("color2", "color", np.uint8).get_or_add_mag("1")
 
 
-def test_get_or_add_mag_for_wk() -> None:
+def test_get_or_add_mag() -> None:
     delete_dir(TESTOUTPUT_DIR / "wk_dataset")
 
     layer = Dataset.create(TESTOUTPUT_DIR / "wk_dataset", scale=(1, 1, 1)).add_layer(
-        "color", Layer.COLOR_TYPE
+        "color", LayerTypes.COLOR_TYPE
     )
 
     assert "1" not in layer.mags.keys()
@@ -530,15 +491,9 @@ def test_get_or_add_mag_for_wk() -> None:
     assert "1" in layer.mags.keys()
     assert mag.name == "1"
 
-    try:
-        # mag did exist before but with another 'block_len' (this would work the same for 'file_len' and 'block_type')
-        mag = layer.get_or_add_mag("1", block_len=64, file_len=32, block_type=1)
-
-        raise Exception(
-            "The test 'test_get_or_add_layer' did not throw an exception even though it should"
-        )
-    except AssertionError:
-        pass
+    with pytest.raises(AssertionError):
+        # The mag "1" did exist before but with another 'block_len' (this would work the same for 'file_len' and 'block_type')
+        layer.get_or_add_mag("1", block_len=64, file_len=32, block_type=1)
 
 
 def test_open_dataset_without_num_channels_in_properties() -> None:
@@ -568,11 +523,13 @@ def test_largest_segment_id_requirement() -> None:
     ds = Dataset.create(path, scale=(10, 10, 10))
 
     with pytest.raises(AssertionError):
-        ds.add_layer("segmentation", Layer.SEGMENTATION_TYPE)
+        ds.add_layer("segmentation", LayerTypes.SEGMENTATION_TYPE)
 
     largest_segment_id = 10
     ds.add_layer(
-        "segmentation", Layer.SEGMENTATION_TYPE, largest_segment_id=largest_segment_id
+        "segmentation",
+        LayerTypes.SEGMENTATION_TYPE,
+        largest_segment_id=largest_segment_id,
     ).add_mag(Mag(1))
 
     ds = Dataset(path)
@@ -629,54 +586,53 @@ def test_chunking_wk() -> None:
     delete_dir(TESTOUTPUT_DIR / "chunking_dataset_wk")
     copytree(TESTDATA_DIR / "simple_wk_dataset", TESTOUTPUT_DIR / "chunking_dataset_wk")
 
-    view = (
-        Dataset(TESTOUTPUT_DIR / "chunking_dataset_wk")
-        .get_layer("color")
-        .get_mag("1")
-        .get_view(size=(256, 256, 256))
+    mag = (
+        Dataset(TESTOUTPUT_DIR / "chunking_dataset_wk").get_layer("color").get_mag("1")
     )
 
-    original_data = view.read(size=view.size)
+    original_data = mag.read()
 
     with get_executor_for_args(None) as executor:
-        view.for_each_chunk(
+        mag.for_each_chunk(
             chunk_job,
             chunk_size=(64, 64, 64),
             executor=executor,
         )
 
-    assert np.array_equal(original_data + 50, view.read(size=view.size))
+    assert np.array_equal(original_data + 50, mag.read())
 
 
 def test_chunking_wk_advanced() -> None:
     delete_dir(TESTOUTPUT_DIR / "chunking_dataset_wk_advanced")
-    copytree(
-        TESTDATA_DIR / "simple_wk_dataset",
-        TESTOUTPUT_DIR / "chunking_dataset_wk_advanced",
-    )
 
-    ds = Dataset(TESTOUTPUT_DIR / "chunking_dataset_wk_advanced")
-    view = (
-        ds.get_layer("color")
-        .get_mag("1")
-        .get_view(size=(150, 150, 54), offset=(10, 10, 10))
+    ds = Dataset.create(
+        TESTOUTPUT_DIR / "chunking_dataset_wk_advanced", scale=(1, 1, 2)
     )
+    mag = ds.add_layer(
+        "color",
+        category=LayerTypes.COLOR_TYPE,
+        dtype_per_channel="uint8",
+        num_channels=3,
+    ).add_mag("1")
+    mag.write(data=(np.random.rand(3, 256, 256, 256) * 255).astype(np.uint8))
+    view = mag.get_view(size=(150, 150, 54), offset=(10, 10, 10))
+
     for_each_chunking_advanced(ds, view)
 
 
 def test_chunking_wk_wrong_chunk_size() -> None:
     delete_dir(TESTOUTPUT_DIR / "chunking_dataset_wk_with_wrong_chunk_size")
-    copytree(
-        TESTDATA_DIR / "simple_wk_dataset",
-        TESTOUTPUT_DIR / "chunking_dataset_wk_with_wrong_chunk_size",
+    ds = Dataset.create(
+        TESTOUTPUT_DIR / "chunking_dataset_wk_with_wrong_chunk_size", scale=(1, 1, 2)
     )
-
-    view = (
-        Dataset(TESTOUTPUT_DIR / "chunking_dataset_wk_with_wrong_chunk_size")
-        .get_layer("color")
-        .get_mag("1")
-        .get_view(size=(256, 256, 256))
-    )
+    mag = ds.add_layer(
+        "color",
+        category=LayerTypes.COLOR_TYPE,
+        dtype_per_channel="uint8",
+        num_channels=3,
+    ).add_mag("1", block_len=8, file_len=8)
+    mag.write(data=(np.random.rand(3, 256, 256, 256) * 255).astype(np.uint8))
+    view = mag.get_view(size=(256, 256, 256))
 
     for_each_chunking_with_wrong_chunk_size(view)
 
@@ -686,11 +642,13 @@ def test_view_write_without_open() -> None:
     delete_dir(ds_path)
 
     ds = Dataset.create(ds_path, scale=(1, 1, 1))
-    ds.add_layer("color", Layer.COLOR_TYPE)
+    layer = ds.add_layer("color", LayerTypes.COLOR_TYPE)
+    layer.set_bounding_box(
+        offset=(0, 0, 0), size=(64, 64, 64)
+    )  # This newly created dataset would otherwise have a "empty" bounding box
+    mag = layer.add_mag("1")
 
-    ds.get_layer("color").add_mag("1")
-
-    wk_view = ds.get_layer("color").get_mag("1").get_view(size=(32, 64, 16))
+    wk_view = mag.get_view(size=(32, 64, 16))
 
     assert not wk_view._is_opened
 
@@ -710,14 +668,14 @@ def test_typing_of_get_mag() -> None:
     assert layer.get_mag("1") == layer.get_mag(Mag(1))
 
 
-def test_wk_dataset_get_or_create() -> None:
+def test_dataset_get_or_create() -> None:
     ds_path = TESTOUTPUT_DIR / "wk_dataset_get_or_create"
     delete_dir(ds_path)
 
     # dataset does not exists yet
     ds1 = Dataset.get_or_create(ds_path, scale=(1, 1, 1))
     assert "color" not in ds1.layers.keys()
-    ds1.add_layer("color", Layer.COLOR_TYPE)
+    ds1.add_layer("color", LayerTypes.COLOR_TYPE)
     assert "color" in ds1.layers.keys()
 
     # dataset already exists
@@ -745,7 +703,7 @@ def test_changing_layer_bounding_box() -> None:
     original_data = mag.read(size=bbox_size)
     assert original_data.shape == (3, 24, 24, 24)
 
-    layer.set_bounding_box_size((12, 12, 10))  # decrease boundingbox
+    layer.set_bounding_box_size((12, 12, 10))  # decrease bounding box
 
     bbox_size = ds.properties.data_layers["color"].get_bounding_box_size()
     assert bbox_size == (12, 12, 10)
@@ -753,7 +711,7 @@ def test_changing_layer_bounding_box() -> None:
     assert less_data.shape == (3, 12, 12, 10)
     assert np.array_equal(original_data[:, :12, :12, :10], less_data)
 
-    layer.set_bounding_box_size((36, 48, 60))  # increase the boundingbox
+    layer.set_bounding_box_size((36, 48, 60))  # increase the bounding box
 
     bbox_size = ds.properties.data_layers["color"].get_bounding_box_size()
     assert bbox_size == (36, 48, 60)
@@ -771,7 +729,8 @@ def test_changing_layer_bounding_box() -> None:
     new_bbox_size = ds.properties.data_layers["color"].get_bounding_box_size()
     assert new_bbox_offset == (10, 10, 0)
     assert new_bbox_size == (14, 14, 24)
-    # Note that even though the offset was changed (in the properties), the offset of 'mag.read()' still refers to the absolute position (relative to (0, 0, 0)).
+    # Note that even though the offset was changed (in the properties), the offset of 'mag.read()'
+    # still refers to the absolute position (relative to (0, 0, 0)).
     # The default offset is (0, 0, 0). Since the bottom right did not change, the read data equals 'original_data'.
     assert np.array_equal(original_data, mag.read())
 
@@ -787,58 +746,81 @@ def test_changing_layer_bounding_box() -> None:
     assert np.array_equal(original_data[:, :14, :14, :], new_data)
 
 
-def test_view_offsets() -> None:
-    delete_dir(TESTOUTPUT_DIR / "wk_offset_tests")
+def test_get_view() -> None:
+    delete_dir(TESTOUTPUT_DIR / "get_view_tests")
 
-    ds = Dataset.create(TESTOUTPUT_DIR / "wk_offset_tests", scale=(1, 1, 1))
-    mag = ds.add_layer("color", Layer.COLOR_TYPE).add_mag("1")
+    ds = Dataset.create(TESTOUTPUT_DIR / "get_view_tests", scale=(1, 1, 1))
+    mag = ds.add_layer("color", LayerTypes.COLOR_TYPE).add_mag("1")
 
     # The dataset is new -> no data has been written.
     # Therefore, the size of the bounding box in the properties.json is (0, 0, 0)
 
     # Creating this view works because the size is set to (0, 0, 0)
     # However, in practice a view with size (0, 0, 0) would not make sense
-    wk_view = mag.get_view(size=(0, 0, 0))
-    assert wk_view.global_offset == tuple((0, 0, 0))
-    assert wk_view.size == tuple((0, 0, 0))
+    with pytest.raises(AssertionError):
+        # The offset and size default to (0, 0, 0).
+        # Sizes that contain "0" are not allowed
+        mag.get_view()
 
-    # This works because "mag" is "MagView" which can create views which exceed the bounding box from the properties.json
-    wk_view = mag.get_view(size=(16, 16, 16))
-    assert wk_view.global_offset == tuple((0, 0, 0))
-    assert wk_view.size == tuple((16, 16, 16))
+    with pytest.raises(AssertionError):
+        # This view exceeds the bounding box
+        mag.get_view(size=(16, 16, 16))
+
+    # read-only-views may exceed the bounding box
+    read_only_view = mag.get_view(size=(16, 16, 16), read_only=True)
+    assert read_only_view.global_offset == tuple((0, 0, 0))
+    assert read_only_view.size == tuple((16, 16, 16))
+
+    with pytest.raises(AssertionError):
+        # Trying to get a writable sub-view of a read-only-view is not allowed
+        read_only_view.get_view(read_only=False)
 
     np.random.seed(1234)
     write_data = (np.random.rand(100, 200, 300) * 255).astype(np.uint8)
+    # This operation updates the bounding box of the dataset according to the written data
     mag.write(write_data, offset=(10, 20, 30))
 
-    # The bounding box of the dataset was updated according to the written data
+    assert mag.global_offset == (0, 0, 0)  # MagViews always start at (0, 0, 0)
+    assert mag.size == (110, 220, 330)
+
     # Therefore, creating a view with a size of (16, 16, 16) is now allowed
     wk_view = mag.get_view(size=(16, 16, 16))
-    assert wk_view.global_offset == tuple((10, 20, 30))
-    assert wk_view.size == tuple((16, 16, 16))
+    assert wk_view.global_offset == (10, 20, 30)
+    assert wk_view.size == (16, 16, 16)
 
     with pytest.raises(AssertionError):
-        # Creating this view does not work because the offset (0, 0, 0) would be outside of the boundingbox from the properties.json
-        mag.get_view(size=(16, 16, 16), offset=(0, 0, 0))
+        # Creating this view does not work because the offset (0, 0, 0) would be outside
+        # of the bounding box from the properties.json.
+        mag.get_view(size=(26, 36, 46), offset=(0, 0, 0))
 
-    # Creating this view works, even though the offset (0, 0, 0) is outside of the boundingbox from the properties.json, because 'is_bounded' is set to 'False'
-    wk_view = mag.get_view(size=(16, 16, 16), offset=(0, 0, 0))
-    assert wk_view.global_offset == tuple((0, 0, 0))
-    assert wk_view.size == tuple((16, 16, 16))
+    # But setting "read_only=True" still works
+    mag.get_view(size=(26, 36, 46), offset=(0, 0, 0), read_only=True)
 
-    # Creating this view works because the bounding box of the view is inside the bounding box from the properties.json
-    wk_view = mag.get_view(size=(16, 16, 16), offset=(20, 30, 40))
-    assert wk_view.global_offset == tuple((20, 30, 40))
-    assert wk_view.size == tuple((16, 16, 16))
-
-    # Creating this subview works because the subview is completely inside the 'wk_view'
+    # Creating this subview works because the subview is completely inside the 'wk_view'.
+    # Note that the offset in "get_view" is always relative to the "global_offset"-attribute of the called view.
     sub_view = wk_view.get_view(offset=(8, 8, 8), size=(8, 8, 8))
-    assert sub_view.global_offset == tuple((28, 38, 48))
+    assert sub_view.global_offset == tuple((18, 28, 38))
     assert sub_view.size == tuple((8, 8, 8))
 
     with pytest.raises(AssertionError):
         # Creating this subview does not work because it is not completely inside the 'wk_view'
         wk_view.get_view(offset=(8, 8, 8), size=(10, 10, 10))
+
+    # Again: read-only is allowed
+    wk_view.get_view(offset=(8, 8, 8), size=(10, 10, 10), read_only=True)
+
+    with pytest.raises(AssertionError):
+        # negative offsets are not allowed
+        mag.get_view(offset=(-1, -2, -3))
+
+    with pytest.raises(AssertionError):
+        # The fact that this call fails, might be confusing at first glance, but this is intentional.
+        # MagViews always start at (0,0,0), regardless of the bounding box in the properties.
+        # In this case the offset of "mag" in the properties is (8, 8, 8).
+        # If this operation would return a View that starts already at (0, 0, 0). However, this view does
+        # not have a reference to the layer. As a result, write operations that do not update the properties
+        # would be allowed.
+        mag.get_view(mag.global_offset, mag.size)
 
 
 def test_adding_layer_with_invalid_dtype_per_layer() -> None:
@@ -848,13 +830,15 @@ def test_adding_layer_with_invalid_dtype_per_layer() -> None:
     with pytest.raises(TypeError):
         # this would lead to a dtype_per_channel of "uint10", but that is not a valid dtype
         ds.add_layer(
-            "color", Layer.COLOR_TYPE, dtype_per_layer="uint30", num_channels=3
+            "color", LayerTypes.COLOR_TYPE, dtype_per_layer="uint30", num_channels=3
         )
     with pytest.raises(TypeError):
         # "int" is interpreted as "int64", but 64 bit cannot be split into 3 channels
-        ds.add_layer("color", Layer.COLOR_TYPE, dtype_per_layer="int", num_channels=3)
+        ds.add_layer(
+            "color", LayerTypes.COLOR_TYPE, dtype_per_layer="int", num_channels=3
+        )
     ds.add_layer(
-        "color", Layer.COLOR_TYPE, dtype_per_layer="int", num_channels=4
+        "color", LayerTypes.COLOR_TYPE, dtype_per_layer="int", num_channels=4
     )  # "int"/"int64" works with 4 channels
 
 
@@ -862,41 +846,49 @@ def test_adding_layer_with_valid_dtype_per_layer() -> None:
     delete_dir(TESTOUTPUT_DIR / "valid_dtype")
 
     ds = Dataset.create(TESTOUTPUT_DIR / "valid_dtype", scale=(1, 1, 1))
-    ds.add_layer("color1", Layer.COLOR_TYPE, dtype_per_layer="uint24", num_channels=3)
-    ds.add_layer("color2", Layer.COLOR_TYPE, dtype_per_layer=np.uint8, num_channels=1)
-    ds.add_layer("color3", Layer.COLOR_TYPE, dtype_per_channel=np.uint8, num_channels=3)
-    ds.add_layer("color4", Layer.COLOR_TYPE, dtype_per_channel="uint8", num_channels=3)
+    ds.add_layer(
+        "color1", LayerTypes.COLOR_TYPE, dtype_per_layer="uint24", num_channels=3
+    )
+    ds.add_layer(
+        "color2", LayerTypes.COLOR_TYPE, dtype_per_layer=np.uint8, num_channels=1
+    )
+    ds.add_layer(
+        "color3", LayerTypes.COLOR_TYPE, dtype_per_channel=np.uint8, num_channels=3
+    )
+    ds.add_layer(
+        "color4", LayerTypes.COLOR_TYPE, dtype_per_channel="uint8", num_channels=3
+    )
     ds.add_layer(
         "seg1",
-        Layer.SEGMENTATION_TYPE,
+        LayerTypes.SEGMENTATION_TYPE,
         dtype_per_channel="float",
         num_channels=1,
         largest_segment_id=100000,
     )
     ds.add_layer(
         "seg2",
-        Layer.SEGMENTATION_TYPE,
+        LayerTypes.SEGMENTATION_TYPE,
         dtype_per_channel=np.float,
         num_channels=1,
         largest_segment_id=100000,
     )
     ds.add_layer(
         "seg3",
-        Layer.SEGMENTATION_TYPE,
+        LayerTypes.SEGMENTATION_TYPE,
         dtype_per_channel=float,
         num_channels=1,
         largest_segment_id=100000,
     )
     ds.add_layer(
         "seg4",
-        Layer.SEGMENTATION_TYPE,
+        LayerTypes.SEGMENTATION_TYPE,
         dtype_per_channel="double",
         num_channels=1,
         largest_segment_id=100000,
     )
     ds.add_layer(
         "seg5",
-        Layer.SEGMENTATION_TYPE,
+        LayerTypes.SEGMENTATION_TYPE,
         dtype_per_channel="float",
         num_channels=3,
         largest_segment_id=100000,
@@ -936,7 +928,7 @@ def test_writing_subset_of_compressed_data_multi_channel() -> None:
     # create uncompressed dataset
     write_data1 = (np.random.rand(3, 100, 120, 140) * 255).astype(np.uint8)
     Dataset.create(TESTOUTPUT_DIR / "compressed_data", scale=(1, 1, 1)).add_layer(
-        "color", Layer.COLOR_TYPE, num_channels=3
+        "color", LayerTypes.COLOR_TYPE, num_channels=3
     ).add_mag("1", block_len=8, file_len=8).write(write_data1)
 
     # compress data
@@ -972,7 +964,7 @@ def test_writing_subset_of_compressed_data_single_channel() -> None:
     # create uncompressed dataset
     write_data1 = (np.random.rand(100, 120, 140) * 255).astype(np.uint8)
     Dataset.create(TESTOUTPUT_DIR / "compressed_data", scale=(1, 1, 1)).add_layer(
-        "color", Layer.COLOR_TYPE
+        "color", LayerTypes.COLOR_TYPE
     ).add_mag("1", block_len=8, file_len=8).write(write_data1)
 
     # compress data
@@ -1007,7 +999,7 @@ def test_writing_subset_of_compressed_data() -> None:
 
     # create uncompressed dataset
     Dataset.create(TESTOUTPUT_DIR / "compressed_data", scale=(1, 1, 1)).add_layer(
-        "color", Layer.COLOR_TYPE
+        "color", LayerTypes.COLOR_TYPE
     ).add_mag("1", block_len=8, file_len=8).write(
         (np.random.rand(20, 40, 60) * 255).astype(np.uint8)
     )
@@ -1038,7 +1030,7 @@ def test_writing_subset_of_chunked_compressed_data() -> None:
     # create uncompressed dataset
     write_data1 = (np.random.rand(100, 200, 300) * 255).astype(np.uint8)
     Dataset.create(TESTOUTPUT_DIR / "compressed_data", scale=(1, 1, 1)).add_layer(
-        "color", Layer.COLOR_TYPE
+        "color", LayerTypes.COLOR_TYPE
     ).add_mag("1", block_len=8, file_len=8).write(write_data1)
 
     # compress data
@@ -1116,7 +1108,7 @@ def test_search_dataset_also_for_long_layer_name() -> None:
     delete_dir(TESTOUTPUT_DIR / "long_layer_name")
 
     ds = Dataset.create(TESTOUTPUT_DIR / "long_layer_name", scale=(1, 1, 1))
-    mag = ds.add_layer("color", Layer.COLOR_TYPE).add_mag("2")
+    mag = ds.add_layer("color", LayerTypes.COLOR_TYPE).add_mag("2")
 
     assert mag.name == "2"
     short_mag_file_path = join(ds.path, "color", Mag(mag.name).to_layer_name())
@@ -1153,10 +1145,12 @@ def test_outdated_dtype_parameter() -> None:
 
     ds = Dataset.create(TESTOUTPUT_DIR / "outdated_dtype", scale=(1, 1, 1))
     with pytest.raises(ValueError):
-        ds.get_or_add_layer("color", Layer.COLOR_TYPE, dtype=np.uint8, num_channels=1)
+        ds.get_or_add_layer(
+            "color", LayerTypes.COLOR_TYPE, dtype=np.uint8, num_channels=1
+        )
 
     with pytest.raises(ValueError):
-        ds.add_layer("color", Layer.COLOR_TYPE, dtype=np.uint8, num_channels=1)
+        ds.add_layer("color", LayerTypes.COLOR_TYPE, dtype=np.uint8, num_channels=1)
 
 
 def test_dataset_conversion() -> None:
@@ -1167,17 +1161,22 @@ def test_dataset_conversion() -> None:
     delete_dir(converted_ds_path)
 
     # create example dataset
-    origin_wk_ds = Dataset.create(origin_ds_path, scale=(1, 1, 1))
-    wk_seg_layer = origin_wk_ds.add_layer(
-        "layer1", Layer.SEGMENTATION_TYPE, num_channels=1, largest_segment_id=1000000000
+    origin_ds = Dataset.create(origin_ds_path, scale=(1, 1, 1))
+    seg_layer = origin_ds.add_layer(
+        "layer1",
+        LayerTypes.SEGMENTATION_TYPE,
+        num_channels=1,
+        largest_segment_id=1000000000,
     )
-    wk_seg_layer.add_mag("1", block_len=8, file_len=16).write(
+    seg_layer.add_mag("1", block_len=8, file_len=16).write(
         offset=(10, 20, 30), data=(np.random.rand(128, 128, 256) * 255).astype(np.uint8)
     )
-    wk_seg_layer.add_mag("2", block_len=8, file_len=16).write(
+    seg_layer.add_mag("2", block_len=8, file_len=16).write(
         offset=(5, 10, 15), data=(np.random.rand(64, 64, 128) * 255).astype(np.uint8)
     )
-    wk_color_layer = origin_wk_ds.add_layer("layer2", Layer.COLOR_TYPE, num_channels=3)
+    wk_color_layer = origin_ds.add_layer(
+        "layer2", LayerTypes.COLOR_TYPE, num_channels=3
+    )
     wk_color_layer.add_mag("1", block_len=8, file_len=16).write(
         offset=(10, 20, 30),
         data=(np.random.rand(3, 128, 128, 256) * 255).astype(np.uint8),
@@ -1185,23 +1184,23 @@ def test_dataset_conversion() -> None:
     wk_color_layer.add_mag("2", block_len=8, file_len=16).write(
         offset=(5, 10, 15), data=(np.random.rand(3, 64, 64, 128) * 255).astype(np.uint8)
     )
-    converted_ds = origin_wk_ds.copy_dataset(converted_ds_path)
+    converted_ds = origin_ds.copy_dataset(converted_ds_path)
 
-    assert origin_wk_ds.layers.keys() == converted_ds.layers.keys()
-    for layer_name in origin_wk_ds.layers:
+    assert origin_ds.layers.keys() == converted_ds.layers.keys()
+    for layer_name in origin_ds.layers:
         assert (
-            origin_wk_ds.layers[layer_name].mags.keys()
+            origin_ds.layers[layer_name].mags.keys()
             == converted_ds.layers[layer_name].mags.keys()
         )
-        for mag in origin_wk_ds.layers[layer_name].mags:
-            origin_header = origin_wk_ds.layers[layer_name].mags[mag].header
+        for mag in origin_ds.layers[layer_name].mags:
+            origin_header = origin_ds.layers[layer_name].mags[mag].header
             converted_header = converted_ds.layers[layer_name].mags[mag].header
             assert origin_header.voxel_type == converted_header.voxel_type
             assert origin_header.num_channels == converted_header.num_channels
             assert origin_header.block_type == converted_header.block_type
             assert origin_header.block_len == converted_header.block_len
             assert np.array_equal(
-                origin_wk_ds.layers[layer_name].mags[mag].read(),
+                origin_ds.layers[layer_name].mags[mag].read(),
                 converted_ds.layers[layer_name].mags[mag].read(),
             )
 
@@ -1209,28 +1208,26 @@ def test_dataset_conversion() -> None:
 def test_for_zipped_chunks() -> None:
     delete_dir(TESTOUTPUT_DIR / "zipped_chunking_source")
     delete_dir(TESTOUTPUT_DIR / "zipped_chunking_target")
-    copytree(
-        TESTDATA_DIR / "simple_wk_dataset", TESTOUTPUT_DIR / "zipped_chunking_source"
-    )
 
-    source_view = (
-        Dataset(TESTOUTPUT_DIR / "zipped_chunking_source")
-        .get_layer("color")
-        .get_mag("1")
-        .get_view(size=(256, 256, 256))
-    )
+    ds = Dataset.create(TESTOUTPUT_DIR / "zipped_chunking_source", scale=(1, 1, 2))
+    mag = ds.add_layer(
+        "color",
+        category=LayerTypes.COLOR_TYPE,
+        dtype_per_channel="uint8",
+        num_channels=3,
+    ).add_mag("1")
+    mag.write(data=(np.random.rand(3, 256, 256, 256) * 255).astype(np.uint8))
+    source_view = mag.get_view(size=(256, 256, 256))
 
     target_mag = (
-        Dataset.create(TESTOUTPUT_DIR / "zipped_chunking_target", scale=(1, 1, 1))
+        Dataset.create(TESTOUTPUT_DIR / "zipped_chunking_target", scale=(1, 1, 2))
         .get_or_add_layer(
-            "color", Layer.COLOR_TYPE, dtype_per_channel="uint8", num_channels=3
+            "color", LayerTypes.COLOR_TYPE, dtype_per_channel="uint8", num_channels=3
         )
         .get_or_add_mag("1", block_len=8, file_len=4)
     )
 
-    target_mag.layer.dataset.properties._set_bounding_box_of_layer(
-        "color", offset=(0, 0, 0), size=(256, 256, 256)
-    )
+    target_mag.layer.set_bounding_box(offset=(0, 0, 0), size=(256, 256, 256))
     target_view = target_mag.get_view(size=(256, 256, 256))
 
     with get_executor_for_args(None) as executor:
@@ -1261,16 +1258,20 @@ def test_for_zipped_chunks_invalid_target_chunk_size_wk() -> None:
         (200, 128, 128),
     ]
 
-    layer = Dataset.create(
+    ds = Dataset.create(
         TESTOUTPUT_DIR / "zipped_chunking_source_invalid", scale=(1, 1, 1)
-    ).get_or_add_layer("color", Layer.COLOR_TYPE)
-    source_mag_view = layer.get_or_add_mag(1, block_len=8, file_len=8)
-    target_mag_view = layer.get_or_add_mag(2, block_len=8, file_len=8)
-    source_mag_view.write(
-        data=(np.random.rand(1, 300, 300, 300) * 255).astype(np.uint8)
     )
-    source_view = source_mag_view.get_view()
-    target_view = target_mag_view.get_view(size=source_view.size)
+    layer1 = ds.get_or_add_layer("color1", LayerTypes.COLOR_TYPE)
+    source_mag_view = layer1.get_or_add_mag(1, block_len=8, file_len=8)
+
+    layer2 = ds.get_or_add_layer("color2", LayerTypes.COLOR_TYPE)
+    target_mag_view = layer2.get_or_add_mag(1, block_len=8, file_len=8)
+
+    source_view = source_mag_view.get_view(size=(300, 300, 300), read_only=True)
+    # In this test case it is possible to simply set "read_only" for "target_view"
+    # because the function "func" does not really write data to the target_view.
+    # In a real scenario, calling "layer2.set_bounding_box(...)" and not setting "read_only" is recommended.
+    target_view = target_mag_view.get_view(size=(300, 300, 300), read_only=True)
 
     def func(args: Tuple[View, View, int]) -> None:
         (s, t, i) = args
@@ -1290,7 +1291,7 @@ def test_for_zipped_chunks_invalid_target_chunk_size_wk() -> None:
 def test_read_only_view() -> None:
     delete_dir(TESTOUTPUT_DIR / "read_only_view")
     ds = Dataset.create(TESTOUTPUT_DIR / "read_only_view", scale=(1, 1, 1))
-    mag = ds.get_or_add_layer("color", Layer.COLOR_TYPE).get_or_add_mag("1")
+    mag = ds.get_or_add_layer("color", LayerTypes.COLOR_TYPE).get_or_add_mag("1")
     mag.write(
         data=(np.random.rand(1, 10, 10, 10) * 255).astype(np.uint8), offset=(10, 20, 30)
     )
@@ -1305,16 +1306,14 @@ def test_read_only_view() -> None:
 
 
 @pytest.fixture(params=[Dataset])
-def create_dataset(request: Any) -> Generator[MagView, None, None]:
+def create_dataset(request: Any, tmp_path: Path) -> Generator[MagView, None, None]:
     dataset_type = request.param
-    with tempfile.TemporaryDirectory() as temp_dir:
+    ds = dataset_type.create(Path(tmp_path), scale=(2, 2, 1))
 
-        ds = dataset_type.create(Path(temp_dir), scale=(2, 2, 1))
-
-        mag = ds.add_layer("color", "color").add_mag(
-            "2-2-1", block_len=8, file_len=8
-        )  # cube_size = 8*8 = 64
-        yield mag
+    mag = ds.add_layer("color", "color").add_mag(
+        "2-2-1", block_len=8, file_len=8
+    )  # cube_size = 8*8 = 64
+    yield mag
 
 
 def test_bounding_box_on_disk(create_dataset: MagView) -> None:
@@ -1354,12 +1353,10 @@ def test_bounding_box_on_disk(create_dataset: MagView) -> None:
     assert set(bounding_boxes_on_disk) == expected_results
 
 
-def test_compression() -> None:
-    temp_ds_path = Path("testoutput") / "compressed_ds"
-    delete_dir(temp_ds_path)
-    copytree(Path("testdata", "simple_wk_dataset"), temp_ds_path)
+def test_compression(tmp_path: Path) -> None:
+    copytree(Path("testdata", "simple_wk_dataset"), tmp_path / "dataset")
 
-    mag1 = Dataset(temp_ds_path).get_layer("color").get_mag(1)
+    mag1 = Dataset(tmp_path / "dataset").get_layer("color").get_mag(1)
 
     # writing unaligned data to an uncompressed dataset
     write_data = (np.random.rand(3, 10, 20, 30) * 255).astype(np.uint8)
