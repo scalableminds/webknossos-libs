@@ -10,7 +10,12 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 [Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.6.7...HEAD)
 
 ### Breaking Changes in Config & CLI
-
+- Refactoring of the dataset API: [#331](https://github.com/scalableminds/webknossos-cuber/pull/331)
+    - Tiff-support is now dropped 
+    - Module names are now lowercase
+    - Some classes are renamed (`WKDataset`, `WKMagDataset`)
+    - `View` (in particular `get_view()`) is refactored to be safer (this is also a breaking change).
+    
 ### Added
 - Added `docs/api.sh` which opens a server displaying the docs. It can also be used to persist the html to `docs/api` by invoking `docs/api.sh --persist`. [#322](https://github.com/scalableminds/webknossos-cuber/pull/322)
 
