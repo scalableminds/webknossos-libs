@@ -196,8 +196,7 @@ class MagView(View):
         if tuple(bb.topleft) == (-1, -1, -1):
             bb.topleft = np.array((0, 0, 0))
 
-        bb.align_with_mag(Mag(self.name), ceil=True)
-        bb = bb.in_mag(Mag(self.name))
+        bb = bb.align_with_mag(Mag(self.name), ceil=True).in_mag(Mag(self.name))
 
         view_offset = cast(
             Tuple[int, int, int],

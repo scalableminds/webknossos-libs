@@ -390,7 +390,9 @@ class Layer:
         )
 
         source_view = prev_mag_view.get_view(
-            offset=aligned_source_bb.topleft, size=aligned_source_bb.size
+            offset=aligned_source_bb.topleft,
+            size=aligned_source_bb.size,
+            read_only=True,
         )
 
         # perform downsampling
@@ -589,13 +591,10 @@ class Layer:
         block_type = (
             wkw.Header.BLOCK_TYPE_LZ4HC if compress else wkw.Header.BLOCK_TYPE_RAW
         )
-        other_wk_mag = cast(
-            MagView, other_mag
-        )  # This method is only used in the context of creating a new magnification by using the same meta data as another magnification of the same dataset
         return self.add_mag(
             new_mag_name,
-            block_len=other_wk_mag.header.block_len,
-            file_len=other_wk_mag.header.file_len,
+            block_len=other_mag.header.block_len,
+            file_len=other_mag.header.file_len,
             block_type=block_type,
         )
 
