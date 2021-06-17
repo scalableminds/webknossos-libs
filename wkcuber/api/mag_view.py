@@ -83,7 +83,9 @@ class MagView(View):
             header,
             cast(
                 Tuple[int, int, int],
-                tuple(convert_mag1_size(layer.get_bounding_box().size, Mag(name))),
+                tuple(
+                    convert_mag1_size(layer.get_bounding_box().bottomright, Mag(name))
+                ),
             ),
             (0, 0, 0),
             False,
