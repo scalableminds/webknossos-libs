@@ -31,6 +31,8 @@ docker exec -it c1 bash
 ```
 
 Tests can be executed with `python3 -m pytest -s test.py` after entering the container.
+Linting can be ran with `python3 -m pylint cluster_tools/`.
+Code formatting (black) can be ran with `python3 -m black cluster_tools *.py`.
 
 ## Credits
 

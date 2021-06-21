@@ -50,6 +50,12 @@ jobs:
             docker exec c2 bash -c "cd /cluster_tools && python3 setup.py install"
 
       - run:
+          name: Run black
+          command: |
+            cd ./dockered-slurm
+            docker exec slurmctld bash -c "cd /cluster_tools && python3 -m black --check cluster_tools *.py"
+
+      - run:
           name: Run pylint
           command: |
             cd ./dockered-slurm

@@ -7,8 +7,10 @@ import time
 def square(n):
     return n * n
 
+
 def hostinfo():
-    return subprocess.check_output('uname -a', shell=True)
+    return subprocess.check_output("uname -a", shell=True)
+
 
 def sleep(duration):
     time.sleep(duration)
@@ -51,7 +53,7 @@ def sleep_example():
         print(list(executor.map(sleep, [10, 10, 10])))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     example_1()
     example_2()
     example_3()

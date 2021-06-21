@@ -19,11 +19,9 @@ SLURM_STATES = {
         "OUT_OF_MEMORY",
         "PREEMPTED",
         "STOPPED",
-        "TIMEOUT"
+        "TIMEOUT",
     ],
-    "Success": [
-        "COMPLETED"
-    ],
+    "Success": ["COMPLETED"],
     "Ignore": [
         "RUNNING",
         "CONFIGURING",
@@ -33,22 +31,13 @@ SLURM_STATES = {
         "REQUEUE_FED",
         "REQUEUE_HOLD",
         "REQUEUED",
-        "RESIZING"
+        "RESIZING",
     ],
-    "Unclear": [
-        "SUSPENDED",
-        "REVOKED",
-        "SIGNALING",
-        "SPECIAL_EXIT",
-        "STAGE_OUT"
-    ]
+    "Unclear": ["SUSPENDED", "REVOKED", "SIGNALING", "SPECIAL_EXIT", "STAGE_OUT"],
 }
 
 
-
-
 class SlurmExecutor(ClusterExecutor):
-
     @staticmethod
     def get_job_array_index():
         return os.environ.get("SLURM_ARRAY_TASK_ID", None)
@@ -76,13 +65,8 @@ class SlurmExecutor(ClusterExecutor):
 
         return int(job_id)
 
-
     def inner_submit(
-        self,
-        cmdline,
-        job_name=None,
-        additional_setup_lines=[],
-        job_count=None,
+        self, cmdline, job_name=None, additional_setup_lines=[], job_count=None
     ):
         """Starts a Slurm job that runs the specified shell command line.
         """
@@ -103,8 +87,9 @@ class SlurmExecutor(ClusterExecutor):
                 "#!/bin/sh",
                 "#SBATCH --output={}".format(log_path),
                 '#SBATCH --job-name "{}"'.format(job_name),
-                job_array_line
-            ] + job_resources_lines
+                job_array_line,
+            ]
+            + job_resources_lines
             + [*additional_setup_lines, "srun {}".format(cmdline)]
         )
 
@@ -120,11 +105,13 @@ class SlurmExecutor(ClusterExecutor):
         stdout = stdout.decode("utf8")
 
         if exit_code == 0:
-            job_state_search = re.search('JobState=([a-zA-Z_]*)', str(stdout))
+            job_state_search = re.search("JobState=([a-zA-Z_]*)", str(stdout))
             if job_state_search:
                 job_states = [job_state_search.group(1)]
             else:
-                logging.error("Could not extract slurm job state? {}".format(stdout[0:10]))
+                logging.error(
+                    "Could not extract slurm job state? {}".format(stdout[0:10])
+                )
         else:
             stdout, _, exit_code = call("sacct -j {} -o State -P".format(job_id))
             stdout = stdout.decode("utf8")
@@ -146,12 +133,18 @@ class SlurmExecutor(ClusterExecutor):
         elif matches_states(SLURM_STATES["Ignore"]):
             return "ignore"
         elif matches_states(SLURM_STATES["Unclear"]):
-            logging.warn("The job state for {} is {}. It's unclear whether the job will recover. Will wait further".format(job_id, job_states))
+            logging.warn(
+                "The job state for {} is {}. It's unclear whether the job will recover. Will wait further".format(
+                    job_id, job_states
+                )
+            )
             return "ignore"
         elif matches_states(SLURM_STATES["Success"]):
             return "completed"
         else:
-            logging.error("Unhandled slurm job state for job id {}? {}".format(job_id, job_states))
+            logging.error(
+                "Unhandled slurm job state for job id {}? {}".format(job_id, job_states)
+            )
             return "ignore"
 
     def get_pending_tasks(self):
@@ -164,5 +157,7 @@ class SlurmExecutor(ClusterExecutor):
             job_ids = set(stdout.split("\n"))
             return job_ids
         except Exception as e:
-            logging.error("Couldn't query pending jobs. Polling for finished jobs might be slow.")
+            logging.error(
+                "Couldn't query pending jobs. Polling for finished jobs might be slow."
+            )
             return []

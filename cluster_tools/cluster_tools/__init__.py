@@ -15,6 +15,7 @@ import tempfile
 from pathlib import Path
 from functools import partial
 
+
 def get_existent_kwargs_subset(whitelist, kwargs):
     new_kwargs = {}
     for arg_name in whitelist:
@@ -25,6 +26,8 @@ def get_existent_kwargs_subset(whitelist, kwargs):
 
 
 PROCESS_POOL_KWARGS_WHITELIST = ["max_workers", "mp_context", "initializer", "initargs"]
+
+
 class WrappedProcessPoolExecutor(ProcessPoolExecutor):
     def __init__(self, **kwargs):
         new_kwargs = get_existent_kwargs_subset(PROCESS_POOL_KWARGS_WHITELIST, kwargs)
@@ -34,7 +37,9 @@ class WrappedProcessPoolExecutor(ProcessPoolExecutor):
             self.did_overwrite_start_method = True
             self.old_start_method = multiprocessing.get_start_method()
             start_method = kwargs["start_method"]
-            logging.info(f"Overwriting start_method to {start_method}. Previous value: {self.old_start_method}")
+            logging.info(
+                f"Overwriting start_method to {start_method}. Previous value: {self.old_start_method}"
+            )
             multiprocessing.set_start_method(start_method, force=True)
 
         ProcessPoolExecutor.__init__(self, **new_kwargs)
@@ -44,7 +49,9 @@ class WrappedProcessPoolExecutor(ProcessPoolExecutor):
         super().shutdown(*args, **kwargs)
 
         if self.did_overwrite_start_method:
-            logging.info(f"Restoring start_method to original value: {self.old_start_method}.")
+            logging.info(
+                f"Restoring start_method to original value: {self.old_start_method}."
+            )
             multiprocessing.set_start_method(self.old_start_method, force=True)
             self.old_start_method = None
             self.did_overwrite_start_method = False
@@ -61,7 +68,7 @@ class WrappedProcessPoolExecutor(ProcessPoolExecutor):
             # workaround size constraints in pythons multiprocessing
             # implementation. Also see https://github.com/python/cpython/pull/10305/files
             # This should be fixed in python 3.8
-            submit_fn =  self._submit_via_io
+            submit_fn = self._submit_via_io
         else:
             submit_fn = super().submit
 
@@ -70,7 +77,7 @@ class WrappedProcessPoolExecutor(ProcessPoolExecutor):
                 WrappedProcessPoolExecutor._execute_and_persist_function,
                 output_pickle_path,
                 *args,
-                **kwargs
+                **kwargs,
             )
         else:
             fut = submit_fn(*args, **kwargs)
@@ -94,9 +101,13 @@ class WrappedProcessPoolExecutor(ProcessPoolExecutor):
         with open(output_pickle_path, "wb") as file:
             pickling.dump((func, args, kwargs), file)
 
-        future = super().submit(WrappedProcessPoolExecutor._execute_via_io, output_pickle_path)
+        future = super().submit(
+            WrappedProcessPoolExecutor._execute_via_io, output_pickle_path
+        )
 
-        future.add_done_callback(partial(WrappedProcessPoolExecutor._remove_tmp_file, dirpath))
+        future.add_done_callback(
+            partial(WrappedProcessPoolExecutor._remove_tmp_file, dirpath)
+        )
 
         return future
 
@@ -145,7 +156,9 @@ class WrappedProcessPoolExecutor(ProcessPoolExecutor):
                 self.submit(
                     func,
                     arg,
-                    __cfut_options={"output_pickle_path": output_pickle_path_getter(arg)},
+                    __cfut_options={
+                        "output_pickle_path": output_pickle_path_getter(arg)
+                    },
                 )
                 for arg in args
             ]
@@ -170,15 +183,17 @@ class SequentialExecutor(WrappedProcessPoolExecutor):
         kwargs["max_workers"] = 1
         WrappedProcessPoolExecutor.__init__(self, **kwargs)
 
+
 def pickle_identity(obj):
     return pickling.loads(pickling.dumps(obj))
+
 
 def pickle_identity_executor(func, *args, **kwargs):
     result = func(*args, **kwargs)
     return pickle_identity(result)
 
-class PickleExecutor(WrappedProcessPoolExecutor):
 
+class PickleExecutor(WrappedProcessPoolExecutor):
     def submit(self, _func, *_args, **_kwargs):
 
         (func, args, kwargs) = pickle_identity((_func, _args, _kwargs))

@@ -1,6 +1,12 @@
 from concurrent import futures
 import os
-from cluster_tools.util import random_string, FileWaitThread, enrich_future_with_uncaught_warning, get_function_name, with_preliminary_postfix
+from cluster_tools.util import (
+    random_string,
+    FileWaitThread,
+    enrich_future_with_uncaught_warning,
+    get_function_name,
+    with_preliminary_postfix,
+)
 import threading
 import signal
 import sys
@@ -12,6 +18,7 @@ import logging
 from typing import Union
 from cluster_tools.tailf import Tail
 import shutil
+
 
 class RemoteException(Exception):
     def __init__(self, error, job_id):
@@ -33,17 +40,21 @@ class ClusterExecutor(futures.Executor):
         job_resources=None,
         job_name=None,
         additional_setup_lines=[],
-        **kwargs
+        **kwargs,
     ):
         self.debug = debug
         self.job_resources = job_resources
         self.additional_setup_lines = additional_setup_lines
         self.job_name = job_name
         self.was_requested_to_shutdown = False
-        self.cfut_dir = cfut_dir if cfut_dir is not None else os.getenv("CFUT_DIR", ".cfut")
+        self.cfut_dir = (
+            cfut_dir if cfut_dir is not None else os.getenv("CFUT_DIR", ".cfut")
+        )
         self.files_to_clean_up = []
 
-        logging.info(f"Instantiating ClusterExecutor. Log files are stored in {self.cfut_dir}")
+        logging.info(
+            f"Instantiating ClusterExecutor. Log files are stored in {self.cfut_dir}"
+        )
 
         # `jobs` maps from job id to (future, workerid, outfile_name, should_keep_output)
         # In case, job arrays are used: job id and workerid are in the format of
@@ -67,16 +78,18 @@ class ClusterExecutor(futures.Executor):
             self.meta_data["logging_config"] = kwargs["logging_config"]
 
     def handle_kill(self, signum, frame):
-      self.wait_thread.stop()
-      job_ids = ",".join(str(id) for id in self.jobs.keys())
-      print("A termination signal was registered. The following jobs are still running on the cluster:\n{}".format(job_ids))
-      sys.exit(130)
-
+        self.wait_thread.stop()
+        job_ids = ",".join(str(id) for id in self.jobs.keys())
+        print(
+            "A termination signal was registered. The following jobs are still running on the cluster:\n{}".format(
+                job_ids
+            )
+        )
+        sys.exit(130)
 
     @abstractmethod
     def check_for_crashed_job(self, job_id) -> Union["failed", "ignore", "completed"]:
         pass
-
 
     def _start(self, workerid, job_count=None, job_name=None):
         """Start a job with the given worker ID and return an ID
@@ -106,7 +119,6 @@ class ClusterExecutor(futures.Executor):
 
         outf = self.format_log_file_path(jobid)
         self.files_to_clean_up.append(outf)
-
 
     @abstractmethod
     def format_log_file_name(self, jobid):
@@ -214,7 +226,9 @@ class ClusterExecutor(futures.Executor):
         self.ensure_not_shutdown()
 
         # Start the job.
-        serialized_function_info = pickling.dumps((fun, args, kwargs, self.meta_data, output_pickle_path))
+        serialized_function_info = pickling.dumps(
+            (fun, args, kwargs, self.meta_data, output_pickle_path)
+        )
         with open(self.format_infile_name(self.cfut_dir, workerid), "wb") as f:
             f.write(serialized_function_info)
 
@@ -222,7 +236,9 @@ class ClusterExecutor(futures.Executor):
 
         preliminary_output_pickle_path = with_preliminary_postfix(output_pickle_path)
         if os.path.exists(preliminary_output_pickle_path):
-            logging.warning(f"Deleting stale output file at {preliminary_output_pickle_path}...")
+            logging.warning(
+                f"Deleting stale output file at {preliminary_output_pickle_path}..."
+            )
             os.unlink(preliminary_output_pickle_path)
 
         job_name = get_function_name(fun)
@@ -247,7 +263,9 @@ class ClusterExecutor(futures.Executor):
         return str(jobid) + "_" + str(index)
 
     def get_function_pickle_path(self, workerid):
-        return self.format_infile_name(self.cfut_dir, self.get_workerid_with_index(workerid, "function"))
+        return self.format_infile_name(
+            self.cfut_dir, self.get_workerid_with_index(workerid, "function")
+        )
 
     @staticmethod
     def get_main_meta_path(cfut_dir, workerid):
@@ -280,17 +298,25 @@ class ClusterExecutor(futures.Executor):
             workerid_with_index = self.get_workerid_with_index(workerid, index)
 
             if output_pickle_path_getter is None:
-                output_pickle_path = self.format_outfile_name(self.cfut_dir, workerid_with_index)
+                output_pickle_path = self.format_outfile_name(
+                    self.cfut_dir, workerid_with_index
+                )
             else:
                 output_pickle_path = output_pickle_path_getter(arg)
 
-            preliminary_output_pickle_path = with_preliminary_postfix(output_pickle_path)
+            preliminary_output_pickle_path = with_preliminary_postfix(
+                output_pickle_path
+            )
             if os.path.exists(preliminary_output_pickle_path):
-                logging.warning(f"Deleting stale output file at {preliminary_output_pickle_path}...")
+                logging.warning(
+                    f"Deleting stale output file at {preliminary_output_pickle_path}..."
+                )
                 os.unlink(preliminary_output_pickle_path)
 
             # Start the job.
-            serialized_function_info = pickling.dumps((pickled_function_path, [arg], {}, self.meta_data, output_pickle_path))
+            serialized_function_info = pickling.dumps(
+                (pickled_function_path, [arg], {}, self.meta_data, output_pickle_path)
+            )
             infile_name = self.format_infile_name(self.cfut_dir, workerid_with_index)
 
             with open(infile_name, "wb") as f:
@@ -321,7 +347,12 @@ class ClusterExecutor(futures.Executor):
                 fut.cluster_jobid = jobid
                 fut.cluster_jobindex = index
 
-                self.jobs[jobid_with_index] = (fut, workerid_with_index, outfile_name, should_keep_output)
+                self.jobs[jobid_with_index] = (
+                    fut,
+                    workerid_with_index,
+                    outfile_name,
+                    should_keep_output,
+                )
 
         return [fut for (fut, _) in futs_with_output_paths]
 
@@ -343,7 +374,6 @@ class ClusterExecutor(futures.Executor):
                 pass
         self.files_to_clean_up = []
 
-
     def map(self, func, args, timeout=None, chunksize=None):
         if chunksize is not None:
             logging.warning(
@@ -362,13 +392,10 @@ class ClusterExecutor(futures.Executor):
         def result_generator():
             for fut in futs:
                 passed_time = time.time() - start_time
-                remaining_timeout = (
-                    None if timeout is None else timeout - passed_time
-                )
+                remaining_timeout = None if timeout is None else timeout - passed_time
                 yield fut.result(remaining_timeout)
 
         return result_generator()
-    
 
     def map_unordered(self, func, args):
         futs = self.map_to_futures(func, args)

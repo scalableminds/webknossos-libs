@@ -8,15 +8,19 @@ import logging
 import re
 import types
 
+
 def local_filename(filename=""):
     return os.path.join(os.getenv("CFUT_DIR", ".cfut"), filename)
+
 
 # Instantiate a dedicate generator to avoid being dependent on
 # the global seed which some external code might have set.
 random_generator = random.Random()
 
+
 def random_string(length=32, chars=(string.ascii_letters + string.digits)):
-    return ''.join(random_generator.choice(chars) for i in range(length))
+    return "".join(random_generator.choice(chars) for i in range(length))
+
 
 def call(command, stdin=None):
     """Invokes a shell command as a subprocess, optionally with some
@@ -27,22 +31,32 @@ def call(command, stdin=None):
         stdin_flag = subprocess.PIPE
     else:
         stdin_flag = None
-    proc = subprocess.Popen(command, shell=True, stdin=stdin_flag,
-                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    proc = subprocess.Popen(
+        command,
+        shell=True,
+        stdin=stdin_flag,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
     stdout, stderr = proc.communicate(stdin)
     return stdout, stderr, proc.returncode
 
+
 class CommandError(Exception):
     """Raised when a shell command exits abnormally."""
+
     def __init__(self, command, code, stderr):
         self.command = command
         self.code = code
         self.stderr = stderr
 
     def __str__(self):
-        return "%s exited with status %i: %s" % (repr(self.command),
-                                                 self.code,
-                                                 repr(self.stderr))
+        return "%s exited with status %i: %s" % (
+            repr(self.command),
+            self.code,
+            repr(self.stderr),
+        )
+
 
 def chcall(command, stdin=None):
     """Like ``call`` but raises an exception when the return code is
@@ -55,17 +69,22 @@ def chcall(command, stdin=None):
 
 
 def warn_after(job, seconds):
-    '''
+    """
     Use as decorator to warn when a function is taking longer than {seconds} seconds.
-    '''
+    """
+
     def outer(fn):
         def inner(*args, **kwargs):
             exceeded_timeout = [False]
             start_time = time.time()
 
             def warn_function():
-              logging.warn("Function {} is taking suspiciously long (longer than {} seconds)".format(job, seconds))
-              exceeded_timeout[0] = True
+                logging.warn(
+                    "Function {} is taking suspiciously long (longer than {} seconds)".format(
+                        job, seconds
+                    )
+                )
+                exceeded_timeout[0] = True
 
             timer = threading.Timer(seconds, warn_function)
             timer.start()
@@ -74,11 +93,17 @@ def warn_after(job, seconds):
                 result = fn(*args, **kwargs)
                 if exceeded_timeout[0]:
                     end_time = time.time()
-                    logging.warn("Function {} succeeded after all (took {} seconds)".format(job, int(end_time - start_time)))
+                    logging.warn(
+                        "Function {} succeeded after all (took {} seconds)".format(
+                            job, int(end_time - start_time)
+                        )
+                    )
             finally:
                 timer.cancel()
             return result
+
         return inner
+
     return outer
 
 
@@ -116,7 +141,6 @@ class FileWaitThread(threading.Thread):
             self.waiting[filename] = value
 
     def run(self):
-
         def handle_completed_job(job_id, filename, failed_early):
             self.callback(job_id, failed_early)
             del self.waiting[filename]
@@ -154,12 +178,16 @@ class FileWaitThread(threading.Thread):
                                     # Retry by looping again
                                     logging.warning(
                                         "Job state is completed, but {} couldn't be found. Retrying {}/{}".format(
-                                            filename, self.retryMap[filename], FileWaitThread.MAX_RETRY
+                                            filename,
+                                            self.retryMap[filename],
+                                            FileWaitThread.MAX_RETRY,
                                         )
                                     )
                                 else:
                                     logging.error(
-                                        "Job state is completed, but {} couldn't be found.".format(filename)
+                                        "Job state is completed, but {} couldn't be found.".format(
+                                            filename
+                                        )
                                     )
                                     handle_completed_job(job_id, filename, True)
 
@@ -168,6 +196,7 @@ class FileWaitThread(threading.Thread):
                             elif status == "ignore":
                                 pass
             time.sleep(self.interval)
+
 
 def get_function_name(fun):
     # When using functools.partial, __name__ does not exist
@@ -181,7 +210,11 @@ def enrich_future_with_uncaught_warning(f):
     def warn_on_exception(future):
         maybe_exception = future.exception()
         if maybe_exception is not None:
-            logging.error("A future crashed with an exception: {}. Future: {}".format(maybe_exception, future))
+            logging.error(
+                "A future crashed with an exception: {}. Future: {}".format(
+                    maybe_exception, future
+                )
+            )
 
     if not hasattr(f, "is_wrapped_by_cluster_tools"):
         f.is_wrapped_by_cluster_tools = True
