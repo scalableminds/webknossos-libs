@@ -11,10 +11,19 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 
 ### Breaking Changes in Config & CLI
 - Refactoring of the dataset API: [#331](https://github.com/scalableminds/webknossos-cuber/pull/331)
-    - Tiff-support is now dropped 
-    - Module names are now lowercase
-    - Some classes are renamed (`WKDataset`, `WKMagDataset`)
+    - Tiff-support is now dropped (`TiffDataset` and `TiledTiffDataset` are now removed (alongside their corresponding `Layer` and `MagDataset` classes))
+    - Module names are now lowercase (previously: `wkcuber.api.Dataset`, `wkcuber.api.Layer`, `wkcuber.api.View`, `wkcuber.api.properties.DatasetProperties`, `wkcuber.api.properties.LayerProperties`, `wkcuber.api.properties.ResolutionProperties`)
+    - Some classes are renamed (`WKDataset` -> `Dataset`, `WKMagDataset` -> `MagView`)
+    - The "Layer types" (previously `Layer.COLOR` and `Layer.SEGMENTATION`) are now moved into their own class `wkcuber.api.layer.LayerTypes`. 
     - `View` (in particular `get_view()`) is refactored to be safer (this is also a breaking change).
+      - The attribute `path_to_mag_dataset` was renamed to `path_to_mag_view`
+      - Changes for `get_view` (these changes also apply for `MagView.get_view()` (previously `MagDataset.get_view()`)):
+        - The parameter `relative_offset` was renamed to `offset`.
+        - The parameter `is_bounded` was dropped (`View`s are now always bounded).
+        - The order of the parameters `size` and `offset` was changed, so that `offset` is now the first parameter.
+      - Changes for `get_view`:
+        - The parameter `relative_offset` was renamed to `offset`
+    - The shorthand `wkcuber.api.dataset.Dataset.get_view()` was removed.
     
 ### Added
 - Added `docs/api.sh` which opens a server displaying the docs. It can also be used to persist the html to `docs/api` by invoking `docs/api.sh --persist`. [#322](https://github.com/scalableminds/webknossos-cuber/pull/322)
