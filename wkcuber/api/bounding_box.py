@@ -318,7 +318,7 @@ class BoundingBox:
 
     def copy(self) -> "BoundingBox":
 
-        return BoundingBox(self.topleft.copy(), self.bottomright.copy())
+        return BoundingBox(self.topleft.copy(), self.size.copy())
 
     def offset(self, vector: Tuple[int, int, int]) -> "BoundingBox":
 
