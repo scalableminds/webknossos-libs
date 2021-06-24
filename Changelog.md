@@ -7,7 +7,19 @@ and this project adheres to [Calendar Versioning](http://calver.org/) `0Y.0M.MIC
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.6.7...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.6.8...HEAD)
+
+### Breaking Changes in Config & CLI
+
+### Added
+
+### Changed
+
+### Fixed
+- Use an os independent path separator for regexes. [#334](https://github.com/scalableminds/webknossos-cuber/pull/334)
+
+## [0.6.8](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.6.8) - 2021-06-18
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.6.7...v0.6.8)
 
 ### Breaking Changes in Config & CLI
 
@@ -17,6 +29,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+
 
 ## [0.6.7](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.6.7) - 2021-05-28
 [Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.6.6...v0.6.7)
