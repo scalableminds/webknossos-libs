@@ -47,11 +47,14 @@ class MagView(View):
     """
     A `MagView` contains all information about the data of a single magnification of a `wkcuber.api.layer.Layer`.
     `MagView` inherits from `wkcuber.api.view.View`.
-    The main difference between them is that a `MagView` does have a reference to a `wkcuber.api.layer.Layer` (while `View` does not).
-    This means that a `MagView` can only exist in the context of the dataset API.
-    The benefit of the `MagView` is that the properties can be automatically updated if it is necessary (e.g. the bounding box changed).
-    The other major difference is that (unlike basic Views) `MagView` are allowed to read/write outside of their specified bounding box.
-    If this happens, the bounding box gets updated.
+    Therefore, the main difference between them is that a `MagView` handles the whole magnification,
+    whereas the `View` only handles a sub-region.
+
+    A `MagView` can read/write outside the specified bounding box (unlike a normal `View`).
+    If necessary, the properties are automatically updated (e.g. if the bounding box changed).
+    This is possible because a `MagView` does have a reference to the `wkcuber.api.layer.Layer`.
+
+    The `global_offset` of a `MagView` is always `(0, 0, 0)` and its `size` is chosen so that the bounding box from the properties is fully inside this View.
     """
 
     def __init__(
@@ -64,11 +67,7 @@ class MagView(View):
         create: bool = False,
     ) -> None:
         """
-        Initializes a `MagView`. If `create` is `True`, a `wkw.Dataset` is created (see [webknossos-wrap (wkw)](https://github.com/scalableminds/webknossos-wrap)).
-        The global_offset of a `MagView` is always `(0, 0, 0)` and its size is chosen so that the bounding box from the properties is fully inside this View.
-
-        A `MagView` cannot exist without a layer. The desired procedure to create a new `MagView` is to call
-        `wkcuber.api.layer.Layer.add_mag` instead of creating and then adding it manually.
+        Do not use this constructor manually. Instead use `wkcuber.api.layer.Layer.add_mag()` to create a `MagView`.
         """
         header = wkw.Header(
             voxel_type=layer.dtype_per_channel,

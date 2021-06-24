@@ -14,7 +14,7 @@ from wkcuber.utils import wait_and_ensure_success
 
 class View:
     """
-    A `View` is essentially a bounding box to a section of a specific `wkw.Dataset` that also provides functionality.
+    A `View` is essentially a bounding box to a region of a specific `wkw.Dataset` that also provides functionality.
     Read- and write-operations are restricted to the bounding box.
     `View`s are designed to be easily passed around as parameters.
     A `View`, in its most basic form, does not have a reference to the `wkcuber.api.dataset.Dataset`.
@@ -30,17 +30,12 @@ class View:
         read_only: bool = False,
     ):
         """
-        Initializes a `View`. If `create` is `True`, a `wkw.Dataset` is created (see [webknossos-wrap (wkw)](https://github.com/scalableminds/webknossos-wrap)).
-
-        Most of the time the `View` is used in the context of the dataset API, even though it could also be used without it.
-
-        In the context of the dataset API, `View`s appear for example in the form of `wkcuber.api.mag_view.MagView` (which are also `View`s).
-        Sub-views can be created with `View.get_view()`.
+        Do not use this constructor manually. Instead use `wkcuber.api.mag_view.MagView.get_view()` to get a `View`.
         """
         self.dataset: Optional[Dataset] = None
         self.path = path_to_mag_view
         self.header: wkw.Header = header
-        self.size = size
+        self.size: Tuple[int, int, int] = size
         self.global_offset: Tuple[int, int, int] = global_offset
         self._is_bounded = is_bounded
         self.read_only = read_only
@@ -80,7 +75,7 @@ class View:
     def write(
         self,
         data: np.ndarray,
-        relative_offset: Tuple[int, int, int] = (0, 0, 0),
+        offset: Tuple[int, int, int] = (0, 0, 0),
         allow_compressed_write: bool = False,
     ) -> None:
         """
@@ -96,8 +91,8 @@ class View:
 
         was_opened = self._is_opened
         # assert the size of the parameter data is not in conflict with the attribute self.size
-        _assert_positive_dimensions(relative_offset, data.shape[-3:])
-        self._assert_bounds(relative_offset, data.shape[-3:])
+        _assert_positive_dimensions(offset, data.shape[-3:])
+        self._assert_bounds(offset, data.shape[-3:])
 
         if len(data.shape) == 4 and data.shape[0] == 1:
             data = data[0]  # remove channel dimension
@@ -105,7 +100,7 @@ class View:
         # calculate the absolute offset
         absolute_offset = cast(
             Tuple[int, int, int],
-            tuple(sum(x) for x in zip(self.global_offset, relative_offset)),
+            tuple(sum(x) for x in zip(self.global_offset, offset)),
         )
 
         if self._is_compressed() and allow_compressed_write:
@@ -131,7 +126,7 @@ class View:
         If no `size` is specified, the size of the view is used.
         If the specified bounding box exceeds the data on disk, the rest is padded with `0`.
 
-        Retruns the specified data as a `np.array`.
+        Returns the specified data as a `np.array`.
 
 
         Example:
@@ -268,9 +263,11 @@ class View:
         The view is chunked into multiple sub-views of size `chunk_size`.
         Then, `work_on_chunk` is performed on each sub-view.
         Besides the view, the counter 'i' is passed to the 'work_on_chunk',
-        which can be used for logging. additional parameter for 'work_on_chunk' can be specified.
+        which can be used for logging. Additional parameter for 'work_on_chunk' can be specified.
         The computation of each chunk has to be independent of each other.
         Therefore, the work can be parallelized with `executor`.
+
+        If the `View` is of type `MagView`, only the bounding box from the properties is chunked.
 
         Example:
         ```python
@@ -293,25 +290,29 @@ class View:
             )
         ```
         """
-        self._check_chunk_size(chunk_size)
+
+        _check_chunk_size(chunk_size)
+        # This "view" object assures that the operation cannot exceed the bounding box of the properties.
+        # `View.get_view()` returns a `View` of the same size as the current object (because of the default parameters).
+        # `MagView.get_view()` returns a `View` with the bounding box from the properties.
+        view = self.get_view()
 
         job_args = []
 
         for i, chunk in enumerate(
-            BoundingBox(self.global_offset, self.size).chunk(
+            BoundingBox(view.global_offset, view.size).chunk(
                 chunk_size, list(chunk_size)
             )
         ):
             relative_offset = cast(
                 Tuple[int, int, int],
-                tuple(np.array(chunk.topleft) - np.array(self.global_offset)),
+                tuple(np.array(chunk.topleft) - np.array(view.global_offset)),
             )
-            view = self.get_view(
+            chunk_view = view.get_view(
                 offset=relative_offset,
                 size=cast(Tuple[int, int, int], tuple(chunk.size)),
             )
-            view._is_bounded = True
-            job_args.append((view, i))
+            job_args.append((chunk_view, i))
 
         # execute the work for each chunk
         wait_and_ensure_success(executor.map_to_futures(work_on_chunk, job_args))
@@ -343,21 +344,28 @@ class View:
         - source_chunk_size: (2048, 2048, 2048)
         - target_chunk_size: (1024, 1024, 1024) // this must be a multiple of the file size on disk to avoid concurrent writes
         """
-        source_offset = np.array(self.global_offset)
+
+        _check_chunk_size(source_chunk_size)
+        _check_chunk_size(target_chunk_size)
+
+        source_view = self.get_view()
+        target_view = target_view.get_view()
+
+        source_offset = np.array(source_view.global_offset)
         target_offset = np.array(target_view.global_offset)
         source_chunk_size_np = np.array(source_chunk_size)
         target_chunk_size_np = np.array(target_chunk_size)
 
         assert np.all(
-            np.array(self.size)
+            np.array(source_view.size)
         ), "Calling 'for_zipped_chunks' failed because the size of the source view contains a 0."
         assert np.all(
             np.array(target_view.size)
         ), "Calling 'for_zipped_chunks' failed because the size of the target view contains a 0."
         assert np.array_equal(
-            np.array(self.size) / np.array(target_view.size),
+            np.array(source_view.size) / np.array(target_view.size),
             source_chunk_size_np / target_chunk_size_np,
-        ), f"Calling 'for_zipped_chunks' failed because the ratio of the view sizes (source size = {self.size}, target size = {target_view.size}) must be equal to the ratio of the chunk sizes (source_chunk_size = {source_chunk_size}, source_chunk_size = {target_chunk_size}))"
+        ), f"Calling 'for_zipped_chunks' failed because the ratio of the view sizes (source size = {source_view.size}, target size = {target_view.size}) must be equal to the ratio of the chunk sizes (source_chunk_size = {source_chunk_size}, source_chunk_size = {target_chunk_size}))"
 
         assert not any(
             target_chunk_size_np
@@ -365,7 +373,7 @@ class View:
         ), f"Calling for_zipped_chunks failed. The target_chunk_size ({target_chunk_size}) must be a multiple of file_len*block_len of the target view ({target_view.header.file_len * target_view.header.block_len})"
 
         job_args = []
-        source_chunks = BoundingBox(source_offset, self.size).chunk(
+        source_chunks = BoundingBox(source_offset, source_view.size).chunk(
             source_chunk_size_np, list(source_chunk_size_np)
         )
         target_chunks = BoundingBox(target_offset, target_view.size).chunk(
@@ -377,7 +385,7 @@ class View:
         ):
             # source chunk
             relative_source_offset = np.array(source_chunk.topleft) - source_offset
-            source_chunk_view = self.get_view(
+            source_chunk_view = source_view.get_view(
                 offset=cast(Tuple[int, int, int], tuple(relative_source_offset)),
                 size=cast(Tuple[int, int, int], tuple(source_chunk.size)),
                 read_only=True,
@@ -393,24 +401,6 @@ class View:
 
         # execute the work for each pair of chunks
         wait_and_ensure_success(executor.map_to_futures(work_on_chunk, job_args))
-
-    def _check_chunk_size(self, chunk_size: Tuple[int, int, int]) -> None:
-        assert chunk_size is not None
-
-        if 0 in chunk_size:
-            raise AssertionError(
-                f"The passed parameter 'chunk_size' {chunk_size} contains at least one 0. This is not allowed."
-            )
-        if not np.all(
-            np.array([math.log2(size).is_integer() for size in np.array(chunk_size)])
-        ):
-            raise AssertionError(
-                f"Each element of the passed parameter 'chunk_size' {chunk_size} must be a power of 2.."
-            )
-        if (np.array(chunk_size) % (32, 32, 32)).any():
-            raise AssertionError(
-                f"The passed parameter 'chunk_size' {chunk_size} must be a multiple of (32, 32, 32)."
-            )
 
     def _is_compressed(self) -> bool:
         return (
@@ -490,4 +480,23 @@ def _assert_positive_dimensions(
     if any(x <= 0 for x in size):
         raise AssertionError(
             f"The size ({size}) contains a negative value (or zeros). All dimensions must be strictly larger than '0'."
+        )
+
+
+def _check_chunk_size(chunk_size: Tuple[int, int, int]) -> None:
+    assert chunk_size is not None
+
+    if 0 in chunk_size:
+        raise AssertionError(
+            f"The passed parameter 'chunk_size' {chunk_size} contains at least one 0. This is not allowed."
+        )
+    if not np.all(
+        np.array([math.log2(size).is_integer() for size in np.array(chunk_size)])
+    ):
+        raise AssertionError(
+            f"Each element of the passed parameter 'chunk_size' {chunk_size} must be a power of 2.."
+        )
+    if (np.array(chunk_size) % (32, 32, 32)).any():
+        raise AssertionError(
+            f"The passed parameter 'chunk_size' {chunk_size} must be a multiple of (32, 32, 32)."
         )

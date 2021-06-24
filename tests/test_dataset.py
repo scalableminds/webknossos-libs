@@ -582,15 +582,13 @@ def test_properties_with_segmentation() -> None:
             assert input_data == output_data
 
 
-def test_chunking_wk() -> None:
-    delete_dir(TESTOUTPUT_DIR / "chunking_dataset_wk")
-    copytree(TESTDATA_DIR / "simple_wk_dataset", TESTOUTPUT_DIR / "chunking_dataset_wk")
+def test_chunking_wk(tmp_path: Path) -> None:
+    ds = Dataset.create(Path(tmp_path), scale=(2, 2, 1))
+    layer = ds.add_layer("color", LayerTypes.COLOR_TYPE)
+    mag = layer.add_mag("1", file_len=8, block_len=8)
 
-    mag = (
-        Dataset(TESTOUTPUT_DIR / "chunking_dataset_wk").get_layer("color").get_mag("1")
-    )
-
-    original_data = mag.read()
+    original_data = (np.random.rand(50, 100, 150) * 205).astype(np.uint8)
+    mag.write(offset=(70, 80, 90), data=original_data)
 
     with get_executor_for_args(None) as executor:
         mag.for_each_chunk(
@@ -599,7 +597,7 @@ def test_chunking_wk() -> None:
             executor=executor,
         )
 
-    assert np.array_equal(original_data + 50, mag.read())
+    assert np.array_equal(original_data + 50, mag.get_view().read()[0])
 
 
 def test_chunking_wk_advanced() -> None:
@@ -946,7 +944,7 @@ def test_writing_subset_of_compressed_data_multi_channel() -> None:
     write_data2 = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
     # Writing compressed data directly to "compressed_mag" also works, but using a View here covers an additional edge case
     compressed_mag.get_view(offset=(50, 60, 70)).write(
-        relative_offset=(10, 20, 30), data=write_data2, allow_compressed_write=True
+        offset=(10, 20, 30), data=write_data2, allow_compressed_write=True
     )
 
     assert np.array_equal(
@@ -982,7 +980,7 @@ def test_writing_subset_of_compressed_data_single_channel() -> None:
     write_data2 = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
     # Writing compressed data directly to "compressed_mag" also works, but using a View here covers an additional edge case
     compressed_mag.get_view(offset=(50, 60, 70)).write(
-        relative_offset=(10, 20, 30), data=write_data2, allow_compressed_write=True
+        offset=(10, 20, 30), data=write_data2, allow_compressed_write=True
     )
 
     assert np.array_equal(
@@ -1052,13 +1050,13 @@ def test_writing_subset_of_chunked_compressed_data() -> None:
     # The aligned data (offset=(0,0,0), size=(64, 64, 64)) IS fully within the bounding box of the view
     write_data2 = (np.random.rand(50, 40, 30) * 255).astype(np.uint8)
     compressed_view.write(
-        relative_offset=(10, 20, 30), data=write_data2, allow_compressed_write=True
+        offset=(10, 20, 30), data=write_data2, allow_compressed_write=True
     )
 
     # Advanced case:
     # The aligned data (offset=(0,0,0), size=(128, 128, 128)) is NOT fully within the bounding box of the view
     compressed_view.write(
-        relative_offset=(10, 20, 30),
+        offset=(10, 20, 30),
         data=(np.random.rand(90, 80, 70) * 255).astype(np.uint8),
         allow_compressed_write=True,
     )
@@ -1305,10 +1303,9 @@ def test_read_only_view() -> None:
     v_write.write(data=new_data)
 
 
-@pytest.fixture(params=[Dataset])
-def create_dataset(request: Any, tmp_path: Path) -> Generator[MagView, None, None]:
-    dataset_type = request.param
-    ds = dataset_type.create(Path(tmp_path), scale=(2, 2, 1))
+@pytest.fixture()
+def create_dataset(tmp_path: Path) -> Generator[MagView, None, None]:
+    ds = Dataset.create(Path(tmp_path), scale=(2, 2, 1))
 
     mag = ds.add_layer("color", "color").add_mag(
         "2-2-1", block_len=8, file_len=8

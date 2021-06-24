@@ -244,8 +244,10 @@ class Dataset:
         Creates a new layer called `layer_name` and adds it to the dataset.
         The dtype can either be specified per layer or per channel.
         If neither of them are specified, `uint8` per channel is used as default.
-        When creating a `wkcuber.api.layer.SegmentationLayer` (`category="segmentation"`),
+        When creating a "Segmentation Layer" (`category="segmentation"`),
         the parameter `largest_segment_id` also has to be specified.
+
+        Creates the folder `layer_name` in the directory of `self.path`.
 
         The return type is `wkcuber.api.layer.Layer`.
 
