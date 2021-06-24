@@ -1,4 +1,5 @@
 import json
+import os
 import re
 import wkw
 import logging
@@ -235,7 +236,9 @@ def detect_bbox(dataset_path: Path, layer: str, mag: Mag = Mag(1)) -> Optional[d
         return iglob(path.join(layer_path, "*", "*", "*.wkw"), recursive=True)
 
     def parse_cube_file_name(filename: str) -> Tuple[int, int, int]:
-        CUBE_REGEX = re.compile(r"z(\d+)/y(\d+)/x(\d+)(\.wkw)$")
+        CUBE_REGEX = re.compile(
+            fr"z(\d+){os.path.sep}y(\d+){os.path.sep}x(\d+)(\.wkw)$"
+        )
         m = CUBE_REGEX.search(filename)
         if m is not None:
             return int(m.group(3)), int(m.group(2)), int(m.group(1))
