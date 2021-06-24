@@ -7,7 +7,7 @@ and this project adheres to [Calendar Versioning](http://calver.org/) `0Y.0M.MIC
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.6.7...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.6.8...HEAD)
 
 ### Breaking Changes in Config & CLI
 - Refactoring of the dataset API: [#331](https://github.com/scalableminds/webknossos-cuber/pull/331)
@@ -25,6 +25,17 @@ For upgrade instructions, please check the respective *Breaking Changes* section
         - The parameter `relative_offset` was renamed to `offset`
     - The shorthand `wkcuber.api.dataset.Dataset.get_view()` was removed.
     
+### Added
+
+### Changed
+
+### Fixed
+
+## [0.6.8](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.6.8) - 2021-06-18
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.6.7...v0.6.8)
+
+### Breaking Changes in Config & CLI
+
 ### Added
 - Added `docs/api.sh` which opens a server displaying the docs. It can also be used to persist the html to `docs/api` by invoking `docs/api.sh --persist`. [#322](https://github.com/scalableminds/webknossos-cuber/pull/322)
 
