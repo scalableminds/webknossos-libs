@@ -174,11 +174,11 @@ class TiffImageReader(ImageReader):
         self.channel_count: Optional[int] = None
         self.z_axis_before_c: Optional[bool] = None
         self.c_count: Optional[int] = None
-        self.z_count:Optional[int] = None
-        self.x_page_index:Optional[int]  = None
-        self.y_page_index:Optional[int]  = None
+        self.z_count: Optional[int] = None
+        self.x_page_index: Optional[int] = None
+        self.y_page_index: Optional[int] = None
         self.width: Optional[int] = None
-        self.height: Optional[int]  = None
+        self.height: Optional[int] = None
 
     @staticmethod
     def find_correct_channels(
@@ -288,7 +288,9 @@ class TiffImageReader(ImageReader):
                 output[output_channel_offset:next_channel_offset] = np.array(
                     list(
                         map(
-                            lambda x: x.transpose((2, self.x_page_index, self.y_page_index)),
+                            lambda x: x.transpose(
+                                (2, self.x_page_index, self.y_page_index)
+                            ),
                             map(
                                 lambda x: x[:, :, sample_slice[0] : sample_slice[1]]
                                 if sample_slice is not None

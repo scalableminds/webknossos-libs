@@ -5,7 +5,8 @@ from typing import Iterable, List, Any, Tuple, Dict, Set, Callable, cast, Option
 
 from .cubing import (
     cubing as cube_image_stack,
-    create_parser as create_image_stack_parser, get_channel_and_sample_count_and_dtype,
+    create_parser as create_image_stack_parser,
+    get_channel_and_sample_count_and_dtype,
 )
 from .convert_knossos import (
     main as convert_knossos,
@@ -387,7 +388,9 @@ class ImageStackConverter(Converter):
                 continue
 
             converted_layers += 1
-            channel_count, sample_count, dtype = get_channel_and_sample_count_and_dtype(Path(layer_path))
+            channel_count, sample_count, dtype = get_channel_and_sample_count_and_dtype(
+                Path(layer_path)
+            )
             if channel_count == 1 or (channel_count == 3 and dtype == "uint8"):
                 arg_dict = vars(args)
                 bounding_box = cube_image_stack(
@@ -404,8 +407,8 @@ class ImageStackConverter(Converter):
                     args.pad,
                     executor_args,
                 )
-            elif channel_count//sample_count == 3 and dtype == "uint8":
-                for i in range(channel_count//sample_count):
+            elif channel_count // sample_count == 3 and dtype == "uint8":
+                for i in range(channel_count // sample_count):
                     arg_dict = vars(args)
 
                     bounding_box = cube_image_stack(
