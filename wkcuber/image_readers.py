@@ -21,7 +21,7 @@ class ImageReader:
         file_name: Path,
         dtype: np.dtype,
         z_slice: int,
-        channel_index: Optional[int],
+        selected_channel: Optional[Tuple[int, int]],
     ) -> np.ndarray:
         pass
 
@@ -30,6 +30,11 @@ class ImageReader:
 
     def read_channel_count(self, file_name: Path) -> int:
         pass
+
+    def read_sample_count(
+        self, file_name: Path  # pylint: disable=unused-argument
+    ) -> int:
+        return 1
 
     def read_z_slices_per_file(
         self, file_name: Path  # pylint: disable=unused-argument
@@ -46,12 +51,12 @@ class PillowImageReader(ImageReader):
         file_name: Path,
         dtype: np.dtype,
         z_slice: int,
-        channel_index: Optional[int],
+        selected_channel: Optional[Tuple[int, int]],
     ) -> np.ndarray:
         this_layer = np.array(Image.open(file_name), dtype)
         this_layer = this_layer.swapaxes(0, 1)
-        if channel_index is not None:
-            this_layer = this_layer[:, :, channel_index]
+        if selected_channel is not None and this_layer.ndim == 3:
+            this_layer = this_layer[:, :, selected_channel[0] : selected_channel[1]]
         this_layer = this_layer.reshape(this_layer.shape + (1,))
         return this_layer
 
@@ -83,7 +88,7 @@ class Dm3ImageReader(ImageReader):
         file_name: Path,
         dtype: np.dtype,
         z_slice: int,
-        channel_index: Optional[int],
+        selected_channel: Optional[Tuple[int, int]],
     ) -> np.ndarray:
         dm3_file = DM3(file_name)
         this_layer = to_target_datatype(dm3_file.imagedata, dtype)
@@ -131,7 +136,7 @@ class Dm4ImageReader(ImageReader):
         file_name: Path,
         dtype: np.dtype,
         z_slice: int,
-        channel_index: Optional[int],
+        selected_channel: Optional[Tuple[int, int]],
     ) -> np.ndarray:
         dm4file = DM4File.open(str(file_name))
         image_data_tag, image_tag = self._read_tags(dm4file)
@@ -166,8 +171,66 @@ class Dm4ImageReader(ImageReader):
 
 class TiffImageReader(ImageReader):
     def __init__(self) -> None:
-        self.is_page_multi_channel: Optional[bool] = None
-        self.num_pages_for_all_channels: Optional[int] = None
+        self.channel_count: Optional[int] = None
+        self.z_axis_before_c: Optional[bool] = None
+        self.c_count: Optional[int] = None
+        self.z_count:Optional[int] = None
+        self.x_page_index:Optional[int]  = None
+        self.y_page_index:Optional[int]  = None
+        self.width: Optional[int] = None
+        self.height: Optional[int]  = None
+
+    @staticmethod
+    def find_correct_channels(
+        tif_file: TiffFile,
+        selected_channel: Optional[Tuple[int, int]],
+        all_channel_count: int,
+    ) -> Dict[int, Optional[Tuple[int, int]]]:
+        result: Dict[int, Optional[Tuple[int, int]]] = dict()
+        s_count = TiffImageReader.find_count_of_axis(tif_file, "S")
+        c_count = TiffImageReader.find_count_of_axis(tif_file, "C")
+        if s_count == 1:
+            # no s axis
+            if c_count == 1:
+                result[0] = None
+            elif selected_channel is None:
+                for i in range(all_channel_count):
+                    result[i] = None
+            else:
+                for i in range(selected_channel[0], selected_channel[1]):
+                    result[i] = None
+        else:
+            # s axis present -> select correct channel + samples per page
+            if c_count == 1:
+                start_index = selected_channel[0] if selected_channel is not None else 0
+                end_index = (
+                    selected_channel[1] if selected_channel is not None else s_count
+                )
+                result[0] = (start_index, end_index)
+            elif selected_channel is None:
+                for i in range(c_count):
+                    result[i] = (0, s_count)
+            else:
+                # we substract one from the outer bound because it is exclusive
+                for i in range(
+                    selected_channel[0] // s_count,
+                    (selected_channel[1] - 1) // s_count + 1,
+                ):
+                    start_index = selected_channel[0] - i * s_count
+                    end_index = selected_channel[1] - i * s_count
+                    result[i] = (
+                        start_index if start_index > 0 else 0,
+                        end_index if end_index < s_count else s_count,
+                    )
+        return result
+
+    @staticmethod
+    def is_z_axis_before_c(tif_file: TiffFile) -> bool:
+        assert len(tif_file.series) == 1, "only single tif series are supported"
+        tif_series = tif_file.series[0]
+        c_index = tif_series.axes.find("C")
+        z_index = tif_series.axes.find("Z")
+        return c_index == -1 or z_index < c_index
 
     @staticmethod
     def find_count_of_axis(tif_file: TiffFile, axis: str) -> int:
@@ -184,78 +247,78 @@ class TiffImageReader(ImageReader):
         file_name: Path,
         dtype: np.dtype,
         z_slice: int,
-        channel_index: Optional[int],
+        selected_channel: Optional[Tuple[int, int]],
     ) -> np.ndarray:
         with TiffFile(file_name) as tif_file:
-            # We are caching 'num_pages_for_all_channels' and 'is_page_multi_channel'
-            # because they are the same for all tiffs
-            if self.num_pages_for_all_channels is None:
-                self.num_pages_for_all_channels = self.read_channel_count(file_name)
-            if self.is_page_multi_channel is None:
-                self.is_page_multi_channel = tif_file.pages[0].ndim == 3
-                if self.is_page_multi_channel:
-                    self.num_pages_for_all_channels = 1
+            if self.channel_count is None:
+                self.channel_count = self.read_channel_count(file_name)
+            if self.z_axis_before_c is None:
+                self.z_axis_before_c = TiffImageReader.is_z_axis_before_c(tif_file)
+            if self.c_count is None:
+                self.c_count = TiffImageReader.find_count_of_axis(tif_file, "C")
+            if self.z_count is None:
+                self.z_count = TiffImageReader.find_count_of_axis(tif_file, "Z")
+            if self.x_page_index is None:
+                self.x_page_index = tif_file.pages[0].axes.find("X")
+            if self.y_page_index is None:
+                self.y_page_index = tif_file.pages[0].axes.find("Y")
+            if self.width is None or self.height is None:
+                self.width, self.height = self.read_dimensions(file_name)
 
-            channel_selected = channel_index is not None
-            num_pages_in_result = (
-                1 if channel_selected else self.num_pages_for_all_channels
+            output_channel = (
+                selected_channel[1] - selected_channel[0]
+                if selected_channel is not None
+                else self.channel_count
+            )
+            output_shape = (output_channel, self.width, self.height)
+
+            output = np.empty(output_shape, tif_file.pages[0].dtype)
+
+            channel_to_samples = TiffImageReader.find_correct_channels(
+                tif_file, selected_channel, self.channel_count
             )
 
-            # we need to set the channel_offset for multi-channel pages
-            # because reading will fail otherwise and we handle the channel selection elsewhere
-            channel_offset = (
-                0
-                if channel_index is None or self.is_page_multi_channel
-                else channel_index
-            )
-
-            if len(tif_file.pages) > self.num_pages_for_all_channels:
-                page_index = z_slice * self.num_pages_for_all_channels + channel_offset
-                # single multi-page input file
-                data = np.array(
+            output_channel_offset = 0
+            for channel, sample_slice in channel_to_samples.items():
+                next_channel_offset = (
+                    (output_channel_offset + sample_slice[1] - sample_slice[0])
+                    if sample_slice is not None
+                    else output_channel_offset + 1
+                )
+                output[output_channel_offset:next_channel_offset] = np.array(
                     list(
                         map(
-                            lambda x: x.asarray(),
-                            tif_file.pages[
-                                page_index : page_index + num_pages_in_result
-                            ],
+                            lambda x: x.transpose((2, self.x_page_index, self.y_page_index)),
+                            map(
+                                lambda x: x[:, :, sample_slice[0] : sample_slice[1]]
+                                if sample_slice is not None
+                                else x[..., np.newaxis],
+                                map(
+                                    lambda x: x.asarray(),
+                                    tif_file.pages[
+                                        z_slice * self.c_count
+                                        + channel : z_slice * self.c_count
+                                        + channel
+                                        + 1
+                                    ]
+                                    if self.z_axis_before_c
+                                    else tif_file.pages[
+                                        channel * self.z_count
+                                        + z_slice : channel * self.z_count
+                                        + z_slice
+                                    ],
+                                ),
+                            ),
                         )
                     ),
                     dtype,
                 )
-            else:
-                # multiple input files
-                data = np.array(
-                    list(
-                        map(
-                            lambda x: x.asarray(),
-                            tif_file.pages[
-                                channel_offset : channel_offset + num_pages_in_result
-                            ],
-                        )
-                    ),
-                    dtype,
-                )
+                output_channel_offset = next_channel_offset
 
-            # if the pages are multi-channel, then we'll have 4 dimensions here because of [x:x+1] notation, so we select the data here
-            if self.is_page_multi_channel:
-                data = data[0]
-                x_index = tif_file.pages[0].axes.find("X")
-                y_index = tif_file.pages[0].axes.find("Y")
-                c_index = tif_file.pages[0].axes.find("S")
-            else:
-                # if each page is a channel, there is no c_index in the page axes and through our selection the c_index is always 0 and therefore the other indices have to be incremented
-                c_index = 0
-                x_index = tif_file.pages[0].axes.find("X") + 1
-                y_index = tif_file.pages[0].axes.find("Y") + 1
+            output = output.transpose((1, 2, 0))
 
-            # transpose data to shape(x, y, channel_count)
-            data = data.transpose((x_index, y_index, c_index))
-            # if page is multi-channel and one channel is selected, slice channel here. Resulting Format will be (X, Y), but the following reshape will fix this
-            if self.is_page_multi_channel and channel_selected:
-                data = data[:, :, channel_index]
-            data = data.reshape(data.shape + (1,))
-            return data
+            output = output.reshape(output.shape + (1,))
+            return output
 
     def read_dimensions(self, file_name: Path) -> Tuple[int, int]:
         with TiffFile(file_name) as tif_file:
@@ -266,15 +329,13 @@ class TiffImageReader(ImageReader):
 
     def read_channel_count(self, file_name: Path) -> int:
         with TiffFile(file_name) as tif_file:
-            c_count = TiffImageReader.find_count_of_axis(tif_file, "C")
-            s_count = TiffImageReader.find_count_of_axis(tif_file, "S")
-            assert not (
-                c_count > 1 and s_count > 1
-            ), "This file format is currently not supported."
-            if s_count > 1:
-                return s_count
-            else:
-                return c_count
+            return TiffImageReader.find_count_of_axis(
+                tif_file, "C"
+            ) * TiffImageReader.find_count_of_axis(tif_file, "S")
+
+    def read_sample_count(self, file_name: Path) -> int:
+        with TiffFile(file_name) as tif_file:
+            return TiffImageReader.find_count_of_axis(tif_file, "S")
 
     def read_z_slices_per_file(self, file_name: Path) -> int:
         with TiffFile(file_name) as tif_file:
@@ -301,6 +362,17 @@ class CziImageReader(ImageReader):
             return 1
         else:
             return czi_file.shape[index]
+
+    def _find_right_c_axis_name(self, czi_file: CziFile) -> str:
+        c_count = CziImageReader.find_count_of_axis(czi_file, "C")
+        zero_count = CziImageReader.find_count_of_axis(czi_file, "0")
+        assert not (
+            c_count > 1 and zero_count > 1
+        ), "This file format is currently not supported."
+        if zero_count > 1:
+            return "0"
+        else:
+            return "C"
 
     # returns format (X, Y)
     def _read_array_single_channel(
@@ -368,29 +440,26 @@ class CziImageReader(ImageReader):
         file_name: Path,
         dtype: np.dtype,
         z_slice: int,
-        channel_index: Optional[int],
+        selected_channel: Optional[Tuple[int, int]],
     ) -> np.ndarray:
         with CziFile(file_name) as czi_file:
-            c_index = czi_file.axes.find("C")  # pylint: disable=no-member
+            c_axis_name = self._find_right_c_axis_name(czi_file)
+            c_index = czi_file.axes.find(c_axis_name)  # pylint: disable=no-member
+
             channel_count = self.read_channel_count(file_name)
             # we assume the tile shape is constant, so we can cache it
             if self.tile_shape is None:
-                self.tile_shape = (
-                    czi_file.filtered_subblock_directory[  # pylint: disable=unsubscriptable-object
-                        0
-                    ]
-                    .data_segment()
-                    .data()
-                    .shape
-                )
+                self.tile_shape = czi_file.filtered_subblock_directory[  # pylint: disable=unsubscriptable-object
+                    0
+                ].shape
 
             assert self.tile_shape is not None, "Cannot read tile shape format."
 
             # we assume either all channel are in one tile or each tile is single channel
             if self.tile_shape[c_index] != channel_count:
-                if channel_index is not None:
+                if selected_channel is not None:
                     data = self._read_array_single_channel(
-                        czi_file, channel_index, dtype, z_slice
+                        czi_file, selected_channel, dtype, z_slice
                     )
                     data = data.reshape(data.shape + (1,))
                     return data
@@ -408,8 +477,8 @@ class CziImageReader(ImageReader):
                     return output
             else:
                 data = self._read_array_all_channels(czi_file, dtype, z_slice)
-                if channel_index is not None:
-                    data = data[:, :, channel_index : channel_index + 1]
+                if selected_channel is not None:
+                    data = data[:, :, selected_channel : selected_channel + 1]
                 return data
 
     def read_dimensions(self, file_name: Path) -> Tuple[int, int]:
@@ -421,7 +490,17 @@ class CziImageReader(ImageReader):
 
     def read_channel_count(self, file_name: Path) -> int:
         with CziFile(file_name) as czi_file:
-            return CziImageReader.find_count_of_axis(czi_file, "C")
+            c_count = CziImageReader.find_count_of_axis(czi_file, "C")
+            s_count = CziImageReader.find_count_of_axis(czi_file, "0")
+            return c_count * s_count
+
+    def read_layer_count(self, file_name: Path) -> int:
+        with TiffFile(file_name) as tif_file:
+            return TiffImageReader.find_count_of_axis(tif_file, "C")
+
+    def read_sample_count(self, file_name: Path) -> int:
+        with CziFile(file_name) as czi_file:
+            return CziImageReader.find_count_of_axis(czi_file, "0")
 
     def read_z_slices_per_file(self, file_name: Path) -> int:
         with CziFile(file_name) as czi_file:
@@ -459,12 +538,14 @@ class ImageReaderManager:
         file_name: Path,
         dtype: np.dtype,
         z_slice: int,
-        channel_index: Optional[int] = None,
+        selected_channels: Optional[Tuple[int, int]] = None,
     ) -> np.ndarray:
         _, ext = path.splitext(file_name)
 
         # Image shape will be (x, y, channel_count, z=1) or (x, y, z=1)
-        image = self.readers[ext].read_array(file_name, dtype, z_slice, channel_index)
+        image = self.readers[ext].read_array(
+            file_name, dtype, z_slice, selected_channels
+        )
         # Standardize the image shape to (x, y, channel_count, z=1)
         if image.ndim == 3:
             image = image.reshape(image.shape + (1,))
@@ -478,6 +559,10 @@ class ImageReaderManager:
     def read_channel_count(self, file_name: Path) -> int:
         _, ext = path.splitext(file_name)
         return self.readers[ext].read_channel_count(file_name)
+
+    def read_sample_count(self, file_name: Path) -> int:
+        _, ext = path.splitext(file_name)
+        return self.readers[ext].read_sample_count(file_name)
 
     def read_z_slices_per_file(self, file_name: Path) -> int:
         _, ext = path.splitext(file_name)

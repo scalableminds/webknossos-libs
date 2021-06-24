@@ -5,8 +5,7 @@ from typing import Iterable, List, Any, Tuple, Dict, Set, Callable, cast, Option
 
 from .cubing import (
     cubing as cube_image_stack,
-    create_parser as create_image_stack_parser,
-    get_channel_count_and_dtype,
+    create_parser as create_image_stack_parser, get_channel_and_sample_count_and_dtype,
 )
 from .convert_knossos import (
     main as convert_knossos,
@@ -388,31 +387,8 @@ class ImageStackConverter(Converter):
                 continue
 
             converted_layers += 1
-            channel_count, dtype = get_channel_count_and_dtype(Path(layer_path))
-            if channel_count > 1 and not (channel_count == 3 and dtype == "uint8"):
-                for i in range(channel_count):
-                    layer_name = f"{layer_name}_{i}"
-                    arg_dict = vars(args)
-
-                    bounding_box = cube_image_stack(
-                        Path(layer_path),
-                        args.target_path,
-                        layer_name,
-                        arg_dict.get("batch_size"),
-                        i,  # channel index
-                        arg_dict.get("dtype"),
-                        args.target_mag,
-                        args.wkw_file_len,
-                        args.interpolation_mode,
-                        args.start_z,
-                        args.pad,
-                        executor_args,
-                    )
-
-                    view_configuration[
-                        layer_name
-                    ] = ImageStackConverter.get_view_configuration(i)
-            else:
+            channel_count, sample_count, dtype = get_channel_and_sample_count_and_dtype(Path(layer_path))
+            if channel_count == 1 or (channel_count == 3 and dtype == "uint8"):
                 arg_dict = vars(args)
                 bounding_box = cube_image_stack(
                     Path(layer_path),
@@ -428,6 +404,47 @@ class ImageStackConverter(Converter):
                     args.pad,
                     executor_args,
                 )
+            elif channel_count//sample_count == 3 and dtype == "uint8":
+                for i in range(channel_count//sample_count):
+                    arg_dict = vars(args)
+
+                    bounding_box = cube_image_stack(
+                        Path(layer_path),
+                        args.target_path,
+                        f"{layer_name}_{i}",
+                        arg_dict.get("batch_size"),
+                        (i, i + sample_count),  # channel index
+                        arg_dict.get("dtype"),
+                        args.target_mag,
+                        args.wkw_file_len,
+                        args.interpolation_mode,
+                        args.start_z,
+                        args.pad,
+                        executor_args,
+                    )
+            else:
+                for i in range(channel_count):
+                    curr_layer_name = f"{layer_name}_{i}"
+                    arg_dict = vars(args)
+
+                    bounding_box = cube_image_stack(
+                        Path(layer_path),
+                        args.target_path,
+                        curr_layer_name,
+                        arg_dict.get("batch_size"),
+                        (i, i + 1),  # channel index
+                        arg_dict.get("dtype"),
+                        args.target_mag,
+                        args.wkw_file_len,
+                        args.interpolation_mode,
+                        args.start_z,
+                        args.pad,
+                        executor_args,
+                    )
+
+                    view_configuration[
+                        curr_layer_name
+                    ] = ImageStackConverter.get_view_configuration(i)
 
         assert converted_layers > 0, "No layer could be converted!"
 
@@ -527,7 +544,7 @@ def main(args: Namespace) -> None:
 
     matching_converters = list(
         filter(
-            lambda c: c.accepts_input(args.source_path),
+            lambda c: c.accepts_input(str(args.source_path)),
             converter_manager.converter,
         )
     )
