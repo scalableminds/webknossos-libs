@@ -39,8 +39,13 @@ class PBSExecutor(ClusterExecutor):
     def get_current_job_id():
         return os.environ.get("PBS_JOBID")
 
-    def format_log_file_name(self, jobid):
-        return "pbs.stdout.{}.log".format(str(jobid))
+    @staticmethod
+    def format_log_file_name(jobid, suffix=".stdout"):
+        return "pbs.{}.log{}".format(str(jobid), suffix)
+
+    @classmethod
+    def get_job_id_string(cls):
+        return cls.get_current_job_id()
 
     def submit_text(self, job):
         """Submits a PBS job represented as a job file string. Returns
@@ -67,7 +72,7 @@ class PBSExecutor(ClusterExecutor):
 
         # if job_count is None else "$PBS_JOBID.$PBS_ARRAY_INDEX"
         # $PBS_JOBID will also include an array index if it's a job array
-        log_path = self.format_log_file_path("$PBS_JOBID")
+        log_path = self.format_log_file_path(self.cfut_dir, "$PBS_JOBID")
         print("log_path", log_path)
 
         job_resources_line = ""

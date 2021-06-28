@@ -42,6 +42,15 @@ class ClusterExecutor(futures.Executor):
         additional_setup_lines=[],
         **kwargs,
     ):
+        """
+        `kwargs` can be the following optional parameters:
+            `logging_config`: An object containing a `level` key specifying the desired log level and/or a
+                `format` key specifying the desired log format string. Cannot be specified together
+                with `logging_setup_fn`.
+            `logging_setup_fn`: A function setting up custom logging. The function will be called with the
+                default log file name. If the caller sets up file logging, this log file name should be adapted,
+                for example, by adding a .mylog suffix. Cannot be specified together with `logging_config`.
+        """
         self.debug = debug
         self.job_resources = job_resources
         self.additional_setup_lines = additional_setup_lines
@@ -74,8 +83,13 @@ class ClusterExecutor(futures.Executor):
         signal.signal(signal.SIGTERM, self.handle_kill)
 
         self.meta_data = {}
+        assert not (
+            "logging_config" in kwargs and "logging_setup_fn" in kwargs
+        ), "Specify either logging_config OR logging_setup_fn but not both at once"
         if "logging_config" in kwargs:
             self.meta_data["logging_config"] = kwargs["logging_config"]
+        if "logging_setup_fn" in kwargs:
+            self.meta_data["logging_setup_fn"] = kwargs["logging_setup_fn"]
 
     def handle_kill(self, signum, frame):
         self.wait_thread.stop()
@@ -117,15 +131,22 @@ class ClusterExecutor(futures.Executor):
         if self.keep_logs:
             return
 
-        outf = self.format_log_file_path(jobid)
+        outf = self.format_log_file_path(self.cfut_dir, jobid)
         self.files_to_clean_up.append(outf)
 
+    @staticmethod
     @abstractmethod
-    def format_log_file_name(self, jobid):
+    def format_log_file_name(jobid, suffix=".stdout"):
         pass
 
-    def format_log_file_path(self, jobid):
-        return os.path.join(self.cfut_dir, self.format_log_file_name(jobid))
+    @classmethod
+    def format_log_file_path(cls, cfut_dir, jobid, suffix=".stdout"):
+        return os.path.join(cfut_dir, cls.format_log_file_name(jobid, suffix))
+
+    @classmethod
+    @abstractmethod
+    def get_job_id_string(self):
+        pass
 
     def get_temp_file_path(self, file_name):
         return os.path.join(self.cfut_dir, file_name)
@@ -164,7 +185,7 @@ class ClusterExecutor(futures.Executor):
             # Therefore, we don't try to deserialize pickling output.
             success = False
             result = "Job submission/execution failed. Please look into the log file at {}".format(
-                self.format_log_file_path(jobid)
+                self.format_log_file_path(self.cfut_dir, jobid)
             )
         else:
             with open(preliminary_outfile_name, "rb") as f:
@@ -176,7 +197,7 @@ class ClusterExecutor(futures.Executor):
             # successfully. # Therefore, the result can be used as a checkpoint
             # by users of the clustertools.
             os.rename(preliminary_outfile_name, outfile_name)
-            logging.info("Pickle file renamed to {}.".format(outfile_name))
+            logging.debug("Pickle file renamed to {}.".format(outfile_name))
 
             fut.set_result(result)
         else:
@@ -414,7 +435,7 @@ class ClusterExecutor(futures.Executor):
         process. This method blocks as long as the future is not done.
         """
 
-        log_path = self.format_log_file_path(fut.cluster_jobid)
+        log_path = self.format_log_file_path(self.cfut_dir, fut.cluster_jobid)
         # Don't use a logger instance here, since the child process
         # probably already used a logger.
         log_callback = lambda s: sys.stdout.write(f"(jid={fut.cluster_jobid}) {s}")

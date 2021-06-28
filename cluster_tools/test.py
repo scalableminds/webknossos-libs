@@ -354,7 +354,7 @@ def test_pickled_logging():
             fut = executor.submit(log, test_output_str)
             fut.result()
 
-            output = ".cfut/slurmpy.stdout.{}.log".format(fut.cluster_jobid)
+            output = ".cfut/slurmpy.{}.log.stdout".format(fut.cluster_jobid)
 
             with open(output, "r") as file:
                 return file.read()
@@ -362,8 +362,8 @@ def test_pickled_logging():
     debug_out = execute_with_log_level(logging.DEBUG)
     assert test_output_str in debug_out
 
-    debug_out = execute_with_log_level(logging.INFO)
-    assert not (test_output_str in debug_out)
+    info_out = execute_with_log_level(logging.INFO)
+    assert not (test_output_str in info_out)
 
 
 def test_tailed_logging():
