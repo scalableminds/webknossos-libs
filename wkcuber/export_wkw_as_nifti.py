@@ -31,7 +31,7 @@ def create_parser() -> ArgumentParser:
 
     parser.add_argument(
         "--bbox",
-        help="The BoundingBox of which the nifti file should be generated."
+        help="The bounding box of which the nifti file should be generated."
         "The input format is x,y,z,width,height,depth."
         "(By default, data for the full bounding box of the dataset is generated)",
         default=None,
