@@ -97,7 +97,7 @@ def downsample_mags(
     buffer_edge_len: int = None,
     compress: bool = True,
     args: Namespace = None,
-    sampling_mode: str = SamplingModes.AUTO,
+    sampling_mode: str = SamplingModes.ANISOTROPIC,
 ) -> None:
     assert layer_name and from_mag or not layer_name and not from_mag, (
         "You provided only one of the following "
@@ -134,7 +134,7 @@ if __name__ == "__main__":
 
     if args.anisotropic_target_mag is not None:
         raise DeprecationWarning(
-            "The 'anisotropic_target_mag' flag is deprecated. Use 'target_mag' instead (and consider changing the 'sampling_mode')"
+            "The 'anisotropic_target_mag' flag is deprecated. Use 'max' instead (and consider changing the 'sampling_mode')"
         )
 
     from_mag = Mag(args.from_mag)

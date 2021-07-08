@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import Tuple, cast
+from typing import Tuple, cast, Any, Generator, List
 
 import numpy as np
 import pytest
@@ -13,7 +13,7 @@ from wkcuber.downsampling_utils import (
     downsample_cube_job,
     get_next_mag,
     calculate_default_max_mag,
-    get_previous_mag,
+    get_previous_mag, SamplingModes, get_previous_mag2,
 )
 import wkw
 from wkcuber.mag import Mag
@@ -205,18 +205,37 @@ def test_downsample_multi_channel() -> None:
 
 def test_anisotropic_mag_calculation() -> None:
     mag_tests = [
+        # Anisotropic scale from Mag(1):
         ((10.5, 10.5, 24), Mag(1), Mag((2, 2, 1))),
         ((10.5, 10.5, 21), Mag(1), Mag((2, 2, 1))),
         ((10.5, 24, 10.5), Mag(1), Mag((2, 1, 2))),
         ((24, 10.5, 10.5), Mag(1), Mag((1, 2, 2))),
         ((10.5, 10.5, 10.5), Mag(1), Mag((2, 2, 2))),
-        ((10.5, 10.5, 24), Mag((2, 2, 1)), Mag((4, 4, 1))),
+        # Anisotropic scale from anisotropic mag:
+        ((10.5, 10.5, 24), Mag((2, 2, 1)), Mag((4, 4, 2))),
         ((10.5, 10.5, 21), Mag((2, 2, 1)), Mag((4, 4, 2))),
-        ((10.5, 24, 10.5), Mag((2, 1, 2)), Mag((4, 1, 4))),
-        ((24, 10.5, 10.5), Mag((1, 2, 2)), Mag((1, 4, 4))),
+        ((10.5, 24, 10.5), Mag((2, 1, 2)), Mag((4, 2, 4))),
+        ((24, 10.5, 10.5), Mag((1, 2, 2)), Mag((2, 4, 4))),
         ((10.5, 10.5, 10.5), Mag(2), Mag(4)),
         ((320, 320, 200), Mag(1), Mag((1, 1, 2))),
         ((320, 320, 200), Mag((1, 1, 2)), Mag((2, 2, 4))),
+        ((320, 320, 200), Mag((2, 2, 4)), Mag((4, 4, 8))),
+        ((9, 9, 20), Mag((2, 2, 1)), Mag((4, 4, 2))),
+        ((5, 5, 20), Mag((2, 2, 1)), Mag((4, 4, 1))),
+        # Edge cases:
+        # The scale (4, 4, 3) is exactly in the middle of (4, 4, 4) and (4, 4, 2) (for which the scheme would be trivial).
+        # The scale (4, 4, 2.9) is a bit closer to (4, 4, 2) compared to (4, 4, 4). Therefore, it behaves like (4, 4, 2).
+        ((4, 4, 3), Mag(1), Mag(2)),
+        ((4, 4, 3), Mag(2), Mag(4)),
+        ((4, 4, 2.9), Mag(1), Mag((1, 1, 2))),
+        ((4, 4, 2.9), Mag((1, 1, 2)), Mag(2)),
+        ((4, 4, 2.9), Mag(2), Mag((2, 2, 4))),
+        # Similar as above, the scale (7.5, 7.5, 20) is exactly between (5, 5, 20) and (10, 10, 20).
+        ((7.5, 7.5, 20), Mag((2, 2, 1)), Mag((4, 4, 2))),
+        ((7.5, 7.5, 20), Mag((4, 4, 2)), Mag((8, 8, 4))),
+        ((7.4, 7.4, 20), Mag((2, 2, 1)), Mag((4, 4, 1))),
+        ((7.4, 7.4, 20), Mag((4, 4, 1)), Mag((4, 4, 2))),
+        ((7.4, 7.4, 20), Mag((4, 4, 2)), Mag((8, 8, 2))),
     ]
 
     for i in range(len(mag_tests)):
@@ -224,7 +243,7 @@ def test_anisotropic_mag_calculation() -> None:
         assert mag_tests[i][2] == next_mag, (
             "The next anisotropic"
             f" Magnification of {mag_tests[i][1]} with "
-            f"the size {mag_tests[i][0]} should be {mag_tests[i][2]} "
+            f"the scale {mag_tests[i][0]} should be {mag_tests[i][2]} "
             f"and not {next_mag}"
         )
 
@@ -233,7 +252,7 @@ def test_anisotropic_mag_calculation() -> None:
         assert mag_tests[i][1] == previous_mag, (
             "The previous anisotropic"
             f" Magnification of {mag_tests[i][2]} with "
-            f"the size {mag_tests[i][0]} should be {mag_tests[i][1]} "
+            f"the scale {mag_tests[i][0]} should be {mag_tests[i][1]} "
             f"and not {previous_mag}"
         )
 
@@ -350,3 +369,37 @@ def test_downsample_compressed() -> None:
     assert "1" in layer.mags.keys()
     assert "2-2-1" in layer.mags.keys()
     assert "4-4-2" in layer.mags.keys()
+
+
+@pytest.fixture(
+    params=[
+        # scale, max mag, sampling mode, expected mags
+        ((2, 2, 1), None, "auto", [Mag("1"), Mag("1-1-2"), Mag("2-2-4")]),
+        ((11.24, 11.24, 28), None, "auto", [Mag("1"), Mag("2-2-1"), Mag("4-4-2")]),
+        ((11.24, 11.24, 28), Mag("8-8-4"), "auto", [Mag("1"), Mag("2-2-1"), Mag("4-4-2"), Mag("8-8-4")]),
+        ((11.24, 11.24, 28), Mag("8-8-4"), "isotropic", [Mag("1"), Mag("2"), Mag("4"), Mag("8")]),
+        ((1, 1, 1), None, "auto", [Mag("1"), Mag("2"), Mag("4")]),
+        ((1, 1, 1), None, "constant_z", [Mag("1"), Mag("2-2-1"), Mag("4-4-1")]),
+    ]
+)
+def create_dataset(request: Any, tmp_path) -> Generator[Tuple[Layer, Mag, str, List[Mag]], None, None]:
+    scale, max_mag, sampling_mode, expected_mags = request.param
+    ds = Dataset.create(tmp_path, scale=scale)
+    layer = ds.add_layer("color", "color")
+    mag = layer.add_mag("1")
+    mag.write((np.random.rand(100, 200, 300) * 255).astype(np.uint8))
+    yield layer, max_mag, sampling_mode, expected_mags
+
+
+def test_scale_for_different_sampling_modes(create_dataset: Tuple[Layer, Mag, str, List[Mag]]):
+    layer, max_mag, sampling_mode, expected_mags = create_dataset
+
+    layer.downsample(
+        from_mag=Mag(1),
+        max_mag=max_mag,
+        compress=False,
+        interpolation_mode="default",
+        sampling_mode=sampling_mode
+    )
+
+    assert set(layer.mags.keys()) == set([m.to_layer_name() for m in expected_mags])

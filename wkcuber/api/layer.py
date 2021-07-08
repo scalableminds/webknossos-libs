@@ -248,14 +248,14 @@ class Layer:
         max_mag: Optional[Mag] = None,
         interpolation_mode: str = "default",
         compress: bool = True,
-        sampling_mode: str = SamplingModes.AUTO,
+        sampling_mode: str = SamplingModes.ANISOTROPIC,
         buffer_edge_len: Optional[int] = None,
         args: Optional[Namespace] = None,
     ) -> None:
         """
         Downsamples the data starting from `from_mag` until a magnification is `>= max(max_mag)`.
         There are three different `sampling_modes`:
-        - 'auto' - The next magnification is chosen so that the width, height and depth of a downsampled voxel assimilate. For example, if the z resolution is worse than the x/y resolution, z won't be downsampled in the first downsampling step(s). As a basis for this method, the scale from the datasource-properties.json is used.
+        - 'anisotropic' - The next magnification is chosen so that the width, height and depth of a downsampled voxel assimilate. For example, if the z resolution is worse than the x/y resolution, z won't be downsampled in the first downsampling step(s). As a basis for this method, the scale from the datasource-properties.json is used.
         - 'isotropic' - Each dimension is downsampled equally.
         - 'constant_z' - The x and y dimensions are downsampled equally, but the z dimension remains the same.
 
@@ -288,15 +288,18 @@ class Layer:
             from_mag.to_layer_name() in self.mags.keys()
         ), f"Failed to downsample data. The from_mag ({from_mag}) does not exist."
 
+
         if max_mag is None:
             max_mag = calculate_default_max_mag(
                 self.dataset.properties.data_layers[self.name].get_bounding_box_size()
             )
 
-        if sampling_mode == SamplingModes.AUTO:
+        if sampling_mode == SamplingModes.ANISOTROPIC or sampling_mode == "auto":
             scale = self.dataset.properties.scale
         elif sampling_mode == SamplingModes.ISOTROPIC:
             scale = (1, 1, 1)
+        elif sampling_mode == SamplingModes.ANISOTROPIC:
+            scale = calculate_virtual_scale_for_target_mag(max_mag)
         elif sampling_mode == SamplingModes.CONSTANT_Z:
             max_mag_with_fixed_z = max_mag.to_array()
             max_mag_with_fixed_z[2] = from_mag.to_array()[2]
@@ -304,7 +307,7 @@ class Layer:
             scale = calculate_virtual_scale_for_target_mag(max_mag)
         else:
             raise AttributeError(
-                f"Downsampling failed: {sampling_mode} is not a valid SamplingMode ({SamplingModes.AUTO}, {SamplingModes.ISOTROPIC}, {SamplingModes.CONSTANT_Z})"
+                f"Downsampling failed: {sampling_mode} is not a valid SamplingMode ({SamplingModes.ANISOTROPIC}, {SamplingModes.ISOTROPIC}, {SamplingModes.CONSTANT_Z})"
             )
 
         prev_mag = from_mag
@@ -470,14 +473,14 @@ class Layer:
         from_mag: Mag,
         min_mag: Optional[Mag],
         compress: bool,
-        sampling_mode: str = SamplingModes.AUTO,
+        sampling_mode: str = SamplingModes.ANISOTROPIC,
         buffer_edge_len: Optional[int] = None,
         args: Optional[Namespace] = None,
     ) -> None:
         """
         Upsamples the data starting from `from_mag` as long as the magnification is `>= min_mag`.
         There are three different `sampling_modes`:
-        - 'auto' - The next magnification is chosen so that the width, height and depth of a downsampled voxel assimilate. For example, if the z resolution is worse than the x/y resolution, z won't be downsampled in the first downsampling step(s). As a basis for this method, the scale from the datasource-properties.json is used.
+        - 'anisotropic' - The next magnification is chosen so that the width, height and depth of a downsampled voxel assimilate. For example, if the z resolution is worse than the x/y resolution, z won't be downsampled in the first downsampling step(s). As a basis for this method, the scale from the datasource-properties.json is used.
         - 'isotropic' - Each dimension is downsampled equally.
         - 'constant_z' - The x and y dimensions are downsampled equally, but the z dimension remains the same.
         """
@@ -488,7 +491,7 @@ class Layer:
         if min_mag is None:
             min_mag = Mag(1)
 
-        if sampling_mode == SamplingModes.AUTO:
+        if sampling_mode == SamplingModes.ANISOTROPIC or sampling_mode == "auto":
             scale = self.dataset.properties.scale
         elif sampling_mode == SamplingModes.ISOTROPIC:
             scale = (1, 1, 1)
@@ -499,7 +502,7 @@ class Layer:
             scale = calculate_virtual_scale_for_target_mag(min_mag)
         else:
             raise AttributeError(
-                f"Upsampling failed: {sampling_mode} is not a valid UpsamplingMode ({SamplingModes.AUTO}, {SamplingModes.ISOTROPIC}, {SamplingModes.CONSTANT_Z})"
+                f"Upsampling failed: {sampling_mode} is not a valid UpsamplingMode ({SamplingModes.ANISOTROPIC}, {SamplingModes.ISOTROPIC}, {SamplingModes.CONSTANT_Z})"
             )
 
         prev_mag = from_mag

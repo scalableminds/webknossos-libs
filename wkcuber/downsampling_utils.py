@@ -14,7 +14,7 @@ from wkcuber.utils import time_start, time_stop
 
 
 class SamplingModes:
-    AUTO = "auto"
+    ANISOTROPIC = "anisotropic"
     ISOTROPIC = "isotropic"
     CONSTANT_Z = "constant_z"
 
@@ -36,27 +36,21 @@ def determine_buffer_edge_len(dataset: wkw.Dataset) -> int:
     return min(DEFAULT_EDGE_LEN, dataset.header.file_len * dataset.header.block_len)
 
 
-def detect_larger_and_smaller_dimension(
-    scale: Tuple[float, float, float]
-) -> Tuple[int, int]:
-    scale_np = np.array(scale)
-    return np.argmax(scale_np), np.argmin(scale_np)
-
-
 def get_next_mag(mag: Mag, scale: Optional[Tuple[float, float, float]]) -> Mag:
     if scale is None:
         return mag.scaled_by(2)
     else:
-        max_index, min_index = detect_larger_and_smaller_dimension(scale)
         mag_array = mag.to_array()
         scale_increase = [1, 1, 1]
 
+        current_dimensions_in_nm = mag_array * np.array(scale)
+        max_in_nm = np.max(current_dimensions_in_nm)
+        min_in_nm = np.min(current_dimensions_in_nm)
         if (
-            mag_array[min_index] * scale[min_index]
-            < mag_array[max_index] * scale[max_index]
+            max_in_nm * 2 - min_in_nm * 2 > abs(max_in_nm - min_in_nm * 2)
         ):
             for i in range(len(scale_increase)):
-                scale_increase[i] = 1 if scale[i] == scale[max_index] else 2
+                scale_increase[i] = 1 if current_dimensions_in_nm[i] == max_in_nm else 2
         else:
             scale_increase = [2, 2, 2]
         return Mag(
@@ -72,16 +66,18 @@ def get_previous_mag(mag: Mag, scale: Optional[Tuple[float, float, float]]) -> M
     if scale is None:
         return mag.divided_by(2)
     else:
-        max_index, min_index = detect_larger_and_smaller_dimension(scale)
         mag_array = mag.to_array()
         scale_increase = [1, 1, 1]
 
+        current_dimensions_in_nm = mag_array * np.array(scale)
+        max_in_nm = np.max(current_dimensions_in_nm)
+        min_in_nm = np.min(current_dimensions_in_nm)
+
         if (
-            mag_array[min_index] // scale[min_index]
-            > mag_array[max_index] // scale[max_index]
+            max_in_nm // 2 - min_in_nm // 2 > abs(max_in_nm // 2 - min_in_nm)
         ):
             for i in range(len(scale_increase)):
-                scale_increase[i] = 1 if scale[i] == scale[max_index] else 2
+                scale_increase[i] = 2 if current_dimensions_in_nm[i] == max_in_nm else 1
         else:
             scale_increase = [2, 2, 2]
         return Mag(
