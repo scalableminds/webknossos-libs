@@ -2,7 +2,7 @@ from argparse import ArgumentParser, Namespace
 import os
 from pathlib import Path
 
-from wkcuber.api.Dataset import WKDataset
+from wkcuber.api.dataset import Dataset
 from wkcuber.downsampling_utils import SamplingModes
 from .mag import Mag
 
@@ -106,7 +106,7 @@ def upsample_mags(
         from_mag = Mag(os.path.basename(path))
         path = path.parent.parent
 
-    WKDataset(path).get_layer(layer_name).upsample(
+    Dataset(path).get_layer(layer_name).upsample(
         from_mag=from_mag,
         min_mag=target_mag,
         compress=compress,

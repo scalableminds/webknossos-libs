@@ -2,14 +2,13 @@ import logging
 import math
 from enum import Enum
 from itertools import product
-from typing import Optional, Tuple, List, Callable, cast, Union
+from typing import Optional, Tuple, List, Callable, cast
 
 import numpy as np
 from scipy.ndimage import zoom
 from wkw import wkw
 
-from wkcuber.api.TiffData.TiffMag import TiffMag
-from wkcuber.api.View import View
+from wkcuber.api.view import View
 from wkcuber.mag import Mag
 from wkcuber.utils import time_start, time_stop
 
@@ -33,10 +32,8 @@ class InterpolationModes(Enum):
 DEFAULT_EDGE_LEN = 256
 
 
-def determine_buffer_edge_len(dataset: Union[wkw.Dataset, TiffMag]) -> int:
-    if isinstance(dataset, wkw.Dataset):
-        return min(DEFAULT_EDGE_LEN, dataset.header.file_len * dataset.header.block_len)
-    return DEFAULT_EDGE_LEN
+def determine_buffer_edge_len(dataset: wkw.Dataset) -> int:
+    return min(DEFAULT_EDGE_LEN, dataset.header.file_len * dataset.header.block_len)
 
 
 def detect_larger_and_smaller_dimension(

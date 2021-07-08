@@ -1,17 +1,16 @@
 import operator
 from argparse import Namespace
 from shutil import rmtree
-from abc import abstractmethod
 from os import makedirs
 from os.path import join, normpath, basename
 from pathlib import Path
-from typing import Type, Tuple, Union, Dict, Any, Optional, cast, TypeVar, Generic
+from typing import Tuple, Union, Dict, Any, Optional, cast
 
 import numpy as np
 import os
 import re
 
-from wkcuber.api.Properties.LayerProperties import (
+from wkcuber.api.properties.layer_properties import (
     properties_floating_type_to_python_type,
     SegmentationLayerProperties,
 )
@@ -19,13 +18,9 @@ from wkcuber.api.bounding_box import BoundingBox
 from wkcuber.mag import Mag
 from wkcuber.utils import get_executor_for_args
 
-from wkcuber.api.Properties.DatasetProperties import (
-    WKProperties,
-    TiffProperties,
-    Properties,
-)
-from wkcuber.api.Layer import Layer, WKLayer, TiffLayer, TiledTiffLayer
-from wkcuber.api.View import View
+from wkcuber.api.properties.dataset_properties import Properties
+from wkcuber.api.layer import Layer, LayerTypes
+from wkcuber.api.view import View
 
 DEFAULT_BIT_DEPTH = 8
 
@@ -108,19 +103,59 @@ def _copy_job(args: Tuple[View, View, int]) -> None:
     target_view.write(source_view.read())
 
 
-LayerT = TypeVar("LayerT", bound=Layer)
-
-
-class AbstractDataset(Generic[LayerT]):
+class Dataset:
     """
     A dataset is the entry point of the Dataset API. An existing dataset on disk can be opened
     or new datasets can be created.
+
+    A `Dataset` stores the data in `.wkw` files on disk.
+
+    ## Examples
+
+    ### Creating Datasets
+    ```python
+    from wkcuber.api.dataset import Dataset
+
+    dataset = Dataset.create(<path_to_new_dataset>, scale=(1, 1, 1))
+    # Adds a new layer
+    layer = dataset.add_layer(
+        layer_name="color",
+        category=LayerTypes.COLOR_TYPE,
+        dtype_per_channel="uint8",
+        num_channels=3
+    )
+    # Adds an existing layer from a different dataset
+    sym_layer = dataset.add_symlink_layer(<foreign_layer_path>)
+    ```
+
+    ### Opening Datasets
+    ```python
+    from wkcuber.api.dataset import Dataset
+
+    dataset = Dataset(<path_to_dataset>)
+    # Assuming that the dataset has a layer called 'color'
+    layer = dataset.get_layer("color")
+    ```
+
+    ### Copying Datasets
+    ```python
+    from wkcuber.api.dataset import Dataset
+
+    dataset = Dataset(<path_to_dataset>)
+    # Copying the dataset with different block_len and file_len
+    copy_of_dataset = dataset.copy_dataset(
+        <path_to_new_dataset>,
+        block_len=8,
+        file_len=8
+    )
+    ```
+
+    ## Functions
     """
 
-    @abstractmethod
     def __init__(self, dataset_path: Union[str, Path]) -> None:
         """
-        To open an existing dataset on disk, simply call the constructor of the appropriate dataset type (e.g. `WKDataset`).
+        To open an existing dataset on disk, simply call the constructor of `Dataset`.
         This requires that the `datasource-properties.json` exists. Based on the `datasource-properties.json`,
         a dataset object is constructed. Only layers and magnifications that are listed in the properties are loaded
         (even though there might exists more layer or magnifications on disk).
@@ -131,7 +166,7 @@ class AbstractDataset(Generic[LayerT]):
         self.path = Path(dataset_path)
         """Location of the dataset"""
 
-        self.properties: Properties = self._get_properties_type()._from_json(
+        self.properties: Properties = Properties._from_json(
             self.path / Properties.FILE_NAME
         )
         """
@@ -139,8 +174,8 @@ class AbstractDataset(Generic[LayerT]):
         The properties are exported to disk automatically, every time the metadata changes.
         """
 
-        self._layers: Dict[str, LayerT] = {}
-        self._data_format = "abstract"
+        self._layers: Dict[str, Layer] = {}
+        self._data_format = "wkw"
 
         # construct self.layer
         for layer_name in self.properties.data_layers:
@@ -155,14 +190,14 @@ class AbstractDataset(Generic[LayerT]):
                 self.get_layer(layer_name)._setup_mag(resolution.mag.to_layer_name())
 
     @property
-    def layers(self) -> Dict[str, LayerT]:
+    def layers(self) -> Dict[str, Layer]:
         """
         Getter for dictionary containing all layers.
         """
         return self._layers
 
     @classmethod
-    def _create_with_properties(cls, properties: Properties) -> "AbstractDataset":
+    def _create_with_properties(cls, properties: Properties) -> "Dataset":
         dataset_dir = properties.path.parent
         if dataset_dir.exists():
             assert (
@@ -184,9 +219,9 @@ class AbstractDataset(Generic[LayerT]):
         # initialize object
         return cls(dataset_dir)
 
-    def get_layer(self, layer_name: str) -> LayerT:
+    def get_layer(self, layer_name: str) -> Layer:
         """
-        Returns the layer called `layer_name` of this dataset. The return type is `wkcuber.api.Layer.Layer`.
+        Returns the layer called `layer_name` of this dataset. The return type is `wkcuber.api.layer.Layer`.
 
         This function raises an `IndexError` if the specified `layer_name` does not exist.
         """
@@ -204,15 +239,17 @@ class AbstractDataset(Generic[LayerT]):
         dtype_per_channel: Union[str, np.dtype, type] = None,
         num_channels: int = None,
         **kwargs: Any,
-    ) -> LayerT:
+    ) -> Layer:
         """
         Creates a new layer called `layer_name` and adds it to the dataset.
         The dtype can either be specified per layer or per channel.
         If neither of them are specified, `uint8` per channel is used as default.
-        When creating a `wkcuber.api.Layer.SegmentationLayer` (category="segmentation"),
+        When creating a "Segmentation Layer" (`category="segmentation"`),
         the parameter `largest_segment_id` also has to be specified.
 
-        The return type is `wkcuber.api.Layer.Layer`.
+        Creates the folder `layer_name` in the directory of `self.path`.
+
+        The return type is `wkcuber.api.layer.Layer`.
 
         This function raises an `IndexError` if the specified `layer_name` already exists.
         """
@@ -275,7 +312,7 @@ class AbstractDataset(Generic[LayerT]):
         dtype_per_channel: Union[str, np.dtype, type] = None,
         num_channels: int = None,
         **kwargs: Any,
-    ) -> LayerT:
+    ) -> Layer:
         """
         Creates a new layer called `layer_name` and adds it to the dataset, in case it did not exist before.
         Then, returns the layer.
@@ -349,7 +386,7 @@ class AbstractDataset(Generic[LayerT]):
         # delete files on disk
         rmtree(join(self.path, layer_name))
 
-    def add_symlink_layer(self, foreign_layer_path: Union[str, Path]) -> LayerT:
+    def add_symlink_layer(self, foreign_layer_path: Union[str, Path]) -> Layer:
         """
         Creates a symlink to the data at `foreign_layer_path` which belongs to another dataset.
         The relevant information from the `datasource-properties.json` of the other dataset is copied to this dataset.
@@ -366,9 +403,9 @@ class AbstractDataset(Generic[LayerT]):
         os.symlink(foreign_layer_path, join(self.path, layer_name))
 
         # copy the properties of the layer into the properties of this dataset
-        layer_properties = self._get_type()(
-            foreign_layer_path.parent
-        ).properties.data_layers[layer_name]
+        layer_properties = Dataset(foreign_layer_path.parent).properties.data_layers[
+            layer_name
+        ]
         self.properties.data_layers[layer_name] = layer_properties
         self.properties._export_as_json()
 
@@ -383,56 +420,37 @@ class AbstractDataset(Generic[LayerT]):
             self.get_layer(layer_name)._setup_mag(resolution.mag.to_layer_name())
         return self.layers[layer_name]
 
-    def get_view(
-        self,
-        layer_name: str,
-        mag: Union[int, str, list, tuple, np.ndarray, Mag],
-        size: Tuple[int, int, int],
-        offset: Tuple[int, int, int] = None,
-        is_bounded: bool = True,
-        read_only: bool = False,
-    ) -> View:
-        """
-        Returns a view of the specified `wkcuber.api.MagDataset.MagDataset`.
-        This is a shorthand for `dataset.get_layer(layer_name).get_mag(mag).get_view(...)`
-
-        See `wkcuber.api.MagDataset.get_view` for more details.
-        """
-        layer = self.get_layer(layer_name)
-        mag_ds = layer.get_mag(mag)
-
-        return mag_ds.get_view(
-            size=size, offset=offset, is_bounded=is_bounded, read_only=read_only
-        )
-
-    def _create_layer(
-        self, layer_name: str, dtype_per_channel: np.dtype, num_channels: int
-    ) -> LayerT:
-        raise NotImplementedError
-
     def copy_dataset(
-        self, empty_target_ds: "AbstractDataset", args: Optional[Namespace] = None
-    ) -> None:
+        self,
+        new_dataset_path: Union[str, Path],
+        scale: Optional[Tuple[float, float, float]] = None,
+        block_len: int = None,
+        file_len: int = None,
+        block_type: int = None,
+        args: Optional[Namespace] = None,
+    ) -> "Dataset":
         """
-        Copies the data from the current dataset to `empty_target_ds`. The types of the two datasets can differ
-        (e.g. on dataset can be `WKDataset` and the other can be `TiffDataset`).
-        Therefore, this method can be used to convert from one type to the other.
+        Creates a new dataset at `new_dataset_path` and copies the data from the current dataset to `empty_target_ds`.
+        If not specified otherwise, the `scale`, `block_len`, `file_len` and `block_type` of the current dataset are also used for the new dataset.
         """
-        assert (
-            len(empty_target_ds.layers) == 0
-        ), "Copying dataset failed. The target dataset must be empty."
+
+        new_dataset_path = Path(new_dataset_path)
+        if scale is None:
+            scale = self.properties.scale
+        new_ds = Dataset.create(new_dataset_path, scale=scale)
+
         with get_executor_for_args(args) as executor:
             for layer_name, layer in self.layers.items():
                 largest_segment_id = None
                 if (
                     self.properties.data_layers[layer_name].category
-                    == Layer.SEGMENTATION_TYPE
+                    == LayerTypes.SEGMENTATION_TYPE
                 ):
                     largest_segment_id = cast(
                         SegmentationLayerProperties,
                         self.properties.data_layers[layer_name],
                     ).largest_segment_id
-                target_layer = empty_target_ds.add_layer(
+                target_layer = new_ds.add_layer(
                     layer_name,
                     self.properties.data_layers[layer_name].category,
                     dtype_per_channel=layer.dtype_per_channel,
@@ -443,12 +461,21 @@ class AbstractDataset(Generic[LayerT]):
                 bbox = self.properties.get_bounding_box_of_layer(layer_name)
 
                 for mag_name, mag in layer.mags.items():
-                    target_mag = target_layer.add_mag(mag_name)
+                    block_len = (
+                        block_len if block_len is not None else mag.header.block_len
+                    )
+                    block_type = (
+                        block_type if block_type is not None else mag.header.block_type
+                    )
+                    file_len = file_len if file_len is not None else mag.header.file_len
+                    target_mag = target_layer.add_mag(
+                        mag_name, block_len, file_len, block_type
+                    )
 
                     # The bounding box needs to be updated manually because chunked views do not have a reference to the dataset itself
                     # The base view of a MagDataset always starts at (0, 0, 0)
-                    target_mag.view.global_offset = (0, 0, 0)
-                    target_mag.view.size = cast(
+                    target_mag.global_offset = (0, 0, 0)
+                    target_mag.size = cast(
                         Tuple[int, int, int],
                         tuple(
                             BoundingBox(topleft=bbox[0], size=bbox[1])
@@ -457,326 +484,52 @@ class AbstractDataset(Generic[LayerT]):
                             .bottomright
                         ),
                     )
-                    target_mag.layer.dataset.properties._set_bounding_box_of_layer(
-                        layer_name, offset=bbox[0], size=bbox[1]
-                    )
+                    target_mag.layer.set_bounding_box(offset=bbox[0], size=bbox[1])
 
                     # The data gets written to the target_mag.
                     # Therefore, the chunk size is determined by the target_mag to prevent concurrent writes
-                    mag.view.for_zipped_chunks(
+                    mag.get_view().for_zipped_chunks(
                         work_on_chunk=_copy_job,
-                        target_view=target_mag.view,
+                        target_view=target_mag.get_view(),
                         source_chunk_size=target_mag._get_file_dimensions(),
                         target_chunk_size=target_mag._get_file_dimensions(),
                         executor=executor,
                     )
-
-    def to_wk_dataset(
-        self,
-        new_dataset_path: Union[str, Path],
-        scale: Optional[Tuple[float, float, float]] = None,
-    ) -> "WKDataset":
-        """
-        Creates a new `WKDataset` at `new_dataset_path` and copies the data from this dataset to the new dataset.
-
-        This is a shorthand for creating an empty `WKDataset` and then calling `AbstractDataset.copy_dataset`
-        """
-        new_dataset_path = Path(new_dataset_path)
-        if scale is None:
-            scale = self.properties.scale
-        new_ds = WKDataset.create(new_dataset_path, scale=scale)
-        self.copy_dataset(new_ds)
         return new_ds
-
-    def to_tiff_dataset(
-        self,
-        new_dataset_path: Union[str, Path],
-        scale: Optional[Tuple[float, float, float]] = None,
-        pattern: Optional[str] = None,
-    ) -> "TiffDataset":
-        """
-        Creates a new `TiffDataset` at `new_dataset_path` and copies the data from this dataset to the new dataset.
-
-        This is a shorthand for creating an empty `TiffDataset` and then calling `AbstractDataset.copy_dataset`
-        """
-        new_dataset_path = Path(new_dataset_path)
-        if scale is None:
-            scale = self.properties.scale
-        new_ds = TiffDataset.create(new_dataset_path, scale=scale, pattern=pattern)
-        self.copy_dataset(new_ds)
-        return new_ds
-
-    def to_tiled_tiff_dataset(
-        self,
-        new_dataset_path: Union[str, Path],
-        tile_size: Tuple[int, int],
-        scale: Optional[Tuple[float, float, float]] = None,
-        pattern: Optional[str] = None,
-    ) -> "TiledTiffDataset":
-        """
-        Creates a new `TiledTiffDataset` at `new_dataset_path` and copies the data from this dataset to the new dataset.
-
-        This is a shorthand for creating an empty `TiledTiffDataset` and then calling `AbstractDataset.copy_dataset`
-        """
-        new_dataset_path = Path(new_dataset_path)
-        if scale is None:
-            scale = self.properties.scale
-        new_ds = TiledTiffDataset.create(
-            new_dataset_path, scale=scale, tile_size=tile_size, pattern=pattern
-        )
-        self.copy_dataset(new_ds)
-        return new_ds
-
-    @abstractmethod
-    def _get_properties_type(self) -> Type[Properties]:
-        pass
-
-    @abstractmethod
-    def _get_type(self) -> Type["AbstractDataset"]:
-        pass
-
-
-class WKDataset(AbstractDataset[WKLayer]):
-    """
-    A dataset is the entry point of the Dataset API. An existing dataset on disk can be opened
-    or new datasets can be created.
-
-    A `WKDataset` stores the data in `.wkw` files on disk.
-    """
 
     @classmethod
     def create(
         cls, dataset_path: Union[str, Path], scale: Tuple[float, float, float]
-    ) -> "WKDataset":
+    ) -> "Dataset":
         """
         Creates a new dataset and the associated `datasource-properties.json`.
         """
         dataset_path = Path(dataset_path)
         name = basename(normpath(dataset_path))
-        properties = WKProperties(dataset_path / Properties.FILE_NAME, name, scale)
-        return cast(WKDataset, WKDataset._create_with_properties(properties))
+        properties = Properties(dataset_path / Properties.FILE_NAME, name, scale)
+        return Dataset._create_with_properties(properties)
 
     @classmethod
     def get_or_create(
         cls, dataset_path: Union[str, Path], scale: Tuple[float, float, float]
-    ) -> "WKDataset":
+    ) -> "Dataset":
         """
-        Creates a new `WKDataset`, in case it did not exist before, and then returns it.
+        Creates a new `Dataset`, in case it did not exist before, and then returns it.
         The `datasource-properties.json` is used to check if the dataset already exist.
         """
         dataset_path = Path(dataset_path)
         if (
             dataset_path / Properties.FILE_NAME
         ).exists():  # use the properties file to check if the Dataset exists
-            ds = WKDataset(dataset_path)
+            ds = Dataset(dataset_path)
             assert tuple(ds.properties.scale) == tuple(
                 scale
-            ), f"Cannot get_or_create WKDataset: The dataset {dataset_path} already exists, but the scales do not match ({ds.properties.scale} != {scale})"
+            ), f"Cannot get_or_create Dataset: The dataset {dataset_path} already exists, but the scales do not match ({ds.properties.scale} != {scale})"
             return ds
         else:
             return cls.create(dataset_path, scale)
 
-    def __init__(self, dataset_path: Union[str, Path]) -> None:
-        super().__init__(dataset_path)
-        self._data_format = "wkw"
-        assert isinstance(self.properties, WKProperties)
-
     def _create_layer(
         self, layer_name: str, dtype_per_channel: np.dtype, num_channels: int
-    ) -> WKLayer:
-        return WKLayer(layer_name, self, dtype_per_channel, num_channels)
-
-    def _get_properties_type(self) -> Type[WKProperties]:
-        return WKProperties
-
-    def _get_type(self) -> Type["WKDataset"]:
-        return WKDataset
-
-
-class TiffDataset(AbstractDataset[TiffLayer]):
-    """
-    A dataset is the entry point of the Dataset API. An existing dataset on disk can be opened
-    or new datasets can be created.
-
-    A `TiffDataset` stores the data in tiff-files on disk. Each z-slice is stored in a separate tiff-image.
-    """
-
-    properties: TiffProperties
-
-    @classmethod
-    def create(
-        cls,
-        dataset_path: Union[str, Path],
-        scale: Tuple[float, float, float],
-        pattern: Optional[str] = None,
-    ) -> "TiffDataset":
-        """
-        Creates a new dataset and the associated `datasource-properties.json`.
-        The `pattern` defines the format of the file structure / filename of the files on disk.
-        The default pattern is `"{zzzzz}.tif"`.
-        """
-        dataset_path = Path(dataset_path)
-        if pattern is None:
-            pattern = "{zzzzz}.tif"
-        _validate_pattern(pattern)
-        name = dataset_path.name
-        properties = TiffProperties(
-            dataset_path / "datasource-properties.json",
-            name,
-            scale,
-            pattern=pattern,
-            tile_size=None,
-        )
-        return cast(TiffDataset, TiffDataset._create_with_properties(properties))
-
-    @classmethod
-    def get_or_create(
-        cls,
-        dataset_path: Union[str, Path],
-        scale: Tuple[float, float, float],
-        pattern: str = None,
-    ) -> "TiffDataset":
-        """
-        Creates a new `TiffDataset`, in case it did not exist before, and then returns it.
-        The `datasource-properties.json` is used to check if the dataset already exist.
-
-        See `TiffDataset.create` for more information.
-        """
-        dataset_path = Path(dataset_path)
-        if (dataset_path / Properties.FILE_NAME).exists():
-            # use the properties file to check if the Dataset exists
-            ds = TiffDataset(dataset_path)
-            assert tuple(ds.properties.scale) == tuple(
-                scale
-            ), f"Cannot get_or_create TiffDataset: The dataset {dataset_path} already exists, but the scales do not match ({ds.properties.scale} != {scale})"
-            if pattern is not None:
-                assert (
-                    ds.properties.pattern == pattern
-                ), f"Cannot get_or_create TiffDataset: The dataset {dataset_path} already exists, but the patterns do not match ({ds.properties.pattern} != {pattern})"
-            return ds
-        else:
-            if pattern is None:
-                return cls.create(dataset_path, scale)
-            else:
-                return cls.create(dataset_path, scale, pattern)
-
-    def __init__(self, dataset_path: Union[str, Path]) -> None:
-        super().__init__(dataset_path)
-        self.data_format = "tiff"
-        assert isinstance(self.properties, TiffProperties)
-
-    def _create_layer(
-        self, layer_name: str, dtype_per_channel: np.dtype, num_channels: int
-    ) -> TiffLayer:
-        return TiffLayer(layer_name, self, dtype_per_channel, num_channels)
-
-    def _get_properties_type(self) -> Type[TiffProperties]:
-        return TiffProperties
-
-    def _get_type(self) -> Type["TiffDataset"]:
-        return TiffDataset
-
-
-class TiledTiffDataset(AbstractDataset[TiledTiffLayer]):
-    """
-    A dataset is the entry point of the Dataset API. An existing dataset on disk can be opened
-    or new datasets can be created.
-
-    A `TiledTiffDataset` stores the data in tiff-files on disk.
-    Each z-slice is composed into multiple smaller tiff-image.
-    """
-
-    properties: TiffProperties
-
-    @classmethod
-    def create(
-        cls,
-        dataset_path: Union[str, Path],
-        scale: Tuple[float, float, float],
-        tile_size: Tuple[int, int],
-        pattern: Optional[str] = None,
-    ) -> "TiledTiffDataset":
-        """
-        Creates a new dataset and the associated `datasource-properties.json`.
-        The `pattern` defines the format of the file structure / filename of the files on disk.
-        The default pattern is `"{xxxxx}/{yyyyy}/{zzzzz}.tif"`.
-        The `tile_size` specifies the dimensions of a single tiff-tile.
-        """
-        dataset_path = Path(dataset_path)
-        if pattern is None:
-            pattern = "{xxxxx}/{yyyyy}/{zzzzz}.tif"
-        _validate_pattern(pattern)
-        name = dataset_path.name
-        properties = TiffProperties(
-            dataset_path / "datasource-properties.json",
-            name,
-            scale,
-            pattern=pattern,
-            tile_size=tile_size,
-        )
-        return cast(
-            TiledTiffDataset, TiledTiffDataset._create_with_properties(properties)
-        )
-
-    @classmethod
-    def get_or_create(
-        cls,
-        dataset_path: Union[str, Path],
-        scale: Tuple[float, float, float],
-        tile_size: Tuple[int, int],
-        pattern: str = None,
-    ) -> "TiledTiffDataset":
-        """
-        Creates a new `TiledTiffDataset`, in case it did not exist before, and then returns it.
-        The `datasource-properties.json` is used to check if the dataset already exist.
-
-        See `TiledTiffDataset.create` for more information.
-        """
-        dataset_path = Path(dataset_path)
-        if (dataset_path / Properties.FILE_NAME).exists():
-            # use the properties file to check if the Dataset exists
-            ds = TiledTiffDataset(dataset_path)
-            assert tuple(ds.properties.scale) == tuple(
-                scale
-            ), f"Cannot get_or_create TiledTiffDataset: The dataset {dataset_path} already exists, but the scales do not match ({ds.properties.scale} != {scale})"
-            assert ds.properties.tile_size is not None
-            assert tuple(ds.properties.tile_size) == tuple(
-                tile_size
-            ), f"Cannot get_or_create TiledTiffDataset: The dataset {dataset_path} already exists, but the tile sizes do not match ({ds.properties.tile_size} != {tile_size})"
-            if pattern is not None:
-                assert (
-                    ds.properties.pattern == pattern
-                ), f"Cannot get_or_create TiledTiffDataset: The dataset {dataset_path} already exists, but the patterns do not match ({ds.properties.pattern} != {pattern})"
-            return ds
-        else:
-            if pattern is None:
-                return cls.create(dataset_path, scale, tile_size)
-            else:
-                return cls.create(dataset_path, scale, tile_size, pattern)
-
-    def __init__(self, dataset_path: Union[str, Path]) -> None:
-        super().__init__(dataset_path)
-        self.data_format = "tiled_tiff"
-        assert isinstance(self.properties, TiffProperties)
-
-    def _create_layer(
-        self, layer_name: str, dtype_per_channel: np.dtype, num_channels: int
-    ) -> TiledTiffLayer:
-        return TiledTiffLayer(layer_name, self, dtype_per_channel, num_channels)
-
-    def _get_properties_type(self) -> Type[TiffProperties]:
-        return TiffProperties
-
-    def _get_type(self) -> Type["TiledTiffDataset"]:
-        return TiledTiffDataset
-
-
-def _validate_pattern(pattern: str) -> None:
-    assert pattern.count("{") > 0 and pattern.count("}") > 0, (
-        f"The provided pattern {pattern} is invalid."
-        + " It needs to contain at least one '{' and one '}'."
-    )
-    assert pattern.count("{") == pattern.count("}"), (
-        f"The provided pattern {pattern} is invalid."
-        + " The number of '{' does not match the number of '}'."
-    )
+    ) -> Layer:
+        return Layer(layer_name, self, dtype_per_channel, num_channels)
