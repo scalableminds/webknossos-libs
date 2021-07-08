@@ -17,19 +17,19 @@ For upgrade instructions, please check the respective *Breaking Changes* section
     - The "Layer types" (previously `Layer.COLOR` and `Layer.SEGMENTATION`) are now moved into their own class `wkcuber.api.layer.LayerTypes`. 
     - `View` (in particular `get_view()`) is refactored to be safer (this is also a breaking change).
       - The attribute `path_to_mag_dataset` was renamed to `path_to_mag_view`
-      - Changes for `get_view` (these changes also apply for `MagView.get_view()` (previously `MagDataset.get_view()`)):
+      - Changes for `View.get_view()` (these changes also apply for `MagView.get_view()` (previously `MagDataset.get_view()`)):
         - The parameter `relative_offset` was renamed to `offset`.
         - The parameter `is_bounded` was dropped (`View`s are now always bounded).
         - The order of the parameters `size` and `offset` was changed, so that `offset` is now the first parameter.
-      - Changes for `get_view`:
-        - The parameter `relative_offset` was renamed to `offset`
     - The shorthand `wkcuber.api.dataset.Dataset.get_view()` was removed.
+    - The flag `--write_tiff` of `convert_nifti` was removed.
     
 ### Added
 
 ### Changed
 
 ### Fixed
+- Use an os independent path separator for regexes. [#334](https://github.com/scalableminds/webknossos-cuber/pull/334)
 
 ## [0.6.8](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.6.8) - 2021-06-18
 [Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.6.7...v0.6.8)
@@ -42,6 +42,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+
 
 ## [0.6.7](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.6.7) - 2021-05-28
 [Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.6.6...v0.6.7)
