@@ -3,8 +3,8 @@ import tempfile
 from pathlib import Path
 from typing import Tuple, cast
 
-from wkcuber.api.Dataset import WKDataset
-from wkcuber.api.Layer import Layer
+from wkcuber.api.dataset import Dataset
+from wkcuber.api.layer import Layer, LayerTypes
 from wkcuber.downsampling_utils import SamplingModes
 from wkcuber.upsampling_utils import upsample_cube, upsample_cube_job
 from wkcuber.mag import Mag
@@ -17,7 +17,7 @@ CUBE_EDGE_LEN = 256
 
 def test_upsampling() -> None:
     with tempfile.TemporaryDirectory() as temp_dir:
-        ds = WKDataset.create(Path(temp_dir), scale=(1, 1, 1))
+        ds = Dataset.create(Path(temp_dir), scale=(1, 1, 1))
         layer = ds.add_layer("color", "COLOR")
         mag = layer.add_mag([4, 4, 2])
         mag.write(
@@ -50,7 +50,7 @@ def test_upsample_cube() -> None:
 
 def upsample_test_helper(use_compress: bool) -> None:
     with tempfile.TemporaryDirectory() as temp_dir:
-        ds = WKDataset.create(Path(temp_dir), scale=(10.5, 10.5, 5))
+        ds = Dataset.create(Path(temp_dir), scale=(10.5, 10.5, 5))
         layer = ds.add_layer("color", "COLOR")
         mag2 = layer.add_mag([2, 2, 2])
 
@@ -79,7 +79,6 @@ def upsample_test_helper(use_compress: bool) -> None:
                 mag1.get_view(
                     offset=target_offset,
                     size=target_size,
-                    is_bounded=False,
                 ),
                 0,
             ),
@@ -118,9 +117,12 @@ def test_upsample_multi_channel() -> None:
     except:
         pass
 
-    ds = WKDataset.create(Path("testoutput", "multi-channel-test"), (1, 1, 1))
+    ds = Dataset.create(Path("testoutput", "multi-channel-test"), (1, 1, 1))
     l = ds.add_layer(
-        "color", Layer.COLOR_TYPE, dtype_per_channel="uint8", num_channels=num_channels
+        "color",
+        LayerTypes.COLOR_TYPE,
+        dtype_per_channel="uint8",
+        num_channels=num_channels,
     )
     mag2 = l.add_mag("2", file_len=file_len)
 
@@ -130,7 +132,7 @@ def test_upsample_multi_channel() -> None:
     l._initialize_mag_from_other_mag("1", mag2, False)
 
     upsample_cube_job(
-        (mag2.get_view(), l.get_mag("1").get_view(is_bounded=False), 0),
+        (mag2.get_view(), l.get_mag("1").get_view(), 0),
         [0.5, 0.5, 0.5],
         CUBE_EDGE_LEN,
         False,

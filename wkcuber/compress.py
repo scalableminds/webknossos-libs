@@ -5,7 +5,7 @@ import logging
 from argparse import ArgumentParser, Namespace
 from os import makedirs
 
-from wkcuber.api.Dataset import WKDataset
+from wkcuber.api.dataset import Dataset
 from .mag import Mag
 
 from .utils import add_verbose_flag, add_distribution_flags, setup_logging
@@ -53,7 +53,7 @@ def compress_mag(
     mag: Mag,
     args: Namespace = None,
 ) -> None:
-    WKDataset(source_path).get_layer(layer_name).get_mag(mag).compress(
+    Dataset(source_path).get_layer(layer_name).get_mag(mag).compress(
         target_path=Path(target_path), args=args
     )
 
@@ -61,7 +61,7 @@ def compress_mag(
 def compress_mag_inplace(
     target_path: Path, layer_name: str, mag: Mag, args: Namespace = None
 ) -> None:
-    WKDataset(target_path).get_layer(layer_name).get_mag(mag).compress(args=args)
+    Dataset(target_path).get_layer(layer_name).get_mag(mag).compress(args=args)
 
 
 def compress_mags(
@@ -76,13 +76,13 @@ def compress_mags(
     else:
         target = target_path
 
-    layer = WKDataset(source_path).get_layer(layer_name)
+    layer = Dataset(source_path).get_layer(layer_name)
     if mags is None:
         mags = [Mag(mag_name) for mag_name in layer.mags.keys()]
 
-    for mag_name, mag_ds in WKDataset(source_path).get_layer(layer_name).mags.items():
+    for mag_name, mag_view in Dataset(source_path).get_layer(layer_name).mags.items():
         if Mag(mag_name) in mags:
-            mag_ds.compress(target_path=Path(target), args=args)
+            mag_view.compress(target_path=Path(target), args=args)
 
     if target_path is None:
         backup_dir = source_path.with_suffix(BACKUP_EXT)
