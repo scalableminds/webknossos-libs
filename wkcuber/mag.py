@@ -82,3 +82,6 @@ class Mag(object):
 
     def as_np(self) -> np.ndarray:
         return np.array(self.mag)
+
+    def __hash__(self) -> int:
+        return hash(tuple(self.mag))

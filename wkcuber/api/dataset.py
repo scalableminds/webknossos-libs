@@ -4,18 +4,20 @@ from shutil import rmtree
 from os import makedirs
 from os.path import join, normpath, basename
 from pathlib import Path
-from typing import Tuple, Union, Dict, Any, Optional, cast
+from typing import Tuple, Union, Dict, Any, Optional, cast, List
 
 import numpy as np
 import os
 import re
 
+import wkw
+
 from wkcuber.api.properties.layer_properties import (
     properties_floating_type_to_python_type,
     SegmentationLayerProperties,
+    LayerProperties,
 )
 from wkcuber.api.bounding_box import BoundingBox
-from wkcuber.mag import Mag
 from wkcuber.utils import get_executor_for_args
 
 from wkcuber.api.properties.dataset_properties import Properties
@@ -372,6 +374,64 @@ class Dataset:
                 **kwargs,
             )
 
+    def get_segmentation_layer(self) -> Layer:
+        """
+        Returns the only segmentation layer.
+
+        Fails with a IndexError if there are multiple segmentation layers or none.
+        """
+        return self._get_layer_by_category(LayerTypes.SEGMENTATION_TYPE)
+
+    def get_or_add_segmentation_layer(
+        self,
+        dtype_per_layer: Union[str, np.dtype, type] = None,
+        dtype_per_channel: Union[str, np.dtype, type] = None,
+        num_channels: int = None,
+        **kwargs: Any,
+    ) -> Layer:
+        """
+        Adds an segmentation layer called "segmentation" if no segmentation layer exist yet.
+        Otherwise the segmentation layer is returned.
+
+        Fails with a IndexError if there are multiple segmentation layer.
+        """
+        return self._get_or_add_layer_by_category(
+            category=LayerTypes.SEGMENTATION_TYPE,
+            dtype_per_layer=dtype_per_layer,
+            dtype_per_channel=dtype_per_channel,
+            num_channels=num_channels,
+            **kwargs,
+        )
+
+    def get_color_layer(self) -> Layer:
+        """
+        Returns the only color layer.
+
+        Fails with a RuntimeError if there are multiple color layers or none.
+        """
+        return self._get_layer_by_category(LayerTypes.COLOR_TYPE)
+
+    def get_or_add_color_layer(
+        self,
+        dtype_per_layer: Union[str, np.dtype, type] = None,
+        dtype_per_channel: Union[str, np.dtype, type] = None,
+        num_channels: int = None,
+        **kwargs: Any,
+    ) -> Layer:
+        """
+        Adds an color layer called "segmentation" if no color layer exist yet.
+        Otherwise the segmentation layer is returned.
+
+        Fails with a RuntimeError if there are multiple color layer.
+        """
+        return self._get_or_add_layer_by_category(
+            category=LayerTypes.COLOR_TYPE,
+            dtype_per_layer=dtype_per_layer,
+            dtype_per_channel=dtype_per_channel,
+            num_channels=num_channels,
+            **kwargs,
+        )
+
     def delete_layer(self, layer_name: str) -> None:
         """
         Deletes the layer from the `datasource-properties.json` and the data from disk.
@@ -426,7 +486,7 @@ class Dataset:
         scale: Optional[Tuple[float, float, float]] = None,
         block_len: int = None,
         file_len: int = None,
-        block_type: int = None,
+        compress: Optional[bool] = None,
         args: Optional[Namespace] = None,
     ) -> "Dataset":
         """
@@ -460,16 +520,22 @@ class Dataset:
 
                 bbox = self.properties.get_bounding_box_of_layer(layer_name)
 
-                for mag_name, mag in layer.mags.items():
+                for mag, mag_view in layer.mags.items():
                     block_len = (
-                        block_len if block_len is not None else mag.header.block_len
+                        block_len
+                        if block_len is not None
+                        else mag_view.header.block_len
                     )
-                    block_type = (
-                        block_type if block_type is not None else mag.header.block_type
+                    compress = (
+                        compress
+                        if compress is not None
+                        else mag_view.header.block_type != wkw.Header.BLOCK_TYPE_RAW
                     )
-                    file_len = file_len if file_len is not None else mag.header.file_len
+                    file_len = (
+                        file_len if file_len is not None else mag_view.header.file_len
+                    )
                     target_mag = target_layer.add_mag(
-                        mag_name, block_len, file_len, block_type
+                        mag, block_len, file_len, compress
                     )
 
                     # The bounding box needs to be updated manually because chunked views do not have a reference to the dataset itself
@@ -479,8 +545,8 @@ class Dataset:
                         Tuple[int, int, int],
                         tuple(
                             BoundingBox(topleft=bbox[0], size=bbox[1])
-                            .align_with_mag(Mag(mag_name), ceil=True)
-                            .in_mag(Mag(mag_name))
+                            .align_with_mag(mag, ceil=True)
+                            .in_mag(mag)
                             .bottomright
                         ),
                     )
@@ -488,7 +554,7 @@ class Dataset:
 
                     # The data gets written to the target_mag.
                     # Therefore, the chunk size is determined by the target_mag to prevent concurrent writes
-                    mag.get_view().for_zipped_chunks(
+                    mag_view.get_view().for_zipped_chunks(
                         work_on_chunk=_copy_job,
                         target_view=target_mag.get_view(),
                         source_chunk_size=target_mag._get_file_dimensions(),
@@ -497,15 +563,85 @@ class Dataset:
                     )
         return new_ds
 
+    def _get_existing_layer_names_by_category(self, category: str) -> List[str]:
+        assert (
+            category == LayerTypes.COLOR_TYPE
+            or category == LayerTypes.SEGMENTATION_TYPE
+        )
+        layer_property_type = (
+            SegmentationLayerProperties
+            if category == LayerTypes.SEGMENTATION_TYPE
+            else LayerProperties
+        )
+
+        return [
+            layer.name
+            for layer in self.properties.data_layers.values()
+            if type(layer) == layer_property_type
+        ]
+
+    def _get_layer_by_category(self, category: str) -> Layer:
+        layer_names = self._get_existing_layer_names_by_category(category)
+
+        if len(layer_names) == 1:
+            return self.get_layer(layer_names[0])
+        elif len(layer_names) == 0:
+            raise IndexError(
+                f"Failed to get segmentation layer: There is no {category} layer."
+            )
+        else:
+            raise IndexError(
+                f"Failed to get segmentation layer: There are multiple {category} layer."
+            )
+
+    def _get_or_add_layer_by_category(
+        self,
+        category: str,
+        dtype_per_layer: Union[str, np.dtype, type] = None,
+        dtype_per_channel: Union[str, np.dtype, type] = None,
+        num_channels: int = None,
+        **kwargs: Any,
+    ) -> Layer:
+
+        layers_by_category = self._get_existing_layer_names_by_category(category)
+        if len(layers_by_category) == 1:
+            return self._get_layer_by_category(category)
+        elif len(layers_by_category) > 1:
+            raise IndexError(
+                f"Failed to get or add a {category} layer: There are already multiple {category} layers."
+            )
+
+        # We use the type as name (e.g. the color name would then be called "color")
+        return self.add_layer(
+            layer_name=category,
+            category=category,
+            dtype_per_layer=dtype_per_layer,
+            dtype_per_channel=dtype_per_channel,
+            num_channels=num_channels,
+            **kwargs,
+        )
+
+    @property
+    def name(self) -> str:
+        return self.properties._name
+
+    @name.setter
+    def name(self, name: str) -> None:
+        self.properties._name = name
+        self.properties._export_as_json()
+
     @classmethod
     def create(
-        cls, dataset_path: Union[str, Path], scale: Tuple[float, float, float]
+        cls,
+        dataset_path: Union[str, Path],
+        scale: Tuple[float, float, float],
+        name: Optional[str] = None,
     ) -> "Dataset":
         """
         Creates a new dataset and the associated `datasource-properties.json`.
         """
         dataset_path = Path(dataset_path)
-        name = basename(normpath(dataset_path))
+        name = name if name is not None else basename(normpath(dataset_path))
         properties = Properties(dataset_path / Properties.FILE_NAME, name, scale)
         return Dataset._create_with_properties(properties)
 

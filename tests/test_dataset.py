@@ -479,21 +479,21 @@ def test_get_or_add_mag() -> None:
         "color", LayerTypes.COLOR_TYPE
     )
 
-    assert "1" not in layer.mags.keys()
+    assert Mag(1) not in layer.mags.keys()
 
     # The mag did not exist before
-    mag = layer.get_or_add_mag("1", block_len=32, file_len=32, block_type=1)
-    assert "1" in layer.mags.keys()
+    mag = layer.get_or_add_mag("1", block_len=32, file_len=32, compress=False)
+    assert Mag(1) in layer.mags.keys()
     assert mag.name == "1"
 
     # The mag did exist before
-    layer.get_or_add_mag("1", block_len=32, file_len=32, block_type=1)
-    assert "1" in layer.mags.keys()
+    layer.get_or_add_mag("1", block_len=32, file_len=32, compress=False)
+    assert Mag(1) in layer.mags.keys()
     assert mag.name == "1"
 
     with pytest.raises(AssertionError):
         # The mag "1" did exist before but with another 'block_len' (this would work the same for 'file_len' and 'block_type')
-        layer.get_or_add_mag("1", block_len=64, file_len=32, block_type=1)
+        layer.get_or_add_mag("1", block_len=64, file_len=32, compress=False)
 
 
 def test_open_dataset_without_num_channels_in_properties() -> None:
@@ -1375,3 +1375,50 @@ def test_compression(tmp_path: Path) -> None:
         (np.random.rand(3, 10, 20, 30) * 255).astype(np.uint8),
         allow_compressed_write=True,
     )
+
+
+def test_get_largest_segment_id(tmp_path: Path) -> None:
+    ds = Dataset.create(tmp_path, scale=(1, 1, 1))
+    color_layer = ds.add_layer("color", LayerTypes.COLOR_TYPE)
+    with pytest.raises(RuntimeError):
+        color_layer.largest_segment_id  # fails
+
+    segmentation_layer = ds.add_layer(
+        "segmentation", LayerTypes.SEGMENTATION_TYPE, largest_segment_id=999
+    )
+    segmentation_layer.largest_segment_id  # fails
+
+
+def test_get_or_add_layer_by_type(tmp_path: Path) -> None:
+    ds = Dataset.create(tmp_path, scale=(1, 1, 1))
+    with pytest.raises(IndexError):
+        ds.get_segmentation_layer()  # fails
+    _ = ds.get_or_add_segmentation_layer(largest_segment_id=999)  # creates layer
+    _ = ds.get_or_add_segmentation_layer(largest_segment_id=999)  # returns layer
+    _ = ds.get_segmentation_layer()  # works
+    _ = ds.add_layer(
+        "different_segmentation", LayerTypes.SEGMENTATION_TYPE, largest_segment_id=999
+    )  # adds another layer
+    with pytest.raises(IndexError):
+        ds.get_segmentation_layer()  # fails
+
+    with pytest.raises(IndexError):
+        ds.get_color_layer()  # fails
+    _ = ds.get_or_add_color_layer()  # creates layer
+    _ = ds.get_or_add_color_layer()  # returns layer
+    _ = ds.get_color_layer()  # works
+    _ = ds.add_layer("different_color", LayerTypes.COLOR_TYPE)  # adds another layer
+    with pytest.raises(IndexError):
+        ds.get_color_layer()  # fails
+
+
+def test_dataset_name(tmp_path: Path) -> None:
+    ds = Dataset.create(tmp_path / "some_name", scale=(1, 1, 1))
+    assert ds.name == "some_name"
+    ds.name = "other_name"
+    assert ds.name == "other_name"
+
+    ds2 = Dataset.create(
+        tmp_path / "some_new_name", scale=(1, 1, 1), name="very important dataset"
+    )
+    assert ds2.name == "very important dataset"

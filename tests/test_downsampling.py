@@ -265,7 +265,7 @@ def test_default_parameter() -> None:
     layer.downsample()
 
     # The max_mag is Mag(4) in this case (see test_default_max_mag)
-    assert sorted(layer.mags.keys()) == ["2", "4"]
+    assert sorted(layer.mags.keys()) == [Mag("2"), Mag("4")]
 
 
 def test_default_anisotropic_scale() -> None:
@@ -282,7 +282,7 @@ def test_default_anisotropic_scale() -> None:
     mag.write(data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8))
 
     layer.downsample(Mag(1), None, "median", True)
-    assert sorted(layer.mags.keys()) == ["1", "2-2-1", "4-4-1"]
+    assert sorted(layer.mags.keys()) == [Mag("1"), Mag("2-2-1"), Mag("4-4-1")]
 
 
 def test_downsample_mag_list() -> None:
@@ -301,7 +301,7 @@ def test_downsample_mag_list() -> None:
     layer.downsample_mag_list(from_mag=Mag(1), target_mags=target_mags)
 
     for m in target_mags:
-        assert m.to_layer_name() in layer.mags
+        assert m in layer.mags
 
 
 def test_downsample_with_invalid_mag_list() -> None:
@@ -347,6 +347,6 @@ def test_downsample_compressed() -> None:
     # Note: this test does not check if the data is correct. This is already covered by other test cases.
 
     assert len(layer.mags) == 3
-    assert "1" in layer.mags.keys()
-    assert "2-2-1" in layer.mags.keys()
-    assert "4-4-2" in layer.mags.keys()
+    assert Mag("1") in layer.mags.keys()
+    assert Mag("2-2-1") in layer.mags.keys()
+    assert Mag("4-4-2") in layer.mags.keys()

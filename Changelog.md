@@ -7,7 +7,19 @@ and this project adheres to [Calendar Versioning](http://calver.org/) `0Y.0M.MIC
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.6.8...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.7.0...HEAD)
+
+### Breaking Changes in Config & CLI
+    
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [0.7.0](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.7.0) - 2021-07-08
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.6.8...v0.7.0)
 
 ### Breaking Changes in Config & CLI
 - Refactoring of the dataset API: [#331](https://github.com/scalableminds/webknossos-cuber/pull/331)
