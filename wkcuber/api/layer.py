@@ -114,7 +114,7 @@ class Layer:
     ) -> MagView:
         """
         Creates a new mag called and adds it to the layer.
-        The parameter `block_len`, `file_len` and `block_type` can be
+        The parameter `block_len`, `file_len` and `compress` can be
         specified to adjust how the data is stored on disk.
 
         The return type is `wkcuber.api.mag_view.MagView`.
@@ -124,7 +124,7 @@ class Layer:
         # normalize the name of the mag
         mag = Mag(mag)
         block_type = (
-            wkw.Header.BLOCK_TYPE_LZ4 if compress else wkw.Header.BLOCK_TYPE_RAW
+            wkw.Header.BLOCK_TYPE_LZ4HC if compress else wkw.Header.BLOCK_TYPE_RAW
         )
 
         self._assert_mag_does_not_exist_yet(mag)
@@ -156,7 +156,7 @@ class Layer:
         # normalize the name of the mag
         mag = Mag(mag)
         block_type = (
-            wkw.Header.BLOCK_TYPE_LZ4 if compress else wkw.Header.BLOCK_TYPE_RAW
+            wkw.Header.BLOCK_TYPE_LZ4HC if compress else wkw.Header.BLOCK_TYPE_RAW
         )
 
         if mag in self._mags.keys():
@@ -607,17 +607,22 @@ class Layer:
             compress=compress,
         )
 
+
+class SegmentationLayer(Layer):
     @property
     def largest_segment_id(self) -> int:
         layer = self.dataset.properties.data_layers[self.name]
-        if isinstance(layer, SegmentationLayerProperties):
-            return layer.largest_segment_id
-        raise RuntimeError(
-            "Failed to get largest_segment_id: This is not a segmentation layer."
-        )
+        assert isinstance(layer, SegmentationLayerProperties)
+        return layer.largest_segment_id
+
+    @largest_segment_id.setter
+    def largest_segment_id(self, largest_segment_id: int) -> None:
+        layer = self.dataset.properties._data_layers[self.name]
+        assert isinstance(layer, SegmentationLayerProperties)
+        layer._largest_segment_id = largest_segment_id
 
 
-class LayerTypes:
+class LayerCategories:
     """
     There are two different types of layers.
     This class can be used to specify the type of a layer during creation:
@@ -626,7 +631,7 @@ class LayerTypes:
 
     dataset = Dataset(<path_to_dataset>)
     # Adds a new layer
-    layer = dataset.add_layer("color", LayerTypes.COLOR_TYPE)
+    layer = dataset.add_layer("color", LayerCategories.COLOR_TYPE)
     ```
     """
 

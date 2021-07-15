@@ -21,7 +21,7 @@ from wkcuber.api.bounding_box import BoundingBox
 from wkcuber.utils import get_executor_for_args
 
 from wkcuber.api.properties.dataset_properties import Properties
-from wkcuber.api.layer import Layer, LayerTypes
+from wkcuber.api.layer import Layer, LayerCategories, SegmentationLayer
 from wkcuber.api.view import View
 
 DEFAULT_BIT_DEPTH = 8
@@ -122,7 +122,7 @@ class Dataset:
     # Adds a new layer
     layer = dataset.add_layer(
         layer_name="color",
-        category=LayerTypes.COLOR_TYPE,
+        category=LayerCategories.COLOR_TYPE,
         dtype_per_channel="uint8",
         num_channels=3
     )
@@ -302,7 +302,7 @@ class Dataset:
             **kwargs,
         )
         self._layers[layer_name] = self._create_layer(
-            layer_name, dtype_per_channel, num_channels
+            layer_name, dtype_per_channel, num_channels, category
         )
         return self.layers[layer_name]
 
@@ -374,33 +374,15 @@ class Dataset:
                 **kwargs,
             )
 
-    def get_segmentation_layer(self) -> Layer:
+    def get_segmentation_layer(self) -> SegmentationLayer:
         """
         Returns the only segmentation layer.
 
         Fails with a IndexError if there are multiple segmentation layers or none.
         """
-        return self._get_layer_by_category(LayerTypes.SEGMENTATION_TYPE)
-
-    def get_or_add_segmentation_layer(
-        self,
-        dtype_per_layer: Union[str, np.dtype, type] = None,
-        dtype_per_channel: Union[str, np.dtype, type] = None,
-        num_channels: int = None,
-        **kwargs: Any,
-    ) -> Layer:
-        """
-        Adds an segmentation layer called "segmentation" if no segmentation layer exist yet.
-        Otherwise the segmentation layer is returned.
-
-        Fails with a IndexError if there are multiple segmentation layer.
-        """
-        return self._get_or_add_layer_by_category(
-            category=LayerTypes.SEGMENTATION_TYPE,
-            dtype_per_layer=dtype_per_layer,
-            dtype_per_channel=dtype_per_channel,
-            num_channels=num_channels,
-            **kwargs,
+        return cast(
+            SegmentationLayer,
+            self._get_layer_by_category(LayerCategories.SEGMENTATION_TYPE),
         )
 
     def get_color_layer(self) -> Layer:
@@ -409,28 +391,7 @@ class Dataset:
 
         Fails with a RuntimeError if there are multiple color layers or none.
         """
-        return self._get_layer_by_category(LayerTypes.COLOR_TYPE)
-
-    def get_or_add_color_layer(
-        self,
-        dtype_per_layer: Union[str, np.dtype, type] = None,
-        dtype_per_channel: Union[str, np.dtype, type] = None,
-        num_channels: int = None,
-        **kwargs: Any,
-    ) -> Layer:
-        """
-        Adds an color layer called "segmentation" if no color layer exist yet.
-        Otherwise the segmentation layer is returned.
-
-        Fails with a RuntimeError if there are multiple color layer.
-        """
-        return self._get_or_add_layer_by_category(
-            category=LayerTypes.COLOR_TYPE,
-            dtype_per_layer=dtype_per_layer,
-            dtype_per_channel=dtype_per_channel,
-            num_channels=num_channels,
-            **kwargs,
-        )
+        return self._get_layer_by_category(LayerCategories.COLOR_TYPE)
 
     def delete_layer(self, layer_name: str) -> None:
         """
@@ -475,6 +436,7 @@ class Dataset:
                 layer_properties.element_class, layer_properties.num_channels
             ),
             layer_properties.num_channels,
+            layer_properties.category,
         )
         for resolution in layer_properties.wkw_magnifications:
             self.get_layer(layer_name)._setup_mag(resolution.mag.to_layer_name())
@@ -504,7 +466,7 @@ class Dataset:
                 largest_segment_id = None
                 if (
                     self.properties.data_layers[layer_name].category
-                    == LayerTypes.SEGMENTATION_TYPE
+                    == LayerCategories.SEGMENTATION_TYPE
                 ):
                     largest_segment_id = cast(
                         SegmentationLayerProperties,
@@ -565,12 +527,12 @@ class Dataset:
 
     def _get_existing_layer_names_by_category(self, category: str) -> List[str]:
         assert (
-            category == LayerTypes.COLOR_TYPE
-            or category == LayerTypes.SEGMENTATION_TYPE
+            category == LayerCategories.COLOR_TYPE
+            or category == LayerCategories.SEGMENTATION_TYPE
         )
         layer_property_type = (
             SegmentationLayerProperties
-            if category == LayerTypes.SEGMENTATION_TYPE
+            if category == LayerCategories.SEGMENTATION_TYPE
             else LayerProperties
         )
 
@@ -593,33 +555,6 @@ class Dataset:
             raise IndexError(
                 f"Failed to get segmentation layer: There are multiple {category} layer."
             )
-
-    def _get_or_add_layer_by_category(
-        self,
-        category: str,
-        dtype_per_layer: Union[str, np.dtype, type] = None,
-        dtype_per_channel: Union[str, np.dtype, type] = None,
-        num_channels: int = None,
-        **kwargs: Any,
-    ) -> Layer:
-
-        layers_by_category = self._get_existing_layer_names_by_category(category)
-        if len(layers_by_category) == 1:
-            return self._get_layer_by_category(category)
-        elif len(layers_by_category) > 1:
-            raise IndexError(
-                f"Failed to get or add a {category} layer: There are already multiple {category} layers."
-            )
-
-        # We use the type as name (e.g. the color name would then be called "color")
-        return self.add_layer(
-            layer_name=category,
-            category=category,
-            dtype_per_layer=dtype_per_layer,
-            dtype_per_channel=dtype_per_channel,
-            num_channels=num_channels,
-            **kwargs,
-        )
 
     @property
     def name(self) -> str:
@@ -666,6 +601,13 @@ class Dataset:
             return cls.create(dataset_path, scale)
 
     def _create_layer(
-        self, layer_name: str, dtype_per_channel: np.dtype, num_channels: int
+        self,
+        layer_name: str,
+        dtype_per_channel: np.dtype,
+        num_channels: int,
+        category: str,
     ) -> Layer:
-        return Layer(layer_name, self, dtype_per_channel, num_channels)
+        layer_type = (
+            Layer if category == LayerCategories.COLOR_TYPE else SegmentationLayer
+        )
+        return layer_type(layer_name, self, dtype_per_channel, num_channels)
