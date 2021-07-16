@@ -611,15 +611,16 @@ class Layer:
 class SegmentationLayer(Layer):
     @property
     def largest_segment_id(self) -> int:
-        layer = self.dataset.properties.data_layers[self.name]
-        assert isinstance(layer, SegmentationLayerProperties)
-        return layer.largest_segment_id
+        layer_properties = self.dataset.properties.data_layers[self.name]
+        assert isinstance(layer_properties, SegmentationLayerProperties)
+        return layer_properties.largest_segment_id
 
     @largest_segment_id.setter
     def largest_segment_id(self, largest_segment_id: int) -> None:
-        layer = self.dataset.properties._data_layers[self.name]
-        assert isinstance(layer, SegmentationLayerProperties)
-        layer._largest_segment_id = largest_segment_id
+        layer_properties = self.dataset.properties._data_layers[self.name]
+        assert isinstance(layer_properties, SegmentationLayerProperties)
+        layer_properties._largest_segment_id = largest_segment_id
+        self.dataset.properties._export_as_json()
 
 
 class LayerCategories:

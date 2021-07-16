@@ -516,7 +516,7 @@ class Dataset:
 
                     # The data gets written to the target_mag.
                     # Therefore, the chunk size is determined by the target_mag to prevent concurrent writes
-                    mag_view.get_view().for_zipped_chunks(
+                    mag_view.for_zipped_chunks(
                         work_on_chunk=_copy_job,
                         target_view=target_mag.get_view(),
                         source_chunk_size=target_mag._get_file_dimensions(),
@@ -525,7 +525,7 @@ class Dataset:
                     )
         return new_ds
 
-    def _get_existing_layer_names_by_category(self, category: str) -> List[str]:
+    def _get_layer_by_category(self, category: str) -> Layer:
         assert (
             category == LayerCategories.COLOR_TYPE
             or category == LayerCategories.SEGMENTATION_TYPE
@@ -536,18 +536,15 @@ class Dataset:
             else LayerProperties
         )
 
-        return [
-            layer.name
+        layers = [
+            layer
             for layer in self.properties.data_layers.values()
             if type(layer) == layer_property_type
         ]
 
-    def _get_layer_by_category(self, category: str) -> Layer:
-        layer_names = self._get_existing_layer_names_by_category(category)
-
-        if len(layer_names) == 1:
-            return self.get_layer(layer_names[0])
-        elif len(layer_names) == 0:
+        if len(layers) == 1:
+            return layers[0]
+        elif len(layers) == 0:
             raise IndexError(
                 f"Failed to get segmentation layer: There is no {category} layer."
             )
