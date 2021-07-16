@@ -18,7 +18,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Fixed
 
 
-## [0.8.0](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.0) - 2021-07-016
+## [0.8.0](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.0) - 2021-07-16
 [Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.7.0...v0.8.0)
 
 ### Breaking Changes in Config & CLI
