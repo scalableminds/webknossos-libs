@@ -4,7 +4,7 @@ from shutil import rmtree
 from os import makedirs
 from os.path import join, normpath, basename
 from pathlib import Path
-from typing import Tuple, Union, Dict, Any, Optional, cast, List
+from typing import Tuple, Union, Dict, Any, Optional, cast
 
 import numpy as np
 import os
