@@ -536,15 +536,15 @@ class Dataset:
             else LayerProperties
         )
 
-        layers = [
-            layer
-            for layer in self.properties.data_layers.values()
-            if type(layer) == layer_property_type
+        layer_properties = [
+            layer_property
+            for layer_property in self.properties.data_layers.values()
+            if type(layer_property) == layer_property_type
         ]
 
-        if len(layers) == 1:
-            return layers[0]
-        elif len(layers) == 0:
+        if len(layer_properties) == 1:
+            return self.get_layer(layer_properties[0].name)
+        elif len(layer_properties) == 0:
             raise IndexError(
                 f"Failed to get segmentation layer: There is no {category} layer."
             )
