@@ -78,10 +78,10 @@ def compress_mags(
 
     layer = Dataset(source_path).get_layer(layer_name)
     if mags is None:
-        mags = [Mag(mag_name) for mag_name in layer.mags.keys()]
+        mags = list(layer.mags.keys())
 
-    for mag_name, mag_view in Dataset(source_path).get_layer(layer_name).mags.items():
-        if Mag(mag_name) in mags:
+    for mag, mag_view in Dataset(source_path).get_layer(layer_name).mags.items():
+        if mag in mags:
             mag_view.compress(target_path=Path(target), args=args)
 
     if target_path is None:

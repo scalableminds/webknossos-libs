@@ -7,7 +7,28 @@ and this project adheres to [Calendar Versioning](http://calver.org/) `0Y.0M.MIC
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.6.8...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.7.0...HEAD)
+
+### Breaking Changes in Config & CLI
+- Some breaking changes in the dataset API: [#339](https://github.com/scalableminds/webknossos-cuber/pull/339)
+  - The interfaces of the methods `Layer.add_mag` and `Layer.get_or_add_mag` have changed: the parameter `block_type` is now replaced with `compress`. 
+  - Previously `Layer.mags` was of type `Dict[str, MagView]`. This was now changed to `Dict[Mag, MagView]`. 
+  - Renamed `LayerTypes` to `LayerCategories`.
+
+### Added
+- Added multiple small features: [#339](https://github.com/scalableminds/webknossos-cuber/pull/339)
+  - Names of datasets can now be passed optionally when creating a dataset.  
+  - The `Layer` does now expose the `largest_segment_id`.
+  - Add methods to get category specific layers for a given dataset.
+
+
+### Changed
+
+### Fixed
+
+
+## [0.7.0](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.7.0) - 2021-07-08
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.6.8...v0.7.0)
 
 ### Breaking Changes in Config & CLI
 - Refactoring of the dataset API: [#331](https://github.com/scalableminds/webknossos-cuber/pull/331)

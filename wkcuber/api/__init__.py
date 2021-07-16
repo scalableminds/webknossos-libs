@@ -27,7 +27,7 @@ from wkcuber.api.layer import Layer
 dataset = Dataset.create(<path_to_new_dataset>, scale=(1, 1, 1))
 layer = dataset.add_layer(
     layer_name="color",
-    category=LayerTypes.COLOR_TYPE,
+    category=LayerCategories.COLOR_TYPE,
     dtype_per_channel="uint8",
     num_channels=3
 )
