@@ -19,6 +19,7 @@ import numpy as np
 from wkw import wkw
 
 from wkcuber.api.bounding_box import BoundingBox
+from wkcuber.api.properties.layer_properties import SegmentationLayerProperties
 from wkcuber.downsampling_utils import (
     calculate_virtual_scale_for_target_mag,
     calculate_default_max_mag,
@@ -93,13 +94,13 @@ class Layer:
         self.dataset = dataset
         self.dtype_per_channel = dtype_per_channel
         self.num_channels = num_channels
-        self._mags: Dict[str, MagView] = {}
+        self._mags: Dict[Mag, MagView] = {}
 
         full_path = join(dataset.path, name)
         makedirs(full_path, exist_ok=True)
 
     @property
-    def mags(self) -> Dict[str, MagView]:
+    def mags(self) -> Dict[Mag, MagView]:
         """
         Getter for dictionary containing all mags.
         """
@@ -111,9 +112,11 @@ class Layer:
 
         This function raises an `IndexError` if the specified `mag` does not exist.
         """
-        mag = Mag(mag).to_layer_name()
+        mag = Mag(mag)
         if mag not in self.mags.keys():
-            raise IndexError("The mag {} is not a mag of this layer".format(mag))
+            raise IndexError(
+                "The mag {} is not a mag of this layer".format(mag.to_layer_name())
+            )
         return self.mags[mag]
 
     def add_mag(
@@ -121,11 +124,11 @@ class Layer:
         mag: Union[int, str, list, tuple, np.ndarray, Mag],
         block_len: int = 32,
         file_len: int = DEFAULT_WKW_FILE_LEN,
-        block_type: int = wkw.Header.BLOCK_TYPE_RAW,
+        compress: bool = False,
     ) -> MagView:
         """
         Creates a new mag called and adds it to the layer.
-        The parameter `block_len`, `file_len` and `block_type` can be
+        The parameter `block_len`, `file_len` and `compress` can be
         specified to adjust how the data is stored on disk.
 
         The return type is `wkcuber.api.mag_view.MagView`.
@@ -133,16 +136,19 @@ class Layer:
         Raises an IndexError if the specified `mag` already exists.
         """
         # normalize the name of the mag
-        mag = Mag(mag).to_layer_name()
+        mag = Mag(mag)
+        block_type = (
+            wkw.Header.BLOCK_TYPE_LZ4HC if compress else wkw.Header.BLOCK_TYPE_RAW
+        )
 
         self._assert_mag_does_not_exist_yet(mag)
         self._create_dir_for_mag(mag)
 
         self._mags[mag] = MagView(
-            self, mag, block_len, file_len, block_type, create=True
+            self, mag.to_layer_name(), block_len, file_len, block_type, create=True
         )
         self.dataset.properties._add_mag(
-            self.name, mag, cube_length=block_len * file_len
+            self.name, mag.to_layer_name(), cube_length=block_len * file_len
         )
 
         return self._mags[mag]
@@ -152,7 +158,7 @@ class Layer:
         mag: Union[int, str, list, tuple, np.ndarray, Mag],
         block_len: int = 32,
         file_len: int = DEFAULT_WKW_FILE_LEN,
-        block_type: int = wkw.Header.BLOCK_TYPE_RAW,
+        compress: bool = False,
     ) -> MagView:
         """
         Creates a new mag called and adds it to the dataset, in case it did not exist before.
@@ -162,7 +168,10 @@ class Layer:
         """
 
         # normalize the name of the mag
-        mag = Mag(mag).to_layer_name()
+        mag = Mag(mag)
+        block_type = (
+            wkw.Header.BLOCK_TYPE_LZ4HC if compress else wkw.Header.BLOCK_TYPE_RAW
+        )
 
         if mag in self._mags.keys():
             assert (
@@ -177,7 +186,7 @@ class Layer:
             return self.get_mag(mag)
         else:
             return self.add_mag(
-                mag, block_len=block_len, file_len=file_len, block_type=block_type
+                mag, block_len=block_len, file_len=file_len, compress=compress
             )
 
     def delete_mag(self, mag: Union[int, str, list, tuple, np.ndarray, Mag]) -> None:
@@ -186,16 +195,18 @@ class Layer:
 
         This function raises an `IndexError` if the specified `mag` does not exist.
         """
-        mag = Mag(mag).to_layer_name()
+        mag = Mag(mag)
         if mag not in self.mags.keys():
             raise IndexError(
                 "Deleting mag {} failed. There is no mag with this name".format(mag)
             )
 
         del self._mags[mag]
-        self.dataset.properties._delete_mag(self.name, mag)
+        self.dataset.properties._delete_mag(self.name, mag.to_layer_name())
         # delete files on disk
-        full_path = _find_mag_path_on_disk(self.dataset.path, self.name, mag)
+        full_path = _find_mag_path_on_disk(
+            self.dataset.path, self.name, mag.to_layer_name()
+        )
         rmtree(full_path)
 
     def _create_dir_for_mag(
@@ -208,7 +219,6 @@ class Layer:
     def _assert_mag_does_not_exist_yet(
         self, mag: Union[int, str, list, tuple, np.ndarray, Mag]
     ) -> None:
-        mag = Mag(mag).to_layer_name()
         if mag in self.mags.keys():
             raise IndexError(
                 "Adding mag {} failed. There is already a mag with this name".format(
@@ -225,13 +235,11 @@ class Layer:
         self.dataset.properties._set_bounding_box_of_layer(self.name, offset, size)
         bounding_box = BoundingBox(offset, size)
 
-        for mag_name, mag in self.mags.items():
-            mag.size = cast(
+        for mag, mag_view in self.mags.items():
+            mag_view.size = cast(
                 Tuple[int, int, int],
                 tuple(
-                    bounding_box.align_with_mag(Mag(mag_name), ceil=True)
-                    .in_mag(Mag(mag_name))
-                    .bottomright
+                    bounding_box.align_with_mag(mag, ceil=True).in_mag(mag).bottomright
                 ),
             )
 
@@ -296,11 +304,11 @@ class Layer:
             assert (
                 len(self.mags.keys()) > 0
             ), "Failed to downsample data because no existing mag was found."
-            from_mag = Mag(max(self.mags.keys()))
+            from_mag = max(self.mags.keys())
 
         assert (
-            from_mag.to_layer_name() in self.mags.keys()
-        ), f"Failed to downsample data. The from_mag ({from_mag}) does not exist."
+            from_mag in self.mags.keys()
+        ), f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
 
         if max_mag is None:
             max_mag = calculate_default_max_mag(
@@ -359,17 +367,17 @@ class Layer:
         The `args` can contain information to distribute the computation.
         """
         assert (
-            from_mag.to_layer_name() in self.mags.keys()
-        ), f"Failed to downsample data. The from_mag ({from_mag}) does not exist."
+            from_mag in self.mags.keys()
+        ), f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
 
         parsed_interpolation_mode = parse_interpolation_mode(
             interpolation_mode, self.dataset.properties.data_layers[self.name].category
         )
 
         assert from_mag <= target_mag
-        assert target_mag.to_layer_name() not in self.mags
+        assert target_mag not in self.mags
 
-        prev_mag_view = self.mags[from_mag.to_layer_name()]
+        prev_mag_view = self.mags[from_mag]
 
         mag_factors = [
             t // s for (t, s) in zip(target_mag.to_array(), from_mag.to_array())
@@ -453,7 +461,7 @@ class Layer:
         See `downsample_mag` for more information.
         """
         assert (
-            from_mag.to_layer_name() in self.mags.keys()
+            from_mag in self.mags.keys()
         ), f"Failed to downsample data. The from_mag ({from_mag}) does not exist."
 
         # The lambda function is important because 'sorted(target_mags)' would only sort by the maximum element per mag
@@ -496,8 +504,8 @@ class Layer:
         - 'constant_z' - The x and y dimensions are downsampled equally, but the z dimension remains the same.
         """
         assert (
-            from_mag.to_layer_name() in self.mags.keys()
-        ), f"Failed to downsample data. The from_mag ({from_mag}) does not exist."
+            from_mag in self.mags.keys()
+        ), f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
 
         if min_mag is None:
             min_mag = Mag(1)
@@ -521,9 +529,9 @@ class Layer:
 
         while target_mag >= min_mag and prev_mag > Mag(1):
             assert prev_mag > target_mag
-            assert target_mag.to_layer_name() not in self.mags
+            assert target_mag not in self.mags
 
-            prev_mag_view = self.mags[prev_mag.to_layer_name()]
+            prev_mag_view = self.mags[prev_mag]
 
             mag_factors = [
                 t / s for (t, s) in zip(target_mag.to_array(), prev_mag.to_array())
@@ -574,39 +582,43 @@ class Layer:
         # This method is used to initialize the mag when opening the Dataset. This does not create e.g. the wk_header.
 
         # normalize the name of the mag
-        mag = Mag(mag).to_layer_name()
+        mag = Mag(mag)
+        mag_name = mag.to_layer_name()
 
         self._assert_mag_does_not_exist_yet(mag)
 
         try:
             with wkw.Dataset.open(
-                str(_find_mag_path_on_disk(self.dataset.path, self.name, mag))
+                str(_find_mag_path_on_disk(self.dataset.path, self.name, mag_name))
             ) as wkw_dataset:
                 wk_header = wkw_dataset.header
 
             self._mags[mag] = MagView(
-                self, mag, wk_header.block_len, wk_header.file_len, wk_header.block_type
+                self,
+                mag_name,
+                wk_header.block_len,
+                wk_header.file_len,
+                wk_header.block_type,
             )
 
             self.dataset.properties._add_mag(
-                self.name, mag, cube_length=wk_header.block_len * wk_header.file_len
+                self.name,
+                mag_name,
+                cube_length=wk_header.block_len * wk_header.file_len,
             )
         except wkw.WKWException:
             logging.error(
-                f"Failed to setup magnification {str(mag)}, which is specified in the datasource-properties.json"
+                f"Failed to setup magnification {mag_name}, which is specified in the datasource-properties.json"
             )
 
     def _initialize_mag_from_other_mag(
         self, new_mag_name: Union[str, Mag], other_mag: MagView, compress: bool
     ) -> MagView:
-        block_type = (
-            wkw.Header.BLOCK_TYPE_LZ4HC if compress else wkw.Header.BLOCK_TYPE_RAW
-        )
         return self.add_mag(
             new_mag_name,
             block_len=other_mag.header.block_len,
             file_len=other_mag.header.file_len,
-            block_type=block_type,
+            compress=compress,
         )
 
     def set_view_configuration(self, view_configuration: ViewConfiguration) -> None:
@@ -633,7 +645,22 @@ class Layer:
         )
 
 
-class LayerTypes:
+class SegmentationLayer(Layer):
+    @property
+    def largest_segment_id(self) -> int:
+        layer_properties = self.dataset.properties.data_layers[self.name]
+        assert isinstance(layer_properties, SegmentationLayerProperties)
+        return layer_properties.largest_segment_id
+
+    @largest_segment_id.setter
+    def largest_segment_id(self, largest_segment_id: int) -> None:
+        layer_properties = self.dataset.properties._data_layers[self.name]
+        assert isinstance(layer_properties, SegmentationLayerProperties)
+        layer_properties._largest_segment_id = largest_segment_id
+        self.dataset.properties._export_as_json()
+
+
+class LayerCategories:
     """
     There are two different types of layers.
     This class can be used to specify the type of a layer during creation:
@@ -642,7 +669,7 @@ class LayerTypes:
 
     dataset = Dataset(<path_to_dataset>)
     # Adds a new layer
-    layer = dataset.add_layer("color", LayerTypes.COLOR_TYPE)
+    layer = dataset.add_layer("color", LayerCategories.COLOR_TYPE)
     ```
     """
 

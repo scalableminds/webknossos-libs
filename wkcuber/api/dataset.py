@@ -10,16 +10,18 @@ import numpy as np
 import os
 import re
 
+import wkw
+
 from wkcuber.api.properties.layer_properties import (
     properties_floating_type_to_python_type,
     SegmentationLayerProperties,
+    LayerProperties,
 )
 from wkcuber.api.bounding_box import BoundingBox
-from wkcuber.mag import Mag
 from wkcuber.utils import get_executor_for_args
 
 from wkcuber.api.properties.dataset_properties import Properties
-from wkcuber.api.layer import Layer, LayerTypes
+from wkcuber.api.layer import Layer, LayerCategories, SegmentationLayer
 from wkcuber.api.view import View
 
 DEFAULT_BIT_DEPTH = 8
@@ -120,7 +122,7 @@ class Dataset:
     # Adds a new layer
     layer = dataset.add_layer(
         layer_name="color",
-        category=LayerTypes.COLOR_TYPE,
+        category=LayerCategories.COLOR_TYPE,
         dtype_per_channel="uint8",
         num_channels=3
     )
@@ -300,7 +302,7 @@ class Dataset:
             **kwargs,
         )
         self._layers[layer_name] = self._create_layer(
-            layer_name, dtype_per_channel, num_channels
+            layer_name, dtype_per_channel, num_channels, category
         )
         return self.layers[layer_name]
 
@@ -372,6 +374,25 @@ class Dataset:
                 **kwargs,
             )
 
+    def get_segmentation_layer(self) -> SegmentationLayer:
+        """
+        Returns the only segmentation layer.
+
+        Fails with a IndexError if there are multiple segmentation layers or none.
+        """
+        return cast(
+            SegmentationLayer,
+            self._get_layer_by_category(LayerCategories.SEGMENTATION_TYPE),
+        )
+
+    def get_color_layer(self) -> Layer:
+        """
+        Returns the only color layer.
+
+        Fails with a RuntimeError if there are multiple color layers or none.
+        """
+        return self._get_layer_by_category(LayerCategories.COLOR_TYPE)
+
     def delete_layer(self, layer_name: str) -> None:
         """
         Deletes the layer from the `datasource-properties.json` and the data from disk.
@@ -415,6 +436,7 @@ class Dataset:
                 layer_properties.element_class, layer_properties.num_channels
             ),
             layer_properties.num_channels,
+            layer_properties.category,
         )
         for resolution in layer_properties.wkw_magnifications:
             self.get_layer(layer_name)._setup_mag(resolution.mag.to_layer_name())
@@ -426,7 +448,7 @@ class Dataset:
         scale: Optional[Tuple[float, float, float]] = None,
         block_len: int = None,
         file_len: int = None,
-        block_type: int = None,
+        compress: Optional[bool] = None,
         args: Optional[Namespace] = None,
     ) -> "Dataset":
         """
@@ -444,7 +466,7 @@ class Dataset:
                 largest_segment_id = None
                 if (
                     self.properties.data_layers[layer_name].category
-                    == LayerTypes.SEGMENTATION_TYPE
+                    == LayerCategories.SEGMENTATION_TYPE
                 ):
                     largest_segment_id = cast(
                         SegmentationLayerProperties,
@@ -460,16 +482,22 @@ class Dataset:
 
                 bbox = self.properties.get_bounding_box_of_layer(layer_name)
 
-                for mag_name, mag in layer.mags.items():
+                for mag, mag_view in layer.mags.items():
                     block_len = (
-                        block_len if block_len is not None else mag.header.block_len
+                        block_len
+                        if block_len is not None
+                        else mag_view.header.block_len
                     )
-                    block_type = (
-                        block_type if block_type is not None else mag.header.block_type
+                    compress = (
+                        compress
+                        if compress is not None
+                        else mag_view.header.block_type != wkw.Header.BLOCK_TYPE_RAW
                     )
-                    file_len = file_len if file_len is not None else mag.header.file_len
+                    file_len = (
+                        file_len if file_len is not None else mag_view.header.file_len
+                    )
                     target_mag = target_layer.add_mag(
-                        mag_name, block_len, file_len, block_type
+                        mag, block_len, file_len, compress
                     )
 
                     # The bounding box needs to be updated manually because chunked views do not have a reference to the dataset itself
@@ -479,8 +507,8 @@ class Dataset:
                         Tuple[int, int, int],
                         tuple(
                             BoundingBox(topleft=bbox[0], size=bbox[1])
-                            .align_with_mag(Mag(mag_name), ceil=True)
-                            .in_mag(Mag(mag_name))
+                            .align_with_mag(mag, ceil=True)
+                            .in_mag(mag)
                             .bottomright
                         ),
                     )
@@ -488,7 +516,7 @@ class Dataset:
 
                     # The data gets written to the target_mag.
                     # Therefore, the chunk size is determined by the target_mag to prevent concurrent writes
-                    mag.get_view().for_zipped_chunks(
+                    mag_view.for_zipped_chunks(
                         work_on_chunk=_copy_job,
                         target_view=target_mag.get_view(),
                         source_chunk_size=target_mag._get_file_dimensions(),
@@ -497,15 +525,55 @@ class Dataset:
                     )
         return new_ds
 
+    def _get_layer_by_category(self, category: str) -> Layer:
+        assert (
+            category == LayerCategories.COLOR_TYPE
+            or category == LayerCategories.SEGMENTATION_TYPE
+        )
+        layer_property_type = (
+            SegmentationLayerProperties
+            if category == LayerCategories.SEGMENTATION_TYPE
+            else LayerProperties
+        )
+
+        layer_properties = [
+            layer_property
+            for layer_property in self.properties.data_layers.values()
+            if type(layer_property) == layer_property_type
+        ]
+
+        if len(layer_properties) == 1:
+            return self.get_layer(layer_properties[0].name)
+        elif len(layer_properties) == 0:
+            raise IndexError(
+                f"Failed to get segmentation layer: There is no {category} layer."
+            )
+        else:
+            raise IndexError(
+                f"Failed to get segmentation layer: There are multiple {category} layer."
+            )
+
+    @property
+    def name(self) -> str:
+        return self.properties._name
+
+    @name.setter
+    def name(self, name: str) -> None:
+        self.properties._name = name
+        self.properties._export_as_json()
+
     @classmethod
     def create(
-        cls, dataset_path: Union[str, Path], scale: Tuple[float, float, float]
+        cls,
+        dataset_path: Union[str, Path],
+        scale: Tuple[float, float, float],
+        name: Optional[str] = None,
     ) -> "Dataset":
         """
         Creates a new dataset and the associated `datasource-properties.json`.
         """
         dataset_path = Path(dataset_path)
-        name = basename(normpath(dataset_path))
+        name = name if name is not None else basename(normpath(dataset_path))
         properties = Properties(dataset_path / Properties.FILE_NAME, name, scale)
         return Dataset._create_with_properties(properties)
 
@@ -530,6 +598,13 @@ class Dataset:
             return cls.create(dataset_path, scale)
 
     def _create_layer(
-        self, layer_name: str, dtype_per_channel: np.dtype, num_channels: int
+        self,
+        layer_name: str,
+        dtype_per_channel: np.dtype,
+        num_channels: int,
+        category: str,
     ) -> Layer:
-        return Layer(layer_name, self, dtype_per_channel, num_channels)
+        layer_type = (
+            Layer if category == LayerCategories.COLOR_TYPE else SegmentationLayer
+        )
+        return layer_type(layer_name, self, dtype_per_channel, num_channels)

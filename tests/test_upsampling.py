@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Tuple, cast
 
 from wkcuber.api.dataset import Dataset
-from wkcuber.api.layer import Layer, LayerTypes
+from wkcuber.api.layer import Layer, LayerCategories
 from wkcuber.downsampling_utils import SamplingModes
 from wkcuber.upsampling_utils import upsample_cube, upsample_cube_job
 from wkcuber.mag import Mag
@@ -120,7 +120,7 @@ def test_upsample_multi_channel() -> None:
     ds = Dataset.create(Path("testoutput", "multi-channel-test"), (1, 1, 1))
     l = ds.add_layer(
         "color",
-        LayerTypes.COLOR_TYPE,
+        LayerCategories.COLOR_TYPE,
         dtype_per_channel="uint8",
         num_channels=num_channels,
     )
