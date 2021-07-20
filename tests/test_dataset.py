@@ -1395,7 +1395,7 @@ def test_compression(tmp_path: Path) -> None:
 
 def test_default_configuration(tmp_path: Path) -> None:
     ds1 = Dataset.create(tmp_path, scale=(2, 2, 1))
-    layer1 = ds1.add_layer("color", LayerTypes.COLOR_TYPE)
+    layer1 = ds1.add_layer("color", LayerCategories.COLOR_TYPE)
     default_view_configuration = layer1.get_view_configuration()
     assert default_view_configuration is None
 
