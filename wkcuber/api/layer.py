@@ -47,6 +47,20 @@ from wkcuber.utils import (
 )
 
 
+class ViewConfiguration:
+    def __init__(
+        self,
+        color: Tuple[int, int, int],
+        alpha: Optional[float] = None,
+        intensity_range: Optional[Tuple[float, float]] = None,
+        is_inverted: Optional[bool] = None,
+    ):
+        self.color = color
+        self.alpha = alpha
+        self.intensity_range = intensity_range
+        self.is_inverted = is_inverted
+
+
 class Layer:
     """
     A `Layer` consists of multiple `wkcuber.api.mag_view.MagView`s, which store the same data in different magnifications.
@@ -593,6 +607,29 @@ class Layer:
             block_len=other_mag.header.block_len,
             file_len=other_mag.header.file_len,
             block_type=block_type,
+        )
+
+    def set_view_configuration(self, view_configuration: ViewConfiguration) -> None:
+        self.dataset.properties._data_layers[
+            self.name
+        ]._default_view_configuration = vars(view_configuration)
+        self.dataset.properties._export_as_json()  # update properties on disk
+
+    def get_view_configuration(self) -> Optional[ViewConfiguration]:
+        view_configuration_dict = self.dataset.properties.data_layers[
+            self.name
+        ].default_view_configuration
+        if view_configuration_dict is None:
+            return None
+
+        intensity_range = view_configuration_dict.get("intensity_range")
+        return ViewConfiguration(
+            cast(Tuple[int, int, int], tuple(view_configuration_dict["color"])),
+            view_configuration_dict.get("alpha"),
+            cast(Tuple[float, float], tuple(intensity_range))
+            if intensity_range is not None
+            else None,
+            view_configuration_dict.get("is_inverted"),
         )
 
 

@@ -17,7 +17,7 @@ from wkw.wkw import WKWException
 from wkcuber.api.dataset import Dataset
 from os import makedirs
 
-from wkcuber.api.layer import Layer, LayerTypes
+from wkcuber.api.layer import Layer, LayerTypes, ViewConfiguration
 from wkcuber.api.mag_view import MagView
 from wkcuber.api.properties.dataset_properties import Properties
 from wkcuber.api.properties.layer_properties import SegmentationLayerProperties
@@ -1375,3 +1375,42 @@ def test_compression(tmp_path: Path) -> None:
         (np.random.rand(3, 10, 20, 30) * 255).astype(np.uint8),
         allow_compressed_write=True,
     )
+
+
+def test_default_configuration(tmp_path: Path) -> None:
+    ds1 = Dataset.create(tmp_path, scale=(2, 2, 1))
+    layer1 = ds1.add_layer("color", LayerTypes.COLOR_TYPE)
+    default_view_configuration = layer1.get_view_configuration()
+    assert default_view_configuration is None
+
+    layer1.set_view_configuration(ViewConfiguration(color=(255, 0, 0)))
+    default_view_configuration = layer1.get_view_configuration()
+    assert default_view_configuration is not None
+    assert default_view_configuration.color == (255, 0, 0)
+    assert default_view_configuration.alpha is None
+    assert default_view_configuration.intensity_range is None
+    assert default_view_configuration.is_inverted is None
+
+    layer1.set_view_configuration(
+        ViewConfiguration(
+            color=(255, 0, 0),
+            alpha=1.0,
+            intensity_range=(-12.3e1, 123),
+            is_inverted=True,
+        )
+    )
+    default_view_configuration = layer1.get_view_configuration()
+    assert default_view_configuration is not None
+    assert default_view_configuration.color == (255, 0, 0)
+    assert default_view_configuration.alpha == 1.0
+    assert default_view_configuration.intensity_range == (-12.3e1, 123)
+    assert default_view_configuration.is_inverted == True
+
+    # Test if the data is persisted to disk
+    ds2 = Dataset(tmp_path)
+    default_view_configuration = ds2.get_layer("color").get_view_configuration()
+    assert default_view_configuration is not None
+    assert default_view_configuration.color == (255, 0, 0)
+    assert default_view_configuration.alpha == 1.0
+    assert default_view_configuration.intensity_range == (-12.3e1, 123)
+    assert default_view_configuration.is_inverted == True
