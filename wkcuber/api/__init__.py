@@ -11,7 +11,7 @@ Each dataset consists of one or more layers (wkcuber.api.layer.Layer), which the
 ## Examples
 ### Opening Datasets
 ```python
-from wkcuber.api.dataset import Dataset
+from wkcuber.api import Dataset
 
 dataset = Dataset(<path_to_dataset>)
 # Assuming that the dataset has a layer called 'color' and the layer has the magnification "1"
@@ -21,8 +21,8 @@ mag1 = layer.get_mag("1")
 
 ### Creating Datasets
 ```python
-from wkcuber.api.dataset import Dataset
-from wkcuber.api.layer import Layer
+from wkcuber.api import Dataset
+from wkcuber.api import Layer
 
 dataset = Dataset.create(<path_to_new_dataset>, scale=(1, 1, 1))
 layer = dataset.add_layer(
@@ -37,7 +37,7 @@ mag1 = layer.add_mag("1")
 
 ### Reading Datasets
 ```python
-from wkcuber.api.dataset import Dataset
+from wkcuber.api import Dataset
 
 dataset = Dataset(<path_to_dataset>)
 # Assuming that the dataset has a layer called 'color' and the layer has the magnification "1" and "2"
@@ -54,7 +54,7 @@ data_in_mag2_subset = mag2.read(offset=(5, 10, 15), size=(256, 256, 16))
 
 ### Writing Datasets
 ```python
-from wkcuber.api.dataset import Dataset
+from wkcuber.api import Dataset
 
 dataset = Dataset(<path_to_dataset>)
 # Assuming that the dataset has a layer called 'color' and the layer has the magnification "1" and "2"
@@ -74,3 +74,9 @@ mag2.write(
 )
 ```
 """
+
+from .bounding_box import BoundingBox
+from .dataset import Dataset
+from .layer import Layer
+from .mag_view import MagView
+from .view import View
