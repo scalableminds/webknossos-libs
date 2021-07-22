@@ -1442,6 +1442,21 @@ def test_dataset_name(tmp_path: Path) -> None:
     assert ds2.name == "very important dataset"
 
 
+def test_read_bbox(tmp_path: Path) -> None:
+    ds = Dataset.create(tmp_path, scale=(2, 2, 1))
+    layer = ds.add_layer("color", LayerCategories.COLOR_TYPE)
+    mag = layer.add_mag(1)
+    mag.write(
+        offset=(10, 20, 30), data=(np.random.rand(50, 60, 70) * 255).astype(np.uint8)
+    )
+
+    assert np.array_equal(mag.read(), mag.read_bbox())
+    assert np.array_equal(
+        mag.read(offset=(20, 30, 40), size=(40, 50, 60)),
+        mag.read_bbox(BoundingBox(topleft=(20, 30, 40), size=(40, 50, 60))),
+    )
+
+
 def test_add_copy_layer(tmp_path: Path) -> None:
     ds = Dataset.create(tmp_path / "ds", scale=(2, 2, 1))
 
@@ -1462,7 +1477,7 @@ def test_add_copy_layer(tmp_path: Path) -> None:
     assert color_layer.mags.keys() == original_color_layer.mags.keys()
     assert len(color_layer.mags.keys()) >= 1
     for mag in color_layer.mags.keys():
-        np.array_equal(
+        assert np.array_equal(
             color_layer.get_mag(mag).read(), original_color_layer.get_mag(mag).read()
         )
         # Test if the copied layer contains actual data

@@ -12,12 +12,23 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes in Config & CLI
 
 ### Added
-- Added `add_copy_layer()` to `wkcuber.api.dataset.Dataset` to copy the layer of a different dataset. [#345](https://github.com/scalableminds/webknossos-cuber/pull/345)
 
 ### Changed
 
 ### Fixed
 
+## [0.8.1](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.1) - 2021-07-22
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.0...v0.8.1)
+
+### Breaking Changes in Config & CLI
+
+### Added
+- Added `add_copy_layer()` to `wkcuber.api.dataset.Dataset` to copy the layer of a different dataset. [#345](https://github.com/scalableminds/webknossos-cuber/pull/345)
+- Added `View.read_bbox()` which takes only a single bounding box as parameter (instead of an offset and size). [#347](https://github.com/scalableminds/webknossos-cuber/pull/347)
+
+### Changed
+
+### Fixed
 
 ## [0.8.0](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.0) - 2021-07-16
 [Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.7.0...v0.8.0)
