@@ -45,21 +45,8 @@ from wkcuber.utils import (
     DEFAULT_WKW_FILE_LEN,
     get_executor_for_args,
     named_partial,
+    _to_camel_case,
 )
-
-
-class ViewConfiguration:
-    def __init__(
-        self,
-        color: Tuple[int, int, int],
-        alpha: Optional[float] = None,
-        intensity_range: Optional[Tuple[float, float]] = None,
-        is_inverted: Optional[bool] = None,
-    ):
-        self.color = color
-        self.alpha = alpha
-        self.intensity_range = intensity_range
-        self.is_inverted = is_inverted
 
 
 class Layer:
@@ -621,27 +608,36 @@ class Layer:
             compress=compress,
         )
 
-    def set_view_configuration(self, view_configuration: ViewConfiguration) -> None:
-        self.dataset.properties._data_layers[
-            self.name
-        ]._default_view_configuration = vars(view_configuration)
+    def set_view_configuration(
+        self, view_configuration: "LayerViewConfiguration"
+    ) -> None:
+        self.dataset.properties._data_layers[self.name]._default_view_configuration = {
+            _to_camel_case(k): v
+            for k, v in vars(view_configuration).items()
+            if v is not None
+        }
         self.dataset.properties._export_as_json()  # update properties on disk
 
-    def get_view_configuration(self) -> Optional[ViewConfiguration]:
+    def get_view_configuration(self) -> Optional["LayerViewConfiguration"]:
         view_configuration_dict = self.dataset.properties.data_layers[
             self.name
         ].default_view_configuration
         if view_configuration_dict is None:
             return None
 
-        intensity_range = view_configuration_dict.get("intensity_range")
-        return ViewConfiguration(
-            cast(Tuple[int, int, int], tuple(view_configuration_dict["color"])),
-            view_configuration_dict.get("alpha"),
-            cast(Tuple[float, float], tuple(intensity_range))
-            if intensity_range is not None
+        return LayerViewConfiguration(
+            color=cast(Tuple[int, int, int], tuple(view_configuration_dict["color"])),
+            alpha=view_configuration_dict.get("alpha"),
+            intensity_range=cast(
+                Tuple[float, float], tuple(view_configuration_dict["intensityRange"])
+            )
+            if "intensityRange" in view_configuration_dict.keys()
             else None,
-            view_configuration_dict.get("is_inverted"),
+            min=view_configuration_dict.get("min"),
+            max=view_configuration_dict.get("max"),
+            is_disabled=view_configuration_dict.get("isDisabled"),
+            is_inverted=view_configuration_dict.get("isInverted"),
+            is_in_edit_mode=view_configuration_dict.get("isInEditMode"),
         )
 
 
@@ -675,3 +671,29 @@ class LayerCategories:
 
     COLOR_TYPE = "color"
     SEGMENTATION_TYPE = "segmentation"
+
+
+class LayerViewConfiguration:
+    """
+    Stores information on how the dataset is visualized in webknossos.
+    """
+
+    def __init__(
+        self,
+        color: Optional[Tuple[int, int, int]] = None,
+        alpha: Optional[float] = None,
+        intensity_range: Optional[Tuple[float, float]] = None,
+        min: Optional[float] = None,  # pylint: disable=redefined-builtin
+        max: Optional[float] = None,  # pylint: disable=redefined-builtin
+        is_disabled: Optional[bool] = None,
+        is_inverted: Optional[bool] = None,
+        is_in_edit_mode: Optional[bool] = None,
+    ):
+        self.color = color
+        self.alpha = alpha
+        self.intensity_range = intensity_range
+        self.min = min
+        self.max = max
+        self.is_disabled = is_disabled
+        self.is_inverted = is_inverted
+        self.is_in_edit_mode = is_in_edit_mode

@@ -18,7 +18,7 @@ from wkcuber.api.properties.layer_properties import (
     LayerProperties,
 )
 from wkcuber.api.bounding_box import BoundingBox
-from wkcuber.utils import get_executor_for_args
+from wkcuber.utils import get_executor_for_args, _to_camel_case
 
 from wkcuber.api.properties.dataset_properties import Properties
 from wkcuber.api.layer import Layer, LayerCategories, SegmentationLayer
@@ -608,3 +608,67 @@ class Dataset:
             Layer if category == LayerCategories.COLOR_TYPE else SegmentationLayer
         )
         return layer_type(layer_name, self, dtype_per_channel, num_channels)
+
+    def set_view_configuration(
+        self, view_configuration: "DatasetViewConfiguration"
+    ) -> None:
+        self.properties._default_view_configuration = {
+            _to_camel_case(k): v
+            for k, v in vars(view_configuration).items()
+            if v is not None
+        }
+        self.properties._export_as_json()  # update properties on disk
+
+    def get_view_configuration(self) -> Optional["DatasetViewConfiguration"]:
+        view_configuration_dict = self.properties.default_view_configuration
+        if view_configuration_dict is None:
+            return None
+
+        return DatasetViewConfiguration(
+            four_bit=view_configuration_dict.get("fourBit"),
+            interpolation=view_configuration_dict.get("interpolation"),
+            render_missing_data_black=view_configuration_dict.get(
+                "renderMissingDataBlack"
+            ),
+            loading_strategy=view_configuration_dict.get("loadingStrategy"),
+            segmentation_pattern_opacity=view_configuration_dict.get(
+                "segmentationPatternOpacity"
+            ),
+            zoom=view_configuration_dict.get("zoom"),
+            position=cast(
+                Tuple[int, int, int], tuple(view_configuration_dict["position"])
+            )
+            if "position" in view_configuration_dict
+            else None,
+            rotation=cast(
+                Tuple[int, int, int], tuple(view_configuration_dict["rotation"])
+            )
+            if "rotation" in view_configuration_dict
+            else None,
+        )
+
+
+class DatasetViewConfiguration:
+    """
+    Stores information on how the dataset is visualized in webknossos.
+    """
+
+    def __init__(
+        self,
+        four_bit: Optional[bool] = None,
+        interpolation: Optional[bool] = None,
+        render_missing_data_black: Optional[bool] = None,
+        loading_strategy: Optional[str] = None,
+        segmentation_pattern_opacity: Optional[int] = None,
+        zoom: Optional[float] = None,
+        position: Optional[Tuple[int, int, int]] = None,
+        rotation: Optional[Tuple[int, int, int]] = None,
+    ):
+        self.four_bit = four_bit
+        self.interpolation = interpolation
+        self.render_missing_data_black = render_missing_data_black
+        self.loading_strategy = loading_strategy
+        self.segmentation_pattern_opacity = segmentation_pattern_opacity
+        self.zoom = zoom
+        self.position = position
+        self.rotation = rotation

@@ -14,14 +14,14 @@ from shutil import rmtree, copytree
 from wkw import wkw
 from wkw.wkw import WKWException
 
-from wkcuber.api.dataset import Dataset
+from wkcuber.api.dataset import Dataset, DatasetViewConfiguration
 from os import makedirs
 
 from wkcuber.api.layer import (
     Layer,
     LayerCategories,
     SegmentationLayer,
-    ViewConfiguration,
+    LayerViewConfiguration,
 )
 from wkcuber.api.mag_view import MagView
 from wkcuber.api.properties.dataset_properties import Properties
@@ -30,7 +30,7 @@ from wkcuber.api.properties.resolution_properties import Resolution
 from wkcuber.api.view import View
 from wkcuber.compress import compress_mag_inplace
 from wkcuber.mag import Mag
-from wkcuber.utils import get_executor_for_args, named_partial
+from wkcuber.utils import get_executor_for_args, named_partial, _to_camel_case
 
 TESTDATA_DIR = Path("testdata")
 TESTOUTPUT_DIR = Path("testoutput")
@@ -1393,24 +1393,92 @@ def test_compression(tmp_path: Path) -> None:
     )
 
 
-def test_default_configuration(tmp_path: Path) -> None:
+def test_dataset_view_configuration(tmp_path: Path) -> None:
+    ds1 = Dataset.create(tmp_path, scale=(2, 2, 1))
+    default_view_configuration = ds1.get_view_configuration()
+    assert default_view_configuration is None
+
+    ds1.set_view_configuration(DatasetViewConfiguration(four_bit=True))
+    default_view_configuration = ds1.get_view_configuration()
+    assert default_view_configuration is not None
+    assert default_view_configuration.four_bit == True
+    assert default_view_configuration.interpolation == None
+    assert default_view_configuration.render_missing_data_black == None
+    assert default_view_configuration.loading_strategy == None
+    assert default_view_configuration.segmentation_pattern_opacity == None
+    assert default_view_configuration.zoom == None
+    assert default_view_configuration.position == None
+    assert default_view_configuration.rotation == None
+
+    # Test if only the set parameters are stored in the properties
+    assert ds1.properties.default_view_configuration == {"fourBit": True}
+
+    ds1.set_view_configuration(
+        DatasetViewConfiguration(
+            four_bit=True,
+            interpolation=False,
+            render_missing_data_black=True,
+            loading_strategy="PROGRESSIVE_QUALITY",
+            segmentation_pattern_opacity=40,
+            zoom=0.1,
+            position=(12, 12, 12),
+            rotation=(1, 2, 3),
+        )
+    )
+    default_view_configuration = ds1.get_view_configuration()
+    assert default_view_configuration is not None
+    assert default_view_configuration.four_bit == True
+    assert default_view_configuration.interpolation == False
+    assert default_view_configuration.render_missing_data_black == True
+    assert default_view_configuration.loading_strategy == "PROGRESSIVE_QUALITY"
+    assert default_view_configuration.segmentation_pattern_opacity == 40
+    assert default_view_configuration.zoom == 0.1
+    assert default_view_configuration.position == (12, 12, 12)
+    assert default_view_configuration.rotation == (1, 2, 3)
+
+    # Test if the data is persisted to disk
+    ds2 = Dataset(tmp_path)
+    default_view_configuration = ds2.get_view_configuration()
+    assert default_view_configuration is not None
+    assert default_view_configuration.four_bit == True
+    assert default_view_configuration.interpolation == False
+    assert default_view_configuration.render_missing_data_black == True
+    assert default_view_configuration.loading_strategy == "PROGRESSIVE_QUALITY"
+    assert default_view_configuration.segmentation_pattern_opacity == 40
+    assert default_view_configuration.zoom == 0.1
+    assert default_view_configuration.position == (12, 12, 12)
+    assert default_view_configuration.rotation == (1, 2, 3)
+
+    # Test camel case
+    view_configuration_dict = ds2.properties.default_view_configuration
+    assert view_configuration_dict is not None
+    for k in view_configuration_dict.keys():
+        assert _to_camel_case(k) == k
+
+
+def test_layer_view_configuration(tmp_path: Path) -> None:
     ds1 = Dataset.create(tmp_path, scale=(2, 2, 1))
     layer1 = ds1.add_layer("color", LayerCategories.COLOR_TYPE)
     default_view_configuration = layer1.get_view_configuration()
     assert default_view_configuration is None
 
-    layer1.set_view_configuration(ViewConfiguration(color=(255, 0, 0)))
+    layer1.set_view_configuration(LayerViewConfiguration(color=(255, 0, 0)))
     default_view_configuration = layer1.get_view_configuration()
     assert default_view_configuration is not None
     assert default_view_configuration.color == (255, 0, 0)
     assert default_view_configuration.alpha is None
     assert default_view_configuration.intensity_range is None
     assert default_view_configuration.is_inverted is None
+    # Test if only the set parameters are stored in the properties
+    assert ds1.properties.data_layers["color"].default_view_configuration == {
+        "color": (255, 0, 0)
+    }
 
     layer1.set_view_configuration(
-        ViewConfiguration(
+        LayerViewConfiguration(
             color=(255, 0, 0),
             alpha=1.0,
+            min=55.0,
             intensity_range=(-12.3e1, 123),
             is_inverted=True,
         )
@@ -1421,6 +1489,7 @@ def test_default_configuration(tmp_path: Path) -> None:
     assert default_view_configuration.alpha == 1.0
     assert default_view_configuration.intensity_range == (-12.3e1, 123)
     assert default_view_configuration.is_inverted == True
+    assert default_view_configuration.min == 55.0
 
     # Test if the data is persisted to disk
     ds2 = Dataset(tmp_path)
@@ -1430,6 +1499,15 @@ def test_default_configuration(tmp_path: Path) -> None:
     assert default_view_configuration.alpha == 1.0
     assert default_view_configuration.intensity_range == (-12.3e1, 123)
     assert default_view_configuration.is_inverted == True
+    assert default_view_configuration.min == 55.0
+
+    # Test camel case
+    view_configuration_dict = ds2.properties.data_layers[
+        "color"
+    ].default_view_configuration
+    assert view_configuration_dict is not None
+    for k in view_configuration_dict.keys():
+        assert _to_camel_case(k) == k
 
 
 def test_get_largest_segment_id(tmp_path: Path) -> None:

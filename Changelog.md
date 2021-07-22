@@ -12,7 +12,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes in Config & CLI
 
 ### Added
-- Added functions to `wkcuber.api.Layer` to set and get the view configuration. [#344](https://github.com/scalableminds/webknossos-cuber/pull/344)
+- Added functions to `wkcuber.api.dataset.Dataset` and `wkcuber.api.layer.Layer` to set and get the view configuration. [#344](https://github.com/scalableminds/webknossos-cuber/pull/344)
 
 ### Changed
 
