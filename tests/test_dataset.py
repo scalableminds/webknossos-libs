@@ -14,6 +14,7 @@ from shutil import rmtree, copytree
 from wkw import wkw
 from wkw.wkw import WKWException
 
+from wkcuber.api.bounding_box import BoundingBox
 from wkcuber.api.dataset import Dataset
 from os import makedirs
 
@@ -1439,3 +1440,37 @@ def test_dataset_name(tmp_path: Path) -> None:
         tmp_path / "some_new_name", scale=(1, 1, 1), name="very important dataset"
     )
     assert ds2.name == "very important dataset"
+
+
+def test_add_copy_layer(tmp_path: Path) -> None:
+    ds = Dataset.create(tmp_path / "ds", scale=(2, 2, 1))
+
+    # Create dataset to copy data from
+    other_ds = Dataset.create(tmp_path / "other_ds", scale=(2, 2, 1))
+    original_color_layer = other_ds.add_layer("color", LayerCategories.COLOR_TYPE)
+    original_color_layer.add_mag(1).write(
+        offset=(10, 20, 30), data=(np.random.rand(32, 64, 128) * 255).astype(np.uint8)
+    )
+
+    # Copies the "color" layer from a different dataset
+    ds.add_copy_layer(tmp_path / "other_ds" / "color")
+    assert len(ds.layers) == 1
+    color_layer = ds.get_layer("color")
+    assert color_layer.get_bounding_box() == BoundingBox(
+        topleft=(10, 20, 30), size=(32, 64, 128)
+    )
+    assert color_layer.mags.keys() == original_color_layer.mags.keys()
+    assert len(color_layer.mags.keys()) >= 1
+    for mag in color_layer.mags.keys():
+        np.array_equal(
+            color_layer.get_mag(mag).read(), original_color_layer.get_mag(mag).read()
+        )
+        # Test if the copied layer contains actual data
+        assert np.max(color_layer.get_mag(mag).read()) > 0
+
+    with pytest.raises(IndexError):
+        # The dataset already has a layer called "color".
+        ds.add_copy_layer(tmp_path / "other_ds" / "color")
+
+    # Test if the changes of the properties are persisted on disk by opening it again
+    assert "color" in Dataset(tmp_path / "ds").layers.keys()
