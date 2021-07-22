@@ -102,8 +102,7 @@ class MagView(View):
     def write(
         self,
         data: np.ndarray,
-        offset: Tuple[int, int, int] = (0, 0, 0),
-        allow_compressed_write: bool = False,
+        offset: Tuple[int, int, int] = (0, 0, 0)
     ) -> None:
         """
         Writes the `data` at the specified `offset` to disk (like `wkcuber.api.view.View.write()`).
@@ -111,12 +110,11 @@ class MagView(View):
         The `offset` refers to the absolute position, regardless of the offset in the properties (because the global_offset is set to (0, 0, 0)).
         If the data exceeds the original bounding box, the properties are updated.
 
-        If the data on disk is compressed, the passed `data` either has to be aligned with the files on disk
-        or `allow_compressed_write` has to be `True`. If `allow_compressed_write` is `True`, `data` is padded by
+        If the data on disk is compressed and the passed `data` is not aligned with the files on disk, it is padded by
         first reading the necessary padding from disk.
         """
         self._assert_valid_num_channels(data.shape)
-        super().write(data, offset, allow_compressed_write)
+        super().write(data, offset)
         layer_properties = self.layer.dataset.properties.data_layers[self.layer.name]
         current_offset_in_mag1 = layer_properties.get_bounding_box_offset()
         current_size_in_mag1 = layer_properties.get_bounding_box_size()

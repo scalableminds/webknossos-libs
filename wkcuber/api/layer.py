@@ -116,6 +116,9 @@ class Layer:
         Creates a new mag called and adds it to the layer.
         The parameter `block_len`, `file_len` and `compress` can be
         specified to adjust how the data is stored on disk.
+        Note that writing compressed data which is not aligned with the blocks on disk may result in
+        diminished performance, as full blocks will automatically read to pad the write actions. Alternatively,
+        you can call mag.compress() after all the data was written
 
         The return type is `wkcuber.api.mag_view.MagView`.
 

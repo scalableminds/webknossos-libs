@@ -99,7 +99,7 @@ def upsample_cube_job(
         # Write the upsampled buffer to target
         if source_view.header.num_channels == 1:
             file_buffer = file_buffer[0]  # remove channel dimension
-        target_view.write(file_buffer, allow_compressed_write=compress)
+        target_view.write(file_buffer)
         if use_logging:
             time_stop(f"Upsampling of {target_view.global_offset}")
 
