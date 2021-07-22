@@ -1,4 +1,5 @@
 import operator
+import shutil
 from argparse import Namespace
 from shutil import rmtree
 from os import makedirs
@@ -422,6 +423,40 @@ class Dataset:
             )
 
         os.symlink(foreign_layer_path, join(self.path, layer_name))
+
+        # copy the properties of the layer into the properties of this dataset
+        layer_properties = Dataset(foreign_layer_path.parent).properties.data_layers[
+            layer_name
+        ]
+        self.properties.data_layers[layer_name] = layer_properties
+        self.properties._export_as_json()
+
+        self._layers[layer_name] = self._create_layer(
+            layer_name,
+            _dtype_per_layer_to_dtype_per_channel(
+                layer_properties.element_class, layer_properties.num_channels
+            ),
+            layer_properties.num_channels,
+            layer_properties.category,
+        )
+        for resolution in layer_properties.wkw_magnifications:
+            self.get_layer(layer_name)._setup_mag(resolution.mag.to_layer_name())
+        return self.layers[layer_name]
+
+    def add_copy_layer(self, foreign_layer_path: Union[str, Path]) -> Layer:
+        """
+        Copies the data at `foreign_layer_path` which belongs to another dataset to the current dataset.
+        Additionally, the relevant information from the `datasource-properties.json` of the other dataset are copied too.
+        """
+
+        foreign_layer_path = Path(os.path.abspath(foreign_layer_path))
+        layer_name = foreign_layer_path.name
+        if layer_name in self.layers.keys():
+            raise IndexError(
+                f"Cannot copy {foreign_layer_path}. This dataset already has a layer called {layer_name}."
+            )
+
+        shutil.copytree(foreign_layer_path, join(self.path, layer_name))
 
         # copy the properties of the layer into the properties of this dataset
         layer_properties = Dataset(foreign_layer_path.parent).properties.data_layers[

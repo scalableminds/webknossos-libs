@@ -12,6 +12,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes in Config & CLI
 
 ### Added
+- Added `add_copy_layer()` to `wkcuber.api.dataset.Dataset` to copy the layer of a different dataset. [#345](https://github.com/scalableminds/webknossos-cuber/pull/345)
 
 ### Changed
 
