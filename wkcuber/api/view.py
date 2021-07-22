@@ -163,6 +163,16 @@ class View:
             cast(Tuple[int, int, int], absolute_offset), size
         )
 
+    def read_bbox(self, bounding_box: Optional[BoundingBox] = None) -> np.array:
+        """
+        The user can specify the `bounding_box` of the requested data.
+        See `read()` for more details.
+        """
+        if bounding_box is None:
+            return self.read()
+        else:
+            return self.read(bounding_box.topleft, bounding_box.size)
+
     def _read_without_checks(
         self,
         absolute_offset: Tuple[int, int, int],
