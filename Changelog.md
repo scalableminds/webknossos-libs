@@ -10,6 +10,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 [Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.0...HEAD)
 
 ### Breaking Changes in Config & CLI
+- The parameter allow_compressed_write from View.write() is now removed. Writing to compressed magnifications is now always allowed. If the user decides to write unaligned data, a warning about a possible performance impact is displayed once. [#356](https://github.com/scalableminds/webknossos-cuber/pull/356)
 
 ### Added
 
