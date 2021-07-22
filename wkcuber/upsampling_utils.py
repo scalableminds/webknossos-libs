@@ -27,7 +27,6 @@ def upsample_cube_job(
     args: Tuple[View, View, int],
     mag_factors: List[float],
     buffer_edge_len: int,
-    compress: bool,
     job_count_per_log: int,
 ) -> None:
     (source_view, target_view, i) = args

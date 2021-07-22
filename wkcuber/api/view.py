@@ -441,7 +441,10 @@ class View:
             # The absolute offset might be outside of the current view.
             # That is the case if the data is compressed but the view does not include the whole file on disk.
             # In this case we avoid checking the bounds because the aligned_offset and aligned_shape are calculated internally.
-            warnings.warn("Warning: write() was called on a compressed mag without block alignment. Performance will be degraded as the data has to be padded first.", RuntimeWarning)
+            warnings.warn(
+                "Warning: write() was called on a compressed mag without block alignment. Performance will be degraded as the data has to be padded first.",
+                RuntimeWarning,
+            )
             aligned_data = self._read_without_checks(aligned_offset, aligned_shape)
 
             index_slice = (

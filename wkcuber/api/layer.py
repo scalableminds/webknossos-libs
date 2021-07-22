@@ -419,7 +419,6 @@ class Layer:
                 mag_factors=mag_factors,
                 interpolation_mode=parsed_interpolation_mode,
                 buffer_edge_len=buffer_edge_len,
-                compress=compress,
                 job_count_per_log=job_count_per_log,
             )
 
@@ -549,7 +548,6 @@ class Layer:
                     upsample_cube_job,
                     mag_factors=mag_factors,
                     buffer_edge_len=buffer_edge_len,
-                    compress=compress,
                     job_count_per_log=job_count_per_log,
                 )
                 prev_mag_view.get_view().for_zipped_chunks(

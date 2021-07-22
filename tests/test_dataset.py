@@ -950,7 +950,9 @@ def test_writing_subset_of_compressed_data_multi_channel() -> None:
     )
 
     with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=RuntimeWarning, module="wkcuber")  # This line is not necessary. It simply keeps the output of the tests clean.
+        warnings.filterwarnings(
+            "ignore", category=RuntimeWarning, module="wkcuber"
+        )  # This line is not necessary. It simply keeps the output of the tests clean.
         write_data2 = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
         # Writing unaligned data to a compressed dataset works because the data gets padded, but it prints a warning
         # Writing compressed data directly to "compressed_mag" also works, but using a View here covers an additional edge case
@@ -989,7 +991,9 @@ def test_writing_subset_of_compressed_data_single_channel() -> None:
     )
 
     with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=RuntimeWarning, module="wkcuber")  # This line is not necessary. It simply keeps the output of the tests clean.
+        warnings.filterwarnings(
+            "ignore", category=RuntimeWarning, module="wkcuber"
+        )  # This line is not necessary. It simply keeps the output of the tests clean.
         write_data2 = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
         # Writing unaligned data to a compressed dataset works because the data gets padded, but it prints a warning
         # Writing compressed data directly to "compressed_mag" also works, but using a View here covers an additional edge case
@@ -1030,7 +1034,9 @@ def test_writing_subset_of_compressed_data() -> None:
 
     # Calling 'write' with unaligned data on compressed data only fails if the warnings are treated as errors.
     with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=RuntimeWarning, module="wkcuber")  # This line is not necessary. It simply keeps the output of the tests clean.
+        warnings.filterwarnings(
+            "ignore", category=RuntimeWarning, module="wkcuber"
+        )  # This line is not necessary. It simply keeps the output of the tests clean.
         compressed_mag.write(
             offset=(10, 20, 30),
             data=(np.random.rand(10, 10, 10) * 255).astype(np.uint8),
@@ -1046,8 +1052,6 @@ def test_writing_subset_of_compressed_data() -> None:
 
         # Writing aligned data does not raise a warning. Therefore, this does not fail with these strict settings.
         compressed_mag.write(data=(np.random.rand(64, 64, 64) * 255).astype(np.uint8))
-
-
 
 
 def test_writing_subset_of_chunked_compressed_data() -> None:
@@ -1075,7 +1079,9 @@ def test_writing_subset_of_chunked_compressed_data() -> None:
     )
 
     with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=RuntimeWarning, module="wkcuber")  # This line is not necessary. It simply keeps the output of the tests clean.
+        warnings.filterwarnings(
+            "ignore", category=RuntimeWarning, module="wkcuber"
+        )  # This line is not necessary. It simply keeps the output of the tests clean.
 
         # Easy case:
         # The aligned data (offset=(0,0,0), size=(64, 64, 64)) IS fully within the bounding box of the view
@@ -1401,7 +1407,9 @@ def test_compression(tmp_path: Path) -> None:
     )
 
     with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=RuntimeWarning, module="wkcuber")  # This line is not necessary. It simply keeps the output of the tests clean.
+        warnings.filterwarnings(
+            "ignore", category=RuntimeWarning, module="wkcuber"
+        )  # This line is not necessary. It simply keeps the output of the tests clean.
         # writing unaligned data to a compressed dataset works because the data gets padded, but it prints a warning
         mag1.write(
             (np.random.rand(3, 10, 20, 30) * 255).astype(np.uint8),

@@ -99,11 +99,7 @@ class MagView(View):
                 join(layer.dataset.path, layer.name, self.name), self.header
             )
 
-    def write(
-        self,
-        data: np.ndarray,
-        offset: Tuple[int, int, int] = (0, 0, 0)
-    ) -> None:
+    def write(self, data: np.ndarray, offset: Tuple[int, int, int] = (0, 0, 0)) -> None:
         """
         Writes the `data` at the specified `offset` to disk (like `wkcuber.api.view.View.write()`).
 

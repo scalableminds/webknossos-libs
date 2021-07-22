@@ -296,7 +296,6 @@ def downsample_cube_job(
     mag_factors: List[int],
     interpolation_mode: InterpolationModes,
     buffer_edge_len: int,
-    compress: bool,
     job_count_per_log: int,
 ) -> None:
     (source_view, target_view, i) = args
