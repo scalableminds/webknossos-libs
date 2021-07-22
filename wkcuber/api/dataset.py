@@ -614,7 +614,10 @@ class Dataset:
 
     @classmethod
     def get_or_create(
-        cls, dataset_path: Union[str, Path], scale: Tuple[float, float, float]
+        cls,
+        dataset_path: Union[str, Path],
+        scale: Tuple[float, float, float],
+        name: Optional[str] = None,
     ) -> "Dataset":
         """
         Creates a new `Dataset`, in case it did not exist before, and then returns it.
@@ -628,9 +631,13 @@ class Dataset:
             assert tuple(ds.properties.scale) == tuple(
                 scale
             ), f"Cannot get_or_create Dataset: The dataset {dataset_path} already exists, but the scales do not match ({ds.properties.scale} != {scale})"
+            if name is not None:
+                assert (
+                    ds.name == name
+                ), f"Cannot get_or_create Dataset: The dataset {dataset_path} already exists, but the names do not match ({ds.name} != {name})"
             return ds
         else:
-            return cls.create(dataset_path, scale)
+            return cls.create(dataset_path, scale, name)
 
     def _create_layer(
         self,
