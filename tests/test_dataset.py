@@ -684,9 +684,18 @@ def test_dataset_get_or_create() -> None:
     ds2 = Dataset.get_or_create(ds_path, scale=(1, 1, 1))
     assert "color" in ds2.layers.keys()
 
+    ds2 = Dataset.get_or_create(
+        ds_path, scale=(1, 1, 1), name="wk_dataset_get_or_create"
+    )
+    assert "color" in ds2.layers.keys()
+
     with pytest.raises(AssertionError):
         # dataset already exists, but with a different scale
         Dataset.get_or_create(ds_path, scale=(2, 2, 2))
+
+    with pytest.raises(AssertionError):
+        # dataset already exists, but with a different name
+        Dataset.get_or_create(ds_path, scale=(1, 1, 1), name="some different name")
 
 
 def test_changing_layer_bounding_box() -> None:
