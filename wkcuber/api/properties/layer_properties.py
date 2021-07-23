@@ -53,7 +53,9 @@ properties_floating_type_to_python_type = {
 
 python_floating_type_to_properties_type = {
     "float32": "float",
+    np.dtype('float32'): "float",
     "float64": "double",
+    np.dtype('float64'): "double"
 }
 
 
