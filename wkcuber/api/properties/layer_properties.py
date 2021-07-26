@@ -266,7 +266,7 @@ class SegmentationLayerProperties(LayerProperties):
             json_data["name"],
             json_data["category"],
             properties_floating_type_to_python_type.get(
-                json_data["elementClass"], json_data["elementClass"],
+                json_data["elementClass"], json_data["elementClass"]
             ),
             json_data["dataFormat"],
             _extract_num_channels(
