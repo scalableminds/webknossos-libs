@@ -12,7 +12,18 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes in Config & CLI
 
 ### Added
-- Added option `make_relative: bool` to `wkcuber.api.dataset.Dataset.add_symlink_layer` to make the symlink relative. [#358](https://github.com/scalableminds/webknossos-cuber/pull/358)
+
+### Changed
+
+### Fixed
+
+## [0.8.2](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.2) - 2021-07-26
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.1...HEAD)
+
+### Breaking Changes in Config & CLI
+
+### Added
+- Added option `make_relative: bool` to `wkcuber.api.dataset.Dataset.add_symlink_layer` to make the symlink relative. [#360](https://github.com/scalableminds/webknossos-cuber/pull/360)
 
 ### Changed
 
