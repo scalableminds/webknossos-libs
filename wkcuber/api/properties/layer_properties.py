@@ -258,7 +258,7 @@ class SegmentationLayerProperties(LayerProperties):
     ) -> "SegmentationLayerProperties":
         if "largestSegmentId" not in json_data:
             warnings.warn(
-                f"Segmentation layer {json_data["name"]} is missing the 'largestSegmentId', defaulting to -1.",
+                f"Segmentation layer {json_data['name']} is missing the 'largestSegmentId', defaulting to -1.",
                 RuntimeWarning,
             )
         # create LayerProperties without resolutions
