@@ -120,7 +120,7 @@ python-versions = ">=3.5"
 
 [[package]]
 name = "cluster-tools"
-version = "1.57"
+version = "1.58"
 description = "Utility library for easily distributing code execution on clusters"
 category = "main"
 optional = false
@@ -836,7 +836,7 @@ cloudpickle = [
     {file = "cloudpickle-1.6.0.tar.gz", hash = "sha256:9bc994f9e9447593bd0a45371f0e7ac7333710fcf64a4eb9834bf149f4ef2f32"},
 ]
 cluster-tools = [
-    {file = "cluster_tools-1.57.tar.gz", hash = "sha256:a07b78d35026d27562ab115e688037f0e31384c88d069dcc217ca9da65896dbe"},
+    {file = "cluster_tools-1.58.tar.gz", hash = "sha256:14b0411de5d74cb3f042d7ceed575dbe4c945262db76573a205add90aab444d5"},
 ]
 colorama = [
     {file = "colorama-0.4.4-py2.py3-none-any.whl", hash = "sha256:9f47eda37229f68eee03b24b9748937c7dc3868f906e8ba69fbcbdd3bc5dc3e2"},
