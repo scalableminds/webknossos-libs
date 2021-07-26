@@ -14,6 +14,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Added
 
 ### Changed
+- Datasets with a missing `largestSegmentId` can now be loaded with a default of `-1`. [#362](https://github.com/scalableminds/webknossos-cuber/pull/362)
 
 ### Fixed
 
