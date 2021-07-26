@@ -1032,7 +1032,6 @@ def test_writing_subset_of_compressed_data() -> None:
         Dataset(TESTOUTPUT_DIR / "compressed_data").get_layer("color").get_mag("1")
     )
 
-    # Calling 'write' with unaligned data on compressed data only fails if the warnings are treated as errors.
     with warnings.catch_warnings():
         warnings.filterwarnings(
             "ignore", category=RuntimeWarning, module="wkcuber"
@@ -1043,6 +1042,7 @@ def test_writing_subset_of_compressed_data() -> None:
         )
 
     with warnings.catch_warnings():
+        # Calling 'write' with unaligned data on compressed data only fails if the warnings are treated as errors.
         warnings.filterwarnings("error")  # This escalates the warning to an error
         with pytest.raises(RuntimeWarning):
             compressed_mag.write(
