@@ -30,7 +30,7 @@ from wkcuber.api.properties.resolution_properties import Resolution
 from wkcuber.api.view import View
 from wkcuber.compress import compress_mag_inplace
 from wkcuber.mag import Mag
-from wkcuber.utils import get_executor_for_args, named_partial, _to_camel_case
+from wkcuber.utils import get_executor_for_args, named_partial, _snake_to_camel_case
 
 TESTDATA_DIR = Path("testdata")
 TESTOUTPUT_DIR = Path("testoutput")
@@ -1453,7 +1453,7 @@ def test_dataset_view_configuration(tmp_path: Path) -> None:
     view_configuration_dict = ds2.properties.default_view_configuration
     assert view_configuration_dict is not None
     for k in view_configuration_dict.keys():
-        assert _to_camel_case(k) == k
+        assert _snake_to_camel_case(k) == k
 
 
 def test_layer_view_configuration(tmp_path: Path) -> None:
@@ -1507,7 +1507,7 @@ def test_layer_view_configuration(tmp_path: Path) -> None:
     ].default_view_configuration
     assert view_configuration_dict is not None
     for k in view_configuration_dict.keys():
-        assert _to_camel_case(k) == k
+        assert _snake_to_camel_case(k) == k
 
 
 def test_get_largest_segment_id(tmp_path: Path) -> None:

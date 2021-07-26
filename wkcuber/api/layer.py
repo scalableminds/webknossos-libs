@@ -45,7 +45,7 @@ from wkcuber.utils import (
     DEFAULT_WKW_FILE_LEN,
     get_executor_for_args,
     named_partial,
-    _to_camel_case,
+    _snake_to_camel_case,
 )
 
 
@@ -612,7 +612,7 @@ class Layer:
         self, view_configuration: "LayerViewConfiguration"
     ) -> None:
         self.dataset.properties._data_layers[self.name]._default_view_configuration = {
-            _to_camel_case(k): v
+            _snake_to_camel_case(k): v
             for k, v in vars(view_configuration).items()
             if v is not None
         }
@@ -675,7 +675,7 @@ class LayerCategories:
 
 class LayerViewConfiguration:
     """
-    Stores information on how the dataset is visualized in webknossos.
+    Stores information on how the dataset is shown in webknossos by default.
     """
 
     def __init__(

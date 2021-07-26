@@ -18,7 +18,7 @@ from wkcuber.api.properties.layer_properties import (
     LayerProperties,
 )
 from wkcuber.api.bounding_box import BoundingBox
-from wkcuber.utils import get_executor_for_args, _to_camel_case
+from wkcuber.utils import get_executor_for_args, _snake_to_camel_case
 
 from wkcuber.api.properties.dataset_properties import Properties
 from wkcuber.api.layer import Layer, LayerCategories, SegmentationLayer
@@ -613,7 +613,7 @@ class Dataset:
         self, view_configuration: "DatasetViewConfiguration"
     ) -> None:
         self.properties._default_view_configuration = {
-            _to_camel_case(k): v
+            _snake_to_camel_case(k): v
             for k, v in vars(view_configuration).items()
             if v is not None
         }
@@ -650,7 +650,7 @@ class Dataset:
 
 class DatasetViewConfiguration:
     """
-    Stores information on how the dataset is visualized in webknossos.
+    Stores information on how the dataset is shown in webknossos by default.
     """
 
     def __init__(

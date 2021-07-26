@@ -516,6 +516,6 @@ def get_executor_args(global_args: argparse.Namespace) -> argparse.Namespace:
     return executor_args
 
 
-def _to_camel_case(snake_case_name: str) -> str:
+def _snake_to_camel_case(snake_case_name: str) -> str:
     parts = snake_case_name.split("_")
     return parts[0] + "".join(part.title() for part in parts[1:])
