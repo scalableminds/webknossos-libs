@@ -12,6 +12,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes in Config & CLI
 
 ### Added
+- Added option `make_relative: bool` to `wkcuber.api.dataset.Dataset.add_symlink_layer` to make the symlink relative. [#358](https://github.com/scalableminds/webknossos-cuber/pull/358)
 
 ### Changed
 
