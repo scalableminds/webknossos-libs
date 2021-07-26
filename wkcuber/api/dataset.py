@@ -408,14 +408,19 @@ class Dataset:
         # delete files on disk
         rmtree(join(self.path, layer_name))
 
-    def add_symlink_layer(self, foreign_layer_path: Union[str, Path]) -> Layer:
+    def add_symlink_layer(
+        self, foreign_layer_path: Union[str, Path], make_relative: bool = False
+    ) -> Layer:
         """
         Creates a symlink to the data at `foreign_layer_path` which belongs to another dataset.
         The relevant information from the `datasource-properties.json` of the other dataset is copied to this dataset.
         Note: If the other dataset modifies its bounding box afterwards, the change does not affect this properties
         (or vice versa).
+        If make_relative is True, the symlink is made relative to the current dataset path.
         """
         foreign_layer_path = Path(os.path.abspath(foreign_layer_path))
+        if make_relative:
+            foreign_layer_path = Path(os.path.relpath(foreign_layer_path, self.path))
         layer_name = foreign_layer_path.name
         if layer_name in self.layers.keys():
             raise IndexError(
