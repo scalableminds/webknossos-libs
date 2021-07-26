@@ -15,6 +15,7 @@ from wkw import wkw
 from wkw.wkw import WKWException
 
 from wkcuber.api.dataset import Dataset, DatasetViewConfiguration
+from wkcuber.api.bounding_box import BoundingBox
 from os import makedirs
 
 from wkcuber.api.layer import (
@@ -688,9 +689,18 @@ def test_dataset_get_or_create() -> None:
     ds2 = Dataset.get_or_create(ds_path, scale=(1, 1, 1))
     assert "color" in ds2.layers.keys()
 
+    ds2 = Dataset.get_or_create(
+        ds_path, scale=(1, 1, 1), name="wk_dataset_get_or_create"
+    )
+    assert "color" in ds2.layers.keys()
+
     with pytest.raises(AssertionError):
         # dataset already exists, but with a different scale
         Dataset.get_or_create(ds_path, scale=(2, 2, 2))
+
+    with pytest.raises(AssertionError):
+        # dataset already exists, but with a different name
+        Dataset.get_or_create(ds_path, scale=(1, 1, 1), name="some different name")
 
 
 def test_changing_layer_bounding_box() -> None:
@@ -1561,3 +1571,52 @@ def test_dataset_name(tmp_path: Path) -> None:
         tmp_path / "some_new_name", scale=(1, 1, 1), name="very important dataset"
     )
     assert ds2.name == "very important dataset"
+
+
+def test_read_bbox(tmp_path: Path) -> None:
+    ds = Dataset.create(tmp_path, scale=(2, 2, 1))
+    layer = ds.add_layer("color", LayerCategories.COLOR_TYPE)
+    mag = layer.add_mag(1)
+    mag.write(
+        offset=(10, 20, 30), data=(np.random.rand(50, 60, 70) * 255).astype(np.uint8)
+    )
+
+    assert np.array_equal(mag.read(), mag.read_bbox())
+    assert np.array_equal(
+        mag.read(offset=(20, 30, 40), size=(40, 50, 60)),
+        mag.read_bbox(BoundingBox(topleft=(20, 30, 40), size=(40, 50, 60))),
+    )
+
+
+def test_add_copy_layer(tmp_path: Path) -> None:
+    ds = Dataset.create(tmp_path / "ds", scale=(2, 2, 1))
+
+    # Create dataset to copy data from
+    other_ds = Dataset.create(tmp_path / "other_ds", scale=(2, 2, 1))
+    original_color_layer = other_ds.add_layer("color", LayerCategories.COLOR_TYPE)
+    original_color_layer.add_mag(1).write(
+        offset=(10, 20, 30), data=(np.random.rand(32, 64, 128) * 255).astype(np.uint8)
+    )
+
+    # Copies the "color" layer from a different dataset
+    ds.add_copy_layer(tmp_path / "other_ds" / "color")
+    assert len(ds.layers) == 1
+    color_layer = ds.get_layer("color")
+    assert color_layer.get_bounding_box() == BoundingBox(
+        topleft=(10, 20, 30), size=(32, 64, 128)
+    )
+    assert color_layer.mags.keys() == original_color_layer.mags.keys()
+    assert len(color_layer.mags.keys()) >= 1
+    for mag in color_layer.mags.keys():
+        assert np.array_equal(
+            color_layer.get_mag(mag).read(), original_color_layer.get_mag(mag).read()
+        )
+        # Test if the copied layer contains actual data
+        assert np.max(color_layer.get_mag(mag).read()) > 0
+
+    with pytest.raises(IndexError):
+        # The dataset already has a layer called "color".
+        ds.add_copy_layer(tmp_path / "other_ds" / "color")
+
+    # Test if the changes of the properties are persisted on disk by opening it again
+    assert "color" in Dataset(tmp_path / "ds").layers.keys()

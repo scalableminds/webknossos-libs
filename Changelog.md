@@ -7,7 +7,7 @@ and this project adheres to [Calendar Versioning](http://calver.org/) `0Y.0M.MIC
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.0...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.4...HEAD)
 
 ### Breaking Changes in Config & CLI
 
@@ -18,6 +18,55 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 
 ### Fixed
 
+## [0.8.4](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.4) - 2021-07-26
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.3...v0.8.4)
+
+### Breaking Changes in Config & CLI
+
+### Added
+
+### Changed
+- Datasets with a missing `largestSegmentId` can now be loaded with a default of `-1`. [#362](https://github.com/scalableminds/webknossos-cuber/pull/362)
+
+### Fixed
+
+## [0.8.3](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.3) - 2021-07-26
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.2...v0.8.3)
+
+### Breaking Changes in Config & CLI
+
+### Added
+
+### Changed
+- Updated `cluster-tools` to `1.58` [#361](https://github.com/scalableminds/webknossos-cuber/pull/361)
+
+### Fixed
+
+
+## [0.8.2](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.2) - 2021-07-26
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.1...v0.8.2)
+
+### Breaking Changes in Config & CLI
+
+### Added
+- Added option `make_relative: bool` to `wkcuber.api.dataset.Dataset.add_symlink_layer` to make the symlink relative. [#360](https://github.com/scalableminds/webknossos-cuber/pull/360)
+
+### Changed
+
+### Fixed
+
+## [0.8.1](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.1) - 2021-07-22
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.0...v0.8.1)
+
+### Breaking Changes in Config & CLI
+
+### Added
+- Added `add_copy_layer()` to `wkcuber.api.dataset.Dataset` to copy the layer of a different dataset. [#345](https://github.com/scalableminds/webknossos-cuber/pull/345)
+- Added `View.read_bbox()` which takes only a single bounding box as parameter (instead of an offset and size). [#347](https://github.com/scalableminds/webknossos-cuber/pull/347)
+
+### Changed
+
+### Fixed
 
 ## [0.8.0](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.0) - 2021-07-16
 [Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.7.0...v0.8.0)

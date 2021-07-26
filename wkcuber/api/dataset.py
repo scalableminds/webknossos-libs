@@ -1,4 +1,5 @@
 import operator
+import shutil
 from argparse import Namespace
 from shutil import rmtree
 from os import makedirs
@@ -407,14 +408,19 @@ class Dataset:
         # delete files on disk
         rmtree(join(self.path, layer_name))
 
-    def add_symlink_layer(self, foreign_layer_path: Union[str, Path]) -> Layer:
+    def add_symlink_layer(
+        self, foreign_layer_path: Union[str, Path], make_relative: bool = False
+    ) -> Layer:
         """
         Creates a symlink to the data at `foreign_layer_path` which belongs to another dataset.
         The relevant information from the `datasource-properties.json` of the other dataset is copied to this dataset.
         Note: If the other dataset modifies its bounding box afterwards, the change does not affect this properties
         (or vice versa).
+        If make_relative is True, the symlink is made relative to the current dataset path.
         """
         foreign_layer_path = Path(os.path.abspath(foreign_layer_path))
+        if make_relative:
+            foreign_layer_path = Path(os.path.relpath(foreign_layer_path, self.path))
         layer_name = foreign_layer_path.name
         if layer_name in self.layers.keys():
             raise IndexError(
@@ -422,6 +428,40 @@ class Dataset:
             )
 
         os.symlink(foreign_layer_path, join(self.path, layer_name))
+
+        # copy the properties of the layer into the properties of this dataset
+        layer_properties = Dataset(foreign_layer_path.parent).properties.data_layers[
+            layer_name
+        ]
+        self.properties.data_layers[layer_name] = layer_properties
+        self.properties._export_as_json()
+
+        self._layers[layer_name] = self._create_layer(
+            layer_name,
+            _dtype_per_layer_to_dtype_per_channel(
+                layer_properties.element_class, layer_properties.num_channels
+            ),
+            layer_properties.num_channels,
+            layer_properties.category,
+        )
+        for resolution in layer_properties.wkw_magnifications:
+            self.get_layer(layer_name)._setup_mag(resolution.mag.to_layer_name())
+        return self.layers[layer_name]
+
+    def add_copy_layer(self, foreign_layer_path: Union[str, Path]) -> Layer:
+        """
+        Copies the data at `foreign_layer_path` which belongs to another dataset to the current dataset.
+        Additionally, the relevant information from the `datasource-properties.json` of the other dataset are copied too.
+        """
+
+        foreign_layer_path = Path(os.path.abspath(foreign_layer_path))
+        layer_name = foreign_layer_path.name
+        if layer_name in self.layers.keys():
+            raise IndexError(
+                f"Cannot copy {foreign_layer_path}. This dataset already has a layer called {layer_name}."
+            )
+
+        shutil.copytree(foreign_layer_path, join(self.path, layer_name))
 
         # copy the properties of the layer into the properties of this dataset
         layer_properties = Dataset(foreign_layer_path.parent).properties.data_layers[
@@ -579,7 +619,10 @@ class Dataset:
 
     @classmethod
     def get_or_create(
-        cls, dataset_path: Union[str, Path], scale: Tuple[float, float, float]
+        cls,
+        dataset_path: Union[str, Path],
+        scale: Tuple[float, float, float],
+        name: Optional[str] = None,
     ) -> "Dataset":
         """
         Creates a new `Dataset`, in case it did not exist before, and then returns it.
@@ -593,9 +636,13 @@ class Dataset:
             assert tuple(ds.properties.scale) == tuple(
                 scale
             ), f"Cannot get_or_create Dataset: The dataset {dataset_path} already exists, but the scales do not match ({ds.properties.scale} != {scale})"
+            if name is not None:
+                assert (
+                    ds.name == name
+                ), f"Cannot get_or_create Dataset: The dataset {dataset_path} already exists, but the names do not match ({ds.name} != {name})"
             return ds
         else:
-            return cls.create(dataset_path, scale)
+            return cls.create(dataset_path, scale, name)
 
     def _create_layer(
         self,
