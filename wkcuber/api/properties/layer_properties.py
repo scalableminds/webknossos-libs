@@ -45,17 +45,15 @@ def _extract_num_channels(
 
 
 properties_floating_type_to_python_type = {
-    "float": np.dtype("float32"),
-    np.float: np.dtype("float32"),
-    float: np.dtype("float32"),
-    "double": np.dtype("float64"),
+    "float": "float32",
+    np.float: "float32",
+    float: "float32",
+    "double": "float64",
 }
 
 python_floating_type_to_properties_type = {
     "float32": "float",
-    np.dtype('float32'): "float",
     "float64": "double",
-    np.dtype('float64'): "double"
 }
 
 
