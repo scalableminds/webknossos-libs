@@ -106,8 +106,8 @@ class MagView(View):
         The `offset` refers to the absolute position, regardless of the offset in the properties (because the global_offset is set to (0, 0, 0)).
         If the data exceeds the original bounding box, the properties are updated.
 
-        If the data on disk is compressed and the passed `data` is not aligned with the files on disk, it is padded by
-        first reading the necessary padding from disk.
+        Note that writing compressed data which is not aligned with the blocks on disk may result in
+        diminished performance, as full blocks will automatically be read to pad the write actions.
         """
         self._assert_valid_num_channels(data.shape)
         super().write(data, offset)

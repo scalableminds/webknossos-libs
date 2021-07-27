@@ -82,9 +82,8 @@ class View:
         Writes the `data` at the specified `offset` to disk.
         The `offset` is relative to `global_offset`.
 
-        If the data on disk is compressed and the passed `data` is not aligned with the files on disk, it is padded by
-        first reading the necessary padding from disk.
-        In this particular case, reading data from outside the bounding box is allowed.
+        Note that writing compressed data which is not aligned with the blocks on disk may result in
+        diminished performance, as full blocks will automatically be read to pad the write actions.
         """
         assert not self.read_only, "Cannot write data to an read_only View"
 
