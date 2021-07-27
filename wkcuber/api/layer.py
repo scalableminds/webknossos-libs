@@ -117,6 +117,9 @@ class Layer:
         Creates a new mag called and adds it to the layer.
         The parameter `block_len`, `file_len` and `compress` can be
         specified to adjust how the data is stored on disk.
+        Note that writing compressed data which is not aligned with the blocks on disk may result in
+        diminished performance, as full blocks will automatically be read to pad the write actions. Alternatively,
+        you can call mag.compress() after all the data was written
 
         The return type is `wkcuber.api.mag_view.MagView`.
 
@@ -417,7 +420,6 @@ class Layer:
                 mag_factors=mag_factors,
                 interpolation_mode=parsed_interpolation_mode,
                 buffer_edge_len=buffer_edge_len,
-                compress=compress,
                 job_count_per_log=job_count_per_log,
             )
 
@@ -547,7 +549,6 @@ class Layer:
                     upsample_cube_job,
                     mag_factors=mag_factors,
                     buffer_edge_len=buffer_edge_len,
-                    compress=compress,
                     job_count_per_log=job_count_per_log,
                 )
                 prev_mag_view.get_view().for_zipped_chunks(

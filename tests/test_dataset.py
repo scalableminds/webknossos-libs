@@ -2,6 +2,7 @@ import filecmp
 import itertools
 import json
 import os
+import warnings
 from os.path import dirname, join
 from pathlib import Path
 from typing import Any, Tuple, cast, Generator
@@ -962,11 +963,16 @@ def test_writing_subset_of_compressed_data_multi_channel() -> None:
         Dataset(TESTOUTPUT_DIR / "compressed_data").get_layer("color").get_mag("1")
     )
 
-    write_data2 = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
-    # Writing compressed data directly to "compressed_mag" also works, but using a View here covers an additional edge case
-    compressed_mag.get_view(offset=(50, 60, 70)).write(
-        offset=(10, 20, 30), data=write_data2, allow_compressed_write=True
-    )
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore", category=RuntimeWarning, module="wkcuber"
+        )  # This line is not necessary. It simply keeps the output of the tests clean.
+        write_data2 = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
+        # Writing unaligned data to a compressed dataset works because the data gets padded, but it prints a warning
+        # Writing compressed data directly to "compressed_mag" also works, but using a View here covers an additional edge case
+        compressed_mag.get_view(offset=(50, 60, 70)).write(
+            offset=(10, 20, 30), data=write_data2
+        )
 
     assert np.array_equal(
         write_data2, compressed_mag.read(offset=(60, 80, 100), size=(10, 10, 10))
@@ -998,11 +1004,16 @@ def test_writing_subset_of_compressed_data_single_channel() -> None:
         Dataset(TESTOUTPUT_DIR / "compressed_data").get_layer("color").get_mag("1")
     )
 
-    write_data2 = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
-    # Writing compressed data directly to "compressed_mag" also works, but using a View here covers an additional edge case
-    compressed_mag.get_view(offset=(50, 60, 70)).write(
-        offset=(10, 20, 30), data=write_data2, allow_compressed_write=True
-    )
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore", category=RuntimeWarning, module="wkcuber"
+        )  # This line is not necessary. It simply keeps the output of the tests clean.
+        write_data2 = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
+        # Writing unaligned data to a compressed dataset works because the data gets padded, but it prints a warning
+        # Writing compressed data directly to "compressed_mag" also works, but using a View here covers an additional edge case
+        compressed_mag.get_view(offset=(50, 60, 70)).write(
+            offset=(10, 20, 30), data=write_data2
+        )
 
     assert np.array_equal(
         write_data2, compressed_mag.read(offset=(60, 80, 100), size=(10, 10, 10))[0]
@@ -1035,12 +1046,26 @@ def test_writing_subset_of_compressed_data() -> None:
         Dataset(TESTOUTPUT_DIR / "compressed_data").get_layer("color").get_mag("1")
     )
 
-    with pytest.raises(WKWException):
-        # calling 'write' with unaligned data on compressed data without setting 'allow_compressed_write=True'
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore", category=RuntimeWarning, module="wkcuber"
+        )  # This line is not necessary. It simply keeps the output of the tests clean.
         compressed_mag.write(
             offset=(10, 20, 30),
             data=(np.random.rand(10, 10, 10) * 255).astype(np.uint8),
         )
+
+    with warnings.catch_warnings():
+        # Calling 'write' with unaligned data on compressed data only fails if the warnings are treated as errors.
+        warnings.filterwarnings("error")  # This escalates the warning to an error
+        with pytest.raises(RuntimeWarning):
+            compressed_mag.write(
+                offset=(10, 20, 30),
+                data=(np.random.rand(10, 10, 10) * 255).astype(np.uint8),
+            )
+
+        # Writing aligned data does not raise a warning. Therefore, this does not fail with these strict settings.
+        compressed_mag.write(data=(np.random.rand(64, 64, 64) * 255).astype(np.uint8))
 
 
 def test_writing_subset_of_chunked_compressed_data() -> None:
@@ -1067,20 +1092,22 @@ def test_writing_subset_of_chunked_compressed_data() -> None:
         .get_view(size=(100, 200, 300))
     )
 
-    # Easy case:
-    # The aligned data (offset=(0,0,0), size=(64, 64, 64)) IS fully within the bounding box of the view
-    write_data2 = (np.random.rand(50, 40, 30) * 255).astype(np.uint8)
-    compressed_view.write(
-        offset=(10, 20, 30), data=write_data2, allow_compressed_write=True
-    )
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore", category=RuntimeWarning, module="wkcuber"
+        )  # This line is not necessary. It simply keeps the output of the tests clean.
 
-    # Advanced case:
-    # The aligned data (offset=(0,0,0), size=(128, 128, 128)) is NOT fully within the bounding box of the view
-    compressed_view.write(
-        offset=(10, 20, 30),
-        data=(np.random.rand(90, 80, 70) * 255).astype(np.uint8),
-        allow_compressed_write=True,
-    )
+        # Easy case:
+        # The aligned data (offset=(0,0,0), size=(64, 64, 64)) IS fully within the bounding box of the view
+        write_data2 = (np.random.rand(50, 40, 30) * 255).astype(np.uint8)
+        compressed_view.write(offset=(10, 20, 30), data=write_data2)
+
+        # Advanced case:
+        # The aligned data (offset=(0,0,0), size=(128, 128, 128)) is NOT fully within the bounding box of the view
+        compressed_view.write(
+            offset=(10, 20, 30),
+            data=(np.random.rand(90, 80, 70) * 255).astype(np.uint8),
+        )
 
     np.array_equal(
         write_data2, compressed_view.read(offset=(10, 20, 30), size=(50, 40, 30))
@@ -1393,14 +1420,14 @@ def test_compression(tmp_path: Path) -> None:
         write_data, mag1.read(offset=(60, 80, 100), size=(10, 20, 30))
     )
 
-    with pytest.raises(wkw.WKWException):
-        # writing unaligned data to a compressed dataset
-        mag1.write((np.random.rand(3, 10, 20, 30) * 255).astype(np.uint8))
-
-    mag1.write(
-        (np.random.rand(3, 10, 20, 30) * 255).astype(np.uint8),
-        allow_compressed_write=True,
-    )
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore", category=RuntimeWarning, module="wkcuber"
+        )  # This line is not necessary. It simply keeps the output of the tests clean.
+        # writing unaligned data to a compressed dataset works because the data gets padded, but it prints a warning
+        mag1.write(
+            (np.random.rand(3, 10, 20, 30) * 255).astype(np.uint8),
+        )
 
 
 def test_dataset_view_configuration(tmp_path: Path) -> None:

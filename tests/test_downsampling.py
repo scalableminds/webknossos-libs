@@ -128,7 +128,6 @@ def downsample_test_helper(use_compress: bool) -> None:
         [2, 2, 2],
         InterpolationModes.MAX,
         CUBE_EDGE_LEN,
-        use_compress,
         100,
     )
 
@@ -185,7 +184,6 @@ def test_downsample_multi_channel() -> None:
         [2, 2, 2],
         InterpolationModes.MAX,
         CUBE_EDGE_LEN,
-        False,
         100,
     )
 
