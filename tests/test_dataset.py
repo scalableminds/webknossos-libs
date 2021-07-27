@@ -2,6 +2,7 @@ import filecmp
 import itertools
 import json
 import os
+import warnings
 from os.path import dirname, join
 from pathlib import Path
 from typing import Any, Tuple, cast, Generator
@@ -14,11 +15,16 @@ from shutil import rmtree, copytree
 from wkw import wkw
 from wkw.wkw import WKWException
 
+from wkcuber.api.dataset import Dataset, DatasetViewConfiguration
 from wkcuber.api.bounding_box import BoundingBox
-from wkcuber.api.dataset import Dataset
 from os import makedirs
 
-from wkcuber.api.layer import Layer, LayerCategories, SegmentationLayer
+from wkcuber.api.layer import (
+    Layer,
+    LayerCategories,
+    SegmentationLayer,
+    LayerViewConfiguration,
+)
 from wkcuber.api.mag_view import MagView
 from wkcuber.api.properties.dataset_properties import Properties
 from wkcuber.api.properties.layer_properties import SegmentationLayerProperties
@@ -26,7 +32,7 @@ from wkcuber.api.properties.resolution_properties import Resolution
 from wkcuber.api.view import View
 from wkcuber.compress import compress_mag_inplace
 from wkcuber.mag import Mag
-from wkcuber.utils import get_executor_for_args, named_partial
+from wkcuber.utils import get_executor_for_args, named_partial, _snake_to_camel_case
 
 TESTDATA_DIR = Path("testdata")
 TESTOUTPUT_DIR = Path("testoutput")
@@ -972,11 +978,16 @@ def test_writing_subset_of_compressed_data_multi_channel() -> None:
         Dataset(TESTOUTPUT_DIR / "compressed_data").get_layer("color").get_mag("1")
     )
 
-    write_data2 = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
-    # Writing compressed data directly to "compressed_mag" also works, but using a View here covers an additional edge case
-    compressed_mag.get_view(offset=(50, 60, 70)).write(
-        offset=(10, 20, 30), data=write_data2, allow_compressed_write=True
-    )
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore", category=RuntimeWarning, module="wkcuber"
+        )  # This line is not necessary. It simply keeps the output of the tests clean.
+        write_data2 = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
+        # Writing unaligned data to a compressed dataset works because the data gets padded, but it prints a warning
+        # Writing compressed data directly to "compressed_mag" also works, but using a View here covers an additional edge case
+        compressed_mag.get_view(offset=(50, 60, 70)).write(
+            offset=(10, 20, 30), data=write_data2
+        )
 
     assert np.array_equal(
         write_data2, compressed_mag.read(offset=(60, 80, 100), size=(10, 10, 10))
@@ -1008,11 +1019,16 @@ def test_writing_subset_of_compressed_data_single_channel() -> None:
         Dataset(TESTOUTPUT_DIR / "compressed_data").get_layer("color").get_mag("1")
     )
 
-    write_data2 = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
-    # Writing compressed data directly to "compressed_mag" also works, but using a View here covers an additional edge case
-    compressed_mag.get_view(offset=(50, 60, 70)).write(
-        offset=(10, 20, 30), data=write_data2, allow_compressed_write=True
-    )
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore", category=RuntimeWarning, module="wkcuber"
+        )  # This line is not necessary. It simply keeps the output of the tests clean.
+        write_data2 = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
+        # Writing unaligned data to a compressed dataset works because the data gets padded, but it prints a warning
+        # Writing compressed data directly to "compressed_mag" also works, but using a View here covers an additional edge case
+        compressed_mag.get_view(offset=(50, 60, 70)).write(
+            offset=(10, 20, 30), data=write_data2
+        )
 
     assert np.array_equal(
         write_data2, compressed_mag.read(offset=(60, 80, 100), size=(10, 10, 10))[0]
@@ -1045,12 +1061,26 @@ def test_writing_subset_of_compressed_data() -> None:
         Dataset(TESTOUTPUT_DIR / "compressed_data").get_layer("color").get_mag("1")
     )
 
-    with pytest.raises(WKWException):
-        # calling 'write' with unaligned data on compressed data without setting 'allow_compressed_write=True'
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore", category=RuntimeWarning, module="wkcuber"
+        )  # This line is not necessary. It simply keeps the output of the tests clean.
         compressed_mag.write(
             offset=(10, 20, 30),
             data=(np.random.rand(10, 10, 10) * 255).astype(np.uint8),
         )
+
+    with warnings.catch_warnings():
+        # Calling 'write' with unaligned data on compressed data only fails if the warnings are treated as errors.
+        warnings.filterwarnings("error")  # This escalates the warning to an error
+        with pytest.raises(RuntimeWarning):
+            compressed_mag.write(
+                offset=(10, 20, 30),
+                data=(np.random.rand(10, 10, 10) * 255).astype(np.uint8),
+            )
+
+        # Writing aligned data does not raise a warning. Therefore, this does not fail with these strict settings.
+        compressed_mag.write(data=(np.random.rand(64, 64, 64) * 255).astype(np.uint8))
 
 
 def test_writing_subset_of_chunked_compressed_data() -> None:
@@ -1077,20 +1107,22 @@ def test_writing_subset_of_chunked_compressed_data() -> None:
         .get_view(size=(100, 200, 300))
     )
 
-    # Easy case:
-    # The aligned data (offset=(0,0,0), size=(64, 64, 64)) IS fully within the bounding box of the view
-    write_data2 = (np.random.rand(50, 40, 30) * 255).astype(np.uint8)
-    compressed_view.write(
-        offset=(10, 20, 30), data=write_data2, allow_compressed_write=True
-    )
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore", category=RuntimeWarning, module="wkcuber"
+        )  # This line is not necessary. It simply keeps the output of the tests clean.
 
-    # Advanced case:
-    # The aligned data (offset=(0,0,0), size=(128, 128, 128)) is NOT fully within the bounding box of the view
-    compressed_view.write(
-        offset=(10, 20, 30),
-        data=(np.random.rand(90, 80, 70) * 255).astype(np.uint8),
-        allow_compressed_write=True,
-    )
+        # Easy case:
+        # The aligned data (offset=(0,0,0), size=(64, 64, 64)) IS fully within the bounding box of the view
+        write_data2 = (np.random.rand(50, 40, 30) * 255).astype(np.uint8)
+        compressed_view.write(offset=(10, 20, 30), data=write_data2)
+
+        # Advanced case:
+        # The aligned data (offset=(0,0,0), size=(128, 128, 128)) is NOT fully within the bounding box of the view
+        compressed_view.write(
+            offset=(10, 20, 30),
+            data=(np.random.rand(90, 80, 70) * 255).astype(np.uint8),
+        )
 
     np.array_equal(
         write_data2, compressed_view.read(offset=(10, 20, 30), size=(50, 40, 30))
@@ -1403,14 +1435,131 @@ def test_compression(tmp_path: Path) -> None:
         write_data, mag1.read(offset=(60, 80, 100), size=(10, 20, 30))
     )
 
-    with pytest.raises(wkw.WKWException):
-        # writing unaligned data to a compressed dataset
-        mag1.write((np.random.rand(3, 10, 20, 30) * 255).astype(np.uint8))
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore", category=RuntimeWarning, module="wkcuber"
+        )  # This line is not necessary. It simply keeps the output of the tests clean.
+        # writing unaligned data to a compressed dataset works because the data gets padded, but it prints a warning
+        mag1.write(
+            (np.random.rand(3, 10, 20, 30) * 255).astype(np.uint8),
+        )
 
-    mag1.write(
-        (np.random.rand(3, 10, 20, 30) * 255).astype(np.uint8),
-        allow_compressed_write=True,
+
+def test_dataset_view_configuration(tmp_path: Path) -> None:
+    ds1 = Dataset.create(tmp_path, scale=(2, 2, 1))
+    default_view_configuration = ds1.get_view_configuration()
+    assert default_view_configuration is None
+
+    ds1.set_view_configuration(DatasetViewConfiguration(four_bit=True))
+    default_view_configuration = ds1.get_view_configuration()
+    assert default_view_configuration is not None
+    assert default_view_configuration.four_bit == True
+    assert default_view_configuration.interpolation == None
+    assert default_view_configuration.render_missing_data_black == None
+    assert default_view_configuration.loading_strategy == None
+    assert default_view_configuration.segmentation_pattern_opacity == None
+    assert default_view_configuration.zoom == None
+    assert default_view_configuration.position == None
+    assert default_view_configuration.rotation == None
+
+    # Test if only the set parameters are stored in the properties
+    assert ds1.properties.default_view_configuration == {"fourBit": True}
+
+    ds1.set_view_configuration(
+        DatasetViewConfiguration(
+            four_bit=True,
+            interpolation=False,
+            render_missing_data_black=True,
+            loading_strategy="PROGRESSIVE_QUALITY",
+            segmentation_pattern_opacity=40,
+            zoom=0.1,
+            position=(12, 12, 12),
+            rotation=(1, 2, 3),
+        )
     )
+    default_view_configuration = ds1.get_view_configuration()
+    assert default_view_configuration is not None
+    assert default_view_configuration.four_bit == True
+    assert default_view_configuration.interpolation == False
+    assert default_view_configuration.render_missing_data_black == True
+    assert default_view_configuration.loading_strategy == "PROGRESSIVE_QUALITY"
+    assert default_view_configuration.segmentation_pattern_opacity == 40
+    assert default_view_configuration.zoom == 0.1
+    assert default_view_configuration.position == (12, 12, 12)
+    assert default_view_configuration.rotation == (1, 2, 3)
+
+    # Test if the data is persisted to disk
+    ds2 = Dataset(tmp_path)
+    default_view_configuration = ds2.get_view_configuration()
+    assert default_view_configuration is not None
+    assert default_view_configuration.four_bit == True
+    assert default_view_configuration.interpolation == False
+    assert default_view_configuration.render_missing_data_black == True
+    assert default_view_configuration.loading_strategy == "PROGRESSIVE_QUALITY"
+    assert default_view_configuration.segmentation_pattern_opacity == 40
+    assert default_view_configuration.zoom == 0.1
+    assert default_view_configuration.position == (12, 12, 12)
+    assert default_view_configuration.rotation == (1, 2, 3)
+
+    # Test camel case
+    view_configuration_dict = ds2.properties.default_view_configuration
+    assert view_configuration_dict is not None
+    for k in view_configuration_dict.keys():
+        assert _snake_to_camel_case(k) == k
+
+
+def test_layer_view_configuration(tmp_path: Path) -> None:
+    ds1 = Dataset.create(tmp_path, scale=(2, 2, 1))
+    layer1 = ds1.add_layer("color", LayerCategories.COLOR_TYPE)
+    default_view_configuration = layer1.get_view_configuration()
+    assert default_view_configuration is None
+
+    layer1.set_view_configuration(LayerViewConfiguration(color=(255, 0, 0)))
+    default_view_configuration = layer1.get_view_configuration()
+    assert default_view_configuration is not None
+    assert default_view_configuration.color == (255, 0, 0)
+    assert default_view_configuration.alpha is None
+    assert default_view_configuration.intensity_range is None
+    assert default_view_configuration.is_inverted is None
+    # Test if only the set parameters are stored in the properties
+    assert ds1.properties.data_layers["color"].default_view_configuration == {
+        "color": (255, 0, 0)
+    }
+
+    layer1.set_view_configuration(
+        LayerViewConfiguration(
+            color=(255, 0, 0),
+            alpha=1.0,
+            min=55.0,
+            intensity_range=(-12.3e1, 123),
+            is_inverted=True,
+        )
+    )
+    default_view_configuration = layer1.get_view_configuration()
+    assert default_view_configuration is not None
+    assert default_view_configuration.color == (255, 0, 0)
+    assert default_view_configuration.alpha == 1.0
+    assert default_view_configuration.intensity_range == (-12.3e1, 123)
+    assert default_view_configuration.is_inverted == True
+    assert default_view_configuration.min == 55.0
+
+    # Test if the data is persisted to disk
+    ds2 = Dataset(tmp_path)
+    default_view_configuration = ds2.get_layer("color").get_view_configuration()
+    assert default_view_configuration is not None
+    assert default_view_configuration.color == (255, 0, 0)
+    assert default_view_configuration.alpha == 1.0
+    assert default_view_configuration.intensity_range == (-12.3e1, 123)
+    assert default_view_configuration.is_inverted == True
+    assert default_view_configuration.min == 55.0
+
+    # Test camel case
+    view_configuration_dict = ds2.properties.data_layers[
+        "color"
+    ].default_view_configuration
+    assert view_configuration_dict is not None
+    for k in view_configuration_dict.keys():
+        assert _snake_to_camel_case(k) == k
 
 
 def test_get_largest_segment_id(tmp_path: Path) -> None:

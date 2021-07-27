@@ -1,3 +1,4 @@
+import warnings
 from os.path import join, dirname, isfile
 from pathlib import Path
 from typing import Tuple, Type, Union, Any, Dict, List, Optional, cast
@@ -255,6 +256,11 @@ class SegmentationLayerProperties(LayerProperties):
         resolution_type: Type[Resolution],
         dataset_path: Path,
     ) -> "SegmentationLayerProperties":
+        if "largestSegmentId" not in json_data:
+            warnings.warn(
+                f"Segmentation layer {json_data['name']} is missing the 'largestSegmentId', defaulting to -1.",
+                RuntimeWarning,
+            )
         # create LayerProperties without resolutions
         layer_properties = cls(
             json_data["name"],
@@ -273,7 +279,7 @@ class SegmentationLayerProperties(LayerProperties):
             ),
             json_data["boundingBox"],
             None,
-            json_data["largestSegmentId"],
+            json_data.get("largestSegmentId", -1),
             json_data.get("mappings"),
             json_data.get("defaultViewConfiguration"),
         )

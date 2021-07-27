@@ -84,7 +84,6 @@ def upsample_test_helper(use_compress: bool) -> None:
             ),
             [0.5, 0.5, 1.0],
             CUBE_EDGE_LEN,
-            use_compress,
             100,
         )
 
@@ -135,7 +134,6 @@ def test_upsample_multi_channel() -> None:
         (mag2.get_view(), l.get_mag("1").get_view(), 0),
         [0.5, 0.5, 0.5],
         CUBE_EDGE_LEN,
-        False,
         100,
     )
 
