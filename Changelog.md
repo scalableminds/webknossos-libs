@@ -7,19 +7,45 @@ and this project adheres to [Calendar Versioning](http://calver.org/) `0Y.0M.MIC
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.0...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.4...HEAD)
 
 ### Breaking Changes in Config & CLI
 - The parameter allow_compressed_write from View.write() is now removed. Writing to compressed magnifications is now always allowed. If the user decides to write unaligned data, a warning about a possible performance impact is displayed once. [#356](https://github.com/scalableminds/webknossos-cuber/pull/356)
 
 ### Added
+- Added functions to `wkcuber.api.dataset.Dataset` and `wkcuber.api.layer.Layer` to set and get the view configuration. [#344](https://github.com/scalableminds/webknossos-cuber/pull/344)
 
 ### Changed
 
 ### Fixed
 
+## [0.8.4](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.4) - 2021-07-26
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.3...v0.8.4)
+
+### Breaking Changes in Config & CLI
+
+### Added
+
+### Changed
+- Datasets with a missing `largestSegmentId` can now be loaded with a default of `-1`. [#362](https://github.com/scalableminds/webknossos-cuber/pull/362)
+
+### Fixed
+
+## [0.8.3](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.3) - 2021-07-26
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.2...v0.8.3)
+
+### Breaking Changes in Config & CLI
+
+### Added
+
+### Changed
+- Updated `cluster-tools` to `1.58` [#361](https://github.com/scalableminds/webknossos-cuber/pull/361)
+
+### Fixed
+
+
 ## [0.8.2](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.2) - 2021-07-26
-[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.1...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.1...v0.8.2)
 
 ### Breaking Changes in Config & CLI
 
