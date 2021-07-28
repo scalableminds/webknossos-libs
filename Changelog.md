@@ -14,6 +14,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 
 ### Added
 - Added functions to `wkcuber.api.dataset.Dataset` and `wkcuber.api.layer.Layer` to set and get the view configuration. [#344](https://github.com/scalableminds/webknossos-cuber/pull/344)
+- Added functions to add mags of a foreign dataset (`Layer.add_symlink_mag` and `Layer.add_copy_mag`) [#367](https://github.com/scalableminds/webknossos-cuber/pull/367)
 
 ### Changed
 
