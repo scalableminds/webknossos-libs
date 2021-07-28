@@ -1,5 +1,6 @@
 import logging
 import math
+import os
 from argparse import Namespace
 from shutil import rmtree
 from os.path import join
@@ -253,6 +254,28 @@ class Layer:
 
     def get_bounding_box(self) -> BoundingBox:
         return self.dataset.properties.data_layers[self.name].get_bounding_box()
+
+    def rename(self, layer_name: str) -> None:
+        """
+        Renames the layer to `layer_name`. This changes the name of the directory on disk and updates the properties.
+        """
+        assert (
+            layer_name not in self.dataset.layers.keys()
+        ), f"Failed to rename layer {self.name} to {layer_name}: The new name already exists."
+        os.rename(self.dataset.path / self.name, self.dataset.path / layer_name)
+        layer_properties = self.dataset.properties.data_layers[self.name]
+        del self.dataset.properties.data_layers[self.name]
+        self.dataset.properties._data_layers[layer_name] = layer_properties
+        self.dataset.properties._export_as_json()
+        self.name = layer_name
+
+        # The MagViews need to be updated
+        for mag in self._mags.values():
+            mag.path = _find_mag_path_on_disk(self.dataset.path, self.name, mag.name)
+            if mag._is_opened:
+                # Reopen handle to dataset on disk
+                mag.close()
+                mag.open()
 
     def downsample(
         self,
