@@ -1157,6 +1157,42 @@ def test_add_symlink_mag(tmp_path: Path) -> None:
     assert np.array_equal(original_layer.get_mag(2).read(size=(5, 5, 5))[0], write_data)
 
 
+def test_add_copy_mag(tmp_path: Path) -> None:
+    original_ds = Dataset.create(tmp_path / "original", scale=(1, 1, 1))
+    original_layer = original_ds.add_layer(
+        "color", LayerCategories.COLOR_TYPE, dtype_per_channel="uint8"
+    )
+    original_layer.add_mag(1).write(
+        data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8)
+    )
+    original_data = (np.random.rand(5, 10, 15) * 255).astype(np.uint8)
+    original_layer.add_mag(2).write(data=original_data)
+
+    ds = Dataset.create(tmp_path / "link", scale=(1, 1, 1))
+    layer = ds.add_layer("color", LayerCategories.COLOR_TYPE, dtype_per_channel="uint8")
+    layer.add_mag(1).write(
+        offset=(6, 6, 6), data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8)
+    )
+
+    assert tuple(layer.get_bounding_box().topleft) == (6, 6, 6)
+    assert tuple(layer.get_bounding_box().size) == (10, 20, 30)
+
+    copy_mag = layer.add_copy_mag(tmp_path / "original" / "color" / "2")
+
+    assert (tmp_path / "link" / "color" / "1").exists()
+    assert len(ds.properties.data_layers["color"].wkw_magnifications) == 2
+
+    assert tuple(layer.get_bounding_box().topleft) == (0, 0, 0)
+    assert tuple(layer.get_bounding_box().size) == (16, 26, 36)
+
+    # Write data in copied layer
+    write_data = (np.random.rand(5, 5, 5) * 255).astype(np.uint8)
+    copy_mag.write(offset=(0, 0, 0), data=write_data)
+
+    assert np.array_equal(copy_mag.read(size=(5, 5, 5))[0], write_data)
+    assert np.array_equal(original_layer.get_mag(2).read()[0], original_data)
+
+
 def test_search_dataset_also_for_long_layer_name() -> None:
     delete_dir(TESTOUTPUT_DIR / "long_layer_name")
 

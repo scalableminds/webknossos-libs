@@ -1,6 +1,7 @@
 import logging
 import math
 import os
+import shutil
 from argparse import Namespace
 from pathlib import Path
 from shutil import rmtree
@@ -197,21 +198,9 @@ class Layer:
         )
         rmtree(full_path)
 
-    def add_symlink_mag(
-        self, foreign_mag_path: Union[str, Path], make_relative: bool = False
+    def _add_foreign_mag(
+        self, foreign_mag_path: Path, symlink: bool, make_relative: bool
     ) -> MagView:
-        """
-        Creates a symlink to the data at `foreign_mag_path` which belongs to another dataset.
-        The relevant information from the `datasource-properties.json` of the other dataset is copied to this dataset.
-        Note: If the other dataset modifies its bounding box afterwards, the change does not affect this properties
-        (or vice versa).
-        If make_relative is True, the symlink is made relative to the current dataset path.
-        """
-        foreign_mag_path = Path(os.path.abspath(foreign_mag_path))
-        if make_relative:
-            foreign_mag_path = Path(
-                os.path.relpath(foreign_mag_path, self.dataset.path)
-            )
         mag_name = foreign_mag_path.name
         mag = Mag(mag_name)
         if mag in self.mags.keys():
@@ -219,7 +208,20 @@ class Layer:
                 f"Cannot create symlink to {foreign_mag_path}. This dataset already has a mag called {mag_name}."
             )
 
-        os.symlink(foreign_mag_path, join(self.dataset.path, self.name, mag_name))
+        foreign_mag_symlink_path = (
+            Path(os.path.relpath(foreign_mag_path, self.dataset.path))
+            if make_relative
+            else foreign_mag_path
+        )
+
+        if symlink:
+            os.symlink(
+                foreign_mag_symlink_path, join(self.dataset.path, self.name, mag_name)
+            )
+        else:
+            shutil.copytree(
+                foreign_mag_symlink_path, join(self.dataset.path, self.name, mag_name)
+            )
 
         # copy the properties of the layer into the properties of this dataset
         mag_properties = None
@@ -249,6 +251,31 @@ class Layer:
 
         self._setup_mag(mag)
         return self.mags[mag]
+
+    def add_symlink_mag(
+        self, foreign_mag_path: Union[str, Path], make_relative: bool = False
+    ) -> MagView:
+        """
+        Creates a symlink to the data at `foreign_mag_path` which belongs to another dataset.
+        The relevant information from the `datasource-properties.json` of the other dataset is copied to this dataset.
+        Note: If the other dataset modifies its bounding box afterwards, the change does not affect this properties
+        (or vice versa).
+        If make_relative is True, the symlink is made relative to the current dataset path.
+        """
+        foreign_mag_path = Path(os.path.abspath(foreign_mag_path))
+        return self._add_foreign_mag(
+            foreign_mag_path, symlink=True, make_relative=make_relative
+        )
+
+    def add_copy_mag(self, foreign_mag_path: Union[str, Path]) -> MagView:
+        """
+        Copies the data at `foreign_mag_path` which belongs to another dataset to the current dataset.
+        Additionally, the relevant information from the `datasource-properties.json` of the other dataset are copied too.
+        """
+        foreign_mag_path = Path(os.path.abspath(foreign_mag_path))
+        return self._add_foreign_mag(
+            foreign_mag_path, symlink=False, make_relative=False
+        )
 
     def _create_dir_for_mag(
         self, mag: Union[int, str, list, tuple, np.ndarray, Mag]
