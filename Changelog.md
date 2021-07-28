@@ -14,6 +14,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 
 ### Added
 - Added functions to `wkcuber.api.dataset.Dataset` and `wkcuber.api.layer.Layer` to set and get the view configuration. [#344](https://github.com/scalableminds/webknossos-cuber/pull/344)
+- Implement descriptive string representations for `Dataset`, `Layer`, `MagView` and `View`. [#369](https://github.com/scalableminds/webknossos-cuber/pull/369)
 
 ### Changed
 
