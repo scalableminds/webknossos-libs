@@ -328,6 +328,12 @@ class MagView(View):
             Tuple[int, int, int], (self.header.file_len * self.header.block_len,) * 3
         )
 
+    def __repr__(self) -> str:
+        return repr(
+            "MagView(%s, name=%s, global_offset=%s, size=%s)"
+            % (self.path, self.name, self.global_offset, self.size)
+        )
+
 
 def _extract_file_index(file_path: Path) -> Tuple[int, int, int]:
     zyx_index = [int(el[1:]) for el in file_path.parts]

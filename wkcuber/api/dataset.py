@@ -694,6 +694,9 @@ class Dataset:
             else None,
         )
 
+    def __repr__(self) -> str:
+        return repr("Dataset(%s)" % self.path)
+
 
 class DatasetViewConfiguration:
     """
