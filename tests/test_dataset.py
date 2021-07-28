@@ -1661,6 +1661,9 @@ def test_rename_layer(tmp_path: Path) -> None:
     assert not (tmp_path / "ds" / "color").exists()
     assert (tmp_path / "ds" / "color2").exists()
     assert "color2" in ds.properties.data_layers.keys()
+    assert "color2" == ds.properties.data_layers["color2"].name
+    assert "color2" in ds.layers.keys()
+    assert "color" not in ds.layers.keys()
 
     # The "mag" object which was created before renaming the layer is still valid
     assert np.array_equal(mag.read()[0], write_data)

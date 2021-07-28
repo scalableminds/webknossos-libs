@@ -264,9 +264,12 @@ class Layer:
         ), f"Failed to rename layer {self.name} to {layer_name}: The new name already exists."
         os.rename(self.dataset.path / self.name, self.dataset.path / layer_name)
         layer_properties = self.dataset.properties.data_layers[self.name]
+        layer_properties._name = layer_name
         del self.dataset.properties.data_layers[self.name]
         self.dataset.properties._data_layers[layer_name] = layer_properties
         self.dataset.properties._export_as_json()
+        del self.dataset.layers[self.name]
+        self.dataset.layers[layer_name] = self
         self.name = layer_name
 
         # The MagViews need to be updated
