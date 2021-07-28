@@ -207,12 +207,13 @@ class Layer:
     ) -> MagView:
         mag_name = foreign_mag_path.name
         mag = Mag(mag_name)
+        operation = "symlink" if symlink else "copy"
         if mag in self.mags.keys():
             raise IndexError(
-                f"Cannot create symlink to {foreign_mag_path}. This dataset already has a mag called {mag_name}."
+                f"Cannot {operation} {foreign_mag_path}. This dataset already has a mag called {mag_name}."
             )
 
-        foreign_mag_symlink_path = (
+        foreign_normalized_mag_path = (
             Path(os.path.relpath(foreign_mag_path, self.dataset.path))
             if make_relative
             else foreign_mag_path
@@ -220,11 +221,13 @@ class Layer:
 
         if symlink:
             os.symlink(
-                foreign_mag_symlink_path, join(self.dataset.path, self.name, mag_name)
+                foreign_normalized_mag_path,
+                join(self.dataset.path, self.name, mag_name),
             )
         else:
             shutil.copytree(
-                foreign_mag_symlink_path, join(self.dataset.path, self.name, mag_name)
+                foreign_normalized_mag_path,
+                join(self.dataset.path, self.name, mag_name),
             )
 
         # copy the properties of the layer into the properties of this dataset
@@ -243,7 +246,7 @@ class Layer:
 
         assert (
             mag_properties is not None
-        ), f"Failed to add symlink to existing mag at {foreign_mag_path}: The properties on the foreign dataset do not contain an entry for the specified mag."
+        ), f"Failed to {operation} existing mag at {foreign_mag_path}: The properties on the foreign dataset do not contain an entry for the specified mag."
         new_bbox = self.get_bounding_box().extended_by(
             foreign_layer_properties.get_bounding_box()
         )
