@@ -667,6 +667,12 @@ class Layer:
             is_in_edit_mode=view_configuration_dict.get("isInEditMode"),
         )
 
+    def __repr__(self) -> str:
+        return repr(
+            "Layer(%s, dtype_per_channel=%s, num_channels=%s)"
+            % (self.name, self.dtype_per_channel, self.num_channels)
+        )
+
 
 class SegmentationLayer(Layer):
     @property
