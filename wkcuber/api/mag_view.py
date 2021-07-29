@@ -330,8 +330,8 @@ class MagView(View):
 
     def __repr__(self) -> str:
         return repr(
-            "MagView(%s, name=%s, global_offset=%s, size=%s)"
-            % (self.path, self.name, self.global_offset, self.size)
+            "MagView(name=%s, global_offset=%s, size=%s)"
+            % (self.name, self.global_offset, self.size)
         )
 
 
