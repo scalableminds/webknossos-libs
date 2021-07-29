@@ -18,6 +18,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+- Fixed a bug where Dataset.add_symlink_layer(make_relative=True) failed to look up dataset properties. [#365](https://github.com/scalableminds/webknossos-cuber/pull/365)
 
 ## [0.8.4](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.4) - 2021-07-26
 [Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.3...v0.8.4)
