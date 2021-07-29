@@ -5,8 +5,8 @@ from typing import Tuple, cast
 import numpy as np
 import pytest
 
-from wkcuber.api.Dataset import WKDataset
-from wkcuber.api.Layer import Layer
+from wkcuber.api.dataset import Dataset
+from wkcuber.api.layer import Layer, LayerCategories
 from wkcuber.downsampling_utils import (
     InterpolationModes,
     downsample_cube,
@@ -92,13 +92,17 @@ def downsample_test_helper(use_compress: bool) -> None:
     except:
         pass
 
-    source_ds = WKDataset(source_path)
+    source_ds = Dataset(source_path)
     source_layer = source_ds.get_layer("color")
     mag1 = source_layer.get_mag("1")
 
-    target_ds = WKDataset.create(target_path, scale=(1, 1, 1))
+    target_ds = Dataset.create(target_path, scale=(1, 1, 1))
     target_layer = target_ds.add_layer(
-        "color", Layer.COLOR_TYPE, dtype_per_channel="uint8"
+        "color", LayerCategories.COLOR_TYPE, dtype_per_channel="uint8"
+    )
+    # The bounding box has to be set here explicitly because the downsampled data is written to a different dataset.
+    target_layer.set_bounding_box(
+        source_layer.get_bounding_box().topleft, source_layer.get_bounding_box().size
     )
     mag2 = target_layer._initialize_mag_from_other_mag("2", mag1, use_compress)
 
@@ -118,14 +122,12 @@ def downsample_test_helper(use_compress: bool) -> None:
             mag2.get_view(
                 offset=target_offset,
                 size=target_size,
-                is_bounded=False,
             ),
             0,
         ),
         [2, 2, 2],
         InterpolationModes.MAX,
         CUBE_EDGE_LEN,
-        use_compress,
         100,
     )
 
@@ -162,9 +164,12 @@ def test_downsample_multi_channel() -> None:
     except:
         pass
 
-    ds = WKDataset.create(TESTOUTPUT_DIR / "multi-channel-test", (1, 1, 1))
+    ds = Dataset.create(TESTOUTPUT_DIR / "multi-channel-test", (1, 1, 1))
     l = ds.add_layer(
-        "color", Layer.COLOR_TYPE, dtype_per_channel="uint8", num_channels=num_channels
+        "color",
+        LayerCategories.COLOR_TYPE,
+        dtype_per_channel="uint8",
+        num_channels=num_channels,
     )
     mag1 = l.add_mag("1", file_len=file_len)
 
@@ -175,11 +180,10 @@ def test_downsample_multi_channel() -> None:
     mag2 = l._initialize_mag_from_other_mag("2", mag1, False)
 
     downsample_cube_job(
-        (l.get_mag("1").get_view(), l.get_mag("2").get_view(is_bounded=False), 0),
+        (l.get_mag("1").get_view(), l.get_mag("2").get_view(), 0),
         [2, 2, 2],
         InterpolationModes.MAX,
         CUBE_EDGE_LEN,
-        False,
         100,
     )
 
@@ -250,16 +254,16 @@ def test_default_parameter() -> None:
     except:
         pass
 
-    ds = WKDataset.create(target_path, scale=(1, 1, 1))
+    ds = Dataset.create(target_path, scale=(1, 1, 1))
     layer = ds.add_layer(
-        "color", Layer.COLOR_TYPE, dtype_per_channel="uint8", num_channels=3
+        "color", LayerCategories.COLOR_TYPE, dtype_per_channel="uint8", num_channels=3
     )
     mag = layer.add_mag("2")
     mag.write(data=(np.random.rand(3, 10, 20, 30) * 255).astype(np.uint8))
     layer.downsample()
 
     # The max_mag is Mag(4) in this case (see test_default_max_mag)
-    assert sorted(layer.mags.keys()) == ["2", "4"]
+    assert sorted(layer.mags.keys()) == [Mag("2"), Mag("4")]
 
 
 def test_default_anisotropic_scale() -> None:
@@ -268,15 +272,15 @@ def test_default_anisotropic_scale() -> None:
     except:
         pass
 
-    ds = WKDataset.create(
+    ds = Dataset.create(
         TESTOUTPUT_DIR / "default_anisotropic_scale", scale=(85, 85, 346)
     )
-    layer = ds.add_layer("color", Layer.COLOR_TYPE)
+    layer = ds.add_layer("color", LayerCategories.COLOR_TYPE)
     mag = layer.add_mag(1)
     mag.write(data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8))
 
     layer.downsample(Mag(1), None, "median", True)
-    assert sorted(layer.mags.keys()) == ["1", "2-2-1", "4-4-1"]
+    assert sorted(layer.mags.keys()) == [Mag("1"), Mag("2-2-1"), Mag("4-4-1")]
 
 
 def test_downsample_mag_list() -> None:
@@ -285,8 +289,8 @@ def test_downsample_mag_list() -> None:
     except:
         pass
 
-    ds = WKDataset.create(TESTOUTPUT_DIR / "downsample_mag_list", scale=(1, 1, 2))
-    layer = ds.add_layer("color", Layer.COLOR_TYPE)
+    ds = Dataset.create(TESTOUTPUT_DIR / "downsample_mag_list", scale=(1, 1, 2))
+    layer = ds.add_layer("color", LayerCategories.COLOR_TYPE)
     mag = layer.add_mag(1)
     mag.write(data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8))
 
@@ -295,7 +299,7 @@ def test_downsample_mag_list() -> None:
     layer.downsample_mag_list(from_mag=Mag(1), target_mags=target_mags)
 
     for m in target_mags:
-        assert m.to_layer_name() in layer.mags
+        assert m in layer.mags
 
 
 def test_downsample_with_invalid_mag_list() -> None:
@@ -304,8 +308,8 @@ def test_downsample_with_invalid_mag_list() -> None:
     except:
         pass
 
-    ds = WKDataset.create(TESTOUTPUT_DIR / "downsample_mag_list", scale=(1, 1, 2))
-    layer = ds.add_layer("color", Layer.COLOR_TYPE)
+    ds = Dataset.create(TESTOUTPUT_DIR / "downsample_mag_list", scale=(1, 1, 2))
+    layer = ds.add_layer("color", LayerCategories.COLOR_TYPE)
     mag = layer.add_mag(1)
     mag.write(data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8))
 
@@ -314,3 +318,33 @@ def test_downsample_with_invalid_mag_list() -> None:
             from_mag=Mag(1),
             target_mags=[Mag(1), Mag([1, 1, 2]), Mag([2, 2, 1]), Mag(2)],
         )
+
+
+def test_downsample_compressed() -> None:
+    try:
+        shutil.rmtree(TESTOUTPUT_DIR / "downsample_compressed")
+    except:
+        pass
+
+    ds = Dataset.create(TESTOUTPUT_DIR / "downsample_compressed", scale=(1, 1, 2))
+    layer = ds.add_layer("color", LayerCategories.COLOR_TYPE)
+    mag = layer.add_mag(1, block_len=8, file_len=8)
+    mag.write(data=(np.random.rand(80, 240, 15) * 255).astype(np.uint8))
+
+    assert not mag._is_compressed()
+    mag.compress()
+    assert mag._is_compressed()
+
+    layer.downsample(
+        from_mag=Mag(1),
+        max_mag=Mag(
+            4
+        ),  # Setting max_mag to "4" covers an edge case because the z-dimension (15) has to be rounded
+    )
+
+    # Note: this test does not check if the data is correct. This is already covered by other test cases.
+
+    assert len(layer.mags) == 3
+    assert Mag("1") in layer.mags.keys()
+    assert Mag("2-2-1") in layer.mags.keys()
+    assert Mag("4-4-2") in layer.mags.keys()

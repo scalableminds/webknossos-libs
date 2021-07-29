@@ -49,7 +49,7 @@ FallbackArgs = namedtuple("FallbackArgs", ("distribution_strategy", "jobs"))
 BLOCK_LEN = 32
 DEFAULT_WKW_FILE_LEN = 32
 DEFAULT_WKW_VOXELS_PER_BLOCK = 32
-CUBE_REGEX = re.compile(r"z(\d+)/y(\d+)/x(\d+)(\.wkw)$")
+CUBE_REGEX = re.compile(fr"z(\d+){os.path.sep}y(\d+){os.path.sep}x(\d+)(\.wkw)$")
 
 logger = getLogger(__name__)
 
@@ -514,3 +514,8 @@ def get_executor_args(global_args: argparse.Namespace) -> argparse.Namespace:
     executor_args.distribution_strategy = global_args.distribution_strategy
     executor_args.job_resources = global_args.job_resources
     return executor_args
+
+
+def _snake_to_camel_case(snake_case_name: str) -> str:
+    parts = snake_case_name.split("_")
+    return parts[0] + "".join(part.title() for part in parts[1:])
