@@ -29,6 +29,13 @@ PROCESS_POOL_KWARGS_WHITELIST = ["max_workers", "mp_context", "initializer", "in
 
 
 class WrappedProcessPoolExecutor(ProcessPoolExecutor):
+    """
+    Wraps the ProcessPoolExecutor to add various features:
+    - map_to_futures and map_unordered method
+    - pickling of job's output (see output_pickle_path_getter and output_pickle_path)
+    - job submission via pickling to circumvent bug in python < 3.8 (see MULTIPROCESSING_VIA_IO_TMP_DIR)
+    """
+
     def __init__(self, **kwargs):
         new_kwargs = get_existent_kwargs_subset(PROCESS_POOL_KWARGS_WHITELIST, kwargs)
 
@@ -179,9 +186,53 @@ class WrappedProcessPoolExecutor(ProcessPoolExecutor):
 
 
 class SequentialExecutor(WrappedProcessPoolExecutor):
+    """
+    The same as WrappedProcessPoolExecutor, but always uses only one core. In essence,
+    this is a sequential executor approach, but it still makes use of the standard pool approach.
+    That way, switching between different executors should always work without any problems.
+    """
+
     def __init__(self, **kwargs):
         kwargs["max_workers"] = 1
         WrappedProcessPoolExecutor.__init__(self, **kwargs)
+
+
+class DebugSequentialExecutor(SequentialExecutor):
+    """
+    Only use for debugging purposes. This executor does not spawn new processes for its jobs. Therefore,
+    setting breakpoint()'s should be possible without context-related problems.
+    """
+
+    def submit(self, *args, **kwargs):
+
+        output_pickle_path = None
+        if "__cfut_options" in kwargs:
+            output_pickle_path = kwargs["__cfut_options"]["output_pickle_path"]
+            del kwargs["__cfut_options"]
+
+        if output_pickle_path is not None:
+            fut = self._blocking_submit(
+                WrappedProcessPoolExecutor._execute_and_persist_function,
+                output_pickle_path,
+                *args,
+                **kwargs,
+            )
+        else:
+            fut = self._blocking_submit(*args, **kwargs)
+
+        enrich_future_with_uncaught_warning(fut)
+        return fut
+
+    def _blocking_submit(self, *args, **kwargs):
+
+        func = args[0]
+        args = args[1:]
+
+        fut = futures.Future()
+        result = func(*args, **kwargs)
+        fut.set_result(result)
+
+        return fut
 
 
 def pickle_identity(obj):
@@ -194,6 +245,12 @@ def pickle_identity_executor(func, *args, **kwargs):
 
 
 class PickleExecutor(WrappedProcessPoolExecutor):
+    """
+    The same as WrappedProcessPoolExecutor, but always pickles input and output of the jobs.
+    When using this executor for automated tests, it is ensured that using cluster executors in production
+    won't provoke pickling-related problems.
+    """
+
     def submit(self, _func, *_args, **_kwargs):
 
         (func, args, kwargs) = pickle_identity((_func, _args, _kwargs))
@@ -209,6 +266,8 @@ def get_executor(environment, **kwargs):
         return WrappedProcessPoolExecutor(**kwargs)
     elif environment == "sequential":
         return SequentialExecutor(**kwargs)
+    elif environment == "debug_sequential":
+        return DebugSequentialExecutor(**kwargs)
     elif environment == "test_pickling":
         return PickleExecutor(**kwargs)
     raise Exception("Unknown executor: {}".format(environment))

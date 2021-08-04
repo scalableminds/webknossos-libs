@@ -31,14 +31,19 @@ def raise_if(msg, bool):
         raise Exception("raise_if was called with True: {}".format(msg))
 
 
-def get_executors():
-    return [
+def get_executors(with_debug_sequential=False):
+    executors = [
         cluster_tools.get_executor("slurm", debug=True, job_resources={"mem": "100M"}),
         cluster_tools.get_executor("multiprocessing", max_workers=5),
         cluster_tools.get_executor("sequential"),
         cluster_tools.get_executor("test_pickling"),
         # cluster_tools.get_executor("pbs"),
     ]
+
+    if with_debug_sequential:
+        executors.append(cluster_tools.get_executor("debug_sequential"))
+
+    return executors
 
 
 @pytest.mark.skip(
@@ -121,8 +126,37 @@ def test_submit():
             for future, job_index in zip(futures, job_range):
                 assert future.result() == square(job_index)
 
-    for exc in get_executors():
+    for exc in get_executors(with_debug_sequential=True):
         run_square_numbers(exc)
+
+
+def get_pid():
+
+    return os.getpid()
+
+
+def test_process_id():
+
+    outer_pid = os.getpid()
+
+    def compare_pids(executor):
+        with executor:
+            future = executor.submit(get_pid)
+            inner_pid = future.result()
+
+            should_differ = not isinstance(exc, cluster_tools.DebugSequentialExecutor)
+
+            if should_differ:
+                assert (
+                    inner_pid != outer_pid
+                ), f"Inner and outer pid should differ, but both are {inner_pid}."
+            else:
+                assert (
+                    inner_pid == outer_pid
+                ), f"Inner and outer pid should be equal, but {inner_pid} != {outer_pid}."
+
+    for exc in get_executors(with_debug_sequential=True):
+        compare_pids(exc)
 
 
 def test_unordered_sleep():
@@ -172,6 +206,25 @@ def test_map_to_futures():
                 assert result == duration
 
 
+def test_map_to_futures_with_debug_sequential():
+
+    with cluster_tools.get_executor("debug_sequential") as exc:
+        durations = [4, 1]
+        futures = exc.map_to_futures(sleep, durations)
+
+        for fut in futures:
+            assert (
+                fut.done()
+            ), "Future should immediately be finished after map_to_futures has returned"
+
+        results = []
+        for i, duration in enumerate(futures):
+            results.append(duration.result())
+
+        for duration, result in zip(durations, results):
+            assert result == duration
+
+
 def test_empty_map_to_futures():
     for exc in get_executors():
         with exc:
@@ -187,7 +240,7 @@ def output_pickle_path_getter(tmp_dir, chunk):
 
 def test_map_to_futures_with_pickle_paths():
 
-    for exc in get_executors():
+    for exc in get_executors(with_debug_sequential=True):
         with tempfile.TemporaryDirectory(dir=".") as tmp_dir:
             with exc:
                 durations = [2, 1]
