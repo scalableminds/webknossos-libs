@@ -27,7 +27,7 @@ def test_single_channel_conversion() -> None:
     single_channel_data = np.empty((3, 32, 32, 1, 1), multi_channel_data.dtype)
     for i in range(3):
         single_channel_data[i] = image_reader_manager.read_array(
-            TESTDATA_DIR / "rgb_tiff" / "test_rgb.tif", np.uint8, 0, i
+            TESTDATA_DIR / "rgb_tiff" / "test_rgb.tif", np.uint8, 0, (i, i + 1)
         )
 
     single_channel_data = single_channel_data.transpose((1, 2, 0, 3, 4))

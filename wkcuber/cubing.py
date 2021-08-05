@@ -29,13 +29,13 @@ from .utils import (
     wait_and_ensure_success,
     setup_logging,
 )
-from .image_readers import image_reader
+from .image_readers import image_reader, new_image_reader
 from .metadata import convert_element_class_to_dtype
 
 BLOCK_LEN = 32
 
 
-def tuple_type(strings):
+def tuple_type(strings: str) -> Tuple[int, ...]:
     strings = strings.replace("(", "").replace(")", "")
     mapped_int = map(int, strings.split(","))
     return tuple(mapped_int)
@@ -282,6 +282,7 @@ def cubing(
     executor_args: Namespace,
 ) -> dict:
     source_files = find_source_filenames(source_path)
+    new_image_reader()
 
     # All images are assumed to have equal dimensions
     num_x, num_y = image_reader.read_dimensions(source_files[0])
