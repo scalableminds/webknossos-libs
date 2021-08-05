@@ -7,7 +7,31 @@ and this project adheres to [Calendar Versioning](http://calver.org/) `0Y.0M.MIC
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.4...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.6...HEAD)
+
+### Breaking Changes in Config & CLI
+
+### Added
+
+### Changed
+
+### Fixed
+
+## [0.8.6](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.6) - 2021-07-29
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.5...v0.8.6)
+
+### Breaking Changes in Config & CLI
+
+### Added
+- Implement descriptive string representations for `Dataset`, `Layer`, `MagView` and `View`. [#369](https://github.com/scalableminds/webknossos-cuber/pull/369)
+- Added option to rename a layer. [#368](https://github.com/scalableminds/webknossos-cuber/pull/368)
+
+### Changed
+
+### Fixed
+
+## [0.8.5](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.5) - 2021-07-29
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.4...v0.8.5)
 
 ### Breaking Changes in Config & CLI
 - The parameter allow_compressed_write from View.write() is now removed. Writing to compressed magnifications is now always allowed. If the user decides to write unaligned data, a warning about a possible performance impact is displayed once. [#356](https://github.com/scalableminds/webknossos-cuber/pull/356)
