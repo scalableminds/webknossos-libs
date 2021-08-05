@@ -47,7 +47,8 @@ class ClusterExecutor(futures.Executor):
             `logging_config`: An object containing a `level` key specifying the desired log level and/or a
                 `format` key specifying the desired log format string. Cannot be specified together
                 with `logging_setup_fn`.
-            `logging_setup_fn`: A function setting up custom logging. The function will be called with the
+            `logging_setup_fn`: A function setting up custom logging. The function will be called for
+                remotely executed code (slurm, pbs) to re-setup logging. The function will be called with the
                 default log file name. If the caller sets up file logging, this log file name should be adapted,
                 for example, by adding a .mylog suffix. Cannot be specified together with `logging_config`.
         """

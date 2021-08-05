@@ -1,19 +1,17 @@
 from concurrent import futures
 from concurrent.futures import ProcessPoolExecutor
 import os
-import sys
-import threading
 from .schedulers.slurm import SlurmExecutor
 from .schedulers.pbs import PBSExecutor
-from .util import random_string, call, enrich_future_with_uncaught_warning
+from .util import enrich_future_with_uncaught_warning
 from . import pickling
-import importlib
 import multiprocessing
 import logging
 import shutil
 import tempfile
 from pathlib import Path
 from functools import partial
+from .multiprocessing_logging_handler import get_multiprocessing_logging_setup_fn
 
 
 def get_existent_kwargs_subset(whitelist, kwargs):
@@ -79,15 +77,35 @@ class WrappedProcessPoolExecutor(ProcessPoolExecutor):
         else:
             submit_fn = super().submit
 
-        if output_pickle_path is not None:
-            fut = submit_fn(
-                WrappedProcessPoolExecutor._execute_and_persist_function,
-                output_pickle_path,
-                *args,
-                **kwargs,
+        # Depending on the start_method and output_pickle_path, wrapper functions may need to be
+        # executed in the new process context, before the actual code is ran.
+        # These wrapper functions consume their arguments from *args, **kwargs and assume
+        # that the next argument will be another function that is then called.
+        # The call_stack holds all of these wrapper functions and their arguments in the correct order.
+        # For example, call_stack = [wrapper_fn_1, wrapper_fn_1_arg_1, wrapper_fn_2, actual_fn, actual_fn_arg_1]
+        # where wrapper_fn_1 is called, which eventually calls wrapper_fn_2, which eventually calls actual_fn.
+        call_stack = []
+
+        if multiprocessing.get_start_method() != "fork":
+            # If a start_method other than the default "fork" is used, logging needs to be re-setup,
+            # because the programming context is not inherited in those cases.
+            multiprocessing_logging_setup_fn = get_multiprocessing_logging_setup_fn()
+            call_stack.extend(
+                [
+                    WrappedProcessPoolExecutor._setup_logging_and_execute,
+                    multiprocessing_logging_setup_fn,
+                ]
             )
-        else:
-            fut = submit_fn(*args, **kwargs)
+
+        if output_pickle_path is not None:
+            call_stack.extend(
+                [
+                    WrappedProcessPoolExecutor._execute_and_persist_function,
+                    output_pickle_path,
+                ]
+            )
+
+        fut = submit_fn(*call_stack, *args, **kwargs)
 
         enrich_future_with_uncaught_warning(fut)
         return fut
@@ -122,6 +140,16 @@ class WrappedProcessPoolExecutor(ProcessPoolExecutor):
     def _remove_tmp_file(path, _future):
 
         shutil.rmtree(path)
+
+    @staticmethod
+    def _setup_logging_and_execute(multiprocessing_logging_setup_fn, *args, **kwargs):
+
+        func = args[0]
+        args = args[1:]
+
+        multiprocessing_logging_setup_fn()
+
+        return func(*args, **kwargs)
 
     @staticmethod
     def _execute_via_io(serialized_function_info_path):
