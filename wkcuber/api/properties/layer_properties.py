@@ -30,7 +30,7 @@ def _extract_num_channels(
         )
 
     wkw_ds_file_path = join(
-        dirname(path), layer, Mag(mag["resolution"]).to_layer_name()
+        path, layer, Mag(mag["resolution"]).to_layer_name()
     )
     if not isfile(join(wkw_ds_file_path, "header.wkw")):
         raise Exception(

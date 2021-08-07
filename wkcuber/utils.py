@@ -7,6 +7,8 @@ from types import TracebackType
 
 import logging
 import argparse
+
+import cattr
 import wkw
 import numpy as np
 import cluster_tools
@@ -519,3 +521,32 @@ def get_executor_args(global_args: argparse.Namespace) -> argparse.Namespace:
 def _snake_to_camel_case(snake_case_name: str) -> str:
     parts = snake_case_name.split("_")
     return parts[0] + "".join(part.title() for part in parts[1:])
+
+
+def _camel_to_snake_case(camel_case_name: str) -> str:
+    return re.sub(r'(?<!^)(?=[A-Z])', '_', camel_case_name).lower()
+
+
+class CamelCaseAttrConverter(cattr.Converter):
+    converter = cattr.Converter()
+
+    def load(self, params, data_cls, camel_to_snake=True):
+        """
+        :param params: params, mostly from front end
+        :param data_cls:
+        :param camel_to_snake: need to convert from camel style to snake style
+        """
+        #if camel_to_snake:
+        #    params = humps.depascalize(params)
+        return self.converter.structure(params, data_cls)
+
+    def dump(self, data, snake_to_camel=False):
+        """
+        :param data:
+        :param snake_to_camel: dump as camel case
+        """
+        result: dict = self.converter.unstructure(data)
+        #if snake_to_camel:
+        #    result = humps.camelize(result)
+
+        return result

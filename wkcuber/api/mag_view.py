@@ -91,13 +91,21 @@ class MagView(View):
             False,
         )
 
-        self.layer = layer
-        self.name = name
+        self._layer = layer
+        self._name = name
 
         if create:
             wkw.Dataset.create(
                 join(layer.dataset.path, layer.name, self.name), self.header
             )
+
+    @property
+    def layer(self) -> "Layer":
+        return self._layer
+
+    @property
+    def name(self) -> str:
+        return self._name
 
     def write(self, data: np.ndarray, offset: Tuple[int, int, int] = (0, 0, 0)) -> None:
         """
@@ -111,37 +119,33 @@ class MagView(View):
         """
         self._assert_valid_num_channels(data.shape)
         super().write(data, offset)
-        layer_properties = self.layer.dataset.properties.data_layers[self.layer.name]
-        current_offset_in_mag1 = layer_properties.get_bounding_box_offset()
-        current_size_in_mag1 = layer_properties.get_bounding_box_size()
+        current_offset_in_mag1 = self.layer.get_bounding_box().topleft
+        current_size_in_mag1 = self.layer.get_bounding_box().size
 
         mag = Mag(self.name)
         mag_np = mag.as_np()
 
-        offset_in_mag1 = tuple(np.array(offset) * mag_np)
+        offset_in_mag1 = np.array(offset) * mag_np
 
         new_offset_in_mag1 = (
             offset_in_mag1
-            if current_offset_in_mag1 == (-1, -1, -1)
-            else tuple(min(x) for x in zip(current_offset_in_mag1, offset_in_mag1))
+            if tuple(current_offset_in_mag1) == (-1, -1, -1)
+            else np.minimum(current_offset_in_mag1, offset_in_mag1)
         )
 
-        old_end_offset_in_mag1 = np.array(current_offset_in_mag1) + np.array(
-            current_size_in_mag1
-        )
+        old_end_offset_in_mag1 = current_offset_in_mag1 + current_size_in_mag1
         new_end_offset_in_mag1 = (np.array(offset) + np.array(data.shape[-3:])) * mag_np
         max_end_offset_in_mag1 = np.array(
             [old_end_offset_in_mag1, new_end_offset_in_mag1]
         ).max(axis=0)
         total_size_in_mag1 = max_end_offset_in_mag1 - np.array(new_offset_in_mag1)
 
-        self.size = cast(
+        self._size = cast(
             Tuple[int, int, int],
             tuple(convert_mag1_offset(max_end_offset_in_mag1, mag)),
         )  # The base view of a MagDataset always starts at (0, 0, 0)
 
-        self.layer.dataset.properties._set_bounding_box_of_layer(
-            self.layer.name,
+        self.layer.set_bounding_box(
             cast(Tuple[int, int, int], tuple(new_offset_in_mag1)),
             cast(Tuple[int, int, int], tuple(total_size_in_mag1)),
         )
@@ -238,9 +242,9 @@ class MagView(View):
         if not was_opened:
             self.open()  # opening the view is necessary to set the dataset
 
-        assert self.dataset is not None
-        for filename in self.dataset.list_files():
-            file_path = Path(os.path.splitext(filename)[0]).relative_to(self.path)
+        assert self._dataset is not None
+        for filename in self._dataset.list_files():
+            file_path = Path(os.path.splitext(filename)[0]).relative_to(self._path)
             cube_index = _extract_file_index(file_path)
             cube_offset = [idx * size for idx, size in zip(cube_index, cube_size)]
 
@@ -287,15 +291,15 @@ class MagView(View):
         was_opened = self._is_opened
         if not was_opened:
             self.open()  # opening the view is necessary to set the dataset
-        assert self.dataset is not None
+        assert self._dataset is not None
 
         # create empty wkw.Dataset
-        self.dataset.compress(str(compressed_full_path))
+        self._dataset.compress(str(compressed_full_path))
 
         # compress all files to and move them to 'compressed_path'
         with get_executor_for_args(args) as executor:
             job_args = []
-            for file in self.dataset.list_files():
+            for file in self._dataset.list_files():
                 rel_file = Path(file).relative_to(self.layer.dataset.path)
                 job_args.append((Path(file), compressed_path / rel_file))
 
@@ -333,6 +337,9 @@ class MagView(View):
             "MagView(name=%s, global_offset=%s, size=%s)"
             % (self.name, self.global_offset, self.size)
         )
+
+    def _to_json(self) -> dict:
+        return {"resolution": Mag(self.name).to_array(), "cubeLength": self.header.block_len * self.header.file_len}
 
 
 def _extract_file_index(file_path: Path) -> Tuple[int, int, int]:

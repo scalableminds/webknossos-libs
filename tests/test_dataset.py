@@ -28,7 +28,6 @@ from wkcuber.api.layer import (
 from wkcuber.api.mag_view import MagView
 from wkcuber.api.properties.dataset_properties import Properties
 from wkcuber.api.properties.layer_properties import SegmentationLayerProperties
-from wkcuber.api.properties.resolution_properties import Resolution
 from wkcuber.api.view import View
 from wkcuber.compress import compress_mag_inplace
 from wkcuber.mag import Mag
@@ -153,8 +152,8 @@ def test_create_dataset_with_layer_and_mag() -> None:
     assert (TESTOUTPUT_DIR / "wk_dataset" / "color" / "1").exists()
     assert (TESTOUTPUT_DIR / "wk_dataset" / "color" / "2-2-1").exists()
 
-    assert len(ds.properties.data_layers) == 1
-    assert len(ds.properties.data_layers["color"].wkw_magnifications) == 2
+    assert len(ds.layers) == 1
+    assert len(ds.get_layer("color").mags) == 2
 
 
 def test_create_dataset_with_explicit_header_fields() -> None:
@@ -171,31 +170,21 @@ def test_create_dataset_with_explicit_header_fields() -> None:
     assert (TESTOUTPUT_DIR / "wk_dataset_advanced" / "color" / "1").exists()
     assert (TESTOUTPUT_DIR / "wk_dataset_advanced" / "color" / "2-2-1").exists()
 
-    assert len(ds.properties.data_layers) == 1
-    assert len(ds.properties.data_layers["color"].wkw_magnifications) == 2
+    assert len(ds.layers) == 1
+    assert len(ds.get_layer("color").mags) == 2
 
-    assert ds.properties.data_layers["color"].element_class == "uint48"
-    assert (
-        cast(
-            Resolution, ds.properties.data_layers["color"].wkw_magnifications[0]
-        ).cube_length
-        == 64 * 64
-    )  # mag "1"
-    assert ds.properties.data_layers["color"].wkw_magnifications[0].mag == Mag("1")
-    assert (
-        cast(
-            Resolution, ds.properties.data_layers["color"].wkw_magnifications[1]
-        ).cube_length
-        == 32 * 32
-    )  # mag "2-2-1" (defaults are used)
-    assert ds.properties.data_layers["color"].wkw_magnifications[1].mag == Mag("2-2-1")
+    assert ds.get_layer("color").dtype_per_channel == "uint16"
+    assert ds.get_layer("color").get_mag(1).header.block_len == 64
+    assert ds.get_layer("color").get_mag(1).header.file_len == 64
+    assert ds.get_layer("color").get_mag("2-2-1").header.block_len == 32  # defaults are used
+    assert ds.get_layer("color").get_mag("2-2-1").header.file_len == 32  # defaults are used
 
 
 def test_open_dataset() -> None:
     ds = Dataset(TESTDATA_DIR / "simple_wk_dataset")
 
-    assert len(ds.properties.data_layers) == 1
-    assert len(ds.properties.data_layers["color"].wkw_magnifications) == 1
+    assert len(ds.layers) == 1
+    assert len(ds.get_layer("color").mags) == 1
 
 
 def test_view_read_with_open() -> None:
@@ -284,11 +273,11 @@ def test_mag_view_write_out_of_bounds() -> None:
     ds = Dataset(new_dataset_path)
     mag_view = ds.get_layer("color").get_mag("1")
 
-    assert ds.properties.data_layers["color"].get_bounding_box_size() == (24, 24, 24)
+    assert tuple(ds.get_layer("color").get_bounding_box().size) == (24, 24, 24)
     mag_view.write(
         np.zeros((3, 1, 1, 48), dtype=np.uint8)
     )  # this is bigger than the bounding_box
-    assert ds.properties.data_layers["color"].get_bounding_box_size() == (24, 24, 48)
+    assert tuple(ds.get_layer("color").get_bounding_box().size) == (24, 24, 48)
 
 
 def test_mag_view_write_out_of_bounds_mag2() -> None:
@@ -300,13 +289,13 @@ def test_mag_view_write_out_of_bounds_mag2() -> None:
     ds = Dataset(new_dataset_path)
     mag_view = ds.get_layer("color").get_or_add_mag("2-2-1")
 
-    assert ds.properties.data_layers["color"].get_bounding_box_offset() == (0, 0, 0)
-    assert ds.properties.data_layers["color"].get_bounding_box_size() == (24, 24, 24)
+    assert tuple(ds.get_layer("color").get_bounding_box().topleft) == (0, 0, 0)
+    assert tuple(ds.get_layer("color").get_bounding_box().size) == (24, 24, 24)
     mag_view.write(
         np.zeros((3, 50, 1, 48), dtype=np.uint8), (10, 10, 10)
     )  # this is bigger than the bounding_box
-    assert ds.properties.data_layers["color"].get_bounding_box_offset() == (0, 0, 0)
-    assert ds.properties.data_layers["color"].get_bounding_box_size() == (120, 24, 58)
+    assert tuple(ds.get_layer("color").get_bounding_box().topleft) == (0, 0, 0)
+    assert tuple(ds.get_layer("color").get_bounding_box().size) == (120, 24, 58)
 
 
 def test_update_new_bounding_box_offset() -> None:
@@ -315,21 +304,21 @@ def test_update_new_bounding_box_offset() -> None:
     ds = Dataset.create(TESTOUTPUT_DIR / "wk_dataset", scale=(1, 1, 1))
     mag = ds.add_layer("color", LayerCategories.COLOR_TYPE).add_mag("1")
 
-    assert ds.properties.data_layers["color"].bounding_box["topLeft"] == (-1, -1, -1)
+    assert tuple(ds.get_layer("color").get_bounding_box().topleft) == (-1, -1, -1)
 
     np.random.seed(1234)
     write_data = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
     mag.write(
         write_data, offset=(10, 10, 10)
     )  # the write method of MagDataset does always use the relative offset to (0, 0, 0)
-    assert ds.properties.data_layers["color"].get_bounding_box_offset() == (10, 10, 10)
-    assert ds.properties.data_layers["color"].get_bounding_box_size() == (10, 10, 10)
+    assert tuple(ds.get_layer("color").get_bounding_box().topleft) == (10, 10, 10)
+    assert tuple(ds.get_layer("color").get_bounding_box().size) == (10, 10, 10)
 
     mag.write(
         write_data, offset=(5, 5, 20)
     )  # the write method of MagDataset does always use the relative offset to (0, 0, 0)
-    assert ds.properties.data_layers["color"].get_bounding_box_offset() == (5, 5, 10)
-    assert ds.properties.data_layers["color"].get_bounding_box_size() == (15, 15, 20)
+    assert tuple(ds.get_layer("color").get_bounding_box().topleft) == (5, 5, 10)
+    assert tuple(ds.get_layer("color").get_bounding_box().size) == (15, 15, 20)
 
 
 def test_write_multi_channel_uint8() -> None:
@@ -517,8 +506,8 @@ def test_open_dataset_without_num_channels_in_properties() -> None:
         assert data["dataLayers"][0].get("num_channels") is None
 
     ds = Dataset(TESTOUTPUT_DIR / "old_wk_dataset")
-    assert ds.properties.data_layers["color"].num_channels == 1
-    ds.properties._export_as_json()
+    assert ds.get_layer("color").num_channels == 1
+    ds._export_as_json()
 
     with open(
         TESTOUTPUT_DIR / "old_wk_dataset" / "datasource-properties.json"
@@ -545,27 +534,29 @@ def test_largest_segment_id_requirement() -> None:
     ds = Dataset(path)
     assert (
         cast(
-            SegmentationLayerProperties, ds.properties.data_layers["segmentation"]
+            SegmentationLayer, ds.get_layer("segmentation")
         ).largest_segment_id
         == largest_segment_id
     )
 
 
 def test_properties_with_segmentation() -> None:
-    input_json_path = (
-        TESTDATA_DIR / "complex_property_ds" / "datasource-properties.json"
+    delete_dir(TESTOUTPUT_DIR / "complex_property_ds")
+    copytree(
+        TESTDATA_DIR / "complex_property_ds",
+        TESTOUTPUT_DIR / "complex_property_ds",
     )
-    output_json_path = (
-        TESTOUTPUT_DIR / "complex_property_ds" / "datasource-properties.json"
-    )
-    properties = Properties._from_json(input_json_path)
+
+    input_path = TESTOUTPUT_DIR / "complex_property_ds"
+
+    ds = Dataset(input_path)
 
     # the attributes 'largest_segment_id' and 'mappings' only exist if it is a SegmentationLayer
     segmentation_layer = cast(
-        SegmentationLayerProperties, properties.data_layers["segmentation"]
+        SegmentationLayerProperties, ds.get_layer("segmentation")
     )
     assert segmentation_layer.largest_segment_id == 1000000000
-    assert segmentation_layer.mappings == [
+    assert segmentation_layer._mappings == [
         "larger5um1",
         "axons",
         "astrocyte-ge-7",
@@ -574,16 +565,14 @@ def test_properties_with_segmentation() -> None:
         "astrocyte-full",
     ]
 
-    # export the json under a new name
-    makedirs(dirname(output_json_path), exist_ok=True)
-    properties._path = output_json_path
-    properties._export_as_json()
+    # Update the properties on disk (without changing the data)
+    ds._export_as_json()
 
     # validate if contents match
-    with open(input_json_path) as input_properties:
+    with open(TESTDATA_DIR / "complex_property_ds" / "datasource-properties.json") as input_properties:
         input_data = json.load(input_properties)
 
-        with open(output_json_path) as output_properties:
+        with open(input_path / "datasource-properties.json") as output_properties:
             output_data = json.load(output_properties)
             for layer in output_data["dataLayers"]:
                 # remove the num_channels because they are not part of the original json
@@ -715,37 +704,37 @@ def test_changing_layer_bounding_box() -> None:
     layer = ds.get_layer("color")
     mag = layer.get_mag("1")
 
-    bbox_size = ds.properties.data_layers["color"].get_bounding_box_size()
-    assert bbox_size == (24, 24, 24)
+    bbox_size = ds.get_layer("color").get_bounding_box().size
+    assert tuple(bbox_size) == (24, 24, 24)
     original_data = mag.read(size=bbox_size)
     assert original_data.shape == (3, 24, 24, 24)
 
     layer.set_bounding_box_size((12, 12, 10))  # decrease bounding box
 
-    bbox_size = ds.properties.data_layers["color"].get_bounding_box_size()
-    assert bbox_size == (12, 12, 10)
+    bbox_size = ds.get_layer("color").get_bounding_box().size
+    assert tuple(bbox_size) == (12, 12, 10)
     less_data = mag.read(size=bbox_size)
     assert less_data.shape == (3, 12, 12, 10)
     assert np.array_equal(original_data[:, :12, :12, :10], less_data)
 
     layer.set_bounding_box_size((36, 48, 60))  # increase the bounding box
 
-    bbox_size = ds.properties.data_layers["color"].get_bounding_box_size()
-    assert bbox_size == (36, 48, 60)
+    bbox_size = ds.get_layer("color").get_bounding_box().size
+    assert tuple(bbox_size) == (36, 48, 60)
     more_data = mag.read(size=bbox_size)
     assert more_data.shape == (3, 36, 48, 60)
     assert np.array_equal(more_data[:, :24, :24, :24], original_data)
 
-    assert ds.properties.data_layers["color"].get_bounding_box_offset() == (0, 0, 0)
+    assert tuple(ds.get_layer("color").get_bounding_box().topleft) == (0, 0, 0)
 
     # Move the offset from (0, 0, 0) to (10, 10, 0)
     # Note that the bottom right coordinate of the dataset is still at (24, 24, 24)
     layer.set_bounding_box(offset=(10, 10, 0), size=(14, 14, 24))
 
-    new_bbox_offset = ds.properties.data_layers["color"].get_bounding_box_offset()
-    new_bbox_size = ds.properties.data_layers["color"].get_bounding_box_size()
-    assert new_bbox_offset == (10, 10, 0)
-    assert new_bbox_size == (14, 14, 24)
+    new_bbox_offset = ds.get_layer("color").get_bounding_box().topleft
+    new_bbox_size = ds.get_layer("color").get_bounding_box().size
+    assert tuple(new_bbox_offset) == (10, 10, 0)
+    assert tuple(new_bbox_size) == (14, 14, 24)
     # Note that even though the offset was changed (in the properties), the offset of 'mag.read()'
     # still refers to the absolute position (relative to (0, 0, 0)).
     # The default offset is (0, 0, 0). Since the bottom right did not change, the read data equals 'original_data'.
@@ -930,16 +919,16 @@ def test_adding_layer_with_valid_dtype_per_layer() -> None:
     ds = Dataset(
         TESTOUTPUT_DIR / "valid_dtype"
     )  # reopen the dataset to check if the data is read from the properties correctly
-    assert ds.properties.data_layers["color1"].element_class == "uint24"
-    assert ds.properties.data_layers["color2"].element_class == "uint8"
-    assert ds.properties.data_layers["color3"].element_class == "uint24"
-    assert ds.properties.data_layers["color4"].element_class == "uint24"
+    assert ds.get_layer("color1").dtype_per_layer == "uint24"
+    assert ds.get_layer("color2").dtype_per_layer == "uint8"
+    assert ds.get_layer("color3").dtype_per_layer == "uint24"
+    assert ds.get_layer("color4").dtype_per_layer == "uint24"
     # Note that 'float' and 'double' are stored as 'float32' and 'float64'
-    assert ds.properties.data_layers["seg1"].element_class == "float32"
-    assert ds.properties.data_layers["seg2"].element_class == "float32"
-    assert ds.properties.data_layers["seg3"].element_class == "float32"
-    assert ds.properties.data_layers["seg4"].element_class == "float64"
-    assert ds.properties.data_layers["seg5"].element_class == "float96"
+    assert ds.get_layer("seg1").dtype_per_layer == "float32"
+    assert ds.get_layer("seg2").dtype_per_layer == "float32"
+    assert ds.get_layer("seg3").dtype_per_layer == "float32"
+    assert ds.get_layer("seg4").dtype_per_layer == "float64"
+    assert ds.get_layer("seg5").dtype_per_layer == "float96"
 
 
 def test_writing_subset_of_compressed_data_multi_channel() -> None:
@@ -1124,6 +1113,8 @@ def test_add_symlink_layer() -> None:
     copytree(
         TESTDATA_DIR / "simple_wk_dataset", TESTOUTPUT_DIR / "simple_wk_dataset_copy"
     )
+    # Add an additional segmentation layer to the original dataset
+    Dataset(TESTOUTPUT_DIR / "simple_wk_dataset_copy").add_layer("segmentation", LayerCategories.SEGMENTATION_TYPE, largest_segment_id=999)
 
     original_mag = (
         Dataset(TESTOUTPUT_DIR / "simple_wk_dataset_copy")
@@ -1132,15 +1123,23 @@ def test_add_symlink_layer() -> None:
     )
 
     ds = Dataset.create(TESTOUTPUT_DIR / "wk_dataset_with_symlink", scale=(1, 1, 1))
+    # symlink color layer
     symlink_layer = ds.add_symlink_layer(
         TESTOUTPUT_DIR / "simple_wk_dataset_copy" / "color"
+    )
+    # symlink segmentation layer
+    symlink_segmentation_layer = ds.add_symlink_layer(
+        TESTOUTPUT_DIR / "simple_wk_dataset_copy" / "segmentation"
     )
     mag = symlink_layer.get_mag("1")
 
     assert (TESTOUTPUT_DIR / "wk_dataset_with_symlink" / "color" / "1").exists()
+    assert (TESTOUTPUT_DIR / "wk_dataset_with_symlink" / "segmentation").exists()
 
-    assert len(ds.properties.data_layers) == 1
-    assert len(ds.properties.data_layers["color"].wkw_magnifications) == 1
+    assert len(ds.layers) == 2
+    assert len(ds.get_layer("color").mags) == 1
+
+    assert cast(SegmentationLayer, symlink_segmentation_layer).largest_segment_id == 999
 
     # write data in symlink layer
     write_data = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
@@ -1448,7 +1447,9 @@ def test_dataset_view_configuration(tmp_path: Path) -> None:
     assert default_view_configuration.rotation == None
 
     # Test if only the set parameters are stored in the properties
-    assert ds1.properties.default_view_configuration == {"fourBit": True}
+    with open(ds1.path/Properties.FILE_NAME) as f:
+        properties = json.load(f)
+        assert properties["defaultViewConfiguration"] == {"fourBit": True}
 
     ds1.set_view_configuration(
         DatasetViewConfiguration(
@@ -1487,31 +1488,32 @@ def test_dataset_view_configuration(tmp_path: Path) -> None:
     assert default_view_configuration.rotation == (1, 2, 3)
 
     # Test camel case
-    view_configuration_dict = ds2.properties.default_view_configuration
-    assert view_configuration_dict is not None
-    for k in view_configuration_dict.keys():
-        assert _snake_to_camel_case(k) == k
+    with open(ds1.path/Properties.FILE_NAME) as f:
+        properties = json.load(f)
+        view_configuration_dict = properties["defaultViewConfiguration"]
+        for k in view_configuration_dict.keys():
+            assert _snake_to_camel_case(k) == k
 
 
 def test_layer_view_configuration(tmp_path: Path) -> None:
     ds1 = Dataset.create(tmp_path, scale=(2, 2, 1))
     layer1 = ds1.add_layer("color", LayerCategories.COLOR_TYPE)
-    default_view_configuration = layer1.get_view_configuration()
+    default_view_configuration = layer1.default_view_configuration
     assert default_view_configuration is None
 
-    layer1.set_view_configuration(LayerViewConfiguration(color=(255, 0, 0)))
-    default_view_configuration = layer1.get_view_configuration()
+    layer1.default_view_configuration = LayerViewConfiguration(color=(255, 0, 0))
+    default_view_configuration = layer1.default_view_configuration
     assert default_view_configuration is not None
     assert default_view_configuration.color == (255, 0, 0)
     assert default_view_configuration.alpha is None
     assert default_view_configuration.intensity_range is None
     assert default_view_configuration.is_inverted is None
     # Test if only the set parameters are stored in the properties
-    assert ds1.properties.data_layers["color"].default_view_configuration == {
-        "color": (255, 0, 0)
-    }
+    with open(ds1.path/Properties.FILE_NAME) as f:
+        properties = json.load(f)
+        assert properties["dataLayers"][0]["defaultViewConfiguration"] == {"color": [255, 0, 0]}
 
-    layer1.set_view_configuration(
+    layer1.default_view_configuration = (
         LayerViewConfiguration(
             color=(255, 0, 0),
             alpha=1.0,
@@ -1520,7 +1522,7 @@ def test_layer_view_configuration(tmp_path: Path) -> None:
             is_inverted=True,
         )
     )
-    default_view_configuration = layer1.get_view_configuration()
+    default_view_configuration = layer1.default_view_configuration
     assert default_view_configuration is not None
     assert default_view_configuration.color == (255, 0, 0)
     assert default_view_configuration.alpha == 1.0
@@ -1530,7 +1532,7 @@ def test_layer_view_configuration(tmp_path: Path) -> None:
 
     # Test if the data is persisted to disk
     ds2 = Dataset(tmp_path)
-    default_view_configuration = ds2.get_layer("color").get_view_configuration()
+    default_view_configuration = ds2.get_layer("color").default_view_configuration
     assert default_view_configuration is not None
     assert default_view_configuration.color == (255, 0, 0)
     assert default_view_configuration.alpha == 1.0
@@ -1539,12 +1541,11 @@ def test_layer_view_configuration(tmp_path: Path) -> None:
     assert default_view_configuration.min == 55.0
 
     # Test camel case
-    view_configuration_dict = ds2.properties.data_layers[
-        "color"
-    ].default_view_configuration
-    assert view_configuration_dict is not None
-    for k in view_configuration_dict.keys():
-        assert _snake_to_camel_case(k) == k
+    with open(ds2.path/Properties.FILE_NAME) as f:
+        properties = json.load(f)
+        view_configuration_dict = properties["dataLayers"][0]["defaultViewConfiguration"]
+        for k in view_configuration_dict.keys():
+            assert _snake_to_camel_case(k) == k
 
 
 def test_get_largest_segment_id(tmp_path: Path) -> None:
@@ -1624,10 +1625,13 @@ def test_add_copy_layer(tmp_path: Path) -> None:
     original_color_layer.add_mag(1).write(
         offset=(10, 20, 30), data=(np.random.rand(32, 64, 128) * 255).astype(np.uint8)
     )
+    other_ds.add_layer("segmentations", LayerCategories.SEGMENTATION_TYPE, largest_segment_id=999)
 
     # Copies the "color" layer from a different dataset
     ds.add_copy_layer(tmp_path / "other_ds" / "color")
-    assert len(ds.layers) == 1
+    ds.add_copy_layer(tmp_path / "other_ds" / "segmentations")
+    assert len(ds.layers) == 2
+    assert cast(SegmentationLayer, ds.get_layer("segmentations")).largest_segment_id == 999
     color_layer = ds.get_layer("color")
     assert color_layer.get_bounding_box() == BoundingBox(
         topleft=(10, 20, 30), size=(32, 64, 128)
@@ -1660,8 +1664,6 @@ def test_rename_layer(tmp_path: Path) -> None:
 
     assert not (tmp_path / "ds" / "color").exists()
     assert (tmp_path / "ds" / "color2").exists()
-    assert "color2" in ds.properties.data_layers.keys()
-    assert "color2" == ds.properties.data_layers["color2"].name
     assert "color2" in ds.layers.keys()
     assert "color" not in ds.layers.keys()
 
