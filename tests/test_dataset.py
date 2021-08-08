@@ -1722,3 +1722,23 @@ def test_add_copy_layer(tmp_path: Path) -> None:
 
     # Test if the changes of the properties are persisted on disk by opening it again
     assert "color" in Dataset(tmp_path / "ds").layers.keys()
+
+
+def test_rename_layer(tmp_path: Path) -> None:
+    ds = Dataset.create(tmp_path / "ds", scale=(1, 1, 1))
+    layer = ds.add_layer("color", LayerCategories.COLOR_TYPE)
+    mag = layer.add_mag(1)
+    write_data = (np.random.rand(10, 20, 30) * 255).astype(np.uint8)
+    mag.write(data=write_data)
+
+    layer.rename("color2")
+
+    assert not (tmp_path / "ds" / "color").exists()
+    assert (tmp_path / "ds" / "color2").exists()
+    assert "color2" in ds.properties.data_layers.keys()
+    assert "color2" == ds.properties.data_layers["color2"].name
+    assert "color2" in ds.layers.keys()
+    assert "color" not in ds.layers.keys()
+
+    # The "mag" object which was created before renaming the layer is still valid
+    assert np.array_equal(mag.read()[0], write_data)
