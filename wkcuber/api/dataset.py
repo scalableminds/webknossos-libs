@@ -1,46 +1,77 @@
+import copy
 import json
-import operator
 import shutil
 from argparse import Namespace
-from dataclasses import dataclass, asdict
 from shutil import rmtree
 from os import makedirs
 from os.path import join, normpath, basename
 from pathlib import Path
-from typing import Tuple, Union, Dict, Any, Optional, cast, List
+from types import TracebackType
+from typing import Tuple, Union, Dict, Any, Optional, cast, Callable, Type
 
-import attr
-import cattr
 import numpy as np
 import os
-import re
 
 import wkw
-from cattr import override
-from cattr.gen import make_dict_unstructure_fn
-
-from wkcuber.mag import Mag
-from wkcuber.api.properties.layer_properties import (
-    properties_floating_type_to_python_type,
+from wkcuber.api.converter import (
+    dataset_converter,
+    DatasetProperties,
     SegmentationLayerProperties,
-    LayerProperties, _extract_num_channels,
+    LayerProperties,
+    layer_properties_converter,
+    DatasetViewConfiguration,
+    _extract_num_channels,
+    properties_floating_type_to_python_type,
 )
 from wkcuber.api.bounding_box import BoundingBox
-from wkcuber.utils import get_executor_for_args, _snake_to_camel_case, _camel_to_snake_case, CamelCaseAttrConverter
+from wkcuber.utils import get_executor_for_args
 
-from wkcuber.api.properties.dataset_properties import Properties
-from wkcuber.api.layer import Layer, LayerCategories, SegmentationLayer, _normalize_dtype_per_channel, \
-    _dtype_per_channel_to_dtype_per_layer, _normalize_dtype_per_layer, _dtype_per_layer_to_dtype_per_channel, \
-    LayerViewConfiguration
+from wkcuber.api.layer import (
+    Layer,
+    LayerCategories,
+    SegmentationLayer,
+    _normalize_dtype_per_channel,
+    _dtype_per_channel_to_dtype_per_layer,
+    _normalize_dtype_per_layer,
+    _dtype_per_layer_to_dtype_per_channel,
+    _dtype_per_channel_to_element_class,
+)
 from wkcuber.api.view import View
 
 DEFAULT_BIT_DEPTH = 8
+
+PROPERTIES_FILE_NAME = "datasource-properties.json"
 
 
 def _copy_job(args: Tuple[View, View, int]) -> None:
     (source_view, target_view, _) = args
     # Copy the data form one view to the other in a buffered fashion
     target_view.write(source_view.read())
+
+
+class _CacheState:
+    def __init__(self, callback: Callable):
+        self.currently_caching = False
+        self.callback_fn = callback
+        self._call_callback_on_error = True
+
+    def __enter__(self) -> None:
+        if self.currently_caching:
+            raise RuntimeError(
+                "Cannot enter CacheState: Exporting the properties as json is already postponed."
+            )
+        self.currently_caching = True
+
+    def __exit__(
+        self,
+        _type: Optional[Type[BaseException]],
+        _value: Optional[BaseException],
+        _tb: Optional[TracebackType],
+    ) -> None:
+        self.currently_caching = False
+        if _type is None or self._call_callback_on_error:
+            self.callback_fn()
+        self._call_callback_on_error = True
 
 
 class Dataset:
@@ -103,17 +134,17 @@ class Dataset:
         The `dataset_path` refers to the top level directory of the dataset (excluding layer or magnification names).
         """
 
+        self._cache_state = _CacheState(self._export_as_json)
+
         self.path = Path(dataset_path)
         """Location of the dataset"""
 
-        with open(self.path / Properties.FILE_NAME) as datasource_properties:
+        with open(self.path / PROPERTIES_FILE_NAME) as datasource_properties:
             data = json.load(datasource_properties)
 
-            self._team: str = data["id"]["team"]
-            self._name: str = data["id"]["name"]
-            self._scale: Tuple[float, float, float] = data["scale"]
-            #self._default_view_configuration: Optional[DatasetViewConfiguration] = cattr.structure(data["defaultViewConfiguration"], DatasetViewConfiguration) if "defaultViewConfiguration" in data else None
-            self._default_view_configuration: Optional[DatasetViewConfiguration] = DatasetViewConfiguration._from_json(data["defaultViewConfiguration"]) if "defaultViewConfiguration" in data else None
+            self._properties: DatasetProperties = dataset_converter.structure(
+                data, DatasetProperties
+            )
 
             """
             The metadata from the `datasource-properties.json`. 
@@ -121,36 +152,24 @@ class Dataset:
             """
 
             self._layers: Dict[str, Layer] = {}
-            self._data_format = "wkw"
-
             # construct self.layer
-            for layer_dict in data["dataLayers"]:
+            for layer_properties in self._properties.data_layers:
                 num_channels = _extract_num_channels(
-                    layer_dict.get("num_channels"),
-                    dataset_path,
-                    layer_dict["name"],
-                    layer_dict["wkwResolutions"][0]
-                    if len(layer_dict["wkwResolutions"]) > 0
+                    layer_properties.num_channels,
+                    Path(dataset_path),
+                    layer_properties.name,
+                    layer_properties.wkw_resolutions[0].resolution
+                    if len(layer_properties.wkw_resolutions) > 0
                     else None,
                 )
+                layer_properties.num_channels = num_channels
 
-                layer = self._setup_layer(
-                    layer_dict["name"],
-                    layer_dict["category"],
-                    dtype_per_layer=layer_dict["elementClass"],
-                    num_channels=num_channels,
-                    default_view_configuration=LayerViewConfiguration._from_json(layer_dict["defaultViewConfiguration"]) if "defaultViewConfiguration" in layer_dict else None,
-                    largest_segment_id=layer_dict.get("largestSegmentId", None),
-                    mappings=layer_dict.get("mappings", None),
-                )
+                layer = self._initialize_layer_from_properties(layer_properties)
+                self._layers[layer_properties.name] = layer
 
-                bbox = BoundingBox.from_wkw(layer_dict["boundingBox"])
-                layer._bounding_box = bbox
-
-                for mag_dict in layer_dict["wkwResolutions"]:
-                    layer._setup_mag(
-                        Mag(mag_dict["resolution"]).to_layer_name()
-                    )
+            # Exporting the properties at this point is not necessary because the dataset didn't change.
+            # However in case there is something broken (for some unknown reason), it is better to fail early
+            self._export_as_json()
 
     @property
     def layers(self) -> Dict[str, Layer]:
@@ -158,29 +177,6 @@ class Dataset:
         Getter for dictionary containing all layers.
         """
         return self._layers
-
-    @classmethod
-    def _create_with_properties(cls, properties: Properties) -> "Dataset":
-        dataset_dir = properties.path.parent
-        if dataset_dir.exists():
-            assert (
-                dataset_dir.is_dir()
-            ), f"Creation of Dataset at {dataset_dir} failed, because a file already exists at this path."
-            assert not os.listdir(
-                dataset_dir
-            ), f"Creation of Dataset at {dataset_dir} failed, because a non-empty folder already exists at this path."
-
-        # create directories on disk and write datasource-properties.json
-        try:
-            makedirs(dataset_dir, exist_ok=True)
-            properties._export_as_json()
-        except OSError as e:
-            raise type(e)(
-                "Creation of Dataset {} failed. ".format(dataset_dir) + repr(e)
-            )
-
-        # initialize object
-        return cls(dataset_dir)
 
     def get_layer(self, layer_name: str) -> Layer:
         """
@@ -216,20 +212,7 @@ class Dataset:
 
         This function raises an `IndexError` if the specified `layer_name` already exists.
         """
-        self._setup_layer(layer_name, category, dtype_per_layer, dtype_per_channel, num_channels, **kwargs)
-        self._export_as_json()
-        return self.layers[layer_name]
 
-    def _setup_layer(
-        self,
-        layer_name: str,
-        category: str,
-        dtype_per_layer: Union[str, np.dtype, type] = None,
-        dtype_per_channel: Union[str, np.dtype, type] = None,
-        num_channels: int = None,
-        default_view_configuration: Optional[LayerViewConfiguration] = None,
-        **kwargs: Any,
-    ) -> Layer:
         if "dtype" in kwargs:
             raise ValueError(
                 f"Called Dataset.add_layer with 'dtype'={kwargs['dtype']}. This parameter is deprecated. Use 'dtype_per_layer' or 'dtype_per_channel' instead."
@@ -246,9 +229,6 @@ class Dataset:
                 dtype_per_channel, dtype_per_channel
             )
             dtype_per_channel = _normalize_dtype_per_channel(dtype_per_channel)
-            dtype_per_layer = _dtype_per_channel_to_dtype_per_layer(
-                dtype_per_channel, num_channels
-            )
         elif dtype_per_layer is not None:
             dtype_per_layer = properties_floating_type_to_python_type.get(
                 dtype_per_layer, dtype_per_layer
@@ -258,7 +238,6 @@ class Dataset:
                 dtype_per_layer, num_channels
             )
         else:
-            dtype_per_layer = "uint" + str(DEFAULT_BIT_DEPTH * num_channels)
             dtype_per_channel = np.dtype("uint" + str(DEFAULT_BIT_DEPTH))
 
         if layer_name in self.layers.keys():
@@ -268,16 +247,42 @@ class Dataset:
                 )
             )
 
-        self._layers[layer_name] = self._create_layer(
-            layer_name,
-            dtype_per_channel,
-            num_channels,
-            category,
-            default_view_configuration,
-            kwargs.get("largest_segment_id"),
-            kwargs.get("mappings")
+        layer_properties = LayerProperties(
+            name=layer_name,
+            category=category,
+            bounding_box=BoundingBox((-1, -1, -1), (-1, -1, -1)),
+            element_class=_dtype_per_channel_to_element_class(
+                dtype_per_channel, num_channels
+            ),
+            wkw_resolutions=[],
+            num_channels=num_channels,
+            data_format="wkw",
         )
 
+        if category == LayerCategories.COLOR_TYPE:
+            self._layers[layer_name] = Layer(self, layer_properties)
+        elif category == LayerCategories.SEGMENTATION_TYPE:
+            assert (
+                "largest_segment_id" in kwargs
+            ), f"Failed to create segmentation layer {layer_name}: the parameter 'largest_segment_id' was not specified, which is necessary for segmentation layers."
+
+            segmentation_layer_properties: SegmentationLayerProperties = (
+                SegmentationLayerProperties(
+                    **layer_properties_converter.unstructure(
+                        layer_properties
+                    ),  # use all attributes from LayerProperties
+                    largest_segment_id=kwargs["largest_segment_id"],
+                )
+            )
+            if "mappings" in kwargs:
+                segmentation_layer_properties.mappings = kwargs["mappings"]
+            self._layers[layer_name] = SegmentationLayer(
+                self, segmentation_layer_properties
+            )
+
+        self._properties.data_layers += [self.layers[layer_name]._properties]
+
+        self._export_as_json()
         return self.layers[layer_name]
 
     def get_or_add_layer(
@@ -404,20 +409,11 @@ class Dataset:
             else foreign_layer_path
         )
         os.symlink(foreign_layer_symlink_path, join(self.path, layer_name))
-
         original_layer = Dataset(foreign_layer_path.parent).get_layer(layer_name)
-
-        self._layers[layer_name] = self._create_layer(
-            layer_name,
-            original_layer.dtype_per_channel,
-            original_layer.num_channels,
-            original_layer.category,
-            original_layer.default_view_configuration
+        self._layers[layer_name] = self._initialize_layer_from_properties(
+            copy.deepcopy(original_layer._properties)
         )
-        self._layers[layer_name].set_bounding_box(original_layer.get_bounding_box().topleft, original_layer.get_bounding_box().size)
-
-        for mag in original_layer.mags.keys():
-            self.get_layer(layer_name)._setup_mag(mag)
+        self._properties.data_layers += [self._layers[layer_name]._properties]
 
         self._export_as_json()
         return self.layers[layer_name]
@@ -436,20 +432,11 @@ class Dataset:
             )
 
         shutil.copytree(foreign_layer_path, join(self.path, layer_name))
-
         original_layer = Dataset(foreign_layer_path.parent).get_layer(layer_name)
-
-        self._layers[layer_name] = self._create_layer(
-            layer_name,
-            original_layer.dtype_per_channel,
-            original_layer.num_channels,
-            original_layer.category,
-            original_layer.default_view_configuration
+        self._layers[layer_name] = self._initialize_layer_from_properties(
+            copy.deepcopy(original_layer._properties)
         )
-        self._layers[layer_name].set_bounding_box(original_layer.get_bounding_box().topleft, original_layer.get_bounding_box().size)
-
-        for mag in original_layer.mags.keys():
-            self.get_layer(layer_name)._setup_mag(mag)
+        self._properties.data_layers += [self._layers[layer_name]._properties]
 
         self._export_as_json()
         return self.layers[layer_name]
@@ -470,45 +457,31 @@ class Dataset:
 
         new_dataset_path = Path(new_dataset_path)
         if scale is None:
-            scale = self._scale
+            scale = self.scale
         new_ds = Dataset.create(new_dataset_path, scale=scale)
 
         with get_executor_for_args(args) as executor:
             for layer_name, layer in self.layers.items():
-                largest_segment_id = None
-                if (
-                    self.get_layer(layer_name).category
-                    == LayerCategories.SEGMENTATION_TYPE
-                ):
-                    largest_segment_id = cast(
-                        SegmentationLayer,
-                        self.get_layer(layer_name),
-                    ).largest_segment_id
-                    # TODO: mappings
-                target_layer = new_ds.add_layer(
-                    layer_name,
-                    self.get_layer(layer_name).category,
-                    dtype_per_channel=layer.dtype_per_channel,
-                    num_channels=layer.num_channels,
-                    largest_segment_id=largest_segment_id,
+                new_ds_properties = copy.deepcopy(
+                    self.get_layer(layer_name)._properties
                 )
+                # Initializing a layer with non-empty wkw_resolutions requires that the files on disk already exist.
+                # The MagViews are added manually afterwards
+                new_ds_properties.wkw_resolutions = []
+                target_layer = new_ds._initialize_layer_from_properties(
+                    new_ds_properties
+                )
+                new_ds._layers[layer_name] = layer
+                new_ds._properties.data_layers += [target_layer._properties]
 
                 bbox = self.get_layer(layer_name).get_bounding_box()
 
                 for mag, mag_view in layer.mags.items():
-                    block_len = (
-                        block_len
-                        if block_len is not None
-                        else mag_view.header.block_len
+                    block_len = block_len or mag_view.header.block_len
+                    compress = compress or (
+                        mag_view.header.block_type != wkw.Header.BLOCK_TYPE_RAW
                     )
-                    compress = (
-                        compress
-                        if compress is not None
-                        else mag_view.header.block_type != wkw.Header.BLOCK_TYPE_RAW
-                    )
-                    file_len = (
-                        file_len if file_len is not None else mag_view.header.file_len
-                    )
+                    file_len = file_len or mag_view.header.file_len
                     target_mag = target_layer.add_mag(
                         mag, block_len, file_len, compress
                     )
@@ -519,13 +492,12 @@ class Dataset:
                     target_mag._size = cast(
                         Tuple[int, int, int],
                         tuple(
-                            bbox
-                            .align_with_mag(mag, ceil=True)
-                            .in_mag(mag)
-                            .bottomright
+                            bbox.align_with_mag(mag, ceil=True).in_mag(mag).bottomright
                         ),
                     )
-                    target_mag.layer.set_bounding_box(offset=bbox.topleft, size=bbox.size)
+                    target_mag.layer.set_bounding_box(
+                        offset=bbox.topleft, size=bbox.size
+                    )
 
                     # The data gets written to the target_mag.
                     # Therefore, the chunk size is determined by the target_mag to prevent concurrent writes
@@ -544,11 +516,7 @@ class Dataset:
             or category == LayerCategories.SEGMENTATION_TYPE
         )
 
-        layers = [
-            layer
-            for layer in self.layers.values()
-            if category == layer.category
-        ]
+        layers = [layer for layer in self.layers.values() if category == layer.category]
 
         if len(layers) == 1:
             return layers[0]
@@ -562,12 +530,18 @@ class Dataset:
             )
 
     @property
+    def scale(self) -> Tuple[float, float, float]:
+        return self._properties.scale
+
+    @property
     def name(self) -> str:
-        return self._name
+        return self._properties.id["name"]
 
     @name.setter
     def name(self, name: str) -> None:
-        self._name = name
+        current_id = self._properties.id
+        current_id["name"] = name
+        self._properties.id = current_id
         self._export_as_json()
 
     @classmethod
@@ -581,7 +555,7 @@ class Dataset:
         Creates a new dataset and the associated `datasource-properties.json`.
         """
         dataset_path = Path(dataset_path)
-        name = name if name is not None else basename(normpath(dataset_path))
+        name = name or basename(normpath(dataset_path))
 
         if dataset_path.exists():
             assert (
@@ -605,7 +579,7 @@ class Dataset:
             "scale": scale,
             "dataLayers": [],
         }
-        with open(dataset_path/Properties.FILE_NAME, "w") as outfile:
+        with open(dataset_path / PROPERTIES_FILE_NAME, "w") as outfile:
             json.dump(data, outfile, indent=4, separators=(",", ": "))
 
         # Initialize object
@@ -626,12 +600,12 @@ class Dataset:
         """
         dataset_path = Path(dataset_path)
         if (
-            dataset_path / Properties.FILE_NAME
+            dataset_path / PROPERTIES_FILE_NAME
         ).exists():  # use the properties file to check if the Dataset exists
             ds = Dataset(dataset_path)
-            assert tuple(ds._scale) == tuple(
+            assert tuple(ds.scale) == tuple(
                 scale
-            ), f"Cannot get_or_create Dataset: The dataset {dataset_path} already exists, but the scales do not match ({ds._scale} != {scale})"
+            ), f"Cannot get_or_create Dataset: The dataset {dataset_path} already exists, but the scales do not match ({ds.scale} != {scale})"
             if name is not None:
                 assert (
                     ds.name == name
@@ -640,167 +614,33 @@ class Dataset:
         else:
             return cls.create(dataset_path, scale, name)
 
-    def _create_layer(
-        self,
-        layer_name: str,
-        dtype_per_channel: np.dtype,
-        num_channels: int,
-        category: str,
-        default_view_configuration: Optional[LayerViewConfiguration],
-        largest_segment_id: Optional[int] = None,
-        mappings: Optional[List[str]] = None
-    ) -> Layer:
-        if category == LayerCategories.COLOR_TYPE:
-            return Layer(layer_name, self, dtype_per_channel, num_channels, BoundingBox((-1,-1,-1), (-1,-1,-1)), default_view_configuration)
-        else:
-            return SegmentationLayer(layer_name, self, dtype_per_channel, num_channels, BoundingBox((-1,-1,-1), (-1,-1,-1)), default_view_configuration, largest_segment_id if largest_segment_id is not None else -1, mappings)
-
     def set_view_configuration(
-        self, view_configuration: "DatasetViewConfiguration"
+        self, view_configuration: DatasetViewConfiguration
     ) -> None:
-        self._default_view_configuration = view_configuration
+        self._properties.default_view_configuration = view_configuration
         self._export_as_json()  # update properties on disk
 
-    def get_view_configuration(self) -> Optional["DatasetViewConfiguration"]:
-        #view_configuration_dict = self.properties.default_view_configuration
-        #if view_configuration_dict is None:
-        #    return None
-
-        #return DatasetViewConfiguration(
-        #    four_bit=view_configuration_dict.get("fourBit"),
-        #    interpolation=view_configuration_dict.get("interpolation"),
-        #    render_missing_data_black=view_configuration_dict.get(
-        #        "renderMissingDataBlack"
-        #    ),
-        #    loading_strategy=view_configuration_dict.get("loadingStrategy"),
-        #    segmentation_pattern_opacity=view_configuration_dict.get(
-        #        "segmentationPatternOpacity"
-        #    ),
-        #    zoom=view_configuration_dict.get("zoom"),
-        #    position=cast(
-        #        Tuple[int, int, int], tuple(view_configuration_dict["position"])
-        #    )
-        #    if "position" in view_configuration_dict
-        #    else None,
-        #    rotation=cast(
-        #        Tuple[int, int, int], tuple(view_configuration_dict["rotation"])
-        #    )
-        #    if "rotation" in view_configuration_dict
-        #    else None,
-        #)
-
-        return self._default_view_configuration
+    def get_view_configuration(self) -> Optional[DatasetViewConfiguration]:
+        return self._properties.default_view_configuration
 
     def __repr__(self) -> str:
         return repr("Dataset(%s)" % self.path)
 
     def _export_as_json(self) -> None:
-        data = {
-            "id": {"name": self.name, "team": self._team},
-            "scale": self._scale,
-            "dataLayers": [
-                layer._to_json()
-                for layer in self.layers.values()
-            ],
-        }
-        if self._default_view_configuration is not None:
-
-            data["defaultViewConfiguration"] = self._default_view_configuration._to_json()
-            '''
-            # TODO: remove
-            c = cattr.Converter()
-            c.register_unstructure_hook( # use register_unstructure_hook_func
-                DatasetViewConfiguration,  # attrs.has
-                make_dict_unstructure_fn(
-                    DatasetViewConfiguration,
-                    c,
-                    **{a.name:override(omit_if_default=True, rename=_snake_to_camel_case(a.name)) for a in attr.fields(DatasetViewConfiguration)}
-                )
+        with open(self.path / PROPERTIES_FILE_NAME, "w") as outfile:
+            json.dump(
+                dataset_converter.unstructure(self._properties),
+                outfile,
+                indent=4,
+                separators=(",", ": "),
             )
-            data["defaultViewConfiguration"] = c.unstructure(self._default_view_configuration)
-            '''
 
-
-        with open(self.path/Properties.FILE_NAME, "w") as outfile:
-            json.dump(data, outfile, indent=4, separators=(",", ": "))
-
-
-class DatasetViewConfiguration:
-    """
-    Stores information on how the dataset is shown in webknossos by default.
-    """
-
-    def __init__(
-        self,
-        four_bit: Optional[bool] = None,
-        interpolation: Optional[bool] = None,
-        render_missing_data_black: Optional[bool] = None,
-        loading_strategy: Optional[str] = None,
-        segmentation_pattern_opacity: Optional[int] = None,
-        zoom: Optional[float] = None,
-        position: Optional[Tuple[int, int, int]] = None,
-        rotation: Optional[Tuple[int, int, int]] = None,
-    ):
-        self.four_bit = four_bit
-        self.interpolation = interpolation
-        self.render_missing_data_black = render_missing_data_black
-        self.loading_strategy = loading_strategy
-        self.segmentation_pattern_opacity = segmentation_pattern_opacity
-        self.zoom = zoom
-        self.position = position
-        self.rotation = rotation
-
-    @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> "DatasetViewConfiguration":
-        return cls(
-            four_bit=data.get("fourBit", None),
-            interpolation=data.get("interpolation", None),
-            render_missing_data_black=data.get("renderMissingDataBlack", None),
-            loading_strategy=data.get("loadingStrategy", None),
-            segmentation_pattern_opacity=data.get("segmentationPatternOpacity", None),
-            zoom=data.get("zoom", None),
-            position=cast(Tuple[int, int, int], tuple(data["position"])) if "position" in data else None,
-            rotation=cast(Tuple[int, int, int], tuple(data["rotation"])) if "rotation" in data else None,
-        )
-
-    def _to_json(self) -> Dict[str, Any]:
-        return {
-            _snake_to_camel_case(k): v
-            for k, v in vars(self).items()
-            if v is not None
-        }
-
-
-
-'''
-@attr.s
-class DatasetViewConfiguration:
-    """
-    Stores information on how the dataset is shown in webknossos by default.
-    """
-    four_bit: Optional[bool] = attr.ib(default=None)
-    interpolation: Optional[bool] = attr.ib(default=None)
-    render_missing_data_black: Optional[bool] = attr.ib(default=None,)
-    loading_strategy: Optional[str] = attr.ib(default=None)
-    segmentation_pattern_opacity: Optional[int] = attr.ib(default=None)
-    zoom: Optional[float] = attr.ib(default=None)
-    position: Optional[Tuple[int, int, int]] = attr.ib(default=None)
-    rotation: Optional[Tuple[int, int, int]] = attr.ib(default=None)
-'''
-
-'''
-
-@dataclass()
-class DatasetViewConfiguration:
-    """
-    Stores information on how the dataset is shown in webknossos by default.
-    """
-    four_bit: Optional[bool] = None
-    interpolation: Optional[bool] = None
-    render_missing_data_black: Optional[bool] = None
-    loading_strategy: Optional[str] = None
-    segmentation_pattern_opacity: Optional[int] = None
-    zoom: Optional[float] = None
-    position: Optional[Tuple[int, int, int]] = None
-    rotation: Optional[Tuple[int, int, int]] = None
-'''
+    def _initialize_layer_from_properties(self, properties: LayerProperties) -> Layer:
+        if properties.category == LayerCategories.COLOR_TYPE:
+            return Layer(self, properties)
+        elif properties.category == LayerCategories.SEGMENTATION_TYPE:
+            return SegmentationLayer(self, properties)
+        else:
+            raise RuntimeError(
+                f"Failed to initialize layer: the specified category ({properties.category}) does not exist."
+            )

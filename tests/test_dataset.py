@@ -15,7 +15,14 @@ from shutil import rmtree, copytree
 from wkw import wkw
 from wkw.wkw import WKWException
 
-from wkcuber.api.dataset import Dataset, DatasetViewConfiguration
+from wkcuber.api.converter import (
+    dataset_converter,
+    DatasetProperties,
+    _snake_to_camel_case,
+    SegmentationLayerProperties,
+    DatasetViewConfiguration,
+)
+from wkcuber.api.dataset import Dataset, PROPERTIES_FILE_NAME
 from wkcuber.api.bounding_box import BoundingBox
 from os import makedirs
 
@@ -26,12 +33,10 @@ from wkcuber.api.layer import (
     LayerViewConfiguration,
 )
 from wkcuber.api.mag_view import MagView
-from wkcuber.api.properties.dataset_properties import Properties
-from wkcuber.api.properties.layer_properties import SegmentationLayerProperties
 from wkcuber.api.view import View
 from wkcuber.compress import compress_mag_inplace
 from wkcuber.mag import Mag
-from wkcuber.utils import get_executor_for_args, named_partial, _snake_to_camel_case
+from wkcuber.utils import get_executor_for_args, named_partial
 
 TESTDATA_DIR = Path("testdata")
 TESTOUTPUT_DIR = Path("testoutput")
@@ -176,8 +181,12 @@ def test_create_dataset_with_explicit_header_fields() -> None:
     assert ds.get_layer("color").dtype_per_channel == "uint16"
     assert ds.get_layer("color").get_mag(1).header.block_len == 64
     assert ds.get_layer("color").get_mag(1).header.file_len == 64
-    assert ds.get_layer("color").get_mag("2-2-1").header.block_len == 32  # defaults are used
-    assert ds.get_layer("color").get_mag("2-2-1").header.file_len == 32  # defaults are used
+    assert (
+        ds.get_layer("color").get_mag("2-2-1").header.block_len == 32
+    )  # defaults are used
+    assert (
+        ds.get_layer("color").get_mag("2-2-1").header.file_len == 32
+    )  # defaults are used
 
 
 def test_open_dataset() -> None:
@@ -382,40 +391,15 @@ def test_read_padded_data() -> None:
     assert np.array_equal(data, np.zeros((3, 10, 10, 10)))
 
 
-def test_read_and_write_of_properties() -> None:
-    destination_path = TESTOUTPUT_DIR / "read_write_properties"
-    delete_dir(destination_path)
-    source_file_name = TESTDATA_DIR / "simple_wk_dataset" / "datasource-properties.json"
-    destination_file_name = destination_path / "datasource-properties.json"
-
-    imported_properties = Properties._from_json(source_file_name)
-    imported_properties._path = destination_file_name
-    makedirs(destination_path)
-    imported_properties._export_as_json()
-
-    with open(source_file_name) as source_stream:
-        source_data = json.load(source_stream)
-        with open(destination_file_name) as destination_stream:
-            destination_data = json.load(destination_stream)
-            assert source_data == destination_data
-
-
 def test_read_and_write_of_view_configuration() -> None:
-    destination_path = TESTOUTPUT_DIR / "read_write_view_configuration"
-    delete_dir(destination_path)
     source_file_name = TESTDATA_DIR / "simple_wk_dataset" / "datasource-properties.json"
-    destination_file_name = destination_path / "datasource-properties.json"
 
-    imported_properties = Properties._from_json(source_file_name)
-    imported_properties._path = destination_file_name
-    makedirs(destination_path)
-    imported_properties._export_as_json()
-
-    with open(source_file_name) as source_stream:
-        source_data = json.load(source_stream)
-        with open(destination_file_name) as destination_stream:
-            destination_data = json.load(destination_stream)
-            assert source_data == destination_data
+    with open(source_file_name, "r") as source_file:
+        source_data = json.load(source_file)
+        imported_properties = dataset_converter.structure(
+            source_data, DatasetProperties
+        )
+        assert source_data == dataset_converter.unstructure(imported_properties)
 
 
 def test_num_channel_mismatch_assertion() -> None:
@@ -513,7 +497,7 @@ def test_open_dataset_without_num_channels_in_properties() -> None:
         TESTOUTPUT_DIR / "old_wk_dataset" / "datasource-properties.json"
     ) as datasource_properties:
         data = json.load(datasource_properties)
-        assert data["dataLayers"][0].get("num_channels") == 1
+        assert data["dataLayers"][0].get("numChannels") == 1
 
 
 def test_largest_segment_id_requirement() -> None:
@@ -533,9 +517,7 @@ def test_largest_segment_id_requirement() -> None:
 
     ds = Dataset(path)
     assert (
-        cast(
-            SegmentationLayer, ds.get_layer("segmentation")
-        ).largest_segment_id
+        cast(SegmentationLayer, ds.get_layer("segmentation")).largest_segment_id
         == largest_segment_id
     )
 
@@ -549,34 +531,46 @@ def test_properties_with_segmentation() -> None:
 
     input_path = TESTOUTPUT_DIR / "complex_property_ds"
 
-    ds = Dataset(input_path)
+    with open(input_path / "datasource-properties.json", "r") as f:
+        data = json.load(f)
+        ds_properties = dataset_converter.structure(data, DatasetProperties)
 
-    # the attributes 'largest_segment_id' and 'mappings' only exist if it is a SegmentationLayer
-    segmentation_layer = cast(
-        SegmentationLayerProperties, ds.get_layer("segmentation")
-    )
-    assert segmentation_layer.largest_segment_id == 1000000000
-    assert segmentation_layer._mappings == [
-        "larger5um1",
-        "axons",
-        "astrocyte-ge-7",
-        "astrocyte",
-        "mitochondria",
-        "astrocyte-full",
-    ]
+        # the attributes 'largest_segment_id' and 'mappings' only exist if it is a SegmentationLayer
+        segmentation_layer = cast(
+            SegmentationLayerProperties,
+            [l for l in ds_properties.data_layers if l.name == "segmentation"][0],
+        )
+        assert segmentation_layer.largest_segment_id == 1000000000
+        assert segmentation_layer.mappings == [
+            "larger5um1",
+            "axons",
+            "astrocyte-ge-7",
+            "astrocyte",
+            "mitochondria",
+            "astrocyte-full",
+        ]
 
-    # Update the properties on disk (without changing the data)
-    ds._export_as_json()
+    with open(input_path / "datasource-properties.json", "w") as f:
+        # Update the properties on disk (without changing the data)
+        json.dump(
+            dataset_converter.unstructure(ds_properties),
+            f,
+            indent=4,
+            separators=(",", ": "),
+        )
 
     # validate if contents match
-    with open(TESTDATA_DIR / "complex_property_ds" / "datasource-properties.json") as input_properties:
+    with open(
+        TESTDATA_DIR / "complex_property_ds" / "datasource-properties.json"
+    ) as input_properties:
         input_data = json.load(input_properties)
 
-        with open(input_path / "datasource-properties.json") as output_properties:
+        with open(input_path / "datasource-properties.json", "r") as output_properties:
             output_data = json.load(output_properties)
             for layer in output_data["dataLayers"]:
                 # remove the num_channels because they are not part of the original json
-                del layer["num_channels"]
+                if "numChannels" in layer:
+                    del layer["numChannels"]
 
             assert input_data == output_data
 
@@ -1114,7 +1108,9 @@ def test_add_symlink_layer() -> None:
         TESTDATA_DIR / "simple_wk_dataset", TESTOUTPUT_DIR / "simple_wk_dataset_copy"
     )
     # Add an additional segmentation layer to the original dataset
-    Dataset(TESTOUTPUT_DIR / "simple_wk_dataset_copy").add_layer("segmentation", LayerCategories.SEGMENTATION_TYPE, largest_segment_id=999)
+    Dataset(TESTOUTPUT_DIR / "simple_wk_dataset_copy").add_layer(
+        "segmentation", LayerCategories.SEGMENTATION_TYPE, largest_segment_id=999
+    )
 
     original_mag = (
         Dataset(TESTOUTPUT_DIR / "simple_wk_dataset_copy")
@@ -1447,7 +1443,7 @@ def test_dataset_view_configuration(tmp_path: Path) -> None:
     assert default_view_configuration.rotation == None
 
     # Test if only the set parameters are stored in the properties
-    with open(ds1.path/Properties.FILE_NAME) as f:
+    with open(ds1.path / PROPERTIES_FILE_NAME) as f:
         properties = json.load(f)
         assert properties["defaultViewConfiguration"] == {"fourBit": True}
 
@@ -1488,7 +1484,7 @@ def test_dataset_view_configuration(tmp_path: Path) -> None:
     assert default_view_configuration.rotation == (1, 2, 3)
 
     # Test camel case
-    with open(ds1.path/Properties.FILE_NAME) as f:
+    with open(ds1.path / PROPERTIES_FILE_NAME) as f:
         properties = json.load(f)
         view_configuration_dict = properties["defaultViewConfiguration"]
         for k in view_configuration_dict.keys():
@@ -1509,18 +1505,18 @@ def test_layer_view_configuration(tmp_path: Path) -> None:
     assert default_view_configuration.intensity_range is None
     assert default_view_configuration.is_inverted is None
     # Test if only the set parameters are stored in the properties
-    with open(ds1.path/Properties.FILE_NAME) as f:
+    with open(ds1.path / PROPERTIES_FILE_NAME) as f:
         properties = json.load(f)
-        assert properties["dataLayers"][0]["defaultViewConfiguration"] == {"color": [255, 0, 0]}
+        assert properties["dataLayers"][0]["defaultViewConfiguration"] == {
+            "color": [255, 0, 0]
+        }
 
-    layer1.default_view_configuration = (
-        LayerViewConfiguration(
-            color=(255, 0, 0),
-            alpha=1.0,
-            min=55.0,
-            intensity_range=(-12.3e1, 123),
-            is_inverted=True,
-        )
+    layer1.default_view_configuration = LayerViewConfiguration(
+        color=(255, 0, 0),
+        alpha=1.0,
+        min=55.0,
+        intensity_range=(-12.3e1, 123),
+        is_inverted=True,
     )
     default_view_configuration = layer1.default_view_configuration
     assert default_view_configuration is not None
@@ -1541,9 +1537,11 @@ def test_layer_view_configuration(tmp_path: Path) -> None:
     assert default_view_configuration.min == 55.0
 
     # Test camel case
-    with open(ds2.path/Properties.FILE_NAME) as f:
+    with open(ds2.path / PROPERTIES_FILE_NAME) as f:
         properties = json.load(f)
-        view_configuration_dict = properties["dataLayers"][0]["defaultViewConfiguration"]
+        view_configuration_dict = properties["dataLayers"][0][
+            "defaultViewConfiguration"
+        ]
         for k in view_configuration_dict.keys():
             assert _snake_to_camel_case(k) == k
 
@@ -1625,13 +1623,17 @@ def test_add_copy_layer(tmp_path: Path) -> None:
     original_color_layer.add_mag(1).write(
         offset=(10, 20, 30), data=(np.random.rand(32, 64, 128) * 255).astype(np.uint8)
     )
-    other_ds.add_layer("segmentations", LayerCategories.SEGMENTATION_TYPE, largest_segment_id=999)
+    other_ds.add_layer(
+        "segmentation", LayerCategories.SEGMENTATION_TYPE, largest_segment_id=999
+    )
 
     # Copies the "color" layer from a different dataset
     ds.add_copy_layer(tmp_path / "other_ds" / "color")
-    ds.add_copy_layer(tmp_path / "other_ds" / "segmentations")
+    ds.add_copy_layer(tmp_path / "other_ds" / "segmentation")
     assert len(ds.layers) == 2
-    assert cast(SegmentationLayer, ds.get_layer("segmentations")).largest_segment_id == 999
+    assert (
+        cast(SegmentationLayer, ds.get_layer("segmentation")).largest_segment_id == 999
+    )
     color_layer = ds.get_layer("color")
     assert color_layer.get_bounding_box() == BoundingBox(
         topleft=(10, 20, 30), size=(32, 64, 128)

@@ -17,6 +17,7 @@ from wkw import wkw
 import numpy as np
 
 from wkcuber.api.bounding_box import BoundingBox
+from wkcuber.api.converter import MagViewProperties
 from wkcuber.compress_utils import compress_file_job
 from wkcuber.utils import (
     convert_mag1_size,
@@ -93,6 +94,9 @@ class MagView(View):
 
         self._layer = layer
         self._name = name
+        self._properties: MagViewProperties = MagViewProperties(
+            Mag(self.name), self.header.block_len * self.header.file_len
+        )
 
         if create:
             wkw.Dataset.create(
@@ -199,7 +203,7 @@ class MagView(View):
 
         view_offset = cast(
             Tuple[int, int, int],
-            tuple(offset if offset is not None else tuple(bb.topleft)),
+            tuple(offset or tuple(bb.topleft)),
         )
 
         if size is None:
@@ -328,18 +332,13 @@ class MagView(View):
             )
 
     def _get_file_dimensions(self) -> Tuple[int, int, int]:
-        return cast(
-            Tuple[int, int, int], (self.header.file_len * self.header.block_len,) * 3
-        )
+        return cast(Tuple[int, int, int], (self._properties.cube_length,) * 3)
 
     def __repr__(self) -> str:
         return repr(
             "MagView(name=%s, global_offset=%s, size=%s)"
             % (self.name, self.global_offset, self.size)
         )
-
-    def _to_json(self) -> dict:
-        return {"resolution": Mag(self.name).to_array(), "cubeLength": self.header.block_len * self.header.file_len}
 
 
 def _extract_file_index(file_path: Path) -> Tuple[int, int, int]:

@@ -4,7 +4,6 @@ import operator
 import os
 import re
 from argparse import Namespace
-from dataclasses import dataclass, asdict
 from shutil import rmtree
 from os.path import join
 from os import makedirs
@@ -15,7 +14,7 @@ from typing import (
     TYPE_CHECKING,
     cast,
     Optional,
-    List, Any,
+    List,
 )
 
 import numpy as np
@@ -23,7 +22,11 @@ import numpy as np
 from wkw import wkw
 
 from wkcuber.api.bounding_box import BoundingBox
-from wkcuber.api.properties.layer_properties import SegmentationLayerProperties
+from wkcuber.api.converter import (
+    LayerViewConfiguration,
+    LayerProperties,
+    SegmentationLayerProperties,
+)
 from wkcuber.downsampling_utils import (
     calculate_virtual_scale_for_target_mag,
     calculate_default_max_mag,
@@ -49,7 +52,6 @@ from wkcuber.utils import (
     DEFAULT_WKW_FILE_LEN,
     get_executor_for_args,
     named_partial,
-    _snake_to_camel_case,
 )
 
 
@@ -125,6 +127,26 @@ def _dtype_per_channel_to_dtype_per_layer(
     )
 
 
+def _dtype_per_channel_to_element_class(
+    dtype_per_channel: Union[str, np.dtype], num_channels: int
+) -> str:
+    dtype_per_layer = _dtype_per_channel_to_dtype_per_layer(
+        dtype_per_channel, num_channels
+    )
+    return _python_floating_type_to_properties_type.get(
+        dtype_per_layer, dtype_per_layer
+    )
+
+
+def _element_class_to_dtype_per_channel(
+    element_class: str, num_channels: int
+) -> np.dtype:
+    dtype_per_layer = _properties_floating_type_to_python_type.get(
+        element_class, element_class
+    )
+    return _dtype_per_layer_to_dtype_per_channel(dtype_per_layer, num_channels)
+
+
 class Layer:
     """
     A `Layer` consists of multiple `wkcuber.api.mag_view.MagView`s, which store the same data in different magnifications.
@@ -143,32 +165,30 @@ class Layer:
     ## Functions
     """
 
-    def __init__(
-        self,
-        name: str,
-        dataset: "Dataset",
-        dtype_per_channel: np.dtype,
-        num_channels: int,
-        bounding_box: BoundingBox,
-        default_view_configuration: Optional["LayerViewConfiguration"]
-    ) -> None:
+    def __init__(self, dataset: "Dataset", properties: LayerProperties) -> None:
         """
         Do not use this constructor manually. Instead use `wkcuber.api.layer.Dataset.add_layer()` to create a `Layer`.
         """
-        self._name = name
-        self._dataset = dataset
-        self._dtype_per_channel = dtype_per_channel
-        self._num_channels = num_channels
-        self._mags: Dict[Mag, MagView] = {}
-        self._bounding_box: BoundingBox = bounding_box
-        self._default_view_configuration: Optional[LayerViewConfiguration] = default_view_configuration
+        # It is possible that the properties on disk do not contain 'num_channels'.
+        # Therefore, the parameter is optional. However at this point, 'num_channels' was already inferred.
+        assert properties.num_channels is not None
 
-        full_path = join(dataset.path, name)
+        self._dataset = dataset
+        self._dtype_per_channel = _element_class_to_dtype_per_channel(
+            properties.element_class, properties.num_channels
+        )
+        self._mags: Dict[Mag, MagView] = {}
+        self._properties: LayerProperties = properties
+
+        full_path = join(dataset.path, properties.name)
         makedirs(full_path, exist_ok=True)
+
+        for resolution in properties.wkw_resolutions:
+            self._setup_mag(Mag(resolution.resolution).to_layer_name())
 
     @property
     def name(self) -> str:
-        return self._name
+        return self._properties.name
 
     @property
     def dataset(self) -> "Dataset":
@@ -180,17 +200,18 @@ class Layer:
 
     @property
     def num_channels(self) -> int:
-        return self._num_channels
+        assert self._properties.num_channels is not None
+        return self._properties.num_channels
 
     @property
-    def default_view_configuration(self) -> Optional["LayerViewConfiguration"]:
-        return self._default_view_configuration
+    def default_view_configuration(self) -> Optional[LayerViewConfiguration]:
+        return self._properties.default_view_configuration
 
     @default_view_configuration.setter
     def default_view_configuration(
-        self, view_configuration: "LayerViewConfiguration"
+        self, view_configuration: LayerViewConfiguration
     ) -> None:
-        self._default_view_configuration = view_configuration
+        self._properties.default_view_configuration = view_configuration
         self.dataset._export_as_json()  # update properties on disk
 
     @property
@@ -244,6 +265,7 @@ class Layer:
         self._mags[mag] = MagView(
             self, mag.to_layer_name(), block_len, file_len, block_type, create=True
         )
+        self._properties.wkw_resolutions += [self._mags[mag]._properties]
         self.dataset._export_as_json()
 
         return self._mags[mag]
@@ -326,13 +348,15 @@ class Layer:
         """
         Updates the offset and size of the bounding box of this layer in the properties.
         """
-        self._bounding_box = BoundingBox(offset, size)
+        self._properties.bounding_box = BoundingBox(offset, size)
 
         for mag, mag_view in self.mags.items():
             mag_view._size = cast(
                 Tuple[int, int, int],
                 tuple(
-                    self._bounding_box.align_with_mag(mag, ceil=True).in_mag(mag).bottomright
+                    self._properties.bounding_box.align_with_mag(mag, ceil=True)
+                    .in_mag(mag)
+                    .bottomright
                 ),
             )
         self.dataset._export_as_json()
@@ -341,16 +365,16 @@ class Layer:
         """
         Updates the offset of the bounding box of this layer in the properties.
         """
-        self.set_bounding_box(offset, self._bounding_box.size)
+        self.set_bounding_box(offset, self._properties.bounding_box.size)
 
     def set_bounding_box_size(self, size: Tuple[int, int, int]) -> None:
         """
         Updates the size of the bounding box of this layer in the properties.
         """
-        self.set_bounding_box(self._bounding_box.topleft, size)
+        self.set_bounding_box(self._properties.bounding_box.topleft, size)
 
     def get_bounding_box(self) -> BoundingBox:
-        return self._bounding_box.copy()
+        return self._properties.bounding_box.copy()
 
     def rename(self, layer_name: str) -> None:
         """
@@ -362,7 +386,7 @@ class Layer:
         os.rename(self.dataset.path / self.name, self.dataset.path / layer_name)
         del self.dataset.layers[self.name]
         self.dataset.layers[layer_name] = self
-        self._name = layer_name
+        self._properties.name = layer_name
 
         # The MagViews need to be updated
         for mag in self._mags.values():
@@ -421,12 +445,10 @@ class Layer:
         ), f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
 
         if max_mag is None:
-            max_mag = calculate_default_max_mag(
-                self.get_bounding_box().size
-            )
+            max_mag = calculate_default_max_mag(self.get_bounding_box().size)
 
         if sampling_mode == SamplingModes.AUTO:
-            scale = self.dataset._scale
+            scale = self.dataset.scale
         elif sampling_mode == SamplingModes.ISOTROPIC:
             scale = (1, 1, 1)
         elif sampling_mode == SamplingModes.CONSTANT_Z:
@@ -615,7 +637,7 @@ class Layer:
             min_mag = Mag(1)
 
         if sampling_mode == SamplingModes.AUTO:
-            scale = self.dataset._scale
+            scale = self.dataset.scale
         elif sampling_mode == SamplingModes.ISOTROPIC:
             scale = (1, 1, 1)
         elif sampling_mode == SamplingModes.CONSTANT_Z:
@@ -720,7 +742,7 @@ class Layer:
 
     def __repr__(self) -> str:
         return repr(
-            "Layer(@dataclass()%s, dtype_per_channel=%s, num_channels=%s)"
+            "Layer(%s, dtype_per_channel=%s, num_channels=%s)"
             % (self.name, self.dtype_per_channel, self.num_channels)
         )
 
@@ -730,79 +752,23 @@ class Layer:
 
     @property
     def dtype_per_layer(self) -> str:
-        return _dtype_per_channel_to_dtype_per_layer(self.dtype_per_channel, self.num_channels)
-
-    def _to_json(self) -> Dict[str, Any]:
-        layer_properties = {
-            "name": self.name,
-            "category": LayerCategories.COLOR_TYPE,
-            "elementClass": _python_floating_type_to_properties_type.get(
-                self.dtype_per_layer, self.dtype_per_layer
-            ),
-            "dataFormat": "wkw",
-            "num_channels": self.num_channels,
-            "boundingBox": {}
-            if self._bounding_box is None
-            else self._bounding_box.as_wkw(),
-            "wkwResolutions": [m._to_json() for m in self.mags.values()],
-        }
-        if self._default_view_configuration is not None:
-            layer_properties[
-                "defaultViewConfiguration"
-            ] = self._default_view_configuration._to_json()
-
-        return layer_properties
-
-    #@classmethod
-    #def _from_json(
-    #        cls,
-    #        json_data: Dict[str, Any],
-    #        dataset: Dataset
-    #) -> "Layer":
-    #    layer = cls(
-    #        json_data["name"],
-    #        dataset,
-    #        dtype_per_channel=
-    #        num_channels=
-    #    )
-    #
-    #    return layer
+        return _dtype_per_channel_to_dtype_per_layer(
+            self.dtype_per_channel, self.num_channels
+        )
 
 
 class SegmentationLayer(Layer):
 
-    def __init__(
-            self,
-            name: str,
-            dataset: "Dataset",
-            dtype_per_channel:
-            np.dtype,
-            num_channels: int,
-            bounding_box: BoundingBox,
-            default_view_configuration: Optional["LayerViewConfiguration"],
-            largest_segment_id: int,
-            mappings: Optional[List[str]]
-    ):
-        super().__init__(name, dataset, dtype_per_channel, num_channels, bounding_box, default_view_configuration)
-        self._largest_segment_id = largest_segment_id
-        self._mappings: Optional[List[str]] = mappings
+    _properties: SegmentationLayerProperties
 
     @property
     def largest_segment_id(self) -> int:
-        return self._largest_segment_id
+        return self._properties.largest_segment_id
 
     @largest_segment_id.setter
     def largest_segment_id(self, largest_segment_id: int) -> None:
-        self._largest_segment_id = largest_segment_id
+        self._properties.largest_segment_id = largest_segment_id
         self.dataset._export_as_json()
-
-    def _to_json(self) -> Dict[str, Any]:
-        json_properties = super()._to_json()
-        json_properties["largestSegmentId"] = self.largest_segment_id
-        json_properties["category"] = LayerCategories.SEGMENTATION_TYPE
-        if self._mappings is not None:
-            json_properties["mappings"] = self._mappings
-        return json_properties
 
     @property
     def category(self) -> str:
@@ -824,51 +790,6 @@ class LayerCategories:
 
     COLOR_TYPE = "color"
     SEGMENTATION_TYPE = "segmentation"
-
-
-class LayerViewConfiguration:
-    """
-    Stores information on how the dataset is shown in webknossos by default.
-    """
-    def __init__(
-        self,
-        color: Optional[Tuple[int, int, int]] = None,
-        alpha: Optional[float] = None,
-        intensity_range: Optional[Tuple[float, float]] = None,
-        min: Optional[float] = None,  # pylint: disable=redefined-builtin
-        max: Optional[float] = None,  # pylint: disable=redefined-builtin
-        is_disabled: Optional[bool] = None,
-        is_inverted: Optional[bool] = None,
-        is_in_edit_mode: Optional[bool] = None
-    ):
-        self.color = color
-        self.alpha = alpha
-        self.intensity_range = intensity_range
-        self.min = min
-        self.max = max
-        self.is_disabled = is_disabled
-        self.is_inverted = is_inverted
-        self.is_in_edit_mode = is_in_edit_mode
-
-    @classmethod
-    def _from_json(cls, data: Dict[str, Any]) -> "LayerViewConfiguration":
-        return cls(
-            color=cast(Tuple[int, int, int], tuple(data["color"])) if "color" in data else None,
-            alpha=data.get("alpha", None),
-            intensity_range=cast(Tuple[float, float], tuple(data["intensityRange"])) if "intensityRange" in data else None,
-            min=data.get("min", None),
-            max=data.get("max", None),
-            is_disabled=data.get("isDisabled", None),
-            is_inverted=data.get("isInverted", None),
-            is_in_edit_mode=data.get("isInEditMode", None),
-        )
-
-    def _to_json(self) -> Dict[str, Any]:
-        return {
-            _snake_to_camel_case(k): v
-            for k, v in vars(self).items()
-            if v is not None
-        }
 
 
 _properties_floating_type_to_python_type = {
