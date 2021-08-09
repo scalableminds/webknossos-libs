@@ -14,6 +14,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Added
 
 ### Changed
+- Bump scipy to `1.6.0` and `scikit-image` to `0.18.0` while keeping `numpy` to under `1.20.0` [#372](https://github.com/scalableminds/webknossos-cuber/pull/372/files)
 
 ### Fixed
 
