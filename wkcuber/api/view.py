@@ -29,7 +29,7 @@ class View:
         global_offset: Tuple[int, int, int] = (0, 0, 0),
         is_bounded: bool = True,
         read_only: bool = False,
-        mag_view_bbox_at_creation: Optional[BoundingBox] = None
+        mag_view_bbox_at_creation: Optional[BoundingBox] = None,
     ):
         """
         Do not use this constructor manually. Instead use `wkcuber.api.mag_view.MagView.get_view()` to get a `View`.
@@ -246,7 +246,7 @@ class View:
             global_offset=view_offset,
             is_bounded=True,
             read_only=read_only,
-            mag_view_bbox_at_creation=self._mag_view_bbox
+            mag_view_bbox_at_creation=self._mag_view_bbox,
         )
 
     def _assert_bounds(
@@ -441,12 +441,22 @@ class View:
             # Calculate in which dimensions the data is aligned and in which dimensions it matches the bbox of the mag.
             aligned_top_left = aligned_offset == np.array(absolute_offset)
             aligned_bottom_right = aligned_bottom_right == bottom_right
-            at_border_top_left = np.array(mag_view_bbox_at_creation.topleft) == np.array(absolute_offset)
-            at_border_bottom_right = np.array(mag_view_bbox_at_creation.bottomright) == bottom_right
+            at_border_top_left = np.array(
+                mag_view_bbox_at_creation.topleft
+            ) == np.array(absolute_offset)
+            at_border_bottom_right = (
+                np.array(mag_view_bbox_at_creation.bottomright) == bottom_right
+            )
 
             if not (
-                np.array_equal(np.logical_or(aligned_top_left, at_border_top_left), np.array([True, True, True])) and
-                np.array_equal(np.logical_or(aligned_bottom_right, at_border_bottom_right), np.array([True, True, True]))
+                np.array_equal(
+                    np.logical_or(aligned_top_left, at_border_top_left),
+                    np.array([True, True, True]),
+                )
+                and np.array_equal(
+                    np.logical_or(aligned_bottom_right, at_border_bottom_right),
+                    np.array([True, True, True]),
+                )
             ):
                 # the data is not aligned
                 # read the aligned bounding box

@@ -983,7 +983,6 @@ def test_writing_subset_of_compressed_data_multi_channel() -> None:
     )  # the old data is still there
 
 
-
 def test_writing_subset_of_compressed_data_single_channel() -> None:
     delete_dir(TESTOUTPUT_DIR / "compressed_data")
 
@@ -1065,7 +1064,14 @@ def test_writing_subset_of_compressed_data() -> None:
                 data=(np.random.rand(10, 10, 10) * 255).astype(np.uint8),
             )
 
-        assert compressed_mag._mag_view_bbox == BoundingBox(topleft=(0, 0, 0,), size=(120, 140, 160))
+        assert compressed_mag._mag_view_bbox == BoundingBox(
+            topleft=(
+                0,
+                0,
+                0,
+            ),
+            size=(120, 140, 160),
+        )
         # Writing unaligned data to the edge of the bounding box of the MagView does not raise an error.
         # This write operation writes unaligned data into the bottom-right corner of the MagView.
         compressed_mag.write(
@@ -1080,7 +1086,6 @@ def test_writing_subset_of_compressed_data() -> None:
 
         # Writing aligned data does not raise a warning. Therefore, this does not fail with these strict settings.
         compressed_mag.write(data=(np.random.rand(64, 64, 64) * 255).astype(np.uint8))
-
 
 
 def test_writing_subset_of_chunked_compressed_data() -> None:

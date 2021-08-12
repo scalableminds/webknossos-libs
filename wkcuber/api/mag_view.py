@@ -85,9 +85,7 @@ class MagView(View):
             header,
             cast(
                 Tuple[int, int, int],
-                tuple(
-                    self._mag_view_bbox.bottomright
-                ),
+                tuple(self._mag_view_bbox.bottomright),
             ),
             (0, 0, 0),
             False,
@@ -331,7 +329,11 @@ class MagView(View):
 
     @property
     def _mag_view_bbox(self) -> BoundingBox:
-        return self.layer.get_bounding_box().align_with_mag(Mag(self.name), ceil=True).in_mag(Mag(self.name))
+        return (
+            self.layer.get_bounding_box()
+            .align_with_mag(Mag(self.name), ceil=True)
+            .in_mag(Mag(self.name))
+        )
 
     def __repr__(self) -> str:
         return repr(
