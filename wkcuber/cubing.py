@@ -135,20 +135,20 @@ def read_image_file(
         raise exc
 
 
-def prepare_slices_for_wkw(
-    slices: List[np.ndarray], num_channels: int = None
-) -> np.ndarray:
-    # Write batch buffer which will have shape (x, y, channel_count, z)
-    # since we concat along the last axis (z)
-    buffer = np.concatenate(slices, axis=-1)
-
-    # We transpose the data so that the first dimension is the channel,
-    # since the wkw library expects this.
-    # New shape will be (channel_count, x, y, z)
-    buffer = np.transpose(buffer, (2, 0, 1, 3))
-    if num_channels is not None:
-        assert buffer.shape[0] == num_channels
-    return buffer
+# def prepare_slices_for_wkw(
+#     slices: List[np.ndarray], num_channels: int = None
+# ) -> np.ndarray:
+#     # Write batch buffer which will have shape (x, y, channel_count, z)
+#     # since we concat along the last axis (z)
+#     buffer = np.concatenate(slices, axis=-1)
+#
+#     # We transpose the data so that the first dimension is the channel,
+#     # since the wkw library expects this.
+#     # New shape will be (channel_count, x, y, z)
+#     buffer = np.transpose(buffer, (2, 0, 1, 3))
+#     if num_channels is not None:
+#         assert buffer.shape[0] == num_channels
+#     return buffer
 
 
 def cubing_job(
@@ -174,13 +174,36 @@ def cubing_job(
         image_size,
         pad,
         channel_index,
+        dtype,
+        num_channels,
     ) = args
     if len(z_batches) == 0:
         return
 
     downsampling_needed = target_mag != Mag(1)
+    effective_num_channels = 1 if channel_index is not None else num_channels
 
     with open_wkw(target_wkw_info) as target_wkw:
+        if pad:
+            # NOTE: not tested after optimizations for memory
+            # Iterate over each z section in the batch to get the image sizes
+            image_sizes = [None]*len(z_batches)
+            for z_batch, source_file_batch, i_batch in zip(
+                z_batches, source_file_batches, range(len(z_batches))
+            ):
+                image_sizes[i_batch] = list(image_reader.read_dimensions(source_file_batch))
+            max_image_size = [max([x[0] for x in image_sizes]), max(x[1] for x in image_sizes)]
+        else:
+            max_image_size = list(image_size)
+
+        # concatenate in prepare_slices_for_wkw with large slices is memory-expensive.
+        # pre-allocate and assign directly to the buffer.
+        # Shape will be (channel_count, x, y, z)
+        buffer_shape = [effective_num_channels] + max_image_size + [batch_size]
+        buffer = np.empty(buffer_shape, dtype=dtype, order='F')
+        logging.debug("Allocated shape {} dtype {} F-cont {} C-cont {}".format(str(buffer_shape),
+            np.dtype(dtype).name, buffer.flags['F_CONTIGUOUS'], buffer.flags['C_CONTIGUOUS']))
+
         # Iterate over batches of continuous z sections
         # The batches have a maximum size of `batch_size`
         # Batched iterations allows to utilize IO more efficiently
@@ -191,49 +214,77 @@ def cubing_job(
             try:
                 ref_time = time.time()
                 logging.info("Cubing z={}-{}".format(z_batch[0], z_batch[-1]))
-                slices = []
+
+                #slices = []
                 # Iterate over each z section in the batch
-                for z, file_name in zip(z_batch, source_file_batch):
+                for z, file_name, i_batch in zip(
+                    z_batch, source_file_batch, range(batch_size)
+                ):
+                    t = time.time()
                     # Image shape will be (x, y, channel_count, z=1)
                     image = read_image_file(
                         file_name, target_wkw_info.header.voxel_type, z, channel_index
                     )
+                    logging.debug("Reading done in {:3f} s".format(time.time()-t))
 
-                    if not pad:
+                    if pad:
+                        image = np.pad(
+                           image,
+                           mode="constant",
+                           pad_width=[
+                               (0, max_image_size[0] - image.shape[0]),
+                               (0, max_image_size[1] - image.shape[1]),
+                               (0, 0),
+                               (0, 0),
+                           ],
+                        )
+                    else:
                         assert (
                             image.shape[0:2] == image_size
                         ), "Section z={} has the wrong dimensions: {} (expected {}). Consider using --pad.".format(
                             z, image.shape, image_size
                         )
-                    slices.append(image)
+                    #slices.append(image)
+                    # image shape - (x, y, channel_count, z=1)
+                    # buffer shape - (channel_count, x, y, z)
+                    t = time.time()
+                    buffer[:,:,:,i_batch] = image.transpose((2, 0, 1, 3))[:,:,:,0]
+                    logging.debug("Copy done in {:3f} s".format(time.time()-t))
+                    logging.debug("Done reading z={}, {}".format(z,file_name))
+                del image
 
-                if pad:
-                    x_max = max(_slice.shape[0] for _slice in slices)
-                    y_max = max(_slice.shape[1] for _slice in slices)
+                #if pad:
+                #    assert(False) # fix this
+                #    x_max = max(_slice.shape[0] for _slice in slices)
+                #    y_max = max(_slice.shape[1] for _slice in slices)
+                #
+                #    slices = [
+                #        np.pad(
+                #            _slice,
+                #            mode="constant",
+                #            pad_width=[
+                #                (0, x_max - _slice.shape[0]),
+                #                (0, y_max - _slice.shape[1]),
+                #                (0, 0),
+                #                (0, 0),
+                #            ],
+                #        )
+                #        for _slice in slices
+                #    ]
 
-                    slices = [
-                        np.pad(
-                            _slice,
-                            mode="constant",
-                            pad_width=[
-                                (0, x_max - _slice.shape[0]),
-                                (0, y_max - _slice.shape[1]),
-                                (0, 0),
-                                (0, 0),
-                            ],
-                        )
-                        for _slice in slices
-                    ]
+                # buffer = prepare_slices_for_wkw(
+                #     slices, target_wkw_info.header.num_channels
+                # )
 
-                buffer = prepare_slices_for_wkw(
-                    slices, target_wkw_info.header.num_channels
-                )
                 if downsampling_needed:
                     buffer = downsample_unpadded_data(
                         buffer, target_mag, interpolation_mode
                     )
 
+                logging.debug("Writing")
+                t = time.time()
                 target_wkw.write([0, 0, z_batch[0] / target_mag.to_array()[2]], buffer)
+                logging.debug("Write done in {:3f} s".format(time.time()-t))
                 logging.debug(
                     "Cubing of z={}-{} took {:.8f}s".format(
                         z_batch[0], z_batch[-1], time.time() - ref_time
@@ -345,6 +396,8 @@ def cubing(
                     (num_x, num_y),
                     pad,
                     channel_index,
+                    dtype,
+                    num_channels,
                 )
             )
 

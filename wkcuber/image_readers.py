@@ -11,6 +11,18 @@ from .vendor.dm4 import DM4File, DM4TagHeader
 from tifffile import TiffFile
 from czifile import CziFile
 
+# tables import is for blosc
+import tables
+import h5py
+# tables is only imported so that the blosc filter can work
+# https://stackoverflow.com/questions/37464262/blosc-compression-in-hdf5-via-h5py
+# define this example from pytables tutorial just to avoid import warning for tables
+class Particle(tables.IsDescription):
+   #identity = tables.StringCol(itemsize=22, dflt=" ", pos=0)  # character String
+   idnumber = tables.Int16Col(dflt=1, pos = 1)  # short integer
+   #speed    = tables.Float32Col(dflt=1, pos = 2)  # single-precision
+
+
 # Disable PIL's maximum image limit.
 Image.MAX_IMAGE_PIXELS = None
 
@@ -70,6 +82,49 @@ class PillowImageReader(ImageReader):
 
     def read_dtype(self, file_name: Path) -> str:
         return np.array(Image.open(file_name)).dtype.name
+
+
+class H5ImageReader(ImageReader):
+    def read_array(
+        self,
+        file_name: Path,
+        dtype: np.dtype,
+        z_slice: int,
+        channel_index: Optional[int],
+    ) -> np.ndarray:
+        fh = h5py.File(file_name, 'r')
+        image = fh['image']
+
+        #this_layer = np.array(Image.open(file_name), dtype)
+        this_layer = np.empty(image.shape, dtype=image.dtype)
+        image.read_direct(this_layer)
+        fh.close()
+
+        this_layer = this_layer.swapaxes(0, 1)
+        if channel_index is not None:
+            this_layer = this_layer[:, :, channel_index]
+        this_layer = this_layer.reshape(this_layer.shape + (1,))
+        return this_layer
+
+    def read_dimensions(self, file_name: Path) -> Tuple[int, int]:
+        fh = h5py.File(file_name, 'r')
+        image = fh['image']
+        image_shape = image.shape
+        fh.close()
+        #with Image.open(file_name) as test_img:
+        #    return test_img.width, test_img.height
+        return image_shape[1], image_shape[0]
+
+    def read_channel_count(self, file_name: Path) -> int:
+        return 1
+
+    def read_dtype(self, file_name: Path) -> str:
+        fh = h5py.File(file_name, 'r')
+        image = fh['image']
+        image_dtype = image.dtype
+        fh.close()
+        #return np.array(Image.open(file_name)).dtype.name
+        return image_dtype.name
 
 
 def to_target_datatype(data: np.ndarray, target_dtype: np.dtype) -> np.ndarray:
@@ -442,6 +497,7 @@ class ImageReaderManager:
                 Dm3ImageReader,
                 Dm4ImageReader,
                 CziImageReader,
+                H5ImageReader,
             ],
         ] = {
             ".tif": TiffImageReader(),
@@ -452,6 +508,8 @@ class ImageReaderManager:
             ".dm3": Dm3ImageReader(),
             ".dm4": Dm4ImageReader(),
             ".czi": CziImageReader(),
+            ".hdf5": H5ImageReader(),
+            ".h5": H5ImageReader(),
         }
 
     def read_array(
