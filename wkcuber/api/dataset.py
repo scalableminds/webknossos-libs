@@ -138,10 +138,6 @@ class Dataset:
                 layer = self._initialize_layer_from_properties(layer_properties)
                 self._layers[layer_properties.name] = layer
 
-            # Exporting the properties at this point is not necessary because the dataset didn't change.
-            # However in case there is something broken (for some unknown reason), it is better to fail early
-            self._export_as_json()
-
     @property
     def layers(self) -> Dict[str, Layer]:
         """
