@@ -4,22 +4,14 @@
         "team": ""
     },
     "scale": [
-        1, 1, 1
+        1.0,
+        1.0,
+        1.0
     ],
-    "defaultViewConfiguration": {
-        "position": [
-            12,
-            12,
-            12
-        ]
-    },
     "dataLayers": [
         {
-            "dataFormat": "wkw",
             "name": "color",
             "category": "color",
-            "elementClass": "uint24",
-            "num_channels": 3,
             "boundingBox": {
                 "topLeft": [
                     0,
@@ -30,6 +22,7 @@
                 "height": 24,
                 "depth": 24
             },
+            "elementClass": "uint24",
             "wkwResolutions": [
                 {
                     "resolution": [
@@ -40,6 +33,8 @@
                     "cubeLength": 32
                 }
             ],
+            "dataFormat": "wkw",
+            "numChannels": 3,
             "defaultViewConfiguration": {
                 "color": [
                     255,
@@ -48,5 +43,12 @@
                 ]
             }
         }
-    ]
+    ],
+    "defaultViewConfiguration": {
+        "position": [
+            12,
+            12,
+            12
+        ]
+    }
 }
