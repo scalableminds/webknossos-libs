@@ -208,7 +208,7 @@ class MagView(View):
 
         view_offset = cast(
             Tuple[int, int, int],
-            tuple(offset or tuple(bb.topleft)),
+            tuple(offset if offset is not None else tuple(bb.topleft)),
         )
 
         if size is None:
