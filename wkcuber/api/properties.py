@@ -1,7 +1,6 @@
-import re
 from os.path import join, isfile
 from pathlib import Path
-from typing import Dict, Tuple, List, Optional, Union, Any
+from typing import Dict, Tuple, List, Optional, Union, Any, Callable
 
 import attr
 import cattr
@@ -17,13 +16,14 @@ def _extract_num_channels(
     num_channels_in_properties: Optional[int],
     path: Path,
     layer: str,
-    mag: Optional[Mag],
+    mag: Optional[Union[int, Mag]],
 ) -> int:
     # if a wk dataset is not created with this API, then it most likely doesn't have the attribute 'num_channels' in the
     # datasource-properties.json. In this case we need to extract the 'num_channels' from the 'header.wkw'.
     if num_channels_in_properties is not None:
         return num_channels_in_properties
 
+    mag = Mag(mag)
     if mag is None:
         # Unable to extract the 'num_channels' from the 'header.wkw' if the dataset has no magnifications.
         # This should never be the case because wkw-datasets that are created without this API always have a magnification.
@@ -138,12 +138,14 @@ class DatasetProperties:
 dataset_converter = cattr.Converter()
 
 # register (un-)structure hooks for non-attr-classes
-dataset_converter.register_unstructure_hook(BoundingBox, lambda o: o.as_wkw())
+bbox_to_wkw: Callable[[BoundingBox], dict] = lambda o: o.as_wkw()
+dataset_converter.register_unstructure_hook(BoundingBox, bbox_to_wkw)
 dataset_converter.register_structure_hook(
     BoundingBox, lambda d, _: BoundingBox.from_wkw(d)
 )
 
-dataset_converter.register_unstructure_hook(Mag, lambda o: o.to_array())
+mag_to_array: Callable[[Mag], List[int]] = lambda o: o.to_array()
+dataset_converter.register_unstructure_hook(Mag, mag_to_array)
 dataset_converter.register_structure_hook(Mag, lambda d, _: Mag(d))
 
 # register (un-)structure hooks for attr-classes
@@ -164,7 +166,7 @@ for cls in [
                 a.name: override(
                     omit_if_default=True, rename=_snake_to_camel_case(a.name)
                 )
-                for a in attr.fields(cls)
+                for a in attr.fields(cls)  # pylint: disable=not-an-iterable
             },
         ),
     )
@@ -175,7 +177,7 @@ for cls in [
             dataset_converter,
             **{
                 a.name: override(rename=_snake_to_camel_case(a.name))
-                for a in attr.fields(cls)
+                for a in attr.fields(cls)  # pylint: disable=not-an-iterable
             },
         ),
     )
@@ -204,9 +206,7 @@ def disambiguate_mag(obj: dict, _: Any) -> Mag:
     return Mag(obj)
 
 
-dataset_converter.register_structure_hook(
-    Union[int, Mag], disambiguate_mag
-)
+dataset_converter.register_structure_hook(Union[int, Mag], disambiguate_mag)
 
 # Separate converter to unstructure LayerProperties
 # This is used to initialize SegmentationLayerProperties from LayerProperties

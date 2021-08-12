@@ -25,7 +25,9 @@ from wkcuber.api.bounding_box import BoundingBox
 from wkcuber.api.properties import (
     LayerViewConfiguration,
     LayerProperties,
-    SegmentationLayerProperties, _python_floating_type_to_properties_type, _properties_floating_type_to_python_type,
+    SegmentationLayerProperties,
+    _python_floating_type_to_properties_type,
+    _properties_floating_type_to_python_type,
     MagViewProperties,
 )
 from wkcuber.downsampling_utils import (
@@ -174,7 +176,9 @@ class Layer:
         # Therefore, the parameter is optional. However at this point, 'num_channels' was already inferred.
         assert properties.num_channels is not None
 
-        self._name: str = properties.name  # The name is also stored in the properties, but the name is required to get the properties.
+        self._name: str = (
+            properties.name
+        )  # The name is also stored in the properties, but the name is required to get the properties.
         self._dataset = dataset
         self._dtype_per_channel = _element_class_to_dtype_per_channel(
             properties.element_class, properties.num_channels
@@ -188,8 +192,12 @@ class Layer:
             self._setup_mag(Mag(resolution.resolution).to_layer_name())
 
     @property
-    def _properties(self):
-        return next(layer_property for layer_property in self.dataset._properties.data_layers if layer_property.name == self.name)
+    def _properties(self) -> LayerProperties:
+        return next(
+            layer_property
+            for layer_property in self.dataset._properties.data_layers
+            if layer_property.name == self.name
+        )
 
     @property
     def name(self) -> str:
@@ -272,9 +280,11 @@ class Layer:
         )
 
         self._mags[mag] = mag_view
-        self._properties.wkw_resolutions += [MagViewProperties(
-            Mag(mag_view.name), mag_view.header.block_len * mag_view.header.file_len
-        )]
+        self._properties.wkw_resolutions += [
+            MagViewProperties(
+                Mag(mag_view.name), mag_view.header.block_len * mag_view.header.file_len
+            )
+        ]
 
         self.dataset._export_as_json()
 
@@ -801,4 +811,3 @@ class LayerCategories:
 
     COLOR_TYPE = "color"
     SEGMENTATION_TYPE = "segmentation"
-

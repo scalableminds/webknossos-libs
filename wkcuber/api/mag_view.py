@@ -105,8 +105,12 @@ class MagView(View):
         return self._layer
 
     @property
-    def _properties(self):
-        return next(mag_property for mag_property in self.layer._properties.wkw_resolutions if Mag(mag_property.resolution).to_array() == Mag(self.name).to_array())
+    def _properties(self) -> MagViewProperties:
+        return next(
+            mag_property
+            for mag_property in self.layer._properties.wkw_resolutions
+            if Mag(mag_property.resolution).to_array() == Mag(self.name).to_array()
+        )
 
     @property
     def name(self) -> str:

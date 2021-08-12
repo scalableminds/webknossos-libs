@@ -19,7 +19,8 @@ from wkcuber.api.properties import (
     LayerProperties,
     layer_properties_converter,
     DatasetViewConfiguration,
-    _extract_num_channels, _properties_floating_type_to_python_type,
+    _extract_num_channels,
+    _properties_floating_type_to_python_type,
 )
 from wkcuber.api.bounding_box import BoundingBox
 from wkcuber.utils import get_executor_for_args
@@ -29,7 +30,6 @@ from wkcuber.api.layer import (
     LayerCategories,
     SegmentationLayer,
     _normalize_dtype_per_channel,
-    _dtype_per_channel_to_dtype_per_layer,
     _normalize_dtype_per_layer,
     _dtype_per_layer_to_dtype_per_channel,
     _dtype_per_channel_to_element_class,
@@ -353,7 +353,9 @@ class Dataset:
                 f"Removing layer {layer_name} failed. There is no layer with this name"
             )
         del self._layers[layer_name]
-        self._properties.data_layers = [layer for layer in self._properties.data_layers if layer.name != layer_name]
+        self._properties.data_layers = [
+            layer for layer in self._properties.data_layers if layer.name != layer_name
+        ]
         # delete files on disk
         rmtree(join(self.path, layer_name))
         self._export_as_json()
@@ -384,7 +386,9 @@ class Dataset:
         original_layer = Dataset(foreign_layer_path.parent).get_layer(layer_name)
         layer_properties = copy.deepcopy(original_layer._properties)
         self._properties.data_layers += [layer_properties]
-        self._layers[layer_name] = self._initialize_layer_from_properties(layer_properties)
+        self._layers[layer_name] = self._initialize_layer_from_properties(
+            layer_properties
+        )
 
         self._export_as_json()
         return self.layers[layer_name]
@@ -406,7 +410,9 @@ class Dataset:
         original_layer = Dataset(foreign_layer_path.parent).get_layer(layer_name)
         layer_properties = copy.deepcopy(original_layer._properties)
         self._properties.data_layers += [layer_properties]
-        self._layers[layer_name] = self._initialize_layer_from_properties(layer_properties)
+        self._layers[layer_name] = self._initialize_layer_from_properties(
+            layer_properties
+        )
 
         self._export_as_json()
         return self.layers[layer_name]
@@ -439,7 +445,9 @@ class Dataset:
                 # The MagViews are added manually afterwards
                 new_ds_properties.wkw_resolutions = []
                 new_ds._properties.data_layers += [new_ds_properties]
-                target_layer = new_ds._initialize_layer_from_properties(new_ds_properties)
+                target_layer = new_ds._initialize_layer_from_properties(
+                    new_ds_properties
+                )
                 new_ds._layers[layer_name] = target_layer
 
                 bbox = self.get_layer(layer_name).get_bounding_box()
