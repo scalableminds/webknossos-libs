@@ -15,7 +15,7 @@ from shutil import rmtree, copytree
 from wkw import wkw
 from wkw.wkw import WKWException
 
-from wkcuber.api.converter import (
+from wkcuber.api.properties import (
     dataset_converter,
     DatasetProperties,
     _snake_to_camel_case,

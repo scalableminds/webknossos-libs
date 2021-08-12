@@ -22,10 +22,11 @@ import numpy as np
 from wkw import wkw
 
 from wkcuber.api.bounding_box import BoundingBox
-from wkcuber.api.converter import (
+from wkcuber.api.properties import (
     LayerViewConfiguration,
     LayerProperties,
     SegmentationLayerProperties, _python_floating_type_to_properties_type, _properties_floating_type_to_python_type,
+    MagViewProperties,
 )
 from wkcuber.downsampling_utils import (
     calculate_virtual_scale_for_target_mag,
@@ -173,12 +174,12 @@ class Layer:
         # Therefore, the parameter is optional. However at this point, 'num_channels' was already inferred.
         assert properties.num_channels is not None
 
+        self._name: str = properties.name  # The name is also stored in the properties, but the name is required to get the properties.
         self._dataset = dataset
         self._dtype_per_channel = _element_class_to_dtype_per_channel(
             properties.element_class, properties.num_channels
         )
         self._mags: Dict[Mag, MagView] = {}
-        self._properties: LayerProperties = properties
 
         full_path = join(dataset.path, properties.name)
         makedirs(full_path, exist_ok=True)
@@ -187,8 +188,12 @@ class Layer:
             self._setup_mag(Mag(resolution.resolution).to_layer_name())
 
     @property
+    def _properties(self):
+        return next(layer_property for layer_property in self.dataset._properties.data_layers if layer_property.name == self.name)
+
+    @property
     def name(self) -> str:
-        return self._properties.name
+        return self._name
 
     @property
     def dataset(self) -> "Dataset":
@@ -262,10 +267,15 @@ class Layer:
         self._assert_mag_does_not_exist_yet(mag)
         self._create_dir_for_mag(mag)
 
-        self._mags[mag] = MagView(
+        mag_view = MagView(
             self, mag.to_layer_name(), block_len, file_len, block_type, create=True
         )
-        self._properties.wkw_resolutions += [self._mags[mag]._properties]
+
+        self._mags[mag] = mag_view
+        self._properties.wkw_resolutions += [MagViewProperties(
+            Mag(mag_view.name), mag_view.header.block_len * mag_view.header.file_len
+        )]
+
         self.dataset._export_as_json()
 
         return self._mags[mag]
@@ -387,6 +397,7 @@ class Layer:
         del self.dataset.layers[self.name]
         self.dataset.layers[layer_name] = self
         self._properties.name = layer_name
+        self._name = layer_name
 
         # The MagViews need to be updated
         for mag in self._mags.values():

@@ -12,7 +12,7 @@ import numpy as np
 import os
 
 import wkw
-from wkcuber.api.converter import (
+from wkcuber.api.properties import (
     dataset_converter,
     DatasetProperties,
     SegmentationLayerProperties,
@@ -232,6 +232,7 @@ class Dataset:
 
         if category == LayerCategories.COLOR_TYPE:
             self._layers[layer_name] = Layer(self, layer_properties)
+            self._properties.data_layers += [layer_properties]
         elif category == LayerCategories.SEGMENTATION_TYPE:
             assert (
                 "largest_segment_id" in kwargs
@@ -250,8 +251,7 @@ class Dataset:
             self._layers[layer_name] = SegmentationLayer(
                 self, segmentation_layer_properties
             )
-
-        self._properties.data_layers += [self.layers[layer_name]._properties]
+            self._properties.data_layers += [segmentation_layer_properties]
 
         self._export_as_json()
         return self.layers[layer_name]
@@ -382,10 +382,9 @@ class Dataset:
         )
         os.symlink(foreign_layer_symlink_path, join(self.path, layer_name))
         original_layer = Dataset(foreign_layer_path.parent).get_layer(layer_name)
-        self._layers[layer_name] = self._initialize_layer_from_properties(
-            copy.deepcopy(original_layer._properties)
-        )
-        self._properties.data_layers += [self._layers[layer_name]._properties]
+        layer_properties = copy.deepcopy(original_layer._properties)
+        self._properties.data_layers += [layer_properties]
+        self._layers[layer_name] = self._initialize_layer_from_properties(layer_properties)
 
         self._export_as_json()
         return self.layers[layer_name]
@@ -405,10 +404,9 @@ class Dataset:
 
         shutil.copytree(foreign_layer_path, join(self.path, layer_name))
         original_layer = Dataset(foreign_layer_path.parent).get_layer(layer_name)
-        self._layers[layer_name] = self._initialize_layer_from_properties(
-            copy.deepcopy(original_layer._properties)
-        )
-        self._properties.data_layers += [self._layers[layer_name]._properties]
+        layer_properties = copy.deepcopy(original_layer._properties)
+        self._properties.data_layers += [layer_properties]
+        self._layers[layer_name] = self._initialize_layer_from_properties(layer_properties)
 
         self._export_as_json()
         return self.layers[layer_name]
@@ -440,11 +438,9 @@ class Dataset:
                 # Initializing a layer with non-empty wkw_resolutions requires that the files on disk already exist.
                 # The MagViews are added manually afterwards
                 new_ds_properties.wkw_resolutions = []
-                target_layer = new_ds._initialize_layer_from_properties(
-                    new_ds_properties
-                )
+                new_ds._properties.data_layers += [new_ds_properties]
+                target_layer = new_ds._initialize_layer_from_properties(new_ds_properties)
                 new_ds._layers[layer_name] = target_layer
-                new_ds._properties.data_layers += [target_layer._properties]
 
                 bbox = self.get_layer(layer_name).get_bounding_box()
 

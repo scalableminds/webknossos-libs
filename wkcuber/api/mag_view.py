@@ -17,7 +17,7 @@ from wkw import wkw
 import numpy as np
 
 from wkcuber.api.bounding_box import BoundingBox
-from wkcuber.api.converter import MagViewProperties
+from wkcuber.api.properties import MagViewProperties
 from wkcuber.compress_utils import compress_file_job
 from wkcuber.utils import (
     convert_mag1_size,
@@ -94,9 +94,6 @@ class MagView(View):
 
         self._layer = layer
         self._name = name
-        self._properties: MagViewProperties = MagViewProperties(
-            Mag(self.name), self.header.block_len * self.header.file_len
-        )
 
         if create:
             wkw.Dataset.create(
@@ -106,6 +103,10 @@ class MagView(View):
     @property
     def layer(self) -> "Layer":
         return self._layer
+
+    @property
+    def _properties(self):
+        return next(mag_property for mag_property in self.layer._properties.wkw_resolutions if Mag(mag_property.resolution).to_array() == Mag(self.name).to_array())
 
     @property
     def name(self) -> str:
