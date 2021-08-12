@@ -179,14 +179,17 @@ def test_create_dataset_with_explicit_header_fields() -> None:
     assert len(ds.get_layer("color").mags) == 2
 
     assert ds.get_layer("color").dtype_per_channel == "uint16"
+    assert ds.get_layer("color")._properties.element_class == "uint48"
     assert ds.get_layer("color").get_mag(1).header.block_len == 64
     assert ds.get_layer("color").get_mag(1).header.file_len == 64
+    assert ds.get_layer("color").get_mag(1)._properties.cube_length == 64*64
     assert (
         ds.get_layer("color").get_mag("2-2-1").header.block_len == 32
     )  # defaults are used
     assert (
         ds.get_layer("color").get_mag("2-2-1").header.file_len == 32
     )  # defaults are used
+    assert ds.get_layer("color").get_mag("2-2-1")._properties.cube_length == 32*32
 
 
 def test_open_dataset() -> None:
@@ -1666,8 +1669,27 @@ def test_rename_layer(tmp_path: Path) -> None:
 
     assert not (tmp_path / "ds" / "color").exists()
     assert (tmp_path / "ds" / "color2").exists()
+    assert len([layer_properties for layer_properties in ds._properties.data_layers if layer_properties.name == "color"]) == 0
+    assert len([layer_properties for layer_properties in ds._properties.data_layers if layer_properties.name == "color2"]) == 1
     assert "color2" in ds.layers.keys()
     assert "color" not in ds.layers.keys()
 
     # The "mag" object which was created before renaming the layer is still valid
     assert np.array_equal(mag.read()[0], write_data)
+
+
+def test_delete_layer(tmp_path: Path):
+    ds = Dataset.create(tmp_path/"ds", scale=(1, 1, 1))
+    ds.add_layer("color", LayerCategories.COLOR_TYPE)
+    ds.add_layer("segmentation", LayerCategories.SEGMENTATION_TYPE, largest_segment_id=999)
+
+    assert "color" in ds.layers
+    assert "segmentation" in ds.layers
+    assert len([layer for layer in ds._properties.data_layers if layer.name == "color"]) == 1
+    assert len([layer for layer in ds._properties.data_layers if layer.name == "segmentation"]) == 1
+    ds.delete_layer("color")
+    assert "color" not in ds.layers
+    assert "segmentation" in ds.layers
+    assert len([layer for layer in ds._properties.data_layers if layer.name == "color"]) == 0
+    assert len([layer for layer in ds._properties.data_layers if layer.name == "segmentation"]) == 1
+

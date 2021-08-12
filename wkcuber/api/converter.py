@@ -45,14 +45,14 @@ def _extract_num_channels(
     return wkw_ds.header.num_channels
 
 
-properties_floating_type_to_python_type = {
+_properties_floating_type_to_python_type = {
     "float": np.dtype("float32"),
     np.float: np.dtype("float32"),
     float: np.dtype("float32"),
     "double": np.dtype("float64"),
 }
 
-python_floating_type_to_properties_type = {
+_python_floating_type_to_properties_type = {
     "float32": "float",
     "float64": "double",
 }
@@ -103,7 +103,7 @@ class LayerViewConfiguration:
 
 @attr.define
 class MagViewProperties:
-    resolution: Mag
+    resolution: Union[int, Mag]
     cube_length: int
 
 
@@ -198,6 +198,15 @@ dataset_converter.register_structure_hook(
     Union[SegmentationLayerProperties, LayerProperties], disambiguate_layer_properties
 )
 
+
+def disambiguate_mag(obj: dict, _: Any) -> Mag:
+    # This function is necessary because cattrs does not support unions of non-attrs objects out of the box
+    return Mag(obj)
+
+
+dataset_converter.register_structure_hook(
+    Union[int, Mag], disambiguate_mag
+)
 
 # Separate converter to unstructure LayerProperties
 # This is used to initialize SegmentationLayerProperties from LayerProperties

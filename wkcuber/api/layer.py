@@ -25,7 +25,7 @@ from wkcuber.api.bounding_box import BoundingBox
 from wkcuber.api.converter import (
     LayerViewConfiguration,
     LayerProperties,
-    SegmentationLayerProperties,
+    SegmentationLayerProperties, _python_floating_type_to_properties_type, _properties_floating_type_to_python_type,
 )
 from wkcuber.downsampling_utils import (
     calculate_virtual_scale_for_target_mag,
@@ -791,15 +791,3 @@ class LayerCategories:
     COLOR_TYPE = "color"
     SEGMENTATION_TYPE = "segmentation"
 
-
-_properties_floating_type_to_python_type = {
-    "float": np.dtype("float32"),
-    np.float: np.dtype("float32"),
-    float: np.dtype("float32"),
-    "double": np.dtype("float64"),
-}
-
-_python_floating_type_to_properties_type = {
-    "float32": "float",
-    "float64": "double",
-}

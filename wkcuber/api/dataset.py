@@ -6,8 +6,7 @@ from shutil import rmtree
 from os import makedirs
 from os.path import join, normpath, basename
 from pathlib import Path
-from types import TracebackType
-from typing import Tuple, Union, Dict, Any, Optional, cast, Callable, Type
+from typing import Tuple, Union, Dict, Any, Optional, cast
 
 import numpy as np
 import os
@@ -20,8 +19,7 @@ from wkcuber.api.converter import (
     LayerProperties,
     layer_properties_converter,
     DatasetViewConfiguration,
-    _extract_num_channels,
-    properties_floating_type_to_python_type,
+    _extract_num_channels, _properties_floating_type_to_python_type,
 )
 from wkcuber.api.bounding_box import BoundingBox
 from wkcuber.utils import get_executor_for_args
@@ -47,31 +45,6 @@ def _copy_job(args: Tuple[View, View, int]) -> None:
     (source_view, target_view, _) = args
     # Copy the data form one view to the other in a buffered fashion
     target_view.write(source_view.read())
-
-
-class _CacheState:
-    def __init__(self, callback: Callable):
-        self.currently_caching = False
-        self.callback_fn = callback
-        self._call_callback_on_error = True
-
-    def __enter__(self) -> None:
-        if self.currently_caching:
-            raise RuntimeError(
-                "Cannot enter CacheState: Exporting the properties as json is already postponed."
-            )
-        self.currently_caching = True
-
-    def __exit__(
-        self,
-        _type: Optional[Type[BaseException]],
-        _value: Optional[BaseException],
-        _tb: Optional[TracebackType],
-    ) -> None:
-        self.currently_caching = False
-        if _type is None or self._call_callback_on_error:
-            self.callback_fn()
-        self._call_callback_on_error = True
 
 
 class Dataset:
@@ -133,8 +106,6 @@ class Dataset:
 
         The `dataset_path` refers to the top level directory of the dataset (excluding layer or magnification names).
         """
-
-        self._cache_state = _CacheState(self._export_as_json)
 
         self.path = Path(dataset_path)
         """Location of the dataset"""
@@ -225,12 +196,12 @@ class Dataset:
                 "Cannot add layer. Specifying both 'dtype_per_layer' and 'dtype_per_channel' is not allowed"
             )
         elif dtype_per_channel is not None:
-            dtype_per_channel = properties_floating_type_to_python_type.get(
+            dtype_per_channel = _properties_floating_type_to_python_type.get(
                 dtype_per_channel, dtype_per_channel
             )
             dtype_per_channel = _normalize_dtype_per_channel(dtype_per_channel)
         elif dtype_per_layer is not None:
-            dtype_per_layer = properties_floating_type_to_python_type.get(
+            dtype_per_layer = _properties_floating_type_to_python_type.get(
                 dtype_per_layer, dtype_per_layer
             )
             dtype_per_layer = _normalize_dtype_per_layer(dtype_per_layer)
@@ -382,6 +353,7 @@ class Dataset:
                 f"Removing layer {layer_name} failed. There is no layer with this name"
             )
         del self._layers[layer_name]
+        self._properties.data_layers = [layer for layer in self._properties.data_layers if layer.name != layer_name]
         # delete files on disk
         rmtree(join(self.path, layer_name))
         self._export_as_json()
@@ -471,7 +443,7 @@ class Dataset:
                 target_layer = new_ds._initialize_layer_from_properties(
                     new_ds_properties
                 )
-                new_ds._layers[layer_name] = layer
+                new_ds._layers[layer_name] = target_layer
                 new_ds._properties.data_layers += [target_layer._properties]
 
                 bbox = self.get_layer(layer_name).get_bounding_box()
