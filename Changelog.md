@@ -17,6 +17,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 - Bump scipy to `1.6.0` and `scikit-image` to `0.18.0` while keeping `numpy` to under `1.20.0` [#372](https://github.com/scalableminds/webknossos-cuber/pull/372/files)
 
 ### Fixed
+- Fixes a bug where modifications to an existing dataset with floats as dtype failed. [#375](https://github.com/scalableminds/webknossos-cuber/pull/375)
 
 ## [0.8.6](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.6) - 2021-07-29
 [Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.5...v0.8.6)
@@ -39,6 +40,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 
 ### Added
 - Added functions to `wkcuber.api.dataset.Dataset` and `wkcuber.api.layer.Layer` to set and get the view configuration. [#344](https://github.com/scalableminds/webknossos-cuber/pull/344)
+- Added functions to add mags of a foreign dataset (`Layer.add_symlink_mag` and `Layer.add_copy_mag`) [#367](https://github.com/scalableminds/webknossos-cuber/pull/367)
 
 ### Changed
 

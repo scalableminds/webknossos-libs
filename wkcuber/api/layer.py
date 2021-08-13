@@ -1,7 +1,9 @@
 import logging
 import math
 import os
+import shutil
 from argparse import Namespace
+from pathlib import Path
 from shutil import rmtree
 from os.path import join
 from os import makedirs
@@ -199,6 +201,88 @@ class Layer:
             self.dataset.path, self.name, mag.to_layer_name()
         )
         rmtree(full_path)
+
+    def _add_foreign_mag(
+        self, foreign_mag_path: Path, symlink: bool, make_relative: bool
+    ) -> MagView:
+        mag_name = foreign_mag_path.name
+        mag = Mag(mag_name)
+        operation = "symlink" if symlink else "copy"
+        if mag in self.mags.keys():
+            raise IndexError(
+                f"Cannot {operation} {foreign_mag_path}. This dataset already has a mag called {mag_name}."
+            )
+
+        foreign_normalized_mag_path = (
+            Path(os.path.relpath(foreign_mag_path, self.dataset.path))
+            if make_relative
+            else foreign_mag_path
+        )
+
+        if symlink:
+            os.symlink(
+                foreign_normalized_mag_path,
+                join(self.dataset.path, self.name, mag_name),
+            )
+        else:
+            shutil.copytree(
+                foreign_normalized_mag_path,
+                join(self.dataset.path, self.name, mag_name),
+            )
+
+        # copy the properties of the layer into the properties of this dataset
+        mag_properties = None
+        from wkcuber.api.properties.dataset_properties import (
+            Properties,
+        )  # using a relative import prevents a circular dependency
+
+        foreign_layer_properties = Properties._from_json(
+            foreign_mag_path.parent.parent / Properties.FILE_NAME
+        ).data_layers[self.name]
+        for resolution in foreign_layer_properties.wkw_magnifications:
+            if resolution.mag == mag:
+                mag_properties = resolution
+                break
+
+        assert (
+            mag_properties is not None
+        ), f"Failed to {operation} existing mag at {foreign_mag_path}: The properties on the foreign dataset do not contain an entry for the specified mag."
+        new_bbox = self.get_bounding_box().extended_by(
+            foreign_layer_properties.get_bounding_box()
+        )
+        self.set_bounding_box(offset=new_bbox.topleft, size=new_bbox.size)
+        self.dataset.properties.data_layers[self.name]._wkw_magnifications += [
+            mag_properties
+        ]
+        self.dataset.properties._export_as_json()
+
+        self._setup_mag(mag)
+        return self.mags[mag]
+
+    def add_symlink_mag(
+        self, foreign_mag_path: Union[str, Path], make_relative: bool = False
+    ) -> MagView:
+        """
+        Creates a symlink to the data at `foreign_mag_path` which belongs to another dataset.
+        The relevant information from the `datasource-properties.json` of the other dataset is copied to this dataset.
+        Note: If the other dataset modifies its bounding box afterwards, the change does not affect this properties
+        (or vice versa).
+        If make_relative is True, the symlink is made relative to the current dataset path.
+        """
+        foreign_mag_path = Path(os.path.abspath(foreign_mag_path))
+        return self._add_foreign_mag(
+            foreign_mag_path, symlink=True, make_relative=make_relative
+        )
+
+    def add_copy_mag(self, foreign_mag_path: Union[str, Path]) -> MagView:
+        """
+        Copies the data at `foreign_mag_path` which belongs to another dataset to the current dataset.
+        Additionally, the relevant information from the `datasource-properties.json` of the other dataset are copied too.
+        """
+        foreign_mag_path = Path(os.path.abspath(foreign_mag_path))
+        return self._add_foreign_mag(
+            foreign_mag_path, symlink=False, make_relative=False
+        )
 
     def _create_dir_for_mag(
         self, mag: Union[int, str, list, tuple, np.ndarray, Mag]
