@@ -1,4 +1,5 @@
 import math
+import warnings
 from pathlib import Path
 from types import TracebackType
 from typing import Tuple, Optional, Type, Callable, Union, cast
@@ -76,16 +77,13 @@ class View:
         self,
         data: np.ndarray,
         offset: Tuple[int, int, int] = (0, 0, 0),
-        allow_compressed_write: bool = False,
     ) -> None:
         """
         Writes the `data` at the specified `offset` to disk.
         The `offset` is relative to `global_offset`.
 
-        If the data on disk is compressed, the passed `data` either has to be aligned with the files on disk
-        or `allow_compressed_write` has to be `True`. If `allow_compressed_write` is `True`, `data` is padded by
-        first reading the necessary padding from disk.
-        In this particular case, reading data from outside the bounding box is allowed.
+        Note that writing compressed data which is not aligned with the blocks on disk may result in
+        diminished performance, as full blocks will automatically be read to pad the write actions.
         """
         assert not self.read_only, "Cannot write data to an read_only View"
 
@@ -103,7 +101,7 @@ class View:
             tuple(sum(x) for x in zip(self.global_offset, offset)),
         )
 
-        if self._is_compressed() and allow_compressed_write:
+        if self._is_compressed():
             absolute_offset, data = self._handle_compressed_write(absolute_offset, data)
 
         if not was_opened:
@@ -437,16 +435,17 @@ class View:
         ):
             # the data is not aligned
             # read the aligned bounding box
-            try:
-                # We want to read the data at the absolute offset.
-                # The absolute offset might be outside of the current view.
-                # That is the case if the data is compressed but the view does not include the whole file on disk.
-                # In this case we avoid checking the bounds because the aligned_offset and aligned_shape are calculated internally.
-                aligned_data = self._read_without_checks(aligned_offset, aligned_shape)
-            except AssertionError as e:
-                raise AssertionError(
-                    f"Writing compressed data failed. The compressed file is not fully inside the bounding box of the view (offset={self.global_offset}, size={self.size})."
-                ) from e
+
+            # We want to read the data at the absolute offset.
+            # The absolute offset might be outside of the current view.
+            # That is the case if the data is compressed but the view does not include the whole file on disk.
+            # In this case we avoid checking the bounds because the aligned_offset and aligned_shape are calculated internally.
+            warnings.warn(
+                "Warning: write() was called on a compressed mag without block alignment. Performance will be degraded as the data has to be padded first.",
+                RuntimeWarning,
+            )
+            aligned_data = self._read_without_checks(aligned_offset, aligned_shape)
+
             index_slice = (
                 slice(None, None),
                 *(
@@ -478,6 +477,12 @@ class View:
         _tb: Optional[TracebackType],
     ) -> None:
         self.close()
+
+    def __repr__(self) -> str:
+        return repr(
+            "View(%s, global_offset=%s, size=%s)"
+            % (self.path, self.global_offset, self.size)
+        )
 
 
 def _assert_positive_dimensions(

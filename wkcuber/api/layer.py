@@ -1,6 +1,9 @@
 import logging
 import math
+import os
+import shutil
 from argparse import Namespace
+from pathlib import Path
 from shutil import rmtree
 from os.path import join
 from os import makedirs
@@ -45,6 +48,7 @@ from wkcuber.utils import (
     DEFAULT_WKW_FILE_LEN,
     get_executor_for_args,
     named_partial,
+    _snake_to_camel_case,
 )
 
 
@@ -116,6 +120,9 @@ class Layer:
         Creates a new mag called and adds it to the layer.
         The parameter `block_len`, `file_len` and `compress` can be
         specified to adjust how the data is stored on disk.
+        Note that writing compressed data which is not aligned with the blocks on disk may result in
+        diminished performance, as full blocks will automatically be read to pad the write actions. Alternatively,
+        you can call mag.compress() after all the data was written
 
         The return type is `wkcuber.api.mag_view.MagView`.
 
@@ -195,6 +202,88 @@ class Layer:
         )
         rmtree(full_path)
 
+    def _add_foreign_mag(
+        self, foreign_mag_path: Path, symlink: bool, make_relative: bool
+    ) -> MagView:
+        mag_name = foreign_mag_path.name
+        mag = Mag(mag_name)
+        operation = "symlink" if symlink else "copy"
+        if mag in self.mags.keys():
+            raise IndexError(
+                f"Cannot {operation} {foreign_mag_path}. This dataset already has a mag called {mag_name}."
+            )
+
+        foreign_normalized_mag_path = (
+            Path(os.path.relpath(foreign_mag_path, self.dataset.path))
+            if make_relative
+            else foreign_mag_path
+        )
+
+        if symlink:
+            os.symlink(
+                foreign_normalized_mag_path,
+                join(self.dataset.path, self.name, mag_name),
+            )
+        else:
+            shutil.copytree(
+                foreign_normalized_mag_path,
+                join(self.dataset.path, self.name, mag_name),
+            )
+
+        # copy the properties of the layer into the properties of this dataset
+        mag_properties = None
+        from wkcuber.api.properties.dataset_properties import (
+            Properties,
+        )  # using a relative import prevents a circular dependency
+
+        foreign_layer_properties = Properties._from_json(
+            foreign_mag_path.parent.parent / Properties.FILE_NAME
+        ).data_layers[self.name]
+        for resolution in foreign_layer_properties.wkw_magnifications:
+            if resolution.mag == mag:
+                mag_properties = resolution
+                break
+
+        assert (
+            mag_properties is not None
+        ), f"Failed to {operation} existing mag at {foreign_mag_path}: The properties on the foreign dataset do not contain an entry for the specified mag."
+        new_bbox = self.get_bounding_box().extended_by(
+            foreign_layer_properties.get_bounding_box()
+        )
+        self.set_bounding_box(offset=new_bbox.topleft, size=new_bbox.size)
+        self.dataset.properties.data_layers[self.name]._wkw_magnifications += [
+            mag_properties
+        ]
+        self.dataset.properties._export_as_json()
+
+        self._setup_mag(mag)
+        return self.mags[mag]
+
+    def add_symlink_mag(
+        self, foreign_mag_path: Union[str, Path], make_relative: bool = False
+    ) -> MagView:
+        """
+        Creates a symlink to the data at `foreign_mag_path` which belongs to another dataset.
+        The relevant information from the `datasource-properties.json` of the other dataset is copied to this dataset.
+        Note: If the other dataset modifies its bounding box afterwards, the change does not affect this properties
+        (or vice versa).
+        If make_relative is True, the symlink is made relative to the current dataset path.
+        """
+        foreign_mag_path = Path(os.path.abspath(foreign_mag_path))
+        return self._add_foreign_mag(
+            foreign_mag_path, symlink=True, make_relative=make_relative
+        )
+
+    def add_copy_mag(self, foreign_mag_path: Union[str, Path]) -> MagView:
+        """
+        Copies the data at `foreign_mag_path` which belongs to another dataset to the current dataset.
+        Additionally, the relevant information from the `datasource-properties.json` of the other dataset are copied too.
+        """
+        foreign_mag_path = Path(os.path.abspath(foreign_mag_path))
+        return self._add_foreign_mag(
+            foreign_mag_path, symlink=False, make_relative=False
+        )
+
     def _create_dir_for_mag(
         self, mag: Union[int, str, list, tuple, np.ndarray, Mag]
     ) -> None:
@@ -249,6 +338,31 @@ class Layer:
 
     def get_bounding_box(self) -> BoundingBox:
         return self.dataset.properties.data_layers[self.name].get_bounding_box()
+
+    def rename(self, layer_name: str) -> None:
+        """
+        Renames the layer to `layer_name`. This changes the name of the directory on disk and updates the properties.
+        """
+        assert (
+            layer_name not in self.dataset.layers.keys()
+        ), f"Failed to rename layer {self.name} to {layer_name}: The new name already exists."
+        os.rename(self.dataset.path / self.name, self.dataset.path / layer_name)
+        layer_properties = self.dataset.properties.data_layers[self.name]
+        layer_properties._name = layer_name
+        del self.dataset.properties.data_layers[self.name]
+        self.dataset.properties._data_layers[layer_name] = layer_properties
+        self.dataset.properties._export_as_json()
+        del self.dataset.layers[self.name]
+        self.dataset.layers[layer_name] = self
+        self.name = layer_name
+
+        # The MagViews need to be updated
+        for mag in self._mags.values():
+            mag.path = _find_mag_path_on_disk(self.dataset.path, self.name, mag.name)
+            if mag._is_opened:
+                # Reopen handle to dataset on disk
+                mag.close()
+                mag.open()
 
     def downsample(
         self,
@@ -416,7 +530,6 @@ class Layer:
                 mag_factors=mag_factors,
                 interpolation_mode=parsed_interpolation_mode,
                 buffer_edge_len=buffer_edge_len,
-                compress=compress,
                 job_count_per_log=job_count_per_log,
             )
 
@@ -546,7 +659,6 @@ class Layer:
                     upsample_cube_job,
                     mag_factors=mag_factors,
                     buffer_edge_len=buffer_edge_len,
-                    compress=compress,
                     job_count_per_log=job_count_per_log,
                 )
                 prev_mag_view.get_view().for_zipped_chunks(
@@ -607,6 +719,44 @@ class Layer:
             compress=compress,
         )
 
+    def set_view_configuration(
+        self, view_configuration: "LayerViewConfiguration"
+    ) -> None:
+        self.dataset.properties._data_layers[self.name]._default_view_configuration = {
+            _snake_to_camel_case(k): v
+            for k, v in vars(view_configuration).items()
+            if v is not None
+        }
+        self.dataset.properties._export_as_json()  # update properties on disk
+
+    def get_view_configuration(self) -> Optional["LayerViewConfiguration"]:
+        view_configuration_dict = self.dataset.properties.data_layers[
+            self.name
+        ].default_view_configuration
+        if view_configuration_dict is None:
+            return None
+
+        return LayerViewConfiguration(
+            color=cast(Tuple[int, int, int], tuple(view_configuration_dict["color"])),
+            alpha=view_configuration_dict.get("alpha"),
+            intensity_range=cast(
+                Tuple[float, float], tuple(view_configuration_dict["intensityRange"])
+            )
+            if "intensityRange" in view_configuration_dict.keys()
+            else None,
+            min=view_configuration_dict.get("min"),
+            max=view_configuration_dict.get("max"),
+            is_disabled=view_configuration_dict.get("isDisabled"),
+            is_inverted=view_configuration_dict.get("isInverted"),
+            is_in_edit_mode=view_configuration_dict.get("isInEditMode"),
+        )
+
+    def __repr__(self) -> str:
+        return repr(
+            "Layer(%s, dtype_per_channel=%s, num_channels=%s)"
+            % (self.name, self.dtype_per_channel, self.num_channels)
+        )
+
 
 class SegmentationLayer(Layer):
     @property
@@ -638,3 +788,29 @@ class LayerCategories:
 
     COLOR_TYPE = "color"
     SEGMENTATION_TYPE = "segmentation"
+
+
+class LayerViewConfiguration:
+    """
+    Stores information on how the dataset is shown in webknossos by default.
+    """
+
+    def __init__(
+        self,
+        color: Optional[Tuple[int, int, int]] = None,
+        alpha: Optional[float] = None,
+        intensity_range: Optional[Tuple[float, float]] = None,
+        min: Optional[float] = None,  # pylint: disable=redefined-builtin
+        max: Optional[float] = None,  # pylint: disable=redefined-builtin
+        is_disabled: Optional[bool] = None,
+        is_inverted: Optional[bool] = None,
+        is_in_edit_mode: Optional[bool] = None,
+    ):
+        self.color = color
+        self.alpha = alpha
+        self.intensity_range = intensity_range
+        self.min = min
+        self.max = max
+        self.is_disabled = is_disabled
+        self.is_inverted = is_inverted
+        self.is_in_edit_mode = is_in_edit_mode

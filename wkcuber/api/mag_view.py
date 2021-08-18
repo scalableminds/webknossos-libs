@@ -99,24 +99,18 @@ class MagView(View):
                 join(layer.dataset.path, layer.name, self.name), self.header
             )
 
-    def write(
-        self,
-        data: np.ndarray,
-        offset: Tuple[int, int, int] = (0, 0, 0),
-        allow_compressed_write: bool = False,
-    ) -> None:
+    def write(self, data: np.ndarray, offset: Tuple[int, int, int] = (0, 0, 0)) -> None:
         """
         Writes the `data` at the specified `offset` to disk (like `wkcuber.api.view.View.write()`).
 
         The `offset` refers to the absolute position, regardless of the offset in the properties (because the global_offset is set to (0, 0, 0)).
         If the data exceeds the original bounding box, the properties are updated.
 
-        If the data on disk is compressed, the passed `data` either has to be aligned with the files on disk
-        or `allow_compressed_write` has to be `True`. If `allow_compressed_write` is `True`, `data` is padded by
-        first reading the necessary padding from disk.
+        Note that writing compressed data which is not aligned with the blocks on disk may result in
+        diminished performance, as full blocks will automatically be read to pad the write actions.
         """
         self._assert_valid_num_channels(data.shape)
-        super().write(data, offset, allow_compressed_write)
+        super().write(data, offset)
         layer_properties = self.layer.dataset.properties.data_layers[self.layer.name]
         current_offset_in_mag1 = layer_properties.get_bounding_box_offset()
         current_size_in_mag1 = layer_properties.get_bounding_box_size()
@@ -332,6 +326,12 @@ class MagView(View):
     def _get_file_dimensions(self) -> Tuple[int, int, int]:
         return cast(
             Tuple[int, int, int], (self.header.file_len * self.header.block_len,) * 3
+        )
+
+    def __repr__(self) -> str:
+        return repr(
+            "MagView(name=%s, global_offset=%s, size=%s)"
+            % (self.name, self.global_offset, self.size)
         )
 
 
