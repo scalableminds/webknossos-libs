@@ -419,15 +419,18 @@ class Dataset:
         If make_relative is True, the symlink is made relative to the current dataset path.
         """
         foreign_layer_path = Path(os.path.abspath(foreign_layer_path))
-        if make_relative:
-            foreign_layer_path = Path(os.path.relpath(foreign_layer_path, self.path))
         layer_name = foreign_layer_path.name
         if layer_name in self.layers.keys():
             raise IndexError(
                 f"Cannot create symlink to {foreign_layer_path}. This dataset already has a layer called {layer_name}."
             )
 
-        os.symlink(foreign_layer_path, join(self.path, layer_name))
+        foreign_layer_symlink_path = (
+            Path(os.path.relpath(foreign_layer_path, self.path))
+            if make_relative
+            else foreign_layer_path
+        )
+        os.symlink(foreign_layer_symlink_path, join(self.path, layer_name))
 
         # copy the properties of the layer into the properties of this dataset
         layer_properties = Dataset(foreign_layer_path.parent).properties.data_layers[
@@ -693,6 +696,9 @@ class Dataset:
             if "rotation" in view_configuration_dict
             else None,
         )
+
+    def __repr__(self) -> str:
+        return repr("Dataset(%s)" % self.path)
 
 
 class DatasetViewConfiguration:

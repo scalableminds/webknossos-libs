@@ -478,6 +478,12 @@ class View:
     ) -> None:
         self.close()
 
+    def __repr__(self) -> str:
+        return repr(
+            "View(%s, global_offset=%s, size=%s)"
+            % (self.path, self.global_offset, self.size)
+        )
+
 
 def _assert_positive_dimensions(
     offset: Tuple[int, int, int], size: Tuple[int, int, int]

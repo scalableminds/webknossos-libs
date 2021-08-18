@@ -1,6 +1,9 @@
 import logging
 import math
+import os
+import shutil
 from argparse import Namespace
+from pathlib import Path
 from shutil import rmtree
 from os.path import join
 from os import makedirs
@@ -199,6 +202,88 @@ class Layer:
         )
         rmtree(full_path)
 
+    def _add_foreign_mag(
+        self, foreign_mag_path: Path, symlink: bool, make_relative: bool
+    ) -> MagView:
+        mag_name = foreign_mag_path.name
+        mag = Mag(mag_name)
+        operation = "symlink" if symlink else "copy"
+        if mag in self.mags.keys():
+            raise IndexError(
+                f"Cannot {operation} {foreign_mag_path}. This dataset already has a mag called {mag_name}."
+            )
+
+        foreign_normalized_mag_path = (
+            Path(os.path.relpath(foreign_mag_path, self.dataset.path))
+            if make_relative
+            else foreign_mag_path
+        )
+
+        if symlink:
+            os.symlink(
+                foreign_normalized_mag_path,
+                join(self.dataset.path, self.name, mag_name),
+            )
+        else:
+            shutil.copytree(
+                foreign_normalized_mag_path,
+                join(self.dataset.path, self.name, mag_name),
+            )
+
+        # copy the properties of the layer into the properties of this dataset
+        mag_properties = None
+        from wkcuber.api.properties.dataset_properties import (
+            Properties,
+        )  # using a relative import prevents a circular dependency
+
+        foreign_layer_properties = Properties._from_json(
+            foreign_mag_path.parent.parent / Properties.FILE_NAME
+        ).data_layers[self.name]
+        for resolution in foreign_layer_properties.wkw_magnifications:
+            if resolution.mag == mag:
+                mag_properties = resolution
+                break
+
+        assert (
+            mag_properties is not None
+        ), f"Failed to {operation} existing mag at {foreign_mag_path}: The properties on the foreign dataset do not contain an entry for the specified mag."
+        new_bbox = self.get_bounding_box().extended_by(
+            foreign_layer_properties.get_bounding_box()
+        )
+        self.set_bounding_box(offset=new_bbox.topleft, size=new_bbox.size)
+        self.dataset.properties.data_layers[self.name]._wkw_magnifications += [
+            mag_properties
+        ]
+        self.dataset.properties._export_as_json()
+
+        self._setup_mag(mag)
+        return self.mags[mag]
+
+    def add_symlink_mag(
+        self, foreign_mag_path: Union[str, Path], make_relative: bool = False
+    ) -> MagView:
+        """
+        Creates a symlink to the data at `foreign_mag_path` which belongs to another dataset.
+        The relevant information from the `datasource-properties.json` of the other dataset is copied to this dataset.
+        Note: If the other dataset modifies its bounding box afterwards, the change does not affect this properties
+        (or vice versa).
+        If make_relative is True, the symlink is made relative to the current dataset path.
+        """
+        foreign_mag_path = Path(os.path.abspath(foreign_mag_path))
+        return self._add_foreign_mag(
+            foreign_mag_path, symlink=True, make_relative=make_relative
+        )
+
+    def add_copy_mag(self, foreign_mag_path: Union[str, Path]) -> MagView:
+        """
+        Copies the data at `foreign_mag_path` which belongs to another dataset to the current dataset.
+        Additionally, the relevant information from the `datasource-properties.json` of the other dataset are copied too.
+        """
+        foreign_mag_path = Path(os.path.abspath(foreign_mag_path))
+        return self._add_foreign_mag(
+            foreign_mag_path, symlink=False, make_relative=False
+        )
+
     def _create_dir_for_mag(
         self, mag: Union[int, str, list, tuple, np.ndarray, Mag]
     ) -> None:
@@ -253,6 +338,31 @@ class Layer:
 
     def get_bounding_box(self) -> BoundingBox:
         return self.dataset.properties.data_layers[self.name].get_bounding_box()
+
+    def rename(self, layer_name: str) -> None:
+        """
+        Renames the layer to `layer_name`. This changes the name of the directory on disk and updates the properties.
+        """
+        assert (
+            layer_name not in self.dataset.layers.keys()
+        ), f"Failed to rename layer {self.name} to {layer_name}: The new name already exists."
+        os.rename(self.dataset.path / self.name, self.dataset.path / layer_name)
+        layer_properties = self.dataset.properties.data_layers[self.name]
+        layer_properties._name = layer_name
+        del self.dataset.properties.data_layers[self.name]
+        self.dataset.properties._data_layers[layer_name] = layer_properties
+        self.dataset.properties._export_as_json()
+        del self.dataset.layers[self.name]
+        self.dataset.layers[layer_name] = self
+        self.name = layer_name
+
+        # The MagViews need to be updated
+        for mag in self._mags.values():
+            mag.path = _find_mag_path_on_disk(self.dataset.path, self.name, mag.name)
+            if mag._is_opened:
+                # Reopen handle to dataset on disk
+                mag.close()
+                mag.open()
 
     def downsample(
         self,
@@ -639,6 +749,12 @@ class Layer:
             is_disabled=view_configuration_dict.get("isDisabled"),
             is_inverted=view_configuration_dict.get("isInverted"),
             is_in_edit_mode=view_configuration_dict.get("isInEditMode"),
+        )
+
+    def __repr__(self) -> str:
+        return repr(
+            "Layer(%s, dtype_per_channel=%s, num_channels=%s)"
+            % (self.name, self.dtype_per_channel, self.num_channels)
         )
 
 

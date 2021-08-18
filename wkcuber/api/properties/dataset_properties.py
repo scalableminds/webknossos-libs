@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 from typing import Tuple, Optional, Dict, Any, cast
 
-from wkcuber.api.layer import Layer, LayerCategories
+from wkcuber.api.layer import LayerCategories
 from wkcuber.api.properties.layer_properties import (
     SegmentationLayerProperties,
     LayerProperties,
