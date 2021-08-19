@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -eEuo pipefail
 
+if [ -d "./testoutput" ]; then rm -Rf ./testoutput; fi
+
 BASEDIR=./tests/scripts
 
 sh ${BASEDIR}/tiff_cubing.sh
