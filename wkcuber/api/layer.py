@@ -89,8 +89,8 @@ class Layer:
         makedirs(self.path, exist_ok=True)
 
     @property
-    def path(self):
-        return join(self.dataset.path, self.name)
+    def path(self) -> Path:
+        return Path(join(self.dataset.path, self.name))
 
     @property
     def mags(self) -> Dict[Mag, MagView]:

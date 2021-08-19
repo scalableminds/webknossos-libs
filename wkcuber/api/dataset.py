@@ -422,9 +422,9 @@ class Dataset:
         if isinstance(foreign_layer, Layer):
             foreign_layer_path = foreign_layer.path
         else:
-            foreign_layer_path = foreign_layer
+            foreign_layer_path = Path(foreign_layer).absolute()
 
-        foreign_layer_path = Path(os.path.abspath(foreign_layer_path))
+        foreign_layer_path = foreign_layer_path.resolve()
         layer_name = foreign_layer_path.name
         if layer_name in self.layers.keys():
             raise IndexError(
@@ -466,9 +466,9 @@ class Dataset:
         if isinstance(foreign_layer, Layer):
             foreign_layer_path = foreign_layer.path
         else:
-            foreign_layer_path = foreign_layer
+            foreign_layer_path = Path(foreign_layer)
 
-        foreign_layer_path = Path(os.path.abspath(foreign_layer_path))
+        foreign_layer_path = foreign_layer_path.resolve()
         layer_name = foreign_layer_path.name
         if layer_name in self.layers.keys():
             raise IndexError(
