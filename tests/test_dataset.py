@@ -196,21 +196,24 @@ def test_open_dataset() -> None:
 
     assert len(ds.properties.data_layers) == 1
     assert len(ds.properties.data_layers["color"].wkw_magnifications) == 1
-    
-    
+
+
 def test_modify_existing_dataset() -> None:
     delete_dir(TESTOUTPUT_DIR / "simple_wk_dataset")
     ds1 = Dataset.create(TESTOUTPUT_DIR / "simple_wk_dataset", scale=(1, 1, 1))
     ds1.add_layer(
         "color", LayerCategories.COLOR_TYPE, dtype_per_layer="float", num_channels=1
     )
-    
+
     ds2 = Dataset(TESTOUTPUT_DIR / "simple_wk_dataset")
     ds2.add_layer(
-        'segmentation', LayerCategories.SEGMENTATION_TYPE, 'uint8', largest_segment_id=100000
+        "segmentation",
+        LayerCategories.SEGMENTATION_TYPE,
+        "uint8",
+        largest_segment_id=100000,
     )
-    
-    assert((TESTOUTPUT_DIR / "simple_wk_dataset" / "segmentation").is_dir())
+
+    assert (TESTOUTPUT_DIR / "simple_wk_dataset" / "segmentation").is_dir()
 
 
 def test_view_read_with_open() -> None:
