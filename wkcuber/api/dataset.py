@@ -409,15 +409,21 @@ class Dataset:
         rmtree(join(self.path, layer_name))
 
     def add_symlink_layer(
-        self, foreign_layer_path: Union[str, Path], make_relative: bool = False
+        self, foreign_layer: Union[str, Path, Layer], make_relative: bool = False
     ) -> Layer:
         """
-        Creates a symlink to the data at `foreign_layer_path` which belongs to another dataset.
+        Creates a symlink to the data at `foreign_layer` which belongs to another dataset.
         The relevant information from the `datasource-properties.json` of the other dataset is copied to this dataset.
         Note: If the other dataset modifies its bounding box afterwards, the change does not affect this properties
         (or vice versa).
         If make_relative is True, the symlink is made relative to the current dataset path.
         """
+
+        if isinstance(foreign_layer, Layer):
+            foreign_layer_path = foreign_layer.path
+        else:
+            foreign_layer_path = foreign_layer
+
         foreign_layer_path = Path(os.path.abspath(foreign_layer_path))
         layer_name = foreign_layer_path.name
         if layer_name in self.layers.keys():
@@ -451,11 +457,16 @@ class Dataset:
             self.get_layer(layer_name)._setup_mag(resolution.mag.to_layer_name())
         return self.layers[layer_name]
 
-    def add_copy_layer(self, foreign_layer_path: Union[str, Path]) -> Layer:
+    def add_copy_layer(self, foreign_layer: Union[str, Path, Layer]) -> Layer:
         """
-        Copies the data at `foreign_layer_path` which belongs to another dataset to the current dataset.
+        Copies the data at `foreign_layer` which belongs to another dataset to the current dataset.
         Additionally, the relevant information from the `datasource-properties.json` of the other dataset are copied too.
         """
+
+        if isinstance(foreign_layer, Layer):
+            foreign_layer_path = foreign_layer.path
+        else:
+            foreign_layer_path = foreign_layer
 
         foreign_layer_path = Path(os.path.abspath(foreign_layer_path))
         layer_name = foreign_layer_path.name
