@@ -18,7 +18,7 @@ CUBE_EDGE_LEN = 256
 def test_upsampling() -> None:
     with tempfile.TemporaryDirectory() as temp_dir:
         ds = Dataset.create(Path(temp_dir), scale=(1, 1, 1))
-        layer = ds.add_layer("color", "COLOR")
+        layer = ds.add_layer("color", LayerCategories.COLOR_TYPE)
         mag = layer.add_mag([4, 4, 2])
         mag.write(
             offset=(10, 20, 40),
@@ -51,7 +51,7 @@ def test_upsample_cube() -> None:
 def upsample_test_helper(use_compress: bool) -> None:
     with tempfile.TemporaryDirectory() as temp_dir:
         ds = Dataset.create(Path(temp_dir), scale=(10.5, 10.5, 5))
-        layer = ds.add_layer("color", "COLOR")
+        layer = ds.add_layer("color", LayerCategories.COLOR_TYPE)
         mag2 = layer.add_mag([2, 2, 2])
 
         source_offset = (WKW_CUBE_SIZE, 2 * WKW_CUBE_SIZE, 0)
