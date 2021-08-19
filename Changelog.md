@@ -16,6 +16,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 
 ### Changed
 - Bump scipy to `1.6.0` and `scikit-image` to `0.18.0` while keeping `numpy` to under `1.20.0` [#372](https://github.com/scalableminds/webknossos-cuber/pull/372/files)
+- Avoid warnings for compressed/unaligned data, if the data is directly at the border of the bounding box. [#378](https://github.com/scalableminds/webknossos-cuber/pull/378)  
 
 ### Fixed
 - Fixes a bug where modifications to an existing dataset with floats as dtype failed. [#375](https://github.com/scalableminds/webknossos-cuber/pull/375)

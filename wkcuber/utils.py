@@ -496,12 +496,6 @@ def named_partial(func: F, *args: Any, **kwargs: Any) -> F:
     return partial_func
 
 
-def convert_mag1_size(
-    mag1_size: Union[List, np.ndarray], target_mag: Mag
-) -> np.ndarray:
-    return ceil_div_np(np.array(mag1_size), target_mag.as_np())
-
-
 def convert_mag1_offset(
     mag1_offset: Union[List, np.ndarray], target_mag: Mag
 ) -> np.ndarray:
