@@ -12,6 +12,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes in Config & CLI
 
 ### Added
+- `dataset.add_symlink_layer` and `dataset.add_copy_layer` can now handle `Layer` arguments as well. The parameter `foreign_layer_path` was renamed to `foreign_layer`. [#389](https://github.com/scalableminds/webknossos-cuber/pull/389)
 
 ### Changed
 - Bump scipy to `1.6.0` and `scikit-image` to `0.18.0` while keeping `numpy` to under `1.20.0` [#372](https://github.com/scalableminds/webknossos-cuber/pull/372/files)
