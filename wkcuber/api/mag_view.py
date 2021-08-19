@@ -19,7 +19,6 @@ import numpy as np
 from wkcuber.api.bounding_box import BoundingBox
 from wkcuber.compress_utils import compress_file_job
 from wkcuber.utils import (
-    convert_mag1_size,
     convert_mag1_offset,
     get_executor_for_args,
     wait_and_ensure_success,
@@ -77,22 +76,22 @@ class MagView(View):
             file_len=file_len,
             block_type=block_type,
         )
+
+        self.layer = layer
+        self.name = name
+
         super().__init__(
             _find_mag_path_on_disk(layer.dataset.path, layer.name, name),
             header,
             cast(
                 Tuple[int, int, int],
-                tuple(
-                    convert_mag1_size(layer.get_bounding_box().bottomright, Mag(name))
-                ),
+                tuple(self._mag_view_bounding_box_at_creation.bottomright),
             ),
             (0, 0, 0),
             False,
             False,
+            None,
         )
-
-        self.layer = layer
-        self.name = name
 
         if create:
             wkw.Dataset.create(
@@ -326,6 +325,14 @@ class MagView(View):
     def _get_file_dimensions(self) -> Tuple[int, int, int]:
         return cast(
             Tuple[int, int, int], (self.header.file_len * self.header.block_len,) * 3
+        )
+
+    @property
+    def _mag_view_bounding_box_at_creation(self) -> BoundingBox:
+        return (
+            self.layer.get_bounding_box()
+            .align_with_mag(Mag(self.name), ceil=True)
+            .in_mag(Mag(self.name))
         )
 
     def __repr__(self) -> str:
