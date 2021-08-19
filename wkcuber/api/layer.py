@@ -24,10 +24,10 @@ from wkw import wkw
 from wkcuber.api.bounding_box import BoundingBox
 from wkcuber.api.properties.layer_properties import SegmentationLayerProperties
 from wkcuber.downsampling_utils import (
-    calculate_virtual_scale_for_target_mag,
     calculate_default_max_mag,
-    get_previous_mag,
     SamplingModes,
+    calculate_mags_to_downsample,
+    calculate_mags_to_upsample,
 )
 
 if TYPE_CHECKING:
@@ -37,7 +37,6 @@ from wkcuber.api.mag_view import (
     _find_mag_path_on_disk,
 )
 from wkcuber.downsampling_utils import (
-    get_next_mag,
     parse_interpolation_mode,
     downsample_cube_job,
     determine_buffer_edge_len,
@@ -415,27 +414,29 @@ class Layer:
 
         if max_mag is None:
             max_mag = calculate_default_max_mag(
-                self.dataset.properties.data_layers[self.name].get_bounding_box_size()
+                self.dataset.properties.data_layers[self.name].get_bounding_box_size(),
+                self.dataset.properties.scale,
             )
 
         if sampling_mode == SamplingModes.AUTO:
             scale = self.dataset.properties.scale
         elif sampling_mode == SamplingModes.ISOTROPIC:
-            scale = (1, 1, 1)
+            scale = None
         elif sampling_mode == SamplingModes.CONSTANT_Z:
             max_mag_with_fixed_z = max_mag.to_array()
             max_mag_with_fixed_z[2] = from_mag.to_array()[2]
             max_mag = Mag(max_mag_with_fixed_z)
-            scale = calculate_virtual_scale_for_target_mag(max_mag)
+            scale = self.dataset.properties.scale
         else:
             raise AttributeError(
                 f"Downsampling failed: {sampling_mode} is not a valid SamplingMode ({SamplingModes.AUTO}, {SamplingModes.ISOTROPIC}, {SamplingModes.CONSTANT_Z})"
             )
 
-        prev_mag = from_mag
-        target_mag = get_next_mag(prev_mag, scale)
+        mags_to_downsample = calculate_mags_to_downsample(from_mag, max_mag, scale)
 
-        while target_mag <= max_mag:
+        for prev_mag, target_mag in zip(
+            [from_mag] + mags_to_downsample[:-1], mags_to_downsample
+        ):
             self.downsample_mag(
                 from_mag=prev_mag,
                 target_mag=target_mag,
@@ -444,9 +445,6 @@ class Layer:
                 buffer_edge_len=buffer_edge_len,
                 args=args,
             )
-
-            prev_mag = target_mag
-            target_mag = get_next_mag(target_mag, scale)
 
     def downsample_mag(
         self,
@@ -615,21 +613,22 @@ class Layer:
         if sampling_mode == SamplingModes.AUTO:
             scale = self.dataset.properties.scale
         elif sampling_mode == SamplingModes.ISOTROPIC:
-            scale = (1, 1, 1)
+            scale = None
         elif sampling_mode == SamplingModes.CONSTANT_Z:
             min_mag_with_fixed_z = min_mag.to_array()
             min_mag_with_fixed_z[2] = from_mag.to_array()[2]
             min_mag = Mag(min_mag_with_fixed_z)
-            scale = calculate_virtual_scale_for_target_mag(min_mag)
+            scale = self.dataset.properties.scale
         else:
             raise AttributeError(
                 f"Upsampling failed: {sampling_mode} is not a valid UpsamplingMode ({SamplingModes.AUTO}, {SamplingModes.ISOTROPIC}, {SamplingModes.CONSTANT_Z})"
             )
 
-        prev_mag = from_mag
-        target_mag = get_previous_mag(prev_mag, scale)
+        mags_to_upsample = calculate_mags_to_upsample(from_mag, min_mag, scale)
 
-        while target_mag >= min_mag and prev_mag > Mag(1):
+        for prev_mag, target_mag in zip(
+            [from_mag] + mags_to_upsample[:-1], mags_to_upsample
+        ):
             assert prev_mag > target_mag
             assert target_mag not in self.mags
 
@@ -675,9 +674,6 @@ class Layer:
                 )
 
             logging.info("Mag {0} successfully cubed".format(target_mag))
-
-            prev_mag = target_mag
-            target_mag = get_previous_mag(target_mag, scale)
 
     def _setup_mag(self, mag: Union[str, Mag]) -> None:
         # This method is used to initialize the mag when opening the Dataset. This does not create e.g. the wk_header.

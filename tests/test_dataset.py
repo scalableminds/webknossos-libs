@@ -31,6 +31,7 @@ from wkcuber.api.properties.layer_properties import SegmentationLayerProperties
 from wkcuber.api.properties.resolution_properties import Resolution
 from wkcuber.api.view import View
 from wkcuber.compress import compress_mag_inplace
+from wkcuber.downsampling_utils import calculate_mags_to_downsample
 from wkcuber.mag import Mag
 from wkcuber.utils import get_executor_for_args, named_partial, _snake_to_camel_case
 

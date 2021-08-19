@@ -12,9 +12,9 @@ from wkcuber.downsampling_utils import (
     InterpolationModes,
     downsample_cube,
     downsample_cube_job,
-    get_next_mag,
     calculate_default_max_mag,
-    get_previous_mag,
+    calculate_mags_to_downsample,
+    calculate_mags_to_upsample,
 )
 import wkw
 from wkcuber.mag import Mag
@@ -201,38 +201,57 @@ def test_downsample_multi_channel() -> None:
 
 
 def test_anisotropic_mag_calculation() -> None:
+    # scale, sampling scheme
     mag_tests = [
-        ((10.5, 10.5, 24), Mag(1), Mag((2, 2, 1))),
-        ((10.5, 10.5, 21), Mag(1), Mag((2, 2, 1))),
-        ((10.5, 24, 10.5), Mag(1), Mag((2, 1, 2))),
-        ((24, 10.5, 10.5), Mag(1), Mag((1, 2, 2))),
-        ((10.5, 10.5, 10.5), Mag(1), Mag((2, 2, 2))),
-        ((10.5, 10.5, 24), Mag((2, 2, 1)), Mag((4, 4, 1))),
-        ((10.5, 10.5, 21), Mag((2, 2, 1)), Mag((4, 4, 2))),
-        ((10.5, 24, 10.5), Mag((2, 1, 2)), Mag((4, 1, 4))),
-        ((24, 10.5, 10.5), Mag((1, 2, 2)), Mag((1, 4, 4))),
-        ((10.5, 10.5, 10.5), Mag(2), Mag(4)),
-        ((320, 320, 200), Mag(1), Mag((1, 1, 2))),
-        ((320, 320, 200), Mag((1, 1, 2)), Mag((2, 2, 4))),
+        # Anisotropic
+        ((10.5, 10.5, 24), [(1, 1, 1), (2, 2, 1), (4, 4, 2), (8, 8, 4), (16, 16, 8)]),
+        (
+            (10.5, 10.5, 24),
+            [(1, 1, 1), (2, 2, 1), (4, 4, 2), (8, 8, 4), (16, 16, 8), (16, 16, 16)],
+        ),
+        (
+            (10.5, 10.5, 24),
+            [(1, 1, 1), (2, 2, 1), (4, 4, 2), (8, 8, 4), (8, 8, 8), (8, 8, 16)],
+        ),
+        (
+            (10.5, 10.5, 10.5),
+            [(1, 1, 1), (2, 2, 2), (4, 4, 4), (8, 8, 8), (16, 16, 16)],
+        ),
+        ((10.5, 10.5, 10.5), [(1, 1, 1), (2, 2, 2), (4, 4, 4), (8, 8, 8), (8, 8, 16)]),
+        ((1, 1, 2), [(2, 2, 1), (4, 4, 2), (8, 8, 4), (16, 16, 8)]),
+        ((1, 1, 2), [(2, 2, 2), (4, 4, 2), (8, 8, 4), (16, 16, 8)]),
+        ((1, 1, 4), [(1, 1, 1), (2, 2, 1), (4, 4, 1), (8, 8, 2), (16, 16, 2)]),
+        # Constant Z
+        (
+            (1, 1, 2),
+            [(1, 1, 1), (2, 2, 1), (4, 4, 1), (8, 8, 1), (16, 16, 1)],
+        ),
+        # Isotropic
+        (None, [(1, 1, 1), (2, 2, 2), (4, 4, 4), (8, 8, 8)]),
+        (None, [(1, 1, 1), (2, 2, 2), (4, 4, 4), (8, 8, 8), (16, 16, 8)]),
+        (None, [(2, 2, 1), (4, 4, 2), (8, 8, 4)]),
+        (None, [(2, 2, 1), (4, 4, 2), (8, 8, 4), (8, 8, 8)]),
     ]
 
     for i in range(len(mag_tests)):
-        next_mag = get_next_mag(mag_tests[i][1], mag_tests[i][0])
-        assert mag_tests[i][2] == next_mag, (
-            "The next anisotropic"
-            f" Magnification of {mag_tests[i][1]} with "
-            f"the size {mag_tests[i][0]} should be {mag_tests[i][2]} "
-            f"and not {next_mag}"
-        )
+        scale = mag_tests[i][0]
+        sampling_scheme = [Mag(m) for m in mag_tests[i][1]]
+        from_mag = sampling_scheme[0]
+        max_mag = sampling_scheme[-1]
+
+        assert sampling_scheme[1:] == calculate_mags_to_downsample(
+            from_mag, max_mag, scale
+        ), f"The calculated downsampling scheme of the {i}-th test case is wrong."
 
     for i in range(len(mag_tests)):
-        previous_mag = get_previous_mag(mag_tests[i][2], mag_tests[i][0])
-        assert mag_tests[i][1] == previous_mag, (
-            "The previous anisotropic"
-            f" Magnification of {mag_tests[i][2]} with "
-            f"the size {mag_tests[i][0]} should be {mag_tests[i][1]} "
-            f"and not {previous_mag}"
-        )
+        scale = mag_tests[i][0]
+        sampling_scheme = [Mag(m) for m in mag_tests[i][1]]
+        min_mag = sampling_scheme[0]
+        from_mag = sampling_scheme[-1]
+
+        assert list(reversed(sampling_scheme[:-1])) == calculate_mags_to_upsample(
+            from_mag, min_mag, scale
+        ), f"The calculated upsampling scheme of the {i}-th test case is wrong."
 
 
 def test_default_max_mag() -> None:
