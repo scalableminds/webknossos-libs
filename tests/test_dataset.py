@@ -316,7 +316,7 @@ def test_update_new_bounding_box_offset() -> None:
     ds = Dataset.create(TESTOUTPUT_DIR / "wk_dataset", scale=(1, 1, 1))
     mag = ds.add_layer("color", LayerCategories.COLOR_TYPE).add_mag("1")
 
-    assert tuple(ds.get_layer("color").get_bounding_box().topleft) == (-1, -1, -1)
+    assert tuple(ds.get_layer("color").get_bounding_box().topleft) == (0, 0, 0)
 
     np.random.seed(1234)
     write_data = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
@@ -548,7 +548,6 @@ def test_properties_with_segmentation() -> None:
             dataset_converter.unstructure(ds_properties),
             f,
             indent=4,
-            separators=(",", ": "),
         )
 
     # validate if contents match
@@ -1419,11 +1418,11 @@ def test_compression(tmp_path: Path) -> None:
 
 def test_dataset_view_configuration(tmp_path: Path) -> None:
     ds1 = Dataset.create(tmp_path, scale=(2, 2, 1))
-    default_view_configuration = ds1.get_view_configuration()
+    default_view_configuration = ds1.default_view_configuration
     assert default_view_configuration is None
 
-    ds1.set_view_configuration(DatasetViewConfiguration(four_bit=True))
-    default_view_configuration = ds1.get_view_configuration()
+    ds1.default_view_configuration = DatasetViewConfiguration(four_bit=True)
+    default_view_configuration = ds1.default_view_configuration
     assert default_view_configuration is not None
     assert default_view_configuration.four_bit == True
     assert default_view_configuration.interpolation == None
@@ -1439,19 +1438,18 @@ def test_dataset_view_configuration(tmp_path: Path) -> None:
         properties = json.load(f)
         assert properties["defaultViewConfiguration"] == {"fourBit": True}
 
-    ds1.set_view_configuration(
-        DatasetViewConfiguration(
-            four_bit=True,
-            interpolation=False,
-            render_missing_data_black=True,
-            loading_strategy="PROGRESSIVE_QUALITY",
-            segmentation_pattern_opacity=40,
-            zoom=0.1,
-            position=(12, 12, 12),
-            rotation=(1, 2, 3),
-        )
+    ds1.default_view_configuration = DatasetViewConfiguration(
+        four_bit=True,
+        interpolation=False,
+        render_missing_data_black=True,
+        loading_strategy="PROGRESSIVE_QUALITY",
+        segmentation_pattern_opacity=40,
+        zoom=0.1,
+        position=(12, 12, 12),
+        rotation=(1, 2, 3),
     )
-    default_view_configuration = ds1.get_view_configuration()
+
+    default_view_configuration = ds1.default_view_configuration
     assert default_view_configuration is not None
     assert default_view_configuration.four_bit == True
     assert default_view_configuration.interpolation == False
@@ -1464,7 +1462,7 @@ def test_dataset_view_configuration(tmp_path: Path) -> None:
 
     # Test if the data is persisted to disk
     ds2 = Dataset(tmp_path)
-    default_view_configuration = ds2.get_view_configuration()
+    default_view_configuration = ds2.default_view_configuration
     assert default_view_configuration is not None
     assert default_view_configuration.four_bit == True
     assert default_view_configuration.interpolation == False
@@ -1654,7 +1652,7 @@ def test_rename_layer(tmp_path: Path) -> None:
     write_data = (np.random.rand(10, 20, 30) * 255).astype(np.uint8)
     mag.write(data=write_data)
 
-    layer.rename("color2")
+    layer.name = "color2"
 
     assert not (tmp_path / "ds" / "color").exists()
     assert (tmp_path / "ds" / "color2").exists()
@@ -1667,17 +1665,33 @@ def test_rename_layer(tmp_path: Path) -> None:
     assert np.array_equal(mag.read()[0], write_data)
 
 
-def test_delete_layer(tmp_path: Path) -> None:
+def test_delete_layer_and_mag(tmp_path: Path) -> None:
     ds = Dataset.create(tmp_path / "ds", scale=(1, 1, 1))
-    ds.add_layer("color", LayerCategories.COLOR_TYPE)
+    color_layer = ds.add_layer("color", LayerCategories.COLOR_TYPE)
+    color_layer.add_mag(1)
+    color_layer.add_mag(2)
     ds.add_layer(
         "segmentation", LayerCategories.SEGMENTATION_TYPE, largest_segment_id=999
     )
-
     assert "color" in ds.layers
     assert "segmentation" in ds.layers
     assert len([l for l in ds._properties.data_layers if l.name == "color"]) == 1
     assert len([l for l in ds._properties.data_layers if l.name == "segmentation"]) == 1
+    assert len(color_layer._properties.wkw_resolutions) == 2
+
+    color_layer.delete_mag(1)
+    assert len(color_layer._properties.wkw_resolutions) == 1
+    assert (
+        len(
+            [
+                m
+                for m in color_layer._properties.wkw_resolutions
+                if Mag(m.resolution) == Mag(2)
+            ]
+        )
+        == 1
+    )
+
     ds.delete_layer("color")
     assert "color" not in ds.layers
     assert "segmentation" in ds.layers

@@ -61,7 +61,7 @@ class MagView(View):
     def __init__(
         self,
         layer: "Layer",
-        name: str,
+        mag: Mag,
         block_len: int,
         file_len: int,
         block_type: int,
@@ -79,13 +79,11 @@ class MagView(View):
             block_type=block_type,
         )
         super().__init__(
-            _find_mag_path_on_disk(layer.dataset.path, layer.name, name),
+            _find_mag_path_on_disk(layer.dataset.path, layer.name, mag.to_layer_name()),
             header,
             cast(
                 Tuple[int, int, int],
-                tuple(
-                    convert_mag1_size(layer.get_bounding_box().bottomright, Mag(name))
-                ),
+                tuple(convert_mag1_size(layer.get_bounding_box().bottomright, mag)),
             ),
             (0, 0, 0),
             False,
@@ -93,7 +91,7 @@ class MagView(View):
         )
 
         self._layer = layer
-        self._name = name
+        self._mag = mag
 
         if create:
             wkw.Dataset.create(
@@ -109,12 +107,16 @@ class MagView(View):
         return next(
             mag_property
             for mag_property in self.layer._properties.wkw_resolutions
-            if Mag(mag_property.resolution).to_array() == Mag(self.name).to_array()
+            if Mag(mag_property.resolution).to_array() == self.mag.to_array()
         )
 
     @property
     def name(self) -> str:
-        return self._name
+        return self._mag.to_layer_name()
+
+    @property
+    def mag(self) -> Mag:
+        return self._mag
 
     def write(self, data: np.ndarray, offset: Tuple[int, int, int] = (0, 0, 0)) -> None:
         """
@@ -131,14 +133,15 @@ class MagView(View):
         current_offset_in_mag1 = self.layer.get_bounding_box().topleft
         current_size_in_mag1 = self.layer.get_bounding_box().size
 
-        mag = Mag(self.name)
-        mag_np = mag.as_np()
+        mag_np = self.mag.as_np()
 
         offset_in_mag1 = np.array(offset) * mag_np
 
+        # The (-1, -1, -1) is for backwards compatibility because we used '(-1, -1, -1)' to indicate that there is no data written yet.
         new_offset_in_mag1 = (
             offset_in_mag1
             if tuple(current_offset_in_mag1) == (-1, -1, -1)
+            or self.layer.get_bounding_box() == BoundingBox((0, 0, 0), (0, 0, 0))
             else np.minimum(current_offset_in_mag1, offset_in_mag1)
         )
 
@@ -151,7 +154,7 @@ class MagView(View):
 
         self._size = cast(
             Tuple[int, int, int],
-            tuple(convert_mag1_offset(max_end_offset_in_mag1, mag)),
+            tuple(convert_mag1_offset(max_end_offset_in_mag1, self.mag)),
         )  # The base view of a MagDataset always starts at (0, 0, 0)
 
         self.layer.set_bounding_box(
@@ -201,10 +204,11 @@ class MagView(View):
 
         bb = self.layer.get_bounding_box()
 
+        # The (-1, -1, -1) is for backwards compatibility because we used '(-1, -1, -1)' to indicate that there is no data written yet.
         if tuple(bb.topleft) == (-1, -1, -1):
             bb.topleft = np.array((0, 0, 0))
 
-        bb = bb.align_with_mag(Mag(self.name), ceil=True).in_mag(Mag(self.name))
+        bb = bb.align_with_mag(self.mag, ceil=True).in_mag(self.mag)
 
         view_offset = cast(
             Tuple[int, int, int],
@@ -276,14 +280,14 @@ class MagView(View):
             target_path = Path(target_path)
 
         uncompressed_full_path = (
-            Path(self.layer.dataset.path) / self.layer.name / str(Mag(self.name))
+            Path(self.layer.dataset.path) / self.layer.name / self.name
         )
         compressed_path = (
             target_path
             if target_path is not None
             else Path("{}.compress-{}".format(self.layer.dataset.path, uuid4()))
         )
-        compressed_full_path = compressed_path / self.layer.name / str(Mag(self.name))
+        compressed_full_path = compressed_path / self.layer.name / self.name
 
         if compressed_full_path.exists():
             logging.error(
@@ -330,7 +334,7 @@ class MagView(View):
             MagView.__init__(
                 self,
                 self.layer,
-                self.name,
+                self.mag,
                 self.header.block_len,
                 self.header.file_len,
                 wkw.Header.BLOCK_TYPE_LZ4HC,

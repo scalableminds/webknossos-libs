@@ -172,7 +172,7 @@ class Layer:
         """
         Do not use this constructor manually. Instead use `wkcuber.api.layer.Dataset.add_layer()` to create a `Layer`.
         """
-        # It is possible that the properties on disk do not contain 'num_channels'.
+        # It is possible that the properties on disk do not contain the number of channels.
         # Therefore, the parameter is optional. However at this point, 'num_channels' was already inferred.
         assert properties.num_channels is not None
 
@@ -202,6 +202,30 @@ class Layer:
     @property
     def name(self) -> str:
         return self._name
+
+    @name.setter
+    def name(self, layer_name: str) -> None:
+        """
+        Renames the layer to `layer_name`. This changes the name of the directory on disk and updates the properties.
+        """
+        assert (
+            layer_name not in self.dataset.layers.keys()
+        ), f"Failed to rename layer {self.name} to {layer_name}: The new name already exists."
+        os.rename(self.dataset.path / self.name, self.dataset.path / layer_name)
+        del self.dataset.layers[self.name]
+        self.dataset.layers[layer_name] = self
+        self._properties.name = layer_name
+        self._name = layer_name
+
+        # The MagViews need to be updated
+        for mag in self._mags.values():
+            mag._path = _find_mag_path_on_disk(self.dataset.path, self.name, mag.name)
+            if mag._is_opened:
+                # Reopen handle to dataset on disk
+                mag.close()
+                mag.open()
+
+        self.dataset._export_as_json()
 
     @property
     def dataset(self) -> "Dataset":
@@ -275,9 +299,7 @@ class Layer:
         self._assert_mag_does_not_exist_yet(mag)
         self._create_dir_for_mag(mag)
 
-        mag_view = MagView(
-            self, mag.to_layer_name(), block_len, file_len, block_type, create=True
-        )
+        mag_view = MagView(self, mag, block_len, file_len, block_type, create=True)
 
         self._mags[mag] = mag_view
         self._properties.wkw_resolutions += [
@@ -339,6 +361,12 @@ class Layer:
             )
 
         del self._mags[mag]
+        self._properties.wkw_resolutions = [
+            res
+            for res in self._properties.wkw_resolutions
+            if Mag(res.resolution) != mag
+        ]
+        self.dataset._export_as_json()
         # delete files on disk
         full_path = _find_mag_path_on_disk(
             self.dataset.path, self.name, mag.to_layer_name()
@@ -395,29 +423,6 @@ class Layer:
 
     def get_bounding_box(self) -> BoundingBox:
         return self._properties.bounding_box.copy()
-
-    def rename(self, layer_name: str) -> None:
-        """
-        Renames the layer to `layer_name`. This changes the name of the directory on disk and updates the properties.
-        """
-        assert (
-            layer_name not in self.dataset.layers.keys()
-        ), f"Failed to rename layer {self.name} to {layer_name}: The new name already exists."
-        os.rename(self.dataset.path / self.name, self.dataset.path / layer_name)
-        del self.dataset.layers[self.name]
-        self.dataset.layers[layer_name] = self
-        self._properties.name = layer_name
-        self._name = layer_name
-
-        # The MagViews need to be updated
-        for mag in self._mags.values():
-            mag._path = _find_mag_path_on_disk(self.dataset.path, self.name, mag.name)
-            if mag._is_opened:
-                # Reopen handle to dataset on disk
-                mag.close()
-                mag.open()
-
-        self.dataset._export_as_json()
 
     def downsample(
         self,
@@ -741,7 +746,7 @@ class Layer:
 
             self._mags[mag] = MagView(
                 self,
-                mag_name,
+                mag,
                 wk_header.block_len,
                 wk_header.file_len,
                 wk_header.block_type,

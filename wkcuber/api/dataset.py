@@ -217,7 +217,7 @@ class Dataset:
         layer_properties = LayerProperties(
             name=layer_name,
             category=category,
-            bounding_box=BoundingBox((-1, -1, -1), (-1, -1, -1)),
+            bounding_box=BoundingBox((0, 0, 0), (0, 0, 0)),
             element_class=_dtype_per_channel_to_element_class(
                 dtype_per_channel, num_channels
             ),
@@ -248,6 +248,10 @@ class Dataset:
                 self, segmentation_layer_properties
             )
             self._properties.data_layers += [segmentation_layer_properties]
+        else:
+            raise RuntimeError(
+                f"Failed to add layer ({layer_name}) because of invalid category ({category}). The supported categories are '{LayerCategories.COLOR_TYPE}' and '{LayerCategories.SEGMENTATION_TYPE}'"
+            )
 
         self._export_as_json()
         return self.layers[layer_name]
@@ -480,6 +484,7 @@ class Dataset:
                         target_chunk_size=target_mag._get_file_dimensions(),
                         executor=executor,
                     )
+        new_ds._export_as_json()
         return new_ds
 
     def _get_layer_by_category(self, category: str) -> Layer:
@@ -515,6 +520,17 @@ class Dataset:
         current_id["name"] = name
         self._properties.id = current_id
         self._export_as_json()
+
+    @property
+    def default_view_configuration(self) -> Optional[DatasetViewConfiguration]:
+        return self._properties.default_view_configuration
+
+    @default_view_configuration.setter
+    def default_view_configuration(
+        self, view_configuration: DatasetViewConfiguration
+    ) -> None:
+        self._properties.default_view_configuration = view_configuration
+        self._export_as_json()  # update properties on disk
 
     @classmethod
     def create(
@@ -552,7 +568,7 @@ class Dataset:
             "dataLayers": [],
         }
         with open(dataset_path / PROPERTIES_FILE_NAME, "w") as outfile:
-            json.dump(data, outfile, indent=4, separators=(",", ": "))
+            json.dump(data, outfile, indent=4)
 
         # Initialize object
         ds = cls(dataset_path)
@@ -586,15 +602,6 @@ class Dataset:
         else:
             return cls.create(dataset_path, scale, name)
 
-    def set_view_configuration(
-        self, view_configuration: DatasetViewConfiguration
-    ) -> None:
-        self._properties.default_view_configuration = view_configuration
-        self._export_as_json()  # update properties on disk
-
-    def get_view_configuration(self) -> Optional[DatasetViewConfiguration]:
-        return self._properties.default_view_configuration
-
     def __repr__(self) -> str:
         return repr("Dataset(%s)" % self.path)
 
@@ -604,7 +611,6 @@ class Dataset:
                 dataset_converter.unstructure(self._properties),
                 outfile,
                 indent=4,
-                separators=(",", ": "),
             )
 
     def _initialize_layer_from_properties(self, properties: LayerProperties) -> Layer:

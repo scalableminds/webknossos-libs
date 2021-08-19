@@ -10,7 +10,10 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 [Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.6...HEAD)
 
 ### Breaking Changes in Config & CLI
-
+- Replaced the old properties classes of the Dataset API with attr-classes.
+  - The `Layer.rename()` function is now replaced with the setter of `Layer.name`.
+  - The functions `Layer.get_view_configuration` and `Layer.set_view_conficuration` are replaced by the property `Layer.default_view_configuration`. (Same applies to `Dataset.get_view_configuration` and `Dataset.set_view_configuration`)
+  - Moved `LayerViewConfiguration` and `DatasetViewConfiguration` into `properties.py`
 ### Added
 
 ### Changed

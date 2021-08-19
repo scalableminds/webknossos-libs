@@ -18,12 +18,11 @@ def _extract_num_channels(
     layer: str,
     mag: Optional[Union[int, Mag]],
 ) -> int:
-    # if a wk dataset is not created with this API, then it most likely doesn't have the attribute 'num_channels' in the
-    # datasource-properties.json. In this case we need to extract the 'num_channels' from the 'header.wkw'.
+    # if a wk dataset is not created with this API, then it most likely doesn't have the attribute 'numChannels' in the
+    # datasource-properties.json. In this case we need to extract the number of channels from the 'header.wkw'.
     if num_channels_in_properties is not None:
         return num_channels_in_properties
 
-    mag = Mag(mag)
     if mag is None:
         # Unable to extract the 'num_channels' from the 'header.wkw' if the dataset has no magnifications.
         # This should never be the case because wkw-datasets that are created without this API always have a magnification.
@@ -31,13 +30,14 @@ def _extract_num_channels(
             "Cannot extract the number of channels of a dataset without a properties file and without any magnifications"
         )
 
+    mag = Mag(mag)
     wkw_ds_file_path = join(path, layer, mag.to_layer_name())
     if not isfile(join(wkw_ds_file_path, "header.wkw")):
         raise Exception(
-            f"The dataset you are trying to open does not have the attribute 'num_channels' for layer {layer}. "
+            f"The dataset you are trying to open does not have the attribute 'numChannels' for layer {layer}. "
             f"However, this attribute is necessary. To mitigate this problem, it was tried to locate "
             f"the file {wkw_ds_file_path} to extract the num_channels from there. "
-            f"Since this file does not exist, the attempt to open the dataset failed."
+            f"Since this file does not exist, the attempt to open the dataset failed. "
             f"Please add the attribute manually to solve the problem. "
             f"If the layer does not contain any data, you can also delete the layer and add it again."
         )
@@ -148,7 +148,12 @@ mag_to_array: Callable[[Mag], List[int]] = lambda o: o.to_array()
 dataset_converter.register_unstructure_hook(Mag, mag_to_array)
 dataset_converter.register_structure_hook(Mag, lambda d, _: Mag(d))
 
-# register (un-)structure hooks for attr-classes
+# Register (un-)structure hooks for attr-classes to bring the data into the expected format.
+# The properties on disk (in datasource-properties.json) use camel case for the names of the attributes.
+# However, we use snake case for the attribute names in python.
+# This requires that the names of the attributes are renamed during (un-)structuring.
+# Additionally we only want to unstructure attributes which don't have the default value
+# (e.g. Layer.default_view_configuration has many attributes which are all optionally).
 for cls in [
     DatasetProperties,
     LayerProperties,
@@ -210,7 +215,7 @@ dataset_converter.register_structure_hook(Union[int, Mag], disambiguate_mag)
 
 # Separate converter to unstructure LayerProperties
 # This is used to initialize SegmentationLayerProperties from LayerProperties
-# The important difference to the dataset_converter is that the names of the attributes stay the same while defaults are omitted.
+# The important difference to the dataset_converter is that the names of the attributes stay the same while defaults are also omitted.
 layer_properties_converter = cattr.Converter()
 layer_properties_converter.register_unstructure_hook(  # use register_unstructure_hook_func
     LayerProperties,
