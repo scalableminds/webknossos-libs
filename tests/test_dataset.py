@@ -1064,7 +1064,7 @@ def test_writing_subset_of_compressed_data() -> None:
                 data=(np.random.rand(10, 10, 10) * 255).astype(np.uint8),
             )
 
-        assert compressed_mag._mag_view_bbox == BoundingBox(
+        assert compressed_mag._mag_view_bounding_box_at_creation == BoundingBox(
             topleft=(
                 0,
                 0,

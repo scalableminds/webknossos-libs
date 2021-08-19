@@ -42,6 +42,15 @@ class View:
         self._is_bounded = is_bounded
         self.read_only = read_only
         self._is_opened = False
+        # The bounding box of the view is used to prevent warnings when writing compressed but unaligned data
+        # directly at the borders of the bounding box.
+        # A View is unable to get this information from the Dataset because it is detached from it.
+        # Adding the bounding box as parameter is a workaround for this.
+        # However, keep in mind that this bounding box is just a snapshot.
+        # This bounding box is not updated if the bounding box of the dataset is updated.
+        # Even though an outdated bounding box can lead to missed (or unwanted) warnings,
+        # this is sufficient for our use case because such scenarios are unlikely and not critical.
+        # This should not be misused to infer the size of the dataset because this might lead to problems.
         self._mag_view_bbox_at_creation = mag_view_bbox_at_creation
 
     def open(self) -> "View":
@@ -246,7 +255,7 @@ class View:
             global_offset=view_offset,
             is_bounded=True,
             read_only=read_only,
-            mag_view_bbox_at_creation=self._mag_view_bbox,
+            mag_view_bbox_at_creation=self._mag_view_bounding_box_at_creation,
         )
 
     def _assert_bounds(
@@ -429,33 +438,29 @@ class View:
         aligned_offset = absolute_offset_np - margin_to_top_left
         bottom_right = absolute_offset_np + np.array(data.shape[-3:])
         margin_to_bottom_right = (file_bb - (bottom_right % file_bb)) % file_bb
-        aligned_bottom_right = bottom_right + margin_to_bottom_right
-        aligned_shape = aligned_bottom_right - aligned_offset
+        is_bottom_right_aligned = bottom_right + margin_to_bottom_right
+        aligned_shape = is_bottom_right_aligned - aligned_offset
 
         if (
             tuple(aligned_offset) != absolute_offset
             or tuple(aligned_shape) != data.shape[-3:]
         ):
-            mag_view_bbox_at_creation = self._mag_view_bbox
+            mag_view_bbox_at_creation = self._mag_view_bounding_box_at_creation
 
             # Calculate in which dimensions the data is aligned and in which dimensions it matches the bbox of the mag.
-            aligned_top_left = aligned_offset == np.array(absolute_offset)
-            aligned_bottom_right = aligned_bottom_right == bottom_right
-            at_border_top_left = np.array(
+            is_top_left_aligned = aligned_offset == np.array(absolute_offset)
+            is_bottom_right_aligned = is_bottom_right_aligned == bottom_right
+            is_at_border_top_left = np.array(
                 mag_view_bbox_at_creation.topleft
             ) == np.array(absolute_offset)
-            at_border_bottom_right = (
+            is_at_border_bottom_right = (
                 np.array(mag_view_bbox_at_creation.bottomright) == bottom_right
             )
 
             if not (
-                np.array_equal(
-                    np.logical_or(aligned_top_left, at_border_top_left),
-                    np.array([True, True, True]),
-                )
-                and np.array_equal(
-                    np.logical_or(aligned_bottom_right, at_border_bottom_right),
-                    np.array([True, True, True]),
+                np.all(np.logical_or(is_top_left_aligned, is_at_border_top_left))
+                and np.all(
+                    np.logical_or(is_bottom_right_aligned, is_at_border_bottom_right)
                 )
             ):
                 # the data is not aligned
@@ -510,7 +515,7 @@ class View:
         )
 
     @property
-    def _mag_view_bbox(self) -> BoundingBox:
+    def _mag_view_bounding_box_at_creation(self) -> BoundingBox:
         assert self._mag_view_bbox_at_creation is not None
         return self._mag_view_bbox_at_creation
 
