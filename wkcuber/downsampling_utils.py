@@ -14,7 +14,7 @@ from wkcuber.utils import time_start, time_stop
 
 
 class SamplingModes:
-    AUTO = "auto"
+    ANISOTROPIC = "anisotropic"
     ISOTROPIC = "isotropic"
     CONSTANT_Z = "constant_z"
 
@@ -34,13 +34,6 @@ DEFAULT_EDGE_LEN = 256
 
 def determine_buffer_edge_len(dataset: wkw.Dataset) -> int:
     return min(DEFAULT_EDGE_LEN, dataset.header.file_len * dataset.header.block_len)
-
-
-def detect_larger_and_smaller_dimension(
-    scale: Tuple[float, float, float]
-) -> Tuple[int, int]:
-    scale_np = np.array(scale)
-    return np.argmax(scale_np), np.argmin(scale_np)
 
 
 def calculate_mags_to_downsample(
@@ -93,8 +86,6 @@ def calculate_default_max_mag(
     # The lowest mag should have a size of ~ 100vx**2 per slice
     max_x_y = max(dataset_size[0], dataset_size[1])
     # highest power of 2 larger (or equal) than max_x_y divided by 100
-    # The calculated factor will be used for x, y and z here. If anisotropic downsampling takes place,
-    # the dimensions can still be downsampled independently according to the scale.
     x_y_mag_value = max(2 ** math.ceil(math.log(max_x_y / 100, 2)), 4)  # at least 4
     # calculate the z value, given the scale
     z_mag_value = 2 ** (math.ceil(math.log(x_y_mag_value * scale[0] / scale[2], 2)))

@@ -372,14 +372,14 @@ class Layer:
         max_mag: Optional[Mag] = None,
         interpolation_mode: str = "default",
         compress: bool = True,
-        sampling_mode: str = SamplingModes.AUTO,
+        sampling_mode: str = SamplingModes.ANISOTROPIC,
         buffer_edge_len: Optional[int] = None,
         args: Optional[Namespace] = None,
     ) -> None:
         """
         Downsamples the data starting from `from_mag` until a magnification is `>= max(max_mag)`.
         There are three different `sampling_modes`:
-        - 'auto' - The next magnification is chosen so that the width, height and depth of a downsampled voxel assimilate. For example, if the z resolution is worse than the x/y resolution, z won't be downsampled in the first downsampling step(s). As a basis for this method, the scale from the datasource-properties.json is used.
+        - 'anisotropic' - The next magnification is chosen so that the width, height and depth of a downsampled voxel assimilate. For example, if the z resolution is worse than the x/y resolution, z won't be downsampled in the first downsampling step(s). As a basis for this method, the scale from the datasource-properties.json is used.
         - 'isotropic' - Each dimension is downsampled equally.
         - 'constant_z' - The x and y dimensions are downsampled equally, but the z dimension remains the same.
 
@@ -418,7 +418,8 @@ class Layer:
                 self.dataset.properties.scale,
             )
 
-        if sampling_mode == SamplingModes.AUTO:
+        scale: Optional[Tuple[float, float, float]] = None
+        if sampling_mode == SamplingModes.ANISOTROPIC or sampling_mode == "auto":
             scale = self.dataset.properties.scale
         elif sampling_mode == SamplingModes.ISOTROPIC:
             scale = None
@@ -429,7 +430,7 @@ class Layer:
             scale = self.dataset.properties.scale
         else:
             raise AttributeError(
-                f"Downsampling failed: {sampling_mode} is not a valid SamplingMode ({SamplingModes.AUTO}, {SamplingModes.ISOTROPIC}, {SamplingModes.CONSTANT_Z})"
+                f"Downsampling failed: {sampling_mode} is not a valid SamplingMode ({SamplingModes.ANISOTROPIC}, {SamplingModes.ISOTROPIC}, {SamplingModes.CONSTANT_Z})"
             )
 
         mags_to_downsample = calculate_mags_to_downsample(from_mag, max_mag, scale)
@@ -592,14 +593,14 @@ class Layer:
         from_mag: Mag,
         min_mag: Optional[Mag],
         compress: bool,
-        sampling_mode: str = SamplingModes.AUTO,
+        sampling_mode: str = SamplingModes.ANISOTROPIC,
         buffer_edge_len: Optional[int] = None,
         args: Optional[Namespace] = None,
     ) -> None:
         """
         Upsamples the data starting from `from_mag` as long as the magnification is `>= min_mag`.
         There are three different `sampling_modes`:
-        - 'auto' - The next magnification is chosen so that the width, height and depth of a downsampled voxel assimilate. For example, if the z resolution is worse than the x/y resolution, z won't be downsampled in the first downsampling step(s). As a basis for this method, the scale from the datasource-properties.json is used.
+        - 'anisotropic' - The next magnification is chosen so that the width, height and depth of a downsampled voxel assimilate. For example, if the z resolution is worse than the x/y resolution, z won't be downsampled in the first downsampling step(s). As a basis for this method, the scale from the datasource-properties.json is used.
         - 'isotropic' - Each dimension is downsampled equally.
         - 'constant_z' - The x and y dimensions are downsampled equally, but the z dimension remains the same.
         """
@@ -610,7 +611,8 @@ class Layer:
         if min_mag is None:
             min_mag = Mag(1)
 
-        if sampling_mode == SamplingModes.AUTO:
+        scale: Optional[Tuple[float, float, float]] = None
+        if sampling_mode == SamplingModes.ANISOTROPIC or sampling_mode == "auto":
             scale = self.dataset.properties.scale
         elif sampling_mode == SamplingModes.ISOTROPIC:
             scale = None
@@ -621,7 +623,7 @@ class Layer:
             scale = self.dataset.properties.scale
         else:
             raise AttributeError(
-                f"Upsampling failed: {sampling_mode} is not a valid UpsamplingMode ({SamplingModes.AUTO}, {SamplingModes.ISOTROPIC}, {SamplingModes.CONSTANT_Z})"
+                f"Upsampling failed: {sampling_mode} is not a valid UpsamplingMode ({SamplingModes.ANISOTROPIC}, {SamplingModes.ISOTROPIC}, {SamplingModes.CONSTANT_Z})"
             )
 
         mags_to_upsample = calculate_mags_to_upsample(from_mag, min_mag, scale)
