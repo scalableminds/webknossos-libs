@@ -12,6 +12,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes in Config & CLI
 
 ### Added
+- The API documentation is now hosted on a publicwebpage. [#392](https://github.com/scalableminds/webknossos-cuber/pull/392)
 
 ### Changed
 
