@@ -119,6 +119,7 @@ jobs:
       run: ./publish.sh
 
   docker:
+    needs: build
     runs-on: ubuntu-latest
 
     steps:
