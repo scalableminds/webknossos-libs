@@ -164,7 +164,7 @@ jobs:
         CI_BRANCH=${GITHUB_REF##*/}
         NORMALIZED_CI_BRANCH=${CI_BRANCH//[\/-]/_}
         docker tag \
-          scalableminds/webknossos-cuber:$GITHUB_SHA \s
+          scalableminds/webknossos-cuber:$GITHUB_SHA \
           scalableminds/webknossos-cuber:$NORMALIZED_CI_BRANCH
         docker push scalableminds/webknossos-cuber:$NORMALIZED_CI_BRANCH
         if [ "${CI_BRANCH}" == "master" ]; then
