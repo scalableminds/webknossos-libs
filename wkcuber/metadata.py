@@ -237,7 +237,7 @@ def detect_bbox(dataset_path: Path, layer: str, mag: Mag = Mag(1)) -> Optional[d
 
     def parse_cube_file_name(filename: str) -> Tuple[int, int, int]:
         CUBE_REGEX = re.compile(
-            fr"z(\d+){os.path.sep}y(\d+){os.path.sep}x(\d+)(\.wkw)$"
+            fr"z(\d+){re.escape(os.path.sep)}y(\d+){re.escape(os.path.sep)}x(\d+)(\.wkw)$"
         )
         m = CUBE_REGEX.search(filename)
         if m is not None:
