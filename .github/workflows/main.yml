@@ -99,30 +99,10 @@ jobs:
       run: |
         pip install poetry
         poetry install
-    
-    - name: Install custom wkw
-      shell: bash
-      run: |
-        git clone --branch truncate-err https://github.com/scalableminds/webknossos-wrap.git
-        cd webknossos-wrap/python
-        pip uninstall -y wkw
-        pip install twine wheel
-        python setup.py install
-        python setup.py sdist bdist_wheel -p $(python -c "import distutils.util; print(distutils.util.get_platform())") --python-tag py${{ matrix.python-version }}
-        ls -lisah dist
-        pwd -P
-        rm -r c:/hostedtoolcache/windows/python/${{ matrix.python-version }}*/x64/lib/site-packages/wkw-*.egg
-        pip install dist/*.whl
 
     - name: Decompress test data
       shell: bash
       run: tar -xzvf testdata/WT1_wkw.tar.gz
-
-    - name: Disk stats
-      shell: bash
-      run: |
-        du -sh *
-        df -h
 
     - name: Python tests
       shell: bash
