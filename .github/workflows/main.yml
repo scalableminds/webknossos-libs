@@ -120,7 +120,9 @@ jobs:
 
     - name: Disk stats
       shell: bash
-      run: "du -sh *"
+      run: |
+        du -sh *
+        df -h
 
     - name: Python tests
       shell: bash
