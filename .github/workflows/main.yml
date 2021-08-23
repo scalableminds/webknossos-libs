@@ -113,6 +113,10 @@ jobs:
         rm -r c:/hostedtoolcache/windows/python/${{ matrix.python-version }}*/x64/lib/site-packages/wkw-*.egg
         pip install dist/*.whl
 
+    - name: Disk stats
+      shell: bash
+      run: "du -sh *"
+
     - name: Decompress test data
       shell: bash
       run: tar -xzvf testdata/WT1_wkw.tar.gz

@@ -38,6 +38,13 @@ TESTDATA_DIR = Path("testdata")
 TESTOUTPUT_DIR = Path("testoutput")
 
 
+@pytest.fixture(autouse=True)
+def run_around_tests():
+    makedirs(TESTOUTPUT_DIR, exist_ok=True)
+    yield
+    rmtree(TESTOUTPUT_DIR)
+
+
 def delete_dir(relative_path: Path) -> None:
     if relative_path.exists() and relative_path.is_dir():
         rmtree(relative_path)
