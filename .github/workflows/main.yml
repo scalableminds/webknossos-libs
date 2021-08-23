@@ -108,6 +108,7 @@ jobs:
         pip install twine wheel
         python setup.py sdist bdist_wheel -p $(python -c "import distutils.util; print(distutils.util.get_platform())") --python-tag py${{ matrix.python-version }}
         ls -lisah dist
+        pip install dist/*.whl
 
     - name: Decompress test data
       shell: bash
