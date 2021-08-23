@@ -1,8 +1,4 @@
 from pathlib import Path
-from os import makedirs
-from platform import system
-from shutil import rmtree
-
 import numpy as np
 import wkw
 
@@ -20,11 +16,6 @@ TESTOUTPUT_DIR = Path("testoutput")
 
 
 def test_element_class_conversion() -> None:
-    if system() == "Windows":
-        # We're skipping this test on Windows, because the CI
-        # doesn't have enough disk storage
-        return
-
     test_wkw_path = TESTOUTPUT_DIR / "test_metadata"
     prediction_layer_name = "prediction"
     prediction_wkw_info = WkwDatasetInfo(
@@ -79,7 +70,7 @@ def write_custom_layer(
         .astype(dtype)
     )
     prediction_wkw_info = WkwDatasetInfo(
-        target_path, layer_name, 1, wkw.Header(dtype, num_channels)
+        target_path, layer_name, 1, wkw.Header(dtype, num_channels, file_len=1)
     )
     ensure_wkw(prediction_wkw_info)
     with open_wkw(prediction_wkw_info) as dataset:
