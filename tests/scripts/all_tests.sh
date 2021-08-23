@@ -19,8 +19,6 @@ sh ${BASEDIR}/downsampling.sh
 sh ${BASEDIR}/upsampling.sh
 sh ${BASEDIR}/anisotropic_downsampling.sh
 sh ${BASEDIR}/compression_and_verification.sh
-sh ${BASEDIR}/in_memory_downsampled_cubing.sh
 sh ${BASEDIR}/in_place_compression.sh
-sh ${BASEDIR}/simple_anisotropic_tiff_cubing.sh
 
 rm -r testdata/tiff_mag_2_reference/
