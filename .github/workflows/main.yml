@@ -118,8 +118,91 @@ jobs:
         PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
       run: ./publish.sh
 
+  build_win:
+    runs-on: windows-latest
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: [3.7, 3.8]
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+        architecture: 'x64'
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        pip install poetry
+        poetry install
+
+    - name: Decompress test data
+      shell: bash
+      run: tar -xzvf testdata/WT1_wkw.tar.gz
+
+    - name: Python tests
+      shell: bash
+      run: poetry run pytest tests
+
+    - name: Test tiff cubing
+      shell: bash
+      run: tests/scripts/tiff_cubing.sh
+
+    - name: Test tile cubing
+      shell: bash
+      run: tests/scripts/tile_cubing.sh
+
+    - name: Test simple tiff cubing
+      shell: bash
+      run: tests/scripts/simple_tiff_cubing.sh
+
+    - name: Test simple tiff cubing (no compression)
+      shell: bash
+      run: tests/scripts/simple_tiff_cubing_no_compression.sh
+
+    - name: Test metadata generation
+      shell: bash
+      run: tests/scripts/meta_generation.sh
+
+    - name: Test KNOSSOS conversion
+      shell: bash
+      run: tests/scripts/knossos_conversion.sh
+
+    - name: Decompress reference magnification data
+      shell: bash
+      run: |
+        mkdir -p testdata/tiff_mag_2_reference
+        tar -xzvf testdata/tiff_mag_2_reference.tar.gz -C testdata/tiff_mag_2_reference
+
+    - name: Test downsampling
+      shell: bash
+      run: tests/scripts/downsampling.sh
+
+    - name: Test upsampling
+      shell: bash
+      run: tests/scripts/upsampling.sh
+
+    - name: Test anisotropic downsampling
+      shell: bash
+      run: tests/scripts/anisotropic_downsampling.sh
+
+    - name: Test compression and verification
+      shell: bash
+      run: tests/scripts/compression_and_verification.sh
+
+    - name: Test in-place compression
+      shell: bash
+      run: tests/scripts/in_place_compression.sh
+
+    - name: Remove reference magnification data
+      shell: bash
+      run: rm -r testdata/tiff_mag_2_reference/
+
   docker:
-    needs: build
+    needs: [build, build_win]
     runs-on: ubuntu-latest
 
     steps:
