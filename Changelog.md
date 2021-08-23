@@ -17,6 +17,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+- Fixes support for Windows. [#394](https://github.com/scalableminds/webknossos-cuber/pull/394)
 
 ## [0.8.12](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.12) - 2021-08-19
 [Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.11...v0.8.12)
