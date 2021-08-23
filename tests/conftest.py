@@ -12,4 +12,3 @@ def run_around_tests() -> Generator:
     makedirs(TESTOUTPUT_DIR, exist_ok=True)
     yield
     rmtree(TESTOUTPUT_DIR)
-    print("CLEANUP")

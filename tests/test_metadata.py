@@ -1,5 +1,6 @@
 from pathlib import Path
 from os import makedirs
+from platform import system
 from shutil import rmtree
 
 import numpy as np
@@ -19,6 +20,11 @@ TESTOUTPUT_DIR = Path("testoutput")
 
 
 def test_element_class_conversion() -> None:
+    if system() == "Windows":
+        # We're skipping this test on Windows, because the CI
+        # doesn't have enough disk storage
+        return
+
     test_wkw_path = TESTOUTPUT_DIR / "test_metadata"
     prediction_layer_name = "prediction"
     prediction_wkw_info = WkwDatasetInfo(
