@@ -39,46 +39,8 @@ jobs:
     - name: Python tests
       run: poetry run pytest tests
 
-    - name: Test tiff cubing
-      run: tests/scripts/tiff_cubing.sh
-
-    - name: Test tile cubing
-      run: tests/scripts/tile_cubing.sh
-
-    - name: Test simple tiff cubing
-      run: tests/scripts/simple_tiff_cubing.sh
-
-    - name: Test simple tiff cubing (no compression)
-      run: tests/scripts/simple_tiff_cubing_no_compression.sh
-
-    - name: Test metadata generation
-      run: tests/scripts/meta_generation.sh
-
-    - name: Test KNOSSOS conversion
-      run: tests/scripts/knossos_conversion.sh
-
-    - name: Decompress reference magnification data
-      run: |
-        mkdir -p testdata/tiff_mag_2_reference
-        tar -xzvf testdata/tiff_mag_2_reference.tar.gz -C testdata/tiff_mag_2_reference
-
-    - name: Test downsampling
-      run: tests/scripts/downsampling.sh
-
-    - name: Test upsampling
-      run: tests/scripts/upsampling.sh
-
-    - name: Test anisotropic downsampling
-      run: tests/scripts/anisotropic_downsampling.sh
-
-    - name: Test compression and verification
-      run: tests/scripts/compression_and_verification.sh
-
-    - name: Test in-place compression
-      run: tests/scripts/in_place_compression.sh
-
-    - name: Remove reference magnification data
-      run: rm -r testdata/tiff_mag_2_reference/
+    - name: CLI tests
+      run: tests/scripts/all_tests.sh
 
     - name: Generate Docs
       if: matrix.python-version == '3.8'
@@ -147,62 +109,41 @@ jobs:
       shell: bash
       run: poetry run pytest tests
 
-    - name: Test tiff cubing
+    - name: CLI tests
       shell: bash
-      run: tests/scripts/tiff_cubing.sh
+      run: tests/scripts/all_tests.sh
 
-    - name: Test tile cubing
-      shell: bash
-      run: tests/scripts/tile_cubing.sh
+  build_mac:
+    runs-on: macos-latest
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: [3.7, 3.8]
 
-    - name: Test simple tiff cubing
-      shell: bash
-      run: tests/scripts/simple_tiff_cubing.sh
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+        architecture: 'x64'
 
-    - name: Test simple tiff cubing (no compression)
-      shell: bash
-      run: tests/scripts/simple_tiff_cubing_no_compression.sh
-
-    - name: Test metadata generation
-      shell: bash
-      run: tests/scripts/meta_generation.sh
-
-    - name: Test KNOSSOS conversion
-      shell: bash
-      run: tests/scripts/knossos_conversion.sh
-
-    - name: Decompress reference magnification data
-      shell: bash
+    - name: Install dependencies
       run: |
-        mkdir -p testdata/tiff_mag_2_reference
-        tar -xzvf testdata/tiff_mag_2_reference.tar.gz -C testdata/tiff_mag_2_reference
+        pip install poetry
+        poetry install
 
-    - name: Test downsampling
-      shell: bash
-      run: tests/scripts/downsampling.sh
+    - name: Decompress test data
+      run: tar -xzvf testdata/WT1_wkw.tar.gz
 
-    - name: Test upsampling
-      shell: bash
-      run: tests/scripts/upsampling.sh
+    - name: Python tests
+      run: poetry run pytest tests
 
-    - name: Test anisotropic downsampling
-      shell: bash
-      run: tests/scripts/anisotropic_downsampling.sh
-
-    - name: Test compression and verification
-      shell: bash
-      run: tests/scripts/compression_and_verification.sh
-
-    - name: Test in-place compression
-      shell: bash
-      run: tests/scripts/in_place_compression.sh
-
-    - name: Remove reference magnification data
-      shell: bash
-      run: rm -r testdata/tiff_mag_2_reference/
+    - name: CLI tests
+      run: tests/scripts/all_tests.sh
 
   docker:
-    needs: [build, build_win]
+    needs: [build, build_win, build_mac]
     runs-on: ubuntu-latest
 
     steps:
