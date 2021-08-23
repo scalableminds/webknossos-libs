@@ -1,4 +1,7 @@
 from pathlib import Path
+import pytest
+from os import makedirs
+from shutil import rmtree
 
 import numpy as np
 import wkw
@@ -13,9 +16,18 @@ from wkcuber.metadata import (
     detect_mappings,
 )
 
+TESTOUTPUT_DIR = Path("testoutput")
+
+
+@pytest.fixture(autouse=True)
+def run_around_tests() -> None:
+    makedirs(TESTOUTPUT_DIR, exist_ok=True)
+    yield
+    rmtree(TESTOUTPUT_DIR)
+
 
 def test_element_class_conversion() -> None:
-    test_wkw_path = Path("testoutput", "test_metadata")
+    test_wkw_path = TESTOUTPUT_DIR / "test_metadata"
     prediction_layer_name = "prediction"
     prediction_wkw_info = WkwDatasetInfo(
         test_wkw_path, prediction_layer_name, 1, wkw.Header(np.float32, num_channels=3)

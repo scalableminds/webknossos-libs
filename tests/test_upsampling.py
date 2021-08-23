@@ -1,10 +1,12 @@
-import shutil
 import tempfile
 from pathlib import Path
+from shutil import rmtree
+from os import makedirs
 from typing import Tuple, cast
+import pytest
 
 from wkcuber.api.dataset import Dataset
-from wkcuber.api.layer import Layer, LayerCategories
+from wkcuber.api.layer import LayerCategories
 from wkcuber.downsampling_utils import SamplingModes
 from wkcuber.upsampling_utils import upsample_cube, upsample_cube_job
 from wkcuber.mag import Mag
@@ -13,6 +15,15 @@ import numpy as np
 
 WKW_CUBE_SIZE = 1024
 CUBE_EDGE_LEN = 256
+
+TESTOUTPUT_DIR = Path("testoutput")
+
+
+@pytest.fixture(autouse=True)
+def run_around_tests() -> None:
+    makedirs(TESTOUTPUT_DIR, exist_ok=True)
+    yield
+    rmtree(TESTOUTPUT_DIR)
 
 
 def test_upsampling() -> None:
@@ -111,12 +122,7 @@ def test_upsample_multi_channel() -> None:
     ).astype("uint8")
     file_len = 32
 
-    try:
-        shutil.rmtree(Path("testoutput", "multi-channel-test"))
-    except:
-        pass
-
-    ds = Dataset.create(Path("testoutput", "multi-channel-test"), (1, 1, 1))
+    ds = Dataset.create(TESTOUTPUT_DIR / "multi-channel-test", (1, 1, 1))
     l = ds.add_layer(
         "color",
         LayerCategories.COLOR_TYPE,
