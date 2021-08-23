@@ -104,6 +104,7 @@ jobs:
       run: |
         git clone --branch truncate-err https://github.com/scalableminds/webknossos-wrap.git
         cd webknossos-wrap/python
+        pip uninstall wkw
         python setup.py install
 
     - name: Decompress test data
