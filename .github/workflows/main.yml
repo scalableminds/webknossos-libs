@@ -109,6 +109,8 @@ jobs:
         python setup.py install
         python setup.py sdist bdist_wheel -p $(python -c "import distutils.util; print(distutils.util.get_platform())") --python-tag py${{ matrix.python-version }}
         ls -lisah dist
+        pwd -P
+        rm -r c:/hostedtoolcache/windows/python/${{ matrix.python-version }}*/x64/lib/site-packages/wkw-*.egg
         pip install dist/*.whl
 
     - name: Decompress test data
