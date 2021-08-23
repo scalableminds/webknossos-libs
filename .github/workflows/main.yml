@@ -98,6 +98,13 @@ jobs:
       run: |
         pip install poetry
         poetry install
+    
+    - name: Install custom wkw
+      shell: bash
+      run: |
+        git clone --branch truncate-err https://github.com/scalableminds/webknossos-wrap.git
+        cd webknossos-wrap/python
+        python setup.py install
 
     - name: Decompress test data
       shell: bash
