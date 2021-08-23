@@ -99,9 +99,9 @@ class Converter:
         traversal_depth = len(first_split_path)
         self.prefix = ""
         if first_split_path[0] == "":
-            self.prefix = "/"
+            self.prefix = sep
         elif first_split_path[0] == "..":
-            self.prefix = "../"
+            self.prefix = f"..{sep}"
 
         assert all(
             map(
