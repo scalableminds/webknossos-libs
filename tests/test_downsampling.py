@@ -28,13 +28,6 @@ TESTOUTPUT_DIR = Path("testoutput")
 TESTDATA_DIR = Path("testdata")
 
 
-@pytest.fixture(autouse=True)
-def run_around_tests() -> None:
-    makedirs(TESTOUTPUT_DIR, exist_ok=True)
-    yield
-    rmtree(TESTOUTPUT_DIR)
-
-
 def read_wkw(
     wkw_info: WkwDatasetInfo, offset: Tuple[int, int, int], size: Tuple[int, int, int]
 ) -> np.array:
@@ -91,7 +84,7 @@ def test_non_linear_filter_reshape() -> None:
 
 
 def downsample_test_helper(use_compress: bool) -> None:
-    source_path = Path("testdata", "WT1_wkw")
+    source_path = TESTDATA_DIR / "WT1_wkw"
     target_path = TESTOUTPUT_DIR / "WT1_wkw"
 
     source_ds = Dataset(source_path)

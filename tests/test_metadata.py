@@ -1,5 +1,4 @@
 from pathlib import Path
-import pytest
 from os import makedirs
 from shutil import rmtree
 
@@ -17,13 +16,6 @@ from wkcuber.metadata import (
 )
 
 TESTOUTPUT_DIR = Path("testoutput")
-
-
-@pytest.fixture(autouse=True)
-def run_around_tests() -> None:
-    makedirs(TESTOUTPUT_DIR, exist_ok=True)
-    yield
-    rmtree(TESTOUTPUT_DIR)
 
 
 def test_element_class_conversion() -> None:

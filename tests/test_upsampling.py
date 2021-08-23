@@ -1,9 +1,6 @@
 import tempfile
 from pathlib import Path
-from shutil import rmtree
-from os import makedirs
 from typing import Tuple, cast
-import pytest
 
 from wkcuber.api.dataset import Dataset
 from wkcuber.api.layer import LayerCategories
@@ -17,13 +14,6 @@ WKW_CUBE_SIZE = 1024
 CUBE_EDGE_LEN = 256
 
 TESTOUTPUT_DIR = Path("testoutput")
-
-
-@pytest.fixture(autouse=True)
-def run_around_tests() -> None:
-    makedirs(TESTOUTPUT_DIR, exist_ok=True)
-    yield
-    rmtree(TESTOUTPUT_DIR)
 
 
 def test_upsampling() -> None:

@@ -7,21 +7,11 @@ import wkw
 import numpy as np
 from math import ceil
 from pathlib import Path
-import pytest
-from os import makedirs
-from shutil import rmtree
 
 
 DS_NAME = "simple_wk_dataset"
 TESTOUTPUT_DIR = Path("testoutput")
 SOURCE_PATH = Path("testdata") / DS_NAME
-
-
-@pytest.fixture(autouse=True)
-def run_around_tests() -> None:
-    makedirs(TESTOUTPUT_DIR, exist_ok=True)
-    yield
-    rmtree(TESTOUTPUT_DIR)
 
 
 def test_export_tiff_stack() -> None:

@@ -1,7 +1,5 @@
 from pathlib import Path
 from shutil import rmtree
-from os import makedirs
-import pytest
 from typing import Union
 
 import numpy as np
@@ -13,13 +11,6 @@ import os
 BLOCK_LEN = 32
 
 TESTOUTPUT_DIR = Path("testoutput")
-
-
-@pytest.fixture(autouse=True)
-def run_around_tests() -> None:
-    makedirs(TESTOUTPUT_DIR, exist_ok=True)
-    yield
-    rmtree(TESTOUTPUT_DIR)
 
 
 def delete_dir(relative_path: Union[str, Path]) -> None:
