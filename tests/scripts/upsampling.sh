@@ -16,7 +16,7 @@ python -m wkcuber.downsampling \
   --jobs 2 \
   --from_mag 1 \
   --max 2 \
-  --isotropic \
+  --sampling_mode isotropic \
   --buffer_cube_size 256 \
   --layer_name color \
   --interpolation_mode nearest \

@@ -114,7 +114,11 @@ class BoundingBox:
 
     def as_wkw(self) -> dict:
 
-        width, height, depth = self.size.tolist()
+        (  # pylint: disable=unbalanced-tuple-unpacking
+            width,
+            height,
+            depth,
+        ) = self.size.tolist()
 
         return {
             "topLeft": self.topleft.tolist(),
@@ -142,6 +146,12 @@ class BoundingBox:
     def as_csv(self) -> str:
 
         return ",".join(map(str, self.as_tuple6()))
+
+    def as_named_tuple(self) -> BoundingBoxNamedTuple:
+        return BoundingBoxNamedTuple(
+            topleft=cast(Tuple[int, int, int], tuple(self.topleft)),
+            size=cast(Tuple[int, int, int], tuple(self.size)),
+        )
 
     def __repr__(self) -> str:
 
@@ -308,7 +318,7 @@ class BoundingBox:
 
     def copy(self) -> "BoundingBox":
 
-        return BoundingBox(self.topleft.copy(), self.bottomright.copy())
+        return BoundingBox(self.topleft.copy(), self.size.copy())
 
     def offset(self, vector: Tuple[int, int, int]) -> "BoundingBox":
 

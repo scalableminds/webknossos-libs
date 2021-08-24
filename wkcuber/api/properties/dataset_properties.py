@@ -1,13 +1,13 @@
 import json
 from pathlib import Path
-from typing import Union, Tuple, Optional, Dict, Any, cast
+from typing import Tuple, Optional, Dict, Any, cast
 
-from wkcuber.api.Layer import Layer
-from wkcuber.api.Properties.LayerProperties import (
+from wkcuber.api.layer import LayerCategories
+from wkcuber.api.properties.layer_properties import (
     SegmentationLayerProperties,
     LayerProperties,
 )
-from wkcuber.api.Properties.ResolutionProperties import WkResolution, Resolution
+from wkcuber.api.properties.resolution_properties import Resolution
 from wkcuber.mag import Mag
 
 
@@ -22,8 +22,9 @@ class Properties:
         scale: Tuple[float, float, float],
         team: str = "",
         data_layers: Dict[str, LayerProperties] = None,
+        default_view_configuration: Optional[dict] = None,
     ) -> None:
-        self._path = str(path)
+        self._path = path
         self._name = name
         self._team = team
         self._scale = scale
@@ -31,13 +32,7 @@ class Properties:
             self._data_layers = {}
         else:
             self._data_layers = data_layers
-
-    @classmethod
-    def _from_json(cls, path: Path) -> "Properties":
-        pass
-
-    def _export_as_json(self) -> None:
-        pass
+        self._default_view_configuration = default_view_configuration
 
     def _add_layer(
         self,
@@ -50,7 +45,7 @@ class Properties:
     ) -> None:
         # this layer is already in data_layers in case we reconstruct the dataset from a datasource-properties.json
         if layer_name not in self.data_layers:
-            if category == Layer.SEGMENTATION_TYPE:
+            if category == LayerCategories.SEGMENTATION_TYPE:
                 assert (
                     "largest_segment_id" in kwargs
                 ), "When adding a segmentation layer, largest_segment_id has to be supplied."
@@ -68,9 +63,6 @@ class Properties:
                     layer_name, category, element_class, data_format, num_channels
                 )
             self._export_as_json()
-
-    def _add_mag(self, layer_name: str, mag: str, **kwargs: int) -> None:
-        pass
 
     def _delete_layer(self, layer_name: str) -> None:
         del self.data_layers[layer_name]
@@ -100,7 +92,7 @@ class Properties:
 
     @property
     def path(self) -> Path:
-        return Path(self._path)
+        return self._path
 
     @property
     def team(self) -> str:
@@ -111,30 +103,37 @@ class Properties:
         return self._scale
 
     @property
-    def data_layers(self) -> dict:
+    def data_layers(self) -> Dict[str, LayerProperties]:
         return self._data_layers
 
+    @property
+    def default_view_configuration(self) -> Optional[dict]:
+        return self._default_view_configuration
 
-class WKProperties(Properties):
     @classmethod
-    def _from_json(cls, path: Path) -> "WKProperties":
+    def _from_json(cls, path: Path) -> "Properties":
         with open(path) as datasource_properties:
             data = json.load(datasource_properties)
 
             # reconstruct data_layers
             data_layers: Dict[str, LayerProperties] = {}
             for layer in data["dataLayers"]:
-                if layer["category"] == Layer.SEGMENTATION_TYPE:
+                if layer["category"] == LayerCategories.SEGMENTATION_TYPE:
                     data_layers[layer["name"]] = SegmentationLayerProperties._from_json(
-                        layer, WkResolution, path
+                        layer, Resolution, path
                     )
                 else:
                     data_layers[layer["name"]] = LayerProperties._from_json(
-                        layer, WkResolution, path
+                        layer, Resolution, path
                     )
 
             return cls(
-                path, data["id"]["name"], data["scale"], data["id"]["team"], data_layers
+                path,
+                data["id"]["name"],
+                data["scale"],
+                data["id"]["team"],
+                data_layers,
+                data.get("defaultViewConfiguration"),
             )
 
     def _export_as_json(self) -> None:
@@ -146,6 +145,9 @@ class WKProperties(Properties):
                 for layer_name in self.data_layers
             ],
         }
+        if self.default_view_configuration is not None:
+            data["defaultViewConfiguration"] = self.default_view_configuration
+
         with open(self.path, "w") as outfile:
             json.dump(data, outfile, indent=4, separators=(",", ": "))
 
@@ -159,79 +161,6 @@ class WKProperties(Properties):
             ]
         ):
             self._data_layers[layer_name]._add_resolution(
-                WkResolution(mag, kwargs["cube_length"])
+                Resolution(mag, kwargs["cube_length"])
             )
-            self._export_as_json()
-
-
-class TiffProperties(Properties):
-    def __init__(
-        self,
-        path: Path,
-        name: str,
-        scale: Tuple[float, float, float],
-        pattern: str,
-        team: str = "",
-        data_layers: Dict[str, LayerProperties] = None,
-        tile_size: Optional[Tuple[int, int]] = (32, 32),
-    ) -> None:
-        super().__init__(path, name, scale, team, data_layers)
-        self.pattern = pattern
-        self.tile_size = tile_size
-
-    @classmethod
-    def _from_json(cls, path: Path) -> Properties:
-        with open(path) as datasource_properties:
-            data = json.load(datasource_properties)
-
-            # reconstruct data_layers
-            data_layers: Dict[str, LayerProperties] = {}
-            for layer in data["dataLayers"]:
-                if layer["category"] == Layer.SEGMENTATION_TYPE:
-                    data_layers[layer["name"]] = SegmentationLayerProperties._from_json(
-                        layer, Resolution, path
-                    )
-                else:
-                    data_layers[layer["name"]] = LayerProperties._from_json(
-                        layer, Resolution, path
-                    )
-
-            tile_size = data.get("tile_size")
-            if tile_size is not None:
-                tile_size = (tile_size[0], tile_size[1])
-            return cls(
-                path=path,
-                name=data["id"]["name"],
-                scale=data["scale"],
-                pattern=data["pattern"],
-                team=data["id"]["team"],
-                data_layers=data_layers,
-                tile_size=tile_size,
-            )
-
-    def _export_as_json(self) -> None:
-        data = {
-            "id": {"name": self.name, "team": self.team},
-            "scale": self.scale,
-            "pattern": self.pattern,
-            "dataLayers": [
-                self.data_layers[layer_name]._to_json()
-                for layer_name in self.data_layers
-            ],
-        }
-        if self.tile_size is not None:
-            data["tile_size"] = self.tile_size
-
-        with open(self.path, "w") as outfile:
-            json.dump(data, outfile, indent=4, separators=(",", ": "))
-
-    def _add_mag(self, layer_name: str, mag: str, **kwargs: int) -> None:
-        # this mag is already in wkw_magnifications in case we reconstruct the dataset from a datasource-properties.json
-        if not any(
-            [
-                res.mag == Mag(mag)
-                for res in self.data_layers[layer_name].wkw_magnifications
-            ]
-        ):
-            self.data_layers[layer_name]._add_resolution(Resolution(mag))
             self._export_as_json()

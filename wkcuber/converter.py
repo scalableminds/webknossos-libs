@@ -1,11 +1,12 @@
 from argparse import ArgumentParser, Namespace
 from os import path, sep
 from pathlib import Path
-from typing import Iterable, List, Any, Tuple, Dict, Set, Callable, cast
+from typing import Iterable, List, Any, Tuple, Dict, Set, Callable, cast, Optional
 
 from .cubing import (
     cubing as cube_image_stack,
     create_parser as create_image_stack_parser,
+    get_channel_count_and_dtype,
 )
 from .convert_knossos import (
     main as convert_knossos,
@@ -13,7 +14,14 @@ from .convert_knossos import (
 )
 from .convert_nifti import main as convert_nifti, create_parser as create_nifti_parser
 from .image_readers import image_reader
-from .utils import find_files, add_scale_flag, logger, add_verbose_flag, setup_logging
+from .utils import (
+    find_files,
+    add_scale_flag,
+    logger,
+    add_verbose_flag,
+    setup_logging,
+    get_executor_args,
+)
 from .metadata import write_webknossos_metadata
 
 
@@ -66,6 +74,12 @@ def get_source_files(
     source_files = list(find_files(input_path, extensions))
 
     return source_files
+
+
+def all_files_of_same_type(input_files: List[str]) -> bool:
+    _, ext = path.splitext(input_files[0])
+
+    return all(map(lambda p: path.splitext(p)[1] == ext, input_files))
 
 
 class Converter:
@@ -301,17 +315,25 @@ class ImageStackConverter(Converter):
         self.layer_path_to_layer_name: Dict[str, str] = dict()
         self.dataset_names: Set[str] = set()
 
+    @staticmethod
+    def get_view_configuration(index: int) -> Optional[Dict[str, List[int]]]:
+        color = None
+        if index == 0:
+            color = [255, 0, 0]
+        elif index == 1:
+            color = [0, 255, 0]
+        elif index == 2:
+            color = [0, 0, 255]
+        if color is not None:
+            return {"color": color}
+        else:
+            return None
+
     def accepts_input(self, source_path: str) -> bool:
         source_files = get_source_files(source_path, image_reader.readers.keys(), True)
 
         if len(source_files) == 0:
             return False
-
-        _, ext = path.splitext(source_files[0])
-
-        assert all(
-            map(lambda p: path.splitext(p)[1] == ext, source_files)
-        ), "Not all image files are of the same type"
 
         self.source_files = list(
             map(lambda p: cast(str, path.normpath(p)), source_files)
@@ -342,12 +364,9 @@ class ImageStackConverter(Converter):
             args, image_stack_parser, "job_resources"
         )
         put_default_from_argparser_if_not_present(args, image_stack_parser, "pad")
-        put_default_from_argparser_if_not_present(args, image_stack_parser, "max_mag")
-        put_default_from_argparser_if_not_present(
-            args, image_stack_parser, "no_compress"
-        )
-        put_default_from_argparser_if_not_present(args, image_stack_parser, "isotropic")
         put_default_from_argparser_if_not_present(args, image_stack_parser, "verbose")
+
+        executor_args = get_executor_args(args)
 
         # detect layer and ds name
         (
@@ -356,18 +375,71 @@ class ImageStackConverter(Converter):
         ) = self.detect_dataset_name_and_layer_path_to_layer_name()
         put_default_if_not_present(args, "name", dataset_name)
 
+        bounding_box = None
+        view_configuration = dict()
+        converted_layers = 0
         for layer_path, layer_name in layer_path_to_name.items():
-            args.layer_name = layer_name
-            args.source_path = Path(layer_path)
-            cube_image_stack(
-                args.source_path,
-                args.target_path,
-                args.layer_name,
-                args.batch_size if "batch_size" in args else None,
-                args,
-            )
+            if not all_files_of_same_type(
+                get_source_files(layer_path, image_reader.readers.keys(), True)
+            ):
+                logger.info(
+                    f"Not converting {layer_name} because not all image files are of the same type"
+                )
+                continue
 
-        return True
+            converted_layers += 1
+            channel_count, dtype = get_channel_count_and_dtype(Path(layer_path))
+            if channel_count > 1 and not (channel_count == 3 and dtype == "uint8"):
+                for i in range(channel_count):
+                    layer_name = f"{layer_name}_{i}"
+                    arg_dict = vars(args)
+
+                    bounding_box = cube_image_stack(
+                        Path(layer_path),
+                        args.target_path,
+                        layer_name,
+                        arg_dict.get("batch_size"),
+                        i,  # channel index
+                        arg_dict.get("dtype"),
+                        args.target_mag,
+                        args.wkw_file_len,
+                        args.interpolation_mode,
+                        args.start_z,
+                        args.pad,
+                        executor_args,
+                    )
+
+                    view_configuration[
+                        layer_name
+                    ] = ImageStackConverter.get_view_configuration(i)
+            else:
+                arg_dict = vars(args)
+                bounding_box = cube_image_stack(
+                    Path(layer_path),
+                    args.target_path,
+                    layer_name,
+                    arg_dict.get("batch_size"),
+                    arg_dict.get("channel_index"),
+                    arg_dict.get("dtype"),
+                    args.target_mag,
+                    args.wkw_file_len,
+                    args.interpolation_mode,
+                    args.start_z,
+                    args.pad,
+                    executor_args,
+                )
+
+        assert converted_layers > 0, "No layer could be converted!"
+
+        write_webknossos_metadata(
+            args.target_path,
+            args.name,
+            args.scale,
+            exact_bounding_box=bounding_box,
+            view_configuration=view_configuration,
+        )
+
+        return False
 
     def detect_dataset_name_and_layer_path_to_layer_name(
         self,

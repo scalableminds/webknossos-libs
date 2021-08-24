@@ -90,6 +90,14 @@ def create_parser() -> ArgumentParser:
         default="1",
     )
 
+    parser.add_argument(
+        "--channel_index",
+        "-c",
+        type=int,
+        default=None,
+        help="Select a single channel to be cubed into a layer. This can be helpful if several channels should be converted to multiple data layers. Note that webKnossos only supports multiple channels if these are three uint8 channels. If this is not the case, use --channel_index to create a layer per channel.",
+    )
+
     add_interpolation_flag(parser)
     add_verbose_flag(parser)
     add_distribution_flags(parser)
@@ -117,9 +125,11 @@ def find_source_filenames(source_path: Path) -> List[Path]:
     return natsorted(source_files)
 
 
-def read_image_file(file_name: Path, dtype: type, z_slice: int) -> np.ndarray:
+def read_image_file(
+    file_name: Path, dtype: type, z_slice: int, channel_index: Optional[int]
+) -> np.ndarray:
     try:
-        return image_reader.read_array(file_name, dtype, z_slice)
+        return image_reader.read_array(file_name, dtype, z_slice, channel_index)
     except Exception as exc:
         logging.error("Reading of file={} failed with {}".format(file_name, exc))
         raise exc
@@ -151,6 +161,7 @@ def cubing_job(
         int,
         Tuple[int, int],
         bool,
+        Optional[int],
     ]
 ) -> None:
     (
@@ -162,6 +173,7 @@ def cubing_job(
         batch_size,
         image_size,
         pad,
+        channel_index,
     ) = args
     if len(z_batches) == 0:
         return
@@ -184,7 +196,7 @@ def cubing_job(
                 for z, file_name in zip(z_batch, source_file_batch):
                     # Image shape will be (x, y, channel_count, z=1)
                     image = read_image_file(
-                        file_name, target_wkw_info.header.voxel_type, z
+                        file_name, target_wkw_info.header.voxel_type, z, channel_index
                     )
 
                     if not pad:
@@ -237,18 +249,40 @@ def cubing_job(
                 raise exc
 
 
+def get_channel_count_and_dtype(source_path: Path) -> Tuple[int, str]:
+    source_files = find_source_filenames(source_path)
+    assert (
+        len(source_files) > 0
+    ), f"Failed to detect channel count and dtype. No sources found in {source_path}"
+    return image_reader.read_channel_count(source_files[0]), image_reader.read_dtype(
+        source_files[0]
+    )
+
+
 def cubing(
     source_path: Path,
     target_path: Path,
     layer_name: str,
     batch_size: Optional[int],
-    args: Namespace,
+    channel_index: Optional[int],
+    dtype: Optional[str],
+    target_mag_str: str,
+    wkw_file_len: int,
+    interpolation_mode_str: str,
+    start_z: int,
+    pad: bool,
+    executor_args: Namespace,
 ) -> dict:
     source_files = find_source_filenames(source_path)
 
     # All images are assumed to have equal dimensions
     num_x, num_y = image_reader.read_dimensions(source_files[0])
     num_channels = image_reader.read_channel_count(source_files[0])
+    if channel_index is not None:
+        assert (
+            channel_index < num_channels
+        ), "Selected channel is not present in the input files"
+        num_channels = 1
     num_z_slices_per_file = image_reader.read_z_slices_per_file(source_files[0])
     assert (
         num_z_slices_per_file == 1 or len(source_files) == 1
@@ -258,25 +292,25 @@ def cubing(
     else:
         num_z = len(source_files)
 
-    if not hasattr(args, "dtype") or args.dtype is None:
-        args.dtype = image_reader.read_dtype(source_files[0])
+    if dtype is None:
+        dtype = image_reader.read_dtype(source_files[0])
 
     if batch_size is None:
         batch_size = BLOCK_LEN
 
-    target_mag = Mag(args.target_mag)
+    target_mag = Mag(target_mag_str)
     target_wkw_info = WkwDatasetInfo(
         target_path,
         layer_name,
         target_mag,
         wkw.Header(
-            convert_element_class_to_dtype(args.dtype),
+            convert_element_class_to_dtype(dtype),
             num_channels,
-            file_len=args.wkw_file_len,
+            file_len=wkw_file_len,
         ),
     )
     interpolation_mode = parse_interpolation_mode(
-        args.interpolation_mode, target_wkw_info.layer_name
+        interpolation_mode_str, target_wkw_info.layer_name
     )
     if target_mag != Mag(1):
         logging.info(
@@ -287,9 +321,7 @@ def cubing(
 
     ensure_wkw(target_wkw_info)
 
-    start_z = args.start_z
-
-    with get_executor_for_args(args) as executor:
+    with get_executor_for_args(executor_args) as executor:
         job_args = []
         # We iterate over all z sections
         for z in range(start_z, num_z + start_z, BLOCK_LEN):
@@ -311,7 +343,8 @@ def cubing(
                     source_files_array,
                     batch_size,
                     (num_x, num_y),
-                    args.pad,
+                    pad,
+                    channel_index,
                 )
             )
 
@@ -325,10 +358,19 @@ if __name__ == "__main__":
     args = create_parser().parse_args()
     setup_logging(args)
 
+    arg_dict = vars(args)
+
     cubing(
         args.source_path,
         args.target_path,
         args.layer_name,
-        args.batch_size,
-        args=args,
+        arg_dict.get("batch_size"),
+        arg_dict.get("channel_index"),
+        arg_dict.get("dtype"),
+        args.target_mag,
+        args.wkw_file_len,
+        args.interpolation_mode,
+        args.start_z,
+        args.pad,
+        args,
     )

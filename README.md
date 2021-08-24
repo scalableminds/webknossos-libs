@@ -1,7 +1,7 @@
 # webKnossos cuber (wkcuber)
 [![PyPI version](https://img.shields.io/pypi/v/wkcuber)](https://pypi.python.org/pypi/wkcuber)
 [![Supported Python Versions](https://img.shields.io/pypi/pyversions/wkcuber.svg)](https://pypi.python.org/pypi/wkcuber)
-[![Build Status](https://img.shields.io/github/workflow/status/scalableminds/wkcuber/CI/master)](https://github.com/scalableminds/wkcuber/actions?query=workflow%3A%22CI%22)
+[![Build Status](https://img.shields.io/github/workflow/status/scalableminds/webknossos-cuber/CI/master)](https://github.com/scalableminds/webknossos-cuber/actions?query=workflow%3A%22CI%22)
 [![Code Style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 Python library for creating and working with [webKnossos](https://webknossos.org) [WKW](https://github.com/scalableminds/webknossos-wrap) datasets. WKW is a container format for efficiently storing large, scale 3D image data as found in (electron) microscopy.
@@ -52,8 +52,13 @@ Use the CI-built image: [scalableminds/webknossos-cuber](https://hub.docker.com/
 ## Usage
 
 ```
-# Convert image stacks into wkw datasets
+# Convert arbitrary, supported input files into wkw datasets. This sets reasonable defaults, but see other commands for customization.
 python -m wkcuber \
+  --scale 11.24,11.24,25 \
+  data/source data/target
+
+# Convert image stacks into wkw datasets
+python -m wkcuber.convert_image_stack_to_wkw \
   --layer_name color \
   --scale 11.24,11.24,25 \
   --name great_dataset \
@@ -122,6 +127,12 @@ tests/scripts/all_tests.sh
 ```
 
 PyPi releases are automatically pushed when creating a new Git tag/Github release. 
+
+## API documentation
+Check out the [latest version of the API documentation](https://static.webknossos.org/lib-docs/master/wkcuber/api.html).
+
+### Generate the API documentation
+Run `docs/api.sh` to open a server displaying the API docs. `docs/api.sh --persist` persists the html to `docs/api`.
 
 ## Test Data Credits
 Excerpts for testing purposes have been sampled from:

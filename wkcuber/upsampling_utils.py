@@ -5,7 +5,7 @@ from typing import Tuple, List, cast
 
 import numpy as np
 
-from wkcuber.api.View import View
+from wkcuber.api.view import View
 from wkcuber.utils import time_start, time_stop
 
 
@@ -27,7 +27,6 @@ def upsample_cube_job(
     args: Tuple[View, View, int],
     mag_factors: List[float],
     buffer_edge_len: int,
-    compress: bool,
     job_count_per_log: int,
 ) -> None:
     (source_view, target_view, i) = args
@@ -99,7 +98,7 @@ def upsample_cube_job(
         # Write the upsampled buffer to target
         if source_view.header.num_channels == 1:
             file_buffer = file_buffer[0]  # remove channel dimension
-        target_view.write(file_buffer, allow_compressed_write=compress)
+        target_view.write(file_buffer)
         if use_logging:
             time_stop(f"Upsampling of {target_view.global_offset}")
 

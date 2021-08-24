@@ -1,15 +1,17 @@
+import warnings
 from os.path import join, dirname, isfile
 from pathlib import Path
 from typing import Tuple, Type, Union, Any, Dict, List, Optional, cast
+import numpy as np
 
 from wkw import wkw
 
-from wkcuber.api.Properties.ResolutionProperties import Resolution
+from wkcuber.api.properties.resolution_properties import Resolution
 from wkcuber.mag import Mag
 from wkcuber.api.bounding_box import BoundingBox
 
 
-def extract_num_channels(
+def _extract_num_channels(
     num_channels_in_properties: Optional[int],
     path: Path,
     layer: str,
@@ -43,6 +45,19 @@ def extract_num_channels(
     return wkw_ds.header.num_channels
 
 
+properties_floating_type_to_python_type = {
+    "float": "float32",
+    np.float: "float32",
+    float: "float32",
+    "double": "float64",
+}
+
+python_floating_type_to_properties_type = {
+    "float32": "float",
+    "float64": "double",
+}
+
+
 class LayerProperties:
     def __init__(
         self,
@@ -53,6 +68,7 @@ class LayerProperties:
         num_channels: int,
         bounding_box: Dict[str, Union[int, Tuple[int, int, int]]] = None,
         resolutions: List[Resolution] = None,
+        default_view_configuration: Optional[dict] = None,
     ):
         self._name = name
         self._category = category
@@ -66,12 +82,15 @@ class LayerProperties:
             "depth": 0,
         }
         self._wkw_magnifications: List[Resolution] = resolutions or []
+        self._default_view_configuration = default_view_configuration
 
     def _to_json(self) -> Dict[str, Any]:
-        return {
+        layer_properties = {
             "name": self.name,
             "category": self.category,
-            "elementClass": self.element_class,
+            "elementClass": python_floating_type_to_properties_type.get(
+                self.element_class, self.element_class
+            ),
             "dataFormat": self._data_format,
             "num_channels": self.num_channels,
             "boundingBox": {}
@@ -84,6 +103,12 @@ class LayerProperties:
             },
             "wkwResolutions": [r._to_json() for r in self.wkw_magnifications],
         }
+        if self.default_view_configuration is not None:
+            layer_properties[
+                "defaultViewConfiguration"
+            ] = self.default_view_configuration
+
+        return layer_properties
 
     @classmethod
     def _from_json(
@@ -96,9 +121,11 @@ class LayerProperties:
         layer_properties = cls(
             json_data["name"],
             json_data["category"],
-            json_data["elementClass"],
+            properties_floating_type_to_python_type.get(
+                json_data["elementClass"], json_data["elementClass"]
+            ),
             json_data["dataFormat"],
-            extract_num_channels(
+            _extract_num_channels(
                 json_data.get("num_channels"),
                 dataset_path,
                 json_data["name"],
@@ -107,6 +134,7 @@ class LayerProperties:
                 else None,
             ),
             json_data["boundingBox"],
+            default_view_configuration=json_data.get("defaultViewConfiguration"),
         )
 
         # add resolutions to LayerProperties
@@ -179,6 +207,10 @@ class LayerProperties:
     def wkw_magnifications(self) -> List[Resolution]:
         return self._wkw_magnifications
 
+    @property
+    def default_view_configuration(self) -> Optional[dict]:
+        return self._default_view_configuration
+
 
 class SegmentationLayerProperties(LayerProperties):
     def __init__(
@@ -192,6 +224,7 @@ class SegmentationLayerProperties(LayerProperties):
         resolutions: List[Resolution] = None,
         largest_segment_id: int = None,
         mappings: List[str] = None,
+        default_view_configuration: Optional[dict] = None,
     ) -> None:
         super().__init__(
             name,
@@ -201,6 +234,7 @@ class SegmentationLayerProperties(LayerProperties):
             num_channels,
             bounding_box,
             resolutions,
+            default_view_configuration,
         )
         # The parameter largest_segment_id is in fact not optional.
         # However, specifying the parameter as not optional, would require to change the parameter order
@@ -222,22 +256,32 @@ class SegmentationLayerProperties(LayerProperties):
         resolution_type: Type[Resolution],
         dataset_path: Path,
     ) -> "SegmentationLayerProperties":
+        if "largestSegmentId" not in json_data:
+            warnings.warn(
+                f"Segmentation layer {json_data['name']} is missing the 'largestSegmentId', defaulting to -1.",
+                RuntimeWarning,
+            )
         # create LayerProperties without resolutions
         layer_properties = cls(
             json_data["name"],
             json_data["category"],
-            json_data["elementClass"],
+            properties_floating_type_to_python_type.get(
+                json_data["elementClass"], json_data["elementClass"]
+            ),
             json_data["dataFormat"],
-            extract_num_channels(
+            _extract_num_channels(
                 json_data.get("num_channels"),
                 dataset_path,
                 json_data["name"],
-                json_data["wkwResolutions"][0],
+                json_data["wkwResolutions"][0]
+                if len(json_data["wkwResolutions"]) > 0
+                else None,
             ),
             json_data["boundingBox"],
             None,
-            json_data["largestSegmentId"],
-            json_data["mappings"] if "mappings" in json_data else None,
+            json_data.get("largestSegmentId", -1),
+            json_data.get("mappings"),
+            json_data.get("defaultViewConfiguration"),
         )
 
         # add resolutions to LayerProperties

@@ -1,11 +1,13 @@
 import logging
+import warnings
 from pathlib import Path
 from typing import Tuple, cast
 
 import numpy as np
+import pytest
 
-from wkcuber.api.Dataset import WKDataset
-from wkcuber.api.Layer import Layer
+from wkcuber.api.dataset import Dataset
+from wkcuber.api.layer import Layer, LayerCategories
 from wkcuber.downsampling_utils import (
     InterpolationModes,
     downsample_cube,
@@ -20,10 +22,10 @@ from wkcuber.utils import WkwDatasetInfo, open_wkw
 from wkcuber.downsampling_utils import _mode, non_linear_filter_3d
 import shutil
 
-WKW_CUBE_SIZE = 1024
 CUBE_EDGE_LEN = 256
 
 TESTOUTPUT_DIR = Path("testoutput")
+TESTDATA_DIR = Path("testdata")
 
 
 def read_wkw(
@@ -90,20 +92,21 @@ def downsample_test_helper(use_compress: bool) -> None:
     except:
         pass
 
-    source_ds = WKDataset(source_path)
-    source_layer = source_ds.get_layer("color")
-    mag1 = source_layer.get_mag("1")
+    source_ds = Dataset(source_path)
+    target_ds = source_ds.copy_dataset(target_path, block_len=16, file_len=16)
 
-    target_ds = WKDataset.create(target_path, scale=(1, 1, 1))
-    target_layer = target_ds.add_layer(
-        "color", Layer.COLOR_TYPE, dtype_per_channel="uint8"
-    )
+    target_layer = target_ds.get_layer("color")
+    mag1 = target_layer.get_mag("1")
+    target_layer.delete_mag("2-2-1")  # This is not needed for this test
+
     mag2 = target_layer._initialize_mag_from_other_mag("2", mag1, use_compress)
 
-    offset = (WKW_CUBE_SIZE, 2 * WKW_CUBE_SIZE, 0)
-    target_offset = cast(Tuple[int, int, int], tuple([o // 2 for o in offset]))
-    source_size = cast(Tuple[int, int, int], (CUBE_EDGE_LEN * 2,) * 3)
-    target_size = cast(Tuple[int, int, int], (CUBE_EDGE_LEN,) * 3)
+    # The actual size of mag1 is (4600, 4600, 512).
+    # To keep this test case fast, we are only downsampling a small part
+    offset = (4096, 4096, 0)
+    target_offset = (2048, 2048, 0)
+    source_size = (504, 504, 512)
+    target_size = (252, 252, 256)
     source_buffer = mag1.read(
         offset=offset,
         size=source_size,
@@ -116,14 +119,12 @@ def downsample_test_helper(use_compress: bool) -> None:
             mag2.get_view(
                 offset=target_offset,
                 size=target_size,
-                is_bounded=False,
             ),
             0,
         ),
         [2, 2, 2],
         InterpolationModes.MAX,
-        CUBE_EDGE_LEN,
-        use_compress,
+        128,
         100,
     )
 
@@ -143,7 +144,9 @@ def test_downsample_cube_job() -> None:
 
 
 def test_compressed_downsample_cube_job() -> None:
-    downsample_test_helper(True)
+    with warnings.catch_warnings():
+        warnings.filterwarnings("error")  # This escalates the warning to an error
+        downsample_test_helper(True)
 
 
 def test_downsample_multi_channel() -> None:
@@ -160,9 +163,12 @@ def test_downsample_multi_channel() -> None:
     except:
         pass
 
-    ds = WKDataset.create(TESTOUTPUT_DIR / "multi-channel-test", (1, 1, 1))
+    ds = Dataset.create(TESTOUTPUT_DIR / "multi-channel-test", (1, 1, 1))
     l = ds.add_layer(
-        "color", Layer.COLOR_TYPE, dtype_per_channel="uint8", num_channels=num_channels
+        "color",
+        LayerCategories.COLOR_TYPE,
+        dtype_per_channel="uint8",
+        num_channels=num_channels,
     )
     mag1 = l.add_mag("1", file_len=file_len)
 
@@ -173,11 +179,10 @@ def test_downsample_multi_channel() -> None:
     mag2 = l._initialize_mag_from_other_mag("2", mag1, False)
 
     downsample_cube_job(
-        (l.get_mag("1").get_view(), l.get_mag("2").get_view(is_bounded=False), 0),
+        (l.get_mag("1").get_view(), l.get_mag("2").get_view(), 0),
         [2, 2, 2],
         InterpolationModes.MAX,
         CUBE_EDGE_LEN,
-        False,
         100,
     )
 
@@ -230,54 +235,6 @@ def test_anisotropic_mag_calculation() -> None:
         )
 
 
-def test_downsampling_padding() -> None:
-    # offset, size, max_mag, scale, expected_offset, expected_size
-    padding_tests = [
-        (
-            (0, 0, 0),
-            (128, 128, 256),
-            Mag(4),
-            (1, 1, 1),
-            (0, 0, 0),
-            (128, 128, 256),
-        ),  # no padding in this case
-        ((10, 0, 0), (118, 128, 256), Mag(4), (1, 1, 1), (8, 0, 0), (120, 128, 256)),
-        (
-            (10, 20, 30),
-            (128, 148, 168),
-            Mag(8),
-            (2, 1, 1),
-            (8, 16, 24),
-            (132, 152, 176),
-        ),
-    ]
-    for args in padding_tests:
-        ds_path = TESTOUTPUT_DIR / "larger_wk_dataset"
-        try:
-            shutil.rmtree(ds_path)
-        except:
-            pass
-
-        (offset, size, max_mag, scale, expected_offset, expected_size) = args
-
-        ds = WKDataset.create(ds_path, scale=scale)
-        layer = ds.add_layer(
-            "layer1", "segmentation", num_channels=1, largest_segment_id=1000000000
-        )
-        mag1 = layer.add_mag("1", block_len=8, file_len=8)
-
-        # write random data to mag 1 to set the initial offset and size
-        mag1.write(
-            offset=offset,
-            data=(np.random.rand(*size) * 255).astype(np.uint8),
-        )
-
-        layer._pad_existing_mags_for_downsampling(Mag(1), max_mag, scale)
-
-        assert np.array_equal(mag1.get_view().size, expected_size)
-        assert np.array_equal(mag1.get_view().global_offset, expected_offset)
-
-
 def test_default_max_mag() -> None:
     assert calculate_default_max_mag(dataset_size=(65536, 65536, 65536)) == Mag(1024)
     assert calculate_default_max_mag(dataset_size=(4096, 4096, 4096)) == Mag(64)
@@ -286,3 +243,107 @@ def test_default_max_mag() -> None:
     assert calculate_default_max_mag(dataset_size=(16384, 65536, 65536)) == Mag(1024)
     assert calculate_default_max_mag(dataset_size=(16384, 65536, 16384)) == Mag(1024)
     assert calculate_default_max_mag(dataset_size=(256, 256, 256)) == Mag([4, 4, 4])
+
+
+def test_default_parameter() -> None:
+    target_path = TESTOUTPUT_DIR / "downsaple_default"
+
+    try:
+        shutil.rmtree(target_path)
+    except:
+        pass
+
+    ds = Dataset.create(target_path, scale=(1, 1, 1))
+    layer = ds.add_layer(
+        "color", LayerCategories.COLOR_TYPE, dtype_per_channel="uint8", num_channels=3
+    )
+    mag = layer.add_mag("2")
+    mag.write(data=(np.random.rand(3, 10, 20, 30) * 255).astype(np.uint8))
+    layer.downsample()
+
+    # The max_mag is Mag(4) in this case (see test_default_max_mag)
+    assert sorted(layer.mags.keys()) == [Mag("2"), Mag("4")]
+
+
+def test_default_anisotropic_scale() -> None:
+    try:
+        shutil.rmtree(TESTOUTPUT_DIR / "default_anisotropic_scale")
+    except:
+        pass
+
+    ds = Dataset.create(
+        TESTOUTPUT_DIR / "default_anisotropic_scale", scale=(85, 85, 346)
+    )
+    layer = ds.add_layer("color", LayerCategories.COLOR_TYPE)
+    mag = layer.add_mag(1)
+    mag.write(data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8))
+
+    layer.downsample(Mag(1), None, "median", True)
+    assert sorted(layer.mags.keys()) == [Mag("1"), Mag("2-2-1"), Mag("4-4-1")]
+
+
+def test_downsample_mag_list() -> None:
+    try:
+        shutil.rmtree(TESTOUTPUT_DIR / "downsample_mag_list")
+    except:
+        pass
+
+    ds = Dataset.create(TESTOUTPUT_DIR / "downsample_mag_list", scale=(1, 1, 2))
+    layer = ds.add_layer("color", LayerCategories.COLOR_TYPE)
+    mag = layer.add_mag(1)
+    mag.write(data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8))
+
+    target_mags = [Mag([4, 4, 8]), Mag(2), Mag([32, 32, 8]), Mag(32)]  # unsorted list
+
+    layer.downsample_mag_list(from_mag=Mag(1), target_mags=target_mags)
+
+    for m in target_mags:
+        assert m in layer.mags
+
+
+def test_downsample_with_invalid_mag_list() -> None:
+    try:
+        shutil.rmtree(TESTOUTPUT_DIR / "downsample_mag_list")
+    except:
+        pass
+
+    ds = Dataset.create(TESTOUTPUT_DIR / "downsample_mag_list", scale=(1, 1, 2))
+    layer = ds.add_layer("color", LayerCategories.COLOR_TYPE)
+    mag = layer.add_mag(1)
+    mag.write(data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8))
+
+    with pytest.raises(AssertionError):
+        layer.downsample_mag_list(
+            from_mag=Mag(1),
+            target_mags=[Mag(1), Mag([1, 1, 2]), Mag([2, 2, 1]), Mag(2)],
+        )
+
+
+def test_downsample_compressed() -> None:
+    try:
+        shutil.rmtree(TESTOUTPUT_DIR / "downsample_compressed")
+    except:
+        pass
+
+    ds = Dataset.create(TESTOUTPUT_DIR / "downsample_compressed", scale=(1, 1, 2))
+    layer = ds.add_layer("color", LayerCategories.COLOR_TYPE)
+    mag = layer.add_mag(1, block_len=8, file_len=8)
+    mag.write(data=(np.random.rand(80, 240, 15) * 255).astype(np.uint8))
+
+    assert not mag._is_compressed()
+    mag.compress()
+    assert mag._is_compressed()
+
+    layer.downsample(
+        from_mag=Mag(1),
+        max_mag=Mag(
+            4
+        ),  # Setting max_mag to "4" covers an edge case because the z-dimension (15) has to be rounded
+    )
+
+    # Note: this test does not check if the data is correct. This is already covered by other test cases.
+
+    assert len(layer.mags) == 3
+    assert Mag("1") in layer.mags.keys()
+    assert Mag("2-2-1") in layer.mags.keys()
+    assert Mag("4-4-2") in layer.mags.keys()

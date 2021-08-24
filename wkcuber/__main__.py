@@ -1,9 +1,14 @@
 from typing import List, Dict
 
-from .downsampling import downsample_mags_isotropic, downsample_mags_anisotropic
+from wkcuber import downsample_mags
 from .compress import compress_mag_inplace
 from .metadata import refresh_metadata
-from .utils import add_isotropic_flag, setup_logging
+from .utils import (
+    add_distribution_flags,
+    add_isotropic_flag,
+    setup_logging,
+    add_sampling_mode_flag,
+)
 from .mag import Mag
 from .converter import (
     create_parser as create_conversion_parser,
@@ -35,9 +40,15 @@ def create_parser() -> ArgumentParser:
     parser.add_argument(
         "--max_mag",
         "-m",
-        help="Max resolution to be downsampled. Needs to be a power of 2.",
+        help="Max resolution to be downsampled. Needs to be a power of 2. In case of anisotropic downsampling, "
+        "the process is considered done when max(current_mag) >= max(max_mag) where max takes the "
+        "largest dimension of the mag tuple x, y, z. For example, a maximum mag value of 8 (or 8-8-8) "
+        "will stop the downsampling as soon as a magnification is produced for which one dimension is "
+        "equal or larger than 8. "
+        "The default value is calculated depending on the dataset size. In the lowest Mag, the size will be "
+        "smaller than 100vx per dimension",
         type=int,
-        default=32,
+        default=None,
     )
 
     parser.add_argument(
@@ -49,12 +60,19 @@ def create_parser() -> ArgumentParser:
 
     parser.add_argument("--name", "-n", help="Name of the dataset", default=None)
     add_isotropic_flag(parser)
+    add_sampling_mode_flag(parser)
+    add_distribution_flags(parser)
 
     return parser
 
 
 def main(args: Namespace) -> None:
     setup_logging(args)
+
+    if args.isotropic is not None:
+        raise DeprecationWarning(
+            "The flag 'isotropic' is deprecated. Consider using '--sampling_mode isotropic' instead."
+        )
 
     auto_detect_and_run_conversion(args)
 
@@ -66,34 +84,19 @@ def main(args: Namespace) -> None:
             for mag in mags:
                 compress_mag_inplace(args.target_path, layer_name, mag, args)
 
-    if not args.isotropic:
-        for (layer_path, mags) in layer_path_to_mags.items():
-            layer_name = layer_path.stem
-            mags.sort()
-            downsample_mags_anisotropic(
-                args.target_path,
-                layer_name,
-                mags[-1],
-                Mag(args.max_mag),
-                args.scale,
-                "default",
-                not args.no_compress,
-                args=args,
-            )
-
-    else:
-        for (layer_path, mags) in layer_path_to_mags.items():
-            layer_name = layer_path.stem
-            mags.sort()
-            downsample_mags_isotropic(
-                args.target_path,
-                layer_name,
-                mags[-1],
-                Mag(args.max_mag),
-                "default",
-                not args.no_compress,
-                args=args,
-            )
+    for (layer_path, mags) in layer_path_to_mags.items():
+        layer_name = layer_path.stem
+        mags.sort()
+        downsample_mags(
+            path=args.target_path,
+            layer_name=layer_name,
+            from_mag=mags[-1],
+            max_mag=None if args.max_mag is None else Mag(args.max_mag),
+            interpolation_mode="default",
+            compress=not args.no_compress,
+            sampling_mode=args.sampling_mode,
+            args=args,
+        )
 
     refresh_metadata(args.target_path)
 

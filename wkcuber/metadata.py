@@ -1,4 +1,5 @@
 import json
+import os
 import re
 import wkw
 import logging
@@ -65,6 +66,7 @@ def write_webknossos_metadata(
     max_id: int = 0,
     compute_max_id: bool = False,
     exact_bounding_box: Optional[dict] = None,
+    view_configuration: Optional[dict] = None,
 ) -> None:
     """
     Creates a datasource-properties.json file with the specified properties
@@ -76,7 +78,9 @@ def write_webknossos_metadata(
     # Generate a metadata file for webKnossos
     # Currently includes no source of information for team
     layers = list(
-        detect_layers(dataset_path, max_id, compute_max_id, exact_bounding_box)
+        detect_layers(
+            dataset_path, max_id, compute_max_id, exact_bounding_box, view_configuration
+        )
     )
     write_datasource_properties(
         dataset_path,
@@ -93,6 +97,7 @@ def refresh_metadata(
     max_id: int = 0,
     compute_max_id: bool = False,
     exact_bounding_box: Optional[dict] = None,
+    view_configuration: Optional[dict] = None,
 ) -> None:
     """
     Updates the datasource-properties.json file for a given dataset.
@@ -114,7 +119,9 @@ def refresh_metadata(
     }
 
     new_layers = list(
-        detect_layers(wkw_path, max_id, compute_max_id, exact_bounding_box)
+        detect_layers(
+            wkw_path, max_id, compute_max_id, exact_bounding_box, view_configuration
+        )
     )
 
     # Merge the freshly read layers with the existing layer information, so that information,
@@ -229,7 +236,9 @@ def detect_bbox(dataset_path: Path, layer: str, mag: Mag = Mag(1)) -> Optional[d
         return iglob(path.join(layer_path, "*", "*", "*.wkw"), recursive=True)
 
     def parse_cube_file_name(filename: str) -> Tuple[int, int, int]:
-        CUBE_REGEX = re.compile(r"z(\d+)/y(\d+)/x(\d+)(\.wkw)$")
+        CUBE_REGEX = re.compile(
+            fr"z(\d+){os.path.sep}y(\d+){os.path.sep}x(\d+)(\.wkw)$"
+        )
         m = CUBE_REGEX.search(filename)
         if m is not None:
             return int(m.group(3)), int(m.group(2)), int(m.group(1))
@@ -268,6 +277,7 @@ def detect_standard_layer(
     layer_name: str,
     exact_bounding_box: Optional[dict] = None,
     category: str = "color",
+    layer_view_configuration: Optional[dict] = None,
 ) -> dict:
     # Perform metadata detection for well-known layers
 
@@ -307,7 +317,7 @@ def detect_standard_layer(
         dtype is not None
     ), f"Data type could not be detected for {dataset_path}/{layer_name}"
 
-    return {
+    layer_info = {
         "dataFormat": "wkw",
         "name": layer_name,
         "category": category,
@@ -315,6 +325,11 @@ def detect_standard_layer(
         "boundingBox": bbox,
         "wkwResolutions": list(resolutions),
     }
+
+    if layer_view_configuration is not None:
+        layer_info["defaultViewConfiguration"] = layer_view_configuration
+
+    return layer_info
 
 
 def detect_mappings(dataset_path: Path, layer_name: str) -> List[str]:
@@ -365,10 +380,18 @@ def detect_layers(
     max_id: int,
     compute_max_id: bool,
     exact_bounding_box: Optional[dict] = None,
+    view_configuration: Optional[dict] = None,
 ) -> Iterable[dict]:
+    if view_configuration is None:
+        view_configuration = dict()
     # Detect metadata for well-known layers (i.e., color, prediction and segmentation)
     if path.exists(path.join(dataset_path, "color")):
-        yield detect_standard_layer(dataset_path, "color", exact_bounding_box)
+        yield detect_standard_layer(
+            dataset_path,
+            "color",
+            exact_bounding_box,
+            layer_view_configuration=view_configuration.get("color"),
+        )
     if path.exists(path.join(dataset_path, "segmentation")):
         yield detect_segmentation_layer(
             dataset_path, "segmentation", max_id, compute_max_id, exact_bounding_box
@@ -385,7 +408,10 @@ def detect_layers(
             layer_info = None
             try:
                 layer_info = detect_standard_layer(
-                    dataset_path, layer_name, exact_bounding_box
+                    dataset_path,
+                    layer_name,
+                    exact_bounding_box,
+                    layer_view_configuration=view_configuration.get(layer_name),
                 )
             except Exception:
                 pass
