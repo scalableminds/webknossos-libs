@@ -46,7 +46,6 @@ def test_get_regular_chunks_max_inclusive() -> None:
 def test_buffered_slice_writer() -> None:
     test_img = np.arange(24 * 24).reshape(24, 24).astype(np.uint16) + 1
     dtype = test_img.dtype
-    # bbox = {"topleft": (0, 0, 0), "size": (24, 24, 35)}
     origin = [0, 0, 0]
     dataset_dir = TESTOUTPUT_DIR / "buffered_slice_writer"
     layer_name = "color"
