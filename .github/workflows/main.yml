@@ -11,12 +11,11 @@ jobs:
         python-version: [3.7, 3.8]
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v1
+      uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
-        architecture: 'x64'
 
     - name: Install dependencies
       run: |
@@ -39,46 +38,8 @@ jobs:
     - name: Python tests
       run: poetry run pytest tests
 
-    - name: Test tiff cubing
-      run: tests/scripts/tiff_cubing.sh
-
-    - name: Test tile cubing
-      run: tests/scripts/tile_cubing.sh
-
-    - name: Test simple tiff cubing
-      run: tests/scripts/simple_tiff_cubing.sh
-
-    - name: Test simple tiff cubing (no compression)
-      run: tests/scripts/simple_tiff_cubing_no_compression.sh
-
-    - name: Test metadata generation
-      run: tests/scripts/meta_generation.sh
-
-    - name: Test KNOSSOS conversion
-      run: tests/scripts/knossos_conversion.sh
-
-    - name: Decompress reference magnification data
-      run: |
-        mkdir -p testdata/tiff_mag_2_reference
-        tar -xzvf testdata/tiff_mag_2_reference.tar.gz -C testdata/tiff_mag_2_reference
-
-    - name: Test downsampling
-      run: tests/scripts/downsampling.sh
-
-    - name: Test upsampling
-      run: tests/scripts/upsampling.sh
-
-    - name: Test anisotropic downsampling
-      run: tests/scripts/anisotropic_downsampling.sh
-
-    - name: Test compression and verification
-      run: tests/scripts/compression_and_verification.sh
-
-    - name: Test in-place compression
-      run: tests/scripts/in_place_compression.sh
-
-    - name: Remove reference magnification data
-      run: rm -r testdata/tiff_mag_2_reference/
+    - name: CLI tests
+      run: tests/scripts/all_tests.sh
 
     - name: Generate Docs
       if: matrix.python-version == '3.8'
@@ -112,18 +73,79 @@ jobs:
         [[ -z $(git status -s) ]]
 
     - name: Publish python package
-      if: startsWith(github.event.ref, 'refs/tags') && matrix.python-version == '3.7'
+      if: startsWith(github.event.ref, 'refs/tags') && matrix.python-version == '3.8'
       env:
         PYPI_USERNAME: ${{ secrets.PYPI_USERNAME }}
         PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
       run: ./publish.sh
 
+  build_win:
+    # Caution! The Windows VM seems to be running out of storage rather quickly.
+    runs-on: windows-latest
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: [3.7, 3.8]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        pip install poetry
+        poetry install
+
+    - name: Decompress test data
+      shell: bash
+      run: tar -xzvf testdata/WT1_wkw.tar.gz
+
+    - name: Python tests
+      shell: bash
+      run: poetry run pytest tests
+
+    - name: CLI tests
+      shell: bash
+      run: tests/scripts/all_tests.sh
+
+  build_mac:
+    runs-on: macos-latest
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: [3.7, 3.8]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        pip install poetry
+        poetry install
+
+    - name: Decompress test data
+      run: tar -xzvf testdata/WT1_wkw.tar.gz
+
+    - name: Python tests
+      run: poetry run pytest tests
+
+    - name: CLI tests
+      run: tests/scripts/all_tests.sh
+
   docker:
-    needs: build
+    needs: [build, build_win, build_mac]
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - name: Build docker image
       run: docker build -t scalableminds/webknossos-cuber:$GITHUB_SHA .
 

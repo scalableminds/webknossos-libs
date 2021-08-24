@@ -1,13 +1,14 @@
-import logging
 import warnings
 from pathlib import Path
-from typing import Tuple, cast
+from typing import Tuple
 
 import numpy as np
 import pytest
+from shutil import rmtree
+from os import makedirs
 
 from wkcuber.api.dataset import Dataset
-from wkcuber.api.layer import Layer, LayerCategories
+from wkcuber.api.layer import LayerCategories
 from wkcuber.downsampling_utils import (
     InterpolationModes,
     downsample_cube,
@@ -16,11 +17,10 @@ from wkcuber.downsampling_utils import (
     calculate_default_max_mag,
     get_previous_mag,
 )
-import wkw
 from wkcuber.mag import Mag
 from wkcuber.utils import WkwDatasetInfo, open_wkw
 from wkcuber.downsampling_utils import _mode, non_linear_filter_3d
-import shutil
+
 
 CUBE_EDGE_LEN = 256
 
@@ -84,13 +84,8 @@ def test_non_linear_filter_reshape() -> None:
 
 
 def downsample_test_helper(use_compress: bool) -> None:
-    source_path = Path("testdata", "WT1_wkw")
+    source_path = TESTDATA_DIR / "WT1_wkw"
     target_path = TESTOUTPUT_DIR / "WT1_wkw"
-
-    try:
-        shutil.rmtree(target_path)
-    except:
-        pass
 
     source_ds = Dataset(source_path)
     target_ds = source_ds.copy_dataset(target_path, block_len=16, file_len=16)
@@ -157,11 +152,6 @@ def test_downsample_multi_channel() -> None:
         128 * np.random.randn(num_channels, size[0], size[1], size[2])
     ).astype("uint8")
     file_len = 32
-
-    try:
-        shutil.rmtree(TESTOUTPUT_DIR / "multi-channel-test")
-    except:
-        pass
 
     ds = Dataset.create(TESTOUTPUT_DIR / "multi-channel-test", (1, 1, 1))
     l = ds.add_layer(
@@ -248,11 +238,6 @@ def test_default_max_mag() -> None:
 def test_default_parameter() -> None:
     target_path = TESTOUTPUT_DIR / "downsaple_default"
 
-    try:
-        shutil.rmtree(target_path)
-    except:
-        pass
-
     ds = Dataset.create(target_path, scale=(1, 1, 1))
     layer = ds.add_layer(
         "color", LayerCategories.COLOR_TYPE, dtype_per_channel="uint8", num_channels=3
@@ -266,11 +251,6 @@ def test_default_parameter() -> None:
 
 
 def test_default_anisotropic_scale() -> None:
-    try:
-        shutil.rmtree(TESTOUTPUT_DIR / "default_anisotropic_scale")
-    except:
-        pass
-
     ds = Dataset.create(
         TESTOUTPUT_DIR / "default_anisotropic_scale", scale=(85, 85, 346)
     )
@@ -283,11 +263,6 @@ def test_default_anisotropic_scale() -> None:
 
 
 def test_downsample_mag_list() -> None:
-    try:
-        shutil.rmtree(TESTOUTPUT_DIR / "downsample_mag_list")
-    except:
-        pass
-
     ds = Dataset.create(TESTOUTPUT_DIR / "downsample_mag_list", scale=(1, 1, 2))
     layer = ds.add_layer("color", LayerCategories.COLOR_TYPE)
     mag = layer.add_mag(1)
@@ -302,11 +277,6 @@ def test_downsample_mag_list() -> None:
 
 
 def test_downsample_with_invalid_mag_list() -> None:
-    try:
-        shutil.rmtree(TESTOUTPUT_DIR / "downsample_mag_list")
-    except:
-        pass
-
     ds = Dataset.create(TESTOUTPUT_DIR / "downsample_mag_list", scale=(1, 1, 2))
     layer = ds.add_layer("color", LayerCategories.COLOR_TYPE)
     mag = layer.add_mag(1)
@@ -320,11 +290,6 @@ def test_downsample_with_invalid_mag_list() -> None:
 
 
 def test_downsample_compressed() -> None:
-    try:
-        shutil.rmtree(TESTOUTPUT_DIR / "downsample_compressed")
-    except:
-        pass
-
     ds = Dataset.create(TESTOUTPUT_DIR / "downsample_compressed", scale=(1, 1, 2))
     layer = ds.add_layer("color", LayerCategories.COLOR_TYPE)
     mag = layer.add_mag(1, block_len=8, file_len=8)

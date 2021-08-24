@@ -1,5 +1,4 @@
 from pathlib import Path
-
 import numpy as np
 import wkw
 
@@ -13,12 +12,17 @@ from wkcuber.metadata import (
     detect_mappings,
 )
 
+TESTOUTPUT_DIR = Path("testoutput")
+
 
 def test_element_class_conversion() -> None:
-    test_wkw_path = Path("testoutput", "test_metadata")
+    test_wkw_path = TESTOUTPUT_DIR / "test_metadata"
     prediction_layer_name = "prediction"
     prediction_wkw_info = WkwDatasetInfo(
-        test_wkw_path, prediction_layer_name, 1, wkw.Header(np.float32, num_channels=3)
+        test_wkw_path,
+        prediction_layer_name,
+        1,
+        wkw.Header(np.float32, num_channels=3, file_len=1),
     )
     ensure_wkw(prediction_wkw_info)
 
@@ -69,7 +73,7 @@ def write_custom_layer(
         .astype(dtype)
     )
     prediction_wkw_info = WkwDatasetInfo(
-        target_path, layer_name, 1, wkw.Header(dtype, num_channels)
+        target_path, layer_name, 1, wkw.Header(dtype, num_channels, file_len=1)
     )
     ensure_wkw(prediction_wkw_info)
     with open_wkw(prediction_wkw_info) as dataset:
