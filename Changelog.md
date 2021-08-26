@@ -7,7 +7,32 @@ and this project adheres to [Calendar Versioning](http://calver.org/) `0Y.0M.MIC
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.6...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.12...HEAD)
+
+### Breaking Changes in Config & CLI
+
+### Added
+- The API documentation is now hosted on a publicwebpage. [#392](https://github.com/scalableminds/webknossos-cuber/pull/392)
+
+### Changed
+
+### Fixed
+- Fixes support for Windows. [#394](https://github.com/scalableminds/webknossos-cuber/pull/394)
+
+## [0.8.12](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.12) - 2021-08-19
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.11...v0.8.12)
+
+### Breaking Changes in Config & CLI
+
+### Added
+
+### Changed
+- Rollback `scikit-image` version from `0.18.0` to `0.16.2` because the newer version cause problems in voxelytics. [#390](https://github.com/scalableminds/webknossos-cuber/pull/390/files)
+
+### Fixed
+
+## [0.8.11](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.11) - 2021-08-19
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.10...v0.8.11)
 
 ### Breaking Changes in Config & CLI
 
@@ -15,11 +40,55 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 - `dataset.add_symlink_layer` and `dataset.add_copy_layer` can now handle `Layer` arguments as well. The parameter `foreign_layer_path` was renamed to `foreign_layer`. [#389](https://github.com/scalableminds/webknossos-cuber/pull/389)
 
 ### Changed
-- Bump scipy to `1.6.0` and `scikit-image` to `0.18.0` while keeping `numpy` to under `1.20.0` [#372](https://github.com/scalableminds/webknossos-cuber/pull/372/files)
+
+### Fixed
+
+## [0.8.10](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.10) - 2021-08-19
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.9...v0.8.10)
+
+### Breaking Changes in Config & CLI
+
+### Added
+
+### Changed
 - Avoid warnings for compressed/unaligned data, if the data is directly at the border of the bounding box. [#378](https://github.com/scalableminds/webknossos-cuber/pull/378)  
 
 ### Fixed
+
+## [0.8.9](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.9) - 2021-08-12
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.8...v0.8.9)
+
+### Breaking Changes in Config & CLI
+
+### Added
+
+### Changed
+- Bump scipy to `1.6.0` and `scikit-image` to `0.18.0` while keeping `numpy` to under `1.20.0` [#372](https://github.com/scalableminds/webknossos-cuber/pull/372/files)
+
+### Fixed
 - Fixes a bug where modifications to an existing dataset with floats as dtype failed. [#375](https://github.com/scalableminds/webknossos-cuber/pull/375)
+
+## [0.8.8](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.8) - 2021-08-06
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.7...v0.8.8)
+
+### Breaking Changes in Config & CLI
+
+### Added
+
+### Changed
+- Bump cluster-tools from 1.59 to 1.60. [#373](https://github.com/scalableminds/webknossos-cuber/pull/373)
+### Fixed
+
+## [0.8.7](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.7) - 2021-08-04
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.6...v0.8.7)
+
+### Breaking Changes in Config & CLI
+
+### Added
+
+### Changed
+- Bump cluster-tools from 1.58 to 1.59. [#371](https://github.com/scalableminds/webknossos-cuber/pull/371)
+### Fixed
 
 ## [0.8.6](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.6) - 2021-07-29
 [Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.5...v0.8.6)

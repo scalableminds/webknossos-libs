@@ -1,18 +1,16 @@
-import filecmp
 import itertools
 import json
 import os
 import warnings
 from os.path import dirname, join
 from pathlib import Path
-from typing import Any, Tuple, cast, Generator
+from typing import Tuple, cast, Generator
 
 import pytest
 
 import numpy as np
 from shutil import rmtree, copytree
 
-from wkw import wkw
 from wkw.wkw import WKWException
 
 from wkcuber.api.dataset import Dataset, DatasetViewConfiguration
@@ -20,7 +18,6 @@ from wkcuber.api.bounding_box import BoundingBox
 from os import makedirs
 
 from wkcuber.api.layer import (
-    Layer,
     LayerCategories,
     SegmentationLayer,
     LayerViewConfiguration,

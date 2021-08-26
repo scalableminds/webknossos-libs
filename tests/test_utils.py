@@ -1,4 +1,5 @@
 from pathlib import Path
+from shutil import rmtree
 from typing import Union
 
 import numpy as np
@@ -6,9 +7,10 @@ from wkcuber.utils import get_chunks, get_regular_chunks, BufferedSliceWriter
 import wkw
 from wkcuber.mag import Mag
 import os
-from shutil import rmtree
 
 BLOCK_LEN = 32
+
+TESTOUTPUT_DIR = Path("testoutput")
 
 
 def delete_dir(relative_path: Union[str, Path]) -> None:
@@ -44,9 +46,8 @@ def test_get_regular_chunks_max_inclusive() -> None:
 def test_buffered_slice_writer() -> None:
     test_img = np.arange(24 * 24).reshape(24, 24).astype(np.uint16) + 1
     dtype = test_img.dtype
-    bbox = {"topleft": (0, 0, 0), "size": (24, 24, 35)}
     origin = [0, 0, 0]
-    dataset_dir = Path("testoutput", "buffered_slice_writer")
+    dataset_dir = TESTOUTPUT_DIR / "buffered_slice_writer"
     layer_name = "color"
     mag = Mag(1)
     dataset_path = dataset_dir / layer_name / mag.to_layer_name()
