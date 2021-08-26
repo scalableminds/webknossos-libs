@@ -14,6 +14,8 @@ For upgrade instructions, please check the respective *Breaking Changes* section
   - The `Layer.rename()` function is now replaced with the setter of `Layer.name`.
   - The functions `Layer.get_view_configuration` and `Layer.set_view_conficuration` are replaced by the property `Layer.default_view_configuration`. (Same applies to `Dataset.get_view_configuration` and `Dataset.set_view_configuration`)
   - Moved `LayerViewConfiguration` and `DatasetViewConfiguration` into `properties.py`
+  - Removed `Layer.set_bounding_box_offset` and `Layer.set_bounding_box_size`.
+  - Renamed `Layer.get_bounding_box()` to the property `Layer.bounding_box`. The method `Layer.set_bounding_box` is replaced with the setter of the property `Layer.bounding_box`.
 ### Added
 
 ### Changed

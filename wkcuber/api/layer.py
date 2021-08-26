@@ -416,20 +416,27 @@ class Layer:
             )
         self.dataset._export_as_json()
 
-    def set_bounding_box_offset(self, offset: Tuple[int, int, int]) -> None:
-        """
-        Updates the offset of the bounding box of this layer in the properties.
-        """
-        self.set_bounding_box(offset, self._properties.bounding_box.size)
-
-    def set_bounding_box_size(self, size: Tuple[int, int, int]) -> None:
-        """
-        Updates the size of the bounding box of this layer in the properties.
-        """
-        self.set_bounding_box(self._properties.bounding_box.topleft, size)
-
-    def get_bounding_box(self) -> BoundingBox:
+    @property
+    def bounding_box(self) -> BoundingBox:
         return self._properties.bounding_box.copy()
+
+    @bounding_box.setter
+    def bounding_box(self, bbox: BoundingBox) -> None:
+        """
+        Updates the offset and size of the bounding box of this layer in the properties.
+        """
+        self._properties.bounding_box = bbox.copy()
+
+        for mag, mag_view in self.mags.items():
+            mag_view._size = cast(
+                Tuple[int, int, int],
+                tuple(
+                    self._properties.bounding_box.align_with_mag(mag, ceil=True)
+                    .in_mag(mag)
+                    .bottomright
+                ),
+            )
+        self.dataset._export_as_json()
 
     def downsample(
         self,
@@ -478,7 +485,7 @@ class Layer:
         ), f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
 
         if max_mag is None:
-            max_mag = calculate_default_max_mag(self.get_bounding_box().size)
+            max_mag = calculate_default_max_mag(self.bounding_box.size)
 
         if sampling_mode == SamplingModes.AUTO:
             scale = self.dataset.scale
@@ -553,7 +560,7 @@ class Layer:
             target_mag, prev_mag_view, compress
         )
 
-        bb_mag1 = self.get_bounding_box()
+        bb_mag1 = self.bounding_box
 
         aligned_source_bb = bb_mag1.align_with_mag(target_mag, ceil=True).in_mag(
             from_mag

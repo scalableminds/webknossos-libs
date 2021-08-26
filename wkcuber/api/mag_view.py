@@ -83,7 +83,7 @@ class MagView(View):
             header,
             cast(
                 Tuple[int, int, int],
-                tuple(convert_mag1_size(layer.get_bounding_box().bottomright, mag)),
+                tuple(convert_mag1_size(layer.bounding_box.bottomright, mag)),
             ),
             (0, 0, 0),
             False,
@@ -130,8 +130,8 @@ class MagView(View):
         """
         self._assert_valid_num_channels(data.shape)
         super().write(data, offset)
-        current_offset_in_mag1 = self.layer.get_bounding_box().topleft
-        current_size_in_mag1 = self.layer.get_bounding_box().size
+        current_offset_in_mag1 = self.layer.bounding_box.topleft
+        current_size_in_mag1 = self.layer.bounding_box.size
 
         mag_np = self.mag.as_np()
 
@@ -141,7 +141,7 @@ class MagView(View):
         new_offset_in_mag1 = (
             offset_in_mag1
             if tuple(current_offset_in_mag1) == (-1, -1, -1)
-            or self.layer.get_bounding_box() == BoundingBox((0, 0, 0), (0, 0, 0))
+            or self.layer.bounding_box == BoundingBox((0, 0, 0), (0, 0, 0))
             else np.minimum(current_offset_in_mag1, offset_in_mag1)
         )
 
@@ -157,9 +157,9 @@ class MagView(View):
             tuple(convert_mag1_offset(max_end_offset_in_mag1, self.mag)),
         )  # The base view of a MagDataset always starts at (0, 0, 0)
 
-        self.layer.set_bounding_box(
-            cast(Tuple[int, int, int], tuple(new_offset_in_mag1)),
-            cast(Tuple[int, int, int], tuple(total_size_in_mag1)),
+        self.layer.bounding_box = BoundingBox(
+            new_offset_in_mag1,
+            total_size_in_mag1,
         )
 
     def get_view(
@@ -202,7 +202,7 @@ class MagView(View):
         ```
         """
 
-        bb = self.layer.get_bounding_box()
+        bb = self.layer.bounding_box
 
         # The (-1, -1, -1) is for backwards compatibility because we used '(-1, -1, -1)' to indicate that there is no data written yet.
         if tuple(bb.topleft) == (-1, -1, -1):

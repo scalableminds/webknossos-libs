@@ -101,9 +101,8 @@ def downsample_test_helper(use_compress: bool) -> None:
         "color", LayerCategories.COLOR_TYPE, dtype_per_channel="uint8"
     )
     # The bounding box has to be set here explicitly because the downsampled data is written to a different dataset.
-    target_layer.set_bounding_box(
-        source_layer.get_bounding_box().topleft, source_layer.get_bounding_box().size
-    )
+    target_layer.bounding_box = source_layer.bounding_box
+
     mag2 = target_layer._initialize_mag_from_other_mag("2", mag1, use_compress)
 
     offset = (WKW_CUBE_SIZE, 2 * WKW_CUBE_SIZE, 0)

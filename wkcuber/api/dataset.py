@@ -227,8 +227,8 @@ class Dataset:
         )
 
         if category == LayerCategories.COLOR_TYPE:
-            self._layers[layer_name] = Layer(self, layer_properties)
             self._properties.data_layers += [layer_properties]
+            self._layers[layer_name] = Layer(self, layer_properties)
         elif category == LayerCategories.SEGMENTATION_TYPE:
             assert (
                 "largest_segment_id" in kwargs
@@ -244,10 +244,10 @@ class Dataset:
             )
             if "mappings" in kwargs:
                 segmentation_layer_properties.mappings = kwargs["mappings"]
+            self._properties.data_layers += [segmentation_layer_properties]
             self._layers[layer_name] = SegmentationLayer(
                 self, segmentation_layer_properties
             )
-            self._properties.data_layers += [segmentation_layer_properties]
         else:
             raise RuntimeError(
                 f"Failed to add layer ({layer_name}) because of invalid category ({category}). The supported categories are '{LayerCategories.COLOR_TYPE}' and '{LayerCategories.SEGMENTATION_TYPE}'"
@@ -450,7 +450,7 @@ class Dataset:
                 )
                 new_ds._layers[layer_name] = target_layer
 
-                bbox = self.get_layer(layer_name).get_bounding_box()
+                bbox = self.get_layer(layer_name).bounding_box
 
                 for mag, mag_view in layer.mags.items():
                     block_len = block_len or mag_view.header.block_len
@@ -471,9 +471,7 @@ class Dataset:
                             bbox.align_with_mag(mag, ceil=True).in_mag(mag).bottomright
                         ),
                     )
-                    target_mag.layer.set_bounding_box(
-                        offset=bbox.topleft, size=bbox.size
-                    )
+                    target_mag.layer.bounding_box = bbox
 
                     # The data gets written to the target_mag.
                     # Therefore, the chunk size is determined by the target_mag to prevent concurrent writes
