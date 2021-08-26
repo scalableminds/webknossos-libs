@@ -189,7 +189,10 @@ class Layer:
         makedirs(full_path, exist_ok=True)
 
         for resolution in properties.wkw_resolutions:
-            self._setup_mag(Mag(resolution.resolution).to_layer_name())
+            self._setup_mag(Mag(resolution.resolution))
+        # Only keep the properties of resolutions that were initialized.
+        # Sometimes the directory of a resolution is removed from disk manually, but the properties are not updated.
+        self._properties.wkw_resolutions = [res for res in self._properties.wkw_resolutions if Mag(res.resolution) in self._mags]
 
     @property
     def _properties(self) -> LayerProperties:
@@ -729,11 +732,9 @@ class Layer:
             prev_mag = target_mag
             target_mag = get_previous_mag(target_mag, scale)
 
-    def _setup_mag(self, mag: Union[str, Mag]) -> None:
+    def _setup_mag(self, mag: Mag) -> None:
         # This method is used to initialize the mag when opening the Dataset. This does not create e.g. the wk_header.
 
-        # normalize the name of the mag
-        mag = Mag(mag)
         mag_name = mag.to_layer_name()
 
         self._assert_mag_does_not_exist_yet(mag)
