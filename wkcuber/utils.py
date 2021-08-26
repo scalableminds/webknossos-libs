@@ -7,6 +7,7 @@ from types import TracebackType
 
 import logging
 import argparse
+
 import wkw
 import numpy as np
 import cluster_tools
@@ -510,8 +511,3 @@ def get_executor_args(global_args: argparse.Namespace) -> argparse.Namespace:
     executor_args.distribution_strategy = global_args.distribution_strategy
     executor_args.job_resources = global_args.job_resources
     return executor_args
-
-
-def _snake_to_camel_case(snake_case_name: str) -> str:
-    parts = snake_case_name.split("_")
-    return parts[0] + "".join(part.title() for part in parts[1:])

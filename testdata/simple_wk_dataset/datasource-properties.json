@@ -4,7 +4,7 @@
         "team": ""
     },
     "scale": [
-        1
+        1, 1, 1
     ],
     "defaultViewConfiguration": {
         "position": [
@@ -19,7 +19,7 @@
             "name": "color",
             "category": "color",
             "elementClass": "uint24",
-            "num_channels": 3,
+            "numChannels": 3,
             "boundingBox": {
                 "topLeft": [
                     0,

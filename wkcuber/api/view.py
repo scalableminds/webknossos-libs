@@ -34,13 +34,13 @@ class View:
         """
         Do not use this constructor manually. Instead use `wkcuber.api.mag_view.MagView.get_view()` to get a `View`.
         """
-        self.dataset: Optional[Dataset] = None
-        self.path = path_to_mag_view
-        self.header: wkw.Header = header
-        self.size: Tuple[int, int, int] = size
-        self.global_offset: Tuple[int, int, int] = global_offset
+        self._dataset: Optional[Dataset] = None
+        self._path = path_to_mag_view
+        self._header: wkw.Header = header
+        self._size: Tuple[int, int, int] = size
+        self._global_offset: Tuple[int, int, int] = global_offset
         self._is_bounded = is_bounded
-        self.read_only = read_only
+        self._read_only = read_only
         self._is_opened = False
         # The bounding box of the view is used to prevent warnings when writing compressed but unaligned data
         # directly at the borders of the bounding box.
@@ -53,6 +53,22 @@ class View:
         # This should not be misused to infer the size of the dataset because this might lead to problems.
         self._mag_view_bbox_at_creation = mag_view_bbox_at_creation
 
+    @property
+    def header(self) -> wkw.Header:
+        return self._header
+
+    @property
+    def size(self) -> Tuple[int, int, int]:
+        return self._size
+
+    @property
+    def global_offset(self) -> Tuple[int, int, int]:
+        return self._global_offset
+
+    @property
+    def read_only(self) -> bool:
+        return self._read_only
+
     def open(self) -> "View":
         """
         Opens the actual handles to the data on disk.
@@ -64,8 +80,8 @@ class View:
         if self._is_opened:
             raise Exception("Cannot open view: the view is already opened")
         else:
-            self.dataset = Dataset.open(
-                str(self.path)
+            self._dataset = Dataset.open(
+                str(self._path)
             )  # No need to pass the header to the wkw.Dataset
             self._is_opened = True
         return self
@@ -79,9 +95,9 @@ class View:
         if not self._is_opened:
             raise Exception("Cannot close View: the view is not opened")
         else:
-            assert self.dataset is not None  # because the View was opened
-            self.dataset.close()
-            self.dataset = None
+            assert self._dataset is not None  # because the View was opened
+            self._dataset.close()
+            self._dataset = None
             self._is_opened = False
 
     def write(
@@ -117,9 +133,9 @@ class View:
 
         if not was_opened:
             self.open()
-        assert self.dataset is not None  # because the View was opened
+        assert self._dataset is not None  # because the View was opened
 
-        self.dataset.write(absolute_offset, data)
+        self._dataset.write(absolute_offset, data)
 
         if not was_opened:
             self.close()
@@ -190,9 +206,9 @@ class View:
         was_opened = self._is_opened
         if not was_opened:
             self.open()
-        assert self.dataset is not None  # because the View was opened
+        assert self._dataset is not None  # because the View was opened
 
-        data = self.dataset.read(absolute_offset, size)
+        data = self._dataset.read(absolute_offset, size)
 
         if not was_opened:
             self.close()
@@ -249,7 +265,7 @@ class View:
             Tuple[int, int, int], tuple(self.global_offset + np.array(offset))
         )
         return View(
-            self.path,
+            self._path,
             self.header,
             size=size,
             global_offset=view_offset,
@@ -511,7 +527,7 @@ class View:
     def __repr__(self) -> str:
         return repr(
             "View(%s, global_offset=%s, size=%s)"
-            % (self.path, self.global_offset, self.size)
+            % (self._path, self.global_offset, self.size)
         )
 
     @property

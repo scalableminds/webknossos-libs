@@ -94,6 +94,9 @@ def downsample_test_helper(use_compress: bool) -> None:
     mag1 = target_layer.get_mag("1")
     target_layer.delete_mag("2-2-1")  # This is not needed for this test
 
+    # The bounding box has to be set here explicitly because the downsampled data is written to a different dataset.
+    target_layer.bounding_box = source_ds.get_layer("color").bounding_box
+
     mag2 = target_layer._initialize_mag_from_other_mag("2", mag1, use_compress)
 
     # The actual size of mag1 is (4600, 4600, 512).
