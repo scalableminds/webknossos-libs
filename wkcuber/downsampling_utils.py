@@ -43,7 +43,7 @@ def calculate_mags_to_downsample(
     assert np.all(from_mag.as_np() <= max_mag.as_np())
     mags = []
     current_mag = from_mag
-    while current_mag.to_array() != max_mag.to_array():
+    while current_mag < max_mag:
         if scale is None:
             current_mag = Mag(np.minimum(current_mag.as_np() * 2, max_mag.as_np()))
         else:
@@ -86,10 +86,9 @@ def calculate_default_max_mag(
     # The lowest mag should have a size of ~ 100vx**2 per slice
     max_x_y = max(dataset_size[0], dataset_size[1])
     # highest power of 2 larger (or equal) than max_x_y divided by 100
-    x_y_mag_value = max(2 ** math.ceil(math.log(max_x_y / 100, 2)), 4)  # at least 4
-    # calculate the z value, given the scale
-    z_mag_value = 2 ** (math.ceil(math.log(x_y_mag_value * scale[0] / scale[2], 2)))
-    return Mag([x_y_mag_value, x_y_mag_value, z_mag_value])
+    # The calculated factor will be used for x, y and z here. If anisotropic downsampling takes place,
+    # the dimensions can still be downsampled independently according to the scale.
+    return Mag(max(2 ** math.ceil(math.log(max_x_y / 100, 2)), 4))  # at least 4
 
 
 def parse_interpolation_mode(

@@ -201,57 +201,121 @@ def test_downsample_multi_channel() -> None:
 
 
 def test_anisotropic_mag_calculation() -> None:
-    # scale, sampling scheme
+    # This test does not test the exact input of the user:
+    # If a user does not specify a max_mag, then a default is calculated.
+    # Therefore, max_mag=None is not covered in this test case.
+    # The same applies for `scale`:
+    # This is either extracted from the properties or set to comply with a specific sampling mode.
+
     mag_tests = [
         # Anisotropic
-        ((10.5, 10.5, 24), [(1, 1, 1), (2, 2, 1), (4, 4, 2), (8, 8, 4), (16, 16, 8)]),
         (
-            (10.5, 10.5, 24),
-            [(1, 1, 1), (2, 2, 1), (4, 4, 2), (8, 8, 4), (16, 16, 8), (16, 16, 16)],
+            (10.5, 10.5, 24),  # scale
+            (1, 1, 1),  # from_mag
+            16,  # max_mag
+            [(1, 1, 1), (2, 2, 1), (4, 4, 2), (8, 8, 4), (16, 16, 8)]  # expected scheme
         ),
         (
             (10.5, 10.5, 24),
-            [(1, 1, 1), (2, 2, 1), (4, 4, 2), (8, 8, 4), (8, 8, 8), (8, 8, 16)],
+            (1, 1, 1),
+            (16, 16, 8),
+            [(1, 1, 1), (2, 2, 1), (4, 4, 2), (8, 8, 4), (16, 16, 8)]
+        ),
+        (
+            (10.5, 10.5, 24),
+            (1, 1, 1),
+            (16, 16, 4),
+            [(1, 1, 1), (2, 2, 1), (4, 4, 2), (8, 8, 4), (16, 16, 4)]
+        ),
+        (
+            (10.5, 10.5, 35),
+            (1, 1, 1),
+            (16, 16, 16),
+            [(1, 1, 1), (2, 2, 1), (4, 4, 1), (8, 8, 2), (16, 16, 4)]
         ),
         (
             (10.5, 10.5, 10.5),
-            [(1, 1, 1), (2, 2, 2), (4, 4, 4), (8, 8, 8), (16, 16, 16)],
+            (1, 1, 1),
+            (16, 16, 16),
+            [(1, 1, 1), (2, 2, 2), (4, 4, 4), (8, 8, 8), (16, 16, 16)]
         ),
-        ((10.5, 10.5, 10.5), [(1, 1, 1), (2, 2, 2), (4, 4, 4), (8, 8, 8), (8, 8, 16)]),
-        ((1, 1, 2), [(2, 2, 1), (4, 4, 2), (8, 8, 4), (16, 16, 8)]),
-        ((1, 1, 2), [(2, 2, 2), (4, 4, 2), (8, 8, 4), (16, 16, 8)]),
-        ((1, 1, 4), [(1, 1, 1), (2, 2, 1), (4, 4, 1), (8, 8, 2), (16, 16, 2)]),
+        (
+            (10.5, 10.5, 10.5),
+            (1, 1, 1),
+            (8, 8, 16),
+            [(1, 1, 1), (2, 2, 2), (4, 4, 4), (8, 8, 8), (8, 8, 16)]
+        ),
+        (
+            (1, 1, 2),
+            (2, 2, 1),
+            (16, 16, 8),
+            [(2, 2, 1), (4, 4, 2), (8, 8, 4), (16, 16, 8)]
+        ),
+        (
+            (1, 1, 2),
+            (2, 2, 2),
+            (16, 16, 8),
+            [(2, 2, 2), (4, 4, 2), (8, 8, 4), (16, 16, 8)]
+        ),
+        (
+            (1, 1, 4),
+            (1, 1, 1),
+            (16, 16, 2),
+            [(1, 1, 1), (2, 2, 1), (4, 4, 1), (8, 8, 2), (16, 16, 2)]
+        ),
         # Constant Z
         (
             (1, 1, 2),
+            (1, 1, 1),
+            (16, 16, 1),
             [(1, 1, 1), (2, 2, 1), (4, 4, 1), (8, 8, 1), (16, 16, 1)],
         ),
         # Isotropic
-        (None, [(1, 1, 1), (2, 2, 2), (4, 4, 4), (8, 8, 8)]),
-        (None, [(1, 1, 1), (2, 2, 2), (4, 4, 4), (8, 8, 8), (16, 16, 8)]),
-        (None, [(2, 2, 1), (4, 4, 2), (8, 8, 4)]),
-        (None, [(2, 2, 1), (4, 4, 2), (8, 8, 4), (8, 8, 8)]),
+        (
+            None,
+            (1, 1, 1),
+            (8, 8, 8),
+            [(1, 1, 1), (2, 2, 2), (4, 4, 4), (8, 8, 8)]
+        ),
+        (
+            None,
+            (1, 1, 1),
+            (16, 16, 8),
+            [(1, 1, 1), (2, 2, 2), (4, 4, 4), (8, 8, 8), (16, 16, 8)]
+        ),
+        (
+            None,
+            (2, 2, 1),
+            (8, 8, 4),
+            [(2, 2, 1), (4, 4, 2), (8, 8, 4)]
+        ),
+        (
+            None,
+            (2, 2, 1),
+            (8, 8, 8),
+            [(2, 2, 1), (4, 4, 2), (8, 8, 4)]
+        ),
     ]
 
     for i in range(len(mag_tests)):
-        scale = mag_tests[i][0]
-        sampling_scheme = [Mag(m) for m in mag_tests[i][1]]
-        from_mag = sampling_scheme[0]
-        max_mag = sampling_scheme[-1]
+        scale, from_mag, max_mag, scheme = mag_tests[i]
+        sampling_scheme = [Mag(m) for m in scheme]
+        from_mag = Mag(from_mag)
+        max_mag = Mag(max_mag)
 
         assert sampling_scheme[1:] == calculate_mags_to_downsample(
             from_mag, max_mag, scale
-        ), f"The calculated downsampling scheme of the {i}-th test case is wrong."
+        ), f"The calculated downsampling scheme of the {i+1}-th test case is wrong."
 
     for i in range(len(mag_tests)):
-        scale = mag_tests[i][0]
-        sampling_scheme = [Mag(m) for m in mag_tests[i][1]]
-        min_mag = sampling_scheme[0]
-        from_mag = sampling_scheme[-1]
+        scale, min_mag, from_mag, scheme = mag_tests[i]
+        sampling_scheme = [Mag(m) for m in scheme]
+        from_mag = Mag(from_mag)
+        min_mag = Mag(min_mag)
 
         assert list(reversed(sampling_scheme[:-1])) == calculate_mags_to_upsample(
             from_mag, min_mag, scale
-        ), f"The calculated upsampling scheme of the {i}-th test case is wrong."
+        ), f"The calculated upsampling scheme of the {i+1}-th test case is wrong."
 
 
 def test_default_max_mag() -> None:
