@@ -192,7 +192,11 @@ class Layer:
             self._setup_mag(Mag(resolution.resolution))
         # Only keep the properties of resolutions that were initialized.
         # Sometimes the directory of a resolution is removed from disk manually, but the properties are not updated.
-        self._properties.wkw_resolutions = [res for res in self._properties.wkw_resolutions if Mag(res.resolution) in self._mags]
+        self._properties.wkw_resolutions = [
+            res
+            for res in self._properties.wkw_resolutions
+            if Mag(res.resolution) in self._mags
+        ]
 
     @property
     def _properties(self) -> LayerProperties:
