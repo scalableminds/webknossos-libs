@@ -213,55 +213,61 @@ def test_anisotropic_mag_calculation() -> None:
             (10.5, 10.5, 24),  # scale
             (1, 1, 1),  # from_mag
             16,  # max_mag
-            [(1, 1, 1), (2, 2, 1), (4, 4, 2), (8, 8, 4), (16, 16, 8)]  # expected scheme
+            [
+                (1, 1, 1),
+                (2, 2, 1),
+                (4, 4, 2),
+                (8, 8, 4),
+                (16, 16, 8),
+            ],  # expected scheme
         ),
         (
             (10.5, 10.5, 24),
             (1, 1, 1),
             (16, 16, 8),
-            [(1, 1, 1), (2, 2, 1), (4, 4, 2), (8, 8, 4), (16, 16, 8)]
+            [(1, 1, 1), (2, 2, 1), (4, 4, 2), (8, 8, 4), (16, 16, 8)],
         ),
         (
             (10.5, 10.5, 24),
             (1, 1, 1),
             (16, 16, 4),
-            [(1, 1, 1), (2, 2, 1), (4, 4, 2), (8, 8, 4), (16, 16, 4)]
+            [(1, 1, 1), (2, 2, 1), (4, 4, 2), (8, 8, 4), (16, 16, 4)],
         ),
         (
             (10.5, 10.5, 35),
             (1, 1, 1),
             (16, 16, 16),
-            [(1, 1, 1), (2, 2, 1), (4, 4, 1), (8, 8, 2), (16, 16, 4)]
+            [(1, 1, 1), (2, 2, 1), (4, 4, 1), (8, 8, 2), (16, 16, 4)],
         ),
         (
             (10.5, 10.5, 10.5),
             (1, 1, 1),
             (16, 16, 16),
-            [(1, 1, 1), (2, 2, 2), (4, 4, 4), (8, 8, 8), (16, 16, 16)]
+            [(1, 1, 1), (2, 2, 2), (4, 4, 4), (8, 8, 8), (16, 16, 16)],
         ),
         (
             (10.5, 10.5, 10.5),
             (1, 1, 1),
             (8, 8, 16),
-            [(1, 1, 1), (2, 2, 2), (4, 4, 4), (8, 8, 8), (8, 8, 16)]
+            [(1, 1, 1), (2, 2, 2), (4, 4, 4), (8, 8, 8), (8, 8, 16)],
         ),
         (
             (1, 1, 2),
             (2, 2, 1),
             (16, 16, 8),
-            [(2, 2, 1), (4, 4, 2), (8, 8, 4), (16, 16, 8)]
+            [(2, 2, 1), (4, 4, 2), (8, 8, 4), (16, 16, 8)],
         ),
         (
             (1, 1, 2),
             (2, 2, 2),
             (16, 16, 8),
-            [(2, 2, 2), (4, 4, 2), (8, 8, 4), (16, 16, 8)]
+            [(2, 2, 2), (4, 4, 2), (8, 8, 4), (16, 16, 8)],
         ),
         (
             (1, 1, 4),
             (1, 1, 1),
             (16, 16, 2),
-            [(1, 1, 1), (2, 2, 1), (4, 4, 1), (8, 8, 2), (16, 16, 2)]
+            [(1, 1, 1), (2, 2, 1), (4, 4, 1), (8, 8, 2), (16, 16, 2)],
         ),
         # Constant Z
         (
@@ -271,47 +277,32 @@ def test_anisotropic_mag_calculation() -> None:
             [(1, 1, 1), (2, 2, 1), (4, 4, 1), (8, 8, 1), (16, 16, 1)],
         ),
         # Isotropic
-        (
-            None,
-            (1, 1, 1),
-            (8, 8, 8),
-            [(1, 1, 1), (2, 2, 2), (4, 4, 4), (8, 8, 8)]
-        ),
+        (None, (1, 1, 1), (8, 8, 8), [(1, 1, 1), (2, 2, 2), (4, 4, 4), (8, 8, 8)]),
         (
             None,
             (1, 1, 1),
             (16, 16, 8),
-            [(1, 1, 1), (2, 2, 2), (4, 4, 4), (8, 8, 8), (16, 16, 8)]
+            [(1, 1, 1), (2, 2, 2), (4, 4, 4), (8, 8, 8), (16, 16, 8)],
         ),
-        (
-            None,
-            (2, 2, 1),
-            (8, 8, 4),
-            [(2, 2, 1), (4, 4, 2), (8, 8, 4)]
-        ),
-        (
-            None,
-            (2, 2, 1),
-            (8, 8, 8),
-            [(2, 2, 1), (4, 4, 2), (8, 8, 4)]
-        ),
+        (None, (2, 2, 1), (8, 8, 4), [(2, 2, 1), (4, 4, 2), (8, 8, 4)]),
+        (None, (2, 2, 1), (8, 8, 8), [(2, 2, 1), (4, 4, 2), (8, 8, 4)]),
     ]
 
     for i in range(len(mag_tests)):
-        scale, from_mag, max_mag, scheme = mag_tests[i]
+        scale, from_max_name, max_mag_name, scheme = mag_tests[i]
         sampling_scheme = [Mag(m) for m in scheme]
-        from_mag = Mag(from_mag)
-        max_mag = Mag(max_mag)
+        from_mag = Mag(from_max_name)
+        max_mag = Mag(max_mag_name)
 
         assert sampling_scheme[1:] == calculate_mags_to_downsample(
             from_mag, max_mag, scale
         ), f"The calculated downsampling scheme of the {i+1}-th test case is wrong."
 
     for i in range(len(mag_tests)):
-        scale, min_mag, from_mag, scheme = mag_tests[i]
+        scale, min_mag_name, from_mag_name, scheme = mag_tests[i]
         sampling_scheme = [Mag(m) for m in scheme]
-        from_mag = Mag(from_mag)
-        min_mag = Mag(min_mag)
+        from_mag = Mag(from_mag_name)
+        min_mag = Mag(min_mag_name)
 
         assert list(reversed(sampling_scheme[:-1])) == calculate_mags_to_upsample(
             from_mag, min_mag, scale
@@ -319,27 +310,13 @@ def test_anisotropic_mag_calculation() -> None:
 
 
 def test_default_max_mag() -> None:
-    assert calculate_default_max_mag(
-        dataset_size=(65536, 65536, 65536), scale=(1, 1, 1)
-    ) == Mag(1024)
-    assert calculate_default_max_mag(
-        dataset_size=(4096, 4096, 4096), scale=(1, 1, 1)
-    ) == Mag(64)
-    assert calculate_default_max_mag(
-        dataset_size=(131072, 262144, 262144), scale=(1, 1, 1)
-    ) == Mag(4096)
-    assert calculate_default_max_mag(
-        dataset_size=(32768, 32768, 32768), scale=(1, 1, 1)
-    ) == Mag(512)
-    assert calculate_default_max_mag(
-        dataset_size=(16384, 65536, 65536), scale=(1, 1, 1)
-    ) == Mag(1024)
-    assert calculate_default_max_mag(
-        dataset_size=(16384, 65536, 16384), scale=(1, 1, 1)
-    ) == Mag(1024)
-    assert calculate_default_max_mag(
-        dataset_size=(256, 256, 256), scale=(1, 1, 1)
-    ) == Mag([4, 4, 4])
+    assert calculate_default_max_mag(dataset_size=(65536, 65536, 65536)) == Mag(1024)
+    assert calculate_default_max_mag(dataset_size=(4096, 4096, 4096)) == Mag(64)
+    assert calculate_default_max_mag(dataset_size=(131072, 262144, 262144)) == Mag(4096)
+    assert calculate_default_max_mag(dataset_size=(32768, 32768, 32768)) == Mag(512)
+    assert calculate_default_max_mag(dataset_size=(16384, 65536, 65536)) == Mag(1024)
+    assert calculate_default_max_mag(dataset_size=(16384, 65536, 16384)) == Mag(1024)
+    assert calculate_default_max_mag(dataset_size=(256, 256, 256)) == Mag([4, 4, 4])
 
 
 def test_default_parameter() -> None:

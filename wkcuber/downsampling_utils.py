@@ -80,9 +80,7 @@ def calculate_mags_to_upsample(
     ] + [min_mag]
 
 
-def calculate_default_max_mag(
-    dataset_size: Tuple[int, int, int], scale: Tuple[float, float, float]
-) -> Mag:
+def calculate_default_max_mag(dataset_size: Tuple[int, int, int]) -> Mag:
     # The lowest mag should have a size of ~ 100vx**2 per slice
     max_x_y = max(dataset_size[0], dataset_size[1])
     # highest power of 2 larger (or equal) than max_x_y divided by 100

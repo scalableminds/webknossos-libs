@@ -416,7 +416,6 @@ class Layer:
         if max_mag is None:
             max_mag = calculate_default_max_mag(
                 self.dataset.properties.data_layers[self.name].get_bounding_box_size(),
-                self.dataset.properties.scale,
             )
 
         scale: Optional[Tuple[float, float, float]] = None
@@ -436,8 +435,12 @@ class Layer:
 
         mags_to_downsample = calculate_mags_to_downsample(from_mag, max_mag, scale)
 
-        if len(set([max(m.to_array()) for m in mags_to_downsample])) != len(mags_to_downsample):
-            warnings.warn("The downsampling scheme contains multiple magnifications with the same maximum value. This is not supported by webknossos.")
+        if len(set([max(m.to_array()) for m in mags_to_downsample])) != len(
+            mags_to_downsample
+        ):
+            warnings.warn(
+                "The downsampling scheme contains multiple magnifications with the same maximum value. This is not supported by webknossos."
+            )
 
         for prev_mag, target_mag in zip(
             [from_mag] + mags_to_downsample[:-1], mags_to_downsample
