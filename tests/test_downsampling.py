@@ -94,10 +94,6 @@ def downsample_test_helper(use_compress: bool) -> None:
     mag1 = target_layer.get_mag("1")
     target_layer.delete_mag("2-2-1")  # This is not needed for this test
 
-    target_ds = Dataset.create(target_path, scale=(1, 1, 1))
-    target_layer = target_ds.add_layer(
-        "color", LayerCategories.COLOR_TYPE, dtype_per_channel="uint8"
-    )
     # The bounding box has to be set here explicitly because the downsampled data is written to a different dataset.
     target_layer.bounding_box = source_ds.get_layer("color").bounding_box
 
