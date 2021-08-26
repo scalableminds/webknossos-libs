@@ -17,7 +17,7 @@ python -m wkcuber.check_equality testoutput/tiff testoutput/tiff_compress
 
 echo "Create broken copy of dataset"
 rm -rf testoutput/tiff_compress-broken
-cp -R testoutput/tiff_compress{,-broken}
+cp -R testoutput/tiff_compress testoutput/tiff_compress-broken
 rm -r testoutput/tiff_compress-broken/color/1/z0/y0/x0.wkw
 
 echo "Compare original dataset to broken one and expect to determine difference"

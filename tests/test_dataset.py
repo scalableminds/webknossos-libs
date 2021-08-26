@@ -1,18 +1,16 @@
-import filecmp
 import itertools
 import json
 import os
 import warnings
 from os.path import dirname, join
 from pathlib import Path
-from typing import Any, Tuple, cast, Generator
+from typing import Tuple, cast, Generator
 
 import pytest
 
 import numpy as np
 from shutil import rmtree, copytree
 
-from wkw import wkw
 from wkw.wkw import WKWException
 
 from wkcuber.api.properties import (
@@ -27,7 +25,6 @@ from wkcuber.api.bounding_box import BoundingBox
 from os import makedirs
 
 from wkcuber.api.layer import (
-    Layer,
     LayerCategories,
     SegmentationLayer,
     LayerViewConfiguration,
@@ -197,6 +194,24 @@ def test_open_dataset() -> None:
 
     assert len(ds.layers) == 1
     assert len(ds.get_layer("color").mags) == 1
+
+
+def test_modify_existing_dataset() -> None:
+    delete_dir(TESTOUTPUT_DIR / "simple_wk_dataset")
+    ds1 = Dataset.create(TESTOUTPUT_DIR / "simple_wk_dataset", scale=(1, 1, 1))
+    ds1.add_layer(
+        "color", LayerCategories.COLOR_TYPE, dtype_per_layer="float", num_channels=1
+    )
+
+    ds2 = Dataset(TESTOUTPUT_DIR / "simple_wk_dataset")
+    ds2.add_layer(
+        "segmentation",
+        LayerCategories.SEGMENTATION_TYPE,
+        "uint8",
+        largest_segment_id=100000,
+    )
+
+    assert (TESTOUTPUT_DIR / "simple_wk_dataset" / "segmentation").is_dir()
 
 
 def test_view_read_with_open() -> None:
@@ -1007,20 +1022,20 @@ def test_writing_subset_of_compressed_data() -> None:
     # create uncompressed dataset
     Dataset.create(TESTOUTPUT_DIR / "compressed_data", scale=(1, 1, 1)).add_layer(
         "color", LayerCategories.COLOR_TYPE
-    ).add_mag("1", block_len=8, file_len=8).write(
-        (np.random.rand(20, 40, 60) * 255).astype(np.uint8)
+    ).add_mag("2", block_len=8, file_len=8).write(
+        (np.random.rand(120, 140, 160) * 255).astype(np.uint8)
     )
 
     # compress data
     compress_mag_inplace(
         (TESTOUTPUT_DIR / "compressed_data").resolve(),
         layer_name="color",
-        mag=Mag("1"),
+        mag=Mag("2"),
     )
 
     # open compressed dataset
     compressed_mag = (
-        Dataset(TESTOUTPUT_DIR / "compressed_data").get_layer("color").get_mag("1")
+        Dataset(TESTOUTPUT_DIR / "compressed_data").get_layer("color").get_mag("2")
     )
 
     with warnings.catch_warnings():
@@ -1040,6 +1055,26 @@ def test_writing_subset_of_compressed_data() -> None:
                 offset=(10, 20, 30),
                 data=(np.random.rand(10, 10, 10) * 255).astype(np.uint8),
             )
+
+        assert compressed_mag._mag_view_bounding_box_at_creation == BoundingBox(
+            topleft=(
+                0,
+                0,
+                0,
+            ),
+            size=(120, 140, 160),
+        )
+        # Writing unaligned data to the edge of the bounding box of the MagView does not raise an error.
+        # This write operation writes unaligned data into the bottom-right corner of the MagView.
+        compressed_mag.write(
+            offset=(64, 64, 64),
+            data=(np.random.rand(56, 76, 96) * 255).astype(np.uint8),
+        )
+        # This also works for normal Views but they only use the bounding box at the time of creation as reference.
+        compressed_mag.get_view().write(
+            offset=(64, 64, 64),
+            data=(np.random.rand(56, 76, 96) * 255).astype(np.uint8),
+        )
 
         # Writing aligned data does not raise a warning. Therefore, this does not fail with these strict settings.
         compressed_mag.write(data=(np.random.rand(64, 64, 64) * 255).astype(np.uint8))
@@ -1137,6 +1172,81 @@ def test_add_symlink_layer() -> None:
 
     assert np.array_equal(mag.read(size=(10, 10, 10)), write_data)
     assert np.array_equal(original_mag.read(size=(10, 10, 10)), write_data)
+
+
+def test_add_symlink_mag(tmp_path: Path) -> None:
+    original_ds = Dataset.create(tmp_path / "original", scale=(1, 1, 1))
+    original_layer = original_ds.add_layer(
+        "color", LayerCategories.COLOR_TYPE, dtype_per_channel="uint8"
+    )
+    original_layer.add_mag(1).write(
+        data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8)
+    )
+    original_layer.add_mag(2).write(
+        data=(np.random.rand(5, 10, 15) * 255).astype(np.uint8)
+    )
+
+    ds = Dataset.create(tmp_path / "link", scale=(1, 1, 1))
+    layer = ds.add_layer("color", LayerCategories.COLOR_TYPE, dtype_per_channel="uint8")
+    layer.add_mag(1).write(
+        offset=(6, 6, 6), data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8)
+    )
+
+    assert tuple(layer.bounding_box.topleft) == (6, 6, 6)
+    assert tuple(layer.bounding_box.size) == (10, 20, 30)
+
+    symlink_mag = layer.add_symlink_mag(tmp_path / "original" / "color" / "2")
+
+    assert (tmp_path / "link" / "color" / "1").exists()
+    assert len(layer._properties.wkw_resolutions) == 2
+
+    assert tuple(layer.bounding_box.topleft) == (0, 0, 0)
+    assert tuple(layer.bounding_box.size) == (16, 26, 36)
+
+    # Write data in symlink layer
+    # Note: The written data is fully inside the bounding box of the original data.
+    # This is important because the bounding box of the foreign layer would not be updated if we use the linked dataset to write outside of its original bounds.
+    write_data = (np.random.rand(5, 5, 5) * 255).astype(np.uint8)
+    symlink_mag.write(offset=(0, 0, 0), data=write_data)
+
+    assert np.array_equal(symlink_mag.read(size=(5, 5, 5))[0], write_data)
+    assert np.array_equal(original_layer.get_mag(2).read(size=(5, 5, 5))[0], write_data)
+
+
+def test_add_copy_mag(tmp_path: Path) -> None:
+    original_ds = Dataset.create(tmp_path / "original", scale=(1, 1, 1))
+    original_layer = original_ds.add_layer(
+        "color", LayerCategories.COLOR_TYPE, dtype_per_channel="uint8"
+    )
+    original_layer.add_mag(1).write(
+        data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8)
+    )
+    original_data = (np.random.rand(5, 10, 15) * 255).astype(np.uint8)
+    original_layer.add_mag(2).write(data=original_data)
+
+    ds = Dataset.create(tmp_path / "link", scale=(1, 1, 1))
+    layer = ds.add_layer("color", LayerCategories.COLOR_TYPE, dtype_per_channel="uint8")
+    layer.add_mag(1).write(
+        offset=(6, 6, 6), data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8)
+    )
+
+    assert tuple(layer.bounding_box.topleft) == (6, 6, 6)
+    assert tuple(layer.bounding_box.size) == (10, 20, 30)
+
+    copy_mag = layer.add_copy_mag(tmp_path / "original" / "color" / "2")
+
+    assert (tmp_path / "link" / "color" / "1").exists()
+    assert len(layer._properties.wkw_resolutions) == 2
+
+    assert tuple(layer.bounding_box.topleft) == (0, 0, 0)
+    assert tuple(layer.bounding_box.size) == (16, 26, 36)
+
+    # Write data in copied layer
+    write_data = (np.random.rand(5, 5, 5) * 255).astype(np.uint8)
+    copy_mag.write(offset=(0, 0, 0), data=write_data)
+
+    assert np.array_equal(copy_mag.read(size=(5, 5, 5))[0], write_data)
+    assert np.array_equal(original_layer.get_mag(2).read()[0], original_data)
 
 
 def test_search_dataset_also_for_long_layer_name() -> None:
