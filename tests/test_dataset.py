@@ -1810,3 +1810,58 @@ def test_delete_layer_and_mag(tmp_path: Path) -> None:
     assert "segmentation" in ds.layers
     assert len([l for l in ds._properties.data_layers if l.name == "color"]) == 0
     assert len([l for l in ds._properties.data_layers if l.name == "segmentation"]) == 1
+
+
+def test_add_layer_like(tmp_path: Path) -> None:
+    ds = Dataset.create(tmp_path / "ds", scale=(1, 1, 1))
+    color_layer1 = ds.add_layer(
+        "color1", LayerCategories.COLOR_TYPE, dtype_per_layer="uint24", num_channels=3
+    )
+    color_layer1.add_mag(1)
+    segmentation_layer1 = cast(
+        SegmentationLayer,
+        ds.add_layer(
+            "segmentation1",
+            LayerCategories.SEGMENTATION_TYPE,
+            dtype_per_channel="uint8",
+            largest_segment_id=999,
+        ),
+    )
+    segmentation_layer1.add_mag(1)
+    color_layer2 = ds.add_layer_like(color_layer1, "color2")
+    segmentation_layer2 = cast(
+        SegmentationLayer, ds.add_layer_like(segmentation_layer1, "segmentation2")
+    )
+
+    assert color_layer1.name == "color1"
+    assert color_layer2.name == "color2"
+    assert len(color_layer1.mags) == 1
+    assert len(color_layer2.mags) == 0
+    assert color_layer1.category == color_layer2.category == LayerCategories.COLOR_TYPE
+    assert (
+        color_layer1.dtype_per_channel
+        == color_layer2.dtype_per_channel
+        == np.dtype("uint8")
+    )
+    assert color_layer1.num_channels == color_layer2.num_channels == 3
+
+    assert segmentation_layer1.name == "segmentation1"
+    assert segmentation_layer2.name == "segmentation2"
+    assert len(segmentation_layer1.mags) == 1
+    assert len(segmentation_layer2.mags) == 0
+    assert (
+        segmentation_layer1.category
+        == segmentation_layer2.category
+        == LayerCategories.SEGMENTATION_TYPE
+    )
+    assert (
+        segmentation_layer1.dtype_per_channel
+        == segmentation_layer2.dtype_per_channel
+        == np.dtype("uint8")
+    )
+    assert segmentation_layer1.num_channels == segmentation_layer2.num_channels == 1
+    assert (
+        segmentation_layer1.largest_segment_id
+        == segmentation_layer2.largest_segment_id
+        == 999
+    )
