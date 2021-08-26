@@ -324,7 +324,7 @@ class Dataset:
                 **kwargs,
             )
 
-    def add_layer_like(self, other_layer: Layer, layer_name: str):
+    def add_layer_like(self, other_layer: Layer, layer_name: str) -> Layer:
         if layer_name in self.layers.keys():
             raise IndexError(
                 f"Adding layer {layer_name} failed. There is already a layer with this name"
