@@ -5,11 +5,12 @@ on:
     paths:
       - "wkcuber/**"
 
+defaults:
+  run:
+    working-directory: wkcuber
+
 jobs:
-  wkcuber:
-    defaults:
-      run:
-        working-directory: wkcuber
+  build:
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 4
