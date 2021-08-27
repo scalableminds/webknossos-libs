@@ -1,9 +1,15 @@
-name: CI
+name: wkcuber
 
-on: [push]
+on:
+  push:
+    paths:
+      - "wkcuber/**"
 
 jobs:
-  build:
+  wkcuber:
+    defaults:
+      run:
+        working-directory: wkcuber
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 4
