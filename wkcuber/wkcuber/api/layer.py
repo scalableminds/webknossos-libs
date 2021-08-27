@@ -820,9 +820,9 @@ class Layer:
                 wk_header.file_len,
                 wk_header.block_type,
             )
-        except wkw.WKWException:
+        except wkw.WKWException as e:
             logging.error(
-                f"Failed to setup magnification {mag_name}, which is specified in the datasource-properties.json"
+                f"Failed to setup magnification {mag_name}, which is specified in the datasource-properties.json. See {e}"
             )
 
     def _initialize_mag_from_other_mag(
