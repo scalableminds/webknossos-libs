@@ -7,6 +7,7 @@ from types import TracebackType
 
 import logging
 import argparse
+
 import wkw
 import numpy as np
 import cluster_tools
@@ -49,7 +50,9 @@ FallbackArgs = namedtuple("FallbackArgs", ("distribution_strategy", "jobs"))
 BLOCK_LEN = 32
 DEFAULT_WKW_FILE_LEN = 32
 DEFAULT_WKW_VOXELS_PER_BLOCK = 32
-CUBE_REGEX = re.compile(fr"z(\d+){os.path.sep}y(\d+){os.path.sep}x(\d+)(\.wkw)$")
+CUBE_REGEX = re.compile(
+    fr"z(\d+){re.escape(os.path.sep)}y(\d+){re.escape(os.path.sep)}x(\d+)(\.wkw)$"
+)
 
 logger = getLogger(__name__)
 
@@ -494,12 +497,6 @@ def named_partial(func: F, *args: Any, **kwargs: Any) -> F:
         # Generic types cannot be pickled in Python <= 3.6, see https://github.com/python/typing/issues/511
         partial_func.__annotations__ = {}
     return partial_func
-
-
-def convert_mag1_size(
-    mag1_size: Union[List, np.ndarray], target_mag: Mag
-) -> np.ndarray:
-    return ceil_div_np(np.array(mag1_size), target_mag.as_np())
 
 
 def convert_mag1_offset(

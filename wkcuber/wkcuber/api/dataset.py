@@ -1,4 +1,5 @@
-import operator
+import copy
+import json
 import shutil
 from argparse import Namespace
 from shutil import rmtree
@@ -9,95 +10,35 @@ from typing import Tuple, Union, Dict, Any, Optional, cast
 
 import numpy as np
 import os
-import re
 
 import wkw
-
-from wkcuber.api.properties.layer_properties import (
-    properties_floating_type_to_python_type,
+from wkcuber.api.properties import (
+    dataset_converter,
+    DatasetProperties,
     SegmentationLayerProperties,
     LayerProperties,
+    layer_properties_converter,
+    DatasetViewConfiguration,
+    _extract_num_channels,
+    _properties_floating_type_to_python_type,
 )
 from wkcuber.api.bounding_box import BoundingBox
 from wkcuber.utils import get_executor_for_args
 
-from wkcuber.api.properties.dataset_properties import Properties
-from wkcuber.api.layer import Layer, LayerCategories, SegmentationLayer
+from wkcuber.api.layer import (
+    Layer,
+    LayerCategories,
+    SegmentationLayer,
+    _normalize_dtype_per_channel,
+    _normalize_dtype_per_layer,
+    _dtype_per_layer_to_dtype_per_channel,
+    _dtype_per_channel_to_element_class,
+)
 from wkcuber.api.view import View
 
 DEFAULT_BIT_DEPTH = 8
 
-
-def _is_int(s: str) -> bool:
-    try:
-        int(s)
-        return True
-    except ValueError:
-        return False
-
-
-def _convert_dtypes(
-    dtype: Union[str, np.dtype],
-    num_channels: int,
-    dtype_per_layer_to_dtype_per_channel: bool,
-) -> str:
-    op = operator.truediv if dtype_per_layer_to_dtype_per_channel else operator.mul
-
-    # split the dtype into the actual type and the number of bits
-    # example: "uint24" -> ["uint", "24"]
-    dtype_parts = re.split(r"(\d+)", str(dtype))
-    # calculate number of bits for dtype_per_channel
-    converted_dtype_parts = [
-        (str(int(op(int(part), num_channels))) if _is_int(part) else part)
-        for part in dtype_parts
-    ]
-    return "".join(converted_dtype_parts)
-
-
-def _normalize_dtype_per_channel(
-    dtype_per_channel: Union[str, np.dtype, type]
-) -> np.dtype:
-    try:
-        return np.dtype(dtype_per_channel)
-    except TypeError as e:
-        raise TypeError(
-            "Cannot add layer. The specified 'dtype_per_channel' must be a valid dtype."
-        ) from e
-
-
-def _normalize_dtype_per_layer(
-    dtype_per_layer: Union[str, np.dtype, type]
-) -> Union[str, np.dtype]:
-    try:
-        dtype_per_layer = str(np.dtype(dtype_per_layer))
-    except Exception:
-        pass  # casting to np.dtype fails if the user specifies a special dtype like "uint24"
-    return dtype_per_layer
-
-
-def _dtype_per_layer_to_dtype_per_channel(
-    dtype_per_layer: Union[str, np.dtype], num_channels: int
-) -> np.dtype:
-    try:
-        return np.dtype(
-            _convert_dtypes(
-                dtype_per_layer, num_channels, dtype_per_layer_to_dtype_per_channel=True
-            )
-        )
-    except TypeError as e:
-        raise TypeError(
-            "Converting dtype_per_layer to dtype_per_channel failed. Double check if the dtype_per_layer value is correct."
-        ) from e
-
-
-def _dtype_per_channel_to_dtype_per_layer(
-    dtype_per_channel: Union[str, np.dtype], num_channels: int
-) -> str:
-    return _convert_dtypes(
-        np.dtype(dtype_per_channel),
-        num_channels,
-        dtype_per_layer_to_dtype_per_channel=False,
-    )
+PROPERTIES_FILE_NAME = "datasource-properties.json"
 
 
 def _copy_job(args: Tuple[View, View, int]) -> None:
@@ -169,28 +110,33 @@ class Dataset:
         self.path = Path(dataset_path)
         """Location of the dataset"""
 
-        self.properties: Properties = Properties._from_json(
-            self.path / Properties.FILE_NAME
-        )
-        """
-        The metadata from the `datasource-properties.json`. 
-        The properties are exported to disk automatically, every time the metadata changes.
-        """
+        with open(self.path / PROPERTIES_FILE_NAME) as datasource_properties:
+            data = json.load(datasource_properties)
 
-        self._layers: Dict[str, Layer] = {}
-        self._data_format = "wkw"
-
-        # construct self.layer
-        for layer_name in self.properties.data_layers:
-            layer = self.properties.data_layers[layer_name]
-            self.add_layer(
-                layer.name,
-                layer.category,
-                dtype_per_layer=layer.element_class,
-                num_channels=layer.num_channels,
+            self._properties: DatasetProperties = dataset_converter.structure(
+                data, DatasetProperties
             )
-            for resolution in layer.wkw_magnifications:
-                self.get_layer(layer_name)._setup_mag(resolution.mag.to_layer_name())
+
+            """
+            The metadata from the `datasource-properties.json`. 
+            The properties are exported to disk automatically, every time the metadata changes.
+            """
+
+            self._layers: Dict[str, Layer] = {}
+            # construct self.layer
+            for layer_properties in self._properties.data_layers:
+                num_channels = _extract_num_channels(
+                    layer_properties.num_channels,
+                    Path(dataset_path),
+                    layer_properties.name,
+                    layer_properties.wkw_resolutions[0].resolution
+                    if len(layer_properties.wkw_resolutions) > 0
+                    else None,
+                )
+                layer_properties.num_channels = num_channels
+
+                layer = self._initialize_layer_from_properties(layer_properties)
+                self._layers[layer_properties.name] = layer
 
     @property
     def layers(self) -> Dict[str, Layer]:
@@ -198,29 +144,6 @@ class Dataset:
         Getter for dictionary containing all layers.
         """
         return self._layers
-
-    @classmethod
-    def _create_with_properties(cls, properties: Properties) -> "Dataset":
-        dataset_dir = properties.path.parent
-        if dataset_dir.exists():
-            assert (
-                dataset_dir.is_dir()
-            ), f"Creation of Dataset at {dataset_dir} failed, because a file already exists at this path."
-            assert not os.listdir(
-                dataset_dir
-            ), f"Creation of Dataset at {dataset_dir} failed, because a non-empty folder already exists at this path."
-
-        # create directories on disk and write datasource-properties.json
-        try:
-            makedirs(dataset_dir, exist_ok=True)
-            properties._export_as_json()
-        except OSError as e:
-            raise type(e)(
-                "Creation of Dataset {} failed. ".format(dataset_dir) + repr(e)
-            )
-
-        # initialize object
-        return cls(dataset_dir)
 
     def get_layer(self, layer_name: str) -> Layer:
         """
@@ -256,6 +179,7 @@ class Dataset:
 
         This function raises an `IndexError` if the specified `layer_name` already exists.
         """
+
         if "dtype" in kwargs:
             raise ValueError(
                 f"Called Dataset.add_layer with 'dtype'={kwargs['dtype']}. This parameter is deprecated. Use 'dtype_per_layer' or 'dtype_per_channel' instead."
@@ -268,15 +192,12 @@ class Dataset:
                 "Cannot add layer. Specifying both 'dtype_per_layer' and 'dtype_per_channel' is not allowed"
             )
         elif dtype_per_channel is not None:
-            dtype_per_channel = properties_floating_type_to_python_type.get(
+            dtype_per_channel = _properties_floating_type_to_python_type.get(
                 dtype_per_channel, dtype_per_channel
             )
             dtype_per_channel = _normalize_dtype_per_channel(dtype_per_channel)
-            dtype_per_layer = _dtype_per_channel_to_dtype_per_layer(
-                dtype_per_channel, num_channels
-            )
         elif dtype_per_layer is not None:
-            dtype_per_layer = properties_floating_type_to_python_type.get(
+            dtype_per_layer = _properties_floating_type_to_python_type.get(
                 dtype_per_layer, dtype_per_layer
             )
             dtype_per_layer = _normalize_dtype_per_layer(dtype_per_layer)
@@ -284,7 +205,6 @@ class Dataset:
                 dtype_per_layer, num_channels
             )
         else:
-            dtype_per_layer = "uint" + str(DEFAULT_BIT_DEPTH * num_channels)
             dtype_per_channel = np.dtype("uint" + str(DEFAULT_BIT_DEPTH))
 
         if layer_name in self.layers.keys():
@@ -294,17 +214,46 @@ class Dataset:
                 )
             )
 
-        self.properties._add_layer(
-            layer_name,
-            category,
-            dtype_per_layer,
-            self._data_format,
-            num_channels,
-            **kwargs,
+        layer_properties = LayerProperties(
+            name=layer_name,
+            category=category,
+            bounding_box=BoundingBox((0, 0, 0), (0, 0, 0)),
+            element_class=_dtype_per_channel_to_element_class(
+                dtype_per_channel, num_channels
+            ),
+            wkw_resolutions=[],
+            num_channels=num_channels,
+            data_format="wkw",
         )
-        self._layers[layer_name] = self._create_layer(
-            layer_name, dtype_per_channel, num_channels, category
-        )
+
+        if category == LayerCategories.COLOR_TYPE:
+            self._properties.data_layers += [layer_properties]
+            self._layers[layer_name] = Layer(self, layer_properties)
+        elif category == LayerCategories.SEGMENTATION_TYPE:
+            assert (
+                "largest_segment_id" in kwargs
+            ), f"Failed to create segmentation layer {layer_name}: the parameter 'largest_segment_id' was not specified, which is necessary for segmentation layers."
+
+            segmentation_layer_properties: SegmentationLayerProperties = (
+                SegmentationLayerProperties(
+                    **layer_properties_converter.unstructure(
+                        layer_properties
+                    ),  # use all attributes from LayerProperties
+                    largest_segment_id=kwargs["largest_segment_id"],
+                )
+            )
+            if "mappings" in kwargs:
+                segmentation_layer_properties.mappings = kwargs["mappings"]
+            self._properties.data_layers += [segmentation_layer_properties]
+            self._layers[layer_name] = SegmentationLayer(
+                self, segmentation_layer_properties
+            )
+        else:
+            raise RuntimeError(
+                f"Failed to add layer ({layer_name}) because of invalid category ({category}). The supported categories are '{LayerCategories.COLOR_TYPE}' and '{LayerCategories.SEGMENTATION_TYPE}'"
+            )
+
+        self._export_as_json()
         return self.layers[layer_name]
 
     def get_or_add_layer(
@@ -336,9 +285,9 @@ class Dataset:
                 + f"The number of channels of the existing layer are '{self.layers[layer_name].num_channels}' "
                 + f"and the passed parameter is '{num_channels}'."
             )
-            assert self.properties.data_layers[layer_name].category == category, (
+            assert self.get_layer(layer_name).category == category, (
                 f"Cannot get_or_add_layer: The layer '{layer_name}' already exists, but the categories do not match. "
-                + f"The category of the existing layer is '{self.properties.data_layers[layer_name].category}' "
+                + f"The category of the existing layer is '{self.get_layer(layer_name).category}' "
                 + f"and the passed parameter is '{category}'."
             )
 
@@ -404,57 +353,64 @@ class Dataset:
                 f"Removing layer {layer_name} failed. There is no layer with this name"
             )
         del self._layers[layer_name]
-        self.properties._delete_layer(layer_name)
+        self._properties.data_layers = [
+            layer for layer in self._properties.data_layers if layer.name != layer_name
+        ]
         # delete files on disk
         rmtree(join(self.path, layer_name))
+        self._export_as_json()
 
     def add_symlink_layer(
-        self, foreign_layer_path: Union[str, Path], make_relative: bool = False
+        self, foreign_layer: Union[str, Path, Layer], make_relative: bool = False
     ) -> Layer:
         """
-        Creates a symlink to the data at `foreign_layer_path` which belongs to another dataset.
+        Creates a symlink to the data at `foreign_layer` which belongs to another dataset.
         The relevant information from the `datasource-properties.json` of the other dataset is copied to this dataset.
         Note: If the other dataset modifies its bounding box afterwards, the change does not affect this properties
         (or vice versa).
         If make_relative is True, the symlink is made relative to the current dataset path.
         """
-        foreign_layer_path = Path(os.path.abspath(foreign_layer_path))
-        if make_relative:
-            foreign_layer_path = Path(os.path.relpath(foreign_layer_path, self.path))
+
+        if isinstance(foreign_layer, Layer):
+            foreign_layer_path = foreign_layer.path
+        else:
+            foreign_layer_path = Path(foreign_layer).absolute()
+
+        foreign_layer_path = foreign_layer_path.resolve()
         layer_name = foreign_layer_path.name
         if layer_name in self.layers.keys():
             raise IndexError(
                 f"Cannot create symlink to {foreign_layer_path}. This dataset already has a layer called {layer_name}."
             )
 
-        os.symlink(foreign_layer_path, join(self.path, layer_name))
-
-        # copy the properties of the layer into the properties of this dataset
-        layer_properties = Dataset(foreign_layer_path.parent).properties.data_layers[
-            layer_name
-        ]
-        self.properties.data_layers[layer_name] = layer_properties
-        self.properties._export_as_json()
-
-        self._layers[layer_name] = self._create_layer(
-            layer_name,
-            _dtype_per_layer_to_dtype_per_channel(
-                layer_properties.element_class, layer_properties.num_channels
-            ),
-            layer_properties.num_channels,
-            layer_properties.category,
+        foreign_layer_symlink_path = (
+            Path(os.path.relpath(foreign_layer_path, self.path))
+            if make_relative
+            else foreign_layer_path
         )
-        for resolution in layer_properties.wkw_magnifications:
-            self.get_layer(layer_name)._setup_mag(resolution.mag.to_layer_name())
+        os.symlink(foreign_layer_symlink_path, join(self.path, layer_name))
+        original_layer = Dataset(foreign_layer_path.parent).get_layer(layer_name)
+        layer_properties = copy.deepcopy(original_layer._properties)
+        self._properties.data_layers += [layer_properties]
+        self._layers[layer_name] = self._initialize_layer_from_properties(
+            layer_properties
+        )
+
+        self._export_as_json()
         return self.layers[layer_name]
 
-    def add_copy_layer(self, foreign_layer_path: Union[str, Path]) -> Layer:
+    def add_copy_layer(self, foreign_layer: Union[str, Path, Layer]) -> Layer:
         """
-        Copies the data at `foreign_layer_path` which belongs to another dataset to the current dataset.
+        Copies the data at `foreign_layer` which belongs to another dataset to the current dataset.
         Additionally, the relevant information from the `datasource-properties.json` of the other dataset are copied too.
         """
 
-        foreign_layer_path = Path(os.path.abspath(foreign_layer_path))
+        if isinstance(foreign_layer, Layer):
+            foreign_layer_path = foreign_layer.path
+        else:
+            foreign_layer_path = Path(foreign_layer)
+
+        foreign_layer_path = foreign_layer_path.resolve()
         layer_name = foreign_layer_path.name
         if layer_name in self.layers.keys():
             raise IndexError(
@@ -462,24 +418,14 @@ class Dataset:
             )
 
         shutil.copytree(foreign_layer_path, join(self.path, layer_name))
-
-        # copy the properties of the layer into the properties of this dataset
-        layer_properties = Dataset(foreign_layer_path.parent).properties.data_layers[
-            layer_name
-        ]
-        self.properties.data_layers[layer_name] = layer_properties
-        self.properties._export_as_json()
-
-        self._layers[layer_name] = self._create_layer(
-            layer_name,
-            _dtype_per_layer_to_dtype_per_channel(
-                layer_properties.element_class, layer_properties.num_channels
-            ),
-            layer_properties.num_channels,
-            layer_properties.category,
+        original_layer = Dataset(foreign_layer_path.parent).get_layer(layer_name)
+        layer_properties = copy.deepcopy(original_layer._properties)
+        self._properties.data_layers += [layer_properties]
+        self._layers[layer_name] = self._initialize_layer_from_properties(
+            layer_properties
         )
-        for resolution in layer_properties.wkw_magnifications:
-            self.get_layer(layer_name)._setup_mag(resolution.mag.to_layer_name())
+
+        self._export_as_json()
         return self.layers[layer_name]
 
     def copy_dataset(
@@ -498,61 +444,45 @@ class Dataset:
 
         new_dataset_path = Path(new_dataset_path)
         if scale is None:
-            scale = self.properties.scale
+            scale = self.scale
         new_ds = Dataset.create(new_dataset_path, scale=scale)
 
         with get_executor_for_args(args) as executor:
             for layer_name, layer in self.layers.items():
-                largest_segment_id = None
-                if (
-                    self.properties.data_layers[layer_name].category
-                    == LayerCategories.SEGMENTATION_TYPE
-                ):
-                    largest_segment_id = cast(
-                        SegmentationLayerProperties,
-                        self.properties.data_layers[layer_name],
-                    ).largest_segment_id
-                target_layer = new_ds.add_layer(
-                    layer_name,
-                    self.properties.data_layers[layer_name].category,
-                    dtype_per_channel=layer.dtype_per_channel,
-                    num_channels=layer.num_channels,
-                    largest_segment_id=largest_segment_id,
+                new_ds_properties = copy.deepcopy(
+                    self.get_layer(layer_name)._properties
                 )
+                # Initializing a layer with non-empty wkw_resolutions requires that the files on disk already exist.
+                # The MagViews are added manually afterwards
+                new_ds_properties.wkw_resolutions = []
+                new_ds._properties.data_layers += [new_ds_properties]
+                target_layer = new_ds._initialize_layer_from_properties(
+                    new_ds_properties
+                )
+                new_ds._layers[layer_name] = target_layer
 
-                bbox = self.properties.get_bounding_box_of_layer(layer_name)
+                bbox = self.get_layer(layer_name).bounding_box
 
                 for mag, mag_view in layer.mags.items():
-                    block_len = (
-                        block_len
-                        if block_len is not None
-                        else mag_view.header.block_len
+                    block_len = block_len or mag_view.header.block_len
+                    compress = compress or (
+                        mag_view.header.block_type != wkw.Header.BLOCK_TYPE_RAW
                     )
-                    compress = (
-                        compress
-                        if compress is not None
-                        else mag_view.header.block_type != wkw.Header.BLOCK_TYPE_RAW
-                    )
-                    file_len = (
-                        file_len if file_len is not None else mag_view.header.file_len
-                    )
+                    file_len = file_len or mag_view.header.file_len
                     target_mag = target_layer.add_mag(
                         mag, block_len, file_len, compress
                     )
 
                     # The bounding box needs to be updated manually because chunked views do not have a reference to the dataset itself
                     # The base view of a MagDataset always starts at (0, 0, 0)
-                    target_mag.global_offset = (0, 0, 0)
-                    target_mag.size = cast(
+                    target_mag._global_offset = (0, 0, 0)
+                    target_mag._size = cast(
                         Tuple[int, int, int],
                         tuple(
-                            BoundingBox(topleft=bbox[0], size=bbox[1])
-                            .align_with_mag(mag, ceil=True)
-                            .in_mag(mag)
-                            .bottomright
+                            bbox.align_with_mag(mag, ceil=True).in_mag(mag).bottomright
                         ),
                     )
-                    target_mag.layer.set_bounding_box(offset=bbox[0], size=bbox[1])
+                    target_mag.layer.bounding_box = bbox
 
                     # The data gets written to the target_mag.
                     # Therefore, the chunk size is determined by the target_mag to prevent concurrent writes
@@ -563,6 +493,7 @@ class Dataset:
                         target_chunk_size=target_mag._get_file_dimensions(),
                         executor=executor,
                     )
+        new_ds._export_as_json()
         return new_ds
 
     def _get_layer_by_category(self, category: str) -> Layer:
@@ -570,21 +501,12 @@ class Dataset:
             category == LayerCategories.COLOR_TYPE
             or category == LayerCategories.SEGMENTATION_TYPE
         )
-        layer_property_type = (
-            SegmentationLayerProperties
-            if category == LayerCategories.SEGMENTATION_TYPE
-            else LayerProperties
-        )
 
-        layer_properties = [
-            layer_property
-            for layer_property in self.properties.data_layers.values()
-            if type(layer_property) == layer_property_type
-        ]
+        layers = [layer for layer in self.layers.values() if category == layer.category]
 
-        if len(layer_properties) == 1:
-            return self.get_layer(layer_properties[0].name)
-        elif len(layer_properties) == 0:
+        if len(layers) == 1:
+            return layers[0]
+        elif len(layers) == 0:
             raise IndexError(
                 f"Failed to get segmentation layer: There is no {category} layer."
             )
@@ -594,13 +516,30 @@ class Dataset:
             )
 
     @property
+    def scale(self) -> Tuple[float, float, float]:
+        return self._properties.scale
+
+    @property
     def name(self) -> str:
-        return self.properties._name
+        return self._properties.id["name"]
 
     @name.setter
     def name(self, name: str) -> None:
-        self.properties._name = name
-        self.properties._export_as_json()
+        current_id = self._properties.id
+        current_id["name"] = name
+        self._properties.id = current_id
+        self._export_as_json()
+
+    @property
+    def default_view_configuration(self) -> Optional[DatasetViewConfiguration]:
+        return self._properties.default_view_configuration
+
+    @default_view_configuration.setter
+    def default_view_configuration(
+        self, view_configuration: DatasetViewConfiguration
+    ) -> None:
+        self._properties.default_view_configuration = view_configuration
+        self._export_as_json()  # update properties on disk
 
     @classmethod
     def create(
@@ -613,9 +552,37 @@ class Dataset:
         Creates a new dataset and the associated `datasource-properties.json`.
         """
         dataset_path = Path(dataset_path)
-        name = name if name is not None else basename(normpath(dataset_path))
-        properties = Properties(dataset_path / Properties.FILE_NAME, name, scale)
-        return Dataset._create_with_properties(properties)
+        name = name or basename(normpath(dataset_path))
+
+        if dataset_path.exists():
+            assert (
+                dataset_path.is_dir()
+            ), f"Creation of Dataset at {dataset_path} failed, because a file already exists at this path."
+            assert not os.listdir(
+                dataset_path
+            ), f"Creation of Dataset at {dataset_path} failed, because a non-empty folder already exists at this path."
+
+        # Create directories on disk and write datasource-properties.json
+        try:
+            makedirs(dataset_path, exist_ok=True)
+        except OSError as e:
+            raise type(e)(
+                "Creation of Dataset {} failed. ".format(dataset_path) + repr(e)
+            )
+
+        # Write empty properties to disk
+        data = {
+            "id": {"name": name, "team": ""},
+            "scale": scale,
+            "dataLayers": [],
+        }
+        with open(dataset_path / PROPERTIES_FILE_NAME, "w") as outfile:
+            json.dump(data, outfile, indent=4)
+
+        # Initialize object
+        ds = cls(dataset_path)
+        ds._export_as_json()
+        return ds
 
     @classmethod
     def get_or_create(
@@ -630,12 +597,12 @@ class Dataset:
         """
         dataset_path = Path(dataset_path)
         if (
-            dataset_path / Properties.FILE_NAME
+            dataset_path / PROPERTIES_FILE_NAME
         ).exists():  # use the properties file to check if the Dataset exists
             ds = Dataset(dataset_path)
-            assert tuple(ds.properties.scale) == tuple(
+            assert tuple(ds.scale) == tuple(
                 scale
-            ), f"Cannot get_or_create Dataset: The dataset {dataset_path} already exists, but the scales do not match ({ds.properties.scale} != {scale})"
+            ), f"Cannot get_or_create Dataset: The dataset {dataset_path} already exists, but the scales do not match ({ds.scale} != {scale})"
             if name is not None:
                 assert (
                     ds.name == name
@@ -644,14 +611,23 @@ class Dataset:
         else:
             return cls.create(dataset_path, scale, name)
 
-    def _create_layer(
-        self,
-        layer_name: str,
-        dtype_per_channel: np.dtype,
-        num_channels: int,
-        category: str,
-    ) -> Layer:
-        layer_type = (
-            Layer if category == LayerCategories.COLOR_TYPE else SegmentationLayer
-        )
-        return layer_type(layer_name, self, dtype_per_channel, num_channels)
+    def __repr__(self) -> str:
+        return repr("Dataset(%s)" % self.path)
+
+    def _export_as_json(self) -> None:
+        with open(self.path / PROPERTIES_FILE_NAME, "w") as outfile:
+            json.dump(
+                dataset_converter.unstructure(self._properties),
+                outfile,
+                indent=4,
+            )
+
+    def _initialize_layer_from_properties(self, properties: LayerProperties) -> Layer:
+        if properties.category == LayerCategories.COLOR_TYPE:
+            return Layer(self, properties)
+        elif properties.category == LayerCategories.SEGMENTATION_TYPE:
+            return SegmentationLayer(self, properties)
+        else:
+            raise RuntimeError(
+                f"Failed to initialize layer: the specified category ({properties.category}) does not exist."
+            )

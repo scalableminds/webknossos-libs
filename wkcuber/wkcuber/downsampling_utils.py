@@ -296,7 +296,6 @@ def downsample_cube_job(
     mag_factors: List[int],
     interpolation_mode: InterpolationModes,
     buffer_edge_len: int,
-    compress: bool,
     job_count_per_log: int,
 ) -> None:
     (source_view, target_view, i) = args
@@ -367,7 +366,7 @@ def downsample_cube_job(
         # Write the downsampled buffer to target
         if source_view.header.num_channels == 1:
             file_buffer = file_buffer[0]  # remove channel dimension
-        target_view.write(file_buffer, allow_compressed_write=compress)
+        target_view.write(file_buffer)
         if use_logging:
             time_stop(f"Downsampling of {target_view.global_offset}")
 

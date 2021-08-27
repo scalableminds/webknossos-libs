@@ -17,9 +17,9 @@ from wkw import wkw
 import numpy as np
 
 from wkcuber.api.bounding_box import BoundingBox
+from wkcuber.api.properties import MagViewProperties
 from wkcuber.compress_utils import compress_file_job
 from wkcuber.utils import (
-    convert_mag1_size,
     convert_mag1_offset,
     get_executor_for_args,
     wait_and_ensure_success,
@@ -60,7 +60,7 @@ class MagView(View):
     def __init__(
         self,
         layer: "Layer",
-        name: str,
+        mag: Mag,
         block_len: int,
         file_len: int,
         block_type: int,
@@ -77,79 +77,92 @@ class MagView(View):
             file_len=file_len,
             block_type=block_type,
         )
+
+        self._layer = layer
+        self._mag = mag
+
         super().__init__(
-            _find_mag_path_on_disk(layer.dataset.path, layer.name, name),
+            _find_mag_path_on_disk(
+                self.layer.dataset.path, self.layer.name, mag.to_layer_name()
+            ),
             header,
             cast(
                 Tuple[int, int, int],
-                tuple(
-                    convert_mag1_size(layer.get_bounding_box().bottomright, Mag(name))
-                ),
+                tuple(self._mag_view_bounding_box_at_creation.bottomright),
             ),
             (0, 0, 0),
             False,
             False,
+            None,
         )
-
-        self.layer = layer
-        self.name = name
 
         if create:
             wkw.Dataset.create(
                 join(layer.dataset.path, layer.name, self.name), self.header
             )
 
-    def write(
-        self,
-        data: np.ndarray,
-        offset: Tuple[int, int, int] = (0, 0, 0),
-        allow_compressed_write: bool = False,
-    ) -> None:
+    @property
+    def layer(self) -> "Layer":
+        return self._layer
+
+    @property
+    def _properties(self) -> MagViewProperties:
+        return next(
+            mag_property
+            for mag_property in self.layer._properties.wkw_resolutions
+            if Mag(mag_property.resolution).to_array() == self.mag.to_array()
+        )
+
+    @property
+    def name(self) -> str:
+        return self._mag.to_layer_name()
+
+    @property
+    def mag(self) -> Mag:
+        return self._mag
+
+    def write(self, data: np.ndarray, offset: Tuple[int, int, int] = (0, 0, 0)) -> None:
         """
         Writes the `data` at the specified `offset` to disk (like `wkcuber.api.view.View.write()`).
 
         The `offset` refers to the absolute position, regardless of the offset in the properties (because the global_offset is set to (0, 0, 0)).
         If the data exceeds the original bounding box, the properties are updated.
 
-        If the data on disk is compressed, the passed `data` either has to be aligned with the files on disk
-        or `allow_compressed_write` has to be `True`. If `allow_compressed_write` is `True`, `data` is padded by
-        first reading the necessary padding from disk.
+        Note that writing compressed data which is not aligned with the blocks on disk may result in
+        diminished performance, as full blocks will automatically be read to pad the write actions.
         """
         self._assert_valid_num_channels(data.shape)
-        super().write(data, offset, allow_compressed_write)
-        layer_properties = self.layer.dataset.properties.data_layers[self.layer.name]
-        current_offset_in_mag1 = layer_properties.get_bounding_box_offset()
-        current_size_in_mag1 = layer_properties.get_bounding_box_size()
+        super().write(data, offset)
+        current_offset_in_mag1 = self.layer.bounding_box.topleft
+        current_size_in_mag1 = self.layer.bounding_box.size
 
-        mag = Mag(self.name)
-        mag_np = mag.as_np()
+        mag_np = self.mag.as_np()
 
-        offset_in_mag1 = tuple(np.array(offset) * mag_np)
+        offset_in_mag1 = np.array(offset) * mag_np
 
+        # The (-1, -1, -1) is for backwards compatibility because we used '(-1, -1, -1)' to indicate that there is no data written yet.
         new_offset_in_mag1 = (
             offset_in_mag1
-            if current_offset_in_mag1 == (-1, -1, -1)
-            else tuple(min(x) for x in zip(current_offset_in_mag1, offset_in_mag1))
+            if tuple(current_offset_in_mag1) == (-1, -1, -1)
+            or self.layer.bounding_box == BoundingBox((0, 0, 0), (0, 0, 0))
+            else np.minimum(current_offset_in_mag1, offset_in_mag1)
         )
 
-        old_end_offset_in_mag1 = np.array(current_offset_in_mag1) + np.array(
-            current_size_in_mag1
-        )
+        old_end_offset_in_mag1 = current_offset_in_mag1 + current_size_in_mag1
         new_end_offset_in_mag1 = (np.array(offset) + np.array(data.shape[-3:])) * mag_np
         max_end_offset_in_mag1 = np.array(
             [old_end_offset_in_mag1, new_end_offset_in_mag1]
         ).max(axis=0)
         total_size_in_mag1 = max_end_offset_in_mag1 - np.array(new_offset_in_mag1)
 
-        self.size = cast(
+        self._size = cast(
             Tuple[int, int, int],
-            tuple(convert_mag1_offset(max_end_offset_in_mag1, mag)),
+            tuple(convert_mag1_offset(max_end_offset_in_mag1, self.mag)),
         )  # The base view of a MagDataset always starts at (0, 0, 0)
 
-        self.layer.dataset.properties._set_bounding_box_of_layer(
-            self.layer.name,
-            cast(Tuple[int, int, int], tuple(new_offset_in_mag1)),
-            cast(Tuple[int, int, int], tuple(total_size_in_mag1)),
+        self.layer.bounding_box = BoundingBox(
+            new_offset_in_mag1,
+            total_size_in_mag1,
         )
 
     def get_view(
@@ -192,12 +205,13 @@ class MagView(View):
         ```
         """
 
-        bb = self.layer.get_bounding_box()
+        bb = self.layer.bounding_box
 
+        # The (-1, -1, -1) is for backwards compatibility because we used '(-1, -1, -1)' to indicate that there is no data written yet.
         if tuple(bb.topleft) == (-1, -1, -1):
             bb.topleft = np.array((0, 0, 0))
 
-        bb = bb.align_with_mag(Mag(self.name), ceil=True).in_mag(Mag(self.name))
+        bb = bb.align_with_mag(self.mag, ceil=True).in_mag(self.mag)
 
         view_offset = cast(
             Tuple[int, int, int],
@@ -244,9 +258,9 @@ class MagView(View):
         if not was_opened:
             self.open()  # opening the view is necessary to set the dataset
 
-        assert self.dataset is not None
-        for filename in self.dataset.list_files():
-            file_path = Path(os.path.splitext(filename)[0]).relative_to(self.path)
+        assert self._dataset is not None
+        for filename in self._dataset.list_files():
+            file_path = Path(os.path.splitext(filename)[0]).relative_to(self._path)
             cube_index = _extract_file_index(file_path)
             cube_offset = [idx * size for idx, size in zip(cube_index, cube_size)]
 
@@ -269,14 +283,14 @@ class MagView(View):
             target_path = Path(target_path)
 
         uncompressed_full_path = (
-            Path(self.layer.dataset.path) / self.layer.name / str(Mag(self.name))
+            Path(self.layer.dataset.path) / self.layer.name / self.name
         )
         compressed_path = (
             target_path
             if target_path is not None
             else Path("{}.compress-{}".format(self.layer.dataset.path, uuid4()))
         )
-        compressed_full_path = compressed_path / self.layer.name / str(Mag(self.name))
+        compressed_full_path = compressed_path / self.layer.name / self.name
 
         if compressed_full_path.exists():
             logging.error(
@@ -293,15 +307,15 @@ class MagView(View):
         was_opened = self._is_opened
         if not was_opened:
             self.open()  # opening the view is necessary to set the dataset
-        assert self.dataset is not None
+        assert self._dataset is not None
 
         # create empty wkw.Dataset
-        self.dataset.compress(str(compressed_full_path))
+        self._dataset.compress(str(compressed_full_path))
 
         # compress all files to and move them to 'compressed_path'
         with get_executor_for_args(args) as executor:
             job_args = []
-            for file in self.dataset.list_files():
+            for file in self._dataset.list_files():
                 rel_file = Path(file).relative_to(self.layer.dataset.path)
                 job_args.append((Path(file), compressed_path / rel_file))
 
@@ -323,15 +337,25 @@ class MagView(View):
             MagView.__init__(
                 self,
                 self.layer,
-                self.name,
+                self.mag,
                 self.header.block_len,
                 self.header.file_len,
                 wkw.Header.BLOCK_TYPE_LZ4HC,
             )
 
     def _get_file_dimensions(self) -> Tuple[int, int, int]:
-        return cast(
-            Tuple[int, int, int], (self.header.file_len * self.header.block_len,) * 3
+        return cast(Tuple[int, int, int], (self._properties.cube_length,) * 3)
+
+    @property
+    def _mag_view_bounding_box_at_creation(self) -> BoundingBox:
+        return self.layer.bounding_box.align_with_mag(Mag(self.name), ceil=True).in_mag(
+            Mag(self.name)
+        )
+
+    def __repr__(self) -> str:
+        return repr(
+            "MagView(name=%s, global_offset=%s, size=%s)"
+            % (self.name, self.global_offset, self.size)
         )
 
 

@@ -1,4 +1,5 @@
 import math
+import warnings
 from pathlib import Path
 from types import TracebackType
 from typing import Tuple, Optional, Type, Callable, Union, cast
@@ -28,18 +29,45 @@ class View:
         global_offset: Tuple[int, int, int] = (0, 0, 0),
         is_bounded: bool = True,
         read_only: bool = False,
+        mag_view_bbox_at_creation: Optional[BoundingBox] = None,
     ):
         """
         Do not use this constructor manually. Instead use `wkcuber.api.mag_view.MagView.get_view()` to get a `View`.
         """
-        self.dataset: Optional[Dataset] = None
-        self.path = path_to_mag_view
-        self.header: wkw.Header = header
-        self.size: Tuple[int, int, int] = size
-        self.global_offset: Tuple[int, int, int] = global_offset
+        self._dataset: Optional[Dataset] = None
+        self._path = path_to_mag_view
+        self._header: wkw.Header = header
+        self._size: Tuple[int, int, int] = size
+        self._global_offset: Tuple[int, int, int] = global_offset
         self._is_bounded = is_bounded
-        self.read_only = read_only
+        self._read_only = read_only
         self._is_opened = False
+        # The bounding box of the view is used to prevent warnings when writing compressed but unaligned data
+        # directly at the borders of the bounding box.
+        # A View is unable to get this information from the Dataset because it is detached from it.
+        # Adding the bounding box as parameter is a workaround for this.
+        # However, keep in mind that this bounding box is just a snapshot.
+        # This bounding box is not updated if the bounding box of the dataset is updated.
+        # Even though an outdated bounding box can lead to missed (or unwanted) warnings,
+        # this is sufficient for our use case because such scenarios are unlikely and not critical.
+        # This should not be misused to infer the size of the dataset because this might lead to problems.
+        self._mag_view_bbox_at_creation = mag_view_bbox_at_creation
+
+    @property
+    def header(self) -> wkw.Header:
+        return self._header
+
+    @property
+    def size(self) -> Tuple[int, int, int]:
+        return self._size
+
+    @property
+    def global_offset(self) -> Tuple[int, int, int]:
+        return self._global_offset
+
+    @property
+    def read_only(self) -> bool:
+        return self._read_only
 
     def open(self) -> "View":
         """
@@ -52,8 +80,8 @@ class View:
         if self._is_opened:
             raise Exception("Cannot open view: the view is already opened")
         else:
-            self.dataset = Dataset.open(
-                str(self.path)
+            self._dataset = Dataset.open(
+                str(self._path)
             )  # No need to pass the header to the wkw.Dataset
             self._is_opened = True
         return self
@@ -67,25 +95,22 @@ class View:
         if not self._is_opened:
             raise Exception("Cannot close View: the view is not opened")
         else:
-            assert self.dataset is not None  # because the View was opened
-            self.dataset.close()
-            self.dataset = None
+            assert self._dataset is not None  # because the View was opened
+            self._dataset.close()
+            self._dataset = None
             self._is_opened = False
 
     def write(
         self,
         data: np.ndarray,
         offset: Tuple[int, int, int] = (0, 0, 0),
-        allow_compressed_write: bool = False,
     ) -> None:
         """
         Writes the `data` at the specified `offset` to disk.
         The `offset` is relative to `global_offset`.
 
-        If the data on disk is compressed, the passed `data` either has to be aligned with the files on disk
-        or `allow_compressed_write` has to be `True`. If `allow_compressed_write` is `True`, `data` is padded by
-        first reading the necessary padding from disk.
-        In this particular case, reading data from outside the bounding box is allowed.
+        Note that writing compressed data which is not aligned with the blocks on disk may result in
+        diminished performance, as full blocks will automatically be read to pad the write actions.
         """
         assert not self.read_only, "Cannot write data to an read_only View"
 
@@ -103,14 +128,14 @@ class View:
             tuple(sum(x) for x in zip(self.global_offset, offset)),
         )
 
-        if self._is_compressed() and allow_compressed_write:
+        if self._is_compressed():
             absolute_offset, data = self._handle_compressed_write(absolute_offset, data)
 
         if not was_opened:
             self.open()
-        assert self.dataset is not None  # because the View was opened
+        assert self._dataset is not None  # because the View was opened
 
-        self.dataset.write(absolute_offset, data)
+        self._dataset.write(absolute_offset, data)
 
         if not was_opened:
             self.close()
@@ -181,9 +206,9 @@ class View:
         was_opened = self._is_opened
         if not was_opened:
             self.open()
-        assert self.dataset is not None  # because the View was opened
+        assert self._dataset is not None  # because the View was opened
 
-        data = self.dataset.read(absolute_offset, size)
+        data = self._dataset.read(absolute_offset, size)
 
         if not was_opened:
             self.close()
@@ -240,12 +265,13 @@ class View:
             Tuple[int, int, int], tuple(self.global_offset + np.array(offset))
         )
         return View(
-            self.path,
+            self._path,
             self.header,
             size=size,
             global_offset=view_offset,
             is_bounded=True,
             read_only=read_only,
+            mag_view_bbox_at_creation=self._mag_view_bounding_box_at_creation,
         )
 
     def _assert_bounds(
@@ -428,25 +454,44 @@ class View:
         aligned_offset = absolute_offset_np - margin_to_top_left
         bottom_right = absolute_offset_np + np.array(data.shape[-3:])
         margin_to_bottom_right = (file_bb - (bottom_right % file_bb)) % file_bb
-        aligned_bottom_right = bottom_right + margin_to_bottom_right
-        aligned_shape = aligned_bottom_right - aligned_offset
+        is_bottom_right_aligned = bottom_right + margin_to_bottom_right
+        aligned_shape = is_bottom_right_aligned - aligned_offset
 
         if (
             tuple(aligned_offset) != absolute_offset
             or tuple(aligned_shape) != data.shape[-3:]
         ):
-            # the data is not aligned
-            # read the aligned bounding box
-            try:
+            mag_view_bbox_at_creation = self._mag_view_bounding_box_at_creation
+
+            # Calculate in which dimensions the data is aligned and in which dimensions it matches the bbox of the mag.
+            is_top_left_aligned = aligned_offset == np.array(absolute_offset)
+            is_bottom_right_aligned = is_bottom_right_aligned == bottom_right
+            is_at_border_top_left = np.array(
+                mag_view_bbox_at_creation.topleft
+            ) == np.array(absolute_offset)
+            is_at_border_bottom_right = (
+                np.array(mag_view_bbox_at_creation.bottomright) == bottom_right
+            )
+
+            if not (
+                np.all(np.logical_or(is_top_left_aligned, is_at_border_top_left))
+                and np.all(
+                    np.logical_or(is_bottom_right_aligned, is_at_border_bottom_right)
+                )
+            ):
+                # the data is not aligned
+                # read the aligned bounding box
+
                 # We want to read the data at the absolute offset.
                 # The absolute offset might be outside of the current view.
                 # That is the case if the data is compressed but the view does not include the whole file on disk.
                 # In this case we avoid checking the bounds because the aligned_offset and aligned_shape are calculated internally.
-                aligned_data = self._read_without_checks(aligned_offset, aligned_shape)
-            except AssertionError as e:
-                raise AssertionError(
-                    f"Writing compressed data failed. The compressed file is not fully inside the bounding box of the view (offset={self.global_offset}, size={self.size})."
-                ) from e
+                warnings.warn(
+                    "Warning: write() was called on a compressed mag without block alignment. Performance will be degraded as the data has to be padded first.",
+                    RuntimeWarning,
+                )
+            aligned_data = self._read_without_checks(aligned_offset, aligned_shape)
+
             index_slice = (
                 slice(None, None),
                 *(
@@ -478,6 +523,17 @@ class View:
         _tb: Optional[TracebackType],
     ) -> None:
         self.close()
+
+    def __repr__(self) -> str:
+        return repr(
+            "View(%s, global_offset=%s, size=%s)"
+            % (self._path, self.global_offset, self.size)
+        )
+
+    @property
+    def _mag_view_bounding_box_at_creation(self) -> BoundingBox:
+        assert self._mag_view_bbox_at_creation is not None
+        return self._mag_view_bbox_at_creation
 
 
 def _assert_positive_dimensions(

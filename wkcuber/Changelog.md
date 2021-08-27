@@ -7,7 +7,124 @@ and this project adheres to [Calendar Versioning](http://calver.org/) `0Y.0M.MIC
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.0...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.12...HEAD)
+
+### Breaking Changes in Config & CLI
+- Replaced the old properties classes of the Dataset API with attr-classes.
+  - The `Layer.rename()` function is now replaced with the setter of `Layer.name`.
+  - The functions `Layer.get_view_configuration` and `Layer.set_view_conficuration` are replaced by the property `Layer.default_view_configuration`. (Same applies to `Dataset.get_view_configuration` and `Dataset.set_view_configuration`)
+  - Moved `LayerViewConfiguration` and `DatasetViewConfiguration` into `properties.py`
+  - Removed `Layer.set_bounding_box_offset` and `Layer.set_bounding_box_size`.
+  - Renamed `Layer.get_bounding_box()` to the property `Layer.bounding_box`. The method `Layer.set_bounding_box` is replaced with the setter of the property `Layer.bounding_box`.
+### Added
+- The API documentation is now hosted on a publicwebpage. [#392](https://github.com/scalableminds/webknossos-cuber/pull/392)
+
+### Changed
+
+### Fixed
+- Fixes support for Windows. [#394](https://github.com/scalableminds/webknossos-cuber/pull/394)
+
+## [0.8.12](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.12) - 2021-08-19
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.11...v0.8.12)
+
+### Breaking Changes in Config & CLI
+
+### Added
+
+### Changed
+- Rollback `scikit-image` version from `0.18.0` to `0.16.2` because the newer version cause problems in voxelytics. [#390](https://github.com/scalableminds/webknossos-cuber/pull/390/files)
+
+### Fixed
+
+## [0.8.11](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.11) - 2021-08-19
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.10...v0.8.11)
+
+### Breaking Changes in Config & CLI
+
+### Added
+- `dataset.add_symlink_layer` and `dataset.add_copy_layer` can now handle `Layer` arguments as well. The parameter `foreign_layer_path` was renamed to `foreign_layer`. [#389](https://github.com/scalableminds/webknossos-cuber/pull/389)
+
+### Changed
+
+### Fixed
+
+## [0.8.10](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.10) - 2021-08-19
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.9...v0.8.10)
+
+### Breaking Changes in Config & CLI
+
+### Added
+
+### Changed
+- Avoid warnings for compressed/unaligned data, if the data is directly at the border of the bounding box. [#378](https://github.com/scalableminds/webknossos-cuber/pull/378)  
+
+### Fixed
+
+## [0.8.9](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.9) - 2021-08-12
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.8...v0.8.9)
+
+### Breaking Changes in Config & CLI
+
+### Added
+
+### Changed
+- Bump scipy to `1.6.0` and `scikit-image` to `0.18.0` while keeping `numpy` to under `1.20.0` [#372](https://github.com/scalableminds/webknossos-cuber/pull/372/files)
+
+### Fixed
+- Fixes a bug where modifications to an existing dataset with floats as dtype failed. [#375](https://github.com/scalableminds/webknossos-cuber/pull/375)
+
+## [0.8.8](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.8) - 2021-08-06
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.7...v0.8.8)
+
+### Breaking Changes in Config & CLI
+
+### Added
+
+### Changed
+- Bump cluster-tools from 1.59 to 1.60. [#373](https://github.com/scalableminds/webknossos-cuber/pull/373)
+### Fixed
+
+## [0.8.7](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.7) - 2021-08-04
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.6...v0.8.7)
+
+### Breaking Changes in Config & CLI
+
+### Added
+
+### Changed
+- Bump cluster-tools from 1.58 to 1.59. [#371](https://github.com/scalableminds/webknossos-cuber/pull/371)
+### Fixed
+
+## [0.8.6](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.6) - 2021-07-29
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.5...v0.8.6)
+
+### Breaking Changes in Config & CLI
+
+### Added
+- Implement descriptive string representations for `Dataset`, `Layer`, `MagView` and `View`. [#369](https://github.com/scalableminds/webknossos-cuber/pull/369)
+- Added option to rename a layer. [#368](https://github.com/scalableminds/webknossos-cuber/pull/368)
+
+### Changed
+
+### Fixed
+
+## [0.8.5](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.5) - 2021-07-29
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.4...v0.8.5)
+
+### Breaking Changes in Config & CLI
+- The parameter allow_compressed_write from View.write() is now removed. Writing to compressed magnifications is now always allowed. If the user decides to write unaligned data, a warning about a possible performance impact is displayed once. [#356](https://github.com/scalableminds/webknossos-cuber/pull/356)
+
+### Added
+- Added functions to `wkcuber.api.dataset.Dataset` and `wkcuber.api.layer.Layer` to set and get the view configuration. [#344](https://github.com/scalableminds/webknossos-cuber/pull/344)
+- Added functions to add mags of a foreign dataset (`Layer.add_symlink_mag` and `Layer.add_copy_mag`) [#367](https://github.com/scalableminds/webknossos-cuber/pull/367)
+
+### Changed
+
+### Fixed
+- Fixed a bug where Dataset.add_symlink_layer(make_relative=True) failed to look up dataset properties. [#365](https://github.com/scalableminds/webknossos-cuber/pull/365)
+
+## [0.8.4](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.4) - 2021-07-26
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.3...v0.8.4)
 
 ### Breaking Changes in Config & CLI
 
@@ -18,8 +135,21 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 
 ### Fixed
 
+## [0.8.3](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.3) - 2021-07-26
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.2...v0.8.3)
+
+### Breaking Changes in Config & CLI
+
+### Added
+
+### Changed
+- Updated `cluster-tools` to `1.58` [#361](https://github.com/scalableminds/webknossos-cuber/pull/361)
+
+### Fixed
+
+
 ## [0.8.2](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.2) - 2021-07-26
-[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.1...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.1...v0.8.2)
 
 ### Breaking Changes in Config & CLI
 
