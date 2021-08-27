@@ -6,7 +6,7 @@ on:
       - "wklib/**"
 
 jobs:
-  wklib:
+  build:
     defaults:
       run:
         working-directory: wklib
