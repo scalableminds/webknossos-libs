@@ -110,7 +110,9 @@ class Dataset:
         self.path = Path(dataset_path)
         """Location of the dataset"""
 
-        with open(self.path / PROPERTIES_FILE_NAME) as datasource_properties:
+        with open(
+            self.path / PROPERTIES_FILE_NAME, encoding="utf-8"
+        ) as datasource_properties:
             data = json.load(datasource_properties)
 
             self._properties: DatasetProperties = dataset_converter.structure(
@@ -576,7 +578,9 @@ class Dataset:
             "scale": scale,
             "dataLayers": [],
         }
-        with open(dataset_path / PROPERTIES_FILE_NAME, "w") as outfile:
+        with open(
+            dataset_path / PROPERTIES_FILE_NAME, "w", encoding="utf-8"
+        ) as outfile:
             json.dump(data, outfile, indent=4)
 
         # Initialize object
@@ -615,7 +619,7 @@ class Dataset:
         return repr("Dataset(%s)" % self.path)
 
     def _export_as_json(self) -> None:
-        with open(self.path / PROPERTIES_FILE_NAME, "w") as outfile:
+        with open(self.path / PROPERTIES_FILE_NAME, "w", encoding="utf-8") as outfile:
             json.dump(
                 dataset_converter.unstructure(self._properties),
                 outfile,

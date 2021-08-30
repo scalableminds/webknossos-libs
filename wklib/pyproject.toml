@@ -46,6 +46,9 @@ profile = "black"
 [tool.mypy]
 ignore_missing_imports = true
 
+[tool.pylint.'MESSAGES CONTROL']
+disable=["logging-format-interpolation","logging-fstring-interpolation","broad-except","protected-access","R","C"]
+
 [build-system]
 requires = ["poetry>=1.1"]
 build-backend = "poetry.masonry.api"
