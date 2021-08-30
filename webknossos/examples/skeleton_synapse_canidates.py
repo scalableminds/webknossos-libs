@@ -1,6 +1,6 @@
 from itertools import combinations
 
-import wklib as wk
+import webknossos as wk
 
 nml = wk.open_nml("neurite-tracings.nml")  # or wk.open_skeleton or wk.skeleton.open
 

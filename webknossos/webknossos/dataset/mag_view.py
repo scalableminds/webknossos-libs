@@ -10,8 +10,8 @@ from uuid import uuid4
 import numpy as np
 from wkw import wkw
 
-from wklib.geometry import BoundingBox, Mag
-from wklib.utils import get_executor_for_args, wait_and_ensure_success
+from webknossos.geometry import BoundingBox, Mag
+from webknossos.utils import get_executor_for_args, wait_and_ensure_success
 
 from .compress_utils import compress_file_job
 from .properties import MagViewProperties

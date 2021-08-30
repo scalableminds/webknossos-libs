@@ -1,13 +1,13 @@
-name: wklib
+name: webknossos
 
 on:
   push:
     paths:
-      - "wklib/**"
+      - "webknossos/**"
 
 defaults:
   run:
-    working-directory: wklib
+    working-directory: webknossos
 
 jobs:
   build:
@@ -34,7 +34,7 @@ jobs:
       run: poetry run ./format.sh check
 
     - name: Lint code
-      run: poetry run pylint -j4 wklib
+      run: poetry run pylint -j4 webknossos
 
     - name: Check typing
       run: |

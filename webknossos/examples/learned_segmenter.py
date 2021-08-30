@@ -1,6 +1,6 @@
 from skimage.future import TrainableSegmenter
 
-import wklib as wk
+import webknossos as wk
 
 # should this be possible in memory? download should work, too
 annotation = wk.open_annotation(

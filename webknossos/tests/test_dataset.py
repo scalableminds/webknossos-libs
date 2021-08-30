@@ -11,9 +11,9 @@ import numpy as np
 import pytest
 from wkw.wkw import WKWException
 
-from wklib.dataset import Dataset, LayerCategories, MagView, SegmentationLayer, View
-from wklib.dataset.dataset import PROPERTIES_FILE_NAME
-from wklib.dataset.properties import (
+from webknossos.dataset import Dataset, LayerCategories, MagView, SegmentationLayer, View
+from webknossos.dataset.dataset import PROPERTIES_FILE_NAME
+from webknossos.dataset.properties import (
     DatasetProperties,
     DatasetViewConfiguration,
     LayerViewConfiguration,
@@ -21,8 +21,8 @@ from wklib.dataset.properties import (
     _snake_to_camel_case,
     dataset_converter,
 )
-from wklib.geometry import BoundingBox, Mag
-from wklib.utils import get_executor_for_args, named_partial
+from webknossos.geometry import BoundingBox, Mag
+from webknossos.utils import get_executor_for_args, named_partial
 
 TESTDATA_DIR = Path("testdata")
 TESTOUTPUT_DIR = Path("testoutput")
@@ -943,7 +943,7 @@ def test_writing_subset_of_compressed_data_multi_channel() -> None:
 
     with warnings.catch_warnings():
         warnings.filterwarnings(
-            "ignore", category=RuntimeWarning, module="wklib"
+            "ignore", category=RuntimeWarning, module="webknossos"
         )  # This line is not necessary. It simply keeps the output of the tests clean.
         write_data2 = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
         # Writing unaligned data to a compressed dataset works because the data gets padded, but it prints a warning
@@ -981,7 +981,7 @@ def test_writing_subset_of_compressed_data_single_channel() -> None:
 
     with warnings.catch_warnings():
         warnings.filterwarnings(
-            "ignore", category=RuntimeWarning, module="wklib"
+            "ignore", category=RuntimeWarning, module="webknossos"
         )  # This line is not necessary. It simply keeps the output of the tests clean.
         write_data2 = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
         # Writing unaligned data to a compressed dataset works because the data gets padded, but it prints a warning
@@ -1018,7 +1018,7 @@ def test_writing_subset_of_compressed_data() -> None:
 
     with warnings.catch_warnings():
         warnings.filterwarnings(
-            "ignore", category=RuntimeWarning, module="wklib"
+            "ignore", category=RuntimeWarning, module="webknossos"
         )  # This line is not necessary. It simply keeps the output of the tests clean.
         compressed_mag.write(
             offset=(10, 20, 30),
@@ -1081,7 +1081,7 @@ def test_writing_subset_of_chunked_compressed_data() -> None:
 
     with warnings.catch_warnings():
         warnings.filterwarnings(
-            "ignore", category=RuntimeWarning, module="wklib"
+            "ignore", category=RuntimeWarning, module="webknossos"
         )  # This line is not necessary. It simply keeps the output of the tests clean.
 
         # Easy case:
@@ -1496,7 +1496,7 @@ def test_compression(tmp_path: Path) -> None:
 
     with warnings.catch_warnings():
         warnings.filterwarnings(
-            "ignore", category=RuntimeWarning, module="wklib"
+            "ignore", category=RuntimeWarning, module="webknossos"
         )  # This line is not necessary. It simply keeps the output of the tests clean.
         # writing unaligned data to a compressed dataset works because the data gets padded, but it prints a warning
         mag1.write(

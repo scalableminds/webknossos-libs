@@ -1,6 +1,6 @@
 import pytest
 
-from wklib.geometry import BoundingBox, Mag
+from webknossos.geometry import BoundingBox, Mag
 
 
 def test_align_with_mag_ceiled() -> None:

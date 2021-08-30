@@ -8,8 +8,8 @@ import numpy as np
 from scipy.ndimage import zoom
 from wkw import wkw
 
-from wklib.geometry import Mag
-from wklib.utils import time_start, time_stop
+from webknossos.geometry import Mag
+from webknossos.utils import time_start, time_stop
 
 from .view import View
 

@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "wklib"
+name = "webknossos"
 version = "0.0.0"  # filled by dunamai
 description = "Python package to work with webKnossos datasets and annotations"
 authors = ["scalable minds <hello@scalableminds.com>"]

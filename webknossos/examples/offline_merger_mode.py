@@ -1,6 +1,6 @@
 import numpy as np
 
-import wklib as wk
+import webknossos as wk
 
 # A merger mode nml with every tree corresponding to a new merged segment is available.
 # All segments in which a node is placed should be merged and saved as a new dataset.

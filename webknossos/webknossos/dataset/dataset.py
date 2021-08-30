@@ -12,8 +12,8 @@ from typing import Any, Dict, Optional, Tuple, Union, cast
 import numpy as np
 import wkw
 
-from wklib.geometry import BoundingBox
-from wklib.utils import get_executor_for_args
+from webknossos.geometry import BoundingBox
+from webknossos.utils import get_executor_for_args
 
 from .layer import (
     Layer,

@@ -1,2 +1,0 @@
-# webKnossos-lib (wklib)
-:construction:

@@ -5,7 +5,7 @@ from typing import List, Tuple, cast
 
 import numpy as np
 
-from wklib.utils import time_start, time_stop
+from webknossos.utils import time_start, time_stop
 
 from .view import View
 

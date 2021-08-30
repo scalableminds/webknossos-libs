@@ -2,7 +2,7 @@ from itertools import combinations
 
 import networkx as nx
 
-import wklib as wk
+import webknossos as wk
 
 nml = wk.open_nml("trees-in-groups.nml")
 

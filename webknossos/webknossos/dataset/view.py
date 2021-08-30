@@ -9,8 +9,8 @@ import numpy as np
 from cluster_tools.schedulers.cluster_executor import ClusterExecutor
 from wkw import Dataset, wkw
 
-from wklib.geometry import BoundingBox
-from wklib.utils import wait_and_ensure_success
+from webknossos.geometry import BoundingBox
+from webknossos.utils import wait_and_ensure_success
 
 Vec3 = Union[Tuple[int, int, int], np.ndarray]
 

@@ -1,6 +1,6 @@
 import numpy as np
 
-from wklib.geometry import Mag
+from webknossos.geometry import Mag
 
 
 def test_mag_constructor() -> None:

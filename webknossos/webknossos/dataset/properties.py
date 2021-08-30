@@ -8,7 +8,7 @@ import numpy as np
 import wkw
 from cattr.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 
-from wklib.geometry import BoundingBox, Mag
+from webknossos.geometry import BoundingBox, Mag
 
 
 def _extract_num_channels(

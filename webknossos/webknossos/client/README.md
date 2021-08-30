@@ -6,7 +6,7 @@ The client code is generated using [openapi-python-client](https://github.com/op
 
 To re-generate,
 1. [install openapi-python-client](https://github.com/openapi-generators/openapi-python-client#installation),
-2. move into the `client` directory (`cd wklib/wklib/client`),
+2. move into the `client` directory (`cd webknossos/webknossos/client`),
 3. run `openapi-python-client generate --url https://raw.githubusercontent.com/openapi-generators/openapi-python-client/main/end_to_end_tests/openapi.json`,
 4. move the relevant files into the correct folder:
    ```

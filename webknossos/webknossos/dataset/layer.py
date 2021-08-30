@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union, cast
 import numpy as np
 from wkw import wkw
 
-from wklib.geometry import BoundingBox, Mag
+from webknossos.geometry import BoundingBox, Mag
 
 from .downsampling_utils import (
     SamplingModes,
@@ -40,7 +40,7 @@ from .upsampling_utils import upsample_cube_job
 if TYPE_CHECKING:
     from .dataset import Dataset
 
-from wklib.utils import get_executor_for_args, named_partial
+from webknossos.utils import get_executor_for_args, named_partial
 
 from .defaults import DEFAULT_WKW_FILE_LEN
 from .mag_view import MagView, _find_mag_path_on_disk
