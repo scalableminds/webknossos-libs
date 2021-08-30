@@ -11,7 +11,13 @@ import numpy as np
 import pytest
 from wkw.wkw import WKWException
 
-from webknossos.dataset import Dataset, LayerCategories, MagView, SegmentationLayer, View
+from webknossos.dataset import (
+    Dataset,
+    LayerCategories,
+    MagView,
+    SegmentationLayer,
+    View,
+)
 from webknossos.dataset.dataset import PROPERTIES_FILE_NAME
 from webknossos.dataset.properties import (
     DatasetProperties,
