@@ -216,7 +216,7 @@ jobs:
     - name: Smoke test docker
       run: |
         docker run --rm \
-          -v$(pwd)/testdata:/app/testdata \
+          -v$(pwd)/wkcuber/testdata:/app/testdata \
           scalableminds/webknossos-cuber:$GITHUB_SHA \
           wkcuber.cubing \
             --jobs 2 \
