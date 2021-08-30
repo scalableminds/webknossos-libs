@@ -4,7 +4,7 @@ version = "0.0.0"  # filled by dunamai
 description = "Python package to work with webKnossos datasets and annotations"
 authors = ["scalable minds <hello@scalableminds.com>"]
 readme = "README.md"
-license = "AGPL-3.0"  # TODO
+license = "AGPL-3.0"
 
 [tool.poetry.dependencies]
 python = "^3.7"
