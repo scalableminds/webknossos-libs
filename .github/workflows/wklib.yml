@@ -5,11 +5,12 @@ on:
     paths:
       - "wklib/**"
 
+defaults:
+  run:
+    working-directory: wklib
+
 jobs:
   build:
-    defaults:
-      run:
-        working-directory: wklib
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 4
@@ -29,18 +30,15 @@ jobs:
         pip install poetry
         poetry install
 
-    - name: Decompress test data
-      run: tar -xzvf testdata/WT1_wkw.tar.gz
-
     - name: Check formatting
-      run: poetry run black --check .
+      run: poetry run ./format.sh check
 
     - name: Lint code
       run: poetry run pylint -j4 wklib
 
     - name: Check typing
       run: |
-        ./typecheck.sh
+        poetry run ./typecheck.sh
 
     - name: Python tests
       run: poetry run pytest tests
