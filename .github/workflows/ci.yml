@@ -14,7 +14,9 @@ jobs:
         working-directory: webknossos
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 2
     - uses: marceloprado/has-changed-path@v1
       id: changed
       with:
@@ -66,6 +68,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      with:
+        fetch-depth: 2
 
     - uses: marceloprado/has-changed-path@v1
       id: changed
