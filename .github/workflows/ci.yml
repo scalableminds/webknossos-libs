@@ -1,24 +1,68 @@
-name: wkcuber
+name: CI
 
-on:
-  push:
-    paths:
-      - "wkcuber/**"
-
-defaults:
-  run:
-    working-directory: wkcuber
+on: push
 
 jobs:
-  build:
+  webknossos_linux:
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 4
       matrix:
         python-version: [3.7, 3.8]
+    defaults:
+      run:
+        working-directory: webknossos
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+        architecture: 'x64'
+
+    - name: Install dependencies
+      run: |
+        pip install poetry
+        poetry install
+
+    - name: Check formatting
+      run: poetry run ./format.sh check
+
+    - name: Lint code
+      run: poetry run pylint -j4 webknossos
+
+    - name: Check typing
+      run: |
+        poetry run ./typecheck.sh
+
+    - name: Python tests
+      run: poetry run pytest tests
+
+    - name: Check if git is dirty
+      run: |
+        git diff --no-ext-diff --quiet --exit-code
+        [[ -z $(git status -s) ]]
+
+  wkcuber_linux:
+    needs: [webknossos_linux]
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: [3.7, 3.8]
+    defaults:
+      run:
+        working-directory: wkcuber
 
     steps:
     - uses: actions/checkout@v2
+
+    - uses: marceloprado/has-changed-path@v1
+      id: changed
+      with:
+        paths: "."
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
@@ -34,13 +78,16 @@ jobs:
 
     - name: Check formatting
       run: poetry run black --check .
+      if: steps.changed.outputs.changed == 'true'
 
     - name: Lint code
       run: poetry run pylint -j4 wkcuber
+      if: steps.changed.outputs.changed == 'true'
 
     - name: Check typing
       run: |
         ./typecheck.sh
+      if: steps.changed.outputs.changed == 'true'
 
     - name: Python tests
       run: poetry run pytest tests
@@ -49,10 +96,10 @@ jobs:
       run: tests/scripts/all_tests.sh
 
     - name: Generate Docs
-      if: matrix.python-version == '3.8'
+      if: matrix.python-version == '3.8' 
       run: |
         docs/api.sh --persist
-    
+
     - name: Push docs (for branch)
       if: startsWith(github.event.ref, 'refs/heads') && matrix.python-version == '3.8'
       env:
@@ -79,20 +126,17 @@ jobs:
         git diff --no-ext-diff --quiet --exit-code
         [[ -z $(git status -s) ]]
 
-    - name: Publish python package
-      if: startsWith(github.event.ref, 'refs/tags') && matrix.python-version == '3.8'
-      env:
-        PYPI_USERNAME: ${{ secrets.PYPI_USERNAME }}
-        PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-      run: ./publish.sh
-
-  build_win:
+  wkcuber_win:
+    needs: [webknossos_linux]
     # Caution! The Windows VM seems to be running out of storage rather quickly.
     runs-on: windows-latest
     strategy:
       max-parallel: 4
       matrix:
         python-version: [3.7, 3.8]
+    defaults:
+      run:
+        working-directory: wkcuber
 
     steps:
     - uses: actions/checkout@v2
@@ -119,12 +163,16 @@ jobs:
       shell: bash
       run: tests/scripts/all_tests.sh
 
-  build_mac:
+  wkcuber_mac:
+    needs: [webknossos_linux]
     runs-on: macos-latest
     strategy:
       max-parallel: 4
       matrix:
         python-version: [3.7, 3.8]
+    defaults:
+      run:
+        working-directory: wkcuber
 
     steps:
     - uses: actions/checkout@v2
@@ -147,14 +195,14 @@ jobs:
     - name: CLI tests
       run: tests/scripts/all_tests.sh
 
-  docker:
-    needs: [build, build_win, build_mac]
+  wkcuber_docker:
+    needs: [wkcuber_linux, wkcuber_win, wkcuber_mac]
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v2
     - name: Build docker image
-      run: docker build -t scalableminds/webknossos-cuber:$GITHUB_SHA .
+      run: docker build -t scalableminds/webknossos-cuber:$GITHUB_SHA wkcuber
 
     - name: Smoke test docker
       run: |
@@ -203,3 +251,25 @@ jobs:
             scalableminds/webknossos-cuber:latest
           docker push scalableminds/webknossos-cuber:latest
         fi
+
+  pypi:
+    needs: [webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac]
+    if: startsWith(github.event.ref, 'refs/tags')
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 4
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.8
+        architecture: 'x64'
+    - name: Install dependencies
+      run: pip3 install -r requirements.txt
+    - name: Publish python packages
+      env:
+        PYPI_USERNAME: ${{ secrets.PYPI_USERNAME }}
+        PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+      run: ./publish.sh

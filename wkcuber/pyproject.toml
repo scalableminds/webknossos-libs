@@ -24,10 +24,10 @@ imagecodecs = "^2020.5.30"
 czifile = "^2019.7.2"
 attrs = "^21.1.0"
 cattrs = "1.7.1"
+webknossos = { path = "../webknossos/", develop = true }
 
 [tool.poetry.dev-dependencies]
 black = "^20.8b1"
-dunamai = "^1.6.0"
 mypy = "^0.800"
 pdoc = "^7.0.0"
 pylint = "^2.6.0"
