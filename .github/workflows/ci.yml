@@ -15,6 +15,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
+    - uses: marceloprado/has-changed-path@v1
+      id: changed
+      with:
+        paths: "."
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v1
       with:
@@ -25,19 +29,24 @@ jobs:
       run: |
         pip install poetry
         poetry install
+      if: steps.changed.outputs.changed == 'true'
 
     - name: Check formatting
       run: poetry run ./format.sh check
+      if: steps.changed.outputs.changed == 'true'
 
     - name: Lint code
       run: poetry run pylint -j4 webknossos
+      if: steps.changed.outputs.changed == 'true'
 
     - name: Check typing
       run: |
         poetry run ./typecheck.sh
+      if: steps.changed.outputs.changed == 'true'
 
     - name: Python tests
       run: poetry run pytest tests
+      if: steps.changed.outputs.changed == 'true'
 
     - name: Check if git is dirty
       run: |
@@ -202,7 +211,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Build docker image
-      run: docker build -t scalableminds/webknossos-cuber:$GITHUB_SHA wkcuber
+      run: docker build -t scalableminds/webknossos-cuber:$GITHUB_SHA -f wkcuber/Dockerfile .
 
     - name: Smoke test docker
       run: |
