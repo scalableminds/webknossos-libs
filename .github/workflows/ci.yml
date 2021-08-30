@@ -18,7 +18,7 @@ jobs:
     - uses: marceloprado/has-changed-path@v1
       id: changed
       with:
-        paths: "."
+        paths: webknossos
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v1
       with:
@@ -70,7 +70,7 @@ jobs:
     - uses: marceloprado/has-changed-path@v1
       id: changed
       with:
-        paths: "."
+        paths: wkcuber
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
