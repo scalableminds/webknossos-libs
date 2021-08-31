@@ -11,7 +11,7 @@ nml = wk.open("merger-mode.nml")
 
 # for online annotation:
 annotation = wk.open_annotation(
-    "https://webknossos.brain.mpg.de/annotations/Explorational/60c1dcea01000070000b30d1#7801,8588,1694,0,0.185,6354"
+    "https://webknossos.org/annotations/Explorational/6114d9410100009f0096c640"
 )
 nml = annotation.skeleton
 # should this save anything to disk, or just happen in memory?

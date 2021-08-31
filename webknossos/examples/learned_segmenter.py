@@ -4,7 +4,7 @@ import webknossos as wk
 
 # should this be possible in memory? download should work, too
 annotation = wk.open_annotation(
-    "https://webknossos.brain.mpg.de/annotations/Explorational/60c1dcea01000070000b30d1#7801,8588,1694,0,0.185,6354"
+    "https://webknossos.org/annotations/Explorational/6114d9410100009f0096c640"
 )
 volume_annotation = (
     annotation.save_volume_annotation_and_get_layer()
