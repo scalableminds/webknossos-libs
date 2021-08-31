@@ -1,1 +1,1 @@
-from webknossos.dataset.compress_utils import *
+from webknossos.dataset.compress_utils import *  # pylint: disable=unused-wildcard-import,wildcard-import

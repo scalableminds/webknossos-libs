@@ -34,7 +34,7 @@ from .knossos import KnossosDataset
 from .mag import Mag
 
 from webknossos.dataset.defaults import DEFAULT_WKW_FILE_LEN
-from webknossos.utils import *
+from webknossos.utils import *  # pylint: disable=unused-wildcard-import,wildcard-import
 
 WkwDatasetInfo = namedtuple(
     "WkwDatasetInfo", ("dataset_path", "layer_name", "mag", "header")
