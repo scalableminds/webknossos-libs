@@ -1,7 +1,4 @@
-import functools
 import re
-import time
-from concurrent.futures._base import Future
 from pathlib import Path
 from types import TracebackType
 
@@ -10,12 +7,9 @@ import argparse
 
 import wkw
 import numpy as np
-import cluster_tools
-import json
 import os
 import psutil
 import traceback
-from cluster_tools.schedulers.cluster_executor import ClusterExecutor
 
 from typing import (
     List,
@@ -26,12 +20,10 @@ from typing import (
     Any,
     Optional,
     Type,
-    Callable,
 )
 from glob import iglob
 from collections import namedtuple
 from multiprocessing import cpu_count
-from concurrent.futures import as_completed
 from os import path, getpid
 from math import floor, ceil
 from logging import getLogger
@@ -41,6 +33,9 @@ from wkcuber.api.bounding_box import BoundingBox
 from .knossos import KnossosDataset
 from .mag import Mag
 
+from webknossos.dataset.defaults import DEFAULT_WKW_FILE_LEN
+from webknossos.utils import *
+
 WkwDatasetInfo = namedtuple(
     "WkwDatasetInfo", ("dataset_path", "layer_name", "mag", "header")
 )
@@ -48,7 +43,6 @@ KnossosDatasetInfo = namedtuple("KnossosDatasetInfo", ("dataset_path", "dtype"))
 FallbackArgs = namedtuple("FallbackArgs", ("distribution_strategy", "jobs"))
 
 BLOCK_LEN = 32
-DEFAULT_WKW_FILE_LEN = 32
 DEFAULT_WKW_VOXELS_PER_BLOCK = 32
 CUBE_REGEX = re.compile(
     fr"z(\d+){re.escape(os.path.sep)}y(\d+){re.escape(os.path.sep)}x(\d+)(\.wkw)$"
@@ -217,69 +211,6 @@ def add_batch_size_flag(parser: argparse.ArgumentParser) -> None:
         type=int,
         default=BLOCK_LEN,
     )
-
-
-def get_executor_for_args(
-    args: Optional[argparse.Namespace],
-) -> Union[ClusterExecutor, cluster_tools.WrappedProcessPoolExecutor]:
-    executor = None
-    if args is None:
-        # For backwards compatibility with code from other packages
-        # we allow args to be None. In this case we are defaulting
-        # to these values:
-        jobs = cpu_count()
-        executor = cluster_tools.get_executor("multiprocessing", max_workers=jobs)
-        logging.info("Using pool of {} workers.".format(jobs))
-    elif args.distribution_strategy == "multiprocessing":
-        # Also accept "processes" instead of job to be compatible with segmentation-tools.
-        # In the long run, the args should be unified and provided by the clustertools.
-        if "jobs" in args:
-            jobs = args.jobs
-        elif "processes" in args:
-            jobs = args.processes
-        else:
-            jobs = cpu_count()
-
-        executor = cluster_tools.get_executor("multiprocessing", max_workers=jobs)
-        logging.info("Using pool of {} workers.".format(jobs))
-    elif args.distribution_strategy == "slurm":
-        if args.job_resources is None:
-            raise argparse.ArgumentTypeError(
-                'Job resources (--job_resources) has to be provided when using slurm as distribution strategy. Example: --job_resources=\'{"mem": "10M"}\''
-            )
-
-        executor = cluster_tools.get_executor(
-            "slurm",
-            debug=True,
-            keep_logs=True,
-            job_resources=json.loads(args.job_resources),
-        )
-        logging.info("Using slurm cluster.")
-    else:
-        logging.error(
-            "Unknown distribution strategy: {}".format(args.distribution_strategy)
-        )
-
-    return executor
-
-
-times = {}
-
-
-def time_start(identifier: str) -> None:
-    times[identifier] = time.time()
-
-
-def time_stop(identifier: str) -> None:
-    _time = times.pop(identifier)
-    logging.debug("{} took {:.8f}s".format(identifier, time.time() - _time))
-
-
-# Waits for all futures to complete and raises an exception
-# as soon as a future resolves with an error.
-def wait_and_ensure_success(futures: List[Future]) -> None:
-    for fut in as_completed(futures):
-        fut.result()
 
 
 class BufferedSliceWriter(object):
@@ -484,19 +415,6 @@ def pad_or_crop_to_size_and_topleft(
 
 def ceil_div_np(numerator: np.ndarray, denominator: np.ndarray) -> np.ndarray:
     return -(-numerator // denominator)
-
-
-F = Callable[..., Any]
-
-
-def named_partial(func: F, *args: Any, **kwargs: Any) -> F:
-    # Propagate __name__ and __doc__ attributes to partial function
-    partial_func = functools.partial(func, *args, **kwargs)
-    functools.update_wrapper(partial_func, func)
-    if hasattr(func, "__annotations__"):
-        # Generic types cannot be pickled in Python <= 3.6, see https://github.com/python/typing/issues/511
-        partial_func.__annotations__ = {}
-    return partial_func
 
 
 def convert_mag1_offset(
