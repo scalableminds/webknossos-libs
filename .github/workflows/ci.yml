@@ -3,7 +3,25 @@ name: CI
 on: push
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      webknossos: ${{ steps.filter.outputs.webknossos }}
+      wkcuber: ${{ steps.filter.outputs.wkcuber }}
+    steps:
+    - uses: actions/checkout@v2
+    - uses: dorny/paths-filter@v2
+      id: filter
+      with:
+        filters: |
+          webknossos:
+            - 'webknossos/**'
+          wkcuber:
+            - 'wkcuber/**'
+
   webknossos_linux:
+    needs: changes
+    if: ${{ needs.changes.outputs.webknossos == 'true' }}
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 4
@@ -15,12 +33,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-      with:
-        fetch-depth: 2
-    - uses: marceloprado/has-changed-path@v1
-      id: changed
-      with:
-        paths: webknossos
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v1
       with:
@@ -31,24 +43,19 @@ jobs:
       run: |
         pip install poetry
         poetry install
-      if: steps.changed.outputs.changed == 'true'
 
     - name: Check formatting
       run: poetry run ./format.sh check
-      if: steps.changed.outputs.changed == 'true'
 
     - name: Lint code
       run: poetry run pylint -j4 webknossos
-      if: steps.changed.outputs.changed == 'true'
 
     - name: Check typing
       run: |
         poetry run ./typecheck.sh
-      if: steps.changed.outputs.changed == 'true'
 
     - name: Python tests
       run: poetry run pytest tests
-      if: steps.changed.outputs.changed == 'true'
 
     - name: Check if git is dirty
       run: |
@@ -56,7 +63,7 @@ jobs:
         [[ -z $(git status -s) ]]
 
   wkcuber_linux:
-    needs: [webknossos_linux]
+    needs: [changes]
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 4
@@ -68,14 +75,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-      with:
-        fetch-depth: 2
-
-    - uses: marceloprado/has-changed-path@v1
-      id: changed
-      with:
-        paths: wkcuber
-
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
@@ -91,16 +90,15 @@ jobs:
 
     - name: Check formatting
       run: poetry run black --check .
-      if: steps.changed.outputs.changed == 'true'
+      if: ${{ needs.changes.outputs.wkcuber == 'true' }}
 
     - name: Lint code
       run: poetry run pylint -j4 wkcuber
-      if: steps.changed.outputs.changed == 'true'
+      if: ${{ needs.changes.outputs.wkcuber == 'true' }}
 
     - name: Check typing
       run: |
         ./typecheck.sh
-      if: steps.changed.outputs.changed == 'true'
 
     - name: Python tests
       run: poetry run pytest tests
@@ -109,7 +107,7 @@ jobs:
       run: tests/scripts/all_tests.sh
 
     - name: Generate Docs
-      if: matrix.python-version == '3.8' 
+      if: matrix.python-version == '3.8'
       run: |
         docs/api.sh --persist
 
@@ -140,7 +138,6 @@ jobs:
         [[ -z $(git status -s) ]]
 
   wkcuber_win:
-    needs: [webknossos_linux]
     # Caution! The Windows VM seems to be running out of storage rather quickly.
     runs-on: windows-latest
     strategy:
@@ -177,7 +174,6 @@ jobs:
       run: tests/scripts/all_tests.sh
 
   wkcuber_mac:
-    needs: [webknossos_linux]
     runs-on: macos-latest
     strategy:
       max-parallel: 4
@@ -209,7 +205,7 @@ jobs:
       run: tests/scripts/all_tests.sh
 
   wkcuber_docker:
-    needs: [wkcuber_linux, wkcuber_win, wkcuber_mac]
+    needs: [webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac]
     runs-on: ubuntu-latest
 
     steps:
