@@ -119,11 +119,15 @@ def check_equality(
         official_bbox = wk_src_dataset.get_layer(layer_name).bounding_box
 
         for mag in mags:
+            inferred_src_bbox_dict = detect_bbox(source_path, layer_name, mag)
+            inferred_target_bbox_dict = detect_bbox(target_path, layer_name, mag)
+            assert inferred_src_bbox_dict is not None
+            assert inferred_target_bbox_dict is not None
             inferred_src_bbox = BoundingBox.from_auto(
-                detect_bbox(source_path, layer_name, mag)
+                inferred_src_bbox_dict
             )
             inferred_target_bbox = BoundingBox.from_auto(
-                detect_bbox(target_path, layer_name, mag)
+                inferred_target_bbox_dict
             )
 
             bbox = inferred_src_bbox.extended_by(inferred_target_bbox).extended_by(
