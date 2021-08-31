@@ -18,3 +18,4 @@ for PKG in */pyproject.toml; do
     mv pyproject.toml.bak pyproject.toml
 
     popd > /dev/null
+done
