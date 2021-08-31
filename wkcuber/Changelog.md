@@ -7,7 +7,18 @@ and this project adheres to [Calendar Versioning](http://calver.org/) `0Y.0M.MIC
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.12...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.13...HEAD)
+
+### Breaking Changes in Config & CLI
+
+### Added
+
+### Changed
+
+### Fixed
+
+## [0.8.13](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.13) - 2021-09-01
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.12...v0.8.13)
 
 ### Breaking Changes in Config & CLI
 - Replaced the old properties classes of the Dataset API with attr-classes.
@@ -16,10 +27,12 @@ For upgrade instructions, please check the respective *Breaking Changes* section
   - Moved `LayerViewConfiguration` and `DatasetViewConfiguration` into `properties.py`
   - Removed `Layer.set_bounding_box_offset` and `Layer.set_bounding_box_size`.
   - Renamed `Layer.get_bounding_box()` to the property `Layer.bounding_box`. The method `Layer.set_bounding_box` is replaced with the setter of the property `Layer.bounding_box`.
+
 ### Added
 - The API documentation is now hosted on a publicwebpage. [#392](https://github.com/scalableminds/webknossos-cuber/pull/392)
 
 ### Changed
+- Uses the new `webknossos` package. All classes and functions are re-exported under the same names. [#398](https://github.com/scalableminds/webknossos-cuber/pull/398)
 
 ### Fixed
 - Fixes support for Windows. [#394](https://github.com/scalableminds/webknossos-cuber/pull/394)
