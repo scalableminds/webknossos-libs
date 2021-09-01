@@ -343,6 +343,7 @@ class Dataset:
             raise RuntimeError(
                 f"Failed to add layer ({layer_name}) because of invalid category ({layer_properties.category}). The supported categories are '{LayerCategories.COLOR_TYPE}' and '{LayerCategories.SEGMENTATION_TYPE}'"
             )
+        self._export_as_json()
         return self._layers[layer_name]
 
     def get_segmentation_layer(self) -> SegmentationLayer:
