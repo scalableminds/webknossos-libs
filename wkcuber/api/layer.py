@@ -427,7 +427,7 @@ class Layer:
             max_mag_with_fixed_z = max_mag.to_array()
             max_mag_with_fixed_z[2] = from_mag.to_array()[2]
             max_mag = Mag(max_mag_with_fixed_z)
-            scale = self.dataset.properties.scale
+            scale = None
         else:
             raise AttributeError(
                 f"Downsampling failed: {sampling_mode} is not a valid SamplingMode ({SamplingModes.ANISOTROPIC}, {SamplingModes.ISOTROPIC}, {SamplingModes.CONSTANT_Z})"

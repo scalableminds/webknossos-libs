@@ -271,7 +271,7 @@ def test_anisotropic_mag_calculation() -> None:
         ),
         # Constant Z
         (
-            (1, 1, 2),
+            None,
             (1, 1, 1),
             (16, 16, 1),
             [(1, 1, 1), (2, 2, 1), (4, 4, 1), (8, 8, 1), (16, 16, 1)],

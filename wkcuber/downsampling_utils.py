@@ -52,17 +52,19 @@ def calculate_mags_to_downsample(
             min_value_bitmask = np.array(current_size == min_value)
             factor = min_value_bitmask + 1
 
+            # Calculate the two potential magnifications
             all_scaled = current_size * 2
-            min_scaled = current_size * factor
+            min_scaled = current_size * factor  # only multiply the smallest dimension
 
-            if (1 - (np.min(all_scaled) / np.max(all_scaled))) < (
-                1 - (np.min(min_scaled) / np.max(min_scaled))
-            ) or np.array_equal(
-                current_mag.as_np() * min_value_bitmask,
-                max_mag.as_np() * min_value_bitmask,
-            ):
+            all_scaled_ratio = np.max(all_scaled) / np.min(all_scaled)
+            min_scaled_ratio = np.max(min_scaled) / np.min(min_scaled)
+
+            # The smaller the ratio between the smallest dimension and the largest dimension, the better.
+            if all_scaled_ratio < min_scaled_ratio:
+                # Multiply all dimensions with "2"
                 current_mag = Mag(np.minimum(current_mag.as_np() * 2, max_mag.as_np()))
             else:
+                # Multiply only the minimal dimension by "2".
                 current_mag = Mag(
                     np.minimum(current_mag.as_np() * factor, max_mag.as_np())
                 )
