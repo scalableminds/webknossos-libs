@@ -318,7 +318,7 @@ jobs:
       run: ./publish.sh
 
   success:
-    needs: [webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac, wkcuber_docker]
+    needs: [webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac, wkcuber_docker, docs]
     if: |
       always() &&
       !contains(needs.*.result, 'failure') &&
