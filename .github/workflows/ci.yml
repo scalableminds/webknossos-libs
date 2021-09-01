@@ -238,6 +238,10 @@ jobs:
   docs:
     needs: [webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac]
     runs-on: ubuntu-latest
+    if: |
+      always() &&
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled')
 
     steps:
     - name: Set up Python 3.8
@@ -274,7 +278,7 @@ jobs:
         CI_TAG=$(git describe --tags)
         aws s3 sync --acl public-read docs/api s3://static.webknossos.org/lib-docs/${CI_TAG}
 
-        
+
   pypi:
     needs: [webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac]
     if: startsWith(github.event.ref, 'refs/tags')
