@@ -236,12 +236,12 @@ jobs:
         fi
 
   docs:
-    needs: [webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac]
+    # needs: [webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac]
     runs-on: ubuntu-latest
-    if: |
-      always() &&
-      !contains(needs.*.result, 'failure') &&
-      !contains(needs.*.result, 'cancelled')
+    # if: |
+    #   always() &&
+    #   !contains(needs.*.result, 'failure') &&
+    #   !contains(needs.*.result, 'cancelled')
 
     steps:
     - uses: actions/checkout@v2
@@ -250,8 +250,16 @@ jobs:
       with:
         python-version: 3.8
         architecture: 'x64'
+
     - name: Install dependencies
-      run: pip3 install -r requirements.txt
+      run: |
+        pip3 install -r requirements.txt
+        pushd webknossos
+          poetry install
+        popd
+        pushd wkcuber
+          poetry install
+        popd
 
     - name: Build Docs
       run: |
