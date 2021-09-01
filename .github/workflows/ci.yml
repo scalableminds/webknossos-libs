@@ -244,6 +244,7 @@ jobs:
       !contains(needs.*.result, 'cancelled')
 
     steps:
+    - uses: actions/checkout@v2
     - name: Set up Python 3.8
       uses: actions/setup-python@v1
       with:
