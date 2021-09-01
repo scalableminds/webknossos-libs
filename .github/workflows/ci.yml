@@ -106,32 +106,6 @@ jobs:
     - name: CLI tests
       run: tests/scripts/all_tests.sh
 
-    - name: Generate Docs
-      if: matrix.python-version == '3.8'
-      run: |
-        docs/api.sh --persist
-
-    - name: Push docs (for branch)
-      if: startsWith(github.event.ref, 'refs/heads') && matrix.python-version == '3.8'
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_DEFAULT_REGION: "eu-west-1"
-      run: |
-        CI_BRANCH=${GITHUB_REF##*/}
-        NORMALIZED_CI_BRANCH=${CI_BRANCH//[\/-]/_}
-        aws s3 sync --acl public-read docs/api s3://static.webknossos.org/lib-docs/${NORMALIZED_CI_BRANCH}
-
-    - name: Push docs (for tag)
-      if: startsWith(github.event.ref, 'refs/tags') && matrix.python-version == '3.8'
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_DEFAULT_REGION: "eu-west-1"
-      run: |
-        CI_TAG=$(git describe --tags)
-        aws s3 sync --acl public-read docs/api s3://static.webknossos.org/lib-docs/${CI_TAG}
-
     - name: Check if git is dirty
       run: |
         git diff --no-ext-diff --quiet --exit-code
@@ -265,6 +239,58 @@ jobs:
           docker push scalableminds/webknossos-cuber:latest
         fi
 
+  docs:
+    needs: [webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac]
+    runs-on: ubuntu-latest
+    if: |
+      always() &&
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled')
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.8
+        architecture: 'x64'
+
+    - name: Install dependencies
+      run: |
+        pip3 install -r requirements.txt
+        pushd webknossos
+          poetry install
+        popd
+        pushd wkcuber
+          poetry install
+        popd
+
+    - name: Build Docs
+      run: |
+        docs/api.sh --persist
+
+    - name: Push docs (for branch)
+      if: startsWith(github.event.ref, 'refs/heads')
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: "eu-west-1"
+      run: |
+        CI_BRANCH=${GITHUB_REF##*/}
+        NORMALIZED_CI_BRANCH=${CI_BRANCH//[\/-]/_}
+        aws s3 sync --acl public-read docs/api s3://static.webknossos.org/lib-docs/${NORMALIZED_CI_BRANCH}
+
+    - name: Push docs (for tag)
+      if: startsWith(github.event.ref, 'refs/tags')
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: "eu-west-1"
+      run: |
+        CI_TAG=$(git describe --tags)
+        aws s3 sync --acl public-read docs/api s3://static.webknossos.org/lib-docs/${CI_TAG}
+
+
   pypi:
     needs: [webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac]
     if: |
@@ -292,7 +318,7 @@ jobs:
       run: ./publish.sh
 
   success:
-    needs: [webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac, wkcuber_docker]
+    needs: [webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac, wkcuber_docker, docs]
     if: |
       always() &&
       !contains(needs.*.result, 'failure') &&

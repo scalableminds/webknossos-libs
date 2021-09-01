@@ -20,7 +20,7 @@ class View:
     A `View` is essentially a bounding box to a region of a specific `wkw.Dataset` that also provides functionality.
     Read- and write-operations are restricted to the bounding box.
     `View`s are designed to be easily passed around as parameters.
-    A `View`, in its most basic form, does not have a reference to the `wkcuber.api.dataset.Dataset`.
+    A `View`, in its most basic form, does not have a reference to the `webknossos.dataset.dataset.Dataset`.
     """
 
     def __init__(
@@ -34,7 +34,7 @@ class View:
         mag_view_bbox_at_creation: Optional[BoundingBox] = None,
     ):
         """
-        Do not use this constructor manually. Instead use `wkcuber.api.mag_view.MagView.get_view()` to get a `View`.
+        Do not use this constructor manually. Instead use `webknossos.dataset.mag_view.MagView.get_view()` to get a `View`.
         """
         self._dataset: Optional[Dataset] = None
         self._path = path_to_mag_view
@@ -310,7 +310,7 @@ class View:
 
         Example:
         ```python
-        from wkcuber.utils import get_executor_for_args, named_partial
+        from webknossos.utils import get_executor_for_args, named_partial
 
         def some_work(args: Tuple[View, int], some_parameter: int) -> None:
             view_of_single_chunk, i = args

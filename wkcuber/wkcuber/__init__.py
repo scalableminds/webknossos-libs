@@ -1,9 +1,8 @@
 """
 # wkcuber
 
-This module provides fundamental methods to modify or interact with datasets.
-The documentation is currently limited to the Dataset API in `wkcuber.api`. For information regarding the other functionalities,
-refer to the `README.md`.
+This module provides CLI tools to modify or interact with datasets.
+For information regarding the other functionalities, refer to the `README.md`.
 """
 
 from .api.dataset import Dataset
