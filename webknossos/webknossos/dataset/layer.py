@@ -140,13 +140,13 @@ def _element_class_to_dtype_per_channel(
 
 class Layer:
     """
-    A `Layer` consists of multiple `wkcuber.api.mag_view.MagView`s, which store the same data in different magnifications.
+    A `Layer` consists of multiple `webknossos.dataset.mag_view.MagView`s, which store the same data in different magnifications.
 
     ## Examples
 
     ### Adding layer to dataset
     ```python
-    from wkcuber.api.dataset import Dataset
+    from webknossos.dataset.dataset import Dataset
 
     dataset = Dataset(<path_to_dataset>)
     # Adds a new layer
@@ -158,7 +158,7 @@ class Layer:
 
     def __init__(self, dataset: "Dataset", properties: LayerProperties) -> None:
         """
-        Do not use this constructor manually. Instead use `wkcuber.api.layer.Dataset.add_layer()` to create a `Layer`.
+        Do not use this constructor manually. Instead use `webknossos.dataset.layer.Dataset.add_layer()` to create a `Layer`.
         """
         # It is possible that the properties on disk do not contain the number of channels.
         # Therefore, the parameter is optional. However at this point, 'num_channels' was already inferred.
@@ -258,7 +258,7 @@ class Layer:
 
     def get_mag(self, mag: Union[int, str, list, tuple, np.ndarray, Mag]) -> MagView:
         """
-        Returns the MagDataset called `mag` of this layer. The return type is `wkcuber.api.MagDataset`.
+        Returns the `MagView` called `mag` of this layer. The return type is `webknossos.dataset.mag_view.MagView`.
 
         This function raises an `IndexError` if the specified `mag` does not exist.
         """
@@ -284,7 +284,7 @@ class Layer:
         diminished performance, as full blocks will automatically be read to pad the write actions. Alternatively,
         you can call mag.compress() after all the data was written
 
-        The return type is `wkcuber.api.mag_view.MagView`.
+        The return type is `webknossos.dataset.mag_view.MagView`.
 
         Raises an IndexError if the specified `mag` already exists.
         """
@@ -348,7 +348,7 @@ class Layer:
 
     def delete_mag(self, mag: Union[int, str, list, tuple, np.ndarray, Mag]) -> None:
         """
-        Deletes the MagDataset from the `datasource-properties.json` and the data from disk.
+        Deletes the MagView from the `datasource-properties.json` and the data from disk.
 
         This function raises an `IndexError` if the specified `mag` does not exist.
         """
@@ -499,7 +499,7 @@ class Layer:
 
         Example:
         ```python
-        from wkcuber.downsampling_utils import SamplingModes
+        from webknossos.dataset.downsampling_utils import SamplingModes
 
         # ...
         # let 'layer' be a `Layer` with only `Mag(1)`
@@ -858,7 +858,7 @@ class LayerCategories:
     There are two different types of layers.
     This class can be used to specify the type of a layer during creation:
     ```python
-    from wkcuber.api.dataset import Dataset
+    from webknossos.dataset.dataset import Dataset
 
     dataset = Dataset(<path_to_dataset>)
     # Adds a new layer

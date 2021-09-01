@@ -58,7 +58,7 @@ class Dataset:
 
     ### Creating Datasets
     ```python
-    from wkcuber.api.dataset import Dataset
+    from webknossos.dataset.dataset import Dataset
 
     dataset = Dataset.create(<path_to_new_dataset>, scale=(1, 1, 1))
     # Adds a new layer
@@ -74,7 +74,7 @@ class Dataset:
 
     ### Opening Datasets
     ```python
-    from wkcuber.api.dataset import Dataset
+    from webknossos.dataset.dataset import Dataset
 
     dataset = Dataset(<path_to_dataset>)
     # Assuming that the dataset has a layer called 'color'
@@ -83,7 +83,7 @@ class Dataset:
 
     ### Copying Datasets
     ```python
-    from wkcuber.api.dataset import Dataset
+    from webknossos.dataset.dataset import Dataset
 
     dataset = Dataset(<path_to_dataset>)
     # Copying the dataset with different block_len and file_len
@@ -149,7 +149,7 @@ class Dataset:
 
     def get_layer(self, layer_name: str) -> Layer:
         """
-        Returns the layer called `layer_name` of this dataset. The return type is `wkcuber.api.layer.Layer`.
+        Returns the layer called `layer_name` of this dataset. The return type is `webknossos.dataset.layer.Layer`.
 
         This function raises an `IndexError` if the specified `layer_name` does not exist.
         """
@@ -177,7 +177,7 @@ class Dataset:
 
         Creates the folder `layer_name` in the directory of `self.path`.
 
-        The return type is `wkcuber.api.layer.Layer`.
+        The return type is `webknossos.dataset.layer.Layer`.
 
         This function raises an `IndexError` if the specified `layer_name` already exists.
         """
