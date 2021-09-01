@@ -254,12 +254,11 @@ jobs:
       run: pip3 install -r requirements.txt
 
     - name: Build Docs
-      if: matrix.python-version == '3.8'
       run: |
         docs/api.sh --persist
 
     - name: Push docs (for branch)
-      if: startsWith(github.event.ref, 'refs/heads') && matrix.python-version == '3.8'
+      if: startsWith(github.event.ref, 'refs/heads')
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -270,7 +269,7 @@ jobs:
         aws s3 sync --acl public-read docs/api s3://static.webknossos.org/lib-docs/${NORMALIZED_CI_BRANCH}
 
     - name: Push docs (for tag)
-      if: startsWith(github.event.ref, 'refs/tags') && matrix.python-version == '3.8'
+      if: startsWith(github.event.ref, 'refs/tags')
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
