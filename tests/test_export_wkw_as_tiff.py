@@ -6,18 +6,21 @@ from wkcuber.mag import Mag
 import wkw
 import numpy as np
 from math import ceil
+from pathlib import Path
 
-ds_name = "simple_wk_dataset"
-source_path = os.path.join("testdata", ds_name)
+
+DS_NAME = "simple_wk_dataset"
+TESTOUTPUT_DIR = Path("testoutput")
+SOURCE_PATH = Path("testdata") / DS_NAME
 
 
 def test_export_tiff_stack() -> None:
-    destination_path = os.path.join("testoutput", ds_name + "_tiff")
+    destination_path = os.path.join("testoutput", DS_NAME + "_tiff")
     bbox = BoundingBox((100, 100, 10), (100, 500, 50))
     bbox_dict = bbox.as_config()
     args_list = [
         "--source_path",
-        source_path,
+        str(SOURCE_PATH),
         "--destination_path",
         destination_path,
         "--layer_name",
@@ -32,8 +35,8 @@ def test_export_tiff_stack() -> None:
 
     run(args_list)
 
-    test_wkw_file_path = os.path.join(source_path, "color", Mag(1).to_layer_name())
-    with wkw.Dataset.open(test_wkw_file_path) as dataset:
+    test_wkw_file_path = SOURCE_PATH / "color" / Mag(1).to_layer_name()
+    with wkw.Dataset.open(str(test_wkw_file_path)) as dataset:
         slice_bbox = bbox_dict
         slice_bbox["size"] = [slice_bbox["size"][0], slice_bbox["size"][1], 1]
         for data_slice_index in range(1, bbox_dict["size"][2] + 1):
@@ -65,10 +68,10 @@ def test_export_tiff_stack() -> None:
 
 
 def test_export_tiff_stack_tile_size() -> None:
-    destination_path = os.path.join("testoutput", ds_name + "_tile_size")
+    destination_path = os.path.join("testoutput", DS_NAME + "_tile_size")
     args_list = [
         "--source_path",
-        source_path,
+        str(SOURCE_PATH),
         "--destination_path",
         destination_path,
         "--layer_name",
@@ -88,8 +91,8 @@ def test_export_tiff_stack_tile_size() -> None:
     run(args_list)
 
     tile_bbox = {"topleft": bbox["topleft"], "size": [30, 30, 1]}
-    test_wkw_file_path = os.path.join(source_path, "color", Mag(1).to_layer_name())
-    with wkw.Dataset.open(test_wkw_file_path) as dataset:
+    test_wkw_file_path = SOURCE_PATH / "color" / Mag(1).to_layer_name()
+    with wkw.Dataset.open(str(test_wkw_file_path)) as dataset:
         slice_bbox = {"topleft": bbox["topleft"], "size": bbox["size"]}
         slice_bbox["size"] = [slice_bbox["size"][0], slice_bbox["size"][1], 1]
         for data_slice_index in range(bbox["size"][2]):
@@ -129,10 +132,10 @@ def test_export_tiff_stack_tile_size() -> None:
 
 
 def test_export_tiff_stack_tiles_per_dimension() -> None:
-    destination_path = os.path.join("testoutput", ds_name + "_tiles_per_dimension")
+    destination_path = os.path.join("testoutput", DS_NAME + "_tiles_per_dimension")
     args_list = [
         "--source_path",
-        source_path,
+        str(SOURCE_PATH),
         "--destination_path",
         destination_path,
         "--layer_name",
@@ -152,8 +155,8 @@ def test_export_tiff_stack_tiles_per_dimension() -> None:
     run(args_list)
 
     tile_bbox = {"topleft": bbox["topleft"], "size": [17, 17, 1]}
-    test_wkw_file_path = os.path.join(source_path, "color", Mag(1).to_layer_name())
-    with wkw.Dataset.open(test_wkw_file_path) as dataset:
+    test_wkw_file_path = SOURCE_PATH / "color" / Mag(1).to_layer_name()
+    with wkw.Dataset.open(str(test_wkw_file_path)) as dataset:
         slice_bbox = bbox
         slice_bbox["size"] = [slice_bbox["size"][0], slice_bbox["size"][1], 1]
         for data_slice_index in range(bbox["size"][2]):

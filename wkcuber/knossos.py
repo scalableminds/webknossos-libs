@@ -12,7 +12,7 @@ CUBE_EDGE_LEN = 128
 CUBE_SIZE = CUBE_EDGE_LEN ** 3
 CUBE_SHAPE = (CUBE_EDGE_LEN,) * 3
 CUBE_REGEX = re.compile(
-    fr"x(\d+){os.path.sep}y(\d+){os.path.sep}z(\d+){os.path.sep}(.*\.raw)$"
+    fr"x(\d+){re.escape(os.path.sep)}y(\d+){re.escape(os.path.sep)}z(\d+){re.escape(os.path.sep)}(.*\.raw)$"
 )
 
 
