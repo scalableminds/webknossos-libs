@@ -290,3 +290,11 @@ jobs:
         PYPI_USERNAME: ${{ secrets.PYPI_USERNAME }}
         PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
       run: ./publish.sh
+
+  success:
+    needs: [webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac, wkcuber_docker]
+    if: |
+      always() &&
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled')
+    runs-on: ubuntu-latest
