@@ -29,7 +29,6 @@ webknossos = { path = "../webknossos/", develop = true }
 [tool.poetry.dev-dependencies]
 black = "^20.8b1"
 mypy = "^0.800"
-pdoc = "^7.0.0"
 pylint = "^2.6.0"
 pytest = "^6.2.1"
 
