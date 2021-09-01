@@ -206,6 +206,10 @@ jobs:
 
   wkcuber_docker:
     needs: [webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac]
+    if: |
+      always() &&
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled')
     runs-on: ubuntu-latest
 
     steps:
@@ -263,7 +267,11 @@ jobs:
 
   pypi:
     needs: [webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac]
-    if: startsWith(github.event.ref, 'refs/tags')
+    if: |
+      always() &&
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled') &&
+      startsWith(github.event.ref, 'refs/tags')
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 4
@@ -282,3 +290,14 @@ jobs:
         PYPI_USERNAME: ${{ secrets.PYPI_USERNAME }}
         PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
       run: ./publish.sh
+
+  success:
+    needs: [webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac, wkcuber_docker]
+    if: |
+      always() &&
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled')
+    runs-on: ubuntu-latest
+    steps:
+    - name: Success
+      run: echo Success!
