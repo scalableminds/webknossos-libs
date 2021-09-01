@@ -317,7 +317,7 @@ jobs:
         PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
       run: ./publish.sh
 
-  success:
+  complete:
     needs: [webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac, wkcuber_docker, docs]
     if: |
       always() &&
