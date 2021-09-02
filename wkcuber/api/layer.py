@@ -375,6 +375,7 @@ class Layer:
         compress: bool = True,
         sampling_mode: str = SamplingModes.ANISOTROPIC,
         buffer_edge_len: Optional[int] = None,
+        force_sampling_scheme=False,
         args: Optional[Namespace] = None,
     ) -> None:
         """
@@ -438,9 +439,15 @@ class Layer:
         if len(set([max(m.to_array()) for m in mags_to_downsample])) != len(
             mags_to_downsample
         ):
-            warnings.warn(
-                "The downsampling scheme contains multiple magnifications with the same maximum value. This is not supported by webknossos."
+            msg = (
+                f"The downsampling scheme contains multiple magnifications with the same maximum value. This is not supported by webknossos. "
+                f"Consider using a different sampling mode (e.g. {SamplingModes.ISOTROPIC}). "
+                f"The calculated downsampling scheme is: {[m.to_layer_name() for m in mags_to_downsample]}"
             )
+            if force_sampling_scheme:
+                warnings.warn(msg)
+            else:
+                raise RuntimeError(msg)
 
         for prev_mag, target_mag in zip(
             [from_mag] + mags_to_downsample[:-1], mags_to_downsample

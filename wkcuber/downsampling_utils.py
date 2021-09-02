@@ -44,14 +44,17 @@ def calculate_mags_to_downsample(
     current_mag = from_mag
     while current_mag < max_mag:
         if scale is None:
+            # In case the sampling mode is CONSTANT_Z or ISOTROPIC:
             current_mag = Mag(np.minimum(current_mag.as_np() * 2, max_mag.as_np()))
         else:
+            # In case the sampling mode is ANISOTROPIC:
             current_size = current_mag.as_np() * np.array(scale)
             min_value = np.min(current_size)
             min_value_bitmask = np.array(current_size == min_value)
             factor = min_value_bitmask + 1
 
-            # Calculate the two potential magnifications
+            # Calculate the two potential magnifications.
+            # Either, double all components or only double the smallest component.
             all_scaled = current_size * 2
             min_scaled = current_size * factor  # only multiply the smallest dimension
 
