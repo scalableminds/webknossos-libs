@@ -584,13 +584,23 @@ def test_chunking_wk(tmp_path: Path) -> None:
     original_data = (np.random.rand(50, 100, 150) * 205).astype(np.uint8)
     mag.write(offset=(70, 80, 90), data=original_data)
 
+    # Test with executor
     with get_executor_for_args(None) as executor:
         mag.for_each_chunk(
             chunk_job,
             chunk_size=(64, 64, 64),
             executor=executor,
         )
+    assert np.array_equal(original_data + 50, mag.get_view().read()[0])
 
+    # Reset the data
+    mag.write(offset=(70, 80, 90), data=original_data)
+
+    # Test without executor
+    mag.for_each_chunk(
+        chunk_job,
+        chunk_size=(64, 64, 64),
+    )
     assert np.array_equal(original_data + 50, mag.get_view().read()[0])
 
 
