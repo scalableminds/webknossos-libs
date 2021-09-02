@@ -39,7 +39,6 @@ def determine_buffer_edge_len(dataset: wkw.Dataset) -> int:
 def calculate_mags_to_downsample(
     from_mag: Mag, max_mag: Mag, scale: Optional[Tuple[float, float, float]]
 ) -> List[Mag]:
-    assert max_mag.to_array()[0] == max_mag.to_array()[1]
     assert np.all(from_mag.as_np() <= max_mag.as_np())
     mags = []
     current_mag = from_mag
