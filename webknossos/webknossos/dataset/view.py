@@ -296,7 +296,9 @@ class View:
         self,
         work_on_chunk: Callable[[Tuple["View", int]], None],
         chunk_size: Tuple[int, int, int],
-        executor: Optional[Union[ClusterExecutor, cluster_tools.WrappedProcessPoolExecutor]] = None,
+        executor: Optional[
+            Union[ClusterExecutor, cluster_tools.WrappedProcessPoolExecutor]
+        ] = None,
     ) -> None:
         """
         The view is chunked into multiple sub-views of size `chunk_size`.
@@ -364,7 +366,9 @@ class View:
         target_view: "View",
         source_chunk_size: Vec3,
         target_chunk_size: Vec3,
-        executor: Optional[Union[ClusterExecutor, cluster_tools.WrappedProcessPoolExecutor]] = None,
+        executor: Optional[
+            Union[ClusterExecutor, cluster_tools.WrappedProcessPoolExecutor]
+        ] = None,
     ) -> None:
         """
         This method is similar to 'for_each_chunk' in the sense, that it delegates work to smaller chunks.
