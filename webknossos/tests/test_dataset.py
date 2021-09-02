@@ -137,6 +137,13 @@ def get_multichanneled_data(dtype: type) -> np.ndarray:
     return data
 
 
+def assure_exported_properties(ds: Dataset) -> None:
+    reopened_ds = Dataset(ds.path)
+    assert (
+        ds._properties == reopened_ds._properties
+    ), "The properties did not match after reopening the dataset. This might indicate that the properties were not exported after they were changed in memory."
+
+
 def test_create_dataset_with_layer_and_mag() -> None:
     delete_dir(TESTOUTPUT_DIR / "wk_dataset")
 
@@ -151,6 +158,8 @@ def test_create_dataset_with_layer_and_mag() -> None:
 
     assert len(ds.layers) == 1
     assert len(ds.get_layer("color").mags) == 2
+
+    assure_exported_properties(ds)
 
 
 def test_create_dataset_with_explicit_header_fields() -> None:
@@ -183,6 +192,8 @@ def test_create_dataset_with_explicit_header_fields() -> None:
     )  # defaults are used
     assert ds.get_layer("color").get_mag("2-2-1")._properties.cube_length == 32 * 32
 
+    assure_exported_properties(ds)
+
 
 def test_open_dataset() -> None:
     ds = Dataset(TESTDATA_DIR / "simple_wk_dataset")
@@ -207,6 +218,9 @@ def test_modify_existing_dataset() -> None:
     )
 
     assert (TESTOUTPUT_DIR / "simple_wk_dataset" / "segmentation").is_dir()
+
+    # Note: ds1 is outdated because the same dataset was opened again and changed.
+    assure_exported_properties(ds2)
 
 
 def test_view_read_with_open() -> None:
@@ -301,6 +315,8 @@ def test_mag_view_write_out_of_bounds() -> None:
     )  # this is bigger than the bounding_box
     assert tuple(ds.get_layer("color").bounding_box.size) == (24, 24, 48)
 
+    assure_exported_properties(ds)
+
 
 def test_mag_view_write_out_of_bounds_mag2() -> None:
     new_dataset_path = TESTOUTPUT_DIR / "simple_wk_dataset_out_of_bounds"
@@ -318,6 +334,8 @@ def test_mag_view_write_out_of_bounds_mag2() -> None:
     )  # this is bigger than the bounding_box
     assert tuple(ds.get_layer("color").bounding_box.topleft) == (0, 0, 0)
     assert tuple(ds.get_layer("color").bounding_box.size) == (120, 24, 58)
+
+    assure_exported_properties(ds)
 
 
 def test_update_new_bounding_box_offset() -> None:
@@ -342,6 +360,8 @@ def test_update_new_bounding_box_offset() -> None:
     assert tuple(ds.get_layer("color").bounding_box.topleft) == (5, 5, 10)
     assert tuple(ds.get_layer("color").bounding_box.size) == (15, 15, 20)
 
+    assure_exported_properties(ds)
+
 
 def test_write_multi_channel_uint8() -> None:
     dataset_path = TESTOUTPUT_DIR / "multichannel"
@@ -355,6 +375,8 @@ def test_write_multi_channel_uint8() -> None:
     ds.get_layer("color").get_mag("1").write(data)
 
     assert np.array_equal(data, mag.read(size=(250, 200, 10)))
+
+    assure_exported_properties(ds)
 
 
 def test_wk_write_multi_channel_uint16() -> None:
@@ -372,6 +394,8 @@ def test_wk_write_multi_channel_uint16() -> None:
     written_data = mag.read(size=(250, 200, 10))
 
     assert np.array_equal(data, written_data)
+
+    assure_exported_properties(ds)
 
 
 def test_empty_read() -> None:
@@ -418,6 +442,8 @@ def test_num_channel_mismatch_assertion() -> None:
     with pytest.raises(AssertionError):
         mag.write(write_data)  # there is a mismatch between the number of channels
 
+    assure_exported_properties(ds)
+
 
 def test_get_or_add_layer() -> None:
     delete_dir(TESTOUTPUT_DIR / "wk_dataset")
@@ -449,12 +475,16 @@ def test_get_or_add_layer() -> None:
             num_channels=1,
         )
 
+    assure_exported_properties(ds)
+
 
 def test_get_or_add_layer_idempotence() -> None:
     delete_dir(TESTOUTPUT_DIR / "wk_dataset")
     ds = Dataset.create(TESTOUTPUT_DIR / "wk_dataset", scale=(1, 1, 1))
     ds.get_or_add_layer("color2", "color", np.uint8).get_or_add_mag("1")
     ds.get_or_add_layer("color2", "color", np.uint8).get_or_add_mag("1")
+
+    assure_exported_properties(ds)
 
 
 def test_get_or_add_mag() -> None:
@@ -480,6 +510,8 @@ def test_get_or_add_mag() -> None:
         # The mag "1" did exist before but with another 'block_len' (this would work the same for 'file_len' and 'block_type')
         layer.get_or_add_mag("1", block_len=64, file_len=32, compress=False)
 
+    assure_exported_properties(layer.dataset)
+
 
 def test_open_dataset_without_num_channels_in_properties() -> None:
     delete_dir(TESTOUTPUT_DIR / "old_wk_dataset")
@@ -500,6 +532,8 @@ def test_open_dataset_without_num_channels_in_properties() -> None:
     ) as datasource_properties:
         data = json.load(datasource_properties)
         assert data["dataLayers"][0].get("numChannels") == 1
+
+    assure_exported_properties(ds)
 
 
 def test_largest_segment_id_requirement() -> None:
@@ -522,6 +556,8 @@ def test_largest_segment_id_requirement() -> None:
         cast(SegmentationLayer, ds.get_layer("segmentation")).largest_segment_id
         == largest_segment_id
     )
+
+    assure_exported_properties(ds)
 
 
 def test_properties_with_segmentation() -> None:
@@ -593,6 +629,8 @@ def test_chunking_wk(tmp_path: Path) -> None:
 
     assert np.array_equal(original_data + 50, mag.get_view().read()[0])
 
+    assure_exported_properties(ds)
+
 
 def test_chunking_wk_advanced() -> None:
     delete_dir(TESTOUTPUT_DIR / "chunking_dataset_wk_advanced")
@@ -611,6 +649,8 @@ def test_chunking_wk_advanced() -> None:
 
     for_each_chunking_advanced(ds, view)
 
+    assure_exported_properties(ds)
+
 
 def test_chunking_wk_wrong_chunk_size() -> None:
     delete_dir(TESTOUTPUT_DIR / "chunking_dataset_wk_with_wrong_chunk_size")
@@ -627,6 +667,8 @@ def test_chunking_wk_wrong_chunk_size() -> None:
     view = mag.get_view(size=(256, 256, 256))
 
     for_each_chunking_with_wrong_chunk_size(view)
+
+    assure_exported_properties(ds)
 
 
 def test_view_write_without_open() -> None:
@@ -649,6 +691,8 @@ def test_view_write_without_open() -> None:
 
     assert not wk_view._is_opened
 
+    assure_exported_properties(ds)
+
 
 def test_typing_of_get_mag() -> None:
     ds = Dataset(TESTDATA_DIR / "simple_wk_dataset")
@@ -658,6 +702,8 @@ def test_typing_of_get_mag() -> None:
     assert layer.get_mag("1") == layer.get_mag([1, 1, 1])
     assert layer.get_mag("1") == layer.get_mag(np.array([1, 1, 1]))
     assert layer.get_mag("1") == layer.get_mag(Mag(1))
+
+    assure_exported_properties(ds)
 
 
 def test_dataset_get_or_create() -> None:
@@ -686,6 +732,8 @@ def test_dataset_get_or_create() -> None:
     with pytest.raises(AssertionError):
         # dataset already exists, but with a different name
         Dataset.get_or_create(ds_path, scale=(1, 1, 1), name="some different name")
+
+    assure_exported_properties(ds1)
 
 
 def test_changing_layer_bounding_box() -> None:
@@ -748,6 +796,8 @@ def test_changing_layer_bounding_box() -> None:
     new_data = mag.read()
     assert new_data.shape == (3, 14, 14, 24)
     assert np.array_equal(original_data[:, :14, :14, :], new_data)
+
+    assure_exported_properties(ds)
 
 
 def test_get_view() -> None:
@@ -826,6 +876,8 @@ def test_get_view() -> None:
         # would be allowed.
         mag.get_view(mag.global_offset, mag.size)
 
+    assure_exported_properties(ds)
+
 
 def test_adding_layer_with_invalid_dtype_per_layer() -> None:
     delete_dir(TESTOUTPUT_DIR / "invalid_dtype")
@@ -847,6 +899,8 @@ def test_adding_layer_with_invalid_dtype_per_layer() -> None:
     ds.add_layer(
         "color", LayerCategories.COLOR_TYPE, dtype_per_layer="int", num_channels=4
     )  # "int"/"int64" works with 4 channels
+
+    assure_exported_properties(ds)
 
 
 def test_adding_layer_with_valid_dtype_per_layer() -> None:
@@ -914,19 +968,21 @@ def test_adding_layer_with_valid_dtype_per_layer() -> None:
         assert data["dataLayers"][7]["elementClass"] == "double"
         assert data["dataLayers"][8]["elementClass"] == "float96"
 
-    ds = Dataset(
+    reopened_ds = Dataset(
         TESTOUTPUT_DIR / "valid_dtype"
     )  # reopen the dataset to check if the data is read from the properties correctly
-    assert ds.get_layer("color1").dtype_per_layer == "uint24"
-    assert ds.get_layer("color2").dtype_per_layer == "uint8"
-    assert ds.get_layer("color3").dtype_per_layer == "uint24"
-    assert ds.get_layer("color4").dtype_per_layer == "uint24"
+    assert reopened_ds.get_layer("color1").dtype_per_layer == "uint24"
+    assert reopened_ds.get_layer("color2").dtype_per_layer == "uint8"
+    assert reopened_ds.get_layer("color3").dtype_per_layer == "uint24"
+    assert reopened_ds.get_layer("color4").dtype_per_layer == "uint24"
     # Note that 'float' and 'double' are stored as 'float32' and 'float64'
-    assert ds.get_layer("seg1").dtype_per_layer == "float32"
-    assert ds.get_layer("seg2").dtype_per_layer == "float32"
-    assert ds.get_layer("seg3").dtype_per_layer == "float32"
-    assert ds.get_layer("seg4").dtype_per_layer == "float64"
-    assert ds.get_layer("seg5").dtype_per_layer == "float96"
+    assert reopened_ds.get_layer("seg1").dtype_per_layer == "float32"
+    assert reopened_ds.get_layer("seg2").dtype_per_layer == "float32"
+    assert reopened_ds.get_layer("seg3").dtype_per_layer == "float32"
+    assert reopened_ds.get_layer("seg4").dtype_per_layer == "float64"
+    assert reopened_ds.get_layer("seg5").dtype_per_layer == "float96"
+
+    assure_exported_properties(ds)
 
 
 def test_writing_subset_of_compressed_data_multi_channel() -> None:
@@ -1154,6 +1210,8 @@ def test_add_symlink_layer() -> None:
     assert np.array_equal(mag.read(size=(10, 10, 10)), write_data)
     assert np.array_equal(original_mag.read(size=(10, 10, 10)), write_data)
 
+    assure_exported_properties(ds)
+
 
 def test_add_symlink_mag(tmp_path: Path) -> None:
     original_ds = Dataset.create(tmp_path / "original", scale=(1, 1, 1))
@@ -1193,6 +1251,9 @@ def test_add_symlink_mag(tmp_path: Path) -> None:
     assert np.array_equal(symlink_mag.read(size=(5, 5, 5))[0], write_data)
     assert np.array_equal(original_layer.get_mag(2).read(size=(5, 5, 5))[0], write_data)
 
+    assure_exported_properties(ds)
+    assure_exported_properties(original_ds)
+
 
 def test_add_copy_mag(tmp_path: Path) -> None:
     original_ds = Dataset.create(tmp_path / "original", scale=(1, 1, 1))
@@ -1229,6 +1290,9 @@ def test_add_copy_mag(tmp_path: Path) -> None:
     assert np.array_equal(copy_mag.read(size=(5, 5, 5))[0], write_data)
     assert np.array_equal(original_layer.get_mag(2).read()[0], original_data)
 
+    assure_exported_properties(ds)
+    assure_exported_properties(original_ds)
+
 
 def test_search_dataset_also_for_long_layer_name() -> None:
     delete_dir(TESTOUTPUT_DIR / "long_layer_name")
@@ -1264,6 +1328,9 @@ def test_search_dataset_also_for_long_layer_name() -> None:
         mag.read(offset=(10, 10, 10), size=(10, 10, 10)), np.expand_dims(write_data, 0)
     )
     layer.delete_mag("2")
+
+    # Note: 'ds' is outdated (it still contains Mag(2)) because it was opened again and changed.
+    assure_exported_properties(layer.dataset)
 
 
 def test_outdated_dtype_parameter() -> None:
@@ -1332,6 +1399,9 @@ def test_dataset_conversion() -> None:
                 converted_ds.layers[layer_name].mags[mag].read(),
             )
 
+    assure_exported_properties(origin_ds)
+    assure_exported_properties(converted_ds)
+
 
 def test_for_zipped_chunks() -> None:
     delete_dir(TESTOUTPUT_DIR / "zipped_chunking_source")
@@ -1378,6 +1448,8 @@ def test_for_zipped_chunks() -> None:
         target_view.read(size=target_view.size),
     )
 
+    assure_exported_properties(ds)
+
 
 def test_for_zipped_chunks_invalid_target_chunk_size_wk() -> None:
     delete_dir(TESTOUTPUT_DIR / "zipped_chunking_source_invalid")
@@ -1418,6 +1490,8 @@ def test_for_zipped_chunks_invalid_target_chunk_size_wk() -> None:
                     executor=executor,
                 )
 
+    assure_exported_properties(ds)
+
 
 def test_read_only_view() -> None:
     delete_dir(TESTOUTPUT_DIR / "read_only_view")
@@ -1434,6 +1508,8 @@ def test_read_only_view() -> None:
         v_read.write(data=new_data)
 
     v_write.write(data=new_data)
+
+    assure_exported_properties(ds)
 
 
 @pytest.fixture()
@@ -1509,6 +1585,8 @@ def test_compression(tmp_path: Path) -> None:
             (np.random.rand(3, 10, 20, 30) * 255).astype(np.uint8),
         )
 
+    assure_exported_properties(mag1.layer.dataset)
+
 
 def test_dataset_view_configuration(tmp_path: Path) -> None:
     ds1 = Dataset.create(tmp_path, scale=(2, 2, 1))
@@ -1574,6 +1652,8 @@ def test_dataset_view_configuration(tmp_path: Path) -> None:
         for k in view_configuration_dict.keys():
             assert _snake_to_camel_case(k) == k
 
+    assure_exported_properties(ds1)
+
 
 def test_layer_view_configuration(tmp_path: Path) -> None:
     ds1 = Dataset.create(tmp_path, scale=(2, 2, 1))
@@ -1629,6 +1709,8 @@ def test_layer_view_configuration(tmp_path: Path) -> None:
         for k in view_configuration_dict.keys():
             assert _snake_to_camel_case(k) == k
 
+    assure_exported_properties(ds1)
+
 
 def test_get_largest_segment_id(tmp_path: Path) -> None:
     ds = Dataset.create(tmp_path, scale=(1, 1, 1))
@@ -1642,6 +1724,8 @@ def test_get_largest_segment_id(tmp_path: Path) -> None:
     assert segmentation_layer.largest_segment_id == 999
     segmentation_layer.largest_segment_id = 123
     assert segmentation_layer.largest_segment_id == 123
+
+    assure_exported_properties(ds)
 
 
 def test_get_or_add_layer_by_type(tmp_path: Path) -> None:
@@ -1670,6 +1754,8 @@ def test_get_or_add_layer_by_type(tmp_path: Path) -> None:
     with pytest.raises(IndexError):
         ds.get_color_layer()  # fails
 
+    assure_exported_properties(ds)
+
 
 def test_dataset_name(tmp_path: Path) -> None:
     ds = Dataset.create(tmp_path / "some_name", scale=(1, 1, 1))
@@ -1681,6 +1767,8 @@ def test_dataset_name(tmp_path: Path) -> None:
         tmp_path / "some_new_name", scale=(1, 1, 1), name="very important dataset"
     )
     assert ds2.name == "very important dataset"
+
+    assure_exported_properties(ds)
 
 
 def test_read_bbox(tmp_path: Path) -> None:
@@ -1738,6 +1826,8 @@ def test_add_copy_layer(tmp_path: Path) -> None:
     # Test if the changes of the properties are persisted on disk by opening it again
     assert "color" in Dataset(tmp_path / "ds").layers.keys()
 
+    assure_exported_properties(ds)
+
 
 def test_rename_layer(tmp_path: Path) -> None:
     ds = Dataset.create(tmp_path / "ds", scale=(1, 1, 1))
@@ -1757,6 +1847,8 @@ def test_rename_layer(tmp_path: Path) -> None:
 
     # The "mag" object which was created before renaming the layer is still valid
     assert np.array_equal(mag.read()[0], write_data)
+
+    assure_exported_properties(ds)
 
 
 def test_delete_layer_and_mag(tmp_path: Path) -> None:
@@ -1791,3 +1883,62 @@ def test_delete_layer_and_mag(tmp_path: Path) -> None:
     assert "segmentation" in ds.layers
     assert len([l for l in ds._properties.data_layers if l.name == "color"]) == 0
     assert len([l for l in ds._properties.data_layers if l.name == "segmentation"]) == 1
+
+    assure_exported_properties(ds)
+
+
+def test_add_layer_like(tmp_path: Path) -> None:
+    ds = Dataset.create(tmp_path / "ds", scale=(1, 1, 1))
+    color_layer1 = ds.add_layer(
+        "color1", LayerCategories.COLOR_TYPE, dtype_per_layer="uint24", num_channels=3
+    )
+    color_layer1.add_mag(1)
+    segmentation_layer1 = cast(
+        SegmentationLayer,
+        ds.add_layer(
+            "segmentation1",
+            LayerCategories.SEGMENTATION_TYPE,
+            dtype_per_channel="uint8",
+            largest_segment_id=999,
+        ),
+    )
+    segmentation_layer1.add_mag(1)
+    color_layer2 = ds.add_layer_like(color_layer1, "color2")
+    segmentation_layer2 = cast(
+        SegmentationLayer, ds.add_layer_like(segmentation_layer1, "segmentation2")
+    )
+
+    assert color_layer1.name == "color1"
+    assert color_layer2.name == "color2"
+    assert len(color_layer1.mags) == 1
+    assert len(color_layer2.mags) == 0
+    assert color_layer1.category == color_layer2.category == LayerCategories.COLOR_TYPE
+    assert (
+        color_layer1.dtype_per_channel
+        == color_layer2.dtype_per_channel
+        == np.dtype("uint8")
+    )
+    assert color_layer1.num_channels == color_layer2.num_channels == 3
+
+    assert segmentation_layer1.name == "segmentation1"
+    assert segmentation_layer2.name == "segmentation2"
+    assert len(segmentation_layer1.mags) == 1
+    assert len(segmentation_layer2.mags) == 0
+    assert (
+        segmentation_layer1.category
+        == segmentation_layer2.category
+        == LayerCategories.SEGMENTATION_TYPE
+    )
+    assert (
+        segmentation_layer1.dtype_per_channel
+        == segmentation_layer2.dtype_per_channel
+        == np.dtype("uint8")
+    )
+    assert segmentation_layer1.num_channels == segmentation_layer2.num_channels == 1
+    assert (
+        segmentation_layer1.largest_segment_id
+        == segmentation_layer2.largest_segment_id
+        == 999
+    )
+
+    assure_exported_properties(ds)

@@ -326,6 +326,28 @@ class Dataset:
                 **kwargs,
             )
 
+    def add_layer_like(self, other_layer: Layer, layer_name: str) -> Layer:
+        if layer_name in self.layers.keys():
+            raise IndexError(
+                f"Adding layer {layer_name} failed. There is already a layer with this name"
+            )
+
+        layer_properties = copy.copy(other_layer._properties)
+        layer_properties.wkw_resolutions = []
+        layer_properties.name = layer_name
+
+        self._properties.data_layers += [layer_properties]
+        if layer_properties.category == LayerCategories.COLOR_TYPE:
+            self._layers[layer_name] = Layer(self, layer_properties)
+        elif layer_properties.category == LayerCategories.SEGMENTATION_TYPE:
+            self._layers[layer_name] = SegmentationLayer(self, layer_properties)
+        else:
+            raise RuntimeError(
+                f"Failed to add layer ({layer_name}) because of invalid category ({layer_properties.category}). The supported categories are '{LayerCategories.COLOR_TYPE}' and '{LayerCategories.SEGMENTATION_TYPE}'"
+            )
+        self._export_as_json()
+        return self._layers[layer_name]
+
     def get_segmentation_layer(self) -> SegmentationLayer:
         """
         Returns the only segmentation layer.
