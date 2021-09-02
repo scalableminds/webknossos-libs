@@ -9,6 +9,8 @@ from os import path
 from pathlib import Path
 from natsort import natsorted
 
+from webknossos.dataset import Dataset, LayerCategories, MagView, View
+from webknossos.geometry import BoundingBox
 from .mag import Mag
 from .downsampling_utils import (
     parse_interpolation_mode,
@@ -153,7 +155,7 @@ def prepare_slices_for_wkw(
 
 def cubing_job(
     args: Tuple[
-        WkwDatasetInfo,
+        View,
         List[int],
         Mag,
         InterpolationModes,
@@ -165,7 +167,7 @@ def cubing_job(
     ]
 ) -> None:
     (
-        target_wkw_info,
+        target_view,
         z_batches,
         target_mag,
         interpolation_mode,
@@ -175,18 +177,16 @@ def cubing_job(
         pad,
         channel_index,
     ) = args
-    if len(z_batches) == 0:
-        return
 
     downsampling_needed = target_mag != Mag(1)
 
-    with open_wkw(target_wkw_info) as target_wkw:
+    with target_view.open():
         # Iterate over batches of continuous z sections
         # The batches have a maximum size of `batch_size`
         # Batched iterations allows to utilize IO more efficiently
         for z_batch, source_file_batch in zip(
             get_chunks(z_batches, batch_size),
-            get_chunks(source_file_batches, batch_size),
+            get_chunks(source_file_batches, batch_size)
         ):
             try:
                 ref_time = time.time()
@@ -196,7 +196,7 @@ def cubing_job(
                 for z, file_name in zip(z_batch, source_file_batch):
                     # Image shape will be (x, y, channel_count, z=1)
                     image = read_image_file(
-                        file_name, target_wkw_info.header.voxel_type, z, channel_index
+                        file_name, target_view.header.voxel_type, z, channel_index
                     )
 
                     if not pad:
@@ -226,14 +226,14 @@ def cubing_job(
                     ]
 
                 buffer = prepare_slices_for_wkw(
-                    slices, target_wkw_info.header.num_channels
+                    slices, target_view.header.num_channels
                 )
                 if downsampling_needed:
                     buffer = downsample_unpadded_data(
                         buffer, target_mag, interpolation_mode
                     )
 
-                target_wkw.write([0, 0, z_batch[0] / target_mag.to_array()[2]], buffer)
+                target_view.write(offset=(0, 0, z_batch[0]//target_mag.to_array()[2]), data=buffer)
                 logging.debug(
                     "Cubing of z={}-{} took {:.8f}s".format(
                         z_batch[0], z_batch[-1], time.time() - ref_time
@@ -272,7 +272,7 @@ def cubing(
     start_z: int,
     pad: bool,
     executor_args: Namespace,
-) -> dict:
+) -> Dataset:
     source_files = find_source_filenames(source_path)
 
     # All images are assumed to have equal dimensions
@@ -299,18 +299,34 @@ def cubing(
         batch_size = BLOCK_LEN
 
     target_mag = Mag(target_mag_str)
-    target_wkw_info = WkwDatasetInfo(
-        target_path,
+
+    target_ds = Dataset.get_or_create(target_path, scale=(1, 1, 1))  # TODO: where do I find the scale?
+    target_layer = target_ds.get_or_add_layer(
         layer_name,
-        target_mag,
-        wkw.Header(
-            convert_element_class_to_dtype(dtype),
-            num_channels,
-            file_len=wkw_file_len,
-        ),
+        LayerCategories.COLOR_TYPE,  # TODO: is cubing always for "color" layers?
+        dtype_per_channel=dtype,  # TODO: is this really per channel?
+        num_channels=num_channels
     )
+    target_layer.bounding_box = BoundingBox((0, 0, 0), (num_x, num_y, num_z)) # TODO: is there an offset (e.g. start_z)?
+
+    target_mag_view = target_layer.add_mag(
+        target_mag,
+        file_len=wkw_file_len,
+        block_len=BLOCK_LEN
+    )
+
+    #target_wkw_info = WkwDatasetInfo(
+    #    target_path,
+    #    layer_name,
+    #    target_mag,
+    #    wkw.Header(
+    #        convert_element_class_to_dtype(dtype),
+    #        num_channels,
+    #        file_len=wkw_file_len,
+    #    ),
+    #)
     interpolation_mode = parse_interpolation_mode(
-        interpolation_mode_str, target_wkw_info.layer_name
+        interpolation_mode_str, layer_name
     )
     if target_mag != Mag(1):
         logging.info(
@@ -319,24 +335,31 @@ def cubing(
 
     logging.info("Found source files: count={} size={}x{}".format(num_z, num_x, num_y))
 
-    ensure_wkw(target_wkw_info)
+    #ensure_wkw(target_wkw_info)
 
     with get_executor_for_args(executor_args) as executor:
         job_args = []
         # We iterate over all z sections
         for z in range(start_z, num_z + start_z, BLOCK_LEN):
             # Prepare z batches
-            max_z = min(num_z + start_z, z + BLOCK_LEN)
+            max_z = min(num_z + start_z, z + BLOCK_LEN)  # TODO: I currently ignored this
             z_batch = list(range(z, max_z))
             # Prepare source files array
             if len(source_files) > 1:
                 source_files_array = source_files[z - start_z : max_z - start_z]
             else:
                 source_files_array = source_files * (max_z - z)
+
+            bbox_of_batch_in_mag1 = BoundingBox((0, 0, z), (num_x, num_y, target_mag_view.header.block_len))  # TODO: why is it enough to use the block_len? dont we need to use the block_len*file_len?
+            bbox_of_batch_in_target_mag = target_layer.bounding_box.intersected_with(bbox_of_batch_in_mag1).align_with_mag(target_mag, ceil=True)
+
             # Prepare job
             job_args.append(
                 (
-                    target_wkw_info,
+                    target_mag_view.get_view(
+                        bbox_of_batch_in_target_mag.topleft,
+                        bbox_of_batch_in_target_mag.size
+                    ),
                     z_batch,
                     target_mag,
                     interpolation_mode,
@@ -348,10 +371,12 @@ def cubing(
                 )
             )
 
-        wait_and_ensure_success(executor.map_to_futures(cubing_job, job_args))
+        wait_and_ensure_success(executor.map_to_futures(cubing_job, job_args))  # TODO: I have to set the bbox and then use normal Views
 
     # Return Bounding Box
-    return {"topLeft": [0, 0, 0], "width": num_x, "height": num_y, "depth": num_z}
+    #return {"topLeft": [0, 0, 0], "width": num_x, "height": num_y, "depth": num_z}
+    # Return dataset
+    return target_ds
 
 
 if __name__ == "__main__":
