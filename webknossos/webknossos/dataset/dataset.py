@@ -385,7 +385,7 @@ class Dataset:
         self._export_as_json()
 
     def add_symlink_layer(
-        self, foreign_layer: Union[str, Path, Layer], make_relative: bool = False
+        self, foreign_layer: Union[str, Path, Layer], make_relative: bool = False, resolve_symlinks: bool = True
     ) -> Layer:
         """
         Creates a symlink to the data at `foreign_layer` which belongs to another dataset.
@@ -400,7 +400,8 @@ class Dataset:
         else:
             foreign_layer_path = Path(foreign_layer).absolute()
 
-        foreign_layer_path = foreign_layer_path.resolve()
+        if resolve_symlinks:
+            foreign_layer_path = foreign_layer_path.resolve()
         layer_name = foreign_layer_path.name
         if layer_name in self.layers.keys():
             raise IndexError(
@@ -423,7 +424,7 @@ class Dataset:
         self._export_as_json()
         return self.layers[layer_name]
 
-    def add_copy_layer(self, foreign_layer: Union[str, Path, Layer]) -> Layer:
+    def add_copy_layer(self, foreign_layer: Union[str, Path, Layer], resolve_symlinks: bool = True) -> Layer:
         """
         Copies the data at `foreign_layer` which belongs to another dataset to the current dataset.
         Additionally, the relevant information from the `datasource-properties.json` of the other dataset are copied too.
@@ -434,7 +435,8 @@ class Dataset:
         else:
             foreign_layer_path = Path(foreign_layer)
 
-        foreign_layer_path = foreign_layer_path.resolve()
+        if resolve_symlinks:
+            foreign_layer_path = foreign_layer_path.resolve()
         layer_name = foreign_layer_path.name
         if layer_name in self.layers.keys():
             raise IndexError(
