@@ -30,6 +30,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 
 ### Added
 - The API documentation is now hosted on a publicwebpage. [#392](https://github.com/scalableminds/webknossos-cuber/pull/392)
+- Added optional parameter `resolve_symlinks` to `Dataset.add_symlink_layer` and `Dataset.add_copy_layer` to prevent that symlinks are resolved. [#406](https://github.com/scalableminds/webknossos-libs/pull/406)
 
 ### Changed
 - Uses the new `webknossos` package. All classes and functions are re-exported under the same names. [#398](https://github.com/scalableminds/webknossos-cuber/pull/398)
