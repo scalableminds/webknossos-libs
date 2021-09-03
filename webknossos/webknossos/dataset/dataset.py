@@ -385,7 +385,10 @@ class Dataset:
         self._export_as_json()
 
     def add_symlink_layer(
-        self, foreign_layer: Union[str, Path, Layer], make_relative: bool = False, resolve_symlinks: bool = True
+        self,
+        foreign_layer: Union[str, Path, Layer],
+        make_relative: bool = False,
+        resolve_symlinks: bool = True,
     ) -> Layer:
         """
         Creates a symlink to the data at `foreign_layer` which belongs to another dataset.
@@ -424,7 +427,9 @@ class Dataset:
         self._export_as_json()
         return self.layers[layer_name]
 
-    def add_copy_layer(self, foreign_layer: Union[str, Path, Layer], resolve_symlinks: bool = True) -> Layer:
+    def add_copy_layer(
+        self, foreign_layer: Union[str, Path, Layer], resolve_symlinks: bool = True
+    ) -> Layer:
         """
         Copies the data at `foreign_layer` which belongs to another dataset to the current dataset.
         Additionally, the relevant information from the `datasource-properties.json` of the other dataset are copied too.
