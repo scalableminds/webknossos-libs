@@ -486,7 +486,7 @@ class Layer:
         compress: bool = True,
         sampling_mode: str = SamplingModes.ANISOTROPIC,
         buffer_edge_len: Optional[int] = None,
-        force_sampling_scheme=False,
+        force_sampling_scheme: bool = False,
         args: Optional[Namespace] = None,
     ) -> None:
         """
