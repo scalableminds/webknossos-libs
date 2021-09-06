@@ -396,9 +396,9 @@ class Dataset:
         """
 
         if isinstance(foreign_layer, Layer):
-            foreign_layer_path = Path(os.path.abspath(foreign_layer.path))
+            foreign_layer_path = foreign_layer.path
         else:
-            foreign_layer_path = Path(os.path.abspath(foreign_layer))
+            foreign_layer_path = Path(foreign_layer)
 
         layer_name = foreign_layer_path.name
         if layer_name in self.layers.keys():
@@ -409,7 +409,7 @@ class Dataset:
         foreign_layer_symlink_path = (
             Path(os.path.relpath(foreign_layer_path, self.path))
             if make_relative
-            else foreign_layer_path
+            else Path(os.path.abspath(foreign_layer_path))
         )
         os.symlink(foreign_layer_symlink_path, join(self.path, layer_name))
         original_layer = Dataset(foreign_layer_path.parent).get_layer(layer_name)
@@ -429,10 +429,11 @@ class Dataset:
         """
 
         if isinstance(foreign_layer, Layer):
-            foreign_layer_path = Path(os.path.abspath(foreign_layer.path))
+            foreign_layer_path = foreign_layer.path
         else:
-            foreign_layer_path = Path(os.path.abspath(foreign_layer))
+            foreign_layer_path = foreign_layer
 
+        foreign_layer_path = Path(os.path.abspath(foreign_layer_path))
         layer_name = foreign_layer_path.name
         if layer_name in self.layers.keys():
             raise IndexError(
