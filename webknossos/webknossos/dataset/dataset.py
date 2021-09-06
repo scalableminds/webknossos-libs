@@ -197,16 +197,12 @@ class Dataset:
             dtype_per_channel = _properties_floating_type_to_python_type.get(
                 dtype_per_channel, dtype_per_channel  # type: ignore[arg-type]
             )
-            dtype_per_channel = _normalize_dtype_per_channel(
-                dtype_per_channel
-            )  # type: ignore[arg-type]
+            dtype_per_channel = _normalize_dtype_per_channel(dtype_per_channel)  # type: ignore[arg-type]
         elif dtype_per_layer is not None:
             dtype_per_layer = _properties_floating_type_to_python_type.get(
                 dtype_per_layer, dtype_per_layer  # type: ignore[arg-type]
             )
-            dtype_per_layer = _normalize_dtype_per_layer(
-                dtype_per_layer
-            )  # type: ignore[arg-type]
+            dtype_per_layer = _normalize_dtype_per_layer(dtype_per_layer)  # type: ignore[arg-type]
             dtype_per_channel = _dtype_per_layer_to_dtype_per_channel(
                 dtype_per_layer, num_channels
             )
@@ -597,7 +593,11 @@ class Dataset:
             )
 
         # Write empty properties to disk
-        data = {"id": {"name": name, "team": ""}, "scale": scale, "dataLayers": []}
+        data = {
+            "id": {"name": name, "team": ""},
+            "scale": scale,
+            "dataLayers": [],
+        }
         with open(
             dataset_path / PROPERTIES_FILE_NAME, "w", encoding="utf-8"
         ) as outfile:
@@ -641,7 +641,9 @@ class Dataset:
     def _export_as_json(self) -> None:
         with open(self.path / PROPERTIES_FILE_NAME, "w", encoding="utf-8") as outfile:
             json.dump(
-                dataset_converter.unstructure(self._properties), outfile, indent=4
+                dataset_converter.unstructure(self._properties),
+                outfile,
+                indent=4,
             )
 
     def _initialize_layer_from_properties(self, properties: LayerProperties) -> Layer:
