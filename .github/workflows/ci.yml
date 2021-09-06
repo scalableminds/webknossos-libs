@@ -41,6 +41,7 @@ jobs:
 
     - name: Install dependencies
       run: |
+        pip install -U pip
         pip install poetry
         poetry install
 
@@ -84,6 +85,7 @@ jobs:
 
     - name: Install dependencies
       run: |
+        pip install -U pip
         pip install poetry
         poetry install
 
@@ -134,6 +136,7 @@ jobs:
     - name: Install dependencies
       shell: bash
       run: |
+        pip install -U pip
         pip install poetry
         poetry install
 
@@ -168,6 +171,7 @@ jobs:
 
     - name: Install dependencies
       run: |
+        pip install -U pip
         pip install poetry
         poetry install
 
