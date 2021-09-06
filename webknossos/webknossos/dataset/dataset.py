@@ -396,7 +396,7 @@ class Dataset:
         """
 
         if isinstance(foreign_layer, Layer):
-            foreign_layer_path = foreign_layer.path
+            foreign_layer_path = Path(os.path.abspath(foreign_layer.path))
         else:
             foreign_layer_path = Path(os.path.abspath(foreign_layer))
 
@@ -429,7 +429,7 @@ class Dataset:
         """
 
         if isinstance(foreign_layer, Layer):
-            foreign_layer_path = foreign_layer.path
+            foreign_layer_path = Path(os.path.abspath(foreign_layer.path))
         else:
             foreign_layer_path = Path(os.path.abspath(foreign_layer))
 
