@@ -431,7 +431,7 @@ class Dataset:
         if isinstance(foreign_layer, Layer):
             foreign_layer_path = foreign_layer.path
         else:
-            foreign_layer_path = foreign_layer
+            foreign_layer_path = Path(foreign_layer)
 
         foreign_layer_path = Path(os.path.abspath(foreign_layer_path))
         layer_name = foreign_layer_path.name
