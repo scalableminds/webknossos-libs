@@ -106,3 +106,5 @@ testdata/tiff_mag_2_reference
 
 # MyPy
 .mypy_cache/
+
+/poetry.toml
