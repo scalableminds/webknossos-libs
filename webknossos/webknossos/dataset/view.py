@@ -285,11 +285,11 @@ class View:
     ) -> None:
         if strict is None:
             strict = self._is_bounded
-        if strict and not BoundingBox((0, 0, 0), self.size).contains_bbox(
+        if strict and not BoundingBox(self.global_offset, self.size).contains_bbox(
             BoundingBox(offset, size)
         ):
             raise AssertionError(
-                f"Accessing data out of bounds: The passed parameter 'size' {size} exceeds the size of the current view ({self.size})"
+                f"Accessing data out of bounds: The passed parameter 'size' {size} and 'offset' {offset} exceeds the bounding box of the current view (offset={self.global_offset}, size={self.size})"
             )
 
     def for_each_chunk(
