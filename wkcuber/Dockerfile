@@ -4,7 +4,6 @@ RUN mkdir /app
 WORKDIR /app
 
 COPY wkcuber/README.md /app
-COPY wkcuber/poetry.toml /app
 COPY wkcuber/poetry.lock /app
 COPY wkcuber/pyproject.toml /app
 
