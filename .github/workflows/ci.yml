@@ -131,6 +131,7 @@ jobs:
     - name: Install dependencies
       shell: bash
       run: |
+        pip install -U pip
         pip install poetry
         poetry config virtualenvs.create false --local
         poetry install
