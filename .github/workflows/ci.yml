@@ -132,6 +132,7 @@ jobs:
       shell: bash
       run: |
         pip install poetry
+        poetry config virtualenvs.create false --local
         poetry install
 
     - name: Decompress test data

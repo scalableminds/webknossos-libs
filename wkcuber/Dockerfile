@@ -19,8 +19,7 @@ COPY webknossos/poetry.lock /webknossos/
 COPY webknossos/pyproject.toml /webknossos/
 COPY webknossos/README.md /webknossos/
 
-RUN echo '[virtualenvs]' > poetry.toml && \
-    echo 'create = false' >> poetry.toml
+RUN poetry config virtualenvs.create false --local
 RUN poetry install --no-dev
 
 ENTRYPOINT [ "python", "-m" ]
