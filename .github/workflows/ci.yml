@@ -131,7 +131,6 @@ jobs:
     - name: Install dependencies
       shell: bash
       run: |
-        pip install -U pip
         pip install poetry
         poetry config virtualenvs.create false --local
         poetry install
@@ -146,7 +145,7 @@ jobs:
 
     - name: CLI tests
       shell: bash
-      run: poetry run tests/scripts/all_tests.sh
+      run: tests/scripts/all_tests.sh
 
   wkcuber_mac:
     runs-on: macos-latest
