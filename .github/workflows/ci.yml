@@ -144,7 +144,7 @@ jobs:
 
     - name: CLI tests
       shell: bash
-      run: poetry run tests\\scripts\\all_tests.sh
+      run: poetry run bash tests/scripts/all_tests.sh
 
   wkcuber_mac:
     runs-on: macos-latest
