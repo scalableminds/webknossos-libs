@@ -132,7 +132,6 @@ jobs:
       shell: bash
       run: |
         pip install poetry
-        pip install virtualenv==20.0.33
         poetry install
 
     - name: Decompress test data
@@ -144,7 +143,6 @@ jobs:
       run: poetry run pytest tests
 
     - name: CLI tests
-      shell: bash
       run: poetry run tests\scripts\all_tests.sh
 
   wkcuber_mac:
