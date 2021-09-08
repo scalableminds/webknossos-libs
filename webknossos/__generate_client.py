@@ -38,7 +38,10 @@ def generate_client(openapi_schema: Dict):
 
 
 def add_api_prefix_for_non_data_paths(openapi_schema: Dict):
-    """TODO"""
+    """The current webKnossos backend does not include the
+    /api prefix into the different backend paths.
+    Howevery, the /data prefix for datastore paths is included.
+    This adds the missing /api prefixes in the openapi_schema (in-place)."""
     assert_valid_schema(openapi_schema)
     paths = openapi_schema["paths"]
     for path in list(paths.keys()):
@@ -99,7 +102,8 @@ def set_response_schema_by_example(
 
 
 def bootstrap_response_schemas(openapi_schema: Dict) -> None:
-    """TODO"""
+    """Inserts the response schemas into openapi_schema (in-place),
+    as recorded by example requests."""
     assert_valid_schema(openapi_schema)
     for operation_id, response in iterate_request_ids_with_responses():
         set_response_schema_by_example(
