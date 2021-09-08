@@ -14,6 +14,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Added
 
 ### Changed
+- Make parameter `executor` optional for `View.for_each_chunk` and `View.for_zipped_chunks`. [#404](https://github.com/scalableminds/webknossos-libs/pull/404)
 
 ### Fixed
 - Reverted that `dataset.add_symlink_layer` and `dataset.add_copy_layer` resolved the layer path if it was a symlink. [#408](https://github.com/scalableminds/webknossos-libs/pull/408)
