@@ -132,6 +132,7 @@ jobs:
       shell: bash
       run: |
         pip install poetry
+        pip install virtualenv==20.0.33
         poetry install
 
     - name: Decompress test data
