@@ -1,5 +1,6 @@
 import itertools
 from itertools import combinations
+import networkx as nx
 
 
 def pairs_within_distance(pos_a, pos_b, max_distance):
@@ -16,6 +17,40 @@ def pairs_within_distance(pos_a, pos_b, max_distance):
 def dev_example():
     import skeleton
 
+    nml = skeleton.NML(name="My NML", scale=(11, 11, 25))
+    g = nml.add_graph("A WkGraph")
+
+    n1 = skeleton.Node(
+        position=[0, 1, 2],
+        comment="A comment",
+        is_branchpoint=True,
+    )
+    n2 = skeleton.Node(
+        position=[3, 1, 2],
+        comment="A comment",
+    )
+    n3 = skeleton.Node(
+        position=[4, 1, 2],
+        comment="A comment",
+    )
+    g.add_node(n1)
+    g.add_node(n2)
+    g.add_node(n3)
+
+    g.add_edge(n1, n2)
+    g.add_edge(n1, n3)
+
+    print("connected_components", list(nx.connected_components(g.nx_graph)))
+
+    print(g.get_node_positions())
+    print(g.get_nodes())
+
+    nml.write("out.nml")
+
+
+def dev_example_broken():
+    import skeleton
+
     print("wknml.open_nml", skeleton.open_nml)
 
     nml = skeleton.open_nml(
@@ -26,7 +61,7 @@ def dev_example():
     synapse_candidate_max_distance = 300  # in nm
     synapse_nodes = []
 
-    for tree_a, tree_b in combinations(nml.flattened_trees(), 2):
+    for tree_a, tree_b in combinations(nml.flattened_graphs(), 2):
         pos_a = (
             tree_a.get_node_positions() * nml.scale
         )  # or tree_a.get_node_positions_nm?
@@ -52,7 +87,7 @@ def dev_example():
 
     nml.add_tree("synapse candidates").add_nodes(synapse_nodes)
 
-    nml.write("out.nml")
+    # nml.write("out.nml")
 
 
 def skeleton_synapse_candidate_example():

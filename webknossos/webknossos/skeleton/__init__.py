@@ -1,245 +1,198 @@
 import numpy as np
-from typing import List, Tuple, Optional
-from copy import deepcopy
-from loxun import XmlWriter
+from typing import List, Tuple, Optional, Union
+import itertools
+import networkx as nx
+
 
 import attr
 
-# @attr.define
-# class LayerProperties:
-#     name: str
-#     category: str
-#     bounding_box: BoundingBox
-#     element_class: str
-#     wkw_resolutions: List[MagViewProperties]
-#     data_format: str
-#     num_channels: Optional[int] = None
-#     default_view_configuration: Optional[LayerViewConfiguration] = None
 
 import skeleton.legacy as legacy_wknml
+import skeleton.legacy.nml_generation as nml_generation
 
 Vector3 = Tuple[float, float, float]
 Vector4 = Tuple[float, float, float, float]
 IntVector6 = Tuple[int, int, int, int, int, int]
 
+GroupOrGraph = Union["Group", "WkGraph"]
 
+
+@attr.define(eq=False)
+class Group:
+    name: str
+    children: List[GroupOrGraph]
+
+
+@attr.define(eq=False)
 class Node:
-    def __init__(self, position, comment=None):
+    position: Vector3
+    id: int = None
+    comment: Optional = None
+    radius: Optional[float] = None
+    rotation: Optional[Vector3] = None
+    inVp: Optional[int] = None
+    inMag: Optional[int] = None
+    bitDepth: Optional[int] = None
+    interpolation: Optional[bool] = None
+    time: Optional[int] = None
 
-        self.position = position
-        self.comment = comment
-
-        self.radius: Optional[float] = None
-        self.rotation: Optional[Vector3] = None
-        self.inVp: Optional[int] = None
-        self.inMag: Optional[int] = None
-        self.bitDepth: Optional[int] = None
-        self.interpolation: Optional[bool] = None
-        self.time: Optional[int] = None
-
-    def as_legacy_node(self):
-
-        # todo: id and comment
-        return legacy_wknml.Node(id=-1, position=self.position)
-
-    @staticmethod
-    def from_legacy(legacy_node):
-
-        return Node(position=legacy_node.position)
-
-    @property
-    def id(self):
-        return -1
-
-    def _dump(self, xf: XmlWriter):
-        # Adapted from __dump_node
-
-        node = self
-        print("node.position", node.position)
-        attributes = {
-            "id": str(node.id),
-            "x": str(node.position[0]),
-            "y": str(node.position[1]),
-            "z": str(node.position[2]),
-        }
-
-        if node.radius is not None:
-            attributes["radius"] = str(node.radius)
-
-        if node.rotation is not None:
-            attributes["rotX"] = str(node.rotation[0])
-            attributes["rotY"] = str(node.rotation[1])
-            attributes["rotZ"] = str(node.rotation[2])
-
-        if node.inVp is not None:
-            attributes["inVp"] = str(node.inVp)
-
-        if node.inMag is not None:
-            attributes["inMag"] = str(node.inMag)
-
-        if node.bitDepth is not None:
-            attributes["bitDepth"] = str(node.bitDepth)
-
-        if node.interpolation is not None:
-            attributes["interpolation"] = str(node.interpolation)
-
-        if node.time is not None:
-            attributes["time"] = str(node.time)
-
-        xf.tag("node", attributes)
+    is_branchpoint: bool = False
 
 
-class Edge:
-    def __init__(self, source: int, target: int):
-
-        self.source = source
-        self.target = target
-
-    def _dump(self, xf: XmlWriter):
-        xf.tag("edge", {"source": str(self.source), "target": str(self.target)})
-
-    @staticmethod
-    def from_legacy(legacy_edge):
-
-        return Edge(source=legacy_edge.source, target=legacy_edge.target)
-
-
-class Skeleton:
+@attr.define(eq=False)
+class WkGraph:
     """
     Contains a collection of nodes and edges.
     """
 
-    def __init__(self, legacy_tree):
+    id: int
+    name: str
+    color: Optional[Vector4] = None
+    nx_graph: nx.Graph = nx.Graph()
 
-        self._legacy_tree = legacy_tree
+    def get_nodes(self):
+
+        return self.nx_graph.nodes
 
     def get_node_positions(self):
-        return np.array([node.position for node in self._legacy_tree.nodes])
+        return np.array([node.position for node in self.nx_graph.nodes])
+
+    def add_node(self, node):
+
+        if node.id is None:
+            node.id = self.get_max_node_id() + 1
+
+        self.nx_graph.add_node(node)
+
+    def add_edge(self, node_1, node_2):
+
+        self.nx_graph.add_edge(node_1, node_2)
 
     def add_nodes(self, nodes):
 
-        # todo: don't loop to concat
-        for node in nodes:
-            self._legacy_tree.nodes.append(node)
+        self.nx_graph.add_nodes_from(nodes)
 
     def get_max_node_id(self):
 
-        return max(node.id for node in self._legacy_tree.nodes)
-
-    @property
-    def id(self) -> int:
-        return self._legacy_tree.id
-
-    @property
-    def color(self) -> Vector4:
-        return self._legacy_tree.color
-
-    @property
-    def name(self) -> str:
-        return self._legacy_tree.name
-
-    @property
-    def nodes(self) -> List[Node]:
-        return [
-            Node.from_legacy(legacy_node) for legacy_node in self._legacy_tree.nodes
-        ]
-
-    @property
-    def edges(self) -> List[Edge]:
-        return [
-            Edge.from_legacy(legacy_edge) for legacy_edge in self._legacy_tree.edges
-        ]
-
-    @property
-    def groupId(self) -> Optional[int]:
-        return self._legacy_tree.groupId
-
-    def _dump(self, xf: XmlWriter):
-        tree = self
-        attributes = {
-            "id": str(tree.id),
-            "color.r": str(tree.color[0]),
-            "color.g": str(tree.color[1]),
-            "color.b": str(tree.color[2]),
-            "color.a": str(tree.color[3]),
-            "name": tree.name,
-        }
-
-        if tree.groupId is not None:
-            attributes["groupId"] = str(tree.groupId)
-
-        xf.startTag("thing", attributes)
-        xf.startTag("nodes")
-        for n in tree.nodes:
-            n._dump(xf)
-        xf.endTag()  # nodes
-        xf.startTag("edges")
-        for e in tree.edges:
-            e._dump(xf)
-        xf.endTag()  # edges
-        xf.endTag()  # thing
+        # Chain with [0] since max is not defined on empty sequences
+        return max(itertools.chain((node.id for node in self.nx_graph.nodes), [0]))
 
 
+def iterate_graphs(wk_graphs_or_groups: List[GroupOrGraph]):
+    for wk_graph_or_group in wk_graphs_or_groups:
+        if isinstance(wk_graph_or_group, WkGraph):
+            yield wk_graph_or_group
+        else:
+            yield from iterate_graphs(wk_graph_or_group.children)
+
+
+def get_graphs_as_dict(wk_graphs_or_groups: List[GroupOrGraph], dictionary):
+
+    for wk_graph_or_group in wk_graphs_or_groups:
+        if isinstance(wk_graph_or_group, WkGraph):
+            wk_graph = wk_graph_or_group
+            dictionary[wk_graph.name] = wk_graph.nx_graph
+        else:
+            wk_group = wk_graph_or_group
+            inner_dictionary = {}
+            get_graphs_as_dict(wk_group.children, inner_dictionary)
+            dictionary[wk_group.name] = inner_dictionary
+
+
+@attr.define(eq=False)
 class NML:
     """
     Contains groups and skeletons.
     """
 
-    def __init__(self, legacy_nml):
+    name: str
+    scale: Vector3
+    offset: Optional[Vector3] = None
+    time: Optional[int] = None
+    editPosition: Optional[Vector3] = None
+    editRotation: Optional[Vector3] = None
+    zoomLevel: Optional[float] = None
+    taskBoundingBox: Optional[IntVector6] = None
+    userBoundingBoxes: Optional[List[IntVector6]] = None
 
-        self._legacy_nml = legacy_nml
+    _wk_graphs_or_groups: List[GroupOrGraph] = []
 
-        self._flat_skeletons = [Skeleton(tree) for tree in self._legacy_nml.trees]
+    def flattened_graphs(self):
 
-    def flattened_trees(self):
-        return self._flat_skeletons
+        return iterate_graphs(self._wk_graphs_or_groups)
 
-    def add_tree(self, name):
+    def add_graph(self, name):
 
-        new_skeleton = Skeleton(
-            legacy_wknml.Tree(
-                id=self.get_max_skeleton_id() + 1,
-                color=(255, 0, 0, 1),
-                name=name,
-                nodes=[],
-                edges=[],
-                groupId=None,
-            )
+        new_graph = WkGraph(
+            id=self.get_max_graph_id() + 1,
+            name=name,
         )
-        self._flat_skeletons.append(new_skeleton)
+        self._wk_graphs_or_groups.append(new_graph)
 
-        self._legacy_nml = deepcopy(self._legacy_nml)._replace(
-            trees=self._flat_skeletons
-        )
+        return new_graph
 
-        return new_skeleton
+    def get_max_graph_id(self):
 
-    def get_max_skeleton_id(self):
-
-        return max(tree.id for tree in self.flattened_trees())
+        # Chain with [0] since max is not defined on empty sequences
+        return max(itertools.chain((tree.id for tree in self.flattened_graphs()), [0]))
 
     def get_max_node_id(self):
 
-        return max(tree.get_max_node_id() for tree in self.flattened_trees())
+        # Chain with [0] since max is not defined on empty sequences
+        return max(
+            itertools.chain(
+                (tree.get_max_node_id() for tree in self.flattened_graphs()),
+                [0],
+            )
+        )
 
-    @staticmethod
-    def from_path(file_path):
+    # @staticmethod
+    # def from_path(file_path):
 
-        return NML(legacy_wknml.parse_nml(file_path))
+    #     return NML(legacy_wknml.parse_nml(file_path))
 
-    @property
-    def scale(self):
+    # @property
+    # def scale(self):
 
-        return self._legacy_nml.parameters.scale
+    #     return self._legacy_nml.parameters.scale
 
-    def ensure_valid_ids(self):
+    # def ensure_valid_ids(self):
 
-        # max_node_id = self.get_max_node_id()
-        pass
+    #     # max_node_id = self.get_max_node_id()
+    #     pass
 
     def write(self, out_path):
+
+        graphs_as_dict = self.get_graphs_as_dict()
+        print("graphs_as_dict", graphs_as_dict)
+        legacy_nml = nml_generation.generate_nml(
+            [g for g in self.flattened_graphs()],
+            self._get_legacy_parameters(),
+            globalize_ids=False,
+        )
+
         with open(out_path, "wb") as f:
-            legacy_wknml.write_nml(f, self._legacy_nml)
+            legacy_wknml.write_nml(f, legacy_nml)
+
+    def get_graphs_as_dict(self):
+
+        dictionary = {}
+        get_graphs_as_dict(self._wk_graphs_or_groups, dictionary)
+        return dictionary
+
+    def _get_legacy_parameters(self):
+
+        return {
+            "name": self.name,
+            "scale": self.scale,
+            "offset": self.offset,
+            "time": self.time,
+            "editPosition": self.editPosition,
+            "editRotation": self.editRotation,
+            "zoomLevel": self.zoomLevel,
+            "taskBoundingBox": self.taskBoundingBox,
+            "userBoundingBoxes": self.userBoundingBoxes,
+        }
 
 
 def open_nml(file_path):
