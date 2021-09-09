@@ -289,6 +289,14 @@ optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*"
 
 [[package]]
+name = "loxun"
+version = "2.0"
+description = "large output in XML using unicode and namespaces"
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "matplotlib"
 version = "3.4.3"
 description = "Python plotting package"
@@ -643,7 +651,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "d24f4533ae40f3c234c9df202f8bf835f93e9a1891befdb63d6ef5dec5b2fe27"
+content-hash = "22a46ded75439a07804b11c4dfeebe1e5d91d174700fccdefbe4a1d90d532af7"
 
 [metadata.files]
 anyio = [
@@ -845,6 +853,9 @@ lazy-object-proxy = [
     {file = "lazy_object_proxy-1.6.0-cp39-cp39-manylinux2014_aarch64.whl", hash = "sha256:9698110e36e2df951c7c36b6729e96429c9c32b3331989ef19976592c5f3c77a"},
     {file = "lazy_object_proxy-1.6.0-cp39-cp39-win32.whl", hash = "sha256:1fee665d2638491f4d6e55bd483e15ef21f6c8c2095f235fef72601021e64f61"},
     {file = "lazy_object_proxy-1.6.0-cp39-cp39-win_amd64.whl", hash = "sha256:f5144c75445ae3ca2057faac03fda5a902eff196702b0a24daf1d6ce0650514b"},
+]
+loxun = [
+    {file = "loxun-2.0.zip", hash = "sha256:9f90d4aa3ff21946555492132a1e51e284a6aab2ed6d2ded7d85d82826c1e5e7"},
 ]
 matplotlib = [
     {file = "matplotlib-3.4.3-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:5c988bb43414c7c2b0a31bd5187b4d27fd625c080371b463a6d422047df78913"},
