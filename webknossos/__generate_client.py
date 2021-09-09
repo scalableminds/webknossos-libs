@@ -58,25 +58,45 @@ def add_api_prefix_for_non_data_paths(openapi_schema: Dict) -> None:
 
 
 def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
-    from webknossos.client.generated.api.default import info, list_
+    from webknossos.client.generated.api.default import (
+        annotation_info,
+        build_info,
+        dataset_info,
+        datastore_list,
+    )
 
     d = datetime.utcnow()
     unixtime = calendar.timegm(d.utctimetuple())
-    client = _get_generated_client()
-    auth_client = _get_generated_client(enforce_token=True)
+    client = _get_generated_client(enforce_token=True)
 
-    r = info.sync_detailed(
+    annotation_info_response = annotation_info.sync_detailed(
         typ="Explorational",
         id="6114d9410100009f0096c640",
         client=client,
         timestamp=unixtime,
     )
-    assert r.status_code == 200
-    yield "info", r.content
+    assert annotation_info_response.status_code == 200
+    yield "annotationInfo", annotation_info_response.content
 
-    r = list_.sync_detailed(client=auth_client)
-    assert r.status_code == 200
-    yield "list", r.content
+    dataset_info_response = dataset_info.sync_detailed(
+        organization_name="scalable_minds",
+        data_set_name="l4dense_motta_et_al_demo",
+        client=client,
+    )
+    assert dataset_info_response.status_code == 200
+    yield "datasetInfo", dataset_info_response.content
+
+    for api_endpoint in [datastore_list, build_info]:
+        api_endpoint_name = api_endpoint.__name__.split(".")[-1]
+        # convert name to camelCase
+        api_endpoint_name_parts = api_endpoint_name.split("_")
+        api_endpoint_name = "".join(
+            s.title() if i > 0 else s for i, s in enumerate(api_endpoint_name_parts)
+        )
+
+        response = api_endpoint.sync_detailed(client=client)
+        assert response.status_code == 200
+        yield api_endpoint_name, response.content
 
 
 def set_response_schema_by_example(

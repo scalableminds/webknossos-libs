@@ -4,11 +4,11 @@ import attr
 
 from ..types import UNSET, Unset
 
-T = TypeVar("T", bound="ListResponse200Item")
+T = TypeVar("T", bound="AnnotationInfoResponse200DataStore")
 
 
 @attr.s(auto_attribs=True)
-class ListResponse200Item:
+class AnnotationInfoResponse200DataStore:
     """ """
 
     name: Union[Unset, str] = UNSET
@@ -60,7 +60,7 @@ class ListResponse200Item:
 
         allows_upload = d.pop("allowsUpload", UNSET)
 
-        list_response_200_item = cls(
+        annotation_info_response_200_data_store = cls(
             name=name,
             url=url,
             is_foreign=is_foreign,
@@ -69,8 +69,8 @@ class ListResponse200Item:
             allows_upload=allows_upload,
         )
 
-        list_response_200_item.additional_properties = d
-        return list_response_200_item
+        annotation_info_response_200_data_store.additional_properties = d
+        return annotation_info_response_200_data_store
 
     @property
     def additional_keys(self) -> List[str]:

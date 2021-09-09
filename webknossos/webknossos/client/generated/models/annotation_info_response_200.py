@@ -2,19 +2,29 @@ from typing import Any, Dict, List, Type, TypeVar, Union, cast
 
 import attr
 
-from ..models.info_response_200_data_store import InfoResponse200DataStore
-from ..models.info_response_200_restrictions import InfoResponse200Restrictions
-from ..models.info_response_200_settings import InfoResponse200Settings
-from ..models.info_response_200_stats import InfoResponse200Stats
-from ..models.info_response_200_tracing import InfoResponse200Tracing
-from ..models.info_response_200_tracing_store import InfoResponse200TracingStore
+from ..models.annotation_info_response_200_data_store import (
+    AnnotationInfoResponse200DataStore,
+)
+from ..models.annotation_info_response_200_restrictions import (
+    AnnotationInfoResponse200Restrictions,
+)
+from ..models.annotation_info_response_200_settings import (
+    AnnotationInfoResponse200Settings,
+)
+from ..models.annotation_info_response_200_stats import AnnotationInfoResponse200Stats
+from ..models.annotation_info_response_200_tracing import (
+    AnnotationInfoResponse200Tracing,
+)
+from ..models.annotation_info_response_200_tracing_store import (
+    AnnotationInfoResponse200TracingStore,
+)
 from ..types import UNSET, Unset
 
-T = TypeVar("T", bound="InfoResponse200")
+T = TypeVar("T", bound="AnnotationInfoResponse200")
 
 
 @attr.s(auto_attribs=True)
-class InfoResponse200:
+class AnnotationInfoResponse200:
     """ """
 
     modified: Union[Unset, int] = UNSET
@@ -24,16 +34,16 @@ class InfoResponse200:
     description: Union[Unset, str] = UNSET
     typ: Union[Unset, str] = UNSET
     task: Union[Unset, str] = UNSET
-    stats: Union[Unset, InfoResponse200Stats] = UNSET
-    restrictions: Union[Unset, InfoResponse200Restrictions] = UNSET
+    stats: Union[Unset, AnnotationInfoResponse200Stats] = UNSET
+    restrictions: Union[Unset, AnnotationInfoResponse200Restrictions] = UNSET
     formatted_hash: Union[Unset, str] = UNSET
-    tracing: Union[Unset, InfoResponse200Tracing] = UNSET
+    tracing: Union[Unset, AnnotationInfoResponse200Tracing] = UNSET
     data_set_name: Union[Unset, str] = UNSET
     organization: Union[Unset, str] = UNSET
-    data_store: Union[Unset, InfoResponse200DataStore] = UNSET
-    tracing_store: Union[Unset, InfoResponse200TracingStore] = UNSET
+    data_store: Union[Unset, AnnotationInfoResponse200DataStore] = UNSET
+    tracing_store: Union[Unset, AnnotationInfoResponse200TracingStore] = UNSET
     visibility: Union[Unset, str] = UNSET
-    settings: Union[Unset, InfoResponse200Settings] = UNSET
+    settings: Union[Unset, AnnotationInfoResponse200Settings] = UNSET
     tracing_time: Union[Unset, int] = UNSET
     tags: Union[Unset, List[str]] = UNSET
     user: Union[Unset, str] = UNSET
@@ -156,54 +166,58 @@ class InfoResponse200:
         task = d.pop("task", UNSET)
 
         _stats = d.pop("stats", UNSET)
-        stats: Union[Unset, InfoResponse200Stats]
+        stats: Union[Unset, AnnotationInfoResponse200Stats]
         if isinstance(_stats, Unset):
             stats = UNSET
         else:
-            stats = InfoResponse200Stats.from_dict(_stats)
+            stats = AnnotationInfoResponse200Stats.from_dict(_stats)
 
         _restrictions = d.pop("restrictions", UNSET)
-        restrictions: Union[Unset, InfoResponse200Restrictions]
+        restrictions: Union[Unset, AnnotationInfoResponse200Restrictions]
         if isinstance(_restrictions, Unset):
             restrictions = UNSET
         else:
-            restrictions = InfoResponse200Restrictions.from_dict(_restrictions)
+            restrictions = AnnotationInfoResponse200Restrictions.from_dict(
+                _restrictions
+            )
 
         formatted_hash = d.pop("formattedHash", UNSET)
 
         _tracing = d.pop("tracing", UNSET)
-        tracing: Union[Unset, InfoResponse200Tracing]
+        tracing: Union[Unset, AnnotationInfoResponse200Tracing]
         if isinstance(_tracing, Unset):
             tracing = UNSET
         else:
-            tracing = InfoResponse200Tracing.from_dict(_tracing)
+            tracing = AnnotationInfoResponse200Tracing.from_dict(_tracing)
 
         data_set_name = d.pop("dataSetName", UNSET)
 
         organization = d.pop("organization", UNSET)
 
         _data_store = d.pop("dataStore", UNSET)
-        data_store: Union[Unset, InfoResponse200DataStore]
+        data_store: Union[Unset, AnnotationInfoResponse200DataStore]
         if isinstance(_data_store, Unset):
             data_store = UNSET
         else:
-            data_store = InfoResponse200DataStore.from_dict(_data_store)
+            data_store = AnnotationInfoResponse200DataStore.from_dict(_data_store)
 
         _tracing_store = d.pop("tracingStore", UNSET)
-        tracing_store: Union[Unset, InfoResponse200TracingStore]
+        tracing_store: Union[Unset, AnnotationInfoResponse200TracingStore]
         if isinstance(_tracing_store, Unset):
             tracing_store = UNSET
         else:
-            tracing_store = InfoResponse200TracingStore.from_dict(_tracing_store)
+            tracing_store = AnnotationInfoResponse200TracingStore.from_dict(
+                _tracing_store
+            )
 
         visibility = d.pop("visibility", UNSET)
 
         _settings = d.pop("settings", UNSET)
-        settings: Union[Unset, InfoResponse200Settings]
+        settings: Union[Unset, AnnotationInfoResponse200Settings]
         if isinstance(_settings, Unset):
             settings = UNSET
         else:
-            settings = InfoResponse200Settings.from_dict(_settings)
+            settings = AnnotationInfoResponse200Settings.from_dict(_settings)
 
         tracing_time = d.pop("tracingTime", UNSET)
 
@@ -218,7 +232,7 @@ class InfoResponse200:
 
             meshes.append(meshes_item)
 
-        info_response_200 = cls(
+        annotation_info_response_200 = cls(
             modified=modified,
             state=state,
             id=id,
@@ -242,8 +256,8 @@ class InfoResponse200:
             meshes=meshes,
         )
 
-        info_response_200.additional_properties = d
-        return info_response_200
+        annotation_info_response_200.additional_properties = d
+        return annotation_info_response_200
 
     @property
     def additional_keys(self) -> List[str]:

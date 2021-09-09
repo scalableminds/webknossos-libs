@@ -4,11 +4,11 @@ import attr
 
 from ..types import UNSET, Unset
 
-T = TypeVar("T", bound="InfoResponse200Restrictions")
+T = TypeVar("T", bound="AnnotationInfoResponse200Restrictions")
 
 
 @attr.s(auto_attribs=True)
-class InfoResponse200Restrictions:
+class AnnotationInfoResponse200Restrictions:
     """ """
 
     allow_access: Union[Unset, int] = UNSET
@@ -48,15 +48,15 @@ class InfoResponse200Restrictions:
 
         allow_download = d.pop("allowDownload", UNSET)
 
-        info_response_200_restrictions = cls(
+        annotation_info_response_200_restrictions = cls(
             allow_access=allow_access,
             allow_update=allow_update,
             allow_finish=allow_finish,
             allow_download=allow_download,
         )
 
-        info_response_200_restrictions.additional_properties = d
-        return info_response_200_restrictions
+        annotation_info_response_200_restrictions.additional_properties = d
+        return annotation_info_response_200_restrictions
 
     @property
     def additional_keys(self) -> List[str]:
