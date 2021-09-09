@@ -4,11 +4,11 @@ import attr
 
 from ..types import UNSET, Unset
 
-T = TypeVar("T", bound="InfoResponse200Tracing")
+T = TypeVar("T", bound="AnnotationInfoResponse200Tracing")
 
 
 @attr.s(auto_attribs=True)
-class InfoResponse200Tracing:
+class AnnotationInfoResponse200Tracing:
     """ """
 
     skeleton: Union[Unset, str] = UNSET
@@ -36,13 +36,13 @@ class InfoResponse200Tracing:
 
         volume = d.pop("volume", UNSET)
 
-        info_response_200_tracing = cls(
+        annotation_info_response_200_tracing = cls(
             skeleton=skeleton,
             volume=volume,
         )
 
-        info_response_200_tracing.additional_properties = d
-        return info_response_200_tracing
+        annotation_info_response_200_tracing.additional_properties = d
+        return annotation_info_response_200_tracing
 
     @property
     def additional_keys(self) -> List[str]:

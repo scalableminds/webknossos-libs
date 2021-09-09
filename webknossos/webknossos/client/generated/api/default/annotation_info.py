@@ -1,10 +1,10 @@
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional
 
 import httpx
 
 from ...client import Client
-from ...models.info_response_200 import InfoResponse200
-from ...types import UNSET, Response, Unset
+from ...models.annotation_info_response_200 import AnnotationInfoResponse200
+from ...types import UNSET, Response
 
 
 def _get_kwargs(
@@ -12,7 +12,7 @@ def _get_kwargs(
     id: str,
     *,
     client: Client,
-    timestamp: Union[Unset, None, int] = UNSET,
+    timestamp: int,
 ) -> Dict[str, Any]:
     url = "{}/api/annotations/{typ}/{id}/info".format(client.base_url, typ=typ, id=id)
 
@@ -33,15 +33,15 @@ def _get_kwargs(
     }
 
 
-def _parse_response(*, response: httpx.Response) -> Optional[InfoResponse200]:
+def _parse_response(*, response: httpx.Response) -> Optional[AnnotationInfoResponse200]:
     if response.status_code == 200:
-        response_200 = InfoResponse200.from_dict(response.json())
+        response_200 = AnnotationInfoResponse200.from_dict(response.json())
 
         return response_200
     return None
 
 
-def _build_response(*, response: httpx.Response) -> Response[InfoResponse200]:
+def _build_response(*, response: httpx.Response) -> Response[AnnotationInfoResponse200]:
     return Response(
         status_code=response.status_code,
         content=response.content,
@@ -55,8 +55,8 @@ def sync_detailed(
     id: str,
     *,
     client: Client,
-    timestamp: Union[Unset, None, int] = UNSET,
-) -> Response[InfoResponse200]:
+    timestamp: int,
+) -> Response[AnnotationInfoResponse200]:
     kwargs = _get_kwargs(
         typ=typ,
         id=id,
@@ -76,8 +76,8 @@ def sync(
     id: str,
     *,
     client: Client,
-    timestamp: Union[Unset, None, int] = UNSET,
-) -> Optional[InfoResponse200]:
+    timestamp: int,
+) -> Optional[AnnotationInfoResponse200]:
     """ """
 
     return sync_detailed(
@@ -93,8 +93,8 @@ async def asyncio_detailed(
     id: str,
     *,
     client: Client,
-    timestamp: Union[Unset, None, int] = UNSET,
-) -> Response[InfoResponse200]:
+    timestamp: int,
+) -> Response[AnnotationInfoResponse200]:
     kwargs = _get_kwargs(
         typ=typ,
         id=id,
@@ -113,8 +113,8 @@ async def asyncio(
     id: str,
     *,
     client: Client,
-    timestamp: Union[Unset, None, int] = UNSET,
-) -> Optional[InfoResponse200]:
+    timestamp: int,
+) -> Optional[AnnotationInfoResponse200]:
     """ """
 
     return (

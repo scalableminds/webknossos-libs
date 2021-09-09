@@ -24,11 +24,10 @@ from webknossos.dataset.properties import (
     DatasetViewConfiguration,
     LayerViewConfiguration,
     SegmentationLayerProperties,
-    _snake_to_camel_case,
     dataset_converter,
 )
 from webknossos.geometry import BoundingBox, Mag
-from webknossos.utils import get_executor_for_args, named_partial
+from webknossos.utils import get_executor_for_args, named_partial, snake_to_camel_case
 
 TESTDATA_DIR = Path("testdata")
 TESTOUTPUT_DIR = Path("testoutput")
@@ -1660,7 +1659,7 @@ def test_dataset_view_configuration(tmp_path: Path) -> None:
         properties = json.load(f)
         view_configuration_dict = properties["defaultViewConfiguration"]
         for k in view_configuration_dict.keys():
-            assert _snake_to_camel_case(k) == k
+            assert snake_to_camel_case(k) == k
 
     assure_exported_properties(ds1)
 
@@ -1717,7 +1716,7 @@ def test_layer_view_configuration(tmp_path: Path) -> None:
             "defaultViewConfiguration"
         ]
         for k in view_configuration_dict.keys():
-            assert _snake_to_camel_case(k) == k
+            assert snake_to_camel_case(k) == k
 
     assure_exported_properties(ds1)
 

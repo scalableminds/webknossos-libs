@@ -85,3 +85,8 @@ def wait_and_ensure_success(futures: List[Future]) -> None:
     as soon as a future resolves with an error."""
     for fut in as_completed(futures):
         fut.result()
+
+
+def snake_to_camel_case(snake_case_name: str) -> str:
+    parts = snake_case_name.split("_")
+    return parts[0] + "".join(part.title() for part in parts[1:])

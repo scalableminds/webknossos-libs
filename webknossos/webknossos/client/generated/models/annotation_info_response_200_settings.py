@@ -2,16 +2,16 @@ from typing import Any, Dict, List, Type, TypeVar, Union, cast
 
 import attr
 
-from ..models.info_response_200_settings_resolution_restrictions import (
-    InfoResponse200SettingsResolutionRestrictions,
+from ..models.annotation_info_response_200_settings_resolution_restrictions import (
+    AnnotationInfoResponse200SettingsResolutionRestrictions,
 )
 from ..types import UNSET, Unset
 
-T = TypeVar("T", bound="InfoResponse200Settings")
+T = TypeVar("T", bound="AnnotationInfoResponse200Settings")
 
 
 @attr.s(auto_attribs=True)
-class InfoResponse200Settings:
+class AnnotationInfoResponse200Settings:
     """ """
 
     allowed_modes: Union[Unset, List[str]] = UNSET
@@ -19,7 +19,7 @@ class InfoResponse200Settings:
     soma_clicking_allowed: Union[Unset, int] = UNSET
     merger_mode: Union[Unset, int] = UNSET
     resolution_restrictions: Union[
-        Unset, InfoResponse200SettingsResolutionRestrictions
+        Unset, AnnotationInfoResponse200SettingsResolutionRestrictions
     ] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
@@ -64,18 +64,18 @@ class InfoResponse200Settings:
 
         _resolution_restrictions = d.pop("resolutionRestrictions", UNSET)
         resolution_restrictions: Union[
-            Unset, InfoResponse200SettingsResolutionRestrictions
+            Unset, AnnotationInfoResponse200SettingsResolutionRestrictions
         ]
         if isinstance(_resolution_restrictions, Unset):
             resolution_restrictions = UNSET
         else:
             resolution_restrictions = (
-                InfoResponse200SettingsResolutionRestrictions.from_dict(
+                AnnotationInfoResponse200SettingsResolutionRestrictions.from_dict(
                     _resolution_restrictions
                 )
             )
 
-        info_response_200_settings = cls(
+        annotation_info_response_200_settings = cls(
             allowed_modes=allowed_modes,
             branch_points_allowed=branch_points_allowed,
             soma_clicking_allowed=soma_clicking_allowed,
@@ -83,8 +83,8 @@ class InfoResponse200Settings:
             resolution_restrictions=resolution_restrictions,
         )
 
-        info_response_200_settings.additional_properties = d
-        return info_response_200_settings
+        annotation_info_response_200_settings.additional_properties = d
+        return annotation_info_response_200_settings
 
     @property
     def additional_keys(self) -> List[str]:

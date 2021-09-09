@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional
 import httpx
 
 from ...client import Client
-from ...models.list_response_200_item import ListResponse200Item
+from ...models.datastore_list_response_200_item import DatastoreListResponse200Item
 from ...types import Response
 
 
@@ -24,12 +24,16 @@ def _get_kwargs(
     }
 
 
-def _parse_response(*, response: httpx.Response) -> Optional[List[ListResponse200Item]]:
+def _parse_response(
+    *, response: httpx.Response
+) -> Optional[List[DatastoreListResponse200Item]]:
     if response.status_code == 200:
         response_200 = []
         _response_200 = response.json()
         for response_200_item_data in _response_200:
-            response_200_item = ListResponse200Item.from_dict(response_200_item_data)
+            response_200_item = DatastoreListResponse200Item.from_dict(
+                response_200_item_data
+            )
 
             response_200.append(response_200_item)
 
@@ -37,7 +41,9 @@ def _parse_response(*, response: httpx.Response) -> Optional[List[ListResponse20
     return None
 
 
-def _build_response(*, response: httpx.Response) -> Response[List[ListResponse200Item]]:
+def _build_response(
+    *, response: httpx.Response
+) -> Response[List[DatastoreListResponse200Item]]:
     return Response(
         status_code=response.status_code,
         content=response.content,
@@ -49,7 +55,7 @@ def _build_response(*, response: httpx.Response) -> Response[List[ListResponse20
 def sync_detailed(
     *,
     client: Client,
-) -> Response[List[ListResponse200Item]]:
+) -> Response[List[DatastoreListResponse200Item]]:
     kwargs = _get_kwargs(
         client=client,
     )
@@ -64,7 +70,7 @@ def sync_detailed(
 def sync(
     *,
     client: Client,
-) -> Optional[List[ListResponse200Item]]:
+) -> Optional[List[DatastoreListResponse200Item]]:
     """ """
 
     return sync_detailed(
@@ -75,7 +81,7 @@ def sync(
 async def asyncio_detailed(
     *,
     client: Client,
-) -> Response[List[ListResponse200Item]]:
+) -> Response[List[DatastoreListResponse200Item]]:
     kwargs = _get_kwargs(
         client=client,
     )
@@ -89,7 +95,7 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: Client,
-) -> Optional[List[ListResponse200Item]]:
+) -> Optional[List[DatastoreListResponse200Item]]:
     """ """
 
     return (

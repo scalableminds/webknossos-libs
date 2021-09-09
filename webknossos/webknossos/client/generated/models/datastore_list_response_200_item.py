@@ -4,20 +4,28 @@ import attr
 
 from ..types import UNSET, Unset
 
-T = TypeVar("T", bound="InfoResponse200TracingStore")
+T = TypeVar("T", bound="DatastoreListResponse200Item")
 
 
 @attr.s(auto_attribs=True)
-class InfoResponse200TracingStore:
+class DatastoreListResponse200Item:
     """ """
 
     name: Union[Unset, str] = UNSET
     url: Union[Unset, str] = UNSET
+    is_foreign: Union[Unset, int] = UNSET
+    is_scratch: Union[Unset, int] = UNSET
+    is_connector: Union[Unset, int] = UNSET
+    allows_upload: Union[Unset, int] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         name = self.name
         url = self.url
+        is_foreign = self.is_foreign
+        is_scratch = self.is_scratch
+        is_connector = self.is_connector
+        allows_upload = self.allows_upload
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -26,6 +34,14 @@ class InfoResponse200TracingStore:
             field_dict["name"] = name
         if url is not UNSET:
             field_dict["url"] = url
+        if is_foreign is not UNSET:
+            field_dict["isForeign"] = is_foreign
+        if is_scratch is not UNSET:
+            field_dict["isScratch"] = is_scratch
+        if is_connector is not UNSET:
+            field_dict["isConnector"] = is_connector
+        if allows_upload is not UNSET:
+            field_dict["allowsUpload"] = allows_upload
 
         return field_dict
 
@@ -36,13 +52,25 @@ class InfoResponse200TracingStore:
 
         url = d.pop("url", UNSET)
 
-        info_response_200_tracing_store = cls(
+        is_foreign = d.pop("isForeign", UNSET)
+
+        is_scratch = d.pop("isScratch", UNSET)
+
+        is_connector = d.pop("isConnector", UNSET)
+
+        allows_upload = d.pop("allowsUpload", UNSET)
+
+        datastore_list_response_200_item = cls(
             name=name,
             url=url,
+            is_foreign=is_foreign,
+            is_scratch=is_scratch,
+            is_connector=is_connector,
+            allows_upload=allows_upload,
         )
 
-        info_response_200_tracing_store.additional_properties = d
-        return info_response_200_tracing_store
+        datastore_list_response_200_item.additional_properties = d
+        return datastore_list_response_200_item
 
     @property
     def additional_keys(self) -> List[str]:

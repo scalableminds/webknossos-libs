@@ -4,11 +4,11 @@ import attr
 
 from ..types import UNSET, Unset
 
-T = TypeVar("T", bound="InfoResponse200Stats")
+T = TypeVar("T", bound="AnnotationInfoResponse200Stats")
 
 
 @attr.s(auto_attribs=True)
-class InfoResponse200Stats:
+class AnnotationInfoResponse200Stats:
     """ """
 
     edge_count: Union[Unset, int] = UNSET
@@ -48,15 +48,15 @@ class InfoResponse200Stats:
 
         branch_point_count = d.pop("branchPointCount", UNSET)
 
-        info_response_200_stats = cls(
+        annotation_info_response_200_stats = cls(
             edge_count=edge_count,
             node_count=node_count,
             tree_count=tree_count,
             branch_point_count=branch_point_count,
         )
 
-        info_response_200_stats.additional_properties = d
-        return info_response_200_stats
+        annotation_info_response_200_stats.additional_properties = d
+        return annotation_info_response_200_stats
 
     @property
     def additional_keys(self) -> List[str]:
