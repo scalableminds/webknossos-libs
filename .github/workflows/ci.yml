@@ -55,6 +55,8 @@ jobs:
         poetry run ./typecheck.sh
 
     - name: Python tests
+      env:
+        WK_TOKEN: ${{ secrets.WK_TOKEN }}
       run: poetry run pytest tests
 
     - name: Check if git is dirty
