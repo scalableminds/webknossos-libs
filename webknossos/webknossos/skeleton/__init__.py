@@ -1,5 +1,5 @@
 import numpy as np
-from typing import List, Tuple, Optional, Union
+from typing import List, Tuple, Optional, Union, Generator
 import itertools
 import networkx as nx
 
@@ -16,17 +16,62 @@ IntVector6 = Tuple[int, int, int, int, int, int]
 
 GroupOrGraph = Union["Group", "WkGraph"]
 
+nml_id_generator = itertools.count()
 
-@attr.define(eq=False)
+
+@attr.define()
 class Group:
+    id: int = attr.ib(init=False)
     name: str
     children: List[GroupOrGraph]
+    _root: "NML"
+    # _parent: Union["Group", "NML"]
+
+    def __attrs_post_init__(self):
+        self.id = self._root.nml_element_id_generator.__next__()
+
+    def add_graph(self, name: str):
+
+        new_graph = WkGraph(name=name, root=self._root)
+        self.children.append(new_graph)
+
+        return new_graph
+
+    def add_group(self, name: str, children: Optional[List[GroupOrGraph]] = None):
+
+        new_group = Group(name, children or [], root=self._root)
+        self.children.append(new_group)
+        return new_group
+
+    def get_max_graph_id(self):
+        # Chain with [0] since max is not defined on empty sequences
+        return max(itertools.chain((tree.id for tree in self.flattened_graphs()), [0]))
+
+    def get_max_node_id(self):
+        # Chain with [0] since max is not defined on empty sequences
+        return max(
+            itertools.chain(
+                (tree.get_max_node_id() for tree in self.flattened_graphs()),
+                [0],
+            )
+        )
+
+    def flattened_graphs(self):
+        for child in self.children:
+            if isinstance(child, Group):
+                yield from child.flattened_graphs()
+            else:
+                yield child
+
+    def __hash__(self):
+        return self.id
 
 
-@attr.define(eq=False)
+@attr.define()
 class Node:
     position: Vector3
-    id: int = None
+    _root: "NML"
+    id: int = attr.ib(init=False)
     comment: Optional = None
     radius: Optional[float] = None
     rotation: Optional[Vector3] = None
@@ -37,18 +82,33 @@ class Node:
     time: Optional[int] = None
 
     is_branchpoint: bool = False
+    _enforce_given_id: Optional[int] = None
+
+    def __attrs_post_init__(self):
+        if self._enforce_given_id is not None:
+            self.id = self._enforce_given_id
+        else:
+            self.id = self._root.nml_element_id_generator.__next__()
+
+    def __hash__(self):
+        return self.id
 
 
-@attr.define(eq=False)
+@attr.define()
 class WkGraph:
     """
     Contains a collection of nodes and edges.
     """
 
-    id: int
     name: str
+    _root: "NML"
     color: Optional[Vector4] = None
-    nx_graph: nx.Graph = nx.Graph()
+    id: int = attr.ib(init=False)
+    nx_graph: nx.Graph = attr.ib(init=False)
+
+    def __attrs_post_init__(self):
+        self.nx_graph = nx.Graph()
+        self.id = self._root.nml_element_id_generator.__next__()
 
     def get_nodes(self):
 
@@ -57,25 +117,23 @@ class WkGraph:
     def get_node_positions(self):
         return np.array([node.position for node in self.nx_graph.nodes])
 
-    def add_node(self, node):
+    def add_node(self, *args, **kwargs):
 
-        if node.id is None:
-            node.id = self.get_max_node_id() + 1
-
+        node = Node(*args, **kwargs, root=self._root)
         self.nx_graph.add_node(node)
+        return node
 
     def add_edge(self, node_1, node_2):
 
         self.nx_graph.add_edge(node_1, node_2)
 
-    def add_nodes(self, nodes):
-
-        self.nx_graph.add_nodes_from(nodes)
-
     def get_max_node_id(self):
 
         # Chain with [0] since max is not defined on empty sequences
         return max(itertools.chain((node.id for node in self.nx_graph.nodes), [0]))
+
+    def __hash__(self):
+        return self.id
 
 
 def iterate_graphs(wk_graphs_or_groups: List[GroupOrGraph]):
@@ -99,13 +157,14 @@ def get_graphs_as_dict(wk_graphs_or_groups: List[GroupOrGraph], dictionary):
             dictionary[wk_group.name] = inner_dictionary
 
 
-@attr.define(eq=False)
+@attr.define()
 class NML:
     """
     Contains groups and skeletons.
     """
 
     name: str
+    id: int = attr.ib(init=False)
     scale: Vector3
     offset: Optional[Vector3] = None
     time: Optional[int] = None
@@ -115,36 +174,33 @@ class NML:
     taskBoundingBox: Optional[IntVector6] = None
     userBoundingBoxes: Optional[List[IntVector6]] = None
 
-    _wk_graphs_or_groups: List[GroupOrGraph] = []
+    root_group: Group = attr.ib(init=False)
+    nml_element_id_generator: Generator[None, int, None] = attr.ib(init=False)
+
+    def __attrs_post_init__(self):
+        self.id = nml_id_generator.__next__()
+        self.nml_element_id_generator = itertools.count()
+        self.root_group = Group("Root", [], self)
 
     def flattened_graphs(self):
 
-        return iterate_graphs(self._wk_graphs_or_groups)
+        return self.root_group.flattened_graphs()
 
-    def add_graph(self, name):
+    def add_graph(self, name: str):
 
-        new_graph = WkGraph(
-            id=self.get_max_graph_id() + 1,
-            name=name,
-        )
-        self._wk_graphs_or_groups.append(new_graph)
+        return self.root_group.add_graph(name)
 
-        return new_graph
+    def add_group(self, name: str, children: Optional[List[GroupOrGraph]] = None):
+
+        return self.root_group.add_group(name, children)
 
     def get_max_graph_id(self):
 
-        # Chain with [0] since max is not defined on empty sequences
-        return max(itertools.chain((tree.id for tree in self.flattened_graphs()), [0]))
+        return self.root_group.get_max_graph_id()
 
     def get_max_node_id(self):
 
-        # Chain with [0] since max is not defined on empty sequences
-        return max(
-            itertools.chain(
-                (tree.get_max_node_id() for tree in self.flattened_graphs()),
-                [0],
-            )
-        )
+        return self.root_group.get_max_node_id()
 
     # @staticmethod
     # def from_path(file_path):
@@ -163,8 +219,13 @@ class NML:
 
     def write(self, out_path):
 
-        graphs_as_dict = self.get_graphs_as_dict()
-        print("graphs_as_dict", graphs_as_dict)
+        # graphs_as_dict = self.get_graphs_as_dict()
+        # print("graphs_as_dict", graphs_as_dict)
+
+        print(
+            "[g for g in self.flattened_graphs()]", [g for g in self.flattened_graphs()]
+        )
+
         legacy_nml = nml_generation.generate_nml(
             [g for g in self.flattened_graphs()],
             self._get_legacy_parameters(),

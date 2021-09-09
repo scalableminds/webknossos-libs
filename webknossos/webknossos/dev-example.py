@@ -20,23 +20,19 @@ def dev_example():
     nml = skeleton.NML(name="My NML", scale=(11, 11, 25))
     g = nml.add_graph("A WkGraph")
 
-    n1 = skeleton.Node(
+    n1 = g.add_node(
         position=[0, 1, 2],
         comment="A comment",
         is_branchpoint=True,
     )
-    n2 = skeleton.Node(
+    n2 = g.add_node(
         position=[3, 1, 2],
         comment="A comment",
     )
-    n3 = skeleton.Node(
+    n3 = g.add_node(
         position=[4, 1, 2],
         comment="A comment",
     )
-    g.add_node(n1)
-    g.add_node(n2)
-    g.add_node(n3)
-
     g.add_edge(n1, n2)
     g.add_edge(n1, n3)
 
@@ -44,6 +40,9 @@ def dev_example():
 
     print(g.get_node_positions())
     print(g.get_nodes())
+
+    group = nml.add_group("Example Group")
+    group.add_graph("Graph in Group").add_node(position=[10, 3, 4])
 
     nml.write("out.nml")
 
