@@ -16,6 +16,7 @@ from openapi_python_client import (
 from openapi_python_client.cli import handle_errors
 
 from webknossos.client import _get_generated_client
+from webknossos.utils import snake_to_camel_case
 
 SCHEMA_URL = "https://converter.swagger.io/api/convert?url=https%3A%2F%2Fwebknossos.org%2Fswagger.json"
 
@@ -88,11 +89,7 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
 
     for api_endpoint in [datastore_list, build_info]:
         api_endpoint_name = api_endpoint.__name__.split(".")[-1]
-        # convert name to camelCase
-        api_endpoint_name_parts = api_endpoint_name.split("_")
-        api_endpoint_name = "".join(
-            s.title() if i > 0 else s for i, s in enumerate(api_endpoint_name_parts)
-        )
+        api_endpoint_name = snake_to_camel_case(api_endpoint_name)
 
         response = api_endpoint.sync_detailed(client=client)
         assert response.status_code == 200

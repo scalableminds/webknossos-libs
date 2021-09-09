@@ -9,6 +9,7 @@ import wkw
 from cattr.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 
 from webknossos.geometry import BoundingBox, Mag
+from webknossos.utils import snake_to_camel_case
 
 
 def _extract_num_channels(
@@ -55,11 +56,6 @@ _python_floating_type_to_properties_type = {
     "float32": "float",
     "float64": "double",
 }
-
-
-def _snake_to_camel_case(snake_case_name: str) -> str:
-    parts = snake_case_name.split("_")
-    return parts[0] + "".join(part.title() for part in parts[1:])
 
 
 # --- View configuration --------------------
@@ -168,7 +164,7 @@ for cls in [
             dataset_converter,
             **{
                 a.name: override(
-                    omit_if_default=True, rename=_snake_to_camel_case(a.name)
+                    omit_if_default=True, rename=snake_to_camel_case(a.name)
                 )
                 for a in attr.fields(cls)  # pylint: disable=not-an-iterable
             },
@@ -180,7 +176,7 @@ for cls in [
             cls,
             dataset_converter,
             **{
-                a.name: override(rename=_snake_to_camel_case(a.name))
+                a.name: override(rename=snake_to_camel_case(a.name))
                 for a in attr.fields(cls)  # pylint: disable=not-an-iterable
             },
         ),
