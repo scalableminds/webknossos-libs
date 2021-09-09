@@ -568,7 +568,10 @@ def __dump_tree(xf: XmlWriter, tree: Tree):
     xf.startTag("thing", attributes)
     xf.startTag("nodes")
     for n in tree.nodes:
-        __dump_node(xf, n)
+        if hasattr(n, "_dump"):
+            n._dump(xf)
+        else:
+            __dump_node(xf, n)
     xf.endTag()  # nodes
     xf.startTag("edges")
     for e in tree.edges:
@@ -625,7 +628,10 @@ def __dump_nml(xf: XmlWriter, nml: NML):
     xf.startTag("things")
     __dump_parameters(xf, nml.parameters)
     for t in nml.trees:
-        __dump_tree(xf, t)
+        if hasattr(t, "_dump"):
+            t._dump(xf)
+        else:
+            __dump_tree(xf, t)
 
     xf.startTag("branchpoints")
     for b in nml.branchpoints:

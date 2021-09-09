@@ -1,3 +1,4 @@
+import itertools
 from itertools import combinations
 
 
@@ -34,18 +35,24 @@ def dev_example():
         print("pos_a", pos_a)
         print("pos_b", pos_b)
 
+        index_generator = itertools.count()
         for partner_a, partner_b in pairs_within_distance(
             pos_a, pos_b, synapse_candidate_max_distance
         ):
             print("partner_a", partner_a, "partner_b", partner_b)
             synapse_nodes.append(
                 skeleton.Node(
+                    # todo: get rid of id.
+                    # id=index_generator.__next__(),
                     position=(partner_a + partner_b) / 2,
+                    # todo: allow comment
                     comment=f"{tree_a.name} ({tree_a.id}) <-> {tree_b.name} ({tree_b.id})",
                 )
             )
 
     nml.add_tree("synapse candidates").add_nodes(synapse_nodes)
+
+    nml.write("out.nml")
 
 
 def skeleton_synapse_candidate_example():
@@ -66,6 +73,7 @@ def skeleton_synapse_candidate_example():
         for partner_a, partner_b in wk.geometry.pairs_within_distance(
             pos_a, pos_b, synapse_candidate_max_distance
         ):
+            tree.add_node(position=..., comment=...)
             synapse_nodes.append(
                 wk.skeleton.Node(
                     position=(partner_a + partner_b) / 2,
