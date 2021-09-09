@@ -7,7 +7,12 @@ from typing import Dict, Iterable, Tuple
 
 import httpx
 from inducoapi import build_openapi
-from openapi_python_client import Config, MetaType, _get_project_for_url_or_path
+from openapi_python_client import (
+    Config,
+    MetaType,
+    Project,
+    _get_project_for_url_or_path,
+)
 from openapi_python_client.cli import handle_errors
 
 from webknossos.client import _get_generated_client
@@ -15,11 +20,11 @@ from webknossos.client import _get_generated_client
 SCHEMA_URL = "https://converter.swagger.io/api/convert?url=https%3A%2F%2Fwebknossos.org%2Fswagger.json"
 
 
-def assert_valid_schema(openapi_schema: Dict):
+def assert_valid_schema(openapi_schema: Dict) -> None:
     assert openapi_schema["openapi"].startswith("3.0.")
 
 
-def generate_client(openapi_schema: Dict):
+def generate_client(openapi_schema: Dict) -> None:
     assert_valid_schema(openapi_schema)
     with NamedTemporaryFile("w", suffix=".json") as schema_file:
         schema_file.write(json.dumps(openapi_schema))
@@ -33,11 +38,12 @@ def generate_client(openapi_schema: Dict):
             meta=MetaType.POETRY,
             config=generator_config,
         )
+        assert isinstance(generator_project, Project)
         errors = generator_project.update()
         # handle_errors(errors)  # prints warnings
 
 
-def add_api_prefix_for_non_data_paths(openapi_schema: Dict):
+def add_api_prefix_for_non_data_paths(openapi_schema: Dict) -> None:
     """The current webKnossos backend does not include the
     /api prefix into the different backend paths.
     Howevery, the /data prefix for datastore paths is included.
@@ -52,13 +58,12 @@ def add_api_prefix_for_non_data_paths(openapi_schema: Dict):
 
 
 def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
-    from webknossos.client.generated import Client
     from webknossos.client.generated.api.default import info, list_
 
     d = datetime.utcnow()
     unixtime = calendar.timegm(d.utctimetuple())
     client = _get_generated_client()
-    auth_client = _get_generated_client(with_token=True)
+    auth_client = _get_generated_client(enforce_token=True)
 
     r = info.sync_detailed(
         typ="Explorational",

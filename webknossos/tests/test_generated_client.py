@@ -18,7 +18,7 @@ def time_since_epoch_in_ms() -> int:
 WK_URL = "https://webknossos.org"
 
 client = _get_generated_client()
-auth_client = _get_generated_client(with_token=True)
+auth_client = _get_generated_client(enforce_token=True)
 
 
 def test_annotation_info() -> None:
