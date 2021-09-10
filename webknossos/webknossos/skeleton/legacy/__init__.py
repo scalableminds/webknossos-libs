@@ -1,12 +1,19 @@
-# type: ignore
 import xml.etree.ElementTree as ET
 from xml.etree.ElementTree import Element
 from loxun import XmlWriter
-from typing import BinaryIO, NamedTuple, List, Tuple, Optional, Text
+from typing import BinaryIO, NamedTuple, List, Tuple, Optional, Text, TypeVar
 
 Vector3 = Tuple[float, float, float]
 Vector4 = Tuple[float, float, float, float]
 IntVector6 = Tuple[int, int, int, int, int, int]
+
+T = TypeVar("T")
+
+
+def enforce_not_null(val: Optional[T]) -> T:
+    if val is None:
+        raise ValueError("Value is None")
+    return val
 
 
 class NMLParameters(NamedTuple):
@@ -94,7 +101,7 @@ class Tree(NamedTuple):
     """
 
     id: int
-    color: Vector4
+    color: Optional[Vector4]
     name: str
     nodes: List[Node]
     edges: List[Edge]
@@ -193,59 +200,64 @@ def __parse_task_bounding_box(nml_parameters: Element):
     return None
 
 
-def __parse_bounding_box(bounding_box_element: Element):
+def __parse_bounding_box(bounding_box_element: Element) -> IntVector6:
     return (
-        int(bounding_box_element.get("topLeftX")),
-        int(bounding_box_element.get("topLeftY")),
-        int(bounding_box_element.get("topLeftZ")),
-        int(bounding_box_element.get("width")),
-        int(bounding_box_element.get("height")),
-        int(bounding_box_element.get("depth")),
+        int(bounding_box_element.get("topLeftX", 0)),
+        int(bounding_box_element.get("topLeftY", 0)),
+        int(bounding_box_element.get("topLeftZ", 0)),
+        int(bounding_box_element.get("width", 0)),
+        int(bounding_box_element.get("height", 0)),
+        int(bounding_box_element.get("depth", 0)),
     )
 
 
-def __parse_parameters(nml_parameters: Element):
+def __parse_parameters(nml_parameters: Element) -> NMLParameters:
     offset = None
     if nml_parameters.find("offset") is not None:
+        offset_element = enforce_not_null(nml_parameters.find("offset"))
         offset = (
-            float(nml_parameters.find("offset").get("x")),
-            float(nml_parameters.find("offset").get("y")),
-            float(nml_parameters.find("offset").get("z")),
+            float(offset_element.get("x", 0)),
+            float(offset_element.get("y", 0)),
+            float(offset_element.get("z", 0)),
         )
 
     editRotation = None
     if nml_parameters.find("editRotation") is not None:
+        edit_rotation_element = enforce_not_null(nml_parameters.find("editRotation"))
         editRotation = (
-            float(nml_parameters.find("editRotation").get("xRot")),
-            float(nml_parameters.find("editRotation").get("yRot")),
-            float(nml_parameters.find("editRotation").get("zRot")),
+            float(edit_rotation_element.get("xRot", 0)),
+            float(edit_rotation_element.get("yRot", 0)),
+            float(edit_rotation_element.get("zRot", 0)),
         )
 
     editPosition = None
     if nml_parameters.find("editPosition") is not None:
         editPosition = (
-            float(nml_parameters.find("editPosition").get("x")),
-            float(nml_parameters.find("editPosition").get("y")),
-            float(nml_parameters.find("editPosition").get("z")),
+            float(enforce_not_null(nml_parameters.find("editPosition")).get("x", 0)),
+            float(enforce_not_null(nml_parameters.find("editPosition")).get("y", 0)),
+            float(enforce_not_null(nml_parameters.find("editPosition")).get("z", 0)),
         )
 
     time = None
     if nml_parameters.find("time") is not None:
-        time = int(nml_parameters.find("time").get("ms"))
+        time = int(enforce_not_null(nml_parameters.find("time")).get("ms", 0))
 
-    zoomLevel = None
+    zoomLevel = 0
     if nml_parameters.find("zoomLevel") is not None:
-        zoomLevel = nml_parameters.find("zoomLevel").get("zoom")
+        zoomLevel = enforce_not_null(nml_parameters.find("zoomLevel")).get("zoom", 0)
 
     taskBoundingBox = __parse_task_bounding_box(nml_parameters)
     userBoundingBoxes = __parse_user_bounding_boxes(nml_parameters)
 
+    scale_element = enforce_not_null(nml_parameters.find("scale"))
     return NMLParameters(
-        name=nml_parameters.find("experiment").get("name"),
+        name=enforce_not_null(nml_parameters.find("experiment")).get(
+            "name", "Unnamed Experiment"
+        ),
         scale=(
-            float(nml_parameters.find("scale").get("x")),
-            float(nml_parameters.find("scale").get("y")),
-            float(nml_parameters.find("scale").get("z")),
+            float(scale_element.get("x", 0)),
+            float(scale_element.get("y", 0)),
+            float(scale_element.get("z", 0)),
         ),
         offset=offset,
         time=time,
@@ -257,63 +269,64 @@ def __parse_parameters(nml_parameters: Element):
     )
 
 
-def __parse_node(nml_node: Element):
+def __parse_node(nml_node: Element) -> Node:
     rotation = None
     if nml_node.get("rotX") is not None:
         rotation = (
-            float(nml_node.get("rotX")),
-            float(nml_node.get("rotY")),
-            float(nml_node.get("rotZ")),
+            float(enforce_not_null(nml_node.get("rotX"))),
+            float(enforce_not_null(nml_node.get("rotY"))),
+            float(enforce_not_null(nml_node.get("rotZ"))),
         )
 
     return Node(
-        id=int(nml_node.get("id")),
-        radius=float(nml_node.get("radius"))
+        id=int(enforce_not_null(nml_node.get("id"))),
+        radius=float(nml_node.get("radius", 0))
         if nml_node.get("radius") is not None
         else None,
         position=(
-            float(nml_node.get("x")),
-            float(nml_node.get("y")),
-            float(nml_node.get("z")),
+            float(nml_node.get("x", 0)),
+            float(nml_node.get("y", 0)),
+            float(nml_node.get("z", 0)),
         ),
         rotation=rotation,
-        inVp=int(nml_node.get("inVp")) if nml_node.get("inVp") is not None else None,
-        inMag=int(nml_node.get("inMag")) if nml_node.get("inMag") is not None else None,
-        bitDepth=int(nml_node.get("bitDepth"))
+        inVp=int(nml_node.get("inVp"), 0) if nml_node.get("inVp") is not None else None,
+        inMag=int(nml_node.get("inMag"), 0)
+        if nml_node.get("inMag") is not None
+        else None,
+        bitDepth=int(nml_node.get("bitDepth", 0))
         if nml_node.get("bitDepth") is not None
         else None,
         interpolation=bool(nml_node.get("interpolation"))
         if nml_node.get("interpolation") is not None
         else None,
-        time=int(nml_node.get("time")) if nml_node.get("time") is not None else None,
+        time=int(nml_node.get("time", 0)) if nml_node.get("time") is not None else None,
     )
 
 
-def __parse_edge(nml_edge: Element):
-    return Edge(source=int(nml_edge.get("source")), target=int(nml_edge.get("target")))
+def __parse_edge(nml_edge: Element) -> Edge:
+    return Edge(
+        source=int(enforce_not_null(nml_edge.get("source"))),
+        target=int(enforce_not_null(nml_edge.get("target"))),
+    )
 
 
-def __parse_tree(nml_tree: Element):
-    name = None
-    if "comment" in nml_tree.attrib:
-        name = nml_tree.get("comment")
-    if "name" in nml_tree.attrib:
-        name = nml_tree.get("name")
+def __parse_tree(nml_tree: Element) -> Tree:
+    name = nml_tree.get("name", "") or nml_tree.get("comment", "")
 
     color = None
     if "color.r" in nml_tree.attrib:
         color = (
-            float(nml_tree.get("color.r")),
-            float(nml_tree.get("color.g")),
-            float(nml_tree.get("color.b")),
-            float(nml_tree.get("color.a")),
+            float(enforce_not_null(nml_tree.get("color.r"))),
+            float(enforce_not_null(nml_tree.get("color.g"))),
+            float(enforce_not_null(nml_tree.get("color.b"))),
+            float(enforce_not_null(nml_tree.get("color.a"))),
         )
     if "colorr" in nml_tree.attrib:
         color = (
-            float(nml_tree.get("colorr")),
-            float(nml_tree.get("colorg")),
-            float(nml_tree.get("colorb")),
-            float(nml_tree.get("colora")),
+            float(enforce_not_null(nml_tree.get("colorr"))),
+            float(enforce_not_null(nml_tree.get("colorg"))),
+            float(enforce_not_null(nml_tree.get("colorb"))),
+            float(enforce_not_null(nml_tree.get("colora"))),
         )
     try:
         groupId = int(nml_tree.get("groupId", default=-1))
@@ -323,36 +336,41 @@ def __parse_tree(nml_tree: Element):
     return Tree(
         nodes=[],
         edges=[],
-        id=int(nml_tree.get("id")),
+        id=int(enforce_not_null(nml_tree.get("id"))),
         name=name,
         groupId=groupId if groupId >= 0 else None,
         color=color,
     )
 
 
-def __parse_branchpoint(nml_branchpoint: Element):
+def __parse_branchpoint(nml_branchpoint: Element) -> Branchpoint:
     return Branchpoint(
-        int(nml_branchpoint.get("id")),
-        int(nml_branchpoint.get("time"))
+        int(enforce_not_null(nml_branchpoint.get("id"))),
+        int(enforce_not_null(nml_branchpoint.get("time")))
         if nml_branchpoint.get("time") is not None
         else None,
     )
 
 
-def __parse_comment(nml_comment: Element):
+def __parse_comment(nml_comment: Element) -> Comment:
     return Comment(
-        int(nml_comment.get("node")), nml_comment.get("content", default=None)
+        int(enforce_not_null(nml_comment.get("node"))),
+        enforce_not_null(nml_comment.get("content")),
     )
 
 
-def __parse_group(nml_group: Element):
-    return Group(int(nml_group.get("id")), nml_group.get("name", default=None), [])
+def __parse_group(nml_group: Element) -> Group:
+    return Group(
+        int(enforce_not_null(nml_group.get("id"))),
+        enforce_not_null(nml_group.get("name")),
+        [],
+    )
 
 
-def __parse_volume(nml_volume: Element):
+def __parse_volume(nml_volume: Element) -> Volume:
     return Volume(
-        int(nml_volume.get("id")),
-        nml_volume.get("location", default=None),
+        int(enforce_not_null(nml_volume.get("id"))),
+        enforce_not_null(nml_volume.get("location")),
         nml_volume.get("fallback_layer", default=None),
     )
 
@@ -435,13 +453,13 @@ def parse_nml(file: BinaryIO) -> NML:
     )
 
 
-def __dump_task_bounding_box(xf: XmlWriter, parameters: NMLParameters):
+def __dump_task_bounding_box(xf: XmlWriter, parameters: NMLParameters) -> None:
     task_bounding_box = getattr(parameters, "taskBoundingBox")
     if task_bounding_box is not None:
         __dump_bounding_box(task_bounding_box, "taskBoundingBox")
 
 
-def __dump_user_bounding_boxes(xf: XmlWriter, parameters: NMLParameters):
+def __dump_user_bounding_boxes(xf: XmlWriter, parameters: NMLParameters) -> None:
     user_bounding_boxes = getattr(parameters, "userBoundingBoxes")
 
     if user_bounding_boxes is not None:
@@ -449,7 +467,9 @@ def __dump_user_bounding_boxes(xf: XmlWriter, parameters: NMLParameters):
             __dump_bounding_box(xf, user_bounding_box, "userBoundingBox")
 
 
-def __dump_bounding_box(xf: XmlWriter, bounding_box: IntVector6, tag_name: Text):
+def __dump_bounding_box(
+    xf: XmlWriter, bounding_box: IntVector6, tag_name: Text
+) -> None:
     xf.tag(
         tag_name,
         {
@@ -463,7 +483,7 @@ def __dump_bounding_box(xf: XmlWriter, bounding_box: IntVector6, tag_name: Text)
     )
 
 
-def __dump_parameters(xf: XmlWriter, parameters: NMLParameters):
+def __dump_parameters(xf: XmlWriter, parameters: NMLParameters) -> None:
     xf.startTag("parameters")
     xf.tag("experiment", {"name": parameters.name})
     xf.tag(
@@ -514,7 +534,7 @@ def __dump_parameters(xf: XmlWriter, parameters: NMLParameters):
     xf.endTag()  # parameters
 
 
-def __dump_node(xf: XmlWriter, node: Node):
+def __dump_node(xf: XmlWriter, node: Node) -> None:
 
     attributes = {
         "id": str(node.id),
@@ -549,17 +569,18 @@ def __dump_node(xf: XmlWriter, node: Node):
     xf.tag("node", attributes)
 
 
-def __dump_edge(xf: XmlWriter, edge: Edge):
+def __dump_edge(xf: XmlWriter, edge: Edge) -> None:
     xf.tag("edge", {"source": str(edge.source), "target": str(edge.target)})
 
 
-def __dump_tree(xf: XmlWriter, tree: Tree):
+def __dump_tree(xf: XmlWriter, tree: Tree) -> None:
+    color = tree.color or (1, 1, 1, 1)
     attributes = {
         "id": str(tree.id),
-        "color.r": str(tree.color[0]),
-        "color.g": str(tree.color[1]),
-        "color.b": str(tree.color[2]),
-        "color.a": str(tree.color[3]),
+        "color.r": str(color[0]),
+        "color.g": str(color[1]),
+        "color.b": str(color[2]),
+        "color.a": str(color[3]),
         "name": tree.name,
     }
 
@@ -578,7 +599,7 @@ def __dump_tree(xf: XmlWriter, tree: Tree):
     xf.endTag()  # thing
 
 
-def __dump_branchpoint(xf: XmlWriter, branchpoint: Branchpoint):
+def __dump_branchpoint(xf: XmlWriter, branchpoint: Branchpoint) -> None:
     if branchpoint.time is not None:
         xf.tag(
             "branchpoint", {"id": str(branchpoint.id), "time": str(branchpoint.time)}
@@ -587,14 +608,14 @@ def __dump_branchpoint(xf: XmlWriter, branchpoint: Branchpoint):
         xf.tag("branchpoint", {"id": str(branchpoint.id)})
 
 
-def __dump_comment(xf: XmlWriter, comment: Comment):
+def __dump_comment(xf: XmlWriter, comment: Comment) -> None:
     if comment.content is not None:
         xf.tag("comment", {"node": str(comment.node), "content": comment.content})
     else:
         xf.tag("comment", {"node": str(comment.node)})
 
 
-def __dump_volume(xf: XmlWriter, volume: Volume):
+def __dump_volume(xf: XmlWriter, volume: Optional[Volume]) -> None:
     if volume is not None:
         if volume.fallback_layer is not None:
             xf.tag(
@@ -615,14 +636,14 @@ def __dump_volume(xf: XmlWriter, volume: Volume):
             )
 
 
-def __dump_group(xf: XmlWriter, group: Group):
+def __dump_group(xf: XmlWriter, group: Group) -> None:
     xf.startTag("group", {"id": str(group.id), "name": group.name})
     for g in group.children:
         __dump_group(xf, g)
     xf.endTag()  # group
 
 
-def __dump_nml(xf: XmlWriter, nml: NML):
+def __dump_nml(xf: XmlWriter, nml: NML) -> None:
     xf.startTag("things")
     __dump_parameters(xf, nml.parameters)
     for t in nml.trees:
@@ -648,7 +669,7 @@ def __dump_nml(xf: XmlWriter, nml: NML):
     xf.endTag()  # things
 
 
-def write_nml(file: BinaryIO, nml: NML):
+def write_nml(file: BinaryIO, nml: NML) -> None:
     """
     Writes an NML object to a file on disk.
 

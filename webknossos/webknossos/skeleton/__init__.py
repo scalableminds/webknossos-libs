@@ -1,5 +1,5 @@
 import numpy as np
-from typing import List, Tuple, Optional, Union, Generator, Dict, Any
+from typing import List, Tuple, Optional, Union, Generator, Dict, Any, Iterator
 import itertools
 import networkx as nx
 from icecream import ic
@@ -9,6 +9,7 @@ import attr
 
 
 import webknossos.skeleton.legacy as legacy_wknml
+from webknossos.skeleton.legacy import NML as LegacyNML, Tree as LegacyTree
 import webknossos.skeleton.legacy.nml_generation as nml_generation
 
 Vector3 = Tuple[float, float, float]
@@ -200,7 +201,7 @@ class WkGraph:
                 return node
         assert ValueError(f"No node with id {node_id} was found")
 
-    def add_node(self, *args, **kwargs) -> "Node":
+    def add_node(self, *args: List[Any], **kwargs: Dict[str, Any]) -> "Node":
 
         if "nml" not in kwargs:
             kwargs["nml"] = self._nml
@@ -241,7 +242,7 @@ class NML:
     userBoundingBoxes: Optional[List[IntVector6]] = None
 
     root_group: Group = attr.ib(init=False)
-    element_id_generator: Generator[int, None, None] = attr.ib(init=False)
+    element_id_generator: Iterator[int] = attr.ib(init=False)
 
     def __attrs_post_init__(self) -> None:
         self.id = nml_id_generator.__next__()
@@ -295,10 +296,11 @@ class NML:
     @staticmethod
     def from_path(file_path: str) -> "NML":
 
-        return NML.from_legacy_nml(legacy_wknml.parse_nml(file_path))
+        with open(file_path, "r") as file_handle:
+            return NML.from_legacy_nml(legacy_wknml.parse_nml(file_handle))
 
     @staticmethod
-    def from_legacy_nml(legacy_nml) -> "NML":
+    def from_legacy_nml(legacy_nml: LegacyNML) -> "NML":
         nml = NML(**legacy_nml.parameters._asdict())
 
         groups_by_id = {}
@@ -332,7 +334,10 @@ class NML:
         return nml
 
     def nml_tree_to_graph(
-        legacy_nml, new_nml: "NML", new_graph: "WkGraph", legacy_tree
+        legacy_nml: LegacyNML,
+        new_nml: "NML",
+        new_graph: "WkGraph",
+        legacy_tree: LegacyTree,
     ) -> nx.Graph:
         """
         A utility to convert a single wK Tree object into a [NetworkX graph object](https://networkx.org/).
