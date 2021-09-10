@@ -151,7 +151,6 @@ def generate_nml(
 
     for graph in sorted(group.flattened_graphs(), key=lambda g: g.id):
 
-        print("graph", graph)
         nodes, edges = extract_nodes_and_edges_from_graph(graph)
         color = graph.color or random_color_rgba()
         name = graph.name or f"tree{graph.id}"

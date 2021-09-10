@@ -230,6 +230,7 @@ class NML:
     scale: Vector3
     offset: Optional[Vector3] = None
     time: Optional[int] = None
+    # TODO: Use snake case for these properties and convert when necessary
     editPosition: Optional[Vector3] = None
     editRotation: Optional[Vector3] = None
     zoomLevel: Optional[float] = None
@@ -244,6 +245,10 @@ class NML:
         self.nml_element_id_generator = itertools.count()
         self.root_group = Group("Root", [], self, is_root_group=False)
         self.scale = vector3_as_float(self.scale)
+        self.time = int(self.time)
+        self.offset = vector3_as_float(self.offset)
+        self.editPosition = vector3_as_float(self.editPosition)
+        self.editRotation = vector3_as_float(self.editRotation)
 
     def flattened_graphs(self):
 
@@ -288,7 +293,7 @@ class NML:
 
     @staticmethod
     def from_legacy_nml(legacy_nml):
-        nml = NML(legacy_nml.parameters.name, legacy_nml.parameters.scale)
+        nml = NML(**legacy_nml.parameters._asdict())
 
         groups_by_id = {}
 

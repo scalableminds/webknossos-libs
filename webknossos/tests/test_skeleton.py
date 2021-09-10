@@ -19,7 +19,16 @@ def pairs_within_distance(pos_a, pos_b, max_distance):
 
 
 def create_dummy_skeleton():
-    nml = skeleton.NML(name="My NML", scale=(11, 11, 25))
+    nml = skeleton.NML(
+        name="My NML",
+        scale=(11, 11, 25),
+        offset=(1, 1, 1),
+        time="1337",
+        editPosition=(3, 6, 0),
+        editRotation=(4, 2, 0),
+        zoomLevel=100,
+    )
+
     g = nml.add_graph(
         "A WkGraph",
         color=[0.9988844805996959, 0.09300433970039235, 0.13373766240135082, 1.0],
@@ -57,6 +66,7 @@ def create_dummy_skeleton():
 
 def test_skeleton_creation():
     nml = create_dummy_skeleton()
+    assert nml.time == 1337
 
     graphs = list(nml.flattened_graphs())
     assert len(graphs) == 3
@@ -108,6 +118,7 @@ def test_import_export_round_trip():
         snapshot_path = "../testdata/nmls/generated_snapshot.nml"
         export_path = f"{temp_dir}/exported_in.nml"
         nml = skeleton.NML.from_path(snapshot_path)
+        assert nml.time == 1337
 
         g6 = nml.get_graph_by_id(6)
         assert g6.name == "Graph in Group"
@@ -138,7 +149,7 @@ def test_code_example():
             pos_a, pos_b, synapse_candidate_max_distance
         ):
             synapse_graph.add_node(
-                position=(partner_a + partner_b) / 2 / nml.scale,
+                position=(partner_a + partner_b) / nml.scale / 2,
                 comment=f"{tree_a.name} ({tree_a.id}) <-> {tree_b.name} ({tree_b.id})",
             )
 
