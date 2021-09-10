@@ -1,6 +1,7 @@
 import itertools
 from itertools import combinations
 import networkx as nx
+from icecream import ic
 
 
 def pairs_within_distance(pos_a, pos_b, max_distance):
@@ -14,7 +15,7 @@ def pairs_within_distance(pos_a, pos_b, max_distance):
             yield (pos_a[i], pos_b[j])
 
 
-def dev_example():
+def dev_example_export():
     import skeleton
 
     nml = skeleton.NML(name="My NML", scale=(11, 11, 25))
@@ -43,8 +44,22 @@ def dev_example():
 
     group = nml.add_group("Example Group")
     group.add_graph("Graph in Group").add_node(position=[10, 3, 4])
+    group.add_group("Nested Group").add_graph("Graph in nested group")
 
     nml.write("out.nml")
+
+
+def dev_example_import():
+    import skeleton
+
+    nml = skeleton.NML.from_path("in.nml")
+    nml.write("exported_in.nml")
+    print(nml)
+
+    node_with_comment = nml.get_graph_by_id(1).get_node_by_id(2)
+    ic(node_with_comment)
+    assert node_with_comment.position == (0.0, 1.0, 2.0)
+    assert node_with_comment.comment == "A comment"
 
 
 def dev_example_broken():
@@ -119,4 +134,5 @@ def skeleton_synapse_candidate_example():
 
 
 if __name__ == "__main__":
-    dev_example()
+    dev_example_import()
+    # dev_example_export()

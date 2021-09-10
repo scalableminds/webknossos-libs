@@ -1,3 +1,4 @@
+# type: ignore
 from typing import Union, Dict, List, Tuple
 from copy import deepcopy
 from math import acos, ceil

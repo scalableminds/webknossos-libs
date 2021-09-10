@@ -1,4 +1,5 @@
-from skeleton.legacy import (
+# type: ignore
+from webknossos.skeleton.legacy import (
     NMLParameters,
     Group,
     Edge,
@@ -97,7 +98,7 @@ def globalize_node_ids(group_dict: Dict[str, List[nx.Graph]]):
 
 
 def generate_nml(
-    tree_dict: Union[List[nx.Graph], Dict[str, List[nx.Graph]]],
+    group: "Group",
     parameters: Dict[str, Any] = {},
     globalize_ids: bool = True,
     volume: Optional[Dict[str, Any]] = None,
@@ -114,18 +115,15 @@ def generate_nml(
     Return:
         nml (NML): A wK NML skeleton annotation object
     """
-    no_group_provided = False
-    if not isinstance(tree_dict, dict):
-        tree_dict = {"main_group": tree_dict}
-        no_group_provided = True
 
     if globalize_ids:
-        globalize_tree_ids(tree_dict)
-        globalize_node_ids(tree_dict)
+        # globalize_tree_ids(tree_dict)
+        # globalize_node_ids(tree_dict)
+        pass
 
     nmlParameters = NMLParameters(
         name=parameters.get("name", "dataset"),
-        scale=parameters.get("scale", [11.24, 11.24, 25]),
+        scale=parameters.get("scale", None),
         offset=parameters.get("offset", None),
         time=parameters.get("time", None),
         editPosition=parameters.get("editPosition", None),
@@ -137,51 +135,37 @@ def generate_nml(
 
     comments = [
         Comment(node.id, node.comment)
-        for group in tree_dict.values()
-        for tree in group
-        for node in tree.nx_graph.nodes
+        for graph in group.flattened_graphs()
+        for node in graph.nx_graph.nodes
         if node.comment is not None
     ]
 
     branchpoints = [
         Branchpoint(node.id, node.time)
-        for group in tree_dict.values()
-        for tree in group
-        for node in tree.nx_graph.nodes
+        for graph in group.flattened_graphs()
+        for node in graph.nx_graph.nodes
         if node.is_branchpoint
     ]
 
-    if no_group_provided:
-        groups = []
-    else:
-        groups = [
-            Group(id=group_id, name=group_name, children=[])
-            for group_id, group_name in enumerate(tree_dict, 1)
-        ]
+    graphs = []
 
-    trees = []
+    for graph in sorted(group.flattened_graphs(), key=lambda g: g.id):
 
-    print("###########################")
-    print("###########################")
-    print("###########################")
-    print("###########################")
-    for group_id, group_name in enumerate(tree_dict, 1):
-        for tree in tree_dict[group_name]:
-            print("tree", tree)
-            nodes, edges = extract_nodes_and_edges_from_graph(tree)
-            color = tree.color or random_color_rgba()
-            name = tree.name or f"tree{tree.id}"
+        print("graph", graph)
+        nodes, edges = extract_nodes_and_edges_from_graph(graph)
+        color = graph.color or random_color_rgba()
+        name = graph.name or f"tree{graph.id}"
 
-            trees.append(
-                Tree(
-                    nodes=nodes,
-                    edges=edges,
-                    id=tree.id,
-                    name=name,
-                    groupId=None if no_group_provided else group_id,
-                    color=color,
-                )
+        graphs.append(
+            Tree(
+                nodes=nodes,
+                edges=edges,
+                id=graph.id,
+                name=name,
+                groupId=graph.group_id if graph.group_id != group.id else None,
+                color=color,
             )
+        )
 
     if volume is not None and "location" in volume and "id" in volume:
         volume = Volume(
@@ -192,10 +176,10 @@ def generate_nml(
 
     nml = NML(
         parameters=nmlParameters,
-        trees=trees,
+        trees=graphs,
         branchpoints=branchpoints,
         comments=comments,
-        groups=groups,
+        groups=group.as_nml_group().children,
         volume=volume,
     )
 
