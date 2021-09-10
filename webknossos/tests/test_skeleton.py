@@ -4,6 +4,18 @@
 import webknossos.skeleton as skeleton
 import tempfile
 import difflib
+from itertools import combinations
+
+
+def pairs_within_distance(pos_a, pos_b, max_distance):
+    from scipy.spatial import cKDTree
+
+    pos_a_kdtree = cKDTree(pos_a)
+    pos_b_kdtree = cKDTree(pos_b)
+    indexes = pos_a_kdtree.query_ball_tree(pos_b_kdtree, max_distance)
+    for i in range(len(indexes)):
+        for j in indexes[i]:
+            yield (pos_a[i], pos_b[j])
 
 
 def create_dummy_skeleton():
@@ -71,9 +83,12 @@ def diff_files(path_a, path_b):
                     tofile="file_b",
                 )
             )
-            for line in diff:
-                print(diff)
-            assert len(diff) == 0, f"File are not equal: {diff}"
+            if len(diff) > 0:
+                print("####################")
+                for line in diff:
+                    print(line)
+                print("####################")
+            assert len(diff) == 0, f"Files {path_a} and {path_b} are not equal: {diff}"
 
 
 def test_export_to_nml():
@@ -91,9 +106,43 @@ def test_export_to_nml():
 def test_import_export_round_trip():
     with tempfile.TemporaryDirectory() as temp_dir:
         snapshot_path = "../testdata/nmls/generated_snapshot.nml"
-        # export_path = f"{temp_dir}/exported_in.nml"
-        export_path = f"exported_in.nml"
+        export_path = f"{temp_dir}/exported_in.nml"
         nml = skeleton.NML.from_path(snapshot_path)
-        nml.write(export_path)
 
-        # diff_files(snapshot_path, export_path)
+        g6 = nml.get_graph_by_id(6)
+        assert g6.name == "Graph in Group"
+        assert g6.get_node_by_id(7).position == (10.0, 3.0, 4.0)
+
+        nml.write(export_path)
+        diff_files(snapshot_path, export_path)
+
+
+def test_code_example():
+
+    nml = skeleton.open_nml("../testdata/nmls/nml_with_small_distance_nodes.nml")
+
+    synapse_candidate_max_distance = 0.5  # in nm
+
+    input_graphs = nml.flattened_graphs()
+    synapse_parent_group = nml.add_group("all synapse candidates")
+
+    for tree_a, tree_b in combinations(input_graphs, 2):
+        pos_a = tree_a.get_node_positions() * nml.scale
+        pos_b = tree_b.get_node_positions() * nml.scale
+
+        synapse_graph = synapse_parent_group.add_graph(
+            f"synapse candidates ({tree_a.name}-{tree_b.name})"
+        )
+
+        for partner_a, partner_b in pairs_within_distance(
+            pos_a, pos_b, synapse_candidate_max_distance
+        ):
+            synapse_graph.add_node(
+                position=(partner_a + partner_b) / 2 / nml.scale,
+                comment=f"{tree_a.name} ({tree_a.id}) <-> {tree_b.name} ({tree_b.id})",
+            )
+
+    assert synapse_parent_group.get_total_node_count() == 57
+    ids = [g.id for g in nml.flattened_graphs()]
+    id_set = set(ids)
+    assert len(ids) == len(id_set), "Graph IDs are not unique."

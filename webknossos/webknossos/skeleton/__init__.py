@@ -20,6 +20,14 @@ GroupOrGraph = Union["Group", "WkGraph"]
 nml_id_generator = itertools.count()
 
 
+def vector3_as_float(vec):
+    return (
+        float(vec[0]),
+        float(vec[1]),
+        float(vec[2]),
+    )
+
+
 @attr.define()
 class Group:
     id: int = attr.ib(init=False)
@@ -53,6 +61,11 @@ class Group:
         new_group = Group(name, children or [], nml=self._nml, enforce_id=enforce_id)
         self.children.append(new_group)
         return new_group
+
+    def get_total_node_count(self) -> int:
+        return sum(
+            len(synapse_graph.get_nodes()) for synapse_graph in self.flattened_graphs()
+        )
 
     def get_max_graph_id(self):
         # Chain with [0] since max is not defined on empty sequences
@@ -115,6 +128,8 @@ class Node:
             self.id = self._enforce_id
         else:
             self.id = self._nml.nml_element_id_generator.__next__()
+
+        self.position = vector3_as_float(self.position)
 
     def __hash__(self):
         return hash((self._nml.id, self.id))
@@ -228,6 +243,7 @@ class NML:
         self.id = nml_id_generator.__next__()
         self.nml_element_id_generator = itertools.count()
         self.root_group = Group("Root", [], self, is_root_group=False)
+        self.scale = vector3_as_float(self.scale)
 
     def flattened_graphs(self):
 
@@ -248,6 +264,10 @@ class NML:
     def add_group(self, name: str, children: Optional[List[GroupOrGraph]] = None):
 
         return self.root_group.add_group(name, children)
+
+    def get_total_node_count(self):
+
+        return self.root_group.get_total_node_count()
 
     def flattened_groups(self):
 
@@ -282,12 +302,16 @@ class NML:
                 visit_groups(legacy_group.children, sub_group)
 
         visit_groups(legacy_nml.groups, nml.root_group)
-        for tree in legacy_nml.trees:
-            if tree.groupId is None:
-                new_graph = nml.root_group.add_graph(tree.name)
+        for legacy_tree in legacy_nml.trees:
+            if legacy_tree.groupId is None:
+                new_graph = nml.root_group.add_graph(
+                    legacy_tree.name, enforce_id=legacy_tree.id
+                )
             else:
-                new_graph = groups_by_id[tree.groupId].add_graph(tree.name)
-            NML.nml_tree_to_graph(legacy_nml, nml, new_graph, tree)
+                new_graph = groups_by_id[legacy_tree.groupId].add_graph(
+                    legacy_tree.name, enforce_id=legacy_tree.id
+                )
+            NML.nml_tree_to_graph(legacy_nml, nml, new_graph, legacy_tree)
 
         nml.write("out_only_groups.nml")
 
@@ -322,7 +346,10 @@ class NML:
         #                 tree.nodes[branchpoint.id]["branchpoint"] = branchpoint.time
 
         # return group_dict, parameter_dict
-        print(nml)
+
+        max_id = max(nml.get_max_graph_id(), nml.get_max_node_id())
+        nml.nml_element_id_generator = itertools.count(max_id + 1)
+
         return nml
 
     def nml_tree_to_graph(legacy_nml, new_nml, new_graph, legacy_tree) -> nx.Graph:
