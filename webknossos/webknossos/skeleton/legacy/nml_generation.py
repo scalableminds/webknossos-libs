@@ -178,7 +178,7 @@ def generate_nml(
         trees=graphs,
         branchpoints=branchpoints,
         comments=comments,
-        groups=group.as_nml_group().children,
+        groups=group.as_legacy_group().children,
         volume=volume,
     )
 
