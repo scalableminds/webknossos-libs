@@ -23,9 +23,19 @@ GroupOrGraph = Union["Group", "WkGraph"]
 nml_id_generator = itertools.count()
 
 
-def vector3_as_float(vec: Optional[Tuple[Number, Number, Number]]) -> Optional[Vector3]:
+def opt_vector3_as_float(
+    vec: Optional[Tuple[Number, Number, Number]]
+) -> Optional[Vector3]:
     if vec is None:
         return None
+    return (
+        float(vec[0]),
+        float(vec[1]),
+        float(vec[2]),
+    )
+
+
+def vector3_as_float(vec: Tuple[Number, Number, Number]) -> Vector3:
     return (
         float(vec[0]),
         float(vec[1]),
@@ -199,7 +209,7 @@ class WkGraph:
         for node in self.get_nodes():
             if node.id == node_id:
                 return node
-        assert ValueError(f"No node with id {node_id} was found")
+        raise ValueError(f"No node with id {node_id} was found")
 
     def add_node(self, *args: List[Any], **kwargs: Dict[str, Any]) -> "Node":
 
@@ -251,9 +261,9 @@ class NML:
         self.scale = vector3_as_float(self.scale)
         # Todo: Casting to str first is only done to satisfy mypy
         self.time = int(str(self.time))
-        self.offset = vector3_as_float(self.offset)
-        self.editPosition = vector3_as_float(self.editPosition)
-        self.editRotation = vector3_as_float(self.editRotation)
+        self.offset = opt_vector3_as_float(self.offset)
+        self.editPosition = opt_vector3_as_float(self.editPosition)
+        self.editRotation = opt_vector3_as_float(self.editRotation)
 
     def flattened_graphs(self) -> Generator["WkGraph", None, None]:
 
@@ -265,7 +275,7 @@ class NML:
         for graph in self.root_group.flattened_graphs():
             if graph.id == graph_id:
                 return graph
-        assert ValueError(f"No graph with id {graph_id} was found")
+        raise ValueError(f"No graph with id {graph_id} was found")
 
     def add_graph(self, name: str, **kwargs) -> "WkGraph":
 
@@ -296,7 +306,7 @@ class NML:
     @staticmethod
     def from_path(file_path: str) -> "NML":
 
-        with open(file_path, "r") as file_handle:
+        with open(file_path, "rb") as file_handle:
             return NML.from_legacy_nml(legacy_wknml.parse_nml(file_handle))
 
     @staticmethod
@@ -401,7 +411,7 @@ class NML:
 
         return new_graph
 
-    def write(self, out_path) -> None:
+    def write(self, out_path: str) -> None:
 
         legacy_nml = nml_generation.generate_nml(
             self.root_group,

@@ -16,6 +16,12 @@ def enforce_not_null(val: Optional[T]) -> T:
     return val
 
 
+def enforce_not_null_str(val: Optional[str]) -> str:
+    if val is None:
+        raise ValueError("Value is None")
+    return val
+
+
 class NMLParameters(NamedTuple):
     """
     Contains common metadata for NML files
@@ -185,14 +191,14 @@ class NML(NamedTuple):
     volume: Optional[Volume] = None
 
 
-def __parse_user_bounding_boxes(nml_parameters: Element):
+def __parse_user_bounding_boxes(nml_parameters: Element) -> List[IntVector6]:
     # ToDo support color, id, name, isVisible attributes
     # https://github.com/scalableminds/wknml/issues/46
     bb_elements = nml_parameters.findall("userBoundingBox")
     return [__parse_bounding_box(bb_element) for bb_element in bb_elements]
 
 
-def __parse_task_bounding_box(nml_parameters: Element):
+def __parse_task_bounding_box(nml_parameters: Element) -> Optional[IntVector6]:
     bb_element = nml_parameters.find("taskBoundingBox")
     if bb_element is not None:
         return __parse_bounding_box(bb_element)
@@ -244,7 +250,9 @@ def __parse_parameters(nml_parameters: Element) -> NMLParameters:
 
     zoomLevel = 0
     if nml_parameters.find("zoomLevel") is not None:
-        zoomLevel = enforce_not_null(nml_parameters.find("zoomLevel")).get("zoom", 0)
+        zoomLevel = int(
+            enforce_not_null(nml_parameters.find("zoomLevel")).get("zoom", 0)
+        )
 
     taskBoundingBox = __parse_task_bounding_box(nml_parameters)
     userBoundingBoxes = __parse_user_bounding_boxes(nml_parameters)
@@ -289,8 +297,8 @@ def __parse_node(nml_node: Element) -> Node:
             float(nml_node.get("z", 0)),
         ),
         rotation=rotation,
-        inVp=int(nml_node.get("inVp"), 0) if nml_node.get("inVp") is not None else None,
-        inMag=int(nml_node.get("inMag"), 0)
+        inVp=int(nml_node.get("inVp", 0)) if nml_node.get("inVp") is not None else None,
+        inMag=int(nml_node.get("inMag", 0))
         if nml_node.get("inMag") is not None
         else None,
         bitDepth=int(nml_node.get("bitDepth", 0))
@@ -345,8 +353,8 @@ def __parse_tree(nml_tree: Element) -> Tree:
 
 def __parse_branchpoint(nml_branchpoint: Element) -> Branchpoint:
     return Branchpoint(
-        int(enforce_not_null(nml_branchpoint.get("id"))),
-        int(enforce_not_null(nml_branchpoint.get("time")))
+        int(enforce_not_null_str(nml_branchpoint.get("id"))),
+        int(enforce_not_null_str(nml_branchpoint.get("time")))
         if nml_branchpoint.get("time") is not None
         else None,
     )
@@ -443,6 +451,8 @@ def parse_nml(file: BinaryIO) -> NML:
                 # Discard the element to save memory
                 elem.clear()
 
+    assert parameters is not None, "No parameters found in NML"
+
     return NML(
         parameters=parameters,
         trees=trees,
@@ -456,7 +466,7 @@ def parse_nml(file: BinaryIO) -> NML:
 def __dump_task_bounding_box(xf: XmlWriter, parameters: NMLParameters) -> None:
     task_bounding_box = getattr(parameters, "taskBoundingBox")
     if task_bounding_box is not None:
-        __dump_bounding_box(task_bounding_box, "taskBoundingBox")
+        __dump_bounding_box(xf, task_bounding_box, "taskBoundingBox")
 
 
 def __dump_user_bounding_boxes(xf: XmlWriter, parameters: NMLParameters) -> None:
