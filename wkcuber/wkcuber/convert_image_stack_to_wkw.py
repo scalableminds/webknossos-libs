@@ -68,21 +68,14 @@ def main(args: Namespace) -> None:
         args.start_z,
         args.pad,
         args,
+        args.scale,
     )
 
-    #write_webknossos_metadata(
-    #    args.target_path,
-    #    args.name,
-    #    args.scale,
-    #    compute_max_id=False,
-    #    exact_bounding_box=bounding_box,
-    #)
-
     if not args.no_compress:
-        compress_mag_inplace(args.target_path, args.layer_name, Mag(1), args)  # TODO: why is this always Mag(1) and not target_mag?
+        compress_mag_inplace(args.target_path, args.layer_name, Mag(1), args)
 
     ds.get_layer(args.layer_name).downsample(
-        from_mag=Mag(1),  # TODO: same here
+        from_mag=Mag(1),
         max_mag=None if args.max_mag is None else Mag(args.max_mag),
         compress=not args.no_compress,
         sampling_mode=args.sampling_mode,
