@@ -3,13 +3,12 @@ import logging
 from typing import List, Tuple, Optional
 
 import numpy as np
-import wkw
 from argparse import ArgumentParser, Namespace
 from os import path
 from pathlib import Path
 from natsort import natsorted
 
-from webknossos.dataset import Dataset, LayerCategories, MagView, View
+from webknossos.dataset import Dataset, LayerCategories, View
 from webknossos.geometry import BoundingBox
 from .mag import Mag
 from .downsampling_utils import (
@@ -22,9 +21,6 @@ from .utils import (
     find_files,
     add_batch_size_flag,
     add_verbose_flag,
-    open_wkw,
-    ensure_wkw,
-    WkwDatasetInfo,
     add_distribution_flags,
     add_interpolation_flag,
     get_executor_for_args,
@@ -32,7 +28,6 @@ from .utils import (
     setup_logging,
 )
 from .image_readers import image_reader
-from .metadata import convert_element_class_to_dtype
 
 BLOCK_LEN = 32
 

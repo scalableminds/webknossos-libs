@@ -1,7 +1,5 @@
-from wkcuber import downsample_mags
 from .cubing import cubing, create_parser as create_cubing_parser
 from .compress import compress_mag_inplace
-from .metadata import write_webknossos_metadata, refresh_metadata
 from .utils import (
     add_isotropic_flag,
     setup_logging,
