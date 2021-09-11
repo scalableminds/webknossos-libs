@@ -376,5 +376,4 @@ if __name__ == "__main__":
         args.start_z,
         args.pad,
         args,
-        args.scale,
     )
