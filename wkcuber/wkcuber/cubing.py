@@ -181,7 +181,11 @@ def cubing_job(
         for source_file_batch in get_chunks(source_file_batches, batch_size):
             try:
                 ref_time = time.time()
-                logging.info("Cubing z={}-{}".format(first_z_idx, first_z_idx + len(source_file_batch)))
+                logging.info(
+                    "Cubing z={}-{}".format(
+                        first_z_idx, first_z_idx + len(source_file_batch)
+                    )
+                )
                 slices = []
                 # Iterate over each z section in the batch
                 for i, file_name in enumerate(source_file_batch):
@@ -217,18 +221,20 @@ def cubing_job(
                         for _slice in slices
                     ]
 
-                buffer = prepare_slices_for_wkw(
-                    slices, target_view.header.num_channels
-                )
+                buffer = prepare_slices_for_wkw(slices, target_view.header.num_channels)
                 if downsampling_needed:
                     buffer = downsample_unpadded_data(
                         buffer, target_mag, interpolation_mode
                     )
-                buffer_z_offset = (first_z_idx-target_view.global_offset[2])//target_mag.to_array()[2]
+                buffer_z_offset = (
+                    first_z_idx - target_view.global_offset[2]
+                ) // target_mag.to_array()[2]
                 target_view.write(offset=(0, 0, buffer_z_offset), data=buffer)
                 logging.debug(
                     "Cubing of z={}-{} took {:.8f}s".format(
-                        first_z_idx, first_z_idx + len(source_file_batch), time.time() - ref_time
+                        first_z_idx,
+                        first_z_idx + len(source_file_batch),
+                        time.time() - ref_time,
                     )
                 )
                 first_z_idx += len(source_file_batch)
@@ -299,19 +305,17 @@ def cubing(
         layer_name,
         LayerCategories.COLOR_TYPE,
         dtype_per_channel=dtype,
-        num_channels=num_channels
+        num_channels=num_channels,
     )
-    target_layer.bounding_box = BoundingBox((0, 0, start_z), (num_x, num_y, start_z + num_z))
+    target_layer.bounding_box = BoundingBox(
+        (0, 0, start_z), (num_x, num_y, start_z + num_z)
+    )
 
     target_mag_view = target_layer.add_mag(
-        target_mag,
-        file_len=wkw_file_len,
-        block_len=BLOCK_LEN
+        target_mag, file_len=wkw_file_len, block_len=BLOCK_LEN
     )
 
-    interpolation_mode = parse_interpolation_mode(
-        interpolation_mode_str, layer_name
-    )
+    interpolation_mode = parse_interpolation_mode(interpolation_mode_str, layer_name)
     if target_mag != Mag(1):
         logging.info(
             f"Downsampling the cubed image to {target_mag} in memory with interpolation mode {interpolation_mode}."
@@ -332,14 +336,16 @@ def cubing(
                 source_files_array = source_files * (max_z - z)
 
             bbox_of_batch_in_mag1 = BoundingBox((0, 0, z), (num_x, num_y, max_z - z))
-            bbox_of_batch_in_target_mag = target_layer.bounding_box.intersected_with(bbox_of_batch_in_mag1).align_with_mag(target_mag, ceil=True)
+            bbox_of_batch_in_target_mag = target_layer.bounding_box.intersected_with(
+                bbox_of_batch_in_mag1
+            ).align_with_mag(target_mag, ceil=True)
 
             # Prepare job
             job_args.append(
                 (
                     target_mag_view.get_view(
                         bbox_of_batch_in_target_mag.topleft,
-                        bbox_of_batch_in_target_mag.size
+                        bbox_of_batch_in_target_mag.size,
                     ),
                     target_mag,
                     interpolation_mode,
