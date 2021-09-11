@@ -140,10 +140,10 @@ def add_sampling_mode_flag(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--sampling_mode",
         help="There are three different types: "
-        "'auto' - The next magnification is chosen so that the width, height and depth of a downsampled voxel assimilate. For example, if the z resolution is worse than the x/y resolution, z won't be downsampled in the first downsampling step(s). As a basis for this method, the scale from the datasource-properties.json is used. "
+        "'anisotropic' - The next magnification is chosen so that the width, height and depth of a downsampled voxel assimilate. For example, if the z resolution is worse than the x/y resolution, z won't be downsampled in the first downsampling step(s). As a basis for this method, the scale from the datasource-properties.json is used. "
         "'isotropic' - Each dimension is downsampled equally. "
         "'constant_z' - The x and y dimensions are downsampled equally, but the z dimension remains the same.",
-        default="auto",
+        default="anisotropic",
     )
 
 

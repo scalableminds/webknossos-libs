@@ -28,9 +28,9 @@ python -m wkcuber.downsampling \
   --buffer_cube_size 128 \
   --layer_name color \
   testoutput/tiff
-[ -d testoutput/tiff/color/8-8-2 ]
-[ -d testoutput/tiff/color/16-16-4 ]
-[ $(find testoutput/tiff/color/8-8-2 -mindepth 3 -name "*.wkw" | wc -l) -eq 1 ]
-[ $(find testoutput/tiff/color/16-16-4 -mindepth 3 -name "*.wkw" | wc -l) -eq 1 ]
+[ -d testoutput/tiff/color/8-8-4 ]
+[ -d testoutput/tiff/color/16-16-8 ]
+[ $(find testoutput/tiff/color/8-8-4 -mindepth 3 -name "*.wkw" | wc -l) -eq 1 ]
+[ $(find testoutput/tiff/color/16-16-8 -mindepth 3 -name "*.wkw" | wc -l) -eq 1 ]
 
 
