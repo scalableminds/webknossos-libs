@@ -326,6 +326,28 @@ class Dataset:
                 **kwargs,
             )
 
+    def add_layer_like(self, other_layer: Layer, layer_name: str) -> Layer:
+        if layer_name in self.layers.keys():
+            raise IndexError(
+                f"Adding layer {layer_name} failed. There is already a layer with this name"
+            )
+
+        layer_properties = copy.copy(other_layer._properties)
+        layer_properties.wkw_resolutions = []
+        layer_properties.name = layer_name
+
+        self._properties.data_layers += [layer_properties]
+        if layer_properties.category == LayerCategories.COLOR_TYPE:
+            self._layers[layer_name] = Layer(self, layer_properties)
+        elif layer_properties.category == LayerCategories.SEGMENTATION_TYPE:
+            self._layers[layer_name] = SegmentationLayer(self, layer_properties)
+        else:
+            raise RuntimeError(
+                f"Failed to add layer ({layer_name}) because of invalid category ({layer_properties.category}). The supported categories are '{LayerCategories.COLOR_TYPE}' and '{LayerCategories.SEGMENTATION_TYPE}'"
+            )
+        self._export_as_json()
+        return self._layers[layer_name]
+
     def get_segmentation_layer(self) -> SegmentationLayer:
         """
         Returns the only segmentation layer.
@@ -376,9 +398,8 @@ class Dataset:
         if isinstance(foreign_layer, Layer):
             foreign_layer_path = foreign_layer.path
         else:
-            foreign_layer_path = Path(foreign_layer).absolute()
+            foreign_layer_path = Path(foreign_layer)
 
-        foreign_layer_path = foreign_layer_path.resolve()
         layer_name = foreign_layer_path.name
         if layer_name in self.layers.keys():
             raise IndexError(
@@ -388,7 +409,7 @@ class Dataset:
         foreign_layer_symlink_path = (
             Path(os.path.relpath(foreign_layer_path, self.path))
             if make_relative
-            else foreign_layer_path
+            else Path(os.path.abspath(foreign_layer_path))
         )
         os.symlink(foreign_layer_symlink_path, join(self.path, layer_name))
         original_layer = Dataset(foreign_layer_path.parent).get_layer(layer_name)
@@ -412,7 +433,7 @@ class Dataset:
         else:
             foreign_layer_path = Path(foreign_layer)
 
-        foreign_layer_path = foreign_layer_path.resolve()
+        foreign_layer_path = Path(os.path.abspath(foreign_layer_path))
         layer_name = foreign_layer_path.name
         if layer_name in self.layers.keys():
             raise IndexError(

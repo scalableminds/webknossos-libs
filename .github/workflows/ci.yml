@@ -55,6 +55,8 @@ jobs:
         poetry run ./typecheck.sh
 
     - name: Python tests
+      env:
+        WK_TOKEN: ${{ secrets.WK_TOKEN }}
       run: poetry run pytest tests
 
     - name: Check if git is dirty
@@ -97,14 +99,13 @@ jobs:
       if: ${{ needs.changes.outputs.wkcuber == 'true' }}
 
     - name: Check typing
-      run: |
-        ./typecheck.sh
+      run: poetry run ./typecheck.sh
 
     - name: Python tests
       run: poetry run pytest tests
 
     - name: CLI tests
-      run: tests/scripts/all_tests.sh
+      run: poetry run tests/scripts/all_tests.sh
 
     - name: Check if git is dirty
       run: |
@@ -145,7 +146,7 @@ jobs:
 
     - name: CLI tests
       shell: bash
-      run: tests/scripts/all_tests.sh
+      run: poetry run "C:\Program Files\Git\bin\bash.EXE" --noprofile --norc tests/scripts/all_tests.sh
 
   wkcuber_mac:
     runs-on: macos-latest
@@ -176,7 +177,7 @@ jobs:
       run: poetry run pytest tests
 
     - name: CLI tests
-      run: tests/scripts/all_tests.sh
+      run: poetry run tests/scripts/all_tests.sh
 
   wkcuber_docker:
     needs: [webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac]

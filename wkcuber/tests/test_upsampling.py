@@ -29,7 +29,7 @@ def test_upsampling() -> None:
             from_mag=Mag([4, 4, 2]),
             min_mag=Mag(1),
             compress=False,
-            sampling_mode=SamplingModes.AUTO,
+            sampling_mode=SamplingModes.ANISOTROPIC,
             buffer_edge_len=64,
             args=None,
         )

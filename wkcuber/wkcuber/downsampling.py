@@ -79,6 +79,13 @@ def create_parser() -> ArgumentParser:
         action="store_true",
     )
 
+    parser.add_argument(
+        "--force_sampling_scheme",
+        default=False,
+        type=bool,
+        help="Specifies if the layer should even be downsampled if the calculated downsampling scheme is not supported by webknossos. Depending on this flag, a warning or an error is raised.",
+    )
+
     add_interpolation_flag(parser)
     add_verbose_flag(parser)
     add_sampling_mode_flag(parser)
@@ -97,7 +104,8 @@ def downsample_mags(
     buffer_edge_len: int = None,
     compress: bool = True,
     args: Namespace = None,
-    sampling_mode: str = SamplingModes.AUTO,
+    sampling_mode: str = SamplingModes.ANISOTROPIC,
+    force_sampling_scheme: bool = False,
 ) -> None:
     assert layer_name and from_mag or not layer_name and not from_mag, (
         "You provided only one of the following "
@@ -119,6 +127,7 @@ def downsample_mags(
         compress=compress,
         sampling_mode=sampling_mode,
         buffer_edge_len=buffer_edge_len,
+        force_sampling_scheme=force_sampling_scheme,
         args=args,
     )
 
@@ -134,7 +143,7 @@ if __name__ == "__main__":
 
     if args.anisotropic_target_mag is not None:
         raise DeprecationWarning(
-            "The 'anisotropic_target_mag' flag is deprecated. Use 'target_mag' instead (and consider changing the 'sampling_mode')"
+            "The 'anisotropic_target_mag' flag is deprecated. Use '--max' instead (and consider changing the 'sampling_mode')"
         )
 
     from_mag = Mag(args.from_mag)
@@ -149,5 +158,6 @@ if __name__ == "__main__":
         compress=not args.no_compress,
         sampling_mode=args.sampling_mode,
         buffer_edge_len=args.buffer_cube_size,
+        force_sampling_scheme=args.force_sampling_scheme,
         args=get_executor_args(args),
     )
