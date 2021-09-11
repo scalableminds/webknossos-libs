@@ -177,7 +177,6 @@ def cubing_job(
         # Iterate over batches of continuous z sections
         # The batches have a maximum size of `batch_size`
         # Batched iterations allows to utilize IO more efficiently
-
         first_z_idx = target_view.global_offset[2]
         for source_file_batch in get_chunks(source_file_batches, batch_size):
             try:
@@ -302,9 +301,7 @@ def cubing(
         dtype_per_channel=dtype,
         num_channels=num_channels
     )
-    target_layer.bounding_box = BoundingBox((0, 0, start_z), (num_x, num_y, num_z))
-
-    print(target_layer.bounding_box)
+    target_layer.bounding_box = BoundingBox((0, 0, start_z), (num_x, num_y, start_z + num_z))
 
     target_mag_view = target_layer.add_mag(
         target_mag,

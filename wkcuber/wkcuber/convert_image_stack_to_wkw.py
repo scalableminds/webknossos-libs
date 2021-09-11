@@ -80,19 +80,6 @@ def main(args: Namespace) -> None:
         args=get_executor_args(args),
     )
 
-    #downsample_mags(
-    #    path=args.target_path,
-    #    layer_name=args.layer_name,
-    #    from_mag=Mag(1),
-    #    max_mag=None if args.max_mag is None else Mag(args.max_mag),
-    #    interpolation_mode="default",
-    #    compress=not args.no_compress,
-    #    sampling_mode=args.sampling_mode,
-    #    args=get_executor_args(args),
-    #)
-
-    #refresh_metadata(args.target_path)
-
 
 if __name__ == "__main__":
     args = create_parser().parse_args()
