@@ -15,8 +15,11 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 
 ### Changed
 - Adjust downsampling scheme to always try to minimize the scaled difference between the different dimensions of a mag and renamed the sampling mode `auto` to `anisotropic`. [#391](https://github.com/scalableminds/webknossos-libs/pull/391)
+- Make parameter `executor` optional for `View.for_each_chunk` and `View.for_zipped_chunks`. [#404](https://github.com/scalableminds/webknossos-libs/pull/404)
+
 
 ### Fixed
+- Reverted that `dataset.add_symlink_layer` and `dataset.add_copy_layer` resolved the layer path if it was a symlink. [#408](https://github.com/scalableminds/webknossos-libs/pull/408)
 
 ## [0.8.13](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.13) - 2021-09-01
 [Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.12...v0.8.13)

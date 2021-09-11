@@ -24,11 +24,10 @@ from webknossos.dataset.properties import (
     DatasetViewConfiguration,
     LayerViewConfiguration,
     SegmentationLayerProperties,
-    _snake_to_camel_case,
     dataset_converter,
 )
 from webknossos.geometry import BoundingBox, Mag
-from webknossos.utils import get_executor_for_args, named_partial
+from webknossos.utils import get_executor_for_args, named_partial, snake_to_camel_case
 
 TESTDATA_DIR = Path("testdata")
 TESTOUTPUT_DIR = Path("testoutput")
@@ -620,13 +619,23 @@ def test_chunking_wk(tmp_path: Path) -> None:
     original_data = (np.random.rand(50, 100, 150) * 205).astype(np.uint8)
     mag.write(offset=(70, 80, 90), data=original_data)
 
+    # Test with executor
     with get_executor_for_args(None) as executor:
         mag.for_each_chunk(
             chunk_job,
             chunk_size=(64, 64, 64),
             executor=executor,
         )
+    assert np.array_equal(original_data + 50, mag.get_view().read()[0])
 
+    # Reset the data
+    mag.write(offset=(70, 80, 90), data=original_data)
+
+    # Test without executor
+    mag.for_each_chunk(
+        chunk_job,
+        chunk_size=(64, 64, 64),
+    )
     assert np.array_equal(original_data + 50, mag.get_view().read()[0])
 
     assure_exported_properties(ds)
@@ -1650,7 +1659,7 @@ def test_dataset_view_configuration(tmp_path: Path) -> None:
         properties = json.load(f)
         view_configuration_dict = properties["defaultViewConfiguration"]
         for k in view_configuration_dict.keys():
-            assert _snake_to_camel_case(k) == k
+            assert snake_to_camel_case(k) == k
 
     assure_exported_properties(ds1)
 
@@ -1707,7 +1716,7 @@ def test_layer_view_configuration(tmp_path: Path) -> None:
             "defaultViewConfiguration"
         ]
         for k in view_configuration_dict.keys():
-            assert _snake_to_camel_case(k) == k
+            assert snake_to_camel_case(k) == k
 
     assure_exported_properties(ds1)
 
