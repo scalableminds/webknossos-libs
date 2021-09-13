@@ -30,6 +30,10 @@ GroupOrGraph = Union["Group", "WkGraph"]
 nml_id_generator = itertools.count()
 
 
+def open_nml(file_path: str) -> "NML":
+    return NML.from_path(file_path)
+
+
 def opt_vector3_as_float(
     vec: Optional[Tuple[Number, Number, Number]]
 ) -> Optional[Vector3]:
@@ -65,130 +69,6 @@ def random_color_rgba() -> Tuple[float, float, float, float]:
     return (r, g, b, 1.0)
 
 
-def generate_nml(
-    group: "Group",
-    parameters: Dict[str, Any] = None,
-    globalize_ids: bool = True,
-    volume_dict: Optional[Dict[str, Any]] = None,
-) -> LegacyNML:
-    """
-    A utility to convert a [NetworkX graph object](https://networkx.org/) into wK NML skeleton annotation object. Accepts both a simple list of multiple skeletons/trees or a dictionary grouping skeleton inputs.
-
-    Arguments:
-        tree_dict (Union[List[nx.Graph], Dict[str, List[nx.Graph]]]): A list of wK tree-like structures as NetworkX graphs or a dictionary of group names and same lists of NetworkX tree objects.
-        parameters (Dict[str, Any]): A dictionary representation of the skeleton annotation metadata. See `LegacyNMLParameters` for accepted attributes.
-        globalize_ids (bool = True): An option to re-assign new, globally unique IDs to all skeletons. Default: `True`
-        volume (Optional[Dict[str, Any]] = None): A dictionary representation of a reference to a wK volume annotation. See `LegacyVolume` object for attributes.
-
-    Return:
-        nml (LegacyNML): A wK LegacyNML skeleton annotation object
-    """
-
-    parameters = parameters or {}
-
-    if globalize_ids:
-        # globalize_tree_ids(tree_dict)
-        # globalize_node_ids(tree_dict)
-        pass
-
-    nmlParameters = LegacyNMLParameters(
-        name=parameters.get("name", "dataset"),
-        scale=parameters.get("scale", None),
-        offset=parameters.get("offset", None),
-        time=parameters.get("time", None),
-        editPosition=parameters.get("editPosition", None),
-        editRotation=parameters.get("editRotation", None),
-        zoomLevel=parameters.get("zoomLevel", None),
-        taskBoundingBox=parameters.get("taskBoundingBox", None),
-        userBoundingBoxes=parameters.get("userBoundingBoxes", None),
-    )
-
-    comments = [
-        LegacyComment(node.id, node.comment)
-        for graph in group.flattened_graphs()
-        for node in graph.nx_graph.nodes
-        if node.comment is not None
-    ]
-
-    branchpoints = [
-        LegacyBranchpoint(node.id, node.time)
-        for graph in group.flattened_graphs()
-        for node in graph.nx_graph.nodes
-        if node.is_branchpoint
-    ]
-
-    graphs = []
-
-    for graph in sorted(group.flattened_graphs(), key=lambda g: g.id):
-
-        nodes, edges = extract_nodes_and_edges_from_graph(graph)
-        color = graph.color or random_color_rgba()
-        name = graph.name or f"tree{graph.id}"
-
-        graphs.append(
-            LegacyTree(
-                nodes=nodes,
-                edges=edges,
-                id=graph.id,
-                name=name,
-                groupId=graph.group_id if graph.group_id != group.id else None,
-                color=color,
-            )
-        )
-
-    volume = None
-    if volume_dict is not None and "location" in volume_dict and "id" in volume_dict:
-        volume = LegacyVolume(
-            id=int(enforce_not_null_str(volume_dict.get("id"))),
-            location=enforce_not_null_str(volume_dict.get("location")),
-            fallback_layer=volume_dict.get("fallback_layer"),
-        )
-
-    nml = LegacyNML(
-        parameters=nmlParameters,
-        trees=graphs,
-        branchpoints=branchpoints,
-        comments=comments,
-        groups=group.as_legacy_group().children,
-        volume=volume,
-    )
-
-    return nml
-
-
-def extract_nodes_and_edges_from_graph(
-    graph: nx.Graph,
-) -> Tuple[List[LegacyNode], List[LegacyEdge]]:
-    """
-    A utility to convert a single [NetworkX graph object](https://networkx.org/) into a list of `LegacyNode` objects and `Edge` objects.
-
-    Return
-        Tuple[List[LegacyNode], List[Edge]]: A tuple containing both all nodes and all edges
-    """
-
-    node_nml = [
-        LegacyNode(
-            id=node.id,
-            position=node.position,
-            radius=node.radius,
-            rotation=node.rotation,
-            inVp=node.inVp,
-            inMag=node.inMag,
-            bitDepth=node.bitDepth,
-            interpolation=node.interpolation,
-            time=node.time,
-        )
-        for node in graph.nx_graph.nodes
-    ]
-
-    edge_nml = [
-        LegacyEdge(source=edge[0].id, target=edge[1].id)
-        for edge in graph.nx_graph.edges
-    ]
-
-    return node_nml, edge_nml
-
-
 @attr.define()
 class Group:
     id: int = attr.ib(init=False)
@@ -196,7 +76,6 @@ class Group:
     children: List[GroupOrGraph]
     _nml: "NML"
     is_root_group: bool = False
-    # _parent: Union["Group", "NML"]
     _enforce_id: Optional[int] = None
 
     def __attrs_post_init__(self) -> None:
@@ -205,17 +84,6 @@ class Group:
             self.id = self._enforce_id
         else:
             self.id = self._nml.element_id_generator.__next__()
-
-    # def add_graph(
-    #     self, name: str, enforce_id: Optional[int] = None, **kwargs: Dict[str, Any]
-    # ) -> "WkGraph":
-
-    #     new_graph = WkGraph(
-    #         name=name, nml=self._nml, group_id=self.id, enforce_id=enforce_id, **kwargs  # type: ignore
-    #     )
-    #     self.children.append(new_graph)
-
-    #     return new_graph
 
     def add_graph(
         self,
@@ -613,10 +481,9 @@ class NML:
 
     def write(self, out_path: str) -> None:
 
-        legacy_nml = generate_nml(
+        legacy_nml = NMLExporter.generate_nml(
             self.root_group,
             self._get_legacy_parameters(),
-            globalize_ids=False,
         )
 
         with open(out_path, "wb") as f:
@@ -637,5 +504,124 @@ class NML:
         }
 
 
-def open_nml(file_path: str) -> "NML":
-    return NML.from_path(file_path)
+class NMLExporter:
+    @staticmethod
+    def generate_nml(
+        group: "Group",
+        parameters: Dict[str, Any] = None,
+        volume_dict: Optional[Dict[str, Any]] = None,
+    ) -> LegacyNML:
+        """
+        A utility to convert a [NetworkX graph object](https://networkx.org/) into wK NML skeleton annotation object. Accepts both a simple list of multiple skeletons/trees or a dictionary grouping skeleton inputs.
+
+        Arguments:
+            tree_dict (Union[List[nx.Graph], Dict[str, List[nx.Graph]]]): A list of wK tree-like structures as NetworkX graphs or a dictionary of group names and same lists of NetworkX tree objects.
+            parameters (Dict[str, Any]): A dictionary representation of the skeleton annotation metadata. See `LegacyNMLParameters` for accepted attributes.
+            volume (Optional[Dict[str, Any]] = None): A dictionary representation of a reference to a wK volume annotation. See `LegacyVolume` object for attributes.
+
+        Return:
+            nml (LegacyNML): A wK LegacyNML skeleton annotation object
+        """
+
+        parameters = parameters or {}
+
+        nmlParameters = LegacyNMLParameters(
+            name=parameters.get("name", "dataset"),
+            scale=parameters.get("scale", None),
+            offset=parameters.get("offset", None),
+            time=parameters.get("time", None),
+            editPosition=parameters.get("editPosition", None),
+            editRotation=parameters.get("editRotation", None),
+            zoomLevel=parameters.get("zoomLevel", None),
+            taskBoundingBox=parameters.get("taskBoundingBox", None),
+            userBoundingBoxes=parameters.get("userBoundingBoxes", None),
+        )
+
+        comments = [
+            LegacyComment(node.id, node.comment)
+            for graph in group.flattened_graphs()
+            for node in graph.nx_graph.nodes
+            if node.comment is not None
+        ]
+
+        branchpoints = [
+            LegacyBranchpoint(node.id, node.time)
+            for graph in group.flattened_graphs()
+            for node in graph.nx_graph.nodes
+            if node.is_branchpoint
+        ]
+
+        graphs = []
+
+        for graph in sorted(group.flattened_graphs(), key=lambda g: g.id):
+
+            nodes, edges = NMLExporter.extract_nodes_and_edges_from_graph(graph)
+            color = graph.color or random_color_rgba()
+            name = graph.name or f"tree{graph.id}"
+
+            graphs.append(
+                LegacyTree(
+                    nodes=nodes,
+                    edges=edges,
+                    id=graph.id,
+                    name=name,
+                    groupId=graph.group_id if graph.group_id != group.id else None,
+                    color=color,
+                )
+            )
+
+        volume = None
+        if (
+            volume_dict is not None
+            and "location" in volume_dict
+            and "id" in volume_dict
+        ):
+            volume = LegacyVolume(
+                id=int(enforce_not_null_str(volume_dict.get("id"))),
+                location=enforce_not_null_str(volume_dict.get("location")),
+                fallback_layer=volume_dict.get("fallback_layer"),
+            )
+
+        nml = LegacyNML(
+            parameters=nmlParameters,
+            trees=graphs,
+            branchpoints=branchpoints,
+            comments=comments,
+            groups=group.as_legacy_group().children,
+            volume=volume,
+        )
+
+        return nml
+
+    @staticmethod
+    def extract_nodes_and_edges_from_graph(
+        graph: nx.Graph,
+    ) -> Tuple[List[LegacyNode], List[LegacyEdge]]:
+        """
+        A utility to convert a single [NetworkX graph object](https://networkx.org/) into a list of `LegacyNode` objects and `Edge` objects.
+
+        Return
+            Tuple[List[LegacyNode], List[Edge]]: A tuple containing both all nodes and all edges
+        """
+
+        node_nml = [
+            LegacyNode(
+                id=node.id,
+                position=node.position,
+                radius=node.radius,
+                rotation=node.rotation,
+                inVp=node.inVp,
+                inMag=node.inMag,
+                bitDepth=node.bitDepth,
+                interpolation=node.interpolation,
+                time=node.time,
+            )
+            for node in graph.nx_graph.nodes
+        ]
+
+        edge_nml = [
+            LegacyEdge(source=edge[0].id, target=edge[1].id)
+            for edge in graph.nx_graph.edges
+        ]
+
+        return node_nml, edge_nml
