@@ -221,7 +221,6 @@ class Group:
         self,
         name: str,
         color: Optional[Vector4] = None,
-        group_id: Optional[int] = None,
         _nml: Optional["NML"] = None,
         _enforce_id: Optional[int] = None,
     ) -> "WkGraph":
@@ -229,7 +228,7 @@ class Group:
         new_graph = WkGraph(
             name=name,
             color=color,
-            group_id=group_id,
+            group_id=self.id,
             nml=_nml or self._nml,
             enforce_id=_enforce_id,
         )
@@ -241,10 +240,10 @@ class Group:
         self,
         name: str,
         children: Optional[List[GroupOrGraph]] = None,
-        enforce_id: int = None,
+        _enforce_id: int = None,
     ) -> "Group":
 
-        new_group = Group(name, children or [], nml=self._nml, enforce_id=enforce_id)  # type: ignore
+        new_group = Group(name, children or [], nml=self._nml, enforce_id=_enforce_id)  # type: ignore
         self.children.append(new_group)
         return new_group
 
@@ -379,8 +378,8 @@ class WkGraph:
         time: Optional[int] = None,
         is_branchpoint: bool = False,
         branchpoint_time: Optional[int] = None,
-        enforce_id: Optional[int] = None,
-        nml: Optional["NML"] = None,
+        _enforce_id: Optional[int] = None,
+        _nml: Optional["NML"] = None,
     ) -> Node:
         node = Node(
             position=position,
@@ -394,8 +393,8 @@ class WkGraph:
             time=time,
             is_branchpoint=is_branchpoint,
             branchpoint_time=branchpoint_time,
-            nml=nml or self._nml,
-            enforce_id=enforce_id,
+            enforce_id=_enforce_id,
+            nml=_nml or self._nml,
         )
         self.nx_graph.add_node(node)
         return node
@@ -459,7 +458,6 @@ class NML:
         self,
         name: str,
         color: Optional[Vector4] = None,
-        group_id: Optional[int] = None,
         _nml: Optional["NML"] = None,
         _enforce_id: Optional[int] = None,
     ) -> "WkGraph":
@@ -467,7 +465,6 @@ class NML:
         return self.root_group.add_graph(
             name,
             color,
-            group_id,
             _nml,
             _enforce_id,
         )
@@ -522,7 +519,7 @@ class NML:
 
             for legacy_group in legacy_groups:
                 sub_group = current_group.add_group(
-                    name=legacy_group.name, enforce_id=legacy_group.id
+                    name=legacy_group.name, _enforce_id=legacy_group.id
                 )
                 groups_by_id[sub_group.id] = sub_group
                 visit_groups(legacy_group.children, sub_group)
@@ -575,9 +572,9 @@ class NML:
         for legacy_node in legacy_tree.nodes:
             node_id = legacy_node.id
             node_by_id[node_id] = new_graph.add_node(
-                position=legacy_node.position,  # type: ignore
-                enforce_id=node_id,  # type: ignore
-                radius=legacy_node.radius,  # type: ignore
+                position=legacy_node.position,
+                _enforce_id=node_id,
+                radius=legacy_node.radius,
             )
 
             for optional_attribute in optional_attribute_list:

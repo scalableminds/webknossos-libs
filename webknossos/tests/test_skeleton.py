@@ -86,6 +86,8 @@ def test_skeleton_creation() -> None:
 
     groups = list(nml.flattened_groups())
     assert len(groups) == 2
+    assert isinstance(groups[0].children[0], skeleton.WkGraph)
+    assert groups[0].children[0].group_id == groups[0].id
 
 
 def diff_files(path_a: str, path_b: str) -> None:
