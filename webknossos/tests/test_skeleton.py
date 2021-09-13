@@ -1,6 +1,3 @@
-# import pytest
-
-# with pytest.raises(AssertionError):
 import difflib
 import tempfile
 from itertools import combinations
