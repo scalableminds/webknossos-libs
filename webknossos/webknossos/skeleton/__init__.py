@@ -534,7 +534,7 @@ class NML:
                 new_graph = groups_by_id[legacy_tree.groupId].add_graph(
                     legacy_tree.name, _enforce_id=legacy_tree.id
                 )
-            NML.nml_tree_to_graph(legacy_nml, nml, new_graph, legacy_tree)
+            NML.nml_tree_to_graph(legacy_nml, new_graph, legacy_tree)
 
         nml.write("out_only_groups.nml")
 
@@ -546,7 +546,6 @@ class NML:
     @staticmethod
     def nml_tree_to_graph(
         legacy_nml: LegacyNML,
-        new_nml: "NML",
         new_graph: "WkGraph",
         legacy_tree: LegacyTree,
     ) -> nx.Graph:
