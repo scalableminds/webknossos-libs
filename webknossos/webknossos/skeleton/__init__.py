@@ -2,15 +2,24 @@ import numpy as np
 from typing import List, Tuple, Optional, Union, Generator, Dict, Any, Iterator
 import itertools
 import networkx as nx
-from icecream import ic
-
-
 import attr
+from icecream import ic
+from webknossos.skeleton.legacy import (
+    NMLParameters as LegacyNMLParameters,
+    Edge as LegacyEdge,
+    Node as LegacyNode,
+    Tree as LegacyTree,
+    NML as LegacyNML,
+    Group as LegacyGroup,
+    Branchpoint as LegacyBranchpoint,
+    Comment as LegacyComment,
+    Volume as LegacyVolume,
+    enforce_not_null_str,
+)
+import colorsys
 
 
 import webknossos.skeleton.legacy as legacy_wknml
-from webknossos.skeleton.legacy import NML as LegacyNML, Tree as LegacyTree
-import webknossos.skeleton.legacy.nml_generation as nml_generation
 
 Vector3 = Tuple[float, float, float]
 Vector4 = Tuple[float, float, float, float]
@@ -43,6 +52,143 @@ def vector3_as_float(vec: Tuple[Number, Number, Number]) -> Vector3:
     )
 
 
+def random_color_rgba() -> Tuple[float, float, float, float]:
+    """
+    A utility to generate a new random RGBA color.
+    """
+    # https://stackoverflow.com/a/43437435/783758
+
+    h, s, l = (
+        np.random.random(),
+        0.5 + np.random.random() / 2.0,
+        0.4 + np.random.random() / 5.0,
+    )
+    r, g, b = colorsys.hls_to_rgb(h, l, s)
+    return (r, g, b, 1.0)
+
+
+def generate_nml(
+    group: "Group",
+    parameters: Dict[str, Any] = {},
+    globalize_ids: bool = True,
+    volume_dict: Optional[Dict[str, Any]] = None,
+) -> LegacyNML:
+    """
+    A utility to convert a [NetworkX graph object](https://networkx.org/) into wK NML skeleton annotation object. Accepts both a simple list of multiple skeletons/trees or a dictionary grouping skeleton inputs.
+
+    Arguments:
+        tree_dict (Union[List[nx.Graph], Dict[str, List[nx.Graph]]]): A list of wK tree-like structures as NetworkX graphs or a dictionary of group names and same lists of NetworkX tree objects.
+        parameters (Dict[str, Any]): A dictionary representation of the skeleton annotation metadata. See `LegacyNMLParameters` for accepted attributes.
+        globalize_ids (bool = True): An option to re-assign new, globally unique IDs to all skeletons. Default: `True`
+        volume (Optional[Dict[str, Any]] = None): A dictionary representation of a reference to a wK volume annotation. See `LegacyVolume` object for attributes.
+
+    Return:
+        nml (LegacyNML): A wK LegacyNML skeleton annotation object
+    """
+
+    if globalize_ids:
+        # globalize_tree_ids(tree_dict)
+        # globalize_node_ids(tree_dict)
+        pass
+
+    nmlParameters = LegacyNMLParameters(
+        name=parameters.get("name", "dataset"),
+        scale=parameters.get("scale", None),
+        offset=parameters.get("offset", None),
+        time=parameters.get("time", None),
+        editPosition=parameters.get("editPosition", None),
+        editRotation=parameters.get("editRotation", None),
+        zoomLevel=parameters.get("zoomLevel", None),
+        taskBoundingBox=parameters.get("taskBoundingBox", None),
+        userBoundingBoxes=parameters.get("userBoundingBoxes", None),
+    )
+
+    comments = [
+        LegacyComment(node.id, node.comment)
+        for graph in group.flattened_graphs()
+        for node in graph.nx_graph.nodes
+        if node.comment is not None
+    ]
+
+    branchpoints = [
+        LegacyBranchpoint(node.id, node.time)
+        for graph in group.flattened_graphs()
+        for node in graph.nx_graph.nodes
+        if node.is_branchpoint
+    ]
+
+    graphs = []
+
+    for graph in sorted(group.flattened_graphs(), key=lambda g: g.id):
+
+        nodes, edges = extract_nodes_and_edges_from_graph(graph)
+        color = graph.color or random_color_rgba()
+        name = graph.name or f"tree{graph.id}"
+
+        graphs.append(
+            LegacyTree(
+                nodes=nodes,
+                edges=edges,
+                id=graph.id,
+                name=name,
+                groupId=graph.group_id if graph.group_id != group.id else None,
+                color=color,
+            )
+        )
+
+    volume = None
+    if volume_dict is not None and "location" in volume_dict and "id" in volume_dict:
+        volume = LegacyVolume(
+            id=int(enforce_not_null_str(volume_dict.get("id"))),
+            location=enforce_not_null_str(volume_dict.get("location")),
+            fallback_layer=volume_dict.get("fallback_layer"),
+        )
+
+    nml = LegacyNML(
+        parameters=nmlParameters,
+        trees=graphs,
+        branchpoints=branchpoints,
+        comments=comments,
+        groups=group.as_legacy_group().children,
+        volume=volume,
+    )
+
+    return nml
+
+
+def extract_nodes_and_edges_from_graph(
+    graph: nx.Graph,
+) -> Tuple[List[LegacyNode], List[LegacyEdge]]:
+    """
+    A utility to convert a single [NetworkX graph object](https://networkx.org/) into a list of `LegacyNode` objects and `Edge` objects.
+
+    Return
+        Tuple[List[LegacyNode], List[Edge]]: A tuple containing both all nodes and all edges
+    """
+
+    node_nml = [
+        LegacyNode(
+            id=node.id,
+            position=node.position,
+            radius=node.radius,
+            rotation=node.rotation,
+            inVp=node.inVp,
+            inMag=node.inMag,
+            bitDepth=node.bitDepth,
+            interpolation=node.interpolation,
+            time=node.time,
+        )
+        for node in graph.nx_graph.nodes
+    ]
+
+    edge_nml = [
+        LegacyEdge(source=edge[0].id, target=edge[1].id)
+        for edge in graph.nx_graph.edges
+    ]
+
+    return node_nml, edge_nml
+
+
 @attr.define()
 class Group:
     id: int = attr.ib(init=False)
@@ -60,22 +206,45 @@ class Group:
         else:
             self.id = self._nml.element_id_generator.__next__()
 
+    # def add_graph(
+    #     self, name: str, enforce_id: Optional[int] = None, **kwargs: Dict[str, Any]
+    # ) -> "WkGraph":
+
+    #     new_graph = WkGraph(
+    #         name=name, nml=self._nml, group_id=self.id, enforce_id=enforce_id, **kwargs  # type: ignore
+    #     )
+    #     self.children.append(new_graph)
+
+    #     return new_graph
+
     def add_graph(
-        self, name: str, enforce_id: Optional[int] = None, **kwargs: Dict[str, Any]
+        self,
+        name: str,
+        color: Optional[Vector4] = None,
+        group_id: Optional[int] = None,
+        _nml: Optional["NML"] = None,
+        _enforce_id: Optional[int] = None,
     ) -> "WkGraph":
 
         new_graph = WkGraph(
-            name=name, nml=self._nml, group_id=self.id, enforce_id=enforce_id, **kwargs
+            name=name,
+            color=color,
+            group_id=group_id,
+            nml=_nml or self._nml,
+            enforce_id=_enforce_id,
         )
         self.children.append(new_graph)
 
         return new_graph
 
     def add_group(
-        self, name: str, children: List[GroupOrGraph] = None, enforce_id: int = None
+        self,
+        name: str,
+        children: Optional[List[GroupOrGraph]] = None,
+        enforce_id: int = None,
     ) -> "Group":
 
-        new_group = Group(name, children or [], nml=self._nml, enforce_id=enforce_id)
+        new_group = Group(name, children or [], nml=self._nml, enforce_id=enforce_id)  # type: ignore
         self.children.append(new_group)
         return new_group
 
@@ -155,21 +324,7 @@ class Node:
     def __hash__(self) -> int:
         return hash((self._nml.id, self.id))
 
-    def __eq__(self, other) -> bool:
-        return hash(self) == hash(other)
-
-
-# Todo: Remove this class and use raw ids + attributes in network x
-# for look ups by id.
-@attr.define()
-class DummyNode:
-    id: int
-    _nml: "NML"
-
-    def __hash__(self) -> int:
-        return hash((self._nml.id, self.id))
-
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: object) -> bool:
         return hash(self) == hash(other)
 
 
@@ -211,16 +366,41 @@ class WkGraph:
                 return node
         raise ValueError(f"No node with id {node_id} was found")
 
-    def add_node(self, *args: List[Any], **kwargs: Dict[str, Any]) -> "Node":
-
-        if "nml" not in kwargs:
-            kwargs["nml"] = self._nml
-
-        node = Node(*args, **kwargs)
+    def add_node(
+        self,
+        position: Vector3,
+        comment: Optional[str] = None,
+        radius: Optional[float] = None,
+        rotation: Optional[Vector3] = None,
+        inVp: Optional[int] = None,
+        inMag: Optional[int] = None,
+        bitDepth: Optional[int] = None,
+        interpolation: Optional[bool] = None,
+        time: Optional[int] = None,
+        is_branchpoint: bool = False,
+        branchpoint_time: Optional[int] = None,
+        enforce_id: Optional[int] = None,
+        nml: Optional["NML"] = None,
+    ) -> Node:
+        node = Node(
+            position=position,
+            comment=comment,
+            radius=radius,
+            rotation=rotation,
+            inVp=inVp,
+            inMag=inMag,
+            bitDepth=bitDepth,
+            interpolation=interpolation,
+            time=time,
+            is_branchpoint=is_branchpoint,
+            branchpoint_time=branchpoint_time,
+            nml=nml or self._nml,
+            enforce_id=enforce_id,
+        )
         self.nx_graph.add_node(node)
         return node
 
-    def add_edge(self, node_1, node_2) -> None:
+    def add_edge(self, node_1: Node, node_2: Node) -> None:
 
         self.nx_graph.add_edge(node_1, node_2)
 
@@ -257,7 +437,7 @@ class NML:
     def __attrs_post_init__(self) -> None:
         self.id = nml_id_generator.__next__()
         self.element_id_generator = itertools.count()
-        self.root_group = Group("Root", [], self, is_root_group=False)
+        self.root_group = Group(name="Root", children=[], nml=self, is_root_group=False)
         self.scale = vector3_as_float(self.scale)
         # Todo: Casting to str first is only done to satisfy mypy
         self.time = int(str(self.time))
@@ -277,9 +457,22 @@ class NML:
                 return graph
         raise ValueError(f"No graph with id {graph_id} was found")
 
-    def add_graph(self, name: str, **kwargs) -> "WkGraph":
+    def add_graph(
+        self,
+        name: str,
+        color: Optional[Vector4] = None,
+        group_id: Optional[int] = None,
+        _nml: Optional["NML"] = None,
+        _enforce_id: Optional[int] = None,
+    ) -> "WkGraph":
 
-        return self.root_group.add_graph(name, **kwargs)
+        return self.root_group.add_graph(
+            name,
+            color,
+            group_id,
+            _nml,
+            _enforce_id,
+        )
 
     def add_group(
         self, name: str, children: Optional[List[GroupOrGraph]] = None
@@ -315,7 +508,9 @@ class NML:
 
         groups_by_id = {}
 
-        def visit_groups(legacy_groups, current_group):
+        def visit_groups(
+            legacy_groups: List[LegacyGroup], current_group: Group
+        ) -> None:
 
             for legacy_group in legacy_groups:
                 sub_group = current_group.add_group(
@@ -328,11 +523,11 @@ class NML:
         for legacy_tree in legacy_nml.trees:
             if legacy_tree.groupId is None:
                 new_graph = nml.root_group.add_graph(
-                    legacy_tree.name, enforce_id=legacy_tree.id
+                    legacy_tree.name, _enforce_id=legacy_tree.id
                 )
             else:
                 new_graph = groups_by_id[legacy_tree.groupId].add_graph(
-                    legacy_tree.name, enforce_id=legacy_tree.id
+                    legacy_tree.name, _enforce_id=legacy_tree.id
                 )
             NML.nml_tree_to_graph(legacy_nml, nml, new_graph, legacy_tree)
 
@@ -343,6 +538,7 @@ class NML:
 
         return nml
 
+    @staticmethod
     def nml_tree_to_graph(
         legacy_nml: LegacyNML,
         new_nml: "NML",
@@ -371,9 +567,9 @@ class NML:
         for legacy_node in legacy_tree.nodes:
             node_id = legacy_node.id
             node_by_id[node_id] = new_graph.add_node(
-                position=legacy_node.position,
-                enforce_id=node_id,
-                radius=legacy_node.radius,
+                position=legacy_node.position,  # type: ignore
+                enforce_id=node_id,  # type: ignore
+                radius=legacy_node.radius,  # type: ignore
             )
 
             for optional_attribute in optional_attribute_list:
@@ -413,7 +609,7 @@ class NML:
 
     def write(self, out_path: str) -> None:
 
-        legacy_nml = nml_generation.generate_nml(
+        legacy_nml = generate_nml(
             self.root_group,
             self._get_legacy_parameters(),
             globalize_ids=False,

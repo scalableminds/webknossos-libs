@@ -1,43 +1,26 @@
 from webknossos.skeleton.legacy import (
-    NMLParameters,
-    Group,
-    Edge,
-    Node,
-    Tree,
-    NML,
-    Branchpoint,
-    Comment,
-    Volume,
+    NMLParameters as LegacyNMLParameters,
+    Edge as LegacyEdge,
+    Node as LegacyNode,
+    Tree as LegacyTree,
+    NML as LegacyNML,
+    Branchpoint as LegacyBranchpoint,
+    Comment as LegacyComment,
+    Volume as LegacyVolume,
 )
 import networkx as nx
 import numpy as np
 
 import logging
-import colorsys
 from typing import Optional, Tuple, List, Dict, Any
 
 
 logger = logging.getLogger(__name__)
 
 
-def random_color_rgba() -> Tuple[float, float, float, float]:
-    """
-    A utility to generate a new random RGBA color.
-    """
-    # https://stackoverflow.com/a/43437435/783758
-
-    h, s, l = (
-        np.random.random(),
-        0.5 + np.random.random() / 2.0,
-        0.4 + np.random.random() / 5.0,
-    )
-    r, g, b = colorsys.hls_to_rgb(h, l, s)
-    return (r, g, b, 1.0)
-
-
 # def globalize_tree_ids(group_dict: Dict[str, List[nx.Graph]]):
 #     """
-#     A utility to in-place re-assign new and globally unqiue IDs to all Tree objects. Starts with ID 1
+#     A utility to in-place re-assign new and globally unqiue IDs to all LegacyTree objects. Starts with ID 1
 
 #     Arguments:
 #         group_dict (Dict[str, List[nx.Graph]]): A mapping of group names to a list of trees as NetworkX graph objects
@@ -78,123 +61,3 @@ def random_color_rgba() -> Tuple[float, float, float, float]:
 
 #             new_tree.add_edges_from(new_edges)
 #             tree_group[tree_index] = new_tree
-
-
-def generate_nml(
-    group: "Group",
-    parameters: Dict[str, Any] = {},
-    globalize_ids: bool = True,
-    volume: Optional[Dict[str, Any]] = None,
-) -> NML:
-    """
-    A utility to convert a [NetworkX graph object](https://networkx.org/) into wK NML skeleton annotation object. Accepts both a simple list of multiple skeletons/trees or a dictionary grouping skeleton inputs.
-
-    Arguments:
-        tree_dict (Union[List[nx.Graph], Dict[str, List[nx.Graph]]]): A list of wK tree-like structures as NetworkX graphs or a dictionary of group names and same lists of NetworkX tree objects.
-        parameters (Dict[str, Any]): A dictionary representation of the skeleton annotation metadata. See `NMLParameters` for accepted attributes.
-        globalize_ids (bool = True): An option to re-assign new, globally unique IDs to all skeletons. Default: `True`
-        volume (Optional[Dict[str, Any]] = None): A dictionary representation of a reference to a wK volume annotation. See `Volume` object for attributes.
-
-    Return:
-        nml (NML): A wK NML skeleton annotation object
-    """
-
-    if globalize_ids:
-        # globalize_tree_ids(tree_dict)
-        # globalize_node_ids(tree_dict)
-        pass
-
-    nmlParameters = NMLParameters(
-        name=parameters.get("name", "dataset"),
-        scale=parameters.get("scale", None),
-        offset=parameters.get("offset", None),
-        time=parameters.get("time", None),
-        editPosition=parameters.get("editPosition", None),
-        editRotation=parameters.get("editRotation", None),
-        zoomLevel=parameters.get("zoomLevel", None),
-        taskBoundingBox=parameters.get("taskBoundingBox", None),
-        userBoundingBoxes=parameters.get("userBoundingBoxes", None),
-    )
-
-    comments = [
-        Comment(node.id, node.comment)
-        for graph in group.flattened_graphs()
-        for node in graph.nx_graph.nodes
-        if node.comment is not None
-    ]
-
-    branchpoints = [
-        Branchpoint(node.id, node.time)
-        for graph in group.flattened_graphs()
-        for node in graph.nx_graph.nodes
-        if node.is_branchpoint
-    ]
-
-    graphs = []
-
-    for graph in sorted(group.flattened_graphs(), key=lambda g: g.id):
-
-        nodes, edges = extract_nodes_and_edges_from_graph(graph)
-        color = graph.color or random_color_rgba()
-        name = graph.name or f"tree{graph.id}"
-
-        graphs.append(
-            Tree(
-                nodes=nodes,
-                edges=edges,
-                id=graph.id,
-                name=name,
-                groupId=graph.group_id if graph.group_id != group.id else None,
-                color=color,
-            )
-        )
-
-    if volume is not None and "location" in volume and "id" in volume:
-        volume = Volume(
-            id=volume.get("id"),
-            location=volume.get("location"),
-            fallback_layer=volume.get("fallback_layer", None),
-        )
-
-    nml = NML(
-        parameters=nmlParameters,
-        trees=graphs,
-        branchpoints=branchpoints,
-        comments=comments,
-        groups=group.as_legacy_group().children,
-        volume=volume,
-    )
-
-    return nml
-
-
-def extract_nodes_and_edges_from_graph(
-    graph: nx.Graph,
-) -> Tuple[List[Node], List[Edge]]:
-    """
-    A utility to convert a single [NetworkX graph object](https://networkx.org/) into a list of `Node` objects and `Edge` objects.
-
-    Return
-        Tuple[List[Node], List[Edge]]: A tuple containing both all nodes and all edges
-    """
-
-    node_nml = [
-        Node(
-            id=node.id,
-            position=node.position,
-            radius=node.radius,
-            rotation=node.rotation,
-            inVp=node.inVp,
-            inMag=node.inMag,
-            bitDepth=node.bitDepth,
-            interpolation=node.interpolation,
-            time=node.time,
-        )
-        for node in graph.nx_graph.nodes
-    ]
-
-    edge_nml = [
-        Edge(source=edge[0].id, target=edge[1].id) for edge in graph.nx_graph.edges
-    ]
-
-    return node_nml, edge_nml

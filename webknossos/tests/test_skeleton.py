@@ -5,9 +5,13 @@ import webknossos.skeleton as skeleton
 import tempfile
 import difflib
 from itertools import combinations
+from typing import Generator, Tuple
+import numpy as np
 
 
-def pairs_within_distance(pos_a, pos_b, max_distance):
+def pairs_within_distance(
+    pos_a: np.ndarray, pos_b: np.ndarray, max_distance: float
+) -> Generator[Tuple[np.ndarray, np.ndarray], None, None]:
     from scipy.spatial import cKDTree
 
     pos_a_kdtree = cKDTree(pos_a)
@@ -18,12 +22,12 @@ def pairs_within_distance(pos_a, pos_b, max_distance):
             yield (pos_a[i], pos_b[j])
 
 
-def create_dummy_skeleton():
+def create_dummy_skeleton() -> skeleton.NML:
     nml = skeleton.NML(
         name="My NML",
         scale=(11, 11, 25),
         offset=(1, 1, 1),
-        time="1337",
+        time=1337,
         editPosition=(3, 6, 0),
         editRotation=(4, 2, 0),
         zoomLevel=100,
@@ -31,7 +35,7 @@ def create_dummy_skeleton():
 
     g = nml.add_graph(
         "A WkGraph",
-        color=[0.9988844805996959, 0.09300433970039235, 0.13373766240135082, 1.0],
+        color=(0.9988844805996959, 0.09300433970039235, 0.13373766240135082, 1.0),
     )
 
     n1 = g.add_node(
@@ -54,17 +58,17 @@ def create_dummy_skeleton():
     group = nml.add_group("Example Group")
     group.add_graph(
         "Graph in Group",
-        color=[0.9340851110768926, 0.0037728487955197565, 0.6720369436532944, 1.0],
-    ).add_node(position=[10, 3, 4])
+        color=(0.9340851110768926, 0.0037728487955197565, 0.6720369436532944, 1.0),
+    ).add_node(position=(10, 3, 4))
     group.add_group("Nested Group").add_graph(
         "Graph in nested group",
-        color=[0.45167026054501613, 0.20806732150346996, 0.7224589094338263, 1.0],
+        color=(0.45167026054501613, 0.20806732150346996, 0.7224589094338263, 1.0),
     )
 
     return nml
 
 
-def test_skeleton_creation():
+def test_skeleton_creation() -> None:
     nml = create_dummy_skeleton()
     assert nml.time == 1337
 
@@ -82,7 +86,7 @@ def test_skeleton_creation():
     assert len(groups) == 2
 
 
-def diff_files(path_a, path_b):
+def diff_files(path_a: str, path_b: str) -> None:
     with open(path_a, "r") as file_a:
         with open(path_b, "r") as file_b:
             diff = list(
@@ -101,7 +105,7 @@ def diff_files(path_a, path_b):
             assert len(diff) == 0, f"Files {path_a} and {path_b} are not equal: {diff}"
 
 
-def test_export_to_nml():
+def test_export_to_nml() -> None:
     with tempfile.TemporaryDirectory() as temp_dir:
 
         nml = create_dummy_skeleton()
@@ -113,7 +117,7 @@ def test_export_to_nml():
         diff_files(output_path, snapshot_path)
 
 
-def test_import_export_round_trip():
+def test_import_export_round_trip() -> None:
     with tempfile.TemporaryDirectory() as temp_dir:
         snapshot_path = "../testdata/nmls/generated_snapshot.nml"
         export_path = f"{temp_dir}/exported_in.nml"
@@ -128,7 +132,7 @@ def test_import_export_round_trip():
         diff_files(snapshot_path, export_path)
 
 
-def test_code_example():
+def test_code_example() -> None:
 
     nml = skeleton.open_nml("../testdata/nmls/nml_with_small_distance_nodes.nml")
 

@@ -22,6 +22,12 @@ def enforce_not_null_str(val: Optional[str]) -> str:
     return val
 
 
+def as_int_unless_none(val: Optional[str]) -> Optional[int]:
+    if val is None:
+        return None
+    return int(val)
+
+
 class NMLParameters(NamedTuple):
     """
     Contains common metadata for NML files
@@ -124,7 +130,7 @@ class Branchpoint(NamedTuple):
     """
 
     id: int
-    time: int
+    time: Optional[int]
 
 
 class Group(NamedTuple):
@@ -139,7 +145,7 @@ class Group(NamedTuple):
 
     id: int
     name: str
-    children: List["Group"]
+    children: List["Group"]  # type: ignore
 
 
 class Comment(NamedTuple):
@@ -354,9 +360,7 @@ def __parse_tree(nml_tree: Element) -> Tree:
 def __parse_branchpoint(nml_branchpoint: Element) -> Branchpoint:
     return Branchpoint(
         int(enforce_not_null_str(nml_branchpoint.get("id"))),
-        int(enforce_not_null_str(nml_branchpoint.get("time")))
-        if nml_branchpoint.get("time") is not None
-        else None,
+        as_int_unless_none(nml_branchpoint.get("time")),
     )
 
 
