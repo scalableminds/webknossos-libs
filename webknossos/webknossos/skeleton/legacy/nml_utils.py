@@ -1,9 +1,10 @@
 # type: ignore
-from typing import Union, Dict, List, Tuple
 from copy import deepcopy
 from math import acos, ceil
-import numpy as np
+from typing import Dict, List, Tuple, Union
+
 import networkx as nx
+import numpy as np
 
 from . import NML
 from .nml_generation import generate_graph, generate_nml

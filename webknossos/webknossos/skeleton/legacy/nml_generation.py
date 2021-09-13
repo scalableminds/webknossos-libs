@@ -1,19 +1,17 @@
-from webknossos.skeleton.legacy import (
-    NMLParameters as LegacyNMLParameters,
-    Edge as LegacyEdge,
-    Node as LegacyNode,
-    Tree as LegacyTree,
-    NML as LegacyNML,
-    Branchpoint as LegacyBranchpoint,
-    Comment as LegacyComment,
-    Volume as LegacyVolume,
-)
+import logging
+from typing import Any, Dict, List, Optional, Tuple
+
 import networkx as nx
 import numpy as np
 
-import logging
-from typing import Optional, Tuple, List, Dict, Any
-
+from webknossos.skeleton.legacy import NML as LegacyNML
+from webknossos.skeleton.legacy import Branchpoint as LegacyBranchpoint
+from webknossos.skeleton.legacy import Comment as LegacyComment
+from webknossos.skeleton.legacy import Edge as LegacyEdge
+from webknossos.skeleton.legacy import NMLParameters as LegacyNMLParameters
+from webknossos.skeleton.legacy import Node as LegacyNode
+from webknossos.skeleton.legacy import Tree as LegacyTree
+from webknossos.skeleton.legacy import Volume as LegacyVolume
 
 logger = logging.getLogger(__name__)
 

@@ -1,25 +1,23 @@
-import numpy as np
-from typing import List, Tuple, Optional, Union, Generator, Dict, Any, Iterator
-import itertools
-import networkx as nx
-import attr
-from icecream import ic
-from webknossos.skeleton.legacy import (
-    NMLParameters as LegacyNMLParameters,
-    Edge as LegacyEdge,
-    Node as LegacyNode,
-    Tree as LegacyTree,
-    NML as LegacyNML,
-    Group as LegacyGroup,
-    Branchpoint as LegacyBranchpoint,
-    Comment as LegacyComment,
-    Volume as LegacyVolume,
-    enforce_not_null_str,
-)
 import colorsys
+import itertools
+from typing import Any, Dict, Generator, Iterator, List, Optional, Tuple, Union
 
+import attr
+import networkx as nx
+import numpy as np
+from icecream import ic
 
 import webknossos.skeleton.legacy as legacy_wknml
+from webknossos.skeleton.legacy import NML as LegacyNML
+from webknossos.skeleton.legacy import Branchpoint as LegacyBranchpoint
+from webknossos.skeleton.legacy import Comment as LegacyComment
+from webknossos.skeleton.legacy import Edge as LegacyEdge
+from webknossos.skeleton.legacy import Group as LegacyGroup
+from webknossos.skeleton.legacy import NMLParameters as LegacyNMLParameters
+from webknossos.skeleton.legacy import Node as LegacyNode
+from webknossos.skeleton.legacy import Tree as LegacyTree
+from webknossos.skeleton.legacy import Volume as LegacyVolume
+from webknossos.skeleton.legacy import enforce_not_null_str
 
 Vector3 = Tuple[float, float, float]
 Vector4 = Tuple[float, float, float, float]

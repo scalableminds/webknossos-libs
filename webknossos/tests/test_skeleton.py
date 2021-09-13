@@ -1,12 +1,14 @@
 # import pytest
 
 # with pytest.raises(AssertionError):
-import webknossos.skeleton as skeleton
-import tempfile
 import difflib
+import tempfile
 from itertools import combinations
 from typing import Generator, Tuple
+
 import numpy as np
+
+import webknossos.skeleton as skeleton
 
 
 def pairs_within_distance(

@@ -1,7 +1,8 @@
 import xml.etree.ElementTree as ET
+from typing import BinaryIO, List, NamedTuple, Optional, Text, Tuple, TypeVar
 from xml.etree.ElementTree import Element
+
 from loxun import XmlWriter
-from typing import BinaryIO, NamedTuple, List, Tuple, Optional, Text, TypeVar
 
 Vector3 = Tuple[float, float, float]
 Vector4 = Tuple[float, float, float, float]
