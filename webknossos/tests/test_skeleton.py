@@ -30,9 +30,9 @@ def create_dummy_skeleton() -> skeleton.NML:
         scale=(11, 11, 25),
         offset=(1, 1, 1),
         time=1337,
-        editPosition=(3, 6, 0),
-        editRotation=(4, 2, 0),
-        zoomLevel=100,
+        edit_position=(3, 6, 0),
+        edit_rotation=(4, 2, 0),
+        zoom_level=100,
     )
 
     g = nml.add_graph(

@@ -67,7 +67,7 @@ def random_color_rgba() -> Tuple[float, float, float, float]:
 
 def generate_nml(
     group: "Group",
-    parameters: Dict[str, Any] = {},
+    parameters: Dict[str, Any] = None,
     globalize_ids: bool = True,
     volume_dict: Optional[Dict[str, Any]] = None,
 ) -> LegacyNML:
@@ -83,6 +83,8 @@ def generate_nml(
     Return:
         nml (LegacyNML): A wK LegacyNML skeleton annotation object
     """
+
+    parameters = parameters or {}
 
     if globalize_ids:
         # globalize_tree_ids(tree_dict)
@@ -422,12 +424,11 @@ class NML:
     scale: Vector3
     offset: Optional[Vector3] = None
     time: Optional[int] = None
-    # TODO: Use snake case for these properties and convert when necessary
-    editPosition: Optional[Vector3] = None
-    editRotation: Optional[Vector3] = None
-    zoomLevel: Optional[float] = None
-    taskBoundingBox: Optional[IntVector6] = None
-    userBoundingBoxes: Optional[List[IntVector6]] = None
+    edit_position: Optional[Vector3] = None
+    edit_rotation: Optional[Vector3] = None
+    zoom_level: Optional[float] = None
+    task_bounding_box: Optional[IntVector6] = None
+    user_bounding_boxes: Optional[List[IntVector6]] = None
 
     root_group: Group = attr.ib(init=False)
     element_id_generator: Iterator[int] = attr.ib(init=False)
@@ -437,11 +438,10 @@ class NML:
         self.element_id_generator = itertools.count()
         self.root_group = Group(name="Root", children=[], nml=self, is_root_group=False)
         self.scale = vector3_as_float(self.scale)
-        # Todo: Casting to str first is only done to satisfy mypy
-        self.time = int(str(self.time))
+        self.time = int(str(self.time))  # typing: ignore
         self.offset = opt_vector3_as_float(self.offset)
-        self.editPosition = opt_vector3_as_float(self.editPosition)
-        self.editRotation = opt_vector3_as_float(self.editRotation)
+        self.edit_position = opt_vector3_as_float(self.edit_position)
+        self.edit_rotation = opt_vector3_as_float(self.edit_rotation)
 
     def flattened_graphs(self) -> Generator["WkGraph", None, None]:
 
@@ -502,7 +502,17 @@ class NML:
 
     @staticmethod
     def from_legacy_nml(legacy_nml: LegacyNML) -> "NML":
-        nml = NML(**legacy_nml.parameters._asdict())
+        nml = NML(
+            name=legacy_nml.parameters.name,
+            scale=legacy_nml.parameters.scale,
+            offset=legacy_nml.parameters.offset,
+            time=legacy_nml.parameters.time,
+            edit_position=legacy_nml.parameters.editPosition,
+            edit_rotation=legacy_nml.parameters.editRotation,
+            zoom_level=legacy_nml.parameters.zoomLevel,
+            task_bounding_box=legacy_nml.parameters.taskBoundingBox,
+            user_bounding_boxes=legacy_nml.parameters.userBoundingBoxes,
+        )
 
         groups_by_id = {}
 
@@ -623,11 +633,11 @@ class NML:
             "scale": self.scale,
             "offset": self.offset,
             "time": self.time,
-            "editPosition": self.editPosition,
-            "editRotation": self.editRotation,
-            "zoomLevel": self.zoomLevel,
-            "taskBoundingBox": self.taskBoundingBox,
-            "userBoundingBoxes": self.userBoundingBoxes,
+            "editPosition": self.edit_position,
+            "editRotation": self.edit_rotation,
+            "zoomLevel": self.zoom_level,
+            "taskBoundingBox": self.task_bounding_box,
+            "userBoundingBoxes": self.user_bounding_boxes,
         }
 
 
