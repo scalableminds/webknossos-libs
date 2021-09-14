@@ -15,7 +15,7 @@ from .view import View
 
 
 class SamplingModes:
-    AUTO = "auto"
+    ANISOTROPIC = "anisotropic"
     ISOTROPIC = "isotropic"
     CONSTANT_Z = "constant_z"
 
@@ -40,73 +40,52 @@ def determine_buffer_edge_len(dataset: wkw.Dataset) -> int:
     return min(DEFAULT_EDGE_LEN, dataset.header.file_len * dataset.header.block_len)
 
 
-def detect_larger_and_smaller_dimension(
-    scale: Tuple[float, float, float]
-) -> Tuple[int, int]:
-    scale_np = np.array(scale)
-    return cast(int, np.argmax(scale_np)), cast(int, np.argmin(scale_np))
-
-
-def get_next_mag(mag: Mag, scale: Optional[Tuple[float, float, float]]) -> Mag:
-    if scale is None:
-        return mag.scaled_by(2)
-    else:
-        max_index, min_index = detect_larger_and_smaller_dimension(scale)
-        mag_array = mag.to_array()
-        scale_increase = [1, 1, 1]
-
-        if (
-            mag_array[min_index] * scale[min_index]
-            < mag_array[max_index] * scale[max_index]
-        ):
-            for i in range(len(scale_increase)):
-                scale_increase[i] = 1 if scale[i] == scale[max_index] else 2
+def calculate_mags_to_downsample(
+    from_mag: Mag, max_mag: Mag, scale: Optional[Tuple[float, float, float]]
+) -> List[Mag]:
+    assert np.all(from_mag.as_np() <= max_mag.as_np())
+    mags = []
+    current_mag = from_mag
+    while current_mag < max_mag:
+        if scale is None:
+            # In case the sampling mode is CONSTANT_Z or ISOTROPIC:
+            current_mag = Mag(np.minimum(current_mag.as_np() * 2, max_mag.as_np()))
         else:
-            scale_increase = [2, 2, 2]
-        return Mag(
-            [
-                mag_array[0] * scale_increase[0],
-                mag_array[1] * scale_increase[1],
-                mag_array[2] * scale_increase[2],
-            ]
-        )
+            # In case the sampling mode is ANISOTROPIC:
+            current_size = current_mag.as_np() * np.array(scale)
+            min_value = np.min(current_size)
+            min_value_bitmask = np.array(current_size == min_value)
+            factor = min_value_bitmask + 1
+
+            # Calculate the two potential magnifications.
+            # Either, double all components or only double the smallest component.
+            all_scaled = current_size * 2
+            min_scaled = current_size * factor  # only multiply the smallest dimension
+
+            all_scaled_ratio = np.max(all_scaled) / np.min(all_scaled)
+            min_scaled_ratio = np.max(min_scaled) / np.min(min_scaled)
+
+            # The smaller the ratio between the smallest dimension and the largest dimension, the better.
+            if all_scaled_ratio < min_scaled_ratio:
+                # Multiply all dimensions with "2"
+                current_mag = Mag(np.minimum(current_mag.as_np() * 2, max_mag.as_np()))
+            else:
+                # Multiply only the minimal dimension by "2".
+                current_mag = Mag(
+                    np.minimum(current_mag.as_np() * factor, max_mag.as_np())
+                )
+
+        mags += [current_mag]
+
+    return mags
 
 
-def get_previous_mag(mag: Mag, scale: Optional[Tuple[float, float, float]]) -> Mag:
-    if scale is None:
-        return mag.divided_by(2)
-    else:
-        max_index, min_index = detect_larger_and_smaller_dimension(scale)
-        mag_array = mag.to_array()
-        scale_increase = [1, 1, 1]
-
-        if (
-            mag_array[min_index] // scale[min_index]
-            > mag_array[max_index] // scale[max_index]
-        ):
-            for i in range(len(scale_increase)):
-                scale_increase[i] = 1 if scale[i] == scale[max_index] else 2
-        else:
-            scale_increase = [2, 2, 2]
-        return Mag(
-            [
-                max(mag_array[0] // scale_increase[0], 1),
-                max(mag_array[1] // scale_increase[1], 1),
-                max(mag_array[2] // scale_increase[2], 1),
-            ]
-        )
-
-
-def calculate_virtual_scale_for_target_mag(
-    target_mag: Mag,
-) -> Tuple[float, float, float]:
-    """
-    This scale is not the actual scale of the dataset
-    The virtual scale is used for downsample_mags_anisotropic.
-    """
-    max_target_value = max(list(target_mag.to_array()))
-    scale_array = max_target_value / np.array(target_mag.to_array())
-    return cast(Tuple[float, float, float], tuple(scale_array))
+def calculate_mags_to_upsample(
+    from_mag: Mag, min_mag: Mag, scale: Optional[Tuple[float, float, float]]
+) -> List[Mag]:
+    return list(reversed(calculate_mags_to_downsample(min_mag, from_mag, scale)))[
+        1:
+    ] + [min_mag]
 
 
 def calculate_default_max_mag(dataset_size: Vec3) -> Mag:
