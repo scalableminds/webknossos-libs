@@ -4,3 +4,55 @@
 {% block nav %}
 {% endblock %}
 {% block style_layout %}{% endblock %}
+{% defaultmacro member(doc,add_div) %}
+    {% if add_div %}
+    <div id="{{ doc.qualname or doc.name }}">
+    {% endif %}
+    {% if doc.type == "class" %}
+        {{ class(doc) }}
+    {% elif doc.type == "function" %}
+        {{ function(doc) }}
+    {% elif doc.type == "module" %}
+        {{ submodule(doc) }}
+    {% else %}
+        {{ variable(doc) }}
+    {% endif %}
+    {% if doc.type != "variable" %}
+        {{ view_source(doc) }}
+    {% endif %}
+    {% if add_div %}
+    </div>
+    {% endif %}
+    {{ docstring(doc) }}
+{% enddefaultmacro %}
+{% block module_contents %}
+    {% for m in module.flattened_own_members if is_public(m) | trim %}
+        <section>
+            {{ member(m,true) }}
+            {% if m.type == "class" %}
+                {% for m in m.own_members if m.type != "class" and is_public(m) | trim %}
+                    <div id="{{ m.qualname }}" class="classattr">
+                        {{ member(m,false) }}
+                    </div>
+                {% endfor %}
+                {% set inherited_members = inherited(m) | trim %}
+                {% if inherited_members %}
+                    <div class="inherited">
+                        <h5>Inherited Members</h5>
+                        <dl>
+                            {{ inherited_members }}
+                        </dl>
+                    </div>
+                {% endif %}
+            {% endif %}
+        </section>
+    {% endfor %}
+    {% if module and module.submodules %}
+        <h2 id="submodules">Submodules</h2>
+        <ul>
+            {% for submodule in module.submodules %}
+                <li>{{ submodule.taken_from | link }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+{% endblock %}

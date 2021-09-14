@@ -68,7 +68,7 @@
     {% set toc = page.toc %}
 
     <!-- Hack: see partials/toc.html for more information -->
-    {% if toc | first is defined and "\x3ch1 id=" in page.content %}
+    {% if toc | first is defined and "\x3ch1 id=\"" + (toc | first).url[1:] + "\"" in page.content %}
         {% set toc = (toc | first).children %}
     {% endif %}
 

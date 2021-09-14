@@ -29,7 +29,7 @@ theme:
     - navigation.instant
     - navigation.tabs
     - navigation.sections
-    - toc.integrate  # Does not work for unliked pages
+    - toc.integrate
     - navigation.top
 
 nav:

@@ -43,6 +43,12 @@ title: {{ module.modulename if module else "API Reference" }}
 {% if module %}
 pdoc-toc:
 {{ toc_members(module.members.values(), 2) }}
+  {% if module.submodules %}
+- id: submodules
+  name: Submodules
+  level: 2
+  children: []
+  {% endif %}
 {% endif %}
 ---
 <div>
