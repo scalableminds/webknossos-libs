@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "wk-libs-docs"
+description = "Documentation for webknossos-libs"
+version = "0.0.1"
+authors = ["scalable minds <hello@scalableminds.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.7"
+
+[tool.poetry.dev-dependencies]
+webknossos = { path = "../webknossos/", develop = true }
+wkcuber = { path = "../wkcuber/", develop = true }
+pdoc = "7.4.0"
+mkdocs = "1.2.2"
+mkdocs-material = "7.2.6"
+
+[build-system]
+requires = ["poetry>=1.0"]
+build-backend = "poetry.masonry.api"

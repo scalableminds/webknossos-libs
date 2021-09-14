@@ -1,12 +1,14 @@
+---
+hide:
+- navigation
+---
 # webKnossos-libs
 <img align="right" src="https://static.webknossos.org/images/oxalis.svg" alt="webKnossos Logo" />
 
-Collection of libraries around webKnossos, please see the respective subfolders:
+## [webKnossos Python API](webknossos)
+Python API to work with webKnossos datasets, annotations and for webKnossos server interaction.
 
-## [webKnossos cuber (wkcuber)](wkcuber)
-[![PyPI version](https://img.shields.io/pypi/v/wkcuber)](https://pypi.python.org/pypi/wkcuber) [![Supported Python Versions](https://img.shields.io/pypi/pyversions/wkcuber.svg)](https://pypi.python.org/pypi/wkcuber)
+Currently under construction :construction:
 
-Python library for creating and working with [webKnossos](https://webknossos.org) [WKW](https://github.com/scalableminds/webknossos-wrap) datasets. WKW is a container format for efficiently storing large, scale 3D image data as found in (electron) microscopy.
-
-## [webKnossos](webknossos) Python Library
-:construction: WIP
+## [webKnossos cuber (wkcuber) CLI](wkcuber)
+CLI tool to creating and manipulate [webKnossos](https://webknossos.org) [WKW](https://github.com/scalableminds/webknossos-wrap) datasets. WKW is a container format for efficiently storing large, scale 3D image data as found in (electron) microscopy.
