@@ -11,13 +11,11 @@ from typing import (
     Union,
     cast,
 )
-import attr
 
 import numpy as np
 
 from .mag import Mag
-
-Shape3D = Union[List[int], Tuple[int, int, int], np.ndarray]
+from .vec3_int import Vec3Int, Vec3IntLike
 
 
 class BoundingBoxNamedTuple(NamedTuple):
@@ -26,31 +24,31 @@ class BoundingBoxNamedTuple(NamedTuple):
 
 
 class BoundingBox:
-    def __init__(self, topleft: Shape3D, size: Shape3D):
+    def __init__(self, topleft: Vec3IntLike, size: Vec3IntLike):
 
-        self._topleft = np.array(topleft, dtype=int)
-        self._size = np.array(size, dtype=int)
-
-    @property
-    def topleft(self) -> np.ndarray:
-
-        return self._topleft.copy()
+        self._topleft = Vec3Int(topleft)
+        self._size = Vec3Int(size)
 
     @property
-    def size(self) -> np.ndarray:
+    def topleft(self) -> Vec3Int:
 
-        return self._size.copy()
+        return self._topleft
 
     @property
-    def bottomright(self) -> np.ndarray:
+    def size(self) -> Vec3Int:
+
+        return self._size
+
+    @property
+    def bottomright(self) -> Vec3Int:
 
         return self._topleft + self._size
 
-    def with_topleft(self, new_topleft: Shape3D) -> "BoundingBox":
+    def with_topleft(self, new_topleft: Vec3IntLike) -> "BoundingBox":
 
         return BoundingBox(new_topleft, self.size)
 
-    def with_size(self, new_size: Shape3D) -> "BoundingBox":
+    def with_size(self, new_size: Vec3IntLike) -> "BoundingBox":
 
         return BoundingBox(self.topleft, new_size)
 
@@ -69,13 +67,13 @@ class BoundingBox:
         return BoundingBox(tuple6[0:3], tuple6[3:6])
 
     @staticmethod
-    def from_tuple2(tuple2: Tuple[Shape3D, Shape3D]) -> "BoundingBox":
+    def from_tuple2(tuple2: Tuple[Vec3IntLike, Vec3IntLike]) -> "BoundingBox":
         return BoundingBox(tuple2[0], tuple2[1])
 
     @staticmethod
-    def from_points(points: Iterable[Shape3D]) -> "BoundingBox":
+    def from_points(points: Iterable[Vec3IntLike]) -> "BoundingBox":
 
-        all_points = np.array(points)
+        all_points = np.array([Vec3Int(point).to_list() for point in points])
         topleft = all_points.min(axis=0)
         bottomright = all_points.max(axis=0)
 
@@ -97,9 +95,9 @@ class BoundingBox:
             match is not None
         ), f"Could not extract bounding box from {checkpoint_name}"
         bbox_tuple = tuple(int(value) for value in match.group().split("_"))
-        topleft = cast(Tuple[int, int, int], bbox_tuple[:3])
-        size = cast(Tuple[int, int, int], bbox_tuple[3:6])
-        return BoundingBox.from_tuple2((topleft, size))
+        return BoundingBox.from_tuple6(
+            cast(Tuple[int, int, int, int, int, int], bbox_tuple)
+        )
 
     @staticmethod
     def from_csv(csv_bbox: str) -> "BoundingBox":
@@ -137,10 +135,10 @@ class BoundingBox:
             width,
             height,
             depth,
-        ) = self._size.tolist()
+        ) = self._size.to_list()
 
         return {
-            "topLeft": self._topleft.tolist(),
+            "topLeft": self._topleft.to_list(),
             "width": width,
             "height": height,
             "depth": depth,
@@ -148,7 +146,7 @@ class BoundingBox:
 
     def to_config_dict(self) -> dict:
 
-        return {"topleft": self._topleft.tolist(), "size": self._size.tolist()}
+        return {"topleft": self._topleft.to_list(), "size": self._size.to_list()}
 
     def to_checkpoint_name(self) -> str:
 
@@ -160,7 +158,7 @@ class BoundingBox:
 
     def to_tuple6(self) -> Tuple[int, int, int, int, int, int]:
 
-        return tuple(self._topleft.tolist() + self._size.tolist())  # type: ignore
+        return tuple(self._topleft.to_list() + self._size.to_list())  # type: ignore
 
     def to_csv(self) -> str:
 
@@ -184,21 +182,19 @@ class BoundingBox:
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, BoundingBox):
-            return np.array_equal(self._topleft, other._topleft) and np.array_equal(
-                self._size, other._size
-            )
+            return self._topleft == other.topleft and self._size == other.size
         else:
             raise NotImplementedError()
 
     def padded_with_margins(
-        self, margins_left: Shape3D, margins_right: Optional[Shape3D] = None
+        self, margins_left: Vec3IntLike, margins_right: Optional[Vec3IntLike] = None
     ) -> "BoundingBox":
 
         if margins_right is None:
             margins_right = margins_left
 
-        margins_left = np.array(margins_left)
-        margins_right = np.array(margins_right)
+        margins_left = Vec3Int(margins_left)
+        margins_right = Vec3Int(margins_right)
 
         return BoundingBox(
             topleft=self._topleft - margins_left,
@@ -210,8 +206,8 @@ class BoundingBox:
     ) -> "BoundingBox":
         """If dont_assert is set to False, this method may return empty bounding boxes (size == (0, 0, 0))"""
 
-        topleft = np.maximum(self.topleft, other.topleft)
-        bottomright = np.minimum(self.bottomright, other.bottomright)
+        topleft = np.maximum(self._topleft.to_np(), other.topleft.to_np())
+        bottomright = np.minimum(self.bottomright.to_np(), other.bottomright.to_np())
         size = np.maximum(bottomright - topleft, (0, 0, 0))
 
         intersection = BoundingBox(topleft, size)
@@ -233,22 +229,22 @@ class BoundingBox:
 
     def is_empty(self) -> bool:
 
-        return not all(self._size > 0)
+        return not all(self._size.to_np() > 0)
 
     def in_mag(self, mag: Mag) -> "BoundingBox":
 
         np_mag = np.array(mag.to_list())
 
         assert (
-            np.count_nonzero(self._topleft % np_mag) == 0
+            np.count_nonzero(self._topleft.to_np() % np_mag) == 0
         ), f"topleft {self._topleft} is not aligned with the mag {mag}. Use BoundingBox.align_with_mag()."
         assert (
-            np.count_nonzero(self.bottomright % np_mag) == 0
+            np.count_nonzero(self.bottomright.to_np() % np_mag) == 0
         ), f"bottomright {self.bottomright} is not aligned with the mag {mag}. Use BoundingBox.align_with_mag()."
 
         return BoundingBox(
-            topleft=(self._topleft // np_mag).astype(int),
-            size=(self._size // np_mag).astype(int),
+            topleft=(self._topleft // np_mag),
+            size=(self._size // np_mag),
         )
 
     def align_with_mag(self, mag: Mag, ceil: bool = False) -> "BoundingBox":
@@ -259,7 +255,10 @@ class BoundingBox:
 
         np_mag = np.array(mag.to_list())
 
-        align = lambda point, round_fn: round_fn(point / np_mag).astype(int) * np_mag
+        align = (
+            lambda point, round_fn: round_fn(point.to_np() / np_mag).astype(int)
+            * np_mag
+        )
 
         if ceil:
             topleft = align(self._topleft, np.floor)
@@ -269,9 +268,9 @@ class BoundingBox:
             bottomright = align(self.bottomright, np.floor)
         return BoundingBox(topleft, bottomright - topleft)
 
-    def contains(self, coord: Shape3D) -> bool:
+    def contains(self, coord: Vec3IntLike) -> bool:
 
-        coord = np.array(coord)
+        coord = Vec3Int(coord).to_np()
 
         return cast(
             bool,
@@ -283,7 +282,9 @@ class BoundingBox:
         return inner_bbox.intersected_with(self, dont_assert=True) == inner_bbox
 
     def chunk(
-        self, chunk_size: Shape3D, chunk_border_alignments: Optional[List[int]] = None
+        self,
+        chunk_size: Vec3IntLike,
+        chunk_border_alignments: Optional[List[int]] = None,
     ) -> Generator["BoundingBox", None, None]:
         """Decompose the bounding box into smaller chunks of size `chunk_size`.
 
@@ -292,8 +293,8 @@ class BoundingBox:
         *between two chunks* will be divisible by that value.
         """
 
-        start = self._topleft.copy()
-        chunk_size = np.array(chunk_size)
+        start = self._topleft
+        chunk_size = Vec3Int(chunk_size).to_np()
 
         start_adjust = np.array([0, 0, 0])
         if chunk_border_alignments is not None:
@@ -327,18 +328,18 @@ class BoundingBox:
     def slice_array(self, array: np.ndarray) -> np.ndarray:
 
         return array[
-            self._topleft[0] : self.bottomright[0],
-            self._topleft[1] : self.bottomright[1],
-            self._topleft[2] : self.bottomright[2],
+            self._topleft.x : self.bottomright.x,
+            self._topleft.y : self.bottomright.y,
+            self._topleft.z : self.bottomright.z,
         ]
 
     def to_slices(self) -> Tuple[slice, slice, slice]:
         return np.index_exp[
-            self._topleft[0] : self.bottomright[0],
-            self._topleft[1] : self.bottomright[1],
-            self._topleft[2] : self.bottomright[2],
+            self._topleft.x : self.bottomright.x,
+            self._topleft.z : self.bottomright.y,
+            self._topleft.z : self.bottomright.z,
         ]
 
-    def offset(self, vector: Tuple[int, int, int]) -> "BoundingBox":
+    def offset(self, vector: Vec3IntLike) -> "BoundingBox":
 
-        return BoundingBox(self._topleft + np.array(vector), self._size.copy())
+        return BoundingBox(self._topleft + Vec3Int(vector), self._size)

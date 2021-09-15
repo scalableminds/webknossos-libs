@@ -25,7 +25,9 @@ class Mag(object):
         elif isinstance(mag_like, Mag):
             self._mag = mag_like._mag
         elif isinstance(mag_like, np.ndarray):
-            assert mag_like.shape == (3,)
+            assert mag_like.shape == (
+                3,
+            ), f"Numpy array for Mag must have shape (3,), got {mag_like.shape}."
             self._mag = list(mag_like)
 
         if self._mag is None or len(self._mag) != 3:

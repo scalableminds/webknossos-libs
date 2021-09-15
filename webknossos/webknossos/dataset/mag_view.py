@@ -132,8 +132,8 @@ class MagView(View):
         """
         self._assert_valid_num_channels(data.shape)
         super().write(data, offset)
-        current_offset_in_mag1 = self.layer.bounding_box.topleft
-        current_size_in_mag1 = self.layer.bounding_box.size
+        current_offset_in_mag1 = self.layer.bounding_box.topleft.to_np()
+        current_size_in_mag1 = self.layer.bounding_box.size.to_np()
 
         mag_np = self.mag.to_np()
 
