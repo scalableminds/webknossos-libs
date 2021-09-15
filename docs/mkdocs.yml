@@ -33,7 +33,36 @@ theme:
     - navigation.top
 
 nav:
-- webknossos Python API:
+- webKnossos:
+  - Summary:
+    - Welcome to webKnossos: wk/hello.md
+    - Getting Started: wk/getting_started.md
+  - Guides:
+    - Dashboard: wk/dashboard.md
+    - Skeleton Annotations: wk/skeleton_annotation.md
+    - Volume Annotations & Proof-Reading: wk/volume_annotation.md
+    - Understanding the User Interface: wk/tracing_ui.md
+    - Mesh Visualization: wk/mesh_visualization.md
+    - Managing Datasets: wk/datasets.md
+    - Managing Users and Access Permissions: wk/users.md
+    - Managing Tasks and Projects: wk/tasks.md
+    - Sharing: wk/sharing.md
+    - Installation on your own Server: wk/installation.md
+  - Reference:
+    - Supported Data Formats: wk/data_formats.md
+    - Keyboard Shortcuts: wk/keyboard_shortcuts.md
+    - Backend REST API: wk/rest_api.md
+    #- Code Readme: wk./README.md
+    #- Changelog: wk./CHANGELOG.md
+    - Migration Guide: wk./MIGRATIONS.md
+    - Publications: wk/publications.md
+    - Tooling: wk/tooling.md
+  - Getting Help:
+    - FAQ: wk/faq.md
+    - Community Support: https://forum.image.sc/tag/webknossos
+    - Email Support: mailto:hello@webknossos.org
+    - Commercial Support: https://scalableminds.com
+- webKnossos Python API:
   - Intro: webknossos/index.md
   - Dataset API: api/webknossos/dataset.md
 - wkcuber CLI: wkcuber/index.md
