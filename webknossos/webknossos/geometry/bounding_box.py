@@ -218,7 +218,7 @@ class BoundingBox:
 
     def in_mag(self, mag: Mag) -> "BoundingBox":
 
-        np_mag = np.array(mag.to_array())
+        np_mag = np.array(mag.to_list())
 
         assert (
             np.count_nonzero(self.topleft % np_mag) == 0
@@ -238,7 +238,7 @@ class BoundingBox:
         :argument ceil: If true, the bounding box is enlarged when necessary. If false, it's shrinked when necessary.
         """
 
-        np_mag = np.array(mag.to_array())
+        np_mag = np.array(mag.to_list())
 
         align = lambda point, round_fn: round_fn(point / np_mag).astype(int) * np_mag
 

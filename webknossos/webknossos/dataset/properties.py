@@ -139,7 +139,7 @@ dataset_converter.register_structure_hook(
     BoundingBox, lambda d, _: BoundingBox.from_wkw(d)
 )
 
-mag_to_array: Callable[[Mag], List[int]] = lambda o: o.to_array()
+mag_to_array: Callable[[Mag], List[int]] = lambda o: o.to_list()
 dataset_converter.register_unstructure_hook(Mag, mag_to_array)
 dataset_converter.register_structure_hook(Mag, lambda d, _: Mag(d))
 

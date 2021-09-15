@@ -233,7 +233,7 @@ def cubing_job(
                         buffer, target_mag, interpolation_mode
                     )
 
-                target_wkw.write([0, 0, z_batch[0] / target_mag.to_array()[2]], buffer)
+                target_wkw.write([0, 0, z_batch[0] / target_mag.to_list()[2]], buffer)
                 logging.debug(
                     "Cubing of z={}-{} took {:.8f}s".format(
                         z_batch[0], z_batch[-1], time.time() - ref_time

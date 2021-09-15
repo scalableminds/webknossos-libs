@@ -420,7 +420,7 @@ def ceil_div_np(numerator: np.ndarray, denominator: np.ndarray) -> np.ndarray:
 def convert_mag1_offset(
     mag1_offset: Union[List, np.ndarray], target_mag: Mag
 ) -> np.ndarray:
-    return np.array(mag1_offset) // target_mag.as_np()  # floor div
+    return np.array(mag1_offset) // target_mag.to_np()  # floor div
 
 
 def get_executor_args(global_args: argparse.Namespace) -> argparse.Namespace:

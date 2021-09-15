@@ -39,7 +39,7 @@ def _find_mag_path_on_disk(dataset_path: Path, layer_name: str, mag_name: str) -
 def _convert_mag1_offset(
     mag1_offset: Union[List, np.ndarray], target_mag: Mag
 ) -> np.ndarray:
-    return np.array(mag1_offset) // target_mag.as_np()  # floor div
+    return np.array(mag1_offset) // target_mag.to_np()  # floor div
 
 
 class MagView(View):
@@ -109,7 +109,7 @@ class MagView(View):
         return next(
             mag_property
             for mag_property in self.layer._properties.wkw_resolutions
-            if Mag(mag_property.resolution).to_array() == self.mag.to_array()
+            if Mag(mag_property.resolution).to_list() == self.mag.to_list()
         )
 
     @property
@@ -135,7 +135,7 @@ class MagView(View):
         current_offset_in_mag1 = self.layer.bounding_box.topleft
         current_size_in_mag1 = self.layer.bounding_box.size
 
-        mag_np = self.mag.as_np()
+        mag_np = self.mag.to_np()
 
         offset_in_mag1 = np.array(offset) * mag_np
 
