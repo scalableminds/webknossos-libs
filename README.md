@@ -11,4 +11,4 @@ Python API to work with webKnossos datasets, annotations and for webKnossos serv
 Currently under construction :construction:
 
 ## [webKnossos cuber (wkcuber) CLI](wkcuber)
-CLI tool to creating and manipulate [webKnossos](https://webknossos.org) [WKW](https://github.com/scalableminds/webknossos-wrap) datasets. WKW is a container format for efficiently storing large, scale 3D image data as found in (electron) microscopy.
+CLI tool to creating and manipulate [webKnossos](https://webknossos.org) [WKW](https://github.com/scalableminds/webknossos-wrap) datasets. WKW is a container format for efficiently storing large-scale 3D images as found in microscopy data.
