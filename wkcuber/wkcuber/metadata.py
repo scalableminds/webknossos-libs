@@ -304,7 +304,7 @@ def detect_standard_layer(
 
     resolutions = [
         {
-            "resolution": mag.to_array(),
+            "resolution": mag.to_list(),
             "cubeLength": detect_cubeLength(dataset_path, layer_name, mag),
         }
         for mag in mags
