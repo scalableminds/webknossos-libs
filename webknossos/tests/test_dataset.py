@@ -761,9 +761,9 @@ def test_changing_layer_bounding_box() -> None:
     original_data = mag.read(size=bbox_size)
     assert original_data.shape == (3, 24, 24, 24)
 
-    old_bbox = layer.bounding_box
-    old_bbox.size = np.array([12, 12, 10])
-    layer.bounding_box = old_bbox  # decrease bounding box
+    layer.bounding_box = layer.bounding_box.with_size(
+        [12, 12, 10]
+    )  # decrease bounding box
 
     bbox_size = ds.get_layer("color").bounding_box.size
     assert tuple(bbox_size) == (12, 12, 10)
@@ -771,8 +771,9 @@ def test_changing_layer_bounding_box() -> None:
     assert less_data.shape == (3, 12, 12, 10)
     assert np.array_equal(original_data[:, :12, :12, :10], less_data)
 
-    old_bbox.size = np.array([36, 48, 60])
-    layer.bounding_box = old_bbox  # increase the bounding box
+    layer.bounding_box = layer.bounding_box.with_size(
+        [36, 48, 60]
+    )  # increase the bounding box
 
     bbox_size = ds.get_layer("color").bounding_box.size
     assert tuple(bbox_size) == (36, 48, 60)

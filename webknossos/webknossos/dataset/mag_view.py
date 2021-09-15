@@ -208,7 +208,7 @@ class MagView(View):
 
         # The (-1, -1, -1) is for backwards compatibility because we used '(-1, -1, -1)' to indicate that there is no data written yet.
         if tuple(bb.topleft) == (-1, -1, -1):
-            bb.topleft = np.array((0, 0, 0))
+            bb = bb.with_topleft(np.array((0, 0, 0)))
 
         bb = bb.align_with_mag(self.mag, ceil=True).in_mag(self.mag)
 

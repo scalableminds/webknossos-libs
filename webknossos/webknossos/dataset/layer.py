@@ -458,14 +458,14 @@ class Layer:
 
     @property
     def bounding_box(self) -> BoundingBox:
-        return self._properties.bounding_box.copy()
+        return self._properties.bounding_box
 
     @bounding_box.setter
     def bounding_box(self, bbox: BoundingBox) -> None:
         """
         Updates the offset and size of the bounding box of this layer in the properties.
         """
-        self._properties.bounding_box = bbox.copy()
+        self._properties.bounding_box = bbox
 
         for mag, mag_view in self.mags.items():
             mag_view._size = cast(

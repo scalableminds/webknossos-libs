@@ -133,7 +133,7 @@ class DatasetProperties:
 dataset_converter = cattr.Converter()
 
 # register (un-)structure hooks for non-attr-classes
-bbox_to_wkw: Callable[[BoundingBox], dict] = lambda o: o.as_wkw()
+bbox_to_wkw: Callable[[BoundingBox], dict] = lambda o: o.to_wkw_dict()
 dataset_converter.register_unstructure_hook(BoundingBox, bbox_to_wkw)
 dataset_converter.register_structure_hook(
     BoundingBox, lambda d, _: BoundingBox.from_wkw(d)

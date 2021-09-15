@@ -8,25 +8,25 @@ import numpy as np
 
 @total_ordering
 class Mag(object):
-    def __init__(self, mag: Any):
+    def __init__(self, mag_like: Any):
         self._mag: List[int] = []
 
-        if isinstance(mag, int):
-            self._mag = [mag] * 3
-        elif isinstance(mag, list):
-            self._mag = mag
-        elif isinstance(mag, tuple):
-            self._mag = [mag_d for mag_d in mag]
-        elif isinstance(mag, str):
-            if re.match(r"^\d+$", mag) is not None:
-                self._mag = [int(mag)] * 3
-            elif re.match(r"^\d+-\d+-\d+$", mag) is not None:
-                self._mag = [int(m) for m in mag.split("-")]
-        elif isinstance(mag, Mag):
-            self._mag = mag._mag
-        elif isinstance(mag, np.ndarray):
-            assert mag.shape == (3,)
-            self._mag = list(mag)
+        if isinstance(mag_like, int):
+            self._mag = [mag_like] * 3
+        elif isinstance(mag_like, list):
+            self._mag = mag_like
+        elif isinstance(mag_like, tuple):
+            self._mag = [mag_d for mag_d in mag_like]
+        elif isinstance(mag_like, str):
+            if re.match(r"^\d+$", mag_like) is not None:
+                self._mag = [int(mag_like)] * 3
+            elif re.match(r"^\d+-\d+-\d+$", mag_like) is not None:
+                self._mag = [int(m) for m in mag_like.split("-")]
+        elif isinstance(mag_like, Mag):
+            self._mag = mag_like._mag
+        elif isinstance(mag_like, np.ndarray):
+            assert mag_like.shape == (3,)
+            self._mag = list(mag_like)
 
         if self._mag is None or len(self._mag) != 3:
             raise ValueError(
