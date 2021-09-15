@@ -1,0 +1,324 @@
+name: CI
+
+on: push
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      webknossos: ${{ steps.filter.outputs.webknossos }}
+      wkcuber: ${{ steps.filter.outputs.wkcuber }}
+    steps:
+    - uses: actions/checkout@v2
+    - uses: dorny/paths-filter@v2
+      id: filter
+      with:
+        filters: |
+          webknossos:
+            - 'webknossos/**'
+          wkcuber:
+            - 'wkcuber/**'
+
+  webknossos_linux:
+    needs: changes
+    if: ${{ needs.changes.outputs.webknossos == 'true' }}
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: [3.7, 3.8]
+    defaults:
+      run:
+        working-directory: webknossos
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+        architecture: 'x64'
+
+    - name: Install dependencies
+      run: |
+        pip install poetry
+        poetry install
+
+    - name: Check formatting
+      run: poetry run ./format.sh check
+
+    - name: Lint code
+      run: poetry run pylint -j4 webknossos
+
+    - name: Check typing
+      run: |
+        poetry run ./typecheck.sh
+
+    - name: Python tests
+      env:
+        WK_TOKEN: ${{ secrets.WK_TOKEN }}
+      run: poetry run pytest tests
+
+    - name: Check if git is dirty
+      run: |
+        git diff --no-ext-diff --quiet --exit-code
+        [[ -z $(git status -s) ]]
+
+  wkcuber_linux:
+    needs: [changes]
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: [3.7, 3.8]
+    defaults:
+      run:
+        working-directory: wkcuber
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        pip install poetry
+        poetry install
+
+    - name: Decompress test data
+      run: tar -xzvf testdata/WT1_wkw.tar.gz
+
+    - name: Check formatting
+      run: poetry run black --check .
+      if: ${{ needs.changes.outputs.wkcuber == 'true' }}
+
+    - name: Lint code
+      run: poetry run pylint -j4 wkcuber
+      if: ${{ needs.changes.outputs.wkcuber == 'true' }}
+
+    - name: Check typing
+      run: poetry run ./typecheck.sh
+
+    - name: Python tests
+      run: poetry run pytest tests
+
+    - name: CLI tests
+      run: poetry run tests/scripts/all_tests.sh
+
+    - name: Check if git is dirty
+      run: |
+        git diff --no-ext-diff --quiet --exit-code
+        [[ -z $(git status -s) ]]
+
+  wkcuber_win:
+    # Caution! The Windows VM seems to be running out of storage rather quickly.
+    runs-on: windows-latest
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: [3.7, 3.8]
+    defaults:
+      run:
+        working-directory: wkcuber
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        pip install poetry
+        poetry install
+
+    - name: Decompress test data
+      shell: bash
+      run: tar -xzvf testdata/WT1_wkw.tar.gz
+
+    - name: Python tests
+      shell: bash
+      run: poetry run pytest tests
+
+    - name: CLI tests
+      shell: bash
+      run: poetry run "C:\Program Files\Git\bin\bash.EXE" --noprofile --norc tests/scripts/all_tests.sh
+
+  wkcuber_mac:
+    runs-on: macos-latest
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: [3.7, 3.8]
+    defaults:
+      run:
+        working-directory: wkcuber
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        pip install poetry
+        poetry install
+
+    - name: Decompress test data
+      run: tar -xzvf testdata/WT1_wkw.tar.gz
+
+    - name: Python tests
+      run: poetry run pytest tests
+
+    - name: CLI tests
+      run: poetry run tests/scripts/all_tests.sh
+
+  wkcuber_docker:
+    needs: [webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac]
+    if: |
+      always() &&
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled')
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build docker image
+      run: docker build -t scalableminds/webknossos-cuber:$GITHUB_SHA -f wkcuber/Dockerfile .
+
+    - name: Smoke test docker
+      run: |
+        docker run --rm \
+          -v$(pwd)/wkcuber/testdata:/app/testdata \
+          scalableminds/webknossos-cuber:$GITHUB_SHA \
+          wkcuber.cubing \
+            --jobs 2 \
+            --batch_size 8 \
+            --layer_name color \
+            --wkw_file_len 32 \
+            testdata/tiff testoutput/tiff
+
+    - name: Login to docker
+      env:
+        DOCKER_USER: ${{ secrets.DOCKER_USER }}
+        DOCKER_PASS: ${{ secrets.DOCKER_PASS }}
+      run: |
+        echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+
+    - name: Push docker images
+      run: |
+        docker push scalableminds/webknossos-cuber:$GITHUB_SHA
+
+    - name: Push docker images (for tag)
+      if: startsWith(github.event.ref, 'refs/tags')
+      run: |
+        CI_TAG=$(git describe --tags)
+        docker tag \
+          scalableminds/webknossos-cuber:$GITHUB_SHA \
+          scalableminds/webknossos-cuber:$CI_TAG
+        docker push scalableminds/webknossos-cuber:$CI_TAG
+
+    - name: Push docker images (for branch)
+      if: startsWith(github.event.ref, 'refs/heads')
+      run: |
+        CI_BRANCH=${GITHUB_REF##*/}
+        NORMALIZED_CI_BRANCH=${CI_BRANCH//[\/-]/_}
+        docker tag \
+          scalableminds/webknossos-cuber:$GITHUB_SHA \
+          scalableminds/webknossos-cuber:$NORMALIZED_CI_BRANCH
+        docker push scalableminds/webknossos-cuber:$NORMALIZED_CI_BRANCH
+        if [ "${CI_BRANCH}" == "master" ]; then
+          docker tag \
+            scalableminds/webknossos-cuber:$GITHUB_SHA \
+            scalableminds/webknossos-cuber:latest
+          docker push scalableminds/webknossos-cuber:latest
+        fi
+
+  docs:
+    needs: [webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac]
+    runs-on: ubuntu-latest
+    if: |
+      always() &&
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled')
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.8
+        architecture: 'x64'
+
+    - name: Install dependencies
+      run: |
+        pip3 install -r requirements.txt
+
+    - name: Build Docs
+      run: |
+        docs/api.sh --persist
+
+    - name: Push docs (for branch)
+      if: startsWith(github.event.ref, 'refs/heads')
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: "eu-west-1"
+      run: |
+        CI_BRANCH=${GITHUB_REF##*/}
+        NORMALIZED_CI_BRANCH=${CI_BRANCH//[\/-]/_}
+        aws s3 sync --acl public-read docs/out s3://static.webknossos.org/lib-docs/${NORMALIZED_CI_BRANCH}
+
+    - name: Push docs (for tag)
+      if: startsWith(github.event.ref, 'refs/tags')
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: "eu-west-1"
+      run: |
+        CI_TAG=$(git describe --tags)
+        aws s3 sync --acl public-read docs/out s3://static.webknossos.org/lib-docs/${CI_TAG}
+
+
+  pypi:
+    needs: [webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac]
+    if: |
+      always() &&
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled') &&
+      startsWith(github.event.ref, 'refs/tags')
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 4
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.8
+        architecture: 'x64'
+    - name: Install dependencies
+      run: pip3 install -r requirements.txt
+    - name: Publish python packages
+      env:
+        PYPI_USERNAME: ${{ secrets.PYPI_USERNAME }}
+        PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+      run: ./publish.sh
+
+  complete:
+    needs: [webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac, wkcuber_docker, docs]
+    if: |
+      always() &&
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled')
+    runs-on: ubuntu-latest
+    steps:
+    - name: Success
+      run: echo Success!

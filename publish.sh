@@ -2,11 +2,26 @@
 set -eEuo pipefail
 set +x
 
-cp pyproject.toml pyproject.toml.bak
-PKG_VERSION=$(python -c "from setuptools_scm import get_version;print(get_version(),end='')")
+for PKG in */pyproject.toml; do
+    PKG="$(dirname "$PKG")"
+    if [[ "$PKG" == "docs" ]]; then
+        echo Skipping "$PKG"
+        continue
+    fi
+    echo Publishing "$PKG"
 
-sed -i "0,/version = \".*\"/{s/version = \".*\"/version = \"$PKG_VERSION\"/}" pyproject.toml
-poetry publish --build -u $PYPI_USERNAME -p $PYPI_PASSWORD
+    pushd "$PKG" > /dev/null
 
-# Restore files
-mv pyproject.toml.bak pyproject.toml
+    cp pyproject.toml pyproject.toml.bak
+    PKG_VERSION="$(dunamai from git)"
+
+    poetry version "$PKG_VERSION"
+    # replace all relative path dependencies with the current version:
+    sed -i 's/\(.*\) = .* path \= \"\.\..*/\1 = "'"$PKG_VERSION"'"/g' pyproject.toml
+    poetry publish --build -u "$PYPI_USERNAME" -p "$PYPI_PASSWORD"
+
+    # Restore files
+    mv pyproject.toml.bak pyproject.toml
+
+    popd > /dev/null
+done
