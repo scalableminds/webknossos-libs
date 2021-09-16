@@ -192,13 +192,12 @@ class WkGraph:
         else:
             self.id = self._nml.element_id_generator.__next__()
 
-    # todo: how to type this?
-    def get_nodes(self) -> Any:
+    def get_nodes(self) -> List[Node]:
 
-        return self.nx_graph.nodes
+        return [node_view[1] for node_view in self.nx_graph.nodes(data="obj")]
 
     def get_node_positions(self) -> np.ndarray:
-        return np.array([node.position for node in self.nx_graph.nodes])
+        return np.array([node.position for node in self.get_nodes()])
 
     def get_node_by_id(self, node_id: int) -> Node:
 
@@ -239,17 +238,17 @@ class WkGraph:
             enforce_id=_enforce_id,
             nml=_nml or self._nml,
         )
-        self.nx_graph.add_node(node)
+        self.nx_graph.add_node(node.id, obj=node)
         return node
 
     def add_edge(self, node_1: Node, node_2: Node) -> None:
 
-        self.nx_graph.add_edge(node_1, node_2)
+        self.nx_graph.add_edge(node_1.id, node_2.id)
 
     def get_max_node_id(self) -> int:
 
         # Chain with [0] since max is not defined on empty sequences
-        return max(itertools.chain((node.id for node in self.nx_graph.nodes), [0]))
+        return max(itertools.chain((node.id for node in self.get_nodes()), [0]))
 
     def __hash__(self) -> int:
         return hash((self._nml.id, self.id))

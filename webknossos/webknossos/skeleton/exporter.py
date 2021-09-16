@@ -69,14 +69,14 @@ class NMLExporter:
         comments = [
             LegacyComment(node.id, node.comment)
             for graph in group.flattened_graphs()
-            for node in graph.nx_graph.nodes
+            for _id, node in graph.nx_graph.nodes(data="obj")
             if node.comment is not None
         ]
 
         branchpoints = [
             LegacyBranchpoint(node.id, node.time)
             for graph in group.flattened_graphs()
-            for node in graph.nx_graph.nodes
+            for _id, node in graph.nx_graph.nodes(data="obj")
             if node.is_branchpoint
         ]
 
@@ -145,12 +145,11 @@ class NMLExporter:
                 interpolation=node.interpolation,
                 time=node.time,
             )
-            for node in graph.nx_graph.nodes
+            for _id, node in graph.nx_graph.nodes(data="obj")
         ]
 
         edge_nml = [
-            LegacyEdge(source=edge[0].id, target=edge[1].id)
-            for edge in graph.nx_graph.edges
+            LegacyEdge(source=edge[0], target=edge[1]) for edge in graph.nx_graph.edges
         ]
 
         return node_nml, edge_nml
