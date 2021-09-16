@@ -1,7 +1,7 @@
 import re
 from functools import total_ordering
 from math import log2
-from typing import Any, List
+from typing import Any, List, Optional
 
 import numpy as np
 
@@ -23,7 +23,7 @@ class Mag(object):
             elif re.match(r"^\d+-\d+-\d+$", mag_like) is not None:
                 self._mag = [int(m) for m in mag_like.split("-")]
         elif isinstance(mag_like, Mag):
-            self._mag = mag_like._mag
+            self._mag = mag_like.to_list()
         elif isinstance(mag_like, np.ndarray):
             assert mag_like.shape == (
                 3,
@@ -37,6 +37,18 @@ class Mag(object):
 
         for m in self._mag:
             assert log2(m) % 1 == 0, "magnification needs to be power of 2."
+
+    @property
+    def x(self) -> int:
+        return self._mag[0]
+
+    @property
+    def y(self) -> int:
+        return self._mag[1]
+
+    @property
+    def z(self) -> int:
+        return self._mag[2]
 
     def __lt__(self, other: Any) -> bool:
         return max(self._mag) < (max(Mag(other).to_list()))

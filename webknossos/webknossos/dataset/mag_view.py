@@ -109,7 +109,7 @@ class MagView(View):
         return next(
             mag_property
             for mag_property in self.layer._properties.wkw_resolutions
-            if Mag(mag_property.resolution).to_list() == self.mag.to_list()
+            if mag_property.resolution == self.mag
         )
 
     @property

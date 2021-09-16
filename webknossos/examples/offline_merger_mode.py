@@ -20,7 +20,7 @@ dataset = wk.download(nml.dataset_name, organization=nml.dataset_organization)
 # asks for auth token, persisted into .env or similar config file (maybe use xdg-path?)
 
 # sub-part access via dicts or dict-like classes
-view = dataset.layers["segmentation"]._mag["1"]
+view = dataset.layers["segmentation"].mag["1"]
 # or via getters
 view = dataset.get_layer("segmentation").get_mag(1)
 
@@ -35,7 +35,7 @@ for tree in nml.trees():  # nml.trees() is a flattened iterator of all trees
 
 new_dataset = dataset.copy("new_dataset_path")
 # same options as above for reading:
-new_dataset.layers["segmentation"]._mag[1].write(segmentation_data)
+new_dataset.layers["segmentation"].mag[1].write(segmentation_data)
 # or
 new_dataset.get_layer("segmentation").get_mag("1").write(segmentation_data)
 # the data should be downsampled automagically, no need for

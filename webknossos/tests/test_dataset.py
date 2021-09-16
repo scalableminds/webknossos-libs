@@ -209,6 +209,7 @@ def test_modify_existing_dataset() -> None:
     )
 
     ds2 = Dataset(TESTOUTPUT_DIR / "simple_wk_dataset")
+
     ds2.add_layer(
         "segmentation",
         LayerCategories.SEGMENTATION_TYPE,

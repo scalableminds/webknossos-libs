@@ -9,6 +9,7 @@ from pathlib import Path
 from shutil import rmtree
 from typing import Any, Dict, Optional, Tuple, Union, cast
 
+import attr
 import numpy as np
 import wkw
 
@@ -32,7 +33,6 @@ from .properties import (
     _extract_num_channels,
     _properties_floating_type_to_python_type,
     dataset_converter,
-    layer_properties_converter,
 )
 from .view import View
 
@@ -228,6 +228,9 @@ class Dataset:
             data_format="wkw",
         )
 
+        # if category == LayerCategories.SEGMENTATION_TYPE:
+        #    breakpoint()
+
         if category == LayerCategories.COLOR_TYPE:
             self._properties.data_layers += [layer_properties]
             self._layers[layer_name] = Layer(self, layer_properties)
@@ -238,12 +241,13 @@ class Dataset:
 
             segmentation_layer_properties: SegmentationLayerProperties = (
                 SegmentationLayerProperties(
-                    **layer_properties_converter.unstructure(
-                        layer_properties
+                    **(
+                        attr.asdict(layer_properties, recurse=False)
                     ),  # use all attributes from LayerProperties
                     largest_segment_id=kwargs["largest_segment_id"],
                 )
             )
+            # breakpoint()
             if "mappings" in kwargs:
                 segmentation_layer_properties.mappings = kwargs["mappings"]
             self._properties.data_layers += [segmentation_layer_properties]
