@@ -394,7 +394,7 @@ class ImageStackConverter(Converter):
                     layer_name = f"{layer_name}_{i}"
                     arg_dict = vars(args)
 
-                    bounding_box = cube_image_stack(
+                    ds = cube_image_stack(
                         Path(layer_path),
                         args.target_path,
                         layer_name,
@@ -414,7 +414,7 @@ class ImageStackConverter(Converter):
                     ] = ImageStackConverter.get_view_configuration(i)
             else:
                 arg_dict = vars(args)
-                bounding_box = cube_image_stack(
+                ds = cube_image_stack(
                     Path(layer_path),
                     args.target_path,
                     layer_name,
@@ -435,7 +435,7 @@ class ImageStackConverter(Converter):
             args.target_path,
             args.name,
             args.scale,
-            exact_bounding_box=bounding_box,
+            exact_bounding_box=ds.get_layer(layer_name).bounding_box.as_wkw(),
             view_configuration=view_configuration,
         )
 
