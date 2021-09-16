@@ -19,7 +19,6 @@ scipy = "^1.4.0"
 wkw = "1.1.11"
 networkx = "^2.6.2"
 loxun = "^2.0"
-icecream = "^2.1.1"
 
 [tool.poetry.dev-dependencies]
 black = "21.7b0"
@@ -28,6 +27,7 @@ types-python-dateutil = "^0.1.6"
 mypy = "0.910"
 pylint = "^2.10.2"
 pytest = "^6.2.4"
+icecream = "^2.1.1"
 
 [tool.black]
 target_version = ['py37', 'py38']
