@@ -327,7 +327,6 @@ def cubing(
         job_args = []
         # We iterate over all z sections
         for z in range(start_z, num_z + start_z, BLOCK_LEN):
-            # Prepare z batches
             max_z = min(num_z + start_z, z + BLOCK_LEN)
             # Prepare source files array
             if len(source_files) > 1:
@@ -335,6 +334,7 @@ def cubing(
             else:
                 source_files_array = source_files * (max_z - z)
 
+            # Prepare Bounding Box for View
             bbox_of_batch_in_mag1 = BoundingBox((0, 0, z), (num_x, num_y, max_z - z))
             bbox_of_batch_in_target_mag = target_layer.bounding_box.intersected_with(
                 bbox_of_batch_in_mag1
