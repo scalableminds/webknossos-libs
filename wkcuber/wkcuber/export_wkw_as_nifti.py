@@ -52,16 +52,18 @@ def create_parser() -> ArgumentParser:
     parser.add_argument(
         "--original_bbox",
         help="Easy way to add padding to the generated file. Format is: x,y,z,width,height,depth"
-             "x,y,z is the offset of the wkw layer into the final bounding box; "
-             "width,height,depth corresponds to final dimensions",
-        default=None, type=parse_bounding_box
+        "x,y,z is the offset of the wkw layer into the final bounding box; "
+        "width,height,depth corresponds to final dimensions",
+        default=None,
+        type=parse_bounding_box,
     )
 
     parser.add_argument(
         "--bounding_box_crop",
         help="Easy way to crop the final file. Is applied AFTER everything else (including padding)."
-             "Format is: x,y,z,width,height,depth",
-        default=None, type=parse_bounding_box
+        "Format is: x,y,z,width,height,depth",
+        default=None,
+        type=parse_bounding_box,
     )
 
     add_verbose_flag(parser)
@@ -105,25 +107,29 @@ def export_layer_to_nifti(
 
         for i in range(3):
             if original_bbox_size[i] == data.shape[i]:
-                padding_per_axis.append((0,0))
+                padding_per_axis.append((0, 0))
             else:
                 left_pad = offset_into_orginal_bbox[i]
-                right_pad = original_bbox_size[i] - offset_into_orginal_bbox[i] - data.shape[i]
+                right_pad = (
+                    original_bbox_size[i] - offset_into_orginal_bbox[i] - data.shape[i]
+                )
                 padding_per_axis.append((left_pad, right_pad))
 
-        padding_per_axis.append((0,0))
+        padding_per_axis.append((0, 0))
         print(padding_per_axis)
         data = np.pad(data, padding_per_axis, mode="constant", constant_values=0)
 
         if bounding_box_crop is not None:
-            assert len(bounding_box_crop) == 6, "bounding box crop needs to have 6 parameters"
+            assert (
+                len(bounding_box_crop) == 6
+            ), "bounding box crop needs to have 6 parameters"
 
             print(f"Using Bounding Box {bounding_box_crop}")
 
             data = data[
-                bounding_box_crop[0] : bounding_box_crop[0]+bounding_box_crop[3],
-                bounding_box_crop[1] : bounding_box_crop[1]+bounding_box_crop[4],
-                bounding_box_crop[2] : bounding_box_crop[2]+bounding_box_crop[5],
+                bounding_box_crop[0] : bounding_box_crop[0] + bounding_box_crop[3],
+                bounding_box_crop[1] : bounding_box_crop[1] + bounding_box_crop[4],
+                bounding_box_crop[2] : bounding_box_crop[2] + bounding_box_crop[5],
             ]
 
     img = nib.Nifti1Image(data, np.eye(4))
@@ -151,9 +157,7 @@ def export_nifti(
     for layer_name in layers:
         if bbox is None:
             # bbox = wk_ds.properties.data_layers[layer_name].bounding_box
-            _, _, bbox_dim, origin = read_metadata_for_layer(
-                wkw_file_path, layer_name
-            )
+            _, _, bbox_dim, origin = read_metadata_for_layer(wkw_file_path, layer_name)
             bbox_dict = {"topleft": origin, "size": bbox_dim}
         else:
             bbox_dict = {"topleft": list(bbox.topleft), "size": list(bbox.size)}
