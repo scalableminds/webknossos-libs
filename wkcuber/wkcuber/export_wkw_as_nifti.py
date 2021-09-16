@@ -21,7 +21,7 @@ def create_parser() -> ArgumentParser:
     parser = ArgumentParser()
 
     parser.add_argument(
-        "--source_path", "-s", help="Directory containing the wkw file.", required=True
+        "--source_path", "-s", help="Directory containing the wkw file(s).", required=True
     )
 
     parser.add_argument(
