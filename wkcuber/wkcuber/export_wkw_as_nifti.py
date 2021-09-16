@@ -136,9 +136,9 @@ def export_layer_to_nifti(
             logging.info(f"Using Bounding Box {cropping_bbox}")
 
             data = data[
-                cropping_bbox[0] : cropping_bbox[0] + cropping_bbox[3],
-                cropping_bbox[1] : cropping_bbox[1] + cropping_bbox[4],
-                cropping_bbox[2] : cropping_bbox[2] + cropping_bbox[5],
+                cropping_bbox.topleft[0] : cropping_bbox.bottomright[0],
+                cropping_bbox.topleft[1] : cropping_bbox.bottomright[1],
+                cropping_bbox.topleft[2] : cropping_bbox.bottomright[2],
             ]
 
     img = nib.Nifti1Image(data, np.eye(4))
