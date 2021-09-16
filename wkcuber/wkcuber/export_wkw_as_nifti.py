@@ -179,14 +179,17 @@ def export_wkw_as_nifti(args: Namespace) -> None:
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG)
 
+    original_bbox_size = args.original_bbox.size if args.original_bbox else None
+    offset_into_orginal_bbox = args.original_bbox.topleft if args.original_bbox else None
+
     export_nifti(
         wkw_file_path=Path(args.source_path),
         bbox=args.bbox,
         mag=Mag(args.mag),
         destination_path=Path(args.destination_path),
         name=args.name,
-        original_bbox_size=args.original_bbox.size,
-        offset_into_orginal_bbox=args.original_bbox.topleft,
+        original_bbox_size=original_bbox_size,
+        offset_into_orginal_bbox=offset_into_orginal_bbox,
         bounding_box_crop=args.bounding_box_crop,
     )
 
