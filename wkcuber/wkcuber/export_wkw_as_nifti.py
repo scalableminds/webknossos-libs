@@ -114,7 +114,6 @@ def export_layer_to_nifti(
                 padding_per_axis.append((left_pad, right_pad))
 
         padding_per_axis.append((0, 0))
-        print(padding_per_axis)
         data = np.pad(data, padding_per_axis, mode="constant", constant_values=0)
 
         if bounding_box_crop is not None:
