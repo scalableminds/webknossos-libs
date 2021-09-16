@@ -123,6 +123,14 @@ class Group:
                 yield child
                 yield from child.flattened_groups()
 
+    def get_node_by_id(self, node_id: int) -> "Node":
+
+        for graph in self.flattened_graphs():
+            if graph.has_node_id(node_id):
+                return graph.get_node_by_id(node_id)
+
+        raise ValueError("Node id not found")
+
     def as_legacy_group(self) -> "LegacyGroup":  # type: ignore
 
         return legacy_wknml.Group(
@@ -201,11 +209,11 @@ class WkGraph:
 
     def get_node_by_id(self, node_id: int) -> Node:
 
-        # Todo: Use hashed access
-        for node in self.get_nodes():
-            if node.id == node_id:
-                return node
-        raise ValueError(f"No node with id {node_id} was found")
+        return self.nx_graph.nodes[node_id]["obj"]
+
+    def has_node_id(self, node_id: int) -> bool:
+
+        return node_id in self.nx_graph.nodes
 
     def add_node(
         self,
@@ -241,9 +249,11 @@ class WkGraph:
         self.nx_graph.add_node(node.id, obj=node)
         return node
 
-    def add_edge(self, node_1: Node, node_2: Node) -> None:
+    def add_edge(self, node_1: Union[int, Node], node_2: Union[int, Node]) -> None:
 
-        self.nx_graph.add_edge(node_1.id, node_2.id)
+        id_1 = node_1.id if isinstance(node_1, Node) else node_1
+        id_2 = node_2.id if isinstance(node_2, Node) else node_2
+        self.nx_graph.add_edge(id_1, id_2)
 
     def get_max_node_id(self) -> int:
 
@@ -333,6 +343,10 @@ class NML:
 
         return self.root_group.get_max_node_id()
 
+    def get_node_by_id(self, node_id: int) -> Node:
+
+        return self.root_group.get_node_by_id(node_id)
+
     @staticmethod
     def from_path(file_path: str) -> "NML":
 
@@ -378,7 +392,14 @@ class NML:
                 )
             NML.nml_tree_to_graph(legacy_nml, new_graph, legacy_tree)
 
-        nml.write("out_only_groups.nml")
+        for comment in legacy_nml.comments:
+            nml.get_node_by_id(comment.node).comment = comment.content
+
+        for branchpoint in legacy_nml.branchpoints:
+            node = nml.get_node_by_id(branchpoint.id)
+            node.is_branchpoint = True
+            if branchpoint.time != 0:
+                node.branchpoint_time = branchpoint.time
 
         max_id = max(nml.get_max_graph_id(), nml.get_max_node_id())
         nml.element_id_generator = itertools.count(max_id + 1)
@@ -408,11 +429,9 @@ class NML:
         new_graph.name = legacy_tree.name
         new_graph.group_id = legacy_tree.groupId
 
-        node_by_id = {}
-
         for legacy_node in legacy_tree.nodes:
             node_id = legacy_node.id
-            node_by_id[node_id] = new_graph.add_node(
+            current_node = new_graph.add_node(
                 position=legacy_node.position,
                 _enforce_id=node_id,
                 radius=legacy_node.radius,
@@ -421,35 +440,13 @@ class NML:
             for optional_attribute in optional_attribute_list:
                 if getattr(legacy_node, optional_attribute) is not None:
                     setattr(
-                        node_by_id[node_id],
+                        current_node,
                         optional_attribute,
                         getattr(legacy_node, optional_attribute),
                     )
 
         for edge in legacy_tree.edges:
-            source_node = node_by_id[edge.source]
-            target_node = node_by_id[edge.target]
-
-            new_graph.add_edge(source_node, target_node)
-
-        for comment in legacy_nml.comments:
-            # Unfortunately, legacy_nml.comments is not grouped by tree which is
-            # why we currently go over all comments in the NML and only attach
-            # the ones for the current tree.
-            # Todo: Implement a more efficient way.
-            if comment.node in node_by_id:
-                node_by_id[comment.node].comment = comment.content
-
-        for branchpoint in legacy_nml.branchpoints:
-            # Unfortunately, legacy_nml.branchpoints is not grouped by tree which is
-            # why we currently go over all branchpoints in the NML and only attach
-            # the ones for the current tree.
-            # Todo: Implement a more efficient way.
-            if branchpoint.id in node_by_id:
-                node = node_by_id[branchpoint.id]
-                node.is_branchpoint = True
-                if branchpoint.time != 0:
-                    node.branchpoint_time = branchpoint.time
+            new_graph.add_edge(edge.source, edge.target)
 
         return new_graph
 
