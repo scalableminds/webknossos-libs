@@ -17,15 +17,13 @@ Vector3 = Tuple[float, float, float]
 Vector4 = Tuple[float, float, float, float]
 IntVector6 = Tuple[int, int, int, int, int, int]
 
-Number = Union[int, float]
-
 GroupOrGraph = Union["Group", "WkGraph"]
 
 nml_id_generator = itertools.count()
 
 
 def opt_vector3_as_float(
-    vec: Optional[Tuple[Number, Number, Number]]
+    vec: Optional[Tuple[float, float, float]]
 ) -> Optional[Vector3]:
     if vec is None:
         return None
@@ -36,7 +34,7 @@ def opt_vector3_as_float(
     )
 
 
-def vector3_as_float(vec: Tuple[Number, Number, Number]) -> Vector3:
+def vector3_as_float(vec: Tuple[float, float, float]) -> Vector3:
     return (
         float(vec[0]),
         float(vec[1]),
@@ -51,12 +49,12 @@ class Group:
     children: List[GroupOrGraph]
     _nml: "NML"
     is_root_group: bool = False
-    _enforce_id: Optional[int] = None
+    _enforced_id: Optional[int] = None
 
     def __attrs_post_init__(self) -> None:
 
-        if self._enforce_id is not None:
-            self.id = self._enforce_id
+        if self._enforced_id is not None:
+            self.id = self._enforced_id
         else:
             self.id = self._nml.element_id_generator.__next__()
 
@@ -65,7 +63,7 @@ class Group:
         name: str,
         color: Optional[Vector4] = None,
         _nml: Optional["NML"] = None,
-        _enforce_id: Optional[int] = None,
+        _enforced_id: Optional[int] = None,
     ) -> "WkGraph":
 
         new_graph = WkGraph(
@@ -73,7 +71,7 @@ class Group:
             color=color,
             group_id=self.id,
             nml=_nml or self._nml,
-            enforce_id=_enforce_id,
+            enforced_id=_enforced_id,
         )
         self.children.append(new_graph)
 
@@ -83,10 +81,10 @@ class Group:
         self,
         name: str,
         children: Optional[List[GroupOrGraph]] = None,
-        _enforce_id: int = None,
+        _enforced_id: int = None,
     ) -> "Group":
 
-        new_group = Group(name, children or [], nml=self._nml, enforce_id=_enforce_id)  # type: ignore
+        new_group = Group(name, children or [], nml=self._nml, enforced_id=_enforced_id)  # type: ignore
         self.children.append(new_group)
         return new_group
 
@@ -161,11 +159,11 @@ class Node:
 
     is_branchpoint: bool = False
     branchpoint_time: Optional[int] = None
-    _enforce_id: Optional[int] = None
+    _enforced_id: Optional[int] = None
 
     def __attrs_post_init__(self) -> None:
-        if self._enforce_id is not None:
-            self.id = self._enforce_id
+        if self._enforced_id is not None:
+            self.id = self._enforced_id
         else:
             self.id = self._nml.element_id_generator.__next__()
 
@@ -191,12 +189,12 @@ class WkGraph:
     nx_graph: nx.Graph = attr.ib(init=False)
     group_id: Optional[int] = None
 
-    _enforce_id: Optional[int] = None
+    _enforced_id: Optional[int] = None
 
     def __attrs_post_init__(self) -> None:
         self.nx_graph = nx.Graph()
-        if self._enforce_id is not None:
-            self.id = self._enforce_id
+        if self._enforced_id is not None:
+            self.id = self._enforced_id
         else:
             self.id = self._nml.element_id_generator.__next__()
 
@@ -228,7 +226,7 @@ class WkGraph:
         time: Optional[int] = None,
         is_branchpoint: bool = False,
         branchpoint_time: Optional[int] = None,
-        _enforce_id: Optional[int] = None,
+        _enforced_id: Optional[int] = None,
         _nml: Optional["NML"] = None,
     ) -> Node:
         node = Node(
@@ -243,7 +241,7 @@ class WkGraph:
             time=time,
             is_branchpoint=is_branchpoint,
             branchpoint_time=branchpoint_time,
-            enforce_id=_enforce_id,
+            enforced_id=_enforced_id,
             nml=_nml or self._nml,
         )
         self.nx_graph.add_node(node.id, obj=node)
@@ -311,14 +309,14 @@ class NML:
         name: str,
         color: Optional[Vector4] = None,
         _nml: Optional["NML"] = None,
-        _enforce_id: Optional[int] = None,
+        _enforced_id: Optional[int] = None,
     ) -> "WkGraph":
 
         return self.root_group.add_graph(
             name,
             color,
             _nml,
-            _enforce_id,
+            _enforced_id,
         )
 
     def add_group(
@@ -375,7 +373,7 @@ class NML:
 
             for legacy_group in legacy_groups:
                 sub_group = current_group.add_group(
-                    name=legacy_group.name, _enforce_id=legacy_group.id
+                    name=legacy_group.name, _enforced_id=legacy_group.id
                 )
                 groups_by_id[sub_group.id] = sub_group
                 visit_groups(legacy_group.children, sub_group)
@@ -384,11 +382,11 @@ class NML:
         for legacy_tree in legacy_nml.trees:
             if legacy_tree.groupId is None:
                 new_graph = nml.root_group.add_graph(
-                    legacy_tree.name, _enforce_id=legacy_tree.id
+                    legacy_tree.name, _enforced_id=legacy_tree.id
                 )
             else:
                 new_graph = groups_by_id[legacy_tree.groupId].add_graph(
-                    legacy_tree.name, _enforce_id=legacy_tree.id
+                    legacy_tree.name, _enforced_id=legacy_tree.id
                 )
             NML.nml_tree_to_graph(legacy_nml, new_graph, legacy_tree)
 
@@ -433,7 +431,7 @@ class NML:
             node_id = legacy_node.id
             current_node = new_graph.add_node(
                 position=legacy_node.position,
-                _enforce_id=node_id,
+                _enforced_id=node_id,
                 radius=legacy_node.radius,
             )
 
