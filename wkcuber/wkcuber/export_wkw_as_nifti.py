@@ -1,7 +1,7 @@
 import logging
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 import nibabel as nib
 import numpy as np
