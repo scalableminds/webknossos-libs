@@ -49,6 +49,21 @@ def create_parser() -> ArgumentParser:
         "--downsample", help="Downsample each nifti image", default=1, type=int
     )
 
+    parser.add_argument(
+        "--original_bbox",
+        help="Easy way to add padding to the generated file. Format is: x,y,z,width,height,depth"
+             "x,y,z is the offset of the wkw layer into the final bounding box; "
+             "width,height,depth corresponds to final dimensions",
+        default=None, type=parse_bounding_box
+    )
+
+    parser.add_argument(
+        "--bounding_box_crop",
+        help="Easy way to crop the final file. Is applied AFTER everything else (including padding)."
+             "Format is: x,y,z,width,height,depth",
+        default=None, type=parse_bounding_box
+    )
+
     add_verbose_flag(parser)
     add_distribution_flags(parser)
 
@@ -121,20 +136,21 @@ def export_layer_to_nifti(
 
 
 def export_nifti(
-        wkw_file_path: Path,
-        bbox: Optional[BoundingBox],
-        mag: Mag,
-        destination_path: Path,
-        name: str,
-        original_bbox_size: Optional[List[int]] = None,
-        offset_into_orginal_bbox: Optional[List[int]] = None,
-        bounding_box_crop: Optional[List[int]] = None,
+    wkw_file_path: Path,
+    bbox: Optional[BoundingBox],
+    mag: Mag,
+    destination_path: Path,
+    name: str,
+    original_bbox_size: Optional[List[int]] = None,
+    offset_into_orginal_bbox: Optional[List[int]] = None,
+    bounding_box_crop: Optional[List[int]] = None,
 ) -> None:
     wk_ds = WKDataset(wkw_file_path)
     layers = wk_ds.layers
 
     for layer_name in layers:
         if bbox is None:
+            # bbox = wk_ds.properties.data_layers[layer_name].bounding_box
             _, _, bbox_dim, origin = read_metadata_for_layer(
                 wkw_file_path, layer_name
             )
@@ -142,7 +158,7 @@ def export_nifti(
         else:
             bbox_dict = {"topleft": list(bbox.topleft), "size": list(bbox.size)}
 
-        logging.info(f"Starting tiff export for bounding box: {bbox}")
+        logging.info(f"Starting nifti export for bounding box: {bbox}")
 
         export_layer_to_nifti(
             wkw_file_path,
@@ -156,6 +172,7 @@ def export_nifti(
             bounding_box_crop,
         )
 
+
 def export_wkw_as_nifti(args: Namespace) -> None:
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG)
@@ -166,15 +183,17 @@ def export_wkw_as_nifti(args: Namespace) -> None:
         mag=Mag(args.mag),
         destination_path=Path(args.destination_path),
         name=args.name,
+        original_bbox_size=args.original_bbox.size,
+        offset_into_orginal_bbox=args.original_bbox.topleft,
+        bounding_box_crop=args.bounding_box_crop,
     )
 
 
-def export_wkw_as_nifti_from_arg_list(args_list: Namespace) -> None:
-    export_wkw_as_nifti(args_list)
+def export_wkw_as_nifti_from_arg_list(arg_list: List = None) -> None:
+    parsed_args = create_parser().parse_args(arg_list)
+    setup_logging(parsed_args)
+    export_wkw_as_nifti(parsed_args)
 
 
 if __name__ == "__main__":
-    parsed_args = create_parser().parse_args()
-    setup_logging(parsed_args)
-
-    export_wkw_as_nifti_from_arg_list(parsed_args)
+    export_wkw_as_nifti_from_arg_list()

@@ -6,7 +6,7 @@ import numpy as np
 
 from wkcuber.api.bounding_box import BoundingBox
 from wkcuber.api.Dataset import WKDataset
-from wkcuber.wkcuber.export_wkw_as_nifti import export_wkw_as_nifti
+from wkcuber.wkcuber.export_wkw_as_nifti import export_wkw_as_nifti_from_arg_list
 from wkcuber.mag import Mag
 
 ds_name = "simple_wk_dataset"
@@ -14,7 +14,7 @@ source_path = os.path.join("testdata", ds_name)
 
 
 def test_export_nifti_file() -> None:
-    destination_path = os.path.join("testoutput", ds_name + "_nifti")
+    destination_path = Path("testoutput").joinpath(ds_name + "_nifti")
     os.mkdir(destination_path)
 
     bbox = BoundingBox((100, 100, 10), (100, 500, 50))
@@ -32,7 +32,7 @@ def test_export_nifti_file() -> None:
         "1",
     ]
 
-    export_wkw_as_nifti(args_list)
+    export_wkw_as_nifti_from_arg_list(args_list)
 
     wk_ds = WKDataset(Path(source_path))
 
@@ -45,11 +45,9 @@ def test_export_nifti_file() -> None:
         correct_image = correct_image.transpose(1, 2, 3, 0)
         correct_image = np.squeeze(correct_image)
 
-        nifti_path = os.path.join(destination_path, f"test_export{layer_name}.nii")
+        nifti_path = destination_path.joinpath(f"test_export{layer_name}.nii")
 
-        assert os.path.isfile(
-            nifti_path
-        ), f"Expected a nifti to be written at: {nifti_path}."
+        assert nifti_path.is_file(), f"Expected a nifti to be written at: {nifti_path}."
 
         nifti = nib.load(nifti_path)
         test_image = np.array(nifti.get_fdata())
