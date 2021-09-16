@@ -5,7 +5,7 @@ import nibabel as nib
 import numpy as np
 
 from wkcuber.api.bounding_box import BoundingBox
-from wkcuber.api.Dataset import WKDataset
+from wkcuber.api.dataset import WKDataset
 from wkcuber.wkcuber.export_wkw_as_nifti import export_wkw_as_nifti_from_arg_list
 from wkcuber.mag import Mag
 
