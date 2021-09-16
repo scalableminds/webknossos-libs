@@ -52,7 +52,7 @@ def create_parser() -> ArgumentParser:
 
     parser.add_argument(
         "--original_bbox",
-        help="Easy way to add padding to the generated file. Format is: x,y,z,width,height,depth"
+        help="After reading from --source_bbox in the input file, the data is zero-padded to fit --padded_bbox. --source_bbox must be contained in --padded_bbox. Format is: x,y,z,width,height,depth"
         "x,y,z is the offset of the wkw layer into the final bounding box; "
         "width,height,depth corresponds to final dimensions",
         default=None,
