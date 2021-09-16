@@ -92,7 +92,7 @@ def export_layer_to_nifti(
 
     is_segmentation_layer = layer.category == LayerCategories.SEGMENTATION_TYPE
 
-    data = mag_layer.read(source_bbox)
+    data = mag_layer.read(source_bbox.topleft, source_bbox.size)
     data = data.transpose(1, 2, 3, 0)
     logging.info(f"Shape with layer {data.shape}")
 
