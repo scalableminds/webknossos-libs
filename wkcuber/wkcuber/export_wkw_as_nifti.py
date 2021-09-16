@@ -21,7 +21,10 @@ def create_parser() -> ArgumentParser:
     parser = ArgumentParser()
 
     parser.add_argument(
-        "--source_path", "-s", help="Directory containing the wkw file(s).", required=True
+        "--source_path",
+        "-s",
+        help="Directory containing the wkw file(s).",
+        required=True,
     )
 
     parser.add_argument(
@@ -100,11 +103,13 @@ def export_layer_to_nifti(
         data = data.astype(np.dtype("uint8"))
 
     if padded_bbox:
-        data_bbox_relative_to_pad_bbox = BoundingBox(padded_bbox.topleft, data.shape[:3])
+        data_bbox_relative_to_pad_bbox = BoundingBox(
+            padded_bbox.topleft, data.shape[:3]
+        )
         pad_bbox_as_origin = BoundingBox((0, 0, 0), padded_bbox.size)
 
-        assert (
-            pad_bbox_as_origin.contains_bbox(data_bbox_relative_to_pad_bbox)
+        assert pad_bbox_as_origin.contains_bbox(
+            data_bbox_relative_to_pad_bbox
         ), "padded_bbox should contain source_bbox"
 
         padding_per_axis = []
@@ -115,7 +120,8 @@ def export_layer_to_nifti(
             else:
                 left_pad = data_bbox_relative_to_pad_bbox.topleft[i]
                 right_pad = (
-                    pad_bbox_as_origin.size[i] - data_bbox_relative_to_pad_bbox.bottomright[i]
+                    pad_bbox_as_origin.size[i]
+                    - data_bbox_relative_to_pad_bbox.bottomright[i]
                 )
                 padding_per_axis.append((left_pad, right_pad))
 
@@ -123,17 +129,17 @@ def export_layer_to_nifti(
         data = np.pad(data, padding_per_axis, mode="constant", constant_values=0)
 
         if cropping_bbox is not None:
-            assert (
-                pad_bbox_as_origin.contains_bbox(cropping_bbox)
+            assert pad_bbox_as_origin.contains_bbox(
+                cropping_bbox
             ), "padded_bbox should contain cropping_bbox"
 
             logging.info(f"Using Bounding Box {cropping_bbox}")
 
             data = data[
-                   cropping_bbox[0]: cropping_bbox[0] + cropping_bbox[3],
-                   cropping_bbox[1]: cropping_bbox[1] + cropping_bbox[4],
-                   cropping_bbox[2]: cropping_bbox[2] + cropping_bbox[5],
-                   ]
+                cropping_bbox[0] : cropping_bbox[0] + cropping_bbox[3],
+                cropping_bbox[1] : cropping_bbox[1] + cropping_bbox[4],
+                cropping_bbox[2] : cropping_bbox[2] + cropping_bbox[5],
+            ]
 
     img = nib.Nifti1Image(data, np.eye(4))
 
