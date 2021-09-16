@@ -48,7 +48,7 @@ def test_export_nifti_file() -> None:
 
         assert nifti_path.is_file(), f"Expected a nifti to be written at: {nifti_path}."
 
-        nifti = nib.load(nifti_path)
+        nifti = nib.load(str(nifti_path))
         test_image = np.array(nifti.get_fdata())
 
         assert np.array_equal(correct_image, test_image), (
