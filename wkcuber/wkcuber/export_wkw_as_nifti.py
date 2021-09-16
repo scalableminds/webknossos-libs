@@ -27,14 +27,14 @@ def create_parser() -> ArgumentParser:
     parser.add_argument(
         "--destination_path",
         "-d",
-        help="Output directory for the generated nifti files.",
+        help="Output directory for the generated nifti files. One file will be generated per wkw layer.",
         required=True,
     )
 
     parser.add_argument("--name", "-n", help="Name of the nifti", default="")
 
     parser.add_argument(
-        "--bbox",
+        "--source_bbox",
         help="The bounding box in the nifti file from which data is read."
         "The input format is x,y,z,width,height,depth."
         "(By default, data for the full bounding box of the dataset is generated)",
@@ -51,7 +51,7 @@ def create_parser() -> ArgumentParser:
     )
 
     parser.add_argument(
-        "--original_bbox",
+        "--padded_bbox",
         help="After reading from --source_bbox in the input file, the data is zero-padded to fit --padded_bbox. --source_bbox must be contained in --padded_bbox. Format is: x,y,z,width,height,depth"
         "x,y,z is the offset of the wkw layer into the final bounding box; "
         "width,height,depth corresponds to final dimensions",
@@ -75,7 +75,7 @@ def create_parser() -> ArgumentParser:
 
 def export_layer_to_nifti(
     wkw_file_path: Path,
-    bbox: Dict,
+    source_bbox: BoundingBox,
     mag: Mag,
     layer_name: str,
     destination_path: Path,
@@ -90,7 +90,7 @@ def export_layer_to_nifti(
 
     is_segmentation_layer = layer.category == LayerCategories.SEGMENTATION_TYPE
 
-    data = mag_layer.read(bbox["topleft"], bbox["size"])
+    data = mag_layer.read(source_bbox)
     data = data.transpose(1, 2, 3, 0)
     logging.info(f"Shape with layer {data.shape}")
 
@@ -140,7 +140,7 @@ def export_layer_to_nifti(
 
 def export_nifti(
     wkw_file_path: Path,
-    bbox: Optional[BoundingBox],
+    source_bbox: Optional[BoundingBox],
     mag: Mag,
     destination_path: Path,
     name: str,
@@ -148,22 +148,14 @@ def export_nifti(
     offset_into_orginal_bbox: Optional[List[int]] = None,
     bounding_box_crop: Optional[List[int]] = None,
 ) -> None:
-    wk_ds = Dataset(wkw_file_path)
+    dataset = Dataset(wkw_file_path)
 
-    for layer_name, layer in wk_ds.layers.items():
-        if bbox is None:
-            bbox_dict = {
-                "topleft": layer.bounding_box.topleft,
-                "size": layer.bounding_box.size,
-            }
-        else:
-            bbox_dict = {"topleft": list(bbox.topleft), "size": list(bbox.size)}
-
-        logging.info(f"Starting nifti export for bounding box: {bbox}")
+    for layer_name, layer in dataset.layers.items():
+        logging.info(f"Starting nifti export for bounding box: {source_bbox}")
 
         export_layer_to_nifti(
             wkw_file_path,
-            bbox_dict,
+            layer.bounding_box if source_bbox is None else source_bbox,
             mag,
             layer_name,
             destination_path,
@@ -185,7 +177,7 @@ def export_wkw_as_nifti(args: Namespace) -> None:
 
     export_nifti(
         wkw_file_path=Path(args.source_path),
-        bbox=args.bbox,
+        source_bbox=args.source_bbox,
         mag=Mag(args.mag),
         destination_path=Path(args.destination_path),
         name=args.name,
