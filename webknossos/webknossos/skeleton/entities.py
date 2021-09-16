@@ -7,11 +7,11 @@ import networkx as nx
 import numpy as np
 from icecream import ic
 
-import webknossos.skeleton.legacy as legacy_wknml
+import webknossos.skeleton.nml as wknml
 from webknossos.skeleton.exporter import NMLExporter
-from webknossos.skeleton.legacy import NML as LegacyNML
-from webknossos.skeleton.legacy import Group as LegacyGroup
-from webknossos.skeleton.legacy import Tree as LegacyTree
+from webknossos.skeleton.nml import NML as WkNML
+from webknossos.skeleton.nml import Group as NmlGroup
+from webknossos.skeleton.nml import Tree as NmlTree
 
 Vector3 = Tuple[float, float, float]
 Vector4 = Tuple[float, float, float, float]
@@ -121,14 +121,12 @@ class Group:
 
         raise ValueError("Node id not found")
 
-    def as_legacy_group(self) -> "LegacyGroup":  # type: ignore
+    def as_nml_group(self) -> "NmlGroup":  # type: ignore
 
-        return legacy_wknml.Group(
+        return wknml.Group(
             self.id,
             self.name,
-            children=[
-                g.as_legacy_group() for g in self.children if isinstance(g, Group)
-            ],
+            children=[g.as_nml_group() for g in self.children if isinstance(g, Group)],
         )
 
     def __hash__(self) -> int:
@@ -339,66 +337,63 @@ class Skeleton:
     def from_path(file_path: str) -> "Skeleton":
 
         with open(file_path, "rb") as file_handle:
-            return Skeleton.from_legacy_nml(legacy_wknml.parse_nml(file_handle))
+            return Skeleton.from_nml(wknml.parse_nml(file_handle))
 
     @staticmethod
-    def from_legacy_nml(legacy_nml: LegacyNML) -> "Skeleton":
-        nml = Skeleton(
-            name=legacy_nml.parameters.name,
-            scale=legacy_nml.parameters.scale,
-            offset=legacy_nml.parameters.offset,
-            time=legacy_nml.parameters.time,
-            edit_position=legacy_nml.parameters.editPosition,
-            edit_rotation=legacy_nml.parameters.editRotation,
-            zoom_level=legacy_nml.parameters.zoomLevel,
-            task_bounding_box=legacy_nml.parameters.taskBoundingBox,
-            user_bounding_boxes=legacy_nml.parameters.userBoundingBoxes,
+    def from_nml(nml: WkNML) -> "Skeleton":
+        skeleton = Skeleton(
+            name=nml.parameters.name,
+            scale=nml.parameters.scale,
+            offset=nml.parameters.offset,
+            time=nml.parameters.time,
+            edit_position=nml.parameters.editPosition,
+            edit_rotation=nml.parameters.editRotation,
+            zoom_level=nml.parameters.zoomLevel,
+            task_bounding_box=nml.parameters.taskBoundingBox,
+            user_bounding_boxes=nml.parameters.userBoundingBoxes,
         )
 
         groups_by_id = {}
 
-        def visit_groups(
-            legacy_groups: List[LegacyGroup], current_group: Group
-        ) -> None:
+        def visit_groups(nml_groups: List[NmlGroup], current_group: Group) -> None:
 
-            for legacy_group in legacy_groups:
+            for nml_group in nml_groups:
                 sub_group = current_group.add_group(
-                    name=legacy_group.name, _enforced_id=legacy_group.id
+                    name=nml_group.name, _enforced_id=nml_group.id
                 )
                 groups_by_id[sub_group.id] = sub_group
-                visit_groups(legacy_group.children, sub_group)
+                visit_groups(nml_group.children, sub_group)
 
-        visit_groups(legacy_nml.groups, nml.root_group)
-        for legacy_tree in legacy_nml.trees:
-            if legacy_tree.groupId is None:
-                new_graph = nml.root_group.add_graph(
-                    legacy_tree.name, _enforced_id=legacy_tree.id
+        visit_groups(nml.groups, skeleton.root_group)
+        for nml_tree in nml.trees:
+            if nml_tree.groupId is None:
+                new_graph = skeleton.root_group.add_graph(
+                    nml_tree.name, _enforced_id=nml_tree.id
                 )
             else:
-                new_graph = groups_by_id[legacy_tree.groupId].add_graph(
-                    legacy_tree.name, _enforced_id=legacy_tree.id
+                new_graph = groups_by_id[nml_tree.groupId].add_graph(
+                    nml_tree.name, _enforced_id=nml_tree.id
                 )
-            Skeleton.nml_tree_to_graph(legacy_nml, new_graph, legacy_tree)
+            Skeleton.nml_tree_to_graph(new_graph, nml_tree)
 
-        for comment in legacy_nml.comments:
-            nml.get_node_by_id(comment.node).comment = comment.content
+        for comment in nml.comments:
+            skeleton.get_node_by_id(comment.node).comment = comment.content
 
-        for branchpoint in legacy_nml.branchpoints:
-            node = nml.get_node_by_id(branchpoint.id)
+        for branchpoint in nml.branchpoints:
+            node = skeleton.get_node_by_id(branchpoint.id)
             node.is_branchpoint = True
             if branchpoint.time != 0:
                 node.branchpoint_time = branchpoint.time
 
-        max_id = max(nml.get_max_graph_id(), nml.get_max_node_id())
-        nml.element_id_generator = itertools.count(max_id + 1)
+        max_id = max(skeleton.get_max_graph_id(), skeleton.get_max_node_id())
+        skeleton.element_id_generator = itertools.count(max_id + 1)
 
-        return nml
+        return skeleton
 
     @staticmethod
     def nml_tree_to_graph(
-        legacy_nml: LegacyNML,
         new_graph: "WkGraph",
-        legacy_tree: LegacyTree,
+        nml_tree: NmlTree,
     ) -> nx.Graph:
         """
         A utility to convert a single wK Tree object into a [NetworkX graph object](https://networkx.org/).
@@ -413,42 +408,42 @@ class Skeleton:
             "time",
         ]
 
-        new_graph.color = legacy_tree.color
-        new_graph.name = legacy_tree.name
-        new_graph.group_id = legacy_tree.groupId
+        new_graph.color = nml_tree.color
+        new_graph.name = nml_tree.name
+        new_graph.group_id = nml_tree.groupId
 
-        for legacy_node in legacy_tree.nodes:
-            node_id = legacy_node.id
+        for nml_node in nml_tree.nodes:
+            node_id = nml_node.id
             current_node = new_graph.add_node(
-                position=legacy_node.position,
+                position=nml_node.position,
                 _enforced_id=node_id,
-                radius=legacy_node.radius,
+                radius=nml_node.radius,
             )
 
             for optional_attribute in optional_attribute_list:
-                if getattr(legacy_node, optional_attribute) is not None:
+                if getattr(nml_node, optional_attribute) is not None:
                     setattr(
                         current_node,
                         optional_attribute,
-                        getattr(legacy_node, optional_attribute),
+                        getattr(nml_node, optional_attribute),
                     )
 
-        for edge in legacy_tree.edges:
+        for edge in nml_tree.edges:
             new_graph.add_edge(edge.source, edge.target)
 
         return new_graph
 
     def write(self, out_path: str) -> None:
 
-        legacy_nml = NMLExporter.generate_nml(
+        nml = NMLExporter.generate_nml(
             self.root_group,
-            self._get_legacy_parameters(),
+            self._get_nml_parameters(),
         )
 
         with open(out_path, "wb") as f:
-            legacy_wknml.write_nml(f, legacy_nml)
+            wknml.write_nml(f, nml)
 
-    def _get_legacy_parameters(self) -> Dict[str, Any]:
+    def _get_nml_parameters(self) -> Dict[str, Any]:
 
         return {
             "name": self.name,
