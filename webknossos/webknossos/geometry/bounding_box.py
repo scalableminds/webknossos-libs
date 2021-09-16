@@ -12,6 +12,7 @@ from typing import (
     cast,
 )
 
+import attr
 import numpy as np
 
 from .mag import Mag
@@ -23,26 +24,15 @@ class BoundingBoxNamedTuple(NamedTuple):
     size: Tuple[int, int, int]
 
 
+@attr.frozen
 class BoundingBox:
-    def __init__(self, topleft: Vec3IntLike, size: Vec3IntLike):
-
-        self._topleft = Vec3Int(topleft)
-        self._size = Vec3Int(size)
-
-    @property
-    def topleft(self) -> Vec3Int:
-
-        return self._topleft
-
-    @property
-    def size(self) -> Vec3Int:
-
-        return self._size
+    topleft: Vec3Int = attr.ib(converter=Vec3Int)
+    size: Vec3Int = attr.ib(converter=Vec3Int)
 
     @property
     def bottomright(self) -> Vec3Int:
 
-        return self._topleft + self._size
+        return self.topleft + self.size
 
     def with_topleft(self, new_topleft: Vec3IntLike) -> "BoundingBox":
 
@@ -53,13 +43,13 @@ class BoundingBox:
         return BoundingBox(self.topleft, new_size)
 
     @staticmethod
-    def from_wkw(bbox: Dict) -> "BoundingBox":
+    def from_wkw_dict(bbox: Dict) -> "BoundingBox":
         return BoundingBox(
             bbox["topLeft"], [bbox["width"], bbox["height"], bbox["depth"]]
         )
 
     @staticmethod
-    def from_config(bbox: Dict) -> "BoundingBox":
+    def from_config_dict(bbox: Dict) -> "BoundingBox":
         return BoundingBox(bbox["topleft"], bbox["size"])
 
     @staticmethod
@@ -118,7 +108,7 @@ class BoundingBox:
             else:
                 return BoundingBox.from_csv(obj)
         elif isinstance(obj, dict):
-            return BoundingBox.from_wkw(obj)
+            return BoundingBox.from_wkw_dict(obj)
         elif isinstance(obj, BoundingBoxNamedTuple):
             return BoundingBox.from_named_tuple(obj)
         elif isinstance(obj, list) or isinstance(obj, tuple):
@@ -135,10 +125,10 @@ class BoundingBox:
             width,
             height,
             depth,
-        ) = self._size.to_list()
+        ) = self.size.to_list()
 
         return {
-            "topLeft": self._topleft.to_list(),
+            "topLeft": self.topleft.to_list(),
             "width": width,
             "height": height,
             "depth": depth,
@@ -146,19 +136,19 @@ class BoundingBox:
 
     def to_config_dict(self) -> dict:
 
-        return {"topleft": self._topleft.to_list(), "size": self._size.to_list()}
+        return {"topleft": self.topleft.to_list(), "size": self.size.to_list()}
 
     def to_checkpoint_name(self) -> str:
 
-        x, y, z = self._topleft
-        width, height, depth = self._size
+        x, y, z = self.topleft
+        width, height, depth = self.size
         return "{x}_{y}_{z}_{width}_{height}_{depth}".format(
             x=x, y=y, z=z, width=width, height=height, depth=depth
         )
 
     def to_tuple6(self) -> Tuple[int, int, int, int, int, int]:
 
-        return tuple(self._topleft.to_list() + self._size.to_list())  # type: ignore
+        return tuple(self.topleft.to_list() + self.size.to_list())  # type: ignore
 
     def to_csv(self) -> str:
 
@@ -166,14 +156,14 @@ class BoundingBox:
 
     def to_named_tuple(self) -> BoundingBoxNamedTuple:
         return BoundingBoxNamedTuple(
-            topleft=cast(Tuple[int, int, int], tuple(self._topleft)),
-            size=cast(Tuple[int, int, int], tuple(self._size)),
+            topleft=cast(Tuple[int, int, int], tuple(self.topleft)),
+            size=cast(Tuple[int, int, int], tuple(self.size)),
         )
 
     def __repr__(self) -> str:
 
         return "BoundingBox(topleft={}, size={})".format(
-            str(tuple(self._topleft)), str(tuple(self._size))
+            str(tuple(self.topleft)), str(tuple(self.size))
         )
 
     def __str__(self) -> str:
@@ -182,7 +172,7 @@ class BoundingBox:
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, BoundingBox):
-            return self._topleft == other.topleft and self._size == other.size
+            return self.topleft == other.topleft and self.size == other.size
         else:
             raise NotImplementedError()
 
@@ -197,8 +187,8 @@ class BoundingBox:
         margins_right = Vec3Int(margins_right)
 
         return BoundingBox(
-            topleft=self._topleft - margins_left,
-            size=self._size + (margins_left + margins_right),
+            topleft=self.topleft - margins_left,
+            size=self.size + (margins_left + margins_right),
         )
 
     def intersected_with(
@@ -206,7 +196,7 @@ class BoundingBox:
     ) -> "BoundingBox":
         """If dont_assert is set to False, this method may return empty bounding boxes (size == (0, 0, 0))"""
 
-        topleft = np.maximum(self._topleft.to_np(), other.topleft.to_np())
+        topleft = np.maximum(self.topleft.to_np(), other.topleft.to_np())
         bottomright = np.minimum(self.bottomright.to_np(), other.bottomright.to_np())
         size = np.maximum(bottomright - topleft, (0, 0, 0))
 
@@ -221,7 +211,7 @@ class BoundingBox:
 
     def extended_by(self, other: "BoundingBox") -> "BoundingBox":
 
-        topleft = np.minimum(self._topleft, other.topleft)
+        topleft = np.minimum(self.topleft, other.topleft)
         bottomright = np.maximum(self.bottomright, other.bottomright)
         size = bottomright - topleft
 
@@ -229,22 +219,22 @@ class BoundingBox:
 
     def is_empty(self) -> bool:
 
-        return not all(self._size.to_np() > 0)
+        return not all(self.size.to_np() > 0)
 
     def in_mag(self, mag: Mag) -> "BoundingBox":
 
         np_mag = np.array(mag.to_list())
 
         assert (
-            np.count_nonzero(self._topleft.to_np() % np_mag) == 0
-        ), f"topleft {self._topleft} is not aligned with the mag {mag}. Use BoundingBox.align_with_mag()."
+            np.count_nonzero(self.topleft.to_np() % np_mag) == 0
+        ), f"topleft {self.topleft} is not aligned with the mag {mag}. Use BoundingBox.align_with_mag()."
         assert (
             np.count_nonzero(self.bottomright.to_np() % np_mag) == 0
         ), f"bottomright {self.bottomright} is not aligned with the mag {mag}. Use BoundingBox.align_with_mag()."
 
         return BoundingBox(
-            topleft=(self._topleft // np_mag),
-            size=(self._size // np_mag),
+            topleft=(self.topleft // np_mag),
+            size=(self.size // np_mag),
         )
 
     def align_with_mag(self, mag: Mag, ceil: bool = False) -> "BoundingBox":
@@ -261,10 +251,10 @@ class BoundingBox:
         )
 
         if ceil:
-            topleft = align(self._topleft, np.floor)
+            topleft = align(self.topleft, np.floor)
             bottomright = align(self.bottomright, np.ceil)
         else:
-            topleft = align(self._topleft, np.ceil)
+            topleft = align(self.topleft, np.ceil)
             bottomright = align(self.bottomright, np.floor)
         return BoundingBox(topleft, bottomright - topleft)
 
@@ -274,8 +264,7 @@ class BoundingBox:
 
         return cast(
             bool,
-            np.all(coord >= self._topleft)
-            and np.all(coord < self._topleft + self._size),
+            np.all(coord >= self.topleft) and np.all(coord < self.topleft + self.size),
         )
 
     def contains_bbox(self, inner_bbox: "BoundingBox") -> bool:
@@ -293,7 +282,7 @@ class BoundingBox:
         *between two chunks* will be divisible by that value.
         """
 
-        start = self._topleft
+        start = self.topleft
         chunk_size = Vec3Int(chunk_size).to_np()
 
         start_adjust = np.array([0, 0, 0])
@@ -310,36 +299,36 @@ class BoundingBox:
             start_adjust = start % chunk_border_alignments_array
 
         for x in range(
-            start[0] - start_adjust[0], start[0] + self._size[0], chunk_size[0]
+            start[0] - start_adjust[0], start[0] + self.size[0], chunk_size[0]
         ):
             for y in range(
-                start[1] - start_adjust[1], start[1] + self._size[1], chunk_size[1]
+                start[1] - start_adjust[1], start[1] + self.size[1], chunk_size[1]
             ):
                 for z in range(
-                    start[2] - start_adjust[2], start[2] + self._size[2], chunk_size[2]
+                    start[2] - start_adjust[2], start[2] + self.size[2], chunk_size[2]
                 ):
 
                     yield BoundingBox([x, y, z], chunk_size).intersected_with(self)
 
     def volume(self) -> int:
 
-        return self._size.prod()
+        return self.size.prod()
 
     def slice_array(self, array: np.ndarray) -> np.ndarray:
 
         return array[
-            self._topleft.x : self.bottomright.x,
-            self._topleft.y : self.bottomright.y,
-            self._topleft.z : self.bottomright.z,
+            self.topleft.x : self.bottomright.x,
+            self.topleft.y : self.bottomright.y,
+            self.topleft.z : self.bottomright.z,
         ]
 
     def to_slices(self) -> Tuple[slice, slice, slice]:
         return np.index_exp[
-            self._topleft.x : self.bottomright.x,
-            self._topleft.z : self.bottomright.y,
-            self._topleft.z : self.bottomright.z,
+            self.topleft.x : self.bottomright.x,
+            self.topleft.z : self.bottomright.y,
+            self.topleft.z : self.bottomright.z,
         ]
 
     def offset(self, vector: Vec3IntLike) -> "BoundingBox":
 
-        return BoundingBox(self._topleft + Vec3Int(vector), self._size)
+        return BoundingBox(self.topleft + Vec3Int(vector), self.size)

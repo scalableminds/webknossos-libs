@@ -211,7 +211,7 @@ class View:
             self.open()
         assert self._dataset is not None  # because the View was opened
 
-        data = self._dataset.read(absolute_offset, size)
+        data = self._dataset.read(tuple(absolute_offset), tuple(size))
 
         if not was_opened:
             self.close()
