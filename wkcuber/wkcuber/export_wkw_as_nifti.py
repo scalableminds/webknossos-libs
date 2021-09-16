@@ -60,8 +60,8 @@ def create_parser() -> ArgumentParser:
     )
 
     parser.add_argument(
-        "--bounding_box_crop",
-        help="Easy way to crop the final file. Is applied AFTER everything else (including padding)."
+        "--cropping_bbox",
+        help="After reading (and potentially padding) the input data, the output is cropped according to --cropping_bbox. --cropping_bbox must be contained in --padded_bbox"
         "Format is: x,y,z,width,height,depth",
         default=None,
         type=parse_bounding_box,
