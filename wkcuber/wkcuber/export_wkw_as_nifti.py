@@ -9,7 +9,12 @@ import numpy as np
 from wkcuber.api.bounding_box import BoundingBox
 from wkcuber.api.dataset import Dataset, LayerCategories
 from wkcuber.mag import Mag
-from wkcuber.utils import add_distribution_flags, add_verbose_flag, parse_bounding_box, setup_logging
+from wkcuber.utils import (
+    add_distribution_flags,
+    add_verbose_flag,
+    parse_bounding_box,
+    setup_logging,
+)
 
 
 def create_parser() -> ArgumentParser:
@@ -83,10 +88,7 @@ def export_layer_to_nifti(
     layer = wk_ds.get_layer(layer_name)
     mag_layer = layer.get_mag(mag)
 
-    is_segmentation_layer = (
-        layer.category
-        == LayerCategories.SEGMENTATION_TYPE
-    )
+    is_segmentation_layer = layer.category == LayerCategories.SEGMENTATION_TYPE
 
     data = mag_layer.read(bbox["topleft"], bbox["size"])
     data = data.transpose(1, 2, 3, 0)
