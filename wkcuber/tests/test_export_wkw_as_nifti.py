@@ -5,7 +5,7 @@ import nibabel as nib
 import numpy as np
 
 from wkcuber.api.bounding_box import BoundingBox
-from wkcuber.api.dataset import WKDataset
+from wkcuber.api.dataset import Dataset
 from wkcuber.wkcuber.export_wkw_as_nifti import export_wkw_as_nifti_from_arg_list
 from wkcuber.mag import Mag
 
@@ -34,13 +34,10 @@ def test_export_nifti_file() -> None:
 
     export_wkw_as_nifti_from_arg_list(args_list)
 
-    wk_ds = WKDataset(Path(source_path))
+    wk_ds = Dataset(Path(source_path))
 
-    layer_names = wk_ds.layers
-
-    for layer_name in layer_names:
-        wk_mag = wk_ds.get_layer(layer_name).get_mag(Mag(1))
-        correct_image = wk_mag.read(bbox_dict["topleft"], bbox_dict["size"])
+    for layer_name, layer in wk_ds.layers:
+        correct_image = layer.get_mag(Mag(1)).read(bbox_dict["topleft"], bbox_dict["size"])
         # nifti is transposed
         correct_image = correct_image.transpose(1, 2, 3, 0)
         correct_image = np.squeeze(correct_image)

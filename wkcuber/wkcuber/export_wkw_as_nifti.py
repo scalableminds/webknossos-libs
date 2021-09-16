@@ -7,7 +7,7 @@ import nibabel as nib
 import numpy as np
 
 from wkcuber.api.bounding_box import BoundingBox
-from wkcuber.api.dataset import WKDataset
+from wkcuber.api.dataset import Dataset
 from wkcuber.mag import Mag
 from wkcuber.metadata import read_metadata_for_layer
 from wkcuber.utils import add_distribution_flags, add_verbose_flag, parse_bounding_box
@@ -83,7 +83,7 @@ def export_layer_to_nifti(
     offset_into_orginal_bbox: Optional[List[int]] = None,
     bounding_box_crop: Optional[List[int]] = None,
 ) -> None:
-    wk_ds = WKDataset(wkw_file_path)
+    wk_ds = Dataset(wkw_file_path)
     layer = wk_ds.get_layer(layer_name)
     mag_layer = layer.get_mag(mag)
 
@@ -151,14 +151,11 @@ def export_nifti(
     offset_into_orginal_bbox: Optional[List[int]] = None,
     bounding_box_crop: Optional[List[int]] = None,
 ) -> None:
-    wk_ds = WKDataset(wkw_file_path)
-    layers = wk_ds.layers
+    wk_ds = Dataset(wkw_file_path)
 
-    for layer_name in layers:
+    for layer_name, layer in wk_ds.layers:
         if bbox is None:
-            # bbox = wk_ds.properties.data_layers[layer_name].bounding_box
-            _, _, bbox_dim, origin = read_metadata_for_layer(wkw_file_path, layer_name)
-            bbox_dict = {"topleft": origin, "size": bbox_dim}
+            bbox_dict = {"topleft": layer.bounding_box.topleft, "size": layer.bounding_box.size}
         else:
             bbox_dict = {"topleft": list(bbox.topleft), "size": list(bbox.size)}
 
