@@ -6,7 +6,7 @@ import numpy as np
 
 from wkcuber.api.bounding_box import BoundingBox
 from wkcuber.api.Dataset import WKDataset
-from wkcuber.export_wkw_as_nifti import run
+from wkcuber.wkcuber.export_wkw_as_nifti import export_wkw_as_nifti
 from wkcuber.mag import Mag
 
 ds_name = "simple_wk_dataset"
@@ -32,7 +32,7 @@ def test_export_nifti_file() -> None:
         "1",
     ]
 
-    run(args_list)
+    export_wkw_as_nifti(args_list)
 
     wk_ds = WKDataset(Path(source_path))
 
