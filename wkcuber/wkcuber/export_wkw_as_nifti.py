@@ -80,9 +80,8 @@ def export_layer_to_nifti(
     layer_name: str,
     destination_path: Path,
     name: str,
-    original_bbox_size: Optional[List[int]] = None,
-    offset_into_orginal_bbox: Optional[List[int]] = None,
-    bounding_box_crop: Optional[List[int]] = None,
+    padded_bbox: Optional[BoundingBox] = None,
+    cropping_bbox: Optional[BoundingBox] = None,
 ) -> None:
     wk_ds = Dataset(wkw_file_path)
     layer = wk_ds.get_layer(layer_name)
@@ -100,34 +99,41 @@ def export_layer_to_nifti(
         data = data * factor
         data = data.astype(np.dtype("uint8"))
 
-    if original_bbox_size and offset_into_orginal_bbox:
+    if padded_bbox:
+        data_bbox_relative_to_pad_bbox = BoundingBox(padded_bbox.topleft, data.shape[:3])
+        pad_bbox_as_origin = BoundingBox((0, 0, 0), padded_bbox.size)
+
+        assert (
+            pad_bbox_as_origin.contains_bbox(data_bbox_relative_to_pad_bbox)
+        ), "padded_bbox should contain source_bbox"
+
         padding_per_axis = []
 
         for i in range(3):
-            if original_bbox_size[i] == data.shape[i]:
+            if padded_bbox.size[i] == data.shape[i]:
                 padding_per_axis.append((0, 0))
             else:
-                left_pad = offset_into_orginal_bbox[i]
+                left_pad = data_bbox_relative_to_pad_bbox.topleft[i]
                 right_pad = (
-                    original_bbox_size[i] - offset_into_orginal_bbox[i] - data.shape[i]
+                    pad_bbox_as_origin.size[i] - data_bbox_relative_to_pad_bbox.bottomright[i]
                 )
                 padding_per_axis.append((left_pad, right_pad))
 
         padding_per_axis.append((0, 0))
         data = np.pad(data, padding_per_axis, mode="constant", constant_values=0)
 
-        if bounding_box_crop is not None:
+        if cropping_bbox is not None:
             assert (
-                len(bounding_box_crop) == 6
-            ), "bounding box crop needs to have 6 parameters"
+                pad_bbox_as_origin.contains_bbox(cropping_bbox)
+            ), "padded_bbox should contain cropping_bbox"
 
-            print(f"Using Bounding Box {bounding_box_crop}")
+            logging.info(f"Using Bounding Box {cropping_bbox}")
 
             data = data[
-                bounding_box_crop[0] : bounding_box_crop[0] + bounding_box_crop[3],
-                bounding_box_crop[1] : bounding_box_crop[1] + bounding_box_crop[4],
-                bounding_box_crop[2] : bounding_box_crop[2] + bounding_box_crop[5],
-            ]
+                   cropping_bbox[0]: cropping_bbox[0] + cropping_bbox[3],
+                   cropping_bbox[1]: cropping_bbox[1] + cropping_bbox[4],
+                   cropping_bbox[2]: cropping_bbox[2] + cropping_bbox[5],
+                   ]
 
     img = nib.Nifti1Image(data, np.eye(4))
 
@@ -144,9 +150,8 @@ def export_nifti(
     mag: Mag,
     destination_path: Path,
     name: str,
-    original_bbox_size: Optional[List[int]] = None,
-    offset_into_orginal_bbox: Optional[List[int]] = None,
-    bounding_box_crop: Optional[List[int]] = None,
+    padded_bbox: Optional[BoundingBox] = None,
+    cropping_bbox: Optional[BoundingBox] = None,
 ) -> None:
     dataset = Dataset(wkw_file_path)
 
@@ -160,9 +165,8 @@ def export_nifti(
             layer_name,
             destination_path,
             name + "_" + layer_name,
-            original_bbox_size,
-            offset_into_orginal_bbox,
-            bounding_box_crop,
+            padded_bbox,
+            cropping_bbox,
         )
 
 
@@ -170,20 +174,14 @@ def export_wkw_as_nifti(args: Namespace) -> None:
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG)
 
-    original_bbox_size = args.padded_bbox.size if args.padded_bbox else None
-    offset_into_orginal_bbox = (
-        args.padded_bbox.topleft if args.padded_bbox else None
-    )
-
     export_nifti(
         wkw_file_path=Path(args.source_path),
         source_bbox=args.source_bbox,
         mag=Mag(args.mag),
         destination_path=Path(args.destination_path),
         name=args.name,
-        original_bbox_size=original_bbox_size,
-        offset_into_orginal_bbox=offset_into_orginal_bbox,
-        bounding_box_crop=args.bounding_box_crop,
+        padded_bbox=args.padded_bbox,
+        cropping_bbox=args.cropping_bbox,
     )
 
 
