@@ -44,7 +44,7 @@ def test_export_nifti_file() -> None:
         correct_image = correct_image.transpose(1, 2, 3, 0)
         correct_image = np.squeeze(correct_image)
 
-        nifti_path = destination_path.joinpath(f"test_export{layer_name}.nii")
+        nifti_path = destination_path.joinpath(f"test_export_{layer_name}.nii")
 
         assert nifti_path.is_file(), f"Expected a nifti to be written at: {nifti_path}."
 
