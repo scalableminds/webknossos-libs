@@ -21,9 +21,9 @@ def test_export_nifti_file() -> None:
     bbox_dict = bbox.as_config()
     args_list = [
         "--source_path",
-        source_path,
+        str(source_path),
         "--destination_path",
-        destination_path,
+        str(destination_path),
         "--name",
         "test_export",
         "--bbox",
