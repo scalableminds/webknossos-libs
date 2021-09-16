@@ -15,7 +15,7 @@ source_path = Path("testdata").joinpath(ds_name)
 
 def test_export_nifti_file() -> None:
     destination_path = Path("testoutput").joinpath(ds_name + "_nifti")
-    os.mkdir(destination_path)
+    destination_path.mkdir()
 
     bbox = BoundingBox((100, 100, 10), (100, 500, 50))
     bbox_dict = bbox.as_config()
@@ -29,12 +29,12 @@ def test_export_nifti_file() -> None:
         "--bbox",
         bbox.as_csv(),
         "--mag",
-        "1",
+        1,
     ]
 
     export_wkw_as_nifti_from_arg_list(args_list)
 
-    wk_ds = Dataset(Path(source_path))
+    wk_ds = Dataset(source_path)
 
     for layer_name, layer in wk_ds.layers.items():
         correct_image = layer.get_mag(Mag(1)).read(
