@@ -26,7 +26,7 @@ def test_export_nifti_file() -> None:
         str(destination_path),
         "--name",
         "test_export",
-        "--bbox",
+        "--source_bbox",
         bbox.as_csv(),
         "--mag",
         "1",
