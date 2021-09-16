@@ -151,7 +151,7 @@ def export_nifti(
 ) -> None:
     wk_ds = Dataset(wkw_file_path)
 
-    for layer_name, layer in wk_ds.layers:
+    for layer_name, layer in wk_ds.layers.items():
         if bbox is None:
             bbox_dict = {
                 "topleft": layer.bounding_box.topleft,

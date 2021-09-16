@@ -6,11 +6,11 @@ import numpy as np
 
 from wkcuber.api.bounding_box import BoundingBox
 from wkcuber.api.dataset import Dataset
-from wkcuber.wkcuber.export_wkw_as_nifti import export_wkw_as_nifti_from_arg_list
+from wkcuber.export_wkw_as_nifti import export_wkw_as_nifti_from_arg_list
 from wkcuber.mag import Mag
 
 ds_name = "simple_wk_dataset"
-source_path = os.path.join("testdata", ds_name)
+source_path = Path("testdata").joinpath(ds_name)
 
 
 def test_export_nifti_file() -> None:
@@ -36,7 +36,7 @@ def test_export_nifti_file() -> None:
 
     wk_ds = Dataset(Path(source_path))
 
-    for layer_name, layer in wk_ds.layers:
+    for layer_name, layer in wk_ds.layers.items():
         correct_image = layer.get_mag(Mag(1)).read(
             bbox_dict["topleft"], bbox_dict["size"]
         )
