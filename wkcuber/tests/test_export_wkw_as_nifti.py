@@ -29,7 +29,7 @@ def test_export_nifti_file() -> None:
         "--bbox",
         bbox.as_csv(),
         "--mag",
-        1,
+        "1",
     ]
 
     export_wkw_as_nifti_from_arg_list(args_list)
