@@ -83,8 +83,8 @@ def export_layer_to_nifti(
     padded_bbox: Optional[BoundingBox] = None,
     cropping_bbox: Optional[BoundingBox] = None,
 ) -> None:
-    wk_ds = Dataset(wkw_file_path)
-    layer = wk_ds.get_layer(layer_name)
+    dataset = Dataset(wkw_file_path)
+    layer = dataset.get_layer(layer_name)
     mag_layer = layer.get_mag(mag)
 
     is_segmentation_layer = layer.category == LayerCategories.SEGMENTATION_TYPE
