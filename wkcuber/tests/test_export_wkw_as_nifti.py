@@ -37,7 +37,9 @@ def test_export_nifti_file() -> None:
     wk_ds = Dataset(Path(source_path))
 
     for layer_name, layer in wk_ds.layers:
-        correct_image = layer.get_mag(Mag(1)).read(bbox_dict["topleft"], bbox_dict["size"])
+        correct_image = layer.get_mag(Mag(1)).read(
+            bbox_dict["topleft"], bbox_dict["size"]
+        )
         # nifti is transposed
         correct_image = correct_image.transpose(1, 2, 3, 0)
         correct_image = np.squeeze(correct_image)
