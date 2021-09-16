@@ -47,7 +47,7 @@ class Group:
     id: int = attr.ib(init=False)
     name: str
     children: List[GroupOrGraph]
-    _nml: "NML"
+    _nml: "Skeleton"
     is_root_group: bool = False
     _enforced_id: Optional[int] = None
 
@@ -62,7 +62,7 @@ class Group:
         self,
         name: str,
         color: Optional[Vector4] = None,
-        _nml: Optional["NML"] = None,
+        _nml: Optional["Skeleton"] = None,
         _enforced_id: Optional[int] = None,
     ) -> "WkGraph":
 
@@ -89,23 +89,15 @@ class Group:
         return new_group
 
     def get_total_node_count(self) -> int:
-        return sum(
-            len(synapse_graph.get_nodes()) for synapse_graph in self.flattened_graphs()
-        )
+        return sum(len(graph.get_nodes()) for graph in self.flattened_graphs())
 
     def get_max_graph_id(self) -> int:
-        # Chain with [0] since max is not defined on empty sequences
-        return max(
-            itertools.chain((graph.id for graph in self.flattened_graphs()), [0])
-        )
+        return max((graph.id for graph in self.flattened_graphs()), default=0)
 
     def get_max_node_id(self) -> int:
-        # Chain with [0] since max is not defined on empty sequences
         return max(
-            itertools.chain(
-                (graph.get_max_node_id() for graph in self.flattened_graphs()),
-                [0],
-            )
+            (graph.get_max_node_id() for graph in self.flattened_graphs()),
+            default=0,
         )
 
     def flattened_graphs(self) -> Generator["WkGraph", None, None]:
@@ -146,7 +138,7 @@ class Group:
 @attr.define()
 class Node:
     position: Vector3
-    _nml: "NML"
+    _nml: "Skeleton"
     id: int = attr.ib(init=False)
     comment: Optional[str] = None
     radius: Optional[float] = None
@@ -183,7 +175,7 @@ class WkGraph:
     """
 
     name: str
-    _nml: "NML"
+    _nml: "Skeleton"
     color: Optional[Vector4] = None
     id: int = attr.ib(init=False)
     nx_graph: nx.Graph = attr.ib(init=False)
@@ -227,7 +219,7 @@ class WkGraph:
         is_branchpoint: bool = False,
         branchpoint_time: Optional[int] = None,
         _enforced_id: Optional[int] = None,
-        _nml: Optional["NML"] = None,
+        _nml: Optional["Skeleton"] = None,
     ) -> Node:
         node = Node(
             position=position,
@@ -254,16 +246,14 @@ class WkGraph:
         self.nx_graph.add_edge(id_1, id_2)
 
     def get_max_node_id(self) -> int:
-
-        # Chain with [0] since max is not defined on empty sequences
-        return max(itertools.chain((node.id for node in self.get_nodes()), [0]))
+        return max((node.id for node in self.get_nodes()), default=0)
 
     def __hash__(self) -> int:
         return hash((self._nml.id, self.id))
 
 
 @attr.define()
-class NML:
+class Skeleton:
     """
     Contains groups and skeletons.
     """
@@ -308,7 +298,7 @@ class NML:
         self,
         name: str,
         color: Optional[Vector4] = None,
-        _nml: Optional["NML"] = None,
+        _nml: Optional["Skeleton"] = None,
         _enforced_id: Optional[int] = None,
     ) -> "WkGraph":
 
@@ -346,14 +336,14 @@ class NML:
         return self.root_group.get_node_by_id(node_id)
 
     @staticmethod
-    def from_path(file_path: str) -> "NML":
+    def from_path(file_path: str) -> "Skeleton":
 
         with open(file_path, "rb") as file_handle:
-            return NML.from_legacy_nml(legacy_wknml.parse_nml(file_handle))
+            return Skeleton.from_legacy_nml(legacy_wknml.parse_nml(file_handle))
 
     @staticmethod
-    def from_legacy_nml(legacy_nml: LegacyNML) -> "NML":
-        nml = NML(
+    def from_legacy_nml(legacy_nml: LegacyNML) -> "Skeleton":
+        nml = Skeleton(
             name=legacy_nml.parameters.name,
             scale=legacy_nml.parameters.scale,
             offset=legacy_nml.parameters.offset,
@@ -388,7 +378,7 @@ class NML:
                 new_graph = groups_by_id[legacy_tree.groupId].add_graph(
                     legacy_tree.name, _enforced_id=legacy_tree.id
                 )
-            NML.nml_tree_to_graph(legacy_nml, new_graph, legacy_tree)
+            Skeleton.nml_tree_to_graph(legacy_nml, new_graph, legacy_tree)
 
         for comment in legacy_nml.comments:
             nml.get_node_by_id(comment.node).comment = comment.content

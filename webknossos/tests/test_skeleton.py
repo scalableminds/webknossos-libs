@@ -21,8 +21,8 @@ def pairs_within_distance(
             yield (pos_a[i], pos_b[j])
 
 
-def create_dummy_skeleton() -> skeleton.NML:
-    nml = skeleton.NML(
+def create_dummy_skeleton() -> skeleton.Skeleton:
+    nml = skeleton.Skeleton(
         name="My NML",
         scale=(11, 11, 25),
         offset=(1, 1, 1),
@@ -122,7 +122,7 @@ def test_import_export_round_trip() -> None:
     with tempfile.TemporaryDirectory() as temp_dir:
         snapshot_path = "../testdata/nmls/generated_snapshot.nml"
         export_path = f"{temp_dir}/exported_in.nml"
-        nml = skeleton.NML.from_path(snapshot_path)
+        nml = skeleton.Skeleton.from_path(snapshot_path)
         assert nml.time == 1337
 
         g6 = nml.get_graph_by_id(6)
