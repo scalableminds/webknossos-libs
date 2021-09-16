@@ -282,7 +282,7 @@ class BoundingBox:
         *between two chunks* will be divisible by that value.
         """
 
-        start = self.topleft
+        start = self.topleft.to_np()
         chunk_size = Vec3Int(chunk_size).to_np()
 
         start_adjust = np.array([0, 0, 0])

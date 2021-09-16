@@ -94,7 +94,7 @@ class Vec3Int(tuple):
         return self._element_wise(other, min)
 
     def prod(self) -> int:
-        self.x * self.y * self.z
+        return self.x * self.y * self.z
 
     def __repr__(self) -> str:
         return f"Vec3Int({self.x},{self.y},{self.z})"

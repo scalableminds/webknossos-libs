@@ -1,68 +1,79 @@
 import re
 from functools import total_ordering
 from math import log2
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Tuple
 
+import attr
 import numpy as np
+
+from .vec3_int import Vec3Int
+
+
+def import_mag(mag_like: Any) -> Vec3Int:
+    as_vec3_int: Optional[Vec3Int] = None
+
+    if isinstance(mag_like, int):
+        as_vec3_int = Vec3Int(mag_like, mag_like, mag_like)
+    elif isinstance(mag_like, Vec3Int):
+        as_vec3_int = mag_like
+    elif isinstance(mag_like, list) or isinstance(mag_like, tuple):
+        as_vec3_int = Vec3Int(mag_like)
+    elif isinstance(mag_like, str):
+        if re.match(r"^\d+$", mag_like) is not None:
+            as_vec3_int = Vec3Int(int(mag_like), int(mag_like), int(mag_like))
+        elif re.match(r"^\d+-\d+-\d+$", mag_like) is not None:
+            as_vec3_int = Vec3Int([int(m) for m in mag_like.split("-")])
+    elif isinstance(mag_like, Mag):
+        as_vec3_int = Vec3Int(mag_like.to_tuple())
+    elif isinstance(mag_like, np.ndarray):
+        as_vec3_int = Vec3Int(mag_like)
+
+    if as_vec3_int is None:
+        raise ValueError(
+            "Mag must be int or a vector3 of ints or a string shaped like e.g. 2-2-1"
+        )
+    for m in as_vec3_int:
+        assert (
+            log2(m) % 1 == 0
+        ), f"Mag components must be power of 2, got {m} in {as_vec3_int}."
+
+    return as_vec3_int
 
 
 @total_ordering
-class Mag(object):
-    def __init__(self, mag_like: Any):
-        self._mag: List[int] = []
-
-        if isinstance(mag_like, int):
-            self._mag = [mag_like] * 3
-        elif isinstance(mag_like, list):
-            self._mag = mag_like
-        elif isinstance(mag_like, tuple):
-            self._mag = [mag_d for mag_d in mag_like]
-        elif isinstance(mag_like, str):
-            if re.match(r"^\d+$", mag_like) is not None:
-                self._mag = [int(mag_like)] * 3
-            elif re.match(r"^\d+-\d+-\d+$", mag_like) is not None:
-                self._mag = [int(m) for m in mag_like.split("-")]
-        elif isinstance(mag_like, Mag):
-            self._mag = mag_like.to_list()
-        elif isinstance(mag_like, np.ndarray):
-            assert mag_like.shape == (
-                3,
-            ), f"Numpy array for Mag must have shape (3,), got {mag_like.shape}."
-            self._mag = list(mag_like)
-
-        if self._mag is None or len(self._mag) != 3:
-            raise ValueError(
-                "magnification must be int or a vector3 of ints or a string shaped like e.g. 2-2-1"
-            )
-
-        for m in self._mag:
-            assert log2(m) % 1 == 0, "magnification needs to be power of 2."
+@attr.frozen
+class Mag:
+    _mag: Vec3Int = attr.ib(converter=import_mag)
 
     @property
     def x(self) -> int:
-        return self._mag[0]
+        return self._mag.x
 
     @property
     def y(self) -> int:
-        return self._mag[1]
+        return self._mag.y
 
     @property
     def z(self) -> int:
-        return self._mag[2]
+        return self._mag.z
+
+    @property
+    def max_dim(self) -> int:
+        return max(self._mag)
 
     def __lt__(self, other: Any) -> bool:
-        return max(self._mag) < (max(Mag(other).to_list()))
+        return self.max_dim < Mag(other).max_dim
 
     def __le__(self, other: Any) -> bool:
-        return max(self._mag) <= (max(Mag(other).to_list()))
+        return self.max_dim <= Mag(other).max_dim
 
     def __eq__(self, other: Any) -> bool:
-        return all(m1 == m2 for m1, m2 in zip(self._mag, Mag(other)._mag))
+        return self.to_vec3_int() == Mag(other).to_vec3_int()
 
     def __str__(self) -> str:
         return self.to_layer_name()
 
-    def __expr__(self) -> str:
+    def __repr__(self) -> str:
         return f"Mag({self.to_layer_name()})"
 
     def to_layer_name(self) -> str:
@@ -77,10 +88,16 @@ class Mag(object):
         return "{}-{}-{}".format(x, y, z)
 
     def to_list(self) -> List[int]:
-        return self._mag.copy()
+        return self._mag.to_list()
 
     def to_np(self) -> np.ndarray:
-        return np.array(self._mag)
+        return self._mag.to_np()
+
+    def to_vec3_int(self) -> Vec3Int:
+        return self._mag
+
+    def to_tuple(self) -> Tuple[int, int, int]:
+        return self._mag.to_tuple()
 
     def scaled_by(self, factor: int) -> "Mag":
         return Mag([mag * factor for mag in self._mag])
@@ -89,7 +106,7 @@ class Mag(object):
         return [c // m for c, m in zip(coord, self._mag)]
 
     def divided_by(self, d: int) -> "Mag":
-        return Mag([mag // d for mag in self._mag])
+        return Mag(self._mag // d)
 
     def __hash__(self) -> int:
         return hash(tuple(self._mag))
