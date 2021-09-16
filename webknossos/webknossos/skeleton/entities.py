@@ -1,11 +1,9 @@
-import colorsys
 import itertools
 from typing import Any, Dict, Generator, Iterator, List, Optional, Tuple, Union
 
 import attr
 import networkx as nx
 import numpy as np
-from icecream import ic
 
 import webknossos.skeleton.nml as wknml
 from webknossos.skeleton.exporter import NMLExporter
@@ -286,7 +284,7 @@ class Skeleton:
 
     def get_graph_by_id(self, graph_id: int) -> WkGraph:
 
-        # Todo: Use hashed access
+        # Todo: Use hashed access if it turns out to be worth it? pylint: disable=fixme
         for graph in self.root_group.flattened_graphs():
             if graph.id == graph_id:
                 return graph

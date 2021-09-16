@@ -199,7 +199,7 @@ class NML(NamedTuple):
 
 
 def __parse_user_bounding_boxes(nml_parameters: Element) -> List[IntVector6]:
-    # ToDo support color, id, name, isVisible attributes
+    # ToDo support color, id, name, isVisible attributes pylint: disable=fixme
     # https://github.com/scalableminds/wknml/issues/46
     bb_elements = nml_parameters.findall("userBoundingBox")
     return [__parse_bounding_box(bb_element) for bb_element in bb_elements]
