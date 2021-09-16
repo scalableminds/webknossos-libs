@@ -7,13 +7,9 @@ import nibabel as nib
 import numpy as np
 
 from wkcuber.api.bounding_box import BoundingBox
-from wkcuber.api.dataset import Dataset
+from wkcuber.api.dataset import Dataset, LayerCategories
 from wkcuber.mag import Mag
-from wkcuber.metadata import read_metadata_for_layer
-from wkcuber.utils import add_distribution_flags, add_verbose_flag, parse_bounding_box
-
-from webknossos.webknossos.dataset import Layer, LayerCategories
-from wkcuber.wkcuber.utils import setup_logging
+from wkcuber.utils import add_distribution_flags, add_verbose_flag, parse_bounding_box, setup_logging
 
 
 def create_parser() -> ArgumentParser:
@@ -88,7 +84,7 @@ def export_layer_to_nifti(
     mag_layer = layer.get_mag(mag)
 
     is_segmentation_layer = (
-        wk_ds.properties.data_layers[layer_name].category
+        layer.category
         == LayerCategories.SEGMENTATION_TYPE
     )
 
