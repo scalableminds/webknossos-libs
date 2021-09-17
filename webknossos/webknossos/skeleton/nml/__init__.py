@@ -504,9 +504,9 @@ def __dump_parameters(xf: XmlWriter, parameters: NMLParameters) -> None:
     xf.tag(
         "scale",
         {
-            "x": str(parameters.scale[0]),
-            "y": str(parameters.scale[1]),
-            "z": str(parameters.scale[2]),
+            "x": str(float(parameters.scale[0])),
+            "y": str(float(parameters.scale[1])),
+            "z": str(float(parameters.scale[2])),
         },
     )
 
@@ -514,9 +514,9 @@ def __dump_parameters(xf: XmlWriter, parameters: NMLParameters) -> None:
         xf.tag(
             "offset",
             {
-                "x": str(parameters.offset[0]),
-                "y": str(parameters.offset[1]),
-                "z": str(parameters.offset[2]),
+                "x": str(float(parameters.offset[0])),
+                "y": str(float(parameters.offset[1])),
+                "z": str(float(parameters.offset[2])),
             },
         )
 
@@ -526,18 +526,18 @@ def __dump_parameters(xf: XmlWriter, parameters: NMLParameters) -> None:
         xf.tag(
             "editPosition",
             {
-                "x": str(parameters.editPosition[0]),
-                "y": str(parameters.editPosition[1]),
-                "z": str(parameters.editPosition[2]),
+                "x": str(float(parameters.editPosition[0])),
+                "y": str(float(parameters.editPosition[1])),
+                "z": str(float(parameters.editPosition[2])),
             },
         )
     if parameters.editRotation is not None:
         xf.tag(
             "editRotation",
             {
-                "xRot": str(parameters.editRotation[0]),
-                "yRot": str(parameters.editRotation[1]),
-                "zRot": str(parameters.editRotation[2]),
+                "xRot": str(float(parameters.editRotation[0])),
+                "yRot": str(float(parameters.editRotation[1])),
+                "zRot": str(float(parameters.editRotation[2])),
             },
         )
     if parameters.zoomLevel is not None:
@@ -553,9 +553,9 @@ def __dump_node(xf: XmlWriter, node: Node) -> None:
 
     attributes = {
         "id": str(node.id),
-        "x": str(node.position[0]),
-        "y": str(node.position[1]),
-        "z": str(node.position[2]),
+        "x": str(float(node.position[0])),
+        "y": str(float(node.position[1])),
+        "z": str(float(node.position[2])),
     }
 
     if node.radius is not None:

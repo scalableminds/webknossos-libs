@@ -20,26 +20,6 @@ GroupOrGraph = Union["Group", "WkGraph"]
 nml_id_generator = itertools.count()
 
 
-def opt_vector3_as_float(
-    vec: Optional[Tuple[float, float, float]]
-) -> Optional[Vector3]:
-    if vec is None:
-        return None
-    return (
-        float(vec[0]),
-        float(vec[1]),
-        float(vec[2]),
-    )
-
-
-def vector3_as_float(vec: Tuple[float, float, float]) -> Vector3:
-    return (
-        float(vec[0]),
-        float(vec[1]),
-        float(vec[2]),
-    )
-
-
 @attr.define()
 class Group:
     id: int = attr.ib(init=False)
@@ -154,8 +134,6 @@ class Node:
             self.id = self._enforced_id
         else:
             self.id = self._nml.element_id_generator.__next__()
-
-        self.position = vector3_as_float(self.position)
 
     def __hash__(self) -> int:
         return hash((self._nml.id, self.id))
@@ -272,11 +250,7 @@ class Skeleton:
         self.id = nml_id_generator.__next__()
         self.element_id_generator = itertools.count()
         self.root_group = Group(name="Root", children=[], nml=self, is_root_group=False)
-        self.scale = vector3_as_float(self.scale)
         self.time = int(str(self.time))  # typing: ignore
-        self.offset = opt_vector3_as_float(self.offset)
-        self.edit_position = opt_vector3_as_float(self.edit_position)
-        self.edit_rotation = opt_vector3_as_float(self.edit_rotation)
 
     def flattened_graphs(self) -> Generator["WkGraph", None, None]:
 
