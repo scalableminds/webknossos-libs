@@ -72,19 +72,19 @@ def test_immutability() -> None:
     nml = create_dummy_skeleton()
 
     with pytest.raises(AttributeError):
-        nml.get_node_by_id(2).id = 999
+        nml.get_node_by_id(2).id = 999  # type: ignore
 
     with pytest.raises(AttributeError):
-        nml.get_graph_by_id(1).id = 999
+        nml.get_graph_by_id(1).id = 999  # type: ignore
 
     with pytest.raises(AttributeError):
-        nml.get_group_by_id(5).id = 999
+        nml.get_group_by_id(5).id = 999  # type: ignore
 
     with pytest.raises(AttributeError):
-        nml.get_group_by_id(5).children = []
+        nml.get_group_by_id(5).children = []  # type: ignore
 
     with pytest.raises(AttributeError):
-        nml.get_group_by_id(5).children.append(nml.get_group_by_id(5))
+        nml.get_group_by_id(5).children.append(nml.get_group_by_id(5))  # type: ignore
 
 
 def test_skeleton_creation() -> None:

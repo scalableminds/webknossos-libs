@@ -237,7 +237,6 @@ class Skeleton:
     """
 
     name: str
-    id: int = attr.ib(init=False)
     scale: Vector3
     offset: Optional[Vector3] = None
     time: Optional[int] = None
@@ -251,7 +250,6 @@ class Skeleton:
     element_id_generator: Iterator[int] = attr.ib(init=False)
 
     def __attrs_post_init__(self) -> None:
-        self.id = nml_id_generator.__next__()
         self.element_id_generator = itertools.count()
         self.root_group = Group(name="Root", children=[], nml=self, is_root_group=False)
         self.time = int(str(self.time))  # typing: ignore
