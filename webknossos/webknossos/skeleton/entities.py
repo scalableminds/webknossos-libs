@@ -24,7 +24,7 @@ nml_id_generator = itertools.count()
 class Group:
     _id: int = attr.ib(init=False)
     name: str
-    children: List[GroupOrGraph]
+    _children: List[GroupOrGraph]
     _nml: "Skeleton"
     is_root_group: bool = False
     _enforced_id: Optional[int] = None
@@ -37,7 +37,7 @@ class Group:
             self._id = self._nml.element_id_generator.__next__()
 
     @property
-    def id(self):
+    def id(self) -> int:
         return self._id
 
     def add_graph(
@@ -55,9 +55,13 @@ class Group:
             nml=_nml or self._nml,
             enforced_id=_enforced_id,
         )
-        self.children.append(new_graph)
+        self._children.append(new_graph)
 
         return new_graph
+
+    @property
+    def children(self) -> Iterator[GroupOrGraph]:
+        return (child for child in self._children)
 
     def add_group(
         self,
@@ -67,7 +71,7 @@ class Group:
     ) -> "Group":
 
         new_group = Group(name, children or [], nml=self._nml, enforced_id=_enforced_id)  # type: ignore
-        self.children.append(new_group)
+        self._children.append(new_group)
         return new_group
 
     def get_total_node_count(self) -> int:
@@ -83,14 +87,14 @@ class Group:
         )
 
     def flattened_graphs(self) -> Generator["Graph", None, None]:
-        for child in self.children:
+        for child in self._children:
             if isinstance(child, Group):
                 yield from child.flattened_graphs()
             else:
                 yield child
 
     def flattened_groups(self) -> Generator["Group", None, None]:
-        for child in self.children:
+        for child in self._children:
             if isinstance(child, Group):
                 yield child
                 yield from child.flattened_groups()
@@ -108,7 +112,7 @@ class Group:
         return wknml.Group(
             self.id,
             self.name,
-            children=[g.as_nml_group() for g in self.children if isinstance(g, Group)],
+            children=[g.as_nml_group() for g in self._children if isinstance(g, Group)],
         )
 
 
@@ -137,7 +141,7 @@ class Node:
             self._id = self._nml.element_id_generator.__next__()
 
     @property
-    def id(self):
+    def id(self) -> int:
         return self._id
 
 
