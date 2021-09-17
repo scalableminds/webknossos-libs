@@ -19,7 +19,7 @@ def pairs_within_distance(
             yield (pos_a[i], pos_b[j])
 
 
-def find_synapse_candidates():
+def find_synapse_candidates() -> Tuple[skeleton.Skeleton, skeleton.Group]:
     """
     Load an NML file and consider all pairs of trees.
     For each tree pair, find the node pairs that have a distance
