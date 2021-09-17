@@ -1,3 +1,4 @@
+import pytest
 import difflib
 import tempfile
 from itertools import combinations
@@ -67,6 +68,19 @@ def create_dummy_skeleton() -> skeleton.Skeleton:
     return nml
 
 
+def test_immutability() -> None:
+    nml = create_dummy_skeleton()
+
+    with pytest.raises(AttributeError):
+        nml.get_node_by_id(2).id = 999
+
+    with pytest.raises(AttributeError):
+        nml.get_graph_by_id(1).id = 999
+
+    with pytest.raises(AttributeError):
+        nml.get_group_by_id(5).id = 999
+
+
 def test_skeleton_creation() -> None:
     nml = create_dummy_skeleton()
     assert nml.time == 1337
@@ -83,7 +97,7 @@ def test_skeleton_creation() -> None:
 
     groups = list(nml.flattened_groups())
     assert len(groups) == 2
-    assert isinstance(groups[0].children[0], skeleton.WkGraph)
+    assert isinstance(groups[0].children[0], skeleton.Graph)
     assert groups[0].children[0].group_id == groups[0].id
 
 

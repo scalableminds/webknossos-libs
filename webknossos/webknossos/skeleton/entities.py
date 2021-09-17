@@ -15,14 +15,14 @@ Vector3 = Tuple[float, float, float]
 Vector4 = Tuple[float, float, float, float]
 IntVector6 = Tuple[int, int, int, int, int, int]
 
-GroupOrGraph = Union["Group", "WkGraph"]
+GroupOrGraph = Union["Group", "Graph"]
 
 nml_id_generator = itertools.count()
 
 
 @attr.define()
 class Group:
-    id: int = attr.ib(init=False)
+    _id: int = attr.ib(init=False)
     name: str
     children: List[GroupOrGraph]
     _nml: "Skeleton"
@@ -32,9 +32,13 @@ class Group:
     def __attrs_post_init__(self) -> None:
 
         if self._enforced_id is not None:
-            self.id = self._enforced_id
+            self._id = self._enforced_id
         else:
-            self.id = self._nml.element_id_generator.__next__()
+            self._id = self._nml.element_id_generator.__next__()
+
+    @property
+    def id(self):
+        return self._id
 
     def add_graph(
         self,
@@ -42,9 +46,9 @@ class Group:
         color: Optional[Vector4] = None,
         _nml: Optional["Skeleton"] = None,
         _enforced_id: Optional[int] = None,
-    ) -> "WkGraph":
+    ) -> "Graph":
 
-        new_graph = WkGraph(
+        new_graph = Graph(
             name=name,
             color=color,
             group_id=self.id,
@@ -78,7 +82,7 @@ class Group:
             default=0,
         )
 
-    def flattened_graphs(self) -> Generator["WkGraph", None, None]:
+    def flattened_graphs(self) -> Generator["Graph", None, None]:
         for child in self.children:
             if isinstance(child, Group):
                 yield from child.flattened_graphs()
@@ -112,7 +116,7 @@ class Group:
 class Node:
     position: Vector3
     _nml: "Skeleton"
-    id: int = attr.ib(init=False)
+    _id: int = attr.ib(init=False)
     comment: Optional[str] = None
     radius: Optional[float] = None
     rotation: Optional[Vector3] = None
@@ -128,13 +132,17 @@ class Node:
 
     def __attrs_post_init__(self) -> None:
         if self._enforced_id is not None:
-            self.id = self._enforced_id
+            self._id = self._enforced_id
         else:
-            self.id = self._nml.element_id_generator.__next__()
+            self._id = self._nml.element_id_generator.__next__()
+
+    @property
+    def id(self):
+        return self._id
 
 
 @attr.define()
-class WkGraph:
+class Graph:
     """
     Contains a collection of nodes and edges.
     """
@@ -142,7 +150,7 @@ class WkGraph:
     name: str
     _nml: "Skeleton"
     color: Optional[Vector4] = None
-    id: int = attr.ib(init=False)
+    _id: int = attr.ib(init=False)
     nx_graph: nx.Graph = attr.ib(init=False)
     group_id: Optional[int] = None
 
@@ -151,9 +159,13 @@ class WkGraph:
     def __attrs_post_init__(self) -> None:
         self.nx_graph = nx.Graph()
         if self._enforced_id is not None:
-            self.id = self._enforced_id
+            self._id = self._enforced_id
         else:
-            self.id = self._nml.element_id_generator.__next__()
+            self._id = self._nml.element_id_generator.__next__()
+
+    @property
+    def id(self) -> int:
+        return self._id
 
     def get_nodes(self) -> List[Node]:
 
@@ -240,11 +252,11 @@ class Skeleton:
         self.root_group = Group(name="Root", children=[], nml=self, is_root_group=False)
         self.time = int(str(self.time))  # typing: ignore
 
-    def flattened_graphs(self) -> Generator["WkGraph", None, None]:
+    def flattened_graphs(self) -> Generator["Graph", None, None]:
 
         return self.root_group.flattened_graphs()
 
-    def get_graph_by_id(self, graph_id: int) -> WkGraph:
+    def get_graph_by_id(self, graph_id: int) -> Graph:
 
         # Todo: Use hashed access if it turns out to be worth it? pylint: disable=fixme
         for graph in self.root_group.flattened_graphs():
@@ -252,13 +264,21 @@ class Skeleton:
                 return graph
         raise ValueError(f"No graph with id {graph_id} was found")
 
+    def get_group_by_id(self, group_id: int) -> Group:
+
+        # Todo: Use hashed access if it turns out to be worth it? pylint: disable=fixme
+        for group in self.root_group.flattened_groups():
+            if group.id == group_id:
+                return group
+        raise ValueError(f"No group with id {group_id} was found")
+
     def add_graph(
         self,
         name: str,
         color: Optional[Vector4] = None,
         _nml: Optional["Skeleton"] = None,
         _enforced_id: Optional[int] = None,
-    ) -> "WkGraph":
+    ) -> "Graph":
 
         return self.root_group.add_graph(
             name,
@@ -352,7 +372,7 @@ class Skeleton:
 
     @staticmethod
     def nml_tree_to_graph(
-        new_graph: "WkGraph",
+        new_graph: "Graph",
         nml_tree: NmlTree,
     ) -> nx.Graph:
         """

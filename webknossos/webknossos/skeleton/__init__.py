@@ -1,4 +1,4 @@
-from webknossos.skeleton.entities import Group, Node, Skeleton, WkGraph
+from webknossos.skeleton.entities import Group, Node, Skeleton, Graph
 
 
 def open_nml(file_path: str) -> Skeleton:
