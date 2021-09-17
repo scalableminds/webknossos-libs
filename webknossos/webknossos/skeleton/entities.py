@@ -107,9 +107,6 @@ class Group:
             children=[g.as_nml_group() for g in self.children if isinstance(g, Group)],
         )
 
-    def __hash__(self) -> int:
-        return hash((self._nml.id, self.id))
-
 
 @attr.define()
 class Node:
@@ -134,12 +131,6 @@ class Node:
             self.id = self._enforced_id
         else:
             self.id = self._nml.element_id_generator.__next__()
-
-    def __hash__(self) -> int:
-        return hash((self._nml.id, self.id))
-
-    def __eq__(self, other: object) -> bool:
-        return hash(self) == hash(other)
 
 
 @attr.define()
@@ -221,9 +212,6 @@ class WkGraph:
 
     def get_max_node_id(self) -> int:
         return max((node.id for node in self.get_nodes()), default=0)
-
-    def __hash__(self) -> int:
-        return hash((self._nml.id, self.id))
 
 
 @attr.define()
