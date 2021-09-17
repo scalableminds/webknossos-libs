@@ -1,11 +1,10 @@
-import pytest
 import difflib
 import tempfile
 
 import numpy as np
+import pytest
 
 import webknossos.skeleton as skeleton
-
 from webknossos.examples.skeleton_synapse_candidates import find_synapse_candidates
 
 
