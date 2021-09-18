@@ -301,12 +301,22 @@ def cubing(
     target_mag = Mag(target_mag_str)
 
     target_ds = Dataset.get_or_create(target_path, scale=scale)
-    target_layer = target_ds.get_or_add_layer(
-        layer_name,
-        LayerCategories.COLOR_TYPE,
-        dtype_per_channel=dtype,
-        num_channels=num_channels,
-    )
+
+    if layer_name == "segmentation":
+        target_layer = target_ds.get_or_add_layer(
+            layer_name,
+            LayerCategories.SEGMENTATION_TYPE,
+            dtype_per_channel=dtype,
+            num_channels=num_channels,
+            largest_segment_id=-1
+        )
+    else:
+        target_layer = target_ds.get_or_add_layer(
+            layer_name,
+            LayerCategories.COLOR_TYPE,
+            dtype_per_channel=dtype,
+            num_channels=num_channels,
+        )
     target_layer.bounding_box = BoundingBox(
         (0, 0, start_z), (num_x, num_y, start_z + num_z)
     )
