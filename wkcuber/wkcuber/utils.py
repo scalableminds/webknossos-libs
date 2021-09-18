@@ -242,7 +242,7 @@ class BufferedSliceWriter(object):
     """
     def __init__(
         self,
-        view,  # TODO: why cant I add the type hint
+        view: View,
         offset: Vec3,
         # buffer_size specifies, how many slices should be aggregated until they are flushed.
         buffer_size: int = 32,
@@ -387,7 +387,7 @@ class BufferedSliceReader(object):
     """
     def __init__(
         self,
-        view,  # TODO: why cant I add the type hint
+        view: View,
         offset: Vec3,
         size: Vec3,
         # buffer_size specifies, how many slices should be aggregated until they are flushed.

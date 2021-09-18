@@ -2,7 +2,7 @@ import math
 import warnings
 from pathlib import Path
 from types import TracebackType
-from typing import Callable, Optional, Tuple, Type, Union, cast
+from typing import Callable, Optional, Tuple, Type, Union, cast, List
 
 import cluster_tools
 import numpy as np
@@ -275,6 +275,36 @@ class View:
             is_bounded=True,
             read_only=read_only,
             mag_view_bbox_at_creation=self._mag_view_bounding_box_at_creation,
+        )
+
+    def get_buffered_slice_writer(
+            self,
+            offset: Tuple[int, int, int] = None,
+            buffer_size: int = 32,
+            dimension: int = 2  # z
+    ):
+        from wkcuber.utils import BufferedSliceWriter
+        return BufferedSliceWriter(
+            view=self,
+            offset=offset if offset is not None else (0, 0, 0),
+            buffer_size=buffer_size,
+            dimension=dimension
+        )
+
+    def get_buffered_slice_reader(
+        self,
+        offset: Tuple[int, int, int] = None,
+        size: Tuple[int, int, int] = None,
+        buffer_size: int = 32,
+        dimension: int = 2  # z
+    ):
+        from wkcuber.utils import BufferedSliceReader
+        return BufferedSliceReader(
+            view=self,
+            offset=offset if offset is not None else (0, 0, 0),
+            size=size if size is not None else self.size,
+            buffer_size=buffer_size,
+            dimension=dimension
         )
 
     def _assert_bounds(
