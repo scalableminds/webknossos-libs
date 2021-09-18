@@ -19,7 +19,7 @@ from typing import (
     Generator,
     Any,
     Optional,
-    Type,
+    Type, cast, TYPE_CHECKING,
 )
 from glob import iglob
 from collections import namedtuple
@@ -27,7 +27,8 @@ from multiprocessing import cpu_count
 from os import path, getpid
 from math import floor, ceil
 from logging import getLogger
-
+if TYPE_CHECKING:
+    from webknossos.dataset import View
 from wkcuber.api.bounding_box import BoundingBox
 
 from .knossos import KnossosDataset
@@ -49,6 +50,9 @@ CUBE_REGEX = re.compile(
 )
 
 logger = getLogger(__name__)
+
+
+Vec3 = Union[Tuple[int, int, int], np.ndarray]
 
 
 def open_wkw(info: WkwDatasetInfo) -> wkw.Dataset:
@@ -214,55 +218,57 @@ def add_batch_size_flag(parser: argparse.ArgumentParser) -> None:
 
 
 class BufferedSliceWriter(object):
+    """
+    The BufferedSliceWriter buffers multiple slices before they are written to disk.
+    The amount of slices that get buffered is specified by `buffer_size`.
+    As soon as the buffer is full, the data gets written to disk.
+
+    The user can specify along which dimension the data is sliced by using the parameter `dimension`.
+    To slice along the x-axis use `0`, for the y-axis use `1`, or for the z-axis use `2` (default: dimension=2).
+
+    This class is supposed to be used with a context manager (see example below).
+    If the buffer is non empty after the user finished writing (i.e. the number of written slices is not a multiple of `buffer_size`),
+    exiting the context will automatically write the buffer to disk.
+    Entering the context returns a generator with consumes slices (np.ndarray).
+    Note: this generator pattern requires to start the generator by sending `None` to it.
+
+    Usage:
+    data_cube = ...
+    with BufferedSliceWriter(...) as writer:
+        writer.send(None)  # to start the generator
+        for data_slice in data_cube:
+            writer.send(data_slice)
+
+    """
     def __init__(
         self,
-        dataset_path: Path,
-        layer_name: str,
-        dtype: np.dtype,
-        origin: Union[Tuple[int, int, int], List[int]],
+        view,  # TODO: why cant I add the type hint
+        offset: Vec3,
         # buffer_size specifies, how many slices should be aggregated until they are flushed.
         buffer_size: int = 32,
-        # file_len specifies, how many buckets written per dimension into a wkw cube. Using 32,
-        # results in 1 GB/wkw file for 8-bit data
-        file_len: int = DEFAULT_WKW_FILE_LEN,
-        mag: Mag = Mag("1"),
-    ):
+        dimension: int = 2  # z
+    ) -> None:
+        """
+        view : datasource
+        offset : specifies the offset of the data to write (relative to the `view`)
+        buffer_size : the number of slices that are read at once
+        dimension : specifies along which axis the data is sliced (0=x; 1=y; 2=z)
 
-        self.dataset_path = dataset_path
-        self.layer_name = layer_name
+        The size is in the magnification of the `view`.
+        """
+        self.view = view
         self.buffer_size = buffer_size
+        self.dtype = self.view.get_dtype()
+        self.offset = offset
+        self.dimension = dimension
 
-        layer_path = path.join(self.dataset_path, self.layer_name, mag.to_layer_name())
-
-        self.dtype = dtype
-        self.dataset = wkw.Dataset.open(
-            layer_path, wkw.Header(dtype, file_len=file_len)
-        )
-        self.origin = origin
+        assert 0 <= dimension <= 2
 
         self.buffer: List[np.ndarray] = []
-        self.current_z: Optional[int] = None
-        self.buffer_start_z: Optional[int] = None
-
-    def write_slice(self, z: int, data: np.ndarray) -> None:
-        """Takes in a slice in [y, x] shape, writes to WKW file."""
-
-        if len(self.buffer) == 0:
-            self.current_z = z
-            self.buffer_start_z = z
-
-        assert (
-            z == self.current_z
-        ), "({}) Slices have to be written sequentially!".format(getpid())
-
-        self.buffer.append(data.transpose())
-        self.current_z += 1
-
-        if self.current_z % self.buffer_size == 0:
-            self._write_buffer()
+        self.current_slice: Optional[int] = None
+        self.buffer_start_slice: Optional[int] = None
 
     def _write_buffer(self) -> None:
-
         if len(self.buffer) == 0:
             return
 
@@ -281,36 +287,38 @@ class BufferedSliceWriter(object):
 
         logger.debug(
             "({}) Writing {} slices at position {}.".format(
-                getpid(), len(self.buffer), self.buffer_start_z
+                getpid(), len(self.buffer), self.buffer_start_slice
             )
         )
         log_memory_consumption()
 
         try:
             assert (
-                self.buffer_start_z is not None
-            ), "Failed to write buffer: The buffer_start_z is not set."
-            origin_with_offset = list(self.origin)
-            origin_with_offset[2] = self.buffer_start_z
-            x_max = max(slice.shape[0] for slice in self.buffer)
-            y_max = max(slice.shape[1] for slice in self.buffer)
+                self.buffer_start_slice is not None
+            ), "Failed to write buffer: The buffer_start_slice is not set."
+            buffer_start = [0, 0, 0]
+            buffer_start[self.dimension] = self.buffer_start_slice
+            offset = cast(Tuple[int, int, int], tuple([off + buff_off for off, buff_off in zip(self.offset, buffer_start)]))
+            max_width = max(slice.shape[-2] for slice in self.buffer)
+            max_height = max(slice.shape[-1] for slice in self.buffer)
 
             self.buffer = [
                 np.pad(
                     slice,
                     mode="constant",
                     pad_width=[
-                        (0, x_max - slice.shape[0]),
-                        (0, y_max - slice.shape[1]),
+                        (0, 0),
+                        (0, max_width - slice.shape[-2]),
+                        (0, max_height - slice.shape[-1]),
                     ],
                 )
                 for slice in self.buffer
             ]
 
             data = np.concatenate(
-                [np.expand_dims(slice, 2) for slice in self.buffer], axis=2
+                [np.expand_dims(slice, self.dimension+1) for slice in self.buffer], axis=self.dimension+1
             )
-            self.dataset.write(origin_with_offset, data)
+            self.view.write(data, offset)
 
         except Exception as exc:
             logger.error(
@@ -318,7 +326,7 @@ class BufferedSliceWriter(object):
                 "slices at position {}. Original error is:\n{}:{}\n\nTraceback:".format(
                     getpid(),
                     len(self.buffer),
-                    self.buffer_start_z,
+                    self.buffer_start_slice,
                     type(exc).__name__,
                     exc,
                 )
@@ -330,13 +338,25 @@ class BufferedSliceWriter(object):
         finally:
             self.buffer = []
 
-    def close(self) -> None:
+    def get_slice_generator(self) -> Generator[None, np.ndarray, None]:
+        """Reads a WKW data, returns slices in [y, x] shape."""
+        current_slice = 0
+        while True:
+            data = yield  # Data gets send from the user
+            if len(self.buffer) == 0:
+                self.buffer_start_slice = current_slice
+            if len(data.shape) == 2:
+                # The input data might contain channel data or not.
+                # Bringing it into the same shape simplifies the code
+                data = np.expand_dims(data, axis=0)
+            self.buffer.append(data)
+            current_slice += 1
 
-        self._write_buffer()
-        self.dataset.close()
+            if current_slice % self.buffer_size == 0:
+                self._write_buffer()
 
-    def __enter__(self) -> "BufferedSliceWriter":
-        return self
+    def __enter__(self) -> Generator[None, np.ndarray, None]:
+        return self.get_slice_generator()
 
     def __exit__(
         self,
@@ -344,7 +364,94 @@ class BufferedSliceWriter(object):
         _value: Optional[BaseException],
         _tb: Optional[TracebackType],
     ) -> None:
-        self.close()
+        self._write_buffer()
+
+
+class BufferedSliceReader(object):
+    """
+    The BufferedSliceReader reads multiple slices from disk at once and buffers the data.
+    The amount of slices that get buffered is specified by `buffer_size`.
+    The slices are then yielded to the user separately.
+
+    The user can specify along which dimension the data is sliced by using the parameter `dimension`.
+    To slice along the x-axis use `0`, for the y-axis use `1`, or for the z-axis use `2` (default: dimension=2).
+
+    This class is supposed to be used with a context manager (see example below).
+    Entering the context returns a generator with yields slices (np.ndarray).
+
+    Usage:
+    with BufferedSliceReader(...) as reader:
+        for slice_data in reader:
+            ...
+
+    """
+    def __init__(
+        self,
+        view,  # TODO: why cant I add the type hint
+        offset: Vec3,
+        size: Vec3,
+        # buffer_size specifies, how many slices should be aggregated until they are flushed.
+        buffer_size: int = 32,
+        dimension: int = 2  # z
+    ) -> None:
+        """
+        view : datasource
+        offset : specifies the offset of the data to read (relative to the `view`)
+        size : specifies the size of the data to read
+        buffer_size : the number of slices that are read at once
+        dimension : specifies along which axis the data is sliced (0=x; 1=y; 2=z)
+
+        The size and offset are in the magnification of the `view`.
+        """
+
+        self.view = view
+        self.buffer_size = buffer_size
+        self.dtype = self.view.get_dtype()
+        assert 0 <= dimension <= 2
+        self.dimension = dimension
+        bounding_box = BoundingBox(view.global_offset, view.size)
+        self.target_bbox = bounding_box.intersected_with(BoundingBox(view.global_offset, size).offset(cast(Tuple[int, int, int], tuple(offset))))
+
+    def _get_slice_generator(self) -> Generator[np.ndarray, None, None]:
+        for batch in get_chunks(list(range(
+            self.target_bbox.topleft[self.dimension],
+            self.target_bbox.bottomright[self.dimension]
+        )), self.buffer_size):
+            n_slices = len(batch)
+            batch_start_idx = batch[0]
+
+
+            assert (
+                n_slices <= self.buffer_size
+            ), f"n_slices should at most be batch_size, but {n_slices} > {self.buffer_size}"
+
+            bbox_offset = self.target_bbox.topleft.tolist()
+            bbox_size = self.target_bbox.size.tolist()
+
+            buffer_bounding_box = BoundingBox.from_tuple2(
+                (
+                    bbox_offset[:self.dimension] + [batch_start_idx] + bbox_offset[self.dimension+1:],
+                    bbox_size[:self.dimension] + [n_slices] + bbox_size[self.dimension+1:],
+                )
+            )
+
+            logger.debug(f"({getpid()}) Reading {n_slices} slices at position {batch_start_idx}.")
+            negative_view_offset = cast(Tuple[int, int, int], tuple([-o for o in self.view.global_offset]))  # this needs to be subtracted from the buffer_bounding_box because the view expects a relative offset
+            data = self.view.read_bbox(buffer_bounding_box.offset(negative_view_offset))
+
+            for current_slice in np.rollaxis(data, self.dimension+1):  # The '+1' is important because the first dimension is the channel
+                yield current_slice
+
+    def __enter__(self) -> Generator[np.ndarray, None, None]:
+        return self._get_slice_generator()
+
+    def __exit__(
+        self,
+        _type: Optional[Type[BaseException]],
+        _value: Optional[BaseException],
+        _tb: Optional[TracebackType],
+    ) -> None:
+        ...
 
 
 def log_memory_consumption(additional_output: str = "") -> None:
@@ -411,10 +518,6 @@ def pad_or_crop_to_size_and_topleft(
     )
 
     return cube_data
-
-
-def ceil_div_np(numerator: np.ndarray, denominator: np.ndarray) -> np.ndarray:
-    return -(-numerator // denominator)
 
 
 def convert_mag1_offset(
