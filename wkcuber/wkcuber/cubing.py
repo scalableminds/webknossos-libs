@@ -308,7 +308,7 @@ def cubing(
             LayerCategories.SEGMENTATION_TYPE,
             dtype_per_channel=dtype,
             num_channels=num_channels,
-            largest_segment_id=-1
+            largest_segment_id=-1,
         )
     else:
         target_layer = target_ds.get_or_add_layer(
