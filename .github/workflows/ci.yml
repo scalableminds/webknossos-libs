@@ -55,6 +55,8 @@ jobs:
         poetry run ./typecheck.sh
 
     - name: Python tests
+      env:
+        WK_TOKEN: ${{ secrets.WK_TOKEN }}
       run: poetry run pytest tests
 
     - name: Check if git is dirty
@@ -97,40 +99,13 @@ jobs:
       if: ${{ needs.changes.outputs.wkcuber == 'true' }}
 
     - name: Check typing
-      run: |
-        ./typecheck.sh
+      run: poetry run ./typecheck.sh
 
     - name: Python tests
       run: poetry run pytest tests
 
     - name: CLI tests
-      run: tests/scripts/all_tests.sh
-
-    - name: Generate Docs
-      if: matrix.python-version == '3.8'
-      run: |
-        docs/api.sh --persist
-
-    - name: Push docs (for branch)
-      if: startsWith(github.event.ref, 'refs/heads') && matrix.python-version == '3.8'
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_DEFAULT_REGION: "eu-west-1"
-      run: |
-        CI_BRANCH=${GITHUB_REF##*/}
-        NORMALIZED_CI_BRANCH=${CI_BRANCH//[\/-]/_}
-        aws s3 sync --acl public-read docs/api s3://static.webknossos.org/lib-docs/${NORMALIZED_CI_BRANCH}
-
-    - name: Push docs (for tag)
-      if: startsWith(github.event.ref, 'refs/tags') && matrix.python-version == '3.8'
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_DEFAULT_REGION: "eu-west-1"
-      run: |
-        CI_TAG=$(git describe --tags)
-        aws s3 sync --acl public-read docs/api s3://static.webknossos.org/lib-docs/${CI_TAG}
+      run: poetry run tests/scripts/all_tests.sh
 
     - name: Check if git is dirty
       run: |
@@ -171,7 +146,7 @@ jobs:
 
     - name: CLI tests
       shell: bash
-      run: tests/scripts/all_tests.sh
+      run: poetry run "C:\Program Files\Git\bin\bash.EXE" --noprofile --norc tests/scripts/all_tests.sh
 
   wkcuber_mac:
     runs-on: macos-latest
@@ -202,10 +177,14 @@ jobs:
       run: poetry run pytest tests
 
     - name: CLI tests
-      run: tests/scripts/all_tests.sh
+      run: poetry run tests/scripts/all_tests.sh
 
   wkcuber_docker:
     needs: [webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac]
+    if: |
+      always() &&
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled')
     runs-on: ubuntu-latest
 
     steps:
@@ -261,9 +240,59 @@ jobs:
           docker push scalableminds/webknossos-cuber:latest
         fi
 
+  docs:
+    needs: [webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac]
+    runs-on: ubuntu-latest
+    if: |
+      always() &&
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled')
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.8
+        architecture: 'x64'
+
+    - name: Install dependencies
+      run: |
+        pip3 install -r requirements.txt
+
+    - name: Build Docs
+      run: |
+        docs/api.sh --persist
+
+    - name: Push docs (for branch)
+      if: startsWith(github.event.ref, 'refs/heads')
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: "eu-west-1"
+      run: |
+        CI_BRANCH=${GITHUB_REF##*/}
+        NORMALIZED_CI_BRANCH=${CI_BRANCH//[\/-]/_}
+        aws s3 sync --acl public-read docs/out s3://static.webknossos.org/lib-docs/${NORMALIZED_CI_BRANCH}
+
+    - name: Push docs (for tag)
+      if: startsWith(github.event.ref, 'refs/tags')
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: "eu-west-1"
+      run: |
+        CI_TAG=$(git describe --tags)
+        aws s3 sync --acl public-read docs/out s3://static.webknossos.org/lib-docs/${CI_TAG}
+
+
   pypi:
     needs: [webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac]
-    if: startsWith(github.event.ref, 'refs/tags')
+    if: |
+      always() &&
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled') &&
+      startsWith(github.event.ref, 'refs/tags')
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 4
@@ -282,3 +311,14 @@ jobs:
         PYPI_USERNAME: ${{ secrets.PYPI_USERNAME }}
         PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
       run: ./publish.sh
+
+  complete:
+    needs: [webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac, wkcuber_docker, docs]
+    if: |
+      always() &&
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled')
+    runs-on: ubuntu-latest
+    steps:
+    - name: Success
+      run: echo Success!

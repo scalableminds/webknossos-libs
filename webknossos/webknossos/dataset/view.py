@@ -20,7 +20,7 @@ class View:
     A `View` is essentially a bounding box to a region of a specific `wkw.Dataset` that also provides functionality.
     Read- and write-operations are restricted to the bounding box.
     `View`s are designed to be easily passed around as parameters.
-    A `View`, in its most basic form, does not have a reference to the `wkcuber.api.dataset.Dataset`.
+    A `View`, in its most basic form, does not have a reference to the `webknossos.dataset.dataset.Dataset`.
     """
 
     def __init__(
@@ -34,7 +34,7 @@ class View:
         mag_view_bbox_at_creation: Optional[BoundingBox] = None,
     ):
         """
-        Do not use this constructor manually. Instead use `wkcuber.api.mag_view.MagView.get_view()` to get a `View`.
+        Do not use this constructor manually. Instead use `webknossos.dataset.mag_view.MagView.get_view()` to get a `View`.
         """
         self._dataset: Optional[Dataset] = None
         self._path = path_to_mag_view
@@ -296,7 +296,9 @@ class View:
         self,
         work_on_chunk: Callable[[Tuple["View", int]], None],
         chunk_size: Tuple[int, int, int],
-        executor: Union[ClusterExecutor, cluster_tools.WrappedProcessPoolExecutor],
+        executor: Optional[
+            Union[ClusterExecutor, cluster_tools.WrappedProcessPoolExecutor]
+        ] = None,
     ) -> None:
         """
         The view is chunked into multiple sub-views of size `chunk_size`.
@@ -310,7 +312,7 @@ class View:
 
         Example:
         ```python
-        from wkcuber.utils import get_executor_for_args, named_partial
+        from webknossos.utils import get_executor_for_args, named_partial
 
         def some_work(args: Tuple[View, int], some_parameter: int) -> None:
             view_of_single_chunk, i = args
@@ -320,13 +322,11 @@ class View:
         # ...
         # let 'mag1' be a `MagView`
         view = mag1.get_view()
-        with get_executor_for_args(None) as executor:
-            func = named_partial(advanced_chunk_job, some_parameter=42)
-            view.for_each_chunk(
-                func,
-                chunk_size=(100, 100, 100),  # Use mag1._get_file_dimensions() if the size of the chunks should match the size of the files on disk
-                executor=executor,
-            )
+        func = named_partial(some_work, some_parameter=42)
+        view.for_each_chunk(
+            func,
+            chunk_size=(100, 100, 100),  # Use mag1._get_file_dimensions() if the size of the chunks should match the size of the files on disk
+        )
         ```
         """
 
@@ -354,7 +354,11 @@ class View:
             job_args.append((chunk_view, i))
 
         # execute the work for each chunk
-        wait_and_ensure_success(executor.map_to_futures(work_on_chunk, job_args))
+        if executor is None:
+            for args in job_args:
+                work_on_chunk(args)
+        else:
+            wait_and_ensure_success(executor.map_to_futures(work_on_chunk, job_args))
 
     def for_zipped_chunks(
         self,
@@ -362,7 +366,9 @@ class View:
         target_view: "View",
         source_chunk_size: Vec3,
         target_chunk_size: Vec3,
-        executor: Union[ClusterExecutor, cluster_tools.WrappedProcessPoolExecutor],
+        executor: Optional[
+            Union[ClusterExecutor, cluster_tools.WrappedProcessPoolExecutor]
+        ] = None,
     ) -> None:
         """
         This method is similar to 'for_each_chunk' in the sense, that it delegates work to smaller chunks.
@@ -439,7 +445,11 @@ class View:
             job_args.append((source_chunk_view, target_chunk_view, i))
 
         # execute the work for each pair of chunks
-        wait_and_ensure_success(executor.map_to_futures(work_on_chunk, job_args))
+        if executor is None:
+            for args in job_args:
+                work_on_chunk(args)
+        else:
+            wait_and_ensure_success(executor.map_to_futures(work_on_chunk, job_args))
 
     def _is_compressed(self) -> bool:
         return (

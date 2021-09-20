@@ -44,14 +44,14 @@ def _convert_mag1_offset(
 
 class MagView(View):
     """
-    A `MagView` contains all information about the data of a single magnification of a `wkcuber.api.layer.Layer`.
-    `MagView` inherits from `wkcuber.api.view.View`.
+    A `MagView` contains all information about the data of a single magnification of a `webknossos.dataset.layer.Layer`.
+    `MagView` inherits from `webknossos.dataset.view.View`.
     Therefore, the main difference between them is that a `MagView` handles the whole magnification,
     whereas the `View` only handles a sub-region.
 
     A `MagView` can read/write outside the specified bounding box (unlike a normal `View`).
     If necessary, the properties are automatically updated (e.g. if the bounding box changed).
-    This is possible because a `MagView` does have a reference to the `wkcuber.api.layer.Layer`.
+    This is possible because a `MagView` does have a reference to the `webknossos.dataset.layer.Layer`.
 
     The `global_offset` of a `MagView` is always `(0, 0, 0)` and its `size` is chosen so that the bounding box from the properties is fully inside this View.
     """
@@ -66,7 +66,7 @@ class MagView(View):
         create: bool = False,
     ) -> None:
         """
-        Do not use this constructor manually. Instead use `wkcuber.api.layer.Layer.add_mag()` to create a `MagView`.
+        Do not use this constructor manually. Instead use `webknossos.dataset.layer.Layer.add_mag()` to create a `MagView`.
         """
         header = wkw.Header(
             voxel_type=layer.dtype_per_channel,
@@ -122,7 +122,7 @@ class MagView(View):
 
     def write(self, data: np.ndarray, offset: Vec3 = (0, 0, 0)) -> None:
         """
-        Writes the `data` at the specified `offset` to disk (like `wkcuber.api.view.View.write()`).
+        Writes the `data` at the specified `offset` to disk (like `webknossos.dataset.view.View.write()`).
 
         The `offset` refers to the absolute position, regardless of the offset in the properties (because the global_offset is set to (0, 0, 0)).
         If the data exceeds the original bounding box, the properties are updated.
