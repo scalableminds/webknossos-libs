@@ -629,12 +629,6 @@ dotenv = ["python-dotenv (>=0.10.4)"]
 email = ["email-validator (>=1.0.3)"]
 
 [[package]]
-name = "pygments"
-version = "2.10.0"
-description = "Pygments is a syntax highlighting package written in Python."
-category = "dev"
-
-[[package]]
 name = "pyflakes"
 version = "2.3.1"
 description = "passive checker of Python programs"
@@ -932,7 +926,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "e9715c2b0441d09efd96252311233649c3a17093a72b59a29f4246ed606dc634"
+content-hash = "e46bc8939ac945d8fde46fbc07297efd11e9c923c5abb303fd927cb4a858a207"
 
 [metadata.files]
 anyio = [
