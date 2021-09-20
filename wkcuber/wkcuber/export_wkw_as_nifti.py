@@ -57,7 +57,7 @@ def create_parser() -> ArgumentParser:
     parser.add_argument(
         "--padding",
         help="After reading from --source_bbox in the input file, the data is zero-padded according to padding."
-             "Format is left_pad_x,left_pad_y,left_pad_z,right_pad_x,right_pad_y,right_pad_z",
+        "Format is left_pad_x,left_pad_y,left_pad_z,right_pad_x,right_pad_y,right_pad_z",
         default=None,
         type=parse_padding,
     )
