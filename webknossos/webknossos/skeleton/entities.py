@@ -1,4 +1,5 @@
 import itertools
+from os import PathLike
 from typing import Any, Dict, Generator, Iterator, List, Optional, Tuple, Union
 
 import attr
@@ -299,7 +300,7 @@ class Skeleton:
         return self.root_group.get_node_by_id(node_id)
 
     @staticmethod
-    def from_path(file_path: str) -> "Skeleton":
+    def from_path(file_path: PathLike) -> "Skeleton":
         with open(file_path, "rb") as file_handle:
             return Skeleton.from_nml(wknml.parse_nml(file_handle))
 
@@ -396,7 +397,7 @@ class Skeleton:
 
         return new_graph
 
-    def write(self, out_path: str) -> None:
+    def write(self, out_path: PathLike) -> None:
         nml = NMLExporter.generate_nml(
             self.root_group,
             self._get_nml_parameters(),

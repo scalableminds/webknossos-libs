@@ -1,11 +1,12 @@
 import difflib
-import tempfile
+from os import PathLike
+from pathlib import Path
 
-import numpy as np
 import pytest
 
 import webknossos.skeleton as skeleton
-from webknossos.examples.skeleton_synapse_candidates import find_synapse_candidates
+
+TESTDATA_DIR = Path("testdata")
 
 
 def create_dummy_skeleton() -> skeleton.Skeleton:
@@ -94,7 +95,7 @@ def test_skeleton_creation() -> None:
     assert grand_child.group_id == groups[0].id
 
 
-def diff_files(path_a: str, path_b: str) -> None:
+def diff_files(path_a: PathLike, path_b: PathLike) -> None:
     with open(path_a, "r") as file_a:
         with open(path_b, "r") as file_b:
             diff = list(
@@ -113,38 +114,25 @@ def diff_files(path_a: str, path_b: str) -> None:
             assert len(diff) == 0, f"Files {path_a} and {path_b} are not equal: {diff}"
 
 
-def test_export_to_nml() -> None:
-    with tempfile.TemporaryDirectory() as temp_dir:
+def test_export_to_nml(tmp_path: Path) -> None:
+    nml = create_dummy_skeleton()
+    output_path = tmp_path / "out.nml"
+    nml.write(output_path)
 
-        nml = create_dummy_skeleton()
-        output_path = f"{temp_dir}/out.nml"
-        nml.write(output_path)
+    snapshot_path = TESTDATA_DIR / "nmls" / "generated_snapshot.nml"
 
-        snapshot_path = "../testdata/nmls/generated_snapshot.nml"
-
-        diff_files(output_path, snapshot_path)
+    diff_files(output_path, snapshot_path)
 
 
-def test_import_export_round_trip() -> None:
-    with tempfile.TemporaryDirectory() as temp_dir:
-        snapshot_path = "../testdata/nmls/generated_snapshot.nml"
-        export_path = f"{temp_dir}/exported_in.nml"
-        nml = skeleton.Skeleton.from_path(snapshot_path)
-        assert nml.time == 1337
+def test_import_export_round_trip(tmp_path: Path) -> None:
+    snapshot_path = TESTDATA_DIR / "nmls" / "generated_snapshot.nml"
+    export_path = tmp_path / "exported_in.nml"
+    nml = skeleton.open_nml(snapshot_path)
+    assert nml.time == 1337
 
-        g6 = nml.get_graph_by_id(6)
-        assert g6.name == "Graph in Group"
-        assert g6.get_node_by_id(7).position == (10.0, 3.0, 4.0)
+    g6 = nml.get_graph_by_id(6)
+    assert g6.name == "Graph in Group"
+    assert g6.get_node_by_id(7).position == (10.0, 3.0, 4.0)
 
-        nml.write(export_path)
-        diff_files(snapshot_path, export_path)
-
-
-def test_code_example() -> None:
-
-    nml, synapse_parent_group = find_synapse_candidates()
-
-    assert synapse_parent_group.get_total_node_count() == 57
-    ids = [g.id for g in nml.flattened_graphs()]
-    id_set = set(ids)
-    assert len(ids) == len(id_set), "Graph IDs are not unique."
+    nml.write(export_path)
+    diff_files(snapshot_path, export_path)

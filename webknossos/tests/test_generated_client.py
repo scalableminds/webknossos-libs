@@ -82,7 +82,11 @@ def test_dataset_info(client: Client) -> None:
     assert sorted(
         (layer.name, layer.category, layer.element_class)
         for layer in response.data_source.data_layers
-    ) == [("color", "color", "uint8"), ("segmentation", "segmentation", "uint32")]
+    ) == [
+        ("color", "color", "uint8"),
+        ("predictions", "color", "uint24"),
+        ("segmentation", "segmentation", "uint32"),
+    ]
 
 
 def test_build_info(client: Client) -> None:

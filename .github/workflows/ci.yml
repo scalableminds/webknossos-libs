@@ -48,7 +48,7 @@ jobs:
       run: poetry run ./format.sh check
 
     - name: Lint code
-      run: poetry run pylint -j4 webknossos
+      run: poetry run ./lint.sh
 
     - name: Check typing
       run: |
