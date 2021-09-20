@@ -17,12 +17,6 @@ def enforce_not_null(val: Optional[T]) -> T:
     return val
 
 
-def enforce_not_null_str(val: Optional[str]) -> str:
-    if val is None:
-        raise ValueError("Value is None")
-    return val
-
-
 def as_int_unless_none(val: Optional[str]) -> Optional[int]:
     if val is None:
         return None
@@ -360,7 +354,7 @@ def __parse_tree(nml_tree: Element) -> Tree:
 
 def __parse_branchpoint(nml_branchpoint: Element) -> Branchpoint:
     return Branchpoint(
-        int(enforce_not_null_str(nml_branchpoint.get("id"))),
+        int(enforce_not_null(nml_branchpoint.get("id"))),
         as_int_unless_none(nml_branchpoint.get("time")),
     )
 

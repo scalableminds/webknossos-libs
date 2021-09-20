@@ -12,7 +12,7 @@ from webknossos.skeleton.nml import NMLParameters as NmlParameters
 from webknossos.skeleton.nml import Node as NmlNode
 from webknossos.skeleton.nml import Tree as NmlTree
 from webknossos.skeleton.nml import Volume as NmlVolume
-from webknossos.skeleton.nml import enforce_not_null_str
+from webknossos.skeleton.nml import enforce_not_null
 
 if TYPE_CHECKING:
     from webknossosk.skeleton import Group
@@ -106,8 +106,8 @@ class NMLExporter:
             and "id" in volume_dict
         ):
             volume = NmlVolume(
-                id=int(enforce_not_null_str(volume_dict.get("id"))),
-                location=enforce_not_null_str(volume_dict.get("location")),
+                id=int(enforce_not_null(volume_dict.get("id"))),
+                location=enforce_not_null(volume_dict.get("location")),
                 fallback_layer=volume_dict.get("fallback_layer"),
             )
 

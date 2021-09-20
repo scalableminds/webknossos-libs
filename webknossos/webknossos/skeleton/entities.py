@@ -30,7 +30,6 @@ class Group:
     _enforced_id: Optional[int] = None
 
     def __attrs_post_init__(self) -> None:
-
         if self._enforced_id is not None:
             self._id = self._enforced_id
         else:
@@ -70,7 +69,7 @@ class Group:
         _enforced_id: int = None,
     ) -> "Group":
 
-        new_group = Group(name, children or [], nml=self._nml, enforced_id=_enforced_id)  # type: ignore
+        new_group = Group(name, children or [], nml=self._nml, enforced_id=_enforced_id)
         self._children.append(new_group)
         return new_group
 
@@ -100,15 +99,13 @@ class Group:
                 yield from child.flattened_groups()
 
     def get_node_by_id(self, node_id: int) -> "Node":
-
         for graph in self.flattened_graphs():
             if graph.has_node_id(node_id):
                 return graph.get_node_by_id(node_id)
 
         raise ValueError("Node id not found")
 
-    def as_nml_group(self) -> "NmlGroup":  # type: ignore
-
+    def as_nml_group(self) -> NmlGroup:
         return wknml.Group(
             self.id,
             self.name,
@@ -172,18 +169,15 @@ class Graph:
         return self._id
 
     def get_nodes(self) -> List[Node]:
-
         return [node_view[1] for node_view in self.nx_graph.nodes(data="obj")]
 
     def get_node_positions(self) -> np.ndarray:
         return np.array([node.position for node in self.get_nodes()])
 
     def get_node_by_id(self, node_id: int) -> Node:
-
         return self.nx_graph.nodes[node_id]["obj"]
 
     def has_node_id(self, node_id: int) -> bool:
-
         return node_id in self.nx_graph.nodes
 
     def add_node(
@@ -221,7 +215,6 @@ class Graph:
         return node
 
     def add_edge(self, node_1: Union[int, Node], node_2: Union[int, Node]) -> None:
-
         id_1 = node_1.id if isinstance(node_1, Node) else node_1
         id_2 = node_2.id if isinstance(node_2, Node) else node_2
         self.nx_graph.add_edge(id_1, id_2)
@@ -255,11 +248,9 @@ class Skeleton:
         self.time = int(str(self.time))  # typing: ignore
 
     def flattened_graphs(self) -> Generator["Graph", None, None]:
-
         return self.root_group.flattened_graphs()
 
     def get_graph_by_id(self, graph_id: int) -> Graph:
-
         # Todo: Use hashed access if it turns out to be worth it? pylint: disable=fixme
         for graph in self.root_group.flattened_graphs():
             if graph.id == graph_id:
@@ -267,7 +258,6 @@ class Skeleton:
         raise ValueError(f"No graph with id {graph_id} was found")
 
     def get_group_by_id(self, group_id: int) -> Group:
-
         # Todo: Use hashed access if it turns out to be worth it? pylint: disable=fixme
         for group in self.root_group.flattened_groups():
             if group.id == group_id:
@@ -281,7 +271,6 @@ class Skeleton:
         _nml: Optional["Skeleton"] = None,
         _enforced_id: Optional[int] = None,
     ) -> "Graph":
-
         return self.root_group.add_graph(
             name,
             color,
@@ -292,32 +281,25 @@ class Skeleton:
     def add_group(
         self, name: str, children: Optional[List[GroupOrGraph]] = None
     ) -> "Group":
-
         return self.root_group.add_group(name, children)
 
     def get_total_node_count(self) -> int:
-
         return self.root_group.get_total_node_count()
 
     def flattened_groups(self) -> Generator["Group", None, None]:
-
         return self.root_group.flattened_groups()
 
     def get_max_graph_id(self) -> int:
-
         return self.root_group.get_max_graph_id()
 
     def get_max_node_id(self) -> int:
-
         return self.root_group.get_max_node_id()
 
     def get_node_by_id(self, node_id: int) -> Node:
-
         return self.root_group.get_node_by_id(node_id)
 
     @staticmethod
     def from_path(file_path: str) -> "Skeleton":
-
         with open(file_path, "rb") as file_handle:
             return Skeleton.from_nml(wknml.parse_nml(file_handle))
 
@@ -338,7 +320,6 @@ class Skeleton:
         groups_by_id = {}
 
         def visit_groups(nml_groups: List[NmlGroup], current_group: Group) -> None:
-
             for nml_group in nml_groups:
                 sub_group = current_group.add_group(
                     name=nml_group.name, _enforced_id=nml_group.id
@@ -416,7 +397,6 @@ class Skeleton:
         return new_graph
 
     def write(self, out_path: str) -> None:
-
         nml = NMLExporter.generate_nml(
             self.root_group,
             self._get_nml_parameters(),
@@ -426,7 +406,6 @@ class Skeleton:
             wknml.write_nml(f, nml)
 
     def _get_nml_parameters(self) -> Dict[str, Any]:
-
         return {
             "name": self.name,
             "scale": self.scale,
