@@ -1,7 +1,7 @@
 import logging
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 import nibabel as nib
 import numpy as np
@@ -13,6 +13,7 @@ from wkcuber.utils import (
     add_distribution_flags,
     add_verbose_flag,
     parse_bounding_box,
+    parse_padding,
     setup_logging,
 )
 
@@ -54,20 +55,11 @@ def create_parser() -> ArgumentParser:
     )
 
     parser.add_argument(
-        "--padded_bbox",
-        help="After reading from --source_bbox in the input file, the data is zero-padded to fit --padded_bbox. --source_bbox must be contained in --padded_bbox. Format is: x,y,z,width,height,depth"
-        "x,y,z is the offset of the wkw layer into the final bounding box; "
-        "width,height,depth corresponds to final dimensions",
+        "--padding",
+        help="After reading from --source_bbox in the input file, the data is zero-padded according to padding."
+             "Format is left_pad_x,left_pad_y,left_pad_z,right_pad_x,right_pad_y,right_pad_z",
         default=None,
-        type=parse_bounding_box,
-    )
-
-    parser.add_argument(
-        "--cropping_bbox",
-        help="After reading (and potentially padding) the input data, the output is cropped according to --cropping_bbox. --cropping_bbox must be contained in --padded_bbox"
-        "Format is: x,y,z,width,height,depth",
-        default=None,
-        type=parse_bounding_box,
+        type=parse_padding,
     )
 
     add_verbose_flag(parser)
@@ -83,8 +75,7 @@ def export_layer_to_nifti(
     layer_name: str,
     destination_path: Path,
     name: str,
-    padded_bbox: Optional[BoundingBox] = None,
-    cropping_bbox: Optional[BoundingBox] = None,
+    padding: Optional[Tuple[int, ...]] = None,
 ) -> None:
     dataset = Dataset(wkw_file_path)
     layer = dataset.get_layer(layer_name)
@@ -102,51 +93,18 @@ def export_layer_to_nifti(
         data = data * factor
         data = data.astype(np.dtype("uint8"))
 
-    if padded_bbox:
-        data_bbox_relative_to_pad_bbox = BoundingBox(
-            padded_bbox.topleft, data.shape[:3]
-        )
-        pad_bbox_as_origin = BoundingBox((0, 0, 0), padded_bbox.size)
+    if padding:
+        assert len(padding) == 6, "padding needs 6 values"
 
-        assert pad_bbox_as_origin.contains_bbox(
-            data_bbox_relative_to_pad_bbox
-        ), "padded_bbox should contain source_bbox"
-
-        padding_per_axis = []
-
-        for i in range(3):
-            if padded_bbox.size[i] == data.shape[i]:
-                padding_per_axis.append((0, 0))
-            else:
-                left_pad = data_bbox_relative_to_pad_bbox.topleft[i]
-                right_pad = (
-                    pad_bbox_as_origin.size[i]
-                    - data_bbox_relative_to_pad_bbox.bottomright[i]
-                )
-                padding_per_axis.append((left_pad, right_pad))
-
+        padding_per_axis = list(zip(padding[:3], padding[3:]))
         padding_per_axis.append((0, 0))
         data = np.pad(data, padding_per_axis, mode="constant", constant_values=0)
-
-        if cropping_bbox is not None:
-            assert pad_bbox_as_origin.contains_bbox(
-                cropping_bbox
-            ), "padded_bbox should contain cropping_bbox"
-
-            logging.info(f"Using Bounding Box {cropping_bbox}")
-
-            data = data[
-                cropping_bbox.topleft[0] : cropping_bbox.bottomright[0],
-                cropping_bbox.topleft[1] : cropping_bbox.bottomright[1],
-                cropping_bbox.topleft[2] : cropping_bbox.bottomright[2],
-            ]
 
     img = nib.Nifti1Image(data, np.eye(4))
 
     destination_file = str(destination_path.joinpath(name + ".nii"))
 
     logging.info(f"Writing to {destination_file} with shape {data.shape}")
-
     nib.save(img, destination_file)
 
 
@@ -156,8 +114,7 @@ def export_nifti(
     mag: Mag,
     destination_path: Path,
     name: str,
-    padded_bbox: Optional[BoundingBox] = None,
-    cropping_bbox: Optional[BoundingBox] = None,
+    padding: Optional[Tuple[int, ...]] = None,
 ) -> None:
     dataset = Dataset(wkw_file_path)
 
@@ -171,8 +128,7 @@ def export_nifti(
             layer_name,
             destination_path,
             name + "_" + layer_name,
-            padded_bbox,
-            cropping_bbox,
+            padding,
         )
 
 
@@ -186,8 +142,7 @@ def export_wkw_as_nifti(args: Namespace) -> None:
         mag=Mag(args.mag),
         destination_path=Path(args.destination_path),
         name=args.name,
-        padded_bbox=args.padded_bbox,
-        cropping_bbox=args.cropping_bbox,
+        padding=args.padding,
     )
 
 
