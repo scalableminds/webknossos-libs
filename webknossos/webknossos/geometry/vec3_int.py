@@ -112,6 +112,10 @@ class Vec3Int(tuple):
     def ones(cls) -> "Vec3Int":
         return cls(1, 1, 1)
 
+    @classmethod
+    def full(cls, an_int: int) -> "Vec3Int":
+        return cls(an_int, an_int, an_int)
+
 
 Vec3IntLike = Union[
     Vec3Int, Tuple[int, int, int], Tuple[int, ...], np.ndarray, List[int]
