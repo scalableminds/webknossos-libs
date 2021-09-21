@@ -1,12 +1,12 @@
 import re
 from functools import total_ordering
 from math import log2
-from typing import Any, List, Optional, Tuple
+from typing import Any, List, Optional, Tuple, cast
 
 import attr
 import numpy as np
 
-from .vec3_int import Vec3Int
+from .vec3_int import Vec3Int, Vec3IntLike
 
 
 def import_mag(mag_like: Any) -> Vec3Int:
@@ -17,7 +17,7 @@ def import_mag(mag_like: Any) -> Vec3Int:
     elif isinstance(mag_like, Vec3Int):
         as_vec3_int = mag_like
     elif isinstance(mag_like, list) or isinstance(mag_like, tuple):
-        as_vec3_int = Vec3Int(mag_like)
+        as_vec3_int = Vec3Int(cast(Vec3IntLike, mag_like))
     elif isinstance(mag_like, str):
         if re.match(r"^\d+$", mag_like) is not None:
             as_vec3_int = Vec3Int(int(mag_like), int(mag_like), int(mag_like))

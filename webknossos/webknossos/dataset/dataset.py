@@ -13,7 +13,7 @@ import attr
 import numpy as np
 import wkw
 
-from webknossos.geometry import BoundingBox
+from webknossos.geometry import BoundingBox, Vec3Int
 from webknossos.utils import get_executor_for_args
 
 from .layer import (
@@ -521,12 +521,9 @@ class Dataset:
 
                     # The bounding box needs to be updated manually because chunked views do not have a reference to the dataset itself
                     # The base view of a MagDataset always starts at (0, 0, 0)
-                    target_mag._global_offset = (0, 0, 0)
-                    target_mag._size = cast(
-                        Tuple[int, int, int],
-                        tuple(
-                            bbox.align_with_mag(mag, ceil=True).in_mag(mag).bottomright
-                        ),
+                    target_mag._global_offset = Vec3Int(0, 0, 0)
+                    target_mag._size = (
+                        bbox.align_with_mag(mag, ceil=True).in_mag(mag).bottomright
                     )
                     target_mag.layer.bounding_box = bbox
 

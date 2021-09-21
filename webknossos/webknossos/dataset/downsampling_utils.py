@@ -2,13 +2,13 @@ import logging
 import math
 from enum import Enum
 from itertools import product
-from typing import Callable, List, Optional, Tuple, Union, cast
+from typing import Callable, List, Optional, Tuple, cast
 
 import numpy as np
 from scipy.ndimage import zoom
 from wkw import wkw
 
-from webknossos.geometry import Mag
+from webknossos.geometry import Mag, Vec3Int, Vec3IntLike
 from webknossos.utils import time_start, time_stop
 
 from .view import View
@@ -31,9 +31,6 @@ class InterpolationModes(Enum):
 
 
 DEFAULT_EDGE_LEN = 256
-
-
-Vec3 = Union[Tuple[int, int, int], np.ndarray]
 
 
 def determine_buffer_edge_len(dataset: wkw.Dataset) -> int:
@@ -88,7 +85,8 @@ def calculate_mags_to_upsample(
     ] + [min_mag]
 
 
-def calculate_default_max_mag(dataset_size: Vec3) -> Mag:
+def calculate_default_max_mag(dataset_size: Vec3IntLike) -> Mag:
+    dataset_size = Vec3Int(dataset_size)
     # The lowest mag should have a size of ~ 100vx**2 per slice
     max_x_y = max(dataset_size[0], dataset_size[1])
     # highest power of 2 larger (or equal) than max_x_y divided by 100

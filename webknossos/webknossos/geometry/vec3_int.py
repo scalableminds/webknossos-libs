@@ -1,5 +1,5 @@
 from operator import add, floordiv, mod, mul, sub
-from typing import Any, Callable, Iterable, List, Optional, Tuple, Union
+from typing import Any, Callable, Iterable, List, Optional, Tuple, Union, cast
 
 import numpy as np
 
@@ -10,11 +10,11 @@ class Vec3Int(tuple):
         vec: Union[int, "Vec3IntLike"],
         y: Optional[int] = None,
         z: Optional[int] = None,
-    ):
+    ) -> "Vec3Int":
         if isinstance(vec, Vec3Int):
             return vec
 
-        as_tuple: Optional[Tuple[int]] = None
+        as_tuple: Optional[Tuple[int, int, int]] = None
         value_error = "Vector components must be three integers or a Vec3IntLike object"
 
         if isinstance(vec, int):
@@ -28,10 +28,11 @@ class Vec3Int(tuple):
                     3,
                 ), f"Numpy array for Vec3Int must have shape (3,), got {vec.shape}."
             if isinstance(vec, Iterable):
-                as_tuple = tuple(int(item) for item in vec)
+                assert len(vec) == 3, value_error
+                as_tuple = cast(Tuple[int, int, int], tuple(int(item) for item in vec))
         assert as_tuple is not None and len(as_tuple) == 3, value_error
 
-        return super().__new__(cls, as_tuple)
+        return super().__new__(cls, cast(Iterable, as_tuple))
 
     @property
     def x(self) -> int:
@@ -54,6 +55,9 @@ class Vec3Int(tuple):
     def to_tuple(self) -> Tuple[int, int, int]:
         return self.x, self.y, self.z
 
+    def contains(self, needle: int) -> bool:
+        return self.x == needle or self.y == needle or self.z == needle
+
     def _element_wise(
         self, other: Union[int, "Vec3IntLike"], fn: Callable[[int, Any], int]
     ) -> "Vec3Int":
@@ -69,7 +73,8 @@ class Vec3Int(tuple):
             )
         )
 
-    def __add__(self, other: Union[int, "Vec3IntLike"]) -> "Vec3Int":
+    # note: (arguments incompatible with superclass, do not add Vec3Int to plain tuple! Hence the type:ignore)
+    def __add__(self, other: Union[int, "Vec3IntLike"]) -> "Vec3Int":  # type: ignore[override]
         return self._element_wise(other, add)
 
     def __sub__(self, other: Union[int, "Vec3IntLike"]) -> "Vec3Int":
@@ -108,4 +113,6 @@ class Vec3Int(tuple):
         return cls(1, 1, 1)
 
 
-Vec3IntLike = Union[Vec3Int, Tuple[int, int, int], np.ndarray, List[int]]
+Vec3IntLike = Union[
+    Vec3Int, Tuple[int, int, int], Tuple[int, ...], np.ndarray, List[int]
+]

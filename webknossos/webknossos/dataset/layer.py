@@ -11,7 +11,7 @@ from os import makedirs
 from os.path import join
 from pathlib import Path
 from shutil import rmtree
-from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union, cast
+from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 from wkw import wkw
@@ -468,13 +468,10 @@ class Layer:
         self._properties.bounding_box = bbox
 
         for mag, mag_view in self.mags.items():
-            mag_view._size = cast(
-                Tuple[int, int, int],
-                tuple(
-                    self._properties.bounding_box.align_with_mag(mag, ceil=True)
-                    .in_mag(mag)
-                    .bottomright
-                ),
+            mag_view._size = (
+                self._properties.bounding_box.align_with_mag(mag, ceil=True)
+                .in_mag(mag)
+                .bottomright
             )
         self.dataset._export_as_json()
 
