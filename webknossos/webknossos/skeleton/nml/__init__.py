@@ -192,9 +192,11 @@ class NML(NamedTuple):
     volume: Optional[Volume] = None
 
 
-def __parse_user_bounding_boxes(nml_parameters: Element) -> List[IntVector6]:
+def __parse_user_bounding_boxes(nml_parameters: Element) -> Optional[List[IntVector6]]:
     # ToDo support color, id, name, isVisible attributes pylint: disable=fixme
     # https://github.com/scalableminds/wknml/issues/46
+    if nml_parameters.find("userBoundingBox") is None:
+        return None
     bb_elements = nml_parameters.findall("userBoundingBox")
     return [__parse_bounding_box(bb_element) for bb_element in bb_elements]
 
@@ -249,7 +251,7 @@ def __parse_parameters(nml_parameters: Element) -> NMLParameters:
     if nml_parameters.find("time") is not None:
         time = int(enforce_not_null(nml_parameters.find("time")).get("ms", 0))
 
-    zoomLevel = 0
+    zoomLevel = None
     if nml_parameters.find("zoomLevel") is not None:
         zoomLevel = int(
             enforce_not_null(nml_parameters.find("zoomLevel")).get("zoom", 0)

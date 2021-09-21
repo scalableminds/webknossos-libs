@@ -1,6 +1,7 @@
 import difflib
-from os import PathLike
+from os import PathLike, name
 from pathlib import Path
+from typing import List
 
 import pytest
 
@@ -90,28 +91,34 @@ def test_skeleton_creation() -> None:
 
     groups = list(nml.flattened_groups())
     assert len(groups) == 2
-    grand_child = next(groups[0].children)
-    assert isinstance(grand_child, skeleton.Graph)
-    assert grand_child.group_id == groups[0].id
+    grand_children = [
+        grand_child
+        for grand_child in groups[0].children
+        if isinstance(grand_child, skeleton.Graph)
+    ]
+    assert len(grand_children) == 1
+    assert grand_children[0].group == groups[0]
+
+
+def diff_lines(lines_a: List[str], lines_b: List[str]) -> List[str]:
+    diff = list(
+        difflib.unified_diff(
+            lines_a,
+            lines_b,
+            fromfile="a",
+            tofile="b",
+        )
+    )
+    return diff
 
 
 def diff_files(path_a: PathLike, path_b: PathLike) -> None:
     with open(path_a, "r") as file_a:
         with open(path_b, "r") as file_b:
-            diff = list(
-                difflib.unified_diff(
-                    file_a.readlines(),
-                    file_b.readlines(),
-                    fromfile="file_a",
-                    tofile="file_b",
-                )
-            )
-            if len(diff) > 0:
-                print("####################")
-                for line in diff:
-                    print(line)
-                print("####################")
-            assert len(diff) == 0, f"Files {path_a} and {path_b} are not equal: {diff}"
+            diff = diff_lines(file_a.readlines(), file_b.readlines())
+            assert (
+                len(diff) == 0
+            ), f"Files {path_a} and {path_b} are not equal:\n{''.join(diff)}"
 
 
 def test_export_to_nml(tmp_path: Path) -> None:
@@ -122,6 +129,88 @@ def test_export_to_nml(tmp_path: Path) -> None:
     snapshot_path = TESTDATA_DIR / "nmls" / "generated_snapshot.nml"
 
     diff_files(output_path, snapshot_path)
+
+
+def test_simple_initialization_and_representations(tmp_path: Path) -> None:
+    nml = skeleton.Skeleton(name="my_skeleton", scale=(0.5, 0.5, 0.5), time=12345)
+    nml_path = tmp_path / "my_skeleton.nml"
+    EXPECTED_NML = """<?xml version="1.0" encoding="utf-8"?>
+<things>
+  <parameters>
+    <experiment name="my_skeleton" />
+    <scale x="0.5" y="0.5" z="0.5" />
+    <time ms="12345" />
+  </parameters>
+  <branchpoints />
+  <comments />
+  <groups />
+</things>
+"""
+    nml.write(nml_path)
+    with open(nml_path, "r") as f:
+        diff = diff_lines(f.readlines(), EXPECTED_NML.splitlines(keepends=True))
+        assert (
+            len(diff) == 0
+        ), f"Written nml does not look as expected:\n{''.join(diff)}"
+    assert nml == skeleton.open_nml(nml_path)
+    assert str(nml) == (
+        "Skeleton(name='my_skeleton', _children=<No children>, scale=(0.5, 0.5, 0.5), offset=None, time=12345, "
+        + "edit_position=None, edit_rotation=None, zoom_level=None, task_bounding_box=None, user_bounding_boxes=None)"
+    )
+
+    my_group = nml.add_group("my_group")
+    my_group.add_graph("my_tree", color=(0.1, 0.2, 0.3), _enforced_id=9).add_node(
+        (2, 4, 6)
+    )
+    my_group.add_graph("my_other_tree", color=(0.1, 0.2, 0.3))
+    nml.add_graph("top_level_tree", color=(0.1, 0.2, 0.3))
+
+    EXPECTED_EXTENDED_NML = """<?xml version="1.0" encoding="utf-8"?>
+<things>
+  <parameters>
+    <experiment name="my_skeleton" />
+    <scale x="0.5" y="0.5" z="0.5" />
+    <time ms="12345" />
+  </parameters>
+  <thing color.a="1.0" color.b="0.3" color.g="0.2" color.r="0.1" groupId="1" id="3" name="my_other_tree">
+    <nodes />
+    <edges />
+  </thing>
+  <thing color.a="1.0" color.b="0.3" color.g="0.2" color.r="0.1" id="4" name="top_level_tree">
+    <nodes />
+    <edges />
+  </thing>
+  <thing color.a="1.0" color.b="0.3" color.g="0.2" color.r="0.1" groupId="1" id="9" name="my_tree">
+    <nodes>
+      <node id="2" x="2.0" y="4.0" z="6.0" />
+    </nodes>
+    <edges />
+  </thing>
+  <branchpoints />
+  <comments />
+  <groups>
+    <group id="1" name="my_group" />
+  </groups>
+</things>
+"""
+    nml.write(nml_path)
+    with open(nml_path, "r") as f:
+        diff = diff_lines(
+            f.readlines(), EXPECTED_EXTENDED_NML.splitlines(keepends=True)
+        )
+        assert (
+            len(diff) == 0
+        ), f"Written nml does not look as expected:\n{''.join(diff)}"
+    assert nml == skeleton.open_nml(nml_path)
+    assert str(nml) == (
+        "Skeleton(name='my_skeleton', _children=<2 children>, scale=(0.5, 0.5, 0.5), offset=None, time=12345, "
+        + "edit_position=None, edit_rotation=None, zoom_level=None, task_bounding_box=None, user_bounding_boxes=None)"
+    )
+    assert str(my_group) == "Group(_id=1, name='my_group', _children=<2 children>)"
+    assert (
+        str(nml.get_graph_by_id(9))
+        == "Graph(name='my_tree', _id=9, nx_graph=<n=1,e=0>, color=(0.1, 0.2, 0.3, 1.0))"
+    )
 
 
 def test_import_export_round_trip(tmp_path: Path) -> None:

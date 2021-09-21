@@ -1,6 +1,3 @@
-import calendar
-from datetime import datetime
-
 import pytest
 
 from webknossos.client import _get_generated_client
@@ -17,12 +14,7 @@ from webknossos.client.generated.models.datastore_list_response_200_item import 
     DatastoreListResponse200Item,
 )
 from webknossos.client.generated.types import Unset
-
-
-def time_since_epoch_in_ms() -> int:
-    d = datetime.utcnow()
-    unixtime = calendar.timegm(d.utctimetuple())
-    return unixtime * 1000
+from webknossos.utils import time_since_epoch_in_ms
 
 
 @pytest.fixture

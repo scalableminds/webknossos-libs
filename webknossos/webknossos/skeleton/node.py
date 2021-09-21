@@ -11,7 +11,7 @@ Vector3 = Tuple[float, float, float]
 @attr.define()
 class Node:
     position: Vector3
-    _nml: "Skeleton"
+    _nml: "Skeleton" = attr.ib(eq=False, repr=False)
     _id: int = attr.ib(init=False)
     comment: Optional[str] = None
     radius: Optional[float] = None
@@ -24,7 +24,7 @@ class Node:
 
     is_branchpoint: bool = False
     branchpoint_time: Optional[int] = None
-    _enforced_id: Optional[int] = None
+    _enforced_id: Optional[int] = attr.ib(None, eq=False, repr=False)
 
     def __attrs_post_init__(self) -> None:
         if self._enforced_id is not None:
@@ -34,4 +34,7 @@ class Node:
 
     @property
     def id(self) -> int:
+        return self._id
+
+    def __hash__(self) -> int:
         return self._id

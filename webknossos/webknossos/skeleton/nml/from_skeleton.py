@@ -91,7 +91,7 @@ def from_skeleton(
                 edges=edges,
                 id=graph.id,
                 name=name,
-                groupId=graph.group_id if graph.group_id != group.id else None,
+                groupId=graph.group.id if graph.group != group else None,
                 color=color,
             )
         )

@@ -32,15 +32,15 @@ def to_skeleton(nml: wknml.NML) -> "Skeleton":
             groups_by_id[sub_group.id] = sub_group
             visit_groups(nml_group.children, sub_group)
 
-    visit_groups(nml.groups, skeleton.root_group)
+    visit_groups(nml.groups, skeleton)
     for nml_tree in nml.trees:
         if nml_tree.groupId is None:
-            new_graph = skeleton.root_group.add_graph(
-                nml_tree.name, _enforced_id=nml_tree.id
+            new_graph = skeleton.add_graph(
+                nml_tree.name, _enforced_id=nml_tree.id, color=nml_tree.color
             )
         else:
             new_graph = groups_by_id[nml_tree.groupId].add_graph(
-                nml_tree.name, _enforced_id=nml_tree.id
+                nml_tree.name, _enforced_id=nml_tree.id, color=nml_tree.color
             )
         _nml_tree_to_graph(new_graph, nml_tree)
 
@@ -71,10 +71,6 @@ def _nml_tree_to_graph(
         "interpolation",
         "time",
     ]
-
-    new_graph.color = nml_tree.color
-    new_graph.name = nml_tree.name
-    new_graph.group_id = nml_tree.groupId
 
     for nml_node in nml_tree.nodes:
         node_id = nml_node.id

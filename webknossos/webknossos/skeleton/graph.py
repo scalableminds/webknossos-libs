@@ -7,27 +7,32 @@ import numpy as np
 from .node import Node
 
 if TYPE_CHECKING:
-    from webknossos.skeleton import Skeleton
-
+    from webknossos.skeleton import Group, Skeleton
 
 Vector3 = Tuple[float, float, float]
 Vector4 = Tuple[float, float, float, float]
 
 
-@attr.define()
+@attr.define(kw_only=True)
 class Graph:
     """
     Contains a collection of nodes and edges.
     """
 
     name: str
-    _nml: "Skeleton"
-    color: Optional[Vector4] = None
+    group: "Group" = attr.ib(eq=False, repr=False)
+    _nml: "Skeleton" = attr.ib(eq=False, repr=False)
     _id: int = attr.ib(init=False)
-    nx_graph: nx.Graph = attr.ib(init=False)
-    group_id: Optional[int] = None
-
-    _enforced_id: Optional[int] = None
+    nx_graph: nx.Graph = attr.ib(
+        init=False,
+        repr=lambda nx_graph: f"<n={len(nx_graph.nodes)},e={len(nx_graph.edges)}>",
+        eq=lambda nx_graph: (
+            sorted(nx_graph.nodes(data="obj")),
+            sorted(nx_graph.edges),
+        ),
+    )
+    color: Optional[Vector4] = None
+    _enforced_id: Optional[int] = attr.ib(None, eq=False, repr=False)
 
     def __attrs_post_init__(self) -> None:
         self.nx_graph = nx.Graph()
@@ -93,3 +98,6 @@ class Graph:
 
     def get_max_node_id(self) -> int:
         return max((node.id for node in self.get_nodes()), default=0)
+
+    def __hash__(self) -> int:
+        return self._id

@@ -1,10 +1,12 @@
 import argparse
+import calendar
 import functools
 import json
 import logging
 import time
 from concurrent.futures import as_completed
 from concurrent.futures._base import Future
+from datetime import datetime
 from multiprocessing import cpu_count
 from typing import Any, Callable, List, Optional, Union
 
@@ -90,3 +92,9 @@ def wait_and_ensure_success(futures: List[Future]) -> None:
 def snake_to_camel_case(snake_case_name: str) -> str:
     parts = snake_case_name.split("_")
     return parts[0] + "".join(part.title() for part in parts[1:])
+
+
+def time_since_epoch_in_ms() -> int:
+    d = datetime.utcnow()
+    unixtime = calendar.timegm(d.utctimetuple())
+    return unixtime * 1000
