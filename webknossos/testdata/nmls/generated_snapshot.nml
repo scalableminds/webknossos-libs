@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<things>
+  <parameters>
+    <experiment name="My NML" />
+    <scale x="11.0" y="11.0" z="25.0" />
+    <offset x="1.0" y="1.0" z="1.0" />
+    <time ms="1337" />
+    <editPosition x="3.0" y="6.0" z="0.0" />
+    <editRotation xRot="4.0" yRot="2.0" zRot="0.0" />
+    <zoomLevel zoom="100" />
+  </parameters>
+  <thing color.a="1.0" color.b="0.13373766240135082" color.g="0.09300433970039235" color.r="0.9988844805996959" id="1" name="A WkGraph">
+    <nodes>
+      <node id="2" inMag="0" x="0.0" y="1.0" z="2.0" />
+      <node id="3" x="3.0" y="1.0" z="2.0" />
+      <node id="4" x="4.0" y="1.0" z="2.0" />
+    </nodes>
+    <edges>
+      <edge source="2" target="3" />
+      <edge source="2" target="4" />
+    </edges>
+  </thing>
+  <thing color.a="1.0" color.b="0.6720369436532944" color.g="0.0037728487955197565" color.r="0.9340851110768926" groupId="5" id="6" name="Graph in Group">
+    <nodes>
+      <node id="7" x="10.0" y="3.0" z="4.0" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing color.a="1.0" color.b="0.7224589094338263" color.g="0.20806732150346996" color.r="0.45167026054501613" groupId="8" id="9" name="Graph in nested group">
+    <nodes />
+    <edges />
+  </thing>
+  <branchpoints>
+    <branchpoint id="2" />
+  </branchpoints>
+  <comments>
+    <comment content="A comment 1" node="2" />
+    <comment content="A comment 2" node="3" />
+    <comment content="A comment 3" node="4" />
+  </comments>
+  <groups>
+    <group id="5" name="Example Group">
+      <group id="8" name="Nested Group" />
+    </group>
+  </groups>
+</things>

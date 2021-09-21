@@ -39,6 +39,20 @@ typing-extensions = {version = ">=3.7.4", markers = "python_version < \"3.8\""}
 wrapt = ">=1.11,<1.13"
 
 [[package]]
+name = "asttokens"
+version = "2.0.5"
+description = "Annotate AST trees with source code positions"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+six = "*"
+
+[package.extras]
+test = ["astroid", "pytest"]
+
+[[package]]
 name = "atomicwrites"
 version = "1.4.0"
 description = "Atomic file writes."
@@ -94,6 +108,14 @@ colorama = ["colorama (>=0.4.3)"]
 d = ["aiohttp (>=3.6.0)", "aiohttp-cors (>=0.4.0)"]
 python2 = ["typed-ast (>=1.4.2)"]
 uvloop = ["uvloop (>=0.15.2)"]
+
+[[package]]
+name = "boltons"
+version = "21.0.0"
+description = "When they're not builtins, they're boltons."
+category = "main"
+optional = false
+python-versions = "*"
 
 [[package]]
 name = "cattrs"
@@ -183,6 +205,14 @@ python-versions = "*"
 six = "*"
 
 [[package]]
+name = "executing"
+version = "0.8.0"
+description = "Get the currently executing AST node of a frame, and other information"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "h11"
 version = "0.12.0"
 description = "A pure-Python, bring-your-own-I/O implementation of HTTP/1.1"
@@ -223,6 +253,20 @@ sniffio = "*"
 [package.extras]
 brotli = ["brotlicffi (>=1.0.0,<2.0.0)"]
 http2 = ["h2 (>=3.0.0,<4.0.0)"]
+
+[[package]]
+name = "icecream"
+version = "2.1.1"
+description = "Never use print() to debug again; inspect variables, expressions, and program execution with a single, simple function call."
+category = "dev"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+asttokens = ">=2.0.1"
+colorama = ">=0.3.9"
+executing = ">=0.3.1"
+pygments = ">=2.2.0"
 
 [[package]]
 name = "idna"
@@ -358,6 +402,14 @@ description = "A fast and thorough lazy object proxy."
 category = "dev"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*"
+
+[[package]]
+name = "loxun"
+version = "2.0"
+description = "large output in XML using unicode and namespaces"
+category = "main"
+optional = false
+python-versions = "*"
 
 [[package]]
 name = "markupsafe"
@@ -882,7 +934,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "6ab536c5886d12ca78a01a1bcf13c370da2b151386df947acbde7ec961d8c8e3"
+content-hash = "d218dae44f0344d28ce803b209eba66ee2bceb2ef95ddbde2483e46ae3911d3d"
 
 [metadata.files]
 anyio = [
@@ -896,6 +948,10 @@ appdirs = [
 astroid = [
     {file = "astroid-2.7.2-py3-none-any.whl", hash = "sha256:ecc50f9b3803ebf8ea19aa2c6df5622d8a5c31456a53c741d3be044d96ff0948"},
     {file = "astroid-2.7.2.tar.gz", hash = "sha256:b6c2d75cd7c2982d09e7d41d70213e863b3ba34d3bd4014e08f167cee966e99e"},
+]
+asttokens = [
+    {file = "asttokens-2.0.5-py2.py3-none-any.whl", hash = "sha256:0844691e88552595a6f4a4281a9f7f79b8dd45ca4ccea82e5e05b4bbdb76705c"},
+    {file = "asttokens-2.0.5.tar.gz", hash = "sha256:9a54c114f02c7a9480d56550932546a3f1fe71d8a02f1bc7ccd0ee3ee35cf4d5"},
 ]
 atomicwrites = [
     {file = "atomicwrites-1.4.0-py2.py3-none-any.whl", hash = "sha256:6d1784dea7c0c8d4a5172b6c620f40b6e4cbfdf96d783691f2e1302a7b88e197"},
@@ -911,6 +967,10 @@ autoflake = [
 black = [
     {file = "black-21.7b0-py3-none-any.whl", hash = "sha256:1c7aa6ada8ee864db745b22790a32f94b2795c253a75d6d9b5e439ff10d23116"},
     {file = "black-21.7b0.tar.gz", hash = "sha256:c8373c6491de9362e39271630b65b964607bc5c79c83783547d76c839b3aa219"},
+]
+boltons = [
+    {file = "boltons-21.0.0-py2.py3-none-any.whl", hash = "sha256:b9bb7b58b2b420bbe11a6025fdef6d3e5edc9f76a42fb467afe7ca212ef9948b"},
+    {file = "boltons-21.0.0.tar.gz", hash = "sha256:65e70a79a731a7fe6e98592ecfb5ccf2115873d01dbc576079874629e5c90f13"},
 ]
 cattrs = [
     {file = "cattrs-1.7.1-py3-none-any.whl", hash = "sha256:d69bd4a3239e189f0740c3c41178dd0f00e4eac3bcb806937e49942fa83adfee"},
@@ -990,6 +1050,10 @@ cycler = [
     {file = "cycler-0.10.0-py2.py3-none-any.whl", hash = "sha256:1d8a5ae1ff6c5cf9b93e8811e581232ad8920aeec647c37316ceac982b08cb2d"},
     {file = "cycler-0.10.0.tar.gz", hash = "sha256:cd7b2d1018258d7247a71425e9f26463dfb444d411c39569972f4ce586b0c9d8"},
 ]
+executing = [
+    {file = "executing-0.8.0-py2.py3-none-any.whl", hash = "sha256:7ef8637519b0c01b69c4a1785a0d13dcc2cf9f0d078804268887edad2b4f26d1"},
+    {file = "executing-0.8.0.tar.gz", hash = "sha256:77ed91874d321338865ea2bf7337636a5de8e9a7f8323527d29c4fad2a1b48f7"},
+]
 h11 = [
     {file = "h11-0.12.0-py3-none-any.whl", hash = "sha256:36a3cb8c0a032f56e2da7084577878a035d3b61d104230d4bd49c0c6b555a9c6"},
     {file = "h11-0.12.0.tar.gz", hash = "sha256:47222cb6067e4a307d535814917cd98fd0a57b6788ce715755fa2b6c28b56042"},
@@ -1001,6 +1065,10 @@ httpcore = [
 httpx = [
     {file = "httpx-0.18.2-py3-none-any.whl", hash = "sha256:979afafecb7d22a1d10340bafb403cf2cb75aff214426ff206521fc79d26408c"},
     {file = "httpx-0.18.2.tar.gz", hash = "sha256:9f99c15d33642d38bce8405df088c1c4cfd940284b4290cacbfb02e64f4877c6"},
+]
+icecream = [
+    {file = "icecream-2.1.1-py2.py3-none-any.whl", hash = "sha256:adc1c48f5a4f83b2171c774a35142f217d317a84fca8cdf3fc65aa1321ff26b6"},
+    {file = "icecream-2.1.1.tar.gz", hash = "sha256:47e00e3f4e8477996e7dc420b6fa8ba53f8ced17de65320fedb5b15997b76589"},
 ]
 idna = [
     {file = "idna-3.2-py3-none-any.whl", hash = "sha256:14475042e284991034cb48e06f6851428fb14c4dc953acd9be9a5e95c7b6dd7a"},
@@ -1107,6 +1175,9 @@ lazy-object-proxy = [
     {file = "lazy_object_proxy-1.6.0-cp39-cp39-manylinux2014_aarch64.whl", hash = "sha256:9698110e36e2df951c7c36b6729e96429c9c32b3331989ef19976592c5f3c77a"},
     {file = "lazy_object_proxy-1.6.0-cp39-cp39-win32.whl", hash = "sha256:1fee665d2638491f4d6e55bd483e15ef21f6c8c2095f235fef72601021e64f61"},
     {file = "lazy_object_proxy-1.6.0-cp39-cp39-win_amd64.whl", hash = "sha256:f5144c75445ae3ca2057faac03fda5a902eff196702b0a24daf1d6ce0650514b"},
+]
+loxun = [
+    {file = "loxun-2.0.zip", hash = "sha256:9f90d4aa3ff21946555492132a1e51e284a6aab2ed6d2ded7d85d82826c1e5e7"},
 ]
 markupsafe = [
     {file = "MarkupSafe-2.0.1-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:f9081981fe268bd86831e5c75f7de206ef275defcb82bc70740ae6dc507aee51"},
