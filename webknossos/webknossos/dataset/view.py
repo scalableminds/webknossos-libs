@@ -296,7 +296,9 @@ class View:
         self,
         work_on_chunk: Callable[[Tuple["View", int]], None],
         chunk_size: Tuple[int, int, int],
-        executor: Union[ClusterExecutor, cluster_tools.WrappedProcessPoolExecutor],
+        executor: Optional[
+            Union[ClusterExecutor, cluster_tools.WrappedProcessPoolExecutor]
+        ] = None,
     ) -> None:
         """
         The view is chunked into multiple sub-views of size `chunk_size`.
@@ -320,13 +322,11 @@ class View:
         # ...
         # let 'mag1' be a `MagView`
         view = mag1.get_view()
-        with get_executor_for_args(None) as executor:
-            func = named_partial(advanced_chunk_job, some_parameter=42)
-            view.for_each_chunk(
-                func,
-                chunk_size=(100, 100, 100),  # Use mag1._get_file_dimensions() if the size of the chunks should match the size of the files on disk
-                executor=executor,
-            )
+        func = named_partial(some_work, some_parameter=42)
+        view.for_each_chunk(
+            func,
+            chunk_size=(100, 100, 100),  # Use mag1._get_file_dimensions() if the size of the chunks should match the size of the files on disk
+        )
         ```
         """
 
@@ -354,7 +354,11 @@ class View:
             job_args.append((chunk_view, i))
 
         # execute the work for each chunk
-        wait_and_ensure_success(executor.map_to_futures(work_on_chunk, job_args))
+        if executor is None:
+            for args in job_args:
+                work_on_chunk(args)
+        else:
+            wait_and_ensure_success(executor.map_to_futures(work_on_chunk, job_args))
 
     def for_zipped_chunks(
         self,
@@ -362,7 +366,9 @@ class View:
         target_view: "View",
         source_chunk_size: Vec3,
         target_chunk_size: Vec3,
-        executor: Union[ClusterExecutor, cluster_tools.WrappedProcessPoolExecutor],
+        executor: Optional[
+            Union[ClusterExecutor, cluster_tools.WrappedProcessPoolExecutor]
+        ] = None,
     ) -> None:
         """
         This method is similar to 'for_each_chunk' in the sense, that it delegates work to smaller chunks.
@@ -439,7 +445,11 @@ class View:
             job_args.append((source_chunk_view, target_chunk_view, i))
 
         # execute the work for each pair of chunks
-        wait_and_ensure_success(executor.map_to_futures(work_on_chunk, job_args))
+        if executor is None:
+            for args in job_args:
+                work_on_chunk(args)
+        else:
+            wait_and_ensure_success(executor.map_to_futures(work_on_chunk, job_args))
 
     def _is_compressed(self) -> bool:
         return (

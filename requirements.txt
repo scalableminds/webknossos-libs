@@ -1,3 +1,2 @@
 dunamai==1.6.0
 poetry==1.1.8
-pdoc==7.4.0
