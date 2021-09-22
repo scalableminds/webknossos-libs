@@ -32,18 +32,22 @@ def test_operator_arithmetic() -> None:
     assert Vec3Int(1, 2, 3) - Vec3Int(4, 5, 6) == Vec3Int(-3, -3, -3)
     assert Vec3Int(1, 2, 3) * Vec3Int(4, 5, 6) == Vec3Int(4, 10, 18)
     assert Vec3Int(4, 5, 6) // Vec3Int(1, 2, 3) == Vec3Int(4, 2, 2)
+    assert Vec3Int(4, 5, 6) % Vec3Int(1, 2, 3) == Vec3Int(0, 1, 0)
 
     # other is scalar int
     assert Vec3Int(1, 2, 3) * 3 == Vec3Int(3, 6, 9)
     assert Vec3Int(1, 2, 3) + 3 == Vec3Int(4, 5, 6)
     assert Vec3Int(1, 2, 3) - 3 == Vec3Int(-2, -1, 0)
     assert Vec3Int(4, 5, 6) // 2 == Vec3Int(2, 2, 3)
+    assert Vec3Int(4, 5, 6) % 3 == Vec3Int(1, 2, 0)
 
     # other is Vec3IntLike (e.g. tuple)
     assert Vec3Int(1, 2, 3) + (4, 5, 6) == Vec3Int(5, 7, 9)
 
     # be wary of the tuple “+” operation:
     assert (1, 2, 3) + Vec3Int(4, 5, 6) == (1, 2, 3, 4, 5, 6)
+
+    assert -Vec3Int(1, 2, 3) == Vec3Int(-1, -2, -3)
 
 
 def test_method_arithmetic() -> None:

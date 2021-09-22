@@ -89,6 +89,9 @@ class Vec3Int(tuple):
     def __mod__(self, other: Union[int, "Vec3IntLike"]) -> "Vec3Int":
         return self._element_wise(other, mod)
 
+    def __neg__(self) -> "Vec3Int":
+        return Vec3Int(-self.x, -self.y, -self.z)
+
     def ceildiv(self, other: Union[int, "Vec3IntLike"]) -> "Vec3Int":
         return (self + other - 1) // other
 
