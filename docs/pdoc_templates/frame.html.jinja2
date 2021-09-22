@@ -1,0 +1,57 @@
+{% defaultmacro toc_members(members, level) %}
+  {% for m in members if is_public(m) | trim %}
+    {% if m.type == "class" %}
+- id: {{ m.qualname }}
+  name: class {{ m.qualname }}
+  level: {{ level }}
+  children: {% if not m.own_members %}[]
+  {% else %}
+
+  {{ toc_members(m.own_members, level+1) | indent(2) }}
+  {% endif %}
+    {% elif m.type == "module" %}
+- id: {{ m.name }}
+  name: module {{ m.name }}
+  level: {{ level }}
+  children: []
+    {% elif m.name == "__init__" %}
+- id: {{ m.qualname }}
+  name: {{ m.qualname.split(".")[-2] }}()
+  level: {{ level }}
+  children: []
+    {% elif m.type == "function" %}
+- id: {{ m.qualname }}
+  name: {{ m.name }}()
+  level: {{ level }}
+  children: []
+    {% elif m.type == "variable" %}
+- id: {{ m.qualname }}
+  name: {{ m.name }}
+  level: {{ level }}
+  children: []
+    {% else %}
+- id: {{ m.qualname }}
+  name: {{ m.type }} {{ m.name }}
+  level: {{ level }}
+  children: []
+    {% endif %}
+  {% endfor %}
+{% enddefaultmacro %}
+---
+title: {{ module.modulename if module else "API Reference" }}
+---
+{% if module %}
+pdoc-toc:
+{{ toc_members(module.members.values(), 2) }}
+  {% if module.submodules %}
+- id: submodules
+  name: Submodules
+  level: 2
+  children: []
+  {% endif %}
+{% endif %}
+---
+<div>
+    {% block body %}{% endblock %}
+    {% block style %}{% endblock %}
+</div>

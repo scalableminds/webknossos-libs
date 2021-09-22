@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<things>
+  <parameters>
+    <experiment name="test_dataset" />
+    <scale x="10.0" y="10.0" z="25.0" />
+    <offset x="1" y="1" z="1" />
+    <time ms="1337" />
+    <editPosition x="3" y="6" z="0" />
+    <editRotation xRot="4" yRot="2" zRot="0" />
+    <zoomLevel zoom="100" />
+  </parameters>
+  <thing color.a="1.0" color.b="0.8" color.g="0.3" color.r="0.4" groupId="1" id="1" name="tree1">
+    <nodes>
+      <node bitDepth="8" id="1" inMag="1" inVp="0" interpolation="True" radius="2.0" rotX="0.2" rotY="0.2" rotZ="0.2" x="0.1" y="0.1" z="0.04" />
+      <node bitDepth="8" id="2" inMag="1" inVp="0" interpolation="True" radius="2.0" rotX="0.2" rotY="0.2" rotZ="0.2" x="0.18" y="0.1" z="0.04" />
+      <node bitDepth="8" id="3" inMag="1" inVp="0" interpolation="True" radius="2.0" rotX="0.2" rotY="0.2" rotZ="0.2" x="0.25" y="0.1" z="0.04" />
+      <node bitDepth="8" id="4" inMag="1" inVp="0" interpolation="True" radius="2.0" rotX="0.2" rotY="0.2" rotZ="0.2" x="0.13" y="0.1" z="0.04" />
+      <node bitDepth="8" id="5" inMag="1" inVp="0" interpolation="True" radius="2.0" rotX="0.2" rotY="0.2" rotZ="0.2" x="0.19" y="0.1" z="0.04" />
+      <node bitDepth="8" id="6" inMag="1" inVp="0" interpolation="True" radius="2.0" rotX="0.2" rotY="0.2" rotZ="0.2" x="0.21" y="0.1" z="0.04" />
+      <node bitDepth="8" id="7" inMag="1" inVp="0" interpolation="True" radius="2.0" rotX="0.2" rotY="0.2" rotZ="0.2" x="0.3" y="0.1" z="0.04" />
+    </nodes>
+    <edges>
+      <edge source="1" target="2" />
+      <edge source="1" target="4" />
+      <edge source="2" target="3" />
+      <edge source="4" target="5" />
+      <edge source="5" target="6" />
+      <edge source="6" target="7" />
+    </edges>
+  </thing>
+  <thing color.a="1.0" color.b="0.8" color.g="0.3" color.r="0.4" groupId="2" id="2" name="tree2">
+    <nodes>
+      <node bitDepth="8" id="8" inMag="1" inVp="0" interpolation="True" radius="2.0" rotX="0.2" rotY="0.2" rotZ="0.2" x="0.1" y="0.1" z="0.04" />
+      <node bitDepth="8" id="9" inMag="1" inVp="0" interpolation="True" radius="2.0" rotX="0.2" rotY="0.2" rotZ="0.2" x="0.18" y="0.1" z="0.04" />
+      <node bitDepth="8" id="10" inMag="1" inVp="0" interpolation="True" radius="2.0" rotX="0.2" rotY="0.2" rotZ="0.2" x="0.25" y="0.1" z="0.04" />
+      <node bitDepth="8" id="11" inMag="1" inVp="0" interpolation="True" radius="2.0" rotX="0.2" rotY="0.2" rotZ="0.2" x="0.13" y="0.1" z="0.04" />
+      <node bitDepth="8" id="12" inMag="1" inVp="0" interpolation="True" radius="2.0" rotX="0.2" rotY="0.2" rotZ="0.2" x="0.19" y="0.1" z="0.04" />
+      <node bitDepth="8" id="13" inMag="1" inVp="0" interpolation="True" radius="2.0" rotX="0.2" rotY="0.2" rotZ="0.2" x="0.21" y="0.1" z="0.04" />
+      <node bitDepth="8" id="14" inMag="1" inVp="0" interpolation="True" radius="2.0" rotX="0.2" rotY="0.2" rotZ="0.2" x="0.3" y="0.1" z="0.04" />
+      <node bitDepth="8" id="22" inMag="1" inVp="0" interpolation="True" radius="2.0" rotX="0.2" rotY="0.2" rotZ="0.2" x="0.18" y="0.1" z="0.04" />
+    </nodes>
+    <edges>
+      <edge source="8" target="9" />
+      <edge source="8" target="10" />
+      <edge source="8" target="22" />
+      <edge source="12" target="11" />
+      <edge source="12" target="13" />
+      <edge source="12" target="14" />
+    </edges>
+  </thing>
+  <thing color.a="1.0" color.b="0.8" color.g="0.3" color.r="0.4" groupId="2" id="3" name="tree3">
+    <nodes>
+      <node bitDepth="8" id="15" inMag="1" inVp="0" interpolation="True" radius="2.0" rotX="0.2" rotY="0.2" rotZ="0.2" x="0.1" y="0.1" z="0.04" />
+      <node bitDepth="8" id="16" inMag="1" inVp="0" interpolation="True" radius="2.0" rotX="0.2" rotY="0.2" rotZ="0.2" x="0.12" y="0.12" z="0.04" />
+      <node bitDepth="8" id="17" inMag="1" inVp="0" interpolation="True" radius="2.0" rotX="0.2" rotY="0.2" rotZ="0.2" x="0.13" y="0.13" z="0.04" />
+      <node bitDepth="8" id="18" inMag="1" inVp="0" interpolation="True" radius="2.0" rotX="0.2" rotY="0.2" rotZ="0.2" x="0.13" y="0.1" z="0.04" />
+      <node bitDepth="8" id="19" inMag="1" inVp="0" interpolation="True" radius="2.0" rotX="0.2" rotY="0.2" rotZ="0.2" x="0.13" y="0.13" z="0.04" />
+      <node bitDepth="8" id="20" inMag="1" inVp="0" interpolation="True" radius="2.0" rotX="0.2" rotY="0.2" rotZ="0.2" x="0.13" y="0.13" z="0.052" />
+      <node bitDepth="8" id="21" inMag="1" inVp="0" interpolation="True" radius="2.0" rotX="0.2" rotY="0.2" rotZ="0.2" x="0.19" y="0.13" z="0.052" />
+    </nodes>
+    <edges>
+      <edge source="15" target="16" />
+      <edge source="15" target="18" />
+      <edge source="16" target="17" />
+      <edge source="18" target="19" />
+      <edge source="19" target="20" />
+      <edge source="20" target="21" />
+    </edges>
+  </thing>
+  <branchpoints>
+    <branchpoint id="1" time="129" />
+    <branchpoint id="2" time="42" />
+    <branchpoint id="4" time="1337" />
+  </branchpoints>
+  <comments>
+    <comment content="test" node="1" />
+    <comment content="hax0r" node="2" />
+    <comment content="admin admin" node="4" />
+  </comments>
+  <groups>
+    <group id="1" name="group1">
+      <group id="2" name="group2" />
+    </group>
+  </groups>
+</things>
