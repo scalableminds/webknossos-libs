@@ -228,9 +228,6 @@ class Dataset:
             data_format="wkw",
         )
 
-        # if category == LayerCategories.SEGMENTATION_TYPE:
-        #    breakpoint()
-
         if category == LayerCategories.COLOR_TYPE:
             self._properties.data_layers += [layer_properties]
             self._layers[layer_name] = Layer(self, layer_properties)
@@ -247,7 +244,6 @@ class Dataset:
                     largest_segment_id=kwargs["largest_segment_id"],
                 )
             )
-            # breakpoint()
             if "mappings" in kwargs:
                 segmentation_layer_properties.mappings = kwargs["mappings"]
             self._properties.data_layers += [segmentation_layer_properties]
