@@ -41,9 +41,7 @@ def import_mag(mag_like: Any) -> Vec3Int:
 
 
 @total_ordering
-@attr.s(
-    frozen=True, auto_attribs=True, slots=True, auto_detect=True, eq=True, order=False
-)
+@attr.frozen
 class Mag:
     _mag: Vec3Int = attr.ib(converter=import_mag)
 

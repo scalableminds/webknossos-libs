@@ -24,9 +24,7 @@ class BoundingBoxNamedTuple(NamedTuple):
     size: Tuple[int, int, int]
 
 
-@attr.s(
-    frozen=True, auto_attribs=True, slots=True, auto_detect=True, eq=True, order=False
-)
+@attr.frozen
 class BoundingBox:
     topleft: Vec3Int = attr.ib(converter=Vec3Int)
     size: Vec3Int = attr.ib(converter=Vec3Int)
