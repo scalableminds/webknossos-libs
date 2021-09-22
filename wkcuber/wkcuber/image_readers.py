@@ -448,6 +448,7 @@ class ImageReaderManager:
             ".tiff": TiffImageReader(),
             ".jpg": PillowImageReader(),
             ".jpeg": PillowImageReader(),
+            ".jp2": PillowImageReader(),
             ".png": PillowImageReader(),
             ".dm3": Dm3ImageReader(),
             ".dm4": Dm4ImageReader(),
