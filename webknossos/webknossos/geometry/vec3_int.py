@@ -28,8 +28,8 @@ class Vec3Int(tuple):
                     3,
                 ), f"Numpy array for Vec3Int must have shape (3,), got {vec.shape}."
             if isinstance(vec, Iterable):
-                assert len(vec) == 3, value_error
                 as_tuple = cast(Tuple[int, int, int], tuple(int(item) for item in vec))
+                assert len(as_tuple) == 3, value_error
         assert as_tuple is not None and len(as_tuple) == 3, value_error
 
         return super().__new__(cls, cast(Iterable, as_tuple))
@@ -130,5 +130,5 @@ class Vec3Int(tuple):
 
 
 Vec3IntLike = Union[
-    Vec3Int, Tuple[int, int, int], Tuple[int, ...], np.ndarray, List[int]
+    Vec3Int, Tuple[int, int, int], Tuple[int, ...], np.ndarray, List[int], Iterable[int]
 ]

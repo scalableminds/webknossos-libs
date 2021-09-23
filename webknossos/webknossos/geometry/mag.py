@@ -1,7 +1,7 @@
 import re
 from functools import total_ordering
 from math import log2
-from typing import Any, List, Optional, Tuple, cast
+from typing import Any, Iterator, List, Optional, Tuple, cast
 
 import attr
 import numpy as np
@@ -41,7 +41,7 @@ def _import_mag(mag_like: Any) -> Vec3Int:
 
 
 @total_ordering
-@attr.frozen
+@attr.frozen(order=False)
 class Mag:
     _mag: Vec3Int = attr.ib(converter=_import_mag)
 
@@ -100,14 +100,16 @@ class Mag:
         return self._mag.to_tuple()
 
     def scaled_by(self, factor: int) -> "Mag":
-        return Mag([mag * factor for mag in self._mag])
+        return Mag(self._mag * factor)
 
-    def divided(self, coord: List[int]) -> List[int]:
-        """Returns a list of ints divided by the components of the mag."""
-        return [c // m for c, m in zip(coord, self._mag)]
+    def __mul__(self, factor: int) -> "Mag":
+        return Mag(self._mag * factor)
 
-    def divided_by(self, d: int) -> "Mag":
+    def __floordiv__(self, d: int) -> "Mag":
         return Mag(self._mag // d)
 
     def __hash__(self) -> int:
-        return hash(tuple(self._mag))
+        return hash(self._mag)
+
+    def __iter__(self) -> Iterator[int]:
+        return iter(self._mag)
