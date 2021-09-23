@@ -4,13 +4,13 @@ import shutil
 from argparse import Namespace
 from os.path import join
 from pathlib import Path
-from typing import TYPE_CHECKING, Generator, List, Tuple, Union, cast
+from typing import TYPE_CHECKING, Generator, List, Optional, Tuple, Union, cast
 from uuid import uuid4
 
 import numpy as np
 from wkw import wkw
 
-from webknossos.geometry import BoundingBox, Mag
+from webknossos.geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 from webknossos.utils import get_executor_for_args, wait_and_ensure_success
 
 from .compress_utils import compress_file_job
@@ -22,8 +22,6 @@ if TYPE_CHECKING:
     )
 
 from .view import View
-
-Vec3 = Union[Tuple[int, int, int], np.ndarray]
 
 
 def _find_mag_path_on_disk(dataset_path: Path, layer_name: str, mag_name: str) -> Path:
@@ -39,7 +37,7 @@ def _find_mag_path_on_disk(dataset_path: Path, layer_name: str, mag_name: str) -
 def _convert_mag1_offset(
     mag1_offset: Union[List, np.ndarray], target_mag: Mag
 ) -> np.ndarray:
-    return np.array(mag1_offset) // target_mag.as_np()  # floor div
+    return np.array(mag1_offset) // target_mag.to_np()  # floor div
 
 
 class MagView(View):
@@ -109,7 +107,7 @@ class MagView(View):
         return next(
             mag_property
             for mag_property in self.layer._properties.wkw_resolutions
-            if Mag(mag_property.resolution).to_array() == self.mag.to_array()
+            if mag_property.resolution == self.mag
         )
 
     @property
@@ -120,7 +118,7 @@ class MagView(View):
     def mag(self) -> Mag:
         return self._mag
 
-    def write(self, data: np.ndarray, offset: Vec3 = (0, 0, 0)) -> None:
+    def write(self, data: np.ndarray, offset: Vec3IntLike = Vec3Int(0, 0, 0)) -> None:
         """
         Writes the `data` at the specified `offset` to disk (like `webknossos.dataset.view.View.write()`).
 
@@ -130,14 +128,16 @@ class MagView(View):
         Note that writing compressed data which is not aligned with the blocks on disk may result in
         diminished performance, as full blocks will automatically be read to pad the write actions.
         """
+        offset = Vec3Int(offset)
+
         self._assert_valid_num_channels(data.shape)
         super().write(data, offset)
-        current_offset_in_mag1 = self.layer.bounding_box.topleft
-        current_size_in_mag1 = self.layer.bounding_box.size
+        current_offset_in_mag1 = self.layer.bounding_box.topleft.to_np()
+        current_size_in_mag1 = self.layer.bounding_box.size.to_np()
 
-        mag_np = self.mag.as_np()
+        mag_np = self.mag.to_np()
 
-        offset_in_mag1 = np.array(offset) * mag_np
+        offset_in_mag1 = offset.to_np() * mag_np
 
         # The (-1, -1, -1) is for backwards compatibility because we used '(-1, -1, -1)' to indicate that there is no data written yet.
         new_offset_in_mag1 = (
@@ -154,10 +154,8 @@ class MagView(View):
         ).max(axis=0)
         total_size_in_mag1 = max_end_offset_in_mag1 - np.array(new_offset_in_mag1)
 
-        self._size = cast(
-            Tuple[int, int, int],
-            tuple(_convert_mag1_offset(max_end_offset_in_mag1, self.mag)),
-        )  # The base view of a MagDataset always starts at (0, 0, 0)
+        # The base view of a MagDataset always starts at (0, 0, 0)
+        self._size = Vec3Int(_convert_mag1_offset(max_end_offset_in_mag1, self.mag))
 
         self.layer.bounding_box = BoundingBox(
             new_offset_in_mag1,
@@ -166,8 +164,8 @@ class MagView(View):
 
     def get_view(
         self,
-        offset: Vec3 = None,
-        size: Vec3 = None,
+        offset: Optional[Vec3IntLike] = None,
+        size: Optional[Vec3IntLike] = None,
         read_only: bool = None,
     ) -> View:
         """
@@ -207,25 +205,18 @@ class MagView(View):
         bb = self.layer.bounding_box
 
         # The (-1, -1, -1) is for backwards compatibility because we used '(-1, -1, -1)' to indicate that there is no data written yet.
-        if tuple(bb.topleft) == (-1, -1, -1):
-            bb.topleft = np.array((0, 0, 0))
+        if bb.topleft == Vec3Int(-1, -1, -1):
+            bb = bb.with_topleft((0, 0, 0))
 
         bb = bb.align_with_mag(self.mag, ceil=True).in_mag(self.mag)
 
-        view_offset = cast(
-            Tuple[int, int, int],
-            tuple(offset if offset is not None else tuple(bb.topleft)),
-        )
+        offset = Vec3Int(offset) if offset is not None else bb.topleft
+        size = Vec3Int(size) if size is not None else bb.bottomright - offset
 
-        if size is None:
-            size = cast(
-                Tuple[int, int, int], tuple(bb.bottomright - np.array(view_offset))
-            )
-
-        assert bb.contains_bbox(BoundingBox(view_offset, size)) or read_only
+        assert bb.contains_bbox(BoundingBox(offset, size)) or read_only
         return super().get_view(
-            view_offset,
-            cast(Tuple[int, int, int], tuple(size)),
+            offset,
+            size,
             read_only,
         )
 

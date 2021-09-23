@@ -3,7 +3,7 @@
 All notable changes to webknossos-cuber are documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
-and this project adheres to [Calendar Versioning](http://calver.org/) `0Y.0M.MICRO`.
+and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MINOR.PATCH`.
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
