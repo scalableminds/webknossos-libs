@@ -150,7 +150,7 @@ class BufferedSliceWriter(object):
                 self._write_buffer()
 
     def __enter__(self) -> Generator[None, np.ndarray, None]:
-        gen = self.get_slice_generator()
+        gen = self._get_slice_generator()
         # It is necessary to start the generator by sending "None"
         gen.send(None)  # type: ignore
         return gen
