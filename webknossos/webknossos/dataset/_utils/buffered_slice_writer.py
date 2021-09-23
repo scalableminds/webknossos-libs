@@ -3,14 +3,15 @@ import os
 import traceback
 from os import getpid
 from types import TracebackType
-from typing import Optional, Type, Generator, cast, Tuple, List, TYPE_CHECKING
+from typing import TYPE_CHECKING, Generator, List, Optional, Tuple, Type, cast
 
 import numpy as np
 import psutil
 
+from webknossos.geometry import Vec3Int
+
 if TYPE_CHECKING:
     from webknossos.dataset import View
-from wkcuber.utils import Vec3
 
 
 def log_memory_consumption(additional_output: str = "") -> None:
@@ -31,10 +32,10 @@ class BufferedSliceWriter(object):
     def __init__(
         self,
         view: "View",
-        offset: Vec3,
+        offset: Vec3Int,
         # buffer_size specifies, how many slices should be aggregated until they are flushed.
         buffer_size: int = 32,
-        dimension: int = 2  # z
+        dimension: int = 2,  # z
     ) -> None:
         """
         view : datasource
@@ -86,7 +87,12 @@ class BufferedSliceWriter(object):
             ), "Failed to write buffer: The buffer_start_slice is not set."
             buffer_start = [0, 0, 0]
             buffer_start[self.dimension] = self.buffer_start_slice
-            offset = cast(Tuple[int, int, int], tuple([off + buff_off for off, buff_off in zip(self.offset, buffer_start)]))
+            offset = cast(
+                Tuple[int, int, int],
+                tuple(
+                    [off + buff_off for off, buff_off in zip(self.offset, buffer_start)]
+                ),
+            )
             max_width = max(slice.shape[-2] for slice in self.buffer)
             max_height = max(slice.shape[-1] for slice in self.buffer)
 
@@ -104,7 +110,8 @@ class BufferedSliceWriter(object):
             ]
 
             data = np.concatenate(
-                [np.expand_dims(slice, self.dimension+1) for slice in self.buffer], axis=self.dimension+1
+                [np.expand_dims(slice, self.dimension + 1) for slice in self.buffer],
+                axis=self.dimension + 1,
             )
             self.view.write(data, offset)
 
@@ -127,7 +134,6 @@ class BufferedSliceWriter(object):
             self.buffer = []
 
     def get_slice_generator(self) -> Generator[None, np.ndarray, None]:
-        """Reads a WKW data, returns slices in [y, x] shape."""
         current_slice = 0
         while True:
             data = yield  # Data gets send from the user
@@ -144,7 +150,10 @@ class BufferedSliceWriter(object):
                 self._write_buffer()
 
     def __enter__(self) -> Generator[None, np.ndarray, None]:
-        return self.get_slice_generator()
+        gen = self.get_slice_generator()
+        # It is necessary to start the generator by sending "None"
+        gen.send(None)  # type: ignore
+        return gen
 
     def __exit__(
         self,
@@ -153,5 +162,3 @@ class BufferedSliceWriter(object):
         _tb: Optional[TracebackType],
     ) -> None:
         self._write_buffer()
-
-

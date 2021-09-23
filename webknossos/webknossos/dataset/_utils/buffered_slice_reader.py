@@ -1,28 +1,26 @@
 import logging
 from os import getpid
 from types import TracebackType
-from typing import Generator, Optional, Type, cast, Tuple, TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Generator, Optional, Tuple, Type, Union, cast
 
 import numpy as np
 
 if TYPE_CHECKING:
     from webknossos.dataset import View
-from webknossos.geometry import BoundingBox
+
+from webknossos.geometry import BoundingBox, Vec3Int
 from webknossos.utils import get_chunks
-
-
-Vec3 = Union[Tuple[int, int, int], np.ndarray]
 
 
 class BufferedSliceReader(object):
     def __init__(
         self,
         view: "View",
-        offset: Vec3,
-        size: Vec3,
+        offset: Vec3Int,
+        size: Vec3Int,
         # buffer_size specifies, how many slices should be aggregated until they are flushed.
         buffer_size: int = 32,
-        dimension: int = 2  # z
+        dimension: int = 2,  # z
     ) -> None:
         """
         view : datasource
@@ -40,16 +38,24 @@ class BufferedSliceReader(object):
         assert 0 <= dimension <= 2
         self.dimension = dimension
         bounding_box = BoundingBox(view.global_offset, view.size)
-        self.target_bbox = bounding_box.intersected_with(BoundingBox(view.global_offset, size).offset(cast(Tuple[int, int, int], tuple(offset))))
+        self.target_bbox = bounding_box.intersected_with(
+            BoundingBox(view.global_offset, size).offset(
+                cast(Tuple[int, int, int], tuple(offset))
+            )
+        )
 
     def _get_slice_generator(self) -> Generator[np.ndarray, None, None]:
-        for batch in get_chunks(list(range(
-            self.target_bbox.topleft[self.dimension],
-            self.target_bbox.bottomright[self.dimension]
-        )), self.buffer_size):
+        for batch in get_chunks(
+            list(
+                range(
+                    self.target_bbox.topleft[self.dimension],
+                    self.target_bbox.bottomright[self.dimension],
+                )
+            ),
+            self.buffer_size,
+        ):
             n_slices = len(batch)
             batch_start_idx = batch[0]
-
 
             assert (
                 n_slices <= self.buffer_size
@@ -60,16 +66,26 @@ class BufferedSliceReader(object):
 
             buffer_bounding_box = BoundingBox.from_tuple2(
                 (
-                    bbox_offset[:self.dimension] + (batch_start_idx,) + bbox_offset[self.dimension+1:],
-                    bbox_size[:self.dimension] + (n_slices,) + bbox_size[self.dimension+1:],
+                    bbox_offset[: self.dimension]
+                    + (batch_start_idx,)
+                    + bbox_offset[self.dimension + 1 :],
+                    bbox_size[: self.dimension]
+                    + (n_slices,)
+                    + bbox_size[self.dimension + 1 :],
                 )
             )
 
-            logging.debug(f"({getpid()}) Reading {n_slices} slices at position {batch_start_idx}.")
-            negative_view_offset = cast(Tuple[int, int, int], tuple([-o for o in self.view.global_offset]))  # this needs to be subtracted from the buffer_bounding_box because the view expects a relative offset
+            logging.debug(
+                f"({getpid()}) Reading {n_slices} slices at position {batch_start_idx}."
+            )
+            negative_view_offset = cast(
+                Tuple[int, int, int], tuple([-o for o in self.view.global_offset])
+            )  # this needs to be subtracted from the buffer_bounding_box because the view expects a relative offset
             data = self.view.read_bbox(buffer_bounding_box.offset(negative_view_offset))
 
-            for current_slice in np.rollaxis(data, self.dimension+1):  # The '+1' is important because the first dimension is the channel
+            for current_slice in np.rollaxis(
+                data, self.dimension + 1
+            ):  # The '+1' is important because the first dimension is the channel
                 yield current_slice
 
     def __enter__(self) -> Generator[np.ndarray, None, None]:

@@ -8,7 +8,7 @@ from concurrent.futures import as_completed
 from concurrent.futures._base import Future
 from datetime import datetime
 from multiprocessing import cpu_count
-from typing import Any, Callable, List, Optional, Union, Iterable
+from typing import Any, Callable, Iterable, List, Optional, Union
 
 from cluster_tools import WrappedProcessPoolExecutor, get_executor
 from cluster_tools.schedulers.cluster_executor import ClusterExecutor

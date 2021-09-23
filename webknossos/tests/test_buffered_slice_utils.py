@@ -7,12 +7,10 @@ import numpy as np
 import wkw
 
 from webknossos.dataset import Dataset, LayerCategories
-from webknossos.dataset._utils.buffered_slice_reader import BufferedSliceReader
-from webknossos.dataset._utils.buffered_slice_writer import BufferedSliceWriter
-from webknossos.geometry import Mag
-
+from webknossos.geometry import Mag, Vec3Int
 
 TESTOUTPUT_DIR = Path("testoutput")
+
 
 def delete_dir(relative_path: Union[str, Path]) -> None:
     if os.path.exists(relative_path) and os.path.isdir(relative_path):
@@ -22,18 +20,19 @@ def delete_dir(relative_path: Union[str, Path]) -> None:
 def test_buffered_slice_writer() -> None:
     test_img = np.arange(24 * 24).reshape(24, 24).astype(np.uint16) + 1
     dtype = test_img.dtype
-    origin = (0, 0, 0)
+    origin = Vec3Int(0, 0, 0)
     layer_name = "color"
     mag = Mag(1)
     dataset_dir = TESTOUTPUT_DIR / "buffered_slice_writer"
-    dataset_path = str(dataset_dir/layer_name/mag.to_layer_name())
+    dataset_path = str(dataset_dir / layer_name / mag.to_layer_name())
 
     delete_dir(dataset_dir)
     ds = Dataset.create(dataset_dir, scale=(1, 1, 1))
-    mag_view = ds.add_layer("color", LayerCategories.COLOR_TYPE, dtype_per_channel=dtype).add_mag(mag)
+    mag_view = ds.add_layer(
+        "color", LayerCategories.COLOR_TYPE, dtype_per_channel=dtype
+    ).add_mag(mag)
 
     with mag_view.get_buffered_slice_writer(origin) as writer:
-        writer.send(None)
         for i in range(13):
             writer.send(test_img)
         with wkw.Dataset.open(dataset_path, wkw.Header(dtype)) as data:
@@ -84,16 +83,19 @@ def test_buffered_slice_writer() -> None:
 
 
 def test_buffered_slice_writer_along_different_axis(tmp_path: Path) -> None:
-    test_cube = (np.random.random((3, 13, 13, 13))*100).astype(np.uint8)
+    test_cube = (np.random.random((3, 13, 13, 13)) * 100).astype(np.uint8)
     cube_size_without_channel = test_cube.shape[1:]
-    offset = (5, 10, 20)
+    offset = Vec3Int(5, 10, 20)
 
     for dim in [0, 1, 2]:
         ds = Dataset.create(tmp_path / f"buffered_slice_writer_{dim}", scale=(1, 1, 1))
-        mag_view = ds.add_layer("color", LayerCategories.COLOR_TYPE, num_channels=3).add_mag(1)
+        mag_view = ds.add_layer(
+            "color", LayerCategories.COLOR_TYPE, num_channels=3
+        ).add_mag(1)
 
-        with mag_view.get_buffered_slice_writer(offset, buffer_size=5, dimension=dim) as writer:
-            writer.send(None)  # to start the generator
+        with mag_view.get_buffered_slice_writer(
+            offset, buffer_size=5, dimension=dim
+        ) as writer:
             for i in range(cube_size_without_channel[dim]):
                 if dim == 0:
                     current_slice = test_cube[:, i, :, :]
@@ -102,20 +104,26 @@ def test_buffered_slice_writer_along_different_axis(tmp_path: Path) -> None:
                 else:  # dim == 2
                     current_slice = test_cube[:, :, :, i]
                 writer.send(current_slice)
-        assert np.array_equal(mag_view.read(offset=offset, size=cube_size_without_channel), test_cube)
+        assert np.array_equal(
+            mag_view.read(offset=offset, size=cube_size_without_channel), test_cube
+        )
 
 
 def test_buffered_slice_reader_along_different_axis(tmp_path: Path) -> None:
-    test_cube = (np.random.random((3, 13, 13, 13))*100).astype(np.uint8)
-    cube_size_without_channel = test_cube.shape[1:]
-    offset = (5, 10, 20)
+    test_cube = (np.random.random((3, 13, 13, 13)) * 100).astype(np.uint8)
+    cube_size_without_channel = Vec3Int(test_cube.shape[1:])
+    offset = Vec3Int(5, 10, 20)
 
     for dim in [0, 1, 2]:
         ds = Dataset.create(tmp_path / f"buffered_slice_reader_{dim}", scale=(1, 1, 1))
-        mag_view = ds.add_layer("color", LayerCategories.COLOR_TYPE, num_channels=3).add_mag(1)
+        mag_view = ds.add_layer(
+            "color", LayerCategories.COLOR_TYPE, num_channels=3
+        ).add_mag(1)
         mag_view.write(test_cube, offset=offset)
 
-        with mag_view.get_buffered_slice_reader(offset, cube_size_without_channel, buffer_size=5, dimension=dim) as reader:
+        with mag_view.get_buffered_slice_reader(
+            offset, cube_size_without_channel, buffer_size=5, dimension=dim
+        ) as reader:
             i = 0
             for slice_data in reader:
                 if dim == 0:

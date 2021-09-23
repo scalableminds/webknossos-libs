@@ -4,14 +4,8 @@ import numpy as np
 import os
 
 from typing import (
-    List,
     Tuple,
-    Union,
-    Iterable,
     Generator,
-    Any,
-    Optional,
-    Type, cast, TYPE_CHECKING,
 )
 from glob import iglob
 from collections import namedtuple

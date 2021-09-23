@@ -2,7 +2,7 @@ import math
 import warnings
 from pathlib import Path
 from types import TracebackType
-from typing import Callable, Optional, Tuple, Type, Union, cast, List
+from typing import TYPE_CHECKING, Callable, Optional, Tuple, Type, Union
 
 import cluster_tools
 import numpy as np
@@ -11,6 +11,10 @@ from wkw import Dataset, wkw
 
 from webknossos.geometry import BoundingBox, Vec3Int, Vec3IntLike
 from webknossos.utils import wait_and_ensure_success
+
+if TYPE_CHECKING:
+    from webknossos.dataset._utils.buffered_slice_reader import BufferedSliceReader
+    from webknossos.dataset._utils.buffered_slice_writer import BufferedSliceWriter
 
 
 class View:
@@ -269,11 +273,8 @@ class View:
         )
 
     def get_buffered_slice_writer(
-            self,
-            offset: Vec3Int = None,
-            buffer_size: int = 32,
-            dimension: int = 2  # z
-    ):
+        self, offset: Vec3Int = None, buffer_size: int = 32, dimension: int = 2  # z
+    ) -> "BufferedSliceWriter":
         """
         The BufferedSliceWriter buffers multiple slices before they are written to disk.
         The amount of slices that get buffered is specified by `buffer_size`.
@@ -286,23 +287,22 @@ class View:
         If the buffer is non empty after the user finished writing (i.e. the number of written slices is not a multiple of `buffer_size`),
         exiting the context will automatically write the buffer to disk.
         Entering the context returns a generator with consumes slices (np.ndarray).
-        Note: this generator pattern requires to start the generator by sending `None` to it.
 
         Usage:
         data_cube = ...
         view = ...
         with view.get_buffered_slice_writer() as writer:
-            writer.send(None)  # to start the generator
             for data_slice in data_cube:
                 writer.send(data_slice)
 
         """
         from webknossos.dataset._utils.buffered_slice_writer import BufferedSliceWriter
+
         return BufferedSliceWriter(
             view=self,
-            offset=offset if offset is not None else (0, 0, 0),
+            offset=offset if offset is not None else Vec3Int(0, 0, 0),
             buffer_size=buffer_size,
-            dimension=dimension
+            dimension=dimension,
         )
 
     def get_buffered_slice_reader(
@@ -310,8 +310,8 @@ class View:
         offset: Vec3Int = None,
         size: Vec3Int = None,
         buffer_size: int = 32,
-        dimension: int = 2  # z
-    ):
+        dimension: int = 2,  # z
+    ) -> "BufferedSliceReader":
         """
         The BufferedSliceReader reads multiple slices from disk at once and buffers the data.
         The amount of slices that get buffered is specified by `buffer_size`.
@@ -331,12 +331,13 @@ class View:
 
         """
         from webknossos.dataset._utils.buffered_slice_reader import BufferedSliceReader
+
         return BufferedSliceReader(
             view=self,
-            offset=offset if offset is not None else (0, 0, 0),
+            offset=offset if offset is not None else Vec3Int(0, 0, 0),
             size=size if size is not None else self.size,
             buffer_size=buffer_size,
-            dimension=dimension
+            dimension=dimension,
         )
 
     def _assert_bounds(
