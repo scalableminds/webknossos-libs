@@ -133,7 +133,7 @@ class BufferedSliceWriter(object):
         finally:
             self.buffer = []
 
-    def get_slice_generator(self) -> Generator[None, np.ndarray, None]:
+    def _get_slice_generator(self) -> Generator[None, np.ndarray, None]:
         current_slice = 0
         while True:
             data = yield  # Data gets send from the user
