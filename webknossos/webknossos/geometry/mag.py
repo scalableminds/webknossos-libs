@@ -1,7 +1,7 @@
 import re
 from functools import total_ordering
 from math import log2
-from typing import Any, List, Optional, Tuple, cast
+from typing import Any, List, Optional, Tuple, Union, cast
 
 import attr
 import numpy as np
@@ -9,10 +9,12 @@ import numpy as np
 from .vec3_int import Vec3Int, Vec3IntLike
 
 
-def import_mag(mag_like: Any) -> Vec3Int:
+def _import_mag(mag_like: Any) -> Vec3Int:
     as_vec3_int: Optional[Vec3Int] = None
 
-    if isinstance(mag_like, int):
+    if isinstance(mag_like, Mag):
+        as_vec3_int = mag_like.to_vec3_int()
+    elif isinstance(mag_like, int):
         as_vec3_int = Vec3Int(mag_like, mag_like, mag_like)
     elif isinstance(mag_like, Vec3Int):
         as_vec3_int = mag_like
@@ -23,8 +25,6 @@ def import_mag(mag_like: Any) -> Vec3Int:
             as_vec3_int = Vec3Int(int(mag_like), int(mag_like), int(mag_like))
         elif re.match(r"^\d+-\d+-\d+$", mag_like) is not None:
             as_vec3_int = Vec3Int([int(m) for m in mag_like.split("-")])
-    elif isinstance(mag_like, Mag):
-        as_vec3_int = Vec3Int(mag_like.to_tuple())
     elif isinstance(mag_like, np.ndarray):
         as_vec3_int = Vec3Int(mag_like)
 
@@ -43,7 +43,7 @@ def import_mag(mag_like: Any) -> Vec3Int:
 @total_ordering
 @attr.frozen
 class Mag:
-    _mag: Vec3Int = attr.ib(converter=import_mag)
+    _mag: Vec3Int = attr.ib(converter=_import_mag)
 
     @property
     def x(self) -> int:
@@ -103,6 +103,7 @@ class Mag:
         return Mag([mag * factor for mag in self._mag])
 
     def divided(self, coord: List[int]) -> List[int]:
+        """Returns a list of ints divided by the components of the mag."""
         return [c // m for c, m in zip(coord, self._mag)]
 
     def divided_by(self, d: int) -> "Mag":

@@ -62,6 +62,7 @@ class BoundingBox:
 
     @staticmethod
     def from_points(points: Iterable[Vec3IntLike]) -> "BoundingBox":
+        """Returns a bounding box exactly containing all points."""
 
         all_points = np.array([Vec3Int(point).to_list() for point in points])
         topleft = all_points.min(axis=0)
@@ -108,6 +109,8 @@ class BoundingBox:
             else:
                 return BoundingBox.from_csv(obj)
         elif isinstance(obj, dict):
+            if "size" in obj:
+                return BoundingBox.from_config_dict(obj)
             return BoundingBox.from_wkw_dict(obj)
         elif isinstance(obj, BoundingBoxNamedTuple):
             return BoundingBox.from_named_tuple(obj)

@@ -8,7 +8,6 @@ def test_import() -> None:
     assert Vec3Int(1, 2, 3) == Vec3Int(1, 2, 3)
     assert Vec3Int((1, 2, 3)) == Vec3Int(1, 2, 3)
     assert Vec3Int([1, 2, 3]) == Vec3Int(1, 2, 3)
-    assert Vec3Int([1, 2, 3]) == Vec3Int(1, 2, 3)
     assert Vec3Int(np.array([1, 2, 3])) == Vec3Int(1, 2, 3)
 
 

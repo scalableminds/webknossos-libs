@@ -3,7 +3,7 @@
 All notable changes to the webknossos python library are documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
-and this project adheres to [Calendar Versioning](http://calver.org/) `0Y.0M.MICRO`.
+and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MINOR.PATCH`.
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
@@ -19,7 +19,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
     - `to_array` → `to_list`
     - `as_np` → `to_np`
     - `as_wkw` → `to_wkw_dict`
-    - `from_wkw` → `rom_wkw_dict`
+    - `from_wkw` → `from_wkw_dict`
     - `as_config` → `to_config_dict`
     - `as_checkpoint_name` → `to_checkpoint_name`
     - `as_tuple6` → `to_tuple6`
