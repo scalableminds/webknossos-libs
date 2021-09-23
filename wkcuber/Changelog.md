@@ -3,7 +3,7 @@
 All notable changes to webknossos-cuber are documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
-and this project adheres to [Calendar Versioning](http://calver.org/) `0Y.0M.MICRO`.
+and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MINOR.PATCH`.
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
@@ -17,6 +17,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 - Adjust downsampling scheme to always try to minimize the scaled difference between the different dimensions of a mag and renamed the sampling mode `auto` to `anisotropic`. [#391](https://github.com/scalableminds/webknossos-libs/pull/391)
 - Make parameter `executor` optional for `View.for_each_chunk` and `View.for_zipped_chunks`. [#404](https://github.com/scalableminds/webknossos-libs/pull/404)
 - Use Dataset API inside `cubing` to automatically write metadata. [#418](https://github.com/scalableminds/webknossos-libs/pull/418)
+- Add option to rename foreign layer with add_{symlink,copy}_layer. [#419](https://github.com/scalableminds/webknossos-libs/pull/419)
 
 ### Fixed
 - Reverted that `dataset.add_symlink_layer` and `dataset.add_copy_layer` resolved the layer path if it was a symlink. [#408](https://github.com/scalableminds/webknossos-libs/pull/408)

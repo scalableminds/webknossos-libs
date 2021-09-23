@@ -229,7 +229,7 @@ def cubing_job(
                     )
                 buffer_z_offset = (
                     first_z_idx - target_view.global_offset[2]
-                ) // target_mag.to_array()[2]
+                ) // target_mag[2]
                 target_view.write(offset=(0, 0, buffer_z_offset), data=buffer)
                 largest_value_in_chunk = max(largest_value_in_chunk, np.max(buffer))
                 logging.debug(

@@ -4,6 +4,12 @@ set +x
 
 for PKG in */pyproject.toml; do
     PKG="$(dirname "$PKG")"
+    if [[ "$PKG" == "docs" ]]; then
+        echo Skipping "$PKG"
+        continue
+    fi
+    echo Publishing "$PKG"
+
     pushd "$PKG" > /dev/null
 
     cp pyproject.toml pyproject.toml.bak

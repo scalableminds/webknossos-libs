@@ -9,10 +9,11 @@ from pathlib import Path
 from shutil import rmtree
 from typing import Any, Dict, Optional, Tuple, Union, cast
 
+import attr
 import numpy as np
 import wkw
 
-from webknossos.geometry import BoundingBox
+from webknossos.geometry import BoundingBox, Vec3Int
 from webknossos.utils import get_executor_for_args
 
 from .layer import (
@@ -32,7 +33,6 @@ from .properties import (
     _extract_num_channels,
     _properties_floating_type_to_python_type,
     dataset_converter,
-    layer_properties_converter,
 )
 from .view import View
 
@@ -238,8 +238,8 @@ class Dataset:
 
             segmentation_layer_properties: SegmentationLayerProperties = (
                 SegmentationLayerProperties(
-                    **layer_properties_converter.unstructure(
-                        layer_properties
+                    **(
+                        attr.asdict(layer_properties, recurse=False)
                     ),  # use all attributes from LayerProperties
                     largest_segment_id=kwargs["largest_segment_id"],
                 )
@@ -385,7 +385,10 @@ class Dataset:
         self._export_as_json()
 
     def add_symlink_layer(
-        self, foreign_layer: Union[str, Path, Layer], make_relative: bool = False
+        self,
+        foreign_layer: Union[str, Path, Layer],
+        make_relative: bool = False,
+        new_layer_name: str = None,
     ) -> Layer:
         """
         Creates a symlink to the data at `foreign_layer` which belongs to another dataset.
@@ -393,6 +396,7 @@ class Dataset:
         Note: If the other dataset modifies its bounding box afterwards, the change does not affect this properties
         (or vice versa).
         If make_relative is True, the symlink is made relative to the current dataset path.
+        If new_layer_name is None, the name of the foreign layer is used.
         """
 
         if isinstance(foreign_layer, Layer):
@@ -400,7 +404,10 @@ class Dataset:
         else:
             foreign_layer_path = Path(foreign_layer)
 
-        layer_name = foreign_layer_path.name
+        foreign_layer_name = foreign_layer_path.name
+        layer_name = (
+            new_layer_name if new_layer_name is not None else foreign_layer_name
+        )
         if layer_name in self.layers.keys():
             raise IndexError(
                 f"Cannot create symlink to {foreign_layer_path}. This dataset already has a layer called {layer_name}."
@@ -412,8 +419,11 @@ class Dataset:
             else Path(os.path.abspath(foreign_layer_path))
         )
         os.symlink(foreign_layer_symlink_path, join(self.path, layer_name))
-        original_layer = Dataset(foreign_layer_path.parent).get_layer(layer_name)
+        original_layer = Dataset(foreign_layer_path.parent).get_layer(
+            foreign_layer_name
+        )
         layer_properties = copy.deepcopy(original_layer._properties)
+        layer_properties.name = layer_name
         self._properties.data_layers += [layer_properties]
         self._layers[layer_name] = self._initialize_layer_from_properties(
             layer_properties
@@ -422,10 +432,13 @@ class Dataset:
         self._export_as_json()
         return self.layers[layer_name]
 
-    def add_copy_layer(self, foreign_layer: Union[str, Path, Layer]) -> Layer:
+    def add_copy_layer(
+        self, foreign_layer: Union[str, Path, Layer], new_layer_name: str = None
+    ) -> Layer:
         """
         Copies the data at `foreign_layer` which belongs to another dataset to the current dataset.
         Additionally, the relevant information from the `datasource-properties.json` of the other dataset are copied too.
+        If new_layer_name is None, the name of the foreign layer is used.
         """
 
         if isinstance(foreign_layer, Layer):
@@ -434,15 +447,21 @@ class Dataset:
             foreign_layer_path = Path(foreign_layer)
 
         foreign_layer_path = Path(os.path.abspath(foreign_layer_path))
-        layer_name = foreign_layer_path.name
+        foreign_layer_name = foreign_layer_path.name
+        layer_name = (
+            new_layer_name if new_layer_name is not None else foreign_layer_name
+        )
         if layer_name in self.layers.keys():
             raise IndexError(
                 f"Cannot copy {foreign_layer_path}. This dataset already has a layer called {layer_name}."
             )
 
         shutil.copytree(foreign_layer_path, join(self.path, layer_name))
-        original_layer = Dataset(foreign_layer_path.parent).get_layer(layer_name)
+        original_layer = Dataset(foreign_layer_path.parent).get_layer(
+            foreign_layer_name
+        )
         layer_properties = copy.deepcopy(original_layer._properties)
+        layer_properties.name = layer_name
         self._properties.data_layers += [layer_properties]
         self._layers[layer_name] = self._initialize_layer_from_properties(
             layer_properties
@@ -498,12 +517,9 @@ class Dataset:
 
                     # The bounding box needs to be updated manually because chunked views do not have a reference to the dataset itself
                     # The base view of a MagDataset always starts at (0, 0, 0)
-                    target_mag._global_offset = (0, 0, 0)
-                    target_mag._size = cast(
-                        Tuple[int, int, int],
-                        tuple(
-                            bbox.align_with_mag(mag, ceil=True).in_mag(mag).bottomright
-                        ),
+                    target_mag._global_offset = Vec3Int(0, 0, 0)
+                    target_mag._size = (
+                        bbox.align_with_mag(mag, ceil=True).in_mag(mag).bottomright
                     )
                     target_mag.layer.bounding_box = bbox
 

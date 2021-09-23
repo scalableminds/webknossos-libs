@@ -1,3 +1,4 @@
+# type: ignore
 from skimage.future import TrainableSegmenter
 
 import webknossos as wk

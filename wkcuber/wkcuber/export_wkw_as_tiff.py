@@ -138,17 +138,17 @@ def export_tiff_slice(
 
     tiff_bbox = tiff_bbox.copy()
     number_of_slices = (
-        min(tiff_bbox["size"][2] - batch_number * batch_size, batch_size) // mag.mag[2]
+        min(tiff_bbox["size"][2] - batch_number * batch_size, batch_size) // mag.z
     )
     tiff_bbox["size"] = (
-        tiff_bbox["size"][0] // mag.mag[0],
-        tiff_bbox["size"][1] // mag.mag[1],
+        tiff_bbox["size"][0] // mag.x,
+        tiff_bbox["size"][1] // mag.y,
         number_of_slices,
     )
     tiff_bbox["topleft"] = (
-        tiff_bbox["topleft"][0] // mag.mag[0],
-        tiff_bbox["topleft"][1] // mag.mag[1],
-        (tiff_bbox["topleft"][2] + batch_number * batch_size) // mag.mag[2],
+        tiff_bbox["topleft"][0] // mag.x,
+        tiff_bbox["topleft"][1] // mag.y,
+        (tiff_bbox["topleft"][2] + batch_number * batch_size) // mag.z,
     )
 
     with wkw.Dataset.open(str(dataset_path)) as dataset:
