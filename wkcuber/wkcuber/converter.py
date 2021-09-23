@@ -408,7 +408,7 @@ class ImageStackConverter(Converter):
                         args.pad,
                         executor_args,
                     )
-                    bounding_box = ds.get_layer(layer_name).bounding_box.as_wkw()
+                    bounding_box = ds.get_layer(layer_name).bounding_box.to_wkw_dict()
 
                     view_configuration[
                         layer_name
@@ -429,7 +429,7 @@ class ImageStackConverter(Converter):
                     args.pad,
                     executor_args,
                 )
-                bounding_box = ds.get_layer(layer_name).bounding_box.as_wkw()
+                bounding_box = ds.get_layer(layer_name).bounding_box.to_wkw_dict()
 
         assert converted_layers > 0, "No layer could be converted!"
 
