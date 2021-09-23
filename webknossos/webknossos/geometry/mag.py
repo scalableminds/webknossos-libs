@@ -99,9 +99,6 @@ class Mag:
     def to_tuple(self) -> Tuple[int, int, int]:
         return self._mag.to_tuple()
 
-    def scaled_by(self, factor: int) -> "Mag":
-        return Mag(self._mag * factor)
-
     def __mul__(self, factor: int) -> "Mag":
         return Mag(self._mag * factor)
 
