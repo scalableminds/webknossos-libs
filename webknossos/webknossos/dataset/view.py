@@ -312,9 +312,9 @@ class View:
         dimension: int = 2,  # z
     ) -> "BufferedSliceReader":
         """
-        The BufferedSliceReader reads multiple slices from disk at once and buffers the data.
+        The BufferedSliceReader yields slices of data along a specified axis.
+        Internally, it reads multiple slices from disk at once and buffers the data.
         The amount of slices that get buffered is specified by `buffer_size`.
-        The slices are then yielded to the user separately.
 
         The user can specify along which dimension the data is sliced by using the parameter `dimension`.
         To slice along the x-axis use `0`, for the y-axis use `1`, or for the z-axis use `2` (default: dimension=2).
