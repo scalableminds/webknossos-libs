@@ -283,7 +283,30 @@ class View:
             buffer_size: int = 32,
             dimension: int = 2  # z
     ):
-        from wkcuber.utils import BufferedSliceWriter
+        """
+        The BufferedSliceWriter buffers multiple slices before they are written to disk.
+        The amount of slices that get buffered is specified by `buffer_size`.
+        As soon as the buffer is full, the data gets written to disk.
+
+        The user can specify along which dimension the data is sliced by using the parameter `dimension`.
+        To slice along the x-axis use `0`, for the y-axis use `1`, or for the z-axis use `2` (default: dimension=2).
+
+        The BufferedSliceWriter is supposed to be used with a context manager (see example below).
+        If the buffer is non empty after the user finished writing (i.e. the number of written slices is not a multiple of `buffer_size`),
+        exiting the context will automatically write the buffer to disk.
+        Entering the context returns a generator with consumes slices (np.ndarray).
+        Note: this generator pattern requires to start the generator by sending `None` to it.
+
+        Usage:
+        data_cube = ...
+        view = ...
+        with view.get_buffered_slice_writer() as writer:
+            writer.send(None)  # to start the generator
+            for data_slice in data_cube:
+                writer.send(data_slice)
+
+        """
+        from webknossos.dataset._utils.buffered_slice_writer import BufferedSliceWriter
         return BufferedSliceWriter(
             view=self,
             offset=offset if offset is not None else (0, 0, 0),
@@ -298,7 +321,25 @@ class View:
         buffer_size: int = 32,
         dimension: int = 2  # z
     ):
-        from wkcuber.utils import BufferedSliceReader
+        """
+        The BufferedSliceReader reads multiple slices from disk at once and buffers the data.
+        The amount of slices that get buffered is specified by `buffer_size`.
+        The slices are then yielded to the user separately.
+
+        The user can specify along which dimension the data is sliced by using the parameter `dimension`.
+        To slice along the x-axis use `0`, for the y-axis use `1`, or for the z-axis use `2` (default: dimension=2).
+
+        The BufferedSliceReader is supposed to be used with a context manager (see example below).
+        Entering the context returns a generator with yields slices (np.ndarray).
+
+        Usage:
+        view = ...
+        with view.get_buffered_slice_reader() as reader:
+            for slice_data in reader:
+                ...
+
+        """
+        from webknossos.dataset._utils.buffered_slice_reader import BufferedSliceReader
         return BufferedSliceReader(
             view=self,
             offset=offset if offset is not None else (0, 0, 0),
