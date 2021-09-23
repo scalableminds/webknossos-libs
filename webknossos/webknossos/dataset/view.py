@@ -283,10 +283,9 @@ class View:
         The user can specify along which dimension the data is sliced by using the parameter `dimension`.
         To slice along the x-axis use `0`, for the y-axis use `1`, or for the z-axis use `2` (default: dimension=2).
 
-        The BufferedSliceWriter is supposed to be used with a context manager (see example below).
-        If the buffer is non empty after the user finished writing (i.e. the number of written slices is not a multiple of `buffer_size`),
-        exiting the context will automatically write the buffer to disk.
-        Entering the context returns a generator with consumes slices (np.ndarray).
+        The BufferedSliceWriter must be used as context manager using the `with` syntax (see example below),
+        which results in a generator consuming np.ndarray-slices via `writer.send(slice)`.
+        Exiting the context will automatically flush any remaining buffered data to disk.
 
         Usage:
         data_cube = ...
