@@ -1,7 +1,7 @@
 import re
 from functools import total_ordering
 from math import log2
-from typing import Any, List, Optional, Tuple, Union, cast
+from typing import Any, List, Optional, Tuple, cast
 
 import attr
 import numpy as np

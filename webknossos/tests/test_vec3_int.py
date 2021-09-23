@@ -3,6 +3,12 @@ import numpy as np
 from webknossos.geometry import Vec3Int
 
 
+def test_with() -> None:
+    assert Vec3Int(1, 2, 3).with_x(5) == Vec3Int(5, 2, 3)
+    assert Vec3Int(1, 2, 3).with_y(5) == Vec3Int(1, 5, 3)
+    assert Vec3Int(1, 2, 3).with_z(5) == Vec3Int(1, 2, 5)
+
+
 def test_import() -> None:
 
     assert Vec3Int(1, 2, 3) == Vec3Int(1, 2, 3)

@@ -42,6 +42,45 @@ class BoundingBox:
 
         return BoundingBox(self.topleft, new_size)
 
+    def with_bounds_x(
+        self, new_topleft_x: Optional[int] = None, new_size_x: Optional[int] = None
+    ) -> "BoundingBox":
+        """Returns a copy of the bounding box with topleft.x optionally replaced and size.x optionally replaced."""
+
+        new_topleft = (
+            self.topleft.with_x(new_topleft_x)
+            if new_topleft_x is not None
+            else self.topleft
+        )
+        new_size = self.size.with_x(new_size_x) if new_size_x is not None else self.size
+        return BoundingBox(new_topleft, new_size)
+
+    def with_bounds_y(
+        self, new_topleft_y: Optional[int] = None, new_size_y: Optional[int] = None
+    ) -> "BoundingBox":
+        """Returns a copy of the bounding box with topleft.x optionally replaced and size.x optionally replaced."""
+
+        new_topleft = (
+            self.topleft.with_y(new_topleft_y)
+            if new_topleft_y is not None
+            else self.topleft
+        )
+        new_size = self.size.with_y(new_size_y) if new_size_y is not None else self.size
+        return BoundingBox(new_topleft, new_size)
+
+    def with_bounds_z(
+        self, new_topleft_z: Optional[int] = None, new_size_z: Optional[int] = None
+    ) -> "BoundingBox":
+        """Returns a copy of the bounding box with topleft.z optionally replaced and size.z optionally replaced."""
+
+        new_topleft = (
+            self.topleft.with_z(new_topleft_z)
+            if new_topleft_z is not None
+            else self.topleft
+        )
+        new_size = self.size.with_z(new_size_z) if new_size_z is not None else self.size
+        return BoundingBox(new_topleft, new_size)
+
     @staticmethod
     def from_wkw_dict(bbox: Dict) -> "BoundingBox":
         return BoundingBox(

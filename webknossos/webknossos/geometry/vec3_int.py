@@ -46,6 +46,15 @@ class Vec3Int(tuple):
     def z(self) -> int:
         return self[2]
 
+    def with_x(self, new_x: int) -> "Vec3Int":
+        return Vec3Int(new_x, self.y, self.z)
+
+    def with_y(self, new_y: int) -> "Vec3Int":
+        return Vec3Int(self.x, new_y, self.z)
+
+    def with_z(self, new_z: int) -> "Vec3Int":
+        return Vec3Int(self.x, self.y, new_z)
+
     def to_np(self) -> np.ndarray:
         return np.array((self.x, self.y, self.z))
 
