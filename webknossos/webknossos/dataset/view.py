@@ -319,7 +319,7 @@ class View:
         The user can specify along which dimension the data is sliced by using the parameter `dimension`.
         To slice along the x-axis use `0`, for the y-axis use `1`, or for the z-axis use `2` (default: dimension=2).
 
-        The BufferedSliceReader is supposed to be used with a context manager (see example below).
+        The BufferedSliceReader must be used as a context manager using the `with` syntax (see example below).
         Entering the context returns a generator with yields slices (np.ndarray).
 
         Usage:
