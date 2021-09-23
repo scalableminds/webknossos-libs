@@ -367,7 +367,7 @@ class BoundingBox:
     def to_slices(self) -> Tuple[slice, slice, slice]:
         return np.index_exp[
             self.topleft.x : self.bottomright.x,
-            self.topleft.z : self.bottomright.y,
+            self.topleft.y : self.bottomright.y,
             self.topleft.z : self.bottomright.z,
         ]
 
