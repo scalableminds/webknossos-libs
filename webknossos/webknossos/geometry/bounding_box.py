@@ -58,7 +58,7 @@ class BoundingBox:
     def with_bounds_y(
         self, new_topleft_y: Optional[int] = None, new_size_y: Optional[int] = None
     ) -> "BoundingBox":
-        """Returns a copy of the bounding box with topleft.x optionally replaced and size.x optionally replaced."""
+        """Returns a copy of the bounding box with topleft.y optionally replaced and size.y optionally replaced."""
 
         new_topleft = (
             self.topleft.with_y(new_topleft_y)
