@@ -132,7 +132,7 @@ PyPi releases are automatically pushed when creating a new Git tag/Github releas
 Check out the [latest version of the API documentation](https://static.webknossos.org/lib-docs/master/wkcuber/api.html).
 
 ### Generate the API documentation
-Run `docs/api.sh` to open a server displaying the API docs. `docs/api.sh --persist` persists the html to `docs/api`.
+Run `docs/generate.sh` to open a server displaying the API docs. `docs/generate.sh --persist` persists the html to `docs/api`.
 
 ## Test Data Credits
 Excerpts for testing purposes have been sampled from:
