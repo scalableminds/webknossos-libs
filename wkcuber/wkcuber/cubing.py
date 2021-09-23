@@ -1,6 +1,6 @@
 import time
 import logging
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, cast, Any
 
 import numpy as np
 from argparse import ArgumentParser, Namespace
@@ -8,7 +8,7 @@ from os import path
 from pathlib import Path
 from natsort import natsorted
 
-from webknossos.dataset import Dataset, LayerCategories, View
+from webknossos.dataset import Dataset, LayerCategories, View, SegmentationLayer
 from webknossos.geometry import BoundingBox
 from .mag import Mag
 from .downsampling_utils import (
@@ -159,7 +159,7 @@ def cubing_job(
         bool,
         Optional[int],
     ]
-) -> None:
+) -> Any:
     (
         target_view,
         target_mag,
@@ -172,6 +172,7 @@ def cubing_job(
     ) = args
 
     downsampling_needed = target_mag != Mag(1)
+    largest_value_in_chunk = 0  # This is used to compute the largest_segmentation_id if it is a segmentation layer
 
     with target_view.open():
         # Iterate over batches of continuous z sections
@@ -230,6 +231,7 @@ def cubing_job(
                     first_z_idx - target_view.global_offset[2]
                 ) // target_mag.to_array()[2]
                 target_view.write(offset=(0, 0, buffer_z_offset), data=buffer)
+                largest_value_in_chunk = max(largest_value_in_chunk, np.max(buffer))
                 logging.debug(
                     "Cubing of z={}-{} took {:.8f}s".format(
                         first_z_idx,
@@ -246,6 +248,8 @@ def cubing_job(
                     )
                 )
                 raise exc
+
+        return largest_value_in_chunk
 
 
 def get_channel_count_and_dtype(source_path: Path) -> Tuple[int, str]:
@@ -301,14 +305,15 @@ def cubing(
     target_mag = Mag(target_mag_str)
 
     target_ds = Dataset.get_or_create(target_path, scale=scale)
+    is_segmentation_layer = layer_name == "segmentation"
 
-    if layer_name == "segmentation":
+    if is_segmentation_layer:
         target_layer = target_ds.get_or_add_layer(
             layer_name,
             LayerCategories.SEGMENTATION_TYPE,
             dtype_per_channel=dtype,
             num_channels=num_channels,
-            largest_segment_id=-1,
+            largest_segment_id=0,
         )
     else:
         target_layer = target_ds.get_or_add_layer(
@@ -367,7 +372,14 @@ def cubing(
                 )
             )
 
-        wait_and_ensure_success(executor.map_to_futures(cubing_job, job_args))
+        largest_segment_id_per_chunk = wait_and_ensure_success(
+            executor.map_to_futures(cubing_job, job_args)
+        )
+        if is_segmentation_layer:
+            largest_segment_id = max(largest_segment_id_per_chunk)
+            cast(
+                SegmentationLayer, target_layer
+            ).largest_segment_id = largest_segment_id
 
     # Return dataset
     return target_ds

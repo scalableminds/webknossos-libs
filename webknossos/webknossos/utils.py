@@ -80,11 +80,13 @@ def named_partial(func: F, *args: Any, **kwargs: Any) -> F:
     return partial_func
 
 
-def wait_and_ensure_success(futures: List[Future]) -> None:
+def wait_and_ensure_success(futures: List[Future]) -> List[Any]:
     """Waits for all futures to complete and raises an exception
     as soon as a future resolves with an error."""
+    results = []
     for fut in as_completed(futures):
-        fut.result()
+        results.append(fut.result())
+    return results
 
 
 def snake_to_camel_case(snake_case_name: str) -> str:
