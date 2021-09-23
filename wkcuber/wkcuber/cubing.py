@@ -178,7 +178,7 @@ def cubing_job(
         # Iterate over batches of continuous z sections
         # The batches have a maximum size of `batch_size`
         # Batched iterations allows to utilize IO more efficiently
-        first_z_idx = target_view.global_offset[2]
+        first_z_idx = target_view.global_offset.z
         for source_file_batch in get_chunks(source_file_batches, batch_size):
             try:
                 ref_time = time.time()
@@ -228,8 +228,8 @@ def cubing_job(
                         buffer, target_mag, interpolation_mode
                     )
                 buffer_z_offset = (
-                    first_z_idx - target_view.global_offset[2]
-                ) // target_mag.to_list()[2]
+                    first_z_idx - target_view.global_offset.z
+                ) // target_mag.z
                 target_view.write(offset=(0, 0, buffer_z_offset), data=buffer)
                 largest_value_in_chunk = max(largest_value_in_chunk, np.max(buffer))
                 logging.debug(
