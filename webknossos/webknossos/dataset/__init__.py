@@ -22,7 +22,7 @@ mag1 = layer.get_mag("1")
 ### Creating Datasets
 ```python
 from webknossos.dataset import Dataset
-from webknossos.dataset import Layer
+from webknossos.dataset import LayerCategories
 
 dataset = Dataset.create(<path_to_new_dataset>, scale=(1, 1, 1))
 layer = dataset.add_layer(

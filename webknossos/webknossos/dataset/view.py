@@ -9,10 +9,8 @@ import numpy as np
 from cluster_tools.schedulers.cluster_executor import ClusterExecutor
 from wkw import Dataset, wkw
 
-from webknossos.geometry import BoundingBox
+from webknossos.geometry import BoundingBox, Vec3Int, Vec3IntLike
 from webknossos.utils import wait_and_ensure_success
-
-Vec3 = Union[Tuple[int, int, int], np.ndarray]
 
 
 class View:
@@ -27,8 +25,8 @@ class View:
         self,
         path_to_mag_view: Path,
         header: wkw.Header,
-        size: Tuple[int, int, int],
-        global_offset: Tuple[int, int, int] = (0, 0, 0),
+        size: Vec3IntLike,
+        global_offset: Vec3IntLike,
         is_bounded: bool = True,
         read_only: bool = False,
         mag_view_bbox_at_creation: Optional[BoundingBox] = None,
@@ -39,8 +37,8 @@ class View:
         self._dataset: Optional[Dataset] = None
         self._path = path_to_mag_view
         self._header: wkw.Header = header
-        self._size: Tuple[int, int, int] = size
-        self._global_offset: Tuple[int, int, int] = global_offset
+        self._size: Vec3Int = Vec3Int(size)
+        self._global_offset: Vec3Int = Vec3Int(global_offset)
         self._is_bounded = is_bounded
         self._read_only = read_only
         self._is_opened = False
@@ -60,11 +58,11 @@ class View:
         return self._header
 
     @property
-    def size(self) -> Tuple[int, int, int]:
+    def size(self) -> Vec3Int:
         return self._size
 
     @property
-    def global_offset(self) -> Tuple[int, int, int]:
+    def global_offset(self) -> Vec3Int:
         return self._global_offset
 
     @property
@@ -105,7 +103,7 @@ class View:
     def write(
         self,
         data: np.ndarray,
-        offset: Vec3 = (0, 0, 0),
+        offset: Vec3IntLike = Vec3Int(0, 0, 0),
     ) -> None:
         """
         Writes the `data` at the specified `offset` to disk.
@@ -116,9 +114,11 @@ class View:
         """
         assert not self.read_only, "Cannot write data to an read_only View"
 
+        offset = Vec3Int(offset)
+
         was_opened = self._is_opened
         # assert the size of the parameter data is not in conflict with the attribute self.size
-        data_dims = cast(Tuple[int, int, int], data.shape[-3:])
+        data_dims = Vec3Int(data.shape[-3:])
         _assert_positive_dimensions(offset, data_dims)
         self._assert_bounds(offset, data_dims)
 
@@ -126,10 +126,7 @@ class View:
             data = data[0]  # remove channel dimension
 
         # calculate the absolute offset
-        absolute_offset = cast(
-            Tuple[int, int, int],
-            tuple(sum(x) for x in zip(self.global_offset, offset)),
-        )
+        absolute_offset = self.global_offset + offset
 
         if self._is_compressed():
             absolute_offset, data = self._handle_compressed_write(absolute_offset, data)
@@ -138,15 +135,15 @@ class View:
             self.open()
         assert self._dataset is not None  # because the View was opened
 
-        self._dataset.write(absolute_offset, data)
+        self._dataset.write(absolute_offset.to_np(), data)
 
         if not was_opened:
             self.close()
 
     def read(
         self,
-        offset: Vec3 = (0, 0, 0),
-        size: Vec3 = None,
+        offset: Vec3IntLike = Vec3Int(0, 0, 0),
+        size: Optional[Vec3IntLike] = None,
     ) -> np.ndarray:
         """
         The user can specify the `offset` and the `size` of the requested data.
@@ -178,18 +175,17 @@ class View:
         ```
         """
 
-        size = self.size if size is None else size
+        offset = Vec3Int(offset)
+        size = self.size if size is None else Vec3Int(size)
 
         # assert the parameter size is not in conflict with the attribute self.size
         _assert_positive_dimensions(offset, size)
         self._assert_bounds(offset, size)
 
         # calculate the absolute offset
-        absolute_offset = tuple(sum(x) for x in zip(self.global_offset, offset))
+        absolute_offset = self.global_offset + offset
 
-        return self._read_without_checks(
-            cast(Tuple[int, int, int], absolute_offset), size
-        )
+        return self._read_without_checks(absolute_offset, size)
 
     def read_bbox(self, bounding_box: Optional[BoundingBox] = None) -> np.ndarray:
         """
@@ -203,15 +199,15 @@ class View:
 
     def _read_without_checks(
         self,
-        absolute_offset: Vec3,
-        size: Vec3,
+        absolute_offset: Vec3Int,
+        size: Vec3Int,
     ) -> np.ndarray:
         was_opened = self._is_opened
         if not was_opened:
             self.open()
         assert self._dataset is not None  # because the View was opened
 
-        data = self._dataset.read(absolute_offset, size)
+        data = self._dataset.read(absolute_offset.to_np(), size.to_np())
 
         if not was_opened:
             self.close()
@@ -220,8 +216,8 @@ class View:
 
     def get_view(
         self,
-        offset: Tuple[int, int, int] = None,
-        size: Tuple[int, int, int] = None,
+        offset: Vec3IntLike = Vec3Int(0, 0, 0),
+        size: Optional[Vec3IntLike] = None,
         read_only: bool = None,
     ) -> "View":
         """
@@ -256,17 +252,12 @@ class View:
             read_only or read_only == self.read_only
         ), "Failed to get subview. The calling view is read_only. Therefore, the subview also has to be read_only."
 
-        if offset is None:
-            offset = (0, 0, 0)
-
-        if size is None:
-            size = self.size
+        offset = Vec3Int(offset)
+        size = self.size if size is None else Vec3Int(size)
 
         _assert_positive_dimensions(offset, size)
         self._assert_bounds(offset, size, not read_only)
-        view_offset = cast(
-            Tuple[int, int, int], tuple(self.global_offset + np.array(offset))
-        )
+        view_offset = self.global_offset + offset
         return View(
             self._path,
             self.header,
@@ -279,7 +270,7 @@ class View:
 
     def get_buffered_slice_writer(
             self,
-            offset: Tuple[int, int, int] = None,
+            offset: Vec3Int = None,
             buffer_size: int = 32,
             dimension: int = 2  # z
     ):
@@ -316,8 +307,8 @@ class View:
 
     def get_buffered_slice_reader(
         self,
-        offset: Tuple[int, int, int] = None,
-        size: Tuple[int, int, int] = None,
+        offset: Vec3Int = None,
+        size: Vec3Int = None,
         buffer_size: int = 32,
         dimension: int = 2  # z
     ):
@@ -350,8 +341,8 @@ class View:
 
     def _assert_bounds(
         self,
-        offset: Vec3,
-        size: Vec3,
+        offset: Vec3Int,
+        size: Vec3Int,
         strict: bool = None,
     ) -> None:
         if strict is None:
@@ -366,7 +357,7 @@ class View:
     def for_each_chunk(
         self,
         work_on_chunk: Callable[[Tuple["View", int]], None],
-        chunk_size: Tuple[int, int, int],
+        chunk_size: Vec3IntLike,
         executor: Optional[
             Union[ClusterExecutor, cluster_tools.WrappedProcessPoolExecutor]
         ] = None,
@@ -401,6 +392,8 @@ class View:
         ```
         """
 
+        chunk_size = Vec3Int(chunk_size)
+
         _check_chunk_size(chunk_size)
         # This "view" object assures that the operation cannot exceed the bounding box of the properties.
         # `View.get_view()` returns a `View` of the same size as the current object (because of the default parameters).
@@ -414,13 +407,10 @@ class View:
                 chunk_size, list(chunk_size)
             )
         ):
-            relative_offset = cast(
-                Tuple[int, int, int],
-                tuple(np.array(chunk.topleft) - np.array(view.global_offset)),
-            )
+            relative_offset = chunk.topleft - view.global_offset
             chunk_view = view.get_view(
                 offset=relative_offset,
-                size=cast(Tuple[int, int, int], tuple(chunk.size)),
+                size=chunk.size,
             )
             job_args.append((chunk_view, i))
 
@@ -435,8 +425,8 @@ class View:
         self,
         work_on_chunk: Callable[[Tuple["View", "View", int]], None],
         target_view: "View",
-        source_chunk_size: Vec3,
-        target_chunk_size: Vec3,
+        source_chunk_size: Vec3IntLike,
+        target_chunk_size: Vec3IntLike,
         executor: Optional[
             Union[ClusterExecutor, cluster_tools.WrappedProcessPoolExecutor]
         ] = None,
@@ -460,6 +450,8 @@ class View:
         - source_chunk_size: (2048, 2048, 2048)
         - target_chunk_size: (1024, 1024, 1024) // this must be a multiple of the file size on disk to avoid concurrent writes
         """
+        source_chunk_size = Vec3Int(source_chunk_size)
+        target_chunk_size = Vec3Int(target_chunk_size)
 
         _check_chunk_size(source_chunk_size)
         _check_chunk_size(target_chunk_size)
@@ -467,19 +459,19 @@ class View:
         source_view = self.get_view()
         target_view = target_view.get_view()
 
-        source_offset = np.array(source_view.global_offset)
-        target_offset = np.array(target_view.global_offset)
-        source_chunk_size_np = np.array(source_chunk_size)
-        target_chunk_size_np = np.array(target_chunk_size)
+        source_offset = source_view.global_offset
+        target_offset = target_view.global_offset
+        source_chunk_size_np = source_chunk_size.to_np()
+        target_chunk_size_np = target_chunk_size.to_np()
 
-        assert np.all(
-            np.array(source_view.size)
+        assert not source_view.size.contains(
+            0
         ), "Calling 'for_zipped_chunks' failed because the size of the source view contains a 0."
-        assert np.all(
-            np.array(target_view.size)
+        assert not target_view.size.contains(
+            0
         ), "Calling 'for_zipped_chunks' failed because the size of the target view contains a 0."
         assert np.array_equal(
-            np.array(source_view.size) / np.array(target_view.size),
+            source_view.size.to_np() / target_view.size.to_np(),
             source_chunk_size_np / target_chunk_size_np,
         ), f"Calling 'for_zipped_chunks' failed because the ratio of the view sizes (source size = {source_view.size}, target size = {target_view.size}) must be equal to the ratio of the chunk sizes (source_chunk_size = {source_chunk_size}, source_chunk_size = {target_chunk_size}))"
 
@@ -490,27 +482,27 @@ class View:
 
         job_args = []
         source_chunks = BoundingBox(source_offset, source_view.size).chunk(
-            source_chunk_size_np, list(source_chunk_size_np)
+            source_chunk_size, source_chunk_size.to_list()
         )
         target_chunks = BoundingBox(target_offset, target_view.size).chunk(
-            target_chunk_size, list(target_chunk_size)
+            target_chunk_size, target_chunk_size.to_list()
         )
 
         for i, (source_chunk, target_chunk) in enumerate(
             zip(source_chunks, target_chunks)
         ):
             # source chunk
-            relative_source_offset = np.array(source_chunk.topleft) - source_offset
+            relative_source_offset = source_chunk.topleft - source_offset
             source_chunk_view = source_view.get_view(
-                offset=cast(Tuple[int, int, int], tuple(relative_source_offset)),
-                size=cast(Tuple[int, int, int], tuple(source_chunk.size)),
+                offset=relative_source_offset,
+                size=source_chunk.size,
                 read_only=True,
             )
             # target chunk
-            relative_target_offset = np.array(target_chunk.topleft) - target_offset
+            relative_target_offset = target_chunk.topleft - target_offset
             target_chunk_view = target_view.get_view(
-                size=cast(Tuple[int, int, int], tuple(target_chunk.size)),
-                offset=cast(Tuple[int, int, int], tuple(relative_target_offset)),
+                size=target_chunk.size,
+                offset=relative_target_offset,
             )
 
             job_args.append((source_chunk_view, target_chunk_view, i))
@@ -529,8 +521,8 @@ class View:
         )
 
     def _handle_compressed_write(
-        self, absolute_offset: Tuple[int, int, int], data: np.ndarray
-    ) -> Tuple[Tuple[int, int, int], np.ndarray]:
+        self, absolute_offset: Vec3Int, data: np.ndarray
+    ) -> Tuple[Vec3Int, np.ndarray]:
         # calculate aligned bounding box
         file_bb = np.full(3, self.header.file_len * self.header.block_len)
         absolute_offset_np = np.array(absolute_offset)
@@ -574,7 +566,9 @@ class View:
                     "Warning: write() was called on a compressed mag without block alignment. Performance will be degraded as the data has to be padded first.",
                     RuntimeWarning,
                 )
-            aligned_data = self._read_without_checks(aligned_offset, aligned_shape)
+            aligned_data = self._read_without_checks(
+                Vec3Int(aligned_offset), Vec3Int(aligned_shape)
+            )
 
             index_slice = (
                 slice(None, None),
@@ -587,7 +581,7 @@ class View:
             )
             # overwrite the specified data
             aligned_data[tuple(index_slice)] = data
-            return cast(Tuple[int, int, int], tuple(aligned_offset)), aligned_data
+            return Vec3Int(aligned_offset), aligned_data
         else:
             return absolute_offset, data
 
@@ -620,7 +614,7 @@ class View:
         return self._mag_view_bbox_at_creation
 
 
-def _assert_positive_dimensions(offset: Vec3, size: Vec3) -> None:
+def _assert_positive_dimensions(offset: Vec3Int, size: Vec3Int) -> None:
     if any(x < 0 for x in offset):
         raise AssertionError(
             f"The offset ({offset}) contains a negative value. All dimensions must be larger or equal to '0'."
@@ -631,7 +625,7 @@ def _assert_positive_dimensions(offset: Vec3, size: Vec3) -> None:
         )
 
 
-def _check_chunk_size(chunk_size: Vec3) -> None:
+def _check_chunk_size(chunk_size: Vec3Int) -> None:
     assert chunk_size is not None
 
     if 0 in chunk_size:

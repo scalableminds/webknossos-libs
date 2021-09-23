@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -eEuo pipefail
 
 if [ $# -eq 1 ] && [ "$1" = "check" ]; then

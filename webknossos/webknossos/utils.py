@@ -1,10 +1,12 @@
 import argparse
+import calendar
 import functools
 import json
 import logging
 import time
 from concurrent.futures import as_completed
 from concurrent.futures._base import Future
+from datetime import datetime
 from multiprocessing import cpu_count
 from typing import Any, Callable, List, Optional, Union, Iterable
 
@@ -95,3 +97,9 @@ def snake_to_camel_case(snake_case_name: str) -> str:
 def get_chunks(arr: List[Any], chunk_size: int) -> Iterable[List[Any]]:
     for i in range(0, len(arr), chunk_size):
         yield arr[i : i + chunk_size]
+
+
+def time_since_epoch_in_ms() -> int:
+    d = datetime.utcnow()
+    unixtime = calendar.timegm(d.utctimetuple())
+    return unixtime * 1000

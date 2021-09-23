@@ -55,13 +55,13 @@ class BufferedSliceReader(object):
                 n_slices <= self.buffer_size
             ), f"n_slices should at most be batch_size, but {n_slices} > {self.buffer_size}"
 
-            bbox_offset = self.target_bbox.topleft.tolist()
-            bbox_size = self.target_bbox.size.tolist()
+            bbox_offset = self.target_bbox.topleft
+            bbox_size = self.target_bbox.size
 
             buffer_bounding_box = BoundingBox.from_tuple2(
                 (
-                    bbox_offset[:self.dimension] + [batch_start_idx] + bbox_offset[self.dimension+1:],
-                    bbox_size[:self.dimension] + [n_slices] + bbox_size[self.dimension+1:],
+                    bbox_offset[:self.dimension] + (batch_start_idx,) + bbox_offset[self.dimension+1:],
+                    bbox_size[:self.dimension] + (n_slices,) + bbox_size[self.dimension+1:],
                 )
             )
 

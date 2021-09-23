@@ -17,7 +17,7 @@ SOURCE_PATH = Path("testdata") / DS_NAME
 def test_export_tiff_stack() -> None:
     destination_path = os.path.join("testoutput", DS_NAME + "_tiff")
     bbox = BoundingBox((100, 100, 10), (100, 500, 50))
-    bbox_dict = bbox.as_config()
+    bbox_dict = bbox.to_config_dict()
     args_list = [
         "--source_path",
         str(SOURCE_PATH),
@@ -28,7 +28,7 @@ def test_export_tiff_stack() -> None:
         "--name",
         "test_export",
         "--bbox",
-        bbox.as_csv(),
+        bbox.to_csv(),
         "--mag",
         "1",
     ]
