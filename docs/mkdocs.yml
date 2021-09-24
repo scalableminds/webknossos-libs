@@ -62,7 +62,7 @@ nav:
     - Community Support: https://forum.image.sc/tag/webknossos" target="_blank
     - Email Support: mailto:hello@webknossos.org
     - Commercial Support: https://scalableminds.com" target="_blank
-- Python API:
+- Python Library:
   - Intro: webknossos-py/index.md
   - Dataset API: api/webknossos/dataset.md
 - wkcuber CLI: wkcuber/index.md
