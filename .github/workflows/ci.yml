@@ -267,6 +267,7 @@ jobs:
     - name: Build Docs
       run: |
         docs/generate.sh --persist
+        rm -r docs/out/wk-repo
 
     - name: Push docs (for branch)
       if: startsWith(github.event.ref, 'refs/heads')
