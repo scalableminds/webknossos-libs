@@ -10,6 +10,17 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 [Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.13...HEAD)
 
 ### Breaking Changes in Config & CLI
+- Refactored the BufferedSliceWriter and added a BufferedSliceReader. [#425](https://github.com/scalableminds/webknossos-libs/pull/425)
+  - BufferedSliceWriter
+    - The data no longer gets transposed: previously the format of the slices was [y,x]; now it is [x,y]
+    - The interface of the constructor was changed: 
+      - A `View` (or `MagView`) is now required as datasource
+      - The parameter `dimension` can be used to specify the axis along the data is sliced
+      - The offset is expected to be in the magnification of the view
+    - This class is now supposed to be used within a context manager and the slices are written by sending them to the generator (see documentation of the class).
+  - BufferedSliceReader
+    - This class was added complementary to the BufferedSliceWriter
+  - Added methods to get a BufferedSliceReader/BufferedSliceWriter from a View directly
 
 ### Added
 

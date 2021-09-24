@@ -1,39 +1,21 @@
 import re
-from pathlib import Path
-from types import TracebackType
-
-import logging
-import argparse
-
 import wkw
 import numpy as np
 import os
-import psutil
-import traceback
 
 from typing import (
-    List,
     Tuple,
-    Union,
-    Iterable,
     Generator,
-    Any,
-    Optional,
-    Type,
 )
 from glob import iglob
 from collections import namedtuple
-from multiprocessing import cpu_count
-from os import path, getpid
 from math import floor, ceil
 from logging import getLogger
-
 from wkcuber.api.bounding_box import BoundingBox
 
 from .knossos import KnossosDataset
 from .mag import Mag
 
-from webknossos.dataset.defaults import DEFAULT_WKW_FILE_LEN
 from webknossos.utils import *  # pylint: disable=unused-wildcard-import,wildcard-import
 
 WkwDatasetInfo = namedtuple(
@@ -49,6 +31,9 @@ CUBE_REGEX = re.compile(
 )
 
 logger = getLogger(__name__)
+
+
+Vec3 = Union[Tuple[int, int, int], np.ndarray]
 
 
 def open_wkw(info: WkwDatasetInfo) -> wkw.Dataset:
@@ -165,11 +150,6 @@ def find_files(
     )
 
 
-def get_chunks(arr: List[Any], chunk_size: int) -> Iterable[List[Any]]:
-    for i in range(0, len(arr), chunk_size):
-        yield arr[i : i + chunk_size]
-
-
 # min_z and max_z are both inclusive
 def get_regular_chunks(
     min_z: int, max_z: int, chunk_size: int
@@ -210,154 +190,6 @@ def add_batch_size_flag(parser: argparse.ArgumentParser) -> None:
         help="Number of sections to buffer per job",
         type=int,
         default=BLOCK_LEN,
-    )
-
-
-class BufferedSliceWriter(object):
-    def __init__(
-        self,
-        dataset_path: Path,
-        layer_name: str,
-        dtype: np.dtype,
-        origin: Union[Tuple[int, int, int], List[int]],
-        # buffer_size specifies, how many slices should be aggregated until they are flushed.
-        buffer_size: int = 32,
-        # file_len specifies, how many buckets written per dimension into a wkw cube. Using 32,
-        # results in 1 GB/wkw file for 8-bit data
-        file_len: int = DEFAULT_WKW_FILE_LEN,
-        mag: Mag = Mag("1"),
-    ):
-
-        self.dataset_path = dataset_path
-        self.layer_name = layer_name
-        self.buffer_size = buffer_size
-
-        layer_path = path.join(self.dataset_path, self.layer_name, mag.to_layer_name())
-
-        self.dtype = dtype
-        self.dataset = wkw.Dataset.open(
-            layer_path, wkw.Header(dtype, file_len=file_len)
-        )
-        self.origin = origin
-
-        self.buffer: List[np.ndarray] = []
-        self.current_z: Optional[int] = None
-        self.buffer_start_z: Optional[int] = None
-
-    def write_slice(self, z: int, data: np.ndarray) -> None:
-        """Takes in a slice in [y, x] shape, writes to WKW file."""
-
-        if len(self.buffer) == 0:
-            self.current_z = z
-            self.buffer_start_z = z
-
-        assert (
-            z == self.current_z
-        ), "({}) Slices have to be written sequentially!".format(getpid())
-
-        self.buffer.append(data.transpose())
-        self.current_z += 1
-
-        if self.current_z % self.buffer_size == 0:
-            self._write_buffer()
-
-    def _write_buffer(self) -> None:
-
-        if len(self.buffer) == 0:
-            return
-
-        assert (
-            len(self.buffer) <= self.buffer_size
-        ), "The WKW buffer is larger than the defined batch_size. The buffer should have been flushed earlier. This is probably a bug in the BufferedSliceWriter."
-
-        uniq_dtypes = set(map(lambda _slice: _slice.dtype, self.buffer))
-        assert (
-            len(uniq_dtypes) == 1
-        ), "The buffer of BufferedSliceWriter contains slices with differing dtype."
-        assert uniq_dtypes.pop() == self.dtype, (
-            "The buffer of BufferedSliceWriter contains slices with a dtype "
-            "which differs from the dtype with which the BufferedSliceWriter was instantiated."
-        )
-
-        logger.debug(
-            "({}) Writing {} slices at position {}.".format(
-                getpid(), len(self.buffer), self.buffer_start_z
-            )
-        )
-        log_memory_consumption()
-
-        try:
-            assert (
-                self.buffer_start_z is not None
-            ), "Failed to write buffer: The buffer_start_z is not set."
-            origin_with_offset = list(self.origin)
-            origin_with_offset[2] = self.buffer_start_z
-            x_max = max(slice.shape[0] for slice in self.buffer)
-            y_max = max(slice.shape[1] for slice in self.buffer)
-
-            self.buffer = [
-                np.pad(
-                    slice,
-                    mode="constant",
-                    pad_width=[
-                        (0, x_max - slice.shape[0]),
-                        (0, y_max - slice.shape[1]),
-                    ],
-                )
-                for slice in self.buffer
-            ]
-
-            data = np.concatenate(
-                [np.expand_dims(slice, 2) for slice in self.buffer], axis=2
-            )
-            self.dataset.write(origin_with_offset, data)
-
-        except Exception as exc:
-            logger.error(
-                "({}) An exception occurred in BufferedSliceWriter._write_buffer with {} "
-                "slices at position {}. Original error is:\n{}:{}\n\nTraceback:".format(
-                    getpid(),
-                    len(self.buffer),
-                    self.buffer_start_z,
-                    type(exc).__name__,
-                    exc,
-                )
-            )
-            traceback.print_tb(exc.__traceback__)
-            logger.error("\n")
-
-            raise exc
-        finally:
-            self.buffer = []
-
-    def close(self) -> None:
-
-        self._write_buffer()
-        self.dataset.close()
-
-    def __enter__(self) -> "BufferedSliceWriter":
-        return self
-
-    def __exit__(
-        self,
-        _type: Optional[Type[BaseException]],
-        _value: Optional[BaseException],
-        _tb: Optional[TracebackType],
-    ) -> None:
-        self.close()
-
-
-def log_memory_consumption(additional_output: str = "") -> None:
-    pid = os.getpid()
-    process = psutil.Process(pid)
-    logging.info(
-        "Currently consuming {:.2f} GB of memory ({:.2f} GB still available) "
-        "in process {}. {}".format(
-            process.memory_info().rss / 1024 ** 3,
-            psutil.virtual_memory().available / 1024 ** 3,
-            pid,
-            additional_output,
-        )
     )
 
 
@@ -411,10 +243,6 @@ def pad_or_crop_to_size_and_topleft(
     )
 
     return cube_data
-
-
-def ceil_div_np(numerator: np.ndarray, denominator: np.ndarray) -> np.ndarray:
-    return -(-numerator // denominator)
 
 
 def convert_mag1_offset(

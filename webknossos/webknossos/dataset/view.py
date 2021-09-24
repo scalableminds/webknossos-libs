@@ -2,7 +2,7 @@ import math
 import warnings
 from pathlib import Path
 from types import TracebackType
-from typing import Callable, Optional, Tuple, Type, Union
+from typing import TYPE_CHECKING, Callable, Optional, Tuple, Type, Union
 
 import cluster_tools
 import numpy as np
@@ -11,6 +11,10 @@ from wkw import Dataset, wkw
 
 from webknossos.geometry import BoundingBox, Vec3Int, Vec3IntLike
 from webknossos.utils import wait_and_ensure_success
+
+if TYPE_CHECKING:
+    from webknossos.dataset._utils.buffered_slice_reader import BufferedSliceReader
+    from webknossos.dataset._utils.buffered_slice_writer import BufferedSliceWriter
 
 
 class View:
@@ -266,6 +270,73 @@ class View:
             is_bounded=True,
             read_only=read_only,
             mag_view_bbox_at_creation=self._mag_view_bounding_box_at_creation,
+        )
+
+    def get_buffered_slice_writer(
+        self, offset: Vec3Int = None, buffer_size: int = 32, dimension: int = 2  # z
+    ) -> "BufferedSliceWriter":
+        """
+        The BufferedSliceWriter buffers multiple slices before they are written to disk.
+        The amount of slices that get buffered is specified by `buffer_size`.
+        As soon as the buffer is full, the data gets written to disk.
+
+        The user can specify along which dimension the data is sliced by using the parameter `dimension`.
+        To slice along the x-axis use `0`, for the y-axis use `1`, or for the z-axis use `2` (default: dimension=2).
+
+        The BufferedSliceWriter must be used as context manager using the `with` syntax (see example below),
+        which results in a generator consuming np.ndarray-slices via `writer.send(slice)`.
+        Exiting the context will automatically flush any remaining buffered data to disk.
+
+        Usage:
+        data_cube = ...
+        view = ...
+        with view.get_buffered_slice_writer() as writer:
+            for data_slice in data_cube:
+                writer.send(data_slice)
+
+        """
+        from webknossos.dataset._utils.buffered_slice_writer import BufferedSliceWriter
+
+        return BufferedSliceWriter(
+            view=self,
+            offset=offset if offset is not None else Vec3Int(0, 0, 0),
+            buffer_size=buffer_size,
+            dimension=dimension,
+        )
+
+    def get_buffered_slice_reader(
+        self,
+        offset: Vec3Int = None,
+        size: Vec3Int = None,
+        buffer_size: int = 32,
+        dimension: int = 2,  # z
+    ) -> "BufferedSliceReader":
+        """
+        The BufferedSliceReader yields slices of data along a specified axis.
+        Internally, it reads multiple slices from disk at once and buffers the data.
+        The amount of slices that get buffered is specified by `buffer_size`.
+
+        The user can specify along which dimension the data is sliced by using the parameter `dimension`.
+        To slice along the x-axis use `0`, for the y-axis use `1`, or for the z-axis use `2` (default: dimension=2).
+
+        The BufferedSliceReader must be used as a context manager using the `with` syntax (see example below).
+        Entering the context returns a generator with yields slices (np.ndarray).
+
+        Usage:
+        view = ...
+        with view.get_buffered_slice_reader() as reader:
+            for slice_data in reader:
+                ...
+
+        """
+        from webknossos.dataset._utils.buffered_slice_reader import BufferedSliceReader
+
+        return BufferedSliceReader(
+            view=self,
+            offset=offset if offset is not None else Vec3Int(0, 0, 0),
+            size=size if size is not None else self.size,
+            buffer_size=buffer_size,
+            dimension=dimension,
         )
 
     def _assert_bounds(
