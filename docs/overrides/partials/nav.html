@@ -65,17 +65,29 @@
 
     {% if not rendered_toc %}
     <li class="{{ class }}">
-    {% set toc = page.toc %}
-
-    <!-- Hack: see partials/toc.html for more information -->
-    {% if toc | first is defined and "\x3ch1 id=\"" + (toc | first).url[1:] + "\"" in page.content %}
-        {% set toc = (toc | first).children %}
-    {% endif %}
-
-    <!-- Show table of contents -->
-    {% if toc | first is defined %}
-        {% include "partials/toc.html" %}
-    {% endif %}
+      <nav class="md-nav md-nav--secondary" aria-label="webKnossos Documentation">
+        <label class="md-nav__title" for="__toc">
+          <span class="md-nav__icon md-icon"></span>
+          webKnossos Documentation
+        </label>
+        <ul class="md-nav__list" data-md-component="toc">
+          <li class="md-nav__item">
+            <a href="{{ base_url }}/webknossos/" class="md-nav__link">
+              webKnossos
+            </a>
+          </li>
+          <li class="md-nav__item">
+            <a href="{{ base_url }}/webknossos-py/" class="md-nav__link">
+              Python Library
+            </a>
+          </li>
+          <li class="md-nav__item">
+            <a href="{{ base_url }}/wkcuber/" class="md-nav__link">
+              wkcuber CLI
+            </a>
+          </li>
+        </ul>
+      </nav>
     </li>
     {% endif %}
 

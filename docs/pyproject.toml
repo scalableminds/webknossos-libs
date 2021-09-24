@@ -9,11 +9,12 @@ readme = "README.md"
 python = "^3.7"
 
 [tool.poetry.dev-dependencies]
-webknossos = { path = "../webknossos/", develop = true }
-wkcuber = { path = "../wkcuber/", develop = true }
-pdoc = "7.4.0"
 mkdocs = "1.2.2"
 mkdocs-material = "7.2.6"
+mkdocs-redirects = "^1.0.3"
+pdoc = "7.4.0"
+webknossos = { path = "../webknossos/", develop = true }
+wkcuber = { path = "../wkcuber/", develop = true }
 
 [build-system]
 requires = ["poetry>=1.0"]
