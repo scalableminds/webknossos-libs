@@ -138,5 +138,5 @@ dmypy.json
 cython_debug/
 
 /src/api
-/src/wk-repo
+/wk-repo
 /out

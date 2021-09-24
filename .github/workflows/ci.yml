@@ -253,7 +253,7 @@ jobs:
     - uses: actions/checkout@v2
       with:
         repository: scalableminds/webknossos
-        path: docs/src/wk-repo
+        path: docs/wk-repo
     - name: Set up Python 3.8
       uses: actions/setup-python@v1
       with:
@@ -267,7 +267,6 @@ jobs:
     - name: Build Docs
       run: |
         docs/generate.sh --persist
-        rm -r docs/out/wk-repo
 
     - name: Push docs (for branch)
       if: startsWith(github.event.ref, 'refs/heads')

@@ -52,9 +52,9 @@ nav:
     - webknossos/data_formats.md
     - Keyboard Shortcuts: webknossos/keyboard_shortcuts.md
     - Backend REST API: webknossos/rest_api.md
-    - Code Readme: wk-repo/README.md
-    - Changelog: wk-repo/CHANGELOG.released.md
-    - Migration Guide: wk-repo/MIGRATIONS.released.md
+    - Code Readme: webknossos/code-readme.md
+    - Changelog: webknossos/CHANGELOG.released.md
+    - Migration Guide: webknossos/MIGRATIONS.released.md
     - webknossos/publications.md
     - webknossos/tooling.md
   - Getting Help:

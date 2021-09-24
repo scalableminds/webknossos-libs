@@ -7,11 +7,11 @@ PROJECT_DIR="$(dirname "$(dirname "$0")")"
 cd "$PROJECT_DIR/docs"
 poetry install
 
-if [ ! -d "src/wk-repo" ]; then
+if [ ! -d "wk-repo" ]; then
     echo
     echo ERROR!
-    echo 'Either link or clone the webknossos repository to "docs/src/wk-repo", e.g. with'
-    echo 'git clone git@github.com:scalableminds/webknossos.git docs/src/wk-repo'
+    echo 'Either link or clone the webknossos repository to "docs/wk-repo", e.g. with'
+    echo 'git clone git@github.com:scalableminds/webknossos.git docs/wk-repo'
     exit 1
 fi
 
