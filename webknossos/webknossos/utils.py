@@ -8,7 +8,7 @@ from concurrent.futures import as_completed
 from concurrent.futures._base import Future
 from datetime import datetime
 from multiprocessing import cpu_count
-from typing import Any, Callable, List, Optional, Union
+from typing import Any, Callable, Iterable, List, Optional, Union
 
 from cluster_tools import WrappedProcessPoolExecutor, get_executor
 from cluster_tools.schedulers.cluster_executor import ClusterExecutor
@@ -92,6 +92,11 @@ def wait_and_ensure_success(futures: List[Future]) -> None:
 def snake_to_camel_case(snake_case_name: str) -> str:
     parts = snake_case_name.split("_")
     return parts[0] + "".join(part.title() for part in parts[1:])
+
+
+def get_chunks(arr: List[Any], chunk_size: int) -> Iterable[List[Any]]:
+    for i in range(0, len(arr), chunk_size):
+        yield arr[i : i + chunk_size]
 
 
 def time_since_epoch_in_ms() -> int:

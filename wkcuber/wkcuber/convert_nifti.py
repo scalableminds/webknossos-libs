@@ -8,10 +8,10 @@ from typing import Tuple, Optional, Union, cast
 import nibabel as nib
 import numpy as np
 
+from webknossos.dataset.defaults import DEFAULT_WKW_FILE_LEN
 from wkcuber.api.dataset import Dataset
 from wkcuber.api.bounding_box import BoundingBox
 from wkcuber.utils import (
-    DEFAULT_WKW_FILE_LEN,
     DEFAULT_WKW_VOXELS_PER_BLOCK,
     add_verbose_flag,
     add_scale_flag,
