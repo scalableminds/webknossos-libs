@@ -278,7 +278,7 @@ jobs:
       run: |
         CI_BRANCH=${GITHUB_REF##*/}
         NORMALIZED_CI_BRANCH=${CI_BRANCH//[\/-]/_}
-        aws s3 sync --acl public-read docs/out s3://static.webknossos.org/lib-docs/${NORMALIZED_CI_BRANCH}
+        aws s3 sync --acl public-read docs/out s3://static.webknossos.org/docs/${NORMALIZED_CI_BRANCH}
 
     - name: Push docs (for tag)
       if: startsWith(github.event.ref, 'refs/tags')
@@ -288,7 +288,7 @@ jobs:
         AWS_DEFAULT_REGION: "eu-west-1"
       run: |
         CI_TAG=$(git describe --tags)
-        aws s3 sync --acl public-read docs/out s3://static.webknossos.org/lib-docs/${CI_TAG}
+        aws s3 sync --acl public-read docs/out s3://static.webknossos.org/docs/${CI_TAG}
 
 
   pypi:
