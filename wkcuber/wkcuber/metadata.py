@@ -260,7 +260,7 @@ def detect_bbox(dataset_path: Path, layer: str, mag: Mag = Mag(1)) -> Optional[d
     }
 
 
-def detect_resolutions(dataset_path: Path, layer: str) -> Generator:
+def detect_resolutions(dataset_path: Path, layer: str) -> Generator[Mag, None, None]:
     for mag in listdir(path.join(dataset_path, layer)):
         try:
             yield Mag(mag)
@@ -300,7 +300,7 @@ def detect_standard_layer(
 
     resolutions = [
         {
-            "resolution": mag.to_array(),
+            "resolution": mag.to_list(),
             "cubeLength": detect_cubeLength(dataset_path, layer_name, mag),
         }
         for mag in mags
