@@ -318,11 +318,13 @@ jobs:
 
   complete:
     needs: [webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac, wkcuber_docker, docs]
-    if: |
-      always() &&
-      !contains(needs.*.result, 'failure') &&
-      !contains(needs.*.result, 'cancelled')
+    if: always()
     runs-on: ubuntu-latest
     steps:
+    - name: Check failure
+      if: |
+        contains(needs.*.result, 'failure') ||
+        contains(needs.*.result, 'cancelled')
+      run: exit 1
     - name: Success
       run: echo Success!
