@@ -1,7 +1,3 @@
----
-hide:
-- navigation
----
 # webKnossos-libs
 <img align="right" src="https://static.webknossos.org/images/oxalis.svg" alt="webKnossos Logo" />
 

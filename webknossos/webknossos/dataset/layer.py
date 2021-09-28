@@ -11,7 +11,7 @@ from os import makedirs
 from os.path import join
 from pathlib import Path
 from shutil import rmtree
-from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union, cast
+from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 from wkw import wkw
@@ -458,23 +458,20 @@ class Layer:
 
     @property
     def bounding_box(self) -> BoundingBox:
-        return self._properties.bounding_box.copy()
+        return self._properties.bounding_box
 
     @bounding_box.setter
     def bounding_box(self, bbox: BoundingBox) -> None:
         """
         Updates the offset and size of the bounding box of this layer in the properties.
         """
-        self._properties.bounding_box = bbox.copy()
+        self._properties.bounding_box = bbox
 
         for mag, mag_view in self.mags.items():
-            mag_view._size = cast(
-                Tuple[int, int, int],
-                tuple(
-                    self._properties.bounding_box.align_with_mag(mag, ceil=True)
-                    .in_mag(mag)
-                    .bottomright
-                ),
+            mag_view._size = (
+                self._properties.bounding_box.align_with_mag(mag, ceil=True)
+                .in_mag(mag)
+                .bottomright
             )
         self.dataset._export_as_json()
 
@@ -534,8 +531,8 @@ class Layer:
         elif sampling_mode == SamplingModes.ISOTROPIC:
             scale = None
         elif sampling_mode == SamplingModes.CONSTANT_Z:
-            max_mag_with_fixed_z = max_mag.to_array()
-            max_mag_with_fixed_z[2] = from_mag.to_array()[2]
+            max_mag_with_fixed_z = max_mag.to_list()
+            max_mag_with_fixed_z[2] = from_mag.to_list()[2]
             max_mag = Mag(max_mag_with_fixed_z)
             scale = None
         else:
@@ -545,7 +542,7 @@ class Layer:
 
         mags_to_downsample = calculate_mags_to_downsample(from_mag, max_mag, scale)
 
-        if len(set([max(m.to_array()) for m in mags_to_downsample])) != len(
+        if len(set([max(m.to_list()) for m in mags_to_downsample])) != len(
             mags_to_downsample
         ):
             msg = (
@@ -605,7 +602,7 @@ class Layer:
         prev_mag_view = self.mags[from_mag]
 
         mag_factors = [
-            t // s for (t, s) in zip(target_mag.to_array(), from_mag.to_array())
+            t // s for (t, s) in zip(target_mag.to_list(), from_mag.to_list())
         ]
 
         # initialize the new mag
@@ -684,11 +681,11 @@ class Layer:
         ), f"Failed to downsample data. The from_mag ({from_mag}) does not exist."
 
         # The lambda function is important because 'sorted(target_mags)' would only sort by the maximum element per mag
-        target_mags = sorted(target_mags, key=lambda m: m.to_array())
+        target_mags = sorted(target_mags, key=lambda m: m.to_list())
 
         for i in range(len(target_mags) - 1):
             assert np.less_equal(
-                target_mags[i].as_np(), target_mags[i + 1].as_np()
+                target_mags[i].to_np(), target_mags[i + 1].to_np()
             ).all(), (
                 f"Downsampling failed: cannot downsample {target_mags[i].to_layer_name()} to {target_mags[i + 1].to_layer_name()}. "
                 f"Check 'target_mags' ({', '.join([str(mag) for mag in target_mags])}): each pair of adjacent Mags results in a downsampling step."
@@ -735,8 +732,8 @@ class Layer:
         elif sampling_mode == SamplingModes.ISOTROPIC:
             scale = None
         elif sampling_mode == SamplingModes.CONSTANT_Z:
-            min_mag_with_fixed_z = min_mag.to_array()
-            min_mag_with_fixed_z[2] = from_mag.to_array()[2]
+            min_mag_with_fixed_z = min_mag.to_list()
+            min_mag_with_fixed_z[2] = from_mag.to_list()[2]
             min_mag = Mag(min_mag_with_fixed_z)
             scale = self.dataset.scale
         else:
@@ -755,7 +752,7 @@ class Layer:
             prev_mag_view = self.mags[prev_mag]
 
             mag_factors = [
-                t / s for (t, s) in zip(target_mag.to_array(), prev_mag.to_array())
+                t / s for (t, s) in zip(target_mag.to_list(), prev_mag.to_list())
             ]
 
             # initialize the new mag

@@ -98,7 +98,7 @@ class LayerViewConfiguration:
 
 @attr.define
 class MagViewProperties:
-    resolution: Union[int, Mag]
+    resolution: Mag
     cube_length: int
 
 
@@ -133,13 +133,13 @@ class DatasetProperties:
 dataset_converter = cattr.Converter()
 
 # register (un-)structure hooks for non-attr-classes
-bbox_to_wkw: Callable[[BoundingBox], dict] = lambda o: o.as_wkw()
+bbox_to_wkw: Callable[[BoundingBox], dict] = lambda o: o.to_wkw_dict()
 dataset_converter.register_unstructure_hook(BoundingBox, bbox_to_wkw)
 dataset_converter.register_structure_hook(
-    BoundingBox, lambda d, _: BoundingBox.from_wkw(d)
+    BoundingBox, lambda d, _: BoundingBox.from_wkw_dict(d)
 )
 
-mag_to_array: Callable[[Mag], List[int]] = lambda o: o.to_array()
+mag_to_array: Callable[[Mag], List[int]] = lambda o: o.to_list()
 dataset_converter.register_unstructure_hook(Mag, mag_to_array)
 dataset_converter.register_structure_hook(Mag, lambda d, _: Mag(d))
 
@@ -198,23 +198,4 @@ def disambiguate_layer_properties(obj: dict, _: Any) -> LayerProperties:
 
 dataset_converter.register_structure_hook(
     Union[SegmentationLayerProperties, LayerProperties], disambiguate_layer_properties
-)
-
-
-def disambiguate_mag(obj: dict, _: Any) -> Mag:
-    # This function is necessary because cattrs does not support unions of non-attrs objects out of the box
-    return Mag(obj)
-
-
-dataset_converter.register_structure_hook(Union[int, Mag], disambiguate_mag)
-
-# Separate converter to unstructure LayerProperties
-# This is used to initialize SegmentationLayerProperties from LayerProperties
-# The important difference to the dataset_converter is that the names of the attributes stay the same while defaults are also omitted.
-layer_properties_converter = cattr.Converter()
-layer_properties_converter.register_unstructure_hook(  # use register_unstructure_hook_func
-    LayerProperties,
-    make_dict_unstructure_fn(
-        LayerProperties, layer_properties_converter, omit_if_default=True
-    ),
 )

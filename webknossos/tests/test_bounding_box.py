@@ -46,3 +46,16 @@ def test_in_mag() -> None:
     assert BoundingBox((2, 2, 2), (10, 10, 10)).in_mag(Mag(2)) == BoundingBox(
         topleft=(1, 1, 1), size=(5, 5, 5)
     )
+
+
+def test_with_bounds() -> None:
+
+    assert BoundingBox((1, 2, 3), (5, 5, 5)).with_bounds_x(0, 10) == BoundingBox(
+        (0, 2, 3), (10, 5, 5)
+    )
+    assert BoundingBox((1, 2, 3), (5, 5, 5)).with_bounds_y(
+        new_topleft_y=0
+    ) == BoundingBox((1, 0, 3), (5, 5, 5))
+    assert BoundingBox((1, 2, 3), (5, 5, 5)).with_bounds_z(
+        new_size_z=10
+    ) == BoundingBox((1, 2, 3), (5, 5, 10))
