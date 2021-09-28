@@ -18,7 +18,7 @@ def test_export_nifti_file() -> None:
     destination_path.mkdir()
 
     bbox = BoundingBox((100, 100, 10), (100, 500, 50))
-    bbox_dict = bbox.as_config()
+    bbox_dict = bbox.to_config_dict()
     args_list = [
         "--source_path",
         str(source_path),
@@ -27,7 +27,7 @@ def test_export_nifti_file() -> None:
         "--name",
         "test_export",
         "--source_bbox",
-        bbox.as_csv(),
+        bbox.to_csv(),
         "--mag",
         "1",
     ]
