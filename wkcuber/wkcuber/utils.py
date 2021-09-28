@@ -79,6 +79,15 @@ def parse_bounding_box(bbox_str: str) -> BoundingBox:
         raise argparse.ArgumentTypeError("The bounding box could not be parsed.") from e
 
 
+def parse_padding(padding_str: str) -> Tuple[int, ...]:
+    try:
+        padding_tuple = tuple(int(x) for x in padding_str.split(","))
+        assert len(padding_tuple) == 6, "Padding needs to have six components"
+        return padding_tuple
+    except Exception as e:
+        raise argparse.ArgumentTypeError("The padding could not be parsed") from e
+
+
 def open_knossos(info: KnossosDatasetInfo) -> KnossosDataset:
     return KnossosDataset.open(info.dataset_path, np.dtype(info.dtype))
 
