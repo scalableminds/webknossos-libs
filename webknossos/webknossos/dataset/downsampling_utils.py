@@ -68,9 +68,7 @@ def calculate_mags_to_downsample(
                 new_mag = Mag(np.minimum(current_mag.to_np() * 2, max_mag.to_np()))
             else:
                 # Multiply only the minimal dimension by "2".
-                new_mag = Mag(
-                    np.minimum(current_mag.to_np() * factor, max_mag.to_np())
-                )
+                new_mag = Mag(np.minimum(current_mag.to_np() * factor, max_mag.to_np()))
             if new_mag == current_mag:
                 raise RuntimeError(
                     f"The maximum mag {max_mag} can not be reached from {current_mag} with scale {scale}!"
