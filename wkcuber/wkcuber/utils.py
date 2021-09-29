@@ -147,6 +147,10 @@ def add_sampling_mode_flag(parser: argparse.ArgumentParser) -> None:
     )
 
 
+def is_wk_compatible_layer_format(channel_count: int, dtype: str) -> bool:
+    return (channel_count == 1) or (channel_count == 3 and dtype == "uint8")
+
+
 def setup_logging(args: argparse.Namespace) -> None:
     logging.basicConfig(
         level=(logging.DEBUG if args.verbose else logging.INFO),

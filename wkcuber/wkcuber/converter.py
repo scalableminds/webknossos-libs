@@ -3,17 +3,18 @@ from os import path, sep
 from pathlib import Path
 from typing import Iterable, List, Any, Tuple, Dict, Set, Callable, cast, Optional
 
-from .cubing import (
-    cubing as cube_image_stack,
-    create_parser as create_image_stack_parser,
-    get_channel_and_sample_count_and_dtype,
-)
 from .convert_knossos import (
     main as convert_knossos,
     create_parser as create_knossos_parser,
 )
 from .convert_nifti import main as convert_nifti, create_parser as create_nifti_parser
+from .cubing import (
+    cubing as cube_image_stack,
+    create_parser as create_image_stack_parser,
+    get_channel_and_sample_count_and_dtype,
+)
 from .image_readers import image_reader
+from .metadata import write_webknossos_metadata
 from .utils import (
     find_files,
     add_scale_flag,
@@ -21,8 +22,8 @@ from .utils import (
     add_verbose_flag,
     setup_logging,
     get_executor_args,
+    is_wk_compatible_layer_format,
 )
-from .metadata import write_webknossos_metadata
 
 
 def create_parser() -> ArgumentParser:
@@ -391,9 +392,7 @@ class ImageStackConverter(Converter):
             channel_count, sample_count, dtype = get_channel_and_sample_count_and_dtype(
                 Path(layer_path)
             )
-            if channel_count == 1 or (
-                channel_count * sample_count == 3 and dtype == "uint8"
-            ):
+            if is_wk_compatible_layer_format(channel_count * sample_count, dtype):
                 arg_dict = vars(args)
                 bounding_box = cube_image_stack(
                     Path(layer_path),
@@ -410,7 +409,7 @@ class ImageStackConverter(Converter):
                     args.pad,
                     executor_args,
                 )
-            elif sample_count == 3 and dtype == "uint8":
+            elif is_wk_compatible_layer_format(sample_count, dtype):
                 for i in range(channel_count):
                     arg_dict = vars(args)
 
