@@ -26,7 +26,7 @@ def detect_present_mags(target_path: Path) -> Dict[Path, List[Mag]]:
         mag_paths = list([p for p in layer_p.iterdir() if p.is_dir()])
         for mag_p in mag_paths:
             try:
-                mag = Mag(mag_p.stem)
+                mag = Mag(mag_p.name)
             except (AssertionError, ValueError) as _:
                 continue
             layer_path_to_mags[layer_p].append(mag)
@@ -80,12 +80,12 @@ def main(args: Namespace) -> None:
 
     if not args.no_compress:
         for (layer_path, mags) in layer_path_to_mags.items():
-            layer_name = layer_path.stem
+            layer_name = layer_path.name
             for mag in mags:
                 compress_mag_inplace(args.target_path, layer_name, mag, args)
 
     for (layer_path, mags) in layer_path_to_mags.items():
-        layer_name = layer_path.stem
+        layer_name = layer_path.name
         mags.sort()
         downsample_mags(
             path=args.target_path,

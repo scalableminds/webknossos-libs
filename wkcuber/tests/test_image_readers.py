@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from wkcuber.image_readers import ImageReaderManager
+from wkcuber.image_readers import ImageReaderManager, new_image_reader
 import numpy as np
 
 TESTDATA_DIR = Path("testdata")
@@ -24,10 +24,11 @@ def test_single_channel_conversion() -> None:
     multi_channel_data = image_reader_manager.read_array(
         TESTDATA_DIR / "rgb_tiff" / "test_rgb.tif", np.uint8, 0
     )
+    new_image_reader()
     single_channel_data = np.empty((3, 32, 32, 1, 1), multi_channel_data.dtype)
     for i in range(3):
         single_channel_data[i] = image_reader_manager.read_array(
-            TESTDATA_DIR / "rgb_tiff" / "test_rgb.tif", np.uint8, 0, (i, i + 1)
+            TESTDATA_DIR / "rgb_tiff" / "test_rgb.tif", np.uint8, 0, 0, i
         )
 
     single_channel_data = single_channel_data.transpose((1, 2, 0, 3, 4))

@@ -61,6 +61,7 @@ def main(args: Namespace) -> None:
         args.layer_name,
         arg_dict.get("batch_size"),
         arg_dict.get("channel_index"),
+        arg_dict.get("sample_index"),
         arg_dict.get("dtype"),
         args.target_mag,
         args.wkw_file_len,

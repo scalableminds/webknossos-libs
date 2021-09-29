@@ -391,14 +391,17 @@ class ImageStackConverter(Converter):
             channel_count, sample_count, dtype = get_channel_and_sample_count_and_dtype(
                 Path(layer_path)
             )
-            if channel_count == 1 or (channel_count == 3 and dtype == "uint8"):
+            if channel_count == 1 or (
+                channel_count * sample_count == 3 and dtype == "uint8"
+            ):
                 arg_dict = vars(args)
                 bounding_box = cube_image_stack(
                     Path(layer_path),
                     args.target_path,
                     layer_name,
                     arg_dict.get("batch_size"),
-                    arg_dict.get("channel_index"),
+                    None,  # channel_index
+                    None,  # sample_index
                     arg_dict.get("dtype"),
                     args.target_mag,
                     args.wkw_file_len,
@@ -407,8 +410,8 @@ class ImageStackConverter(Converter):
                     args.pad,
                     executor_args,
                 )
-            elif channel_count // sample_count == 3 and dtype == "uint8":
-                for i in range(channel_count // sample_count):
+            elif sample_count == 3 and dtype == "uint8":
+                for i in range(channel_count):
                     arg_dict = vars(args)
 
                     bounding_box = cube_image_stack(
@@ -416,7 +419,8 @@ class ImageStackConverter(Converter):
                         args.target_path,
                         f"{layer_name}_{i}",
                         arg_dict.get("batch_size"),
-                        (i, i + sample_count),  # channel index
+                        i,  # channel index
+                        None,  # sample_count (= all samples)
                         arg_dict.get("dtype"),
                         args.target_mag,
                         args.wkw_file_len,
@@ -427,27 +431,31 @@ class ImageStackConverter(Converter):
                     )
             else:
                 for i in range(channel_count):
-                    curr_layer_name = f"{layer_name}_{i}"
-                    arg_dict = vars(args)
+                    for j in range(sample_count):
+                        curr_layer_name = f"{layer_name}_{i}"
+                        arg_dict = vars(args)
 
-                    bounding_box = cube_image_stack(
-                        Path(layer_path),
-                        args.target_path,
-                        curr_layer_name,
-                        arg_dict.get("batch_size"),
-                        (i, i + 1),  # channel index
-                        arg_dict.get("dtype"),
-                        args.target_mag,
-                        args.wkw_file_len,
-                        args.interpolation_mode,
-                        args.start_z,
-                        args.pad,
-                        executor_args,
-                    )
+                        bounding_box = cube_image_stack(
+                            Path(layer_path),
+                            args.target_path,
+                            curr_layer_name,
+                            arg_dict.get("batch_size"),
+                            i,  # channel index
+                            j,  # sample index
+                            arg_dict.get("dtype"),
+                            args.target_mag,
+                            args.wkw_file_len,
+                            args.interpolation_mode,
+                            args.start_z,
+                            args.pad,
+                            executor_args,
+                        )
 
-                    view_configuration[
-                        curr_layer_name
-                    ] = ImageStackConverter.get_view_configuration(i)
+                        view_configuration[
+                            curr_layer_name
+                        ] = ImageStackConverter.get_view_configuration(
+                            i * sample_count + j
+                        )
 
         assert converted_layers > 0, "No layer could be converted!"
 
