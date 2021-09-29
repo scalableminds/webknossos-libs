@@ -744,10 +744,26 @@ class ImageReaderManager:
                 CziImageReader,
             ],
         ] = {
+            # TIFF file endings
             ".tif": TiffImageReader(),
             ".tiff": TiffImageReader(),
+            # JPEG file endings
             ".jpg": PillowImageReader(),
             ".jpeg": PillowImageReader(),
+            ".jpe": PillowImageReader(),
+            ".jfif": PillowImageReader(),
+            ".jif": PillowImageReader(),
+            # JPEG2000 file endings
+            ".jp2": PillowImageReader(),
+            ".j2k": PillowImageReader(),
+            ".jpf": PillowImageReader(),
+            ".jpm": PillowImageReader(),
+            ".jpg2": PillowImageReader(),
+            ".j2c": PillowImageReader(),
+            ".jpc": PillowImageReader(),
+            ".jpx": PillowImageReader(),
+            ".mj2": PillowImageReader(),
+            # Other image file endings
             ".png": PillowImageReader(),
             ".dm3": Dm3ImageReader(),
             ".dm4": Dm4ImageReader(),

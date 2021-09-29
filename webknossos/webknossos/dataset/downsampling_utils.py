@@ -2,13 +2,13 @@ import logging
 import math
 from enum import Enum
 from itertools import product
-from typing import Callable, List, Optional, Tuple, Union, cast
+from typing import Callable, List, Optional, Tuple, cast
 
 import numpy as np
 from scipy.ndimage import zoom
 from wkw import wkw
 
-from webknossos.geometry import Mag
+from webknossos.geometry import Mag, Vec3Int, Vec3IntLike
 from webknossos.utils import time_start, time_stop
 
 from .view import View
@@ -33,9 +33,6 @@ class InterpolationModes(Enum):
 DEFAULT_EDGE_LEN = 256
 
 
-Vec3 = Union[Tuple[int, int, int], np.ndarray]
-
-
 def determine_buffer_edge_len(dataset: wkw.Dataset) -> int:
     return min(DEFAULT_EDGE_LEN, dataset.header.file_len * dataset.header.block_len)
 
@@ -43,16 +40,16 @@ def determine_buffer_edge_len(dataset: wkw.Dataset) -> int:
 def calculate_mags_to_downsample(
     from_mag: Mag, max_mag: Mag, scale: Optional[Tuple[float, float, float]]
 ) -> List[Mag]:
-    assert np.all(from_mag.as_np() <= max_mag.as_np())
+    assert np.all(from_mag.to_np() <= max_mag.to_np())
     mags = []
     current_mag = from_mag
     while current_mag < max_mag:
         if scale is None:
             # In case the sampling mode is CONSTANT_Z or ISOTROPIC:
-            current_mag = Mag(np.minimum(current_mag.as_np() * 2, max_mag.as_np()))
+            current_mag = Mag(np.minimum(current_mag.to_np() * 2, max_mag.to_np()))
         else:
             # In case the sampling mode is ANISOTROPIC:
-            current_size = current_mag.as_np() * np.array(scale)
+            current_size = current_mag.to_np() * np.array(scale)
             min_value = np.min(current_size)
             min_value_bitmask = np.array(current_size == min_value)
             factor = min_value_bitmask + 1
@@ -68,12 +65,15 @@ def calculate_mags_to_downsample(
             # The smaller the ratio between the smallest dimension and the largest dimension, the better.
             if all_scaled_ratio < min_scaled_ratio:
                 # Multiply all dimensions with "2"
-                current_mag = Mag(np.minimum(current_mag.as_np() * 2, max_mag.as_np()))
+                new_mag = Mag(np.minimum(current_mag.to_np() * 2, max_mag.to_np()))
             else:
                 # Multiply only the minimal dimension by "2".
-                current_mag = Mag(
-                    np.minimum(current_mag.as_np() * factor, max_mag.as_np())
+                new_mag = Mag(np.minimum(current_mag.to_np() * factor, max_mag.to_np()))
+            if new_mag == current_mag:
+                raise RuntimeError(
+                    f"The maximum mag {max_mag} can not be reached from {current_mag} with scale {scale}!"
                 )
+            current_mag = new_mag
 
         mags += [current_mag]
 
@@ -88,7 +88,8 @@ def calculate_mags_to_upsample(
     ] + [min_mag]
 
 
-def calculate_default_max_mag(dataset_size: Vec3) -> Mag:
+def calculate_default_max_mag(dataset_size: Vec3IntLike) -> Mag:
+    dataset_size = Vec3Int(dataset_size)
     # The lowest mag should have a size of ~ 100vx**2 per slice
     max_x_y = max(dataset_size[0], dataset_size[1])
     # highest power of 2 larger (or equal) than max_x_y divided by 100
@@ -234,7 +235,7 @@ def downsample_unpadded_data(
     logging.info(
         f"Downsampling buffer of size {buffer.shape} to mag {target_mag.to_layer_name()}"
     )
-    target_mag_np = np.array(target_mag.to_array())
+    target_mag_np = np.array(target_mag.to_list())
     current_dimension_size = np.array(buffer.shape[1:])
     padding_size_for_downsampling = (
         target_mag_np - (current_dimension_size % target_mag_np) % target_mag_np
@@ -243,12 +244,12 @@ def downsample_unpadded_data(
     buffer = np.pad(
         buffer, pad_width=[(0, 0)] + padding_size_for_downsampling, mode="constant"
     )
-    dimension_decrease = np.array([1] + target_mag.to_array())
+    dimension_decrease = np.array([1] + target_mag.to_list())
     downsampled_buffer_shape = np.array(buffer.shape) // dimension_decrease
     downsampled_buffer = np.empty(dtype=buffer.dtype, shape=downsampled_buffer_shape)
     for channel in range(buffer.shape[0]):
         downsampled_buffer[channel] = downsample_cube(
-            buffer[channel], target_mag.to_array(), interpolation_mode
+            buffer[channel], target_mag.to_list(), interpolation_mode
         )
     return downsampled_buffer
 

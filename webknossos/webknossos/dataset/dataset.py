@@ -9,10 +9,11 @@ from pathlib import Path
 from shutil import rmtree
 from typing import Any, Dict, Optional, Tuple, Union, cast
 
+import attr
 import numpy as np
 import wkw
 
-from webknossos.geometry import BoundingBox
+from webknossos.geometry import BoundingBox, Vec3Int
 from webknossos.utils import get_executor_for_args
 
 from .layer import (
@@ -32,7 +33,6 @@ from .properties import (
     _extract_num_channels,
     _properties_floating_type_to_python_type,
     dataset_converter,
-    layer_properties_converter,
 )
 from .view import View
 
@@ -238,8 +238,8 @@ class Dataset:
 
             segmentation_layer_properties: SegmentationLayerProperties = (
                 SegmentationLayerProperties(
-                    **layer_properties_converter.unstructure(
-                        layer_properties
+                    **(
+                        attr.asdict(layer_properties, recurse=False)
                     ),  # use all attributes from LayerProperties
                     largest_segment_id=kwargs["largest_segment_id"],
                 )
@@ -517,12 +517,9 @@ class Dataset:
 
                     # The bounding box needs to be updated manually because chunked views do not have a reference to the dataset itself
                     # The base view of a MagDataset always starts at (0, 0, 0)
-                    target_mag._global_offset = (0, 0, 0)
-                    target_mag._size = cast(
-                        Tuple[int, int, int],
-                        tuple(
-                            bbox.align_with_mag(mag, ceil=True).in_mag(mag).bottomright
-                        ),
+                    target_mag._global_offset = Vec3Int(0, 0, 0)
+                    target_mag._size = (
+                        bbox.align_with_mag(mag, ceil=True).in_mag(mag).bottomright
                     )
                     target_mag.layer.bounding_box = bbox
 

@@ -179,13 +179,9 @@ def convert_dtype_to_element_class(dtype: np.dtype) -> str:
     element_class_to_dtype_map = {
         "float": np.float32,
         "double": np.float64,
-        "uint8": np.uint8,
-        "uint16": np.uint16,
-        "uint32": np.uint32,
-        "uint64": np.uint64,
     }
     conversion_map = {v: k for k, v in element_class_to_dtype_map.items()}
-    return conversion_map.get(dtype, str(dtype))
+    return conversion_map.get(dtype, str(np.dtype(dtype)))
 
 
 def detect_mag_path(
@@ -264,7 +260,7 @@ def detect_bbox(dataset_path: Path, layer: str, mag: Mag = Mag(1)) -> Optional[d
     }
 
 
-def detect_resolutions(dataset_path: Path, layer: str) -> Generator:
+def detect_resolutions(dataset_path: Path, layer: str) -> Generator[Mag, None, None]:
     for mag in listdir(path.join(dataset_path, layer)):
         try:
             yield Mag(mag)
@@ -304,7 +300,7 @@ def detect_standard_layer(
 
     resolutions = [
         {
-            "resolution": mag.to_array(),
+            "resolution": mag.to_list(),
             "cubeLength": detect_cubeLength(dataset_path, layer_name, mag),
         }
         for mag in mags

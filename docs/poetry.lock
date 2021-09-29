@@ -409,6 +409,23 @@ optional = false
 python-versions = ">=3.6"
 
 [[package]]
+name = "mkdocs-redirects"
+version = "1.0.3"
+description = "A MkDocs plugin for dynamic page redirects to prevent broken links."
+category = "dev"
+optional = false
+python-versions = ">=2.7"
+
+[package.dependencies]
+mkdocs = ">=1.0.4,<2"
+six = ">=1.15.0,<2"
+
+[package.extras]
+dev = ["pytest (<5)", "twine (>=1.13.0,<2)"]
+release = ["twine (>=1.13.0,<2)"]
+test = ["pytest (<5)"]
+
+[[package]]
 name = "natsort"
 version = "6.2.1"
 description = "Simple yet flexible natural sorting in Python."
@@ -854,7 +871,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "78db46a98c3a28e6a60e501b156432393077f3fa018d4f1f1abccddaeea4e7d6"
+content-hash = "c0201fdad49fd76b34c38d9499d80d1c74ab482b8bf29fc4f2bf6be213d1e9fa"
 
 [metadata.files]
 anyio = [
@@ -1146,6 +1163,9 @@ mkdocs-material = [
 mkdocs-material-extensions = [
     {file = "mkdocs-material-extensions-1.0.3.tar.gz", hash = "sha256:bfd24dfdef7b41c312ede42648f9eb83476ea168ec163b613f9abd12bbfddba2"},
     {file = "mkdocs_material_extensions-1.0.3-py3-none-any.whl", hash = "sha256:a82b70e533ce060b2a5d9eb2bc2e1be201cf61f901f93704b4acf6e3d5983a44"},
+]
+mkdocs-redirects = [
+    {file = "mkdocs-redirects-1.0.3.tar.gz", hash = "sha256:db413e1d1ef5e88d8427c0a259d72ae85e74a2b51f6cd7605c2a8db358fe340f"},
 ]
 natsort = [
     {file = "natsort-6.2.1-py2.py3-none-any.whl", hash = "sha256:daae7b2e22ef21305bf6921e49f6ad25d0e29f924e96e3bb447449e11446c726"},
