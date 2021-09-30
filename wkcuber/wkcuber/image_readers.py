@@ -176,7 +176,7 @@ class Dm4ImageReader(ImageReader):
 
 class TiffImageReader(ImageReader):
     def __init__(self) -> None:
-        self.z_axis_name: Optional[str] = None
+        self.z_axis_name: Optional[str] = None  # possible values [Z, I, Q]
         self.axes: Dict[
             str, Tuple[bool, int, int]
         ] = {}  # axis name to (exists, index, dimension)
@@ -188,6 +188,10 @@ class TiffImageReader(ImageReader):
     def _get_page_index(
         self, tif_file: TiffFile, z_index: int, c_index: int, s_index: int
     ) -> int:
+        # TiffFile consists of Tiff Pages, which are ordered according to the axis order
+        # To find the index of the page that contains the data we want, we increase the page_index for each axis that we are looking for
+        # Additionally, we multiply the index with dimension of each axis to "skip" the necessary amount of pages.
+        # We divide by an axis if it is present in the TiffPage because there are less TiffPages to skip.
         page_index = 0
         for axis in tif_file.series[0].axes:
             page_index *= self.axes[axis][2]
@@ -315,33 +319,15 @@ class TiffImageReader(ImageReader):
             for page_index, (data_c_index, data_s_index,) in self._find_correct_pages(
                 tif_file, channel_index, sample_index, z_index
             ).items():
-                if data_s_index is not None:
-                    output_channel_offset_increment = 1
-                elif data_c_index is not None:
-                    output_channel_offset_increment = (
-                        1 if "S" not in self.page_axes else self.page_axes["S"][2]
-                    )
-                else:
-                    s_increment = (
-                        1 if "S" not in self.page_axes else self.page_axes["S"][2]
-                    )
-                    c_increment = (
-                        1 if "C" not in self.page_axes else self.page_axes["C"][2]
-                    )
-                    output_channel_offset_increment = c_increment * s_increment
-
-                next_channel_offset = (
-                    output_channel_offset + output_channel_offset_increment
-                )
                 page_data = tif_file.pages[page_index].asarray()
 
                 # remove any axis that we do not use
-                # left over axes [CYXS] (Z axis is not on same TiffPage)
+                # left over axes [(C)YX(S)] (Z axis is not on same TiffPage)
                 for axis in self.page_axes:
                     if axis not in self.used_axes:
                         page_data = page_data.take([0], self.page_axes[axis][1])
 
-                # axes order is then [(C)(S)YX]
+                # axes order is then [YX(S)(C)]
                 if page_data.ndim == 4:
                     page_data = page_data.transpose(
                         (
@@ -380,8 +366,8 @@ class TiffImageReader(ImageReader):
                 if data_s_index is not None:
                     page_data = page_data.take([data_s_index], -1)
 
-                # means C and S axis present and no data index set
                 if page_data.ndim == 4:
+                    # means C and S axis present and no data index set
                     for c in range(page_data.shape[-1]):
                         output[
                             :,
@@ -392,12 +378,15 @@ class TiffImageReader(ImageReader):
                         output_channel_offset += (
                             output_channel_offset + self.page_axes["S"][2]
                         )
+                elif page_data.ndim == 3:
+                    next_channel_offset = output_channel_offset + page_data.shape[-1]
+                    output[:, :, output_channel_offset:next_channel_offset] = page_data
+                    output_channel_offset = next_channel_offset
                 elif page_data.ndim == 2:
                     output[:, :, output_channel_offset] = page_data
                     output_channel_offset += 1
                 else:
-                    output[:, :, output_channel_offset:next_channel_offset] = page_data
-                output_channel_offset = next_channel_offset
+                    raise Exception("Invalid axis count")
 
             output = np.array(output, dtype)
             output = output.reshape(output.shape + (1,))
@@ -452,6 +441,7 @@ class TiffImageReader(ImageReader):
             self.z_axis_name = "Z"
         self.used_axes.add(self.z_axis_name)
 
+
 class CziImageReader(ImageReader):
     def __init__(self) -> None:
         # Shape of a single tile
@@ -496,8 +486,7 @@ class CziImageReader(ImageReader):
         if self.axes["C"][0]:
             c_count_per_tile = self.tile_shape[self.axes["C"][1]]
             c_tiles_for_complete_axis = (
-                self.dataset_shape[self.axes["C"][1]]
-                // self.tile_shape[self.axes["C"][1]]
+                self.dataset_shape[self.axes["C"][1]] // c_count_per_tile
             )
 
         tile_z_index: int = 0

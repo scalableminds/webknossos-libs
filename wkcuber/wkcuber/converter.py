@@ -23,6 +23,7 @@ from .utils import (
     setup_logging,
     get_executor_args,
     is_wk_compatible_layer_format,
+    get_channel_and_sample_iters_for_wk_compatibility,
 )
 
 
@@ -392,34 +393,30 @@ class ImageStackConverter(Converter):
             channel_count, sample_count, dtype = get_channel_and_sample_count_and_dtype(
                 Path(layer_path)
             )
-            if is_wk_compatible_layer_format(channel_count * sample_count, dtype):
-                arg_dict = vars(args)
-                bounding_box = cube_image_stack(
-                    Path(layer_path),
-                    args.target_path,
-                    layer_name,
-                    arg_dict.get("batch_size"),
-                    None,  # channel_index
-                    None,  # sample_index
-                    arg_dict.get("dtype"),
-                    args.target_mag,
-                    args.wkw_file_len,
-                    args.interpolation_mode,
-                    args.start_z,
-                    args.pad,
-                    executor_args,
-                )
-            elif is_wk_compatible_layer_format(sample_count, dtype):
-                for i in range(channel_count):
-                    arg_dict = vars(args)
 
+            (
+                channel_iter,
+                sample_iter,
+            ) = get_channel_and_sample_iters_for_wk_compatibility(
+                channel_count, sample_count, dtype
+            )
+
+            layer_count = 0
+            for channel_index in channel_iter:
+                for sample_index in sample_iter:
+                    if len(channel_iter) * len(sample_iter) > 1:
+                        curr_layer_name = f"{layer_name}_{layer_count}"
+                    else:
+                        curr_layer_name = layer_name
+
+                    arg_dict = vars(args)
                     bounding_box = cube_image_stack(
                         Path(layer_path),
                         args.target_path,
-                        f"{layer_name}_{i}",
+                        curr_layer_name,
                         arg_dict.get("batch_size"),
-                        i,  # channel index
-                        None,  # sample_count (= all samples)
+                        channel_index,
+                        sample_index,
                         arg_dict.get("dtype"),
                         args.target_mag,
                         args.wkw_file_len,
@@ -428,33 +425,13 @@ class ImageStackConverter(Converter):
                         args.pad,
                         executor_args,
                     )
-            else:
-                for i in range(channel_count):
-                    for j in range(sample_count):
-                        curr_layer_name = f"{layer_name}_{i}"
-                        arg_dict = vars(args)
 
-                        bounding_box = cube_image_stack(
-                            Path(layer_path),
-                            args.target_path,
-                            curr_layer_name,
-                            arg_dict.get("batch_size"),
-                            i,  # channel index
-                            j,  # sample index
-                            arg_dict.get("dtype"),
-                            args.target_mag,
-                            args.wkw_file_len,
-                            args.interpolation_mode,
-                            args.start_z,
-                            args.pad,
-                            executor_args,
-                        )
-
+                    if not is_wk_compatible_layer_format(sample_count, dtype):
+                        # this means that every sample has to be converted into its own layer, so we want to set a view configuration since first three layers are probably RGB
                         view_configuration[
                             curr_layer_name
-                        ] = ImageStackConverter.get_view_configuration(
-                            i * sample_count + j
-                        )
+                        ] = ImageStackConverter.get_view_configuration(layer_count)
+                    layer_count += 1
 
         assert converted_layers > 0, "No layer could be converted!"
 

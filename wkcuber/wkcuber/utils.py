@@ -6,6 +6,7 @@ import os
 from typing import (
     Tuple,
     Generator,
+    Sequence,
 )
 from glob import iglob
 from collections import namedtuple
@@ -143,6 +144,20 @@ def add_sampling_mode_flag(parser: argparse.ArgumentParser) -> None:
 
 def is_wk_compatible_layer_format(channel_count: int, dtype: str) -> bool:
     return (channel_count == 1) or (channel_count == 3 and dtype == "uint8")
+
+
+def get_channel_and_sample_iters_for_wk_compatibility(
+    channel_count: int, sample_count: int, dtype: str
+) -> Tuple[Sequence, Sequence]:
+    if is_wk_compatible_layer_format(channel_count * sample_count, dtype):
+        # combine all channel and samples into a single layer
+        return ([None], [None])
+    elif is_wk_compatible_layer_format(sample_count, dtype):
+        # Convert each channel into a separate layer and convert each sample to wkw channels
+        return (range(channel_count), [None])
+    else:
+        # Convert each channel and sample into a separate layer
+        return (range(channel_count), range(sample_count))
 
 
 def setup_logging(args: argparse.Namespace) -> None:

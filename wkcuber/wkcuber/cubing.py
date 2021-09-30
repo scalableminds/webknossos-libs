@@ -88,7 +88,7 @@ def create_parser() -> ArgumentParser:
         "magnification before writing to disk. The magnification can "
         "be provided like 2-2-1.",
         default="1",
-        type=Mag
+        type=Mag,
     )
 
     parser.add_argument(
@@ -307,7 +307,7 @@ def cubing(
     num_output_channels = num_channels * num_samples
     if channel_index is not None:
         # if there is no c axis, but someone meant to only use one channel/sample, set the sample index instead
-        if sample_index is None and num_channels == 0 < channel_index:
+        if sample_index is None and num_channels == 1 and channel_index > 0:
             sample_index = channel_index
             channel_index = 0
 

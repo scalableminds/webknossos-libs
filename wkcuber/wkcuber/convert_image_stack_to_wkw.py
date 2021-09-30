@@ -18,6 +18,7 @@ from .utils import (
     add_sampling_mode_flag,
     get_executor_args,
     is_wk_compatible_layer_format,
+    get_channel_and_sample_iters_for_wk_compatibility,
 )
 
 
@@ -58,7 +59,7 @@ def create_parser() -> ArgumentParser:
         action="store_true",
     )
     parser.add_argument(
-        "--force_wkw_format",
+        "--force_non_webknossos_format",
         help="Specifies if the data should be converted, although webKnossos cannot read the result.",
         default=False,
         action="store_true",
@@ -74,7 +75,7 @@ def create_parser() -> ArgumentParser:
 
 def _handle_hierarchical_data(args: Namespace, dtype: str, sample_count: int) -> None:
     if not is_wk_compatible_layer_format(sample_count, dtype):
-        if args.force_wkw_format:
+        if args.force_non_webknossos_format:
             logging.warning(
                 "Chosen wkw format is incompatible with webKnossos. Proceeding anyways..."
             )
@@ -99,34 +100,35 @@ def main(args: Namespace) -> None:
     if arg_dict.get("dtype") is not None:
         dtype = args.get("dtype")
 
+    assert not (
+        args.prefer_layers and args.prefer_channels
+    ), "Invalid configuration. You cannot use prefer_channels and prefer_layers simultaneously."
+
     channel_iter: Sequence = [None]
     sample_iter: Sequence = [None]
     if (
         arg_dict.get("channel_index") is not None
         or arg_dict.get("sample_index") is not None
     ):
+        # The user selected an explicit channel or sample
         channel_iter = [arg_dict.get("channel_index")]
         sample_iter = [arg_dict.get("sample_index")]
     elif not args.prefer_layers and not args.prefer_channels:
         # user did not specify how to deal with data formats => make wk compatible
-        if is_wk_compatible_layer_format(channel_count * sample_count, dtype):
-            channel_iter = [None]
-            sample_iter = [None]
-        elif is_wk_compatible_layer_format(sample_count, dtype):
-            channel_iter = range(channel_count)
-            sample_iter = [None]
-        else:
-            channel_iter = range(channel_count)
-            sample_iter = range(sample_count)
+        channel_iter, sample_iter = get_channel_and_sample_iters_for_wk_compatibility(
+            channel_count, sample_count, dtype
+        )
     elif args.prefer_channels:
         if channel_count > 1 and sample_count > 1:
+            # no ambiguity exists, since channel axis and sample axis exist.
+            # Use natural hierarchy, so each channel is a layer and the samples are wkw channels
             _handle_hierarchical_data(args, dtype, sample_count)
             channel_iter = range(channel_count)
             sample_iter = [None]
         else:
             # not both axes exist, so we use the disambiguation strategy prefer channels
             if not is_wk_compatible_layer_format(channel_count * sample_count, dtype):
-                if args.force_wkw_format:
+                if args.force_non_webknossos_format:
                     logging.warning(
                         "Chosen wkw format is incompatible with webKnossos. Proceeding anyways..."
                     )
@@ -138,6 +140,8 @@ def main(args: Namespace) -> None:
             sample_iter = [None]
     elif args.prefer_layers:
         if channel_count > 1 and sample_count > 1:
+            # no ambiguity exists, since channel axis and sample axis exist.
+            # Use natural hierarchy, so each channel is a layer and the samples are wkw channels
             _handle_hierarchical_data(args, dtype, sample_count)
             channel_iter = range(channel_count)
             sample_iter = [None]
@@ -148,8 +152,8 @@ def main(args: Namespace) -> None:
 
     layer_count = 0
     bounding_box = None
-    for channel in channel_iter:
-        for sample in sample_iter:
+    for channel_index in channel_iter:
+        for sample_index in sample_iter:
             bounding_box = cubing(
                 args.source_path,
                 args.target_path,
@@ -157,8 +161,8 @@ def main(args: Namespace) -> None:
                 if len(channel_iter) * len(sample_iter) > 1
                 else args.layer_name,
                 arg_dict.get("batch_size"),
-                channel,
-                sample,
+                channel_index,
+                sample_index,
                 arg_dict.get("dtype"),
                 args.target_mag,
                 args.wkw_file_len,

@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 set -xe
 mkdir -p testoutput/tiff4
 
@@ -8,7 +9,7 @@ python -m wkcuber.convert_image_stack_to_wkw \
   --jobs 2 \
   --batch_size 8 \
   --layer_name color \
-  --max_mag 2 \
+  --max_mag 4 \
   --target_mag 2\
   --scale 1,1,1 \
   --name awesome_data \
