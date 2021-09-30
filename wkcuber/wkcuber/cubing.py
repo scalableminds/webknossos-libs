@@ -100,7 +100,6 @@ def create_parser() -> ArgumentParser:
 
     parser.add_argument(
         "--sample_index",
-        "-s",
         type=int,
         default=None,
         help="Select a single sample of a specific channel to be cubed into a layer. This option is only valid if channel_index is set. Since webKnossos only supports multiple uint8 channels, it may be necessary to cube a multi-sample dataset to different layers.",
