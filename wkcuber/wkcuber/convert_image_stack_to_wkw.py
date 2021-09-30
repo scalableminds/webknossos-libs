@@ -80,7 +80,7 @@ def _handle_hierarchical_data(args: Namespace, dtype: str, sample_count: int) ->
             )
         else:
             raise AssertionError(
-                "Chosen wkw format would not be compatibly with webKnossos. If you wish to convert it anyway, use --force_wkw_format."
+                "Chosen wkw format would not be compatible with webKnossos. If you wish to convert it anyway, use --force_wkw_format."
             )
 
 
@@ -107,7 +107,7 @@ def main(args: Namespace) -> None:
     ):
         channel_iter = [arg_dict.get("channel_index")]
         sample_iter = [arg_dict.get("sample_index")]
-    elif not args.prefer_layers or not args.prefer_channels:
+    elif not args.prefer_layers and not args.prefer_channels:
         # user did not specify how to deal with data formats => make wk compatible
         if is_wk_compatible_layer_format(channel_count * sample_count, dtype):
             channel_iter = [None]
@@ -132,7 +132,7 @@ def main(args: Namespace) -> None:
                     )
                 else:
                     raise AssertionError(
-                        "Chosen wkw format would not be compatibly with webKnossos. If you wish to convert it anyway, use --force_wkw_format."
+                        "Chosen wkw format would not be compatible with webKnossos. If you wish to convert it anyway, use --force_wkw_format."
                     )
             channel_iter = [None]
             sample_iter = [None]
@@ -182,14 +182,14 @@ def main(args: Namespace) -> None:
             compress_mag_inplace(
                 args.target_path,
                 f"{args.layer_name}_{i}" if layer_count > 1 else args.layer_name,
-                Mag(1),
+                args.target_mag,
                 args,
             )
 
         downsample_mags(
             path=args.target_path,
             layer_name=f"{args.layer_name}_{i}" if layer_count > 1 else args.layer_name,
-            from_mag=Mag(1),
+            from_mag=args.target_mag,
             max_mag=None if args.max_mag is None else Mag(args.max_mag),
             interpolation_mode="default",
             compress=not args.no_compress,

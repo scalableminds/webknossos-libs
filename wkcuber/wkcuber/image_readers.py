@@ -183,7 +183,7 @@ class TiffImageReader(ImageReader):
         self.page_axes: Dict[
             str, Tuple[int, int, int]
         ] = {}  # axis name to (index, access_index, dimension)
-        self.used_axes = {"Q", "I", "Z", "C", "Y", "X", "S"}
+        self.used_axes = {"C", "Y", "X", "S"}
 
     def _get_page_index(
         self, tif_file: TiffFile, z_index: int, c_index: int, s_index: int
@@ -450,7 +450,7 @@ class TiffImageReader(ImageReader):
                 i_count * q_count == 1
             ), "Format error, as multiple Z axis names were identified"
             self.z_axis_name = "Z"
-
+        self.used_axes.add(self.z_axis_name)
 
 class CziImageReader(ImageReader):
     def __init__(self) -> None:
