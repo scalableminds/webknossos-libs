@@ -85,7 +85,7 @@ def create_parser() -> ArgumentParser:
         "magnification before writing to disk. The magnification can "
         "be provided like 2-2-1.",
         default=Mag("1"),
-        type=Mag
+        type=Mag,
     )
 
     parser.add_argument(
