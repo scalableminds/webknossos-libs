@@ -46,7 +46,7 @@ def create_parser() -> ArgumentParser:
         "x, y, z (or after Mag(1) was upsampled). For example, a minimum mag value of 2 (or 2-2-2) will stop "
         "the upsampling as soon as a magnification is produced for which one dimension is smaller than 2. "
         "The default value is Mag(1)",
-        type=int,
+        type=Mag,
         default=Mag(1),
     )
 

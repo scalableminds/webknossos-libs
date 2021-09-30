@@ -70,10 +70,10 @@ def main(args: Namespace) -> None:
     )
 
     if not args.no_compress:
-        compress_mag_inplace(args.target_path, args.layer_name, Mag(1), args)
+        compress_mag_inplace(args.target_path, args.layer_name, args.target_mag, args)
 
     ds.get_layer(args.layer_name).downsample(
-        from_mag=Mag(1),
+        from_mag=args.target_mag,
         max_mag=None if args.max_mag is None else Mag(args.max_mag),
         compress=not args.no_compress,
         sampling_mode=args.sampling_mode,
