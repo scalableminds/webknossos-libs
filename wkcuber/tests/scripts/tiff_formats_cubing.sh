@@ -2,8 +2,6 @@
 set -xe
 mkdir -p testoutput/tiff4
 
-multi_output_files=("test_C" "test_S" "test_CS")
-
 # simplest case: Only XY and I (alternative Z axis name) axis
 python -m wkcuber.convert_image_stack_to_wkw \
   --jobs 2 \
@@ -22,28 +20,60 @@ python -m wkcuber.convert_image_stack_to_wkw \
 rm -r testoutput/tiff4/*
 
 # to make output wk_compatible, these files require multiple layer
-for f in "${multi_output_files[@]}"; do
-  python -m wkcuber.convert_image_stack_to_wkw \
-    --jobs 2 \
-    --batch_size 8 \
-    --layer_name color \
-    --max_mag 1 \
-    --scale 1,1,1 \
-    --name awesome_data \
-    --no_compress \
-    testdata/various_tiff_formats/"$f".tif testoutput/tiff4
-  [ -d testoutput/tiff4/color_0 ]
-  [ -d testoutput/tiff4/color_1 ]
-  [ -d testoutput/tiff4/color_2 ]
-  if [[ "$f" != "test_S" ]]; then
-    [ -d testoutput/tiff4/color_3 ]
-    [ -d testoutput/tiff4/color_4 ]
-  fi
-  [ -d testoutput/tiff4/color_0/1 ]
-  [ $(find testoutput/tiff4/color_0/1 -mindepth 3 -name "*.wkw" | wc -l) -eq 1 ]
-  [ -e testoutput/tiff4/datasource-properties.json ]
-  rm -r testoutput/tiff4/*
-done
+python -m wkcuber.convert_image_stack_to_wkw \
+  --jobs 2 \
+  --batch_size 8 \
+  --layer_name color \
+  --max_mag 1 \
+  --scale 1,1,1 \
+  --name awesome_data \
+  --no_compress \
+  testdata/various_tiff_formats/test_C.tif testoutput/tiff4
+[ -d testoutput/tiff4/color_0 ]
+[ -d testoutput/tiff4/color_1 ]
+[ -d testoutput/tiff4/color_2 ]
+[ -d testoutput/tiff4/color_3 ]
+[ -d testoutput/tiff4/color_4 ]
+[ -d testoutput/tiff4/color_0/1 ]
+[ $(find testoutput/tiff4/color_0/1 -mindepth 3 -name "*.wkw" | wc -l) -eq 1 ]
+[ -e testoutput/tiff4/datasource-properties.json ]
+rm -r testoutput/tiff4/*
+
+python -m wkcuber.convert_image_stack_to_wkw \
+  --jobs 2 \
+  --batch_size 8 \
+  --layer_name color \
+  --max_mag 1 \
+  --scale 1,1,1 \
+  --name awesome_data \
+  --no_compress \
+  testdata/various_tiff_formats/test_S.tif testoutput/tiff4
+[ -d testoutput/tiff4/color_0 ]
+[ -d testoutput/tiff4/color_1 ]
+[ -d testoutput/tiff4/color_2 ]
+[ -d testoutput/tiff4/color_0/1 ]
+[ $(find testoutput/tiff4/color_0/1 -mindepth 3 -name "*.wkw" | wc -l) -eq 1 ]
+[ -e testoutput/tiff4/datasource-properties.json ]
+rm -r testoutput/tiff4/*
+
+python -m wkcuber.convert_image_stack_to_wkw \
+  --jobs 2 \
+  --batch_size 8 \
+  --layer_name color \
+  --max_mag 1 \
+  --scale 1,1,1 \
+  --name awesome_data \
+  --no_compress \
+  testdata/various_tiff_formats/test_CS.tif testoutput/tiff4
+[ -d testoutput/tiff4/color_0 ]
+[ -d testoutput/tiff4/color_1 ]
+[ -d testoutput/tiff4/color_2 ]
+[ -d testoutput/tiff4/color_3 ]
+[ -d testoutput/tiff4/color_4 ]
+[ -d testoutput/tiff4/color_0/1 ]
+[ $(find testoutput/tiff4/color_0/1 -mindepth 3 -name "*.wkw" | wc -l) -eq 1 ]
+[ -e testoutput/tiff4/datasource-properties.json ]
+rm -r testoutput/tiff4/*
 
 # test wk incompatible configs, program should fail because force parameter was not given
 if python -m wkcuber.convert_image_stack_to_wkw \
@@ -69,8 +99,8 @@ python -m wkcuber.convert_image_stack_to_wkw \
   --layer_name color \
   --max_mag 1 \
   --scale 1,1,1 \
-  --channel_index 0 \
-  --sample_index 0 \
+  --channel_index 3 \
+  --sample_index 2 \
   --name awesome_data \
   --no_compress \
   testdata/various_tiff_formats/test_CS.tif testoutput/tiff4
