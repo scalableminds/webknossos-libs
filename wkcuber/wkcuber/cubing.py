@@ -29,7 +29,7 @@ from .utils import (
     wait_and_ensure_success,
     setup_logging,
 )
-from .image_readers import image_reader, new_image_reader
+from .image_readers import image_reader, refresh_global_image_reader
 from .metadata import convert_element_class_to_dtype
 
 BLOCK_LEN = 32
@@ -298,7 +298,7 @@ def cubing(
 ) -> dict:
     source_files = find_source_filenames(source_path)
     # we need to refresh the image readers because they are no longer stateless for performance reasons
-    new_image_reader()
+    refresh_global_image_reader()
 
     # All images are assumed to have equal dimensions
     num_x, num_y = image_reader.read_dimensions(source_files[0])

@@ -812,7 +812,7 @@ class ImageReaderManager:
 
 
 # refresh all cached values
-def new_image_reader() -> None:
+def refresh_global_image_reader() -> None:
     global image_reader
     image_reader = ImageReaderManager()
 
