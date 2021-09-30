@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from wkcuber.image_readers import ImageReaderManager, new_image_reader
+from wkcuber.image_readers import ImageReaderManager
 import numpy as np
 
 TESTDATA_DIR = Path("testdata")
