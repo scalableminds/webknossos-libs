@@ -15,7 +15,7 @@ class Vec3Int(tuple):
             return vec
 
         as_tuple: Optional[Tuple[int, int, int]] = None
-        value_error = "Vector components must be three integers or a Vec3IntLike object"
+        value_error = f"Vector components must be three integers or a Vec3IntLike object, got {vec}, {y}, {z}"
 
         if isinstance(vec, int):
             assert y is not None and z is not None, value_error
@@ -24,6 +24,7 @@ class Vec3Int(tuple):
         else:
             assert y is None and z is None, value_error
             if isinstance(vec, np.ndarray):
+                assert np.count_nonzero(vec % 1) == 0, value_error
                 assert vec.shape == (
                     3,
                 ), f"Numpy array for Vec3Int must have shape (3,), got {vec.shape}."
