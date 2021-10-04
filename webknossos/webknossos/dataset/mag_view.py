@@ -95,12 +95,16 @@ class MagView(View):
 
         if create:
             wkw.Dataset.create(
-                join(layer.dataset.path, layer.name, self.name), self.header
+                str(self.path), self.header
             )
 
     @property
     def layer(self) -> "Layer":
         return self._layer
+
+    @property
+    def path(self) -> Path:
+        return self._path
 
     @property
     def _properties(self) -> MagViewProperties:

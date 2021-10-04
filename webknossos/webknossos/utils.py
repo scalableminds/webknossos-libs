@@ -3,11 +3,13 @@ import calendar
 import functools
 import json
 import logging
+import os
 import time
 from concurrent.futures import as_completed
 from concurrent.futures._base import Future
 from datetime import datetime
 from multiprocessing import cpu_count
+from pathlib import Path
 from typing import Any, Callable, Iterable, List, Optional, Union
 
 from cluster_tools import WrappedProcessPoolExecutor, get_executor
@@ -103,3 +105,11 @@ def time_since_epoch_in_ms() -> int:
     d = datetime.utcnow()
     unixtime = calendar.timegm(d.utctimetuple())
     return unixtime * 1000
+
+
+def copy_directory_with_symlinks(src_path: Path, dst_path: Path, ignore: Iterable[str] = tuple()):
+    for item in os.scandir(src_path):
+        if item.name not in ignore:
+            symlink_path = dst_path / item.name
+            relpath = os.path.relpath(Path(item.path), symlink_path.parent)
+            symlink_path.symlink_to(relpath)

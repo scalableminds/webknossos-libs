@@ -1232,7 +1232,8 @@ def test_add_symlink_mag(tmp_path: Path) -> None:
     original_layer.add_mag(1).write(
         data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8)
     )
-    original_layer.add_mag(2).write(
+    original_mag_2 = original_layer.add_mag(2)
+    original_mag_2.write(
         data=(np.random.rand(5, 10, 15) * 255).astype(np.uint8)
     )
 
@@ -1245,7 +1246,7 @@ def test_add_symlink_mag(tmp_path: Path) -> None:
     assert tuple(layer.bounding_box.topleft) == (6, 6, 6)
     assert tuple(layer.bounding_box.size) == (10, 20, 30)
 
-    symlink_mag = layer.add_symlink_mag(tmp_path / "original" / "color" / "2")
+    symlink_mag = layer.add_symlink_mag(original_mag_2)
 
     assert (tmp_path / "link" / "color" / "1").exists()
     assert len(layer._properties.wkw_resolutions) == 2
@@ -1275,7 +1276,8 @@ def test_add_copy_mag(tmp_path: Path) -> None:
         data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8)
     )
     original_data = (np.random.rand(5, 10, 15) * 255).astype(np.uint8)
-    original_layer.add_mag(2).write(data=original_data)
+    original_mag_2 = original_layer.add_mag(2)
+    original_mag_2.write(data=original_data)
 
     ds = Dataset.create(tmp_path / "link", scale=(1, 1, 1))
     layer = ds.add_layer("color", LayerCategories.COLOR_TYPE, dtype_per_channel="uint8")
@@ -1286,7 +1288,7 @@ def test_add_copy_mag(tmp_path: Path) -> None:
     assert tuple(layer.bounding_box.topleft) == (6, 6, 6)
     assert tuple(layer.bounding_box.size) == (10, 20, 30)
 
-    copy_mag = layer.add_copy_mag(tmp_path / "original" / "color" / "2")
+    copy_mag = layer.add_copy_mag(original_mag_2)
 
     assert (tmp_path / "link" / "color" / "1").exists()
     assert len(layer._properties.wkw_resolutions) == 2
@@ -1357,6 +1359,24 @@ def test_outdated_dtype_parameter() -> None:
         ds.add_layer(
             "color", LayerCategories.COLOR_TYPE, dtype=np.uint8, num_channels=1
         )
+
+def test_dataset_shallow_copy(run_around_tests) -> None:
+    delete_dir(TESTOUTPUT_DIR / "original_dataset")
+    delete_dir(TESTOUTPUT_DIR / "copy_dataset")
+    ds = Dataset.create(TESTOUTPUT_DIR / "original_dataset", (1, 1, 1))
+    original_layer_1 = ds.add_layer("color", LayerCategories.COLOR_TYPE, dtype_per_layer=np.uint8, num_channels=1)
+    original_layer_1.add_mag(1)
+    original_layer_1.add_mag("2-2-1")
+    original_layer_2 = ds.add_layer("segmentation", LayerCategories.SEGMENTATION_TYPE, dtype_per_layer=np.uint32, largest_segment_id=0)
+    original_layer_2.add_mag(4)
+    mappings_path = original_layer_2.path / "mappings"
+    os.makedirs(mappings_path)
+    open(mappings_path / "agglomerate_view.hdf5", 'w').close()
+
+    shallow_copy_of_ds = ds.shallow_copy_dataset(TESTOUTPUT_DIR / "copy_dataset")
+    shallow_copy_of_ds.get_layer("color").add_mag(Mag("4-4-1"))
+    assert len(Dataset(TESTOUTPUT_DIR / "original_dataset").get_layer("color").mags) == 2, "Adding a new mag should not affect the original dataset"
+    assert len(Dataset(TESTOUTPUT_DIR / "copy_dataset").get_layer("color").mags) == 3, "Expecting all mags from original dataset and new downsampled mag"
 
 
 def test_dataset_conversion() -> None:

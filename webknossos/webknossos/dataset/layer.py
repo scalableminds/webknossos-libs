@@ -372,50 +372,35 @@ class Layer:
         rmtree(full_path)
 
     def _add_foreign_mag(
-        self, foreign_mag_path: Path, symlink: bool, make_relative: bool
+        self, foreign_mag_view: MagView, symlink: bool, make_relative: bool
     ) -> MagView:
-        mag_name = foreign_mag_path.name
-        mag = Mag(mag_name)
-        operation = "symlink" if symlink else "copy"
-        if mag in self.mags.keys():
-            raise IndexError(
-                f"Cannot {operation} {foreign_mag_path}. This dataset already has a mag called {mag_name}."
-            )
+        is_foreign_mag_compressed = foreign_mag_view.header.block_type != wkw.Header.BLOCK_TYPE_RAW
+        added_mag_view = self.add_mag(foreign_mag_view.mag, foreign_mag_view.header.block_len, foreign_mag_view.header.file_len,
+                     is_foreign_mag_compressed)
+
+        # delete new created mag path and relplace with (shallow) copy
+        shutil.rmtree(added_mag_view.path)
 
         foreign_normalized_mag_path = (
-            Path(os.path.relpath(foreign_mag_path, self.dataset.path))
+            Path(os.path.relpath(foreign_mag_view.path, self.dataset.path))
             if make_relative
-            else foreign_mag_path
+            else os.path.abspath(foreign_mag_view.path)
         )
 
         if symlink:
             os.symlink(
                 foreign_normalized_mag_path,
-                join(self.dataset.path, self.name, mag_name),
+                join(self.dataset.path, self.name, str(foreign_mag_view.mag)),
             )
         else:
             shutil.copytree(
                 foreign_normalized_mag_path,
-                join(self.dataset.path, self.name, mag_name),
+                join(self.dataset.path, self.name, str(foreign_mag_view.mag)),
             )
-
-        # copy the properties of the layer into the properties of this dataset
-        from .dataset import Dataset  # local import to prevent circular dependency
-
-        original_layer = Dataset(foreign_mag_path.parent.parent).get_layer(
-            foreign_mag_path.parent.name
-        )
-        original_mag = original_layer.get_mag(foreign_mag_path.name)
-        mag_properties = copy.deepcopy(original_mag._properties)
-
-        self.bounding_box = self.bounding_box.extended_by(original_layer.bounding_box)
-        self._properties.wkw_resolutions += [mag_properties]
-        self._setup_mag(mag)
-        self.dataset._export_as_json()
-        return self.mags[mag]
+        return added_mag_view
 
     def add_symlink_mag(
-        self, foreign_mag_path: Union[str, Path], make_relative: bool = False
+        self, foreign_mag_view: MagView, make_relative: bool = False
     ) -> MagView:
         """
         Creates a symlink to the data at `foreign_mag_path` which belongs to another dataset.
@@ -424,19 +409,17 @@ class Layer:
         (or vice versa).
         If make_relative is True, the symlink is made relative to the current dataset path.
         """
-        foreign_mag_path = Path(os.path.abspath(foreign_mag_path))
         return self._add_foreign_mag(
-            foreign_mag_path, symlink=True, make_relative=make_relative
+            foreign_mag_view, symlink=True, make_relative=make_relative
         )
 
-    def add_copy_mag(self, foreign_mag_path: Union[str, Path]) -> MagView:
+    def add_copy_mag(self, foreign_mag_view: MagView) -> MagView:
         """
-        Copies the data at `foreign_mag_path` which belongs to another dataset to the current dataset.
+        Copies the data at `foreign_mag_view` which belongs to another dataset to the current dataset.
         Additionally, the relevant information from the `datasource-properties.json` of the other dataset are copied too.
         """
-        foreign_mag_path = Path(os.path.abspath(foreign_mag_path))
         return self._add_foreign_mag(
-            foreign_mag_path, symlink=False, make_relative=False
+            foreign_mag_view, symlink=False, make_relative=False
         )
 
     def _create_dir_for_mag(

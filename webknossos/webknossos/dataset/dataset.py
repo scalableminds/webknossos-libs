@@ -14,7 +14,7 @@ import numpy as np
 import wkw
 
 from webknossos.geometry import BoundingBox, Vec3Int
-from webknossos.utils import get_executor_for_args
+from webknossos.utils import get_executor_for_args, copy_directory_with_symlinks
 
 from .layer import (
     Layer,
@@ -534,6 +534,23 @@ class Dataset:
                     )
         new_ds._export_as_json()
         return new_ds
+
+    def shallow_copy_dataset(self, new_dataset_path: Path, name: Optional[str] = None, make_relative: bool = False) -> "Dataset":
+        """
+        Create a new dataset at the given path. Link all mags of all existing layers.
+        In addition, link all files in all layer directories
+        to make this method robust against additional files e.g. layer/mappings/agglomerate_view.hdf5
+        """
+        new_dataset = Dataset.create(new_dataset_path, scale=self.scale, name=name or self.name)
+        for layer_name, layer in self.layers.items():
+            new_layer = new_dataset.add_layer_like(layer, layer_name)
+            for mag_view in layer.mags.values():
+                new_layer.add_symlink_mag(mag_view, make_relative)
+
+            # copy all other files with a dir scan
+            copy_directory_with_symlinks(layer.path, new_layer.path, ignore=[str(mag) for mag in layer.mags] + [PROPERTIES_FILE_NAME])
+
+        return new_dataset
 
     def _get_layer_by_category(self, category: str) -> Layer:
         assert (
