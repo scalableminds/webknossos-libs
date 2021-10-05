@@ -392,20 +392,14 @@ class Layer:
         rmtree(full_path)
 
     def _add_foreign_mag(
-        self, foreign_mag_view: MagView, symlink: bool, make_relative: bool
+        self,
+        foreign_mag_view: MagView,
+        symlink: bool,
+        make_relative: bool,
+        extend_layer_bounding_box: bool = True,
     ) -> MagView:
-        is_foreign_mag_compressed = (
-            foreign_mag_view.header.block_type != wkw.Header.BLOCK_TYPE_RAW
-        )
-        added_mag_view = self.add_mag(
-            foreign_mag_view.mag,
-            foreign_mag_view.header.block_len,
-            foreign_mag_view.header.file_len,
-            is_foreign_mag_compressed,
-        )
 
-        # delete new created mag path and relplace with (shallow) copy
-        shutil.rmtree(added_mag_view.path)
+        self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
 
         foreign_normalized_mag_path = (
             Path(os.path.relpath(foreign_mag_view.path, self.path))
@@ -423,10 +417,21 @@ class Layer:
                 foreign_normalized_mag_path,
                 join(self.dataset.path, self.name, str(foreign_mag_view.mag)),
             )
-        return added_mag_view
+
+        self.add_mag_for_existing_files(foreign_mag_view.mag)
+        if extend_layer_bounding_box:
+            self.bounding_box = self.bounding_box.extended_by(
+                foreign_mag_view.layer.bounding_box
+            )
+        self.dataset._export_as_json()
+
+        return self._mags[foreign_mag_view.mag]
 
     def add_symlink_mag(
-        self, foreign_mag_view: MagView, make_relative: bool = False
+        self,
+        foreign_mag_view: MagView,
+        make_relative: bool = False,
+        extend_layer_bounding_box: bool = True,
     ) -> MagView:
         """
         Creates a symlink to the data at `foreign_mag_path` which belongs to another dataset.
@@ -436,16 +441,24 @@ class Layer:
         If make_relative is True, the symlink is made relative to the current dataset path.
         """
         return self._add_foreign_mag(
-            foreign_mag_view, symlink=True, make_relative=make_relative
+            foreign_mag_view,
+            symlink=True,
+            make_relative=make_relative,
+            extend_layer_bounding_box=extend_layer_bounding_box,
         )
 
-    def add_copy_mag(self, foreign_mag_view: MagView) -> MagView:
+    def add_copy_mag(
+        self, foreign_mag_view: MagView, extend_layer_bounding_box: bool = True
+    ) -> MagView:
         """
         Copies the data at `foreign_mag_view` which belongs to another dataset to the current dataset.
         Additionally, the relevant information from the `datasource-properties.json` of the other dataset are copied too.
         """
         return self._add_foreign_mag(
-            foreign_mag_view, symlink=False, make_relative=False
+            foreign_mag_view,
+            symlink=False,
+            make_relative=False,
+            extend_layer_bounding_box=extend_layer_bounding_box,
         )
 
     def _create_dir_for_mag(
