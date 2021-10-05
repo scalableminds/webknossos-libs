@@ -115,7 +115,6 @@ def copy_directory_with_symlinks(
 ) -> None:
     """
     Links all directories in src_path / dir_name to dst_path / dir_name.
-    All links are relative to dst_path.
     """
     for item in os.scandir(src_path):
         if item.name not in ignore:

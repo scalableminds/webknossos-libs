@@ -545,8 +545,7 @@ class Dataset:
         Create a new dataset at the given path. Link all mags of all existing layers.
         In addition, link all other directories in all layer directories
         to make this method robust against additional files e.g. layer/mappings/agglomerate_view.hdf5.
-        This method becomes useful when exposing a dataset to webknossos
-        by e.g. linking several layers together or adding downsampled mags
+        This method becomes useful when exposing a dataset to webknossos.
         """
         new_dataset = Dataset.create(
             new_dataset_path, scale=self.scale, name=name or self.name
