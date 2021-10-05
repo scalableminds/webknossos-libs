@@ -1234,6 +1234,8 @@ def test_add_symlink_mag(tmp_path: Path) -> None:
     )
     original_mag_2 = original_layer.add_mag(2)
     original_mag_2.write(data=(np.random.rand(5, 10, 15) * 255).astype(np.uint8))
+    original_mag_4 = original_layer.add_mag(4)
+    original_mag_4.write(data=(np.random.rand(2, 5, 7) * 255).astype(np.uint8))
 
     ds = Dataset.create(tmp_path / "link", scale=(1, 1, 1))
     layer = ds.add_layer("color", LayerCategories.COLOR_TYPE, dtype_per_channel="uint8")
@@ -1244,10 +1246,11 @@ def test_add_symlink_mag(tmp_path: Path) -> None:
     assert tuple(layer.bounding_box.topleft) == (6, 6, 6)
     assert tuple(layer.bounding_box.size) == (10, 20, 30)
 
-    symlink_mag = layer.add_symlink_mag(original_mag_2)
+    symlink_mag_2 = layer.add_symlink_mag(original_mag_2)
+    symlink_mag_4 = layer.add_symlink_mag(original_mag_4.path)
 
     assert (tmp_path / "link" / "color" / "1").exists()
-    assert len(layer._properties.wkw_resolutions) == 2
+    assert len(layer._properties.wkw_resolutions) == 3
 
     assert tuple(layer.bounding_box.topleft) == (0, 0, 0)
     assert tuple(layer.bounding_box.size) == (16, 26, 36)
@@ -1256,9 +1259,9 @@ def test_add_symlink_mag(tmp_path: Path) -> None:
     # Note: The written data is fully inside the bounding box of the original data.
     # This is important because the bounding box of the foreign layer would not be updated if we use the linked dataset to write outside of its original bounds.
     write_data = (np.random.rand(5, 5, 5) * 255).astype(np.uint8)
-    symlink_mag.write(offset=(0, 0, 0), data=write_data)
+    symlink_mag_2.write(offset=(0, 0, 0), data=write_data)
 
-    assert np.array_equal(symlink_mag.read(size=(5, 5, 5))[0], write_data)
+    assert np.array_equal(symlink_mag_2.read(size=(5, 5, 5))[0], write_data)
     assert np.array_equal(original_layer.get_mag(2).read(size=(5, 5, 5))[0], write_data)
 
     assure_exported_properties(ds)
@@ -1390,6 +1393,13 @@ def test_dataset_shallow_copy(make_relative: bool) -> None:
     assert (
         len(Dataset(TESTOUTPUT_DIR / "copy_dataset").get_layer("color").mags) == 3
     ), "Expecting all mags from original dataset and new downsampled mag"
+    assert os.path.exists(
+        TESTOUTPUT_DIR
+        / "copy_dataset"
+        / "segmentation"
+        / "mappings"
+        / "agglomerate_view.hdf5"
+    ), "Expecting mappings to exist in shallow copy"
 
 
 def test_dataset_conversion() -> None:

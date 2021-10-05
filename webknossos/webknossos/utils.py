@@ -116,11 +116,11 @@ def copy_directory_with_symlinks(
     """
     Links all directories in src_path / dir_name to dst_path / dir_name.
     """
-    for item in os.scandir(src_path):
+    for item in src_path.iterdir():
         if item.name not in ignore:
             symlink_path = dst_path / item.name
             if make_relative:
-                rel_or_abspath = os.path.relpath(Path(item.path), symlink_path.parent)
+                rel_or_abspath = os.path.relpath(item, symlink_path.parent)
             else:
-                rel_or_abspath = os.path.abspath(item.path)
+                rel_or_abspath = os.path.abspath(item)
             symlink_path.symlink_to(rel_or_abspath)

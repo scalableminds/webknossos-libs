@@ -3,7 +3,7 @@ import json
 import os
 import shutil
 from argparse import Namespace
-from os import PathLike, makedirs
+from os import makedirs
 from os.path import basename, join, normpath
 from pathlib import Path
 from shutil import rmtree
