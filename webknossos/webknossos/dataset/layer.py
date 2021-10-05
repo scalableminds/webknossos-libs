@@ -319,7 +319,9 @@ class Layer:
         Raises an IndexError if the specified `mag` does not exists.
         """
         mag = Mag(mag)
-        assert mag not in self.mags, "TODO"
+        assert (
+            mag not in self.mags
+        ), f"Cannot add mag {mag} as it already exists for layer {self}"
         self._setup_mag(mag)
         mag_view = self._mags[mag]
         cube_length = mag_view.header.file_len * mag_view.header.block_len
@@ -398,6 +400,11 @@ class Layer:
         make_relative: bool,
         extend_layer_bounding_box: bool = True,
     ) -> MagView:
+        """
+        The foreign mag is (shallow) copied and the existing mag is added to the datasource-properties.json.
+        If extend_layer_bounding_box is true, the self.bounding_box will be extended
+        by the bounding box of the layer the foreign mag belongs to.
+        """
 
         if isinstance(foreign_mag_view_or_path, MagView):
             foreign_mag_view = foreign_mag_view_or_path
@@ -447,7 +454,7 @@ class Layer:
         extend_layer_bounding_box: bool = True,
     ) -> MagView:
         """
-        Creates a symlink to the data at `foreign_mag_path` which belongs to another dataset.
+        Creates a symlink to the data at `foreign_mag_view_or_path` which belongs to another dataset.
         The relevant information from the `datasource-properties.json` of the other dataset is copied to this dataset.
         Note: If the other dataset modifies its bounding box afterwards, the change does not affect this properties
         (or vice versa).
@@ -466,7 +473,7 @@ class Layer:
         extend_layer_bounding_box: bool = True,
     ) -> MagView:
         """
-        Copies the data at `foreign_mag_view` which belongs to another dataset to the current dataset.
+        Copies the data at `foreign_mag_view_or_path` which belongs to another dataset to the current dataset.
         Additionally, the relevant information from the `datasource-properties.json` of the other dataset are copied too.
         """
         return self._add_foreign_mag(
