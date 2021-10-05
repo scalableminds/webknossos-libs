@@ -1233,9 +1233,7 @@ def test_add_symlink_mag(tmp_path: Path) -> None:
         data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8)
     )
     original_mag_2 = original_layer.add_mag(2)
-    original_mag_2.write(
-        data=(np.random.rand(5, 10, 15) * 255).astype(np.uint8)
-    )
+    original_mag_2.write(data=(np.random.rand(5, 10, 15) * 255).astype(np.uint8))
 
     ds = Dataset.create(tmp_path / "link", scale=(1, 1, 1))
     layer = ds.add_layer("color", LayerCategories.COLOR_TYPE, dtype_per_channel="uint8")
@@ -1360,23 +1358,38 @@ def test_outdated_dtype_parameter() -> None:
             "color", LayerCategories.COLOR_TYPE, dtype=np.uint8, num_channels=1
         )
 
-def test_dataset_shallow_copy(run_around_tests) -> None:
+
+@pytest.mark.parametrize("make_relative", [True, False])
+def test_dataset_shallow_copy(make_relative) -> None:
     delete_dir(TESTOUTPUT_DIR / "original_dataset")
     delete_dir(TESTOUTPUT_DIR / "copy_dataset")
     ds = Dataset.create(TESTOUTPUT_DIR / "original_dataset", (1, 1, 1))
-    original_layer_1 = ds.add_layer("color", LayerCategories.COLOR_TYPE, dtype_per_layer=np.uint8, num_channels=1)
+    original_layer_1 = ds.add_layer(
+        "color", LayerCategories.COLOR_TYPE, dtype_per_layer=np.uint8, num_channels=1
+    )
     original_layer_1.add_mag(1)
     original_layer_1.add_mag("2-2-1")
-    original_layer_2 = ds.add_layer("segmentation", LayerCategories.SEGMENTATION_TYPE, dtype_per_layer=np.uint32, largest_segment_id=0)
+    original_layer_2 = ds.add_layer(
+        "segmentation",
+        LayerCategories.SEGMENTATION_TYPE,
+        dtype_per_layer=np.uint32,
+        largest_segment_id=0,
+    )
     original_layer_2.add_mag(4)
     mappings_path = original_layer_2.path / "mappings"
     os.makedirs(mappings_path)
-    open(mappings_path / "agglomerate_view.hdf5", 'w').close()
+    open(mappings_path / "agglomerate_view.hdf5", "w").close()
 
-    shallow_copy_of_ds = ds.shallow_copy_dataset(TESTOUTPUT_DIR / "copy_dataset")
+    shallow_copy_of_ds = ds.shallow_copy_dataset(
+        TESTOUTPUT_DIR / "copy_dataset", make_relative=make_relative
+    )
     shallow_copy_of_ds.get_layer("color").add_mag(Mag("4-4-1"))
-    assert len(Dataset(TESTOUTPUT_DIR / "original_dataset").get_layer("color").mags) == 2, "Adding a new mag should not affect the original dataset"
-    assert len(Dataset(TESTOUTPUT_DIR / "copy_dataset").get_layer("color").mags) == 3, "Expecting all mags from original dataset and new downsampled mag"
+    assert (
+        len(Dataset(TESTOUTPUT_DIR / "original_dataset").get_layer("color").mags) == 2
+    ), "Adding a new mag should not affect the original dataset"
+    assert (
+        len(Dataset(TESTOUTPUT_DIR / "copy_dataset").get_layer("color").mags) == 3
+    ), "Expecting all mags from original dataset and new downsampled mag"
 
 
 def test_dataset_conversion() -> None:

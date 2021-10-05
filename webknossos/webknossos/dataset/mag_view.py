@@ -94,9 +94,7 @@ class MagView(View):
         )
 
         if create:
-            wkw.Dataset.create(
-                str(self.path), self.header
-            )
+            wkw.Dataset.create(str(self.path), self.header)
 
     @property
     def layer(self) -> "Layer":

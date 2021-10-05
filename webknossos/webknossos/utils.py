@@ -107,9 +107,18 @@ def time_since_epoch_in_ms() -> int:
     return unixtime * 1000
 
 
-def copy_directory_with_symlinks(src_path: Path, dst_path: Path, ignore: Iterable[str] = tuple()):
+def copy_directory_with_symlinks(
+    src_path: Path, dst_path: Path, ignore: Iterable[str] = tuple(), make_relative=False
+):
+    """
+    Links all directories in src_path / dir_name to dst_path / dir_name.
+    All links are relative to dst_path.
+    """
     for item in os.scandir(src_path):
         if item.name not in ignore:
             symlink_path = dst_path / item.name
-            relpath = os.path.relpath(Path(item.path), symlink_path.parent)
-            symlink_path.symlink_to(relpath)
+            if make_relative:
+                rel_or_abspath = os.path.relpath(Path(item.path), symlink_path.parent)
+            else:
+                rel_or_abspath = os.path.abspath(item.path)
+            symlink_path.symlink_to(rel_or_abspath)

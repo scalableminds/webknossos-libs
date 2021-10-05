@@ -374,15 +374,21 @@ class Layer:
     def _add_foreign_mag(
         self, foreign_mag_view: MagView, symlink: bool, make_relative: bool
     ) -> MagView:
-        is_foreign_mag_compressed = foreign_mag_view.header.block_type != wkw.Header.BLOCK_TYPE_RAW
-        added_mag_view = self.add_mag(foreign_mag_view.mag, foreign_mag_view.header.block_len, foreign_mag_view.header.file_len,
-                     is_foreign_mag_compressed)
+        is_foreign_mag_compressed = (
+            foreign_mag_view.header.block_type != wkw.Header.BLOCK_TYPE_RAW
+        )
+        added_mag_view = self.add_mag(
+            foreign_mag_view.mag,
+            foreign_mag_view.header.block_len,
+            foreign_mag_view.header.file_len,
+            is_foreign_mag_compressed,
+        )
 
         # delete new created mag path and relplace with (shallow) copy
         shutil.rmtree(added_mag_view.path)
 
         foreign_normalized_mag_path = (
-            Path(os.path.relpath(foreign_mag_view.path, self.dataset.path))
+            Path(os.path.relpath(foreign_mag_view.path, self.path))
             if make_relative
             else os.path.abspath(foreign_mag_view.path)
         )
