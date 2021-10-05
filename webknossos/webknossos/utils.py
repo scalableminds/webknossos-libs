@@ -108,8 +108,11 @@ def time_since_epoch_in_ms() -> int:
 
 
 def copy_directory_with_symlinks(
-    src_path: Path, dst_path: Path, ignore: Iterable[str] = tuple(), make_relative=False
-):
+    src_path: Path,
+    dst_path: Path,
+    ignore: Iterable[str] = tuple(),
+    make_relative: bool = False,
+) -> None:
     """
     Links all directories in src_path / dir_name to dst_path / dir_name.
     All links are relative to dst_path.

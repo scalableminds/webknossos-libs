@@ -1360,7 +1360,7 @@ def test_outdated_dtype_parameter() -> None:
 
 
 @pytest.mark.parametrize("make_relative", [True, False])
-def test_dataset_shallow_copy(make_relative) -> None:
+def test_dataset_shallow_copy(make_relative: bool) -> None:
     delete_dir(TESTOUTPUT_DIR / "original_dataset")
     delete_dir(TESTOUTPUT_DIR / "copy_dataset")
     ds = Dataset.create(TESTOUTPUT_DIR / "original_dataset", (1, 1, 1))
