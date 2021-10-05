@@ -309,6 +309,27 @@ class Layer:
 
         return self._mags[mag]
 
+    def add_mag_for_existing_files(
+        self,
+        mag: Union[int, str, list, tuple, np.ndarray, Mag],
+    ) -> MagView:
+        """
+        Creates a new mag based on already existing files.
+
+        Raises an IndexError if the specified `mag` does not exists.
+        """
+        mag = Mag(mag)
+        assert mag not in self.mags, "TODO"
+        self._setup_mag(mag)
+        mag_view = self._mags[mag]
+        cube_length = mag_view.header.file_len * mag_view.header.block_len
+        self._properties.wkw_resolutions.append(
+            MagViewProperties(resolution=mag, cube_length=cube_length)
+        )
+        self.dataset._export_as_json()
+
+        return mag_view
+
     def get_or_add_mag(
         self,
         mag: Union[int, str, list, tuple, np.ndarray, Mag],

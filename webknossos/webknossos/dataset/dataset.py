@@ -3,7 +3,7 @@ import json
 import os
 import shutil
 from argparse import Namespace
-from os import makedirs
+from os import PathLike, makedirs
 from os.path import basename, join, normpath
 from pathlib import Path
 from shutil import rmtree
@@ -347,6 +347,27 @@ class Dataset:
             )
         self._export_as_json()
         return self._layers[layer_name]
+
+    def add_layer_for_existing_files(
+        self, layer_name: str, category: str, **kwargs: Any
+    ) -> Layer:
+        assert layer_name not in self.layers, f"Layer {layer_name} already exists!"
+        mag_headers = list((self.path / layer_name).glob("*/header.wkw"))
+        assert (
+            len(mag_headers) != 0
+        ), f"Could not find any header.wkw files in {self.path / layer_name}, cannot add layer."
+        with wkw.Dataset.open(str(mag_headers[0].parent)) as wkw_dataset:
+            header = wkw_dataset.header
+        layer = self.add_layer(
+            layer_name,
+            category=category,
+            num_channels=header.num_channels,
+            dtype_per_channel=header.voxel_type,
+            **kwargs,
+        )
+        for mag_dir in layer.path.iterdir():
+            layer.add_mag_for_existing_files(mag_dir.name)
+        return layer
 
     def get_segmentation_layer(self) -> SegmentationLayer:
         """
