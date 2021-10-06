@@ -14,7 +14,7 @@ import numpy as np
 import wkw
 
 from webknossos.geometry import BoundingBox, Vec3Int
-from webknossos.utils import get_executor_for_args
+from webknossos.utils import copy_directory_with_symlinks, get_executor_for_args
 
 from .layer import (
     Layer,
@@ -348,6 +348,27 @@ class Dataset:
         self._export_as_json()
         return self._layers[layer_name]
 
+    def add_layer_for_existing_files(
+        self, layer_name: str, category: str, **kwargs: Any
+    ) -> Layer:
+        assert layer_name not in self.layers, f"Layer {layer_name} already exists!"
+        mag_headers = list((self.path / layer_name).glob("*/header.wkw"))
+        assert (
+            len(mag_headers) != 0
+        ), f"Could not find any header.wkw files in {self.path / layer_name}, cannot add layer."
+        with wkw.Dataset.open(str(mag_headers[0].parent)) as wkw_dataset:
+            header = wkw_dataset.header
+        layer = self.add_layer(
+            layer_name,
+            category=category,
+            num_channels=header.num_channels,
+            dtype_per_channel=header.voxel_type,
+            **kwargs,
+        )
+        for mag_dir in layer.path.iterdir():
+            layer.add_mag_for_existing_files(mag_dir.name)
+        return layer
+
     def get_segmentation_layer(self) -> SegmentationLayer:
         """
         Returns the only segmentation layer.
@@ -534,6 +555,36 @@ class Dataset:
                     )
         new_ds._export_as_json()
         return new_ds
+
+    def shallow_copy_dataset(
+        self,
+        new_dataset_path: Path,
+        name: Optional[str] = None,
+        make_relative: bool = False,
+    ) -> "Dataset":
+        """
+        Create a new dataset at the given path. Link all mags of all existing layers.
+        In addition, link all other directories in all layer directories
+        to make this method robust against additional files e.g. layer/mappings/agglomerate_view.hdf5.
+        This method becomes useful when exposing a dataset to webknossos.
+        """
+        new_dataset = Dataset.create(
+            new_dataset_path, scale=self.scale, name=name or self.name
+        )
+        for layer_name, layer in self.layers.items():
+            new_layer = new_dataset.add_layer_like(layer, layer_name)
+            for mag_view in layer.mags.values():
+                new_layer.add_symlink_mag(mag_view, make_relative)
+
+            # copy all other directories with a dir scan
+            copy_directory_with_symlinks(
+                layer.path,
+                new_layer.path,
+                ignore=[str(mag) for mag in layer.mags] + [PROPERTIES_FILE_NAME],
+                make_relative=make_relative,
+            )
+
+        return new_dataset
 
     def _get_layer_by_category(self, category: str) -> Layer:
         assert (
