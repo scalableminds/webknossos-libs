@@ -2,8 +2,6 @@ import logging
 from argparse import Namespace, ArgumentParser
 from typing import Sequence
 
-import psutil
-
 from wkcuber import downsample_mags
 from .compress import compress_mag_inplace
 from .cubing import (
@@ -156,7 +154,6 @@ def main(args: Namespace) -> None:
     bounding_box = None
     for channel_index in channel_iter:
         for sample_index in sample_iter:
-            print("Free space:", psutil.disk_usage(".").free / 1024 / 1024 / 1024)
             bounding_box = cubing(
                 args.source_path,
                 args.target_path,
