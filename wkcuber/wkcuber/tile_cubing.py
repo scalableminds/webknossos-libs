@@ -232,6 +232,7 @@ def tile_cubing_job(
                                     target_wkw_info.header.voxel_type,
                                     z,
                                     None,
+                                    None,
                                 )
                                 slices.append(image)
                             else:

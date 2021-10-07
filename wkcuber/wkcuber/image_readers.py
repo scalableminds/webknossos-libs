@@ -22,6 +22,7 @@ class ImageReader:
         dtype: np.dtype,
         z_slice: int,
         channel_index: Optional[int],
+        sample_index: Optional[int],
     ) -> np.ndarray:
         pass
 
@@ -30,6 +31,12 @@ class ImageReader:
 
     def read_channel_count(self, file_name: Path) -> int:
         pass
+
+    # the sample count describes how many values are saved for each pixel, e.g. uint24 is 3x uint8 channels, therefore the sample count is 3. This applies only on TIFF and CZI datasets.
+    def read_sample_count(
+        self, file_name: Path  # pylint: disable=unused-argument
+    ) -> int:
+        return 1
 
     def read_z_slices_per_file(
         self, file_name: Path  # pylint: disable=unused-argument
@@ -47,10 +54,11 @@ class PillowImageReader(ImageReader):
         dtype: np.dtype,
         z_slice: int,
         channel_index: Optional[int],
+        sample_index: Optional[int],
     ) -> np.ndarray:
         this_layer = np.array(Image.open(file_name), dtype)
         this_layer = this_layer.swapaxes(0, 1)
-        if channel_index is not None:
+        if channel_index is not None and this_layer.ndim == 3:
             this_layer = this_layer[:, :, channel_index]
         this_layer = this_layer.reshape(this_layer.shape + (1,))
         return this_layer
@@ -84,6 +92,7 @@ class Dm3ImageReader(ImageReader):
         dtype: np.dtype,
         z_slice: int,
         channel_index: Optional[int],
+        sample_index: Optional[int],
     ) -> np.ndarray:
         dm3_file = DM3(file_name)
         this_layer = to_target_datatype(dm3_file.imagedata, dtype)
@@ -132,6 +141,7 @@ class Dm4ImageReader(ImageReader):
         dtype: np.dtype,
         z_slice: int,
         channel_index: Optional[int],
+        sample_index: Optional[int],
     ) -> np.ndarray:
         dm4file = DM4File.open(str(file_name))
         image_data_tag, image_tag = self._read_tags(dm4file)
@@ -166,8 +176,92 @@ class Dm4ImageReader(ImageReader):
 
 class TiffImageReader(ImageReader):
     def __init__(self) -> None:
-        self.is_page_multi_channel: Optional[bool] = None
-        self.num_pages_for_all_channels: Optional[int] = None
+        self.z_axis_name: Optional[str] = None  # possible values [Z, I, Q]
+        self.axes: Dict[
+            str, Tuple[bool, int, int]
+        ] = {}  # axis name to (exists, index, dimension)
+        self.page_axes: Dict[
+            str, Tuple[int, int, int]
+        ] = {}  # axis name to (index, access_index, dimension)
+        self.used_axes = {"C", "Y", "X", "S"}
+
+    def _get_page_index(
+        self, tif_file: TiffFile, z_index: int, c_index: int, s_index: int
+    ) -> int:
+        # TiffFile consists of Tiff Pages, which are ordered according to the axis order
+        # To find the index of the page that contains the data we want, we increase the page_index for each axis that we are looking for
+        # Additionally, we multiply the index with dimension of each axis to "skip" the necessary amount of pages.
+        # We divide by an axis if it is present in the TiffPage because there are less TiffPages to skip.
+        page_index = 0
+        for axis in tif_file.series[0].axes:
+            page_index *= self.axes[axis][2]
+            if axis in self.page_axes:
+                page_index //= self.page_axes[axis][2]
+            if axis == self.z_axis_name:
+                page_index += z_index
+            elif axis == "C":
+                page_index += c_index
+            elif axis == "S":
+                page_index += s_index
+        return page_index
+
+    def _find_correct_pages(
+        self,
+        tif_file: TiffFile,
+        channel_index: Optional[int],
+        sample_index: Optional[int],
+        z_index: int,
+    ) -> Dict[int, Tuple[Optional[int], Optional[int]]]:
+        # return format is page_index to [Optional[channel_index], Optional[sample_index]]
+        result: Dict[int, Tuple[Optional[int], Optional[int]]] = dict()
+
+        if channel_index is not None:
+            page_c_index = (
+                (channel_index // self.page_axes["C"][2])
+                if "C" in self.page_axes
+                else channel_index
+            )
+            data_c_index = (
+                (channel_index % self.page_axes["C"][2])
+                if "C" in self.page_axes
+                else None
+            )
+            page_s_index = 0
+            data_s_index = None
+            if sample_index is not None:
+                page_s_index = (
+                    (sample_index // self.page_axes["S"][2])
+                    if "S" in self.page_axes
+                    else sample_index
+                )
+                data_s_index = (
+                    (sample_index % self.page_axes["S"][2])
+                    if "S" in self.page_axes
+                    else None
+                )
+
+            result[
+                self._get_page_index(tif_file, z_index, page_c_index, page_s_index)
+            ] = (data_c_index, data_s_index)
+        else:
+            # implies sample_index not set
+            c_range = range(1)
+            s_range = range(1)
+            if "C" in self.page_axes and self.axes["C"][0]:
+                c_range = range(self.axes["C"][2] // self.page_axes["C"][2])
+            elif self.axes["C"][0]:
+                c_range = range(self.axes["C"][2])
+
+            if "S" in self.page_axes and self.axes["S"][0]:
+                s_range = range(self.axes["S"][2] // self.page_axes["S"][2])
+            elif self.axes["S"][0]:
+                s_range = range(self.axes["S"][2])
+
+            for c in c_range:
+                for s in s_range:
+                    result[self._get_page_index(tif_file, z_index, c, s)] = (None, None)
+
+        return result
 
     @staticmethod
     def find_count_of_axis(tif_file: TiffFile, axis: str) -> int:
@@ -185,77 +279,118 @@ class TiffImageReader(ImageReader):
         dtype: np.dtype,
         z_slice: int,
         channel_index: Optional[int],
+        sample_index: Optional[int],
     ) -> np.ndarray:
         with TiffFile(file_name) as tif_file:
-            # We are caching 'num_pages_for_all_channels' and 'is_page_multi_channel'
-            # because they are the same for all tiffs
-            if self.num_pages_for_all_channels is None:
-                self.num_pages_for_all_channels = self.read_channel_count(file_name)
-            if self.is_page_multi_channel is None:
-                self.is_page_multi_channel = tif_file.pages[0].ndim == 3
-                if self.is_page_multi_channel:
-                    self.num_pages_for_all_channels = 1
+            if self.z_axis_name is None:
+                self._find_right_z_axis_name(tif_file)
+            if len(self.axes) == 0:
+                assert len(tif_file.series) == 1, "Multi-series tiff not supported"
+                series = tif_file.series[0]  # pylint: disable=unsubscriptable-object
+                page = tif_file.pages[0]
+                for index, axis in enumerate(series.axes):
+                    self.axes[axis] = (True, index, series.shape[index])
+                for axis in self.used_axes:
+                    if axis not in self.axes:
+                        self.axes[axis] = (False, 0, 1)
+            if len(self.page_axes) == 0:
+                count = 0
+                for index, axis in enumerate(page.axes):
+                    # when reading the data, we'll remove any axis that is not used, so the dimensionality shrinks
+                    self.page_axes[axis] = (index, index - count, page.shape[index])
+                    if axis not in self.used_axes:
+                        count += 1
+            assert (
+                len(self.axes) > 0 and self.z_axis_name is not None
+            ), "TiffReader initialization failed"
+            # this calculation is possible this way because the extent for non existing axes gets set to one
+            num_output_channel = self.axes["C"][2] * self.axes["S"][2]
+            if channel_index is not None:
+                num_output_channel //= self.axes["C"][2]
+            if sample_index is not None:
+                num_output_channel //= self.axes["S"][2]
 
-            channel_selected = channel_index is not None
-            num_pages_in_result = (
-                1 if channel_selected else self.num_pages_for_all_channels
-            )
+            output_shape = (self.axes["X"][2], self.axes["Y"][2], num_output_channel)
+            output = np.empty(output_shape, tif_file.pages[0].dtype)
 
-            # we need to set the channel_offset for multi-channel pages
-            # because reading will fail otherwise and we handle the channel selection elsewhere
-            channel_offset = (
-                0
-                if channel_index is None or self.is_page_multi_channel
-                else channel_index
-            )
+            z_index = z_slice if self.axes[self.z_axis_name][0] else 0
+            output_channel_offset = 0
 
-            if len(tif_file.pages) > self.num_pages_for_all_channels:
-                page_index = z_slice * self.num_pages_for_all_channels + channel_offset
-                # single multi-page input file
-                data = np.array(
-                    list(
-                        map(
-                            lambda x: x.asarray(),
-                            tif_file.pages[
-                                page_index : page_index + num_pages_in_result
-                            ],
+            for page_index, (data_c_index, data_s_index,) in self._find_correct_pages(
+                tif_file, channel_index, sample_index, z_index
+            ).items():
+                page_data = tif_file.pages[page_index].asarray()
+
+                # remove any axis that we do not use
+                # left over axes [(C)YX(S)] (Z axis is not on same TiffPage)
+                for axis in self.page_axes:
+                    if axis not in self.used_axes:
+                        page_data = page_data.take([0], self.page_axes[axis][1])
+
+                # axes order is then [YX(S)(C)]
+                if page_data.ndim == 4:
+                    page_data = page_data.transpose(
+                        (
+                            self.page_axes["X"][1],
+                            self.page_axes["Y"][1],
+                            self.page_axes["S"][1],
+                            self.page_axes["C"][1],
                         )
-                    ),
-                    dtype,
-                )
-            else:
-                # multiple input files
-                data = np.array(
-                    list(
-                        map(
-                            lambda x: x.asarray(),
-                            tif_file.pages[
-                                channel_offset : channel_offset + num_pages_in_result
-                            ],
+                    )
+                elif page_data.ndim == 3:
+                    if "S" in self.page_axes:
+                        page_data = page_data.transpose(
+                            (
+                                self.page_axes["X"][1],
+                                self.page_axes["Y"][1],
+                                self.page_axes["S"][1],
+                            )
                         )
-                    ),
-                    dtype,
-                )
+                    else:
+                        page_data = page_data.transpose(
+                            (
+                                self.page_axes["X"][1],
+                                self.page_axes["Y"][1],
+                                self.page_axes["C"][1],
+                            )
+                        )
+                elif page_data.ndim == 2:
+                    page_data = page_data.transpose(
+                        (self.page_axes["X"][1], self.page_axes["Y"][1])
+                    )
+                else:
+                    raise Exception
 
-            # if the pages are multi-channel, then we'll have 4 dimensions here because of [x:x+1] notation, so we select the data here
-            if self.is_page_multi_channel:
-                data = data[0]
-                x_index = tif_file.pages[0].axes.find("X")
-                y_index = tif_file.pages[0].axes.find("Y")
-                c_index = tif_file.pages[0].axes.find("S")
-            else:
-                # if each page is a channel, there is no c_index in the page axes and through our selection the c_index is always 0 and therefore the other indices have to be incremented
-                c_index = 0
-                x_index = tif_file.pages[0].axes.find("X") + 1
-                y_index = tif_file.pages[0].axes.find("Y") + 1
+                if data_c_index is not None:
+                    page_data = page_data.take([data_c_index], -1)
+                if data_s_index is not None:
+                    page_data = page_data.take([data_s_index], -1)
 
-            # transpose data to shape(x, y, channel_count)
-            data = data.transpose((x_index, y_index, c_index))
-            # if page is multi-channel and one channel is selected, slice channel here. Resulting Format will be (X, Y), but the following reshape will fix this
-            if self.is_page_multi_channel and channel_selected:
-                data = data[:, :, channel_index]
-            data = data.reshape(data.shape + (1,))
-            return data
+                if page_data.ndim == 4:
+                    # means C and S axis present and no data index set
+                    for c in range(page_data.shape[-1]):
+                        output[
+                            :,
+                            :,
+                            output_channel_offset : output_channel_offset
+                            + self.page_axes["S"][2],
+                        ] = page_data[:, :, :, c]
+                        output_channel_offset += (
+                            output_channel_offset + self.page_axes["S"][2]
+                        )
+                elif page_data.ndim == 3:
+                    next_channel_offset = output_channel_offset + page_data.shape[-1]
+                    output[:, :, output_channel_offset:next_channel_offset] = page_data
+                    output_channel_offset = next_channel_offset
+                elif page_data.ndim == 2:
+                    output[:, :, output_channel_offset] = page_data
+                    output_channel_offset += 1
+                else:
+                    raise Exception("Invalid axis count")
+
+            output = np.array(output, dtype)
+            output = output.reshape(output.shape + (1,))
+            return output
 
     def read_dimensions(self, file_name: Path) -> Tuple[int, int]:
         with TiffFile(file_name) as tif_file:
@@ -266,22 +401,18 @@ class TiffImageReader(ImageReader):
 
     def read_channel_count(self, file_name: Path) -> int:
         with TiffFile(file_name) as tif_file:
-            c_count = TiffImageReader.find_count_of_axis(tif_file, "C")
-            s_count = TiffImageReader.find_count_of_axis(tif_file, "S")
-            assert not (
-                c_count > 1 and s_count > 1
-            ), "This file format is currently not supported."
-            if s_count > 1:
-                return s_count
-            else:
-                return c_count
+            return TiffImageReader.find_count_of_axis(tif_file, "C")
+
+    def read_sample_count(self, file_name: Path) -> int:
+        with TiffFile(file_name) as tif_file:
+            return TiffImageReader.find_count_of_axis(tif_file, "S")
 
     def read_z_slices_per_file(self, file_name: Path) -> int:
         with TiffFile(file_name) as tif_file:
-            i_count = TiffImageReader.find_count_of_axis(tif_file, "I")
-            if i_count > 1:
-                return i_count
-            return TiffImageReader.find_count_of_axis(tif_file, "Z")
+            if self.z_axis_name is None:
+                self._find_right_z_axis_name(tif_file)
+            assert self.z_axis_name is not None, "Z axis name still unclear"
+            return TiffImageReader.find_count_of_axis(tif_file, self.z_axis_name)
 
     def read_dtype(self, file_name: Path) -> str:
         with TiffFile(file_name) as tif_file:
@@ -289,10 +420,45 @@ class TiffImageReader(ImageReader):
                 0
             ].dtype.name
 
+    def _find_right_z_axis_name(self, tif_file: TiffFile) -> None:
+        i_count = TiffImageReader.find_count_of_axis(tif_file, "I")
+        z_count = TiffImageReader.find_count_of_axis(tif_file, "Z")
+        q_count = TiffImageReader.find_count_of_axis(tif_file, "Q")
+        if i_count > 1:
+            assert (
+                z_count * q_count == 1
+            ), "Format error, as multiple Z axis names were identified"
+            self.z_axis_name = "I"
+        elif q_count > 1:
+            assert (
+                z_count * i_count == 1
+            ), "Format error, as multiple Z axis names were identified"
+            self.z_axis_name = "Q"
+        else:
+            assert (
+                i_count * q_count == 1
+            ), "Format error, as multiple Z axis names were identified"
+            self.z_axis_name = "Z"
+        self.used_axes.add(self.z_axis_name)
+
 
 class CziImageReader(ImageReader):
     def __init__(self) -> None:
-        self.tile_shape = None
+        # Shape of a single tile
+        self.tile_shape: Optional[Tuple[int]] = None
+        # Shape of the whole dataset
+        self.dataset_shape: Optional[Tuple[int]] = None
+        # axis -> [exist, index, access_index]
+        self.axes: Dict[str, Tuple[bool, int, int]] = {}
+        # "0" is the sample axis and artificially created by the underlying library, so it always exists
+        self.used_axes = {"Z", "C", "Y", "X", "0"}
+
+    def matches_if_exist(self, axis: str, value: int, other_value: int) -> bool:
+        assert len(self.axes) != 0, "Axes initialization failed"
+        if self.axes[axis][0]:
+            return value == other_value
+        else:
+            return True
 
     @staticmethod
     def find_count_of_axis(czi_file: CziFile, axis: str) -> int:
@@ -302,66 +468,48 @@ class CziImageReader(ImageReader):
         else:
             return czi_file.shape[index]
 
-    # returns format (X, Y)
-    def _read_array_single_channel(
-        self, czi_file: CziFile, channel_slice: int, dtype: np.dtype, z_slice: int
-    ) -> np.ndarray:
-        channel_index = czi_file.axes.find("C")
-        x_index = czi_file.axes.find("X")
-        y_index = czi_file.axes.find("Y")
-        z_index = czi_file.axes.find("Z")
-        channel_file_start = czi_file.start[channel_index]
-        z_file_start = czi_file.start[z_index]
-        for entry in czi_file.filtered_subblock_directory:
-            if (
-                entry.start[z_index] - z_file_start == z_slice
-                and entry.start[channel_index] - channel_file_start == channel_slice
-            ):
-                # This case assumes that the data-segment contains a single channel and a single z slice
-                data = entry.data_segment().data()
-                # We are not sure if the order of the X and Y dimensions is always the same, so we check that we always produce the correct output format
-                if x_index > y_index:
-                    data = data.reshape(data.shape[y_index], data.shape[x_index])
-                    data = data.swapaxes(0, 1)
-                else:
-                    data = data.reshape(data.shape[x_index], data.shape[y_index])
-                data = to_target_datatype(data, dtype)
-                return data
+    def select_correct_tiles(
+        self, channel_index: Optional[int], sample_index: Optional[int], z_slice: int
+    ) -> Dict[int, Tuple[int, Optional[int], Optional[int], Optional[int]]]:
+        assert (
+            len(self.axes) != 0
+            and self.tile_shape is not None
+            and self.dataset_shape is not None
+        ), "CZIReader initialization failed"
+        # return type is tile channel index to tile z index, data z index, data channel index and 0 index, None means all
+        result: Dict[
+            int, Tuple[int, Optional[int], Optional[int], Optional[int]]
+        ] = dict()
+        # C axis exists
+        c_count_per_tile = 1
+        c_tiles_for_complete_axis = 1
+        if self.axes["C"][0]:
+            c_count_per_tile = self.tile_shape[self.axes["C"][1]]
+            c_tiles_for_complete_axis = (
+                self.dataset_shape[self.axes["C"][1]] // c_count_per_tile
+            )
 
-    # return format will be (X, Y, channel_count)
-    def _read_array_all_channels(
-        self, czi_file: CziFile, dtype: np.dtype, z_slice: int
-    ) -> np.ndarray:
-        # There can be a lot of axes in the czi_file, but we are only interested in the x, y and c indices
-        x_index = czi_file.axes.find("X")
-        y_index = czi_file.axes.find("Y")
-        z_index = czi_file.axes.find("Z")
-        c_index = czi_file.axes.find("C")
-        indices = [(x_index, "X"), (y_index, "Y"), (c_index, "C")]
-        # We are not sure, which ordering these indices have, so we order them to correctly reshape the data
-        indices.sort()
+        tile_z_index: int = 0
+        data_z_index: Optional[int] = None
+        if self.axes["Z"][0]:
+            tile_z_index = z_slice // self.dataset_shape[self.axes["Z"][1]]
+            data_z_index = z_slice % self.dataset_shape[self.axes["Z"][1]]
 
-        z_start = czi_file.start[z_index]
-        for entry in czi_file.filtered_subblock_directory:
-            if entry.start[z_index] - z_start == z_slice:
-                data = entry.data_segment().data()
-                # Reshaping the data to the shape of the selected axes from above
-                data = data.reshape(
-                    data.shape[indices[0][0]],
-                    data.shape[indices[1][0]],
-                    data.shape[indices[2][0]],
-                )
-                # After reshaping the data to the ordered indices, we now change the format to (X, Y, channel_count)
-                data = np.transpose(
-                    data,
-                    (
-                        [i for i, d in enumerate(indices) if d[1] == "X"][0],
-                        [i for i, d in enumerate(indices) if d[1] == "Y"][0],
-                        [i for i, d in enumerate(indices) if d[1] == "C"][0],
-                    ),
-                )
-                data = to_target_datatype(data, dtype)
-                return data
+        if channel_index is not None:
+            tile_channel_index = channel_index // c_count_per_tile
+            data_channel_index = channel_index % c_count_per_tile
+            result[tile_channel_index] = (
+                tile_z_index,
+                data_z_index,
+                data_channel_index,
+                sample_index,
+            )
+        else:
+            # no channel index set, implies no sample index set
+            for i in range(c_tiles_for_complete_axis):
+                result[i] = (tile_z_index, data_z_index, None, None)
+
+        return result
 
     def read_array(
         self,
@@ -369,48 +517,185 @@ class CziImageReader(ImageReader):
         dtype: np.dtype,
         z_slice: int,
         channel_index: Optional[int],
+        sample_index: Optional[int],
     ) -> np.ndarray:
         with CziFile(file_name) as czi_file:
-            c_index = czi_file.axes.find("C")  # pylint: disable=no-member
-            channel_count = self.read_channel_count(file_name)
             # we assume the tile shape is constant, so we can cache it
             if self.tile_shape is None:
-                self.tile_shape = (
-                    czi_file.filtered_subblock_directory[  # pylint: disable=unsubscriptable-object
-                        0
-                    ]
-                    .data_segment()
-                    .data()
-                    .shape
-                )
+                self.tile_shape = czi_file.filtered_subblock_directory[  # pylint: disable=unsubscriptable-object
+                    0
+                ].shape
+            if self.dataset_shape is None:
+                self.dataset_shape = czi_file.shape
+            if len(self.axes) == 0:
+                count = 0
+                for i, axis in enumerate(czi_file.axes):
+                    self.axes[axis] = (True, i, i - count)
+                    if axis not in self.used_axes:
+                        count += 1
+                for axis in self.used_axes:
+                    if axis not in self.axes:
+                        self.axes[axis] = (False, 0, 0)
 
             assert self.tile_shape is not None, "Cannot read tile shape format."
 
-            # we assume either all channel are in one tile or each tile is single channel
-            if self.tile_shape[c_index] != channel_count:
-                if channel_index is not None:
-                    data = self._read_array_single_channel(
-                        czi_file, channel_index, dtype, z_slice
-                    )
-                    data = data.reshape(data.shape + (1,))
-                    return data
-                else:
-                    x_count, y_count = self.read_dimensions(file_name)
-                    output = np.empty((channel_count, x_count, y_count), dtype)
-                    # format is (channel_count, x, y)
-                    for i in range(0, channel_count):
-                        output[i] = self._read_array_single_channel(
-                            czi_file, i, dtype, z_slice
-                        )
-
-                    # transpose format to x, y, channel_count
-                    output = np.transpose(output, (1, 2, 0))
-                    return output
+            if sample_index is not None:
+                num_output_channel = 1
+            elif channel_index is not None:
+                num_output_channel = self.dataset_shape[self.axes["0"][1]]
             else:
-                data = self._read_array_all_channels(czi_file, dtype, z_slice)
-                if channel_index is not None:
-                    data = data[:, :, channel_index : channel_index + 1]
-                return data
+                channel_count = (
+                    self.dataset_shape[self.axes["C"][1]] if self.axes["C"][0] else 1
+                )
+                num_output_channel = (
+                    channel_count * self.dataset_shape[self.axes["0"][1]]
+                )
+
+            output_shape = (
+                self.dataset_shape[self.axes["X"][1]],
+                self.dataset_shape[self.axes["Y"][1]],
+                num_output_channel,
+            )
+            output = np.empty(output_shape, dtype)
+
+            z_file_start = (
+                czi_file.start[  # pylint: disable=unsubscriptable-object
+                    self.axes["Z"][1]
+                ]
+                if self.axes["Z"][0]
+                else 0
+            )
+            c_file_start = (
+                czi_file.start[  # pylint: disable=unsubscriptable-object
+                    self.axes["C"][1]
+                ]
+                if self.axes["C"][0]
+                else 0
+            )
+            output_channel_offset = 0
+
+            for tile_channel_index, (
+                tile_z_index,
+                data_z_index,
+                data_channel_index,
+                data_sample_index,
+            ) in self.select_correct_tiles(
+                channel_index, sample_index, z_slice
+            ).items():
+                # since the czi tiles are not sorted, we search linearly through them and check if the tile matches with the wanted coordinates
+                # however, some axes might not exist, so the matches_if_exist helper returns true if the axis does not exist
+                for (
+                    entry
+                ) in (
+                    czi_file.filtered_subblock_directory  # pylint: disable=not-an-iterable
+                ):
+                    if self.matches_if_exist(
+                        "Z", entry.start[self.axes["Z"][1]] - z_file_start, tile_z_index
+                    ) and self.matches_if_exist(
+                        "C",
+                        (entry.start[self.axes["C"][1]] - c_file_start)
+                        // self.tile_shape[self.axes["C"][1]],
+                        tile_channel_index,
+                    ):
+                        data = entry.data_segment().data()
+                        data = to_target_datatype(data, dtype)
+
+                        # left axis are in order [(Z)(C)0XY]
+                        for axis in czi_file.axes:  # pylint: disable=not-an-iterable
+                            if axis not in self.used_axes:
+                                data = data.take([0], self.axes[axis][2])
+                        if data.ndim == 5:
+                            data = data.transpose(
+                                (
+                                    self.axes["Z"][2],
+                                    self.axes["X"][2],
+                                    self.axes["Y"][2],
+                                    self.axes["0"][2],
+                                    self.axes["C"][2],
+                                )
+                            )
+                        elif data.ndim == 4:
+                            if self.axes["Z"][0]:
+                                data = data.transpose(
+                                    (
+                                        self.axes["Z"][2],
+                                        self.axes["X"][2],
+                                        self.axes["Y"][2],
+                                        self.axes["0"][2],
+                                    )
+                                )
+                            else:
+                                data = data.transpose(
+                                    (
+                                        self.axes["X"][2],
+                                        self.axes["Y"][2],
+                                        self.axes["0"][2],
+                                        self.axes["C"][2],
+                                    )
+                                )
+                        elif data.ndim == 3:
+                            data = data.transpose(
+                                (
+                                    self.axes["X"][2],
+                                    self.axes["Y"][2],
+                                    self.axes["0"][2],
+                                )
+                            )
+                        else:
+                            raise Exception
+
+                        if data_z_index is not None:
+                            data = data.take([data_z_index], 0)
+
+                        # if z axis exist, data_z_index is set, so the access index for this is always 0
+                        if data_channel_index is not None and self.axes["C"][0]:
+                            data = data.take([data_channel_index], -1)
+
+                        # if the sample index is set, the channel index is set, too, so access index is always 0
+                        if data_sample_index is not None:
+                            data = data.take([data_sample_index], -1)
+
+                        # special case with C and 0 and no selected index set
+                        if data.ndim == 4:
+                            for c in range(self.tile_shape[self.axes["C"][1]]):
+                                next_output_channel_offset = (
+                                    output_channel_offset + data.shape[2]
+                                )
+                                output[
+                                    :,
+                                    :,
+                                    output_channel_offset:next_output_channel_offset,
+                                ] = data[:, :, :, c]
+                                output_channel_offset = next_output_channel_offset
+                        elif data.ndim == 2:
+                            output[:, :, output_channel_offset] = data
+                            output_channel_offset += 1
+                        else:
+                            output_channel_increment = (
+                                1 if data_sample_index is not None else data.shape[-1]
+                            )
+                            next_output_channel_offset = (
+                                output_channel_offset + output_channel_increment
+                            )
+                            output[
+                                :, :, output_channel_offset:next_output_channel_offset
+                            ] = data
+                            output_channel_offset = next_output_channel_offset
+
+        # CZI stores pixels as BGR instead of RGB, so swap axes to ensure right color output
+        if (
+            num_output_channel == 3
+            and dtype == np.uint8
+            and czi_file.filtered_subblock_directory[  # pylint: disable=unsubscriptable-object
+                0
+            ].pixel_type
+            == "Bgr24"
+        ):
+            output[:, :, 2], output[:, :, 0] = output[:, :, 0], output[:, :, 2]
+
+        output = output.reshape(output.shape + (1,))
+
+        return output
 
     def read_dimensions(self, file_name: Path) -> Tuple[int, int]:
         with CziFile(file_name) as czi_file:
@@ -422,6 +707,10 @@ class CziImageReader(ImageReader):
     def read_channel_count(self, file_name: Path) -> int:
         with CziFile(file_name) as czi_file:
             return CziImageReader.find_count_of_axis(czi_file, "C")
+
+    def read_sample_count(self, file_name: Path) -> int:
+        with CziFile(file_name) as czi_file:
+            return CziImageReader.find_count_of_axis(czi_file, "0")
 
     def read_z_slices_per_file(self, file_name: Path) -> int:
         with CziFile(file_name) as czi_file:
@@ -476,11 +765,14 @@ class ImageReaderManager:
         dtype: np.dtype,
         z_slice: int,
         channel_index: Optional[int] = None,
+        sample_index: Optional[int] = None,
     ) -> np.ndarray:
         _, ext = path.splitext(file_name)
 
         # Image shape will be (x, y, channel_count, z=1) or (x, y, z=1)
-        image = self.readers[ext].read_array(file_name, dtype, z_slice, channel_index)
+        image = self.readers[ext].read_array(
+            file_name, dtype, z_slice, channel_index, sample_index
+        )
         # Standardize the image shape to (x, y, channel_count, z=1)
         if image.ndim == 3:
             image = image.reshape(image.shape + (1,))
@@ -495,6 +787,10 @@ class ImageReaderManager:
         _, ext = path.splitext(file_name)
         return self.readers[ext].read_channel_count(file_name)
 
+    def read_sample_count(self, file_name: Path) -> int:
+        _, ext = path.splitext(file_name)
+        return self.readers[ext].read_sample_count(file_name)
+
     def read_z_slices_per_file(self, file_name: Path) -> int:
         _, ext = path.splitext(file_name)
         return self.readers[ext].read_z_slices_per_file(file_name)
@@ -502,6 +798,12 @@ class ImageReaderManager:
     def read_dtype(self, file_name: Path) -> str:
         _, ext = path.splitext(file_name)
         return self.readers[ext].read_dtype(file_name)
+
+
+# refresh all cached values
+def refresh_global_image_reader() -> None:
+    global image_reader
+    image_reader = ImageReaderManager()
 
 
 image_reader = ImageReaderManager()

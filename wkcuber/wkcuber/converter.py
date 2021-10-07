@@ -3,17 +3,18 @@ from os import path, sep
 from pathlib import Path
 from typing import Iterable, List, Any, Tuple, Dict, Set, Callable, cast, Optional
 
-from .cubing import (
-    cubing as cube_image_stack,
-    create_parser as create_image_stack_parser,
-    get_channel_count_and_dtype,
-)
 from .convert_knossos import (
     main as convert_knossos,
     create_parser as create_knossos_parser,
 )
 from .convert_nifti import main as convert_nifti, create_parser as create_nifti_parser
+from .cubing import (
+    cubing as cube_image_stack,
+    create_parser as create_image_stack_parser,
+    get_channel_and_sample_count_and_dtype,
+)
 from .image_readers import image_reader
+from .metadata import write_webknossos_metadata
 from .utils import (
     find_files,
     add_scale_flag,
@@ -21,8 +22,9 @@ from .utils import (
     add_verbose_flag,
     setup_logging,
     get_executor_args,
+    is_wk_compatible_layer_format,
+    get_channel_and_sample_iters_for_wk_compatibility,
 )
-from .metadata import write_webknossos_metadata
 
 
 def create_parser() -> ArgumentParser:
@@ -388,18 +390,33 @@ class ImageStackConverter(Converter):
                 continue
 
             converted_layers += 1
-            channel_count, dtype = get_channel_count_and_dtype(Path(layer_path))
-            if channel_count > 1 and not (channel_count == 3 and dtype == "uint8"):
-                for i in range(channel_count):
-                    layer_name = f"{layer_name}_{i}"
-                    arg_dict = vars(args)
+            channel_count, sample_count, dtype = get_channel_and_sample_count_and_dtype(
+                Path(layer_path)
+            )
 
+            (
+                channel_iter,
+                sample_iter,
+            ) = get_channel_and_sample_iters_for_wk_compatibility(
+                channel_count, sample_count, dtype
+            )
+
+            layer_count = 0
+            for channel_index in channel_iter:
+                for sample_index in sample_iter:
+                    if len(channel_iter) * len(sample_iter) > 1:
+                        curr_layer_name = f"{layer_name}_{layer_count}"
+                    else:
+                        curr_layer_name = layer_name
+
+                    arg_dict = vars(args)
                     bounding_box = cube_image_stack(
                         Path(layer_path),
                         args.target_path,
-                        layer_name,
+                        curr_layer_name,
                         arg_dict.get("batch_size"),
-                        i,  # channel index
+                        channel_index,
+                        sample_index,
                         arg_dict.get("dtype"),
                         args.target_mag,
                         args.wkw_file_len,
@@ -409,25 +426,12 @@ class ImageStackConverter(Converter):
                         executor_args,
                     )
 
-                    view_configuration[
-                        layer_name
-                    ] = ImageStackConverter.get_view_configuration(i)
-            else:
-                arg_dict = vars(args)
-                bounding_box = cube_image_stack(
-                    Path(layer_path),
-                    args.target_path,
-                    layer_name,
-                    arg_dict.get("batch_size"),
-                    arg_dict.get("channel_index"),
-                    arg_dict.get("dtype"),
-                    args.target_mag,
-                    args.wkw_file_len,
-                    args.interpolation_mode,
-                    args.start_z,
-                    args.pad,
-                    executor_args,
-                )
+                    if not is_wk_compatible_layer_format(sample_count, dtype):
+                        # this means that every sample has to be converted into its own layer, so we want to set a view configuration since first three layers are probably RGB
+                        view_configuration[
+                            curr_layer_name
+                        ] = ImageStackConverter.get_view_configuration(layer_count)
+                    layer_count += 1
 
         assert converted_layers > 0, "No layer could be converted!"
 
@@ -527,7 +531,7 @@ def main(args: Namespace) -> None:
 
     matching_converters = list(
         filter(
-            lambda c: c.accepts_input(args.source_path),
+            lambda c: c.accepts_input(str(args.source_path)),
             converter_manager.converter,
         )
     )
