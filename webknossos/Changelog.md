@@ -15,6 +15,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 - The `Vec3Int` constructor now asserts that its components are whole numbers also in numpy case. [#434](https://github.com/scalableminds/webknossos-libs/pull/434)
 - Updated scikit-image dependency to 0.18.3. [#435](https://github.com/scalableminds/webknossos-libs/pull/435)
+- `View`s now always opens the `wkw.Dataset` lazy. All explicit calls to `View.open()` and `View.close()` can be removed. [#448](https://github.com/scalableminds/webknossos-libs/pull/448)
 ### Fixed
 
 ## [0.8.16](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.16) - 2021-09-22
