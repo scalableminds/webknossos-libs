@@ -24,6 +24,7 @@ czifile = "^2019.7.2"
 attrs = "^21.1.0"
 cattrs = "1.7.1"
 webknossos = { path = "../webknossos/", develop = true }
+psutil = "^5.8.0"
 
 [tool.poetry.dev-dependencies]
 black = "^20.8b1"

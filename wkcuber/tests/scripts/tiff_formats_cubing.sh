@@ -12,6 +12,7 @@ python -m wkcuber.convert_image_stack_to_wkw \
   --scale 1,1,1 \
   --name awesome_data \
   --no_compress \
+  --wkw_file_len 8 \
   testdata/various_tiff_formats/test_I.tif testoutput/tiff4
 [ -d testoutput/tiff4/color ]
 [ -d testoutput/tiff4/color/2 ]
@@ -28,6 +29,7 @@ python -m wkcuber.convert_image_stack_to_wkw \
   --scale 1,1,1 \
   --name awesome_data \
   --no_compress \
+  --wkw_file_len 8 \
   testdata/various_tiff_formats/test_C.tif testoutput/tiff4
 [ -d testoutput/tiff4/color_0 ]
 [ -d testoutput/tiff4/color_1 ]
@@ -47,6 +49,7 @@ python -m wkcuber.convert_image_stack_to_wkw \
   --scale 1,1,1 \
   --name awesome_data \
   --no_compress \
+  --wkw_file_len 8 \
   testdata/various_tiff_formats/test_S.tif testoutput/tiff4
 [ -d testoutput/tiff4/color_0 ]
 [ -d testoutput/tiff4/color_1 ]
@@ -64,6 +67,7 @@ python -m wkcuber.convert_image_stack_to_wkw \
   --scale 1,1,1 \
   --name awesome_data \
   --no_compress \
+  --wkw_file_len 8 \
   testdata/various_tiff_formats/test_CS.tif testoutput/tiff4
 [ -d testoutput/tiff4/color_0 ]
 [ -d testoutput/tiff4/color_1 ]
@@ -85,6 +89,7 @@ if python -m wkcuber.convert_image_stack_to_wkw \
     --prefer_channels \
     --name awesome_data \
     --no_compress \
+    --wkw_file_len 8 \
     testdata/various_tiff_formats/test_C.tif testoutput/tiff4; then
   echo "Conversion worked although invalid config should have been detected."
   exit 1
@@ -103,6 +108,7 @@ python -m wkcuber.convert_image_stack_to_wkw \
   --sample_index 2 \
   --name awesome_data \
   --no_compress \
+  --wkw_file_len 8 \
   testdata/various_tiff_formats/test_CS.tif testoutput/tiff4
 [ -d testoutput/tiff4/color ]
 [ -d testoutput/tiff4/color/1 ]
