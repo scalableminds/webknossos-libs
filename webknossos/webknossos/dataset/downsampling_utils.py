@@ -305,8 +305,6 @@ def downsample_cube_job(
             )
         )
 
-        source_view.open()
-
         for tile in tiles:
             target_offset = np.array(tile) * buffer_edge_len
             source_offset = (mag_factors * target_offset).astype(int)
@@ -346,7 +344,6 @@ def downsample_cube_job(
                         buffer_offset[2] : buffer_end[2],
                     ] = data_cube
 
-        source_view.close()
         # Write the downsampled buffer to target
         if source_view.header.num_channels == 1:
             file_buffer = file_buffer[0]  # remove channel dimension

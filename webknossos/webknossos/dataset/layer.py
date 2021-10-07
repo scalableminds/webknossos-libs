@@ -217,10 +217,10 @@ class Layer:
         # The MagViews need to be updated
         for mag in self._mags.values():
             mag._path = _find_mag_path_on_disk(self.dataset.path, self.name, mag.name)
-            if mag._is_opened:
+            if mag._dataset is not None:
                 # Reopen handle to dataset on disk
-                mag.close()
-                mag.open()
+                mag._close()
+                mag._open()
 
         self.dataset._export_as_json()
 

@@ -244,11 +244,7 @@ class MagView(View):
         - the bounding box in the properties is an "overall" bounding box, which abstracts from the files on disk
         """
         cube_size = self._get_file_dimensions()
-        was_opened = self._is_opened
-
-        if not was_opened:
-            self.open()  # opening the view is necessary to set the dataset
-
+        self._open_if_necessary()
         assert self._dataset is not None
         for filename in self._dataset.list_files():
             file_path = Path(os.path.splitext(filename)[0]).relative_to(self._path)
@@ -256,9 +252,6 @@ class MagView(View):
             cube_offset = [idx * size for idx, size in zip(cube_index, cube_size)]
 
             yield (cube_offset[0], cube_offset[1], cube_offset[2]), cube_size
-
-        if not was_opened:
-            self.close()
 
     def compress(
         self, target_path: Union[str, Path] = None, args: Namespace = None
@@ -295,9 +288,7 @@ class MagView(View):
             )
         )
 
-        was_opened = self._is_opened
-        if not was_opened:
-            self.open()  # opening the view is necessary to set the dataset
+        self._open_if_necessary()
         assert self._dataset is not None
 
         # create empty wkw.Dataset
@@ -315,9 +306,6 @@ class MagView(View):
             )
 
         logging.info("Mag {0} successfully compressed".format(self.name))
-
-        if not was_opened:
-            self.close()
 
         if target_path is None:
             shutil.rmtree(uncompressed_full_path)

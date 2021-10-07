@@ -223,7 +223,7 @@ def test_modify_existing_dataset() -> None:
     assure_exported_properties(ds2)
 
 
-def test_view_read_with_open() -> None:
+def test_view_read() -> None:
     wk_view = (
         Dataset(TESTDATA_DIR / "simple_wk_dataset")
         .get_layer("color")
@@ -231,32 +231,13 @@ def test_view_read_with_open() -> None:
         .get_view(size=(16, 16, 16))
     )
 
-    assert not wk_view._is_opened
+    assert wk_view._dataset is None
 
-    with wk_view.open():
-        assert wk_view._is_opened
-
-        data = wk_view.read(size=(10, 10, 10))
-        assert data.shape == (3, 10, 10, 10)  # three channel
-
-    assert not wk_view._is_opened
-
-
-def test_view_read_without_open() -> None:
-    wk_view = (
-        Dataset(TESTDATA_DIR / "simple_wk_dataset")
-        .get_layer("color")
-        .get_mag("1")
-        .get_view(size=(16, 16, 16))
-    )
-
-    assert not wk_view._is_opened
-
-    # 'read()' checks if it was already opened. If not, it opens and closes automatically
+    # 'read()' checks if it was already opened. If not, it opens it automatically
     data = wk_view.read(size=(10, 10, 10))
     assert data.shape == (3, 10, 10, 10)  # three channel
 
-    assert not wk_view._is_opened
+    assert wk_view._dataset is not None
 
 
 def test_view_write() -> None:
@@ -270,14 +251,13 @@ def test_view_write() -> None:
         .get_view(size=(16, 16, 16))
     )
 
-    with wk_view.open():
-        np.random.seed(1234)
-        write_data = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
+    np.random.seed(1234)
+    write_data = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
 
-        wk_view.write(write_data)
+    wk_view.write(write_data)
 
-        data = wk_view.read(size=(10, 10, 10))
-        assert np.array_equal(data, write_data)
+    data = wk_view.read(size=(10, 10, 10))
+    assert np.array_equal(data, write_data)
 
 
 def test_view_write_out_of_bounds() -> None:
@@ -293,11 +273,10 @@ def test_view_write_out_of_bounds() -> None:
         .get_view(size=(16, 16, 16))
     )
 
-    with view.open():
-        with pytest.raises(AssertionError):
-            view.write(
-                np.zeros((200, 200, 5), dtype=np.uint8)
-            )  # this is bigger than the bounding_box
+    with pytest.raises(AssertionError):
+        view.write(
+            np.zeros((200, 200, 5), dtype=np.uint8)
+        )  # this is bigger than the bounding_box
 
 
 def test_mag_view_write_out_of_bounds() -> None:
@@ -677,29 +656,6 @@ def test_chunking_wk_wrong_chunk_size() -> None:
     view = mag.get_view(size=(256, 256, 256))
 
     for_each_chunking_with_wrong_chunk_size(view)
-
-    assure_exported_properties(ds)
-
-
-def test_view_write_without_open() -> None:
-    ds_path = TESTOUTPUT_DIR / "wk_dataset_write_without_open"
-    delete_dir(ds_path)
-
-    ds = Dataset.create(ds_path, scale=(1, 1, 1))
-    layer = ds.add_layer("color", LayerCategories.COLOR_TYPE)
-    layer.bounding_box = BoundingBox(
-        (0, 0, 0), (64, 64, 64)
-    )  # This newly created dataset would otherwise have a "empty" bounding box
-    mag = layer.add_mag("1")
-
-    wk_view = mag.get_view(size=(32, 64, 16))
-
-    assert not wk_view._is_opened
-
-    write_data = (np.random.rand(32, 64, 16) * 255).astype(np.uint8)
-    wk_view.write(write_data)
-
-    assert not wk_view._is_opened
 
     assure_exported_properties(ds)
 
@@ -1330,10 +1286,6 @@ def test_search_dataset_also_for_long_layer_name() -> None:
 
     # rename the path from "long_layer_name/color/2" to "long_layer_name/color/2-2-2"
     os.rename(short_mag_file_path, long_mag_file_path)
-
-    with pytest.raises(WKWException):
-        # the dataset has to be reopened to notice the changed directory
-        mag.read(offset=(10, 10, 10), size=(10, 10, 10))
 
     # when opening the dataset, it searches both for the long and the short path
     layer = Dataset(TESTOUTPUT_DIR / "long_layer_name").get_layer("color")

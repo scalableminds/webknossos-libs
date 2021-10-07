@@ -45,7 +45,6 @@ class View:
         self._global_offset: Vec3Int = Vec3Int(global_offset)
         self._is_bounded = is_bounded
         self._read_only = read_only
-        self._is_opened = False
         # The bounding box of the view is used to prevent warnings when writing compressed but unaligned data
         # directly at the borders of the bounding box.
         # A View is unable to get this information from the Dataset because it is detached from it.
@@ -73,37 +72,6 @@ class View:
     def read_only(self) -> bool:
         return self._read_only
 
-    def open(self) -> "View":
-        """
-        Opens the actual handles to the data on disk.
-        A `MagDataset` has to be opened before it can be read or written to. However, the user does not
-        have to open it explicitly because the API automatically opens it when it is needed.
-        The user can choose to open it explicitly to avoid that handles are opened and closed automatically
-        each time data is read or written.
-        """
-        if self._is_opened:
-            raise Exception("Cannot open view: the view is already opened")
-        else:
-            self._dataset = Dataset.open(
-                str(self._path)
-            )  # No need to pass the header to the wkw.Dataset
-            self._is_opened = True
-        return self
-
-    def close(self) -> None:
-        """
-        Complementary to `open`, this closes the handles to the data.
-
-        See `open` for more information.
-        """
-        if not self._is_opened:
-            raise Exception("Cannot close View: the view is not opened")
-        else:
-            assert self._dataset is not None  # because the View was opened
-            self._dataset.close()
-            self._dataset = None
-            self._is_opened = False
-
     def write(
         self,
         data: np.ndarray,
@@ -120,7 +88,6 @@ class View:
 
         offset = Vec3Int(offset)
 
-        was_opened = self._is_opened
         # assert the size of the parameter data is not in conflict with the attribute self.size
         data_dims = Vec3Int(data.shape[-3:])
         _assert_positive_dimensions(offset, data_dims)
@@ -135,14 +102,9 @@ class View:
         if self._is_compressed():
             absolute_offset, data = self._handle_compressed_write(absolute_offset, data)
 
-        if not was_opened:
-            self.open()
-        assert self._dataset is not None  # because the View was opened
-
+        self._open_if_necessary()
+        assert self._dataset is not None
         self._dataset.write(absolute_offset.to_np(), data)
-
-        if not was_opened:
-            self.close()
 
     def read(
         self,
@@ -206,16 +168,9 @@ class View:
         absolute_offset: Vec3Int,
         size: Vec3Int,
     ) -> np.ndarray:
-        was_opened = self._is_opened
-        if not was_opened:
-            self.open()
-        assert self._dataset is not None  # because the View was opened
-
+        self._open_if_necessary()
+        assert self._dataset is not None
         data = self._dataset.read(absolute_offset.to_np(), size.to_np())
-
-        if not was_opened:
-            self.close()
-
         return data
 
     def get_view(
@@ -603,7 +558,7 @@ class View:
         _value: Optional[BaseException],
         _tb: Optional[TracebackType],
     ) -> None:
-        self.close()
+        pass
 
     def __repr__(self) -> str:
         return repr(
@@ -615,6 +570,25 @@ class View:
     def _mag_view_bounding_box_at_creation(self) -> BoundingBox:
         assert self._mag_view_bbox_at_creation is not None
         return self._mag_view_bbox_at_creation
+
+    def _open(self) -> None:
+        if self._dataset is not None:
+            raise Exception("Cannot open view: the view is already opened")
+        else:
+            self._dataset = Dataset.open(
+                str(self._path)
+            )  # No need to pass the header to the wkw.Dataset
+
+    def _close(self) -> None:
+        if self._dataset is None:
+            raise Exception("Cannot close View: the view is not opened")
+        else:
+            self._dataset.close()
+            self._dataset = None
+
+    def _open_if_necessary(self) -> None:
+        if self._dataset is None:
+            self._open()
 
 
 def _assert_positive_dimensions(offset: Vec3Int, size: Vec3Int) -> None:
