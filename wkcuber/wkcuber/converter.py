@@ -400,7 +400,6 @@ class ImageStackConverter(Converter):
                 channel_count, sample_count, dtype
             )
 
-
             layer_count = 0
             for channel_index in channel_iter:
                 for sample_index in sample_iter:

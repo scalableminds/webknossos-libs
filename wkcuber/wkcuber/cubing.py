@@ -52,7 +52,10 @@ def create_parser() -> ArgumentParser:
     )
 
     parser.add_argument(
-        "--start_z", help="The z coordinate of the first slice. This is useful to continue at a specific z, if a previous run was interrupted.", default=0, type=int
+        "--start_z",
+        help="The z coordinate of the first slice. This is useful to continue at a specific z, if a previous run was interrupted.",
+        default=0,
+        type=int,
     )
 
     parser.add_argument(
@@ -368,7 +371,7 @@ def cubing(
         )
     target_layer.bounding_box = BoundingBox(
         Vec3Int(0, 0, start_z) * target_mag,
-        Vec3Int(num_x, num_y, num_z-start_z) * target_mag
+        Vec3Int(num_x, num_y, num_z - start_z) * target_mag,
     )
 
     target_mag_view = target_layer.get_or_add_mag(
@@ -390,7 +393,7 @@ def cubing(
             max_z = min(num_z, z + BLOCK_LEN)
             # Prepare source files array
             if len(source_files) > 1:
-                source_files_array = source_files[z : max_z]
+                source_files_array = source_files[z:max_z]
             else:
                 source_files_array = source_files * (max_z - z)
 

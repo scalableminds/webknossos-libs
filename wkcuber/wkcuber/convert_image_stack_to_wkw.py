@@ -154,23 +154,25 @@ def main(args: Namespace) -> None:
     layers = []
     for channel_index in channel_iter:
         for sample_index in sample_iter:
-            layers.append(cubing(
-                args.source_path,
-                args.target_path,
-                f"{args.layer_name}_{layer_count}"
-                if len(channel_iter) * len(sample_iter) > 1
-                else args.layer_name,
-                arg_dict.get("batch_size"),
-                channel_index,
-                sample_index,
-                arg_dict.get("dtype"),
-                args.target_mag,
-                args.wkw_file_len,
-                args.interpolation_mode,
-                args.start_z,
-                args.pad,
-                args,
-            ))
+            layers.append(
+                cubing(
+                    args.source_path,
+                    args.target_path,
+                    f"{args.layer_name}_{layer_count}"
+                    if len(channel_iter) * len(sample_iter) > 1
+                    else args.layer_name,
+                    arg_dict.get("batch_size"),
+                    channel_index,
+                    sample_index,
+                    arg_dict.get("dtype"),
+                    args.target_mag,
+                    args.wkw_file_len,
+                    args.interpolation_mode,
+                    args.start_z,
+                    args.pad,
+                    args,
+                )
+            )
             layer_count += 1
 
     for layer in layers:
