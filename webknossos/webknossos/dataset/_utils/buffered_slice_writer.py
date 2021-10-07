@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Generator, List, Optional, Tuple, Type, cast
 import numpy as np
 import psutil
 
-from webknossos.geometry import Vec3Int
+from webknossos.geometry import Vec3Int, Vec3IntLike
 
 if TYPE_CHECKING:
     from webknossos.dataset import View
@@ -32,7 +32,7 @@ class BufferedSliceWriter(object):
     def __init__(
         self,
         view: "View",
-        offset: Vec3Int,
+        offset: Vec3IntLike,
         # buffer_size specifies, how many slices should be aggregated until they are flushed.
         buffer_size: int = 32,
         dimension: int = 2,  # z
@@ -48,7 +48,7 @@ class BufferedSliceWriter(object):
         self.view = view
         self.buffer_size = buffer_size
         self.dtype = self.view.get_dtype()
-        self.offset = offset
+        self.offset = Vec3Int(offset)
         self.dimension = dimension
 
         assert 0 <= dimension <= 2

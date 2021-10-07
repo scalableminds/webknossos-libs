@@ -273,7 +273,10 @@ class View:
         )
 
     def get_buffered_slice_writer(
-        self, offset: Vec3Int = None, buffer_size: int = 32, dimension: int = 2  # z
+        self,
+        offset: Vec3IntLike = Vec3Int(0, 0, 0),
+        buffer_size: int = 32,
+        dimension: int = 2,  # z
     ) -> "BufferedSliceWriter":
         """
         The BufferedSliceWriter buffers multiple slices before they are written to disk.
@@ -299,15 +302,15 @@ class View:
 
         return BufferedSliceWriter(
             view=self,
-            offset=offset if offset is not None else Vec3Int(0, 0, 0),
+            offset=Vec3Int(offset),
             buffer_size=buffer_size,
             dimension=dimension,
         )
 
     def get_buffered_slice_reader(
         self,
-        offset: Vec3Int = None,
-        size: Vec3Int = None,
+        offset: Vec3IntLike = Vec3Int(0, 0, 0),
+        size: Optional[Vec3IntLike] = None,
         buffer_size: int = 32,
         dimension: int = 2,  # z
     ) -> "BufferedSliceReader":
@@ -333,8 +336,8 @@ class View:
 
         return BufferedSliceReader(
             view=self,
-            offset=offset if offset is not None else Vec3Int(0, 0, 0),
-            size=size if size is not None else self.size,
+            offset=Vec3Int(offset),
+            size=Vec3Int(size) if size is not None else self.size,
             buffer_size=buffer_size,
             dimension=dimension,
         )
