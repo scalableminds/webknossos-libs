@@ -28,7 +28,6 @@ from .utils import (
     setup_logging,
 )
 from .image_readers import image_reader, refresh_global_image_reader
-from .metadata import convert_element_class_to_dtype
 
 BLOCK_LEN = 32
 

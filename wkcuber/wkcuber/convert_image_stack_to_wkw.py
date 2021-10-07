@@ -1,16 +1,13 @@
-from .compress import compress_mag_inplace
 import logging
 from argparse import Namespace, ArgumentParser
 from typing import Sequence
 
-from wkcuber import downsample_mags
 from .cubing import (
     get_channel_and_sample_count_and_dtype,
     cubing,
     create_parser as create_cubing_parser,
 )
 from .mag import Mag
-from .metadata import write_webknossos_metadata, refresh_metadata
 from .utils import (
     add_isotropic_flag,
     setup_logging,
