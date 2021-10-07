@@ -1,18 +1,19 @@
-site_name: webKnossos Libraries
+site_name: webKnossos Documentation
 docs_dir: src
 site_dir: out
 use_directory_urls: false
-repo_url: https://github.com/scalableminds/webknossos-libs
-repo_name: webknossos-libs
+# repo_url: https://github.com/scalableminds/webknossos-libs
+# repo_name: webknossos-libs
 edit_uri: ""
 
 theme:
   name: material
   custom_dir: overrides
-  favicon: https://static.webknossos.org/mails/icon-webknossos.png
-  logo: https://static.webknossos.org/mails/icon-webknossos.png
+  favicon: https://static.webknossos.org/assets/favicon-docs.png
+  logo: https://static.webknossos.org/assets/icon-white.png
   icon:
     repo: fontawesome/brands/github
+  font: false
   ### pdoc sites don't invert the text color in dark-mode 
   # palette:
   #   - media: "(prefers-color-scheme: light)"
@@ -29,20 +30,55 @@ theme:
     - navigation.instant
     - navigation.tabs
     - navigation.sections
-    - toc.integrate
     - navigation.top
 
 nav:
-- webknossos Python API:
-  - Intro: webknossos/index.md
+- webKnossos:
+  - Summary:
+    - webknossos/index.md
+    - webknossos/getting_started.md
+  - Guides:
+    - webknossos/dashboard.md
+    - webknossos/skeleton_annotation.md
+    - webknossos/volume_annotation.md
+    - webknossos/tracing_ui.md
+    - webknossos/mesh_visualization.md
+    - webknossos/datasets.md
+    - Managing Users & Permissions: webknossos/users.md
+    - webknossos/tasks.md
+    - webknossos/sharing.md
+    - webknossos/installation.md
+  - Reference:
+    - webknossos/data_formats.md
+    - Keyboard Shortcuts: webknossos/keyboard_shortcuts.md
+    - Backend REST API: webknossos/rest_api.md
+    - Code Readme: webknossos/code-readme.md
+    - Changelog: webknossos/CHANGELOG.released.md
+    - Migration Guide: webknossos/MIGRATIONS.released.md
+    - webknossos/publications.md
+    - webknossos/tooling.md
+  - Getting Help:
+    - webknossos/faq.md
+    - Community Support: https://forum.image.sc/tag/webknossos" target="_blank
+    - Email Support: mailto:hello@webknossos.org
+    - Commercial Support: https://scalableminds.com" target="_blank
+- Python Library:
+  - Intro: webknossos-py/index.md
   - Dataset API: api/webknossos/dataset.md
 - wkcuber CLI: wkcuber/index.md
 
 plugins:
 - search
+- redirects:
+    redirect_maps:
+        'index.md': 'webknossos/index.md'
 
 markdown_extensions:
+- admonition
+- attr_list
 - md_extensions.pdoc_toc_extension
+- md_extensions.video_embed_extension
+- md_extensions.mdlightbox
 - pymdownx.emoji:
     emoji_index: !!python/name:materialx.emoji.twemoji
     emoji_generator: !!python/name:materialx.emoji.to_svg

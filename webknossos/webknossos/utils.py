@@ -3,12 +3,14 @@ import calendar
 import functools
 import json
 import logging
+import os
 import time
 from concurrent.futures import as_completed
 from concurrent.futures._base import Future
 from datetime import datetime
 from multiprocessing import cpu_count
-from typing import Any, Callable, List, Optional, Union
+from pathlib import Path
+from typing import Any, Callable, Iterable, List, Optional, Union
 
 from cluster_tools import WrappedProcessPoolExecutor, get_executor
 from cluster_tools.schedulers.cluster_executor import ClusterExecutor
@@ -96,7 +98,31 @@ def snake_to_camel_case(snake_case_name: str) -> str:
     return parts[0] + "".join(part.title() for part in parts[1:])
 
 
+def get_chunks(arr: List[Any], chunk_size: int) -> Iterable[List[Any]]:
+    for i in range(0, len(arr), chunk_size):
+        yield arr[i : i + chunk_size]
+
+
 def time_since_epoch_in_ms() -> int:
     d = datetime.utcnow()
     unixtime = calendar.timegm(d.utctimetuple())
     return unixtime * 1000
+
+
+def copy_directory_with_symlinks(
+    src_path: Path,
+    dst_path: Path,
+    ignore: Iterable[str] = tuple(),
+    make_relative: bool = False,
+) -> None:
+    """
+    Links all directories in src_path / dir_name to dst_path / dir_name.
+    """
+    for item in src_path.iterdir():
+        if item.name not in ignore:
+            symlink_path = dst_path / item.name
+            if make_relative:
+                rel_or_abspath = os.path.relpath(item, symlink_path.parent)
+            else:
+                rel_or_abspath = os.path.abspath(item)
+            symlink_path.symlink_to(rel_or_abspath)

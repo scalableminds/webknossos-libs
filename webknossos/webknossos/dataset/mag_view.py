@@ -2,7 +2,6 @@ import logging
 import os
 import shutil
 from argparse import Namespace
-from os.path import join
 from pathlib import Path
 from typing import TYPE_CHECKING, Generator, List, Optional, Tuple, Union, cast
 from uuid import uuid4
@@ -94,13 +93,15 @@ class MagView(View):
         )
 
         if create:
-            wkw.Dataset.create(
-                join(layer.dataset.path, layer.name, self.name), self.header
-            )
+            wkw.Dataset.create(str(self.path), self.header)
 
     @property
     def layer(self) -> "Layer":
         return self._layer
+
+    @property
+    def path(self) -> Path:
+        return self._path
 
     @property
     def _properties(self) -> MagViewProperties:

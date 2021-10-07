@@ -7,11 +7,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.13...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.16...HEAD)
+
+### Breaking Changes in Config & CLI
+### Added
+### Changed
+- Updated scikit-image dependency to 0.18.3. [#435](https://github.com/scalableminds/webknossos-libs/pull/435)
+### Fixed
+
+
+## [0.8.16](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.16) - 2021-09-01
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.13...v0.8.16)
 
 ### Breaking Changes in Config & CLI
 
 ### Added
+- Add `jp2` support. [#428](https://github.com/scalableminds/webknossos-libs/pull/428)
 
 ### Changed
 - Adjust downsampling scheme to always try to minimize the scaled difference between the different dimensions of a mag and renamed the sampling mode `auto` to `anisotropic`. [#391](https://github.com/scalableminds/webknossos-libs/pull/391)
@@ -21,6 +32,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 
 ### Fixed
 - Reverted that `dataset.add_symlink_layer` and `dataset.add_copy_layer` resolved the layer path if it was a symlink. [#408](https://github.com/scalableminds/webknossos-libs/pull/408)
+- Fixed the string translation for `signed int` layer. [#428](https://github.com/scalableminds/webknossos-libs/pull/428)
 
 ## [0.8.13](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.13) - 2021-09-01
 [Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.12...v0.8.13)
