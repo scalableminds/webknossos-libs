@@ -52,7 +52,7 @@ def create_parser() -> ArgumentParser:
     )
 
     parser.add_argument(
-        "--start_z", help="The z coordinate of the first slice", default=0, type=int
+        "--start_z", help="The z coordinate of the first slice. This is useful to continue at a specific z, if a previous run was interrupted.", default=0, type=int
     )
 
     parser.add_argument(
@@ -368,10 +368,10 @@ def cubing(
         )
     target_layer.bounding_box = BoundingBox(
         Vec3Int(0, 0, start_z) * target_mag,
-        Vec3Int(num_x, num_y, start_z + num_z) * target_mag
+        Vec3Int(num_x, num_y, num_z-start_z) * target_mag
     )
 
-    target_mag_view = target_layer.add_mag(
+    target_mag_view = target_layer.get_or_add_mag(
         target_mag, file_len=wkw_file_len, block_len=BLOCK_LEN
     )
 
@@ -386,11 +386,11 @@ def cubing(
     with get_executor_for_args(executor_args) as executor:
         job_args = []
         # We iterate over all z sections
-        for z in range(start_z, num_z + start_z, BLOCK_LEN):
-            max_z = min(num_z + start_z, z + BLOCK_LEN)
+        for z in range(start_z, num_z, BLOCK_LEN):
+            max_z = min(num_z, z + BLOCK_LEN)
             # Prepare source files array
             if len(source_files) > 1:
-                source_files_array = source_files[z - start_z : max_z - start_z]
+                source_files_array = source_files[z : max_z]
             else:
                 source_files_array = source_files * (max_z - z)
 
