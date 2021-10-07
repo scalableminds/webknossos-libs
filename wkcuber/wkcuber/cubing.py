@@ -8,8 +8,8 @@ from os import path
 from pathlib import Path
 from natsort import natsorted
 
-from webknossos.dataset import Dataset, LayerCategories, View, SegmentationLayer
-from webknossos.geometry import BoundingBox
+from webknossos.dataset import Dataset, LayerCategories, View, SegmentationLayer, Layer
+from webknossos.geometry import BoundingBox, Vec3Int
 from .mag import Mag
 from .downsampling_utils import (
     parse_interpolation_mode,
@@ -27,7 +27,8 @@ from .utils import (
     wait_and_ensure_success,
     setup_logging,
 )
-from .image_readers import image_reader
+from .image_readers import image_reader, refresh_global_image_reader
+from .metadata import convert_element_class_to_dtype
 
 BLOCK_LEN = 32
 
@@ -84,7 +85,7 @@ def create_parser() -> ArgumentParser:
         help="Automatically downsamples the cubed images to the provided "
         "magnification before writing to disk. The magnification can "
         "be provided like 2-2-1.",
-        default=Mag("1"),
+        default="1",
         type=Mag,
     )
 
@@ -94,6 +95,13 @@ def create_parser() -> ArgumentParser:
         type=int,
         default=None,
         help="Select a single channel to be cubed into a layer. This can be helpful if several channels should be converted to multiple data layers. Note that webKnossos only supports multiple channels if these are three uint8 channels. If this is not the case, use --channel_index to create a layer per channel.",
+    )
+
+    parser.add_argument(
+        "--sample_index",
+        type=int,
+        default=None,
+        help="Select a single sample of a specific channel to be cubed into a layer. This option is only valid if channel_index is set. Since webKnossos only supports multiple uint8 channels, it may be necessary to cube a multi-sample dataset to different layers.",
     )
 
     add_interpolation_flag(parser)
@@ -124,10 +132,16 @@ def find_source_filenames(source_path: Path) -> List[Path]:
 
 
 def read_image_file(
-    file_name: Path, dtype: type, z_slice: int, channel_index: Optional[int]
+    file_name: Path,
+    dtype: type,
+    z_slice: int,
+    channel_index: Optional[int],
+    sample_index: Optional[int],
 ) -> np.ndarray:
     try:
-        return image_reader.read_array(file_name, dtype, z_slice, channel_index)
+        return image_reader.read_array(
+            file_name, dtype, z_slice, channel_index, sample_index
+        )
     except Exception as exc:
         logging.error("Reading of file={} failed with {}".format(file_name, exc))
         raise exc
@@ -159,6 +173,7 @@ def cubing_job(
         Tuple[int, int],
         bool,
         Optional[int],
+        Optional[int],
     ]
 ) -> Any:
     (
@@ -170,6 +185,7 @@ def cubing_job(
         image_size,
         pad,
         channel_index,
+        sample_index,
     ) = args
 
     downsampling_needed = target_mag != Mag(1)
@@ -194,7 +210,11 @@ def cubing_job(
                     z = first_z_idx + i
                     # Image shape will be (x, y, channel_count, z=1)
                     image = read_image_file(
-                        file_name, target_view.header.voxel_type, z, channel_index
+                        file_name,
+                        target_view.header.voxel_type,
+                        z,
+                        channel_index,
+                        sample_index,
                     )
 
                     if not pad:
@@ -253,13 +273,15 @@ def cubing_job(
         return largest_value_in_chunk
 
 
-def get_channel_count_and_dtype(source_path: Path) -> Tuple[int, str]:
+def get_channel_and_sample_count_and_dtype(source_path: Path) -> Tuple[int, int, str]:
     source_files = find_source_filenames(source_path)
     assert (
         len(source_files) > 0
     ), f"Failed to detect channel count and dtype. No sources found in {source_path}"
-    return image_reader.read_channel_count(source_files[0]), image_reader.read_dtype(
-        source_files[0]
+    return (
+        image_reader.read_channel_count(source_files[0]),
+        image_reader.read_sample_count(source_files[0]),
+        image_reader.read_dtype(source_files[0]),
     )
 
 
@@ -269,6 +291,7 @@ def cubing(
     layer_name: str,
     batch_size: Optional[int],
     channel_index: Optional[int],
+    sample_index: Optional[int],
     dtype: Optional[str],
     target_mag_str: str,
     wkw_file_len: int,
@@ -277,17 +300,37 @@ def cubing(
     pad: bool,
     executor_args: Namespace,
     scale: Tuple[float, float, float] = (1, 1, 1),
-) -> Dataset:
+) -> Layer:
     source_files = find_source_filenames(source_path)
+    # we need to refresh the image readers because they are no longer stateless for performance reasons
+    refresh_global_image_reader()
 
     # All images are assumed to have equal dimensions
     num_x, num_y = image_reader.read_dimensions(source_files[0])
     num_channels = image_reader.read_channel_count(source_files[0])
+    num_samples = image_reader.read_sample_count(source_files[0])
+    num_output_channels = num_channels * num_samples
     if channel_index is not None:
+        # if there is no c axis, but someone meant to only use one channel/sample, set the sample index instead
+        if sample_index is None and num_channels == 1 and channel_index > 0:
+            sample_index = channel_index
+            channel_index = 0
+
         assert (
-            channel_index < num_channels
-        ), "Selected channel is not present in the input files"
-        num_channels = 1
+            0 <= channel_index < num_channels
+        ), "Selected channel is invalid. Please check the number of channels in the source file."
+        num_output_channels = num_samples
+    if sample_index is not None:
+        # if no channel axis exists, it is valid to only set the sample index. Set channel index to 0 to avoid confusion
+        if channel_index is None and num_channels == 1:
+            channel_index = 0
+        assert (
+            channel_index is not None
+        ), "Sample index is only valid if a channel index is also set."
+        assert (
+            0 <= sample_index < num_samples
+        ), "Selected sample is invalid. Please check the number of samples in the source file."
+        num_output_channels = 1
     num_z_slices_per_file = image_reader.read_z_slices_per_file(source_files[0])
     assert (
         num_z_slices_per_file == 1 or len(source_files) == 1
@@ -313,7 +356,7 @@ def cubing(
             layer_name,
             LayerCategories.SEGMENTATION_TYPE,
             dtype_per_channel=dtype,
-            num_channels=num_channels,
+            num_channels=num_output_channels,
             largest_segment_id=0,
         )
     else:
@@ -321,10 +364,11 @@ def cubing(
             layer_name,
             LayerCategories.COLOR_TYPE,
             dtype_per_channel=dtype,
-            num_channels=num_channels,
+            num_channels=num_output_channels,
         )
     target_layer.bounding_box = BoundingBox(
-        (0, 0, start_z), (num_x, num_y, start_z + num_z)
+        Vec3Int(0, 0, start_z) * target_mag,
+        Vec3Int(num_x, num_y, start_z + num_z) * target_mag
     )
 
     target_mag_view = target_layer.add_mag(
@@ -350,18 +394,14 @@ def cubing(
             else:
                 source_files_array = source_files * (max_z - z)
 
-            # Prepare Bounding Box for View
-            bbox_of_batch_in_mag1 = BoundingBox((0, 0, z), (num_x, num_y, max_z - z))
-            bbox_of_batch_in_target_mag = target_layer.bounding_box.intersected_with(
-                bbox_of_batch_in_mag1
-            ).align_with_mag(target_mag, ceil=True)
+            bbox_of_batch = BoundingBox((0, 0, z), (num_x, num_y, max_z - z))
 
             # Prepare job
             job_args.append(
                 (
                     target_mag_view.get_view(
-                        bbox_of_batch_in_target_mag.topleft,
-                        bbox_of_batch_in_target_mag.size,
+                        bbox_of_batch.topleft,
+                        bbox_of_batch.size,
                     ),
                     target_mag,
                     interpolation_mode,
@@ -370,6 +410,7 @@ def cubing(
                     (num_x, num_y),
                     pad,
                     channel_index,
+                    sample_index,
                 )
             )
 
@@ -382,8 +423,8 @@ def cubing(
                 SegmentationLayer, target_layer
             ).largest_segment_id = largest_segment_id
 
-    # Return dataset
-    return target_ds
+    # Return layer
+    return target_layer
 
 
 if __name__ == "__main__":
@@ -398,6 +439,7 @@ if __name__ == "__main__":
         args.layer_name,
         arg_dict.get("batch_size"),
         arg_dict.get("channel_index"),
+        arg_dict.get("sample_index"),
         arg_dict.get("dtype"),
         args.target_mag,
         args.wkw_file_len,
