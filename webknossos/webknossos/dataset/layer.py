@@ -1,4 +1,3 @@
-import copy
 import logging
 import math
 import operator
@@ -310,6 +309,29 @@ class Layer:
 
         return self._mags[mag]
 
+    def add_mag_for_existing_files(
+        self,
+        mag: Union[int, str, list, tuple, np.ndarray, Mag],
+    ) -> MagView:
+        """
+        Creates a new mag based on already existing files.
+
+        Raises an IndexError if the specified `mag` does not exists.
+        """
+        mag = Mag(mag)
+        assert (
+            mag not in self.mags
+        ), f"Cannot add mag {mag} as it already exists for layer {self}"
+        self._setup_mag(mag)
+        mag_view = self._mags[mag]
+        cube_length = mag_view.header.file_len * mag_view.header.block_len
+        self._properties.wkw_resolutions.append(
+            MagViewProperties(resolution=mag, cube_length=cube_length)
+        )
+        self.dataset._export_as_json()
+
+        return mag_view
+
     def get_or_add_mag(
         self,
         mag: Union[int, str, list, tuple, np.ndarray, Mag],
@@ -372,71 +394,93 @@ class Layer:
         rmtree(full_path)
 
     def _add_foreign_mag(
-        self, foreign_mag_path: Path, symlink: bool, make_relative: bool
+        self,
+        foreign_mag_view_or_path: Union[os.PathLike, str, MagView],
+        symlink: bool,
+        make_relative: bool,
+        extend_layer_bounding_box: bool = True,
     ) -> MagView:
-        mag_name = foreign_mag_path.name
-        mag = Mag(mag_name)
-        operation = "symlink" if symlink else "copy"
-        if mag in self.mags.keys():
-            raise IndexError(
-                f"Cannot {operation} {foreign_mag_path}. This dataset already has a mag called {mag_name}."
+        """
+        The foreign mag is (shallow) copied and the existing mag is added to the datasource-properties.json.
+        If extend_layer_bounding_box is true, the self.bounding_box will be extended
+        by the bounding box of the layer the foreign mag belongs to.
+        """
+
+        if isinstance(foreign_mag_view_or_path, MagView):
+            foreign_mag_view = foreign_mag_view_or_path
+        else:
+            # local import to prevent circular dependency
+            from .dataset import Dataset
+
+            foreign_mag_view_path = Path(foreign_mag_view_or_path)
+            foreign_mag_view = (
+                Dataset(foreign_mag_view_path.parent.parent)
+                .get_layer(foreign_mag_view_path.parent.name)
+                .get_mag(foreign_mag_view_path.name)
             )
 
+        self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
+
         foreign_normalized_mag_path = (
-            Path(os.path.relpath(foreign_mag_path, self.dataset.path))
+            Path(os.path.relpath(foreign_mag_view.path, self.path))
             if make_relative
-            else foreign_mag_path
+            else Path(os.path.abspath(foreign_mag_view.path))
         )
 
         if symlink:
             os.symlink(
                 foreign_normalized_mag_path,
-                join(self.dataset.path, self.name, mag_name),
+                join(self.dataset.path, self.name, str(foreign_mag_view.mag)),
             )
         else:
             shutil.copytree(
                 foreign_normalized_mag_path,
-                join(self.dataset.path, self.name, mag_name),
+                join(self.dataset.path, self.name, str(foreign_mag_view.mag)),
             )
 
-        # copy the properties of the layer into the properties of this dataset
-        from .dataset import Dataset  # local import to prevent circular dependency
-
-        original_layer = Dataset(foreign_mag_path.parent.parent).get_layer(
-            foreign_mag_path.parent.name
-        )
-        original_mag = original_layer.get_mag(foreign_mag_path.name)
-        mag_properties = copy.deepcopy(original_mag._properties)
-
-        self.bounding_box = self.bounding_box.extended_by(original_layer.bounding_box)
-        self._properties.wkw_resolutions += [mag_properties]
-        self._setup_mag(mag)
+        self.add_mag_for_existing_files(foreign_mag_view.mag)
+        if extend_layer_bounding_box:
+            self.bounding_box = self.bounding_box.extended_by(
+                foreign_mag_view.layer.bounding_box
+            )
         self.dataset._export_as_json()
-        return self.mags[mag]
+
+        return self._mags[foreign_mag_view.mag]
 
     def add_symlink_mag(
-        self, foreign_mag_path: Union[str, Path], make_relative: bool = False
+        self,
+        foreign_mag_view_or_path: Union[os.PathLike, str, MagView],
+        make_relative: bool = False,
+        extend_layer_bounding_box: bool = True,
     ) -> MagView:
         """
-        Creates a symlink to the data at `foreign_mag_path` which belongs to another dataset.
+        Creates a symlink to the data at `foreign_mag_view_or_path` which belongs to another dataset.
         The relevant information from the `datasource-properties.json` of the other dataset is copied to this dataset.
         Note: If the other dataset modifies its bounding box afterwards, the change does not affect this properties
         (or vice versa).
         If make_relative is True, the symlink is made relative to the current dataset path.
         """
-        foreign_mag_path = Path(os.path.abspath(foreign_mag_path))
         return self._add_foreign_mag(
-            foreign_mag_path, symlink=True, make_relative=make_relative
+            foreign_mag_view_or_path,
+            symlink=True,
+            make_relative=make_relative,
+            extend_layer_bounding_box=extend_layer_bounding_box,
         )
 
-    def add_copy_mag(self, foreign_mag_path: Union[str, Path]) -> MagView:
+    def add_copy_mag(
+        self,
+        foreign_mag_view_or_path: Union[os.PathLike, str, MagView],
+        extend_layer_bounding_box: bool = True,
+    ) -> MagView:
         """
-        Copies the data at `foreign_mag_path` which belongs to another dataset to the current dataset.
+        Copies the data at `foreign_mag_view_or_path` which belongs to another dataset to the current dataset.
         Additionally, the relevant information from the `datasource-properties.json` of the other dataset are copied too.
         """
-        foreign_mag_path = Path(os.path.abspath(foreign_mag_path))
         return self._add_foreign_mag(
-            foreign_mag_path, symlink=False, make_relative=False
+            foreign_mag_view_or_path,
+            symlink=False,
+            make_relative=False,
+            extend_layer_bounding_box=extend_layer_bounding_box,
         )
 
     def _create_dir_for_mag(

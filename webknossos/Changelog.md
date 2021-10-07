@@ -11,6 +11,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 
 ### Breaking Changes
 ### Added
+- The Dataset class now has a new method: add_shallow_copy. [#437](https://github.com/scalableminds/webknossos-libs/pull/437)
 ### Changed
 - The `Vec3Int` constructor now asserts that its components are whole numbers also in numpy case. [#434](https://github.com/scalableminds/webknossos-libs/pull/434)
 - Updated scikit-image dependency to 0.18.3. [#435](https://github.com/scalableminds/webknossos-libs/pull/435)
