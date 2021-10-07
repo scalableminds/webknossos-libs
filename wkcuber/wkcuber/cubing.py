@@ -296,6 +296,7 @@ def cubing(
     pad: bool,
     executor_args: Namespace,
 ) -> dict:
+    wkw_file_len = 8
     source_files = find_source_filenames(source_path)
     # we need to refresh the image readers because they are no longer stateless for performance reasons
     refresh_global_image_reader()
