@@ -1,7 +1,7 @@
 import time
 import logging
 from pathlib import Path
-from typing import Tuple, cast
+from typing import Tuple, cast, Optional
 
 import wkw
 from argparse import ArgumentParser, Namespace
@@ -84,7 +84,7 @@ def convert_knossos(
     layer_name: str,
     dtype: str,
     mag: int = 1,
-    args: Namespace = None,
+    args: Optional[Namespace] = None,
 ) -> None:
     source_knossos_info = KnossosDatasetInfo(source_path, dtype)
     target_wkw_info = WkwDatasetInfo(
