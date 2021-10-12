@@ -2,6 +2,7 @@
 [![PyPI version](https://img.shields.io/pypi/v/wkcuber)](https://pypi.python.org/pypi/wkcuber)
 [![Supported Python Versions](https://img.shields.io/pypi/pyversions/wkcuber.svg)](https://pypi.python.org/pypi/wkcuber)
 [![Build Status](https://img.shields.io/github/workflow/status/scalableminds/webknossos-libs/CI/master)](https://github.com/scalableminds/webknossos-libs/actions?query=workflow%3A%22CI%22)
+[![Documentation](https://img.shields.io/badge/docs-passing-brightgreen.svg)](https://docs.webknossos.org/wkcuber/index.html)
 [![Code Style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 Python library for creating and working with [webKnossos](https://webknossos.org) [WKW](https://github.com/scalableminds/webknossos-wrap) datasets. WKW is a container format for efficiently storing large, scale 3D image data as found in (electron) microscopy.
@@ -34,7 +35,7 @@ The tools are modular components to allow easy integration into existing pipelin
 
 ## Installation
 ### Python 3 with pip from PyPi
-- `wkcuber` requires at least Python 3.6+
+- `wkcuber` requires at least Python 3.7+
 
 ```
 # Make sure to have lz4 installed:
