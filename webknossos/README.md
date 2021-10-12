@@ -11,7 +11,7 @@ Python API for working with [webKnossos](https://webknossos.org) datasets, annot
 
 - easy-to-use dataset API for reading/writing/editing raw 2D/3D image data and volume annotations/segmentation in webKnossos wrap (*.wkw) format
     - add/remove layers
-    - update metadata ('datasource-properties.json`) 
+    - update metadata (`datasource-properties.json`) 
     - up/downsample layers
     - compress layers 
     - add/remove magnifications
