@@ -5,7 +5,7 @@
 [![Documentation](https://img.shields.io/badge/docs-passing-brightgreen.svg)](https://docs.webknossos.org/webknossos-py/index.html)
 [![Code Style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-Python API for working with [webKnossos](https://webknossos.org) datasets, annotations and for webKnossos server interaction.
+Python API for working with [webKnossos](https://webknossos.org) datasets, annotations, and for webKnossos server interaction.
 
 ## Features
 
@@ -15,9 +15,9 @@ Python API for working with [webKnossos](https://webknossos.org) datasets, annot
     - up/downsample layers
     - compress layers 
     - add/remove magnifications
-    - execution any of the `wkCuber` operations from your code
+    - execute any of the `wkCuber` operations from your code
 - manipulation of webKnossos skeleton annotations (*.nml) as Python objects
-    - access to node, comments, trees, bounding boxes, metadata etc.
+    - access to nodes, comments, trees, bounding boxes, metadata, etc.
     - create new skeleton annotation from Graph structures or Python objects
 - interaction, connection & scripting with your webKnossos instance over the REST API
     - uploading/downloading annotations
