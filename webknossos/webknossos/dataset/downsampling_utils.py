@@ -11,7 +11,7 @@ from wkw import wkw
 from webknossos.geometry import Mag, Vec3Int, Vec3IntLike
 from webknossos.utils import time_start, time_stop
 
-from . import LayerCategories
+from webknossos.dataset.layer import LayerCategories
 from .view import View
 
 
