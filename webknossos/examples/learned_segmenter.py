@@ -41,7 +41,7 @@ img_data_train = mag_view.read(
 )
 # move channels to last dimension, remove z dimension
 X_train = np.moveaxis(np.squeeze(img_data_train), 0, -1)
-Y_train = np.squeeze(volume_annotation.mags[mag].read())
+Y_train = np.squeeze(volume_annotation.mags[mag].get_view().read())
 segmenter.fit(X_train, Y_train)
 
 

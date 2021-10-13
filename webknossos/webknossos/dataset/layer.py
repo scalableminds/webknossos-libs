@@ -514,7 +514,7 @@ class Layer:
         for mag, mag_view in self.mags.items():
             bbox_in_mag = bbox.align_with_mag(mag, ceil=True).in_mag(mag)
             mag_view._size = bbox_in_mag.size
-            mag_view._global_offset = bbox_in_mag.topleft
+            # The offset is not updated since a MagView always is in global coordinates.
         self.dataset._export_as_json()
 
     def downsample(
