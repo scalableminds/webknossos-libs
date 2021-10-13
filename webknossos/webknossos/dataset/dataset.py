@@ -147,6 +147,11 @@ class Dataset:
         """
         return self._layers
 
+    def upload(self) -> str:
+        from webknossos.client.upload_dataset import upload_dataset
+
+        return upload_dataset(self)
+
     def get_layer(self, layer_name: str) -> Layer:
         """
         Returns the layer called `layer_name` of this dataset. The return type is `webknossos.dataset.layer.Layer`.

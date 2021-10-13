@@ -2,10 +2,10 @@
 set -eEuo pipefail
 
 echo -n "Typecheck webknossos: "
-python -m mypy -p webknossos --disallow-untyped-defs --show-error-codes --strict-equality --namespace-packages
+python -m mypy -p webknossos
 
 echo -n "Typecheck tests:      "
-python -m mypy -p tests --disallow-untyped-defs --show-error-codes --strict-equality --namespace-packages
+python -m mypy -p tests
 
 echo -n "Typecheck examples:   "
-python -m mypy -p examples --disallow-untyped-defs --show-error-codes --strict-equality --namespace-packages
+python -m mypy -p examples

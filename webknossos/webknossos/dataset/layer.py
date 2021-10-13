@@ -512,11 +512,9 @@ class Layer:
         self._properties.bounding_box = bbox
 
         for mag, mag_view in self.mags.items():
-            mag_view._size = (
-                self._properties.bounding_box.align_with_mag(mag, ceil=True)
-                .in_mag(mag)
-                .bottomright
-            )
+            bbox_in_mag = bbox.align_with_mag(mag, ceil=True).in_mag(mag)
+            mag_view._size = bbox_in_mag.size
+            mag_view._global_offset = bbox_in_mag.topleft
         self.dataset._export_as_json()
 
     def downsample(

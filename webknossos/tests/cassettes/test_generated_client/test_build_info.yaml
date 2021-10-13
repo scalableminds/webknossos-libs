@@ -1,0 +1,46 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - webknossos.org
+      user-agent:
+      - python-httpx/0.18.2
+    method: GET
+    uri: https://webknossos.org/api/buildinfo
+  response:
+    content: '{"webknossos":{"name":"webknossos","ciTag":"","commitHash":"48bd317a3e452122a1eecabb35cfeff5da03d19e","ciBuild":"15750","scalaVersion":"2.12.12","version":"15750","sbtVersion":"1.4.1","datastoreApiVersion":"1.0","commitDate":"Tue
+      Oct 12 10:43:19 2021 +0000"},"webknossos-wrap":{"builtAtMillis":"1623317662808","name":"webknossos-wrap","commitHash":"1380fd8fa9b3fd8b71a684299883a6697f80b4c2","scalaVersion":"2.12.7","version":"1.1.11","sbtVersion":"1.4.1","builtAtString":"2021-06-10
+      09:34:22.808"},"schemaVersion":75,"token":"SqnS3uAzkqF94GoTgisQLw","localDataStoreEnabled":true,"localTracingStoreEnabled":true}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 12 Oct 2021 15:55:24 GMT
+      Referrer-Policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      Server:
+      - nginx/1.17.10
+      Strict-Transport-Security:
+      - max-age=15724800; includeSubDomains
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+      X-Permitted-Cross-Domain-Policies:
+      - master-only
+      X-XSS-Protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+version: 1

@@ -253,7 +253,7 @@ def __parse_parameters(nml_parameters: Element) -> NMLParameters:
 
     zoomLevel = None
     if nml_parameters.find("zoomLevel") is not None:
-        zoomLevel = int(
+        zoomLevel = float(
             enforce_not_null(nml_parameters.find("zoomLevel")).get("zoom", 0)
         )
 

@@ -1,6 +1,6 @@
 import pytest
 
-from webknossos.client import _get_generated_client
+from webknossos.client.context import get_generated_client
 from webknossos.client.defaults import DEFAULT_WEBKNOSSOS_URL
 from webknossos.client.generated.api.default import (
     annotation_info,
@@ -19,19 +19,21 @@ from webknossos.utils import time_since_epoch_in_ms
 
 @pytest.fixture
 def client() -> Client:
-    return _get_generated_client()
+    return get_generated_client()
 
 
 @pytest.fixture
 def auth_client() -> Client:
-    return _get_generated_client(enforce_token=True)
+    return get_generated_client(enforce_auth=True)
 
 
+@pytest.mark.vcr()
 def test_health(client: Client) -> None:
     response = health.sync_detailed(client=client)
     assert response.status_code == 200
 
 
+@pytest.mark.vcr()
 def test_annotation_info(client: Client) -> None:
     id = "6114d9410100009f0096c640"
     typ = "Explorational"
@@ -45,6 +47,7 @@ def test_annotation_info(client: Client) -> None:
     assert info_object.data_store.url == client.base_url
 
 
+@pytest.mark.vcr()
 def test_datastore_list(auth_client: Client) -> None:
     datastores = datastore_list.sync(client=auth_client)
     internal_datastore = DatastoreListResponse200Item(
@@ -59,6 +62,7 @@ def test_datastore_list(auth_client: Client) -> None:
     assert internal_datastore in datastores
 
 
+@pytest.mark.vcr()
 def test_dataset_info(client: Client) -> None:
     response = dataset_info.sync(
         organization_name="scalable_minds",
@@ -81,6 +85,7 @@ def test_dataset_info(client: Client) -> None:
     ]
 
 
+@pytest.mark.vcr()
 def test_build_info(client: Client) -> None:
     response = build_info.sync(
         client=client,

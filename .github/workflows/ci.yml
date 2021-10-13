@@ -57,7 +57,7 @@ jobs:
     - name: Python tests
       env:
         WK_TOKEN: ${{ secrets.WK_TOKEN }}
-      run: poetry run pytest tests
+      run: ./test.sh
 
     - name: Check if git is dirty
       run: |
