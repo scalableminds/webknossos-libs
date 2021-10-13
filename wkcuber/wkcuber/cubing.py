@@ -377,7 +377,7 @@ def cubing(
         target_mag, file_len=wkw_file_len, block_len=BLOCK_LEN
     )
 
-    interpolation_mode = parse_interpolation_mode(interpolation_mode_str, layer_name)
+    interpolation_mode = parse_interpolation_mode(interpolation_mode_str, target_layer.category)
     if target_mag != Mag(1):
         logging.info(
             f"Downsampling the cubed image to {target_mag} in memory with interpolation mode {interpolation_mode}."
@@ -396,14 +396,12 @@ def cubing(
             else:
                 source_files_array = source_files * (max_z - z)
 
-            bbox_of_batch = BoundingBox((0, 0, z), (num_x, num_y, max_z - z))
-
             # Prepare job
             job_args.append(
                 (
                     target_mag_view.get_view(
-                        bbox_of_batch.topleft,
-                        bbox_of_batch.size,
+                        (0, 0, z),
+                        (num_x, num_y, max_z - z),
                     ),
                     target_mag,
                     interpolation_mode,

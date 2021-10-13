@@ -3,6 +3,7 @@ from os import path, sep
 from pathlib import Path
 from typing import Iterable, List, Any, Tuple, Dict, Set, Callable, cast, Optional
 
+from webknossos.dataset.properties import LayerViewConfiguration
 from .convert_knossos import (
     main as convert_knossos,
     create_parser as create_knossos_parser,
@@ -318,14 +319,14 @@ class ImageStackConverter(Converter):
         self.dataset_names: Set[str] = set()
 
     @staticmethod
-    def get_view_configuration(index: int) -> Optional[Dict[str, List[int]]]:
+    def get_view_configuration(index: int) -> Optional[Dict[str, Tuple[int, int, int]]]:
         color = None
         if index == 0:
-            color = [255, 0, 0]
+            color = (255, 0, 0)
         elif index == 1:
-            color = [0, 255, 0]
+            color = (0, 255, 0)
         elif index == 2:
-            color = [0, 0, 255]
+            color = (0, 0, 255)
         if color is not None:
             return {"color": color}
         else:
@@ -377,7 +378,6 @@ class ImageStackConverter(Converter):
         ) = self.detect_dataset_name_and_layer_path_to_layer_name()
         put_default_if_not_present(args, "name", dataset_name)
 
-        view_configuration = dict()
         converted_layers = 0
         for layer_path, layer_name in layer_path_to_name.items():
             if not all_files_of_same_type(
@@ -409,7 +409,7 @@ class ImageStackConverter(Converter):
                         curr_layer_name = layer_name
 
                     arg_dict = vars(args)
-                    cube_image_stack(
+                    layer = cube_image_stack(
                         Path(layer_path),
                         args.target_path,
                         curr_layer_name,
@@ -427,9 +427,9 @@ class ImageStackConverter(Converter):
 
                     if not is_wk_compatible_layer_format(sample_count, dtype):
                         # this means that every sample has to be converted into its own layer, so we want to set a view configuration since first three layers are probably RGB
-                        view_configuration[
-                            curr_layer_name
-                        ] = ImageStackConverter.get_view_configuration(layer_count)
+                        view_configuration = ImageStackConverter.get_view_configuration(layer_count)
+                        if view_configuration is not None:
+                            layer.default_view_configuration = LayerViewConfiguration(color=view_configuration["color"])
                     layer_count += 1
 
         assert converted_layers > 0, "No layer could be converted!"
