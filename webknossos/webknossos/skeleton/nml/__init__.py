@@ -251,11 +251,13 @@ def __parse_parameters(nml_parameters: Element) -> NMLParameters:
     if nml_parameters.find("time") is not None:
         time = int(enforce_not_null(nml_parameters.find("time")).get("ms", 0))
 
-    zoomLevel = None
+    zoomLevel: Optional[float] = None
     if nml_parameters.find("zoomLevel") is not None:
-        zoomLevel = float(
-            enforce_not_null(nml_parameters.find("zoomLevel")).get("zoom", 0)
-        )
+        zoom_str = enforce_not_null(nml_parameters.find("zoomLevel")).get("zoom", 0)
+        try:
+            zoomLevel = int(zoom_str)
+        except ValueError:
+            zoomLevel = float(zoom_str)
 
     taskBoundingBox = __parse_task_bounding_box(nml_parameters)
     userBoundingBoxes = __parse_user_bounding_boxes(nml_parameters)
