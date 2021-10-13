@@ -2,6 +2,8 @@ from argparse import ArgumentParser, Namespace
 import os
 from pathlib import Path
 
+from typing import Optional
+
 from wkcuber.api.dataset import Dataset
 from wkcuber.downsampling_utils import SamplingModes
 from .mag import Mag
@@ -85,12 +87,12 @@ def create_parser() -> ArgumentParser:
 
 def upsample_mags(
     path: Path,
-    layer_name: str = None,
-    from_mag: Mag = None,
+    layer_name: Optional[str] = None,
+    from_mag: Optional[Mag] = None,
     target_mag: Mag = Mag(1),
-    buffer_edge_len: int = None,
+    buffer_edge_len: Optional[int] = None,
     compress: bool = True,
-    args: Namespace = None,
+    args: Optional[Namespace] = None,
     sampling_mode: str = SamplingModes.ANISOTROPIC,
 ) -> None:
     assert layer_name and from_mag or not layer_name and not from_mag, (

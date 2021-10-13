@@ -222,7 +222,7 @@ class View:
         self,
         offset: Vec3IntLike = Vec3Int(0, 0, 0),
         size: Optional[Vec3IntLike] = None,
-        read_only: bool = None,
+        read_only: Optional[bool] = None,
     ) -> "View":
         """
         Returns a view that is limited to the specified bounding box.
@@ -346,7 +346,7 @@ class View:
         self,
         offset: Vec3Int,
         size: Vec3Int,
-        strict: bool = None,
+        strict: Optional[bool] = None,
     ) -> None:
         if strict is None:
             strict = self._is_bounded

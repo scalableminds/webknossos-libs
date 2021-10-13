@@ -168,9 +168,9 @@ class Dataset:
         self,
         layer_name: str,
         category: str,
-        dtype_per_layer: Union[str, np.dtype, type] = None,
-        dtype_per_channel: Union[str, np.dtype, type] = None,
-        num_channels: int = None,
+        dtype_per_layer: Optional[Union[str, np.dtype, type]] = None,
+        dtype_per_channel: Optional[Union[str, np.dtype, type]] = None,
+        num_channels: Optional[int] = None,
         **kwargs: Any,
     ) -> Layer:
         """
@@ -267,9 +267,9 @@ class Dataset:
         self,
         layer_name: str,
         category: str,
-        dtype_per_layer: Union[str, np.dtype, type] = None,
-        dtype_per_channel: Union[str, np.dtype, type] = None,
-        num_channels: int = None,
+        dtype_per_layer: Optional[Union[str, np.dtype, type]] = None,
+        dtype_per_channel: Optional[Union[str, np.dtype, type]] = None,
+        num_channels: Optional[int] = None,
         **kwargs: Any,
     ) -> Layer:
         """
@@ -414,7 +414,7 @@ class Dataset:
         self,
         foreign_layer: Union[str, Path, Layer],
         make_relative: bool = False,
-        new_layer_name: str = None,
+        new_layer_name: Optional[str] = None,
     ) -> Layer:
         """
         Creates a symlink to the data at `foreign_layer` which belongs to another dataset.
@@ -459,7 +459,9 @@ class Dataset:
         return self.layers[layer_name]
 
     def add_copy_layer(
-        self, foreign_layer: Union[str, Path, Layer], new_layer_name: str = None
+        self,
+        foreign_layer: Union[str, Path, Layer],
+        new_layer_name: Optional[str] = None,
     ) -> Layer:
         """
         Copies the data at `foreign_layer` which belongs to another dataset to the current dataset.
@@ -500,8 +502,8 @@ class Dataset:
         self,
         new_dataset_path: Union[str, Path],
         scale: Optional[Tuple[float, float, float]] = None,
-        block_len: int = None,
-        file_len: int = None,
+        block_len: Optional[int] = None,
+        file_len: Optional[int] = None,
         compress: Optional[bool] = None,
         args: Optional[Namespace] = None,
     ) -> "Dataset":
