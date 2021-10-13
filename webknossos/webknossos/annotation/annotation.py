@@ -1,6 +1,5 @@
 import re
 from enum import Enum, unique
-from io import TextIOWrapper
 from os import PathLike
 from pathlib import Path
 from typing import IO, List, NamedTuple, Optional, Union
@@ -21,13 +20,11 @@ class _ZipPath(NamedTuple):
     def open(
         self, mode: str = "r", *, pwd: Optional[bytes] = None, force_zip64: bool = True
     ) -> IO[bytes]:
+        assert "b" in mode, "Opening a ZipFile currently only supports binary mode"
         zip_mode = mode[0]
-        result_bytes = self.zipfile.open(
+        return self.zipfile.open(
             self.path, mode=zip_mode, pwd=pwd, force_zip64=force_zip64
         )
-        if "b" in mode:
-            return result_bytes
-        return TextIOWrapper(result_bytes)
 
 
 @dataclass
