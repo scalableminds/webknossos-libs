@@ -52,7 +52,7 @@ def move_by_one(
     )
 
     data = src_mag.read(src_offset, size)
-    dst_mag.write(data, dst_offset)
+    chunk_view.write(data)
 
 
 def main():
