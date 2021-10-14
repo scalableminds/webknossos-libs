@@ -546,7 +546,9 @@ class View:
         return self.header.voxel_type
 
     def __enter__(self) -> "View":
-        warnings.warn("Entering a View to open it is no longer necessary. The internal dataset will be opened automatically.")
+        warnings.warn(
+            "Entering a View to open it is no longer necessary. The internal dataset will be opened automatically."
+        )
         return self
 
     def __exit__(
