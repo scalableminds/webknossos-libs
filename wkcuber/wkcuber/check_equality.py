@@ -1,7 +1,7 @@
 import logging
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, Optional
 
 from wkcuber.api.dataset import Dataset
 from wkcuber.api.bounding_box import BoundingBox, BoundingBoxNamedTuple
@@ -80,7 +80,7 @@ def assert_equality_for_chunk(
 
 
 def check_equality(
-    source_path: Path, target_path: Path, args: Namespace = None
+    source_path: Path, target_path: Path, args: Optional[Namespace] = None
 ) -> None:
 
     logging.info(f"Comparing {source_path} with {target_path}")

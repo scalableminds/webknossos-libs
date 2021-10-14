@@ -159,7 +159,7 @@ def read_image_file(
 
 
 def prepare_slices_for_wkw(
-    slices: List[np.ndarray], num_channels: int = None
+    slices: List[np.ndarray], num_channels: Optional[int] = None
 ) -> np.ndarray:
     # Write batch buffer which will have shape (x, y, channel_count, z)
     # since we concat along the last axis (z)
