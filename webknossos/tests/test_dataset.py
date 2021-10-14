@@ -231,13 +231,9 @@ def test_view_read() -> None:
         .get_view(size=(16, 16, 16))
     )
 
-    assert wk_view._dataset is None
-
     # 'read()' checks if it was already opened. If not, it opens it automatically
     data = wk_view.read(size=(10, 10, 10))
     assert data.shape == (3, 10, 10, 10)  # three channel
-
-    assert wk_view._dataset is not None
 
 
 def test_view_write() -> None:

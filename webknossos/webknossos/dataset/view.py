@@ -38,13 +38,13 @@ class View:
         """
         Do not use this constructor manually. Instead use `webknossos.dataset.mag_view.MagView.get_view()` to get a `View`.
         """
-        self._dataset: Optional[Dataset] = None
         self._path = path_to_mag_view
         self._header: wkw.Header = header
         self._size: Vec3Int = Vec3Int(size)
         self._global_offset: Vec3Int = Vec3Int(global_offset)
         self._is_bounded = is_bounded
         self._read_only = read_only
+        self._cached_wkw_dataset = None
         # The bounding box of the view is used to prevent warnings when writing compressed but unaligned data
         # directly at the borders of the bounding box.
         # A View is unable to get this information from the Dataset because it is detached from it.
@@ -102,9 +102,7 @@ class View:
         if self._is_compressed():
             absolute_offset, data = self._handle_compressed_write(absolute_offset, data)
 
-        self._open_if_necessary()
-        assert self._dataset is not None
-        self._dataset.write(absolute_offset.to_np(), data)
+        self._wkw_dataset.write(absolute_offset.to_np(), data)
 
     def read(
         self,
@@ -168,9 +166,7 @@ class View:
         absolute_offset: Vec3Int,
         size: Vec3Int,
     ) -> np.ndarray:
-        self._open_if_necessary()
-        assert self._dataset is not None
-        data = self._dataset.read(absolute_offset.to_np(), size.to_np())
+        data = self._wkw_dataset.read(absolute_offset.to_np(), size.to_np())
         return data
 
     def get_view(
@@ -550,6 +546,7 @@ class View:
         return self.header.voxel_type
 
     def __enter__(self) -> "View":
+        warnings.warn("Entering a View to open it is no longer necessary. The internal dataset will be opened automatically.")
         return self
 
     def __exit__(
@@ -571,24 +568,22 @@ class View:
         assert self._mag_view_bbox_at_creation is not None
         return self._mag_view_bbox_at_creation
 
-    def _open(self) -> None:
-        if self._dataset is not None:
-            raise Exception("Cannot open view: the view is already opened")
-        else:
-            self._dataset = Dataset.open(
+    @property
+    def _wkw_dataset(self) -> wkw.Dataset:
+        if self._cached_wkw_dataset is None:
+            self._cached_wkw_dataset = Dataset.open(
                 str(self._path)
             )  # No need to pass the header to the wkw.Dataset
+        return self._cached_wkw_dataset
 
-    def _close(self) -> None:
-        if self._dataset is None:
-            raise Exception("Cannot close View: the view is not opened")
-        else:
-            self._dataset.close()
-            self._dataset = None
+    @_wkw_dataset.deleter
+    def _wkw_dataset(self) -> None:
+        if self._cached_wkw_dataset is not None:
+            self._cached_wkw_dataset.close()
+            self._cached_wkw_dataset = None
 
-    def _open_if_necessary(self) -> None:
-        if self._dataset is None:
-            self._open()
+    def __del__(self) -> None:
+        del self._cached_wkw_dataset
 
 
 def _assert_positive_dimensions(offset: Vec3Int, size: Vec3Int) -> None:
