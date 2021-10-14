@@ -319,7 +319,7 @@ class ImageStackConverter(Converter):
         self.dataset_names: Set[str] = set()
 
     @staticmethod
-    def get_view_configuration(index: int) -> Optional[Dict[str, Tuple[int, int, int]]]:
+    def get_color_of_view_configuration(index: int) -> Optional[Tuple[int, int, int]]:
         color = None
         if index == 0:
             color = (255, 0, 0)
@@ -328,7 +328,7 @@ class ImageStackConverter(Converter):
         elif index == 2:
             color = (0, 0, 255)
         if color is not None:
-            return {"color": color}
+            return color
         else:
             return None
 
@@ -426,10 +426,14 @@ class ImageStackConverter(Converter):
                     )
 
                     if not is_wk_compatible_layer_format(sample_count, dtype):
-                        # this means that every sample has to be converted into its own layer, so we want to set a view configuration since first three layers are probably RGB
-                        view_configuration = ImageStackConverter.get_view_configuration(layer_count)
-                        if view_configuration is not None:
-                            layer.default_view_configuration = LayerViewConfiguration(color=view_configuration["color"])
+                        # This means that every sample has to be converted into its own layer, so we want to set a view configuration since first three layers are probably RGB
+                        color = ImageStackConverter.get_color_of_view_configuration(
+                            layer_count
+                        )
+                        if color is not None:
+                            layer.default_view_configuration = LayerViewConfiguration(
+                                color=color
+                            )
                     layer_count += 1
 
         assert converted_layers > 0, "No layer could be converted!"

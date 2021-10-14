@@ -377,7 +377,9 @@ def cubing(
         target_mag, file_len=wkw_file_len, block_len=BLOCK_LEN
     )
 
-    interpolation_mode = parse_interpolation_mode(interpolation_mode_str, target_layer.category)
+    interpolation_mode = parse_interpolation_mode(
+        interpolation_mode_str, target_layer.category
+    )
     if target_mag != Mag(1):
         logging.info(
             f"Downsampling the cubed image to {target_mag} in memory with interpolation mode {interpolation_mode}."
