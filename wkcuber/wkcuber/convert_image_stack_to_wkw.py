@@ -165,6 +165,7 @@ def main(args: Namespace) -> None:
                     args.wkw_file_len,
                     args.interpolation_mode,
                     args.start_z,
+                    args.skip_first_z_slices,
                     args.pad,
                     args.scale,
                     args,

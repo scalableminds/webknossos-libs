@@ -52,8 +52,15 @@ def create_parser() -> ArgumentParser:
     )
 
     parser.add_argument(
+        "--skip_first_z_slices",
+        help="The number of z slices to skip at the beginning. This is useful to continue at a specific z, if a previous run was interrupted.",
+        default=0,
+        type=int,
+    )
+
+    parser.add_argument(
         "--start_z",
-        help="The z coordinate of the first slice. This is useful to continue at a specific z, if a previous run was interrupted.",
+        help="The offset of the first z slice.",
         default=0,
         type=int,
     )
@@ -301,6 +308,7 @@ def cubing(
     wkw_file_len: int,
     interpolation_mode_str: str,
     start_z: int,
+    skip_first_z_slices: int,
     pad: bool,
     scale: Tuple[float, float, float],
     executor_args: Namespace,
@@ -371,8 +379,8 @@ def cubing(
             num_channels=num_output_channels,
         )
     target_layer.bounding_box = target_layer.bounding_box.extended_by(BoundingBox(
-        Vec3Int(0, 0, start_z) * target_mag,
-        Vec3Int(num_x, num_y, num_z - start_z) * target_mag,
+        Vec3Int(0, 0, start_z + skip_first_z_slices) * target_mag,
+        Vec3Int(num_x, num_y, num_z - skip_first_z_slices) * target_mag,
     ))
 
     target_mag_view = target_layer.get_or_add_mag(
@@ -392,7 +400,8 @@ def cubing(
     with get_executor_for_args(executor_args) as executor:
         job_args = []
         # We iterate over all z sections
-        for z in range(start_z, num_z, BLOCK_LEN):
+        for z in range(skip_first_z_slices, num_z, BLOCK_LEN):
+            # The z is used to access the source files. However, when writing the data, the `start_z` has to be considered.
             max_z = min(num_z, z + BLOCK_LEN)
             # Prepare source files array
             if len(source_files) > 1:
@@ -404,8 +413,8 @@ def cubing(
             job_args.append(
                 (
                     target_mag_view.get_view(
-                        (0, 0, z),
-                        (num_x, num_y, max_z - z),
+                        (0, 0, z + start_z),
+                        (num_x, num_y, start_z + max_z - z),
                     ),
                     target_mag,
                     interpolation_mode,
@@ -449,6 +458,7 @@ if __name__ == "__main__":
         args.wkw_file_len,
         args.interpolation_mode,
         args.start_z,
+        args.skip_first_z_slices,
         args.pad,
         args.scale,
         args,
