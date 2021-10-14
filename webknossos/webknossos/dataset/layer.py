@@ -26,6 +26,7 @@ from .downsampling_utils import (
     downsample_cube_job,
     parse_interpolation_mode,
 )
+from .layer_categories import LayerCategories, LayerCategoryType
 from .properties import (
     LayerProperties,
     LayerViewConfiguration,
@@ -878,7 +879,7 @@ class Layer:
         )
 
     @property
-    def category(self) -> str:
+    def category(self) -> LayerCategoryType:
         return LayerCategories.COLOR_TYPE
 
     @property
@@ -902,22 +903,5 @@ class SegmentationLayer(Layer):
         self.dataset._export_as_json()
 
     @property
-    def category(self) -> str:
+    def category(self) -> LayerCategoryType:
         return LayerCategories.SEGMENTATION_TYPE
-
-
-class LayerCategories:
-    """
-    There are two different types of layers.
-    This class can be used to specify the type of a layer during creation:
-    ```python
-    from webknossos.dataset.dataset import Dataset
-
-    dataset = Dataset(<path_to_dataset>)
-    # Adds a new layer
-    layer = dataset.add_layer("color", LayerCategories.COLOR_TYPE)
-    ```
-    """
-
-    COLOR_TYPE = "color"
-    SEGMENTATION_TYPE = "segmentation"

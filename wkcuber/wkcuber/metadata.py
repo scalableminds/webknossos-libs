@@ -10,6 +10,8 @@ from argparse import ArgumentParser
 from glob import iglob
 from os import path, listdir
 from typing import Optional, Tuple, Iterable, Generator
+
+from webknossos.dataset.layer import LayerCategoryType
 from .mag import Mag
 from typing import List
 from .utils import add_verbose_flag, setup_logging, add_scale_flag
@@ -272,7 +274,7 @@ def detect_standard_layer(
     dataset_path: Path,
     layer_name: str,
     exact_bounding_box: Optional[dict] = None,
-    category: str = "color",
+    category: LayerCategoryType = "color",
     layer_view_configuration: Optional[dict] = None,
 ) -> dict:
     # Perform metadata detection for well-known layers

@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Tuple, cast
 
 from wkcuber.api.dataset import Dataset
-from wkcuber.api.layer import LayerCategories
+from wkcuber.api.layer_categories import LayerCategories
 from wkcuber.downsampling_utils import SamplingModes
 from wkcuber.upsampling_utils import upsample_cube, upsample_cube_job
 from wkcuber.mag import Mag

@@ -8,7 +8,7 @@ from shutil import rmtree
 from os import makedirs
 
 from wkcuber.api.dataset import Dataset
-from wkcuber.api.layer import LayerCategories
+from wkcuber.api.layer_categories import LayerCategories
 from wkcuber.downsampling_utils import (
     InterpolationModes,
     downsample_cube,

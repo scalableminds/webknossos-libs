@@ -11,6 +11,7 @@ from wkw import wkw
 from webknossos.geometry import Mag, Vec3Int, Vec3IntLike
 from webknossos.utils import time_start, time_stop
 
+from .layer import LayerCategoryType
 from .view import View
 
 
@@ -99,12 +100,12 @@ def calculate_default_max_mag(dataset_size: Vec3IntLike) -> Mag:
 
 
 def parse_interpolation_mode(
-    interpolation_mode: str, layer_name: str
+    interpolation_mode: str, layer_category: LayerCategoryType
 ) -> InterpolationModes:
     if interpolation_mode.upper() == "DEFAULT":
         return (
             InterpolationModes.MODE
-            if layer_name == "segmentation"
+            if layer_category == "segmentation"
             else InterpolationModes.MEDIAN
         )
     else:

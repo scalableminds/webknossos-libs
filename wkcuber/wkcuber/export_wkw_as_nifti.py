@@ -7,7 +7,8 @@ import nibabel as nib
 import numpy as np
 
 from wkcuber.api.bounding_box import BoundingBox
-from wkcuber.api.dataset import Dataset, LayerCategories
+from wkcuber.api.dataset import Dataset
+from wkcuber.api.layer_categories import LayerCategories
 from wkcuber.mag import Mag
 from wkcuber.utils import (
     add_distribution_flags,

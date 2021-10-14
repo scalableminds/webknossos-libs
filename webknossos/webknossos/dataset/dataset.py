@@ -18,13 +18,13 @@ from webknossos.utils import copy_directory_with_symlinks, get_executor_for_args
 
 from .layer import (
     Layer,
-    LayerCategories,
     SegmentationLayer,
     _dtype_per_channel_to_element_class,
     _dtype_per_layer_to_dtype_per_channel,
     _normalize_dtype_per_channel,
     _normalize_dtype_per_layer,
 )
+from .layer_categories import LayerCategories, LayerCategoryType
 from .properties import (
     DatasetProperties,
     DatasetViewConfiguration,
@@ -162,7 +162,7 @@ class Dataset:
     def add_layer(
         self,
         layer_name: str,
-        category: str,
+        category: LayerCategoryType,
         dtype_per_layer: Union[str, np.dtype, type] = None,
         dtype_per_channel: Union[str, np.dtype, type] = None,
         num_channels: int = None,
@@ -261,7 +261,7 @@ class Dataset:
     def get_or_add_layer(
         self,
         layer_name: str,
-        category: str,
+        category: LayerCategoryType,
         dtype_per_layer: Union[str, np.dtype, type] = None,
         dtype_per_channel: Union[str, np.dtype, type] = None,
         num_channels: int = None,
@@ -349,7 +349,7 @@ class Dataset:
         return self._layers[layer_name]
 
     def add_layer_for_existing_files(
-        self, layer_name: str, category: str, **kwargs: Any
+        self, layer_name: str, category: LayerCategoryType, **kwargs: Any
     ) -> Layer:
         assert layer_name not in self.layers, f"Layer {layer_name} already exists!"
         mag_headers = list((self.path / layer_name).glob("*/header.wkw"))
@@ -586,7 +586,7 @@ class Dataset:
 
         return new_dataset
 
-    def _get_layer_by_category(self, category: str) -> Layer:
+    def _get_layer_by_category(self, category: LayerCategoryType) -> Layer:
         assert (
             category == LayerCategories.COLOR_TYPE
             or category == LayerCategories.SEGMENTATION_TYPE

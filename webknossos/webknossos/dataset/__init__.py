@@ -76,6 +76,7 @@ mag2.write(
 """
 
 from .dataset import Dataset
-from .layer import Layer, LayerCategories, SegmentationLayer
+from .layer import Layer, SegmentationLayer
+from .layer_categories import LayerCategories, LayerCategoryType
 from .mag_view import MagView
 from .view import View
