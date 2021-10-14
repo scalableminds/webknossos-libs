@@ -147,7 +147,7 @@ def export_wkw_as_nifti(args: Namespace) -> None:
     )
 
 
-def export_wkw_as_nifti_from_arg_list(arg_list: List = None) -> None:
+def export_wkw_as_nifti_from_arg_list(arg_list: Optional[List] = None) -> None:
     parsed_args = create_parser().parse_args(arg_list)
     setup_logging(parsed_args)
     export_wkw_as_nifti(parsed_args)

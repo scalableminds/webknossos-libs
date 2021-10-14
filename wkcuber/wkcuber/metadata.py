@@ -342,7 +342,7 @@ def detect_segmentation_layer(
     layer_name: str,
     max_id: int,
     compute_max_id: bool = False,
-    exact_bounding_box: dict = None,
+    exact_bounding_box: Optional[dict] = None,
 ) -> dict:
     layer_info = detect_standard_layer(
         dataset_path, layer_name, exact_bounding_box, category="segmentation"

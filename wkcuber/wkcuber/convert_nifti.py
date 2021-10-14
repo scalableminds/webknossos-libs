@@ -128,7 +128,7 @@ def convert_nifti(
     scale: Tuple[float, ...],
     is_segmentation_layer: bool = False,
     file_len: int = DEFAULT_WKW_FILE_LEN,
-    bbox_to_enforce: BoundingBox = None,
+    bbox_to_enforce: Optional[BoundingBox] = None,
     use_orientation_header: bool = False,
     flip_axes: Optional[Union[int, Tuple[int, ...]]] = None,
 ) -> None:
@@ -230,7 +230,7 @@ def convert_folder_nifti(
     segmentation_subpath: str,
     scale: Tuple[float, ...],
     use_orientation_header: bool = False,
-    bbox_to_enforce: BoundingBox = None,
+    bbox_to_enforce: Optional[BoundingBox] = None,
     flip_axes: Optional[Union[int, Tuple[int, ...]]] = None,
 ) -> None:
     paths = list(source_folder_path.rglob("**/*.nii"))
