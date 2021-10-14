@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 
 from webknossos.geometry import BoundingBox, Mag
@@ -59,3 +60,17 @@ def test_with_bounds() -> None:
     assert BoundingBox((1, 2, 3), (5, 5, 5)).with_bounds_z(
         new_size_z=10
     ) == BoundingBox((1, 2, 3), (5, 5, 10))
+
+
+def test_contains() -> None:
+
+    assert BoundingBox((1, 1, 1), (5, 5, 5)).contains((2, 2, 2))
+    assert BoundingBox((1, 1, 1), (5, 5, 5)).contains((1, 1, 1))
+
+    # top-left is inclusive, bottom-right is exclusive
+    assert not BoundingBox((1, 1, 1), (5, 5, 5)).contains((6, 6, 6))
+    assert not BoundingBox((1, 1, 1), (5, 5, 5)).contains((20, 20, 20))
+
+    # nd-array may contain float values
+    assert BoundingBox((1, 1, 1), (5, 5, 5)).contains(np.array([5.5, 5.5, 5.5]))
+    assert not BoundingBox((1, 1, 1), (5, 5, 5)).contains(np.array([6.0, 6.0, 6.0]))

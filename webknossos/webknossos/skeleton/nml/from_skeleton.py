@@ -35,7 +35,7 @@ def _random_color_rgba() -> Tuple[float, float, float, float]:
 
 def from_skeleton(
     group: "Group",
-    parameters: Dict[str, Any] = None,
+    parameters: Optional[Dict[str, Any]] = None,
     volume_dict: Optional[Dict[str, Any]] = None,
 ) -> NML:
     """
