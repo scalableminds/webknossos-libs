@@ -144,6 +144,8 @@ mag_to_array: Callable[[Mag], List[int]] = lambda o: o.to_list()
 dataset_converter.register_unstructure_hook(Mag, mag_to_array)
 dataset_converter.register_structure_hook(Mag, lambda d, _: Mag(d))
 
+dataset_converter.register_structure_hook(LayerCategoryType, lambda d, _: str(d))
+
 # Register (un-)structure hooks for attr-classes to bring the data into the expected format.
 # The properties on disk (in datasource-properties.json) use camel case for the names of the attributes.
 # However, we use snake case for the attribute names in python.
