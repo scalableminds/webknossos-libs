@@ -11,7 +11,6 @@ from wkw import wkw
 from webknossos.geometry import Mag, Vec3Int, Vec3IntLike
 from webknossos.utils import time_start, time_stop
 
-from webknossos.dataset.layer import LayerCategories
 from .view import View
 
 
@@ -103,6 +102,7 @@ def parse_interpolation_mode(
     interpolation_mode: str, layer_category: str
 ) -> InterpolationModes:
     if interpolation_mode.upper() == "DEFAULT":
+        from webknossos.dataset.layer import LayerCategories
         return (
             InterpolationModes.MODE
             if layer_category == LayerCategories.SEGMENTATION_TYPE

@@ -422,6 +422,7 @@ class ImageStackConverter(Converter):
                         args.interpolation_mode,
                         args.start_z,
                         args.pad,
+                        args.scale,
                         executor_args,
                     )
 

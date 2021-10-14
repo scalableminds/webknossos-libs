@@ -10,11 +10,11 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.16...HEAD)
 
 ### Breaking Changes in Config & CLI
+- Use Dataset API inside `cubing` to automatically write metadata. Cubing does now require a scale. [#418](https://github.com/scalableminds/webknossos-libs/pull/418)
 ### Added
 ### Changed
 - Updated scikit-image dependency to 0.18.3. [#435](https://github.com/scalableminds/webknossos-libs/pull/435)
 - Improved the `TIFF` and `CZI` reader to work with a wider variety of formats. The module `convert_image_stack_to_wkw` is now capable of making the result webKnossos compatible. [#335](https://github.com/scalableminds/webknossos-libs/pull/335)
-- Use Dataset API inside `cubing` to automatically write metadata. [#418](https://github.com/scalableminds/webknossos-libs/pull/418)
 ### Fixed
 
 

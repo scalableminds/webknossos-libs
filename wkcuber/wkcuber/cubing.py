@@ -25,7 +25,7 @@ from .utils import (
     add_interpolation_flag,
     get_executor_for_args,
     wait_and_ensure_success,
-    setup_logging,
+    setup_logging, add_scale_flag,
 )
 from .image_readers import image_reader, refresh_global_image_reader
 
@@ -106,6 +106,7 @@ def create_parser() -> ArgumentParser:
         help="Select a single sample of a specific channel to be cubed into a layer. This option is only valid if channel_index is set. Since webKnossos only supports multiple uint8 channels, it may be necessary to cube a multi-sample dataset to different layers.",
     )
 
+    add_scale_flag(parser)
     add_interpolation_flag(parser)
     add_verbose_flag(parser)
     add_distribution_flags(parser)
@@ -300,8 +301,8 @@ def cubing(
     interpolation_mode_str: str,
     start_z: int,
     pad: bool,
+    scale: Tuple[float, float, float],
     executor_args: Namespace,
-    scale: Tuple[float, float, float] = (1, 1, 1),
 ) -> Layer:
     source_files = find_source_filenames(source_path)
     # we need to refresh the image readers because they are no longer stateless for performance reasons
@@ -448,5 +449,6 @@ if __name__ == "__main__":
         args.interpolation_mode,
         args.start_z,
         args.pad,
+        args.scale,
         args,
     )

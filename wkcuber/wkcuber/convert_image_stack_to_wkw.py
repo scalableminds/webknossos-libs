@@ -63,7 +63,6 @@ def create_parser() -> ArgumentParser:
     )
 
     parser.add_argument("--name", "-n", help="Name of the dataset", default=None)
-    add_scale_flag(parser)
     add_isotropic_flag(parser)
     add_sampling_mode_flag(parser)
 
@@ -167,6 +166,7 @@ def main(args: Namespace) -> None:
                     args.interpolation_mode,
                     args.start_z,
                     args.pad,
+                    args.scale,
                     args,
                 )
             )
