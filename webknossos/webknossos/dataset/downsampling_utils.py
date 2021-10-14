@@ -103,6 +103,7 @@ def parse_interpolation_mode(
 ) -> InterpolationModes:
     if interpolation_mode.upper() == "DEFAULT":
         from webknossos.dataset.layer import LayerCategories
+
         return (
             InterpolationModes.MODE
             if layer_category == LayerCategories.SEGMENTATION_TYPE

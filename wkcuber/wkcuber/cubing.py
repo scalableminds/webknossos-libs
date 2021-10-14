@@ -25,7 +25,8 @@ from .utils import (
     add_interpolation_flag,
     get_executor_for_args,
     wait_and_ensure_success,
-    setup_logging, add_scale_flag,
+    setup_logging,
+    add_scale_flag,
 )
 from .image_readers import image_reader, refresh_global_image_reader
 
