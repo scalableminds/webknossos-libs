@@ -6,6 +6,7 @@ python -m wkcuber.cubing \
   --layer_name color \
   --target_mag 2-2-1 \
   --interpolation_mode default \
+  --scale 1 \
   testdata/tiff testoutput/in_memory_downsampled_tiff
 [ -d testoutput/in_memory_downsampled_tiff/color ]
 [ -d testoutput/in_memory_downsampled_tiff/color/2-2-1 ]
