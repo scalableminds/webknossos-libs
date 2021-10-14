@@ -378,10 +378,12 @@ def cubing(
             dtype_per_channel=dtype,
             num_channels=num_output_channels,
         )
-    target_layer.bounding_box = target_layer.bounding_box.extended_by(BoundingBox(
-        Vec3Int(0, 0, start_z + skip_first_z_slices) * target_mag,
-        Vec3Int(num_x, num_y, num_z - skip_first_z_slices) * target_mag,
-    ))
+    target_layer.bounding_box = target_layer.bounding_box.extended_by(
+        BoundingBox(
+            Vec3Int(0, 0, start_z + skip_first_z_slices) * target_mag,
+            Vec3Int(num_x, num_y, num_z - skip_first_z_slices) * target_mag,
+        )
+    )
 
     target_mag_view = target_layer.get_or_add_mag(
         target_mag, file_len=wkw_file_len, block_len=BLOCK_LEN

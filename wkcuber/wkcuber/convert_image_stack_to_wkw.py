@@ -11,7 +11,6 @@ from .mag import Mag
 from .utils import (
     add_isotropic_flag,
     setup_logging,
-    add_scale_flag,
     add_sampling_mode_flag,
     get_executor_args,
     is_wk_compatible_layer_format,

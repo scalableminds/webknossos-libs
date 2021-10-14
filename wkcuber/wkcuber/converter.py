@@ -359,7 +359,9 @@ class ImageStackConverter(Converter):
             args, image_stack_parser, "interpolation_mode"
         )
         put_default_from_argparser_if_not_present(args, image_stack_parser, "start_z")
-        put_default_from_argparser_if_not_present(args, image_stack_parser, "skip_first_z_slices")
+        put_default_from_argparser_if_not_present(
+            args, image_stack_parser, "skip_first_z_slices"
+        )
         put_default_from_argparser_if_not_present(args, image_stack_parser, "jobs")
         put_default_from_argparser_if_not_present(
             args, image_stack_parser, "distribution_strategy"
@@ -422,6 +424,7 @@ class ImageStackConverter(Converter):
                         args.wkw_file_len,
                         args.interpolation_mode,
                         args.start_z,
+                        args.skip_first_z_slices,
                         args.pad,
                         args.scale,
                         executor_args,
