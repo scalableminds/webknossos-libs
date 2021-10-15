@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 set -eEuo pipefail
 
-echo -n "Typecheck webknossos: "
+echo "Typecheck webknossos..."
 python -m mypy -p webknossos
 
-echo -n "Typecheck tests:      "
+echo "Typecheck tests..."
 python -m mypy -p tests
 
-echo -n "Typecheck examples:   "
+echo "Typecheck examples..."
 python -m mypy -p examples
