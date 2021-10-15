@@ -27,7 +27,7 @@ def vcr_config() -> Dict[str, Any]:
     }
 
 
-# Monkeypatch VCR with the following PRs:
+# The remaining code of this module monkeypatches VCR with the following PRs:
 # https://github.com/kevin1024/vcrpy/pull/574
 # https://github.com/kevin1024/vcrpy/pull/583
 
