@@ -8,7 +8,7 @@ python -m wkcuber.convert_image_stack_to_wkw \
   --batch_size 8 \
   --layer_name color \
   --max_mag 4 \
-  --target_mag 2\
+  --target_mag 2 \
   --scale 1,1,1 \
   --name awesome_data \
   --no_compress \

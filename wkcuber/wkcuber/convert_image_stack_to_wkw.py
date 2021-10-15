@@ -2,19 +2,15 @@ import logging
 from argparse import Namespace, ArgumentParser
 from typing import Sequence
 
-from wkcuber import downsample_mags
-from .compress import compress_mag_inplace
 from .cubing import (
     get_channel_and_sample_count_and_dtype,
     cubing,
     create_parser as create_cubing_parser,
 )
 from .mag import Mag
-from .metadata import write_webknossos_metadata, refresh_metadata
 from .utils import (
     add_isotropic_flag,
     setup_logging,
-    add_scale_flag,
     add_sampling_mode_flag,
     get_executor_args,
     is_wk_compatible_layer_format,
@@ -66,7 +62,6 @@ def create_parser() -> ArgumentParser:
     )
 
     parser.add_argument("--name", "-n", help="Name of the dataset", default=None)
-    add_scale_flag(parser)
     add_isotropic_flag(parser)
     add_sampling_mode_flag(parser)
 
@@ -151,57 +146,43 @@ def main(args: Namespace) -> None:
             sample_iter = range(sample_count)
 
     layer_count = 0
-    bounding_box = None
+    layers = []
     for channel_index in channel_iter:
         for sample_index in sample_iter:
-            bounding_box = cubing(
-                args.source_path,
-                args.target_path,
-                f"{args.layer_name}_{layer_count}"
-                if len(channel_iter) * len(sample_iter) > 1
-                else args.layer_name,
-                arg_dict.get("batch_size"),
-                channel_index,
-                sample_index,
-                arg_dict.get("dtype"),
-                args.target_mag,
-                args.wkw_file_len,
-                args.interpolation_mode,
-                args.start_z,
-                args.pad,
-                args,
+            layers.append(
+                cubing(
+                    args.source_path,
+                    args.target_path,
+                    f"{args.layer_name}_{layer_count}"
+                    if len(channel_iter) * len(sample_iter) > 1
+                    else args.layer_name,
+                    arg_dict.get("batch_size"),
+                    channel_index,
+                    sample_index,
+                    arg_dict.get("dtype"),
+                    args.target_mag,
+                    args.wkw_file_len,
+                    args.interpolation_mode,
+                    args.start_z,
+                    args.skip_first_z_slices,
+                    args.pad,
+                    args.scale,
+                    args,
+                )
             )
             layer_count += 1
 
-    write_webknossos_metadata(
-        args.target_path,
-        args.name,
-        args.scale,
-        compute_max_id=False,
-        exact_bounding_box=bounding_box,
-    )
-
-    for i in range(layer_count):
+    for layer in layers:
         if not args.no_compress:
-            compress_mag_inplace(
-                args.target_path,
-                f"{args.layer_name}_{i}" if layer_count > 1 else args.layer_name,
-                args.target_mag,
-                args,
-            )
+            layer.get_mag(args.target_mag).compress(args=args)
 
-        downsample_mags(
-            path=args.target_path,
-            layer_name=f"{args.layer_name}_{i}" if layer_count > 1 else args.layer_name,
+        layer.downsample(
             from_mag=args.target_mag,
             max_mag=None if args.max_mag is None else Mag(args.max_mag),
-            interpolation_mode="default",
             compress=not args.no_compress,
             sampling_mode=args.sampling_mode,
             args=get_executor_args(args),
         )
-
-    refresh_metadata(args.target_path)
 
 
 if __name__ == "__main__":

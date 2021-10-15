@@ -5,6 +5,7 @@ python -m wkcuber.cubing \
   --batch_size 8 \
   --layer_name color \
   --wkw_file_len 32 \
+  --scale 1 \
   testdata/tiff testoutput/tiff
 [ -d testoutput/tiff/color ]
 [ -d testoutput/tiff/color/1 ]
