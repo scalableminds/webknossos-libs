@@ -64,7 +64,9 @@ def main():
     src_mag = src_layer.get_mag("1")
 
     dst_dataset = Dataset.get_or_create(args.target_path, args.scale)
-    dst_layer = dst_dataset.get_or_add_layer(args.layer_name, "color")
+    dst_layer = dst_dataset.add_layer(args.layer_name, "color")
+    dst_layer.bounding_box = src_layer.bounding_box
+
     dst_mag = dst_layer.get_or_add_mag("1")
 
     dst_view = dst_mag.get_view()
