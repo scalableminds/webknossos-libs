@@ -336,6 +336,8 @@ class BoundingBox:
 
         start_adjust = np.array([0, 0, 0])
         if chunk_border_alignments is not None:
+            if len(list(chunk_border_alignments)) == 1:
+                chunk_border_alignments = list(chunk_border_alignments) * 3
 
             chunk_border_alignments_array = Vec3Int(chunk_border_alignments).to_np()
             assert np.all(
