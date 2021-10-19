@@ -133,9 +133,7 @@ def check_equality(
             logging.info(f"Start verification of {layer_name} in mag {mag} in {bbox}")
 
             with get_executor_for_args(args) as executor:
-                boxes = list(
-                    bbox.chunk(CHUNK_SIZE, CHUNK_SIZE)
-                )
+                boxes = list(bbox.chunk(CHUNK_SIZE, CHUNK_SIZE))
                 assert_fn = named_partial(
                     assert_equality_for_chunk, source_path, target_path, layer_name, mag
                 )
