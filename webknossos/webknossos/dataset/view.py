@@ -407,7 +407,7 @@ class View:
 
         for i, chunk in enumerate(
             BoundingBox(view.global_offset, view.size).chunk(
-                chunk_size, list(chunk_size)
+                chunk_size, chunk_size
             )
         ):
             relative_offset = chunk.topleft - view.global_offset
@@ -485,10 +485,10 @@ class View:
 
         job_args = []
         source_chunks = BoundingBox(source_offset, source_view.size).chunk(
-            source_chunk_size, source_chunk_size.to_list()
+            source_chunk_size, source_chunk_size
         )
         target_chunks = BoundingBox(target_offset, target_view.size).chunk(
-            target_chunk_size, target_chunk_size.to_list()
+            target_chunk_size, target_chunk_size
         )
 
         for i, (source_chunk, target_chunk) in enumerate(

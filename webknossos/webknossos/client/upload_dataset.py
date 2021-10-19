@@ -1,4 +1,3 @@
-import logging
 from functools import lru_cache
 from pathlib import Path
 from shutil import make_archive

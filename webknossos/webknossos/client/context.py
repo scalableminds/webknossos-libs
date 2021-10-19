@@ -14,12 +14,15 @@ from .generated import Client as GeneratedClient
 
 load_dotenv()
 
-# TODO use boltons.cacheutils.LRU and reset invalid tokens
+
 @lru_cache(maxsize=None)
 def _cached_ask_for_token(webknossos_url: str) -> str:
     # TODO  pylint: disable=fixme
     # -validate token and ask again if necessary
     # -ask if the token should be saved in some .env file
+    # -reset invalid tokens
+    #  (e.g. use cachetools for explicit cache managment:
+    #  https://cachetools.readthedocs.io/en/stable/#memoizing-decorators)
     return Prompt.ask(
         f"\nPlease enter your webknossos token as shown on {webknossos_url}/auth/token ",
         password=True,
@@ -38,7 +41,7 @@ def _cached_get_default_org(webknossos_url: str, token: str) -> str:
     return default_organization["name"]
 
 
-# TODO use boltons.cacheutils.LRU and reset invalid tokens
+# TODO reset invalid tokens e.g. using cachetools
 @lru_cache(maxsize=None)
 def _cached_get_datastore_token(webknossos_url: str, token: str) -> str:
     response = httpx.post(

@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any, Callable, Optional
 
 from wkcuber.api.dataset import Dataset
-from wkcuber.api.bounding_box import BoundingBox, BoundingBoxNamedTuple
+from webknossos.geometry import BoundingBox, Vec3Int
 import numpy as np
 
 from wkcuber.mag import Mag
@@ -21,7 +21,8 @@ from .metadata import detect_resolutions, detect_bbox, detect_layers
 import functools
 from .compress import BACKUP_EXT
 
-CHUNK_SIZE = 1024
+
+CHUNK_SIZE = Vec3Int.full(1024)
 
 
 def named_partial(func: Callable, *args: Any, **kwargs: Any) -> Callable:
@@ -63,7 +64,7 @@ def assert_equality_for_chunk(
     target_path: Path,
     layer_name: str,
     mag: Mag,
-    sub_box: BoundingBoxNamedTuple,
+    sub_box: BoundingBox,
 ) -> None:
     wk_dataset = Dataset(source_path)
     layer = wk_dataset.get_layer(layer_name)
@@ -133,7 +134,7 @@ def check_equality(
 
             with get_executor_for_args(args) as executor:
                 boxes = list(
-                    bbox.chunk([CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE], [CHUNK_SIZE])
+                    bbox.chunk(CHUNK_SIZE, CHUNK_SIZE)
                 )
                 assert_fn = named_partial(
                     assert_equality_for_chunk, source_path, target_path, layer_name, mag

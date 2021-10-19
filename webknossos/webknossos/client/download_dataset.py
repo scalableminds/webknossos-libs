@@ -49,7 +49,10 @@ def download_dataset(
     dataset = Dataset.create(actual_path, name=parsed.name, scale=scale)
     for layer_name in layers or [i.name for i in data_layers]:
 
-        response_layer = [i for i in data_layers if i.name == layer_name][0]
+        response_layers = [i for i in data_layers if i.name == layer_name]
+        assert len(response_layers) > 0, f"The provided layer name {layer_name} could not be found in the requested dataset."
+        assert len(response_layers) == 1, f"The provided layer name {layer_name} was found multiple times in the requested dataset."
+        response_layer = response_layers[0]
         layer = dataset.add_layer(
             layer_name=layer_name,
             category=response_layer.category,
@@ -66,6 +69,7 @@ def download_dataset(
                 (response_bbox.width, response_bbox.height, response_bbox.depth),
             )
         else:
+            assert isinstance(bbox, BoundingBox), f"Expected a BoundingBox object for the bbox parameter but got {type(bbox)}"
             layer.bounding_box = bbox
         if mags is None:
             mags = [Mag(mag) for mag in response_layer.resolutions]
