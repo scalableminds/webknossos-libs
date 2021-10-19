@@ -35,7 +35,6 @@ openapi-python-client = "0.10.3"
 pylint = "^2.10.2"
 pytest = "^6.2.4"
 pytest-recording = "^0.12.0"
-scikit-learn = "^1.0"
 types-python-dateutil = "^0.1.6"
 
 [tool.black]

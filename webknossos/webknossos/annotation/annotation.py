@@ -12,6 +12,11 @@ from webknossos.client.context import get_context
 from webknossos.dataset import Dataset, Layer, SegmentationLayer
 from webknossos.skeleton import Skeleton, open_nml
 
+MAG_RE = r"((\d+-\d+-)?\d+)"
+SEP_RE = r"(\/|\\)"
+CUBE_RE = fr"z\d+{SEP_RE}y\d+{SEP_RE}x\d+\.wkw"
+ANNOTATION_WKW_PATH_RE = re.compile(fr"{MAG_RE}{SEP_RE}(header\.wkw|{CUBE_RE})")
+
 
 class _ZipPath(NamedTuple):
     """Small wrapper around a zipfile.Zipfile object, pointing to a path within this zipfile."""
@@ -56,7 +61,16 @@ class Annotation:
     ) -> Layer:
         assert "data.zip" in self._filelist
         with self._zipfile.open("data.zip") as f:
-            ZipFile(f).extractall(dataset.path / layer_name)
+            data_zip = ZipFile(f)
+            wrong_files = [
+                i.filename
+                for i in data_zip.filelist
+                if ANNOTATION_WKW_PATH_RE.search(i.filename) is None
+            ]
+            assert (
+                len(wrong_files) == 0
+            ), f"The annotation contains unexpected files: {wrong_files}"
+            data_zip.extractall(dataset.path / layer_name)
         layer = cast(
             SegmentationLayer,
             dataset.add_layer_for_existing_files(

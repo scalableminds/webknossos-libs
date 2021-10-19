@@ -49,6 +49,8 @@ print("Starting prediction…")
 X_predict = np.moveaxis(np.squeeze(mag_view.read()), 0, -1)
 Y_predicted = segmenter.predict(X_predict)
 segmentation = Y_predicted[:, :, None]  # adds z dimension
+assert segmentation.max() < 256
+segmentation = segmentation.astype("uint8")
 
 segmentation_layer = dataset.add_layer(
     "segmentation",
@@ -58,6 +60,6 @@ segmentation_layer = dataset.add_layer(
     largest_segment_id=int(segmentation.max()),
 )
 segmentation_layer.bounding_box = dataset.layers["color"].bounding_box
-segmentation_layer.add_mag(mag).write(segmentation)
+segmentation_layer.add_mag(mag, compress=True).write(segmentation)
 with webknossos_context(url="http://localhost:9000", token="secretScmBoyToken"):
     dataset.upload()

@@ -1,11 +1,9 @@
 import logging
-from os import PathLike, name
+from os import PathLike
 from pathlib import Path
 from typing import List, Optional, Tuple, TypeVar, Union, cast
 
 import numpy as np
-from networkx.convert import to_dict_of_dicts
-from numpy.core.fromnumeric import compress
 from rich.progress import track
 
 from webknossos.client.context import get_generated_client
@@ -25,6 +23,9 @@ T = TypeVar("T")
 def no_unset(x: Union[Unset, T]) -> T:
     assert not isinstance(x, Unset)
     return x
+
+
+_DOWNLOAD_CHUNK_SIZE = (512, 512, 512)
 
 
 def download_dataset(
@@ -83,7 +84,7 @@ def download_dataset(
         for mag in mags:
             aligned_bbox = layer.bounding_box.align_with_mag(mag, ceil=True)
             for chunk in track(
-                list(aligned_bbox.chunk((512, 512, 512))),
+                list(aligned_bbox.chunk(_DOWNLOAD_CHUNK_SIZE, _DOWNLOAD_CHUNK_SIZE)),
                 description=f"Downloading {layer.name} layer",
             ):
                 aligned_chunk_in_mag = chunk.in_mag(mag)
@@ -104,6 +105,11 @@ def download_dataset(
                 data = np.frombuffer(
                     response.content, dtype=layer.dtype_per_channel
                 ).reshape(layer.num_channels, *aligned_chunk_in_mag.size, order="F")
-                mag_view = layer.get_or_add_mag(mag, compress=True)
+                mag_view = layer.get_or_add_mag(
+                    mag,
+                    compress=True,
+                    block_len=32,
+                    file_len=_DOWNLOAD_CHUNK_SIZE[0] // 32,
+                )
                 mag_view.write(data, offset=aligned_chunk_in_mag.topleft)
     return dataset
