@@ -13,7 +13,6 @@ from webknossos.client.generated.client import Client
 from webknossos.client.generated.models.datastore_list_response_200_item import (
     DatastoreListResponse200Item,
 )
-from webknossos.client.generated.types import Unset
 from webknossos.utils import time_since_epoch_in_ms
 
 
@@ -43,7 +42,6 @@ def test_annotation_info(client: Client) -> None:
     assert info_object is not None
     assert info_object.id == id
     assert info_object.typ == typ
-    assert not isinstance(info_object.data_store, Unset)
     assert info_object.data_store.url == client.base_url
 
 
@@ -70,11 +68,8 @@ def test_dataset_info(client: Client) -> None:
         client=client,
     )
     assert response is not None
-    assert not isinstance(response.data_store, Unset)
     assert response.data_store.url == client.base_url
     assert response.display_name == "L4 Mouse Cortex Demo"
-    assert not isinstance(response.data_source, Unset)
-    assert not isinstance(response.data_source.data_layers, Unset)
     assert sorted(
         (layer.name, layer.category, layer.element_class)
         for layer in response.data_source.data_layers
@@ -91,8 +86,6 @@ def test_build_info(client: Client) -> None:
         client=client,
     )
     assert response is not None
-    assert not isinstance(response.webknossos, Unset)
-    assert not isinstance(response.webknossos_wrap, Unset)
     assert response.webknossos.name == "webknossos"
     assert response.webknossos_wrap.name == "webknossos-wrap"
     assert response.local_data_store_enabled

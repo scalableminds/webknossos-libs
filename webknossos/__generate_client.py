@@ -3,7 +3,7 @@ import json
 from datetime import datetime
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from typing import Dict, Iterable, Tuple
+from typing import Any, Dict, Iterable, Tuple
 
 import httpx
 from inducoapi import build_openapi
@@ -15,7 +15,7 @@ from openapi_python_client import (
 )
 from openapi_python_client.cli import handle_errors
 
-from webknossos.client import _get_generated_client
+from webknossos.client.context import get_generated_client
 from webknossos.utils import snake_to_camel_case
 
 SCHEMA_URL = "https://converter.swagger.io/api/convert?url=https%3A%2F%2Fwebknossos.org%2Fswagger.json"
@@ -39,7 +39,7 @@ def generate_client(openapi_schema: Dict) -> None:
             meta=MetaType.POETRY,
             config=generator_config,
         )
-        assert isinstance(generator_project, Project)
+        assert isinstance(generator_project, Project), generator_project.detail
         errors = generator_project.update()
         # handle_errors(errors)  # prints warnings
 
@@ -68,7 +68,7 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
 
     d = datetime.utcnow()
     unixtime = calendar.timegm(d.utctimetuple())
-    client = _get_generated_client(enforce_token=True)
+    client = get_generated_client(enforce_auth=True)
 
     annotation_info_response = annotation_info.sync_detailed(
         typ="Explorational",
@@ -96,6 +96,23 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
         yield api_endpoint_name, response.content
 
 
+def make_properties_required(x: Any) -> None:
+    if isinstance(x, dict):
+        for key, value in x.items():
+            if key in ["adminViewConfiguration"]:
+                continue
+            make_properties_required(value)
+    elif isinstance(x, list):
+        for i in x:
+            make_properties_required(i)
+
+    if isinstance(x, dict) and "properties" in x:
+        properties = x["properties"]
+        if isinstance(properties, dict) and len(properties) > 0:
+            assert "required" not in x
+            x["required"] = list(properties.keys())
+
+
 def set_response_schema_by_example(
     openapi_schema: Dict,
     example_response: bytes,
@@ -120,6 +137,7 @@ def set_response_schema_by_example(
         for path_method in path.values()
         if path_method["operationId"] == operation_id
     ][0]
+    make_properties_required(recorded_response_schema)
     request_schema["responses"]["200"]["content"] = recorded_response_schema
 
 

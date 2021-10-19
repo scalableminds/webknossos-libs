@@ -2,27 +2,30 @@ from typing import Any, Dict, List, Type, TypeVar
 
 import attr
 
-T = TypeVar("T", bound="AnnotationInfoResponse200TracingStore")
+T = TypeVar("T", bound="AnnotationInfoResponse200UserTeamsItem")
 
 
 @attr.s(auto_attribs=True)
-class AnnotationInfoResponse200TracingStore:
+class AnnotationInfoResponse200UserTeamsItem:
     """ """
 
+    id: str
     name: str
-    url: str
+    is_team_manager: int
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
+        id = self.id
         name = self.name
-        url = self.url
+        is_team_manager = self.is_team_manager
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
+                "id": id,
                 "name": name,
-                "url": url,
+                "isTeamManager": is_team_manager,
             }
         )
 
@@ -31,17 +34,20 @@ class AnnotationInfoResponse200TracingStore:
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
+        id = d.pop("id")
+
         name = d.pop("name")
 
-        url = d.pop("url")
+        is_team_manager = d.pop("isTeamManager")
 
-        annotation_info_response_200_tracing_store = cls(
+        annotation_info_response_200_user_teams_item = cls(
+            id=id,
             name=name,
-            url=url,
+            is_team_manager=is_team_manager,
         )
 
-        annotation_info_response_200_tracing_store.additional_properties = d
-        return annotation_info_response_200_tracing_store
+        annotation_info_response_200_user_teams_item.additional_properties = d
+        return annotation_info_response_200_user_teams_item
 
     @property
     def additional_keys(self) -> List[str]:

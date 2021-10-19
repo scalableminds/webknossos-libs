@@ -1,8 +1,6 @@
-from typing import Any, Dict, List, Type, TypeVar, Union
+from typing import Any, Dict, List, Type, TypeVar
 
 import attr
-
-from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="AnnotationInfoResponse200Stats")
 
@@ -11,10 +9,10 @@ T = TypeVar("T", bound="AnnotationInfoResponse200Stats")
 class AnnotationInfoResponse200Stats:
     """ """
 
-    edge_count: Union[Unset, int] = UNSET
-    node_count: Union[Unset, int] = UNSET
-    tree_count: Union[Unset, int] = UNSET
-    branch_point_count: Union[Unset, int] = UNSET
+    edge_count: int
+    node_count: int
+    tree_count: int
+    branch_point_count: int
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -25,28 +23,27 @@ class AnnotationInfoResponse200Stats:
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update({})
-        if edge_count is not UNSET:
-            field_dict["edgeCount"] = edge_count
-        if node_count is not UNSET:
-            field_dict["nodeCount"] = node_count
-        if tree_count is not UNSET:
-            field_dict["treeCount"] = tree_count
-        if branch_point_count is not UNSET:
-            field_dict["branchPointCount"] = branch_point_count
+        field_dict.update(
+            {
+                "edgeCount": edge_count,
+                "nodeCount": node_count,
+                "treeCount": tree_count,
+                "branchPointCount": branch_point_count,
+            }
+        )
 
         return field_dict
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        edge_count = d.pop("edgeCount", UNSET)
+        edge_count = d.pop("edgeCount")
 
-        node_count = d.pop("nodeCount", UNSET)
+        node_count = d.pop("nodeCount")
 
-        tree_count = d.pop("treeCount", UNSET)
+        tree_count = d.pop("treeCount")
 
-        branch_point_count = d.pop("branchPointCount", UNSET)
+        branch_point_count = d.pop("branchPointCount")
 
         annotation_info_response_200_stats = cls(
             edge_count=edge_count,

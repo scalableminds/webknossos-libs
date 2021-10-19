@@ -11,7 +11,6 @@ from rich.progress import Progress
 
 from webknossos.client.context import WebknossosContext, get_context
 from webknossos.client.generated.api.default import datastore_list
-from webknossos.client.generated.types import UNSET
 from webknossos.dataset import Dataset
 
 from .resumable import Resumable

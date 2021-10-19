@@ -2,14 +2,12 @@ import os
 from contextlib import contextmanager
 from contextvars import ContextVar
 from functools import lru_cache
-from typing import Iterator, List, Optional
+from typing import Iterator, Optional
 
 import attr
 import httpx
 from dotenv import load_dotenv
 from rich.prompt import Prompt
-
-from webknossos.client.generated.api.default import datastore_list
 
 from .defaults import DEFAULT_WEBKNOSSOS_URL
 from .generated import Client as GeneratedClient
