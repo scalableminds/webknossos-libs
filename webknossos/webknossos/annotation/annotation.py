@@ -2,20 +2,22 @@ import re
 from enum import Enum, unique
 from os import PathLike
 from pathlib import Path
-from typing import IO, List, NamedTuple, Optional, Union
+from typing import IO, List, NamedTuple, Optional, Union, cast
 from zipfile import ZipFile
 
 from attr import dataclass
 from boltons.cacheutils import cachedproperty
 
 from webknossos.client.context import get_context
-from webknossos.dataset import Dataset, Layer
+from webknossos.dataset import Dataset, Layer, SegmentationLayer
 from webknossos.skeleton import Skeleton, open_nml
 
 
 class _ZipPath(NamedTuple):
+    """Small wrapper around a zipfile.Zipfile object, pointing to a path within this zipfile."""
+
     zipfile: ZipFile
-    path: str
+    path: str  # path within the zipfile itself
 
     def open(
         self, mode: str = "r", *, pwd: Optional[bytes] = None, force_zip64: bool = True
@@ -55,9 +57,15 @@ class Annotation:
         assert "data.zip" in self._filelist
         with self._zipfile.open("data.zip") as f:
             ZipFile(f).extractall(dataset.path / layer_name)
-        return dataset.add_layer_for_existing_files(
-            layer_name, category="segmentation", largest_segment_id=0
+        layer = cast(
+            SegmentationLayer,
+            dataset.add_layer_for_existing_files(
+                layer_name, category="segmentation", largest_segment_id=0
+            ),
         )
+        min_mag_view = layer.mags[min(layer.mags)]
+        layer.largest_segment_id = int(min_mag_view.read().max())
+        return layer
 
 
 @unique
@@ -87,7 +95,10 @@ def open_annotation(annotation_path: Union[str, PathLike]) -> "Annotation":
         ), "open_annotation() must be called with a path or an annotation url, e.g. https://webknossos.org/annotations/Explorational/6114d9410100009f0096c640"
         webknossos_url, annotation_type_str, annotation_id = match.groups()
         annotation_type = AnnotationType(annotation_type_str)
-        assert webknossos_url == get_context().url
+        assert webknossos_url == get_context().url, (
+            f"The supplied url {webknossos_url} does not match your current context {get_context().url},\n"
+            + "please adapt it e.g. via 'with webknossos_context(…)'"
+        )
         from webknossos.client.download_annotation import download_annotation
 
         return download_annotation(annotation_type, annotation_id)

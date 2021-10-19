@@ -57,16 +57,24 @@ def upload_dataset(dataset: Dataset) -> str:
                     "Dataset Upload", total=len(file.chunks)
                 )
                 file.chunk_completed.register(lambda _: progress.advance(progress_task))
-    httpx.post(
-        f"{datastore_url}/data/datasets/finishUpload?token={datastore_token}",
-        params={"token": datastore_token},
-        json={
-            "uploadId": upload_id,
-            "organization": context.organization,
-            "name": dataset.name,
-            "initialTeams": [],
-            "needsConversion": False,
-        },
-        timeout=60,
-    ).raise_for_status()
+    for _ in range(5):
+        try:
+            httpx.post(
+                f"{datastore_url}/data/datasets/finishUpload?token={datastore_token}",
+                params={"token": datastore_token},
+                json={
+                    "uploadId": upload_id,
+                    "organization": context.organization,
+                    "name": dataset.name,
+                    "initialTeams": [],
+                    "needsConversion": False,
+                },
+                timeout=60,
+            ).raise_for_status()
+            break
+        except httpx.HTTPStatusError as e:
+            http_error = e
+    else:
+        raise http_error
+
     return f"{context.url}/datasets/{context.organization}/{dataset.name}/view"

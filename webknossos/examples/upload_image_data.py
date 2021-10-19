@@ -15,6 +15,8 @@ with webknossos_context(url="http://localhost:9000", token="secretScmBoyToken"):
         "color",
         dtype_per_layer=img.dtype,
     )
+    # add channel and z dimensions and put X before Y,
+    # resulting dimensions are C, X, Y, Z.
     layer.add_mag(1, compress=True).write(img.T[None, :, :, None])
     url = ds.upload()
     print(f"Successfully uploaded {url}")

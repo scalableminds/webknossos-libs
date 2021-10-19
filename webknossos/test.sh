@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -eEuo pipefail
 
-if [ $# -eq 1 ] && [ "$1" = "--with-network" ]; then
+if [ $# -eq 1 ] && [ "$1" = "--refresh-snapshots" ]; then
     if ! curl -sf localhost:9000/api/health; then
         WK_DOCKER_DIR="tests/.webknossos-server"
         if [ ! -d "$WK_DOCKER_DIR" ]; then
