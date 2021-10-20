@@ -14,7 +14,7 @@ Use this for:
 - reading/writing/manipulating raw 2D/3D image data and volume annotations/segmentation in webKnossos wrap (*.wkw) format
 - handling/manipulation of webKnossos datasets
 - reading/writing/manipulating webKnossos skeleton annotations (*.nml)
-- uploading/downloading annotations from your webKnossos instance
+- up- & downloading annotations and datasets from your webKnossos instance
 - executing any of the wkCuber operations from below from your code
 
 
@@ -24,4 +24,4 @@ CLI tool for creating and manipulating [webKnossos](https://webknossos.org) [WKW
 Use this for:
 - converting Tiff-stacks and other data formats for volume image data to webKnossos-compatible *.wkw files from the CLI
 - up/downsampling of *.wkw files to different magnification levels (image pyramid) from the CLI
-- compressing your *.wkw files to save disc space
+- compressing your *.wkw files to save disc space from the CLI
