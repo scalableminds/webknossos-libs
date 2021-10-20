@@ -2,8 +2,7 @@ from pathlib import Path
 import numpy as np
 import wkw
 
-from wkcuber.cubing import ensure_wkw
-from wkcuber.utils import WkwDatasetInfo, open_wkw
+from wkcuber.utils import WkwDatasetInfo, open_wkw, ensure_wkw
 from wkcuber.metadata import (
     write_webknossos_metadata,
     refresh_metadata,
