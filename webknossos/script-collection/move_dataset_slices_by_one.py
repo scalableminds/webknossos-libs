@@ -1,13 +1,14 @@
-from typing import Tuple
 from argparse import ArgumentParser
 from pathlib import Path
+from typing import Tuple
+
+from wkcuber.api import Dataset, View
 from wkcuber.utils import (
-    get_executor_for_args,
-    named_partial,
     add_distribution_flags,
     add_scale_flag,
+    get_executor_for_args,
+    named_partial,
 )
-from wkcuber.api import Dataset, View
 
 
 def create_parser() -> ArgumentParser:
