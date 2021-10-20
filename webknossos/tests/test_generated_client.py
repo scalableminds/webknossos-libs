@@ -26,6 +26,9 @@ def auth_client() -> Client:
     return get_generated_client(enforce_auth=True)
 
 
+# pylint: disable=redefined-outer-name
+
+
 @pytest.mark.vcr()
 def test_health(client: Client) -> None:
     response = health.sync_detailed(client=client)
@@ -34,7 +37,7 @@ def test_health(client: Client) -> None:
 
 @pytest.mark.vcr()
 def test_annotation_info(client: Client) -> None:
-    id = "616457c2010000870032ced4"
+    id = "616457c2010000870032ced4"  # pylint: disable=redefined-builtin
     typ = "Explorational"
     info_object = annotation_info.sync(
         typ=typ, id=id, client=client, timestamp=time_since_epoch_in_ms()

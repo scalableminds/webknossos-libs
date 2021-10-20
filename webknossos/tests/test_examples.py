@@ -7,6 +7,8 @@ import numpy as np
 import pytest
 from scipy.spatial import cKDTree
 
+from webknossos.geometry import Mag
+
 
 @contextmanager
 def tmp_cwd() -> Iterator[None]:
@@ -31,11 +33,21 @@ def test_skeleton_synapse_candidates() -> None:
 @pytest.mark.vcr()
 def test_upload_data() -> None:
     with tmp_cwd():
-        import examples.upload_image_data
+        from examples.upload_image_data import img, layer, url
+
+        assert layer.bounding_box.size[0] == img.shape[1]
+        assert layer.bounding_box.size[1] == img.shape[0]
+        assert layer.bounding_box.size[2] == 1
+        assert url.startswith(
+            "http://localhost:9000/datasets/sample_organization/cell_"
+        )
 
 
 class _DummyNearestNeighborClassifier:
-    def __init__(*args: Any, **kwargs: Any) -> None:
+    labels: np.ndarray
+    tree: cKDTree
+
+    def __init__(self, *_args: Any, **_kwargs: Any) -> None:
         pass
 
     def fit(self, X: np.ndarray, labels: np.ndarray) -> None:
@@ -69,7 +81,14 @@ def test_learned_segmenter() -> None:
             old_default_classifier = trainable_segmentation.RandomForestClassifier
         trainable_segmentation.RandomForestClassifier = _DummyNearestNeighborClassifier
         trainable_segmentation.has_sklearn = True
-        import examples.learned_segmenter
+        from examples.learned_segmenter import segmentation_layer, url
+
+        segmentation_data = segmentation_layer.mags[Mag(1)].read()
+        counts = dict(zip(*np.unique(segmentation_data, return_counts=True)))
+        assert counts == {1: 209066, 2: 37803, 3: 164553, 4: 817378}
+        assert url.startswith(
+            "http://localhost:9000/datasets/sample_organization/skin_segmented_"
+        )
 
         if old_default_classifier is None:
             del trainable_segmentation.RandomForestClassifier

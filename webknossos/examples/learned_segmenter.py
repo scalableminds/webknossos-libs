@@ -61,5 +61,7 @@ segmentation_layer = dataset.add_layer(
 )
 segmentation_layer.bounding_box = dataset.layers["color"].bounding_box
 segmentation_layer.add_mag(mag, compress=True).write(segmentation)
+
 with webknossos_context(url="http://localhost:9000", token="secretScmBoyToken"):
-    dataset.upload()
+    url = dataset.upload()
+print(f"Successfully uploaded {url}")

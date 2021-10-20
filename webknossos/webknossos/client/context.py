@@ -9,8 +9,8 @@ import httpx
 from dotenv import load_dotenv
 from rich.prompt import Prompt
 
-from .defaults import DEFAULT_WEBKNOSSOS_URL
-from .generated import Client as GeneratedClient
+from webknossos.client.defaults import DEFAULT_WEBKNOSSOS_URL
+from webknossos.client.generated import Client as GeneratedClient
 
 load_dotenv()
 
@@ -41,7 +41,7 @@ def _cached_get_default_org(webknossos_url: str, token: str) -> str:
     return default_organization["name"]
 
 
-# TODO reset invalid tokens e.g. using cachetools
+# TODO reset invalid tokens e.g. using cachetools  pylint: disable=fixme
 @lru_cache(maxsize=None)
 def _cached_get_datastore_token(webknossos_url: str, token: str) -> str:
     response = httpx.post(

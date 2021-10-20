@@ -1,5 +1,5 @@
 import difflib
-from os import PathLike, name
+from os import PathLike
 from pathlib import Path
 from typing import List
 
@@ -113,8 +113,8 @@ def diff_lines(lines_a: List[str], lines_b: List[str]) -> List[str]:
 
 
 def diff_files(path_a: PathLike, path_b: PathLike) -> None:
-    with open(path_a, "r") as file_a:
-        with open(path_b, "r") as file_b:
+    with open(path_a, "r", encoding="utf-8") as file_a:
+        with open(path_b, "r", encoding="utf-8") as file_b:
             diff = diff_lines(file_a.readlines(), file_b.readlines())
             assert (
                 len(diff) == 0
@@ -147,7 +147,7 @@ def test_simple_initialization_and_representations(tmp_path: Path) -> None:
 </things>
 """
     nml.write(nml_path)
-    with open(nml_path, "r") as f:
+    with open(nml_path, "r", encoding="utf-8") as f:
         diff = diff_lines(f.readlines(), EXPECTED_NML.splitlines(keepends=True))
         assert (
             len(diff) == 0
@@ -194,7 +194,7 @@ def test_simple_initialization_and_representations(tmp_path: Path) -> None:
 </things>
 """
     nml.write(nml_path)
-    with open(nml_path, "r") as f:
+    with open(nml_path, "r", encoding="utf-8") as f:
         diff = diff_lines(
             f.readlines(), EXPECTED_EXTENDED_NML.splitlines(keepends=True)
         )

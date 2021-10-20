@@ -13,7 +13,6 @@ from openapi_python_client import (
     Project,
     _get_project_for_url_or_path,
 )
-from openapi_python_client.cli import handle_errors
 
 from webknossos.client.context import get_generated_client
 from webknossos.utils import snake_to_camel_case
@@ -40,8 +39,9 @@ def generate_client(openapi_schema: Dict) -> None:
             config=generator_config,
         )
         assert isinstance(generator_project, Project), generator_project.detail
-        errors = generator_project.update()
-        # handle_errors(errors)  # prints warnings
+        _errors = generator_project.update()  # pylint: disable=no-member
+        # from openapi_python_client.cli import handle_errors
+        # handle_errors(_errors)  # prints warnings
 
 
 def add_api_prefix_for_non_data_paths(openapi_schema: Dict) -> None:
@@ -91,9 +91,9 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
         api_endpoint_name = api_endpoint.__name__.split(".")[-1]
         api_endpoint_name = snake_to_camel_case(api_endpoint_name)
 
-        response = api_endpoint.sync_detailed(client=client)
-        assert response.status_code == 200
-        yield api_endpoint_name, response.content
+        api_endpoint_response = api_endpoint.sync_detailed(client=client)
+        assert api_endpoint_response.status_code == 200
+        yield api_endpoint_name, api_endpoint_response.content
 
 
 def make_properties_required(x: Any) -> None:
@@ -145,9 +145,9 @@ def bootstrap_response_schemas(openapi_schema: Dict) -> None:
     """Inserts the response schemas into openapi_schema (in-place),
     as recorded by example requests."""
     assert_valid_schema(openapi_schema)
-    for operation_id, response in iterate_request_ids_with_responses():
+    for operation_id, example_response in iterate_request_ids_with_responses():
         set_response_schema_by_example(
-            openapi_schema, example_response=response, operation_id=operation_id
+            openapi_schema, example_response=example_response, operation_id=operation_id
         )
 
 

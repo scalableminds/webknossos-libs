@@ -3,7 +3,7 @@ from concurrent.futures import Future, ThreadPoolExecutor, as_completed
 from functools import partial
 from os import PathLike
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Sequence, Union
+from typing import Any, Callable, Dict, List, Optional, Sequence, Union
 
 import httpx
 
@@ -53,16 +53,20 @@ class Resumable:
         target: str,
         chunk_size: int = MiB,
         simultaneous_uploads: int = 3,
-        headers: Dict[str, Any] = {},
+        headers: Optional[Dict[str, Any]] = None,
         test_chunks: bool = True,
         max_chunk_retries: int = 100,
         permanent_errors: Sequence[int] = (400, 404, 415, 500, 501),
-        query: Dict[str, Any] = {},
+        query: Optional[Dict[str, Any]] = None,
         generate_unique_identifier: Callable[[Path], str] = lambda _path: str(
             uuid.uuid4()
         ),
         client: httpx.Client = httpx.Client(),
     ) -> None:
+        if headers is None:
+            headers = {}
+        if query is None:
+            query = {}
 
         self.config = Config(
             target=target,

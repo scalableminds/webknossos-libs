@@ -32,7 +32,7 @@ def vcr_config() -> Dict[str, Any]:
 # https://github.com/kevin1024/vcrpy/pull/583
 
 
-def _make_vcr_request(httpx_request: httpx.Request, **kwargs: Any) -> VcrRequest:
+def _make_vcr_request(httpx_request: httpx.Request, **_kwargs: Any) -> VcrRequest:
     body = httpx_request.read()
     uri = str(httpx_request.url)
     headers = dict(httpx_request.headers)

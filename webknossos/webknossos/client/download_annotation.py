@@ -11,7 +11,9 @@ COMPOUND_ANNOTATION_TYPES = [
 ]
 
 
-def download_annotation(type: AnnotationType, id: str) -> Annotation:
+def download_annotation(
+    type: AnnotationType, id: str  # pylint: disable=redefined-builtin
+) -> Annotation:
     assert (
         type not in COMPOUND_ANNOTATION_TYPES
     ), f"Currently compund annotation types are not supported, got {type}"
