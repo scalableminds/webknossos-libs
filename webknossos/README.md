@@ -7,6 +7,8 @@
 
 Python API for working with [webKnossos](https://webknossos.org) datasets, annotations, and for webKnossos server interaction.
 
+For the webKnossos server, please refer to https://github.com/scalableminds/webknossos.
+
 ## Features
 
 - easy-to-use dataset API for reading/writing/editing raw 2D/3D image data and volume annotations/segmentation in webKnossos wrap (*.wkw) format
@@ -20,14 +22,13 @@ Python API for working with [webKnossos](https://webknossos.org) datasets, annot
     - access to nodes, comments, trees, bounding boxes, metadata, etc.
     - create new skeleton annotation from Graph structures or Python objects
 - interaction, connection & scripting with your webKnossos instance over the REST API
-    - uploading/downloading annotations
+    - up- & downloading annotations and datasets
 
 ## Installation
-### Python 3 with pip from PyPi
-- `webknossos` requires at least Python 3.7+
+`webknossos` requires at least Python 3.7+
 
 ```
-pip install wkcuber
+pip install webknossos
 ```
 
 ## Examples
