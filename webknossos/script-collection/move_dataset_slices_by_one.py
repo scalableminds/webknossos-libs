@@ -2,8 +2,8 @@ from argparse import ArgumentParser
 from pathlib import Path
 from typing import Tuple
 
-from wkcuber.api import Dataset, View
-from wkcuber.utils import (
+from webknossos.dataset import Dataset, View
+from wkcuber.utils import (  # pylint: disable=import-error
     add_distribution_flags,
     add_scale_flag,
     get_executor_for_args,
@@ -39,10 +39,10 @@ def create_parser() -> ArgumentParser:
 
 def move_by_one(
     src_mag,
-    dst_mag,
     args: Tuple[View, int],
 ) -> None:
     chunk_view, i = args
+    del i
     size = chunk_view.size
     dst_offset = chunk_view.global_offset
 
@@ -73,7 +73,7 @@ def main():
     dst_view = dst_mag.get_view()
 
     with get_executor_for_args(args) as executor:
-        func = named_partial(move_by_one, src_mag, dst_mag)
+        func = named_partial(move_by_one, src_mag)
         dst_view.for_each_chunk(
             func,
             chunk_size=dst_mag._get_file_dimensions(),
