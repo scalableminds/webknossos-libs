@@ -11,7 +11,12 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 [Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.18...HEAD)
 
 ### Breaking Changes
+- `BoundingBox.chunk()`'s 2nd parameter `chunk_border_alignments` now does not accept a list with a single `int` anymore. [#437](https://github.com/scalableminds/webknossos-libs/pull/452)
+
 ### Added
+- Added a new Annotation class which includes skeletons as well as volume-annotations. [#437](https://github.com/scalableminds/webknossos-libs/pull/452)
+- Added dataset down- and upload as well as annotation download, see the examples `learned_segmenter.py` and `upload_image_data.py`. [#437](https://github.com/scalableminds/webknossos-libs/pull/452)
+
 ### Changed
 ### Fixed
 
