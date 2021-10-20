@@ -6,8 +6,18 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MINOR.PATCH`.
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
+
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.16...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.18...HEAD)
+
+### Breaking Changes
+### Added
+### Changed
+### Fixed
+
+
+## [0.8.18](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.18) - 2021-10-18
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.16...v0.8.18)
 
 ### Breaking Changes
 ### Added
