@@ -34,7 +34,7 @@ def test_health(client: Client) -> None:
 
 @pytest.mark.vcr()
 def test_annotation_info(client: Client) -> None:
-    id = "6114d9410100009f0096c640"
+    id = "616457c2010000870032ced4"
     typ = "Explorational"
     info_object = annotation_info.sync(
         typ=typ, id=id, client=client, timestamp=time_since_epoch_in_ms()

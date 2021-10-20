@@ -13,11 +13,11 @@ interactions:
       user-agent:
       - python-httpx/0.18.2
     method: GET
-    uri: https://webknossos.org/api/annotations/Explorational/6114d9410100009f0096c640/info
+    uri: https://webknossos.org/api/annotations/Explorational/616457c2010000870032ced4/info
   response:
-    content: '{"modified":1630410875640,"state":"Active","id":"6114d9410100009f0096c640","name":"Nuclei
-      Trees","description":"","typ":"Explorational","task":null,"stats":{"edgeCount":0,"nodeCount":6,"treeCount":6,"branchPointCount":0},"restrictions":{"allowAccess":true,"allowUpdate":false,"allowFinish":true,"allowDownload":true},"formattedHash":"96c640","tracing":{"skeleton":"adec7916-772b-4b9a-a438-d2cfaf37b044","volume":"ea2dd5df-fd54-41d4-9fa7-32d7ce619a27"},"dataSetName":"l4dense_motta_et_al_demo","organization":"scalable_minds","dataStore":{"name":"webknossos.org","url":"https://webknossos.org","isForeign":false,"isScratch":false,"isConnector":false,"allowsUpload":true},"tracingStore":{"name":"localhost","url":"https://webknossos.org"},"visibility":"Public","settings":{"allowedModes":["orthogonal","oblique","flight","volume"],"branchPointsAllowed":true,"somaClickingAllowed":true,"mergerMode":false,"resolutionRestrictions":{}},"tracingTime":575130,"tags":["l4dense_motta_et_al_demo","hybrid"],"user":{"id":"606c47c20100008300b3e8ae","email":"albane.dlvg@scalableminds.com","firstName":"Albane","lastName":"de
-      la Villegeorges","isAdmin":true,"isDatasetManager":false,"isAnonymous":false,"teams":[{"id":"5b3ce78557b7414e59269427","name":"scalable
+    content: '{"modified":1634039566087,"state":"Active","id":"616457c2010000870032ced4","name":"Training
+      Data Example for Skin Layers","description":"Example Annotation to reproduce
+      [the scikit-image example with a trainable segmenter](https://scikit-image.org/docs/0.18.x/auto_examples/segmentation/plot_trainable_segmentation.html#sphx-glr-auto-examples-segmentation-plot-trainable-segmentation-py).","typ":"Explorational","task":null,"stats":{"edgeCount":0,"nodeCount":0,"treeCount":0,"branchPointCount":0},"restrictions":{"allowAccess":true,"allowUpdate":true,"allowFinish":true,"allowDownload":true},"formattedHash":"32ced4","tracing":{"skeleton":"bd0e7b0b-0902-47df-a2de-91f8250c0189","volume":"65029191-14f6-49d1-a946-11496d249e1e"},"dataSetName":"skin","organization":"scalable_minds","dataStore":{"name":"webknossos.org","url":"https://webknossos.org","isForeign":false,"isScratch":false,"isConnector":false,"allowsUpload":true},"tracingStore":{"name":"localhost","url":"https://webknossos.org"},"visibility":"Internal","settings":{"allowedModes":["orthogonal","oblique","flight","volume"],"branchPointsAllowed":true,"somaClickingAllowed":true,"mergerMode":false,"resolutionRestrictions":{}},"tracingTime":613508,"tags":["skin","hybrid"],"user":{"id":"6006a44d0100007e0070d734","email":"jonathan@scm.io","firstName":"Jonathan","lastName":"Striebel","isAdmin":true,"isDatasetManager":false,"isAnonymous":false,"teams":[{"id":"5b3ce78557b7414e59269427","name":"scalable
       minds","isTeamManager":false}]},"meshes":[]}'
     headers:
       Connection:
@@ -27,7 +27,7 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Tue, 12 Oct 2021 15:55:24 GMT
+      - Tue, 19 Oct 2021 17:15:33 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       Server:
