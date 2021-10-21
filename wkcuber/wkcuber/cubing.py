@@ -200,86 +200,85 @@ def cubing_job(
     downsampling_needed = target_mag != Mag(1)
     largest_value_in_chunk = 0  # This is used to compute the largest_segmentation_id if it is a segmentation layer
 
-    with target_view.open():
-        # Iterate over batches of continuous z sections
-        # The batches have a maximum size of `batch_size`
-        # Batched iterations allows to utilize IO more efficiently
-        first_z_idx = target_view.global_offset.z
-        for source_file_batch in get_chunks(source_file_batches, batch_size):
-            try:
-                ref_time = time.time()
-                logging.info(
-                    "Cubing z={}-{}".format(
-                        first_z_idx, first_z_idx + len(source_file_batch)
-                    )
+    # Iterate over batches of continuous z sections
+    # The batches have a maximum size of `batch_size`
+    # Batched iterations allows to utilize IO more efficiently
+    first_z_idx = target_view.global_offset.z
+    for source_file_batch in get_chunks(source_file_batches, batch_size):
+        try:
+            ref_time = time.time()
+            logging.info(
+                "Cubing z={}-{}".format(
+                    first_z_idx, first_z_idx + len(source_file_batch)
                 )
-                slices = []
-                # Iterate over each z section in the batch
-                for i, file_name in enumerate(source_file_batch):
-                    z = first_z_idx + i
-                    # Image shape will be (x, y, channel_count, z=1)
-                    image = read_image_file(
-                        file_name,
-                        target_view.header.voxel_type,
-                        z,
-                        channel_index,
-                        sample_index,
-                    )
-
-                    if not pad:
-                        assert (
-                            image.shape[0:2] == target_view.size[0:2]
-                        ), "Section z={} has the wrong dimensions: {} (expected {}). Consider using --pad.".format(
-                            z, image.shape, target_view.size[0:2]
-                        )
-                    slices.append(image)
-
-                if pad:
-                    x_max = target_view.size[0]
-                    y_max = target_view.size[1]
-
-                    slices = [
-                        np.pad(
-                            _slice,
-                            mode="constant",
-                            pad_width=[
-                                (0, x_max - _slice.shape[0]),
-                                (0, y_max - _slice.shape[1]),
-                                (0, 0),
-                                (0, 0),
-                            ],
-                        )
-                        for _slice in slices
-                    ]
-
-                buffer = prepare_slices_for_wkw(slices, target_view.header.num_channels)
-                if downsampling_needed:
-                    buffer = downsample_unpadded_data(
-                        buffer, target_mag, interpolation_mode
-                    )
-                buffer_z_offset = (
-                    first_z_idx - target_view.global_offset.z
-                ) // target_mag.z
-                target_view.write(offset=(0, 0, buffer_z_offset), data=buffer)
-                largest_value_in_chunk = max(largest_value_in_chunk, np.max(buffer))
-                logging.debug(
-                    "Cubing of z={}-{} took {:.8f}s".format(
-                        first_z_idx,
-                        first_z_idx + len(source_file_batch),
-                        time.time() - ref_time,
-                    )
+            )
+            slices = []
+            # Iterate over each z section in the batch
+            for i, file_name in enumerate(source_file_batch):
+                z = first_z_idx + i
+                # Image shape will be (x, y, channel_count, z=1)
+                image = read_image_file(
+                    file_name,
+                    target_view.header.voxel_type,
+                    z,
+                    channel_index,
+                    sample_index,
                 )
-                first_z_idx += len(source_file_batch)
 
-            except Exception as exc:
-                logging.error(
-                    "Cubing of z={}-{} failed with {}".format(
-                        first_z_idx, first_z_idx + len(source_file_batch), exc
+                if not pad:
+                    assert (
+                        image.shape[0:2] == target_view.size[0:2]
+                    ), "Section z={} has the wrong dimensions: {} (expected {}). Consider using --pad.".format(
+                        z, image.shape, target_view.size[0:2]
                     )
-                )
-                raise exc
+                slices.append(image)
 
-        return largest_value_in_chunk
+            if pad:
+                x_max = target_view.size[0]
+                y_max = target_view.size[1]
+
+                slices = [
+                    np.pad(
+                        _slice,
+                        mode="constant",
+                        pad_width=[
+                            (0, x_max - _slice.shape[0]),
+                            (0, y_max - _slice.shape[1]),
+                            (0, 0),
+                            (0, 0),
+                        ],
+                    )
+                    for _slice in slices
+                ]
+
+            buffer = prepare_slices_for_wkw(slices, target_view.header.num_channels)
+            if downsampling_needed:
+                buffer = downsample_unpadded_data(
+                    buffer, target_mag, interpolation_mode
+                )
+            buffer_z_offset = (
+                first_z_idx - target_view.global_offset.z
+            ) // target_mag.z
+            target_view.write(offset=(0, 0, buffer_z_offset), data=buffer)
+            largest_value_in_chunk = max(largest_value_in_chunk, np.max(buffer))
+            logging.debug(
+                "Cubing of z={}-{} took {:.8f}s".format(
+                    first_z_idx,
+                    first_z_idx + len(source_file_batch),
+                    time.time() - ref_time,
+                )
+            )
+            first_z_idx += len(source_file_batch)
+
+        except Exception as exc:
+            logging.error(
+                "Cubing of z={}-{} failed with {}".format(
+                    first_z_idx, first_z_idx + len(source_file_batch), exc
+                )
+            )
+            raise exc
+
+    return largest_value_in_chunk
 
 
 def get_channel_and_sample_count_and_dtype(source_path: Path) -> Tuple[int, int, str]:
