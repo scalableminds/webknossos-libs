@@ -308,12 +308,13 @@ def main(args: Namespace) -> None:
     if dataset_bbox is None:
         raise ValueError("Could not detect bbox")
     else:
-        combine_with_fallback_layer(
-            dataset_bbox,
-            args.output_path,
-            args.volume_path,
-            args.segmentation_layer_path,
-        )
+        if not args.skip_merge:
+            combine_with_fallback_layer(
+                dataset_bbox,
+                args.output_path,
+                args.volume_path,
+                args.segmentation_layer_path,
+            )
     for floodfill in bboxes:
         execute_floodfill(
             args.output_path,
