@@ -18,6 +18,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 - Added dataset down- and upload as well as annotation download, see the examples `learned_segmenter.py` and `upload_image_data.py`. [#437](https://github.com/scalableminds/webknossos-libs/pull/452)
 
 ### Changed
+- `View`s now always open the `wkw.Dataset` lazily. All explicit calls to `View.open()` and `View.close()` must be removed. [#448](https://github.com/scalableminds/webknossos-libs/pull/448)
 ### Fixed
 
 
