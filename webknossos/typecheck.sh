@@ -9,3 +9,6 @@ python -m mypy -p tests --disallow-untyped-defs --show-error-codes --strict-equa
 
 echo "Typecheck examples..."
 python -m mypy -p examples --disallow-untyped-defs --show-error-codes --strict-equality --namespace-packages --no-implicit-optional
+
+echo "Typecheck script-collection..."
+python -m mypy -p script-collection --disallow-untyped-defs --show-error-codes --strict-equality --namespace-packages --no-implicit-optional
