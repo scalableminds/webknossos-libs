@@ -23,6 +23,7 @@ rich = "^10.9.0"
 scikit-image = "^0.18.3"
 scipy = "^1.4.0"
 wkw = "1.1.11"
+typing-extensions = "^3.10.0"
 
 [tool.poetry.dev-dependencies]
 # autoflake
