@@ -22,7 +22,8 @@ GroupOrGraph = Union[Group, Graph]
 @attr.define()
 class Skeleton(Group):
     """
-    Contains groups and skeletons.
+    Contains metadata and is the root-group of sub-groups and graphs.
+    See the parent webknossos.skeleton.group.Group for methods about group and graph handling.
     """
 
     # from Group parent to support mypy:
@@ -53,7 +54,7 @@ class Skeleton(Group):
         super().__attrs_post_init__()
 
     @staticmethod
-    def from_path(file_path: PathLike) -> "Skeleton":
+    def from_path(file_path: Union[PathLike, str]) -> "Skeleton":
         with open(file_path, "rb") as file_handle:
             return nml_to_skeleton(wknml.parse_nml(file_handle))
 

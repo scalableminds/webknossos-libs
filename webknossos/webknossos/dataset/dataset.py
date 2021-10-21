@@ -49,52 +49,15 @@ def _copy_job(args: Tuple[View, View, int]) -> None:
 
 class Dataset:
     """
-    A dataset is the entry point of the Dataset API. An existing dataset on disk can be opened
+    A dataset is the entry point of the Dataset API.
+    An existing dataset on disk can be opened
     or new datasets can be created.
 
-    A `Dataset` stores the data in `.wkw` files on disk.
+    A dataset stores the data in `.wkw` files on disk with metadata in `datasource-properties.json`.
+    The information in those files are kept in sync with the object.
 
-    ## Examples
-
-    ### Creating Datasets
-    ```python
-    from webknossos.dataset.dataset import Dataset
-
-    dataset = Dataset.create(<path_to_new_dataset>, scale=(1, 1, 1))
-    # Adds a new layer
-    layer = dataset.add_layer(
-        layer_name="color",
-        category=LayerCategories.COLOR_TYPE,
-        dtype_per_channel="uint8",
-        num_channels=3
-    )
-    # Adds an existing layer from a different dataset
-    sym_layer = dataset.add_symlink_layer(<foreign_layer_path>)
-    ```
-
-    ### Opening Datasets
-    ```python
-    from webknossos.dataset.dataset import Dataset
-
-    dataset = Dataset(<path_to_dataset>)
-    # Assuming that the dataset has a layer called 'color'
-    layer = dataset.get_layer("color")
-    ```
-
-    ### Copying Datasets
-    ```python
-    from webknossos.dataset.dataset import Dataset
-
-    dataset = Dataset(<path_to_dataset>)
-    # Copying the dataset with different block_len and file_len
-    copy_of_dataset = dataset.copy_dataset(
-        <path_to_new_dataset>,
-        block_len=8,
-        file_len=8
-    )
-    ```
-
-    ## Functions
+    Each dataset consists of one or more layers (webknossos.dataset.layer.Layer),
+    which themselves can comprise multiple magnifications (webknossos.dataset.mag_view.MagView).
     """
 
     def __init__(self, dataset_path: Union[str, Path]) -> None:
