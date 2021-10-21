@@ -158,22 +158,6 @@ def read_image_file(
         raise exc
 
 
-def prepare_slices_for_wkw(
-    slices: List[np.ndarray], num_channels: Optional[int] = None
-) -> np.ndarray:
-    # Write batch buffer which will have shape (x, y, channel_count, z)
-    # since we concat along the last axis (z)
-    buffer = np.concatenate(slices, axis=-1)
-
-    # We transpose the data so that the first dimension is the channel,
-    # since the wkw library expects this.
-    # New shape will be (channel_count, x, y, z)
-    buffer = np.transpose(buffer, (2, 0, 1, 3))
-    if num_channels is not None:
-        assert buffer.shape[0] == num_channels
-    return buffer
-
-
 def cubing_job(
     args: Tuple[
         View,
@@ -185,6 +169,8 @@ def cubing_job(
         bool,
         Optional[int],
         Optional[int],
+        str,
+        int,
     ]
 ) -> Any:
     (
@@ -197,12 +183,28 @@ def cubing_job(
         pad,
         channel_index,
         sample_index,
+        dtype,
+        num_channels,
     ) = args
 
     downsampling_needed = target_mag != Mag(1)
     largest_value_in_chunk = 0  # This is used to compute the largest_segmentation_id if it is a segmentation layer
 
     with target_view.open():
+        if pad:
+            # NOTE: not tested after optimizations for memory
+            # Iterate over each z section in the batch to get the image sizes
+            image_sizes = [
+                image_reader.read_dimensions(Path(source_file))
+                for source_file in source_file_batches
+            ]
+            max_image_size = (
+                max([x[0] for x in image_sizes]),
+                max(x[1] for x in image_sizes),
+            )
+        else:
+            max_image_size = image_size
+
         # Iterate over batches of continuous z sections
         # The batches have a maximum size of `batch_size`
         # Batched iterations allows to utilize IO more efficiently
@@ -215,7 +217,14 @@ def cubing_job(
                         first_z_idx, first_z_idx + len(source_file_batch)
                     )
                 )
-                slices = []
+
+                # Allocate a large buffer for all images in this batch
+                # Shape will be (channel_count, x, y, z)
+                # Using fortran order for the buffer, prevents that the data has to be copied in rust
+                buffer_shape = [num_channels] + list(max_image_size) + [len(source_file_batch)]
+                print(target_view.size)
+                buffer = np.empty(buffer_shape, dtype=dtype, order="F")
+
                 # Iterate over each z section in the batch
                 for i, file_name in enumerate(source_file_batch):
                     z = first_z_idx + i
@@ -228,33 +237,26 @@ def cubing_job(
                         sample_index,
                     )
 
-                    if not pad:
+                    if pad:
+                        image = np.pad(
+                            image,
+                            mode="constant",
+                            pad_width=[
+                                (0, max_image_size[0] - image.shape[0]),
+                                (0, max_image_size[1] - image.shape[1]),
+                                (0, 0),
+                                (0, 0),
+                            ],
+                        )
+                    else:
                         assert (
                             image.shape[0:2] == image_size
                         ), "Section z={} has the wrong dimensions: {} (expected {}). Consider using --pad.".format(
                             z, image.shape, image_size
                         )
-                    slices.append(image)
+                    buffer[:, :, :, i] = image.transpose((2, 0, 1, 3))[:, :, :, 0]
+                del image
 
-                if pad:
-                    x_max = max(_slice.shape[0] for _slice in slices)
-                    y_max = max(_slice.shape[1] for _slice in slices)
-
-                    slices = [
-                        np.pad(
-                            _slice,
-                            mode="constant",
-                            pad_width=[
-                                (0, x_max - _slice.shape[0]),
-                                (0, y_max - _slice.shape[1]),
-                                (0, 0),
-                                (0, 0),
-                            ],
-                        )
-                        for _slice in slices
-                    ]
-
-                buffer = prepare_slices_for_wkw(slices, target_view.header.num_channels)
                 if downsampling_needed:
                     buffer = downsample_unpadded_data(
                         buffer, target_mag, interpolation_mode
@@ -426,6 +428,8 @@ def cubing(
                     pad,
                     channel_index,
                     sample_index,
+                    dtype,
+                    target_layer.num_channels,
                 )
             )
 
