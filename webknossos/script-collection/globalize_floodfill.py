@@ -5,10 +5,11 @@ from collections import namedtuple
 from glob import iglob
 from os import path
 from pathlib import Path
-from typing import List, Tuple, Optional, Iterable, Set
+from typing import Iterable, List, Optional, Set, Tuple
 
 import numpy as np
 import wkw
+
 from webknossos.geometry import BoundingBox, Mag, Vec3Int
 
 BUCKET_SIZE = 32
