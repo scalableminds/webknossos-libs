@@ -6,6 +6,7 @@ import attr
 from boltons.strutils import unit_len
 
 import webknossos.skeleton.nml as wknml
+from webknossos._types import Openable
 from webknossos.skeleton.nml.from_skeleton import from_skeleton as nml_from_skeleton
 from webknossos.skeleton.nml.to_skeleton import to_skeleton as nml_to_skeleton
 from webknossos.utils import time_since_epoch_in_ms
@@ -54,9 +55,13 @@ class Skeleton(Group):
         super().__attrs_post_init__()
 
     @staticmethod
-    def from_path(file_path: Union[PathLike, str]) -> "Skeleton":
-        with open(file_path, "rb") as file_handle:
-            return nml_to_skeleton(wknml.parse_nml(file_handle))
+    def from_path(file_path: Union[Openable, PathLike, str]) -> "Skeleton":
+        if isinstance(file_path, Openable):
+            with file_path.open(mode="rb") as file_handle:
+                return nml_to_skeleton(wknml.parse_nml(file_handle))
+        else:
+            with open(file_path, "rb") as file_handle:
+                return nml_to_skeleton(wknml.parse_nml(file_handle))
 
     def write(self, out_path: PathLike) -> None:
         nml = nml_from_skeleton(

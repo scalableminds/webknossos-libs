@@ -11,7 +11,7 @@ from glob import iglob, glob
 CUBE_EDGE_LEN = 128
 CUBE_SIZE = CUBE_EDGE_LEN ** 3
 CUBE_SHAPE = (CUBE_EDGE_LEN,) * 3
-CUBE_REGEX = re.compile(
+KNOSSOS_CUBE_REGEX = re.compile(
     fr"x(\d+){re.escape(os.path.sep)}y(\d+){re.escape(os.path.sep)}z(\d+){re.escape(os.path.sep)}(.*\.raw)$"
 )
 
@@ -85,7 +85,7 @@ class KnossosDataset:
         return iglob(path.join(self.root, "*", "*", "*", "*.raw"), recursive=True)
 
     def __parse_cube_file_name(self, filename: str) -> Optional[Tuple[int, int, int]]:
-        m = CUBE_REGEX.search(filename)
+        m = KNOSSOS_CUBE_REGEX.search(filename)
         if m is None:
             return None
         return int(m.group(1)), int(m.group(2)), int(m.group(3))

@@ -1,8 +1,6 @@
-from typing import Any, Dict, List, Type, TypeVar, Union
+from typing import Any, Dict, List, Type, TypeVar
 
 import attr
-
-from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="AnnotationInfoResponse200Tracing")
 
@@ -11,8 +9,8 @@ T = TypeVar("T", bound="AnnotationInfoResponse200Tracing")
 class AnnotationInfoResponse200Tracing:
     """ """
 
-    skeleton: Union[Unset, str] = UNSET
-    volume: Union[Unset, str] = UNSET
+    skeleton: str
+    volume: str
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -21,20 +19,21 @@ class AnnotationInfoResponse200Tracing:
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update({})
-        if skeleton is not UNSET:
-            field_dict["skeleton"] = skeleton
-        if volume is not UNSET:
-            field_dict["volume"] = volume
+        field_dict.update(
+            {
+                "skeleton": skeleton,
+                "volume": volume,
+            }
+        )
 
         return field_dict
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        skeleton = d.pop("skeleton", UNSET)
+        skeleton = d.pop("skeleton")
 
-        volume = d.pop("volume", UNSET)
+        volume = d.pop("volume")
 
         annotation_info_response_200_tracing = cls(
             skeleton=skeleton,

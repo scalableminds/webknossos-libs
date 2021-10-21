@@ -1,8 +1,6 @@
-from typing import Any, Dict, List, Type, TypeVar, Union
+from typing import Any, Dict, List, Type, TypeVar
 
 import attr
-
-from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="BuildInfoResponse200Webknossos")
 
@@ -11,15 +9,15 @@ T = TypeVar("T", bound="BuildInfoResponse200Webknossos")
 class BuildInfoResponse200Webknossos:
     """ """
 
-    name: Union[Unset, str] = UNSET
-    ci_tag: Union[Unset, str] = UNSET
-    commit_hash: Union[Unset, str] = UNSET
-    ci_build: Union[Unset, str] = UNSET
-    scala_version: Union[Unset, str] = UNSET
-    version: Union[Unset, str] = UNSET
-    sbt_version: Union[Unset, str] = UNSET
-    datastore_api_version: Union[Unset, str] = UNSET
-    commit_date: Union[Unset, str] = UNSET
+    name: str
+    ci_tag: str
+    commit_hash: str
+    ci_build: str
+    scala_version: str
+    version: str
+    sbt_version: str
+    datastore_api_version: str
+    commit_date: str
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -35,48 +33,42 @@ class BuildInfoResponse200Webknossos:
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update({})
-        if name is not UNSET:
-            field_dict["name"] = name
-        if ci_tag is not UNSET:
-            field_dict["ciTag"] = ci_tag
-        if commit_hash is not UNSET:
-            field_dict["commitHash"] = commit_hash
-        if ci_build is not UNSET:
-            field_dict["ciBuild"] = ci_build
-        if scala_version is not UNSET:
-            field_dict["scalaVersion"] = scala_version
-        if version is not UNSET:
-            field_dict["version"] = version
-        if sbt_version is not UNSET:
-            field_dict["sbtVersion"] = sbt_version
-        if datastore_api_version is not UNSET:
-            field_dict["datastoreApiVersion"] = datastore_api_version
-        if commit_date is not UNSET:
-            field_dict["commitDate"] = commit_date
+        field_dict.update(
+            {
+                "name": name,
+                "ciTag": ci_tag,
+                "commitHash": commit_hash,
+                "ciBuild": ci_build,
+                "scalaVersion": scala_version,
+                "version": version,
+                "sbtVersion": sbt_version,
+                "datastoreApiVersion": datastore_api_version,
+                "commitDate": commit_date,
+            }
+        )
 
         return field_dict
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        name = d.pop("name", UNSET)
+        name = d.pop("name")
 
-        ci_tag = d.pop("ciTag", UNSET)
+        ci_tag = d.pop("ciTag")
 
-        commit_hash = d.pop("commitHash", UNSET)
+        commit_hash = d.pop("commitHash")
 
-        ci_build = d.pop("ciBuild", UNSET)
+        ci_build = d.pop("ciBuild")
 
-        scala_version = d.pop("scalaVersion", UNSET)
+        scala_version = d.pop("scalaVersion")
 
-        version = d.pop("version", UNSET)
+        version = d.pop("version")
 
-        sbt_version = d.pop("sbtVersion", UNSET)
+        sbt_version = d.pop("sbtVersion")
 
-        datastore_api_version = d.pop("datastoreApiVersion", UNSET)
+        datastore_api_version = d.pop("datastoreApiVersion")
 
-        commit_date = d.pop("commitDate", UNSET)
+        commit_date = d.pop("commitDate")
 
         build_info_response_200_webknossos = cls(
             name=name,

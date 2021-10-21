@@ -13,6 +13,9 @@ import attr
 import numpy as np
 import wkw
 
+from webknossos.dataset._utils.infer_bounding_box_existing_files import (
+    infer_bounding_box_existing_files,
+)
 from webknossos.geometry import BoundingBox, Vec3Int
 from webknossos.utils import copy_directory_with_symlinks, get_executor_for_args
 
@@ -109,6 +112,11 @@ class Dataset:
         Getter for dictionary containing all layers.
         """
         return self._layers
+
+    def upload(self) -> str:
+        from webknossos.client.upload_dataset import upload_dataset
+
+        return upload_dataset(self)
 
     def get_layer(self, layer_name: str) -> Layer:
         """
@@ -330,6 +338,8 @@ class Dataset:
         )
         for mag_dir in layer.path.iterdir():
             layer.add_mag_for_existing_files(mag_dir.name)
+        min_mag_view = layer.mags[min(layer.mags)]
+        layer.bounding_box = infer_bounding_box_existing_files(min_mag_view)
         return layer
 
     def get_segmentation_layer(self) -> SegmentationLayer:
