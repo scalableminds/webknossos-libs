@@ -3,6 +3,7 @@ from pathlib import Path
 import shutil
 import logging
 from argparse import ArgumentParser, Namespace
+from typing import Optional
 from os import makedirs
 
 from wkcuber.api.dataset import Dataset
@@ -51,7 +52,7 @@ def compress_mag(
     layer_name: str,
     target_path: Path,
     mag: Mag,
-    args: Namespace = None,
+    args: Optional[Namespace] = None,
 ) -> None:
     Dataset(source_path).get_layer(layer_name).get_mag(mag).compress(
         target_path=Path(target_path), args=args
@@ -59,7 +60,7 @@ def compress_mag(
 
 
 def compress_mag_inplace(
-    target_path: Path, layer_name: str, mag: Mag, args: Namespace = None
+    target_path: Path, layer_name: str, mag: Mag, args: Optional[Namespace] = None
 ) -> None:
     Dataset(target_path).get_layer(layer_name).get_mag(mag).compress(args=args)
 
@@ -67,9 +68,9 @@ def compress_mag_inplace(
 def compress_mags(
     source_path: Path,
     layer_name: str,
-    target_path: Path = None,
-    mags: List[Mag] = None,
-    args: Namespace = None,
+    target_path: Optional[Path] = None,
+    mags: Optional[List[Mag]] = None,
+    args: Optional[Namespace] = None,
 ) -> None:
     if target_path is None:
         target = source_path.with_suffix(".tmp")

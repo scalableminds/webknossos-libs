@@ -300,9 +300,16 @@ class BoundingBox:
             bottomright = align(self.bottomright, np.floor)
         return BoundingBox(topleft, bottomright - topleft)
 
-    def contains(self, coord: Vec3IntLike) -> bool:
+    def contains(self, coord: Union[Vec3IntLike, np.ndarray]) -> bool:
+        """Check whether a point is inside of the bounding box.
+        Note that the point may have float coordinates in the ndarray case"""
 
-        coord = Vec3Int(coord).to_np()
+        if isinstance(coord, np.ndarray):
+            assert coord.shape == (
+                3,
+            ), f"Numpy array BoundingBox.contains must have shape (3,), got {coord.shape}."
+        else:
+            coord = Vec3Int(coord).to_np()
 
         return cast(
             bool,
@@ -315,7 +322,7 @@ class BoundingBox:
     def chunk(
         self,
         chunk_size: Vec3IntLike,
-        chunk_border_alignments: Optional[List[int]] = None,
+        chunk_border_alignments: Optional[Vec3IntLike] = None,
     ) -> Generator["BoundingBox", None, None]:
         """Decompose the bounding box into smaller chunks of size `chunk_size`.
 
@@ -329,8 +336,7 @@ class BoundingBox:
 
         start_adjust = np.array([0, 0, 0])
         if chunk_border_alignments is not None:
-
-            chunk_border_alignments_array = np.array(chunk_border_alignments)
+            chunk_border_alignments_array = Vec3Int(chunk_border_alignments).to_np()
             assert np.all(
                 chunk_size % chunk_border_alignments_array == 0
             ), f"{chunk_size} not divisible by {chunk_border_alignments_array}"

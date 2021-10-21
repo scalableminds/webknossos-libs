@@ -85,7 +85,7 @@ def replace_coordinates_with_glob_regex(pattern: str, coord_ids: Dict[str, int])
 
 
 def get_digit_counts_for_dimensions(pattern: str) -> Dict[str, int]:
-    """ Counts how many digits the dimensions x, y and z occupy in the given pattern. """
+    """Counts how many digits the dimensions x, y and z occupy in the given pattern."""
     occurrences = re.findall("({x+}|{y+}|{z+})", pattern)
     decimal_lengths = {"x": 0, "y": 0, "z": 0}
 
@@ -275,7 +275,7 @@ def tile_cubing(
     layer_name: str,
     batch_size: int,
     input_path_pattern: str,
-    args: Namespace = None,
+    args: Optional[Namespace] = None,
 ) -> None:
     decimal_lengths = get_digit_counts_for_dimensions(input_path_pattern)
     (

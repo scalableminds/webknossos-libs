@@ -167,7 +167,7 @@ class MagView(View):
         self,
         offset: Optional[Vec3IntLike] = None,
         size: Optional[Vec3IntLike] = None,
-        read_only: bool = None,
+        read_only: Optional[bool] = None,
     ) -> View:
         """
         Returns a view that is limited to the specified bounding box.
@@ -252,7 +252,9 @@ class MagView(View):
             yield (cube_offset[0], cube_offset[1], cube_offset[2]), cube_size
 
     def compress(
-        self, target_path: Union[str, Path] = None, args: Namespace = None
+        self,
+        target_path: Optional[Union[str, Path]] = None,
+        args: Optional[Namespace] = None,
     ) -> None:
         """
         Compresses the files on disk. This has consequences for writing data (see `write`).

@@ -2,7 +2,7 @@ import itertools
 import json
 import os
 import warnings
-from os.path import dirname, join
+from os.path import join
 from pathlib import Path
 from shutil import copytree, rmtree
 from typing import Generator, Tuple, cast
@@ -39,7 +39,7 @@ def delete_dir(relative_path: Path) -> None:
 
 
 def chunk_job(args: Tuple[View, int]) -> None:
-    (view, i) = args
+    (view, _i) = args
     # increment the color value of each voxel
     data = view.read(size=view.size)
     if data.shape[0] == 1:
@@ -48,12 +48,12 @@ def chunk_job(args: Tuple[View, int]) -> None:
     view.write(data)
 
 
-def advanced_chunk_job(args: Tuple[View, int], type: type) -> None:
-    view, i = args
+def advanced_chunk_job(args: Tuple[View, int], dtype: type) -> None:
+    view, _i = args
 
     # write different data for each chunk (depending on the global_offset of the chunk)
     data = view.read(size=view.size)
-    data = np.ones(data.shape, dtype=type) * type(sum(view.global_offset))
+    data = np.ones(data.shape, dtype=dtype) * dtype(sum(view.global_offset))
     view.write(data)
 
 
@@ -82,7 +82,7 @@ def for_each_chunking_with_wrong_chunk_size(view: View) -> None:
 def for_each_chunking_advanced(ds: Dataset, view: View) -> None:
     chunk_size = (64, 64, 64)
     with get_executor_for_args(None) as executor:
-        func = named_partial(advanced_chunk_job, type=np.uint8)
+        func = named_partial(advanced_chunk_job, dtype=np.uint8)
         view.for_each_chunk(
             func,
             chunk_size=chunk_size,
@@ -110,7 +110,7 @@ def for_each_chunking_advanced(ds: Dataset, view: View) -> None:
 
 
 def copy_and_transform_job(args: Tuple[View, View, int], name: str, val: int) -> None:
-    (source_view, target_view, i) = args
+    (source_view, target_view, _i) = args
     # This method simply takes the data from the source_view, transforms it and writes it to the target_view
 
     # These assertions are just to demonstrate how the passed parameters can be accessed inside this method
@@ -493,7 +493,8 @@ def test_open_dataset_without_num_channels_in_properties() -> None:
     copytree(TESTDATA_DIR / "old_wk_dataset", TESTOUTPUT_DIR / "old_wk_dataset")
 
     with open(
-        TESTOUTPUT_DIR / "old_wk_dataset" / "datasource-properties.json"
+        TESTOUTPUT_DIR / "old_wk_dataset" / "datasource-properties.json",
+        encoding="utf-8",
     ) as datasource_properties:
         data = json.load(datasource_properties)
         assert data["dataLayers"][0].get("num_channels") is None
@@ -503,7 +504,8 @@ def test_open_dataset_without_num_channels_in_properties() -> None:
     ds._export_as_json()
 
     with open(
-        TESTOUTPUT_DIR / "old_wk_dataset" / "datasource-properties.json"
+        TESTOUTPUT_DIR / "old_wk_dataset" / "datasource-properties.json",
+        encoding="utf-8",
     ) as datasource_properties:
         data = json.load(datasource_properties)
         assert data["dataLayers"][0].get("numChannels") == 1
@@ -544,7 +546,7 @@ def test_properties_with_segmentation() -> None:
 
     input_path = TESTOUTPUT_DIR / "complex_property_ds"
 
-    with open(input_path / "datasource-properties.json", "r") as f:
+    with open(input_path / "datasource-properties.json", "r", encoding="utf-8") as f:
         data = json.load(f)
         ds_properties = dataset_converter.structure(data, DatasetProperties)
 
@@ -563,7 +565,7 @@ def test_properties_with_segmentation() -> None:
             "astrocyte-full",
         ]
 
-    with open(input_path / "datasource-properties.json", "w") as f:
+    with open(input_path / "datasource-properties.json", "w", encoding="utf-8") as f:
         # Update the properties on disk (without changing the data)
         json.dump(
             dataset_converter.unstructure(ds_properties),
@@ -573,11 +575,14 @@ def test_properties_with_segmentation() -> None:
 
     # validate if contents match
     with open(
-        TESTDATA_DIR / "complex_property_ds" / "datasource-properties.json"
+        TESTDATA_DIR / "complex_property_ds" / "datasource-properties.json",
+        encoding="utf-8",
     ) as input_properties:
         input_data = json.load(input_properties)
 
-        with open(input_path / "datasource-properties.json", "r") as output_properties:
+        with open(
+            input_path / "datasource-properties.json", "r", encoding="utf-8"
+        ) as output_properties:
             output_data = json.load(output_properties)
             for layer in output_data["dataLayers"]:
                 # remove the num_channels because they are not part of the original json
@@ -918,7 +923,11 @@ def test_adding_layer_with_valid_dtype_per_layer() -> None:
         largest_segment_id=100000,
     )
 
-    with open(TESTOUTPUT_DIR / "valid_dtype" / "datasource-properties.json", "r") as f:
+    with open(
+        TESTOUTPUT_DIR / "valid_dtype" / "datasource-properties.json",
+        "r",
+        encoding="utf-8",
+    ) as f:
         data = json.load(f)
         # The order of the layers in the properties equals the order of creation
         assert data["dataLayers"][0]["elementClass"] == "uint24"
@@ -1199,7 +1208,7 @@ def test_add_symlink_mag(tmp_path: Path) -> None:
     assert tuple(layer.bounding_box.size) == (10, 20, 30)
 
     symlink_mag_2 = layer.add_symlink_mag(original_mag_2)
-    symlink_mag_4 = layer.add_symlink_mag(original_mag_4.path)
+    _symlink_mag_4 = layer.add_symlink_mag(original_mag_4.path)
 
     assert (tmp_path / "link" / "color" / "1").exists()
     assert len(layer._properties.wkw_resolutions) == 3
@@ -1332,7 +1341,7 @@ def test_dataset_shallow_copy(make_relative: bool) -> None:
     original_layer_2.add_mag(4)
     mappings_path = original_layer_2.path / "mappings"
     os.makedirs(mappings_path)
-    open(mappings_path / "agglomerate_view.hdf5", "w").close()
+    open(mappings_path / "agglomerate_view.hdf5", "w", encoding="utf-8").close()
 
     shallow_copy_of_ds = ds.shallow_copy_dataset(
         TESTOUTPUT_DIR / "copy_dataset", make_relative=make_relative
@@ -1482,7 +1491,7 @@ def test_for_zipped_chunks_invalid_target_chunk_size_wk() -> None:
     target_view = target_mag_view.get_view(size=(300, 300, 300), read_only=True)
 
     def func(args: Tuple[View, View, int]) -> None:
-        (s, t, i) = args
+        (_s, _t, _i) = args
 
     with get_executor_for_args(None) as executor:
         for test_case in test_cases_wk:
@@ -1527,7 +1536,9 @@ def create_dataset(tmp_path: Path) -> Generator[MagView, None, None]:
     yield mag
 
 
-def test_bounding_box_on_disk(create_dataset: MagView) -> None:
+def test_bounding_box_on_disk(
+    create_dataset: MagView,  # pylint: disable=redefined-outer-name
+) -> None:
     mag = create_dataset
 
     write_positions = [(0, 0, 0), (20, 80, 120), (1000, 2000, 4000)]
@@ -1611,7 +1622,7 @@ def test_dataset_view_configuration(tmp_path: Path) -> None:
     assert default_view_configuration.rotation == None
 
     # Test if only the set parameters are stored in the properties
-    with open(ds1.path / PROPERTIES_FILE_NAME) as f:
+    with open(ds1.path / PROPERTIES_FILE_NAME, encoding="utf-8") as f:
         properties = json.load(f)
         assert properties["defaultViewConfiguration"] == {"fourBit": True}
 
@@ -1651,7 +1662,7 @@ def test_dataset_view_configuration(tmp_path: Path) -> None:
     assert default_view_configuration.rotation == (1, 2, 3)
 
     # Test camel case
-    with open(ds1.path / PROPERTIES_FILE_NAME) as f:
+    with open(ds1.path / PROPERTIES_FILE_NAME, encoding="utf-8") as f:
         properties = json.load(f)
         view_configuration_dict = properties["defaultViewConfiguration"]
         for k in view_configuration_dict.keys():
@@ -1674,7 +1685,7 @@ def test_layer_view_configuration(tmp_path: Path) -> None:
     assert default_view_configuration.intensity_range is None
     assert default_view_configuration.is_inverted is None
     # Test if only the set parameters are stored in the properties
-    with open(ds1.path / PROPERTIES_FILE_NAME) as f:
+    with open(ds1.path / PROPERTIES_FILE_NAME, encoding="utf-8") as f:
         properties = json.load(f)
         assert properties["dataLayers"][0]["defaultViewConfiguration"] == {
             "color": [255, 0, 0]
@@ -1706,7 +1717,7 @@ def test_layer_view_configuration(tmp_path: Path) -> None:
     assert default_view_configuration.min == 55.0
 
     # Test camel case
-    with open(ds2.path / PROPERTIES_FILE_NAME) as f:
+    with open(ds2.path / PROPERTIES_FILE_NAME, encoding="utf-8") as f:
         properties = json.load(f)
         view_configuration_dict = properties["dataLayers"][0][
             "defaultViewConfiguration"

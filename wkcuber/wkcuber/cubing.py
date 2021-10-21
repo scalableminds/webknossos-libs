@@ -1,14 +1,15 @@
 import time
 import logging
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, cast, Any
 
 import numpy as np
-import wkw
 from argparse import ArgumentParser, Namespace
 from os import path
 from pathlib import Path
 from natsort import natsorted
 
+from webknossos.dataset import Dataset, LayerCategories, View, SegmentationLayer, Layer
+from webknossos.geometry import BoundingBox, Vec3Int
 from .mag import Mag
 from .downsampling_utils import (
     parse_interpolation_mode,
@@ -20,17 +21,14 @@ from .utils import (
     find_files,
     add_batch_size_flag,
     add_verbose_flag,
-    open_wkw,
-    ensure_wkw,
-    WkwDatasetInfo,
     add_distribution_flags,
     add_interpolation_flag,
     get_executor_for_args,
     wait_and_ensure_success,
     setup_logging,
+    add_scale_flag,
 )
 from .image_readers import image_reader, refresh_global_image_reader
-from .metadata import convert_element_class_to_dtype
 
 BLOCK_LEN = 32
 
@@ -54,7 +52,17 @@ def create_parser() -> ArgumentParser:
     )
 
     parser.add_argument(
-        "--start_z", help="The z coordinate of the first slice", default=0, type=int
+        "--skip_first_z_slices",
+        help="The number of z slices to skip at the beginning. This is useful to continue at a specific z, if a previous run was interrupted.",
+        default=0,
+        type=int,
+    )
+
+    parser.add_argument(
+        "--start_z",
+        help="The offset of the first z slice.",
+        default=0,
+        type=int,
     )
 
     parser.add_argument(
@@ -106,6 +114,7 @@ def create_parser() -> ArgumentParser:
         help="Select a single sample of a specific channel to be cubed into a layer. This option is only valid if channel_index is set. Since webKnossos only supports multiple uint8 channels, it may be necessary to cube a multi-sample dataset to different layers.",
     )
 
+    add_scale_flag(parser)
     add_interpolation_flag(parser)
     add_verbose_flag(parser)
     add_distribution_flags(parser)
@@ -150,7 +159,7 @@ def read_image_file(
 
 
 def prepare_slices_for_wkw(
-    slices: List[np.ndarray], num_channels: int = None
+    slices: List[np.ndarray], num_channels: Optional[int] = None
 ) -> np.ndarray:
     # Write batch buffer which will have shape (x, y, channel_count, z)
     # since we concat along the last axis (z)
@@ -167,8 +176,7 @@ def prepare_slices_for_wkw(
 
 def cubing_job(
     args: Tuple[
-        WkwDatasetInfo,
-        List[int],
+        View,
         Mag,
         InterpolationModes,
         List[str],
@@ -178,10 +186,9 @@ def cubing_job(
         Optional[int],
         Optional[int],
     ]
-) -> None:
+) -> Any:
     (
-        target_wkw_info,
-        z_batches,
+        target_view,
         target_mag,
         interpolation_mode,
         source_file_batches,
@@ -191,29 +198,31 @@ def cubing_job(
         channel_index,
         sample_index,
     ) = args
-    if len(z_batches) == 0:
-        return
 
     downsampling_needed = target_mag != Mag(1)
+    largest_value_in_chunk = 0  # This is used to compute the largest_segmentation_id if it is a segmentation layer
 
-    with open_wkw(target_wkw_info) as target_wkw:
+    with target_view.open():
         # Iterate over batches of continuous z sections
         # The batches have a maximum size of `batch_size`
         # Batched iterations allows to utilize IO more efficiently
-        for z_batch, source_file_batch in zip(
-            get_chunks(z_batches, batch_size),
-            get_chunks(source_file_batches, batch_size),
-        ):
+        first_z_idx = target_view.global_offset.z
+        for source_file_batch in get_chunks(source_file_batches, batch_size):
             try:
                 ref_time = time.time()
-                logging.info("Cubing z={}-{}".format(z_batch[0], z_batch[-1]))
+                logging.info(
+                    "Cubing z={}-{}".format(
+                        first_z_idx, first_z_idx + len(source_file_batch)
+                    )
+                )
                 slices = []
                 # Iterate over each z section in the batch
-                for z, file_name in zip(z_batch, source_file_batch):
+                for i, file_name in enumerate(source_file_batch):
+                    z = first_z_idx + i
                     # Image shape will be (x, y, channel_count, z=1)
                     image = read_image_file(
                         file_name,
-                        target_wkw_info.header.voxel_type,
+                        target_view.header.voxel_type,
                         z,
                         channel_index,
                         sample_index,
@@ -245,28 +254,34 @@ def cubing_job(
                         for _slice in slices
                     ]
 
-                buffer = prepare_slices_for_wkw(
-                    slices, target_wkw_info.header.num_channels
-                )
+                buffer = prepare_slices_for_wkw(slices, target_view.header.num_channels)
                 if downsampling_needed:
                     buffer = downsample_unpadded_data(
                         buffer, target_mag, interpolation_mode
                     )
-
-                target_wkw.write([0, 0, z_batch[0] / target_mag.to_list()[2]], buffer)
+                buffer_z_offset = (
+                    first_z_idx - target_view.global_offset.z
+                ) // target_mag.z
+                target_view.write(offset=(0, 0, buffer_z_offset), data=buffer)
+                largest_value_in_chunk = max(largest_value_in_chunk, np.max(buffer))
                 logging.debug(
                     "Cubing of z={}-{} took {:.8f}s".format(
-                        z_batch[0], z_batch[-1], time.time() - ref_time
+                        first_z_idx,
+                        first_z_idx + len(source_file_batch),
+                        time.time() - ref_time,
                     )
                 )
+                first_z_idx += len(source_file_batch)
 
             except Exception as exc:
                 logging.error(
                     "Cubing of z={}-{} failed with {}".format(
-                        z_batch[0], z_batch[-1], exc
+                        first_z_idx, first_z_idx + len(source_file_batch), exc
                     )
                 )
                 raise exc
+
+        return largest_value_in_chunk
 
 
 def get_channel_and_sample_count_and_dtype(source_path: Path) -> Tuple[int, int, str]:
@@ -293,9 +308,11 @@ def cubing(
     wkw_file_len: int,
     interpolation_mode_str: str,
     start_z: int,
+    skip_first_z_slices: int,
     pad: bool,
+    scale: Tuple[float, float, float],
     executor_args: Namespace,
-) -> dict:
+) -> Layer:
     source_files = find_source_filenames(source_path)
     # we need to refresh the image readers because they are no longer stateless for performance reasons
     refresh_global_image_reader()
@@ -342,18 +359,38 @@ def cubing(
         batch_size = BLOCK_LEN
 
     target_mag = Mag(target_mag_str)
-    target_wkw_info = WkwDatasetInfo(
-        target_path,
-        layer_name,
-        target_mag,
-        wkw.Header(
-            convert_element_class_to_dtype(dtype),
-            num_output_channels,
-            file_len=wkw_file_len,
-        ),
+
+    target_ds = Dataset.get_or_create(target_path, scale=scale)
+    is_segmentation_layer = layer_name == "segmentation"
+
+    if is_segmentation_layer:
+        target_layer = target_ds.get_or_add_layer(
+            layer_name,
+            LayerCategories.SEGMENTATION_TYPE,
+            dtype_per_channel=dtype,
+            num_channels=num_output_channels,
+            largest_segment_id=0,
+        )
+    else:
+        target_layer = target_ds.get_or_add_layer(
+            layer_name,
+            LayerCategories.COLOR_TYPE,
+            dtype_per_channel=dtype,
+            num_channels=num_output_channels,
+        )
+    target_layer.bounding_box = target_layer.bounding_box.extended_by(
+        BoundingBox(
+            Vec3Int(0, 0, start_z + skip_first_z_slices) * target_mag,
+            Vec3Int(num_x, num_y, num_z - skip_first_z_slices) * target_mag,
+        )
     )
+
+    target_mag_view = target_layer.get_or_add_mag(
+        target_mag, file_len=wkw_file_len, block_len=BLOCK_LEN
+    )
+
     interpolation_mode = parse_interpolation_mode(
-        interpolation_mode_str, target_wkw_info.layer_name
+        interpolation_mode_str, target_layer.category
     )
     if target_mag != Mag(1):
         logging.info(
@@ -362,25 +399,25 @@ def cubing(
 
     logging.info("Found source files: count={} size={}x{}".format(num_z, num_x, num_y))
 
-    ensure_wkw(target_wkw_info)
-
     with get_executor_for_args(executor_args) as executor:
         job_args = []
         # We iterate over all z sections
-        for z in range(start_z, num_z + start_z, BLOCK_LEN):
-            # Prepare z batches
-            max_z = min(num_z + start_z, z + BLOCK_LEN)
-            z_batch = list(range(z, max_z))
+        for z in range(skip_first_z_slices, num_z, BLOCK_LEN):
+            # The z is used to access the source files. However, when writing the data, the `start_z` has to be considered.
+            max_z = min(num_z, z + BLOCK_LEN)
             # Prepare source files array
             if len(source_files) > 1:
-                source_files_array = source_files[z - start_z : max_z - start_z]
+                source_files_array = source_files[z:max_z]
             else:
                 source_files_array = source_files * (max_z - z)
+
             # Prepare job
             job_args.append(
                 (
-                    target_wkw_info,
-                    z_batch,
+                    target_mag_view.get_view(
+                        (0, 0, z + start_z),
+                        (num_x, num_y, start_z + max_z - z),
+                    ),
                     target_mag,
                     interpolation_mode,
                     source_files_array,
@@ -392,10 +429,17 @@ def cubing(
                 )
             )
 
-        wait_and_ensure_success(executor.map_to_futures(cubing_job, job_args))
+        largest_segment_id_per_chunk = wait_and_ensure_success(
+            executor.map_to_futures(cubing_job, job_args)
+        )
+        if is_segmentation_layer:
+            largest_segment_id = max(largest_segment_id_per_chunk)
+            cast(
+                SegmentationLayer, target_layer
+            ).largest_segment_id = largest_segment_id
 
-    # Return Bounding Box
-    return {"topLeft": [0, 0, 0], "width": num_x, "height": num_y, "depth": num_z}
+    # Return layer
+    return target_layer
 
 
 if __name__ == "__main__":
@@ -416,6 +460,8 @@ if __name__ == "__main__":
         args.wkw_file_len,
         args.interpolation_mode,
         args.start_z,
+        args.skip_first_z_slices,
         args.pad,
+        args.scale,
         args,
     )

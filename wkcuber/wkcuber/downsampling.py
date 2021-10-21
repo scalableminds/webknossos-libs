@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from typing import Optional
+
 from argparse import ArgumentParser, Namespace
 import os
 
@@ -97,13 +99,13 @@ def create_parser() -> ArgumentParser:
 
 def downsample_mags(
     path: Path,
-    layer_name: str = None,
-    from_mag: Mag = None,
-    max_mag: Mag = None,
+    layer_name: Optional[str] = None,
+    from_mag: Optional[Mag] = None,
+    max_mag: Optional[Mag] = None,
     interpolation_mode: str = "default",
-    buffer_edge_len: int = None,
+    buffer_edge_len: Optional[int] = None,
     compress: bool = True,
-    args: Namespace = None,
+    args: Optional[Namespace] = None,
     sampling_mode: str = SamplingModes.ANISOTROPIC,
     force_sampling_scheme: bool = False,
 ) -> None:

@@ -1,0 +1,38 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - webknossos.org
+      user-agent:
+      - python-httpx/0.18.2
+    method: GET
+    uri: https://webknossos.org/api/health
+  response:
+    content: ''
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '0'
+      Date:
+      - Tue, 19 Oct 2021 17:15:33 GMT
+      Referrer-Policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      Server:
+      - nginx/1.17.10
+      Strict-Transport-Security:
+      - max-age=15724800; includeSubDomains
+      X-Permitted-Cross-Domain-Policies:
+      - master-only
+      X-XSS-Protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+version: 1

@@ -2,6 +2,8 @@ from argparse import ArgumentParser, Namespace
 import os
 from pathlib import Path
 
+from typing import Optional
+
 from wkcuber.api.dataset import Dataset
 from wkcuber.downsampling_utils import SamplingModes
 from .mag import Mag
@@ -46,7 +48,7 @@ def create_parser() -> ArgumentParser:
         "x, y, z (or after Mag(1) was upsampled). For example, a minimum mag value of 2 (or 2-2-2) will stop "
         "the upsampling as soon as a magnification is produced for which one dimension is smaller than 2. "
         "The default value is Mag(1)",
-        type=int,
+        type=Mag,
         default=Mag(1),
     )
 
@@ -85,12 +87,12 @@ def create_parser() -> ArgumentParser:
 
 def upsample_mags(
     path: Path,
-    layer_name: str = None,
-    from_mag: Mag = None,
+    layer_name: Optional[str] = None,
+    from_mag: Optional[Mag] = None,
     target_mag: Mag = Mag(1),
-    buffer_edge_len: int = None,
+    buffer_edge_len: Optional[int] = None,
     compress: bool = True,
-    args: Namespace = None,
+    args: Optional[Namespace] = None,
     sampling_mode: str = SamplingModes.ANISOTROPIC,
 ) -> None:
     assert layer_name and from_mag or not layer_name and not from_mag, (
