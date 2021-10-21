@@ -9,7 +9,7 @@ from wkcuber.utils import (  # pylint: disable=import-error
     named_partial,
 )
 
-from webknossos.dataset import Dataset, View, MagView
+from webknossos.dataset import Dataset, MagView, View
 
 
 def create_parser() -> ArgumentParser:
