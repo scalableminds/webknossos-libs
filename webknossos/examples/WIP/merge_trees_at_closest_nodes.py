@@ -1,4 +1,5 @@
 # type: ignore
+# pylint: skip-file
 from itertools import combinations
 
 import networkx as nx

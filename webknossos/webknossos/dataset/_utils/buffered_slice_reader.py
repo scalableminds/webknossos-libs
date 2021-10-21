@@ -1,7 +1,7 @@
 import logging
 from os import getpid
 from types import TracebackType
-from typing import TYPE_CHECKING, Generator, Optional, Tuple, Type, Union, cast
+from typing import TYPE_CHECKING, Generator, Optional, Tuple, Type, cast
 
 import numpy as np
 

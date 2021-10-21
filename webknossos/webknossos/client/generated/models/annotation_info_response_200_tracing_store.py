@@ -1,8 +1,6 @@
-from typing import Any, Dict, List, Type, TypeVar, Union
+from typing import Any, Dict, List, Type, TypeVar
 
 import attr
-
-from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="AnnotationInfoResponse200TracingStore")
 
@@ -11,8 +9,8 @@ T = TypeVar("T", bound="AnnotationInfoResponse200TracingStore")
 class AnnotationInfoResponse200TracingStore:
     """ """
 
-    name: Union[Unset, str] = UNSET
-    url: Union[Unset, str] = UNSET
+    name: str
+    url: str
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -21,20 +19,21 @@ class AnnotationInfoResponse200TracingStore:
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update({})
-        if name is not UNSET:
-            field_dict["name"] = name
-        if url is not UNSET:
-            field_dict["url"] = url
+        field_dict.update(
+            {
+                "name": name,
+                "url": url,
+            }
+        )
 
         return field_dict
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        name = d.pop("name", UNSET)
+        name = d.pop("name")
 
-        url = d.pop("url", UNSET)
+        url = d.pop("url")
 
         annotation_info_response_200_tracing_store = cls(
             name=name,

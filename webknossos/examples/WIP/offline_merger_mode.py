@@ -1,4 +1,5 @@
 # type: ignore
+# pylint: skip-file
 import numpy as np
 
 import webknossos as wk
