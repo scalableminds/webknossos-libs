@@ -1,14 +1,14 @@
 import os
 import re
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 import numpy as np
 
 from webknossos.dataset.mag_view import MagView
 from webknossos.geometry import BoundingBox
 
-CUBE_REGEX = re.compile(
+WKW_CUBE_REGEX = re.compile(
     fr"z(\d+){re.escape(os.path.sep)}y(\d+){re.escape(os.path.sep)}x(\d+)(\.wkw)$"
 )
 
@@ -19,8 +19,8 @@ def cube_addresses(mag_view: MagView) -> List[Tuple[int, int, int]]:
     return sorted(parse_cube_file_name(f) for f in wkw_files)
 
 
-def parse_cube_file_name(filename: Path) -> Tuple[int, int, int]:
-    match = CUBE_REGEX.search(str(filename))
+def parse_cube_file_name(filename: Union[os.PathLike, str]) -> Tuple[int, int, int]:
+    match = WKW_CUBE_REGEX.search(str(filename))
     if match is None:
         raise ValueError(f"Failed to parse cube file name {filename}")
     return int(match.group(3)), int(match.group(2)), int(match.group(1))

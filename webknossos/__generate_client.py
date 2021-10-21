@@ -96,10 +96,14 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
         yield api_endpoint_name, api_endpoint_response.content
 
 
+FIELDS_WITH_VARYING_CONTENT = ["adminViewConfiguration"]
+
+
 def make_properties_required(x: Any) -> None:
     if isinstance(x, dict):
         for key, value in x.items():
-            if key in ["adminViewConfiguration"]:
+            # do not recurse into objects where the contents might be varying
+            if key in FIELDS_WITH_VARYING_CONTENT:
                 continue
             make_properties_required(value)
     elif isinstance(x, list):

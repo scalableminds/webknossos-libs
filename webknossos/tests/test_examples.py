@@ -44,6 +44,9 @@ def test_upload_data() -> None:
 
 
 class _DummyNearestNeighborClassifier:
+    """Faster replacement for a sklearn classifier,
+    also removing the need for sklearn as a dependency."""
+
     labels: np.ndarray
     tree: cKDTree
 

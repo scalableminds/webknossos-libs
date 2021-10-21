@@ -1,6 +1,9 @@
 import json
 import os
 import re
+from webknossos.dataset._utils.infer_bounding_box_existing_files import (
+    parse_cube_file_name,
+)
 import wkw
 import logging
 import numpy as np
@@ -230,15 +233,6 @@ def detect_bbox(dataset_path: Path, layer: str, mag: Mag = Mag(1)) -> Optional[d
 
     def list_files(layer_path: str) -> Iterable[str]:
         return iglob(path.join(layer_path, "*", "*", "*.wkw"), recursive=True)
-
-    def parse_cube_file_name(filename: str) -> Tuple[int, int, int]:
-        CUBE_REGEX = re.compile(
-            fr"z(\d+){re.escape(os.path.sep)}y(\d+){re.escape(os.path.sep)}x(\d+)(\.wkw)$"
-        )
-        m = CUBE_REGEX.search(filename)
-        if m is not None:
-            return int(m.group(3)), int(m.group(2)), int(m.group(1))
-        raise RuntimeError(f"Failed to parse cube file name from {filename}")
 
     def list_cubes(layer_path: str) -> Iterable[Tuple[int, int, int]]:
         return (parse_cube_file_name(f) for f in list_files(layer_path))
