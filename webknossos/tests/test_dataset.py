@@ -9,7 +9,6 @@ from typing import Generator, Tuple, cast
 
 import numpy as np
 import pytest
-from wkw.wkw import WKWException
 
 from webknossos.dataset import (
     Dataset,
