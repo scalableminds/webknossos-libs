@@ -67,6 +67,8 @@ nav:
   - webknossos-py/installation.md
   - Usage Examples:
       - webknossos-py/examples/dataset_usage.md
+      - webknossos-py/examples/upload_image_data.md
+      - webknossos-py/examples/learned_segmenter.md
       - webknossos-py/examples/skeleton_synapse_candidates.md
   - API Reference:
     - Geometry:
@@ -83,6 +85,7 @@ nav:
       - Group: api/webknossos/skeleton/group.md
       - Graph: api/webknossos/skeleton/graph.md
       - Node: api/webknossos/skeleton/node.md
+    - Annotation: api/webknossos/annotation/annotation.md
 - wkcuber CLI: wkcuber/index.md
 
 plugins:
@@ -94,6 +97,7 @@ plugins:
 markdown_extensions:
 - admonition
 - attr_list
+- md_in_html
 - md_extensions.pdoc_toc_extension
 - md_extensions.video_embed_extension
 - md_extensions.mdlightbox

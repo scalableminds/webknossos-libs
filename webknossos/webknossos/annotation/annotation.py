@@ -82,20 +82,6 @@ class Annotation:
         return layer
 
 
-@unique
-class AnnotationType(Enum):
-    TASK = "Task"
-    EXPLORATIONAL = "Explorational"
-    COMPOUND_TASK = "CompoundTask"
-    COMPOUND_PROJECT = "CompoundProject"
-    COMPOUND_TASK_TYPE = "CompoundTaskType"
-
-
-annotation_url_regex = re.compile(
-    fr"(https?://.*)/annotations/({'|'.join(i.value for i in AnnotationType.__members__.values())})/([0-9A-Fa-f]*)"
-)
-
-
 def open_annotation(annotation_path: Union[str, PathLike]) -> "Annotation":
     if Path(annotation_path).exists():
         return Annotation(annotation_path)
@@ -116,3 +102,17 @@ def open_annotation(annotation_path: Union[str, PathLike]) -> "Annotation":
         from webknossos.client.download_annotation import download_annotation
 
         return download_annotation(annotation_type, annotation_id)
+
+
+@unique
+class AnnotationType(Enum):
+    TASK = "Task"
+    EXPLORATIONAL = "Explorational"
+    COMPOUND_TASK = "CompoundTask"
+    COMPOUND_PROJECT = "CompoundProject"
+    COMPOUND_TASK_TYPE = "CompoundTaskType"
+
+
+annotation_url_regex = re.compile(
+    fr"(https?://.*)/annotations/({'|'.join(i.value for i in AnnotationType.__members__.values())})/([0-9A-Fa-f]*)"
+)

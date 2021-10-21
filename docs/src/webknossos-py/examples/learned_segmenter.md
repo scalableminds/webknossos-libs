@@ -1,0 +1,24 @@
+# Learned Segmenter
+
+This example trains a segmenter from a volume annotation and applies it on the whole dataset.
+
+<figure markdown>
+  ![Dummy image](./learned_segmenter_annotation.png)
+  <figcaption>Volume annotation used for training</figcaption>
+</figure>
+<figure markdown>
+  ![Dummy image](./learned_segmenter_result.png)
+  <figcaption>Result of the trained segmenter on the full dataset</figcaption>
+</figure>
+
+It builds upon the two previous examples using the [Dataset API](../../api/webknossos/dataset/dataset.md) and dataset upload.
+Additionally, it downloads [this manual volume annotation of a subset of the skin example dataset](https://webknossos.org/annotations/Explorational/616457c2010000870032ced) which is used for training.
+
+
+```python
+--8<--
+webknossos/examples/learned_segmenter.py
+--8<--
+```
+
+This example is inspired by [the trainable segmentation example from scikit-image](https://scikit-image.org/docs/dev/auto_examples/segmentation/plot_trainable_segmentation.html).
