@@ -527,7 +527,7 @@ class CziImageReader(ImageReader):
             tile_shape = czi_file.filtered_subblock_directory[  # pylint: disable=unsubscriptable-object
                 0
             ].shape
-            dataset_shape: Tuple[int, ...] = czi_file.shape
+            dataset_shape: Tuple[int, ...] = tuple(czi_file.shape)
             count = 0
             used_axes = {"Z", "C", "Y", "X", "0"}
             axes: Dict[str, Tuple[bool, int, int]] = {}
