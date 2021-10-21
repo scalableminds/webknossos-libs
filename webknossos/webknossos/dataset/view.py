@@ -547,7 +547,7 @@ class View:
 
     def __enter__(self) -> "View":
         warnings.warn(
-            "Entering a View to open it is no longer necessary. The internal dataset will be opened automatically."
+            "[DEPRECATION] Entering a View to open it is deprecated. The internal dataset will be opened automatically."
         )
         return self
 

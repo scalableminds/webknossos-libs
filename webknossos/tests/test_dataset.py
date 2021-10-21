@@ -1283,6 +1283,9 @@ def test_search_dataset_also_for_long_layer_name() -> None:
     # rename the path from "long_layer_name/color/2" to "long_layer_name/color/2-2-2"
     os.rename(short_mag_file_path, long_mag_file_path)
 
+    # make sure that reading data still works
+    mag.read(offset=(10, 10, 10), size=(10, 10, 10))
+
     # when opening the dataset, it searches both for the long and the short path
     layer = Dataset(TESTOUTPUT_DIR / "long_layer_name").get_layer("color")
     mag = layer.get_mag("2")
