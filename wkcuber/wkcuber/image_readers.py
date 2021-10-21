@@ -237,7 +237,7 @@ class TiffImageReader(ImageReader):
                 )
 
             result[
-                self._get_page_index(
+                TiffImageReader._get_page_index(
                     tif_file,
                     z_index,
                     page_c_index,
@@ -264,7 +264,7 @@ class TiffImageReader(ImageReader):
             for c in c_range:
                 for s in s_range:
                     result[
-                        self._get_page_index(
+                        TiffImageReader._get_page_index(
                             tif_file, z_index, c, s, axes, z_axis_name, page_axes
                         )
                     ] = (None, None)
@@ -576,7 +576,7 @@ class CziImageReader(ImageReader):
                 data_z_index,
                 data_channel_index,
                 data_sample_index,
-            ) in self._select_correct_tiles_for_czi(
+            ) in CziImageReader._select_correct_tiles_for_czi(
                 channel_index, sample_index, z_slice, axes, tile_shape, dataset_shape
             ).items():
                 # since the czi tiles are not sorted, we search linearly through them and check if the tile matches with the wanted coordinates
@@ -586,12 +586,12 @@ class CziImageReader(ImageReader):
                 ) in (
                     czi_file.filtered_subblock_directory  # pylint: disable=not-an-iterable
                 ):
-                    if self._matches_if_exist(
+                    if CziImageReader._matches_if_exist(
                         "Z",
                         entry.start[axes["Z"][1]] - z_file_start,
                         tile_z_index,
                         axes,
-                    ) and self._matches_if_exist(
+                    ) and CziImageReader._matches_if_exist(
                         "C",
                         (entry.start[axes["C"][1]] - c_file_start)
                         // tile_shape[axes["C"][1]],
