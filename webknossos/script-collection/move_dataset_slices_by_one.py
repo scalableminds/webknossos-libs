@@ -9,7 +9,7 @@ from wkcuber.utils import (  # pylint: disable=import-error
     named_partial,
 )
 
-from webknossos.dataset import Dataset, View
+from webknossos.dataset import Dataset, View, MagView
 
 
 def create_parser() -> ArgumentParser:
@@ -39,7 +39,7 @@ def create_parser() -> ArgumentParser:
 
 
 def move_by_one(
-    src_mag,
+    src_mag: MagView,
     args: Tuple[View, int],
 ) -> None:
     chunk_view, i = args
@@ -57,7 +57,7 @@ def move_by_one(
     chunk_view.write(data)
 
 
-def main():
+def main() -> None:
 
     args = create_parser().parse_args()
 
