@@ -1,6 +1,4 @@
 import json
-import os
-import re
 from webknossos.dataset._utils.infer_bounding_box_existing_files import (
     parse_cube_file_name,
 )
