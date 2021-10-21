@@ -20,6 +20,10 @@ from .annotation_info_response_200_tracing import AnnotationInfoResponse200Traci
 from .annotation_info_response_200_tracing_store import (
     AnnotationInfoResponse200TracingStore,
 )
+from .annotation_info_response_200_user import AnnotationInfoResponse200User
+from .annotation_info_response_200_user_teams_item import (
+    AnnotationInfoResponse200UserTeamsItem,
+)
 from .build_info_response_200 import BuildInfoResponse200
 from .build_info_response_200_webknossos import BuildInfoResponse200Webknossos
 from .build_info_response_200_webknossos_wrap import BuildInfoResponse200WebknossosWrap

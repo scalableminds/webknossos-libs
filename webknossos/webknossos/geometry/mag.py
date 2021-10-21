@@ -1,3 +1,4 @@
+import math
 import re
 from functools import total_ordering
 from math import log2
@@ -60,6 +61,10 @@ class Mag:
     @property
     def max_dim(self) -> int:
         return max(self._mag)
+
+    @property
+    def max_dim_log2(self) -> int:
+        return int(math.log(self.max_dim) / math.log(2))
 
     def __lt__(self, other: Any) -> bool:
         return self.max_dim < Mag(other).max_dim

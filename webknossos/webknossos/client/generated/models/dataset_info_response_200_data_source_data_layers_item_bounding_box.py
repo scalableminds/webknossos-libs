@@ -1,8 +1,6 @@
-from typing import Any, Dict, List, Type, TypeVar, Union, cast
+from typing import Any, Dict, List, Type, TypeVar, cast
 
 import attr
-
-from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="DatasetInfoResponse200DataSourceDataLayersItemBoundingBox")
 
@@ -11,16 +9,14 @@ T = TypeVar("T", bound="DatasetInfoResponse200DataSourceDataLayersItemBoundingBo
 class DatasetInfoResponse200DataSourceDataLayersItemBoundingBox:
     """ """
 
-    top_left: Union[Unset, List[int]] = UNSET
-    width: Union[Unset, int] = UNSET
-    height: Union[Unset, int] = UNSET
-    depth: Union[Unset, int] = UNSET
+    top_left: List[int]
+    width: int
+    height: int
+    depth: int
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        top_left: Union[Unset, List[int]] = UNSET
-        if not isinstance(self.top_left, Unset):
-            top_left = self.top_left
+        top_left = self.top_left
 
         width = self.width
         height = self.height
@@ -28,28 +24,27 @@ class DatasetInfoResponse200DataSourceDataLayersItemBoundingBox:
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update({})
-        if top_left is not UNSET:
-            field_dict["topLeft"] = top_left
-        if width is not UNSET:
-            field_dict["width"] = width
-        if height is not UNSET:
-            field_dict["height"] = height
-        if depth is not UNSET:
-            field_dict["depth"] = depth
+        field_dict.update(
+            {
+                "topLeft": top_left,
+                "width": width,
+                "height": height,
+                "depth": depth,
+            }
+        )
 
         return field_dict
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        top_left = cast(List[int], d.pop("topLeft", UNSET))
+        top_left = cast(List[int], d.pop("topLeft"))
 
-        width = d.pop("width", UNSET)
+        width = d.pop("width")
 
-        height = d.pop("height", UNSET)
+        height = d.pop("height")
 
-        depth = d.pop("depth", UNSET)
+        depth = d.pop("depth")
 
         dataset_info_response_200_data_source_data_layers_item_bounding_box = cls(
             top_left=top_left,
