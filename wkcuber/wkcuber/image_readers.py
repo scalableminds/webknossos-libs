@@ -175,8 +175,8 @@ class Dm4ImageReader(ImageReader):
 
 
 class TiffImageReader(ImageReader):
+    @staticmethod
     def _get_page_index(
-        self,
         tif_file: TiffFile,
         z_index: int,
         c_index: int,
@@ -454,58 +454,60 @@ class TiffImageReader(ImageReader):
             return "Z"
 
 
-def _select_correct_tiles_for_czi(
-    channel_index: Optional[int],
-    sample_index: Optional[int],
-    z_slice: int,
-    axes: Dict[str, Tuple[bool, int, int]],
-    tile_shape: Tuple[int, int],
-    dataset_shape: Tuple[int, ...],
-) -> Dict[int, Tuple[int, Optional[int], Optional[int], Optional[int]]]:
-    assert len(axes) != 0, "CZIReader initialization failed"
-    # return type is tile channel index to tile z index, data z index, data channel index and 0 index, None means all
-    result: Dict[int, Tuple[int, Optional[int], Optional[int], Optional[int]]] = dict()
-    # C axis exists
-    c_count_per_tile = 1
-    c_tiles_for_complete_axis = 1
-    if axes["C"][0]:
-        c_count_per_tile = tile_shape[axes["C"][1]]
-        c_tiles_for_complete_axis = dataset_shape[axes["C"][1]] // c_count_per_tile
-
-    tile_z_index: int = 0
-    data_z_index: Optional[int] = None
-    if axes["Z"][0]:
-        tile_z_index = z_slice // dataset_shape[axes["Z"][1]]
-        data_z_index = z_slice % dataset_shape[axes["Z"][1]]
-
-    if channel_index is not None:
-        tile_channel_index = channel_index // c_count_per_tile
-        data_channel_index = channel_index % c_count_per_tile
-        result[tile_channel_index] = (
-            tile_z_index,
-            data_z_index,
-            data_channel_index,
-            sample_index,
-        )
-    else:
-        # no channel index set, implies no sample index set
-        for i in range(c_tiles_for_complete_axis):
-            result[i] = (tile_z_index, data_z_index, None, None)
-
-    return result
-
-
-def _matches_if_exist(
-    axis: str, value: int, other_value: int, axes: Dict[str, Tuple[bool, int, int]]
-) -> bool:
-    assert len(axes) != 0, "Axes initialization failed"
-    if axes[axis][0]:
-        return value == other_value
-    else:
-        return True
-
-
 class CziImageReader(ImageReader):
+    @staticmethod
+    def _select_correct_tiles_for_czi(
+        channel_index: Optional[int],
+        sample_index: Optional[int],
+        z_slice: int,
+        axes: Dict[str, Tuple[bool, int, int]],
+        tile_shape: Tuple[int, int],
+        dataset_shape: Tuple[int, ...],
+    ) -> Dict[int, Tuple[int, Optional[int], Optional[int], Optional[int]]]:
+        assert len(axes) != 0, "CZIReader initialization failed"
+        # return type is tile channel index to tile z index, data z index, data channel index and 0 index, None means all
+        result: Dict[
+            int, Tuple[int, Optional[int], Optional[int], Optional[int]]
+        ] = dict()
+        # C axis exists
+        c_count_per_tile = 1
+        c_tiles_for_complete_axis = 1
+        if axes["C"][0]:
+            c_count_per_tile = tile_shape[axes["C"][1]]
+            c_tiles_for_complete_axis = dataset_shape[axes["C"][1]] // c_count_per_tile
+
+        tile_z_index: int = 0
+        data_z_index: Optional[int] = None
+        if axes["Z"][0]:
+            tile_z_index = z_slice // dataset_shape[axes["Z"][1]]
+            data_z_index = z_slice % dataset_shape[axes["Z"][1]]
+
+        if channel_index is not None:
+            tile_channel_index = channel_index // c_count_per_tile
+            data_channel_index = channel_index % c_count_per_tile
+            result[tile_channel_index] = (
+                tile_z_index,
+                data_z_index,
+                data_channel_index,
+                sample_index,
+            )
+        else:
+            # no channel index set, implies no sample index set
+            for i in range(c_tiles_for_complete_axis):
+                result[i] = (tile_z_index, data_z_index, None, None)
+
+        return result
+
+    @staticmethod
+    def _matches_if_exist(
+        axis: str, value: int, other_value: int, axes: Dict[str, Tuple[bool, int, int]]
+    ) -> bool:
+        assert len(axes) != 0, "Axes initialization failed"
+        if axes[axis][0]:
+            return value == other_value
+        else:
+            return True
+
     @staticmethod
     def find_count_of_axis(czi_file: CziFile, axis: str) -> int:
         index = czi_file.axes.find(axis)
@@ -574,7 +576,7 @@ class CziImageReader(ImageReader):
                 data_z_index,
                 data_channel_index,
                 data_sample_index,
-            ) in _select_correct_tiles_for_czi(
+            ) in self._select_correct_tiles_for_czi(
                 channel_index, sample_index, z_slice, axes, tile_shape, dataset_shape
             ).items():
                 # since the czi tiles are not sorted, we search linearly through them and check if the tile matches with the wanted coordinates
@@ -584,12 +586,12 @@ class CziImageReader(ImageReader):
                 ) in (
                     czi_file.filtered_subblock_directory  # pylint: disable=not-an-iterable
                 ):
-                    if _matches_if_exist(
+                    if self._matches_if_exist(
                         "Z",
                         entry.start[axes["Z"][1]] - z_file_start,
                         tile_z_index,
                         axes,
-                    ) and _matches_if_exist(
+                    ) and self._matches_if_exist(
                         "C",
                         (entry.start[axes["C"][1]] - c_file_start)
                         // tile_shape[axes["C"][1]],
