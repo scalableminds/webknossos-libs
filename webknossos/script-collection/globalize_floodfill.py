@@ -286,8 +286,9 @@ def main(args: Namespace) -> None:
     )
 
     bboxes: List[FloodFillBbox] = []
-    nml_file = open(args.nml_path, "r")
+    nml_file = open(args.nml_path, "r", encoding="utf-8")
     lines = nml_file.readlines()
+    nml_file.close()
     for line in lines:
         matches = nml_regex.findall(line)
         for match in matches:
