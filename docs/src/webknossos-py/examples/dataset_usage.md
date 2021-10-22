@@ -1,6 +1,6 @@
 # Dataset Usage
 
-The high-level dataset API automatically reads and writes meta information for any dataset and updates them if necessary,
+The high-level dataset API allows to interact with datasets while automatically maintaining meta data for any dataset,
 such as the `datasource-properties.json`.
 
 The [`Dataset` class](../../api/webknossos/dataset/dataset.md) is the entry-point for this API.

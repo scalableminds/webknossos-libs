@@ -1,6 +1,6 @@
 # Learned Segmenter
 
-This example trains a segmenter from a volume annotation and applies it on the whole dataset.
+This example trains a segmenter from a volume annotation and applies it to the whole dataset.
 
 <figure markdown>
   ![Dummy image](./learned_segmenter_annotation.png)
