@@ -4,11 +4,8 @@
 - id: {{ m.qualname }}
   name: class {{ m.qualname }}
   level: {{ level }}
-  children: {% if not m.own_members %}[]
-  {% else %}
-
+  children:
   {{ toc_members(m.own_members, level+1) | indent(2) }}
-  {% endif %}
     {% elif m.type == "module" %}
 - id: {{ m.name }}
   name: module {{ m.name }}
@@ -35,6 +32,7 @@
   level: {{ level }}
   children: []
     {% endif %}
+  {% else %}{% if level > 2 %}  []{% endif %}
   {% endfor %}
 {% enddefaultmacro %}
 ---

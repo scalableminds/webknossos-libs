@@ -2,14 +2,13 @@ from time import gmtime, strftime
 
 from skimage import data
 
-from webknossos.client.context import webknossos_context
-from webknossos.dataset.dataset import Dataset
+import webknossos as wk
 
-with webknossos_context(url="http://localhost:9000", token="secretScmBoyToken"):
+with wk.webknossos_context(url="http://localhost:9000", token="secretScmBoyToken"):
     img = data.cell()
     time_str = strftime("%Y-%m-%d_%H-%M-%S", gmtime())
     name = f"cell_{time_str}"
-    ds = Dataset.create(name, scale=(107, 107, 107))
+    ds = wk.Dataset.create(name, scale=(107, 107, 107))
     layer = ds.add_layer(
         "color",
         "color",

@@ -140,19 +140,6 @@ def _element_class_to_dtype_per_channel(
 class Layer:
     """
     A `Layer` consists of multiple `webknossos.dataset.mag_view.MagView`s, which store the same data in different magnifications.
-
-    ## Examples
-
-    ### Adding layer to dataset
-    ```python
-    from webknossos.dataset.dataset import Dataset
-
-    dataset = Dataset(<path_to_dataset>)
-    # Adds a new layer
-    layer = dataset.get_layer("color")
-    ```
-
-    ## Functions
     """
 
     def __init__(self, dataset: "Dataset", properties: LayerProperties) -> None:
