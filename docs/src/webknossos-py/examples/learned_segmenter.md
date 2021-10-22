@@ -11,7 +11,7 @@ This example trains a segmenter from a volume annotation and applies it to the w
   <figcaption>Result of the trained segmenter on the full dataset</figcaption>
 </figure>
 
-It builds upon the two previous examples using the [Dataset API](../../api/webknossos/dataset/dataset.md) and dataset upload.
+It builds upon the two previous examples using the [Dataset API](dataset_usage.md) and [dataset upload](upload_image_data.md).
 Additionally, it downloads [this manual volume annotation of a subset of the skin example dataset](https://webknossos.org/annotations/Explorational/616457c2010000870032ced4) which is used for training.
 
 
