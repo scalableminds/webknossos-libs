@@ -86,6 +86,9 @@ nav:
       - Graph: api/webknossos/skeleton/graph.md
       - Node: api/webknossos/skeleton/node.md
     - Annotation: api/webknossos/annotation/annotation.md
+    - Client:
+      - Overview: api/webknossos/client.md
+      - Authentication & Server Context: api/webknossos/client/context.md
 - wkcuber CLI: wkcuber/index.md
 
 plugins:

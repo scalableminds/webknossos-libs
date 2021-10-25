@@ -8,14 +8,14 @@ from uuid import uuid4
 import httpx
 from rich.progress import Progress
 
-from webknossos.client.context import WebknossosContext, get_context
-from webknossos.client.generated.api.default import datastore_list
-from webknossos.client.resumable import Resumable
+from webknossos.client._generated.api.default import datastore_list
+from webknossos.client._resumable import Resumable
+from webknossos.client.context import _get_context, _WebknossosContext
 from webknossos.dataset import Dataset
 
 
 @lru_cache(maxsize=None)
-def _cached_get_upload_datastore(context: WebknossosContext) -> str:
+def _cached_get_upload_datastore(context: _WebknossosContext) -> str:
     datastores = datastore_list.sync(client=context.generated_auth_client)
     assert datastores is not None
     for datastore in datastores:
@@ -26,7 +26,7 @@ def _cached_get_upload_datastore(context: WebknossosContext) -> str:
 
 
 def upload_dataset(dataset: Dataset) -> str:
-    context = get_context()
+    context = _get_context()
     # replicates https://github.com/scalableminds/webknossos/blob/master/frontend/javascripts/admin/dataset/dataset_upload_view.js
     with NamedTemporaryFile(suffix=".zip") as tmp_zip_file:
         zip_path = Path(tmp_zip_file.name)

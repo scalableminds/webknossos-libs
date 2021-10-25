@@ -1,29 +1,29 @@
 import pytest
 
-from webknossos.client.context import get_generated_client
-from webknossos.client.defaults import DEFAULT_WEBKNOSSOS_URL
-from webknossos.client.generated.api.default import (
+from webknossos.client._defaults import DEFAULT_WEBKNOSSOS_URL
+from webknossos.client._generated.api.default import (
     annotation_info,
     build_info,
     dataset_info,
     datastore_list,
     health,
 )
-from webknossos.client.generated.client import Client
-from webknossos.client.generated.models.datastore_list_response_200_item import (
+from webknossos.client._generated.client import Client
+from webknossos.client._generated.models.datastore_list_response_200_item import (
     DatastoreListResponse200Item,
 )
+from webknossos.client.context import _get_generated_client
 from webknossos.utils import time_since_epoch_in_ms
 
 
 @pytest.fixture
 def client() -> Client:
-    return get_generated_client()
+    return _get_generated_client()
 
 
 @pytest.fixture
 def auth_client() -> Client:
-    return get_generated_client(enforce_auth=True)
+    return _get_generated_client(enforce_auth=True)
 
 
 # pylint: disable=redefined-outer-name

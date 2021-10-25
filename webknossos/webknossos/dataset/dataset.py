@@ -114,7 +114,7 @@ class Dataset:
         return self._layers
 
     def upload(self) -> str:
-        from webknossos.client.upload_dataset import upload_dataset
+        from webknossos.client._upload_dataset import upload_dataset
 
         return upload_dataset(self)
 

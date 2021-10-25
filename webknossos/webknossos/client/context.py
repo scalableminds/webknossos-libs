@@ -1,3 +1,52 @@
+"""
+# Authentication & Server Context
+
+When interacting with a webKnossos server, you might need to
+specify your user token to authenticate yourself.
+You can copy your token from
+
+[https://webknossos.org/auth/token](https://webknossos.org/auth/token)
+
+Using the same methods, you can also specify which organization
+you want to use by default if you are belonging to multiple ones,
+or specify the webknossos-server if your are not using
+the default [webknossos.org](https://webknossos.org) instance.
+
+There are the following four options to specify which server context to use:
+
+1. Specifying the context in code using the `webknossos_context`
+   contextmanager in a `with` statement:
+
+    ```python
+    with webknossos_context(token="my_webknossos_token"):
+       # code that interacts with webknossos
+    ```
+
+    For more information about the `with` statement and contextmanagers,
+    please see [this tutorial](https://realpython.com/python-with-statement).
+
+2. You may specify your settings as environment variables `WK_TOKEN`, `WK_ORG`, `WK_URL`:
+
+    ```shell
+    WK_TOKEN="my_webknossos_token" python my-script.py
+    ```
+3. You can also specify those environment variables in a `.env` file
+   in your working directory.
+   Environment variables set in the command line take precedence.
+
+    ```shell
+    # content of .env
+    WK_TOKEN="my_webknossos_token"
+    WK_ORG="…"
+    WK_URL="…"
+    ```
+
+4. If nothing else is specified and authentication is needed,
+   you are asked interactively for a token, which is used for
+   subsequent interactions in the same python run as well.
+"""
+
+
 import os
 from contextlib import contextmanager
 from contextvars import ContextVar
@@ -9,8 +58,8 @@ import httpx
 from dotenv import load_dotenv
 from rich.prompt import Prompt
 
-from webknossos.client.defaults import DEFAULT_WEBKNOSSOS_URL
-from webknossos.client.generated import Client as GeneratedClient
+from webknossos.client._defaults import DEFAULT_WEBKNOSSOS_URL
+from webknossos.client._generated import Client as GeneratedClient
 
 load_dotenv()
 
@@ -53,7 +102,7 @@ def _cached_get_datastore_token(webknossos_url: str, token: str) -> str:
 
 
 @lru_cache(maxsize=None)
-def _cached_get_generated_client(
+def _cached__get_generated_client(
     webknossos_url: str,
     token: Optional[str],
 ) -> GeneratedClient:
@@ -68,7 +117,7 @@ def _cached_get_generated_client(
 
 
 @attr.frozen
-class WebknossosContext:
+class _WebknossosContext:
     url: str = os.environ.get("WK_URL", default=DEFAULT_WEBKNOSSOS_URL)
     token: Optional[str] = os.environ.get("WK_TOKEN", default=None)
     _organization: Optional[str] = os.environ.get("WK_ORG", default=None)
@@ -95,15 +144,15 @@ class WebknossosContext:
 
     @property
     def generated_client(self) -> GeneratedClient:
-        return _cached_get_generated_client(self.url, self.token)
+        return _cached__get_generated_client(self.url, self.token)
 
     @property
     def generated_auth_client(self) -> GeneratedClient:
-        return _cached_get_generated_client(self.url, self.required_token)
+        return _cached__get_generated_client(self.url, self.required_token)
 
 
-_webknossos_context_var: ContextVar[WebknossosContext] = ContextVar(
-    "_webknossos_context_var", default=WebknossosContext()
+_webknossos_context_var: ContextVar[_WebknossosContext] = ContextVar(
+    "_webknossos_context_var", default=_WebknossosContext()
 )
 
 
@@ -114,7 +163,7 @@ def webknossos_context(
     organization: Optional[str] = None,
 ) -> Iterator[None]:
     context_var_token = _webknossos_context_var.set(
-        WebknossosContext(url, token, organization)
+        _WebknossosContext(url, token, organization)
     )
     try:
         yield
@@ -122,12 +171,12 @@ def webknossos_context(
         _webknossos_context_var.reset(context_var_token)
 
 
-def get_context() -> WebknossosContext:
+def _get_context() -> _WebknossosContext:
     return _webknossos_context_var.get()
 
 
-def get_generated_client(enforce_auth: bool = False) -> GeneratedClient:
+def _get_generated_client(enforce_auth: bool = False) -> GeneratedClient:
     if enforce_auth:
-        return get_context().generated_auth_client
+        return _get_context().generated_auth_client
     else:
-        return get_context().generated_client
+        return _get_context().generated_client
