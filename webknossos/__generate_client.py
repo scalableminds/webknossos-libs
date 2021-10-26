@@ -14,7 +14,7 @@ from openapi_python_client import (
     _get_project_for_url_or_path,
 )
 
-from webknossos.client.context import get_generated_client
+from webknossos.client.context import _get_generated_client
 from webknossos.utils import snake_to_camel_case
 
 SCHEMA_URL = "https://converter.swagger.io/api/convert?url=https%3A%2F%2Fwebknossos.org%2Fswagger.json"
@@ -59,7 +59,7 @@ def add_api_prefix_for_non_data_paths(openapi_schema: Dict) -> None:
 
 
 def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
-    from webknossos.client.generated.api.default import (
+    from webknossos.client._generated.api.default import (
         annotation_info,
         build_info,
         dataset_info,
@@ -68,7 +68,7 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
 
     d = datetime.utcnow()
     unixtime = calendar.timegm(d.utctimetuple())
-    client = get_generated_client(enforce_auth=True)
+    client = _get_generated_client(enforce_auth=True)
 
     annotation_info_response = annotation_info.sync_detailed(
         typ="Explorational",

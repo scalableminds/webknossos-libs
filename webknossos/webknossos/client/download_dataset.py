@@ -6,9 +6,9 @@ from typing import List, Optional, Tuple, TypeVar, Union, cast
 import numpy as np
 from rich.progress import track
 
-from webknossos.client.context import get_generated_client
-from webknossos.client.generated.api.datastore import dataset_download
-from webknossos.client.generated.api.default import dataset_info
+from webknossos.client._generated.api.datastore import dataset_download
+from webknossos.client._generated.api.default import dataset_info
+from webknossos.client.context import _get_generated_client
 from webknossos.dataset import Dataset
 from webknossos.geometry import BoundingBox, Mag
 
@@ -29,7 +29,7 @@ def download_dataset(
     mags: Optional[List[Mag]] = None,
     path: Optional[Union[PathLike, str]] = None,
 ) -> Dataset:
-    client = get_generated_client()
+    client = _get_generated_client()
     dataset_info_response = dataset_info.sync_detailed(
         organization_name=organization_name,
         data_set_name=dataset_name,

@@ -3,11 +3,11 @@
 This example trains a segmenter from a volume annotation and applies it to the whole dataset.
 
 <figure markdown>
-  ![Dummy image](./learned_segmenter_annotation.png)
+  ![Volume annotation used for training](./learned_segmenter_annotation.png)
   <figcaption>Volume annotation used for training</figcaption>
 </figure>
 <figure markdown>
-  ![Dummy image](./learned_segmenter_result.png)
+  ![Result of the trained segmenter on the full dataset](./learned_segmenter_result.png)
   <figcaption>Result of the trained segmenter on the full dataset</figcaption>
 </figure>
 
