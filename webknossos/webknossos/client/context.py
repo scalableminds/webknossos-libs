@@ -8,7 +8,7 @@ You can copy your token from
 [https://webknossos.org/auth/token](https://webknossos.org/auth/token)
 
 Using the same methods, you can also specify which organization
-you want to use by default if you are belonging to multiple ones,
+you want to use by default if you are member of multiple ones,
 or specify the webknossos-server if your are not using
 the default [webknossos.org](https://webknossos.org) instance.
 
