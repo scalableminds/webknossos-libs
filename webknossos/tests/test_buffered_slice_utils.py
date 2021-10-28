@@ -6,7 +6,7 @@ from typing import Union
 import numpy as np
 import wkw
 
-from webknossos.dataset import COLOR_TYPE, Dataset
+from webknossos.dataset import COLOR_CATEGORY, Dataset
 from webknossos.geometry import Mag, Vec3Int
 
 TESTOUTPUT_DIR = Path("testoutput")
@@ -28,7 +28,9 @@ def test_buffered_slice_writer() -> None:
 
     delete_dir(dataset_dir)
     ds = Dataset.create(dataset_dir, scale=(1, 1, 1))
-    mag_view = ds.add_layer("color", COLOR_TYPE, dtype_per_channel=dtype).add_mag(mag)
+    mag_view = ds.add_layer("color", COLOR_CATEGORY, dtype_per_channel=dtype).add_mag(
+        mag
+    )
 
     with mag_view.get_buffered_slice_writer(origin) as writer:
         for i in range(13):
@@ -87,7 +89,7 @@ def test_buffered_slice_writer_along_different_axis(tmp_path: Path) -> None:
 
     for dim in [0, 1, 2]:
         ds = Dataset.create(tmp_path / f"buffered_slice_writer_{dim}", scale=(1, 1, 1))
-        mag_view = ds.add_layer("color", COLOR_TYPE, num_channels=3).add_mag(1)
+        mag_view = ds.add_layer("color", COLOR_CATEGORY, num_channels=3).add_mag(1)
 
         with mag_view.get_buffered_slice_writer(
             offset, buffer_size=5, dimension=dim
@@ -112,7 +114,7 @@ def test_buffered_slice_reader_along_different_axis(tmp_path: Path) -> None:
 
     for dim in [0, 1, 2]:
         ds = Dataset.create(tmp_path / f"buffered_slice_reader_{dim}", scale=(1, 1, 1))
-        mag_view = ds.add_layer("color", COLOR_TYPE, num_channels=3).add_mag(1)
+        mag_view = ds.add_layer("color", COLOR_CATEGORY, num_channels=3).add_mag(1)
         mag_view.write(test_cube, offset=offset)
 
         with mag_view.get_buffered_slice_reader(

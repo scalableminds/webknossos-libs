@@ -11,6 +11,6 @@ Each dataset consists of one or more layers (webknossos.dataset.layer.Layer), wh
 
 from .dataset import Dataset
 from .layer import Layer, SegmentationLayer
-from .layer_categories import COLOR_TYPE, SEGMENTATION_TYPE, LayerCategoryType
+from .layer_categories import COLOR_CATEGORY, SEGMENTATION_CATEGORY, LayerCategoryType
 from .mag_view import MagView
 from .view import View

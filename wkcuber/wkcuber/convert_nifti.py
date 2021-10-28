@@ -150,7 +150,9 @@ def convert_nifti(
         if is_segmentation_layer
         else {}
     )
-    category_type: LayerCategoryType = "segmentation" if is_segmentation_layer else "color"
+    category_type: LayerCategoryType = (
+        "segmentation" if is_segmentation_layer else "color"
+    )
     logging.debug(f"Assuming {category_type} as layer type for {layer_name}")
 
     if len(source_nifti.shape) == 3:

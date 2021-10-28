@@ -8,7 +8,7 @@ import numpy as np
 
 from wkcuber.api.bounding_box import BoundingBox
 from wkcuber.api.dataset import Dataset
-from wkcuber.api.layer_categories import SEGMENTATION_TYPE
+from wkcuber.api.layer_categories import SEGMENTATION_CATEGORY
 from wkcuber.mag import Mag
 from wkcuber.utils import (
     add_distribution_flags,
@@ -82,7 +82,7 @@ def export_layer_to_nifti(
     layer = dataset.get_layer(layer_name)
     mag_layer = layer.get_mag(mag)
 
-    is_segmentation_layer = layer.category == SEGMENTATION_TYPE
+    is_segmentation_layer = layer.category == SEGMENTATION_CATEGORY
 
     data = mag_layer.read(source_bbox.topleft, source_bbox.size)
     data = data.transpose(1, 2, 3, 0)
