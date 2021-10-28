@@ -108,3 +108,5 @@ testdata/tiff_mag_2_reference
 .mypy_cache/
 
 /poetry.toml
+
+/wkcuber/version.py
