@@ -45,19 +45,19 @@ jobs:
         poetry install
 
     - name: Check formatting
-      run: poetry run ./format.sh check
+      run: ./format.sh check
 
     - name: Lint code
-      run: poetry run ./lint.sh
+      run: ./lint.sh
 
     - name: Check typing
       run: |
-        poetry run ./typecheck.sh
+        ./typecheck.sh
 
     - name: Python tests
       env:
         WK_TOKEN: ${{ secrets.WK_TOKEN }}
-      run: poetry run pytest tests
+      run: ./test.sh
 
     - name: Check if git is dirty
       run: |

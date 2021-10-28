@@ -28,7 +28,7 @@ from .utils import (
     setup_logging,
     add_scale_flag,
 )
-from .image_readers import image_reader, refresh_global_image_reader
+from .image_readers import image_reader
 
 BLOCK_LEN = 32
 
@@ -165,7 +165,6 @@ def cubing_job(
         InterpolationModes,
         List[str],
         int,
-        Tuple[int, int],
         bool,
         Optional[int],
         Optional[int],
@@ -179,7 +178,6 @@ def cubing_job(
         interpolation_mode,
         source_file_batches,
         batch_size,
-        image_size,
         pad,
         channel_index,
         sample_index,
@@ -190,100 +188,87 @@ def cubing_job(
     downsampling_needed = target_mag != Mag(1)
     largest_value_in_chunk = 0  # This is used to compute the largest_segmentation_id if it is a segmentation layer
 
-    with target_view.open():
-        if pad:
-            # NOTE: not tested after optimizations for memory
-            # Iterate over each z section in the batch to get the image sizes
-            image_sizes = [
-                image_reader.read_dimensions(Path(source_file))
-                for source_file in source_file_batches
-            ]
-            max_image_size = (
-                max([x[0] for x in image_sizes]),
-                max(x[1] for x in image_sizes),
+    max_image_size = (target_view.size[0], target_view.size[1])
+
+    # Iterate over batches of continuous z sections
+    # The batches have a maximum size of `batch_size`
+    # Batched iterations allows to utilize IO more efficiently
+    first_z_idx = target_view.global_offset.z
+    for source_file_batch in get_chunks(source_file_batches, batch_size):
+        try:
+            ref_time = time.time()
+            logging.info(
+                "Cubing z={}-{}".format(
+                    first_z_idx, first_z_idx + len(source_file_batch)
+                )
             )
-        else:
-            max_image_size = image_size
 
-        # Iterate over batches of continuous z sections
-        # The batches have a maximum size of `batch_size`
-        # Batched iterations allows to utilize IO more efficiently
-        first_z_idx = target_view.global_offset.z
-        for source_file_batch in get_chunks(source_file_batches, batch_size):
-            try:
-                ref_time = time.time()
-                logging.info(
-                    "Cubing z={}-{}".format(
-                        first_z_idx, first_z_idx + len(source_file_batch)
-                    )
+            # Allocate a large buffer for all images in this batch
+            # Shape will be (channel_count, x, y, z)
+            # Using fortran order for the buffer, prevents that the data has to be copied in rust
+            buffer_shape = [num_channels] + list(max_image_size) + [len(source_file_batch)]
+            print(target_view.size)
+            buffer = np.empty(buffer_shape, dtype=dtype, order="F")
+
+            # Iterate over each z section in the batch
+            for i, file_name in enumerate(source_file_batch):
+                z = first_z_idx + i
+                # Image shape will be (x, y, channel_count, z=1)
+                image = read_image_file(
+                    file_name,
+                    target_view.header.voxel_type,
+                    z,
+                    channel_index,
+                    sample_index,
                 )
 
-                # Allocate a large buffer for all images in this batch
-                # Shape will be (channel_count, x, y, z)
-                # Using fortran order for the buffer, prevents that the data has to be copied in rust
-                buffer_shape = [num_channels] + list(max_image_size) + [len(source_file_batch)]
-                print(target_view.size)
-                buffer = np.empty(buffer_shape, dtype=dtype, order="F")
-
-                # Iterate over each z section in the batch
-                for i, file_name in enumerate(source_file_batch):
-                    z = first_z_idx + i
-                    # Image shape will be (x, y, channel_count, z=1)
-                    image = read_image_file(
-                        file_name,
-                        target_view.header.voxel_type,
-                        z,
-                        channel_index,
-                        sample_index,
+                if pad:
+                    image = np.pad(
+                        image,
+                        mode="constant",
+                        pad_width=[
+                            (0, max_image_size[0] - image.shape[0]),
+                            (0, max_image_size[1] - image.shape[1]),
+                            (0, 0),
+                            (0, 0),
+                        ],
                     )
-
-                    if pad:
-                        image = np.pad(
-                            image,
-                            mode="constant",
-                            pad_width=[
-                                (0, max_image_size[0] - image.shape[0]),
-                                (0, max_image_size[1] - image.shape[1]),
-                                (0, 0),
-                                (0, 0),
-                            ],
-                        )
-                    else:
-                        assert (
-                            image.shape[0:2] == image_size
-                        ), "Section z={} has the wrong dimensions: {} (expected {}). Consider using --pad.".format(
-                            z, image.shape, image_size
-                        )
-                    buffer[:, :, :, i] = image.transpose((2, 0, 1, 3))[:, :, :, 0]
-                del image
-
-                if downsampling_needed:
-                    buffer = downsample_unpadded_data(
-                        buffer, target_mag, interpolation_mode
+                else:
+                    assert (
+                        image.shape[0:2] == max_image_size
+                    ), "Section z={} has the wrong dimensions: {} (expected {}). Consider using --pad.".format(
+                        z, image.shape, max_image_size
                     )
-                buffer_z_offset = (
-                    first_z_idx - target_view.global_offset.z
-                ) // target_mag.z
-                target_view.write(offset=(0, 0, buffer_z_offset), data=buffer)
-                largest_value_in_chunk = max(largest_value_in_chunk, np.max(buffer))
-                logging.debug(
-                    "Cubing of z={}-{} took {:.8f}s".format(
-                        first_z_idx,
-                        first_z_idx + len(source_file_batch),
-                        time.time() - ref_time,
-                    )
+                buffer[:, :, :, i] = image.transpose((2, 0, 1, 3))[:, :, :, 0]
+            del image
+
+            if downsampling_needed:
+                buffer = downsample_unpadded_data(
+                    buffer, target_mag, interpolation_mode
                 )
-                first_z_idx += len(source_file_batch)
-
-            except Exception as exc:
-                logging.error(
-                    "Cubing of z={}-{} failed with {}".format(
-                        first_z_idx, first_z_idx + len(source_file_batch), exc
-                    )
+            buffer_z_offset = (
+                first_z_idx - target_view.global_offset.z
+            ) // target_mag.z
+            target_view.write(offset=(0, 0, buffer_z_offset), data=buffer)
+            largest_value_in_chunk = max(largest_value_in_chunk, np.max(buffer))
+            logging.debug(
+                "Cubing of z={}-{} took {:.8f}s".format(
+                    first_z_idx,
+                    first_z_idx + len(source_file_batch),
+                    time.time() - ref_time,
                 )
-                raise exc
+            )
+            first_z_idx += len(source_file_batch)
 
-        return largest_value_in_chunk
+        except Exception as exc:
+            logging.error(
+                "Cubing of z={}-{} failed with {}".format(
+                    first_z_idx, first_z_idx + len(source_file_batch), exc
+                )
+            )
+            raise exc
+
+    return largest_value_in_chunk
 
 
 def get_channel_and_sample_count_and_dtype(source_path: Path) -> Tuple[int, int, str]:
@@ -316,11 +301,16 @@ def cubing(
     executor_args: Namespace,
 ) -> Layer:
     source_files = find_source_filenames(source_path)
-    # we need to refresh the image readers because they are no longer stateless for performance reasons
-    refresh_global_image_reader()
 
-    # All images are assumed to have equal dimensions
-    num_x, num_y = image_reader.read_dimensions(source_files[0])
+    all_num_x, all_num_y = zip(
+        *[
+            image_reader.read_dimensions(source_files[i])
+            for i in range(len(source_files))
+        ]
+    )
+    num_x = max(all_num_x)
+    num_y = max(all_num_y)
+    # All images are assumed to have equal channels and samples
     num_channels = image_reader.read_channel_count(source_files[0])
     num_samples = image_reader.read_sample_count(source_files[0])
     num_output_channels = num_channels * num_samples
@@ -418,13 +408,12 @@ def cubing(
                 (
                     target_mag_view.get_view(
                         (0, 0, z + start_z),
-                        (num_x, num_y, start_z + max_z - z),
+                        (num_x, num_y, max_z - z),
                     ),
                     target_mag,
                     interpolation_mode,
                     source_files_array,
                     batch_size,
-                    (num_x, num_y),
                     pad,
                     channel_index,
                     sample_index,

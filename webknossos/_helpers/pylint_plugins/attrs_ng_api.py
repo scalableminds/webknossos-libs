@@ -7,7 +7,7 @@ import astroid
 
 def register(linter):
     # Needed for registering the plugin.
-    pass
+    del linter
 
 
 ATTRIB_NAMES = frozenset(("attr.ib", "attrib", "attr.attrib", "attr.field", "field"))

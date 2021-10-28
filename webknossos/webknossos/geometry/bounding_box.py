@@ -19,11 +19,6 @@ from .mag import Mag
 from .vec3_int import Vec3Int, Vec3IntLike
 
 
-class BoundingBoxNamedTuple(NamedTuple):
-    topleft: Tuple[int, int, int]
-    size: Tuple[int, int, int]
-
-
 @attr.frozen
 class BoundingBox:
     topleft: Vec3Int = attr.ib(converter=Vec3Int)
@@ -113,7 +108,7 @@ class BoundingBox:
         return BoundingBox(topleft, bottomright - topleft)
 
     @staticmethod
-    def from_named_tuple(bb_named_tuple: BoundingBoxNamedTuple) -> "BoundingBox":
+    def from_named_tuple(bb_named_tuple: "BoundingBoxNamedTuple") -> "BoundingBox":
         return BoundingBox(bb_named_tuple.topleft, bb_named_tuple.size)
 
     @staticmethod
@@ -138,7 +133,7 @@ class BoundingBox:
 
     @staticmethod
     def from_auto(
-        obj: Union["BoundingBox", str, Dict, BoundingBoxNamedTuple, List, Tuple]
+        obj: Union["BoundingBox", str, Dict, "BoundingBoxNamedTuple", List, Tuple]
     ) -> "BoundingBox":
         if isinstance(obj, BoundingBox):
             return obj
@@ -196,7 +191,7 @@ class BoundingBox:
 
         return ",".join(map(str, self.to_tuple6()))
 
-    def to_named_tuple(self) -> BoundingBoxNamedTuple:
+    def to_named_tuple(self) -> "BoundingBoxNamedTuple":
         return BoundingBoxNamedTuple(
             topleft=cast(Tuple[int, int, int], tuple(self.topleft)),
             size=cast(Tuple[int, int, int], tuple(self.size)),
@@ -322,7 +317,7 @@ class BoundingBox:
     def chunk(
         self,
         chunk_size: Vec3IntLike,
-        chunk_border_alignments: Optional[List[int]] = None,
+        chunk_border_alignments: Optional[Vec3IntLike] = None,
     ) -> Generator["BoundingBox", None, None]:
         """Decompose the bounding box into smaller chunks of size `chunk_size`.
 
@@ -336,8 +331,7 @@ class BoundingBox:
 
         start_adjust = np.array([0, 0, 0])
         if chunk_border_alignments is not None:
-
-            chunk_border_alignments_array = np.array(chunk_border_alignments)
+            chunk_border_alignments_array = Vec3Int(chunk_border_alignments).to_np()
             assert np.all(
                 chunk_size % chunk_border_alignments_array == 0
             ), f"{chunk_size} not divisible by {chunk_border_alignments_array}"
@@ -381,3 +375,8 @@ class BoundingBox:
     def offset(self, vector: Vec3IntLike) -> "BoundingBox":
 
         return BoundingBox(self.topleft + Vec3Int(vector), self.size)
+
+
+class BoundingBoxNamedTuple(NamedTuple):
+    topleft: Tuple[int, int, int]
+    size: Tuple[int, int, int]

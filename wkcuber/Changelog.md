@@ -7,7 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.16...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.18...HEAD)
+
+### Breaking Changes in Config & CLI
+### Added
+### Changed
+### Fixed
+- Fixed two bugs in `cubing` (regarding `start_z` and `pad`). As a result, the ImageConverters do no longer cache metadata. [#460](https://github.com/scalableminds/webknossos-libs/pull/460)
+
+## [v0.8.18](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.18) - 2021-10-18
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.16...v0.8.18)
 
 ### Breaking Changes in Config & CLI
 - Use Dataset API inside `cubing` to automatically write metadata. Cubing does now require a scale. [#418](https://github.com/scalableminds/webknossos-libs/pull/418)

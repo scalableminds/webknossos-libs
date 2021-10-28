@@ -1,17 +1,17 @@
 import difflib
-from os import PathLike, name
+from os import PathLike
 from pathlib import Path
 from typing import List
 
 import pytest
 
-import webknossos.skeleton as skeleton
+import webknossos as wk
 
 TESTDATA_DIR = Path("testdata")
 
 
-def create_dummy_skeleton() -> skeleton.Skeleton:
-    nml = skeleton.Skeleton(
+def create_dummy_skeleton() -> wk.Skeleton:
+    nml = wk.Skeleton(
         name="My NML",
         scale=(11, 11, 25),
         offset=(1, 1, 1),
@@ -94,7 +94,7 @@ def test_skeleton_creation() -> None:
     grand_children = [
         grand_child
         for grand_child in groups[0].children
-        if isinstance(grand_child, skeleton.Graph)
+        if isinstance(grand_child, wk.Graph)
     ]
     assert len(grand_children) == 1
     assert grand_children[0].group == groups[0]
@@ -113,8 +113,8 @@ def diff_lines(lines_a: List[str], lines_b: List[str]) -> List[str]:
 
 
 def diff_files(path_a: PathLike, path_b: PathLike) -> None:
-    with open(path_a, "r") as file_a:
-        with open(path_b, "r") as file_b:
+    with open(path_a, "r", encoding="utf-8") as file_a:
+        with open(path_b, "r", encoding="utf-8") as file_b:
             diff = diff_lines(file_a.readlines(), file_b.readlines())
             assert (
                 len(diff) == 0
@@ -132,7 +132,7 @@ def test_export_to_nml(tmp_path: Path) -> None:
 
 
 def test_simple_initialization_and_representations(tmp_path: Path) -> None:
-    nml = skeleton.Skeleton(name="my_skeleton", scale=(0.5, 0.5, 0.5), time=12345)
+    nml = wk.Skeleton(name="my_skeleton", scale=(0.5, 0.5, 0.5), time=12345)
     nml_path = tmp_path / "my_skeleton.nml"
     EXPECTED_NML = """<?xml version="1.0" encoding="utf-8"?>
 <things>
@@ -147,12 +147,12 @@ def test_simple_initialization_and_representations(tmp_path: Path) -> None:
 </things>
 """
     nml.write(nml_path)
-    with open(nml_path, "r") as f:
+    with open(nml_path, "r", encoding="utf-8") as f:
         diff = diff_lines(f.readlines(), EXPECTED_NML.splitlines(keepends=True))
         assert (
             len(diff) == 0
         ), f"Written nml does not look as expected:\n{''.join(diff)}"
-    assert nml == skeleton.open_nml(nml_path)
+    assert nml == wk.open_nml(nml_path)
     assert str(nml) == (
         "Skeleton(name='my_skeleton', _children=<No children>, scale=(0.5, 0.5, 0.5), offset=None, time=12345, "
         + "edit_position=None, edit_rotation=None, zoom_level=None, task_bounding_box=None, user_bounding_boxes=None)"
@@ -194,14 +194,14 @@ def test_simple_initialization_and_representations(tmp_path: Path) -> None:
 </things>
 """
     nml.write(nml_path)
-    with open(nml_path, "r") as f:
+    with open(nml_path, "r", encoding="utf-8") as f:
         diff = diff_lines(
             f.readlines(), EXPECTED_EXTENDED_NML.splitlines(keepends=True)
         )
         assert (
             len(diff) == 0
         ), f"Written nml does not look as expected:\n{''.join(diff)}"
-    assert nml == skeleton.open_nml(nml_path)
+    assert nml == wk.open_nml(nml_path)
     assert str(nml) == (
         "Skeleton(name='my_skeleton', _children=<2 children>, scale=(0.5, 0.5, 0.5), offset=None, time=12345, "
         + "edit_position=None, edit_rotation=None, zoom_level=None, task_bounding_box=None, user_bounding_boxes=None)"
@@ -216,7 +216,7 @@ def test_simple_initialization_and_representations(tmp_path: Path) -> None:
 def test_import_export_round_trip(tmp_path: Path) -> None:
     snapshot_path = TESTDATA_DIR / "nmls" / "generated_snapshot.nml"
     export_path = tmp_path / "exported_in.nml"
-    nml = skeleton.open_nml(snapshot_path)
+    nml = wk.open_nml(snapshot_path)
     assert nml.time == 1337
 
     g6 = nml.get_graph_by_id(6)

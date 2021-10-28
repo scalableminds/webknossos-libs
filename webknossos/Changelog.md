@@ -6,8 +6,25 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MINOR.PATCH`.
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
+
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.16...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.18...HEAD)
+
+### Breaking Changes
+- `BoundingBox.chunk()`'s 2nd parameter `chunk_border_alignments` now does not accept a list with a single `int` anymore. [#437](https://github.com/scalableminds/webknossos-libs/pull/452)
+
+### Added
+- Added a new Annotation class which includes skeletons as well as volume-annotations. [#437](https://github.com/scalableminds/webknossos-libs/pull/452)
+- Added dataset down- and upload as well as annotation download, see the examples `learned_segmenter.py` and `upload_image_data.py`. [#437](https://github.com/scalableminds/webknossos-libs/pull/452)
+
+### Changed
+- `View`s now always open the `wkw.Dataset` lazily. All explicit calls to `View.open()` and `View.close()` must be removed. [#448](https://github.com/scalableminds/webknossos-libs/pull/448)
+### Fixed
+- Make Views picklable. We now ignore the file handle when we pickle Views. [#469](https://github.com/scalableminds/webknossos-libs/pull/469)
+
+
+## [0.8.18](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.18) - 2021-10-18
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.16...v0.8.18)
 
 ### Breaking Changes
 ### Added
