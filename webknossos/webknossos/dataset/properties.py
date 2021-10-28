@@ -8,7 +8,7 @@ import numpy as np
 import wkw
 from cattr.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 
-from webknossos.dataset.layer import LayerCategoryType
+from webknossos.dataset.layer_categories import LayerCategoryType
 from webknossos.geometry import BoundingBox, Mag
 from webknossos.utils import snake_to_camel_case
 

@@ -6,7 +6,7 @@ from typing import List, Optional, Tuple, TypeVar, Union, cast
 import numpy as np
 from rich.progress import track
 
-from webknossos import LayerCategoryType
+from webknossos.dataset import LayerCategoryType
 from webknossos.client._generated.api.datastore import dataset_download
 from webknossos.client._generated.api.default import dataset_info
 from webknossos.client.context import _get_generated_client

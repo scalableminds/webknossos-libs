@@ -2,8 +2,6 @@ from typing import Any, Dict, List, Type, TypeVar, cast
 
 import attr
 
-from webknossos import LayerCategoryType
-
 from ..models.dataset_info_response_200_data_source_data_layers_item_admin_view_configuration import (
     DatasetInfoResponse200DataSourceDataLayersItemAdminViewConfiguration,
 )

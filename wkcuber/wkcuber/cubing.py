@@ -8,7 +8,7 @@ from os import path
 from pathlib import Path
 from natsort import natsorted
 
-from webknossos.dataset import Dataset, LayerCategories, View, SegmentationLayer, Layer
+from webknossos.dataset import Dataset, COLOR_TYPE, SEGMENTATION_TYPE, View, SegmentationLayer, Layer
 from webknossos.geometry import BoundingBox, Vec3Int
 from .mag import Mag
 from .downsampling_utils import (
@@ -368,7 +368,7 @@ def cubing(
     if is_segmentation_layer:
         target_layer = target_ds.get_or_add_layer(
             layer_name,
-            LayerCategories.SEGMENTATION_TYPE,
+            SEGMENTATION_TYPE,
             dtype_per_channel=dtype,
             num_channels=num_output_channels,
             largest_segment_id=0,
@@ -376,7 +376,7 @@ def cubing(
     else:
         target_layer = target_ds.get_or_add_layer(
             layer_name,
-            LayerCategories.COLOR_TYPE,
+            COLOR_TYPE,
             dtype_per_channel=dtype,
             num_channels=num_output_channels,
         )
