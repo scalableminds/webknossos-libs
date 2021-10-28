@@ -1,49 +1,19 @@
-import os
-from functools import lru_cache
-from typing import Optional
+"""
+# webKnossos Client Overview
 
-from dotenv import load_dotenv
-from rich.prompt import Prompt
+You can interact with the webknossos server via the built-in client functions of this package.
+The following table shows how objects can be down- & uploaded:
 
-from .defaults import DEFAULT_WEBKNOSSOS_URL
-from .generated import Client as GeneratedClient
+|              | [Dataset](dataset/dataset.html#Dataset)                       | [Annotation](annotation/annotation.html#Annotation)                |
+|--------------|---------------------------------------------------------------|--------------------------------------------------------------------|
+| **Download** | [`download_dataset(…)`](client/download_dataset.html)         | [`open_annotation(…)`](annotation/annotation.html#open_annotation) |
+| **Upload**   | [`my_dataset.upload(…)`](dataset/dataset.html#Dataset.upload) |                                                                    |
 
-load_dotenv()
-
-
-@lru_cache(maxsize=None)
-def _ask_for_token(webknossos_url: str) -> str:
-    # TODO  pylint: disable=fixme
-    # -validate token and ask again if necessary
-    # -ask if the token should be saved in some .env file
-    return Prompt.ask(
-        f"\nPlease enter your webknossos token as shown on {webknossos_url}/auth/token ",
-        password=True,
-    )
+Check [this page for information about authentication & server context specicification](client/context.html).
 
 
-@lru_cache(maxsize=None)
-def _get_generated_client(
-    webknossos_url: str = DEFAULT_WEBKNOSSOS_URL,
-    *,
-    token: Optional[str] = None,
-    enforce_token: bool = False,
-) -> GeneratedClient:
-    """Generates a client which might contain an x-auth-token header.
-    The token is taken from one of the following sources, using the first one matching:
-    - function argument
-    - environment variable
-    - user prompt (only if enforce_token is set)
-    """
-    if token is None and "WK_TOKEN" in os.environ:
-        token = os.environ["WK_TOKEN"]
-    if token is None and enforce_token:
-        token = _ask_for_token(webknossos_url)
+"""
 
-    if token is None:
-        return GeneratedClient(base_url=webknossos_url)
-    else:
-        return GeneratedClient(
-            base_url=webknossos_url,
-            headers={"X-Auth-Token": token},
-        )
+
+from .context import webknossos_context
+from .download_dataset import download_dataset

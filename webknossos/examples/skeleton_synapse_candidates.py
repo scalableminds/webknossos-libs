@@ -2,25 +2,24 @@
 Load an NML file and consider all pairs of trees.
 For each tree pair, find the node pairs that have a distance
 lower than a given threshold.
-For these candidates (with meaningful input data, these could be synapse candidates),
-new graphs are created which contain a node at the center position between the input
-nodes.
+For these candidates (e.g. synapse candidates with meaningful input data),
+new graphs are created which contain a node at the
+center position between the input nodes.
 """
 
 from itertools import combinations
-from pathlib import Path
-from typing import Generator, Tuple
+from typing import Iterator, Tuple
 
 import numpy as np
 
-import webknossos.skeleton as skeleton
+import webknossos as wk
 
 
 def pairs_within_distance(
-    pos_a: np.ndarray,  # pylint: disable=redefined-outer-name
-    pos_b: np.ndarray,  # pylint: disable=redefined-outer-name
+    pos_a: np.ndarray,
+    pos_b: np.ndarray,
     max_distance: float,
-) -> Generator[Tuple[np.ndarray, np.ndarray], None, None]:
+) -> Iterator[Tuple[np.ndarray, np.ndarray]]:
     from scipy.spatial import cKDTree
 
     pos_a_kdtree = cKDTree(pos_a)
@@ -31,7 +30,7 @@ def pairs_within_distance(
             yield (pos_a[i], pos_b[j])
 
 
-nml = skeleton.open_nml(Path("testdata") / "nmls" / "nml_with_small_distance_nodes.nml")
+nml = wk.open_nml("testdata/nmls/nml_with_small_distance_nodes.nml")
 
 synapse_candidate_max_distance = 0.5  # in nm
 
@@ -39,15 +38,15 @@ input_graphs = list(nml.flattened_graphs())
 synapse_parent_group = nml.add_group("all synapse candidates")
 
 for tree_a, tree_b in combinations(input_graphs, 2):
-    pos_a = tree_a.get_node_positions() * nml.scale
-    pos_b = tree_b.get_node_positions() * nml.scale
+    positions_a = tree_a.get_node_positions() * nml.scale
+    positions_b = tree_b.get_node_positions() * nml.scale
 
     synapse_graph = synapse_parent_group.add_graph(
         f"synapse candidates ({tree_a.name}-{tree_b.name})"
     )
 
     for partner_a, partner_b in pairs_within_distance(
-        pos_a, pos_b, synapse_candidate_max_distance
+        positions_a, positions_b, synapse_candidate_max_distance
     ):
         synapse_graph.add_node(
             position=(partner_a + partner_b) / nml.scale / 2,

@@ -7,12 +7,23 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.16...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.18...HEAD)
 
 ### Breaking Changes in Config & CLI
 ### Added
 ### Changed
+### Fixed
+- Fixed two bugs in `cubing` (regarding `start_z` and `pad`). As a result, the ImageConverters do no longer cache metadata. [#460](https://github.com/scalableminds/webknossos-libs/pull/460)
+
+## [v0.8.18](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.18) - 2021-10-18
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.16...v0.8.18)
+
+### Breaking Changes in Config & CLI
+- Use Dataset API inside `cubing` to automatically write metadata. Cubing does now require a scale. [#418](https://github.com/scalableminds/webknossos-libs/pull/418)
+### Added
+### Changed
 - Updated scikit-image dependency to 0.18.3. [#435](https://github.com/scalableminds/webknossos-libs/pull/435)
+- Improved the `TIFF` and `CZI` reader to work with a wider variety of formats. The module `convert_image_stack_to_wkw` is now capable of making the result webKnossos compatible. [#335](https://github.com/scalableminds/webknossos-libs/pull/335)
 ### Fixed
 
 
@@ -28,7 +39,6 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 - Adjust downsampling scheme to always try to minimize the scaled difference between the different dimensions of a mag and renamed the sampling mode `auto` to `anisotropic`. [#391](https://github.com/scalableminds/webknossos-libs/pull/391)
 - Make parameter `executor` optional for `View.for_each_chunk` and `View.for_zipped_chunks`. [#404](https://github.com/scalableminds/webknossos-libs/pull/404)
 - Add option to rename foreign layer with add_{symlink,copy}_layer. [#419](https://github.com/scalableminds/webknossos-libs/pull/419)
-- Improved the `TIFF` and `CZI` reader to work with a wider variety of formats. The module `convert_image_stack_to_wkw` is now capable of making the result webKnossos compatible. [#335](https://github.com/scalableminds/webknossos-libs/pull/335)
 
 ### Fixed
 - Reverted that `dataset.add_symlink_layer` and `dataset.add_copy_layer` resolved the layer path if it was a symlink. [#408](https://github.com/scalableminds/webknossos-libs/pull/408)

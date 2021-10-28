@@ -141,19 +141,6 @@ def _element_class_to_dtype_per_channel(
 class Layer:
     """
     A `Layer` consists of multiple `webknossos.dataset.mag_view.MagView`s, which store the same data in different magnifications.
-
-    ## Examples
-
-    ### Adding layer to dataset
-    ```python
-    from webknossos.dataset.dataset import Dataset
-
-    dataset = Dataset(<path_to_dataset>)
-    # Adds a new layer
-    layer = dataset.get_layer("color")
-    ```
-
-    ## Functions
     """
 
     def __init__(self, dataset: "Dataset", properties: LayerProperties) -> None:
@@ -218,10 +205,9 @@ class Layer:
         # The MagViews need to be updated
         for mag in self._mags.values():
             mag._path = _find_mag_path_on_disk(self.dataset.path, self.name, mag.name)
-            if mag._is_opened:
-                # Reopen handle to dataset on disk
-                mag.close()
-                mag.open()
+            # Deleting the dataset will close the file handle.
+            # The new dataset will be opened automatically when needed.
+            del mag._wkw_dataset
 
         self.dataset._export_as_json()
 
@@ -513,11 +499,9 @@ class Layer:
         self._properties.bounding_box = bbox
 
         for mag, mag_view in self.mags.items():
-            mag_view._size = (
-                self._properties.bounding_box.align_with_mag(mag, ceil=True)
-                .in_mag(mag)
-                .bottomright
-            )
+            bbox_in_mag = bbox.align_with_mag(mag, ceil=True).in_mag(mag)
+            mag_view._size = bbox_in_mag.bottomright
+            # The offset is not updated since a MagView always is in global coordinates.
         self.dataset._export_as_json()
 
     def downsample(

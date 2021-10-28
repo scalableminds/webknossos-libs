@@ -3,7 +3,7 @@ import json
 from datetime import datetime
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from typing import Dict, Iterable, Tuple
+from typing import Any, Dict, Iterable, Tuple
 
 import httpx
 from inducoapi import build_openapi
@@ -13,9 +13,8 @@ from openapi_python_client import (
     Project,
     _get_project_for_url_or_path,
 )
-from openapi_python_client.cli import handle_errors
 
-from webknossos.client import _get_generated_client
+from webknossos.client.context import _get_generated_client
 from webknossos.utils import snake_to_camel_case
 
 SCHEMA_URL = "https://converter.swagger.io/api/convert?url=https%3A%2F%2Fwebknossos.org%2Fswagger.json"
@@ -39,9 +38,10 @@ def generate_client(openapi_schema: Dict) -> None:
             meta=MetaType.POETRY,
             config=generator_config,
         )
-        assert isinstance(generator_project, Project)
-        errors = generator_project.update()
-        # handle_errors(errors)  # prints warnings
+        assert isinstance(generator_project, Project), generator_project.detail
+        _errors = generator_project.update()  # pylint: disable=no-member
+        # from openapi_python_client.cli import handle_errors
+        # handle_errors(_errors)  # prints warnings
 
 
 def add_api_prefix_for_non_data_paths(openapi_schema: Dict) -> None:
@@ -59,7 +59,7 @@ def add_api_prefix_for_non_data_paths(openapi_schema: Dict) -> None:
 
 
 def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
-    from webknossos.client.generated.api.default import (
+    from webknossos.client._generated.api.default import (
         annotation_info,
         build_info,
         dataset_info,
@@ -68,7 +68,7 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
 
     d = datetime.utcnow()
     unixtime = calendar.timegm(d.utctimetuple())
-    client = _get_generated_client(enforce_token=True)
+    client = _get_generated_client(enforce_auth=True)
 
     annotation_info_response = annotation_info.sync_detailed(
         typ="Explorational",
@@ -91,9 +91,30 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
         api_endpoint_name = api_endpoint.__name__.split(".")[-1]
         api_endpoint_name = snake_to_camel_case(api_endpoint_name)
 
-        response = api_endpoint.sync_detailed(client=client)
-        assert response.status_code == 200
-        yield api_endpoint_name, response.content
+        api_endpoint_response = api_endpoint.sync_detailed(client=client)
+        assert api_endpoint_response.status_code == 200
+        yield api_endpoint_name, api_endpoint_response.content
+
+
+FIELDS_WITH_VARYING_CONTENT = ["adminViewConfiguration"]
+
+
+def make_properties_required(x: Any) -> None:
+    if isinstance(x, dict):
+        for key, value in x.items():
+            # do not recurse into objects where the contents might be varying
+            if key in FIELDS_WITH_VARYING_CONTENT:
+                continue
+            make_properties_required(value)
+    elif isinstance(x, list):
+        for i in x:
+            make_properties_required(i)
+
+    if isinstance(x, dict) and "properties" in x:
+        properties = x["properties"]
+        if isinstance(properties, dict) and len(properties) > 0:
+            assert "required" not in x
+            x["required"] = list(properties.keys())
 
 
 def set_response_schema_by_example(
@@ -120,6 +141,7 @@ def set_response_schema_by_example(
         for path_method in path.values()
         if path_method["operationId"] == operation_id
     ][0]
+    make_properties_required(recorded_response_schema)
     request_schema["responses"]["200"]["content"] = recorded_response_schema
 
 
@@ -127,9 +149,9 @@ def bootstrap_response_schemas(openapi_schema: Dict) -> None:
     """Inserts the response schemas into openapi_schema (in-place),
     as recorded by example requests."""
     assert_valid_schema(openapi_schema)
-    for operation_id, response in iterate_request_ids_with_responses():
+    for operation_id, example_response in iterate_request_ids_with_responses():
         set_response_schema_by_example(
-            openapi_schema, example_response=response, operation_id=operation_id
+            openapi_schema, example_response=example_response, operation_id=operation_id
         )
 
 

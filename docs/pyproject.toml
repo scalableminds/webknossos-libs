@@ -10,7 +10,7 @@ python = "^3.7"
 
 [tool.poetry.dev-dependencies]
 mkdocs = "1.2.2"
-mkdocs-material = "7.2.6"
+mkdocs-material = "^7.3.0"
 mkdocs-redirects = "^1.0.3"
 pdoc = "7.4.0"
 webknossos = { path = "../webknossos/", develop = true }

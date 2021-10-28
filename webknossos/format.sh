@@ -2,9 +2,9 @@
 set -eEuo pipefail
 
 if [ $# -eq 1 ] && [ "$1" = "check" ]; then
-    black --check .
-    isort --check-only .
+    poetry run black --check .
+    poetry run isort --check-only .
 else
-    isort .
-    black .
+    poetry run isort .
+    poetry run black .
 fi

@@ -65,7 +65,7 @@ class Group:
     def add_group(
         self,
         name: str,
-        _enforced_id: int = None,
+        _enforced_id: Optional[int] = None,
     ) -> "Group":
         new_group = Group(name, nml=self._nml, enforced_id=_enforced_id)
         self._children.add(new_group)

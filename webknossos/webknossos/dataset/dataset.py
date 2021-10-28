@@ -13,6 +13,9 @@ import attr
 import numpy as np
 import wkw
 
+from webknossos.dataset._utils.infer_bounding_box_existing_files import (
+    infer_bounding_box_existing_files,
+)
 from webknossos.geometry import BoundingBox, Vec3Int
 from webknossos.utils import copy_directory_with_symlinks, get_executor_for_args
 
@@ -49,52 +52,15 @@ def _copy_job(args: Tuple[View, View, int]) -> None:
 
 class Dataset:
     """
-    A dataset is the entry point of the Dataset API. An existing dataset on disk can be opened
+    A dataset is the entry point of the Dataset API.
+    An existing dataset on disk can be opened
     or new datasets can be created.
 
-    A `Dataset` stores the data in `.wkw` files on disk.
+    A dataset stores the data in `.wkw` files on disk with metadata in `datasource-properties.json`.
+    The information in those files are kept in sync with the object.
 
-    ## Examples
-
-    ### Creating Datasets
-    ```python
-    from webknossos.dataset.dataset import Dataset
-
-    dataset = Dataset.create(<path_to_new_dataset>, scale=(1, 1, 1))
-    # Adds a new layer
-    layer = dataset.add_layer(
-        layer_name="color",
-        category=COLOR_TYPE,
-        dtype_per_channel="uint8",
-        num_channels=3
-    )
-    # Adds an existing layer from a different dataset
-    sym_layer = dataset.add_symlink_layer(<foreign_layer_path>)
-    ```
-
-    ### Opening Datasets
-    ```python
-    from webknossos.dataset.dataset import Dataset
-
-    dataset = Dataset(<path_to_dataset>)
-    # Assuming that the dataset has a layer called 'color'
-    layer = dataset.get_layer("color")
-    ```
-
-    ### Copying Datasets
-    ```python
-    from webknossos.dataset.dataset import Dataset
-
-    dataset = Dataset(<path_to_dataset>)
-    # Copying the dataset with different block_len and file_len
-    copy_of_dataset = dataset.copy_dataset(
-        <path_to_new_dataset>,
-        block_len=8,
-        file_len=8
-    )
-    ```
-
-    ## Functions
+    Each dataset consists of one or more layers (webknossos.dataset.layer.Layer),
+    which themselves can comprise multiple magnifications (webknossos.dataset.mag_view.MagView).
     """
 
     def __init__(self, dataset_path: Union[str, Path]) -> None:
@@ -147,6 +113,11 @@ class Dataset:
         """
         return self._layers
 
+    def upload(self) -> str:
+        from webknossos.client._upload_dataset import upload_dataset
+
+        return upload_dataset(self)
+
     def get_layer(self, layer_name: str) -> Layer:
         """
         Returns the layer called `layer_name` of this dataset. The return type is `webknossos.dataset.layer.Layer`.
@@ -163,9 +134,9 @@ class Dataset:
         self,
         layer_name: str,
         category: LayerCategoryType,
-        dtype_per_layer: Union[str, np.dtype, type] = None,
-        dtype_per_channel: Union[str, np.dtype, type] = None,
-        num_channels: int = None,
+        dtype_per_layer: Optional[Union[str, np.dtype, type]] = None,
+        dtype_per_channel: Optional[Union[str, np.dtype, type]] = None,
+        num_channels: Optional[int] = None,
         **kwargs: Any,
     ) -> Layer:
         """
@@ -262,9 +233,9 @@ class Dataset:
         self,
         layer_name: str,
         category: LayerCategoryType,
-        dtype_per_layer: Union[str, np.dtype, type] = None,
-        dtype_per_channel: Union[str, np.dtype, type] = None,
-        num_channels: int = None,
+        dtype_per_layer: Optional[Union[str, np.dtype, type]] = None,
+        dtype_per_channel: Optional[Union[str, np.dtype, type]] = None,
+        num_channels: Optional[int] = None,
         **kwargs: Any,
     ) -> Layer:
         """
@@ -367,6 +338,8 @@ class Dataset:
         )
         for mag_dir in layer.path.iterdir():
             layer.add_mag_for_existing_files(mag_dir.name)
+        min_mag_view = layer.mags[min(layer.mags)]
+        layer.bounding_box = infer_bounding_box_existing_files(min_mag_view)
         return layer
 
     def get_segmentation_layer(self) -> SegmentationLayer:
@@ -409,7 +382,7 @@ class Dataset:
         self,
         foreign_layer: Union[str, Path, Layer],
         make_relative: bool = False,
-        new_layer_name: str = None,
+        new_layer_name: Optional[str] = None,
     ) -> Layer:
         """
         Creates a symlink to the data at `foreign_layer` which belongs to another dataset.
@@ -454,7 +427,9 @@ class Dataset:
         return self.layers[layer_name]
 
     def add_copy_layer(
-        self, foreign_layer: Union[str, Path, Layer], new_layer_name: str = None
+        self,
+        foreign_layer: Union[str, Path, Layer],
+        new_layer_name: Optional[str] = None,
     ) -> Layer:
         """
         Copies the data at `foreign_layer` which belongs to another dataset to the current dataset.
@@ -495,8 +470,8 @@ class Dataset:
         self,
         new_dataset_path: Union[str, Path],
         scale: Optional[Tuple[float, float, float]] = None,
-        block_len: int = None,
-        file_len: int = None,
+        block_len: Optional[int] = None,
+        file_len: Optional[int] = None,
         compress: Optional[bool] = None,
         args: Optional[Namespace] = None,
     ) -> "Dataset":

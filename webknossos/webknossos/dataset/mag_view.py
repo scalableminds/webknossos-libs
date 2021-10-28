@@ -167,7 +167,7 @@ class MagView(View):
         self,
         offset: Optional[Vec3IntLike] = None,
         size: Optional[Vec3IntLike] = None,
-        read_only: bool = None,
+        read_only: Optional[bool] = None,
     ) -> View:
         """
         Returns a view that is limited to the specified bounding box.
@@ -244,24 +244,17 @@ class MagView(View):
         - the bounding box in the properties is an "overall" bounding box, which abstracts from the files on disk
         """
         cube_size = self._get_file_dimensions()
-        was_opened = self._is_opened
-
-        if not was_opened:
-            self.open()  # opening the view is necessary to set the dataset
-
-        assert self._dataset is not None
-        for filename in self._dataset.list_files():
+        for filename in self._wkw_dataset.list_files():
             file_path = Path(os.path.splitext(filename)[0]).relative_to(self._path)
             cube_index = _extract_file_index(file_path)
             cube_offset = [idx * size for idx, size in zip(cube_index, cube_size)]
 
             yield (cube_offset[0], cube_offset[1], cube_offset[2]), cube_size
 
-        if not was_opened:
-            self.close()
-
     def compress(
-        self, target_path: Union[str, Path] = None, args: Namespace = None
+        self,
+        target_path: Optional[Union[str, Path]] = None,
+        args: Optional[Namespace] = None,
     ) -> None:
         """
         Compresses the files on disk. This has consequences for writing data (see `write`).
@@ -294,19 +287,13 @@ class MagView(View):
                 self.name, str(uncompressed_full_path)
             )
         )
-
-        was_opened = self._is_opened
-        if not was_opened:
-            self.open()  # opening the view is necessary to set the dataset
-        assert self._dataset is not None
-
         # create empty wkw.Dataset
-        self._dataset.compress(str(compressed_full_path))
+        self._wkw_dataset.compress(str(compressed_full_path))
 
         # compress all files to and move them to 'compressed_path'
         with get_executor_for_args(args) as executor:
             job_args = []
-            for file in self._dataset.list_files():
+            for file in self._wkw_dataset.list_files():
                 rel_file = Path(file).relative_to(self.layer.dataset.path)
                 job_args.append((Path(file), compressed_path / rel_file))
 
@@ -315,9 +302,6 @@ class MagView(View):
             )
 
         logging.info("Mag {0} successfully compressed".format(self.name))
-
-        if not was_opened:
-            self.close()
 
         if target_path is None:
             shutil.rmtree(uncompressed_full_path)
