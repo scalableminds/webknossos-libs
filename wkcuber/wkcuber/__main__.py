@@ -1,5 +1,6 @@
 from typing import List, Dict
 
+from versioning import get_available_version
 from wkcuber import downsample_mags
 from .compress import compress_mag_inplace
 from .metadata import refresh_metadata
@@ -56,6 +57,10 @@ def create_parser() -> ArgumentParser:
         help="Don't compress this data",
         default=False,
         action="store_true",
+    )
+
+    parser.add_argument(
+        "--version", action="version", version=f"wkcuber {get_available_version()}"
     )
 
     parser.add_argument("--name", "-n", help="Name of the dataset", default=None)
