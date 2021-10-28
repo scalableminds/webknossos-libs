@@ -26,7 +26,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 [Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.16...v0.8.18)
 
 ### Breaking Changes
-- The class `LayerCategories` was removed. `COLOR_TYPE` and `SEGMENTATION_TYPE` can now be imported directly. The type of many parameter were changed from `str` to the literal `LayerCategoryType`. [#454](https://github.com/scalableminds/webknossos-libs/pull/454)
+- The class `LayerCategories` was removed. `COLOR_TYPE` and `SEGMENTATION_TYPE` can now be imported directly. The type of many parameters were changed from `str` to the literal `LayerCategoryType`. [#454](https://github.com/scalableminds/webknossos-libs/pull/454)
 ### Added
 - The Dataset class now has a new method: add_shallow_copy. [#437](https://github.com/scalableminds/webknossos-libs/pull/437)
 ### Changed
