@@ -2,7 +2,7 @@ import math
 import warnings
 from pathlib import Path
 from types import TracebackType
-from typing import TYPE_CHECKING, Callable, Optional, Tuple, Type, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, Optional, Tuple, Type, Union
 
 import cluster_tools
 import numpy as np
@@ -584,6 +584,15 @@ class View:
 
     def __del__(self) -> None:
         del self._cached_wkw_dataset
+
+    def __getstate__(self) -> Dict[str, Any]:
+        d = dict(self.__dict__)
+        del d["_cached_wkw_dataset"]
+        return d
+
+    def __setstate__(self, d: Dict[str, Any]) -> None:
+        d["_cached_wkw_dataset"] = None
+        self.__dict__ = d
 
 
 def _assert_positive_dimensions(offset: Vec3Int, size: Vec3Int) -> None:
