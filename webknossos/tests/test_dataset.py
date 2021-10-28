@@ -12,8 +12,9 @@ import pytest
 from wkw.wkw import WKWException
 
 from webknossos.dataset import (
+    COLOR_TYPE,
+    SEGMENTATION_TYPE,
     Dataset,
-    LayerCategories,
     MagView,
     SegmentationLayer,
     View,
@@ -165,9 +166,7 @@ def test_create_dataset_with_explicit_header_fields() -> None:
     delete_dir(TESTOUTPUT_DIR / "wk_dataset_advanced")
 
     ds = Dataset.create(TESTOUTPUT_DIR / "wk_dataset_advanced", scale=(1, 1, 1))
-    ds.add_layer(
-        "color", LayerCategories.COLOR_TYPE, dtype_per_layer="uint48", num_channels=3
-    )
+    ds.add_layer("color", COLOR_TYPE, dtype_per_layer="uint48", num_channels=3)
 
     ds.get_layer("color").add_mag("1", block_len=64, file_len=64)
     ds.get_layer("color").add_mag("2-2-1")
@@ -204,15 +203,13 @@ def test_open_dataset() -> None:
 def test_modify_existing_dataset() -> None:
     delete_dir(TESTOUTPUT_DIR / "simple_wk_dataset")
     ds1 = Dataset.create(TESTOUTPUT_DIR / "simple_wk_dataset", scale=(1, 1, 1))
-    ds1.add_layer(
-        "color", LayerCategories.COLOR_TYPE, dtype_per_layer="float", num_channels=1
-    )
+    ds1.add_layer("color", COLOR_TYPE, dtype_per_layer="float", num_channels=1)
 
     ds2 = Dataset(TESTOUTPUT_DIR / "simple_wk_dataset")
 
     ds2.add_layer(
         "segmentation",
-        LayerCategories.SEGMENTATION_TYPE,
+        SEGMENTATION_TYPE,
         "uint8",
         largest_segment_id=100000,
     )
@@ -342,7 +339,7 @@ def test_update_new_bounding_box_offset() -> None:
     delete_dir(TESTOUTPUT_DIR / "wk_dataset")
 
     ds = Dataset.create(TESTOUTPUT_DIR / "wk_dataset", scale=(1, 1, 1))
-    mag = ds.add_layer("color", LayerCategories.COLOR_TYPE).add_mag("1")
+    mag = ds.add_layer("color", COLOR_TYPE).add_mag("1")
 
     assert tuple(ds.get_layer("color").bounding_box.topleft) == (0, 0, 0)
 
@@ -368,7 +365,7 @@ def test_write_multi_channel_uint8() -> None:
     delete_dir(dataset_path)
 
     ds = Dataset.create(dataset_path, scale=(1, 1, 1))
-    mag = ds.add_layer("color", LayerCategories.COLOR_TYPE, num_channels=3).add_mag("1")
+    mag = ds.add_layer("color", COLOR_TYPE, num_channels=3).add_mag("1")
 
     data = get_multichanneled_data(np.uint8)
 
@@ -385,7 +382,7 @@ def test_wk_write_multi_channel_uint16() -> None:
 
     ds = Dataset.create(dataset_path, scale=(1, 1, 1))
     mag = ds.add_layer(
-        "color", LayerCategories.COLOR_TYPE, num_channels=3, dtype_per_layer="uint48"
+        "color", COLOR_TYPE, num_channels=3, dtype_per_layer="uint48"
     ).add_mag("1")
 
     data = get_multichanneled_data(np.uint16)
@@ -404,7 +401,7 @@ def test_empty_read() -> None:
 
     mag = (
         Dataset.create(filename, scale=(1, 1, 1))
-        .add_layer("color", LayerCategories.COLOR_TYPE)
+        .add_layer("color", COLOR_TYPE)
         .add_mag("1")
     )
     with pytest.raises(AssertionError):
@@ -418,7 +415,7 @@ def test_read_padded_data() -> None:
 
     mag = (
         Dataset.create(filename, scale=(1, 1, 1))
-        .add_layer("color", LayerCategories.COLOR_TYPE, num_channels=3)
+        .add_layer("color", COLOR_TYPE, num_channels=3)
         .add_mag("1")
     )
     # there is no data yet, however, this should not fail but pad the data with zeros
@@ -432,7 +429,7 @@ def test_num_channel_mismatch_assertion() -> None:
     delete_dir(TESTOUTPUT_DIR / "wk_dataset")
 
     ds = Dataset.create(TESTOUTPUT_DIR / "wk_dataset", scale=(1, 1, 1))
-    mag = ds.add_layer("color", LayerCategories.COLOR_TYPE, num_channels=1).add_mag(
+    mag = ds.add_layer("color", COLOR_TYPE, num_channels=1).add_mag(
         "1"
     )  # num_channel=1 is also the default
 
@@ -454,14 +451,14 @@ def test_get_or_add_layer() -> None:
 
     # layer did not exist before
     layer = ds.get_or_add_layer(
-        "color", LayerCategories.COLOR_TYPE, dtype_per_layer="uint8", num_channels=1
+        "color", COLOR_TYPE, dtype_per_layer="uint8", num_channels=1
     )
     assert "color" in ds.layers.keys()
     assert layer.name == "color"
 
     # layer did exist before
     layer = ds.get_or_add_layer(
-        "color", LayerCategories.COLOR_TYPE, dtype_per_layer="uint8", num_channels=1
+        "color", COLOR_TYPE, dtype_per_layer="uint8", num_channels=1
     )
     assert "color" in ds.layers.keys()
     assert layer.name == "color"
@@ -470,7 +467,7 @@ def test_get_or_add_layer() -> None:
         # The layer "color" did exist before but with another 'dtype_per_layer' (this would work the same for 'category' and 'num_channels')
         ds.get_or_add_layer(
             "color",
-            LayerCategories.COLOR_TYPE,
+            COLOR_TYPE,
             dtype_per_layer="uint16",
             num_channels=1,
         )
@@ -491,7 +488,7 @@ def test_get_or_add_mag() -> None:
     delete_dir(TESTOUTPUT_DIR / "wk_dataset")
 
     layer = Dataset.create(TESTOUTPUT_DIR / "wk_dataset", scale=(1, 1, 1)).add_layer(
-        "color", LayerCategories.COLOR_TYPE
+        "color", COLOR_TYPE
     )
 
     assert Mag(1) not in layer.mags.keys()
@@ -542,12 +539,12 @@ def test_largest_segment_id_requirement() -> None:
     ds = Dataset.create(path, scale=(10, 10, 10))
 
     with pytest.raises(AssertionError):
-        ds.add_layer("segmentation", LayerCategories.SEGMENTATION_TYPE)
+        ds.add_layer("segmentation", SEGMENTATION_TYPE)
 
     largest_segment_id = 10
     ds.add_layer(
         "segmentation",
-        LayerCategories.SEGMENTATION_TYPE,
+        SEGMENTATION_TYPE,
         largest_segment_id=largest_segment_id,
     ).add_mag(Mag(1))
 
@@ -614,7 +611,7 @@ def test_properties_with_segmentation() -> None:
 
 def test_chunking_wk(tmp_path: Path) -> None:
     ds = Dataset.create(Path(tmp_path), scale=(2, 2, 1))
-    layer = ds.add_layer("color", LayerCategories.COLOR_TYPE)
+    layer = ds.add_layer("color", COLOR_TYPE)
     mag = layer.add_mag("1", file_len=8, block_len=8)
 
     original_data = (np.random.rand(50, 100, 150) * 205).astype(np.uint8)
@@ -650,7 +647,7 @@ def test_chunking_wk_advanced() -> None:
     )
     mag = ds.add_layer(
         "color",
-        category=LayerCategories.COLOR_TYPE,
+        category=COLOR_TYPE,
         dtype_per_channel="uint8",
         num_channels=3,
     ).add_mag("1")
@@ -669,7 +666,7 @@ def test_chunking_wk_wrong_chunk_size() -> None:
     )
     mag = ds.add_layer(
         "color",
-        category=LayerCategories.COLOR_TYPE,
+        category=COLOR_TYPE,
         dtype_per_channel="uint8",
         num_channels=3,
     ).add_mag("1", block_len=8, file_len=8)
@@ -686,7 +683,7 @@ def test_view_write_without_open() -> None:
     delete_dir(ds_path)
 
     ds = Dataset.create(ds_path, scale=(1, 1, 1))
-    layer = ds.add_layer("color", LayerCategories.COLOR_TYPE)
+    layer = ds.add_layer("color", COLOR_TYPE)
     layer.bounding_box = BoundingBox(
         (0, 0, 0), (64, 64, 64)
     )  # This newly created dataset would otherwise have a "empty" bounding box
@@ -723,7 +720,7 @@ def test_dataset_get_or_create() -> None:
     # dataset does not exists yet
     ds1 = Dataset.get_or_create(ds_path, scale=(1, 1, 1))
     assert "color" not in ds1.layers.keys()
-    ds1.add_layer("color", LayerCategories.COLOR_TYPE)
+    ds1.add_layer("color", COLOR_TYPE)
     assert "color" in ds1.layers.keys()
 
     # dataset already exists
@@ -815,7 +812,7 @@ def test_get_view() -> None:
     delete_dir(TESTOUTPUT_DIR / "get_view_tests")
 
     ds = Dataset.create(TESTOUTPUT_DIR / "get_view_tests", scale=(1, 1, 1))
-    mag = ds.add_layer("color", LayerCategories.COLOR_TYPE).add_mag("1")
+    mag = ds.add_layer("color", COLOR_TYPE).add_mag("1")
 
     # The dataset is new -> no data has been written.
     # Therefore, the size of the bounding box in the properties.json is (0, 0, 0)
@@ -898,17 +895,15 @@ def test_adding_layer_with_invalid_dtype_per_layer() -> None:
         # this would lead to a dtype_per_channel of "uint10", but that is not a valid dtype
         ds.add_layer(
             "color",
-            LayerCategories.COLOR_TYPE,
+            COLOR_TYPE,
             dtype_per_layer="uint30",
             num_channels=3,
         )
     with pytest.raises(TypeError):
         # "int" is interpreted as "int64", but 64 bit cannot be split into 3 channels
-        ds.add_layer(
-            "color", LayerCategories.COLOR_TYPE, dtype_per_layer="int", num_channels=3
-        )
+        ds.add_layer("color", COLOR_TYPE, dtype_per_layer="int", num_channels=3)
     ds.add_layer(
-        "color", LayerCategories.COLOR_TYPE, dtype_per_layer="int", num_channels=4
+        "color", COLOR_TYPE, dtype_per_layer="int", num_channels=4
     )  # "int"/"int64" works with 4 channels
 
     assure_exported_properties(ds)
@@ -918,49 +913,41 @@ def test_adding_layer_with_valid_dtype_per_layer() -> None:
     delete_dir(TESTOUTPUT_DIR / "valid_dtype")
 
     ds = Dataset.create(TESTOUTPUT_DIR / "valid_dtype", scale=(1, 1, 1))
-    ds.add_layer(
-        "color1", LayerCategories.COLOR_TYPE, dtype_per_layer="uint24", num_channels=3
-    )
-    ds.add_layer(
-        "color2", LayerCategories.COLOR_TYPE, dtype_per_layer=np.uint8, num_channels=1
-    )
-    ds.add_layer(
-        "color3", LayerCategories.COLOR_TYPE, dtype_per_channel=np.uint8, num_channels=3
-    )
-    ds.add_layer(
-        "color4", LayerCategories.COLOR_TYPE, dtype_per_channel="uint8", num_channels=3
-    )
+    ds.add_layer("color1", COLOR_TYPE, dtype_per_layer="uint24", num_channels=3)
+    ds.add_layer("color2", COLOR_TYPE, dtype_per_layer=np.uint8, num_channels=1)
+    ds.add_layer("color3", COLOR_TYPE, dtype_per_channel=np.uint8, num_channels=3)
+    ds.add_layer("color4", COLOR_TYPE, dtype_per_channel="uint8", num_channels=3)
     ds.add_layer(
         "seg1",
-        LayerCategories.SEGMENTATION_TYPE,
+        SEGMENTATION_TYPE,
         dtype_per_channel="float",
         num_channels=1,
         largest_segment_id=100000,
     )
     ds.add_layer(
         "seg2",
-        LayerCategories.SEGMENTATION_TYPE,
+        SEGMENTATION_TYPE,
         dtype_per_channel=float,
         num_channels=1,
         largest_segment_id=100000,
     )
     ds.add_layer(
         "seg3",
-        LayerCategories.SEGMENTATION_TYPE,
+        SEGMENTATION_TYPE,
         dtype_per_channel=float,
         num_channels=1,
         largest_segment_id=100000,
     )
     ds.add_layer(
         "seg4",
-        LayerCategories.SEGMENTATION_TYPE,
+        SEGMENTATION_TYPE,
         dtype_per_channel="double",
         num_channels=1,
         largest_segment_id=100000,
     )
     ds.add_layer(
         "seg5",
-        LayerCategories.SEGMENTATION_TYPE,
+        SEGMENTATION_TYPE,
         dtype_per_channel="float",
         num_channels=3,
         largest_segment_id=100000,
@@ -1003,7 +990,7 @@ def test_writing_subset_of_compressed_data_multi_channel() -> None:
     write_data1 = (np.random.rand(3, 100, 120, 140) * 255).astype(np.uint8)
     mag_view = (
         Dataset.create(TESTOUTPUT_DIR / "compressed_data", scale=(1, 1, 1))
-        .add_layer("color", LayerCategories.COLOR_TYPE, num_channels=3)
+        .add_layer("color", COLOR_TYPE, num_channels=3)
         .add_mag("1", block_len=8, file_len=8)
     )
     mag_view.write(write_data1)
@@ -1041,7 +1028,7 @@ def test_writing_subset_of_compressed_data_single_channel() -> None:
     write_data1 = (np.random.rand(100, 120, 140) * 255).astype(np.uint8)
     mag_view = (
         Dataset.create(TESTOUTPUT_DIR / "compressed_data", scale=(1, 1, 1))
-        .add_layer("color", LayerCategories.COLOR_TYPE)
+        .add_layer("color", COLOR_TYPE)
         .add_mag("1", block_len=8, file_len=8)
     )
     mag_view.write(write_data1)
@@ -1078,7 +1065,7 @@ def test_writing_subset_of_compressed_data() -> None:
     # create uncompressed dataset
     mag_view = (
         Dataset.create(TESTOUTPUT_DIR / "compressed_data", scale=(1, 1, 1))
-        .add_layer("color", LayerCategories.COLOR_TYPE)
+        .add_layer("color", COLOR_TYPE)
         .add_mag("2", block_len=8, file_len=8)
     )
     mag_view.write((np.random.rand(120, 140, 160) * 255).astype(np.uint8))
@@ -1138,7 +1125,7 @@ def test_writing_subset_of_chunked_compressed_data() -> None:
     write_data1 = (np.random.rand(100, 200, 300) * 255).astype(np.uint8)
     mag_view = (
         Dataset.create(TESTOUTPUT_DIR / "compressed_data", scale=(1, 1, 1))
-        .add_layer("color", LayerCategories.COLOR_TYPE)
+        .add_layer("color", COLOR_TYPE)
         .add_mag("1", block_len=8, file_len=8)
     )
     mag_view.write(write_data1)
@@ -1186,7 +1173,7 @@ def test_add_symlink_layer() -> None:
     )
     # Add an additional segmentation layer to the original dataset
     Dataset(TESTOUTPUT_DIR / "simple_wk_dataset_copy").add_layer(
-        "segmentation", LayerCategories.SEGMENTATION_TYPE, largest_segment_id=999
+        "segmentation", SEGMENTATION_TYPE, largest_segment_id=999
     )
 
     original_mag = (
@@ -1227,7 +1214,7 @@ def test_add_symlink_layer() -> None:
 def test_add_symlink_mag(tmp_path: Path) -> None:
     original_ds = Dataset.create(tmp_path / "original", scale=(1, 1, 1))
     original_layer = original_ds.add_layer(
-        "color", LayerCategories.COLOR_TYPE, dtype_per_channel="uint8"
+        "color", COLOR_TYPE, dtype_per_channel="uint8"
     )
     original_layer.add_mag(1).write(
         data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8)
@@ -1238,7 +1225,7 @@ def test_add_symlink_mag(tmp_path: Path) -> None:
     original_mag_4.write(data=(np.random.rand(2, 5, 7) * 255).astype(np.uint8))
 
     ds = Dataset.create(tmp_path / "link", scale=(1, 1, 1))
-    layer = ds.add_layer("color", LayerCategories.COLOR_TYPE, dtype_per_channel="uint8")
+    layer = ds.add_layer("color", COLOR_TYPE, dtype_per_channel="uint8")
     layer.add_mag(1).write(
         offset=(6, 6, 6), data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8)
     )
@@ -1271,7 +1258,7 @@ def test_add_symlink_mag(tmp_path: Path) -> None:
 def test_add_copy_mag(tmp_path: Path) -> None:
     original_ds = Dataset.create(tmp_path / "original", scale=(1, 1, 1))
     original_layer = original_ds.add_layer(
-        "color", LayerCategories.COLOR_TYPE, dtype_per_channel="uint8"
+        "color", COLOR_TYPE, dtype_per_channel="uint8"
     )
     original_layer.add_mag(1).write(
         data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8)
@@ -1281,7 +1268,7 @@ def test_add_copy_mag(tmp_path: Path) -> None:
     original_mag_2.write(data=original_data)
 
     ds = Dataset.create(tmp_path / "link", scale=(1, 1, 1))
-    layer = ds.add_layer("color", LayerCategories.COLOR_TYPE, dtype_per_channel="uint8")
+    layer = ds.add_layer("color", COLOR_TYPE, dtype_per_channel="uint8")
     layer.add_mag(1).write(
         offset=(6, 6, 6), data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8)
     )
@@ -1312,7 +1299,7 @@ def test_search_dataset_also_for_long_layer_name() -> None:
     delete_dir(TESTOUTPUT_DIR / "long_layer_name")
 
     ds = Dataset.create(TESTOUTPUT_DIR / "long_layer_name", scale=(1, 1, 1))
-    mag = ds.add_layer("color", LayerCategories.COLOR_TYPE).add_mag("2")
+    mag = ds.add_layer("color", COLOR_TYPE).add_mag("2")
 
     assert mag.name == "2"
     short_mag_file_path = join(ds.path, "color", Mag(mag.name).to_layer_name())
@@ -1352,14 +1339,10 @@ def test_outdated_dtype_parameter() -> None:
 
     ds = Dataset.create(TESTOUTPUT_DIR / "outdated_dtype", scale=(1, 1, 1))
     with pytest.raises(ValueError):
-        ds.get_or_add_layer(
-            "color", LayerCategories.COLOR_TYPE, dtype=np.uint8, num_channels=1
-        )
+        ds.get_or_add_layer("color", COLOR_TYPE, dtype=np.uint8, num_channels=1)
 
     with pytest.raises(ValueError):
-        ds.add_layer(
-            "color", LayerCategories.COLOR_TYPE, dtype=np.uint8, num_channels=1
-        )
+        ds.add_layer("color", COLOR_TYPE, dtype=np.uint8, num_channels=1)
 
 
 @pytest.mark.parametrize("make_relative", [True, False])
@@ -1368,13 +1351,13 @@ def test_dataset_shallow_copy(make_relative: bool) -> None:
     delete_dir(TESTOUTPUT_DIR / "copy_dataset")
     ds = Dataset.create(TESTOUTPUT_DIR / "original_dataset", (1, 1, 1))
     original_layer_1 = ds.add_layer(
-        "color", LayerCategories.COLOR_TYPE, dtype_per_layer=np.uint8, num_channels=1
+        "color", COLOR_TYPE, dtype_per_layer=np.uint8, num_channels=1
     )
     original_layer_1.add_mag(1)
     original_layer_1.add_mag("2-2-1")
     original_layer_2 = ds.add_layer(
         "segmentation",
-        LayerCategories.SEGMENTATION_TYPE,
+        SEGMENTATION_TYPE,
         dtype_per_layer=np.uint32,
         largest_segment_id=0,
     )
@@ -1413,7 +1396,7 @@ def test_dataset_conversion() -> None:
     origin_ds = Dataset.create(origin_ds_path, scale=(1, 1, 1))
     seg_layer = origin_ds.add_layer(
         "layer1",
-        LayerCategories.SEGMENTATION_TYPE,
+        SEGMENTATION_TYPE,
         num_channels=1,
         largest_segment_id=1000000000,
     )
@@ -1423,9 +1406,7 @@ def test_dataset_conversion() -> None:
     seg_layer.add_mag("2", block_len=8, file_len=16).write(
         offset=(5, 10, 15), data=(np.random.rand(64, 64, 128) * 255).astype(np.uint8)
     )
-    wk_color_layer = origin_ds.add_layer(
-        "layer2", LayerCategories.COLOR_TYPE, num_channels=3
-    )
+    wk_color_layer = origin_ds.add_layer("layer2", COLOR_TYPE, num_channels=3)
     wk_color_layer.add_mag("1", block_len=8, file_len=16).write(
         offset=(10, 20, 30),
         data=(np.random.rand(3, 128, 128, 256) * 255).astype(np.uint8),
@@ -1464,7 +1445,7 @@ def test_for_zipped_chunks() -> None:
     ds = Dataset.create(TESTOUTPUT_DIR / "zipped_chunking_source", scale=(1, 1, 2))
     mag = ds.add_layer(
         "color",
-        category=LayerCategories.COLOR_TYPE,
+        category=COLOR_TYPE,
         dtype_per_channel="uint8",
         num_channels=3,
     ).add_mag("1")
@@ -1475,7 +1456,7 @@ def test_for_zipped_chunks() -> None:
         Dataset.create(TESTOUTPUT_DIR / "zipped_chunking_target", scale=(1, 1, 2))
         .get_or_add_layer(
             "color",
-            LayerCategories.COLOR_TYPE,
+            COLOR_TYPE,
             dtype_per_channel="uint8",
             num_channels=3,
         )
@@ -1518,10 +1499,10 @@ def test_for_zipped_chunks_invalid_target_chunk_size_wk() -> None:
     ds = Dataset.create(
         TESTOUTPUT_DIR / "zipped_chunking_source_invalid", scale=(1, 1, 1)
     )
-    layer1 = ds.get_or_add_layer("color1", LayerCategories.COLOR_TYPE)
+    layer1 = ds.get_or_add_layer("color1", COLOR_TYPE)
     source_mag_view = layer1.get_or_add_mag(1, block_len=8, file_len=8)
 
-    layer2 = ds.get_or_add_layer("color2", LayerCategories.COLOR_TYPE)
+    layer2 = ds.get_or_add_layer("color2", COLOR_TYPE)
     target_mag_view = layer2.get_or_add_mag(1, block_len=8, file_len=8)
 
     source_view = source_mag_view.get_view(size=(300, 300, 300), read_only=True)
@@ -1550,7 +1531,7 @@ def test_for_zipped_chunks_invalid_target_chunk_size_wk() -> None:
 def test_read_only_view() -> None:
     delete_dir(TESTOUTPUT_DIR / "read_only_view")
     ds = Dataset.create(TESTOUTPUT_DIR / "read_only_view", scale=(1, 1, 1))
-    mag = ds.get_or_add_layer("color", LayerCategories.COLOR_TYPE).get_or_add_mag("1")
+    mag = ds.get_or_add_layer("color", COLOR_TYPE).get_or_add_mag("1")
     mag.write(
         data=(np.random.rand(1, 10, 10, 10) * 255).astype(np.uint8), offset=(10, 20, 30)
     )
@@ -1711,7 +1692,7 @@ def test_dataset_view_configuration(tmp_path: Path) -> None:
 
 def test_layer_view_configuration(tmp_path: Path) -> None:
     ds1 = Dataset.create(tmp_path, scale=(2, 2, 1))
-    layer1 = ds1.add_layer("color", LayerCategories.COLOR_TYPE)
+    layer1 = ds1.add_layer("color", COLOR_TYPE)
     default_view_configuration = layer1.default_view_configuration
     assert default_view_configuration is None
 
@@ -1771,9 +1752,7 @@ def test_get_largest_segment_id(tmp_path: Path) -> None:
 
     segmentation_layer = cast(
         SegmentationLayer,
-        ds.add_layer(
-            "segmentation", LayerCategories.SEGMENTATION_TYPE, largest_segment_id=999
-        ),
+        ds.add_layer("segmentation", SEGMENTATION_TYPE, largest_segment_id=999),
     )
     assert segmentation_layer.largest_segment_id == 999
     segmentation_layer.largest_segment_id = 123
@@ -1787,12 +1766,12 @@ def test_get_or_add_layer_by_type(tmp_path: Path) -> None:
     with pytest.raises(IndexError):
         ds.get_segmentation_layer()  # fails
     _ = ds.add_layer(
-        "segmentation", LayerCategories.SEGMENTATION_TYPE, largest_segment_id=999
+        "segmentation", SEGMENTATION_TYPE, largest_segment_id=999
     )  # adds layer
     _ = ds.get_segmentation_layer()  # works
     _ = ds.add_layer(
         "different_segmentation",
-        LayerCategories.SEGMENTATION_TYPE,
+        SEGMENTATION_TYPE,
         largest_segment_id=999,
     )  # adds another layer
     with pytest.raises(IndexError):
@@ -1800,11 +1779,9 @@ def test_get_or_add_layer_by_type(tmp_path: Path) -> None:
 
     with pytest.raises(IndexError):
         ds.get_color_layer()  # fails
-    _ = ds.add_layer("color", LayerCategories.COLOR_TYPE)  # adds layer
+    _ = ds.add_layer("color", COLOR_TYPE)  # adds layer
     _ = ds.get_color_layer()  # works
-    _ = ds.add_layer(
-        "different_color", LayerCategories.COLOR_TYPE
-    )  # adds another layer
+    _ = ds.add_layer("different_color", COLOR_TYPE)  # adds another layer
     with pytest.raises(IndexError):
         ds.get_color_layer()  # fails
 
@@ -1827,7 +1804,7 @@ def test_dataset_name(tmp_path: Path) -> None:
 
 def test_read_bbox(tmp_path: Path) -> None:
     ds = Dataset.create(tmp_path, scale=(2, 2, 1))
-    layer = ds.add_layer("color", LayerCategories.COLOR_TYPE)
+    layer = ds.add_layer("color", COLOR_TYPE)
     mag = layer.add_mag(1)
     mag.write(
         offset=(10, 20, 30), data=(np.random.rand(50, 60, 70) * 255).astype(np.uint8)
@@ -1845,13 +1822,11 @@ def test_add_copy_layer(tmp_path: Path) -> None:
 
     # Create dataset to copy data from
     other_ds = Dataset.create(tmp_path / "other_ds", scale=(2, 2, 1))
-    original_color_layer = other_ds.add_layer("color", LayerCategories.COLOR_TYPE)
+    original_color_layer = other_ds.add_layer("color", COLOR_TYPE)
     original_color_layer.add_mag(1).write(
         offset=(10, 20, 30), data=(np.random.rand(32, 64, 128) * 255).astype(np.uint8)
     )
-    other_ds.add_layer(
-        "segmentation", LayerCategories.SEGMENTATION_TYPE, largest_segment_id=999
-    )
+    other_ds.add_layer("segmentation", SEGMENTATION_TYPE, largest_segment_id=999)
 
     # Copies the "color" layer from a different dataset
     ds.add_copy_layer(tmp_path / "other_ds" / "color")
@@ -1885,7 +1860,7 @@ def test_add_copy_layer(tmp_path: Path) -> None:
 
 def test_rename_layer(tmp_path: Path) -> None:
     ds = Dataset.create(tmp_path / "ds", scale=(1, 1, 1))
-    layer = ds.add_layer("color", LayerCategories.COLOR_TYPE)
+    layer = ds.add_layer("color", COLOR_TYPE)
     mag = layer.add_mag(1)
     write_data = (np.random.rand(10, 20, 30) * 255).astype(np.uint8)
     mag.write(data=write_data)
@@ -1907,12 +1882,10 @@ def test_rename_layer(tmp_path: Path) -> None:
 
 def test_delete_layer_and_mag(tmp_path: Path) -> None:
     ds = Dataset.create(tmp_path / "ds", scale=(1, 1, 1))
-    color_layer = ds.add_layer("color", LayerCategories.COLOR_TYPE)
+    color_layer = ds.add_layer("color", COLOR_TYPE)
     color_layer.add_mag(1)
     color_layer.add_mag(2)
-    ds.add_layer(
-        "segmentation", LayerCategories.SEGMENTATION_TYPE, largest_segment_id=999
-    )
+    ds.add_layer("segmentation", SEGMENTATION_TYPE, largest_segment_id=999)
     assert "color" in ds.layers
     assert "segmentation" in ds.layers
     assert len([l for l in ds._properties.data_layers if l.name == "color"]) == 1
@@ -1944,14 +1917,14 @@ def test_delete_layer_and_mag(tmp_path: Path) -> None:
 def test_add_layer_like(tmp_path: Path) -> None:
     ds = Dataset.create(tmp_path / "ds", scale=(1, 1, 1))
     color_layer1 = ds.add_layer(
-        "color1", LayerCategories.COLOR_TYPE, dtype_per_layer="uint24", num_channels=3
+        "color1", COLOR_TYPE, dtype_per_layer="uint24", num_channels=3
     )
     color_layer1.add_mag(1)
     segmentation_layer1 = cast(
         SegmentationLayer,
         ds.add_layer(
             "segmentation1",
-            LayerCategories.SEGMENTATION_TYPE,
+            SEGMENTATION_TYPE,
             dtype_per_channel="uint8",
             largest_segment_id=999,
         ),
@@ -1966,7 +1939,7 @@ def test_add_layer_like(tmp_path: Path) -> None:
     assert color_layer2.name == "color2"
     assert len(color_layer1.mags) == 1
     assert len(color_layer2.mags) == 0
-    assert color_layer1.category == color_layer2.category == LayerCategories.COLOR_TYPE
+    assert color_layer1.category == color_layer2.category == COLOR_TYPE
     assert (
         color_layer1.dtype_per_channel
         == color_layer2.dtype_per_channel
@@ -1981,7 +1954,7 @@ def test_add_layer_like(tmp_path: Path) -> None:
     assert (
         segmentation_layer1.category
         == segmentation_layer2.category
-        == LayerCategories.SEGMENTATION_TYPE
+        == SEGMENTATION_TYPE
     )
     assert (
         segmentation_layer1.dtype_per_channel

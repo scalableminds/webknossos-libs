@@ -24,7 +24,7 @@ from .layer import (
     _normalize_dtype_per_channel,
     _normalize_dtype_per_layer,
 )
-from .layer_categories import LayerCategories, LayerCategoryType
+from .layer_categories import COLOR_TYPE, SEGMENTATION_TYPE, LayerCategoryType
 from .properties import (
     DatasetProperties,
     DatasetViewConfiguration,
@@ -64,7 +64,7 @@ class Dataset:
     # Adds a new layer
     layer = dataset.add_layer(
         layer_name="color",
-        category=LayerCategories.COLOR_TYPE,
+        category=COLOR_TYPE,
         dtype_per_channel="uint8",
         num_channels=3
     )
@@ -228,10 +228,10 @@ class Dataset:
             data_format="wkw",
         )
 
-        if category == LayerCategories.COLOR_TYPE:
+        if category == COLOR_TYPE:
             self._properties.data_layers += [layer_properties]
             self._layers[layer_name] = Layer(self, layer_properties)
-        elif category == LayerCategories.SEGMENTATION_TYPE:
+        elif category == SEGMENTATION_TYPE:
             assert (
                 "largest_segment_id" in kwargs
             ), f"Failed to create segmentation layer {layer_name}: the parameter 'largest_segment_id' was not specified, which is necessary for segmentation layers."
@@ -252,7 +252,7 @@ class Dataset:
             )
         else:
             raise RuntimeError(
-                f"Failed to add layer ({layer_name}) because of invalid category ({category}). The supported categories are '{LayerCategories.COLOR_TYPE}' and '{LayerCategories.SEGMENTATION_TYPE}'"
+                f"Failed to add layer ({layer_name}) because of invalid category ({category}). The supported categories are '{COLOR_TYPE}' and '{SEGMENTATION_TYPE}'"
             )
 
         self._export_as_json()
@@ -337,13 +337,13 @@ class Dataset:
         layer_properties.name = layer_name
 
         self._properties.data_layers += [layer_properties]
-        if layer_properties.category == LayerCategories.COLOR_TYPE:
+        if layer_properties.category == COLOR_TYPE:
             self._layers[layer_name] = Layer(self, layer_properties)
-        elif layer_properties.category == LayerCategories.SEGMENTATION_TYPE:
+        elif layer_properties.category == SEGMENTATION_TYPE:
             self._layers[layer_name] = SegmentationLayer(self, layer_properties)
         else:
             raise RuntimeError(
-                f"Failed to add layer ({layer_name}) because of invalid category ({layer_properties.category}). The supported categories are '{LayerCategories.COLOR_TYPE}' and '{LayerCategories.SEGMENTATION_TYPE}'"
+                f"Failed to add layer ({layer_name}) because of invalid category ({layer_properties.category}). The supported categories are '{COLOR_TYPE}' and '{SEGMENTATION_TYPE}'"
             )
         self._export_as_json()
         return self._layers[layer_name]
@@ -377,7 +377,7 @@ class Dataset:
         """
         return cast(
             SegmentationLayer,
-            self._get_layer_by_category(LayerCategories.SEGMENTATION_TYPE),
+            self._get_layer_by_category(SEGMENTATION_TYPE),
         )
 
     def get_color_layer(self) -> Layer:
@@ -386,7 +386,7 @@ class Dataset:
 
         Fails with a RuntimeError if there are multiple color layers or none.
         """
-        return self._get_layer_by_category(LayerCategories.COLOR_TYPE)
+        return self._get_layer_by_category(COLOR_TYPE)
 
     def delete_layer(self, layer_name: str) -> None:
         """
@@ -587,10 +587,7 @@ class Dataset:
         return new_dataset
 
     def _get_layer_by_category(self, category: LayerCategoryType) -> Layer:
-        assert (
-            category == LayerCategories.COLOR_TYPE
-            or category == LayerCategories.SEGMENTATION_TYPE
-        )
+        assert category == COLOR_TYPE or category == SEGMENTATION_TYPE
 
         layers = [layer for layer in self.layers.values() if category == layer.category]
 
@@ -715,9 +712,9 @@ class Dataset:
             )
 
     def _initialize_layer_from_properties(self, properties: LayerProperties) -> Layer:
-        if properties.category == LayerCategories.COLOR_TYPE:
+        if properties.category == COLOR_TYPE:
             return Layer(self, properties)
-        elif properties.category == LayerCategories.SEGMENTATION_TYPE:
+        elif properties.category == SEGMENTATION_TYPE:
             return SegmentationLayer(self, properties)
         else:
             raise RuntimeError(

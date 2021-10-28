@@ -26,7 +26,7 @@ from .downsampling_utils import (
     downsample_cube_job,
     parse_interpolation_mode,
 )
-from .layer_categories import LayerCategories, LayerCategoryType
+from .layer_categories import COLOR_TYPE, SEGMENTATION_TYPE, LayerCategoryType
 from .properties import (
     LayerProperties,
     LayerViewConfiguration,
@@ -880,7 +880,7 @@ class Layer:
 
     @property
     def category(self) -> LayerCategoryType:
-        return LayerCategories.COLOR_TYPE
+        return COLOR_TYPE
 
     @property
     def dtype_per_layer(self) -> str:
@@ -904,4 +904,4 @@ class SegmentationLayer(Layer):
 
     @property
     def category(self) -> LayerCategoryType:
-        return LayerCategories.SEGMENTATION_TYPE
+        return SEGMENTATION_TYPE

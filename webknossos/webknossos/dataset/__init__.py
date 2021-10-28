@@ -22,12 +22,12 @@ mag1 = layer.get_mag("1")
 ### Creating Datasets
 ```python
 from webknossos.dataset import Dataset
-from webknossos.dataset import LayerCategories
+from webknossos.dataset import COLOR_TYPE
 
 dataset = Dataset.create(<path_to_new_dataset>, scale=(1, 1, 1))
 layer = dataset.add_layer(
     layer_name="color",
-    category=LayerCategories.COLOR_TYPE,
+    category=COLOR_TYPE,
     dtype_per_channel="uint8",
     num_channels=3
 )
@@ -77,6 +77,6 @@ mag2.write(
 
 from .dataset import Dataset
 from .layer import Layer, SegmentationLayer
-from .layer_categories import LayerCategories, LayerCategoryType
+from .layer_categories import COLOR_TYPE, SEGMENTATION_TYPE, LayerCategoryType
 from .mag_view import MagView
 from .view import View
