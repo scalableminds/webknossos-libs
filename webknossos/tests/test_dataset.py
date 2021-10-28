@@ -1974,7 +1974,7 @@ def test_pickle_view(tmp_path: Path) -> None:
 
     # Make sure that the pickled mag can still read data
     assert pickled_mag1._cached_wkw_dataset is None
-    assert np.array_equal(write_data, pickled_mag1.read())
+    assert np.array_equal(data_to_write, pickled_mag1.read())
     assert pickled_mag1._cached_wkw_dataset is not None
 
     # Make sure that the attributes of the MagView (not View) still exist
