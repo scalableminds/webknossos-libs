@@ -1964,9 +1964,9 @@ def test_pickle_view(tmp_path: Path) -> None:
     ds = Dataset.create(tmp_path / "ds", scale=(1, 1, 1))
     mag1 = ds.add_layer("color", LayerCategories.COLOR_TYPE).add_mag(1)
 
-    write_data = (np.random.rand(1, 10, 10, 10) * 255).astype(np.uint8)
     assert mag1._cached_wkw_dataset is None
-    mag1.write(write_data)
+    data_to_write = (np.random.rand(1, 10, 10, 10) * 255).astype(np.uint8)
+    mag1.write(data_to_write)
     assert mag1._cached_wkw_dataset is not None
 
     pickle.dump(mag1, open(str(tmp_path / "save.p"), "wb"))
