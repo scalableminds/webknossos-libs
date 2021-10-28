@@ -1,6 +1,7 @@
 import itertools
 import json
 import os
+import pickle
 import warnings
 from os.path import join
 from pathlib import Path
@@ -1957,3 +1958,24 @@ def test_add_layer_like(tmp_path: Path) -> None:
     )
 
     assure_exported_properties(ds)
+
+
+def test_pickle_view(tmp_path: Path) -> None:
+    ds = Dataset.create(tmp_path / "ds", scale=(1, 1, 1))
+    mag1 = ds.add_layer("color", LayerCategories.COLOR_TYPE).add_mag(1)
+
+    write_data = (np.random.rand(1, 10, 10, 10) * 255).astype(np.uint8)
+    assert mag1._cached_wkw_dataset is None
+    mag1.write(write_data)
+    assert mag1._cached_wkw_dataset is not None
+
+    pickle.dump(mag1, open(str(tmp_path / "save.p"), "wb"))
+    pickled_mag1 = pickle.load(open(str(tmp_path / "save.p"), "rb"))
+
+    # Make sure that the pickled mag can still read data
+    assert pickled_mag1._cached_wkw_dataset is None
+    assert np.array_equal(write_data, pickled_mag1.read())
+    assert pickled_mag1._cached_wkw_dataset is not None
+
+    # Make sure that the attributes of the MagView (not View) still exist
+    assert pickled_mag1.layer is not None
