@@ -29,7 +29,7 @@ def generate_client(openapi_schema: Dict) -> None:
     with NamedTemporaryFile("w", suffix=".json") as schema_file:
         schema_file.write(json.dumps(openapi_schema))
         generator_config = Config(
-            project_name_override="webknossos/client/generated",
+            project_name_override="webknossos/client/_generated",
             package_name_override=".",
         )
         generator_project = _get_project_for_url_or_path(
@@ -62,8 +62,12 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
     from webknossos.client._generated.api.default import (
         annotation_info,
         build_info,
+        current_user_info,
         dataset_info,
         datastore_list,
+        generate_token_for_data_store,
+        user_list,
+        user_logged_time,
     )
 
     d = datetime.utcnow()
@@ -87,7 +91,13 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
     assert dataset_info_response.status_code == 200
     yield "datasetInfo", dataset_info_response.content
 
-    for api_endpoint in [datastore_list, build_info]:
+    for api_endpoint in [
+        datastore_list,
+        build_info,
+        current_user_info,
+        generate_token_for_data_store,
+        user_list,
+    ]:
         api_endpoint_name = api_endpoint.__name__.split(".")[-1]
         api_endpoint_name = snake_to_camel_case(api_endpoint_name)
 
@@ -95,8 +105,18 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
         assert api_endpoint_response.status_code == 200
         yield api_endpoint_name, api_endpoint_response.content
 
+        if api_endpoint == current_user_info:
+            user_id = json.loads(api_endpoint_response.content)["id"]
 
-FIELDS_WITH_VARYING_CONTENT = ["adminViewConfiguration"]
+    user_logged_time_response = user_logged_time.sync_detailed(
+        id=user_id,
+        client=client,
+    )
+    assert user_logged_time_response.status_code == 200
+    yield "userLoggedTime", user_logged_time_response.content
+
+
+FIELDS_WITH_VARYING_CONTENT = ["adminViewConfiguration", "novelUserExperienceInfos"]
 
 
 def make_properties_required(x: Any) -> None:

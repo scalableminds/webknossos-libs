@@ -11,9 +11,11 @@ The following table shows how objects can be down- & uploaded:
 
 Check [this page for information about authentication & server context specicification](client/context.html).
 
+Additionally, one can [get user-specific information, see this page for more information](client/user.html).
 
 """
 
 
 from .context import webknossos_context
 from .download_dataset import download_dataset
+from .user import User

@@ -112,3 +112,12 @@ def test_learned_segmenter() -> None:
             trainable_segmentation.has_sklearn = False
         else:
             trainable_segmentation.RandomForestClassifier = old_default_classifier
+
+
+@pytest.mark.vcr()
+def test_user_times() -> None:
+    from examples.user_times import df
+
+    assert len(df) > 0
+    assert sum(df.loc[:, (2021, 10)]) > 0
+    assert "taylor.tester@mail.com" in df.index
