@@ -4,9 +4,13 @@ from webknossos.client._defaults import DEFAULT_WEBKNOSSOS_URL
 from webknossos.client._generated.api.default import (
     annotation_info,
     build_info,
+    current_user_info,
     dataset_info,
     datastore_list,
+    generate_token_for_data_store,
     health,
+    user_list,
+    user_logged_time,
 )
 from webknossos.client._generated.client import Client
 from webknossos.client._generated.models.datastore_list_response_200_item import (
@@ -61,6 +65,35 @@ def test_datastore_list(auth_client: Client) -> None:
     )
     assert datastores is not None
     assert internal_datastore in datastores
+
+
+@pytest.mark.vcr()
+def test_generate_token_for_data_store(auth_client: Client) -> None:
+    generate_token_for_data_store_response = generate_token_for_data_store.sync(
+        client=auth_client
+    )
+    assert generate_token_for_data_store_response is not None
+    assert len(generate_token_for_data_store_response.token) > 0
+
+
+@pytest.mark.vcr()
+def test_current_user_info_and_user_logged_time(auth_client: Client) -> None:
+    current_user_info_response = current_user_info.sync(client=auth_client)
+    assert current_user_info_response is not None
+    assert len(current_user_info_response.email) > 0
+    assert len(current_user_info_response.teams) > 0
+    assert current_user_info_response.is_active
+    user_logged_time_response = user_logged_time.sync(
+        id=current_user_info_response.id, client=auth_client
+    )
+    assert user_logged_time_response is not None
+    assert isinstance(user_logged_time_response.logged_time, list)
+
+
+@pytest.mark.vcr()
+def test_user_list(auth_client: Client) -> None:
+    user_list_response = user_list.sync(client=auth_client)
+    assert isinstance(user_list_response, list)
 
 
 @pytest.mark.vcr()
