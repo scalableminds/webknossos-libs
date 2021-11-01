@@ -1935,7 +1935,7 @@ def test_add_layer_like(tmp_path: Path) -> None:
 
 def test_pickle_view(tmp_path: Path) -> None:
     ds = Dataset.create(tmp_path / "ds", scale=(1, 1, 1))
-    mag1 = ds.add_layer("color", LayerCategories.COLOR_TYPE).add_mag(1)
+    mag1 = ds.add_layer("color", COLOR_CATEGORY).add_mag(1)
 
     assert mag1._cached_wkw_dataset is None
     data_to_write = (np.random.rand(1, 10, 10, 10) * 255).astype(np.uint8)
