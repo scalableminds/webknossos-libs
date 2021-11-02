@@ -1,4 +1,5 @@
 import cluster_tools
+from cluster_tools.util import call
 import concurrent.futures
 import time
 import logging
@@ -12,6 +13,7 @@ import io
 import multiprocessing as mp
 from pathlib import Path
 import tempfile
+from collections import Counter
 
 # "Worker" functions.
 def square(n):
@@ -372,6 +374,173 @@ def test_slurm_cfut_dir():
     assert len(os.listdir(cfut_dir)) == 2
 
 
+def test_slurm_max_submit_user():
+    max_submit_jobs = 6
+
+    # MaxSubmitJobs can either be defined at the user or at the qos level
+    for command in ["user root", "qos normal"]:
+        executor = cluster_tools.get_executor("slurm", debug=True)
+        original_max_submit_jobs = executor.get_max_submit_jobs()
+
+        _, _, exit_code = call(
+            f"echo y | sacctmgr modify {command} set MaxSubmitJobs={max_submit_jobs}"
+        )
+        try:
+            assert exit_code == 0
+
+            new_max_submit_jobs = executor.get_max_submit_jobs()
+            assert new_max_submit_jobs == max_submit_jobs
+
+            with executor:
+                futures = executor.map_to_futures(square, range(10))
+
+                result = [fut.result() for fut in futures]
+                assert result == [i ** 2 for i in range(10)]
+
+                job_ids = {fut.cluster_jobid for fut in futures}
+                # The 10 work packages should have been scheduled as 5 separate jobs,
+                # because the cluster_tools schedule at most 1/3 of MaxSubmitJobs at once.
+                assert len(job_ids) == 5
+        finally:
+            _, _, exit_code = call(
+                f"echo y | sacctmgr modify {command} set MaxSubmitJobs=-1"
+            )
+            assert exit_code == 0
+            reset_max_submit_jobs = executor.get_max_submit_jobs()
+            assert reset_max_submit_jobs == original_max_submit_jobs
+
+
+def test_slurm_deferred_submit():
+    max_submit_jobs = 1
+
+    # Only one job can be scheduled at a time
+    _, _, exit_code = call(
+        f"echo y | sacctmgr modify qos normal set MaxSubmitJobs={max_submit_jobs}"
+    )
+    executor = cluster_tools.get_executor("slurm", debug=True)
+
+    try:
+        with executor:
+            time_of_start = time.time()
+            futures = executor.map_to_futures(sleep, [0.5, 0.5])
+            time_of_futures = time.time()
+            concurrent.futures.wait(futures)
+            time_of_result = time.time()
+
+            # The futures should be returned before each job was scheduled
+            assert time_of_futures - time_of_start < 0.5
+
+            # Computing the results should have taken at least two seconds
+            # since only one job is scheduled at a time and each job takes 0.5 seconds
+            assert time_of_result - time_of_start > 1
+    finally:
+        _, _, exit_code = call(
+            "echo y | sacctmgr modify qos normal set MaxSubmitJobs=-1"
+        )
+
+
+def wait_until_first_job_was_submitted(executor):
+    # Since the job submission is not synchronous, we need to poll
+    # to find out when the first job was submitted
+    while executor.get_number_of_submitted_jobs() <= 0:
+        time.sleep(0.1)
+
+
+def test_slurm_deferred_submit_shutdown():
+    # Test that the SlurmExecutor stops scheduling jobs in a separate thread
+    # once it was killed even if the executor was used multiple times and
+    # therefore started multiple job submission threads
+    max_submit_jobs = 1
+
+    # Only one job can be scheduled at a time
+    _, _, exit_code = call(
+        f"echo y | sacctmgr modify qos normal set MaxSubmitJobs={max_submit_jobs}"
+    )
+    executor = cluster_tools.get_executor("slurm", debug=True)
+
+    try:
+        # Use the executor twice to start multiple job submission threads
+        executor.map_to_futures(sleep, [0.5] * 10)
+        executor.map_to_futures(sleep, [0.5] * 10)
+
+        wait_until_first_job_was_submitted(executor)
+
+        for submit_thread in executor.submit_threads:
+            assert submit_thread.is_alive()
+
+        with pytest.raises(SystemExit) as pytest_wrapped_e:
+            executor.handle_kill(None, None)
+        assert pytest_wrapped_e.type == SystemExit
+        assert pytest_wrapped_e.value.code == 130
+
+        # Wait for the threads to die down, but less than it would take to submit all jobs
+        # which would take ~5 seconds since only one job is scheduled at a time
+        for submit_thread in executor.submit_threads:
+            submit_thread.join(1)
+            assert not submit_thread.is_alive()
+
+        # Wait for scheduled jobs to finish, so that the queue is empty again
+        while executor.get_number_of_submitted_jobs() > 0:
+            time.sleep(0.5)
+
+    finally:
+        _, _, exit_code = call(
+            "echo y | sacctmgr modify qos normal set MaxSubmitJobs=-1"
+        )
+
+
+def test_slurm_number_of_submitted_jobs():
+    number_of_jobs = 6
+    executor = cluster_tools.get_executor("slurm", debug=True)
+
+    assert executor.get_number_of_submitted_jobs() == 0
+
+    with executor:
+        futures = executor.map_to_futures(sleep, [1] * number_of_jobs)
+
+        wait_until_first_job_was_submitted(executor)
+
+        assert executor.get_number_of_submitted_jobs() == number_of_jobs
+
+        concurrent.futures.wait(futures)
+        assert executor.get_number_of_submitted_jobs() == 0
+
+
+def test_slurm_max_array_size():
+    max_array_size = 2
+
+    executor = cluster_tools.get_executor("slurm", debug=True)
+    original_max_array_size = executor.get_max_array_size()
+
+    command = f"MaxArraySize={max_array_size}"
+    _, _, exit_code = call(
+        f"echo -e '{command}' >> /etc/slurm/slurm.conf && scontrol reconfigure"
+    )
+
+    try:
+        assert exit_code == 0
+
+        new_max_array_size = executor.get_max_array_size()
+        assert new_max_array_size == max_array_size
+
+        with executor:
+            futures = executor.map_to_futures(square, range(6))
+            concurrent.futures.wait(futures)
+            job_ids = [fut.cluster_jobid for fut in futures]
+
+            # Count how often each job_id occurs which corresponds to the array size of the job
+            occurences = list(Counter(job_ids).values())
+
+            assert all(array_size <= max_array_size for array_size in occurences)
+    finally:
+        _, _, exit_code = call(
+            f"sed -i 's/{command}//g' /etc/slurm/slurm.conf && scontrol reconfigure"
+        )
+        assert exit_code == 0
+        reset_max_array_size = executor.get_max_array_size()
+        assert reset_max_array_size == original_max_array_size
+
+
 def test_executor_args():
     def pass_with(exc):
         with exc:
@@ -490,7 +659,7 @@ def accept_high_mem(data):
 
 
 @pytest.mark.skip(
-    reason="This test is does not pass on the CI. Probably because the machine does not have enough RAM."
+    reason="This test does not pass on the CI. Probably because the machine does not have enough RAM."
 )
 def test_high_ram_usage():
     very_long_string = " " * 10 ** 6 * 2500
@@ -565,8 +734,9 @@ def test_preliminary_file_map():
                 list(a_range),
                 output_pickle_path_getter=partial(output_pickle_path_getter, tmp_dir),
             )
-            with pytest.raises(Exception):
-                [fut.result() for fut in futs]
+            for fut in futs:
+                with pytest.raises(Exception):
+                    fut.result()
 
             for idx in a_range:
                 output_pickle_path = Path(output_pickle_path_getter(tmp_dir, idx))
@@ -586,7 +756,7 @@ def test_preliminary_file_map():
                 output_pickle_path_getter=partial(output_pickle_path_getter, tmp_dir),
             )
             for (fut, job_index) in zip(futs, a_range):
-                fut.result() == square(job_index)
+                assert fut.result() == square(job_index)
 
             for idx in a_range:
                 output_pickle_path = Path(output_pickle_path_getter(tmp_dir, idx))

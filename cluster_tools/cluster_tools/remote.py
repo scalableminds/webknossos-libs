@@ -30,12 +30,15 @@ def get_custom_main_path(workerid):
     return custom_main_path
 
 
-def worker(workerid, job_array_index, cfut_dir):
+def worker(workerid, job_array_index, job_array_index_offset, cfut_dir):
     """Called to execute a job on a remote host."""
 
-    workerid_with_idx = (
-        worker_id + "_" + job_array_index if job_array_index is not None else workerid
-    )
+    if job_array_index is not None:
+        workerid_with_idx = (
+            worker_id + "_" + str(int(job_array_index_offset) + int(job_array_index))
+        )
+    else:
+        workerid_with_idx = worker_id
 
     executor = get_executor_class()
     try:
@@ -70,7 +73,7 @@ def worker(workerid, job_array_index, cfut_dir):
         logging.info("Job computation completed.")
         out = pickling.dumps(result)
 
-    except Exception as e:
+    except Exception:
         print(traceback.format_exc())
 
         result = False, format_remote_exc()
@@ -126,9 +129,10 @@ def setup_logging(meta_data, executor, cfut_dir):
 if __name__ == "__main__":
     worker_id = sys.argv[1]
     cfut_dir = sys.argv[2]
+    job_array_index_offset = sys.argv[3] if len(sys.argv) > 3 else "0"
     job_array_index = get_executor_class().get_job_array_index()
 
-    worker(worker_id, job_array_index, cfut_dir)
+    worker(worker_id, job_array_index, job_array_index_offset, cfut_dir)
     # This is a workaround for the case that some subprocesses are still hanging around and are waited for.
     # If this point is reached, results were written to disk and we can "safely" shut down everything.
     sys.exit()

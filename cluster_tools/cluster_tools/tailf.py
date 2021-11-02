@@ -8,25 +8,25 @@ import time
 
 
 class Tail(object):
-    """ Represents a tail command. """
+    """Represents a tail command."""
 
     def __init__(self, tailed_file, callback=sys.stdout.write):
-        """ Initiate a Tail instance.
-            Check for file validity, assigns callback function to standard out.
-            
-            Arguments:
-                tailed_file - File to be followed. """
+        """Initiate a Tail instance.
+        Check for file validity, assigns callback function to standard out.
+
+        Arguments:
+            tailed_file - File to be followed."""
 
         self.tailed_file = tailed_file
         self.callback = callback
         self.is_cancelled = False
 
     def follow(self, seconds=1):
-        """ Do a tail follow. If a callback function is registered it is called with every new line. 
+        """Do a tail follow. If a callback function is registered it is called with every new line.
         Else printed to standard out.
-    
+
         Arguments:
-            seconds - Number of seconds to wait between each iteration; Defaults to 1. """
+            seconds - Number of seconds to wait between each iteration; Defaults to 1."""
 
         self.check_file_validity(self.tailed_file)
         with open(self.tailed_file, errors="replace") as file_:
@@ -48,11 +48,11 @@ class Tail(object):
         self.is_cancelled = True
 
     def register_callback(self, func):
-        """ Overrides default callback function to provided function. """
+        """Overrides default callback function to provided function."""
         self.callback = func
 
     def check_file_validity(self, file_):
-        """ Check whether the a given file exists, readable and is a file """
+        """Check whether the a given file exists, readable and is a file"""
         if not os.access(file_, os.F_OK):
             raise TailError("File '%s' does not exist" % (file_))
         if not os.access(file_, os.R_OK):
@@ -62,8 +62,4 @@ class Tail(object):
 
 
 class TailError(Exception):
-    def __init__(self, msg):
-        self.message = msg
-
-    def __str__(self):
-        return self.message
+    pass

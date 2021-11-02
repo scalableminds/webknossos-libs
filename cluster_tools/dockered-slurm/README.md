@@ -100,5 +100,5 @@ To remove all containers and volumes, run:
 
 ```console
 $ docker-compose rm -sf
-$ docker volume rm slurm-docker-cluster_etc_munge slurm-docker-cluster_etc_slurm slurm-docker-cluster_slurm_jobdir slurm-docker-cluster_var_lib_mysql slurm-docker-cluster_var_log_slurm
+$ docker volume rm dockered-slurm_etc_munge dockered-slurm_etc_slurm dockered-slurm_slurm_jobdir dockered-slurm_var_lib_mysql dockered-slurm_var_log_slurm
 ```

@@ -32,6 +32,8 @@ services:
     image: slurm-docker-cluster:latest
     command: ["slurmctld"]
     container_name: slurmctld
+    environment:
+      USER: "root"
     hostname: slurmctld
     volumes:
       - etc_munge:/etc/munge

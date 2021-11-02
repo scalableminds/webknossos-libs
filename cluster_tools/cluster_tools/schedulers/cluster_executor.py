@@ -17,11 +17,11 @@ from abc import abstractmethod
 import logging
 from typing import Union
 from cluster_tools.tailf import Tail
-import shutil
+from functools import partial
 
 
 class RemoteException(Exception):
-    def __init__(self, error, job_id):
+    def __init__(self, error, job_id):  # pylint: disable=super-init-not-called
         self.error = error
         self.job_id = job_id
 
@@ -39,7 +39,7 @@ class ClusterExecutor(futures.Executor):
         cfut_dir=None,
         job_resources=None,
         job_name=None,
-        additional_setup_lines=[],
+        additional_setup_lines=None,
         **kwargs,
     ):
         """
@@ -54,7 +54,7 @@ class ClusterExecutor(futures.Executor):
         """
         self.debug = debug
         self.job_resources = job_resources
-        self.additional_setup_lines = additional_setup_lines
+        self.additional_setup_lines = additional_setup_lines or []
         self.job_name = job_name
         self.was_requested_to_shutdown = False
         self.cfut_dir = (
@@ -92,7 +92,7 @@ class ClusterExecutor(futures.Executor):
         if "logging_setup_fn" in kwargs:
             self.meta_data["logging_setup_fn"] = kwargs["logging_setup_fn"]
 
-    def handle_kill(self, signum, frame):
+    def handle_kill(self, _signum, _frame):
         self.wait_thread.stop()
         job_ids = ",".join(str(id) for id in self.jobs.keys())
         print(
@@ -107,19 +107,26 @@ class ClusterExecutor(futures.Executor):
         pass
 
     def _start(self, workerid, job_count=None, job_name=None):
-        """Start a job with the given worker ID and return an ID
-        identifying the new job. The job should run ``python -m
+        """Start job(s) with the given worker ID and return IDs
+        identifying the new job(s). The job should run ``python -m
         cfut.remote <workerid>.
         """
 
-        jobid = self.inner_submit(
+        jobids_futures, job_index_ranges = self.inner_submit(
             f"{sys.executable} -m cluster_tools.remote {workerid} {self.cfut_dir}",
             job_name=self.job_name if self.job_name is not None else job_name,
             additional_setup_lines=self.additional_setup_lines,
             job_count=job_count,
         )
 
-        return jobid
+        # Since not all jobs may be submitted immediately, cluster executors return
+        # jobid futures in the inner_submit function. Also, since it may not be allowed
+        # to submit all jobs at once, the jobs may be submitted in batches with each batch
+        # containing a subset of all jobs identified by a separate jobid. The job_index_ranges
+        # array of (start_index, end_index) tuples, indicates which of the job_count
+        # jobs were submitted in each batch. start_index is inclusive whereas end_index
+        # is not.
+        return jobids_futures, job_index_ranges
 
     @abstractmethod
     def inner_submit(self, *args, **kwargs):
@@ -149,8 +156,9 @@ class ClusterExecutor(futures.Executor):
     def get_job_id_string(self):
         pass
 
-    def get_temp_file_path(self, file_name):
-        return os.path.join(self.cfut_dir, file_name)
+    @staticmethod
+    def get_temp_file_path(cfut_dir, file_name):
+        return os.path.join(cfut_dir, file_name)
 
     @staticmethod
     def format_infile_name(cfut_dir, job_id):
@@ -264,7 +272,9 @@ class ClusterExecutor(futures.Executor):
             os.unlink(preliminary_output_pickle_path)
 
         job_name = get_function_name(fun)
-        jobid = self._start(workerid, job_name=job_name)
+        jobids_futures, _ = self._start(workerid, job_name=job_name)
+        # Only a single job was submitted
+        jobid = jobids_futures[0].result()
 
         if self.debug:
             print("job submitted: %i" % jobid, file=sys.stderr)
@@ -314,7 +324,6 @@ class ClusterExecutor(futures.Executor):
             pickling.dump(fun, file)
         self.store_main_path_to_meta_file(workerid)
 
-        # Submit jobs eagerly
         for index, arg in enumerate(allArgs):
             fut = self.create_enriched_future()
             workerid_with_index = self.get_workerid_with_index(workerid, index)
@@ -335,7 +344,6 @@ class ClusterExecutor(futures.Executor):
                 )
                 os.unlink(preliminary_output_pickle_path)
 
-            # Start the job.
             serialized_function_info = pickling.dumps(
                 (pickled_function_path, [arg], {}, self.meta_data, output_pickle_path)
             )
@@ -346,37 +354,78 @@ class ClusterExecutor(futures.Executor):
 
             futs_with_output_paths.append((fut, output_pickle_path))
 
+        with self.jobs_lock:
+            # Use a separate loop to avoid having to acquire the jobs_lock many times
+            # or for the full duration of the above loop
+            for index in range(len(futs_with_output_paths)):
+                workerid_with_index = self.get_workerid_with_index(workerid, index)
+                # Register the job in the jobs array, although the jobid is not known yet.
+                # Otherwise it might happen that self.jobs becomes empty, but some of the jobs were
+                # not even submitted yet.
+                self.jobs[workerid_with_index] = "pending"
+
         job_count = len(allArgs)
         job_name = get_function_name(fun)
-        jobid = self._start(workerid, job_count, job_name)
+        jobids_futures, job_index_ranges = self._start(workerid, job_count, job_name)
 
+        number_of_batches = len(jobids_futures)
+        for batch_index, (jobid_future, (job_index_start, job_index_end)) in enumerate(
+            zip(jobids_futures, job_index_ranges)
+        ):
+            jobid_future.add_done_callback(
+                partial(
+                    self.register_jobs,
+                    futs_with_output_paths[job_index_start:job_index_end],
+                    workerid,
+                    should_keep_output,
+                    job_index_start,
+                    f"{batch_index + 1}/{number_of_batches}",
+                )
+            )
+
+        return [fut for (fut, _) in futs_with_output_paths]
+
+    def register_jobs(
+        self,
+        futs_with_output_paths,
+        workerid,
+        should_keep_output,
+        job_index_offset,
+        batch_description,
+        jobid_future,
+    ):
+        jobid = jobid_future.result()
         if self.debug:
+
             print(
-                "main job submitted: %i. consists of %i subjobs." % (jobid, job_count),
+                "Submitted array job {} with JobId {} and {} subjobs.".format(
+                    batch_description, jobid, len(futs_with_output_paths)
+                ),
                 file=sys.stderr,
             )
 
-        with self.jobs_lock:
-            for index, (fut, output_pickle_path) in enumerate(futs_with_output_paths):
-                jobid_with_index = self.get_jobid_with_index(jobid, index)
-                # Thread will wait for it to finish.
+        for array_index, (fut, output_path) in enumerate(futs_with_output_paths):
+            jobid_with_index = self.get_jobid_with_index(jobid, array_index)
 
-                outfile_name = output_pickle_path
-                self.wait_thread.waitFor(
-                    with_preliminary_postfix(outfile_name), jobid_with_index
-                )
+            # Thread will wait for it to finish.
+            self.wait_thread.waitFor(
+                with_preliminary_postfix(output_path), jobid_with_index
+            )
 
-                fut.cluster_jobid = jobid
-                fut.cluster_jobindex = index
+            fut.cluster_jobid = jobid
+            fut.cluster_jobindex = array_index
 
+            job_index = job_index_offset + array_index
+            workerid_with_index = self.get_workerid_with_index(workerid, job_index)
+            # Remove the pending jobs entry and add the correct one
+            with self.jobs_lock:
+                del self.jobs[workerid_with_index]
                 self.jobs[jobid_with_index] = (
                     fut,
                     workerid_with_index,
-                    outfile_name,
+                    output_path,
                     should_keep_output,
                 )
-
-        return [fut for (fut, _) in futs_with_output_paths]
 
     def shutdown(self, wait=True):
         """Close the pool."""

@@ -1,7 +1,5 @@
 import sys
 import os
-import io
-import logging
 
 use_cloudpickle = "USE_CLOUDPICKLE" in os.environ
 
@@ -13,7 +11,6 @@ else:
     import pickle
 
     pickle_strategy = pickle
-import importlib
 from .util import warn_after
 
 WARNING_TIMEOUT = 10 * 60  # seconds
@@ -26,7 +23,7 @@ def file_path_to_absolute_module(file_path):
     :return:
     """
     assert os.path.exists(file_path)
-    file_loc, ext = os.path.splitext(file_path)
+    file_loc, _ = os.path.splitext(file_path)
     directory, module = os.path.split(file_loc)
     module_path = [module]
     while True:
@@ -80,5 +77,7 @@ class RenameUnpickler(pickle_strategy.Unpickler):
 @warn_after("pickle.load", WARNING_TIMEOUT)
 def load(f, custom_main_path=None):
     unpickler = RenameUnpickler(f)
-    unpickler.custom_main_path = custom_main_path
+    unpickler.custom_main_path = (  # pylint: disable=attribute-defined-outside-init
+        custom_main_path
+    )
     return unpickler.load()

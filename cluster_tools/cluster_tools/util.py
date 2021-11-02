@@ -5,8 +5,6 @@ import os
 import threading
 import time
 import logging
-import re
-import types
 
 
 def local_filename(filename=""):
@@ -45,7 +43,7 @@ def call(command, stdin=None):
 class CommandError(Exception):
     """Raised when a shell command exits abnormally."""
 
-    def __init__(self, command, code, stderr):
+    def __init__(self, command, code, stderr):  # pylint: disable=super-init-not-called
         self.command = command
         self.code = code
         self.stderr = stderr
@@ -79,7 +77,7 @@ def warn_after(job, seconds):
             start_time = time.time()
 
             def warn_function():
-                logging.warn(
+                logging.warning(
                     "Function {} is taking suspiciously long (longer than {} seconds)".format(
                         job, seconds
                     )
@@ -93,7 +91,7 @@ def warn_after(job, seconds):
                 result = fn(*args, **kwargs)
                 if exceeded_timeout[0]:
                     end_time = time.time()
-                    logging.warn(
+                    logging.warning(
                         "Function {} succeeded after all (took {} seconds)".format(
                             job, int(end_time - start_time)
                         )
