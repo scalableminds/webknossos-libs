@@ -293,7 +293,7 @@ def tile_cubing(
 
     # Determine tile size from first matching file
     num_x, num_y = image_reader.read_dimensions(arbitrary_file)
-    num_z = max_dimensions["z"] - min_dimensions["z"]
+    num_z = max_dimensions["z"] - min_dimensions["z"] + 1
     num_channels = image_reader.read_channel_count(arbitrary_file)
     logging.info(
         "Found source files: count={} with tile_size={}x{}".format(
@@ -322,12 +322,20 @@ def tile_cubing(
             dtype_per_channel=dtype,
             num_channels=num_channels,
         )
-    target_layer.bounding_box = target_layer.bounding_box.extended_by(
-        BoundingBox(
-            Vec3Int(0, 0, min_dimensions["z"]),
-            Vec3Int(num_x, num_y, num_z),
+    if target_layer.bounding_box == BoundingBox((0, 0, 0), (0, 0, 0)):
+        # If the layer is empty, we want to set the bbox directly because extending it
+        # would mean that the bbox would always start at (0, 0, 0)
+        target_layer.bounding_box = BoundingBox(
+                Vec3Int(0, 0, min_dimensions["z"]),
+                Vec3Int(num_x, num_y, num_z),
+            )
+    else:
+        target_layer.bounding_box = target_layer.bounding_box.extended_by(
+            BoundingBox(
+                Vec3Int(0, 0, min_dimensions["z"]),
+                Vec3Int(num_x, num_y, num_z),
+            )
         )
-    )
 
     target_mag_view = target_layer.get_or_add_mag(Mag(1), block_len=BLOCK_LEN)
 
@@ -337,6 +345,12 @@ def tile_cubing(
         for z_batch in get_regular_chunks(
             min_dimensions["z"], max_dimensions["z"], BLOCK_LEN
         ):
+            # The z_batch always starts and ends at a multiple of BLOCK_LEN.
+            # However, we only want the part that is inside the bounding box
+            z_batch = range(
+                max(list(z_batch)[0], target_layer.bounding_box.topleft.z),
+                min(list(z_batch)[-1]+1, target_layer.bounding_box.bottomright.z)
+            )
             z_values = list(z_batch)
             job_args.append(
                 (
