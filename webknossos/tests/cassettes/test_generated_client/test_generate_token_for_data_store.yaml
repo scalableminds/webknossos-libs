@@ -1,0 +1,44 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '0'
+      host:
+      - webknossos.org
+      user-agent:
+      - python-httpx/0.18.2
+    method: POST
+    uri: https://webknossos.org/api/userToken/generate
+  response:
+    content: '{"token":"WUQV2LaMDn2e0kDCpuARcg"}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '34'
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 26 Oct 2021 15:29:44 GMT
+      Referrer-Policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      Server:
+      - nginx/1.17.10
+      Strict-Transport-Security:
+      - max-age=15724800; includeSubDomains
+      Vary:
+      - Accept-Encoding
+      X-Permitted-Cross-Domain-Policies:
+      - master-only
+      X-XSS-Protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+version: 1

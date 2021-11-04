@@ -70,6 +70,7 @@ nav:
       - webknossos-py/examples/upload_image_data.md
       - webknossos-py/examples/learned_segmenter.md
       - webknossos-py/examples/skeleton_synapse_candidates.md
+      - webknossos-py/examples/user_times.md
   - API Reference:
     - Geometry:
       - BoundingBox: api/webknossos/geometry/bounding_box.md

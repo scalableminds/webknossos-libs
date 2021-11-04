@@ -20,6 +20,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 
 ## [v0.8.19](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.19) - 2021-10-21
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.18...v.8.19)
+
 ### Fixed
 - Fixed two bugs in `cubing` (regarding `start_z` and `pad`). As a result, the ImageConverters do no longer cache metadata. [#460](https://github.com/scalableminds/webknossos-libs/pull/460)
 
