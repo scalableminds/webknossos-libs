@@ -1,5 +1,6 @@
 import os
 import re
+import time
 from argparse import ArgumentParser, Namespace
 from collections import namedtuple
 from glob import iglob
@@ -11,7 +12,6 @@ import numpy as np
 import wkw
 
 from webknossos.geometry import BoundingBox, Mag, Vec3Int
-import time
 
 BUCKET_SIZE = 32
 BUCKET_SHAPE = (BUCKET_SIZE, BUCKET_SIZE, BUCKET_SIZE)
