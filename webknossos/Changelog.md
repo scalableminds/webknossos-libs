@@ -6,10 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MINOR.PATCH`.
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
-
 ## Unreleased
 [Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.22...HEAD)
-
 
 ### Breaking Changes
 ### Added
@@ -23,6 +21,11 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes
 - Removed the `organization` parameter from the `webknossos_context` function. The organization will automatically be fetched using the token of the user. [#470](https://github.com/scalableminds/webknossos-libs/pull/470)
 
+### Fixed
+- Make Views picklable. We now ignore the file handle when we pickle Views. [#469](https://github.com/scalableminds/webknossos-libs/pull/469)
+
+## [v0.8.19](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.19) - 2021-10-21
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.18...v.8.19)
 ### Added
 - Added a `User` class to the client that can be used to get meta-information of users or their logged time. The currently logged in user can be accessed, as well as all managed users. [#470](https://github.com/scalableminds/webknossos-libs/pull/470)
 
