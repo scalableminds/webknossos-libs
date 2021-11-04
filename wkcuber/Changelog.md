@@ -7,15 +7,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.19...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.20...HEAD)
 
 ### Breaking Changes in Config & CLI
 ### Added
+- Added the flag `--version` to `wkcuber`. [#471](https://github.com/scalableminds/webknossos-libs/pull/471)
 ### Changed
 ### Fixed
 
-## [0.8.19](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.19) - 2021-10-21
-[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.18...v0.8.19)
+## [v0.8.20](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.20) - 2021-10-28
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.19...v.8.20)
+
+## [v0.8.19](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.19) - 2021-10-21
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.18...v.8.19)
 
 ### Fixed
 - Fixed two bugs in `cubing` (regarding `start_z` and `pad`). As a result, the ImageConverters do no longer cache metadata. [#460](https://github.com/scalableminds/webknossos-libs/pull/460)
