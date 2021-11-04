@@ -308,13 +308,17 @@ class BoundingBox:
             assert coord.shape == (
                 3,
             ), f"Numpy array BoundingBox.contains must have shape (3,), got {coord.shape}."
+            return cast(
+                bool,
+                np.all(coord >= self.topleft) and np.all(coord < self.bottomright),
+            )
         else:
-            coord = Vec3Int(coord).to_np()
-
-        return cast(
-            bool,
-            np.all(coord >= self.topleft) and np.all(coord < self.topleft + self.size),
-        )
+            coord = Vec3Int(coord)
+            return (
+                self.topleft[0] <= coord[0] < self.bottomright[0]
+                and self.topleft[1] <= coord[1] < self.bottomright[1]
+                and self.topleft[2] <= coord[2] < self.bottomright[2]
+            )
 
     def contains_bbox(self, inner_bbox: "BoundingBox") -> bool:
         return inner_bbox.intersected_with(self, dont_assert=True) == inner_bbox
@@ -355,7 +359,6 @@ class BoundingBox:
                 for z in range(
                     start[2] - start_adjust[2], start[2] + self.size[2], chunk_size[2]
                 ):
-
                     yield BoundingBox([x, y, z], chunk_size).intersected_with(self)
 
     def volume(self) -> int:
