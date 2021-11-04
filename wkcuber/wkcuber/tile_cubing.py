@@ -204,71 +204,70 @@ def tile_cubing_job(
         max_dimensions,
         decimal_lengths,
         dtype,
-        num_channels
+        num_channels,
     ) = args
 
-    with target_view.open():
-        # Iterate over the z batches
-        # Batching is useful to utilize IO more efficiently
-        for z_batch in get_chunks(z_batches, batch_size):
-            try:
-                ref_time = time.time()
-                logging.info("Cubing z={}-{}".format(z_batch[0], z_batch[-1]))
+    # Iterate over the z batches
+    # Batching is useful to utilize IO more efficiently
+    for z_batch in get_chunks(z_batches, batch_size):
+        try:
+            ref_time = time.time()
+            logging.info("Cubing z={}-{}".format(z_batch[0], z_batch[-1]))
 
-                for x in range(min_dimensions["x"], max_dimensions["x"] + 1):
-                    for y in range(min_dimensions["y"], max_dimensions["y"] + 1):
-                        ref_time2 = time.time()
-                        # Allocate a large buffer for all images in this batch
-                        # Shape will be (channel_count, x, y, z)
-                        # Using fortran order for the buffer, prevents that the data has to be copied in rust
-                        buffer_shape = [num_channels, tile_size[0], tile_size[1], batch_size]
-                        buffer = np.empty(buffer_shape, dtype=dtype, order="F")
-                        for z in z_batch:
-                            # Read file if exists or use zeros instead
-                            file_name = find_file_with_dimensions(
-                                input_path_pattern, x, y, z, decimal_lengths
-                            )
-                            if file_name:
-                                # read the image
-                                image = read_image_file(
-                                    file_name,
-                                    target_view.header.voxel_type,
-                                    z,
-                                    None,
-                                    None,
-                                )
-                            else:
-                                # add zeros instead
-                                image = np.zeros(
-                                        tile_size + (1,),
-                                        dtype=target_view.header.voxel_type,
-                                    )
-                            buffer[
-                                :,
-                                :,
-                                :,
-                                z-z_batch[0]
-                            ] = image.transpose((2, 0, 1, 3))[:, :, :, 0]
-
-                        if np.any(buffer != 0):
-                            target_view.write(data=buffer)
-                        logging.debug(
-                            "Cubing of z={}-{} x={} y={} took {:.8f}s".format(
-                                z_batch[0], z_batch[-1], x, y, time.time() - ref_time2
-                            )
+            for x in range(min_dimensions["x"], max_dimensions["x"] + 1):
+                for y in range(min_dimensions["y"], max_dimensions["y"] + 1):
+                    ref_time2 = time.time()
+                    # Allocate a large buffer for all images in this batch
+                    # Shape will be (channel_count, x, y, z)
+                    # Using fortran order for the buffer, prevents that the data has to be copied in rust
+                    buffer_shape = [
+                        num_channels,
+                        tile_size[0],
+                        tile_size[1],
+                        batch_size,
+                    ]
+                    buffer = np.empty(buffer_shape, dtype=dtype, order="F")
+                    for z in z_batch:
+                        # Read file if exists or use zeros instead
+                        file_name = find_file_with_dimensions(
+                            input_path_pattern, x, y, z, decimal_lengths
                         )
-                logging.debug(
-                    "Cubing of z={}-{} took {:.8f}s".format(
-                        z_batch[0], z_batch[-1], time.time() - ref_time
+                        if file_name:
+                            # read the image
+                            image = read_image_file(
+                                file_name,
+                                target_view.header.voxel_type,
+                                z,
+                                None,
+                                None,
+                            )
+                        else:
+                            # add zeros instead
+                            image = np.zeros(
+                                tile_size + (1,),
+                                dtype=target_view.header.voxel_type,
+                            )
+                        buffer[:, :, :, z - z_batch[0]] = image.transpose((2, 0, 1, 3))[
+                            :, :, :, 0
+                        ]
+
+                    if np.any(buffer != 0):
+                        target_view.write(data=buffer)
+                    logging.debug(
+                        "Cubing of z={}-{} x={} y={} took {:.8f}s".format(
+                            z_batch[0], z_batch[-1], x, y, time.time() - ref_time2
+                        )
                     )
+            logging.debug(
+                "Cubing of z={}-{} took {:.8f}s".format(
+                    z_batch[0], z_batch[-1], time.time() - ref_time
                 )
-            except Exception as exc:
-                logging.error(
-                    "Cubing of z={}-{} failed with: {}".format(
-                        z_batch[0], z_batch[-1], exc
-                    )
-                )
-                raise exc
+            )
+        except Exception as exc:
+            logging.error(
+                "Cubing of z={}-{} failed with: {}".format(z_batch[0], z_batch[-1], exc)
+            )
+            raise exc
 
 
 def tile_cubing(
@@ -294,7 +293,7 @@ def tile_cubing(
 
     # Determine tile size from first matching file
     num_x, num_y = image_reader.read_dimensions(arbitrary_file)
-    num_z = max_dimensions["z"] - min_dimensions["z"]  # TODO: is this correct
+    num_z = max_dimensions["z"] - min_dimensions["z"]
     num_channels = image_reader.read_channel_count(arbitrary_file)
     logging.info(
         "Found source files: count={} with tile_size={}x{}".format(
@@ -306,7 +305,7 @@ def tile_cubing(
     else:
         dtype = args.dtype
 
-    target_ds = Dataset.get_or_create(target_path, scale=(1, 1, 1))  # TODO:scale
+    target_ds = Dataset.get_or_create(target_path, scale=(1, 1, 1))
     is_segmentation_layer = layer_name == "segmentation"
     if is_segmentation_layer:
         target_layer = target_ds.get_or_add_layer(
@@ -325,14 +324,12 @@ def tile_cubing(
         )
     target_layer.bounding_box = target_layer.bounding_box.extended_by(
         BoundingBox(
-            Vec3Int(0, 0, 0),
+            Vec3Int(0, 0, min_dimensions["z"]),
             Vec3Int(num_x, num_y, num_z),
         )
     )
 
-    target_mag_view = target_layer.get_or_add_mag(
-        Mag(1), block_len=BLOCK_LEN
-    )
+    target_mag_view = target_layer.get_or_add_mag(Mag(1), block_len=BLOCK_LEN)
 
     with get_executor_for_args(args) as executor:
         job_args = []
@@ -340,7 +337,7 @@ def tile_cubing(
         for z_batch in get_regular_chunks(
             min_dimensions["z"], max_dimensions["z"], BLOCK_LEN
         ):
-            z_values = list(z_batch)  # TODO: get rid of get_regular_chunks
+            z_values = list(z_batch)
             job_args.append(
                 (
                     target_mag_view.get_view(
@@ -355,7 +352,7 @@ def tile_cubing(
                     max_dimensions,
                     decimal_lengths,
                     dtype,
-                    num_channels
+                    num_channels,
                 )
             )
         wait_and_ensure_success(executor.map_to_futures(tile_cubing_job, job_args))

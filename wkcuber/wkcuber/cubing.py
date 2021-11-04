@@ -206,8 +206,9 @@ def cubing_job(
             # Allocate a large buffer for all images in this batch
             # Shape will be (channel_count, x, y, z)
             # Using fortran order for the buffer, prevents that the data has to be copied in rust
-            buffer_shape = [num_channels] + list(max_image_size) + [len(source_file_batch)]
-            print(target_view.size)
+            buffer_shape = (
+                [num_channels] + list(max_image_size) + [len(source_file_batch)]
+            )
             buffer = np.empty(buffer_shape, dtype=dtype, order="F")
 
             # Iterate over each z section in the batch
