@@ -11,9 +11,11 @@ import numpy as np
 import wkw
 
 from webknossos.geometry import BoundingBox, Mag, Vec3Int
+import time
 
 BUCKET_SIZE = 32
 BUCKET_SHAPE = (BUCKET_SIZE, BUCKET_SIZE, BUCKET_SIZE)
+CUBE_SHAPE = BUCKET_SHAPE  # (256, 256, 256)
 NEIGHBORS = [(1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1)]
 
 FloodFillBbox = namedtuple(
@@ -48,7 +50,7 @@ def create_parser() -> ArgumentParser:
 
     parser.add_argument("--output_path", "-o", help="Output directory", type=Path)
 
-    parser.add_argument("--skip_merge", type=bool, default=False, action="store_true")
+    parser.add_argument("--skip_merge", default=False, action="store_true")
 
     return parser
 
@@ -57,9 +59,9 @@ def get_bucket_pos_and_offset(
     global_position: Tuple[int, int, int]
 ) -> Tuple[Tuple[int, int, int], Tuple[int, int, int]]:
     offset = (
-        global_position[0] % BUCKET_SIZE,
-        global_position[1] % BUCKET_SIZE,
-        global_position[2] % BUCKET_SIZE,
+        global_position[0] % CUBE_SHAPE[0],
+        global_position[1] % CUBE_SHAPE[1],
+        global_position[2] % CUBE_SHAPE[2],
     )
     return (
         substract_positions(global_position, offset),
@@ -79,6 +81,18 @@ def substract_positions(
     return a[0] - b[0], a[1] - b[1], a[2] - b[2]
 
 
+def inside_bbox(
+    point: Tuple[int, int, int],
+    bbox_top_left: Tuple[int, int, int] = (0, 0, 0),
+    bbox_bottom_right: Tuple[int, int, int] = CUBE_SHAPE,
+) -> bool:
+    return (
+        bbox_top_left[0] <= point[0] < bbox_bottom_right[0]
+        and bbox_top_left[1] <= point[1] < bbox_bottom_right[1]
+        and bbox_top_left[2] <= point[2] < bbox_bottom_right[2]
+    )
+
+
 def execute_floodfill(
     data_path: Path,
     seed_position: Tuple[int, int, int],
@@ -93,9 +107,8 @@ def execute_floodfill(
     # bucket_to_seed_pos: Dict[
     #    Tuple[int, int, int], Set[Tuple[int, int, int]]
     # ] = defaultdict(set)
-    bucket_bbox = BoundingBox(
-        (0, 0, 0), BUCKET_SHAPE
-    )  # helper bbox to determine whether neighbor is in same bucket
+    already_processed_bbox_top_left = already_processed_bbox.topleft.to_tuple()
+    already_processed_bbox_bottom_right = already_processed_bbox.bottomright.to_tuple()
     visited = np.zeros(
         already_processed_bbox.size.to_tuple(), dtype=np.uint8
     )  # bitarray needs less memory, but new dependency
@@ -107,17 +120,21 @@ def execute_floodfill(
                 print("Handled seed positions ", bucket_count)
 
             dirty_bucket = False
-            current_bucket, seed_position = bucket_and_seed_pos.pop()
-            global_seed_position = add_positions(current_bucket, seed_position)
-            bucket_data = wkw_data.read(current_bucket, BUCKET_SHAPE)
-            bucket_data = bucket_data[0, :, :, :]
+            current_cube, seed_position = bucket_and_seed_pos.pop()
+            global_seed_position = add_positions(current_cube, seed_position)
+            cube_data = wkw_data.read(current_cube, CUBE_SHAPE)
+            cube_data = cube_data[0, :, :, :]
 
-            if bucket_data[seed_position] == source_id or (
-                already_processed_bbox.contains(global_seed_position)
-                and bucket_data[seed_position] == target_id
+            if cube_data[seed_position] == source_id or (
+                inside_bbox(
+                    global_seed_position,
+                    already_processed_bbox_top_left,
+                    already_processed_bbox_bottom_right,
+                )
+                and cube_data[seed_position] == target_id
                 and not visited[
                     substract_positions(
-                        global_seed_position, already_processed_bbox.topleft.to_tuple()
+                        global_seed_position, already_processed_bbox_top_left
                     )
                 ]
             ):
@@ -125,47 +142,55 @@ def execute_floodfill(
                 seeds_in_curr_bucket.add(seed_position)
                 while len(seeds_in_curr_bucket) > 0:
                     seed_pos = seeds_in_curr_bucket.pop()
-                    global_seed_pos = add_positions(current_bucket, seed_pos)
-                    if already_processed_bbox.contains(global_seed_pos):
+                    global_seed_pos = add_positions(current_cube, seed_pos)
+                    if inside_bbox(
+                        global_seed_pos,
+                        already_processed_bbox_top_left,
+                        already_processed_bbox_bottom_right,
+                    ):
                         visited[
                             substract_positions(
                                 global_seed_pos,
-                                already_processed_bbox.topleft.to_tuple(),
+                                already_processed_bbox_top_left,
                             )
                         ] = 1
 
-                    if bucket_data[seed_pos] != target_id:
-                        bucket_data[seed_pos] = target_id
+                    if cube_data[seed_pos] != target_id:
+                        cube_data[seed_pos] = target_id
                         dirty_bucket = True
 
-                    # checkNeighbors
+                    # check neighbors
                     for neighbor in NEIGHBORS:
                         neighbor_pos = add_positions(seed_pos, neighbor)
-                        global_neighbor_pos = add_positions(
-                            current_bucket, neighbor_pos
-                        )
-                        if already_processed_bbox.contains(global_neighbor_pos):
+                        global_neighbor_pos = add_positions(current_cube, neighbor_pos)
+                        if inside_bbox(
+                            global_neighbor_pos,
+                            already_processed_bbox_top_left,
+                            already_processed_bbox_bottom_right,
+                        ):
                             if visited[
                                 substract_positions(
                                     global_neighbor_pos,
-                                    already_processed_bbox.topleft.to_tuple(),
+                                    already_processed_bbox_top_left,
                                 )
                             ]:
                                 continue
-                        if bucket_bbox.contains(neighbor_pos):
-                            if bucket_data[neighbor_pos] == source_id or (
-                                already_processed_bbox.contains(global_neighbor_pos)
-                                and bucket_data[neighbor_pos] == target_id
+                        if inside_bbox(neighbor_pos):
+                            if cube_data[neighbor_pos] == source_id or (
+                                inside_bbox(
+                                    global_neighbor_pos,
+                                    already_processed_bbox_top_left,
+                                    already_processed_bbox_bottom_right,
+                                )
+                                and cube_data[neighbor_pos] == target_id
                             ):
                                 seeds_in_curr_bucket.add(neighbor_pos)
                         else:
                             bucket_and_seed_pos.append(
-                                get_bucket_pos_and_offset(
-                                    add_positions(current_bucket, neighbor_pos)
-                                )
+                                get_bucket_pos_and_offset(global_neighbor_pos)
                             )
                 if dirty_bucket:
-                    wkw_data.write(current_bucket, bucket_data)
+                    wkw_data.write(current_cube, cube_data)
 
 
 def detect_cube_length(layer_path: Path) -> int:
@@ -311,13 +336,17 @@ def main(args: Namespace) -> None:
         raise ValueError("Could not detect bbox")
     else:
         if not args.skip_merge:
+            start = time.time()
             combine_with_fallback_layer(
                 dataset_bbox,
                 args.output_path,
                 args.volume_path,
                 args.segmentation_layer_path,
             )
+            print("Combining data took ", time.time() - start)
+    overall_start = time.time()
     for floodfill in bboxes:
+        start = time.time()
         execute_floodfill(
             args.output_path,
             floodfill.seed_position.to_tuple(),
@@ -325,6 +354,8 @@ def main(args: Namespace) -> None:
             floodfill.source_id,
             floodfill.target_id,
         )
+        print("Current floodfill took ", time.time() - start)
+    print("All floodfills took ", time.time() - overall_start)
 
 
 if __name__ == "__main__":
