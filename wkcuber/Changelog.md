@@ -12,6 +12,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes in Config & CLI
 ### Added
 ### Changed
+- Improved the performance of cubing and tile-cubing and integrated the dataset API into tile-cubing. [#480](https://github.com/scalableminds/webknossos-libs/pull/480)
 ### Fixed
 - Fixed two bugs in `cubing` (regarding `start_z` and `pad`). As a result, the ImageConverters do no longer cache metadata. [#460](https://github.com/scalableminds/webknossos-libs/pull/460)
 
