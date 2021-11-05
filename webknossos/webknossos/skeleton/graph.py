@@ -20,8 +20,51 @@ def _get_id(node_or_id: Union[Node, int]) -> int:
         return node_or_id
 
 
+class _NodeDict(MutableMapping):
+    """Dict-like container for the `Graph` class below to handle both nodes and ids as keys.
+    Only when setting the value of a node for the first time the actual node must be passed.
+    This allows to keep a reference from all ids to the nodes, which can be looked up
+    using `get_node()`. Iterating over the keys yields the `Node` objects."""
+
+    def __init__(self) -> None:
+        self._id_to_attrs: Dict[int, Any] = {}
+        self._id_to_node: Dict[int, Node] = {}
+
+    def __getitem__(self, key: Union[Node, int]) -> Any:
+        return self._id_to_attrs[_get_id(key)]
+
+    def __setitem__(self, key: Union[Node, int], value: Dict) -> None:
+        key_id = _get_id(key)
+        if key_id not in self._id_to_node:
+            if isinstance(key, Node):
+                self._id_to_node[key_id] = key
+            else:
+                raise ValueError(
+                    f"Tried to add node {key}, which does not exist yet, to a graph."
+                    + "For insertion, the node must be an instance of the Node class."
+                )
+        self._id_to_attrs[key_id] = value
+
+    def __delitem__(self, key: Union[Node, int]) -> None:
+        del self._id_to_node[_get_id(key)]
+        del self._id_to_attrs[_get_id(key)]
+
+    def __iter__(self) -> Iterator[Node]:
+        return iter(self._id_to_node.values())
+
+    def __len__(self) -> int:
+        return len(self._id_to_attrs)
+
+    def get_node(self, id_: int) -> Node:
+        return self._id_to_node[id_]
+
+
 class _AdjDict(MutableMapping):
-    def __init__(self, *, node_dict: "_NodeDict") -> None:
+    """Dict-like container for the `Graph` class below to handle both nodes and ids as keys.
+    Needs a reference to the _node attribute (of class `_NodeDict`) of the graph object
+    to get a reference from ids to nodes. Iterating over the keys yields the `Node` objects."""
+
+    def __init__(self, *, node_dict: _NodeDict) -> None:
         self._id_to_attrs: Dict[int, Any] = {}
         self._node_dict = node_dict
 
@@ -41,32 +84,6 @@ class _AdjDict(MutableMapping):
         return len(self._id_to_attrs)
 
 
-class _NodeDict(MutableMapping):
-    def __init__(self) -> None:
-        self._id_to_attrs: Dict[int, Any] = {}
-        self._id_to_node: Dict[int, Node] = {}
-
-    def __getitem__(self, key: Union[Node, int]) -> Any:
-        return self._id_to_attrs[_get_id(key)]
-
-    def __setitem__(self, key: Node, value: Dict) -> None:
-        self._id_to_node[key.id] = key
-        self._id_to_attrs[key.id] = value
-
-    def __delitem__(self, key: Union[Node, int]) -> None:
-        del self._id_to_node[_get_id(key)]
-        del self._id_to_attrs[_get_id(key)]
-
-    def __iter__(self) -> Iterator[Node]:
-        return iter(self._id_to_node.values())
-
-    def __len__(self) -> int:
-        return len(self._id_to_attrs)
-
-    def get_node(self, id_: int) -> Node:
-        return self._id_to_node[id_]
-
-
 class Graph(nx.Graph):
     """
     Contains a collection of nodes and edges.
@@ -82,7 +99,18 @@ class Graph(nx.Graph):
         color: Optional[Vector4] = None,
         enforced_id: Optional[int] = None,
     ) -> None:
+        # To be able to reference nodes by id after adding them for the first time, we use custom dict-like classes
+        # for the networkx-graph structures, that have nodes as keys:
+        # * `self._node`: _NodeDict
+        #   holding the attributes of nodes, keeping references from ids to nodes
+        # * `self._adj`: _AdjDict on the first two levels
+        #   holding edge attributes on the last level, using self._node to convert ids to nodes
+        #
+        # For further details, see the *Subclasses* section here: https://networkx.org/documentation/stable/reference/classes/graph.html
+
         self.node_dict_factory = _NodeDict
+        # The lambda works because self._node is set before self._adj in networkx.Graph.__init__
+        # and because the lambda is evaluated lazily.
         self.adjlist_outer_dict_factory = lambda: _AdjDict(node_dict=self._node)
         self.adjlist_inner_dict_factory = lambda: _AdjDict(node_dict=self._node)
 
