@@ -20,6 +20,8 @@ for PKG in */pyproject.toml; do
     sed -i 's/\(.*\) = .* path \= \"\.\..*/\1 = "'"$PKG_VERSION"'"/g' pyproject.toml
     poetry publish --build -u "$PYPI_USERNAME" -p "$PYPI_PASSWORD"
 
+    echo "__version__ = '$PKG_VERSION'" > ./"$PKG"/version.py
+
     # Restore files
     mv pyproject.toml.bak pyproject.toml
 

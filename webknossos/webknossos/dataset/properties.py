@@ -8,6 +8,7 @@ import numpy as np
 import wkw
 from cattr.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 
+from webknossos.dataset.layer_categories import LayerCategoryType
 from webknossos.geometry import BoundingBox, Mag
 from webknossos.utils import snake_to_camel_case
 
@@ -105,7 +106,7 @@ class MagViewProperties:
 @attr.define
 class LayerProperties:
     name: str
-    category: str
+    category: LayerCategoryType
     bounding_box: BoundingBox
     element_class: str
     wkw_resolutions: List[MagViewProperties]
@@ -142,6 +143,8 @@ dataset_converter.register_structure_hook(
 mag_to_array: Callable[[Mag], List[int]] = lambda o: o.to_list()
 dataset_converter.register_unstructure_hook(Mag, mag_to_array)
 dataset_converter.register_structure_hook(Mag, lambda d, _: Mag(d))
+
+dataset_converter.register_structure_hook(LayerCategoryType, lambda d, _: str(d))
 
 # Register (un-)structure hooks for attr-classes to bring the data into the expected format.
 # The properties on disk (in datasource-properties.json) use camel case for the names of the attributes.
