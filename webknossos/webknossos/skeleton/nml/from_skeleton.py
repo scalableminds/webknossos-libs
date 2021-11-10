@@ -142,7 +142,7 @@ def _extract_nodes_and_edges_from_graph(
     ]
 
     edge_nml = [
-        NmlEdge(source=edge_a.id, target=edge_b.id) for edge_a, edge_b in graph.edges
+        NmlEdge(source=source.id, target=target.id) for source, target in graph.edges
     ]
 
     return node_nml, edge_nml
