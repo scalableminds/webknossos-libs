@@ -10,6 +10,8 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 [Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.22...HEAD)
 
 ### Breaking Changes
+- `wk.Graph` now inherits from `networkx.Graph` directly. Therefore, the `nx_graph` attribute is removed. [#481](https://github.com/scalableminds/webknossos-libs/pull/481)
+
 ### Added
 ### Changed
 ### Fixed
