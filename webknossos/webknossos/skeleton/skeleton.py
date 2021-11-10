@@ -47,11 +47,11 @@ class Skeleton(Group):
 
     _id: int = attr.ib(init=False, repr=False)
     element_id_generator: Iterator[int] = attr.ib(init=False, eq=False, repr=False)
-    _nml: "Skeleton" = attr.ib(init=False, eq=False, repr=False)
+    _skeleton: "Skeleton" = attr.ib(init=False, eq=False, repr=False)
 
     def __attrs_post_init__(self) -> None:
         self.element_id_generator = itertools.count()
-        self._nml = self
+        self._skeleton = self
         super().__attrs_post_init__()
 
     @staticmethod

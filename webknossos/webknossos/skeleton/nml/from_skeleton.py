@@ -67,14 +67,14 @@ def from_skeleton(
     comments = [
         NmlComment(node.id, node.comment)
         for graph in group.flattened_graphs()
-        for _id, node in graph.nx_graph.nodes(data="obj")
+        for node in graph.nodes
         if node.comment is not None
     ]
 
     branchpoints = [
         NmlBranchpoint(node.id, node.time)
         for graph in group.flattened_graphs()
-        for _id, node in graph.nx_graph.nodes(data="obj")
+        for node in graph.nodes
         if node.is_branchpoint
     ]
 
@@ -138,11 +138,11 @@ def _extract_nodes_and_edges_from_graph(
             interpolation=node.interpolation,
             time=node.time,
         )
-        for _id, node in graph.nx_graph.nodes(data="obj")
+        for node in graph.nodes
     ]
 
     edge_nml = [
-        NmlEdge(source=edge[0], target=edge[1]) for edge in graph.nx_graph.edges
+        NmlEdge(source=source.id, target=target.id) for source, target in graph.edges
     ]
 
     return node_nml, edge_nml
