@@ -25,14 +25,14 @@ class Group:
         init=False,
         repr=lambda children: f"<{unit_len(children, 'children')}>",
     )
-    _nml: "Skeleton" = attr.ib(eq=False, repr=False)
+    _skeleton: "Skeleton" = attr.ib(eq=False, repr=False)
     _enforced_id: Optional[int] = attr.ib(None, eq=False, repr=False)
 
     def __attrs_post_init__(self) -> None:
         if self._enforced_id is not None:
             self._id = self._enforced_id
         else:
-            self._id = self._nml.element_id_generator.__next__()
+            self._id = self._skeleton.element_id_generator.__next__()
 
     @property
     def id(self) -> int:
@@ -51,7 +51,7 @@ class Group:
             name=name,
             color=color,
             group=self,
-            nml=self._nml,
+            skeleton=self._skeleton,
             enforced_id=_enforced_id,
         )
         self._children.add(new_graph)
@@ -67,12 +67,12 @@ class Group:
         name: str,
         _enforced_id: Optional[int] = None,
     ) -> "Group":
-        new_group = Group(name, nml=self._nml, enforced_id=_enforced_id)
+        new_group = Group(name, skeleton=self._skeleton, enforced_id=_enforced_id)
         self._children.add(new_group)
         return new_group
 
     def get_total_node_count(self) -> int:
-        return sum(len(graph.get_nodes()) for graph in self.flattened_graphs())
+        return sum(graph.number_of_nodes() for graph in self.flattened_graphs())
 
     def get_max_graph_id(self) -> int:
         return max((graph.id for graph in self.flattened_graphs()), default=0)
@@ -98,7 +98,7 @@ class Group:
 
     def get_node_by_id(self, node_id: int) -> "Node":
         for graph in self.flattened_graphs():
-            if graph.has_node_id(node_id):
+            if graph.has_node(node_id):
                 return graph.get_node_by_id(node_id)
 
         raise ValueError("Node id not found")
