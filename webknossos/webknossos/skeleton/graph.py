@@ -1,5 +1,5 @@
 from collections.abc import MutableMapping
-from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional, Tuple, Union, cast
 
 import networkx as nx
 import numpy as np
@@ -62,7 +62,9 @@ class _NodeDict(MutableMapping):
 class _AdjDict(MutableMapping):
     """Dict-like container for the `Graph` class below to handle both nodes and ids as keys.
     Needs a reference to the _node attribute (of class `_NodeDict`) of the graph object
-    to get a reference from ids to nodes. Iterating over the keys yields the `Node` objects."""
+    to get a reference from ids to nodes. Iterating over the keys yields the `Node` objects.
+
+    See Graph.__init__ for more details"""
 
     def __init__(self, *, node_dict: _NodeDict) -> None:
         self._id_to_attrs: Dict[int, Any] = {}
@@ -71,7 +73,7 @@ class _AdjDict(MutableMapping):
     def __getitem__(self, key: Union[Node, int]) -> Any:
         return self._id_to_attrs[_get_id(key)]
 
-    def __setitem__(self, key: Node, value: Dict) -> None:
+    def __setitem__(self, key: Union[Node, int], value: Dict) -> None:
         self._id_to_attrs[_get_id(key)] = value
 
     def __delitem__(self, key: Union[Node, int]) -> None:
@@ -89,7 +91,8 @@ class Graph(nx.Graph):
     Contains a collection of nodes and edges.
     This class inherits from [`networkx.Graph`](https://networkx.org/documentation/stable/reference/classes/graph.html).
     For further methods, please [check the networkx documentation](https://networkx.org/documentation/stable/reference/classes/graph.html#methods).
-    """
+
+    See Graph.__init__ for more details"""
 
     def __init__(
         self,
@@ -105,6 +108,8 @@ class Graph(nx.Graph):
         #   holding the attributes of nodes, keeping references from ids to nodes
         # * `self._adj`: _AdjDict on the first two levels
         #   holding edge attributes on the last level, using self._node to convert ids to nodes
+        #
+        # It's important to set the attributes before the parent's init so that they shadow the class-attributes.
         #
         # For further details, see the *Subclasses* section here: https://networkx.org/documentation/stable/reference/classes/graph.html
 
@@ -129,15 +134,23 @@ class Graph(nx.Graph):
         # only used internally
         self._skeleton = skeleton
 
-    def __eq__(self, o: object) -> bool:
-        get_comparable = lambda graph: (
-            graph.name,
-            graph.id,
-            graph.color,
-            sorted(graph.nodes),
-            sorted(graph.edges),
+    def __to_tuple_for_comparison(self) -> Tuple:
+        return (
+            self.name,
+            self.id,
+            self.color,
+            sorted(self.nodes),
+            sorted(self.edges),
         )
-        return get_comparable(self) == get_comparable(o)
+
+    def __eq__(self, o: object) -> bool:
+        assert isinstance(
+            o, type(self)
+        ), "Can only compare wk.Graph to another wk.Graph."
+        return (
+            self.__to_tuple_for_comparison()
+            == cast("Graph", o).__to_tuple_for_comparison()
+        )
 
     @property
     def id(self) -> int:
