@@ -109,6 +109,10 @@ def execute_floodfill(
     # ] = defaultdict(set)
     already_processed_bbox_top_left = already_processed_bbox.topleft.to_tuple()
     already_processed_bbox_bottom_right = already_processed_bbox.bottomright.to_tuple()
+
+    # The `visited` variable is used to know which parts of the already processed bbox
+    # were already traversed. Outside of that bounding box, the actual data already
+    # is an indicator of whether the flood-fill has reached a voxel.
     visited = np.zeros(
         already_processed_bbox.size.to_tuple(), dtype=np.uint8
     )  # bitarray needs less memory, but new dependency
@@ -237,7 +241,7 @@ def detect_bbox(layer_path: Path) -> Optional[dict]:
     }
 
 
-def combine_with_fallback_layer(
+def merge_with_fallback_layer(
     bbox: dict,
     output_path: Path,
     volume_data_path: Path,
@@ -306,6 +310,9 @@ def bucket_path_for_pos(position: Vec3Int) -> Path:
 
 
 def main(args: Namespace) -> None:
+
+    # Use the skeleton API to read the bounding boxes once
+    # https://github.com/scalableminds/webknossos-libs/issues/482 is done.
     nml_regex = re.compile(
         r'<userBoundingBox .*name="Limits of flood-fill \(source_id=(\d+), target_id=(\d+), seed=([\d,]+), timestamp=(\d+)\)".*topLeftX="(\d+)" topLeftY="(\d+)" topLeftZ="(\d+)" width="(\d+)" height="(\d+)" depth="(\d+)" />'
     )
@@ -337,7 +344,7 @@ def main(args: Namespace) -> None:
     else:
         if not args.skip_merge:
             start = time.time()
-            combine_with_fallback_layer(
+            merge_with_fallback_layer(
                 dataset_bbox,
                 args.output_path,
                 args.volume_path,

@@ -308,6 +308,9 @@ class BoundingBox:
                 np.all(coord >= self.topleft) and np.all(coord < self.bottomright),
             )
         else:
+            # In earlier versions, we simply converted to ndarray to have
+            # a unified calculation here, but this turned out to be a performance bottleneck.
+            # Therefore, the contains-check is performed on the tuple here.
             coord = Vec3Int(coord)
             return (
                 self.topleft[0] <= coord[0] < self.bottomright[0]
