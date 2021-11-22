@@ -21,13 +21,13 @@ from webknossos.utils import copy_directory_with_symlinks, get_executor_for_args
 
 from .layer import (
     Layer,
-    LayerCategories,
     SegmentationLayer,
     _dtype_per_channel_to_element_class,
     _dtype_per_layer_to_dtype_per_channel,
     _normalize_dtype_per_channel,
     _normalize_dtype_per_layer,
 )
+from .layer_categories import COLOR_CATEGORY, SEGMENTATION_CATEGORY, LayerCategoryType
 from .properties import (
     DatasetProperties,
     DatasetViewConfiguration,
@@ -52,52 +52,15 @@ def _copy_job(args: Tuple[View, View, int]) -> None:
 
 class Dataset:
     """
-    A dataset is the entry point of the Dataset API. An existing dataset on disk can be opened
+    A dataset is the entry point of the Dataset API.
+    An existing dataset on disk can be opened
     or new datasets can be created.
 
-    A `Dataset` stores the data in `.wkw` files on disk.
+    A dataset stores the data in `.wkw` files on disk with metadata in `datasource-properties.json`.
+    The information in those files are kept in sync with the object.
 
-    ## Examples
-
-    ### Creating Datasets
-    ```python
-    from webknossos.dataset.dataset import Dataset
-
-    dataset = Dataset.create(<path_to_new_dataset>, scale=(1, 1, 1))
-    # Adds a new layer
-    layer = dataset.add_layer(
-        layer_name="color",
-        category=LayerCategories.COLOR_TYPE,
-        dtype_per_channel="uint8",
-        num_channels=3
-    )
-    # Adds an existing layer from a different dataset
-    sym_layer = dataset.add_symlink_layer(<foreign_layer_path>)
-    ```
-
-    ### Opening Datasets
-    ```python
-    from webknossos.dataset.dataset import Dataset
-
-    dataset = Dataset(<path_to_dataset>)
-    # Assuming that the dataset has a layer called 'color'
-    layer = dataset.get_layer("color")
-    ```
-
-    ### Copying Datasets
-    ```python
-    from webknossos.dataset.dataset import Dataset
-
-    dataset = Dataset(<path_to_dataset>)
-    # Copying the dataset with different block_len and file_len
-    copy_of_dataset = dataset.copy_dataset(
-        <path_to_new_dataset>,
-        block_len=8,
-        file_len=8
-    )
-    ```
-
-    ## Functions
+    Each dataset consists of one or more layers (webknossos.dataset.layer.Layer),
+    which themselves can comprise multiple magnifications (webknossos.dataset.mag_view.MagView).
     """
 
     def __init__(self, dataset_path: Union[str, Path]) -> None:
@@ -151,7 +114,7 @@ class Dataset:
         return self._layers
 
     def upload(self) -> str:
-        from webknossos.client.upload_dataset import upload_dataset
+        from webknossos.client._upload_dataset import upload_dataset
 
         return upload_dataset(self)
 
@@ -170,7 +133,7 @@ class Dataset:
     def add_layer(
         self,
         layer_name: str,
-        category: str,
+        category: LayerCategoryType,
         dtype_per_layer: Optional[Union[str, np.dtype, type]] = None,
         dtype_per_channel: Optional[Union[str, np.dtype, type]] = None,
         num_channels: Optional[int] = None,
@@ -236,10 +199,10 @@ class Dataset:
             data_format="wkw",
         )
 
-        if category == LayerCategories.COLOR_TYPE:
+        if category == COLOR_CATEGORY:
             self._properties.data_layers += [layer_properties]
             self._layers[layer_name] = Layer(self, layer_properties)
-        elif category == LayerCategories.SEGMENTATION_TYPE:
+        elif category == SEGMENTATION_CATEGORY:
             assert (
                 "largest_segment_id" in kwargs
             ), f"Failed to create segmentation layer {layer_name}: the parameter 'largest_segment_id' was not specified, which is necessary for segmentation layers."
@@ -260,7 +223,7 @@ class Dataset:
             )
         else:
             raise RuntimeError(
-                f"Failed to add layer ({layer_name}) because of invalid category ({category}). The supported categories are '{LayerCategories.COLOR_TYPE}' and '{LayerCategories.SEGMENTATION_TYPE}'"
+                f"Failed to add layer ({layer_name}) because of invalid category ({category}). The supported categories are '{COLOR_CATEGORY}' and '{SEGMENTATION_CATEGORY}'"
             )
 
         self._export_as_json()
@@ -269,7 +232,7 @@ class Dataset:
     def get_or_add_layer(
         self,
         layer_name: str,
-        category: str,
+        category: LayerCategoryType,
         dtype_per_layer: Optional[Union[str, np.dtype, type]] = None,
         dtype_per_channel: Optional[Union[str, np.dtype, type]] = None,
         num_channels: Optional[int] = None,
@@ -345,19 +308,19 @@ class Dataset:
         layer_properties.name = layer_name
 
         self._properties.data_layers += [layer_properties]
-        if layer_properties.category == LayerCategories.COLOR_TYPE:
+        if layer_properties.category == COLOR_CATEGORY:
             self._layers[layer_name] = Layer(self, layer_properties)
-        elif layer_properties.category == LayerCategories.SEGMENTATION_TYPE:
+        elif layer_properties.category == SEGMENTATION_CATEGORY:
             self._layers[layer_name] = SegmentationLayer(self, layer_properties)
         else:
             raise RuntimeError(
-                f"Failed to add layer ({layer_name}) because of invalid category ({layer_properties.category}). The supported categories are '{LayerCategories.COLOR_TYPE}' and '{LayerCategories.SEGMENTATION_TYPE}'"
+                f"Failed to add layer ({layer_name}) because of invalid category ({layer_properties.category}). The supported categories are '{COLOR_CATEGORY}' and '{SEGMENTATION_CATEGORY}'"
             )
         self._export_as_json()
         return self._layers[layer_name]
 
     def add_layer_for_existing_files(
-        self, layer_name: str, category: str, **kwargs: Any
+        self, layer_name: str, category: LayerCategoryType, **kwargs: Any
     ) -> Layer:
         assert layer_name not in self.layers, f"Layer {layer_name} already exists!"
         mag_headers = list((self.path / layer_name).glob("*/header.wkw"))
@@ -387,7 +350,7 @@ class Dataset:
         """
         return cast(
             SegmentationLayer,
-            self._get_layer_by_category(LayerCategories.SEGMENTATION_TYPE),
+            self._get_layer_by_category(SEGMENTATION_CATEGORY),
         )
 
     def get_color_layer(self) -> Layer:
@@ -396,7 +359,7 @@ class Dataset:
 
         Fails with a RuntimeError if there are multiple color layers or none.
         """
-        return self._get_layer_by_category(LayerCategories.COLOR_TYPE)
+        return self._get_layer_by_category(COLOR_CATEGORY)
 
     def delete_layer(self, layer_name: str) -> None:
         """
@@ -598,11 +561,8 @@ class Dataset:
 
         return new_dataset
 
-    def _get_layer_by_category(self, category: str) -> Layer:
-        assert (
-            category == LayerCategories.COLOR_TYPE
-            or category == LayerCategories.SEGMENTATION_TYPE
-        )
+    def _get_layer_by_category(self, category: LayerCategoryType) -> Layer:
+        assert category == COLOR_CATEGORY or category == SEGMENTATION_CATEGORY
 
         layers = [layer for layer in self.layers.values() if category == layer.category]
 
@@ -727,9 +687,9 @@ class Dataset:
             )
 
     def _initialize_layer_from_properties(self, properties: LayerProperties) -> Layer:
-        if properties.category == LayerCategories.COLOR_TYPE:
+        if properties.category == COLOR_CATEGORY:
             return Layer(self, properties)
-        elif properties.category == LayerCategories.SEGMENTATION_TYPE:
+        elif properties.category == SEGMENTATION_CATEGORY:
             return SegmentationLayer(self, properties)
         else:
             raise RuntimeError(

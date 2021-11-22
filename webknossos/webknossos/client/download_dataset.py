@@ -6,10 +6,10 @@ from typing import List, Optional, Tuple, TypeVar, Union, cast
 import numpy as np
 from rich.progress import track
 
-from webknossos.client.context import get_generated_client
-from webknossos.client.generated.api.datastore import dataset_download
-from webknossos.client.generated.api.default import dataset_info
-from webknossos.dataset import Dataset
+from webknossos.client._generated.api.datastore import dataset_download
+from webknossos.client._generated.api.default import dataset_info
+from webknossos.client.context import _get_generated_client
+from webknossos.dataset import Dataset, LayerCategoryType
 from webknossos.geometry import BoundingBox, Mag
 
 logger = logging.getLogger(__name__)
@@ -29,7 +29,7 @@ def download_dataset(
     mags: Optional[List[Mag]] = None,
     path: Optional[Union[PathLike, str]] = None,
 ) -> Dataset:
-    client = get_generated_client()
+    client = _get_generated_client()
     dataset_info_response = dataset_info.sync_detailed(
         organization_name=organization_name,
         data_set_name=dataset_name,
@@ -57,9 +57,10 @@ def download_dataset(
             len(response_layers) == 1
         ), f"The provided layer name {layer_name} was found multiple times in the requested dataset."
         response_layer = response_layers[0]
+        category = cast(LayerCategoryType, response_layer.category)
         layer = dataset.add_layer(
             layer_name=layer_name,
-            category=response_layer.category,
+            category=category,
             dtype_per_layer=response_layer.element_class,
             num_channels=3 if response_layer.element_class == "uint24" else 1,
             largest_segment_id=response_layer.additional_properties.get(

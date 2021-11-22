@@ -8,6 +8,7 @@ from typing import Tuple, Optional, Union, cast
 import nibabel as nib
 import numpy as np
 
+from webknossos.dataset import LayerCategoryType
 from webknossos.dataset.defaults import DEFAULT_WKW_FILE_LEN
 from wkcuber.api.dataset import Dataset
 from wkcuber.api.bounding_box import BoundingBox
@@ -149,7 +150,9 @@ def convert_nifti(
         if is_segmentation_layer
         else {}
     )
-    category_type = "segmentation" if is_segmentation_layer else "color"
+    category_type: LayerCategoryType = (
+        "segmentation" if is_segmentation_layer else "color"
+    )
     logging.debug(f"Assuming {category_type} as layer type for {layer_name}")
 
     if len(source_nifti.shape) == 3:

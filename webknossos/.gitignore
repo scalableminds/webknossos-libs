@@ -104,3 +104,5 @@ ENV/
 
 # MyPy
 .mypy_cache/
+
+/webknossos/version.py

@@ -2,9 +2,10 @@
 # webknossos
 
 This module providess methods to modify or interact with webKnossos resources.
-Check out `webknossos.dataset` for detailed API documentation.
+Check out the different submodules for detailed API documentation:
 """
-
-from webknossos.annotation import open_annotation
-from webknossos.client.download_dataset import download_dataset
-from webknossos.skeleton import open_nml
+from webknossos.annotation import *
+from webknossos.client import *
+from webknossos.dataset import *
+from webknossos.geometry import *
+from webknossos.skeleton import *

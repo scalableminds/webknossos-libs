@@ -21,6 +21,20 @@ def tmp_cwd() -> Iterator[None]:
             os.chdir(prev_cwd)
 
 
+def test_dataset_usage() -> None:
+    from examples.dataset_usage import (
+        data_in_mag1,
+        data_in_mag1_subset,
+        data_in_mag2,
+        data_in_mag2_subset,
+    )
+
+    assert data_in_mag1.shape == (3, 522, 532, 62)
+    assert data_in_mag1_subset.shape == (3, 512, 512, 32)
+    assert data_in_mag2.shape == (3, 261, 266, 31)
+    assert data_in_mag2_subset.shape == (3, 256, 256, 16)
+
+
 def test_skeleton_synapse_candidates() -> None:
     from examples.skeleton_synapse_candidates import nml, synapse_parent_group
 
@@ -98,3 +112,12 @@ def test_learned_segmenter() -> None:
             trainable_segmentation.has_sklearn = False
         else:
             trainable_segmentation.RandomForestClassifier = old_default_classifier
+
+
+@pytest.mark.vcr()
+def test_user_times() -> None:
+    from examples.user_times import df
+
+    assert len(df) > 0
+    assert sum(df.loc[:, (2021, 10)]) > 0
+    assert "taylor.tester@mail.com" in df.index

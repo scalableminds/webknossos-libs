@@ -6,13 +6,11 @@ from skimage import feature
 from skimage.future import TrainableSegmenter
 
 import webknossos as wk
-from webknossos.client.context import webknossos_context
-from webknossos.geometry import BoundingBox, Mag
 
 annotation = wk.open_annotation(
     "https://webknossos.org/annotations/Explorational/616457c2010000870032ced4"
 )
-training_data_bbox = BoundingBox.from_tuple6(
+training_data_bbox = wk.BoundingBox.from_tuple6(
     annotation.skeleton.user_bounding_boxes[0]  # pylint: disable=unsubscriptable-object
 )
 time_str = strftime("%Y-%m-%d_%H-%M-%S", gmtime())
@@ -27,7 +25,7 @@ dataset.name = new_dataset_name
 volume_annotation = annotation.save_volume_annotation(dataset)
 volume_annotation.bounding_box = training_data_bbox
 
-mag = Mag(1)
+mag = wk.Mag(1)
 mag_view = dataset.layers["color"].mags[mag]
 
 features_func = partial(
@@ -62,6 +60,6 @@ segmentation_layer = dataset.add_layer(
 segmentation_layer.bounding_box = dataset.layers["color"].bounding_box
 segmentation_layer.add_mag(mag, compress=True).write(segmentation)
 
-with webknossos_context(url="http://localhost:9000", token="secretScmBoyToken"):
+with wk.webknossos_context(url="http://localhost:9000", token="secretScmBoyToken"):
     url = dataset.upload()
 print(f"Successfully uploaded {url}")

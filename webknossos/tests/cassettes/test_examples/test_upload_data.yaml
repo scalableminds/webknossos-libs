@@ -17,14 +17,14 @@ interactions:
     method: POST
     uri: http://localhost:9000/api/userToken/generate
   response:
-    content: '{"token":"rQTrRm6e1a6HmmCybjxtBQ"}'
+    content: '{"token":"n7ROkF-VPMaQDTKISO8jpQ"}'
     headers:
       Content-Length:
       - '34'
       Content-Type:
       - application/json
       Date:
-      - Tue, 19 Oct 2021 17:15:18 GMT
+      - Tue, 26 Oct 2021 16:25:45 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       X-Permitted-Cross-Domain-Policies:
@@ -56,7 +56,7 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Tue, 19 Oct 2021 17:15:18 GMT
+      - Tue, 26 Oct 2021 16:25:45 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       X-Permitted-Cross-Domain-Policies:
@@ -79,18 +79,16 @@ interactions:
       user-agent:
       - python-httpx/0.18.2
     method: GET
-    uri: http://localhost:9000/api/organizations/default
+    uri: http://localhost:9000/api/user
   response:
-    content: '{"id":"61644946010000010042cb15","name":"sample_organization","additionalInformation":"**Sample
-      Organization**\n\nSample Street 123\nSampletown\nSamplecountry\n","enableAutoVerify":false,"displayName":"Sample
-      Organization"}'
+    content: '{"id":"6165556b0100000100e34e80","email":"scmboy@scalableminds.com","firstName":"SCM","lastName":"Boy","isAdmin":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"6165556b0100000100e34e7e","name":"sample_organization","isTeamManager":true}],"experiences":{"sampleExp":10},"lastActivity":1634030955379,"isAnonymous":false,"isEditable":true,"organization":"sample_organization","novelUserExperienceInfos":{"hasSeenDashboardWelcomeBanner":true},"selectedTheme":"auto","created":1634030955379,"lastTaskTypeId":null}'
     headers:
       Content-Length:
-      - '223'
+      - '522'
       Content-Type:
       - application/json
       Date:
-      - Tue, 19 Oct 2021 17:15:18 GMT
+      - Tue, 26 Oct 2021 16:25:45 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       X-Permitted-Cross-Domain-Policies:
@@ -101,43 +99,43 @@ interactions:
     status_code: 200
 - request:
     body: !!binary |
-      LS0xOTZkMzVmNDc4N2M4MmYxNGE2ZmIwMjQ2Y2M5NzhjYg0KQ29udGVudC1EaXNwb3NpdGlvbjog
-      Zm9ybS1kYXRhOyBuYW1lPSJyZXN1bWFibGVDaHVua1NpemUiDQoNCjEwNDg1NzYwDQotLTE5NmQz
-      NWY0Nzg3YzgyZjE0YTZmYjAyNDZjYzk3OGNiDQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRh
-      dGE7IG5hbWU9InJlc3VtYWJsZVRvdGFsU2l6ZSINCg0KMjQ2NjkwDQotLTE5NmQzNWY0Nzg3Yzgy
-      ZjE0YTZmYjAyNDZjYzk3OGNiDQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9
-      InJlc3VtYWJsZVR5cGUiDQoNCmFwcGxpY2F0aW9uL3ppcA0KLS0xOTZkMzVmNDc4N2M4MmYxNGE2
-      ZmIwMjQ2Y2M5NzhjYg0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJyZXN1
-      bWFibGVJZGVudGlmaWVyIg0KDQoyMDIxLTEwLTE5IDE3OjE1OjE4X182NTdlZGZlNS01ZWM4LTQ0
-      YjUtYmJhOS03NTFkMWNjYzY1MjcvdG1wMWVwMWF6dWMuemlwDQotLTE5NmQzNWY0Nzg3YzgyZjE0
-      YTZmYjAyNDZjYzk3OGNiDQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9InJl
-      c3VtYWJsZUZpbGVuYW1lIg0KDQp0bXAxZXAxYXp1Yy56aXANCi0tMTk2ZDM1ZjQ3ODdjODJmMTRh
-      NmZiMDI0NmNjOTc4Y2INCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0icmVz
-      dW1hYmxlUmVsYXRpdmVQYXRoIg0KDQovdG1wL3RtcDFlcDFhenVjLnppcA0KLS0xOTZkMzVmNDc4
-      N2M4MmYxNGE2ZmIwMjQ2Y2M5NzhjYg0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBu
-      YW1lPSJyZXN1bWFibGVUb3RhbENodW5rcyINCg0KMQ0KLS0xOTZkMzVmNDc4N2M4MmYxNGE2ZmIw
-      MjQ2Y2M5NzhjYg0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJyZXN1bWFi
-      bGVDaHVua051bWJlciINCg0KMQ0KLS0xOTZkMzVmNDc4N2M4MmYxNGE2ZmIwMjQ2Y2M5NzhjYg0K
+      LS1hNjg3Yzk5ZTg5ZjEyNjBiZjQ4YjFkY2U2OTE1ZmVhOQ0KQ29udGVudC1EaXNwb3NpdGlvbjog
+      Zm9ybS1kYXRhOyBuYW1lPSJyZXN1bWFibGVDaHVua1NpemUiDQoNCjEwNDg1NzYwDQotLWE2ODdj
+      OTllODlmMTI2MGJmNDhiMWRjZTY5MTVmZWE5DQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRh
+      dGE7IG5hbWU9InJlc3VtYWJsZVRvdGFsU2l6ZSINCg0KMjQ2NjkwDQotLWE2ODdjOTllODlmMTI2
+      MGJmNDhiMWRjZTY5MTVmZWE5DQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9
+      InJlc3VtYWJsZVR5cGUiDQoNCmFwcGxpY2F0aW9uL3ppcA0KLS1hNjg3Yzk5ZTg5ZjEyNjBiZjQ4
+      YjFkY2U2OTE1ZmVhOQ0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJyZXN1
+      bWFibGVJZGVudGlmaWVyIg0KDQoyMDIxLTEwLTI2IDE2OjI1OjQ0X181YjU2YmRjNC00MmM0LTRh
+      YmYtYTAyZi1iNDg4YWNmMmJkMzQvdG1wZWthX2gzN3kuemlwDQotLWE2ODdjOTllODlmMTI2MGJm
+      NDhiMWRjZTY5MTVmZWE5DQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9InJl
+      c3VtYWJsZUZpbGVuYW1lIg0KDQp0bXBla2FfaDM3eS56aXANCi0tYTY4N2M5OWU4OWYxMjYwYmY0
+      OGIxZGNlNjkxNWZlYTkNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0icmVz
+      dW1hYmxlUmVsYXRpdmVQYXRoIg0KDQovdG1wL3RtcGVrYV9oMzd5LnppcA0KLS1hNjg3Yzk5ZTg5
+      ZjEyNjBiZjQ4YjFkY2U2OTE1ZmVhOQ0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBu
+      YW1lPSJyZXN1bWFibGVUb3RhbENodW5rcyINCg0KMQ0KLS1hNjg3Yzk5ZTg5ZjEyNjBiZjQ4YjFk
+      Y2U2OTE1ZmVhOQ0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJyZXN1bWFi
+      bGVDaHVua051bWJlciINCg0KMQ0KLS1hNjg3Yzk5ZTg5ZjEyNjBiZjQ4YjFkY2U2OTE1ZmVhOQ0K
       Q29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJyZXN1bWFibGVDdXJyZW50Q2h1
-      bmtTaXplIg0KDQoyNDY2OTANCi0tMTk2ZDM1ZjQ3ODdjODJmMTRhNmZiMDI0NmNjOTc4Y2INCkNv
+      bmtTaXplIg0KDQoyNDY2OTANCi0tYTY4N2M5OWU4OWYxMjYwYmY0OGIxZGNlNjkxNWZlYTkNCkNv
       bnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0ib3duaW5nT3JnYW5pemF0aW9uIg0K
-      DQpzYW1wbGVfb3JnYW5pemF0aW9uDQotLTE5NmQzNWY0Nzg3YzgyZjE0YTZmYjAyNDZjYzk3OGNi
+      DQpzYW1wbGVfb3JnYW5pemF0aW9uDQotLWE2ODdjOTllODlmMTI2MGJmNDhiMWRjZTY5MTVmZWE5
       DQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9Im5hbWUiDQoNCmNlbGxfMjAy
-      MS0xMC0xOV8xNy0xNS0xOA0KLS0xOTZkMzVmNDc4N2M4MmYxNGE2ZmIwMjQ2Y2M5NzhjYg0KQ29u
+      MS0xMC0yNl8xNi0yNS00NA0KLS1hNjg3Yzk5ZTg5ZjEyNjBiZjQ4YjFkY2U2OTE1ZmVhOQ0KQ29u
       dGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJ0b3RhbEZpbGVDb3VudCINCg0KMQ0K
-      LS0xOTZkMzVmNDc4N2M4MmYxNGE2ZmIwMjQ2Y2M5NzhjYg0KQ29udGVudC1EaXNwb3NpdGlvbjog
+      LS1hNjg3Yzk5ZTg5ZjEyNjBiZjQ4YjFkY2U2OTE1ZmVhOQ0KQ29udGVudC1EaXNwb3NpdGlvbjog
       Zm9ybS1kYXRhOyBuYW1lPSJmaWxlIjsgZmlsZW5hbWU9InVwbG9hZCINCkNvbnRlbnQtVHlwZTog
-      YXBwbGljYXRpb24vb2N0ZXQtc3RyZWFtDQoNClBLAwQUAAAAAADpmVNTAAAAAAAAAAAAAAAABgAA
-      AGNvbG9yL1BLAwQUAAAACADpmVNTdnTVcR0BAABjAwAAGgAAAGRhdGFzb3VyY2UtcHJvcGVydGll
-      cy5qc29ulZLNboMwEITveYrIZ6hsVJK0x0bqiVOvFYoc2IJV/0TYiEYR715sqhCD06o+sTuz6/En
-      Lqv1cBAr0fP64r5dLamAoYMK4PyQ4ITEBMfk6UC2MUljskPR5DVAhfUi1+pHBemCcrvi/WokePuA
-      o19LV+U/G0pqaEbP0GhvzZTST6q4am5iObGgBirVnO8ajqqVJZPVi/ryAEyPU6cMPoyX4Pbg6F/t
-      RTdfGlHHSlMPN6ZpYA2qgVW1DbTZhOQSTm6YeFI/ezdwECDNnlNt6aKWSbObw+k+uzfQireGKamD
-      CJbE3GRzHbsLzh4SpvSXFFQCIF2Uoj1CBrIaoeDkcWHrvc5sj/sLX1UjqEVukcwpyVbsayolcO1h
-      H9fmq/4bUEsDBBQAAAAAAOmZU1MAAAAAAAAAAAAAAAAIAAAAY29sb3IvMS9QSwMEFAAAAAAA6ZlT
-      UwAAAAAAAAAAAAAAAAsAAABjb2xvci8xL3owL1BLAwQUAAAACADpmVNTfyrHlwwAAAAQAAAAEgAA
-      AGNvbG9yLzEvaGVhZGVyLndrdwv3DmcMZWZkZIACAFBLAwQUAAAAAADpmVNTAAAAAAAAAAAAAAAA
-      DgAAAGNvbG9yLzEvejAveTAvUEsDBBQAAAAIAOmZU1Mtq0uxgb8DAOKfTAAUAAAAY29sb3IvMS96
+      YXBwbGljYXRpb24vb2N0ZXQtc3RyZWFtDQoNClBLAwQUAAAAAAA2k1pTAAAAAAAAAAAAAAAABgAA
+      AGNvbG9yL1BLAwQUAAAACAA2k1pT4dNCyB0BAABjAwAAGgAAAGRhdGFzb3VyY2UtcHJvcGVydGll
+      cy5qc29ulZIxb4MwEIX3/IrIM1Q2Alp1bKROTFkjFDlwBavGjrARjSL+e7GpQgxOq3ri7r07P3/i
+      utmOB7ESvW6v9tvWgjYwdlABnB8jHJGQ4DBKjyQNoySMYxTMXg20MV5kW8OkIFVQblYcbkaCn59w
+      8Gtpq/xnQ0k1zegFWuWsmVO6SSWX7V0sKxZUQyXby0PDSXaiZKJ6k18OgPlx8pzBh3YS3B8c/Ku9
+      6uZrI+pZqevxxiTxrEE1sKo2gdLUJ5dwtsPEkYbFu4FDA0LvOFWGLuqY0C9LOP1nvwcleaeZFMqL
+      YE3MTra3sYfgzCF+Sn9JXsUD0kYpuhNkIKoJCo7ilW1wOos99i98l21DDXKDZElJdM2upkIAVw72
+      aW2+Gb4BUEsDBBQAAAAAADaTWlMAAAAAAAAAAAAAAAAIAAAAY29sb3IvMS9QSwMEFAAAAAAANpNa
+      UwAAAAAAAAAAAAAAAAsAAABjb2xvci8xL3owL1BLAwQUAAAACAA2k1pTfyrHlwwAAAAQAAAAEgAA
+      AGNvbG9yLzEvaGVhZGVyLndrdwv3DmcMZWZkZIACAFBLAwQUAAAAAAA2k1pTAAAAAAAAAAAAAAAA
+      DgAAAGNvbG9yLzEvejAveTAvUEsDBBQAAAAIADaTWlMtq0uxgb8DAOKfTAAUAAAAY29sb3IvMS96
       MC95MC94MC53a3cs01OUYNuibNGybdu2bdu2bdu2bdu2bdvmLle9d88YmR+9pVauGTOieunqAasG
       DhgwQoAgAf7vY2MgnBUUU4XAA6GwdGi8pg3D4BudGx7nRcJIUfFgdCwTA69ro5j4VlfHwTzxcXtC
       TJgE12j2pHhIyybDvSmwb2oslA7fZ8BeGTFoJpygsTPjMs2YBfdo8ax4SetmwxfaOTv+1ZE5MEpO
@@ -4447,16 +4445,16 @@ interactions:
       FRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUV
       FRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUV
       FRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUV
-      FRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFZVdCVBLAQIUAxQAAAAAAOmZU1MAAAAAAAAAAAAA
-      AAAGAAAAAAAAAAAAEADtQQAAAABjb2xvci9QSwECFAMUAAAACADpmVNTdnTVcR0BAABjAwAAGgAA
-      AAAAAAAAAAAApIEkAAAAZGF0YXNvdXJjZS1wcm9wZXJ0aWVzLmpzb25QSwECFAMUAAAAAADpmVNT
-      AAAAAAAAAAAAAAAACAAAAAAAAAAAABAA7UF5AQAAY29sb3IvMS9QSwECFAMUAAAAAADpmVNTAAAA
-      AAAAAAAAAAAACwAAAAAAAAAAABAA7UGfAQAAY29sb3IvMS96MC9QSwECFAMUAAAACADpmVNTfyrH
+      FRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFZVdCVBLAQIUAxQAAAAAADaTWlMAAAAAAAAAAAAA
+      AAAGAAAAAAAAAAAAEADtQQAAAABjb2xvci9QSwECFAMUAAAACAA2k1pT4dNCyB0BAABjAwAAGgAA
+      AAAAAAAAAAAApIEkAAAAZGF0YXNvdXJjZS1wcm9wZXJ0aWVzLmpzb25QSwECFAMUAAAAAAA2k1pT
+      AAAAAAAAAAAAAAAACAAAAAAAAAAAABAA7UF5AQAAY29sb3IvMS9QSwECFAMUAAAAAAA2k1pTAAAA
+      AAAAAAAAAAAACwAAAAAAAAAAABAA7UGfAQAAY29sb3IvMS96MC9QSwECFAMUAAAACAA2k1pTfyrH
       lwwAAAAQAAAAEgAAAAAAAAAAAAAApIHIAQAAY29sb3IvMS9oZWFkZXIud2t3UEsBAhQDFAAAAAAA
-      6ZlTUwAAAAAAAAAAAAAAAA4AAAAAAAAAAAAQAO1BBAIAAGNvbG9yLzEvejAveTAvUEsBAhQDFAAA
-      AAgA6ZlTUy2rS7GBvwMA4p9MABQAAAAAAAAAAAAAAKSBMAIAAGNvbG9yLzEvejAveTAveDAud2t3
-      UEsFBgAAAAAHAAcAqQEAAOPBAwAAAA0KLS0xOTZkMzVmNDc4N2M4MmYxNGE2ZmIwMjQ2Y2M5Nzhj
-      Yi0tDQo=
+      NpNaUwAAAAAAAAAAAAAAAA4AAAAAAAAAAAAQAO1BBAIAAGNvbG9yLzEvejAveTAvUEsBAhQDFAAA
+      AAgANpNaUy2rS7GBvwMA4p9MABQAAAAAAAAAAAAAAKSBMAIAAGNvbG9yLzEvejAveTAveDAud2t3
+      UEsFBgAAAAAHAAcAqQEAAOPBAwAAAA0KLS1hNjg3Yzk5ZTg5ZjEyNjBiZjQ4YjFkY2U2OTE1ZmVh
+      OS0tDQo=
     headers:
       accept:
       - '*/*'
@@ -4467,7 +4465,7 @@ interactions:
       content-length:
       - '248240'
       content-type:
-      - multipart/form-data; boundary=196d35f4787c82f14a6fb0246cc978cb
+      - multipart/form-data; boundary=a687c99e89f1260bf48b1dce6915fea9
       host:
       - localhost:9000
       user-agent:
@@ -4484,7 +4482,7 @@ interactions:
       Content-Length:
       - '0'
       Date:
-      - Tue, 19 Oct 2021 17:15:18 GMT
+      - Tue, 26 Oct 2021 16:25:46 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       X-Permitted-Cross-Domain-Policies:
@@ -4494,8 +4492,8 @@ interactions:
     http_version: HTTP/1.1
     status_code: 200
 - request:
-    body: '{"uploadId": "2021-10-19 17:15:18__657edfe5-5ec8-44b5-bba9-751d1ccc6527",
-      "organization": "sample_organization", "name": "cell_2021-10-19_17-15-18", "initialTeams":
+    body: '{"uploadId": "2021-10-26 16:25:44__5b56bdc4-42c4-4abf-a02f-b488acf2bd34",
+      "organization": "sample_organization", "name": "cell_2021-10-26_16-25-44", "initialTeams":
       [], "needsConversion": false}'
     headers:
       accept:
@@ -4524,7 +4522,7 @@ interactions:
       Content-Length:
       - '0'
       Date:
-      - Tue, 19 Oct 2021 17:15:19 GMT
+      - Tue, 26 Oct 2021 16:25:48 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       X-Permitted-Cross-Domain-Policies:

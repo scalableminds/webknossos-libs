@@ -8,7 +8,14 @@ from os import path
 from pathlib import Path
 from natsort import natsorted
 
-from webknossos.dataset import Dataset, LayerCategories, View, SegmentationLayer, Layer
+from webknossos.dataset import (
+    Dataset,
+    COLOR_CATEGORY,
+    SEGMENTATION_CATEGORY,
+    View,
+    SegmentationLayer,
+    Layer,
+)
 from webknossos.geometry import BoundingBox, Vec3Int
 from .mag import Mag
 from .downsampling_utils import (
@@ -28,7 +35,7 @@ from .utils import (
     setup_logging,
     add_scale_flag,
 )
-from .image_readers import image_reader, refresh_global_image_reader
+from .image_readers import image_reader
 
 BLOCK_LEN = 32
 
@@ -181,7 +188,6 @@ def cubing_job(
         InterpolationModes,
         List[str],
         int,
-        Tuple[int, int],
         bool,
         Optional[int],
         Optional[int],
@@ -193,7 +199,6 @@ def cubing_job(
         interpolation_mode,
         source_file_batches,
         batch_size,
-        image_size,
         pad,
         channel_index,
         sample_index,
@@ -229,15 +234,15 @@ def cubing_job(
 
                 if not pad:
                     assert (
-                        image.shape[0:2] == image_size
+                        image.shape[0:2] == target_view.size[0:2]
                     ), "Section z={} has the wrong dimensions: {} (expected {}). Consider using --pad.".format(
-                        z, image.shape, image_size
+                        z, image.shape, target_view.size[0:2]
                     )
                 slices.append(image)
 
             if pad:
-                x_max = max(_slice.shape[0] for _slice in slices)
-                y_max = max(_slice.shape[1] for _slice in slices)
+                x_max = target_view.size[0]
+                y_max = target_view.size[1]
 
                 slices = [
                     np.pad(
@@ -313,11 +318,16 @@ def cubing(
     executor_args: Namespace,
 ) -> Layer:
     source_files = find_source_filenames(source_path)
-    # we need to refresh the image readers because they are no longer stateless for performance reasons
-    refresh_global_image_reader()
 
-    # All images are assumed to have equal dimensions
-    num_x, num_y = image_reader.read_dimensions(source_files[0])
+    all_num_x, all_num_y = zip(
+        *[
+            image_reader.read_dimensions(source_files[i])
+            for i in range(len(source_files))
+        ]
+    )
+    num_x = max(all_num_x)
+    num_y = max(all_num_y)
+    # All images are assumed to have equal channels and samples
     num_channels = image_reader.read_channel_count(source_files[0])
     num_samples = image_reader.read_sample_count(source_files[0])
     num_output_channels = num_channels * num_samples
@@ -365,7 +375,7 @@ def cubing(
     if is_segmentation_layer:
         target_layer = target_ds.get_or_add_layer(
             layer_name,
-            LayerCategories.SEGMENTATION_TYPE,
+            SEGMENTATION_CATEGORY,
             dtype_per_channel=dtype,
             num_channels=num_output_channels,
             largest_segment_id=0,
@@ -373,7 +383,7 @@ def cubing(
     else:
         target_layer = target_ds.get_or_add_layer(
             layer_name,
-            LayerCategories.COLOR_TYPE,
+            COLOR_CATEGORY,
             dtype_per_channel=dtype,
             num_channels=num_output_channels,
         )
@@ -415,13 +425,12 @@ def cubing(
                 (
                     target_mag_view.get_view(
                         (0, 0, z + start_z),
-                        (num_x, num_y, start_z + max_z - z),
+                        (num_x, num_y, max_z - z),
                     ),
                     target_mag,
                     interpolation_mode,
                     source_files_array,
                     batch_size,
-                    (num_x, num_y),
                     pad,
                     channel_index,
                     sample_index,

@@ -8,7 +8,7 @@ from zipfile import ZipFile
 from attr import dataclass
 from boltons.cacheutils import cachedproperty
 
-from webknossos.client.context import get_context
+from webknossos.client.context import _get_context
 from webknossos.dataset import Dataset, Layer, SegmentationLayer
 from webknossos.skeleton import Skeleton, open_nml
 
@@ -82,20 +82,6 @@ class Annotation:
         return layer
 
 
-@unique
-class AnnotationType(Enum):
-    TASK = "Task"
-    EXPLORATIONAL = "Explorational"
-    COMPOUND_TASK = "CompoundTask"
-    COMPOUND_PROJECT = "CompoundProject"
-    COMPOUND_TASK_TYPE = "CompoundTaskType"
-
-
-annotation_url_regex = re.compile(
-    fr"(https?://.*)/annotations/({'|'.join(i.value for i in AnnotationType.__members__.values())})/([0-9A-Fa-f]*)"
-)
-
-
 def open_annotation(annotation_path: Union[str, PathLike]) -> "Annotation":
     if Path(annotation_path).exists():
         return Annotation(annotation_path)
@@ -109,10 +95,24 @@ def open_annotation(annotation_path: Union[str, PathLike]) -> "Annotation":
         ), "open_annotation() must be called with a path or an annotation url, e.g. https://webknossos.org/annotations/Explorational/6114d9410100009f0096c640"
         webknossos_url, annotation_type_str, annotation_id = match.groups()
         annotation_type = AnnotationType(annotation_type_str)
-        assert webknossos_url == get_context().url, (
-            f"The supplied url {webknossos_url} does not match your current context {get_context().url},\n"
+        assert webknossos_url == _get_context().url, (
+            f"The supplied url {webknossos_url} does not match your current context {_get_context().url},\n"
             + "please adapt it e.g. via 'with webknossos_context(…)'"
         )
-        from webknossos.client.download_annotation import download_annotation
+        from webknossos.client._download_annotation import download_annotation
 
         return download_annotation(annotation_type, annotation_id)
+
+
+@unique
+class AnnotationType(Enum):
+    TASK = "Task"
+    EXPLORATIONAL = "Explorational"
+    COMPOUND_TASK = "CompoundTask"
+    COMPOUND_PROJECT = "CompoundProject"
+    COMPOUND_TASK_TYPE = "CompoundTaskType"
+
+
+annotation_url_regex = re.compile(
+    fr"(https?://.*)/annotations/({'|'.join(i.value for i in AnnotationType.__members__.values())})/([0-9A-Fa-f]*)"
+)
