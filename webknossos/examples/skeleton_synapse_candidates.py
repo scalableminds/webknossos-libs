@@ -11,6 +11,7 @@ from itertools import combinations
 from typing import Iterator, Tuple
 
 import numpy as np
+from scipy.spatial import cKDTree
 
 import webknossos as wk
 
@@ -20,7 +21,6 @@ def pairs_within_distance(
     pos_b: np.ndarray,
     max_distance: float,
 ) -> Iterator[Tuple[np.ndarray, np.ndarray]]:
-    from scipy.spatial import cKDTree
 
     pos_a_kdtree = cKDTree(pos_a)
     pos_b_kdtree = cKDTree(pos_b)
