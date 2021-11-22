@@ -1,13 +1,19 @@
 """
+Example application: 
+Finding synapse candidates with a threshold in a skeleton
+annotation where each neuron is represented/reconstructed as one long tree 
+of many nodes placed reguarly along its axon/dendrite paths.
+
+Method:
 Load an NML file and consider all pairs of trees.
 For each tree pair, find the node pairs that have a distance
 lower than a given threshold.
-For these candidates (e.g. synapse candidates with meaningful input data),
-new graphs are created which contain a node at the
+For these candidates, new annotations are created which contain a node at the
 center position between the input nodes.
 """
 
 from itertools import combinations
+from pathlib import Path
 from typing import Iterator, Tuple
 
 import numpy as np
@@ -54,4 +60,5 @@ for tree_a, tree_b in combinations(input_graphs, 2):
         )
 
 # nml can be used for further processing or written to a file:
-# nml.write("output_path.nml")
+output_path = Path("output_path.nml")
+nml.write(output_path)

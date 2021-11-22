@@ -28,8 +28,7 @@ with wk.webknossos_context(url="http://localhost:9000", token="secretToken"):
         dtype_per_layer=img.dtype,
     )
 
-    layer.add_mag(1, compress=True)
-    layer.write(img)
+    layer.add_mag(1, compress=True).write(img)
 
     url = ds.upload()
     print(f"Successfully uploaded {url}")
