@@ -14,6 +14,8 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 
 ### Added
 ### Changed
+- Adapt the dataset upload to new webKnossos api. [#484](https://github.com/scalableminds/webknossos-libs/pull/484)
+
 ### Fixed
 
 
