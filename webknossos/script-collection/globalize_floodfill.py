@@ -32,6 +32,7 @@ def create_parser() -> ArgumentParser:
         "-v",
         help="Directory containing the volume tracing.",
         type=Path,
+        required=True,
     )
 
     parser.add_argument(
@@ -39,6 +40,7 @@ def create_parser() -> ArgumentParser:
         "-s",
         help="Directory containing the segmentation layer.",
         type=Path,
+        required=True,
     )
 
     parser.add_argument(
@@ -46,9 +48,12 @@ def create_parser() -> ArgumentParser:
         "-n",
         help="NML that contains the bounding boxes",
         type=Path,
+        required=True,
     )
 
-    parser.add_argument("--output_path", "-o", help="Output directory", type=Path)
+    parser.add_argument(
+        "--output_path", "-o", help="Output directory", type=Path, required=True
+    )
 
     parser.add_argument("--skip_merge", default=False, action="store_true")
 
@@ -120,7 +125,7 @@ def execute_floodfill(
     with wkw.Dataset.open(str(data_path)) as wkw_data:
         while len(bucket_and_seed_pos) != 0:
             bucket_count += 1
-            if bucket_count % 100 == 0:
+            if bucket_count % 10000 == 0:
                 print("Handled seed positions ", bucket_count)
 
             dirty_bucket = False
