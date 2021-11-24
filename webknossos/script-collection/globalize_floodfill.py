@@ -1,3 +1,6 @@
+from collections import defaultdict
+import webknossos as wk
+import sys
 import os
 import re
 import time
@@ -7,6 +10,9 @@ from glob import iglob
 from os import path
 from pathlib import Path
 from typing import Iterable, List, Optional, Set, Tuple
+import shutil
+from icecream import ic
+from webknossos.utils import time_start, time_stop
 
 import numpy as np
 import wkw
@@ -15,7 +21,8 @@ from webknossos.geometry import BoundingBox, Mag, Vec3Int
 
 BUCKET_SIZE = 32
 BUCKET_SHAPE = (BUCKET_SIZE, BUCKET_SIZE, BUCKET_SIZE)
-CUBE_SHAPE = BUCKET_SHAPE  # (256, 256, 256)
+# CUBE_SHAPE = BUCKET_SHAPE
+CUBE_SHAPE = (1024, 1024, 1024)
 NEIGHBORS = [(1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1)]
 
 FloodFillBbox = namedtuple(
@@ -122,7 +129,7 @@ def execute_floodfill(
         already_processed_bbox.size.to_tuple(), dtype=np.uint8
     )  # bitarray needs less memory, but new dependency
     bucket_count = 0
-    with wkw.Dataset.open(str(data_path)) as wkw_data:
+    with wkw.Dataset.open(str(data_path / "1")) as wkw_data:
         while len(bucket_and_seed_pos) != 0:
             bucket_count += 1
             if bucket_count % 10000 == 0:
@@ -131,25 +138,37 @@ def execute_floodfill(
             dirty_bucket = False
             current_cube, seed_position = bucket_and_seed_pos.pop()
             global_seed_position = add_positions(current_cube, seed_position)
-            cube_data = wkw_data.read(current_cube, CUBE_SHAPE)
-            cube_data = cube_data[0, :, :, :]
 
-            if cube_data[seed_position] == source_id or (
+            # Only reading one voxel for the seed is approximately 30.000 times faster
+            value_at_seed_position = wkw_data.read(
+                Vec3Int(current_cube) + Vec3Int(seed_position), (1, 1, 1)
+            )
+
+            if value_at_seed_position == source_id or (
                 inside_bbox(
                     global_seed_position,
                     already_processed_bbox_top_left,
                     already_processed_bbox_bottom_right,
                 )
-                and cube_data[seed_position] == target_id
+                and value_at_seed_position == target_id
                 and not visited[
                     substract_positions(
                         global_seed_position, already_processed_bbox_top_left
                     )
                 ]
             ):
+                print("Handling chunk", bucket_count, "with current cube", current_cube)
+                time_start("read data")
+                cube_data = wkw_data.read(current_cube, CUBE_SHAPE)
+                cube_data = cube_data[0, :, :, :]
+                time_stop("read data")
+
                 seeds_in_curr_bucket: Set[Tuple[int, int, int]] = set()
                 seeds_in_curr_bucket.add(seed_position)
+                time_start("traverse cube")
                 while len(seeds_in_curr_bucket) > 0:
+                    if len(seeds_in_curr_bucket) % 10000 == 0:
+                        print("remaining seeds", len(seeds_in_curr_bucket))
                     seed_pos = seeds_in_curr_bucket.pop()
                     global_seed_pos = add_positions(current_cube, seed_pos)
                     if inside_bbox(
@@ -198,8 +217,11 @@ def execute_floodfill(
                             bucket_and_seed_pos.append(
                                 get_bucket_pos_and_offset(global_neighbor_pos)
                             )
+                time_stop("traverse cube")
                 if dirty_bucket:
+                    time_start("write chunk")
                     wkw_data.write(current_cube, cube_data)
+                    time_stop("write chunk")
 
 
 def detect_cube_length(layer_path: Path) -> int:
@@ -211,107 +233,148 @@ def detect_cube_length(layer_path: Path) -> int:
     )
 
 
-def detect_bbox(layer_path: Path) -> Optional[dict]:
-    # Detect the coarse bounding box of a dataset by iterating
-    # over the WKW cubes
-    def list_files(layer_path: str) -> Iterable[str]:
-        return iglob(path.join(layer_path, "*", "*", "*.wkw"), recursive=True)
+# def detect_bbox(layer_path: Path) -> Optional[dict]:
+#     # Detect the coarse bounding box of a dataset by iterating
+#     # over the WKW cubes
+#     def list_files(layer_path: str) -> Iterable[str]:
+#         return iglob(path.join(layer_path, "*", "*", "*.wkw"), recursive=True)
 
-    def parse_cube_file_name(filename: str) -> Tuple[int, int, int]:
-        CUBE_REGEX = re.compile(
-            fr"z(\d+){re.escape(os.path.sep)}y(\d+){re.escape(os.path.sep)}x(\d+)(\.wkw)$"
-        )
-        m = CUBE_REGEX.search(filename)
-        if m is not None:
-            return int(m.group(3)), int(m.group(2)), int(m.group(1))
-        raise RuntimeError(f"Failed to parse cube file name from {filename}")
+#     def parse_cube_file_name(filename: str) -> Tuple[int, int, int]:
+#         CUBE_REGEX = re.compile(
+#             fr"z(\d+){re.escape(os.path.sep)}y(\d+){re.escape(os.path.sep)}x(\d+)(\.wkw)$"
+#         )
+#         m = CUBE_REGEX.search(filename)
+#         if m is not None:
+#             return int(m.group(3)), int(m.group(2)), int(m.group(1))
+#         raise RuntimeError(f"Failed to parse cube file name from {filename}")
 
-    def list_cubes(layer_path: str) -> Iterable[Tuple[int, int, int]]:
-        return (parse_cube_file_name(f) for f in list_files(layer_path))
+#     def list_cubes(layer_path: str) -> Iterable[Tuple[int, int, int]]:
+#         return (parse_cube_file_name(f) for f in list_files(layer_path))
 
-    xs, ys, zs = list(zip(*list_cubes(str(layer_path))))
+#     xs, ys, zs = list(zip(*list_cubes(str(layer_path))))
 
-    min_x, min_y, min_z = min(xs), min(ys), min(zs)
-    max_x, max_y, max_z = max(xs), max(ys), max(zs)
+#     min_x, min_y, min_z = min(xs), min(ys), min(zs)
+#     max_x, max_y, max_z = max(xs), max(ys), max(zs)
 
-    cube_length = detect_cube_length(layer_path)
-    if cube_length is None:
-        return None
+#     cube_length = detect_cube_length(layer_path)
+#     if cube_length is None:
+#         return None
 
-    return {
-        "topLeft": [min_x * cube_length, min_y * cube_length, min_z * cube_length],
-        "width": (1 + max_x - min_x) * cube_length,
-        "height": (1 + max_y - min_y) * cube_length,
-        "depth": (1 + max_z - min_z) * cube_length,
-    }
+#     return {
+#         "topLeft": [min_x * cube_length, min_y * cube_length, min_z * cube_length],
+#         "width": (1 + max_x - min_x) * cube_length,
+#         "height": (1 + max_y - min_y) * cube_length,
+#         "depth": (1 + max_z - min_z) * cube_length,
+#     }
 
 
 def merge_with_fallback_layer(
-    bbox: dict,
     output_path: Path,
     volume_data_path: Path,
     segmentation_layer_path: Path,
 ) -> None:
-    with wkw.Dataset.open(str(volume_data_path)) as volume_data_wkw:
-        with wkw.Dataset.open(str(segmentation_layer_path)) as fallback_layer_wkw:
-            assert (
-                volume_data_wkw.header.file_len == 1
-            ), "volume annotation must have file_len=1"
-            assert (
-                volume_data_wkw.header.voxel_type
-                == fallback_layer_wkw.header.voxel_type
-            ), "Volume annotation must have same dtype as fallback layer"
-            with wkw.Dataset.open(
-                str(output_path),
-                wkw.Header(
-                    voxel_type=fallback_layer_wkw.header.voxel_type,
-                    file_len=1,
-                    block_type=wkw.Header.BLOCK_TYPE_LZ4HC,
-                ),
-            ) as merged_wkw:
-                annotation_bucket_paths = list_bucket_paths(volume_data_path)
 
-                annotated_count = 0
-                bucket_boxes = list(
-                    BoundingBox.from_wkw_dict(bbox)
-                    .align_with_mag(Mag(BUCKET_SIZE), ceil=True)
-                    .chunk(BUCKET_SHAPE)
-                )
-                total_bucket_count = len(bucket_boxes)
-                for count, bucket_bbox in enumerate(bucket_boxes):
-                    if count % 100 == 0:
-                        print(f"Processing bucket {count} of {total_bucket_count}...")
-                    if (
-                        bucket_path_for_pos(bucket_bbox.topleft)
-                        in annotation_bucket_paths
-                    ):
-                        data = volume_data_wkw.read(
-                            bucket_bbox.topleft.to_np(), BUCKET_SHAPE
-                        )
-                        merged_wkw.write(bucket_bbox.topleft.to_np(), data)
-                        annotated_count += 1
-                    else:
-                        data = fallback_layer_wkw.read(
-                            bucket_bbox.topleft.to_np(), BUCKET_SHAPE
-                        )
-                        merged_wkw.write(bucket_bbox.topleft.to_np(), data)
+    # dataset_bbox = detect_bbox(args.segmentation_layer_path)
+    # if dataset_bbox is None:
+    #     raise ValueError("Could not detect bbox")
 
-    print(
-        f"Combined {annotated_count} volume-annotated buckets with"
-        f" {total_bucket_count - annotated_count} from fallback layer."
+    if output_path.exists():
+        print("skipping copying")
+    else:
+        copy_start = time.time()
+        shutil.copytree(segmentation_layer_path, output_path)
+        copy_end = time.time()
+        print(f"Copying took {copy_end - copy_start}")
+
+    fallback_voxel_type = None
+    with wkw.Dataset.open(str(segmentation_layer_path / "1")) as fallback_layer_wkw:
+        fallback_voxel_type = fallback_layer_wkw.header.voxel_type
+
+    tmp_annotation_dataset_path = Path("tmp_annotation_dataset")
+    input_annotation_dataset = wk.Dataset.get_or_create(
+        str(tmp_annotation_dataset_path), scale=(1, 1, 1)
     )
+    if not (tmp_annotation_dataset_path / "segmentation").exists():
+        os.symlink(volume_data_path, tmp_annotation_dataset_path / "segmentation")
+        input_annotation_layer = input_annotation_dataset.add_layer_for_existing_files(
+            layer_name="segmentation",
+            category="segmentation",
+            largest_segment_id=0,  # todo
+        )
+    else:
+        input_annotation_layer = input_annotation_dataset.get_layer("segmentation")
+    min_mag = min(input_annotation_layer.mags.keys())
+    bboxes = list(input_annotation_layer.get_mag(min_mag).get_bounding_boxes_on_disk())
+
+    chunks_with_bboxes = defaultdict(list)
+    for bbox_tuple in bboxes:
+        bbox = BoundingBox.from_tuple2(bbox_tuple)
+        chunk_key = bbox.align_with_mag(Mag(1024), ceil=True)
+        chunks_with_bboxes[chunk_key].append(bbox)
+
+    with wkw.Dataset.open(str(volume_data_path / "1")) as volume_data_wkw:
+        assert (
+            volume_data_wkw.header.file_len == 1
+        ), "volume annotation must have file_len=1"
+        assert (
+            volume_data_wkw.header.voxel_type == fallback_voxel_type
+        ), "Volume annotation must have same dtype as fallback layer"
+        with wkw.Dataset.open(
+            str(output_path / "1"),
+        ) as merged_wkw:
+            annotated_count = 0
+            # bucket_boxes = list(
+            #     BoundingBox.from_wkw_dict(bbox)
+            #     .align_with_mag(Mag(BUCKET_SIZE), ceil=True)
+            #     .chunk(BUCKET_SHAPE)
+            # )
+            # total_bucket_count = len(bucket_boxes)
+            # todo: only iterate over annotation_bucket_paths
+            # annotation_bucket_paths = list_bucket_paths(volume_data_path)
+            # for count, bucket_bbox in enumerate(bucket_boxes):
+
+            chunk_count = 0
+            for chunk, bboxes in chunks_with_bboxes.items():
+                chunk_count += 1
+                print(f"Processing chunk {chunk_count}...")
+
+                time_start("Read chunk")
+                data_buffer = merged_wkw.read(chunk.topleft.to_np(), chunk.size)[
+                    0, :, :, :
+                ]
+                time_stop("Read chunk")
+
+                # print("data_buffer.shape", data_buffer.shape)
+
+                time_start("Read/merge bboxes")
+                for bbox in bboxes:
+                    annotated_count += 1
+                    read_data = volume_data_wkw.read(bbox.topleft.to_np(), bbox.size)
+                    # ic(read_data.shape)
+                    # ic(bbox.offset(-chunk.topleft))
+                    data_buffer[bbox.offset(-chunk.topleft).to_slices()] = read_data
+                time_stop("Read/merge bboxes")
+
+                time_start("Write chunk")
+                merged_wkw.write(chunk.topleft.to_np(), data_buffer)
+                time_stop("Write chunk")
+
+    # print(
+    #     f"Combined {annotated_count} volume-annotated buckets with"
+    #     f" {total_bucket_count - annotated_count} from fallback layer."
+    # )
 
 
-def list_bucket_paths(volume_data_layer_path: Path) -> List[Path]:
-    return [
-        wkw_path.relative_to(volume_data_layer_path)
-        for wkw_path in volume_data_layer_path.rglob("*/*/*.wkw")
-    ]
+# def list_bucket_paths(volume_data_layer_path: Path) -> List[Path]:
+#     return [
+#         wkw_path.relative_to(volume_data_layer_path)
+#         for wkw_path in volume_data_layer_path.rglob("*/*/*.wkw")
+#     ]
 
 
-def bucket_path_for_pos(position: Vec3Int) -> Path:
-    x_bucket, y_bucket, z_bucket = position // BUCKET_SIZE
-    return Path(f"z{z_bucket}/y{y_bucket}/x{x_bucket}.wkw")
+# def bucket_path_for_pos(position: Vec3Int) -> Path:
+#     x_bucket, y_bucket, z_bucket = position // BUCKET_SIZE
+#     return Path(f"z{z_bucket}/y{y_bucket}/x{x_bucket}.wkw")
 
 
 def main(args: Namespace) -> None:
@@ -343,19 +406,15 @@ def main(args: Namespace) -> None:
             )
     bboxes = sorted(bboxes, key=lambda x: x.timestamp)
 
-    dataset_bbox = detect_bbox(args.segmentation_layer_path)
-    if dataset_bbox is None:
-        raise ValueError("Could not detect bbox")
-    else:
-        if not args.skip_merge:
-            start = time.time()
-            merge_with_fallback_layer(
-                dataset_bbox,
-                args.output_path,
-                args.volume_path,
-                args.segmentation_layer_path,
-            )
-            print("Combining data took ", time.time() - start)
+    if not args.skip_merge:
+        start = time.time()
+        merge_with_fallback_layer(
+            args.output_path,
+            args.volume_path,
+            args.segmentation_layer_path,
+        )
+        print("Combining data took ", time.time() - start)
+    # return
     overall_start = time.time()
     for floodfill in bboxes:
         start = time.time()

@@ -382,6 +382,9 @@ class BoundingBox:
 
         return BoundingBox(self.topleft + Vec3Int(vector), self.size)
 
+    def __hash__(self) -> int:
+        return hash(self.to_tuple6())
+
 
 class BoundingBoxNamedTuple(NamedTuple):
     topleft: Tuple[int, int, int]
