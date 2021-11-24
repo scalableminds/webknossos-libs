@@ -224,59 +224,11 @@ def execute_floodfill(
                     time_stop("write chunk")
 
 
-def detect_cube_length(layer_path: Path) -> int:
-    if layer_path is not None:
-        with wkw.Dataset.open(str(layer_path)) as dataset:
-            return dataset.header.block_len * dataset.header.file_len
-    raise RuntimeError(
-        f"Failed to detect the cube length (for {layer_path}) because the layer_path is None"
-    )
-
-
-# def detect_bbox(layer_path: Path) -> Optional[dict]:
-#     # Detect the coarse bounding box of a dataset by iterating
-#     # over the WKW cubes
-#     def list_files(layer_path: str) -> Iterable[str]:
-#         return iglob(path.join(layer_path, "*", "*", "*.wkw"), recursive=True)
-
-#     def parse_cube_file_name(filename: str) -> Tuple[int, int, int]:
-#         CUBE_REGEX = re.compile(
-#             fr"z(\d+){re.escape(os.path.sep)}y(\d+){re.escape(os.path.sep)}x(\d+)(\.wkw)$"
-#         )
-#         m = CUBE_REGEX.search(filename)
-#         if m is not None:
-#             return int(m.group(3)), int(m.group(2)), int(m.group(1))
-#         raise RuntimeError(f"Failed to parse cube file name from {filename}")
-
-#     def list_cubes(layer_path: str) -> Iterable[Tuple[int, int, int]]:
-#         return (parse_cube_file_name(f) for f in list_files(layer_path))
-
-#     xs, ys, zs = list(zip(*list_cubes(str(layer_path))))
-
-#     min_x, min_y, min_z = min(xs), min(ys), min(zs)
-#     max_x, max_y, max_z = max(xs), max(ys), max(zs)
-
-#     cube_length = detect_cube_length(layer_path)
-#     if cube_length is None:
-#         return None
-
-#     return {
-#         "topLeft": [min_x * cube_length, min_y * cube_length, min_z * cube_length],
-#         "width": (1 + max_x - min_x) * cube_length,
-#         "height": (1 + max_y - min_y) * cube_length,
-#         "depth": (1 + max_z - min_z) * cube_length,
-#     }
-
-
 def merge_with_fallback_layer(
     output_path: Path,
     volume_data_path: Path,
     segmentation_layer_path: Path,
 ) -> None:
-
-    # dataset_bbox = detect_bbox(args.segmentation_layer_path)
-    # if dataset_bbox is None:
-    #     raise ValueError("Could not detect bbox")
 
     if output_path.exists():
         print("skipping copying")
@@ -323,15 +275,6 @@ def merge_with_fallback_layer(
             str(output_path / "1"),
         ) as merged_wkw:
             annotated_count = 0
-            # bucket_boxes = list(
-            #     BoundingBox.from_wkw_dict(bbox)
-            #     .align_with_mag(Mag(BUCKET_SIZE), ceil=True)
-            #     .chunk(BUCKET_SHAPE)
-            # )
-            # total_bucket_count = len(bucket_boxes)
-            # todo: only iterate over annotation_bucket_paths
-            # annotation_bucket_paths = list_bucket_paths(volume_data_path)
-            # for count, bucket_bbox in enumerate(bucket_boxes):
 
             chunk_count = 0
             for chunk, bboxes in chunks_with_bboxes.items():
@@ -363,18 +306,6 @@ def merge_with_fallback_layer(
     #     f"Combined {annotated_count} volume-annotated buckets with"
     #     f" {total_bucket_count - annotated_count} from fallback layer."
     # )
-
-
-# def list_bucket_paths(volume_data_layer_path: Path) -> List[Path]:
-#     return [
-#         wkw_path.relative_to(volume_data_layer_path)
-#         for wkw_path in volume_data_layer_path.rglob("*/*/*.wkw")
-#     ]
-
-
-# def bucket_path_for_pos(position: Vec3Int) -> Path:
-#     x_bucket, y_bucket, z_bucket = position // BUCKET_SIZE
-#     return Path(f"z{z_bucket}/y{y_bucket}/x{x_bucket}.wkw")
 
 
 def main(args: Namespace) -> None:
