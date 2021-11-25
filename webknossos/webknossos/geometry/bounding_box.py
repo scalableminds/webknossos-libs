@@ -11,6 +11,7 @@ from typing import (
     Union,
     cast,
 )
+import functools
 
 import attr
 import numpy as np
@@ -24,10 +25,12 @@ class BoundingBox:
     topleft: Vec3Int = attr.ib(converter=Vec3Int)
     size: Vec3Int = attr.ib(converter=Vec3Int)
 
-    @property
-    def bottomright(self) -> Vec3Int:
+    bottomright = attr.ib(init=False)
 
-        return self.topleft + self.size
+    def __attrs_post_init__(self):
+        # Compute bottomright to avoid that it's recomputed every time
+        # it is needed.
+        object.__setattr__(self, "bottomright", self.topleft + self.size)
 
     def with_topleft(self, new_topleft: Vec3IntLike) -> "BoundingBox":
 
