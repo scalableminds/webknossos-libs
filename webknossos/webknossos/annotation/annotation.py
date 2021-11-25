@@ -59,8 +59,9 @@ class Annotation:
     def save_volume_annotation(
         self, dataset: Dataset, layer_name: str = "volume_annotation"
     ) -> Layer:
-        assert "data.zip" in self._filelist
-        with self._zipfile.open("data.zip") as f:
+        # todo: the name is about to change with multiple volume annotations
+        assert "data_Volume.zip" in self._filelist
+        with self._zipfile.open("data_Volume.zip") as f:
             data_zip = ZipFile(f)
             wrong_files = [
                 i.filename
@@ -78,6 +79,8 @@ class Annotation:
             ),
         )
         min_mag_view = layer.mags[min(layer.mags)]
+        # todo: this tries to read the entire DS into memory (beginning from 0, 0, 0).
+        # if the annotation begins at some other point, this will blow up the RAM unnecessarily.
         layer.largest_segment_id = int(min_mag_view.read().max())
         return layer
 

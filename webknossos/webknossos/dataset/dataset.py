@@ -7,7 +7,7 @@ from os import makedirs
 from os.path import basename, join, normpath
 from pathlib import Path
 from shutil import rmtree
-from typing import Any, Dict, Optional, Tuple, Union, cast
+from typing import Any, Dict, Optional, Tuple, Union, cast, List
 
 import attr
 import numpy as np
@@ -538,6 +538,7 @@ class Dataset:
         new_dataset_path: Path,
         name: Optional[str] = None,
         make_relative: bool = False,
+        layers_to_ignore: List[str] = [],
     ) -> "Dataset":
         """
         Create a new dataset at the given path. Link all mags of all existing layers.
@@ -549,6 +550,8 @@ class Dataset:
             new_dataset_path, scale=self.scale, name=name or self.name
         )
         for layer_name, layer in self.layers.items():
+            if layer_name in layers_to_ignore:
+                continue
             new_layer = new_dataset.add_layer_like(layer, layer_name)
             for mag_view in layer.mags.values():
                 new_layer.add_symlink_mag(mag_view, make_relative)

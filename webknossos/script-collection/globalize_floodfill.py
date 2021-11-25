@@ -1,4 +1,3 @@
-from collections import defaultdict
 import webknossos as wk
 import sys
 import os
@@ -6,24 +5,31 @@ import re
 import time
 from argparse import ArgumentParser, Namespace
 from collections import namedtuple
-from glob import iglob
-from os import path
 from pathlib import Path
-from typing import Iterable, List, Optional, Set, Tuple
+from typing import List, Set, Tuple
 import shutil
 from icecream import ic
 from webknossos.utils import time_start, time_stop
+from tempfile import TemporaryDirectory
+from contextlib import contextmanager
 
 import numpy as np
 import wkw
 
+import webknossos.geometry
+from webknossos.dataset import MagView
 from webknossos.geometry import BoundingBox, Mag, Vec3Int
 
-BUCKET_SIZE = 32
-BUCKET_SHAPE = (BUCKET_SIZE, BUCKET_SIZE, BUCKET_SIZE)
-# CUBE_SHAPE = BUCKET_SHAPE
-CUBE_SHAPE = (1024, 1024, 1024)
-NEIGHBORS = [(1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1)]
+CUBE_SHAPE = Vec3Int(1024, 1024, 1024)
+CUBE_BBOX = BoundingBox(Vec3Int(0, 0, 0), CUBE_SHAPE)
+NEIGHBORS = [
+    Vec3Int(1, 0, 0),
+    Vec3Int(-1, 0, 0),
+    Vec3Int(0, 1, 0),
+    Vec3Int(0, -1, 0),
+    Vec3Int(0, 0, 1),
+    Vec3Int(0, 0, -1),
+]
 
 FloodFillBbox = namedtuple(
     "FloodFillBbox",
@@ -67,60 +73,24 @@ def create_parser() -> ArgumentParser:
     return parser
 
 
-def get_bucket_pos_and_offset(
-    global_position: Tuple[int, int, int]
-) -> Tuple[Tuple[int, int, int], Tuple[int, int, int]]:
-    offset = (
-        global_position[0] % CUBE_SHAPE[0],
-        global_position[1] % CUBE_SHAPE[1],
-        global_position[2] % CUBE_SHAPE[2],
-    )
+def get_bucket_pos_and_offset(global_position: Vec3Int) -> Tuple[Vec3Int, Vec3Int]:
+    offset = global_position % CUBE_SHAPE
     return (
-        substract_positions(global_position, offset),
+        global_position - offset,
         offset,
     )
 
 
-def add_positions(
-    a: Tuple[int, int, int], b: Tuple[int, int, int]
-) -> Tuple[int, int, int]:
-    return a[0] + b[0], a[1] + b[1], a[2] + b[2]
-
-
-def substract_positions(
-    a: Tuple[int, int, int], b: Tuple[int, int, int]
-) -> Tuple[int, int, int]:
-    return a[0] - b[0], a[1] - b[1], a[2] - b[2]
-
-
-def inside_bbox(
-    point: Tuple[int, int, int],
-    bbox_top_left: Tuple[int, int, int] = (0, 0, 0),
-    bbox_bottom_right: Tuple[int, int, int] = CUBE_SHAPE,
-) -> bool:
-    return (
-        bbox_top_left[0] <= point[0] < bbox_bottom_right[0]
-        and bbox_top_left[1] <= point[1] < bbox_bottom_right[1]
-        and bbox_top_left[2] <= point[2] < bbox_bottom_right[2]
-    )
-
-
 def execute_floodfill(
-    data_path: Path,
-    seed_position: Tuple[int, int, int],
+    data_mag: MagView,
+    seed_position: Vec3Int,
     already_processed_bbox: BoundingBox,
     source_id: int,
     target_id: int,
 ) -> None:
-    # bucketData[neighbourVoxelIndex] == sourceCellId || (isInsideBBox & & bucketData[neighbourVoxelIndex] == targetCellId)
-    bucket_and_seed_pos: List[Tuple[Tuple[int, int, int], Tuple[int, int, int]]] = [
+    bucket_and_seed_pos: List[Tuple[Vec3Int, Vec3Int]] = [
         get_bucket_pos_and_offset(seed_position)
     ]
-    # bucket_to_seed_pos: Dict[
-    #    Tuple[int, int, int], Set[Tuple[int, int, int]]
-    # ] = defaultdict(set)
-    already_processed_bbox_top_left = already_processed_bbox.topleft.to_tuple()
-    already_processed_bbox_bottom_right = already_processed_bbox.bottomright.to_tuple()
 
     # The `visited` variable is used to know which parts of the already processed bbox
     # were already traversed. Outside of that bounding box, the actual data already
@@ -129,183 +99,176 @@ def execute_floodfill(
         already_processed_bbox.size.to_tuple(), dtype=np.uint8
     )  # bitarray needs less memory, but new dependency
     bucket_count = 0
-    with wkw.Dataset.open(str(data_path / "1")) as wkw_data:
-        while len(bucket_and_seed_pos) != 0:
-            bucket_count += 1
-            if bucket_count % 10000 == 0:
-                print("Handled seed positions ", bucket_count)
 
-            dirty_bucket = False
-            current_cube, seed_position = bucket_and_seed_pos.pop()
-            global_seed_position = add_positions(current_cube, seed_position)
+    while len(bucket_and_seed_pos) != 0:
+        bucket_count += 1
+        if bucket_count % 10000 == 0:
+            print("Handled seed positions ", bucket_count)
 
-            # Only reading one voxel for the seed is approximately 30.000 times faster
-            value_at_seed_position = wkw_data.read(
-                Vec3Int(current_cube) + Vec3Int(seed_position), (1, 1, 1)
-            )
+        dirty_bucket = False
+        current_cube, seed_position = bucket_and_seed_pos.pop()
+        global_seed_position = current_cube + seed_position
 
-            if value_at_seed_position == source_id or (
-                inside_bbox(
-                    global_seed_position,
-                    already_processed_bbox_top_left,
-                    already_processed_bbox_bottom_right,
-                )
-                and value_at_seed_position == target_id
-                and not visited[
-                    substract_positions(
-                        global_seed_position, already_processed_bbox_top_left
-                    )
-                ]
-            ):
-                print("Handling chunk", bucket_count, "with current cube", current_cube)
-                time_start("read data")
-                cube_data = wkw_data.read(current_cube, CUBE_SHAPE)
-                cube_data = cube_data[0, :, :, :]
-                time_stop("read data")
+        # Only reading one voxel for the seed can be up to 30.000 times faster
+        # which is very relevent, since the chunk doesn't need to be traversed
+        # if the seed voxel was already covered.
+        value_at_seed_position = data_mag.read(current_cube + seed_position, (1, 1, 1))
 
-                seeds_in_curr_bucket: Set[Tuple[int, int, int]] = set()
-                seeds_in_curr_bucket.add(seed_position)
-                time_start("traverse cube")
-                while len(seeds_in_curr_bucket) > 0:
-                    if len(seeds_in_curr_bucket) % 10000 == 0:
-                        print("remaining seeds", len(seeds_in_curr_bucket))
-                    seed_pos = seeds_in_curr_bucket.pop()
-                    global_seed_pos = add_positions(current_cube, seed_pos)
-                    if inside_bbox(
-                        global_seed_pos,
-                        already_processed_bbox_top_left,
-                        already_processed_bbox_bottom_right,
-                    ):
-                        visited[
-                            substract_positions(
-                                global_seed_pos,
-                                already_processed_bbox_top_left,
-                            )
-                        ] = 1
+        if value_at_seed_position == source_id or (
+            already_processed_bbox.contains(global_seed_position)
+            and value_at_seed_position == target_id
+            and not visited[global_seed_position - already_processed_bbox.topleft]
+        ):
+            print("Handling chunk", bucket_count, "with current cube", current_cube)
+            time_start("read data")
+            cube_data = data_mag.read(current_cube, CUBE_SHAPE)
+            cube_data = cube_data[0, :, :, :]
+            time_stop("read data")
 
-                    if cube_data[seed_pos] != target_id:
-                        cube_data[seed_pos] = target_id
-                        dirty_bucket = True
+            seeds_in_curr_bucket: Set[Vec3Int] = set()
+            seeds_in_curr_bucket.add(seed_position)
+            time_start("traverse cube")
+            while len(seeds_in_curr_bucket) > 0:
+                if len(seeds_in_curr_bucket) % 10000 == 0:
+                    print("remaining seeds", len(seeds_in_curr_bucket))
+                seed_pos = seeds_in_curr_bucket.pop()
+                global_seed_pos = current_cube + seed_pos
+                if already_processed_bbox.contains(global_seed_pos):
+                    visited[global_seed_pos - already_processed_bbox.topleft] = 1
 
-                    # check neighbors
-                    for neighbor in NEIGHBORS:
-                        neighbor_pos = add_positions(seed_pos, neighbor)
-                        global_neighbor_pos = add_positions(current_cube, neighbor_pos)
-                        if inside_bbox(
-                            global_neighbor_pos,
-                            already_processed_bbox_top_left,
-                            already_processed_bbox_bottom_right,
+                if cube_data[seed_pos] != target_id:
+                    cube_data[seed_pos] = target_id
+                    dirty_bucket = True
+
+                # check neighbors
+                for neighbor in NEIGHBORS:
+                    neighbor_pos = seed_pos + neighbor
+
+                    global_neighbor_pos = current_cube + neighbor_pos
+                    if already_processed_bbox.contains(global_neighbor_pos):
+                        if visited[
+                            global_neighbor_pos - already_processed_bbox.topleft
+                        ]:
+                            continue
+                    if CUBE_BBOX.contains(neighbor_pos):
+                        if cube_data[neighbor_pos] == source_id or (
+                            already_processed_bbox.contains(global_neighbor_pos)
+                            and cube_data[neighbor_pos] == target_id
                         ):
-                            if visited[
-                                substract_positions(
-                                    global_neighbor_pos,
-                                    already_processed_bbox_top_left,
-                                )
-                            ]:
-                                continue
-                        if inside_bbox(neighbor_pos):
-                            if cube_data[neighbor_pos] == source_id or (
-                                inside_bbox(
-                                    global_neighbor_pos,
-                                    already_processed_bbox_top_left,
-                                    already_processed_bbox_bottom_right,
-                                )
-                                and cube_data[neighbor_pos] == target_id
-                            ):
-                                seeds_in_curr_bucket.add(neighbor_pos)
-                        else:
-                            bucket_and_seed_pos.append(
-                                get_bucket_pos_and_offset(global_neighbor_pos)
-                            )
-                time_stop("traverse cube")
-                if dirty_bucket:
-                    time_start("write chunk")
-                    wkw_data.write(current_cube, cube_data)
-                    time_stop("write chunk")
+                            seeds_in_curr_bucket.add(neighbor_pos)
+                    else:
+                        bucket_and_seed_pos.append(
+                            get_bucket_pos_and_offset(global_neighbor_pos)
+                        )
+            time_stop("traverse cube")
+            if dirty_bucket:
+                time_start("write chunk")
+                data_mag.write(cube_data, current_cube)
+                time_stop("write chunk")
+
+
+@contextmanager
+def temporary_annotation_view(volume_annotation_path: Path):
+
+    """
+    Given a volume annotation path, create a temporary dataset which
+    contains the volume annotation via a symlink. Yield the layer
+    so that one can work with the annotation as a wk.Dataset.
+    """
+
+    with TemporaryDirectory() as tmp_annotation_dir:
+        tmp_annotation_dataset_path = (
+            Path(tmp_annotation_dir) / "tmp_annotation_dataset"
+        )
+
+        input_annotation_dataset = wk.Dataset.get_or_create(
+            str(tmp_annotation_dataset_path), scale=(1, 1, 1)
+        )
+
+        # Ideally, the following code would be used, but there are two problems:
+        # - save_volume_annotation cannot deal with the
+        #   new named volume annotation layers, yet
+        # - save_volume_annotation tries to read the entire data (beginning from 0, 0, 0)
+        #   to infer the largest_segment_id which can easily exceed the available RAM.
+        # volume_annotation = open_annotation(volume_annotation_path)
+        # input_annotation_layer = volume_annotation.save_volume_annotation(
+        #     input_annotation_dataset, "volume_annotation"
+        # )
+
+        os.symlink(volume_annotation_path, tmp_annotation_dataset_path / "segmentation")
+        input_annotation_layer = input_annotation_dataset.add_layer_for_existing_files(
+            layer_name="segmentation",
+            category="segmentation",
+            largest_segment_id=0,  # This is incorrect, but for globalize_floodfill not relevant.
+        )
+
+        yield input_annotation_layer
 
 
 def merge_with_fallback_layer(
     output_path: Path,
-    volume_data_path: Path,
+    volume_annotation_path: Path,
     segmentation_layer_path: Path,
-) -> None:
+) -> MagView:
 
-    if output_path.exists():
-        print("skipping copying")
-    else:
-        copy_start = time.time()
-        shutil.copytree(segmentation_layer_path, output_path)
-        copy_end = time.time()
-        print(f"Copying took {copy_end - copy_start}")
+    assert not output_path.exists(), f"Dataset at {output_path} already exists"
 
-    fallback_voxel_type = None
-    with wkw.Dataset.open(str(segmentation_layer_path / "1")) as fallback_layer_wkw:
-        fallback_voxel_type = fallback_layer_wkw.header.voxel_type
-
-    tmp_annotation_dataset_path = Path("tmp_annotation_dataset")
-    input_annotation_dataset = wk.Dataset.get_or_create(
-        str(tmp_annotation_dataset_path), scale=(1, 1, 1)
+    # Prepare output dataset by creatign a shallow copy of the dataset
+    # determined by segmentation_layer_path, but do a deep copy of
+    # segmentation_layer_path itself (so that we can mutate it).
+    input_segmentation_dataset = wk.Dataset(segmentation_layer_path.parent)
+    time_start("Prepare output dataset")
+    output_dataset = input_segmentation_dataset.shallow_copy_dataset(
+        output_path,
+        name=output_path.name,
+        make_relative=True,
+        layers_to_ignore=[segmentation_layer_path.name],
     )
-    if not (tmp_annotation_dataset_path / "segmentation").exists():
-        os.symlink(volume_data_path, tmp_annotation_dataset_path / "segmentation")
-        input_annotation_layer = input_annotation_dataset.add_layer_for_existing_files(
-            layer_name="segmentation",
-            category="segmentation",
-            largest_segment_id=0,  # todo
+    output_layer = output_dataset.add_copy_layer(
+        segmentation_layer_path, segmentation_layer_path.name
+    )
+    time_stop("Prepare output dataset")
+
+    input_segmentation_mag = input_segmentation_dataset.get_layer(
+        segmentation_layer_path.name
+    ).get_best_mag()
+    with temporary_annotation_view(volume_annotation_path) as input_annotation_layer:
+        input_annotation_mag = input_annotation_layer.get_best_mag()
+        bboxes = list(
+            BoundingBox.from_tuple2(tuple)
+            for tuple in input_annotation_mag.get_bounding_boxes_on_disk()
         )
-    else:
-        input_annotation_layer = input_annotation_dataset.get_layer("segmentation")
-    min_mag = min(input_annotation_layer.mags.keys())
-    bboxes = list(input_annotation_layer.get_mag(min_mag).get_bounding_boxes_on_disk())
 
-    chunks_with_bboxes = defaultdict(list)
-    for bbox_tuple in bboxes:
-        bbox = BoundingBox.from_tuple2(bbox_tuple)
-        chunk_key = bbox.align_with_mag(Mag(1024), ceil=True)
-        chunks_with_bboxes[chunk_key].append(bbox)
+        chunks_with_bboxes = BoundingBox.group_boxes_with_aligned_mag(bboxes, Mag(1024))
 
-    with wkw.Dataset.open(str(volume_data_path / "1")) as volume_data_wkw:
         assert (
-            volume_data_wkw.header.file_len == 1
+            input_annotation_mag.header.file_len == 1
         ), "volume annotation must have file_len=1"
         assert (
-            volume_data_wkw.header.voxel_type == fallback_voxel_type
+            input_annotation_mag.header.voxel_type
+            == input_segmentation_mag.header.voxel_type
         ), "Volume annotation must have same dtype as fallback layer"
-        with wkw.Dataset.open(
-            str(output_path / "1"),
-        ) as merged_wkw:
-            annotated_count = 0
 
-            chunk_count = 0
-            for chunk, bboxes in chunks_with_bboxes.items():
-                chunk_count += 1
-                print(f"Processing chunk {chunk_count}...")
+        output_mag = output_layer.get_mag(input_segmentation_mag.mag)
+        chunk_count = 0
+        for chunk, bboxes in chunks_with_bboxes.items():
+            chunk_count += 1
+            print(f"Processing chunk {chunk_count}...")
 
-                time_start("Read chunk")
-                data_buffer = merged_wkw.read(chunk.topleft.to_np(), chunk.size)[
-                    0, :, :, :
-                ]
-                time_stop("Read chunk")
+            time_start("Read chunk")
+            data_buffer = output_mag.read(chunk.topleft, chunk.size)[0, :, :, :]
+            time_stop("Read chunk")
 
-                # print("data_buffer.shape", data_buffer.shape)
+            time_start("Read/merge bboxes")
+            for bbox in bboxes:
+                read_data = input_annotation_mag.read(bbox.topleft, bbox.size)
+                data_buffer[bbox.offset(-chunk.topleft).to_slices()] = read_data
+            time_stop("Read/merge bboxes")
 
-                time_start("Read/merge bboxes")
-                for bbox in bboxes:
-                    annotated_count += 1
-                    read_data = volume_data_wkw.read(bbox.topleft.to_np(), bbox.size)
-                    # ic(read_data.shape)
-                    # ic(bbox.offset(-chunk.topleft))
-                    data_buffer[bbox.offset(-chunk.topleft).to_slices()] = read_data
-                time_stop("Read/merge bboxes")
-
-                time_start("Write chunk")
-                merged_wkw.write(chunk.topleft.to_np(), data_buffer)
-                time_stop("Write chunk")
-
-    # print(
-    #     f"Combined {annotated_count} volume-annotated buckets with"
-    #     f" {total_bucket_count - annotated_count} from fallback layer."
-    # )
+            time_start("Write chunk")
+            output_mag.write(data_buffer, chunk.topleft)
+            time_stop("Write chunk")
+    return output_mag
 
 
 def main(args: Namespace) -> None:
@@ -338,20 +301,21 @@ def main(args: Namespace) -> None:
     bboxes = sorted(bboxes, key=lambda x: x.timestamp)
 
     if not args.skip_merge:
+        time_start("Merge with fallback layer")
         start = time.time()
-        merge_with_fallback_layer(
+        data_mag = merge_with_fallback_layer(
             args.output_path,
             args.volume_path,
             args.segmentation_layer_path,
         )
-        print("Combining data took ", time.time() - start)
-    # return
+        time_stop("Merge with fallback layer")
+    return
     overall_start = time.time()
     for floodfill in bboxes:
         start = time.time()
         execute_floodfill(
-            args.output_path,
-            floodfill.seed_position.to_tuple(),
+            data_mag,
+            floodfill.seed_position,
             floodfill.bounding_box,
             floodfill.source_id,
             floodfill.target_id,

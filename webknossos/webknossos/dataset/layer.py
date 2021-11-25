@@ -255,6 +255,10 @@ class Layer:
             )
         return self.mags[mag]
 
+    def get_best_mag(self) -> MagView:
+
+        return self.get_mag(min(self.mags.keys()))
+
     def add_mag(
         self,
         mag: Union[int, str, list, tuple, np.ndarray, Mag],
