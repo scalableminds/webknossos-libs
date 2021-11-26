@@ -100,7 +100,7 @@ def download_dataset(
                     height=aligned_chunk_in_mag.size.y,
                     depth=aligned_chunk_in_mag.size.z,
                 )
-                assert response.status_code == 200
+                assert response.status_code == 200, f"Download response was not 200, got {response.status_code}"
                 data = np.frombuffer(
                     response.content, dtype=layer.dtype_per_channel
                 ).reshape(layer.num_channels, *aligned_chunk_in_mag.size, order="F")

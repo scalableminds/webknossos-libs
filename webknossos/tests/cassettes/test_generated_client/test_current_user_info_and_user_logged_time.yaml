@@ -15,8 +15,8 @@ interactions:
     method: GET
     uri: https://webknossos.org/api/user
   response:
-    content: '{"id":"6006a44d0100007e0070d734","email":"jonathan@scm.io","firstName":"Jonathan","lastName":"Striebel","isAdmin":true,"isDatasetManager":false,"isActive":true,"teams":[{"id":"5b3ce78557b7414e59269427","name":"scalable
-      minds","isTeamManager":false}],"experiences":{},"lastActivity":1611048013169,"isAnonymous":false,"isEditable":true,"organization":"scalable_minds","novelUserExperienceInfos":{"lastViewedWhatsNewTimestamp":1634559953377,"shouldSeeModernControlsModal":false,"hasSeenDashboardWelcomeBanner":true},"selectedTheme":"auto","created":1611048013169,"lastTaskTypeId":null}'
+    content: '{"id":"5ffdaacf0100008a004e96c4","email":"florian@scm.io","firstName":"Florian","lastName":"M","isAdmin":true,"isDatasetManager":false,"isActive":true,"teams":[{"id":"5b3ce78557b7414e59269427","name":"scalable
+      minds","isTeamManager":false}],"experiences":{},"lastActivity":1610459855550,"isAnonymous":false,"isEditable":true,"organization":"scalable_minds","novelUserExperienceInfos":{"lastViewedWhatsNewTimestamp":1634825151366,"hasSeenDashboardWelcomeBanner":true},"selectedTheme":"auto","created":1610459855550,"lastTaskTypeId":null}'
     headers:
       Connection:
       - keep-alive
@@ -25,7 +25,7 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Tue, 26 Oct 2021 15:29:44 GMT
+      - Fri, 26 Nov 2021 10:57:34 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       Server:
@@ -56,9 +56,9 @@ interactions:
       user-agent:
       - python-httpx/0.18.2
     method: GET
-    uri: https://webknossos.org/api/users/6006a44d0100007e0070d734/loggedTime
+    uri: https://webknossos.org/api/users/5ffdaacf0100008a004e96c4/loggedTime
   response:
-    content: '{"loggedTime":[{"paymentInterval":{"month":1,"year":1970},"durationInSeconds":4},{"paymentInterval":{"month":10,"year":2021},"durationInSeconds":1169},{"paymentInterval":{"month":8,"year":2021},"durationInSeconds":0},{"paymentInterval":{"month":9,"year":2021},"durationInSeconds":17}]}'
+    content: '{"loggedTime":[{"paymentInterval":{"month":10,"year":2021},"durationInSeconds":0},{"paymentInterval":{"month":7,"year":2021},"durationInSeconds":452},{"paymentInterval":{"month":5,"year":2021},"durationInSeconds":20},{"paymentInterval":{"month":11,"year":2021},"durationInSeconds":21},{"paymentInterval":{"month":1,"year":2021},"durationInSeconds":36},{"paymentInterval":{"month":3,"year":2021},"durationInSeconds":158},{"paymentInterval":{"month":4,"year":2021},"durationInSeconds":0},{"paymentInterval":{"month":9,"year":2021},"durationInSeconds":143},{"paymentInterval":{"month":8,"year":2021},"durationInSeconds":203}]}'
     headers:
       Connection:
       - keep-alive
@@ -67,7 +67,7 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Tue, 26 Oct 2021 15:29:44 GMT
+      - Fri, 26 Nov 2021 10:57:35 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       Server:
