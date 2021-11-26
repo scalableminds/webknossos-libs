@@ -1,19 +1,16 @@
 import logging
 import os
 import re
-import time
 from argparse import ArgumentParser, Namespace
 from collections import namedtuple
 from contextlib import contextmanager
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import List, Set, Tuple, Iterator
+from typing import Iterator, List, Set, Tuple
 
 import numpy as np
-from icecream import ic
 
 import webknossos as wk
-import webknossos.geometry
 from webknossos.dataset import Layer, MagView
 from webknossos.geometry import BoundingBox, Mag, Vec3Int
 from webknossos.utils import time_start, time_stop
@@ -104,7 +101,7 @@ def execute_floodfill(
     while len(chunk_with_relative_seed) > 0:
         chunk_count += 1
         if chunk_count % 10000 == 0:
-            logger.info("Handled seed positions ", chunk_count)
+            logger.info(f"Handled seed positions {chunk_count}")
 
         dirty_bucket = False
         current_cube, relative_seed = chunk_with_relative_seed.pop()
@@ -121,7 +118,7 @@ def execute_floodfill(
             and not is_visited[global_seed - already_processed_bbox.topleft]
         ):
             logger.info(
-                "Handling chunk", chunk_count, "with current cube", current_cube
+                f"Handling chunk {chunk_count} with current cube {current_cube}"
             )
             time_start("read data")
             cube_data = data_mag.read(current_cube, cube_size)
@@ -309,7 +306,6 @@ def main(args: Namespace) -> None:
 
     if not args.skip_merge:
         time_start("Merge with fallback layer")
-        start = time.time()
         data_mag = merge_with_fallback_layer(
             args.output_path,
             args.volume_path,
@@ -317,9 +313,9 @@ def main(args: Namespace) -> None:
         )
         time_stop("Merge with fallback layer")
 
-    overall_start = time.time()
+    time_start("All floodfills")
     for floodfill in bboxes:
-        start = time.time()
+        time_start("Floodfill")
         execute_floodfill(
             data_mag,
             floodfill.seed_position,
@@ -327,8 +323,8 @@ def main(args: Namespace) -> None:
             floodfill.source_id,
             floodfill.target_id,
         )
-        logger.info("Current floodfill took ", time.time() - start)
-    logger.info("All floodfills took ", time.time() - overall_start)
+        time_stop("Floodfill")
+    time_stop("All floodfills")
 
     time_start("Recompute downsampled mags")
     data_mag.layer.redownsample()

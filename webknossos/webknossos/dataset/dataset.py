@@ -537,7 +537,7 @@ class Dataset:
         new_dataset_path: Path,
         name: Optional[str] = None,
         make_relative: bool = False,
-        layers_to_ignore: List[str] = [],
+        layers_to_ignore: Optional[List[str]] = None,
     ) -> "Dataset":
         """
         Create a new dataset at the given path. Link all mags of all existing layers.
@@ -549,7 +549,7 @@ class Dataset:
             new_dataset_path, scale=self.scale, name=name or self.name
         )
         for layer_name, layer in self.layers.items():
-            if layer_name in layers_to_ignore:
+            if layers_to_ignore is not None and layer_name in layers_to_ignore:
                 continue
             new_layer = new_dataset.add_layer_like(layer, layer_name)
             for mag_view in layer.mags.values():
