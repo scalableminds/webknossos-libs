@@ -20,8 +20,6 @@ import webknossos.geometry
 from webknossos.dataset import MagView
 from webknossos.geometry import BoundingBox, Mag, Vec3Int
 
-CUBE_SHAPE = Vec3Int(1024, 1024, 1024)
-CUBE_BBOX = BoundingBox(Vec3Int(0, 0, 0), CUBE_SHAPE)
 NEIGHBORS = [
     Vec3Int(1, 0, 0),
     Vec3Int(-1, 0, 0),
@@ -73,8 +71,10 @@ def create_parser() -> ArgumentParser:
     return parser
 
 
-def get_bucket_pos_and_offset(global_position: Vec3Int) -> Tuple[Vec3Int, Vec3Int]:
-    offset = global_position % CUBE_SHAPE
+def get_bucket_pos_and_offset(
+    global_position: Vec3Int, cube_shape: Vec3Int
+) -> Tuple[Vec3Int, Vec3Int]:
+    offset = global_position % cube_shape
     return (
         global_position - offset,
         offset,
@@ -88,8 +88,10 @@ def execute_floodfill(
     source_id: int,
     target_id: int,
 ) -> None:
+    cube_size = Vec3Int(data_mag.header.file_len * data_mag.header.block_len)
+    cube_bbox = BoundingBox(Vec3Int(0, 0, 0), cube_size)
     bucket_and_seed_pos: List[Tuple[Vec3Int, Vec3Int]] = [
-        get_bucket_pos_and_offset(seed_position)
+        get_bucket_pos_and_offset(seed_position, cube_size)
     ]
 
     # The `visited` variable is used to know which parts of the already processed bbox
@@ -121,7 +123,7 @@ def execute_floodfill(
         ):
             print("Handling chunk", bucket_count, "with current cube", current_cube)
             time_start("read data")
-            cube_data = data_mag.read(current_cube, CUBE_SHAPE)
+            cube_data = data_mag.read(current_cube, cube_size)
             cube_data = cube_data[0, :, :, :]
             time_stop("read data")
 
@@ -150,7 +152,7 @@ def execute_floodfill(
                             global_neighbor_pos - already_processed_bbox.topleft
                         ]:
                             continue
-                    if CUBE_BBOX.contains(neighbor_pos):
+                    if cube_bbox.contains(neighbor_pos):
                         if cube_data[neighbor_pos] == source_id or (
                             already_processed_bbox.contains(global_neighbor_pos)
                             and cube_data[neighbor_pos] == target_id
@@ -158,7 +160,7 @@ def execute_floodfill(
                             seeds_in_curr_bucket.add(neighbor_pos)
                     else:
                         bucket_and_seed_pos.append(
-                            get_bucket_pos_and_offset(global_neighbor_pos)
+                            get_bucket_pos_and_offset(global_neighbor_pos, cube_size)
                         )
             time_stop("traverse cube")
             if dirty_bucket:
@@ -190,6 +192,7 @@ def temporary_annotation_view(volume_annotation_path: Path):
         #   new named volume annotation layers, yet
         # - save_volume_annotation tries to read the entire data (beginning from 0, 0, 0)
         #   to infer the largest_segment_id which can easily exceed the available RAM.
+        #
         # volume_annotation = open_annotation(volume_annotation_path)
         # input_annotation_layer = volume_annotation.save_volume_annotation(
         #     input_annotation_dataset, "volume_annotation"
@@ -238,8 +241,12 @@ def merge_with_fallback_layer(
             BoundingBox.from_tuple2(tuple)
             for tuple in input_annotation_mag.get_bounding_boxes_on_disk()
         )
+        output_mag = output_layer.get_mag(input_segmentation_mag.mag)
 
-        chunks_with_bboxes = BoundingBox.group_boxes_with_aligned_mag(bboxes, Mag(1024))
+        cube_size = output_mag.header.file_len * output_mag.header.block_len
+        chunks_with_bboxes = BoundingBox.group_boxes_with_aligned_mag(
+            bboxes, Mag(cube_size)
+        )
 
         assert (
             input_annotation_mag.header.file_len == 1
@@ -249,7 +256,6 @@ def merge_with_fallback_layer(
             == input_segmentation_mag.header.voxel_type
         ), "Volume annotation must have same dtype as fallback layer"
 
-        output_mag = output_layer.get_mag(input_segmentation_mag.mag)
         chunk_count = 0
         for chunk, bboxes in chunks_with_bboxes.items():
             chunk_count += 1
