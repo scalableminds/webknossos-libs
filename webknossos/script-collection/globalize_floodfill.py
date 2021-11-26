@@ -7,14 +7,14 @@ from collections import namedtuple
 from contextlib import contextmanager
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import List, Set, Tuple
+from typing import List, Set, Tuple, Iterator
 
 import numpy as np
 from icecream import ic
 
 import webknossos as wk
 import webknossos.geometry
-from webknossos.dataset import MagView
+from webknossos.dataset import Layer, MagView
 from webknossos.geometry import BoundingBox, Mag, Vec3Int
 from webknossos.utils import time_start, time_stop
 
@@ -171,7 +171,7 @@ def execute_floodfill(
 
 
 @contextmanager
-def temporary_annotation_view(volume_annotation_path: Path):
+def temporary_annotation_view(volume_annotation_path: Path) -> Iterator[Layer]:
 
     """
     Given a volume annotation path, create a temporary dataset which

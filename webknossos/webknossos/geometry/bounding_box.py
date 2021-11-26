@@ -28,7 +28,7 @@ class BoundingBox:
 
     bottomright = attr.ib(init=False)
 
-    def __attrs_post_init__(self):
+    def __attrs_post_init__(self) -> None:
         # Compute bottomright to avoid that it's recomputed every time
         # it is needed.
         object.__setattr__(self, "bottomright", self.topleft + self.size)
