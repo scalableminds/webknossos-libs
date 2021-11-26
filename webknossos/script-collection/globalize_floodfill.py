@@ -71,10 +71,10 @@ def create_parser() -> ArgumentParser:
     return parser
 
 
-def get_bucket_pos_and_offset(
-    global_position: Vec3Int, cube_shape: Vec3Int
+def get_chunk_pos_and_offset(
+    global_position: Vec3Int, chunk_shape: Vec3Int
 ) -> Tuple[Vec3Int, Vec3Int]:
-    offset = global_position % cube_shape
+    offset = global_position % chunk_shape
     return (
         global_position - offset,
         offset,
@@ -90,65 +90,62 @@ def execute_floodfill(
 ) -> None:
     cube_size = Vec3Int(data_mag.header.file_len * data_mag.header.block_len)
     cube_bbox = BoundingBox(Vec3Int(0, 0, 0), cube_size)
-    bucket_and_seed_pos: List[Tuple[Vec3Int, Vec3Int]] = [
-        get_bucket_pos_and_offset(seed_position, cube_size)
+    chunk_with_relative_seed: List[Tuple[Vec3Int, Vec3Int]] = [
+        get_chunk_pos_and_offset(seed_position, cube_size)
     ]
 
-    # The `visited` variable is used to know which parts of the already processed bbox
+    # The `is_visited` variable is used to know which parts of the already processed bbox
     # were already traversed. Outside of that bounding box, the actual data already
     # is an indicator of whether the flood-fill has reached a voxel.
-    visited = np.zeros(
-        already_processed_bbox.size.to_tuple(), dtype=np.uint8
-    )  # bitarray needs less memory, but new dependency
-    bucket_count = 0
+    is_visited = np.zeros(already_processed_bbox.size.to_tuple(), dtype=np.uint8)
+    chunk_count = 0
 
-    while len(bucket_and_seed_pos) != 0:
-        bucket_count += 1
-        if bucket_count % 10000 == 0:
-            print("Handled seed positions ", bucket_count)
+    while len(chunk_with_relative_seed) > 0:
+        chunk_count += 1
+        if chunk_count % 10000 == 0:
+            print("Handled seed positions ", chunk_count)
 
         dirty_bucket = False
-        current_cube, seed_position = bucket_and_seed_pos.pop()
-        global_seed_position = current_cube + seed_position
+        current_cube, relative_seed = chunk_with_relative_seed.pop()
+        global_seed = current_cube + relative_seed
 
-        # Only reading one voxel for the seed can be up to 30.000 times faster
+        # Only reading one voxel for the seed can be up to 30,000 times faster
         # which is very relevent, since the chunk doesn't need to be traversed
         # if the seed voxel was already covered.
-        value_at_seed_position = data_mag.read(current_cube + seed_position, (1, 1, 1))
+        value_at_seed_position = data_mag.read(current_cube + relative_seed, (1, 1, 1))
 
         if value_at_seed_position == source_id or (
-            already_processed_bbox.contains(global_seed_position)
+            already_processed_bbox.contains(global_seed)
             and value_at_seed_position == target_id
-            and not visited[global_seed_position - already_processed_bbox.topleft]
+            and not is_visited[global_seed - already_processed_bbox.topleft]
         ):
-            print("Handling chunk", bucket_count, "with current cube", current_cube)
+            print("Handling chunk", chunk_count, "with current cube", current_cube)
             time_start("read data")
             cube_data = data_mag.read(current_cube, cube_size)
             cube_data = cube_data[0, :, :, :]
             time_stop("read data")
 
-            seeds_in_curr_bucket: Set[Vec3Int] = set()
-            seeds_in_curr_bucket.add(seed_position)
-            time_start("traverse cube")
-            while len(seeds_in_curr_bucket) > 0:
-                if len(seeds_in_curr_bucket) % 10000 == 0:
-                    print("remaining seeds", len(seeds_in_curr_bucket))
-                seed_pos = seeds_in_curr_bucket.pop()
-                global_seed_pos = current_cube + seed_pos
-                if already_processed_bbox.contains(global_seed_pos):
-                    visited[global_seed_pos - already_processed_bbox.topleft] = 1
+            seeds_in_current_chunk: Set[Vec3Int] = set()
+            seeds_in_current_chunk.add(relative_seed)
 
-                if cube_data[seed_pos] != target_id:
-                    cube_data[seed_pos] = target_id
+            time_start("traverse cube")
+            while len(seeds_in_current_chunk) > 0:
+                current_relative_seed = seeds_in_current_chunk.pop()
+                current_global_seed = current_cube + current_relative_seed
+                if already_processed_bbox.contains(current_global_seed):
+                    is_visited[current_global_seed - already_processed_bbox.topleft] = 1
+
+                if cube_data[current_relative_seed] != target_id:
+                    cube_data[current_relative_seed] = target_id
                     dirty_bucket = True
 
                 # check neighbors
                 for neighbor in NEIGHBORS:
-                    neighbor_pos = seed_pos + neighbor
+                    neighbor_pos = current_relative_seed + neighbor
 
                     global_neighbor_pos = current_cube + neighbor_pos
                     if already_processed_bbox.contains(global_neighbor_pos):
-                        if visited[
+                        if is_visited[
                             global_neighbor_pos - already_processed_bbox.topleft
                         ]:
                             continue
@@ -157,12 +154,13 @@ def execute_floodfill(
                             already_processed_bbox.contains(global_neighbor_pos)
                             and cube_data[neighbor_pos] == target_id
                         ):
-                            seeds_in_curr_bucket.add(neighbor_pos)
+                            seeds_in_current_chunk.add(neighbor_pos)
                     else:
-                        bucket_and_seed_pos.append(
-                            get_bucket_pos_and_offset(global_neighbor_pos, cube_size)
+                        chunk_with_relative_seed.append(
+                            get_chunk_pos_and_offset(global_neighbor_pos, cube_size)
                         )
             time_stop("traverse cube")
+
             if dirty_bucket:
                 time_start("write chunk")
                 data_mag.write(cube_data, current_cube)
