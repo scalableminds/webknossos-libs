@@ -3,9 +3,7 @@ from typing import Any, Callable, Iterable, List, Optional, Tuple, Union, cast
 
 import numpy as np
 
-value_error = (
-    "Vector components must be three integers or a Vec3IntLike object."  # slow
-)
+value_error = "Vector components must be three integers or a Vec3IntLike object."
 
 
 class Vec3Int(tuple):
@@ -32,14 +30,11 @@ class Vec3Int(tuple):
                     3,
                 ), "Numpy array for Vec3Int must have shape (3,)."
             if isinstance(vec, Iterable):
-                # print("slow Vec3Int")
-                as_tuple = cast(
-                    Tuple[int, int, int], tuple(int(item) for item in vec)
-                )  # slow
+                as_tuple = cast(Tuple[int, int, int], tuple(int(item) for item in vec))
                 assert len(as_tuple) == 3, value_error
         assert as_tuple is not None and len(as_tuple) == 3, value_error
 
-        return super().__new__(cls, cast(Iterable, as_tuple))  # slow
+        return super().__new__(cls, cast(Iterable, as_tuple))
 
     @staticmethod
     def from_xyz(x: int, y: int, z: int) -> "Vec3Int":
