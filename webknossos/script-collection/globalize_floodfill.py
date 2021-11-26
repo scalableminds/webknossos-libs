@@ -1,5 +1,4 @@
 import webknossos as wk
-import sys
 import os
 import re
 import time
@@ -7,7 +6,6 @@ from argparse import ArgumentParser, Namespace
 from collections import namedtuple
 from pathlib import Path
 from typing import List, Set, Tuple
-import shutil
 from icecream import ic
 from webknossos.utils import time_start, time_stop
 from tempfile import TemporaryDirectory
@@ -15,7 +13,6 @@ from contextlib import contextmanager
 import logging
 
 import numpy as np
-import wkw
 
 import webknossos.geometry
 from webknossos.dataset import MagView
@@ -92,7 +89,7 @@ def execute_floodfill(
     source_id: int,
     target_id: int,
 ) -> None:
-    cube_size = Vec3Int(data_mag.header.file_len * data_mag.header.block_len)
+    cube_size = Vec3Int.full(data_mag.header.file_len * data_mag.header.block_len)
     cube_bbox = BoundingBox(Vec3Int(0, 0, 0), cube_size)
     chunk_with_relative_seed: List[Tuple[Vec3Int, Vec3Int]] = [
         get_chunk_pos_and_offset(seed_position, cube_size)
@@ -332,6 +329,10 @@ def main(args: Namespace) -> None:
         )
         logger.info("Current floodfill took ", time.time() - start)
     logger.info("All floodfills took ", time.time() - overall_start)
+
+    time_start("Recompute downsampled mags")
+    data_mag.layer.redownsample()
+    time_stop("Recompute downsampled mags")
 
 
 if __name__ == "__main__":
