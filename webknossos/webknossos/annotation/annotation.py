@@ -61,8 +61,8 @@ class Annotation:
     ) -> Layer:
         # todo pylint: disable=fixme
         # the name is about to change with multiple volume annotations
-        assert "data_Volume.zip" in self._filelist
-        with self._zipfile.open("data_Volume.zip") as f:
+        assert "data.zip" in self._filelist
+        with self._zipfile.open("data.zip") as f:
             data_zip = ZipFile(f)
             wrong_files = [
                 i.filename
