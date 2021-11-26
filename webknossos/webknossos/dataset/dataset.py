@@ -324,7 +324,6 @@ class Dataset:
     ) -> Layer:
         assert layer_name not in self.layers, f"Layer {layer_name} already exists!"
         mag_headers = list((self.path / layer_name).glob("*/header.wkw"))
-        print("mag_headers", mag_headers, "in", self.path / layer_name)
 
         assert (
             len(mag_headers) != 0
