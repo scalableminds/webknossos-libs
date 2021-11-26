@@ -12,6 +12,7 @@ from icecream import ic
 from webknossos.utils import time_start, time_stop
 from tempfile import TemporaryDirectory
 from contextlib import contextmanager
+import logging
 
 import numpy as np
 import wkw
@@ -19,6 +20,9 @@ import wkw
 import webknossos.geometry
 from webknossos.dataset import MagView
 from webknossos.geometry import BoundingBox, Mag, Vec3Int
+
+logger = logging.getLogger(__name__)
+
 
 NEIGHBORS = [
     Vec3Int(1, 0, 0),
@@ -103,7 +107,7 @@ def execute_floodfill(
     while len(chunk_with_relative_seed) > 0:
         chunk_count += 1
         if chunk_count % 10000 == 0:
-            print("Handled seed positions ", chunk_count)
+            logger.info("Handled seed positions ", chunk_count)
 
         dirty_bucket = False
         current_cube, relative_seed = chunk_with_relative_seed.pop()
@@ -119,7 +123,9 @@ def execute_floodfill(
             and value_at_seed_position == target_id
             and not is_visited[global_seed - already_processed_bbox.topleft]
         ):
-            print("Handling chunk", chunk_count, "with current cube", current_cube)
+            logger.info(
+                "Handling chunk", chunk_count, "with current cube", current_cube
+            )
             time_start("read data")
             cube_data = data_mag.read(current_cube, cube_size)
             cube_data = cube_data[0, :, :, :]
@@ -257,7 +263,7 @@ def merge_with_fallback_layer(
         chunk_count = 0
         for chunk, bboxes in chunks_with_bboxes.items():
             chunk_count += 1
-            print(f"Processing chunk {chunk_count}...")
+            logger.info(f"Processing chunk {chunk_count}...")
 
             time_start("Read chunk")
             data_buffer = output_mag.read(chunk.topleft, chunk.size)[0, :, :, :]
@@ -324,8 +330,8 @@ def main(args: Namespace) -> None:
             floodfill.source_id,
             floodfill.target_id,
         )
-        print("Current floodfill took ", time.time() - start)
-    print("All floodfills took ", time.time() - overall_start)
+        logger.info("Current floodfill took ", time.time() - start)
+    logger.info("All floodfills took ", time.time() - overall_start)
 
 
 if __name__ == "__main__":
