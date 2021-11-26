@@ -5,6 +5,8 @@ description = "Python package to work with webKnossos datasets and annotations"
 authors = ["scalable minds <hello@scalableminds.com>"]
 readme = "README.md"
 license = "AGPL-3.0"
+repository = "https://github.com/scalableminds/webknossos-libs"
+homepage = "https://docs.webknossos.org"
 
 [tool.poetry.dependencies]
 python = "^3.7,>=3.7.1"
