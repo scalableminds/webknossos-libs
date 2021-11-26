@@ -1,12 +1,13 @@
 import logging
 import os
 import re
-from argparse import ArgumentParser, Namespace
+import argparse
 from collections import namedtuple
 from contextlib import contextmanager
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Iterator, List, Set, Tuple
+import textwrap
 
 import numpy as np
 
@@ -33,8 +34,26 @@ FloodFillBbox = namedtuple(
 )
 
 
-def create_parser() -> ArgumentParser:
-    parser = ArgumentParser()
+def create_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description=textwrap.dedent(
+            """\
+         Example usage:
+         The following invocation will create a new dataset at "some/path/new_dataset"
+         which will be a shallow copy of "existing/dataset" with the exception that
+         the "segmentation" layer will have the volume data from "annotation/data"
+         merged in. Additionally, the partial flood-fills which are denoted in
+         "explorational.nml" will be continued/globalized.
+
+         python -m script-collection.globalize_floodfill \\
+            --output_path some/path/new_dataset \\
+            --segmentation_layer_path existing/dataset/segmentation \\
+            --volume_path annotation/data \\
+            --nml_path explorational.nml
+         """
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
 
     parser.add_argument(
         "--volume_path",
@@ -63,8 +82,6 @@ def create_parser() -> ArgumentParser:
     parser.add_argument(
         "--output_path", "-o", help="Output directory", type=Path, required=True
     )
-
-    parser.add_argument("--skip_merge", default=False, action="store_true")
 
     return parser
 
@@ -275,7 +292,7 @@ def merge_with_fallback_layer(
     return output_mag
 
 
-def main(args: Namespace) -> None:
+def main(args: argparse.Namespace) -> None:
 
     # Use the skeleton API to read the bounding boxes once
     # https://github.com/scalableminds/webknossos-libs/issues/482 is done.
@@ -304,14 +321,13 @@ def main(args: Namespace) -> None:
             )
     bboxes = sorted(bboxes, key=lambda x: x.timestamp)
 
-    if not args.skip_merge:
-        time_start("Merge with fallback layer")
-        data_mag = merge_with_fallback_layer(
-            args.output_path,
-            args.volume_path,
-            args.segmentation_layer_path,
-        )
-        time_stop("Merge with fallback layer")
+    time_start("Merge with fallback layer")
+    data_mag = merge_with_fallback_layer(
+        args.output_path,
+        args.volume_path,
+        args.segmentation_layer_path,
+    )
+    time_stop("Merge with fallback layer")
 
     time_start("All floodfills")
     for floodfill in bboxes:
