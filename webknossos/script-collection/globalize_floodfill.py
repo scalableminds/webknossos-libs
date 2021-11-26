@@ -1,20 +1,20 @@
+import argparse
 import logging
 import os
 import re
-import argparse
+import textwrap
 from collections import namedtuple
 from contextlib import contextmanager
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Iterator, List, Set, Tuple
-import textwrap
 
 import numpy as np
 
 import webknossos as wk
 from webknossos.dataset import Layer, MagView
 from webknossos.geometry import BoundingBox, Mag, Vec3Int
-from webknossos.utils import time_start, time_stop, setup_logging, add_verbose_flag
+from webknossos.utils import add_verbose_flag, setup_logging, time_start, time_stop
 
 logger = logging.getLogger(__name__)
 
