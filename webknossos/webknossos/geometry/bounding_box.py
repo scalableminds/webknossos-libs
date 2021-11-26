@@ -1,6 +1,7 @@
-from collections import defaultdict
+import functools
 import json
 import re
+from collections import defaultdict
 from typing import (
     Dict,
     Generator,
@@ -12,7 +13,6 @@ from typing import (
     Union,
     cast,
 )
-import functools
 
 import attr
 import numpy as np

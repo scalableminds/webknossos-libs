@@ -1,22 +1,22 @@
-import webknossos as wk
+import logging
 import os
 import re
 import time
 from argparse import ArgumentParser, Namespace
 from collections import namedtuple
-from pathlib import Path
-from typing import List, Set, Tuple
-from icecream import ic
-from webknossos.utils import time_start, time_stop
-from tempfile import TemporaryDirectory
 from contextlib import contextmanager
-import logging
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from typing import List, Set, Tuple
 
 import numpy as np
+from icecream import ic
 
+import webknossos as wk
 import webknossos.geometry
 from webknossos.dataset import MagView
 from webknossos.geometry import BoundingBox, Mag, Vec3Int
+from webknossos.utils import time_start, time_stop
 
 logger = logging.getLogger(__name__)
 

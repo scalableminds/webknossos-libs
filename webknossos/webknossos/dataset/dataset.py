@@ -7,7 +7,7 @@ from os import makedirs
 from os.path import basename, join, normpath
 from pathlib import Path
 from shutil import rmtree
-from typing import Any, Dict, Optional, Tuple, Union, cast, List
+from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 import attr
 import numpy as np
