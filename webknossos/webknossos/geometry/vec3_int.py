@@ -3,6 +3,8 @@ from typing import Any, Callable, Iterable, List, Optional, Tuple, Union, cast
 
 import numpy as np
 
+value_error = "Vector components must be three integers or a Vec3IntLike object."
+
 
 class Vec3Int(tuple):
     def __new__(
@@ -15,7 +17,6 @@ class Vec3Int(tuple):
             return vec
 
         as_tuple: Optional[Tuple[int, int, int]] = None
-        value_error = f"Vector components must be three integers or a Vec3IntLike object, got {vec}, {y}, {z}"
 
         if isinstance(vec, int):
             assert y is not None and z is not None, value_error
@@ -27,13 +28,21 @@ class Vec3Int(tuple):
                 assert np.count_nonzero(vec % 1) == 0, value_error
                 assert vec.shape == (
                     3,
-                ), f"Numpy array for Vec3Int must have shape (3,), got {vec.shape}."
+                ), "Numpy array for Vec3Int must have shape (3,)."
             if isinstance(vec, Iterable):
                 as_tuple = cast(Tuple[int, int, int], tuple(int(item) for item in vec))
                 assert len(as_tuple) == 3, value_error
         assert as_tuple is not None and len(as_tuple) == 3, value_error
 
         return super().__new__(cls, cast(Iterable, as_tuple))
+
+    @staticmethod
+    def from_xyz(x: int, y: int, z: int) -> "Vec3Int":
+        """Use Vec3Int.from_xyz for fast construction."""
+
+        # By calling __new__ of tuple directly, we circumvent
+        # the tolerant (and potentially) slow Vec3Int.__new__ method.
+        return tuple.__new__(Vec3Int, (x, y, z))
 
     @property
     def x(self) -> int:
@@ -48,13 +57,13 @@ class Vec3Int(tuple):
         return self[2]
 
     def with_x(self, new_x: int) -> "Vec3Int":
-        return Vec3Int(new_x, self.y, self.z)
+        return Vec3Int.from_xyz(new_x, self.y, self.z)
 
     def with_y(self, new_y: int) -> "Vec3Int":
-        return Vec3Int(self.x, new_y, self.z)
+        return Vec3Int.from_xyz(self.x, new_y, self.z)
 
     def with_z(self, new_z: int) -> "Vec3Int":
-        return Vec3Int(self.x, self.y, new_z)
+        return Vec3Int.from_xyz(self.x, self.y, new_z)
 
     def to_np(self) -> np.ndarray:
         return np.array((self.x, self.y, self.z))
@@ -72,15 +81,13 @@ class Vec3Int(tuple):
         self, other: Union[int, "Vec3IntLike"], fn: Callable[[int, Any], int]
     ) -> "Vec3Int":
         if isinstance(other, int):
-            other_imported = Vec3Int(other, other, other)
+            other_imported = Vec3Int.from_xyz(other, other, other)
         else:
             other_imported = Vec3Int(other)
-        return Vec3Int(
-            (
-                fn(self.x, other_imported.x),
-                fn(self.y, other_imported.y),
-                fn(self.z, other_imported.z),
-            )
+        return Vec3Int.from_xyz(
+            fn(self.x, other_imported.x),
+            fn(self.y, other_imported.y),
+            fn(self.z, other_imported.z),
         )
 
     # note: (arguments incompatible with superclass, do not add Vec3Int to plain tuple! Hence the type:ignore)
@@ -100,7 +107,7 @@ class Vec3Int(tuple):
         return self._element_wise(other, mod)
 
     def __neg__(self) -> "Vec3Int":
-        return Vec3Int(-self.x, -self.y, -self.z)
+        return Vec3Int.from_xyz(-self.x, -self.y, -self.z)
 
     def ceildiv(self, other: Union[int, "Vec3IntLike"]) -> "Vec3Int":
         return (self + other - 1) // other
