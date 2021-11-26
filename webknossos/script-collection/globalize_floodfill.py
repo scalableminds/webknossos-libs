@@ -309,7 +309,7 @@ def main(args: Namespace) -> None:
             args.segmentation_layer_path,
         )
         time_stop("Merge with fallback layer")
-    return
+
     overall_start = time.time()
     for floodfill in bboxes:
         start = time.time()
