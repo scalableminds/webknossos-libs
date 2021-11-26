@@ -14,7 +14,7 @@ import numpy as np
 import webknossos as wk
 from webknossos.dataset import Layer, MagView
 from webknossos.geometry import BoundingBox, Mag, Vec3Int
-from webknossos.utils import time_start, time_stop
+from webknossos.utils import time_start, time_stop, setup_logging, add_verbose_flag
 
 logger = logging.getLogger(__name__)
 
@@ -82,6 +82,8 @@ def create_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--output_path", "-o", help="Output directory", type=Path, required=True
     )
+
+    add_verbose_flag(parser)
 
     return parser
 
@@ -349,5 +351,6 @@ def main(args: argparse.Namespace) -> None:
 
 if __name__ == "__main__":
     parsed_args = create_parser().parse_args()
+    setup_logging(parsed_args)
 
     main(parsed_args)
