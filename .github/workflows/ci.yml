@@ -39,20 +39,26 @@ jobs:
         run: |
           cd ./dockered-slurm
 
+          echo build
           # Build image
           docker build -t slurm-docker-cluster:latest .
 
+          echo docker-compose up
           docker-compose up -d
 
           # Register cluster (with retry)
           for i in {1..5}; do
+            echo register_cluster
             ./register_cluster.sh && s=0 && break || s=$?
             sleep 10
           done
 
           # Run setup.py on all three nodes
+          echo exec slurmctld
           docker exec slurmctld bash -c "cd /cluster_tools && python3 setup.py install"
+          echo exec c1
           docker exec c1 bash -c "cd /cluster_tools && python3 setup.py install"
+          echo exec c2
           docker exec c2 bash -c "cd /cluster_tools && python3 setup.py install"
 
       - name: Re-run setup
@@ -79,19 +85,20 @@ jobs:
           docker exec slurmctld bash -c "cd /cluster_tools && python3 test.py"
 
       - name: Publish python package
+        env:
+          PYPI_USERNAME: ${{ secrets.PYPI_USERNAME }}
+          PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        if: startsWith(github.event.ref, 'refs/tags')
         run: |
-          if [ -n "$CIRCLE_TAG" ]; then
-            echo "[distutils]" >> .pypirc
-            echo "index-servers = pypi" >> .pypirc
-            echo "[pypi]" >> .pypirc
-            echo "repository=https://upload.pypi.org/legacy/" >> .pypirc
-            echo "username=$PYPI_USERNAME" >> .pypirc
-            echo "password=$PYPI_PASSWORD" >> .pypirc
-            docker exec slurmctld bash -c "cp /cluster_tools/.pypirc ~/.pypirc"
-            docker exec slurmctld bash -c "cd /cluster_tools && python3 setup.py sdist upload"
-          else
-            echo "Skipping publishing on non-tag"
-          fi
+          CI_TAG=$(git describe --tags)
+          echo "[distutils]" >> .pypirc
+          echo "index-servers = pypi" >> .pypirc
+          echo "[pypi]" >> .pypirc
+          echo "repository=https://upload.pypi.org/legacy/" >> .pypirc
+          echo "username=$PYPI_USERNAME" >> .pypirc
+          echo "password=$PYPI_PASSWORD" >> .pypirc
+          docker exec slurmctld bash -c "cp /cluster_tools/.pypirc ~/.pypirc"
+          docker exec slurmctld bash -c "cd /cluster_tools && python3 setup.py sdist upload"          
 
   webknossos_linux:
     needs: changes
