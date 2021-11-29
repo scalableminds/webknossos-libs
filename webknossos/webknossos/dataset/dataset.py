@@ -411,7 +411,7 @@ class Dataset:
         foreign_layer_symlink_path = (
             Path(os.path.relpath(foreign_layer_path, self.path))
             if make_relative
-            else Path(os.path.abspath(foreign_layer_path))
+            else foreign_layer_path.resolve()
         )
         os.symlink(foreign_layer_symlink_path, join(self.path, layer_name))
         original_layer = Dataset(foreign_layer_path.parent).get_layer(
@@ -443,7 +443,6 @@ class Dataset:
         else:
             foreign_layer_path = Path(foreign_layer)
 
-        foreign_layer_path = Path(os.path.abspath(foreign_layer_path))
         foreign_layer_name = foreign_layer_path.name
         layer_name = (
             new_layer_name if new_layer_name is not None else foreign_layer_name
