@@ -35,11 +35,6 @@ jobs:
         working-directory: cluster_tools
     steps:
       - uses: actions/checkout@v2
-      - name: Install dependencies
-        run: |
-          pip install poetry
-          poetry install
-
       - name: Build/pull dockered-slurm image
         run: |
           cd ./dockered-slurm
