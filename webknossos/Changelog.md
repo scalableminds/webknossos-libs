@@ -18,6 +18,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 
 ### Changed
 - Improved performance for calculations with `Vec3Int` and `BoundingBox`. [#461](https://github.com/scalableminds/webknossos-libs/pull/461)
+- Resolve path when symlinking layer and make_relative is False (instead of only making it absolute). [#492](https://github.com/scalableminds/webknossos-libs/pull/492)
 
 ### Fixed
 
