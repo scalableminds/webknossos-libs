@@ -1,0 +1,94 @@
+version: 2
+jobs:
+  build:
+    machine: true
+    environment:
+      USER_NAME: circleci
+      USER_UID: 1001
+      USER_GID: 1001
+      TZ: Europe/Berlin
+    steps:
+      - checkout
+      - run:
+          name: Build/pull dockered-slurm image
+          command: |
+            cd ./dockered-slurm
+
+            # Build image
+            docker build -t slurm-docker-cluster:latest .
+
+            docker-compose up -d
+
+            # Register cluster (with retry)
+            for i in {1..5}; do
+              ./register_cluster.sh && s=0 && break || s=$?
+              sleep 10
+            done
+
+            # Run setup.py on all three nodes
+            docker exec slurmctld bash -c "cd /cluster_tools && python3 setup.py install"
+            docker exec c1 bash -c "cd /cluster_tools && python3 setup.py install"
+            docker exec c2 bash -c "cd /cluster_tools && python3 setup.py install"
+
+      # - run:
+      #     name: Setup PBS
+      #     command: |
+      #       /etc/init.d/pbs start
+      #       . /etc/profile.d/pbs.sh
+
+      #       qmgr -c "set server flatuid=true"
+      #       qmgr -c "set server acl_roots+=root@*"
+      #       qmgr -c "set server operators+=root@*"
+      #       qmgr -c “s s job_history_enable=1”
+
+      - run:
+          name: Re-run setup
+          command: |
+            cd ./dockered-slurm
+            docker exec slurmctld bash -c "cd /cluster_tools && python3 setup.py install"
+            docker exec c1 bash -c "cd /cluster_tools && python3 setup.py install"
+            docker exec c2 bash -c "cd /cluster_tools && python3 setup.py install"
+
+      - run:
+          name: Run black
+          command: |
+            cd ./dockered-slurm
+            docker exec slurmctld bash -c "cd /cluster_tools && python3 -m black --check cluster_tools *.py"
+
+      - run:
+          name: Run pylint
+          command: |
+            cd ./dockered-slurm
+            docker exec slurmctld bash -c "cd /cluster_tools && python3 -m pylint cluster_tools/"
+
+      - run:
+          name: Run tests
+          command: |
+            cd ./dockered-slurm
+            docker exec slurmctld bash -c "cd /cluster_tools && python3 -m pytest -s test.py"
+            docker exec slurmctld bash -c "cd /cluster_tools && python3 test.py"
+
+      - run:
+          name: Publish python package
+          command: |
+            if [ -n "$CIRCLE_TAG" ]; then
+              echo "[distutils]" >> .pypirc
+              echo "index-servers = pypi" >> .pypirc
+              echo "[pypi]" >> .pypirc
+              echo "repository=https://upload.pypi.org/legacy/" >> .pypirc
+              echo "username=$PYPI_USERNAME" >> .pypirc
+              echo "password=$PYPI_PASSWORD" >> .pypirc
+              docker exec slurmctld bash -c "cp /cluster_tools/.pypirc ~/.pypirc"
+              docker exec slurmctld bash -c "cd /cluster_tools && python3 setup.py sdist upload"
+            else
+              echo "Skipping publishing on non-tag"
+            fi
+
+workflows:
+  version: 2
+  circleci_build:
+    jobs:
+      - build:
+          filters:
+            tags:
+              only: /.*/
