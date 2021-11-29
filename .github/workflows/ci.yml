@@ -8,6 +8,7 @@ jobs:
     outputs:
       webknossos: ${{ steps.filter.outputs.webknossos }}
       wkcuber: ${{ steps.filter.outputs.wkcuber }}
+      cluster_tools: ${{ steps.filter.outputs.cluster_tools }}
     steps:
     - uses: actions/checkout@v2
     - uses: dorny/paths-filter@v2
@@ -18,6 +19,84 @@ jobs:
             - 'webknossos/**'
           wkcuber:
             - 'wkcuber/**'
+          cluster_tools:
+            - 'cluster_tools/**'
+
+  cluster_tools:
+    needs: changes
+    if: ${{ needs.changes.outputs.cluster_tools == 'true' }}
+    runs-on: ubuntu-latest
+    # strategy:
+    #   max-parallel: 4
+    #   matrix:
+    #     python-version: [3.7, 3.8]
+    defaults:
+      run:
+        working-directory: cluster_tools
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install dependencies
+        run: |
+          pip install poetry
+          poetry install
+
+      - name: Build/pull dockered-slurm image
+        run: |
+          cd ./dockered-slurm
+
+          # Build image
+          docker build -t slurm-docker-cluster:latest .
+
+          docker-compose up -d
+
+          # Register cluster (with retry)
+          for i in {1..5}; do
+            ./register_cluster.sh && s=0 && break || s=$?
+            sleep 10
+          done
+
+          # Run setup.py on all three nodes
+          docker exec slurmctld bash -c "cd /cluster_tools && python3 setup.py install"
+          docker exec c1 bash -c "cd /cluster_tools && python3 setup.py install"
+          docker exec c2 bash -c "cd /cluster_tools && python3 setup.py install"
+
+      - name: Re-run setup
+        run: |
+          cd ./dockered-slurm
+          docker exec slurmctld bash -c "cd /cluster_tools && python3 setup.py install"
+          docker exec c1 bash -c "cd /cluster_tools && python3 setup.py install"
+          docker exec c2 bash -c "cd /cluster_tools && python3 setup.py install"
+
+      - name: Run black
+        run: |
+          cd ./dockered-slurm
+          docker exec slurmctld bash -c "cd /cluster_tools && python3 -m black --check cluster_tools *.py"
+
+      - name: Run pylint
+        run: |
+          cd ./dockered-slurm
+          docker exec slurmctld bash -c "cd /cluster_tools && python3 -m pylint cluster_tools/"
+
+      - name: Run tests
+        run: |
+          cd ./dockered-slurm
+          docker exec slurmctld bash -c "cd /cluster_tools && python3 -m pytest -s test.py"
+          docker exec slurmctld bash -c "cd /cluster_tools && python3 test.py"
+
+      - name: Publish python package
+        run: |
+          if [ -n "$CIRCLE_TAG" ]; then
+            echo "[distutils]" >> .pypirc
+            echo "index-servers = pypi" >> .pypirc
+            echo "[pypi]" >> .pypirc
+            echo "repository=https://upload.pypi.org/legacy/" >> .pypirc
+            echo "username=$PYPI_USERNAME" >> .pypirc
+            echo "password=$PYPI_PASSWORD" >> .pypirc
+            docker exec slurmctld bash -c "cp /cluster_tools/.pypirc ~/.pypirc"
+            docker exec slurmctld bash -c "cd /cluster_tools && python3 setup.py sdist upload"
+          else
+            echo "Skipping publishing on non-tag"
+          fi
 
   webknossos_linux:
     needs: changes
@@ -318,7 +397,7 @@ jobs:
       run: ./publish.sh
 
   complete:
-    needs: [webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac, wkcuber_docker, docs]
+    needs: [webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac, wkcuber_docker, docs, cluster_tools]
     if: always()
     runs-on: ubuntu-latest
     steps:
