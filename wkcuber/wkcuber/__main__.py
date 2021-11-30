@@ -15,7 +15,7 @@ from .converter import (
     create_parser as create_conversion_parser,
     main as auto_detect_and_run_conversion,
 )
-from argparse import Namespace, ArgumentParser
+from argparse import ArgumentParser
 from pathlib import Path
 
 
