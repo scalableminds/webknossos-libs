@@ -9,7 +9,7 @@ readme = "README.md"
 python = "^3.7"
 
 [tool.poetry.dev-dependencies]
-mkdocs = "1.2.2"
+mkdocs = "1.2.3"
 mkdocs-material = "^7.3.0"
 mkdocs-redirects = "^1.0.3"
 pdoc = "7.4.0"
