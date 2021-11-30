@@ -74,6 +74,6 @@ segmentation_layer.bounding_box = dataset.layers["color"].bounding_box
 segmentation_layer.add_mag(mag, compress=True).write(segmentation)
 
 # Get your auth token from https://webknossos.org/auth/token
-with wk.webknossos_context(url="http://localhost:9000", token="secretUserToken"):
+with wk.webknossos_context(url="http://localhost:9000", token="m6Jh1qCtiNwiQ241POjtHQ"):
     url = dataset.upload()
 print(f"Successfully uploaded {url}")

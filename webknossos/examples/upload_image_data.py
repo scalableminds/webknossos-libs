@@ -7,7 +7,7 @@ import webknossos as wk
 from webknossos.dataset import COLOR_CATEGORY
 
 # Get your auth token from https://webknossos.org/auth/token
-with wk.webknossos_context(url="http://localhost:9000", token="secretToken"):
+with wk.webknossos_context(url="http://webknossos.org", token="yourUserAuthToken"):
 
     # load your data - we use a an example 3D dataset here
     img = data.cells3d()  # (z, c, y, x)
@@ -22,13 +22,24 @@ with wk.webknossos_context(url="http://localhost:9000", token="secretToken"):
 
     # scale is defined in nm
     ds = wk.Dataset.create(name, scale=(290, 260, 260))
-    layer = ds.add_layer(
-        "raw_microscopy_layer",
+
+    # The example microscopy data has two channels
+    # Channel 0 contains cell membranes, channel 1 contains nuclei.
+    layer_membranes = ds.add_layer(
+        "cell membranes",
         COLOR_CATEGORY,
         dtype_per_layer=img.dtype,
     )
 
-    layer.add_mag(1, compress=True).write(img)
+    layer_membranes.add_mag(1, compress=True).write(img[0, :])
+
+    layer_nuclei = ds.add_layer(
+        "nuclei",
+        COLOR_CATEGORY,
+        dtype_per_layer=img.dtype,
+    )
+
+    layer_nuclei.add_mag(1, compress=True).write(img[1, :])
 
     url = ds.upload()
     print(f"Successfully uploaded {url}")

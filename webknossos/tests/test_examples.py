@@ -47,11 +47,11 @@ def test_skeleton_synapse_candidates() -> None:
 @pytest.mark.vcr()
 def test_upload_data() -> None:
     with tmp_cwd():
-        from examples.upload_image_data import img, layer, url
+        from examples.upload_image_data import img, layer_nuclei, url
 
-        assert layer.bounding_box.size[0] == img.shape[1]
-        assert layer.bounding_box.size[1] == img.shape[0]
-        assert layer.bounding_box.size[2] == 1
+        assert layer_nuclei.bounding_box.size[0] == img.shape[1]
+        assert layer_nuclei.bounding_box.size[1] == img.shape[0]
+        assert layer_nuclei.bounding_box.size[2] == 1
         assert url.startswith(
             "http://localhost:9000/datasets/sample_organization/cell_"
         )

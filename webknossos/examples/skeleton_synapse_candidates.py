@@ -60,5 +60,5 @@ for tree_a, tree_b in combinations(input_graphs, 2):
         )
 
 # nml can be used for further processing or written to a file:
-output_path = Path("output_path.nml")
+output_path = Path("output.nml")
 nml.write(output_path)
