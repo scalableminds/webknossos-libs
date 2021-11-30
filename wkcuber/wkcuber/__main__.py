@@ -71,7 +71,8 @@ def create_parser() -> ArgumentParser:
     return parser
 
 
-def main(args: Namespace) -> None:
+def main() -> None:
+    args = create_parser().parse_args()
     setup_logging(args)
 
     if args.isotropic is not None:
@@ -107,6 +108,4 @@ def main(args: Namespace) -> None:
 
 
 if __name__ == "__main__":
-    args = create_parser().parse_args()
-    setup_logging(args)
-    main(args)
+    main()
