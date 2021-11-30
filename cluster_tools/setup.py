@@ -9,10 +9,7 @@ def _read(fn):
 
 setup(
     name="cluster_tools",
-    use_scm_version={
-        "root": "..",
-        "relative_to": __file__,
-    },
+    version="0.0.0",  # filled by dunamai
     setup_requires=["setuptools_scm"],
     description="Utility library for easily distributing code execution on clusters",
     author="scalableminds",
