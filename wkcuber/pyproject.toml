@@ -1,10 +1,11 @@
 [tool.poetry]
 name = "wkcuber"
-version = "0.0.0" # filled by setuptools-scm
+version = "0.0.0"  # filled by dunamai
 description = "Python package to create, cube, and work with webKnossos WKW datasets"
 authors = ["scalable minds <hello@scalableminds.com>"]
 readme = "README.md"
 license = "AGPL-3.0"
+include = ["wkcuber/version.py"]
 
 [tool.poetry.dependencies]
 python = "^3.7"
