@@ -126,3 +126,18 @@ def copy_directory_with_symlinks(
             else:
                 rel_or_abspath = os.path.abspath(item)
             symlink_path.symlink_to(rel_or_abspath)
+
+
+def setup_logging(args: argparse.Namespace) -> None:
+    logging.basicConfig(
+        level=(logging.DEBUG if args.verbose else logging.INFO),
+        format="%(asctime)s %(levelname)s %(message)s",
+    )
+
+
+def add_verbose_flag(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--silent", help="Silent output", dest="verbose", action="store_false"
+    )
+
+    parser.set_defaults(verbose=True)
