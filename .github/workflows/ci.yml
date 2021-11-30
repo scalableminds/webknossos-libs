@@ -41,7 +41,8 @@ jobs:
 
           echo build
           # Build image
-          docker build -t slurm-docker-cluster:latest .
+          # docker build -t slurm-docker-cluster:latest .
+          docker pull scalableminds/various:slurm-docker-cluster__slurm
 
           echo docker-compose up
           docker-compose up -d
