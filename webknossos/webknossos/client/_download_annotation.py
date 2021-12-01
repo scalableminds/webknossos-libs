@@ -19,5 +19,5 @@ def download_annotation(
     ), f"Currently compund annotation types are not supported, got {type}"
     client = _get_generated_client()
     response = annotation_download.sync_detailed(typ=type.value, id=id, client=client)
-    assert response.status_code == 200
+    assert response.status_code == 200, response
     return Annotation(BytesIO(response.content))
