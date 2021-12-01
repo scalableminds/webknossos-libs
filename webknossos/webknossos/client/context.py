@@ -111,6 +111,13 @@ def _cached__get_generated_client(
         )
 
 
+def _clear_all_context_caches() -> None:
+    _cached_ask_for_token.cache_clear()
+    _cached_get_org.cache_clear()
+    _cached_get_datastore_token.cache_clear()
+    _cached__get_generated_client.cache_clear()
+
+
 @attr.frozen
 class _WebknossosContext:
     url: str = os.environ.get("WK_URL", default=DEFAULT_WEBKNOSSOS_URL)

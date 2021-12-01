@@ -1,6 +1,8 @@
+import inspect
 import os
 from contextlib import contextmanager
 from tempfile import TemporaryDirectory
+from types import ModuleType
 from typing import Any, Iterator
 
 import numpy as np
@@ -21,25 +23,30 @@ def tmp_cwd() -> Iterator[None]:
             os.chdir(prev_cwd)
 
 
-def test_dataset_usage() -> None:
-    from examples.dataset_usage import (
-        data_in_mag1,
-        data_in_mag1_subset,
-        data_in_mag2,
-        data_in_mag2_subset,
-    )
+def exec_module_as_main(module: ModuleType) -> None:
+    source = inspect.getsource(module)
+    new_source = source.replace('\nif __name__ == "__main__":\n', "\nif True:\n")
+    exec(new_source, module.__dict__)  # pylint: disable=exec-used
 
-    assert data_in_mag1.shape == (3, 522, 532, 62)
-    assert data_in_mag1_subset.shape == (3, 512, 512, 32)
-    assert data_in_mag2.shape == (3, 261, 266, 31)
-    assert data_in_mag2_subset.shape == (3, 256, 256, 16)
+
+def test_dataset_usage() -> None:
+    import examples.dataset_usage as example
+
+    exec_module_as_main(example)
+
+    assert example.data_in_mag1.shape == (3, 522, 532, 62)
+    assert example.data_in_mag1_subset.shape == (3, 512, 512, 32)
+    assert example.data_in_mag2.shape == (3, 261, 266, 31)
+    assert example.data_in_mag2_subset.shape == (3, 256, 256, 16)
 
 
 def test_skeleton_synapse_candidates() -> None:
-    from examples.skeleton_synapse_candidates import nml, synapse_parent_group
+    import examples.skeleton_synapse_candidates as example
 
-    assert synapse_parent_group.get_total_node_count() == 57
-    ids = [g.id for g in nml.flattened_graphs()]
+    exec_module_as_main(example)
+
+    assert example.synapse_parent_group.get_total_node_count() == 57
+    ids = [g.id for g in example.nml.flattened_graphs()]
     id_set = set(ids)
     assert len(ids) == len(id_set), "Graph IDs are not unique."
 
@@ -47,12 +54,14 @@ def test_skeleton_synapse_candidates() -> None:
 @pytest.mark.vcr()
 def test_upload_data() -> None:
     with tmp_cwd():
-        from examples.upload_image_data import img, layer, url
+        import examples.upload_image_data as example
 
-        assert layer.bounding_box.size[0] == img.shape[1]
-        assert layer.bounding_box.size[1] == img.shape[0]
-        assert layer.bounding_box.size[2] == 1
-        assert url.startswith(
+        exec_module_as_main(example)
+
+        assert example.layer.bounding_box.size[0] == example.img.shape[1]
+        assert example.layer.bounding_box.size[1] == example.img.shape[0]
+        assert example.layer.bounding_box.size[2] == 1
+        assert example.url.startswith(
             "http://localhost:9000/datasets/sample_organization/cell_"
         )
 
@@ -98,12 +107,14 @@ def test_learned_segmenter() -> None:
             old_default_classifier = trainable_segmentation.RandomForestClassifier
         trainable_segmentation.RandomForestClassifier = _DummyNearestNeighborClassifier
         trainable_segmentation.has_sklearn = True
-        from examples.learned_segmenter import segmentation_layer, url
+        import examples.learned_segmenter as example
 
-        segmentation_data = segmentation_layer.mags[Mag(1)].read()
+        exec_module_as_main(example)
+
+        segmentation_data = example.segmentation_layer.mags[Mag(1)].read()
         counts = dict(zip(*np.unique(segmentation_data, return_counts=True)))
         assert counts == {1: 209066, 2: 37803, 3: 164553, 4: 817378}
-        assert url.startswith(
+        assert example.url.startswith(
             "http://localhost:9000/datasets/sample_organization/skin_segmented_"
         )
 
@@ -116,8 +127,10 @@ def test_learned_segmenter() -> None:
 
 @pytest.mark.vcr()
 def test_user_times() -> None:
-    from examples.user_times import df
+    import examples.user_times as example
 
-    assert len(df) > 0
-    assert sum(df.loc[:, (2021, 10)]) > 0
-    assert "taylor.tester@mail.com" in df.index
+    exec_module_as_main(example)
+
+    assert len(example.df) > 0
+    assert sum(example.df.loc[:, (2021, 10)]) > 0
+    assert "taylor.tester@mail.com" in example.df.index
