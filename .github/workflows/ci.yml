@@ -69,15 +69,11 @@ jobs:
           docker exec c1 bash -c "cd /cluster_tools && python3 setup.py install"
           docker exec c2 bash -c "cd /cluster_tools && python3 setup.py install"
 
-      - name: Run black
-        run: |
-          cd ./dockered-slurm
-          docker exec slurmctld bash -c "cd /cluster_tools && python3 -m black --check cluster_tools *.py"
+      - name: Check formatting
+        run: ./format.sh check
 
-      - name: Run pylint
-        run: |
-          cd ./dockered-slurm
-          docker exec slurmctld bash -c "cd /cluster_tools && python3 -m pylint cluster_tools/"
+      - name: Lint code
+        run: ./lint.sh
 
       - name: Run tests
         run: |
