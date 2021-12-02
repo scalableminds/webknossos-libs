@@ -26,6 +26,7 @@ from .downsampling_utils import (
     downsample_cube_job,
     parse_interpolation_mode,
 )
+from .layer_categories import COLOR_CATEGORY, SEGMENTATION_CATEGORY, LayerCategoryType
 from .properties import (
     LayerProperties,
     LayerViewConfiguration,
@@ -253,6 +254,10 @@ class Layer:
                 "The mag {} is not a mag of this layer".format(mag.to_layer_name())
             )
         return self.mags[mag]
+
+    def get_best_mag(self) -> MagView:
+
+        return self.get_mag(min(self.mags.keys()))
 
     def add_mag(
         self,
@@ -603,6 +608,7 @@ class Layer:
         compress: bool = True,
         buffer_edge_len: Optional[int] = None,
         args: Optional[Namespace] = None,
+        allow_overwrite: bool = False,
     ) -> None:
         """
         Performs a single downsampling step from `from_mag` to `target_mag`.
@@ -615,6 +621,7 @@ class Layer:
          - "bicubic"
 
         The `args` can contain information to distribute the computation.
+        If allow_overwrite is True, an existing Mag may be overwritten.
         """
         assert (
             from_mag in self.mags.keys()
@@ -625,7 +632,9 @@ class Layer:
         )
 
         assert from_mag <= target_mag
-        assert target_mag not in self.mags
+        assert (
+            allow_overwrite or target_mag not in self.mags
+        ), "The target mag already exists. Pass allow_overwrite=True if you want to overwrite it."
 
         prev_mag_view = self.mags[from_mag]
 
@@ -633,10 +642,13 @@ class Layer:
             t // s for (t, s) in zip(target_mag.to_list(), from_mag.to_list())
         ]
 
-        # initialize the new mag
-        target_mag_view = self._initialize_mag_from_other_mag(
-            target_mag, prev_mag_view, compress
-        )
+        if target_mag in self.mags.keys() and allow_overwrite:
+            target_mag_view = self.get_mag(target_mag)
+        else:
+            # initialize the new mag
+            target_mag_view = self._initialize_mag_from_other_mag(
+                target_mag, prev_mag_view, compress
+            )
 
         bb_mag1 = self.bounding_box
 
@@ -690,6 +702,34 @@ class Layer:
 
         logging.info("Mag {0} successfully cubed".format(target_mag))
 
+    def redownsample(
+        self,
+        interpolation_mode: str = "default",
+        compress: bool = True,
+        buffer_edge_len: Optional[int] = None,
+        args: Optional[Namespace] = None,
+    ) -> None:
+        """
+        Use this method to recompute downsampled magnifications after mutating data in the
+        base magnification.
+        """
+
+        mags = sorted(self.mags.keys(), key=lambda m: m.to_list())
+        if len(mags) <= 1:
+            # No downsampled magnifications exist. Thus, there's nothing to do.
+            return
+        from_mag = mags[0]
+        target_mags = mags[1:]
+        self.downsample_mag_list(
+            from_mag,
+            target_mags,
+            interpolation_mode,
+            compress,
+            buffer_edge_len,
+            args,
+            allow_overwrite=True,
+        )
+
     def downsample_mag_list(
         self,
         from_mag: Mag,
@@ -698,6 +738,7 @@ class Layer:
         compress: bool = True,
         buffer_edge_len: Optional[int] = None,
         args: Optional[Namespace] = None,
+        allow_overwrite: bool = False,
     ) -> None:
         """
         Downsamples the data starting at `from_mag` to each magnification in `target_mags` iteratively.
@@ -728,6 +769,7 @@ class Layer:
                 compress=compress,
                 buffer_edge_len=buffer_edge_len,
                 args=args,
+                allow_overwrite=allow_overwrite,
             )
             source_mag = target_mag
 
@@ -862,8 +904,8 @@ class Layer:
         )
 
     @property
-    def category(self) -> str:
-        return LayerCategories.COLOR_TYPE
+    def category(self) -> LayerCategoryType:
+        return COLOR_CATEGORY
 
     @property
     def dtype_per_layer(self) -> str:
@@ -886,22 +928,5 @@ class SegmentationLayer(Layer):
         self.dataset._export_as_json()
 
     @property
-    def category(self) -> str:
-        return LayerCategories.SEGMENTATION_TYPE
-
-
-class LayerCategories:
-    """
-    There are two different types of layers.
-    This class can be used to specify the type of a layer during creation:
-    ```python
-    from webknossos.dataset.dataset import Dataset
-
-    dataset = Dataset(<path_to_dataset>)
-    # Adds a new layer
-    layer = dataset.add_layer("color", LayerCategories.COLOR_TYPE)
-    ```
-    """
-
-    COLOR_TYPE = "color"
-    SEGMENTATION_TYPE = "segmentation"
+    def category(self) -> LayerCategoryType:
+        return SEGMENTATION_CATEGORY

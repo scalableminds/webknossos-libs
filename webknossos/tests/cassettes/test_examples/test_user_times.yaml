@@ -1,0 +1,124 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - webknossos.org
+      user-agent:
+      - python-httpx/0.18.2
+    method: GET
+    uri: https://webknossos.org/api/users
+  response:
+    content: '[{"id":"5bfecf6e010000fa035248bb","email":"tony.tester@mail.com","firstName":"Tony","lastName":"Tester","isAdmin":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"5b3ce78557b7414e59269427","name":"scalable
+      minds","isTeamManager":true}],"experiences":{},"lastActivity":1543425902059,"isAnonymous":false,"isEditable":true,"organization":"scalable_minds","novelUserExperienceInfos":{"shouldSeeModernControlsModal":true,"hasSeenDashboardWelcomeBanner":true},"selectedTheme":"auto","created":1543425902059,"lastTaskTypeId":null},{"id":"60f17acf0100008e003484ea","email":"taylor.tester@mail.com","firstName":"Taylor","lastName":"Tester","isAdmin":false,"isDatasetManager":false,"isActive":true,"teams":[{"id":"5b3ce78557b7414e59269427","name":"scalable
+      minds","isTeamManager":false}],"experiences":{},"lastActivity":1626438351807,"isAnonymous":false,"isEditable":true,"organization":"scalable_minds","novelUserExperienceInfos":{"hasSeenDashboardWelcomeBanner":true},"selectedTheme":"auto","created":1626438351807,"lastTaskTypeId":null}]'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - application/json
+      Date:
+      - Thu, 28 Oct 2021 08:01:58 GMT
+      Referrer-Policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      Server:
+      - nginx/1.17.10
+      Strict-Transport-Security:
+      - max-age=15724800; includeSubDomains
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+      X-Permitted-Cross-Domain-Policies:
+      - master-only
+      X-XSS-Protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: ''
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - webknossos.org
+      user-agent:
+      - python-httpx/0.18.2
+    method: GET
+    uri: https://webknossos.org/api/users/5bfecf6e010000fa035248bb/loggedTime
+  response:
+    content: '{"loggedTime":[{"paymentInterval":{"month":10,"year":2021},"durationInSeconds":40}]}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '84'
+      Content-Type:
+      - application/json
+      Date:
+      - Thu, 28 Oct 2021 08:01:59 GMT
+      Referrer-Policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      Server:
+      - nginx/1.17.10
+      Strict-Transport-Security:
+      - max-age=15724800; includeSubDomains
+      Vary:
+      - Accept-Encoding
+      X-Permitted-Cross-Domain-Policies:
+      - master-only
+      X-XSS-Protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: ''
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - webknossos.org
+      user-agent:
+      - python-httpx/0.18.2
+    method: GET
+    uri: https://webknossos.org/api/users/60f17acf0100008e003484ea/loggedTime
+  response:
+    content: '{"loggedTime":[{"paymentInterval":{"month":5,"year":2019},"durationInSeconds":0},{"paymentInterval":{"month":7,"year":2021},"durationInSeconds":10},{"paymentInterval":{"month":2,"year":2019},"durationInSeconds":452},{"paymentInterval":{"month":12,"year":2018},"durationInSeconds":116},{"paymentInterval":{"month":1,"year":2021},"durationInSeconds":13},{"paymentInterval":{"month":3,"year":2021},"durationInSeconds":152},{"paymentInterval":{"month":1,"year":2019},"durationInSeconds":365},{"paymentInterval":{"month":9,"year":2021},"durationInSeconds":98}]}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '17'
+      Content-Type:
+      - application/json
+      Date:
+      - Thu, 28 Oct 2021 08:01:59 GMT
+      Referrer-Policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      Server:
+      - nginx/1.17.10
+      Strict-Transport-Security:
+      - max-age=15724800; includeSubDomains
+      X-Permitted-Cross-Domain-Policies:
+      - master-only
+      X-XSS-Protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+version: 1

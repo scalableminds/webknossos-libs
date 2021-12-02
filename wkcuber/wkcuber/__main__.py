@@ -14,6 +14,7 @@ from .converter import (
     create_parser as create_conversion_parser,
     main as auto_detect_and_run_conversion,
 )
+from .versioning import get_available_version
 from argparse import Namespace, ArgumentParser
 from pathlib import Path
 
@@ -56,6 +57,10 @@ def create_parser() -> ArgumentParser:
         help="Don't compress this data",
         default=False,
         action="store_true",
+    )
+
+    parser.add_argument(
+        "--version", action="version", version=f"wkcuber {get_available_version()}"
     )
 
     parser.add_argument("--name", "-n", help="Name of the dataset", default=None)

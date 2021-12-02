@@ -6,27 +6,80 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MINOR.PATCH`.
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
-
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.18...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.23...HEAD)
 
 ### Breaking Changes
-- `BoundingBox.chunk()`'s 2nd parameter `chunk_border_alignments` now does not accept a list with a single `int` anymore. [#437](https://github.com/scalableminds/webknossos-libs/pull/452)
 
 ### Added
-- Added a new Annotation class which includes skeletons as well as volume-annotations. [#437](https://github.com/scalableminds/webknossos-libs/pull/452)
-- Added dataset down- and upload as well as annotation download, see the examples `learned_segmenter.py` and `upload_image_data.py`. [#437](https://github.com/scalableminds/webknossos-libs/pull/452)
 
 ### Changed
-- `View`s now always open the `wkw.Dataset` lazily. All explicit calls to `View.open()` and `View.close()` must be removed. [#448](https://github.com/scalableminds/webknossos-libs/pull/448)
+
+### Fixed
+
+
+## [v0.8.23](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.8.23) - 2021-11-29
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.22...v0.8.23)
+
+### Breaking Changes
+- `wk.Graph` now inherits from `networkx.Graph` directly. Therefore, the `nx_graph` attribute is removed. [#481](https://github.com/scalableminds/webknossos-libs/pull/481)
+- The class `LayerCategories` was removed. `COLOR_TYPE` and `SEGMENTATION_TYPE` were renamed to `COLOR_CATEGORY` and `SEGMENTATION_CATEGORY` and can now be imported directly. The type of many parameters were changed from `str` to the literal `LayerCategoryType`. [#454](https://github.com/scalableminds/webknossos-libs/pull/454)
+
+### Added
+- Added `redownsample()` method to `Layer` to recompute existing downsampled magnifications. [#461](https://github.com/scalableminds/webknossos-libs/pull/461)
+- Added `globalize_floodfill.py` script to globalize partially computed flood fill operations. [#461](https://github.com/scalableminds/webknossos-libs/pull/461)
+
+### Changed
+- Improved performance for calculations with `Vec3Int` and `BoundingBox`. [#461](https://github.com/scalableminds/webknossos-libs/pull/461)
+- Resolve path when symlinking layer and make_relative is False (instead of only making it absolute). [#492](https://github.com/scalableminds/webknossos-libs/pull/492)
+
+
+## [0.8.22](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.22) - 2021-11-01
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.21...v0.8.22)
+
+### Breaking Changes
+- Removed the `organization` parameter from the `webknossos_context` function. The organization will automatically be fetched using the token of the user. [#470](https://github.com/scalableminds/webknossos-libs/pull/470)
+
 ### Fixed
 - Make Views picklable. We now ignore the file handle when we pickle Views. [#469](https://github.com/scalableminds/webknossos-libs/pull/469)
+
+## [v0.8.19](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.19) - 2021-10-21
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.18...v.8.19)
+### Added
+- Added a `User` class to the client that can be used to get meta-information of users or their logged time. The currently logged in user can be accessed, as well as all managed users. [#470](https://github.com/scalableminds/webknossos-libs/pull/470)
+
+
+## [0.8.21](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.21) - 2021-10-28
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.20...v0.8.21)
+
+### Changed
+- Downgraded typing-extensions for better dependency compatibility  [#472](https://github.com/scalableminds/webknossos-libs/pull/472)
+
+
+## [0.8.20](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.20) - 2021-10-28
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.19...v0.8.20)
+
+### Breaking Changes
+- `BoundingBox.chunk()`'s 2nd parameter `chunk_border_alignments` now does not accept a list with a single `int` anymore. [#452](https://github.com/scalableminds/webknossos-libs/pull/452)
+
+### Fixed
+- Make Views picklable. We now ignore the file handle when we pickle Views. [#469](https://github.com/scalableminds/webknossos-libs/pull/469)
+
+
+## [0.8.19](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.19) - 2021-10-21
+[Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.18...v0.8.19)
+
+### Breaking Changes
+- `View`s now always open the `wkw.Dataset` lazily. All explicit calls to `View.open()` and `View.close()` must be removed. [#448](https://github.com/scalableminds/webknossos-libs/pull/448)
+- 
+### Added
+- Added a new Annotation class which includes skeletons as well as volume-annotations. [#452](https://github.com/scalableminds/webknossos-libs/pull/452)
+- Added dataset down- and upload as well as annotation download, see the examples `learned_segmenter.py` and `upload_image_data.py`. [#452](https://github.com/scalableminds/webknossos-libs/pull/452)
 
 
 ## [0.8.18](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.18) - 2021-10-18
 [Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.8.16...v0.8.18)
 
-### Breaking Changes
 ### Added
 - The Dataset class now has a new method: add_shallow_copy. [#437](https://github.com/scalableminds/webknossos-libs/pull/437)
 ### Changed

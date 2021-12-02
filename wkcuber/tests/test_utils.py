@@ -4,7 +4,7 @@ from typing import Union
 
 import numpy as np
 
-from webknossos.dataset import Dataset, LayerCategories
+from webknossos.dataset import Dataset
 from webknossos.utils import get_chunks
 from wkcuber.utils import get_regular_chunks
 import wkw

@@ -11,7 +11,7 @@ Vector3 = Tuple[float, float, float]
 @attr.define()
 class Node:
     position: Vector3
-    _nml: "Skeleton" = attr.ib(eq=False, repr=False)
+    _skeleton: "Skeleton" = attr.ib(eq=False, repr=False)
     _id: int = attr.ib(init=False)
     comment: Optional[str] = None
     radius: Optional[float] = None
@@ -30,7 +30,7 @@ class Node:
         if self._enforced_id is not None:
             self._id = self._enforced_id
         else:
-            self._id = self._nml.element_id_generator.__next__()
+            self._id = self._skeleton.element_id_generator.__next__()
 
     @property
     def id(self) -> int:

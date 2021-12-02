@@ -83,7 +83,7 @@ def test_skeleton_creation() -> None:
     assert len(graphs) == 3
 
     g1 = nml.get_graph_by_id(1)
-    assert len(g1.get_nodes()) == 3
+    assert g1.number_of_nodes() == 3
 
     assert g1.get_node_by_id(2).comment == "A comment 1"
     assert g1.get_node_by_id(2).is_branchpoint
@@ -208,8 +208,7 @@ def test_simple_initialization_and_representations(tmp_path: Path) -> None:
     )
     assert str(my_group) == "Group(_id=1, name='my_group', _children=<2 children>)"
     assert (
-        str(nml.get_graph_by_id(9))
-        == "Graph(name='my_tree', _id=9, nx_graph=<n=1,e=0>, color=(0.1, 0.2, 0.3, 1.0))"
+        str(nml.get_graph_by_id(9)) == "Graph named 'my_tree' with 1 nodes and 0 edges"
     )
 
 
