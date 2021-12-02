@@ -12,6 +12,8 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes in Config & CLI
 ### Added
 - Added the flag `--version` to `wkcuber`. [#471](https://github.com/scalableminds/webknossos-libs/pull/471)
+- `wkcuber.convert_raw` conversion tool for raw binary data files. [#498](https://github.com/scalableminds/webknossos-libs/pull/498)
+
 ### Changed
 ### Fixed
 
