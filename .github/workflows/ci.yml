@@ -55,19 +55,22 @@ jobs:
           done
 
           # Run setup.py on all three nodes
-          echo exec slurmctld
-          docker exec slurmctld bash -c "cd /cluster_tools && python3 setup.py install"
-          echo exec c1
-          docker exec c1 bash -c "cd /cluster_tools && python3 setup.py install"
-          echo exec c2
-          docker exec c2 bash -c "cd /cluster_tools && python3 setup.py install"
+          docker exec slurmctld bash -c "curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -"
+          docker exec slurmctld bash -c "cd /cluster_tools && poetry install"
+          docker exec c1 bash -c "curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -"
+          docker exec c1 bash -c "cd /cluster_tools && poetry install"
+          docker exec c2 bash -c "curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -"
+          docker exec c2 bash -c "cd /cluster_tools && poetry install"
 
       - name: Re-run setup
         run: |
           cd ./dockered-slurm
-          docker exec slurmctld bash -c "cd /cluster_tools && python3 setup.py install"
-          docker exec c1 bash -c "cd /cluster_tools && python3 setup.py install"
-          docker exec c2 bash -c "cd /cluster_tools && python3 setup.py install"
+          docker exec slurmctld bash -c "cd /cluster_tools && poetry install"
+          docker exec c1 bash -c "cd /cluster_tools && poetry install"
+          docker exec c2 bash -c "cd /cluster_tools && poetry install"
+
+      - name: Install (without docker)
+        run: poetry install
 
       - name: Check formatting
         run: ./format.sh check
@@ -78,24 +81,8 @@ jobs:
       - name: Run tests
         run: |
           cd ./dockered-slurm
-          docker exec slurmctld bash -c "cd /cluster_tools && python3 -m pytest -s test.py"
-          docker exec slurmctld bash -c "cd /cluster_tools && python3 test.py"
-
-      - name: Publish python package
-        env:
-          PYPI_USERNAME: ${{ secrets.PYPI_USERNAME }}
-          PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-        if: startsWith(github.event.ref, 'refs/tags')
-        run: |
-          CI_TAG=$(git describe --tags)
-          echo "[distutils]" >> .pypirc
-          echo "index-servers = pypi" >> .pypirc
-          echo "[pypi]" >> .pypirc
-          echo "repository=https://upload.pypi.org/legacy/" >> .pypirc
-          echo "username=$PYPI_USERNAME" >> .pypirc
-          echo "password=$PYPI_PASSWORD" >> .pypirc
-          docker exec slurmctld bash -c "cp /cluster_tools/.pypirc ~/.pypirc"
-          docker exec slurmctld bash -c "cd /cluster_tools && python3 setup.py sdist upload"          
+          docker exec slurmctld bash -c "cd /cluster_tools && poetry run python -m pytest -s test.py"
+          docker exec slurmctld bash -c "cd /cluster_tools && poetry run python test.py"
 
   # webknossos_linux:
   #   needs: changes
@@ -380,20 +367,20 @@ jobs:
   #   strategy:
   #     max-parallel: 4
 
-  #   steps:
-  #   - uses: actions/checkout@v2
-  #   - name: Set up Python 3.8
-  #     uses: actions/setup-python@v1
-  #     with:
-  #       python-version: 3.8
-  #       architecture: 'x64'
-  #   - name: Install dependencies
-  #     run: pip3 install -r requirements.txt
-  #   - name: Publish python packages
-  #     env:
-  #       PYPI_USERNAME: ${{ secrets.PYPI_USERNAME }}
-  #       PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-  #     run: ./publish.sh
+  steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.8
+        architecture: 'x64'
+    - name: Install dependencies
+      run: pip3 install -r requirements.txt
+    - name: Publish python packages
+      env:
+        PYPI_USERNAME: ${{ secrets.PYPI_USERNAME }}
+        PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+      run: ./publish.sh
 
   # complete:
   #   needs: [webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac, wkcuber_docker, docs, cluster_tools]
