@@ -1,6 +1,5 @@
 from typing import List, Dict
 
-from versioning import get_available_version
 from wkcuber import downsample_mags
 from .compress import compress_mag_inplace
 from .metadata import refresh_metadata
@@ -15,6 +14,7 @@ from .converter import (
     create_parser as create_conversion_parser,
     main as auto_detect_and_run_conversion,
 )
+from .versioning import get_available_version
 from argparse import Namespace, ArgumentParser
 from pathlib import Path
 
