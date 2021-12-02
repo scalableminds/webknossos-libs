@@ -340,20 +340,17 @@ def tile_cubing(
             dtype_per_channel=dtype,
             num_channels=num_channels,
         )
+
+    bbox = BoundingBox(
+        Vec3Int(x_offset, y_offset, min_dimensions["z"]),
+        Vec3Int(num_x, num_y, num_z),
+    )
     if target_layer.bounding_box.volume() == 0:
         # If the layer is empty, we want to set the bbox directly because extending it
         # would mean that the bbox would always start at (0, 0, 0)
-        target_layer.bounding_box = BoundingBox(
-            Vec3Int(x_offset, y_offset, min_dimensions["z"]),
-            Vec3Int(num_x, num_y, num_z),
-        )
+        target_layer.bounding_box = bbox
     else:
-        target_layer.bounding_box = target_layer.bounding_box.extended_by(
-            BoundingBox(
-                Vec3Int(x_offset, y_offset, min_dimensions["z"]),
-                Vec3Int(num_x, num_y, num_z),
-            )
-        )
+        target_layer.bounding_box = target_layer.bounding_box.extended_by(bbox)
 
     target_mag_view = target_layer.get_or_add_mag(Mag(1), block_len=BLOCK_LEN)
 
