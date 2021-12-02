@@ -1,15 +1,17 @@
 """Abstracts access to a Slurm cluster via its command-line tools.
 """
-import re
-import os
-import sys
-from cluster_tools.util import chcall, random_string, call
-from .cluster_executor import ClusterExecutor
-import logging
-from typing import Union
 import concurrent
+import logging
+import os
+import re
+import sys
 import threading
 from functools import lru_cache
+from typing import Union
+
+from cluster_tools.util import call, chcall, random_string
+
+from .cluster_executor import ClusterExecutor
 
 SLURM_STATES = {
     "Failure": [

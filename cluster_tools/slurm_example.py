@@ -1,7 +1,9 @@
-import cluster_tools
-import subprocess
 import concurrent.futures
+import subprocess
 import time
+
+import cluster_tools
+
 
 # "Worker" functions.
 def square(n):
@@ -18,8 +20,7 @@ def sleep(duration):
 
 
 def example_1():
-    """Square some numbers on remote hosts!
-    """
+    """Square some numbers on remote hosts!"""
     executor = cluster_tools.get_executor("slurm", debug=True, keep_logs=True)
     # executor = cluster_tools.get_executor("multiprocessing", 5)
     # executor = cluster_tools.get_executor("sequential")

@@ -1,19 +1,22 @@
-import cluster_tools
-from cluster_tools.util import call
 import concurrent.futures
-import time
-import logging
-from enum import Enum
-from functools import partial
-import os
-import pytest
-import shutil
 import contextlib
 import io
+import logging
 import multiprocessing as mp
-from pathlib import Path
+import os
+import shutil
 import tempfile
+import time
 from collections import Counter
+from enum import Enum
+from functools import partial
+from pathlib import Path
+
+import pytest
+
+import cluster_tools
+from cluster_tools.util import call
+
 
 # "Worker" functions.
 def square(n):

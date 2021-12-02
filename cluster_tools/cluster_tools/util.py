@@ -1,10 +1,10 @@
-import subprocess
+import logging
+import os
 import random
 import string
-import os
+import subprocess
 import threading
 import time
-import logging
 
 
 def local_filename(filename=""):

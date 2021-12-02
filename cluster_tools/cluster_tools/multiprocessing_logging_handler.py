@@ -1,20 +1,20 @@
+import functools
 import logging
 import multiprocessing
 import sys
 import threading
 import traceback
-import functools
-
-from typing import List, Any
 from logging import getLogger
 from logging.handlers import QueueHandler
-from queue import Empty as QueueEmpty, Queue
+from queue import Empty as QueueEmpty
+from queue import Queue
+from typing import Any, List
 
 # Inspired by https://stackoverflow.com/a/894284
 
 
 class MultiProcessingHandler(logging.Handler):
-    """ This class wraps a logging handler and instantiates a multiprocessing queue.
+    """This class wraps a logging handler and instantiates a multiprocessing queue.
     It asynchronously receives messages from the queue and emits them using the
     wrapped handler. The queue can be used by logging.QueueHandlers in other processes
     so that in a multiprocessing context all log messages are received by the main process.

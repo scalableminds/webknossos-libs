@@ -1,23 +1,24 @@
-from concurrent import futures
+import logging
 import os
+import signal
+import sys
+import threading
+import time
+from abc import abstractmethod
+from concurrent import futures
+from functools import partial
+from typing import Union
+
+from cluster_tools import pickling
+from cluster_tools.pickling import file_path_to_absolute_module
+from cluster_tools.tailf import Tail
 from cluster_tools.util import (
-    random_string,
     FileWaitThread,
     enrich_future_with_uncaught_warning,
     get_function_name,
+    random_string,
     with_preliminary_postfix,
 )
-import threading
-import signal
-import sys
-from cluster_tools import pickling
-from cluster_tools.pickling import file_path_to_absolute_module
-import time
-from abc import abstractmethod
-import logging
-from typing import Union
-from cluster_tools.tailf import Tail
-from functools import partial
 
 
 class RemoteException(Exception):

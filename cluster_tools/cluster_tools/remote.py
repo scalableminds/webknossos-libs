@@ -1,12 +1,14 @@
 """Tools for executing remote commands."""
-import sys
-import os
-import traceback
-from . import pickling
 import logging
-from cluster_tools.schedulers.slurm import SlurmExecutor
+import os
+import sys
+import traceback
+
 from cluster_tools.schedulers.pbs import PBSExecutor
+from cluster_tools.schedulers.slurm import SlurmExecutor
 from cluster_tools.util import with_preliminary_postfix
+
+from . import pickling
 
 
 def get_executor_class():
