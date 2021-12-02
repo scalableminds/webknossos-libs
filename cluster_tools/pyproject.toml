@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "cluster_tools"
+version = "0.0.0"
+description = "Utility library for easily distributing code execution on clusters"
+authors = ["scalable minds <hello@scalableminds.com>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.7"
+cloudpickle = "^2.0.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.2.4"
+pylint = "^2.10.2"
+black = "21.7b0"
+icecream = "^2.1.1"
+isort = "^5.9.3"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
