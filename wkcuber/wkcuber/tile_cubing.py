@@ -3,7 +3,7 @@ import logging
 from pathlib import Path
 
 import numpy as np
-from typing import Dict, Tuple, Union, List, Optional
+from typing import Dict, Tuple, Union, List, Optional, cast
 import os
 from glob import glob
 import re
@@ -11,6 +11,8 @@ from argparse import ArgumentTypeError, ArgumentParser, Namespace
 
 from webknossos.dataset import Dataset, LayerCategories, View
 from webknossos.geometry import BoundingBox, Vec3Int, Mag
+
+from webknossos.dataset import SegmentationLayer
 from .utils import (
     get_chunks,
     get_executor_for_args,
@@ -119,7 +121,8 @@ def detect_interval_for_dimensions(
                 found_files = glob(specific_pattern)
                 file_count += len(found_files)
                 for file_name in found_files:
-                    arbitrary_file = Path(file_name)
+                    if arbitrary_file is None:
+                        arbitrary_file = Path(file_name)
                     # Turn a pattern {xxx}/{yyy}/{zzzzzz} for given dimension counts into (e.g., 2, 2, 3) into
                     # something like xx/yy/zzz (note that the curly braces are gone)
                     applied_fpp = replace_pattern_to_specific_length_without_brackets(
@@ -193,7 +196,7 @@ def tile_cubing_job(
         str,
         int,
     ]
-) -> None:
+) -> int:
     (
         target_view,
         z_batches,
@@ -206,6 +209,7 @@ def tile_cubing_job(
         dtype,
         num_channels,
     ) = args
+    largest_value_in_chunk = 0  # This is used to compute the largest_segmentation_id if it is a segmentation layer
 
     # Iterate over the z batches
     # Batching is useful to utilize IO more efficiently
@@ -224,7 +228,7 @@ def tile_cubing_job(
                         num_channels,
                         tile_size[0],
                         tile_size[1],
-                        batch_size,
+                        len(z_batch),
                     ]
                     buffer = np.empty(buffer_shape, dtype=dtype, order="F")
                     for z in z_batch:
@@ -247,12 +251,21 @@ def tile_cubing_job(
                                 tile_size + (1,),
                                 dtype=target_view.header.voxel_type,
                             )
-                        buffer[:, :, :, z - z_batch[0]] = image.transpose((2, 0, 1, 3))[
-                            :, :, :, 0
-                        ]
+                        # The size of a image might be smaller than the buffer, if the tile is at the bottom/right border
+                        buffer[
+                            :, : image.shape[0], : image.shape[1], z - z_batch[0]
+                        ] = image.transpose((2, 0, 1, 3))[:, :, :, 0]
 
                     if np.any(buffer != 0):
-                        target_view.write(data=buffer)
+                        offset = (
+                            (x - min_dimensions["x"]) * tile_size[0],
+                            (y - min_dimensions["y"]) * tile_size[1],
+                            z_batch[0] - target_view.global_offset.z,
+                        )
+                        target_view.write(data=buffer, offset=offset)
+                        largest_value_in_chunk = max(
+                            largest_value_in_chunk, np.max(buffer)
+                        )
                     logging.debug(
                         "Cubing of z={}-{} x={} y={} took {:.8f}s".format(
                             z_batch[0], z_batch[-1], x, y, time.time() - ref_time2
@@ -268,6 +281,7 @@ def tile_cubing_job(
                 "Cubing of z={}-{} failed with: {}".format(z_batch[0], z_batch[-1], exc)
             )
             raise exc
+    return largest_value_in_chunk
 
 
 def tile_cubing(
@@ -275,6 +289,7 @@ def tile_cubing(
     layer_name: str,
     batch_size: int,
     input_path_pattern: str,
+    scale: Tuple[int, int, int],
     args: Optional[Namespace] = None,
 ) -> None:
     decimal_lengths = get_digit_counts_for_dimensions(input_path_pattern)
@@ -290,14 +305,17 @@ def tile_cubing(
             f"No source files found. Maybe the input_path_pattern was wrong. You provided: {input_path_pattern}"
         )
         return
-
     # Determine tile size from first matching file
-    num_x, num_y = image_reader.read_dimensions(arbitrary_file)
+    tile_width, tile_height = image_reader.read_dimensions(arbitrary_file)
     num_z = max_dimensions["z"] - min_dimensions["z"] + 1
+    num_x = (max_dimensions["x"] - min_dimensions["x"] + 1) * tile_width
+    num_y = (max_dimensions["y"] - min_dimensions["y"] + 1) * tile_height
+    x_offset = min_dimensions["x"] * tile_width
+    y_offset = min_dimensions["y"] * tile_height
     num_channels = image_reader.read_channel_count(arbitrary_file)
     logging.info(
         "Found source files: count={} with tile_size={}x{}".format(
-            file_count, num_x, num_y
+            file_count, tile_width, tile_height
         )
     )
     if args is None or not hasattr(args, "dtype") or args.dtype is None:
@@ -305,7 +323,7 @@ def tile_cubing(
     else:
         dtype = args.dtype
 
-    target_ds = Dataset.get_or_create(target_path, scale=(1, 1, 1))
+    target_ds = Dataset.get_or_create(target_path, scale=scale)
     is_segmentation_layer = layer_name == "segmentation"
     if is_segmentation_layer:
         target_layer = target_ds.get_or_add_layer(
@@ -322,17 +340,17 @@ def tile_cubing(
             dtype_per_channel=dtype,
             num_channels=num_channels,
         )
-    if target_layer.bounding_box == BoundingBox((0, 0, 0), (0, 0, 0)):
+    if target_layer.bounding_box.volume() == 0:
         # If the layer is empty, we want to set the bbox directly because extending it
         # would mean that the bbox would always start at (0, 0, 0)
         target_layer.bounding_box = BoundingBox(
-                Vec3Int(0, 0, min_dimensions["z"]),
-                Vec3Int(num_x, num_y, num_z),
-            )
+            Vec3Int(x_offset, y_offset, min_dimensions["z"]),
+            Vec3Int(num_x, num_y, num_z),
+        )
     else:
         target_layer.bounding_box = target_layer.bounding_box.extended_by(
             BoundingBox(
-                Vec3Int(0, 0, min_dimensions["z"]),
+                Vec3Int(x_offset, y_offset, min_dimensions["z"]),
                 Vec3Int(num_x, num_y, num_z),
             )
         )
@@ -349,19 +367,19 @@ def tile_cubing(
             # However, we only want the part that is inside the bounding box
             z_batch = range(
                 max(list(z_batch)[0], target_layer.bounding_box.topleft.z),
-                min(list(z_batch)[-1]+1, target_layer.bounding_box.bottomright.z)
+                min(list(z_batch)[-1] + 1, target_layer.bounding_box.bottomright.z),
             )
             z_values = list(z_batch)
             job_args.append(
                 (
                     target_mag_view.get_view(
-                        (0, 0, z_values[0]),
+                        (x_offset, y_offset, z_values[0]),
                         (num_x, num_y, len(z_values)),
                     ),
                     z_values,
                     input_path_pattern,
                     batch_size,
-                    (num_x, num_y, num_channels),
+                    (tile_width, tile_height, num_channels),
                     min_dimensions,
                     max_dimensions,
                     decimal_lengths,
@@ -369,7 +387,16 @@ def tile_cubing(
                     num_channels,
                 )
             )
-        wait_and_ensure_success(executor.map_to_futures(tile_cubing_job, job_args))
+
+        largest_segment_id_per_chunk = wait_and_ensure_success(
+            executor.map_to_futures(tile_cubing_job, job_args)
+        )
+
+        if is_segmentation_layer:
+            largest_segment_id = max(largest_segment_id_per_chunk)
+            cast(
+                SegmentationLayer, target_layer
+            ).largest_segment_id = largest_segment_id
 
 
 def create_parser() -> ArgumentParser:
@@ -395,5 +422,6 @@ if __name__ == "__main__":
         args.layer_name,
         int(args.batch_size),
         input_path_pattern,
+        args.scale,
         args,
     )
