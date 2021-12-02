@@ -6,8 +6,10 @@ from typing import Optional, Tuple, Union
 import numpy as np
 
 from webknossos.dataset.defaults import DEFAULT_WKW_FILE_LEN
-from wkcuber.api.dataset import Dataset
-from wkcuber.utils import (
+from webknossos import Dataset, Mag, MagView
+from .utils import (
+    add_interpolation_flag,
+    add_sampling_mode_flag,
     add_scale_flag,
     add_verbose_flag,
     setup_logging,
@@ -60,6 +62,15 @@ def create_parser() -> argparse.ArgumentParser:
         required=True,
     )
 
+    add_scale_flag(parser, required=False)
+
+    parser.add_argument(
+        "--layer_name",
+        "-l",
+        help="Name of the cubed layer (color or segmentation).",
+        default="color",
+    )
+
     parser.add_argument(
         "--order",
         help="The input data storage layout:"
@@ -68,13 +79,6 @@ def create_parser() -> argparse.ArgumentParser:
         "Note: Axes are expected in  (x, y, z) order.",
         choices=("C", "F"),
         default="F",
-    )
-
-    parser.add_argument(
-        "--layer_name",
-        "-l",
-        help="Name of the cubed layer (color or segmentation).",
-        default="color",
     )
 
     parser.add_argument(
@@ -93,7 +97,23 @@ def create_parser() -> argparse.ArgumentParser:
         action="store_true",
     )
 
-    add_scale_flag(parser, required=False)
+    parser.add_argument(
+        "--max_mag",
+        "-m",
+        help="Max resolution to be downsampled. Needs to be a power of 2. In case of anisotropic downsampling, "
+        "the process is considered done when max(current_mag) >= max(max_mag) where max takes the "
+        "largest dimension of the mag tuple x, y, z. For example, a maximum mag value of 8 (or 8-8-8) "
+        "will stop the downsampling as soon as a magnification is produced for which one dimension is "
+        "equal or larger than 8. "
+        "The default value is calculated depending on the dataset size. In the lowest Mag, the size will be "
+        "smaller than 100vx per dimension",
+        type=int,
+        default=None,
+    )
+
+    add_sampling_mode_flag(parser)
+    add_interpolation_flag(parser)
+
     add_verbose_flag(parser)
 
     return parser
@@ -110,7 +130,7 @@ def convert_raw(
     flip_axes: Optional[Union[int, Tuple[int, ...]]] = None,
     compress: bool = True,
     file_len: int = DEFAULT_WKW_FILE_LEN,
-) -> None:
+) -> MagView:
     assert order in ("C", "F")
     ref_time = time.time()
 
@@ -137,6 +157,7 @@ def convert_raw(
     logger.debug(
         "Converting of {} took {:.8f}s".format(source_raw_path, time.time() - ref_time)
     )
+    return wk_mag
 
 
 def main(args: argparse.Namespace) -> None:
@@ -146,7 +167,7 @@ def main(args: argparse.Namespace) -> None:
         logger.error("source_path is not a file")
         return
 
-    convert_raw(
+    mag_view = convert_raw(
         source_path,
         args.target_path,
         args.layer_name,
@@ -156,6 +177,14 @@ def main(args: argparse.Namespace) -> None:
         args.scale,
         args.flip_axes,
         not args.no_compress,
+    )
+
+    mag_view.layer.downsample(
+        from_mag=mag_view.mag,
+        max_mag=None if args.max_mag is None else Mag(args.max_mag),
+        interpolation_mode=args.interpolation_mode,
+        compress=not args.no_compress,
+        sampling_mode=args.sampling_mode,
     )
 
 
