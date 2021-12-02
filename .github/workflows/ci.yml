@@ -42,7 +42,7 @@ jobs:
           echo build
           # Build image
           # docker build -t slurm-docker-cluster:latest .
-          docker pull scalableminds/various:slurm-docker-cluster__slurm
+          docker pull scalableminds/slurm-docker-cluster:slurm__1531325958
 
           echo docker-compose up
           docker-compose up -d
@@ -55,11 +55,11 @@ jobs:
           done
 
           # Run setup.py on all three nodes
-          docker exec slurmctld bash -c "curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -"
+          # docker exec slurmctld bash -c "curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -"
           docker exec slurmctld bash -c "cd /cluster_tools && poetry install"
-          docker exec c1 bash -c "curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -"
+          # docker exec c1 bash -c "curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -"
           docker exec c1 bash -c "cd /cluster_tools && poetry install"
-          docker exec c2 bash -c "curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -"
+          # docker exec c2 bash -c "curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -"
           docker exec c2 bash -c "cd /cluster_tools && poetry install"
 
       - name: Re-run setup
