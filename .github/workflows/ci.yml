@@ -69,8 +69,10 @@ jobs:
           docker exec c1 bash -c "cd /cluster_tools && poetry install"
           docker exec c2 bash -c "cd /cluster_tools && poetry install"
 
-      - name: Install (without docker)
-        run: poetry install
+      - name: Install dependencies (without docker)
+        run: |
+          pip install poetry
+          poetry install
 
       - name: Check formatting
         run: ./format.sh check
