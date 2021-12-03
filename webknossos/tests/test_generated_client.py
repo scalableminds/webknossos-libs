@@ -1,6 +1,5 @@
 import pytest
 
-from webknossos.client._defaults import DEFAULT_WEBKNOSSOS_URL
 from webknossos.client._generated.api.default import (
     annotation_info,
     build_info,
@@ -18,6 +17,8 @@ from webknossos.client._generated.models.datastore_list_response_200_item import
 )
 from webknossos.client.context import _get_generated_client
 from webknossos.utils import time_since_epoch_in_ms
+
+DATASTORE_URL = "https://data-humerus.webknossos.org"
 
 
 @pytest.fixture
@@ -49,7 +50,7 @@ def test_annotation_info(client: Client) -> None:
     assert info_object is not None
     assert info_object.id == id
     assert info_object.typ == typ
-    assert info_object.data_store.url == client.base_url
+    assert info_object.data_store.url == DATASTORE_URL
 
 
 @pytest.mark.vcr()
@@ -57,7 +58,7 @@ def test_datastore_list(auth_client: Client) -> None:
     datastores = datastore_list.sync(client=auth_client)
     internal_datastore = DatastoreListResponse200Item(
         name="webknossos.org",
-        url=DEFAULT_WEBKNOSSOS_URL,
+        url=DATASTORE_URL,
         is_foreign=False,
         is_scratch=False,
         is_connector=False,
@@ -104,7 +105,7 @@ def test_dataset_info(client: Client) -> None:
         client=client,
     )
     assert response is not None
-    assert response.data_store.url == client.base_url
+    assert response.data_store.url == DATASTORE_URL
     assert response.display_name == "L4 Mouse Cortex Demo"
     assert sorted(
         (layer.name, layer.category, layer.element_class)
@@ -124,5 +125,5 @@ def test_build_info(client: Client) -> None:
     assert response is not None
     assert response.webknossos.name == "webknossos"
     assert response.webknossos_wrap.name == "webknossos-wrap"
-    assert response.local_data_store_enabled
+    assert not response.local_data_store_enabled
     assert response.local_tracing_store_enabled
