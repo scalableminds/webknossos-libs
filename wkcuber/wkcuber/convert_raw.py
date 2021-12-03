@@ -1,4 +1,5 @@
 import argparse
+from functools import partial
 import logging
 from pathlib import Path
 import time
@@ -6,17 +7,23 @@ from typing import Optional, Tuple, Union
 import numpy as np
 
 from webknossos.dataset.defaults import DEFAULT_WKW_FILE_LEN
-from webknossos import Dataset, Mag, MagView
+from webknossos import BoundingBox, Dataset, Mag, MagView
+from webknossos.utils import get_executor_for_args, wait_and_ensure_success
 from .utils import (
+    add_distribution_flags,
     add_interpolation_flag,
     add_sampling_mode_flag,
     add_scale_flag,
     add_verbose_flag,
+    get_executor_args,
     setup_logging,
 )
 
 
 logger = logging.getLogger(__name__)
+
+
+CHUNK_SIZE = 1024, 1024, 1024
 
 
 def parse_shape(shape: str) -> Tuple[float, ...]:
@@ -114,9 +121,32 @@ def create_parser() -> argparse.ArgumentParser:
     add_sampling_mode_flag(parser)
     add_interpolation_flag(parser)
 
+    add_distribution_flags(parser)
+
     add_verbose_flag(parser)
 
     return parser
+
+
+def _raw_chunk_converter(
+    bounding_box: BoundingBox,
+    source_raw_path: Path,
+    target_mag_view: MagView,
+    input_dtype: str,
+    shape: Tuple[int, int, int],
+    order: str,
+    flip_axes: Optional[Union[int, Tuple[int, ...]]],
+):
+    logging.info(f"Conversion of {bounding_box.topleft}")
+    cube_data = np.memmap(
+        source_raw_path, dtype=input_dtype, mode="r", shape=(1,) + shape, order=order
+    )
+
+    if flip_axes:
+        cube_data = np.flip(cube_data, flip_axes)
+
+    chunk = cube_data[(slice(None),) + bounding_box.to_slices()]
+    target_mag_view.write(chunk, bounding_box.topleft)
 
 
 def convert_raw(
@@ -130,17 +160,10 @@ def convert_raw(
     flip_axes: Optional[Union[int, Tuple[int, ...]]] = None,
     compress: bool = True,
     file_len: int = DEFAULT_WKW_FILE_LEN,
+    executor_args: Optional[argparse.Namespace] = None,
 ) -> MagView:
     assert order in ("C", "F")
     ref_time = time.time()
-
-    # Axes are understood as x,y,z ordered
-    cube_data = np.memmap(
-        source_raw_path, dtype=input_dtype, mode="r", shape=(1,) + shape, order=order
-    )
-
-    if flip_axes:
-        cube_data = np.flip(cube_data, flip_axes)
 
     if scale is None:
         scale = 1.0, 1.0, 1.0
@@ -151,8 +174,25 @@ def convert_raw(
         dtype_per_layer=np.dtype(input_dtype),
         num_channels=1,
     )
+    wk_layer.bounding_box = BoundingBox((0, 0, 0), shape)
     wk_mag = wk_layer.get_or_add_mag("1", file_len=file_len, compress=compress)
-    wk_mag.write(cube_data)
+
+    # Parallel chunk conversion
+    with get_executor_for_args(executor_args) as executor:
+        wait_and_ensure_success(
+            executor.map_to_futures(
+                partial(
+                    _raw_chunk_converter,
+                    source_raw_path=source_raw_path,
+                    target_mag_view=wk_mag,
+                    input_dtype=input_dtype,
+                    shape=shape,
+                    order=order,
+                    flip_axes=flip_axes,
+                ),
+                wk_layer.bounding_box.chunk(chunk_size=CHUNK_SIZE),
+            )
+        )
 
     logger.debug(
         "Converting of {} took {:.8f}s".format(source_raw_path, time.time() - ref_time)
@@ -167,6 +207,8 @@ def main(args: argparse.Namespace) -> None:
         logger.error("source_path is not a file")
         return
 
+    executor_args = get_executor_args(args)
+
     mag_view = convert_raw(
         source_path,
         args.target_path,
@@ -177,6 +219,7 @@ def main(args: argparse.Namespace) -> None:
         args.scale,
         args.flip_axes,
         not args.no_compress,
+        executor_args=executor_args,
     )
 
     mag_view.layer.downsample(
@@ -185,6 +228,7 @@ def main(args: argparse.Namespace) -> None:
         interpolation_mode=args.interpolation_mode,
         compress=not args.no_compress,
         sampling_mode=args.sampling_mode,
+        args=executor_args,
     )
 
 
