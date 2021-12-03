@@ -15,15 +15,13 @@ from .utils import (
     add_sampling_mode_flag,
     add_scale_flag,
     add_verbose_flag,
+    DEFAULT_WKW_VOXELS_PER_BLOCK,
     get_executor_args,
     setup_logging,
 )
 
 
 logger = logging.getLogger(__name__)
-
-
-BLOCK_SIZE = 32
 
 
 def parse_shape(shape: str) -> Tuple[float, ...]:
@@ -192,12 +190,14 @@ def convert_raw(
                     order=order,
                     flip_axes=flip_axes,
                 ),
-                wk_layer.bounding_box.chunk(chunk_size=(BLOCK_SIZE * file_len,) * 3),
+                wk_layer.bounding_box.chunk(
+                    chunk_size=(DEFAULT_WKW_VOXELS_PER_BLOCK * file_len,) * 3
+                ),
             )
         )
 
     logger.debug(
-        "Converting of {} took {:.8f}s".format(source_raw_path, time.time() - ref_time)
+        "Conversion of {} took {:.8f}s".format(source_raw_path, time.time() - ref_time)
     )
     return wk_mag
 
