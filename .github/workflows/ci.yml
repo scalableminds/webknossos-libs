@@ -62,12 +62,12 @@ jobs:
           # docker exec c2 bash -c "curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -"
           docker exec c2 bash -c "cd /cluster_tools && poetry install"
 
-      - name: Re-run setup
-        run: |
-          cd ./dockered-slurm
-          docker exec slurmctld bash -c "cd /cluster_tools && poetry install"
-          docker exec c1 bash -c "cd /cluster_tools && poetry install"
-          docker exec c2 bash -c "cd /cluster_tools && poetry install"
+      # - name: Re-run setup
+      #   run: |
+      #     cd ./dockered-slurm
+      #     docker exec slurmctld bash -c "cd /cluster_tools && poetry install"
+      #     docker exec c1 bash -c "cd /cluster_tools && poetry install"
+      #     docker exec c2 bash -c "cd /cluster_tools && poetry install"
 
       - name: Install dependencies (without docker)
         run: |
