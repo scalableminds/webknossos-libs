@@ -6,7 +6,7 @@ authors = ["scalable minds <hello@scalableminds.com>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.6.2"
 cloudpickle = "^2.0.0"
 
 [tool.poetry.dev-dependencies]
