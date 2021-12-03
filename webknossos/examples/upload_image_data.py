@@ -4,7 +4,8 @@ from skimage import data
 
 import webknossos as wk
 
-if __name__ == "__main__":
+
+def main() -> None:
     with wk.webknossos_context(url="http://localhost:9000", token="secretScmBoyToken"):
         img = data.cell()
         time_str = strftime("%Y-%m-%d_%H-%M-%S", gmtime())
@@ -20,3 +21,7 @@ if __name__ == "__main__":
         layer.add_mag(1, compress=True).write(img.T[None, :, :, None])
         url = ds.upload()
         print(f"Successfully uploaded {url}")
+
+
+if __name__ == "__main__":
+    main()

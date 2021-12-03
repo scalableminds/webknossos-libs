@@ -3,7 +3,7 @@ import os
 from contextlib import contextmanager
 from tempfile import TemporaryDirectory
 from types import ModuleType
-from typing import Any, Iterator
+from typing import Any, Iterator, Tuple
 
 import numpy as np
 import pytest
@@ -23,30 +23,48 @@ def tmp_cwd() -> Iterator[None]:
             os.chdir(prev_cwd)
 
 
-def exec_module_as_main(module: ModuleType) -> None:
+def exec_main_and_get_vars(module: ModuleType, *var_names: str) -> Tuple[Any, ...]:
     source = inspect.getsource(module)
-    new_source = source.replace('\nif __name__ == "__main__":\n', "\nif True:\n")
+    global_statements = "\n".join(f"    global {var_name}" for var_name in var_names)
+    new_source = source.replace(
+        "def main() -> None:\n", "def main() -> None:\n" + global_statements + "\n"
+    )
     exec(new_source, module.__dict__)  # pylint: disable=exec-used
+    module.main()  # type: ignore[attr-defined]
+    return tuple(module.__dict__[var_name] for var_name in var_names)
 
 
 def test_dataset_usage() -> None:
     import examples.dataset_usage as example
 
-    exec_module_as_main(example)
+    (
+        data_in_mag1,
+        data_in_mag1_subset,
+        data_in_mag2,
+        data_in_mag2_subset,
+    ) = exec_main_and_get_vars(
+        example,
+        "data_in_mag1",
+        "data_in_mag1_subset",
+        "data_in_mag2",
+        "data_in_mag2_subset",
+    )
 
-    assert example.data_in_mag1.shape == (3, 522, 532, 62)
-    assert example.data_in_mag1_subset.shape == (3, 512, 512, 32)
-    assert example.data_in_mag2.shape == (3, 261, 266, 31)
-    assert example.data_in_mag2_subset.shape == (3, 256, 256, 16)
+    assert data_in_mag1.shape == (3, 522, 532, 62)
+    assert data_in_mag1_subset.shape == (3, 512, 512, 32)
+    assert data_in_mag2.shape == (3, 261, 266, 31)
+    assert data_in_mag2_subset.shape == (3, 256, 256, 16)
 
 
 def test_skeleton_synapse_candidates() -> None:
     import examples.skeleton_synapse_candidates as example
 
-    exec_module_as_main(example)
+    synapse_parent_group, nml = exec_main_and_get_vars(
+        example, "synapse_parent_group", "nml"
+    )
 
-    assert example.synapse_parent_group.get_total_node_count() == 57
-    ids = [g.id for g in example.nml.flattened_graphs()]
+    assert synapse_parent_group.get_total_node_count() == 57
+    ids = [g.id for g in nml.flattened_graphs()]
     id_set = set(ids)
     assert len(ids) == len(id_set), "Graph IDs are not unique."
 
@@ -56,12 +74,12 @@ def test_upload_data() -> None:
     with tmp_cwd():
         import examples.upload_image_data as example
 
-        exec_module_as_main(example)
+        layer, img, url = exec_main_and_get_vars(example, "layer", "img", "url")
 
-        assert example.layer.bounding_box.size[0] == example.img.shape[1]
-        assert example.layer.bounding_box.size[1] == example.img.shape[0]
-        assert example.layer.bounding_box.size[2] == 1
-        assert example.url.startswith(
+        assert layer.bounding_box.size[0] == img.shape[1]
+        assert layer.bounding_box.size[1] == img.shape[0]
+        assert layer.bounding_box.size[2] == 1
+        assert url.startswith(
             "http://localhost:9000/datasets/sample_organization/cell_"
         )
 
@@ -109,12 +127,14 @@ def test_learned_segmenter() -> None:
         trainable_segmentation.has_sklearn = True
         import examples.learned_segmenter as example
 
-        exec_module_as_main(example)
+        segmentation_layer, url = exec_main_and_get_vars(
+            example, "segmentation_layer", "url"
+        )
 
-        segmentation_data = example.segmentation_layer.mags[Mag(1)].read()
+        segmentation_data = segmentation_layer.mags[Mag(1)].read()
         counts = dict(zip(*np.unique(segmentation_data, return_counts=True)))
         assert counts == {1: 209066, 2: 37803, 3: 164553, 4: 817378}
-        assert example.url.startswith(
+        assert url.startswith(
             "http://localhost:9000/datasets/sample_organization/skin_segmented_"
         )
 
@@ -129,8 +149,8 @@ def test_learned_segmenter() -> None:
 def test_user_times() -> None:
     import examples.user_times as example
 
-    exec_module_as_main(example)
+    (df,) = exec_main_and_get_vars(example, "df")
 
-    assert len(example.df) > 0
-    assert sum(example.df.loc[:, (2021, 10)]) > 0
-    assert "taylor.tester@mail.com" in example.df.index
+    assert len(df) > 0
+    assert sum(df.loc[:, (2021, 10)]) > 0
+    assert "taylor.tester@mail.com" in df.index

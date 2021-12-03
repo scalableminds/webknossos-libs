@@ -2,7 +2,8 @@ import pandas as pd
 
 import webknossos as wk
 
-if __name__ == "__main__":
+
+def main() -> None:
     df = pd.DataFrame()
     df.columns = pd.MultiIndex([[], []], [[], []], names=("year", "month"))
     df.index.name = "email"
@@ -22,3 +23,7 @@ if __name__ == "__main__":
 
     print(f"Logged User Times {year}:\n")
     print(df.loc[has_logged_times_in_year, year].to_markdown())
+
+
+if __name__ == "__main__":
+    main()

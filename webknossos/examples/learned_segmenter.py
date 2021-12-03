@@ -7,11 +7,13 @@ from skimage.future import TrainableSegmenter
 
 import webknossos as wk
 
-if __name__ == "__main__":
+# pylint: disable=unsubscriptable-object
+
+
+def main() -> None:
     annotation = wk.open_annotation(
         "https://webknossos.org/annotations/Explorational/616457c2010000870032ced4"
     )
-    # pylint: disable=unsubscriptable-object
     training_data_bbox = wk.BoundingBox.from_tuple6(
         annotation.skeleton.user_bounding_boxes[0]
     )
@@ -64,3 +66,7 @@ if __name__ == "__main__":
     with wk.webknossos_context(url="http://localhost:9000", token="secretScmBoyToken"):
         url = dataset.upload()
     print(f"Successfully uploaded {url}")
+
+
+if __name__ == "__main__":
+    main()

@@ -30,7 +30,7 @@ def pairs_within_distance(
             yield (pos_a[i], pos_b[j])
 
 
-if __name__ == "__main__":
+def main() -> None:
     nml = wk.open_nml("testdata/nmls/nml_with_small_distance_nodes.nml")
 
     synapse_candidate_max_distance = 0.5  # in nm
@@ -56,3 +56,7 @@ if __name__ == "__main__":
 
     # nml can be used for further processing or written to a file:
     # nml.write("output_path.nml")
+
+
+if __name__ == "__main__":
+    main()
