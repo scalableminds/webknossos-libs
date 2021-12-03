@@ -23,7 +23,7 @@ from .utils import (
 logger = logging.getLogger(__name__)
 
 
-CHUNK_SIZE = 1024, 1024, 1024
+BLOCK_SIZE = 32
 
 
 def parse_shape(shape: str) -> Tuple[float, ...]:
@@ -190,7 +190,7 @@ def convert_raw(
                     order=order,
                     flip_axes=flip_axes,
                 ),
-                wk_layer.bounding_box.chunk(chunk_size=CHUNK_SIZE),
+                wk_layer.bounding_box.chunk(chunk_size=(BLOCK_SIZE * file_len,) * 3),
             )
         )
 
