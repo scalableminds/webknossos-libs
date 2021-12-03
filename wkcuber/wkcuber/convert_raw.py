@@ -138,15 +138,17 @@ def _raw_chunk_converter(
     flip_axes: Optional[Union[int, Tuple[int, ...]]],
 ):
     logging.info(f"Conversion of {bounding_box.topleft}")
-    cube_data = np.memmap(
+    source_data = np.memmap(
         source_raw_path, dtype=input_dtype, mode="r", shape=(1,) + shape, order=order
     )
 
     if flip_axes:
-        cube_data = np.flip(cube_data, flip_axes)
+        source_data = np.flip(source_data, flip_axes)
 
-    chunk = cube_data[(slice(None),) + bounding_box.to_slices()]
-    target_mag_view.write(chunk, bounding_box.topleft)
+    contiguous_chunk = source_data[(slice(None),) + bounding_box.to_slices()].copy(
+        order="F"
+    )
+    target_mag_view.write(contiguous_chunk, bounding_box.topleft)
 
 
 def convert_raw(
