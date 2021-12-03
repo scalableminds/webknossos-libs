@@ -10,7 +10,7 @@ if [ $# -eq 1 ] && [ "$1" = "--refresh-snapshots" ]; then
         fi
         pushd $WK_DOCKER_DIR > /dev/null
         mkdir -p binaryData
-        export DOCKER_TAG=21.09.0
+        export DOCKER_TAG=21.11.0
         docker-compose pull webknossos
         USER_UID=$(id -u) USER_GID=$(id -g) docker-compose up -d --no-build webknossos
         popd > /dev/null

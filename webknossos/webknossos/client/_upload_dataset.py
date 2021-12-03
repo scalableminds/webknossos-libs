@@ -48,6 +48,7 @@ def upload_dataset(dataset: Dataset) -> str:
                 generate_unique_identifier=lambda path: f"{upload_id}/{path.name}",
                 test_chunks=False,
                 permanent_errors=[400, 403, 404, 409, 415, 500, 501],
+                client=httpx.Client(timeout=None),
             ) as session:
                 file = session.add_file(zip_path)
                 progress_task = progress.add_task(
