@@ -11,10 +11,11 @@ jobs:
   release:
     runs-on: ubuntu-latest
     env:
-      VERSION: ${{ github.event.inputs.message }}
+      VERSION: ${{ github.event.inputs.version }}
     steps:
     - uses: actions/checkout@v2
       with:
+        fetch-depth: 0
         ref: auto-changelogs
 
     - uses: actions/setup-python@v1
@@ -38,12 +39,9 @@ jobs:
       run: |
         ./make_release.sh ${VERSION}
         git add */Changelog.md
-          git status
-          git cat */Changelog.md
 
         git commit -m "Release for v${VERSION}"
         git tag v${VERSION}
 
-          git tag
-        # git push origin master
-        # git push --tags
+        git push origin master
+        git push --tags
