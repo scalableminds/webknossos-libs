@@ -9,12 +9,15 @@ import pytest
 from vcr.request import Request as VcrRequest
 from vcr.stubs import httpx_stubs
 
+from webknossos.client.context import _clear_all_context_caches
+
 TESTOUTPUT_DIR = Path("testoutput")
 
 
 @pytest.fixture(autouse=True, scope="function")
 def run_around_tests() -> Generator:
     makedirs(TESTOUTPUT_DIR, exist_ok=True)
+    _clear_all_context_caches()
     yield
     rmtree(TESTOUTPUT_DIR)
 

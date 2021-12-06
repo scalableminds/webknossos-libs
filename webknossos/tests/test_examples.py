@@ -1,7 +1,9 @@
+import inspect
 import os
 from contextlib import contextmanager
 from tempfile import TemporaryDirectory
-from typing import Any, Iterator
+from types import ModuleType
+from typing import Any, Iterator, Tuple
 
 import numpy as np
 import pytest
@@ -21,12 +23,31 @@ def tmp_cwd() -> Iterator[None]:
             os.chdir(prev_cwd)
 
 
+def exec_main_and_get_vars(module: ModuleType, *var_names: str) -> Tuple[Any, ...]:
+    source = inspect.getsource(module)
+    global_statements = "\n".join(f"    global {var_name}" for var_name in var_names)
+    new_source = source.replace(
+        "def main() -> None:\n", "def main() -> None:\n" + global_statements + "\n"
+    )
+    exec(new_source, module.__dict__)  # pylint: disable=exec-used
+    module.main()  # type: ignore[attr-defined]
+    return tuple(module.__dict__[var_name] for var_name in var_names)
+
+
 def test_dataset_usage() -> None:
-    from examples.dataset_usage import (
+    import examples.dataset_usage as example
+
+    (
         data_in_mag1,
         data_in_mag1_subset,
         data_in_mag2,
         data_in_mag2_subset,
+    ) = exec_main_and_get_vars(
+        example,
+        "data_in_mag1",
+        "data_in_mag1_subset",
+        "data_in_mag2",
+        "data_in_mag2_subset",
     )
 
     assert data_in_mag1.shape == (3, 522, 532, 62)
@@ -36,7 +57,11 @@ def test_dataset_usage() -> None:
 
 
 def test_skeleton_synapse_candidates() -> None:
-    from examples.skeleton_synapse_candidates import nml, synapse_parent_group
+    import examples.skeleton_synapse_candidates as example
+
+    synapse_parent_group, nml = exec_main_and_get_vars(
+        example, "synapse_parent_group", "nml"
+    )
 
     assert synapse_parent_group.get_total_node_count() == 57
     ids = [g.id for g in nml.flattened_graphs()]
@@ -47,7 +72,9 @@ def test_skeleton_synapse_candidates() -> None:
 @pytest.mark.vcr()
 def test_upload_data() -> None:
     with tmp_cwd():
-        from examples.upload_image_data import img, layer, url
+        import examples.upload_image_data as example
+
+        layer, img, url = exec_main_and_get_vars(example, "layer", "img", "url")
 
         assert layer.bounding_box.size[0] == img.shape[1]
         assert layer.bounding_box.size[1] == img.shape[0]
@@ -98,7 +125,11 @@ def test_learned_segmenter() -> None:
             old_default_classifier = trainable_segmentation.RandomForestClassifier
         trainable_segmentation.RandomForestClassifier = _DummyNearestNeighborClassifier
         trainable_segmentation.has_sklearn = True
-        from examples.learned_segmenter import segmentation_layer, url
+        import examples.learned_segmenter as example
+
+        segmentation_layer, url = exec_main_and_get_vars(
+            example, "segmentation_layer", "url"
+        )
 
         segmentation_data = segmentation_layer.mags[Mag(1)].read()
         counts = dict(zip(*np.unique(segmentation_data, return_counts=True)))
@@ -116,7 +147,9 @@ def test_learned_segmenter() -> None:
 
 @pytest.mark.vcr()
 def test_user_times() -> None:
-    from examples.user_times import df
+    import examples.user_times as example
+
+    (df,) = exec_main_and_get_vars(example, "df")
 
     assert len(df) > 0
     assert sum(df.loc[:, (2021, 10)]) > 0

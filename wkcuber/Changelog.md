@@ -7,13 +7,24 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.20...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.23...HEAD)
 
 ### Breaking Changes in Config & CLI
+
+### Added
+- Added the `wkcuber` executable that is installed when the package is installed. [#495](https://github.com/scalableminds/webknossos-libs/pull/495)
+
+### Changed
+
+### Fixed
+
+
+## [v0.8.23](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.8.23) - 2021-11-29
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.18...v0.8.23)
+
 ### Added
 - Added the flag `--version` to `wkcuber`. [#471](https://github.com/scalableminds/webknossos-libs/pull/471)
-### Changed
-### Fixed
+
 
 ## [v0.8.20](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.8.20) - 2021-10-28
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.19...v.8.20)

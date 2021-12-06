@@ -30,28 +30,33 @@ def pairs_within_distance(
             yield (pos_a[i], pos_b[j])
 
 
-nml = wk.open_nml("testdata/nmls/nml_with_small_distance_nodes.nml")
+def main() -> None:
+    nml = wk.open_nml("testdata/nmls/nml_with_small_distance_nodes.nml")
 
-synapse_candidate_max_distance = 0.5  # in nm
+    synapse_candidate_max_distance = 0.5  # in nm
 
-input_graphs = list(nml.flattened_graphs())
-synapse_parent_group = nml.add_group("all synapse candidates")
+    input_graphs = list(nml.flattened_graphs())
+    synapse_parent_group = nml.add_group("all synapse candidates")
 
-for tree_a, tree_b in combinations(input_graphs, 2):
-    positions_a = tree_a.get_node_positions() * nml.scale
-    positions_b = tree_b.get_node_positions() * nml.scale
+    for tree_a, tree_b in combinations(input_graphs, 2):
+        positions_a = tree_a.get_node_positions() * nml.scale
+        positions_b = tree_b.get_node_positions() * nml.scale
 
-    synapse_graph = synapse_parent_group.add_graph(
-        f"synapse candidates ({tree_a.name}-{tree_b.name})"
-    )
-
-    for partner_a, partner_b in pairs_within_distance(
-        positions_a, positions_b, synapse_candidate_max_distance
-    ):
-        synapse_graph.add_node(
-            position=(partner_a + partner_b) / nml.scale / 2,
-            comment=f"{tree_a.name} ({tree_a.id}) <-> {tree_b.name} ({tree_b.id})",
+        synapse_graph = synapse_parent_group.add_graph(
+            f"synapse candidates ({tree_a.name}-{tree_b.name})"
         )
 
-# nml can be used for further processing or written to a file:
-# nml.write("output_path.nml")
+        for partner_a, partner_b in pairs_within_distance(
+            positions_a, positions_b, synapse_candidate_max_distance
+        ):
+            synapse_graph.add_node(
+                position=(partner_a + partner_b) / nml.scale / 2,
+                comment=f"{tree_a.name} ({tree_a.id}) <-> {tree_b.name} ({tree_b.id})",
+            )
+
+    # nml can be used for further processing or written to a file:
+    # nml.write("output_path.nml")
+
+
+if __name__ == "__main__":
+    main()
