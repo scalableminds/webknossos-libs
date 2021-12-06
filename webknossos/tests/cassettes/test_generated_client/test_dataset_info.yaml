@@ -22,7 +22,7 @@ interactions:
       reconstruction in layer 4 of the somatosensory cortex* by A Motta, M Berning,
       KM Boergens, B Staffler, M Beining, S Loomba, P Hennig, H Wissler, M Helmstaedter
       in *Science* on 24 October 2019. [10.1126/science.aay3134](https://science.sciencemag.org/content/early/2019/10/23/science.aay3134)\n","displayName":"L4
-      Mouse Cortex Demo","created":1597232436055,"isEditable":true,"lastUsedByUser":1637924255511,"logoUrl":"https://static.webknossos.org/logos/scalableminds.svg","sortingKey":1597232436055,"details":null,"publication":null,"isUnreported":false,"isForeign":false,"jobsEnabled":true}'
+      Mouse Cortex Demo","created":1597232436055,"isEditable":true,"lastUsedByUser":1638357740352,"logoUrl":"https://static.webknossos.org/logos/scalableminds.svg","sortingKey":1597232436055,"details":null,"publication":null,"isUnreported":false,"isForeign":false,"jobsEnabled":true}'
     headers:
       Connection:
       - keep-alive
@@ -31,7 +31,7 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Fri, 26 Nov 2021 10:57:35 GMT
+      - Wed, 01 Dec 2021 11:22:20 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       Server:

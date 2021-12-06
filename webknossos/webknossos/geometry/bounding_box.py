@@ -1,5 +1,6 @@
 import json
 import re
+from collections import defaultdict
 from typing import (
     Dict,
     Generator,
@@ -24,10 +25,12 @@ class BoundingBox:
     topleft: Vec3Int = attr.ib(converter=Vec3Int)
     size: Vec3Int = attr.ib(converter=Vec3Int)
 
-    @property
-    def bottomright(self) -> Vec3Int:
+    bottomright = attr.ib(init=False)
 
-        return self.topleft + self.size
+    def __attrs_post_init__(self) -> None:
+        # Compute bottomright to avoid that it's recomputed every time
+        # it is needed.
+        object.__setattr__(self, "bottomright", self.topleft + self.size)
 
     def with_topleft(self, new_topleft: Vec3IntLike) -> "BoundingBox":
 
@@ -155,6 +158,25 @@ class BoundingBox:
                 return BoundingBox.from_tuple6(obj)  # type: ignore
 
         raise Exception("Unknown bounding box format.")
+
+    @staticmethod
+    def group_boxes_with_aligned_mag(
+        bounding_boxes: Iterable["BoundingBox"], aligning_mag: Mag
+    ) -> Dict["BoundingBox", List["BoundingBox"]]:
+        """
+        Groups the given BoundingBox instances by aligning each
+        bbox to the given mag and using that as the key.
+        For example, bounding boxes of size 256**3 could be grouped
+        into the corresponding 1024**3 chunks to which they belong
+        by using aligning_mag = Mag(1024).
+        """
+
+        chunks_with_bboxes = defaultdict(list)
+        for bbox in bounding_boxes:
+            chunk_key = bbox.align_with_mag(aligning_mag, ceil=True)
+            chunks_with_bboxes[chunk_key].append(bbox)
+
+        return chunks_with_bboxes
 
     def to_wkw_dict(self) -> dict:
 
@@ -303,13 +325,20 @@ class BoundingBox:
             assert coord.shape == (
                 3,
             ), f"Numpy array BoundingBox.contains must have shape (3,), got {coord.shape}."
+            return cast(
+                bool,
+                np.all(coord >= self.topleft) and np.all(coord < self.bottomright),
+            )
         else:
-            coord = Vec3Int(coord).to_np()
-
-        return cast(
-            bool,
-            np.all(coord >= self.topleft) and np.all(coord < self.topleft + self.size),
-        )
+            # In earlier versions, we simply converted to ndarray to have
+            # a unified calculation here, but this turned out to be a performance bottleneck.
+            # Therefore, the contains-check is performed on the tuple here.
+            coord = Vec3Int(coord)
+            return (
+                self.topleft[0] <= coord[0] < self.bottomright[0]
+                and self.topleft[1] <= coord[1] < self.bottomright[1]
+                and self.topleft[2] <= coord[2] < self.bottomright[2]
+            )
 
     def contains_bbox(self, inner_bbox: "BoundingBox") -> bool:
         return inner_bbox.intersected_with(self, dont_assert=True) == inner_bbox
@@ -350,7 +379,6 @@ class BoundingBox:
                 for z in range(
                     start[2] - start_adjust[2], start[2] + self.size[2], chunk_size[2]
                 ):
-
                     yield BoundingBox([x, y, z], chunk_size).intersected_with(self)
 
     def volume(self) -> int:
@@ -375,6 +403,9 @@ class BoundingBox:
     def offset(self, vector: Vec3IntLike) -> "BoundingBox":
 
         return BoundingBox(self.topleft + Vec3Int(vector), self.size)
+
+    def __hash__(self) -> int:
+        return hash(self.to_tuple6())
 
 
 class BoundingBoxNamedTuple(NamedTuple):

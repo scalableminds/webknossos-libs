@@ -73,14 +73,6 @@ def open_knossos(info: KnossosDatasetInfo) -> KnossosDataset:
     return KnossosDataset.open(info.dataset_path, np.dtype(info.dtype))
 
 
-def add_verbose_flag(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument(
-        "--silent", help="Silent output", dest="verbose", action="store_false"
-    )
-
-    parser.set_defaults(verbose=True)
-
-
 def add_scale_flag(parser: argparse.ArgumentParser, required: bool = True) -> None:
     parser.add_argument(
         "--scale",
@@ -138,13 +130,6 @@ def get_channel_and_sample_iters_for_wk_compatibility(
     else:
         # Convert each channel and sample into a separate layer
         return (range(channel_count), range(sample_count))
-
-
-def setup_logging(args: argparse.Namespace) -> None:
-    logging.basicConfig(
-        level=(logging.DEBUG if args.verbose else logging.INFO),
-        format="%(asctime)s %(levelname)s %(message)s",
-    )
 
 
 def find_files(
