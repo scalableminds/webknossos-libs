@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Optional, Tuple
 import numpy as np
 import pytest
 
@@ -11,7 +12,7 @@ TESTOUTPUT_DIR = Path("testoutput")
 
 @pytest.mark.parametrize("order", ["F", "C"])
 @pytest.mark.parametrize("flip_axes", [None, (1, 2)])
-def test_main(order, flip_axes):
+def test_main(order: str, flip_axes: Optional[Tuple[int, int]]) -> None:
     raw_file = TESTOUTPUT_DIR / "input.raw"
 
     input_dtype = "float32"
