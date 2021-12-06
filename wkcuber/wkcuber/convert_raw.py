@@ -134,7 +134,7 @@ def _raw_chunk_converter(
     shape: Tuple[int, int, int],
     order: str,
     flip_axes: Optional[Union[int, Tuple[int, ...]]],
-):
+) -> None:
     logging.info(f"Conversion of {bounding_box.topleft}")
     source_data = np.memmap(
         source_raw_path, dtype=input_dtype, mode="r", shape=(1,) + shape, order=order
