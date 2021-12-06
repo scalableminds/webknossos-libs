@@ -9,6 +9,11 @@ fi
 
 PKG_VERSION="$1"
 
+if ! python check_version.py ${PKG_VERSION}; then
+    echo "A higher version is already present."
+    exit 1
+fi
+
 for PKG in */pyproject.toml; do
     PKG="$(dirname "$PKG")"
     if [[ "$PKG" == "docs" ]]; then

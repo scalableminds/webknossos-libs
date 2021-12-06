@@ -36,7 +36,7 @@ jobs:
 
     - name: Make and push release
       run: |
-        ./make_release.sh
+        ./make_release.sh ${VERSION}
         git add */Changelog.md
           git status
           git cat */Changelog.md
