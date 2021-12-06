@@ -67,7 +67,7 @@ def upload_dataset(dataset: Dataset) -> str:
                     "initialTeams": [],
                     "needsConversion": False,
                 },
-                timeout=60,
+                timeout=None,
             ).raise_for_status()
             break
         except httpx.HTTPStatusError as e:
