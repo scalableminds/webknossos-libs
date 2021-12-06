@@ -21,7 +21,7 @@ interactions:
       minds","isTeamManager":true}],"experiences":{},"lastActivity":1548424380131,"isAnonymous":false,"isEditable":true,"organization":"scalable_minds","novelUserExperienceInfos":{"shouldSeeModernControlsModal":true,"hasSeenDashboardWelcomeBanner":true},"selectedTheme":"auto","created":1548424380131,"lastTaskTypeId":null},{"id":"5c9e32280100005712f44435","email":"michael.buessemeyer@scalableminds.com","firstName":"Michael","lastName":"Buessemeyer","isAdmin":true,"isDatasetManager":false,"isActive":true,"teams":[{"id":"5b3ce78557b7414e59269427","name":"scalable
       minds","isTeamManager":false}],"experiences":{},"lastActivity":1553871400638,"isAnonymous":false,"isEditable":true,"organization":"scalable_minds","novelUserExperienceInfos":{"shouldSeeModernControlsModal":false,"hasSeenDashboardWelcomeBanner":true},"selectedTheme":"auto","created":1553871400638,"lastTaskTypeId":null},{"id":"606c47c20100008300b3e8ae","email":"albane.dlvg@scalableminds.com","firstName":"Albane","lastName":"de
       la Villegeorges","isAdmin":true,"isDatasetManager":false,"isActive":true,"teams":[{"id":"5b3ce78557b7414e59269427","name":"scalable
-      minds","isTeamManager":false}],"experiences":{},"lastActivity":1617708994356,"isAnonymous":false,"isEditable":true,"organization":"scalable_minds","novelUserExperienceInfos":{"lastViewedWhatsNewTimestamp":1637837715115,"hasSeenDashboardWelcomeBanner":true},"selectedTheme":"dark","created":1617708994356,"lastTaskTypeId":null},{"id":"5b6877741b0000a63898baec","email":"tom.herold@scalableminds.com","firstName":"Tom","lastName":"Herold","isAdmin":true,"isDatasetManager":false,"isActive":true,"teams":[{"id":"5b3ce78557b7414e59269427","name":"scalable
+      minds","isTeamManager":false}],"experiences":{},"lastActivity":1617708994356,"isAnonymous":false,"isEditable":true,"organization":"scalable_minds","novelUserExperienceInfos":{"lastViewedWhatsNewTimestamp":1638190197167,"hasSeenDashboardWelcomeBanner":true},"selectedTheme":"auto","created":1617708994356,"lastTaskTypeId":null},{"id":"5b6877741b0000a63898baec","email":"tom.herold@scalableminds.com","firstName":"Tom","lastName":"Herold","isAdmin":true,"isDatasetManager":false,"isActive":true,"teams":[{"id":"5b3ce78557b7414e59269427","name":"scalable
       minds","isTeamManager":false}],"experiences":{},"lastActivity":1533572980445,"isAnonymous":false,"isEditable":true,"organization":"scalable_minds","novelUserExperienceInfos":{"lastViewedWhatsNewTimestamp":1637077617864,"hasSeenDashboardWelcomeBanner":true},"selectedTheme":"light","created":1533572980446,"lastTaskTypeId":null},{"id":"5c1b7693010000be628c1e92","email":"youri@scm.io","firstName":"Youri","lastName":"Kaminsky","isAdmin":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"5b3ce78557b7414e59269427","name":"scalable
       minds","isTeamManager":true}],"experiences":{},"lastActivity":1545303699301,"isAnonymous":false,"isEditable":true,"organization":"scalable_minds","novelUserExperienceInfos":{"lastViewedWhatsNewTimestamp":1634807547415,"shouldSeeModernControlsModal":false,"hasSeenDashboardWelcomeBanner":true},"selectedTheme":"auto","created":1545303699301,"lastTaskTypeId":null},{"id":"5ffdaacf0100008a004e96c4","email":"florian@scm.io","firstName":"Florian","lastName":"M","isAdmin":true,"isDatasetManager":false,"isActive":true,"teams":[{"id":"5b3ce78557b7414e59269427","name":"scalable
       minds","isTeamManager":false}],"experiences":{},"lastActivity":1610459855550,"isAnonymous":false,"isEditable":true,"organization":"scalable_minds","novelUserExperienceInfos":{"lastViewedWhatsNewTimestamp":1634825151366,"hasSeenDashboardWelcomeBanner":true},"selectedTheme":"auto","created":1610459855550,"lastTaskTypeId":null},{"id":"5f96d7570100001700dfcf14","email":"max.mittelstaedt@scalableminds.com","firstName":"Max","lastName":"Mittelstaedt","isAdmin":false,"isDatasetManager":true,"isActive":false,"teams":[{"id":"5b3ce78557b7414e59269427","name":"scalable
@@ -32,7 +32,7 @@ interactions:
       minds","isTeamManager":false}],"experiences":{},"lastActivity":1524222841802,"isAnonymous":false,"isEditable":true,"organization":"scalable_minds","novelUserExperienceInfos":{"lastViewedWhatsNewTimestamp":1632297552709,"hasSeenDashboardWelcomeBanner":true},"selectedTheme":"auto","created":1524222841807,"lastTaskTypeId":null},{"id":"5e6635790100005400230e67","email":"dennis.pospich@scalableminds.com","firstName":"Dennis","lastName":"Pospich","isAdmin":false,"isDatasetManager":true,"isActive":false,"teams":[{"id":"5b3ce78557b7414e59269427","name":"scalable
       minds","isTeamManager":true}],"experiences":{},"lastActivity":1583756665727,"isAnonymous":false,"isEditable":true,"organization":"scalable_minds","novelUserExperienceInfos":{"shouldSeeModernControlsModal":true,"hasSeenDashboardWelcomeBanner":true},"selectedTheme":"auto","created":1583756665727,"lastTaskTypeId":null},{"id":"5b4cdd6d1d0000864155f737","email":"haedngaga@gmail.com","firstName":"Haedn","lastName":"Rho","isAdmin":false,"isDatasetManager":false,"isActive":false,"teams":[{"id":"5b3ce78557b7414e59269427","name":"scalable
       minds","isTeamManager":false}],"experiences":{},"lastActivity":1531764077527,"isAnonymous":false,"isEditable":true,"organization":"scalable_minds","novelUserExperienceInfos":{"shouldSeeModernControlsModal":true,"hasSeenDashboardWelcomeBanner":true},"selectedTheme":"auto","created":1531764077529,"lastTaskTypeId":null},{"id":"5b5dd2fb1c00008230ec8174","email":"n@scm.io","firstName":"Norman","lastName":"Rzepka","isAdmin":true,"isDatasetManager":false,"isActive":true,"teams":[{"id":"5b3ce78557b7414e59269427","name":"scalable
-      minds","isTeamManager":false}],"experiences":{},"lastActivity":1532875515002,"isAnonymous":false,"isEditable":true,"organization":"scalable_minds","novelUserExperienceInfos":{"lastViewedWhatsNewTimestamp":1637052761892,"shouldSeeModernControlsModal":false,"hasSeenDashboardWelcomeBanner":true},"selectedTheme":"dark","created":1532875515006,"lastTaskTypeId":null},{"id":"5b8e93aa1e0000b90a4aa940","email":"robert.schwanhold@scalableminds.com","firstName":"Robert","lastName":"Schwanhold","isAdmin":true,"isDatasetManager":false,"isActive":true,"teams":[{"id":"5b3ce78557b7414e59269427","name":"scalable
+      minds","isTeamManager":false}],"experiences":{},"lastActivity":1532875515002,"isAnonymous":false,"isEditable":true,"organization":"scalable_minds","novelUserExperienceInfos":{"lastViewedWhatsNewTimestamp":1638372267773,"shouldSeeModernControlsModal":false,"hasSeenDashboardWelcomeBanner":true},"selectedTheme":"dark","created":1532875515006,"lastTaskTypeId":null},{"id":"5b8e93aa1e0000b90a4aa940","email":"robert.schwanhold@scalableminds.com","firstName":"Robert","lastName":"Schwanhold","isAdmin":true,"isDatasetManager":false,"isActive":true,"teams":[{"id":"5b3ce78557b7414e59269427","name":"scalable
       minds","isTeamManager":false}],"experiences":{},"lastActivity":1536070570797,"isAnonymous":false,"isEditable":true,"organization":"scalable_minds","novelUserExperienceInfos":{"shouldSeeModernControlsModal":true,"hasSeenDashboardWelcomeBanner":true},"selectedTheme":"auto","created":1536070570798,"lastTaskTypeId":null},{"id":"6006a44d0100007e0070d734","email":"jonathan@scm.io","firstName":"Jonathan","lastName":"Striebel","isAdmin":true,"isDatasetManager":false,"isActive":true,"teams":[{"id":"5b3ce78557b7414e59269427","name":"scalable
       minds","isTeamManager":false}],"experiences":{},"lastActivity":1611048013169,"isAnonymous":false,"isEditable":true,"organization":"scalable_minds","novelUserExperienceInfos":{"lastViewedWhatsNewTimestamp":1634559953377,"shouldSeeModernControlsModal":false,"hasSeenDashboardWelcomeBanner":true},"selectedTheme":"auto","created":1611048013169,"lastTaskTypeId":null},{"id":"5e9c9c1201000017000f9a00","email":"sami@abelling.com","firstName":"Sami","lastName":"Tauseef","isAdmin":false,"isDatasetManager":false,"isActive":false,"teams":[{"id":"5b3ce78557b7414e59269427","name":"scalable
       minds","isTeamManager":false}],"experiences":{},"lastActivity":1587321874579,"isAnonymous":false,"isEditable":true,"organization":"scalable_minds","novelUserExperienceInfos":{"shouldSeeModernControlsModal":true,"hasSeenDashboardWelcomeBanner":true},"selectedTheme":"auto","created":1587321874579,"lastTaskTypeId":null},{"id":"5dc593c40100009e00eca357","email":"johann.voigtsberger@scalableminds.com","firstName":"Johann","lastName":"Voigtsberger","isAdmin":false,"isDatasetManager":false,"isActive":true,"teams":[{"id":"5b3ce78557b7414e59269427","name":"scalable
@@ -49,7 +49,7 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Fri, 26 Nov 2021 10:57:29 GMT
+      - Mon, 06 Dec 2021 08:46:14 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       Server:
@@ -91,7 +91,7 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Fri, 26 Nov 2021 10:57:29 GMT
+      - Mon, 06 Dec 2021 08:46:14 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       Server:
@@ -131,7 +131,7 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Fri, 26 Nov 2021 10:57:30 GMT
+      - Mon, 06 Dec 2021 08:46:14 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       Server:
@@ -169,7 +169,7 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Fri, 26 Nov 2021 10:57:30 GMT
+      - Mon, 06 Dec 2021 08:46:14 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       Server:
@@ -209,7 +209,7 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Fri, 26 Nov 2021 10:57:30 GMT
+      - Mon, 06 Dec 2021 08:46:14 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       Server:
@@ -242,7 +242,7 @@ interactions:
     method: GET
     uri: https://webknossos.org/api/users/606c47c20100008300b3e8ae/loggedTime
   response:
-    content: '{"loggedTime":[{"paymentInterval":{"month":10,"year":2021},"durationInSeconds":4120},{"paymentInterval":{"month":7,"year":2021},"durationInSeconds":486},{"paymentInterval":{"month":5,"year":2021},"durationInSeconds":0},{"paymentInterval":{"month":11,"year":2021},"durationInSeconds":1632},{"paymentInterval":{"month":4,"year":2021},"durationInSeconds":1746},{"paymentInterval":{"month":9,"year":2021},"durationInSeconds":552},{"paymentInterval":{"month":8,"year":2021},"durationInSeconds":3100}]}'
+    content: '{"loggedTime":[{"paymentInterval":{"month":10,"year":2021},"durationInSeconds":4120},{"paymentInterval":{"month":7,"year":2021},"durationInSeconds":486},{"paymentInterval":{"month":12,"year":2021},"durationInSeconds":130},{"paymentInterval":{"month":5,"year":2021},"durationInSeconds":0},{"paymentInterval":{"month":11,"year":2021},"durationInSeconds":1632},{"paymentInterval":{"month":4,"year":2021},"durationInSeconds":1746},{"paymentInterval":{"month":9,"year":2021},"durationInSeconds":552},{"paymentInterval":{"month":8,"year":2021},"durationInSeconds":3100}]}'
     headers:
       Connection:
       - keep-alive
@@ -251,7 +251,7 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Fri, 26 Nov 2021 10:57:30 GMT
+      - Mon, 06 Dec 2021 08:46:15 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       Server:
@@ -284,7 +284,7 @@ interactions:
     method: GET
     uri: https://webknossos.org/api/users/5b6877741b0000a63898baec/loggedTime
   response:
-    content: '{"loggedTime":[{"paymentInterval":{"month":6,"year":2021},"durationInSeconds":50},{"paymentInterval":{"month":5,"year":2019},"durationInSeconds":78},{"paymentInterval":{"month":10,"year":2021},"durationInSeconds":59},{"paymentInterval":{"month":1,"year":2020},"durationInSeconds":2234},{"paymentInterval":{"month":11,"year":2020},"durationInSeconds":491},{"paymentInterval":{"month":7,"year":2021},"durationInSeconds":482},{"paymentInterval":{"month":2,"year":2021},"durationInSeconds":409},{"paymentInterval":{"month":6,"year":2020},"durationInSeconds":465},{"paymentInterval":{"month":7,"year":2020},"durationInSeconds":95},{"paymentInterval":{"month":5,"year":2020},"durationInSeconds":1149},{"paymentInterval":{"month":12,"year":2020},"durationInSeconds":1818},{"paymentInterval":{"month":5,"year":2021},"durationInSeconds":251},{"paymentInterval":{"month":11,"year":2018},"durationInSeconds":10},{"paymentInterval":{"month":3,"year":2020},"durationInSeconds":141},{"paymentInterval":{"month":2,"year":2019},"durationInSeconds":92},{"paymentInterval":{"month":1,"year":2021},"durationInSeconds":5134},{"paymentInterval":{"month":10,"year":2020},"durationInSeconds":89},{"paymentInterval":{"month":2,"year":2020},"durationInSeconds":154},{"paymentInterval":{"month":3,"year":2021},"durationInSeconds":162},{"paymentInterval":{"month":11,"year":2019},"durationInSeconds":0},{"paymentInterval":{"month":4,"year":2021},"durationInSeconds":514},{"paymentInterval":{"month":1,"year":2019},"durationInSeconds":32},{"paymentInterval":{"month":12,"year":2019},"durationInSeconds":1446},{"paymentInterval":{"month":9,"year":2021},"durationInSeconds":3214},{"paymentInterval":{"month":8,"year":2021},"durationInSeconds":1657}]}'
+    content: '{"loggedTime":[{"paymentInterval":{"month":6,"year":2021},"durationInSeconds":50},{"paymentInterval":{"month":5,"year":2019},"durationInSeconds":78},{"paymentInterval":{"month":10,"year":2021},"durationInSeconds":59},{"paymentInterval":{"month":1,"year":2020},"durationInSeconds":2234},{"paymentInterval":{"month":11,"year":2020},"durationInSeconds":491},{"paymentInterval":{"month":7,"year":2021},"durationInSeconds":482},{"paymentInterval":{"month":2,"year":2021},"durationInSeconds":409},{"paymentInterval":{"month":6,"year":2020},"durationInSeconds":465},{"paymentInterval":{"month":7,"year":2020},"durationInSeconds":95},{"paymentInterval":{"month":5,"year":2020},"durationInSeconds":1149},{"paymentInterval":{"month":12,"year":2020},"durationInSeconds":1818},{"paymentInterval":{"month":5,"year":2021},"durationInSeconds":251},{"paymentInterval":{"month":11,"year":2018},"durationInSeconds":10},{"paymentInterval":{"month":11,"year":2021},"durationInSeconds":223},{"paymentInterval":{"month":3,"year":2020},"durationInSeconds":141},{"paymentInterval":{"month":2,"year":2019},"durationInSeconds":92},{"paymentInterval":{"month":1,"year":2021},"durationInSeconds":5134},{"paymentInterval":{"month":10,"year":2020},"durationInSeconds":89},{"paymentInterval":{"month":2,"year":2020},"durationInSeconds":154},{"paymentInterval":{"month":3,"year":2021},"durationInSeconds":162},{"paymentInterval":{"month":11,"year":2019},"durationInSeconds":0},{"paymentInterval":{"month":4,"year":2021},"durationInSeconds":514},{"paymentInterval":{"month":1,"year":2019},"durationInSeconds":32},{"paymentInterval":{"month":12,"year":2019},"durationInSeconds":1446},{"paymentInterval":{"month":9,"year":2021},"durationInSeconds":3214},{"paymentInterval":{"month":8,"year":2021},"durationInSeconds":1657}]}'
     headers:
       Connection:
       - keep-alive
@@ -293,7 +293,7 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Fri, 26 Nov 2021 10:57:30 GMT
+      - Mon, 06 Dec 2021 08:46:15 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       Server:
@@ -335,7 +335,7 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Fri, 26 Nov 2021 10:57:30 GMT
+      - Mon, 06 Dec 2021 08:46:15 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       Server:
@@ -377,7 +377,7 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Fri, 26 Nov 2021 10:57:31 GMT
+      - Mon, 06 Dec 2021 08:46:15 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       Server:
@@ -419,7 +419,7 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Fri, 26 Nov 2021 10:57:31 GMT
+      - Mon, 06 Dec 2021 08:46:15 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       Server:
@@ -461,7 +461,7 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Fri, 26 Nov 2021 10:57:31 GMT
+      - Mon, 06 Dec 2021 08:46:15 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       Server:
@@ -492,7 +492,7 @@ interactions:
     method: GET
     uri: https://webknossos.org/api/users/5caf02710100006907d4caad/loggedTime
   response:
-    content: '{"loggedTime":[{"paymentInterval":{"month":6,"year":2021},"durationInSeconds":69},{"paymentInterval":{"month":10,"year":2021},"durationInSeconds":466},{"paymentInterval":{"month":7,"year":2021},"durationInSeconds":27},{"paymentInterval":{"month":5,"year":2021},"durationInSeconds":32},{"paymentInterval":{"month":1,"year":2021},"durationInSeconds":485},{"paymentInterval":{"month":3,"year":2021},"durationInSeconds":404},{"paymentInterval":{"month":4,"year":2021},"durationInSeconds":295},{"paymentInterval":{"month":9,"year":2021},"durationInSeconds":1479},{"paymentInterval":{"month":8,"year":2021},"durationInSeconds":582}]}'
+    content: '{"loggedTime":[{"paymentInterval":{"month":6,"year":2021},"durationInSeconds":69},{"paymentInterval":{"month":10,"year":2021},"durationInSeconds":466},{"paymentInterval":{"month":7,"year":2021},"durationInSeconds":27},{"paymentInterval":{"month":12,"year":2021},"durationInSeconds":54},{"paymentInterval":{"month":5,"year":2021},"durationInSeconds":32},{"paymentInterval":{"month":1,"year":2021},"durationInSeconds":485},{"paymentInterval":{"month":3,"year":2021},"durationInSeconds":404},{"paymentInterval":{"month":4,"year":2021},"durationInSeconds":295},{"paymentInterval":{"month":9,"year":2021},"durationInSeconds":1479},{"paymentInterval":{"month":8,"year":2021},"durationInSeconds":582}]}'
     headers:
       Connection:
       - keep-alive
@@ -501,7 +501,7 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Fri, 26 Nov 2021 10:57:31 GMT
+      - Mon, 06 Dec 2021 08:46:16 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       Server:
@@ -543,7 +543,7 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Fri, 26 Nov 2021 10:57:31 GMT
+      - Mon, 06 Dec 2021 08:46:16 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       Server:
@@ -576,7 +576,7 @@ interactions:
     method: GET
     uri: https://webknossos.org/api/users/5ad9cb79320000db193744b4/loggedTime
   response:
-    content: '{"loggedTime":[{"paymentInterval":{"month":10,"year":2021},"durationInSeconds":1},{"paymentInterval":{"month":7,"year":2021},"durationInSeconds":76},{"paymentInterval":{"month":1,"year":2021},"durationInSeconds":394},{"paymentInterval":{"month":3,"year":2021},"durationInSeconds":0},{"paymentInterval":{"month":9,"year":2021},"durationInSeconds":1001},{"paymentInterval":{"month":8,"year":2021},"durationInSeconds":0}]}'
+    content: '{"loggedTime":[{"paymentInterval":{"month":10,"year":2021},"durationInSeconds":1},{"paymentInterval":{"month":7,"year":2021},"durationInSeconds":76},{"paymentInterval":{"month":11,"year":2021},"durationInSeconds":96},{"paymentInterval":{"month":1,"year":2021},"durationInSeconds":394},{"paymentInterval":{"month":3,"year":2021},"durationInSeconds":0},{"paymentInterval":{"month":9,"year":2021},"durationInSeconds":1001},{"paymentInterval":{"month":8,"year":2021},"durationInSeconds":0}]}'
     headers:
       Connection:
       - keep-alive
@@ -585,7 +585,7 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Fri, 26 Nov 2021 10:57:32 GMT
+      - Mon, 06 Dec 2021 08:46:16 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       Server:
@@ -627,7 +627,7 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Fri, 26 Nov 2021 10:57:32 GMT
+      - Mon, 06 Dec 2021 08:46:16 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       Server:
@@ -667,7 +667,7 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Fri, 26 Nov 2021 10:57:32 GMT
+      - Mon, 06 Dec 2021 08:46:16 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       Server:
@@ -696,7 +696,7 @@ interactions:
     method: GET
     uri: https://webknossos.org/api/users/5b5dd2fb1c00008230ec8174/loggedTime
   response:
-    content: '{"loggedTime":[{"paymentInterval":{"month":6,"year":2021},"durationInSeconds":133},{"paymentInterval":{"month":9,"year":2020},"durationInSeconds":389},{"paymentInterval":{"month":10,"year":2021},"durationInSeconds":227},{"paymentInterval":{"month":11,"year":2020},"durationInSeconds":773},{"paymentInterval":{"month":4,"year":2019},"durationInSeconds":3406},{"paymentInterval":{"month":8,"year":2020},"durationInSeconds":131},{"paymentInterval":{"month":7,"year":2021},"durationInSeconds":817},{"paymentInterval":{"month":2,"year":2021},"durationInSeconds":706},{"paymentInterval":{"month":6,"year":2020},"durationInSeconds":131},{"paymentInterval":{"month":7,"year":2020},"durationInSeconds":39},{"paymentInterval":{"month":12,"year":2020},"durationInSeconds":55},{"paymentInterval":{"month":11,"year":2021},"durationInSeconds":69},{"paymentInterval":{"month":10,"year":2020},"durationInSeconds":134},{"paymentInterval":{"month":3,"year":2021},"durationInSeconds":1548},{"paymentInterval":{"month":4,"year":2021},"durationInSeconds":889},{"paymentInterval":{"month":8,"year":2021},"durationInSeconds":19}]}'
+    content: '{"loggedTime":[{"paymentInterval":{"month":6,"year":2021},"durationInSeconds":133},{"paymentInterval":{"month":9,"year":2020},"durationInSeconds":389},{"paymentInterval":{"month":10,"year":2021},"durationInSeconds":227},{"paymentInterval":{"month":11,"year":2020},"durationInSeconds":773},{"paymentInterval":{"month":4,"year":2019},"durationInSeconds":3406},{"paymentInterval":{"month":8,"year":2020},"durationInSeconds":131},{"paymentInterval":{"month":7,"year":2021},"durationInSeconds":817},{"paymentInterval":{"month":2,"year":2021},"durationInSeconds":706},{"paymentInterval":{"month":6,"year":2020},"durationInSeconds":131},{"paymentInterval":{"month":7,"year":2020},"durationInSeconds":39},{"paymentInterval":{"month":12,"year":2020},"durationInSeconds":55},{"paymentInterval":{"month":12,"year":2021},"durationInSeconds":0},{"paymentInterval":{"month":11,"year":2021},"durationInSeconds":69},{"paymentInterval":{"month":10,"year":2020},"durationInSeconds":134},{"paymentInterval":{"month":3,"year":2021},"durationInSeconds":1548},{"paymentInterval":{"month":4,"year":2021},"durationInSeconds":889},{"paymentInterval":{"month":8,"year":2021},"durationInSeconds":19}]}'
     headers:
       Connection:
       - keep-alive
@@ -705,7 +705,7 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Fri, 26 Nov 2021 10:57:32 GMT
+      - Mon, 06 Dec 2021 08:46:17 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       Server:
@@ -747,7 +747,7 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Fri, 26 Nov 2021 10:57:32 GMT
+      - Mon, 06 Dec 2021 08:46:17 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       Server:
@@ -778,7 +778,7 @@ interactions:
     method: GET
     uri: https://webknossos.org/api/users/6006a44d0100007e0070d734/loggedTime
   response:
-    content: '{"loggedTime":[{"paymentInterval":{"month":1,"year":1970},"durationInSeconds":4},{"paymentInterval":{"month":10,"year":2021},"durationInSeconds":1169},{"paymentInterval":{"month":8,"year":2021},"durationInSeconds":0},{"paymentInterval":{"month":9,"year":2021},"durationInSeconds":17}]}'
+    content: '{"loggedTime":[{"paymentInterval":{"month":10,"year":2021},"durationInSeconds":1169},{"paymentInterval":{"month":1,"year":1970},"durationInSeconds":4},{"paymentInterval":{"month":12,"year":2021},"durationInSeconds":0},{"paymentInterval":{"month":9,"year":2021},"durationInSeconds":17},{"paymentInterval":{"month":8,"year":2021},"durationInSeconds":0}]}'
     headers:
       Connection:
       - keep-alive
@@ -787,7 +787,7 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Fri, 26 Nov 2021 10:57:32 GMT
+      - Mon, 06 Dec 2021 08:46:17 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       Server:
@@ -829,7 +829,7 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Fri, 26 Nov 2021 10:57:33 GMT
+      - Mon, 06 Dec 2021 08:46:17 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       Server:
@@ -867,7 +867,7 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Fri, 26 Nov 2021 10:57:33 GMT
+      - Mon, 06 Dec 2021 08:46:17 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       Server:
@@ -905,7 +905,7 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Fri, 26 Nov 2021 10:57:33 GMT
+      - Mon, 06 Dec 2021 08:46:17 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       Server:
@@ -938,7 +938,7 @@ interactions:
     method: GET
     uri: https://webknossos.org/api/users/5ba0d064010000552628225d/loggedTime
   response:
-    content: '{"loggedTime":[{"paymentInterval":{"month":6,"year":2021},"durationInSeconds":271},{"paymentInterval":{"month":10,"year":2021},"durationInSeconds":4531},{"paymentInterval":{"month":1,"year":2020},"durationInSeconds":0},{"paymentInterval":{"month":7,"year":2021},"durationInSeconds":150},{"paymentInterval":{"month":2,"year":2021},"durationInSeconds":0},{"paymentInterval":{"month":6,"year":2020},"durationInSeconds":72},{"paymentInterval":{"month":7,"year":2020},"durationInSeconds":0},{"paymentInterval":{"month":5,"year":2020},"durationInSeconds":1472},{"paymentInterval":{"month":11,"year":2021},"durationInSeconds":72},{"paymentInterval":{"month":12,"year":2018},"durationInSeconds":0},{"paymentInterval":{"month":3,"year":2021},"durationInSeconds":16},{"paymentInterval":{"month":4,"year":2021},"durationInSeconds":210},{"paymentInterval":{"month":12,"year":2019},"durationInSeconds":58},{"paymentInterval":{"month":9,"year":2021},"durationInSeconds":97},{"paymentInterval":{"month":8,"year":2021},"durationInSeconds":0}]}'
+    content: '{"loggedTime":[{"paymentInterval":{"month":6,"year":2021},"durationInSeconds":271},{"paymentInterval":{"month":10,"year":2021},"durationInSeconds":4531},{"paymentInterval":{"month":1,"year":2020},"durationInSeconds":0},{"paymentInterval":{"month":7,"year":2021},"durationInSeconds":150},{"paymentInterval":{"month":2,"year":2021},"durationInSeconds":0},{"paymentInterval":{"month":6,"year":2020},"durationInSeconds":72},{"paymentInterval":{"month":7,"year":2020},"durationInSeconds":0},{"paymentInterval":{"month":5,"year":2020},"durationInSeconds":1472},{"paymentInterval":{"month":12,"year":2021},"durationInSeconds":812},{"paymentInterval":{"month":11,"year":2021},"durationInSeconds":72},{"paymentInterval":{"month":12,"year":2018},"durationInSeconds":0},{"paymentInterval":{"month":3,"year":2021},"durationInSeconds":16},{"paymentInterval":{"month":4,"year":2021},"durationInSeconds":210},{"paymentInterval":{"month":12,"year":2019},"durationInSeconds":58},{"paymentInterval":{"month":9,"year":2021},"durationInSeconds":97},{"paymentInterval":{"month":8,"year":2021},"durationInSeconds":0}]}'
     headers:
       Connection:
       - keep-alive
@@ -947,7 +947,7 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Fri, 26 Nov 2021 10:57:33 GMT
+      - Mon, 06 Dec 2021 08:46:18 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       Server:
@@ -989,7 +989,7 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Fri, 26 Nov 2021 10:57:33 GMT
+      - Mon, 06 Dec 2021 08:46:18 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       Server:
@@ -1031,7 +1031,7 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Fri, 26 Nov 2021 10:57:33 GMT
+      - Mon, 06 Dec 2021 08:46:18 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       Server:

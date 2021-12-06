@@ -6,10 +6,10 @@ if [ $# -eq 1 ] && [ "$1" = "--refresh-snapshots" ]; then
         WK_DOCKER_DIR="tests/.webknossos-server"
 
 #        git clone git@github.com:scalableminds/webknossos.git $WK_DOCKER_DIR
-        pushd $WK_DOCKER_DIR
-        git checkout robuster-uploads
-        popd
+        pushd $WK_DOCKER_DIR > /dev/null
+        git checkout robuster-uploads > /dev/null
         sed -i -e 's/webKnossos.sampleOrganization.enabled=false/webKnossos.sampleOrganization.enabled=true/g' docker-compose.yml
+        popd > /dev/null
         pushd $WK_DOCKER_DIR > /dev/null
         mkdir -p binaryData
         export DOCKER_TAG=robuster_uploads__16085
