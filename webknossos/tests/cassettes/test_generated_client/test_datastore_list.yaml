@@ -15,7 +15,7 @@ interactions:
     method: GET
     uri: https://webknossos.org/api/datastores
   response:
-    content: '[{"name":"data5.connect","url":"https://data5.connect.demo.webknossos.org","isForeign":false,"isScratch":false,"isConnector":true,"allowsUpload":false},{"name":"demo-mhlab","url":"https://demo.data1-brain.esc.rzg.mpg.de","isForeign":false,"isScratch":false,"isConnector":false,"allowsUpload":false},{"name":"test-wkconnect","url":"https://test-wkconnect1.cloud.scm.io","isForeign":false,"isScratch":false,"isConnector":true,"allowsUpload":false},{"name":"webknossos.org","url":"https://data-humerus.webknossos.org","isForeign":false,"isScratch":false,"isConnector":false,"allowsUpload":true}]'
+    content: '[{"name":"data5.connect","url":"https://data5.connect.demo.webknossos.org","isForeign":false,"isScratch":false,"isConnector":true,"allowsUpload":false},{"name":"demo-mhlab","url":"https://demo.data1-brain.esc.rzg.mpg.de","isForeign":false,"isScratch":false,"isConnector":false,"allowsUpload":false},{"name":"webknossos.org","url":"https://data-humerus.webknossos.org","isForeign":false,"isScratch":false,"isConnector":false,"allowsUpload":true}]'
     headers:
       Connection:
       - keep-alive
@@ -24,7 +24,7 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Mon, 06 Dec 2021 08:46:19 GMT
+      - Wed, 01 Dec 2021 11:22:19 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       Server:

@@ -17,7 +17,7 @@ interactions:
     method: POST
     uri: https://webknossos.org/api/userToken/generate
   response:
-    content: '{"token":"lhhs3qXQ2hfZV_skQBfvvw"}'
+    content: '{"token":"WUQV2LaMDn2e0kDCpuARcg"}'
     headers:
       Connection:
       - keep-alive
@@ -26,7 +26,7 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Mon, 06 Dec 2021 08:46:19 GMT
+      - Tue, 26 Oct 2021 15:29:44 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       Server:
