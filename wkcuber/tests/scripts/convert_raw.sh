@@ -17,7 +17,6 @@ for DTYPE in "uint8" "float32"; do
     --input_dtype $DTYPE \
     --shape 128,128,128 \
     --scale 11.24,11.24,25 \
-    --no_compress \
     $INPUT_FILE $OUTPUT_DIR
     [ -d $OUTPUT_DIR/$NAME ]
     [ -d $OUTPUT_DIR/$NAME/1 ]
