@@ -2,6 +2,7 @@ import copy
 import json
 import os
 import shutil
+import warnings
 from argparse import Namespace
 from os import makedirs
 from os.path import basename, join, normpath
@@ -345,22 +346,51 @@ class Dataset:
 
     def get_segmentation_layer(self) -> SegmentationLayer:
         """
-        Returns the only segmentation layer.
+        Returns the only segmentation layer. Prefer `get_segmentation_layers`,
+        because multiple segmentation layers can exist.
 
         Fails with a IndexError if there are multiple segmentation layers or none.
         """
+
+        warnings.warn(
+            "[DEPRECATION] get_segmentation_layer() fails if no or more than one segmentation layer exists. Prefer get_segmentation_layers()."
+        )
         return cast(
             SegmentationLayer,
             self._get_layer_by_category(SEGMENTATION_CATEGORY),
         )
 
+    def get_segmentation_layers(self) -> List[SegmentationLayer]:
+        """
+        Returns all segmentation layers.
+        """
+        return [
+            cast(SegmentationLayer, layer)
+            for layer in self.layers.values()
+            if layer.category == SEGMENTATION_CATEGORY
+        ]
+
     def get_color_layer(self) -> Layer:
         """
-        Returns the only color layer.
+        Returns the only color layer. Prefer `get_color_layers`, because multiple
+        color layers can exist.
 
         Fails with a RuntimeError if there are multiple color layers or none.
         """
         return self._get_layer_by_category(COLOR_CATEGORY)
+
+    def get_color_layers(self) -> List[Layer]:
+        """
+        Returns all color layers.
+        """
+        warnings.warn(
+            "[DEPRECATION] get_color_layer() fails if no or more than one color layer exists. Prefer get_color_layers()."
+        )
+        return [
+            cast(Layer, layer)
+            for layer in self.layers.values()
+            if layer.category == COLOR_CATEGORY
+        ]
 
     def delete_layer(self, layer_name: str) -> None:
         """
@@ -411,7 +441,7 @@ class Dataset:
         foreign_layer_symlink_path = (
             Path(os.path.relpath(foreign_layer_path, self.path))
             if make_relative
-            else Path(os.path.abspath(foreign_layer_path))
+            else foreign_layer_path.resolve()
         )
         os.symlink(foreign_layer_symlink_path, join(self.path, layer_name))
         original_layer = Dataset(foreign_layer_path.parent).get_layer(
@@ -443,7 +473,6 @@ class Dataset:
         else:
             foreign_layer_path = Path(foreign_layer)
 
-        foreign_layer_path = Path(os.path.abspath(foreign_layer_path))
         foreign_layer_name = foreign_layer_path.name
         layer_name = (
             new_layer_name if new_layer_name is not None else foreign_layer_name

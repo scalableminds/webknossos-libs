@@ -15,12 +15,12 @@ for PKG in */pyproject.toml; do
     cp pyproject.toml pyproject.toml.bak
     PKG_VERSION="$(dunamai from git)"
 
+    echo "__version__ = '$PKG_VERSION'" > ./"$PKG"/version.py
+
     poetry version "$PKG_VERSION"
     # replace all relative path dependencies with the current version:
     sed -i 's/\(.*\) = .* path \= \"\.\..*/\1 = "'"$PKG_VERSION"'"/g' pyproject.toml
     poetry publish --build -u "$PYPI_USERNAME" -p "$PYPI_PASSWORD"
-
-    echo "__version__ = '$PKG_VERSION'" > ./"$PKG"/version.py
 
     # Restore files
     mv pyproject.toml.bak pyproject.toml
