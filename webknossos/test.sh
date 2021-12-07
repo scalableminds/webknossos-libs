@@ -4,15 +4,13 @@ set -eEuo pipefail
 if [ $# -eq 1 ] && [ "$1" = "--refresh-snapshots" ]; then
     if ! curl -sf localhost:9000/api/health; then
         WK_DOCKER_DIR="tests/.webknossos-server"
-
-#        git clone git@github.com:scalableminds/webknossos.git $WK_DOCKER_DIR
+        if [ ! -d "$WK_DOCKER_DIR" ]; then
+            git clone git@github.com:scalableminds/webknossos.git $WK_DOCKER_DIR
+        fi
         pushd $WK_DOCKER_DIR > /dev/null
-        git checkout robuster-uploads > /dev/null
         sed -i -e 's/webKnossos.sampleOrganization.enabled=false/webKnossos.sampleOrganization.enabled=true/g' docker-compose.yml
-        popd > /dev/null
-        pushd $WK_DOCKER_DIR > /dev/null
         mkdir -p binaryData
-        export DOCKER_TAG=robuster_uploads__16085
+        export DOCKER_TAG=master__16085__TODO
         docker-compose pull webknossos
         USER_UID=$(id -u) USER_GID=$(id -g) docker-compose up -d --no-build webknossos
         popd > /dev/null
