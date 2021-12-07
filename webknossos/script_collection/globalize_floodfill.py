@@ -45,7 +45,7 @@ def create_parser() -> argparse.ArgumentParser:
          merged in. Additionally, the partial flood-fills which are denoted in
          "explorational.nml" will be continued/globalized.
 
-         python -m script-collection.globalize_floodfill \\
+         python -m script_collection.globalize_floodfill \\
             --output_path some/path/new_dataset \\
             --segmentation_layer_path existing/dataset/segmentation \\
             --volume_path annotation/data \\
