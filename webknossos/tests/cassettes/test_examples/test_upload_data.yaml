@@ -17,14 +17,14 @@ interactions:
     method: POST
     uri: http://localhost:9000/api/userToken/generate
   response:
-    content: '{"token":"n7ROkF-VPMaQDTKISO8jpQ"}'
+    content: '{"token":"NWC_I_d3YcMVgF5DnAdLYQ"}'
     headers:
       Content-Length:
       - '34'
       Content-Type:
       - application/json
       Date:
-      - Tue, 26 Oct 2021 16:25:45 GMT
+      - Mon, 06 Dec 2021 08:46:01 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       X-Permitted-Cross-Domain-Policies:
@@ -56,7 +56,7 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Tue, 26 Oct 2021 16:25:45 GMT
+      - Mon, 06 Dec 2021 08:46:01 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       X-Permitted-Cross-Domain-Policies:
@@ -81,14 +81,54 @@ interactions:
     method: GET
     uri: http://localhost:9000/api/user
   response:
-    content: '{"id":"6165556b0100000100e34e80","email":"scmboy@scalableminds.com","firstName":"SCM","lastName":"Boy","isAdmin":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"6165556b0100000100e34e7e","name":"sample_organization","isTeamManager":true}],"experiences":{"sampleExp":10},"lastActivity":1634030955379,"isAnonymous":false,"isEditable":true,"organization":"sample_organization","novelUserExperienceInfos":{"hasSeenDashboardWelcomeBanner":true},"selectedTheme":"auto","created":1634030955379,"lastTaskTypeId":null}'
+    content: '{"id":"61a09e600100000100c32558","email":"scmboy@scalableminds.com","firstName":"SCM","lastName":"Boy","isAdmin":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"61a09e600100000100c32556","name":"sample_organization","isTeamManager":true}],"experiences":{"sampleExp":10},"lastActivity":1637916256828,"isAnonymous":false,"isEditable":true,"organization":"sample_organization","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1637916256829,"lastTaskTypeId":null}'
     headers:
       Content-Length:
-      - '522'
+      - '486'
       Content-Type:
       - application/json
       Date:
-      - Tue, 26 Oct 2021 16:25:45 GMT
+      - Mon, 06 Dec 2021 08:46:01 GMT
+      Referrer-Policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      X-Permitted-Cross-Domain-Policies:
+      - master-only
+      X-XSS-Protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: '{"uploadId": "2021-12-06 08:46:01__382ac040-2889-47c1-9724-1034160c9ca7",
+      "organization": "sample_organization", "name": "cell_2021-12-06_08-46-00", "totalFileCount":
+      1, "initialTeams": []}'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '189'
+      content-type:
+      - application/json
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.18.2
+    method: POST
+    uri: http://localhost:9000/data/datasets/reserveUpload
+  response:
+    content: ''
+    headers:
+      Access-Control-Allow-Origin:
+      - '*'
+      Access-Control-Max-Age:
+      - '600'
+      Content-Length:
+      - '0'
+      Date:
+      - Mon, 06 Dec 2021 08:46:01 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       X-Permitted-Cross-Domain-Policies:
@@ -99,43 +139,43 @@ interactions:
     status_code: 200
 - request:
     body: !!binary |
-      LS1hNjg3Yzk5ZTg5ZjEyNjBiZjQ4YjFkY2U2OTE1ZmVhOQ0KQ29udGVudC1EaXNwb3NpdGlvbjog
-      Zm9ybS1kYXRhOyBuYW1lPSJyZXN1bWFibGVDaHVua1NpemUiDQoNCjEwNDg1NzYwDQotLWE2ODdj
-      OTllODlmMTI2MGJmNDhiMWRjZTY5MTVmZWE5DQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRh
-      dGE7IG5hbWU9InJlc3VtYWJsZVRvdGFsU2l6ZSINCg0KMjQ2NjkwDQotLWE2ODdjOTllODlmMTI2
-      MGJmNDhiMWRjZTY5MTVmZWE5DQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9
-      InJlc3VtYWJsZVR5cGUiDQoNCmFwcGxpY2F0aW9uL3ppcA0KLS1hNjg3Yzk5ZTg5ZjEyNjBiZjQ4
-      YjFkY2U2OTE1ZmVhOQ0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJyZXN1
-      bWFibGVJZGVudGlmaWVyIg0KDQoyMDIxLTEwLTI2IDE2OjI1OjQ0X181YjU2YmRjNC00MmM0LTRh
-      YmYtYTAyZi1iNDg4YWNmMmJkMzQvdG1wZWthX2gzN3kuemlwDQotLWE2ODdjOTllODlmMTI2MGJm
-      NDhiMWRjZTY5MTVmZWE5DQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9InJl
-      c3VtYWJsZUZpbGVuYW1lIg0KDQp0bXBla2FfaDM3eS56aXANCi0tYTY4N2M5OWU4OWYxMjYwYmY0
-      OGIxZGNlNjkxNWZlYTkNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0icmVz
-      dW1hYmxlUmVsYXRpdmVQYXRoIg0KDQovdG1wL3RtcGVrYV9oMzd5LnppcA0KLS1hNjg3Yzk5ZTg5
-      ZjEyNjBiZjQ4YjFkY2U2OTE1ZmVhOQ0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBu
-      YW1lPSJyZXN1bWFibGVUb3RhbENodW5rcyINCg0KMQ0KLS1hNjg3Yzk5ZTg5ZjEyNjBiZjQ4YjFk
-      Y2U2OTE1ZmVhOQ0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJyZXN1bWFi
-      bGVDaHVua051bWJlciINCg0KMQ0KLS1hNjg3Yzk5ZTg5ZjEyNjBiZjQ4YjFkY2U2OTE1ZmVhOQ0K
+      LS1hZmYwZmEwM2FkOTRlOTQ0MTEyOTc2NDVkNGMyZDQ2Mw0KQ29udGVudC1EaXNwb3NpdGlvbjog
+      Zm9ybS1kYXRhOyBuYW1lPSJyZXN1bWFibGVDaHVua1NpemUiDQoNCjEwNDg1NzYwDQotLWFmZjBm
+      YTAzYWQ5NGU5NDQxMTI5NzY0NWQ0YzJkNDYzDQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRh
+      dGE7IG5hbWU9InJlc3VtYWJsZVRvdGFsU2l6ZSINCg0KMjQ2NjkwDQotLWFmZjBmYTAzYWQ5NGU5
+      NDQxMTI5NzY0NWQ0YzJkNDYzDQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9
+      InJlc3VtYWJsZVR5cGUiDQoNCmFwcGxpY2F0aW9uL3ppcA0KLS1hZmYwZmEwM2FkOTRlOTQ0MTEy
+      OTc2NDVkNGMyZDQ2Mw0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJyZXN1
+      bWFibGVJZGVudGlmaWVyIg0KDQoyMDIxLTEyLTA2IDA4OjQ2OjAxX18zODJhYzA0MC0yODg5LTQ3
+      YzEtOTcyNC0xMDM0MTYwYzljYTcvdG1wYmN0cF9kNm0uemlwDQotLWFmZjBmYTAzYWQ5NGU5NDQx
+      MTI5NzY0NWQ0YzJkNDYzDQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9InJl
+      c3VtYWJsZUZpbGVuYW1lIg0KDQp0bXBiY3RwX2Q2bS56aXANCi0tYWZmMGZhMDNhZDk0ZTk0NDEx
+      Mjk3NjQ1ZDRjMmQ0NjMNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0icmVz
+      dW1hYmxlUmVsYXRpdmVQYXRoIg0KDQovdG1wL3RtcGJjdHBfZDZtLnppcA0KLS1hZmYwZmEwM2Fk
+      OTRlOTQ0MTEyOTc2NDVkNGMyZDQ2Mw0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBu
+      YW1lPSJyZXN1bWFibGVUb3RhbENodW5rcyINCg0KMQ0KLS1hZmYwZmEwM2FkOTRlOTQ0MTEyOTc2
+      NDVkNGMyZDQ2Mw0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJyZXN1bWFi
+      bGVDaHVua051bWJlciINCg0KMQ0KLS1hZmYwZmEwM2FkOTRlOTQ0MTEyOTc2NDVkNGMyZDQ2Mw0K
       Q29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJyZXN1bWFibGVDdXJyZW50Q2h1
-      bmtTaXplIg0KDQoyNDY2OTANCi0tYTY4N2M5OWU4OWYxMjYwYmY0OGIxZGNlNjkxNWZlYTkNCkNv
+      bmtTaXplIg0KDQoyNDY2OTANCi0tYWZmMGZhMDNhZDk0ZTk0NDExMjk3NjQ1ZDRjMmQ0NjMNCkNv
       bnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0ib3duaW5nT3JnYW5pemF0aW9uIg0K
-      DQpzYW1wbGVfb3JnYW5pemF0aW9uDQotLWE2ODdjOTllODlmMTI2MGJmNDhiMWRjZTY5MTVmZWE5
+      DQpzYW1wbGVfb3JnYW5pemF0aW9uDQotLWFmZjBmYTAzYWQ5NGU5NDQxMTI5NzY0NWQ0YzJkNDYz
       DQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9Im5hbWUiDQoNCmNlbGxfMjAy
-      MS0xMC0yNl8xNi0yNS00NA0KLS1hNjg3Yzk5ZTg5ZjEyNjBiZjQ4YjFkY2U2OTE1ZmVhOQ0KQ29u
+      MS0xMi0wNl8wOC00Ni0wMA0KLS1hZmYwZmEwM2FkOTRlOTQ0MTEyOTc2NDVkNGMyZDQ2Mw0KQ29u
       dGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJ0b3RhbEZpbGVDb3VudCINCg0KMQ0K
-      LS1hNjg3Yzk5ZTg5ZjEyNjBiZjQ4YjFkY2U2OTE1ZmVhOQ0KQ29udGVudC1EaXNwb3NpdGlvbjog
+      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
-      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
+      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
@@ -4445,16 +4485,16 @@ interactions:
       FRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUV
       FRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUV
       FRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUV
-      FRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFZVdCVBLAQIUAxQAAAAAADaTWlMAAAAAAAAAAAAA
-      AAAGAAAAAAAAAAAAEADtQQAAAABjb2xvci9QSwECFAMUAAAACAA2k1pT4dNCyB0BAABjAwAAGgAA
-      AAAAAAAAAAAApIEkAAAAZGF0YXNvdXJjZS1wcm9wZXJ0aWVzLmpzb25QSwECFAMUAAAAAAA2k1pT
-      AAAAAAAAAAAAAAAACAAAAAAAAAAAABAA7UF5AQAAY29sb3IvMS9QSwECFAMUAAAAAAA2k1pTAAAA
-      AAAAAAAAAAAACwAAAAAAAAAAABAA7UGfAQAAY29sb3IvMS96MC9QSwECFAMUAAAACAA2k1pTfyrH
-      lwwAAAAQAAAAEgAAAAAAAAAAAAAApIHIAQAAY29sb3IvMS9oZWFkZXIud2t3UEsBAhQDFAAAAAAA
-      NpNaUwAAAAAAAAAAAAAAAA4AAAAAAAAAAAAQAO1BBAIAAGNvbG9yLzEvejAveTAvUEsBAhQDFAAA
-      AAgANpNaUy2rS7GBvwMA4p9MABQAAAAAAAAAAAAAAKSBMAIAAGNvbG9yLzEvejAveTAveDAud2t3
-      UEsFBgAAAAAHAAcAqQEAAOPBAwAAAA0KLS1hNjg3Yzk5ZTg5ZjEyNjBiZjQ4YjFkY2U2OTE1ZmVh
-      OS0tDQo=
+      FRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFZVdCVBLAQIUAxQAAAAAAMBNhlMAAAAAAAAAAAAA
+      AAAGAAAAAAAAAAAAEAD9QQAAAABjb2xvci9QSwECFAMUAAAACADATYZTj4RsrB0BAABjAwAAGgAA
+      AAAAAAAAAAAAtIEkAAAAZGF0YXNvdXJjZS1wcm9wZXJ0aWVzLmpzb25QSwECFAMUAAAAAADATYZT
+      AAAAAAAAAAAAAAAACAAAAAAAAAAAABAA/UF5AQAAY29sb3IvMS9QSwECFAMUAAAAAADATYZTAAAA
+      AAAAAAAAAAAACwAAAAAAAAAAABAA/UGfAQAAY29sb3IvMS96MC9QSwECFAMUAAAACADATYZTfyrH
+      lwwAAAAQAAAAEgAAAAAAAAAAAAAAtIHIAQAAY29sb3IvMS9oZWFkZXIud2t3UEsBAhQDFAAAAAAA
+      wE2GUwAAAAAAAAAAAAAAAA4AAAAAAAAAAAAQAP1BBAIAAGNvbG9yLzEvejAveTAvUEsBAhQDFAAA
+      AAgAwE2GUy2rS7GBvwMA4p9MABQAAAAAAAAAAAAAALSBMAIAAGNvbG9yLzEvejAveTAveDAud2t3
+      UEsFBgAAAAAHAAcAqQEAAOPBAwAAAA0KLS1hZmYwZmEwM2FkOTRlOTQ0MTEyOTc2NDVkNGMyZDQ2
+      My0tDQo=
     headers:
       accept:
       - '*/*'
@@ -4465,7 +4505,7 @@ interactions:
       content-length:
       - '248240'
       content-type:
-      - multipart/form-data; boundary=a687c99e89f1260bf48b1dce6915fea9
+      - multipart/form-data; boundary=aff0fa03ad94e94411297645d4c2d463
       host:
       - localhost:9000
       user-agent:
@@ -4482,7 +4522,7 @@ interactions:
       Content-Length:
       - '0'
       Date:
-      - Tue, 26 Oct 2021 16:25:46 GMT
+      - Mon, 06 Dec 2021 08:46:01 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       X-Permitted-Cross-Domain-Policies:
@@ -4492,9 +4532,9 @@ interactions:
     http_version: HTTP/1.1
     status_code: 200
 - request:
-    body: '{"uploadId": "2021-10-26 16:25:44__5b56bdc4-42c4-4abf-a02f-b488acf2bd34",
-      "organization": "sample_organization", "name": "cell_2021-10-26_16-25-44", "initialTeams":
-      [], "needsConversion": false}'
+    body: '{"uploadId": "2021-12-06 08:46:01__382ac040-2889-47c1-9724-1034160c9ca7",
+      "organization": "sample_organization", "name": "cell_2021-12-06_08-46-00", "needsConversion":
+      false}'
     headers:
       accept:
       - '*/*'
@@ -4503,7 +4543,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '194'
+      - '174'
       content-type:
       - application/json
       host:
@@ -4522,7 +4562,7 @@ interactions:
       Content-Length:
       - '0'
       Date:
-      - Tue, 26 Oct 2021 16:25:48 GMT
+      - Mon, 06 Dec 2021 08:46:01 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       X-Permitted-Cross-Domain-Policies:

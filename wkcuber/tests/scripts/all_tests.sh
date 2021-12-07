@@ -39,3 +39,6 @@ rm -r testoutput/tiff4
 
 sh ${BASEDIR}/knossos_conversion.sh
 rm -r testoutput/knossos
+
+sh ${BASEDIR}/convert_raw.sh
+rm -r testoutput/raw
