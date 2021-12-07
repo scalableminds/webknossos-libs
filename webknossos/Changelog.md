@@ -15,7 +15,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 
 ### Changed
 
-## [v0.8.24](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.8.25) - 2021-12-07
+## [v0.8.25](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.8.25) - 2021-12-07
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.24...v0.8.25)
 
 ### Added
