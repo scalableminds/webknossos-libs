@@ -18,6 +18,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 
 ### Changed
 - Improved performance for calculations with `Vec3Int` and `BoundingBox`. [#461](https://github.com/scalableminds/webknossos-libs/pull/461)
+- Renamed the folder webknossos/script-collection to webknossos/script_collection to enable module imports. [#505](https://github.com/scalableminds/webknossos-libs/pull/505)
 
 ### Fixed
 
