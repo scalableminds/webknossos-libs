@@ -10,7 +10,7 @@ if [ $# -eq 1 ] && [ "$1" = "--refresh-snapshots" ]; then
         pushd $WK_DOCKER_DIR > /dev/null
         sed -i -e 's/webKnossos.sampleOrganization.enabled=false/webKnossos.sampleOrganization.enabled=true/g' docker-compose.yml
         mkdir -p binaryData
-        export DOCKER_TAG=master__16085__TODO
+        export DOCKER_TAG=master__16177
         docker-compose pull webknossos
         USER_UID=$(id -u) USER_GID=$(id -g) docker-compose up -d --no-build webknossos
         popd > /dev/null
