@@ -52,6 +52,8 @@ def upload_dataset(dataset: Dataset) -> str:
                 break
             except httpx.HTTPStatusError as e:
                 http_error = e
+        else:
+            raise http_error
         with Progress() as progress:
             with Resumable(
                 f"{datastore_url}/data/datasets?token={datastore_token}",
