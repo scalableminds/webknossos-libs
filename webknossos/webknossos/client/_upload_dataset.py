@@ -35,6 +35,25 @@ def upload_dataset(dataset: Dataset) -> str:
         upload_id = f"{time_str}__{uuid4()}"
         datastore_token = context.datastore_token
         datastore_url = _cached_get_upload_datastore(context)
+        for _ in range(5):
+            try:
+                httpx.post(
+                    f"{datastore_url}/data/datasets/reserveUpload?token={datastore_token}",
+                    params={"token": datastore_token},
+                    json={
+                        "uploadId": upload_id,
+                        "organization": context.organization,
+                        "name": dataset.name,
+                        "totalFileCount": 1,
+                        "initialTeams": [],
+                    },
+                    timeout=60,
+                ).raise_for_status()
+                break
+            except httpx.HTTPStatusError as e:
+                http_error = e
+        else:
+            raise http_error
         with Progress() as progress:
             with Resumable(
                 f"{datastore_url}/data/datasets?token={datastore_token}",
@@ -64,7 +83,6 @@ def upload_dataset(dataset: Dataset) -> str:
                     "uploadId": upload_id,
                     "organization": context.organization,
                     "name": dataset.name,
-                    "initialTeams": [],
                     "needsConversion": False,
                 },
                 timeout=None,
