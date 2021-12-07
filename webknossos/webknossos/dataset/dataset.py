@@ -1,8 +1,8 @@
 import copy
-import warnings
 import json
 import os
 import shutil
+import warnings
 from argparse import Namespace
 from os import makedirs
 from os.path import basename, join, normpath
@@ -21,6 +21,7 @@ from webknossos.geometry import BoundingBox, Vec3Int
 from webknossos.utils import copy_directory_with_symlinks, get_executor_for_args
 
 from .layer import (
+    ColorLayer,
     Layer,
     SegmentationLayer,
     _dtype_per_channel_to_element_class,
@@ -379,7 +380,7 @@ class Dataset:
         """
         return self._get_layer_by_category(COLOR_CATEGORY)
 
-    def get_color_layers(self) -> List[SegmentationLayer]:
+    def get_color_layers(self) -> List[ColorLayer]:
         """
         Returns all color layers.
         """
@@ -387,7 +388,7 @@ class Dataset:
             "[DEPRECATION] get_color_layer() fails if no or more than one color layer exists. Prefer get_color_layers()."
         )
         return [
-            cast(SegmentationLayer, layer)
+            cast(ColorLayer, layer)
             for layer in self.layers.values()
             if layer.category == COLOR_CATEGORY
         ]
