@@ -6,11 +6,11 @@ if [ $# -eq 1 ] && [ "$1" = "--refresh-snapshots" ]; then
         WK_DOCKER_DIR="tests/.webknossos-server"
         if [ ! -d "$WK_DOCKER_DIR" ]; then
             git clone git@github.com:scalableminds/webknossos.git $WK_DOCKER_DIR --depth 1
-            cp tests/wk-docker-compose.override.yml $WK_DOCKER_DIR/docker-compose.override.yml
         fi
         pushd $WK_DOCKER_DIR > /dev/null
+        sed -i -e 's/webKnossos.sampleOrganization.enabled=false/webKnossos.sampleOrganization.enabled=true/g' docker-compose.yml
         mkdir -p binaryData
-        export DOCKER_TAG=21.11.0
+        export DOCKER_TAG=master__16177
         docker-compose pull webknossos
         USER_UID=$(id -u) USER_GID=$(id -g) docker-compose up -d --no-build webknossos
         popd > /dev/null
