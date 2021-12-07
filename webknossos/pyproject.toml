@@ -7,6 +7,7 @@ readme = "README.md"
 license = "AGPL-3.0"
 repository = "https://github.com/scalableminds/webknossos-libs"
 homepage = "https://docs.webknossos.org"
+include = ["webknossos/version.py"]
 
 [tool.poetry.dependencies]
 python = "^3.7,>=3.7.1"

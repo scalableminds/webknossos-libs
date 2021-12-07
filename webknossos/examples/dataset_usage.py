@@ -2,8 +2,10 @@ import numpy as np
 
 import webknossos as wk
 
-if __name__ == "__main__":
+# pylint: disable=unused-variable
 
+
+def main() -> None:
     #####################
     # Opening a dataset #
     #####################
@@ -78,3 +80,7 @@ if __name__ == "__main__":
     )
     # Link a layer of the initial dataset to the copy:
     sym_layer = copy_of_dataset.add_symlink_layer(new_layer)
+
+
+if __name__ == "__main__":
+    main()

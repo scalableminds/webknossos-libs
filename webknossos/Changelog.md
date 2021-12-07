@@ -12,8 +12,11 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes
 
 ### Added
+- Added support to download datasets from external datastores, which is the case for webknossos.org.  [#497](https://github.com/scalableminds/webknossos-libs/pull/497)
 
 ### Changed
+- Adapt the dataset upload to new webKnossos api. [#484](https://github.com/scalableminds/webknossos-libs/pull/484)
+
 
 ### Fixed
 
