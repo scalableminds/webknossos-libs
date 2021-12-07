@@ -12,6 +12,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes in Config & CLI
 
 ### Added
+- `wkcuber.convert_raw` conversion tool for raw binary data files. [#498](https://github.com/scalableminds/webknossos-libs/pull/498)
 - Added the `wkcuber` executable that is installed when the package is installed. [#495](https://github.com/scalableminds/webknossos-libs/pull/495)
 
 ### Changed

@@ -18,6 +18,7 @@ The tools are modular components to allow easy integration into existing pipelin
 * `wkcuber.tile_cubing`: Convert tiled image stacks (e.g. in `z/y/x.ext` folder structure) to WKW cubes
 * `wkcuber.convert_knossos`: Convert KNOSSOS cubes to WKW cubes
 * `wkcuber.convert_nifti`: Convert NIFTI files to WKW files (Currently without applying transformations).
+* `wkcuber.convert_raw`: Convert RAW binary data (.raw, .vol) files to WKW datasets
 * `wkcuber.downsampling`: Create downsampled magnifications (with `median`, `mode` and linear interpolation modes). Downsampling compresses the new magnifications by default (disable via `--no-compress`).
 * `wkcuber.compress`: Compress WKW cubes for efficient file storage (especially useful for segmentation data)
 * `wkcuber.metadata`: Create (or refresh) metadata (with guessing of most parameters)
@@ -32,6 +33,7 @@ The tools are modular components to allow easy integration into existing pipelin
 * Tiled image stacks (used for Catmaid)
 * KNOSSOS cubes
 * NIFTI files
+* Raw binary files
 
 ## Installation
 ### Python 3 with pip from PyPi
@@ -80,6 +82,9 @@ python -m wkcuber.convert_nifti --layer_name color --scale 10,10,30 data/source/
 
 # Convert folder with NIFTI files to wkw files
 python -m wkcuber.convert_nifti --color_file one_nifti_file --segmentation_file --scale 10,10,30 another_nifti data/source/ data/target
+
+# Convert RAW file to wkw file
+python -m wkcuber.convert_raw --layer_name color --scale 10,10,30 --input_dtype uint8 --shape 2048,2048,1024 data/source/raw_file.raw data/target
 
 # Create downsampled magnifications
 python -m wkcuber.downsampling --layer_name color data/target
