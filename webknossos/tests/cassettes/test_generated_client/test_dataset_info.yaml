@@ -22,26 +22,20 @@ interactions:
       reconstruction in layer 4 of the somatosensory cortex* by A Motta, M Berning,
       KM Boergens, B Staffler, M Beining, S Loomba, P Hennig, H Wissler, M Helmstaedter
       in *Science* on 24 October 2019. [10.1126/science.aay3134](https://science.sciencemag.org/content/early/2019/10/23/science.aay3134)\n","displayName":"L4
-      Mouse Cortex Demo","created":1597232436055,"isEditable":true,"lastUsedByUser":1638357740352,"logoUrl":"https://static.webknossos.org/logos/scalableminds.svg","sortingKey":1597232436055,"details":null,"publication":null,"isUnreported":false,"isForeign":false,"jobsEnabled":true}'
+      Mouse Cortex Demo","created":1597232436055,"isEditable":true,"lastUsedByUser":1638984888257,"logoUrl":"https://static.webknossos.org/logos/scalableminds.svg","sortingKey":1597232436055,"details":null,"publication":null,"isUnreported":false,"isForeign":false,"jobsEnabled":true,"tags":["demo","l4dense"]}'
     headers:
       Connection:
       - keep-alive
-      Content-Encoding:
-      - gzip
+      Content-Length:
+      - '2319'
       Content-Type:
       - application/json
       Date:
-      - Wed, 01 Dec 2021 11:22:20 GMT
+      - Wed, 08 Dec 2021 17:34:48 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
-      Server:
-      - nginx/1.17.10
       Strict-Transport-Security:
       - max-age=15724800; includeSubDomains
-      Transfer-Encoding:
-      - chunked
-      Vary:
-      - Accept-Encoding
       X-Permitted-Cross-Domain-Policies:
       - master-only
       X-XSS-Protection:

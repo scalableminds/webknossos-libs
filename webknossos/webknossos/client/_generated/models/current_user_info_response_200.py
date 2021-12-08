@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Type, TypeVar
+from typing import Any, Dict, List, Type, TypeVar, Union
 
 import attr
 
@@ -11,6 +11,7 @@ from ..models.current_user_info_response_200_novel_user_experience_infos import 
 from ..models.current_user_info_response_200_teams_item import (
     CurrentUserInfoResponse200TeamsItem,
 )
+from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="CurrentUserInfoResponse200")
 
@@ -32,10 +33,12 @@ class CurrentUserInfoResponse200:
     is_anonymous: int
     is_editable: int
     organization: str
-    novel_user_experience_infos: CurrentUserInfoResponse200NovelUserExperienceInfos
     selected_theme: str
     created: int
     last_task_type_id: str
+    novel_user_experience_infos: Union[
+        Unset, CurrentUserInfoResponse200NovelUserExperienceInfos
+    ] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -58,11 +61,12 @@ class CurrentUserInfoResponse200:
         is_anonymous = self.is_anonymous
         is_editable = self.is_editable
         organization = self.organization
-        novel_user_experience_infos = self.novel_user_experience_infos.to_dict()
-
         selected_theme = self.selected_theme
         created = self.created
         last_task_type_id = self.last_task_type_id
+        novel_user_experience_infos: Union[Unset, Dict[str, Any]] = UNSET
+        if not isinstance(self.novel_user_experience_infos, Unset):
+            novel_user_experience_infos = self.novel_user_experience_infos.to_dict()
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -81,12 +85,13 @@ class CurrentUserInfoResponse200:
                 "isAnonymous": is_anonymous,
                 "isEditable": is_editable,
                 "organization": organization,
-                "novelUserExperienceInfos": novel_user_experience_infos,
                 "selectedTheme": selected_theme,
                 "created": created,
                 "lastTaskTypeId": last_task_type_id,
             }
         )
+        if novel_user_experience_infos is not UNSET:
+            field_dict["novelUserExperienceInfos"] = novel_user_experience_infos
 
         return field_dict
 
@@ -126,17 +131,24 @@ class CurrentUserInfoResponse200:
 
         organization = d.pop("organization")
 
-        novel_user_experience_infos = (
-            CurrentUserInfoResponse200NovelUserExperienceInfos.from_dict(
-                d.pop("novelUserExperienceInfos")
-            )
-        )
-
         selected_theme = d.pop("selectedTheme")
 
         created = d.pop("created")
 
         last_task_type_id = d.pop("lastTaskTypeId")
+
+        _novel_user_experience_infos = d.pop("novelUserExperienceInfos", UNSET)
+        novel_user_experience_infos: Union[
+            Unset, CurrentUserInfoResponse200NovelUserExperienceInfos
+        ]
+        if isinstance(_novel_user_experience_infos, Unset):
+            novel_user_experience_infos = UNSET
+        else:
+            novel_user_experience_infos = (
+                CurrentUserInfoResponse200NovelUserExperienceInfos.from_dict(
+                    _novel_user_experience_infos
+                )
+            )
 
         current_user_info_response_200 = cls(
             id=id,
@@ -152,10 +164,10 @@ class CurrentUserInfoResponse200:
             is_anonymous=is_anonymous,
             is_editable=is_editable,
             organization=organization,
-            novel_user_experience_infos=novel_user_experience_infos,
             selected_theme=selected_theme,
             created=created,
             last_task_type_id=last_task_type_id,
+            novel_user_experience_infos=novel_user_experience_infos,
         )
 
         current_user_info_response_200.additional_properties = d
