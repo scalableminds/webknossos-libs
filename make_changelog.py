@@ -50,7 +50,7 @@ for i, section in empty_unreleased_sections[::-1]:
 # Update changelog
 lines_to_insert = [
     "## Unreleased",
-    f"[Commits](https://github.com/scalableminds/voxelytics/compare/{this_version}...HEAD)",
+    f"[Commits](https://github.com/scalableminds/webknossos-libs/compare/v{this_version}...HEAD)",
     "",
     "### Breaking Changes",
     "",
@@ -61,8 +61,8 @@ lines_to_insert = [
     "### Fixed",
     "",
     "",
-    f"## [{this_version}](https://github.com/scalableminds/voxelytics/releases/tag/{this_version}) - {today_str}",
-    f"[Commits](https://github.com/scalableminds/voxelytics/compare/{last_version}...{this_version})",
+    f"## [{this_version}](https://github.com/scalableminds/webknossos-libs/releases/tag/v{this_version}) - {today_str}",
+    f"[Commits](https://github.com/scalableminds/webknossos-libs/compare/v{last_version}...v{this_version})",
 ]
 changelog_lines = (
     changelog_lines[:unreleased_idx]
