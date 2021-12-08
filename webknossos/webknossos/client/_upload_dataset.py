@@ -24,17 +24,19 @@ def _cached_get_upload_datastore(context: _WebknossosContext) -> str:
     raise ValueError("No datastore found where datasets can be uploaded.")
 
 
-def _walk_file(path: Path, base_path: Path) -> Iterator[Tuple[Path, int]]:
+def _walk_file(path: Path, base_path: Path) -> Iterator[Tuple[Path, Path, int]]:
     if path.is_dir():
         yield from _walk(path, base_path)
         return
     elif path.is_symlink():
         yield from _walk_file(path.resolve(), base_path)
         return
-    yield (path.relative_to(base_path), path.stat().st_size)
+    yield (path.resolve(), path.relative_to(base_path), path.stat().st_size)
 
 
-def _walk(path: Path, base_path: Optional[Path] = None) -> Iterator[Tuple[Path, int]]:
+def _walk(
+    path: Path, base_path: Optional[Path] = None
+) -> Iterator[Tuple[Path, Path, int]]:
     if base_path is None:
         base_path = path
     for p in Path(path).iterdir():
@@ -44,7 +46,7 @@ def _walk(path: Path, base_path: Optional[Path] = None) -> Iterator[Tuple[Path, 
 def upload_dataset(dataset: Dataset) -> str:
     context = _get_context()
     file_infos = list(_walk(dataset.path))
-    total_file_size = sum(size for _, size in file_infos)
+    total_file_size = sum(size for _, _, size in file_infos)
     # replicates https://github.com/scalableminds/webknossos/blob/master/frontend/javascripts/admin/dataset/dataset_upload_view.js
     time_str = strftime("%Y-%m-%dT%H-%M-%S", gmtime())
     upload_id = f"{time_str}__{uuid4()}"
@@ -79,14 +81,14 @@ def upload_dataset(dataset: Dataset) -> str:
                 "totalFileCount": 1,
             },
             chunk_size=100 * 1024 * 1024,  # 100 MiB
-            generate_unique_identifier=lambda path: f"{upload_id}/{path.name}",
+            generate_unique_identifier=lambda _, relative_path: f"{upload_id}/{relative_path}",
             test_chunks=False,
             permanent_errors=[400, 403, 404, 409, 415, 500, 501],
             client=httpx.Client(timeout=None),
         ) as session:
             progress_task = progress.add_task("Dataset Upload", total=total_file_size)
-            for file_path, _ in file_infos:
-                resumable_file = session.add_file(file_path)
+            for file_path, relative_path, _ in file_infos:
+                resumable_file = session.add_file(file_path, relative_path)
                 resumable_file.chunk_completed.register(
                     lambda chunk: progress.advance(progress_task, chunk.size)
                 )

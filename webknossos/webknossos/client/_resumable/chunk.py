@@ -94,7 +94,7 @@ def _build_query(
         "resumableType": _file_type(file.path),
         "resumableIdentifier": str(file.unique_identifier),
         "resumableFilename": file.path.name,
-        "resumableRelativePath": str(file.path),
+        "resumableRelativePath": str(file.relative_path),
         "resumableTotalChunks": len(file.chunks),
         "resumableChunkNumber": chunk.index + 1,
         "resumableCurrentChunkSize": chunk.size,
