@@ -15,7 +15,7 @@ from .converter import (
     main as auto_detect_and_run_conversion,
 )
 from .versioning import get_available_version
-from argparse import ArgumentParser
+from argparse import Namespace, ArgumentParser
 from pathlib import Path
 
 
@@ -71,10 +71,7 @@ def create_parser() -> ArgumentParser:
     return parser
 
 
-def main() -> None:
-    args = create_parser().parse_args()
-    setup_logging(args)
-
+def cube_with_args(args: Namespace) -> None:
     if args.isotropic is not None:
         raise DeprecationWarning(
             "The flag 'isotropic' is deprecated. Consider using '--sampling_mode isotropic' instead."
@@ -105,6 +102,12 @@ def main() -> None:
         )
 
     refresh_metadata(args.target_path)
+
+
+def main() -> None:
+    args = create_parser().parse_args()
+    setup_logging(args)
+    cube_with_args(args)
 
 
 if __name__ == "__main__":

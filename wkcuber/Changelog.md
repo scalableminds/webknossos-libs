@@ -12,13 +12,25 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes in Config & CLI
 
 ### Added
-- `wkcuber.convert_raw` conversion tool for raw binary data files. [#498](https://github.com/scalableminds/webknossos-libs/pull/498)
-- Added the `wkcuber` executable that is installed when the package is installed. [#495](https://github.com/scalableminds/webknossos-libs/pull/495)
+- Added importable `cube_with_args` function to main module of wkcuber. [#507](https://github.com/scalableminds/webknossos-libs/pull/507)
 
 ### Changed
 
 ### Fixed
 
+
+## [v0.8.25](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.8.25) - 2021-12-07
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.24...v0.8.25)
+
+### Added
+- `wkcuber.convert_raw` conversion tool for raw binary data files. [#498](https://github.com/scalableminds/webknossos-libs/pull/498)
+- Added the `wkcuber` executable that is installed when the package is installed. [#495](https://github.com/scalableminds/webknossos-libs/pull/495)
+
+## [v0.8.24](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.8.24) - 2021-11-30
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.23...v0.8.24)
+
+### Fixed
+- Fixed `--version` CLI argument. [#493](https://github.com/scalableminds/webknossos-libs/pull/493)
 
 ## [v0.8.23](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.8.23) - 2021-11-29
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.18...v0.8.23)
