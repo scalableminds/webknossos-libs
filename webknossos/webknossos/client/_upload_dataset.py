@@ -1,7 +1,7 @@
 from functools import lru_cache
 from pathlib import Path
 from time import gmtime, strftime
-from typing import Iterator, Tuple
+from typing import Iterator, Optional, Tuple
 from uuid import uuid4
 
 import httpx
@@ -24,19 +24,21 @@ def _cached_get_upload_datastore(context: _WebknossosContext) -> str:
     raise ValueError("No datastore found where datasets can be uploaded.")
 
 
-def _walk_file(path: Path) -> Iterator[Tuple[Path, int]]:
+def _walk_file(path: Path, base_path: Path) -> Iterator[Tuple[Path, int]]:
     if path.is_dir():
-        yield from _walk(path)
+        yield from _walk(path, base_path)
         return
     elif path.is_symlink():
-        yield from _walk_file(path)
+        yield from _walk_file(path.resolve(), base_path)
         return
-    yield (path.resolve(), path.stat().st_size)
+    yield (path.relative_to(base_path), path.stat().st_size)
 
 
-def _walk(path: Path) -> Iterator[Tuple[Path, int]]:
+def _walk(path: Path, base_path: Optional[Path] = None) -> Iterator[Tuple[Path, int]]:
+    if base_path is None:
+        base_path = path
     for p in Path(path).iterdir():
-        yield from _walk_file(p)
+        yield from _walk_file(p, base_path)
 
 
 def upload_dataset(dataset: Dataset) -> str:
@@ -44,7 +46,7 @@ def upload_dataset(dataset: Dataset) -> str:
     file_infos = list(_walk(dataset.path))
     total_file_size = sum(size for _, size in file_infos)
     # replicates https://github.com/scalableminds/webknossos/blob/master/frontend/javascripts/admin/dataset/dataset_upload_view.js
-    time_str = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+    time_str = strftime("%Y-%m-%dT%H-%M-%S", gmtime())
     upload_id = f"{time_str}__{uuid4()}"
     datastore_token = context.datastore_token
     datastore_url = _cached_get_upload_datastore(context)
@@ -76,7 +78,7 @@ def upload_dataset(dataset: Dataset) -> str:
                 "name": dataset.name,
                 "totalFileCount": 1,
             },
-            chunk_size=10 * 1024 * 1024,  # 10 MiB
+            chunk_size=100 * 1024 * 1024,  # 100 MiB
             generate_unique_identifier=lambda path: f"{upload_id}/{path.name}",
             test_chunks=False,
             permanent_errors=[400, 403, 404, 409, 415, 500, 501],
