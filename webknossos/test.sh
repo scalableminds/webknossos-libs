@@ -12,6 +12,7 @@ if [ $# -eq 1 ] && [ "$1" = "--refresh-snapshots" ]; then
         mkdir -p binaryData
         export DOCKER_TAG=master__16177
         docker-compose pull webknossos
+        # TODO: either remove pg/db before starting or run tools/postgres/apply_evolutions.sh
         USER_UID=$(id -u) USER_GID=$(id -g) docker-compose up -d --no-build webknossos
         popd > /dev/null
         stop_wk () {
