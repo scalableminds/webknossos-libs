@@ -12,7 +12,7 @@ today = datetime.date.today()
 today_str = f"{today.strftime('%Y')}-{today.strftime('%m')}-{today.strftime('%d')}"
 
 # Determine last version
-matches = re.finditer(r"^## \[(.*)\].*$", "\n".join(changelog_lines), re.MULTILINE)
+matches = re.finditer(r"^## \[v?(.*)\].*$", "\n".join(changelog_lines), re.MULTILINE)
 last_version = next(matches)[1]
 
 # Stop the script if new version is already the latest
