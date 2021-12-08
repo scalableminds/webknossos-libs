@@ -1,8 +1,7 @@
 from functools import lru_cache
 from pathlib import Path
-from shutil import make_archive
-from tempfile import NamedTemporaryFile
 from time import gmtime, strftime
+from typing import Iterator, Tuple
 from uuid import uuid4
 
 import httpx
@@ -25,55 +24,70 @@ def _cached_get_upload_datastore(context: _WebknossosContext) -> str:
     raise ValueError("No datastore found where datasets can be uploaded.")
 
 
+def _walk_file(path: Path) -> Iterator[Tuple[Path, int]]:
+    if path.is_dir():
+        yield from _walk(path)
+        return
+    elif path.is_symlink():
+        yield from _walk_file(path)
+        return
+    yield (path.resolve(), path.stat().st_size)
+
+
+def _walk(path: Path) -> Iterator[Tuple[Path, int]]:
+    for p in Path(path).iterdir():
+        yield from _walk_file(p)
+
+
 def upload_dataset(dataset: Dataset) -> str:
     context = _get_context()
+    file_infos = list(_walk(dataset.path))
+    total_file_size = sum(size for _, size in file_infos)
     # replicates https://github.com/scalableminds/webknossos/blob/master/frontend/javascripts/admin/dataset/dataset_upload_view.js
-    with NamedTemporaryFile(suffix=".zip") as tmp_zip_file:
-        zip_path = Path(tmp_zip_file.name)
-        make_archive(str(zip_path.with_suffix("")), "zip", dataset.path)
-        time_str = strftime("%Y-%m-%d %H:%M:%S", gmtime())
-        upload_id = f"{time_str}__{uuid4()}"
-        datastore_token = context.datastore_token
-        datastore_url = _cached_get_upload_datastore(context)
-        for _ in range(5):
-            try:
-                httpx.post(
-                    f"{datastore_url}/data/datasets/reserveUpload?token={datastore_token}",
-                    params={"token": datastore_token},
-                    json={
-                        "uploadId": upload_id,
-                        "organization": context.organization,
-                        "name": dataset.name,
-                        "totalFileCount": 1,
-                        "initialTeams": [],
-                    },
-                    timeout=60,
-                ).raise_for_status()
-                break
-            except httpx.HTTPStatusError as e:
-                http_error = e
-        else:
-            raise http_error
-        with Progress() as progress:
-            with Resumable(
-                f"{datastore_url}/data/datasets?token={datastore_token}",
-                simultaneous_uploads=1,
-                query={
-                    "owningOrganization": context.organization,
+    time_str = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+    upload_id = f"{time_str}__{uuid4()}"
+    datastore_token = context.datastore_token
+    datastore_url = _cached_get_upload_datastore(context)
+    for _ in range(5):
+        try:
+            httpx.post(
+                f"{datastore_url}/data/datasets/reserveUpload?token={datastore_token}",
+                params={"token": datastore_token},
+                json={
+                    "uploadId": upload_id,
+                    "organization": context.organization,
                     "name": dataset.name,
-                    "totalFileCount": 1,
+                    "totalFileCount": len(file_infos),
+                    "initialTeams": [],
                 },
-                chunk_size=10 * 1024 * 1024,  # 10 MiB
-                generate_unique_identifier=lambda path: f"{upload_id}/{path.name}",
-                test_chunks=False,
-                permanent_errors=[400, 403, 404, 409, 415, 500, 501],
-                client=httpx.Client(timeout=None),
-            ) as session:
-                file = session.add_file(zip_path)
-                progress_task = progress.add_task(
-                    "Dataset Upload", total=len(file.chunks)
+                timeout=60,
+            ).raise_for_status()
+            break
+        except httpx.HTTPStatusError as e:
+            http_error = e
+    else:
+        raise http_error
+    with Progress() as progress:
+        with Resumable(
+            f"{datastore_url}/data/datasets?token={datastore_token}",
+            simultaneous_uploads=1,
+            query={
+                "owningOrganization": context.organization,
+                "name": dataset.name,
+                "totalFileCount": 1,
+            },
+            chunk_size=10 * 1024 * 1024,  # 10 MiB
+            generate_unique_identifier=lambda path: f"{upload_id}/{path.name}",
+            test_chunks=False,
+            permanent_errors=[400, 403, 404, 409, 415, 500, 501],
+            client=httpx.Client(timeout=None),
+        ) as session:
+            progress_task = progress.add_task("Dataset Upload", total=total_file_size)
+            for file_path, _ in file_infos:
+                resumable_file = session.add_file(file_path)
+                resumable_file.chunk_completed.register(
+                    lambda chunk: progress.advance(progress_task, chunk.size)
                 )
-                file.chunk_completed.register(lambda _: progress.advance(progress_task))
     for _ in range(5):
         try:
             httpx.post(
