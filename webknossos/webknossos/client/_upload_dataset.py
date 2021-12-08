@@ -46,6 +46,7 @@ def upload_dataset(dataset: Dataset) -> str:
                         "name": dataset.name,
                         "totalFileCount": 1,
                         "initialTeams": [],
+                        "layersToLink": [],
                     },
                     timeout=60,
                 ).raise_for_status()
@@ -84,6 +85,7 @@ def upload_dataset(dataset: Dataset) -> str:
                     "organization": context.organization,
                     "name": dataset.name,
                     "needsConversion": False,
+                    "layersToLink": [],
                 },
                 timeout=None,
             ).raise_for_status()
