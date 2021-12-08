@@ -33,19 +33,26 @@ last_release_idx = next(
 )
 
 # Clean up unreleased notes (i.e. remove empty sections)
-unreleased_notes = changelog_lines[(unreleased_idx + 2) : last_release_idx]
+released_notes = "\n".join(changelog_lines[(unreleased_idx + 2) : last_release_idx])
 
-empty_unreleased_sections = [
-    (i, line)
-    for i, line in enumerate(unreleased_notes)
-    if line.startswith("### ") and unreleased_notes[i + 1] == ""
+release_section_fragments = re.split("\n### (.*)\n", released_notes, re.MULTILINE)
+release_notes_intro = release_section_fragments[0]
+release_sections = list(
+    zip(release_section_fragments[1::2], release_section_fragments[2::2])
+)
+nonempty_release_sections = [
+    (section, content) for section, content in release_sections if content.strip() != ""
 ]
-for i, section in empty_unreleased_sections[::-1]:
-    # Remove section heading
-    del unreleased_notes[i]
-    # Remove empty line
-    del unreleased_notes[i]
 
+cleaned_release_notes = (
+    "\n".join(
+        [release_notes_intro]
+        + [
+            f"### {section}\n{content}"
+            for section, content in nonempty_release_sections
+        ]
+    )
+).split("\n")
 
 # Update changelog
 lines_to_insert = [
@@ -67,7 +74,8 @@ lines_to_insert = [
 changelog_lines = (
     changelog_lines[:unreleased_idx]
     + lines_to_insert
-    + unreleased_notes
+    + cleaned_release_notes
+    + [""]
     + changelog_lines[(last_release_idx):]
     + [""]
 )
