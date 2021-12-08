@@ -9,11 +9,11 @@ from webknossos.dataset import COLOR_CATEGORY
 
 def main() -> None:
     with wk.webknossos_context(url="http://localhost:9000", token="secretScmBoyToken"):
-        # load your data - we use a an example 3D dataset here
+        # load your data - we use an example 3D dataset here
         img = data.cells3d()  # (z, c, y, x)
 
         # make sure that the dimension of your data has the right order
-        # we expect the following dimensions Channels, X, Y, Z.
+        # we expect the following dimensions: Channels, X, Y, Z.
         img = np.transpose(img, [1, 3, 2, 0])
 
         # choose a name for our dataset
