@@ -1,0 +1,47 @@
+name: Automatic release
+
+on:
+  workflow_dispatch: 
+    inputs:
+      version:
+        description: "Version of the new release (e.g. `0.0.1`)"
+        required: true
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ github.event.inputs.version }}
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+        ref: auto-changelogs
+
+    - uses: actions/setup-python@v1
+      with:
+        python-version: "3.8"
+        architecture: 'x64'
+
+    - name: Setup git config
+      run: |
+        git config user.name "Automatic release"
+        git config user.email "<>"
+
+    - name: Check whether tag already exists
+      run: |
+        if git show-ref --tags "v${VERSION}" --quiet; then
+            echo "Version $VERSION already exists. Stopping."
+            exit 1
+        fi
+
+    - name: Make and push release
+      run: |
+        ./make_release.sh ${VERSION}
+        git add */Changelog.md
+
+        git commit -m "Release for v${VERSION}"
+        git tag v${VERSION}
+
+        git push origin master
+        git push --tags
