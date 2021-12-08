@@ -117,3 +117,9 @@ venv.bak/
 .docker_credentials
 *.simg
 slurm-*.out
+
+# webknossos-libs examples temp output
+webknossos/testoutput/*
+*/*/output.nml
+*/cell_*/*
+cell_*/*
