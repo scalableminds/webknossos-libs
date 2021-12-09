@@ -7,16 +7,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.23...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.27...HEAD)
 
-### Breaking Changes in Config & CLI
+### Breaking Changes
 
 ### Added
-- Added importable `cube_with_args` function to main module of wkcuber. [#507](https://github.com/scalableminds/webknossos-libs/pull/507)
 
 ### Changed
 
 ### Fixed
+
+
+## [0.8.27](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.8.27) - 2021-12-09
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.25...v0.8.27)
+
+### Added
+- Added importable `cube_with_args` function to main module of wkcuber. [#507](https://github.com/scalableminds/webknossos-libs/pull/507)
 
 
 ## [v0.8.25](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.8.25) - 2021-12-07
@@ -129,7 +135,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Added
 
 ### Changed
-- Avoid warnings for compressed/unaligned data, if the data is directly at the border of the bounding box. [#378](https://github.com/scalableminds/webknossos-cuber/pull/378)  
+- Avoid warnings for compressed/unaligned data, if the data is directly at the border of the bounding box. [#378](https://github.com/scalableminds/webknossos-cuber/pull/378)
 
 ### Fixed
 
@@ -251,13 +257,13 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 
 ### Breaking Changes in Config & CLI
 - Some breaking changes in the dataset API: [#339](https://github.com/scalableminds/webknossos-cuber/pull/339)
-  - The interfaces of the methods `Layer.add_mag` and `Layer.get_or_add_mag` have changed: the parameter `block_type` is now replaced with `compress`. 
-  - Previously `Layer.mags` was of type `Dict[str, MagView]`. This was now changed to `Dict[Mag, MagView]`. 
+  - The interfaces of the methods `Layer.add_mag` and `Layer.get_or_add_mag` have changed: the parameter `block_type` is now replaced with `compress`.
+  - Previously `Layer.mags` was of type `Dict[str, MagView]`. This was now changed to `Dict[Mag, MagView]`.
   - Renamed `LayerTypes` to `LayerCategories`.
 
 ### Added
 - Added multiple small features: [#339](https://github.com/scalableminds/webknossos-cuber/pull/339)
-  - Names of datasets can now be passed optionally when creating a dataset.  
+  - Names of datasets can now be passed optionally when creating a dataset.
   - The `Layer` does now expose the `largest_segment_id`.
   - Add methods to get category specific layers for a given dataset.
 
@@ -269,7 +275,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
     - Tiff-support is now dropped (`TiffDataset` and `TiledTiffDataset` are now removed (alongside their corresponding `Layer` and `MagDataset` classes))
     - Module names are now lowercase (previously: `wkcuber.api.Dataset`, `wkcuber.api.Layer`, `wkcuber.api.View`, `wkcuber.api.properties.DatasetProperties`, `wkcuber.api.properties.LayerProperties`, `wkcuber.api.properties.ResolutionProperties`)
     - Some classes are renamed (`WKDataset` -> `Dataset`, `WKMagDataset` -> `MagView`)
-    - The "Layer types" (previously `Layer.COLOR` and `Layer.SEGMENTATION`) are now moved into their own class `wkcuber.api.layer.LayerTypes`. 
+    - The "Layer types" (previously `Layer.COLOR` and `Layer.SEGMENTATION`) are now moved into their own class `wkcuber.api.layer.LayerTypes`.
     - `View` (in particular `get_view()`) is refactored to be safer (this is also a breaking change).
       - The attribute `path_to_mag_dataset` was renamed to `path_to_mag_view`
       - Changes for `View.get_view()` (these changes also apply for `MagView.get_view()` (previously `MagDataset.get_view()`)):
@@ -278,7 +284,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
         - The order of the parameters `size` and `offset` was changed, so that `offset` is now the first parameter.
     - The shorthand `wkcuber.api.dataset.Dataset.get_view()` was removed.
     - The flag `--write_tiff` of `convert_nifti` was removed.
-    
+
 ### Added
 
 ### Changed
@@ -367,4 +373,4 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ## [0.6.1](https://github.com/scalableminds/webknossos-cuber/releases/tag/v0.6.1) - 2021-04-29
 [Commits](https://github.com/scalableminds/webknossos-cuber/compare/v0.6.0...v0.6.1)
 
-This is the latest release at the time of creating this changelog. 
+This is the latest release at the time of creating this changelog.
