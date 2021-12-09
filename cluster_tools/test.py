@@ -506,6 +506,7 @@ def test_slurm_number_of_submitted_jobs():
         assert executor.get_number_of_submitted_jobs() == number_of_jobs
 
         concurrent.futures.wait(futures)
+        time.sleep(3)
         assert executor.get_number_of_submitted_jobs() == 0
 
 
