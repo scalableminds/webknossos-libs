@@ -4,7 +4,7 @@ import os
 import shutil
 import warnings
 from argparse import Namespace
-from os import makedirs
+from os import PathLike, makedirs
 from os.path import basename, join, normpath
 from pathlib import Path
 from shutil import rmtree
@@ -64,7 +64,51 @@ class Dataset:
     which themselves can comprise multiple magnifications (webknossos.dataset.mag_view.MagView).
     """
 
-    def __init__(self, dataset_path: Union[str, Path]) -> None:
+    def __init__(
+        self,
+        dataset_path: Union[str, PathLike],
+        scale: Optional[Tuple[float, float, float]] = None,
+        name: Optional[str] = None,
+    ) -> None:
+        """
+        Creates a new dataset and the associated `datasource-properties.json`.
+        """
+        dataset_path = Path(dataset_path)
+        name = name or basename(normpath(dataset_path))
+
+        if dataset_path.exists():
+            # use Dataset.open() for backwards compatibility
+            assert (
+                dataset_path.is_dir()
+            ), f"Creation of Dataset at {dataset_path} failed, because a file already exists at this path."
+            # assert the dataset is empty if we don't allow open in the constructor
+        else:
+            # Create directories on disk and write datasource-properties.json
+            try:
+                makedirs(dataset_path, exist_ok=True)
+            except OSError as e:
+                raise type(e)(
+                    "Creation of Dataset {} failed. ".format(dataset_path) + repr(e)
+                )
+
+            # Write empty properties to disk
+            dataset_properties = DatasetProperties(id={"name": name, "team": ""}, scale=scale, dataLayers=[])
+            data = {
+                
+                "scale": scale,
+                "dataLayers": [],
+            }
+            with open(
+                dataset_path / PROPERTIES_FILE_NAME, "w", encoding="utf-8"
+            ) as outfile:
+                json.dump(dataset_converter.unstructure(dataset_properties), outfile, indent=4)
+
+        # Initialize object
+        ds = cls(dataset_path)
+        ds._export_as_json()
+        return ds
+
+        #---------
         """
         To open an existing dataset on disk, simply call the constructor of `Dataset`.
         This requires that the `datasource-properties.json` exists. Based on the `datasource-properties.json`,
@@ -643,6 +687,7 @@ class Dataset:
         scale: Tuple[float, float, float],
         name: Optional[str] = None,
     ) -> "Dataset":
+        # TODO add deprecation, use constructor internally
         """
         Creates a new dataset and the associated `datasource-properties.json`.
         """
