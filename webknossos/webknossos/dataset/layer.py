@@ -558,6 +558,11 @@ class Layer:
         if max_mag is None:
             max_mag = calculate_default_max_mag(self.bounding_box.size)
 
+        if self._properties.bounding_box.size.z == 1:
+            if sampling_mode != SamplingModes.CONSTANT_Z:
+                warnings.warn("The sampling_mode was changed to 'CONSTANT_Z'. Downsampling 2D data with a differnt sampling mode lead to darker images.")
+                sampling_mode = SamplingModes.CONSTANT_Z
+
         scale: Optional[Tuple[float, float, float]] = None
         if sampling_mode == SamplingModes.ANISOTROPIC or sampling_mode == "auto":
             scale = self.dataset.scale
