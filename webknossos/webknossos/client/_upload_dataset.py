@@ -74,11 +74,11 @@ def upload_dataset(dataset: Dataset) -> str:
     with Progress() as progress:
         with Resumable(
             f"{datastore_url}/data/datasets?token={datastore_token}",
-            simultaneous_uploads=1,
+            simultaneous_uploads=5,
             query={
                 "owningOrganization": context.organization,
                 "name": dataset.name,
-                "totalFileCount": 1,
+                "totalFileCount": len(file_infos),
             },
             chunk_size=100 * 1024 * 1024,  # 100 MiB
             generate_unique_identifier=lambda _, relative_path: f"{upload_id}/{relative_path}",
