@@ -7,13 +7,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.25...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.27...HEAD)
 
 ### Breaking Changes
 
 ### Added
 
 ### Changed
+
+### Fixed
+
+
+## [0.8.27](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.8.27) - 2021-12-09
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.25...v0.8.27)
+
 
 ## [v0.8.25](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.8.25) - 2021-12-07
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.24...v0.8.25)
@@ -85,7 +92,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 
 ### Breaking Changes
 - `View`s now always open the `wkw.Dataset` lazily. All explicit calls to `View.open()` and `View.close()` must be removed. [#448](https://github.com/scalableminds/webknossos-libs/pull/448)
-- 
+-
 ### Added
 - Added a new Annotation class which includes skeletons as well as volume-annotations. [#452](https://github.com/scalableminds/webknossos-libs/pull/452)
 - Added dataset down- and upload as well as annotation download, see the examples `learned_segmenter.py` and `upload_image_data.py`. [#452](https://github.com/scalableminds/webknossos-libs/pull/452)
