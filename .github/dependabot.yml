@@ -10,3 +10,10 @@ updates:
   allow:
   - dependency-name: cluster_tools
   - dependency-name: wkw
+- package-ecosystem: pip
+  directory: "/cluster_tools"
+  schedule:
+    interval: daily
+  open-pull-requests-limit: 10
+  reviewers:
+  - philippotto
