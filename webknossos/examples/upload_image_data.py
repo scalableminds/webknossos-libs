@@ -21,7 +21,7 @@ def main() -> None:
         name = f"cell_{time_str}"
 
         # scale is defined in nm
-        ds = wk.Dataset.create(name, scale=(260, 260, 290))
+        ds = wk.Dataset(name, scale=(260, 260, 290))
 
         # The example microscopy data has two channels
         # Channel 0 contains cell membranes, channel 1 contains nuclei.

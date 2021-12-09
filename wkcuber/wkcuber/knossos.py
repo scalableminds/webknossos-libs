@@ -102,7 +102,7 @@ class KnossosDataset:
 
     @staticmethod
     def open(root: Union[str, Path], dtype: Optional[np.dtype]) -> "KnossosDataset":
-        return KnossosDataset(str(root), dtype)
+        return KnossosDataset.open(str(root), dtype)
 
     def __enter__(self) -> "KnossosDataset":
         return self

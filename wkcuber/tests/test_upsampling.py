@@ -18,7 +18,7 @@ TESTOUTPUT_DIR = Path("testoutput")
 
 def test_upsampling() -> None:
     with tempfile.TemporaryDirectory() as temp_dir:
-        ds = Dataset.create(Path(temp_dir), scale=(1, 1, 1))
+        ds = Dataset(Path(temp_dir), scale=(1, 1, 1))
         layer = ds.add_layer("color", COLOR_CATEGORY)
         mag = layer.add_mag([4, 4, 2])
         mag.write(
@@ -51,7 +51,7 @@ def test_upsample_cube() -> None:
 
 def upsample_test_helper(use_compress: bool) -> None:
     with tempfile.TemporaryDirectory() as temp_dir:
-        ds = Dataset.create(Path(temp_dir), scale=(10.5, 10.5, 5))
+        ds = Dataset(Path(temp_dir), scale=(10.5, 10.5, 5))
         layer = ds.add_layer("color", COLOR_CATEGORY)
         mag2 = layer.add_mag([2, 2, 2])
 
@@ -112,7 +112,7 @@ def test_upsample_multi_channel() -> None:
     ).astype("uint8")
     file_len = 32
 
-    ds = Dataset.create(TESTOUTPUT_DIR / "multi-channel-test", (1, 1, 1))
+    ds = Dataset(TESTOUTPUT_DIR / "multi-channel-test", (1, 1, 1))
     l = ds.add_layer(
         "color",
         COLOR_CATEGORY,

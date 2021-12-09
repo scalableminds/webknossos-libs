@@ -122,7 +122,7 @@ def downsample_mags(
         from_mag = Mag(os.path.basename(path))
         path = path.parent.parent
 
-    Dataset(path).get_layer(layer_name).downsample(
+    Dataset.open(path).get_layer(layer_name).downsample(
         from_mag=from_mag,
         max_mag=max_mag,
         interpolation_mode=interpolation_mode,

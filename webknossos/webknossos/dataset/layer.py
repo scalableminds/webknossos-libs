@@ -405,7 +405,7 @@ class Layer:
 
             foreign_mag_view_path = Path(foreign_mag_view_or_path)
             foreign_mag_view = (
-                Dataset(foreign_mag_view_path.parent.parent)
+                Dataset.open(foreign_mag_view_path.parent.parent)
                 .get_layer(foreign_mag_view_path.parent.name)
                 .get_mag(foreign_mag_view_path.name)
             )

@@ -100,7 +100,7 @@ class Dataset:
             # Write empty properties to disk
             assert (
                 scale is not None
-            ), "When creating a new dataset scale must be give, e.g. as Dataset(path, scale=(10, 10, 16.8))"
+            ), "When creating a new dataset scale must be give, e.g. as Dataset.open(path, scale=(10, 10, 16.8))"
             name = name or basename(normpath(dataset_path))
             dataset_properties = DatasetProperties(
                 id={"name": name, "team": ""}, scale=scale, data_layers=[]
@@ -510,7 +510,7 @@ class Dataset:
             else foreign_layer_path.resolve()
         )
         os.symlink(foreign_layer_symlink_path, join(self.path, layer_name))
-        original_layer = Dataset(foreign_layer_path.parent).get_layer(
+        original_layer = Dataset.open(foreign_layer_path.parent).get_layer(
             foreign_layer_name
         )
         layer_properties = copy.deepcopy(original_layer._properties)
@@ -549,7 +549,7 @@ class Dataset:
             )
 
         shutil.copytree(foreign_layer_path, join(self.path, layer_name))
-        original_layer = Dataset(foreign_layer_path.parent).get_layer(
+        original_layer = Dataset.open(foreign_layer_path.parent).get_layer(
             foreign_layer_name
         )
         layer_properties = copy.deepcopy(original_layer._properties)
@@ -579,7 +579,7 @@ class Dataset:
         new_dataset_path = Path(new_dataset_path)
         if scale is None:
             scale = self.scale
-        new_ds = Dataset.create(new_dataset_path, scale=scale)
+        new_ds = Dataset(new_dataset_path, scale=scale)
 
         with get_executor_for_args(args) as executor:
             for layer_name, layer in self.layers.items():
@@ -640,7 +640,7 @@ class Dataset:
         to make this method robust against additional files e.g. layer/mappings/agglomerate_view.hdf5.
         This method becomes useful when exposing a dataset to webknossos.
         """
-        new_dataset = Dataset.create(
+        new_dataset = Dataset(
             new_dataset_path, scale=self.scale, name=name or self.name
         )
         for layer_name, layer in self.layers.items():
@@ -710,10 +710,10 @@ class Dataset:
         name: Optional[str] = None,
     ) -> "Dataset":
         """
-        **Deprecated**, please use the constructor `Dataset()` instead.
+        **Deprecated**, please use the constructor `Dataset.open()` instead.
         """
         warnings.warn(
-            "[DEPRECATION] Dataset.create() is deprecated in favor of the normal constructor Dataset()."
+            "[DEPRECATION] Dataset() is deprecated in favor of the normal constructor Dataset.open()."
         )
         return cls(dataset_path, scale, name)
 
@@ -725,15 +725,15 @@ class Dataset:
         name: Optional[str] = None,
     ) -> "Dataset":
         """
-        **Deprecated**, please use the constructor `Dataset()` instead.
+        **Deprecated**, please use the constructor `Dataset.open()` instead.
         """
         warnings.warn(
-            "[DEPRECATION] Dataset.get_or_create() is deprecated in favor of the normal constructor Dataset()."
+            "[DEPRECATION] Dataset() is deprecated in favor of the normal constructor Dataset.open()."
         )
         return cls(dataset_path, scale, name)
 
     def __repr__(self) -> str:
-        return repr("Dataset(%s)" % self.path)
+        return repr("Dataset.open(%s)" % self.path)
 
     def _export_as_json(self) -> None:
         with open(self.path / PROPERTIES_FILE_NAME, "w", encoding="utf-8") as outfile:

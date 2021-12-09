@@ -87,7 +87,7 @@ def downsample_test_helper(use_compress: bool) -> None:
     source_path = TESTDATA_DIR / "WT1_wkw"
     target_path = TESTOUTPUT_DIR / "WT1_wkw"
 
-    source_ds = Dataset(source_path)
+    source_ds = Dataset.open(source_path)
     target_ds = source_ds.copy_dataset(target_path, block_len=16, file_len=16)
 
     target_layer = target_ds.get_layer("color")
@@ -156,7 +156,7 @@ def test_downsample_multi_channel() -> None:
     ).astype("uint8")
     file_len = 32
 
-    ds = Dataset.create(TESTOUTPUT_DIR / "multi-channel-test", (1, 1, 1))
+    ds = Dataset(TESTOUTPUT_DIR / "multi-channel-test", (1, 1, 1))
     l = ds.add_layer(
         "color",
         COLOR_CATEGORY,
@@ -315,7 +315,7 @@ def test_default_max_mag() -> None:
 def test_default_parameter() -> None:
     target_path = TESTOUTPUT_DIR / "downsaple_default"
 
-    ds = Dataset.create(target_path, scale=(1, 1, 1))
+    ds = Dataset(target_path, scale=(1, 1, 1))
     layer = ds.add_layer(
         "color", COLOR_CATEGORY, dtype_per_channel="uint8", num_channels=3
     )
@@ -328,7 +328,7 @@ def test_default_parameter() -> None:
 
 
 def test_default_anisotropic_scale() -> None:
-    ds = Dataset.create(
+    ds = Dataset(
         TESTOUTPUT_DIR / "default_anisotropic_scale", scale=(85, 85, 346)
     )
     layer = ds.add_layer("color", COLOR_CATEGORY)
@@ -340,7 +340,7 @@ def test_default_anisotropic_scale() -> None:
 
 
 def test_downsample_mag_list() -> None:
-    ds = Dataset.create(TESTOUTPUT_DIR / "downsample_mag_list", scale=(1, 1, 2))
+    ds = Dataset(TESTOUTPUT_DIR / "downsample_mag_list", scale=(1, 1, 2))
     layer = ds.add_layer("color", COLOR_CATEGORY)
     mag = layer.add_mag(1)
     mag.write(data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8))
@@ -354,7 +354,7 @@ def test_downsample_mag_list() -> None:
 
 
 def test_downsample_with_invalid_mag_list() -> None:
-    ds = Dataset.create(TESTOUTPUT_DIR / "downsample_mag_list", scale=(1, 1, 2))
+    ds = Dataset(TESTOUTPUT_DIR / "downsample_mag_list", scale=(1, 1, 2))
     layer = ds.add_layer("color", COLOR_CATEGORY)
     mag = layer.add_mag(1)
     mag.write(data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8))
@@ -367,7 +367,7 @@ def test_downsample_with_invalid_mag_list() -> None:
 
 
 def test_downsample_compressed() -> None:
-    ds = Dataset.create(TESTOUTPUT_DIR / "downsample_compressed", scale=(1, 1, 2))
+    ds = Dataset(TESTOUTPUT_DIR / "downsample_compressed", scale=(1, 1, 2))
     layer = ds.add_layer("color", COLOR_CATEGORY)
     mag = layer.add_mag(1, block_len=8, file_len=8)
     mag.write(data=(np.random.rand(80, 240, 15) * 255).astype(np.uint8))

@@ -369,7 +369,7 @@ def cubing(
 
     target_mag = Mag(target_mag_str)
 
-    target_ds = Dataset.get_or_create(target_path, scale=scale)
+    target_ds = Dataset(target_path, scale=scale)
     is_segmentation_layer = layer_name == "segmentation"
 
     if is_segmentation_layer:
