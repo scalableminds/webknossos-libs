@@ -9,7 +9,7 @@ from glob import glob
 import re
 from argparse import ArgumentTypeError, ArgumentParser, Namespace
 
-from webknossos.dataset import Dataset, LayerCategories, View
+from webknossos.dataset import Dataset, View, COLOR_CATEGORY, SEGMENTATION_CATEGORY
 from webknossos.geometry import BoundingBox, Vec3Int, Mag
 
 from webknossos.dataset import SegmentationLayer
@@ -328,7 +328,7 @@ def tile_cubing(
     if is_segmentation_layer:
         target_layer = target_ds.get_or_add_layer(
             layer_name,
-            LayerCategories.SEGMENTATION_TYPE,
+            SEGMENTATION_CATEGORY,
             dtype_per_channel=dtype,
             num_channels=num_channels,
             largest_segment_id=0,
@@ -336,7 +336,7 @@ def tile_cubing(
     else:
         target_layer = target_ds.get_or_add_layer(
             layer_name,
-            LayerCategories.COLOR_TYPE,
+            COLOR_CATEGORY,
             dtype_per_channel=dtype,
             num_channels=num_channels,
         )
