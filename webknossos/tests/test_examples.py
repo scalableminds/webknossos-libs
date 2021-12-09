@@ -69,16 +69,19 @@ def test_skeleton_synapse_candidates() -> None:
     assert len(ids) == len(id_set), "Graph IDs are not unique."
 
 
-@pytest.mark.vcr()
+# Allowing requests to download the cells3d dataset via pooch,
+# which are not snapshotted
+@pytest.mark.block_network(allowed_hosts=[".*"])
+@pytest.mark.vcr(ignore_hosts=["gitlab.com"])
 def test_upload_data() -> None:
     with tmp_cwd():
         import examples.upload_image_data as example
 
-        layer, img, url = exec_main_and_get_vars(example, "layer", "img", "url")
+        layer_nuclei, img, url = exec_main_and_get_vars(
+            example, "layer_nuclei", "img", "url"
+        )
 
-        assert layer.bounding_box.size[0] == img.shape[1]
-        assert layer.bounding_box.size[1] == img.shape[0]
-        assert layer.bounding_box.size[2] == 1
+        assert layer_nuclei.bounding_box.size == img.shape[1:]
         assert url.startswith(
             "http://localhost:9000/datasets/sample_organization/cell_"
         )

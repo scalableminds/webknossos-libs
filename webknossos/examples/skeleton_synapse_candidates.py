@@ -1,9 +1,14 @@
 """
+Example application: 
+Finding synapse candidates with a threshold in a skeleton
+annotation where each neuron is represented/reconstructed as one long tree 
+of many nodes placed reguarly along its axon/dendrite paths.
+
+Method:
 Load an NML file and consider all pairs of trees.
 For each tree pair, find the node pairs that have a distance
 lower than a given threshold.
-For these candidates (e.g. synapse candidates with meaningful input data),
-new graphs are created which contain a node at the
+For these candidates, new annotations are created which contain a node at the
 center position between the input nodes.
 """
 
@@ -11,6 +16,7 @@ from itertools import combinations
 from typing import Iterator, Tuple
 
 import numpy as np
+from scipy.spatial import cKDTree
 
 import webknossos as wk
 
@@ -20,7 +26,6 @@ def pairs_within_distance(
     pos_b: np.ndarray,
     max_distance: float,
 ) -> Iterator[Tuple[np.ndarray, np.ndarray]]:
-    from scipy.spatial import cKDTree
 
     pos_a_kdtree = cKDTree(pos_a)
     pos_b_kdtree = cKDTree(pos_b)
