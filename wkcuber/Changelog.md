@@ -14,6 +14,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Added
 
 ### Changed
+- Improved the performance of cubing and tile-cubing and integrated the dataset API into tile-cubing. [#480](https://github.com/scalableminds/webknossos-libs/pull/480)
 
 ### Fixed
 
