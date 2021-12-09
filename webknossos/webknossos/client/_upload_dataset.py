@@ -24,23 +24,16 @@ def _cached_get_upload_datastore(context: _WebknossosContext) -> str:
     raise ValueError("No datastore found where datasets can be uploaded.")
 
 
-def _walk_file(path: Path, base_path: Path) -> Iterator[Tuple[Path, Path, int]]:
-    if path.is_dir():
-        yield from _walk(path, base_path)
-        return
-    elif path.is_symlink():
-        yield from _walk_file(path.resolve(), base_path)
-        return
-    yield (path.resolve(), path.relative_to(base_path), path.stat().st_size)
-
-
 def _walk(
     path: Path, base_path: Optional[Path] = None
 ) -> Iterator[Tuple[Path, Path, int]]:
     if base_path is None:
         base_path = path
-    for p in Path(path).iterdir():
-        yield from _walk_file(p, base_path)
+    if path.is_dir():
+        for p in Path(path).iterdir():
+            yield from _walk(p, base_path)
+    else:
+        yield (path.resolve(), path.relative_to(base_path), path.stat().st_size)
 
 
 def upload_dataset(dataset: Dataset) -> str:
