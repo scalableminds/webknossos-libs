@@ -3,27 +3,26 @@ import logging
 from pathlib import Path
 
 import numpy as np
-from typing import Dict, Tuple, Union, List, Optional
+from typing import Dict, Tuple, Union, List, Optional, cast
 import os
 from glob import glob
 import re
 from argparse import ArgumentTypeError, ArgumentParser, Namespace
-import wkw
 
+from webknossos.dataset import Dataset, View, COLOR_CATEGORY, SEGMENTATION_CATEGORY
+from webknossos.geometry import BoundingBox, Vec3Int, Mag
+
+from webknossos.dataset import SegmentationLayer
 from .utils import (
     get_chunks,
-    ensure_wkw,
-    open_wkw,
-    WkwDatasetInfo,
     get_executor_for_args,
     wait_and_ensure_success,
     setup_logging,
     get_regular_chunks,
 )
 from .cubing import create_parser as create_cubing_parser
-from .cubing import read_image_file, prepare_slices_for_wkw
+from .cubing import read_image_file
 from .image_readers import image_reader
-from .metadata import convert_element_class_to_dtype
 
 BLOCK_LEN = 32
 PADDING_FILE_NAME = "/"
@@ -122,7 +121,8 @@ def detect_interval_for_dimensions(
                 found_files = glob(specific_pattern)
                 file_count += len(found_files)
                 for file_name in found_files:
-                    arbitrary_file = Path(file_name)
+                    if arbitrary_file is None:
+                        arbitrary_file = Path(file_name)
                     # Turn a pattern {xxx}/{yyy}/{zzzzzz} for given dimension counts into (e.g., 2, 2, 3) into
                     # something like xx/yy/zzz (note that the curly braces are gone)
                     applied_fpp = replace_pattern_to_specific_length_without_brackets(
@@ -185,7 +185,7 @@ def find_file_with_dimensions(
 
 def tile_cubing_job(
     args: Tuple[
-        WkwDatasetInfo,
+        View,
         List[int],
         str,
         int,
@@ -193,10 +193,12 @@ def tile_cubing_job(
         Dict[str, int],
         Dict[str, int],
         Dict[str, int],
+        str,
+        int,
     ]
-) -> None:
+) -> int:
     (
-        target_wkw_info,
+        target_view,
         z_batches,
         input_path_pattern,
         batch_size,
@@ -204,70 +206,82 @@ def tile_cubing_job(
         min_dimensions,
         max_dimensions,
         decimal_lengths,
+        dtype,
+        num_channels,
     ) = args
-    if len(z_batches) == 0:
-        return
+    largest_value_in_chunk = 0  # This is used to compute the largest_segmentation_id if it is a segmentation layer
 
-    with open_wkw(target_wkw_info) as target_wkw:
-        # Iterate over the z batches
-        # Batching is useful to utilize IO more efficiently
-        for z_batch in get_chunks(z_batches, batch_size):
-            try:
-                ref_time = time.time()
-                logging.info("Cubing z={}-{}".format(z_batch[0], z_batch[-1]))
+    # Iterate over the z batches
+    # Batching is useful to utilize IO more efficiently
+    for z_batch in get_chunks(z_batches, batch_size):
+        try:
+            ref_time = time.time()
+            logging.info("Cubing z={}-{}".format(z_batch[0], z_batch[-1]))
 
-                for x in range(min_dimensions["x"], max_dimensions["x"] + 1):
-                    for y in range(min_dimensions["y"], max_dimensions["y"] + 1):
-                        ref_time2 = time.time()
-                        slices = []
-                        for z in z_batch:
-                            # Read file if exists or use zeros instead
-                            file_name = find_file_with_dimensions(
-                                input_path_pattern, x, y, z, decimal_lengths
-                            )
-                            if file_name:
-                                # read the image
-                                image = read_image_file(
-                                    file_name,
-                                    target_wkw_info.header.voxel_type,
-                                    z,
-                                    None,
-                                    None,
-                                )
-                                slices.append(image)
-                            else:
-                                # add zeros instead
-                                slices.append(
-                                    np.zeros(
-                                        tile_size + (1,),
-                                        dtype=target_wkw_info.header.voxel_type,
-                                    )
-                                )
-                        buffer = prepare_slices_for_wkw(
-                            slices, num_channels=tile_size[2]
+            for x in range(min_dimensions["x"], max_dimensions["x"] + 1):
+                for y in range(min_dimensions["y"], max_dimensions["y"] + 1):
+                    ref_time2 = time.time()
+                    # Allocate a large buffer for all images in this batch
+                    # Shape will be (channel_count, x, y, z)
+                    # Using fortran order for the buffer, prevents that the data has to be copied in rust
+                    buffer_shape = [
+                        num_channels,
+                        tile_size[0],
+                        tile_size[1],
+                        len(z_batch),
+                    ]
+                    buffer = np.empty(buffer_shape, dtype=dtype, order="F")
+                    for z in z_batch:
+                        # Read file if exists or use zeros instead
+                        file_name = find_file_with_dimensions(
+                            input_path_pattern, x, y, z, decimal_lengths
                         )
+                        if file_name:
+                            # read the image
+                            image = read_image_file(
+                                file_name,
+                                target_view.header.voxel_type,
+                                z,
+                                None,
+                                None,
+                            )
+                        else:
+                            # add zeros instead
+                            image = np.zeros(
+                                tile_size + (1,),
+                                dtype=target_view.header.voxel_type,
+                            )
+                        # The size of a image might be smaller than the buffer, if the tile is at the bottom/right border
+                        buffer[
+                            :, : image.shape[0], : image.shape[1], z - z_batch[0]
+                        ] = image.transpose((2, 0, 1, 3))[:, :, :, 0]
 
-                        if np.any(buffer != 0):
-                            target_wkw.write(
-                                [x * tile_size[0], y * tile_size[1], z_batch[0]], buffer
-                            )
-                        logging.debug(
-                            "Cubing of z={}-{} x={} y={} took {:.8f}s".format(
-                                z_batch[0], z_batch[-1], x, y, time.time() - ref_time2
-                            )
+                    if np.any(buffer != 0):
+                        offset = (
+                            (x - min_dimensions["x"]) * tile_size[0],
+                            (y - min_dimensions["y"]) * tile_size[1],
+                            z_batch[0] - target_view.global_offset.z,
                         )
-                logging.debug(
-                    "Cubing of z={}-{} took {:.8f}s".format(
-                        z_batch[0], z_batch[-1], time.time() - ref_time
+                        target_view.write(data=buffer, offset=offset)
+                        largest_value_in_chunk = max(
+                            largest_value_in_chunk, np.max(buffer)
+                        )
+                    logging.debug(
+                        "Cubing of z={}-{} x={} y={} took {:.8f}s".format(
+                            z_batch[0], z_batch[-1], x, y, time.time() - ref_time2
+                        )
                     )
+            logging.debug(
+                "Cubing of z={}-{} took {:.8f}s".format(
+                    z_batch[0], z_batch[-1], time.time() - ref_time
                 )
-            except Exception as exc:
-                logging.error(
-                    "Cubing of z={}-{} failed with: {}".format(
-                        z_batch[0], z_batch[-1], exc
-                    )
-                )
-                raise exc
+            )
+        except Exception as exc:
+            logging.error(
+                "Cubing of z={}-{} failed with: {}".format(z_batch[0], z_batch[-1], exc)
+            )
+            raise exc
+    return largest_value_in_chunk
 
 
 def tile_cubing(
@@ -275,6 +289,7 @@ def tile_cubing(
     layer_name: str,
     batch_size: int,
     input_path_pattern: str,
+    scale: Tuple[int, int, int],
     args: Optional[Namespace] = None,
 ) -> None:
     decimal_lengths = get_digit_counts_for_dimensions(input_path_pattern)
@@ -290,44 +305,95 @@ def tile_cubing(
             f"No source files found. Maybe the input_path_pattern was wrong. You provided: {input_path_pattern}"
         )
         return
-
     # Determine tile size from first matching file
-    tile_size = image_reader.read_dimensions(arbitrary_file)
+    tile_width, tile_height = image_reader.read_dimensions(arbitrary_file)
+    num_z = max_dimensions["z"] - min_dimensions["z"] + 1
+    num_x = (max_dimensions["x"] - min_dimensions["x"] + 1) * tile_width
+    num_y = (max_dimensions["y"] - min_dimensions["y"] + 1) * tile_height
+    x_offset = min_dimensions["x"] * tile_width
+    y_offset = min_dimensions["y"] * tile_height
     num_channels = image_reader.read_channel_count(arbitrary_file)
     logging.info(
         "Found source files: count={} with tile_size={}x{}".format(
-            file_count, tile_size[0], tile_size[1]
+            file_count, tile_width, tile_height
         )
     )
     if args is None or not hasattr(args, "dtype") or args.dtype is None:
         dtype = image_reader.read_dtype(arbitrary_file)
+    else:
+        dtype = args.dtype
 
-    target_wkw_info = WkwDatasetInfo(
-        target_path,
-        layer_name,
-        1,
-        wkw.Header(convert_element_class_to_dtype(dtype), num_channels),
+    target_ds = Dataset.get_or_create(target_path, scale=scale)
+    is_segmentation_layer = layer_name == "segmentation"
+    if is_segmentation_layer:
+        target_layer = target_ds.get_or_add_layer(
+            layer_name,
+            SEGMENTATION_CATEGORY,
+            dtype_per_channel=dtype,
+            num_channels=num_channels,
+            largest_segment_id=0,
+        )
+    else:
+        target_layer = target_ds.get_or_add_layer(
+            layer_name,
+            COLOR_CATEGORY,
+            dtype_per_channel=dtype,
+            num_channels=num_channels,
+        )
+
+    bbox = BoundingBox(
+        Vec3Int(x_offset, y_offset, min_dimensions["z"]),
+        Vec3Int(num_x, num_y, num_z),
     )
-    ensure_wkw(target_wkw_info)
+    if target_layer.bounding_box.volume() == 0:
+        # If the layer is empty, we want to set the bbox directly because extending it
+        # would mean that the bbox would always start at (0, 0, 0)
+        target_layer.bounding_box = bbox
+    else:
+        target_layer.bounding_box = target_layer.bounding_box.extended_by(bbox)
+
+    target_mag_view = target_layer.get_or_add_mag(Mag(1), block_len=BLOCK_LEN)
+
     with get_executor_for_args(args) as executor:
         job_args = []
         # Iterate over all z batches
         for z_batch in get_regular_chunks(
             min_dimensions["z"], max_dimensions["z"], BLOCK_LEN
         ):
+            # The z_batch always starts and ends at a multiple of BLOCK_LEN.
+            # However, we only want the part that is inside the bounding box
+            z_batch = range(
+                max(list(z_batch)[0], target_layer.bounding_box.topleft.z),
+                min(list(z_batch)[-1] + 1, target_layer.bounding_box.bottomright.z),
+            )
+            z_values = list(z_batch)
             job_args.append(
                 (
-                    target_wkw_info,
-                    list(z_batch),
+                    target_mag_view.get_view(
+                        (x_offset, y_offset, z_values[0]),
+                        (num_x, num_y, len(z_values)),
+                    ),
+                    z_values,
                     input_path_pattern,
                     batch_size,
-                    (tile_size[0], tile_size[1], num_channels),
+                    (tile_width, tile_height, num_channels),
                     min_dimensions,
                     max_dimensions,
                     decimal_lengths,
+                    dtype,
+                    num_channels,
                 )
             )
-        wait_and_ensure_success(executor.map_to_futures(tile_cubing_job, job_args))
+
+        largest_segment_id_per_chunk = wait_and_ensure_success(
+            executor.map_to_futures(tile_cubing_job, job_args)
+        )
+
+        if is_segmentation_layer:
+            largest_segment_id = max(largest_segment_id_per_chunk)
+            cast(
+                SegmentationLayer, target_layer
+            ).largest_segment_id = largest_segment_id
 
 
 def create_parser() -> ArgumentParser:
@@ -353,5 +419,6 @@ if __name__ == "__main__":
         args.layer_name,
         int(args.batch_size),
         input_path_pattern,
+        args.scale,
         args,
     )
