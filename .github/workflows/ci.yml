@@ -69,7 +69,7 @@ jobs:
 
   webknossos_linux:
     needs: changes
-    if: ${{ needs.changes.outputs.webknossos == 'true' }}
+    if: ${{ needs.changes.outputs.cluster_tools == 'true' }} || ${{ needs.changes.outputs.webknossos == 'true' }}
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 4
@@ -114,6 +114,10 @@ jobs:
 
   wkcuber_linux:
     needs: [changes]
+    if: |
+      ${{ needs.changes.outputs.cluster_tools == 'true' }} ||
+      ${{ needs.changes.outputs.webknossos == 'true' }} ||
+      ${{ needs.changes.outputs.wkcuber == 'true' }}
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 4
@@ -163,6 +167,11 @@ jobs:
   wkcuber_win:
     # Caution! The Windows VM seems to be running out of storage rather quickly.
     runs-on: windows-latest
+    needs: [changes]
+    if: |
+      ${{ needs.changes.outputs.cluster_tools == 'true' }} ||
+      ${{ needs.changes.outputs.webknossos == 'true' }} ||
+      ${{ needs.changes.outputs.wkcuber == 'true' }}
     strategy:
       max-parallel: 4
       matrix:
@@ -198,6 +207,11 @@ jobs:
 
   wkcuber_mac:
     runs-on: macos-latest
+    needs: [changes]
+    if: |
+      ${{ needs.changes.outputs.cluster_tools == 'true' }} ||
+      ${{ needs.changes.outputs.webknossos == 'true' }} ||
+      ${{ needs.changes.outputs.wkcuber == 'true' }}
     strategy:
       max-parallel: 4
       matrix:
@@ -228,7 +242,7 @@ jobs:
       run: poetry run tests/scripts/all_tests.sh
 
   wkcuber_docker:
-    needs: [webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac]
+    needs: [webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac, cluster_tools]
     if: |
       always() &&
       !contains(needs.*.result, 'failure') &&
@@ -290,7 +304,7 @@ jobs:
         fi
 
   docs:
-    needs: [webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac]
+    needs: [webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac, cluster_tools]
     runs-on: ubuntu-latest
     if: |
       always() &&
@@ -340,7 +354,7 @@ jobs:
 
 
   pypi:
-    needs: [webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac]
+    needs: [webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac, cluster_tools]
     if: |
       always() &&
       !contains(needs.*.result, 'failure') &&
