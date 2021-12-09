@@ -1,5 +1,7 @@
 # Slurm Docker Cluster
 
+**Note: Refer to cluster_tools/README.md for how to use this container in the context of testing the cluster_tools**
+
 This is a multi-container Slurm cluster using docker-compose.  The compose file
 creates named volumes for persistent storage of MySQL data files as well as
 Slurm state and log directories.
