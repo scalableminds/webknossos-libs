@@ -15,14 +15,14 @@ interactions:
     method: GET
     uri: https://webknossos.org/api/datasets/scalable_minds/l4dense_motta_et_al_demo
   response:
-    content: '{"name":"l4dense_motta_et_al_demo","dataSource":{"id":{"name":"l4dense_motta_et_al_demo","team":"scalable_minds"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[128,128,128],"width":5445,"height":8380,"depth":3285},"resolutions":[[1,1,1],[2,2,1],[4,4,2],[8,8,4],[16,16,8],[32,32,16],[64,64,32],[128,128,64],[256,256,128],[512,512,256],[1024,1024,512]],"elementClass":"uint8","adminViewConfiguration":{"intensityRange":[80,180]}},{"name":"predictions","category":"color","boundingBox":{"topLeft":[0,0,0],"width":5632,"height":8704,"depth":3584},"resolutions":[[1,1,1],[2,2,1],[4,4,2],[8,8,4],[16,16,8],[32,32,16],[64,64,32],[128,128,64],[256,256,128],[512,512,256],[1024,1024,512]],"elementClass":"uint24","adminViewConfiguration":{"isDisabled":true}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[128,128,128],"width":5445,"height":8380,"depth":3285},"resolutions":[[1,1,1],[2,2,1],[4,4,2],[8,8,4],[16,16,8],[32,32,16],[64,64,32],[128,128,64],[256,256,128],[512,512,256],[1024,1024,512]],"elementClass":"uint32","largestSegmentId":2504697,"adminViewConfiguration":{}}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"webknossos.org","url":"https://webknossos.org","isForeign":false,"isScratch":false,"isConnector":false,"allowsUpload":true},"owningOrganization":"scalable_minds","allowedTeams":[],"isActive":true,"isPublic":true,"description":"Segmentation
+    content: '{"name":"l4dense_motta_et_al_demo","dataSource":{"id":{"name":"l4dense_motta_et_al_demo","team":"scalable_minds"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[128,128,128],"width":5445,"height":8380,"depth":3285},"resolutions":[[1,1,1],[2,2,1],[4,4,2],[8,8,4],[16,16,8],[32,32,16],[64,64,32],[128,128,64],[256,256,128],[512,512,256],[1024,1024,512]],"elementClass":"uint8","adminViewConfiguration":{"intensityRange":[80,180]}},{"name":"predictions","category":"color","boundingBox":{"topLeft":[0,0,0],"width":5632,"height":8704,"depth":3584},"resolutions":[[1,1,1],[2,2,1],[4,4,2],[8,8,4],[16,16,8],[32,32,16],[64,64,32],[128,128,64],[256,256,128],[512,512,256],[1024,1024,512]],"elementClass":"uint24","adminViewConfiguration":{"isDisabled":true}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[128,128,128],"width":5445,"height":8380,"depth":3285},"resolutions":[[1,1,1],[2,2,1],[4,4,2],[8,8,4],[16,16,8],[32,32,16],[64,64,32],[128,128,64],[256,256,128],[512,512,256],[1024,1024,512]],"elementClass":"uint32","largestSegmentId":2504697,"adminViewConfiguration":{}}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"webknossos.org","url":"https://data-humerus.webknossos.org","isForeign":false,"isScratch":false,"isConnector":false,"allowsUpload":true},"owningOrganization":"scalable_minds","allowedTeams":[],"isActive":true,"isPublic":true,"description":"Segmentation
       created with [Voxelytics](https://scalableminds.com/voxelytics-connect) by [scalable
       minds](https://scalableminds.com).\n\n \n\nRaw SBEM data and segmentation ground
       truth by Max Planck Institute for Brain Research. As published in *Dense connectomic
       reconstruction in layer 4 of the somatosensory cortex* by A Motta, M Berning,
       KM Boergens, B Staffler, M Beining, S Loomba, P Hennig, H Wissler, M Helmstaedter
       in *Science* on 24 October 2019. [10.1126/science.aay3134](https://science.sciencemag.org/content/early/2019/10/23/science.aay3134)\n","displayName":"L4
-      Mouse Cortex Demo","created":1597232436055,"isEditable":true,"lastUsedByUser":1634663733624,"logoUrl":"https://static.webknossos.org/logos/scalableminds.svg","sortingKey":1597232436055,"details":null,"publication":null,"isUnreported":false,"isForeign":false,"jobsEnabled":true}'
+      Mouse Cortex Demo","created":1597232436055,"isEditable":true,"lastUsedByUser":1638357740352,"logoUrl":"https://static.webknossos.org/logos/scalableminds.svg","sortingKey":1597232436055,"details":null,"publication":null,"isUnreported":false,"isForeign":false,"jobsEnabled":true}'
     headers:
       Connection:
       - keep-alive
@@ -31,7 +31,7 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Tue, 19 Oct 2021 17:15:33 GMT
+      - Wed, 01 Dec 2021 11:22:20 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       Server:

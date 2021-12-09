@@ -21,6 +21,9 @@ To get started, check out the [installation instructions](installation.md).
 - Interaction, connection & scripting with your webKnossos instance over the REST API
     - Up- & downloading annotations and datasets
 
+## Source Code
+
+The `webknossos` Python package is [open-source on GitHub][https://github.com/scalableminds/webknossos-libs]. Feel free to report bugs there or open pull requests with your features and fixes.
 
 ## License
 [AGPLv3](https://www.gnu.org/licenses/agpl-3.0.html)

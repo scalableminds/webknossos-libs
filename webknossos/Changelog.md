@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.23...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.27...HEAD)
 
 ### Breaking Changes
 
@@ -16,6 +16,25 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+
+
+## [0.8.27](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.8.27) - 2021-12-09
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.25...v0.8.27)
+
+
+## [v0.8.25](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.8.25) - 2021-12-07
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.24...v0.8.25)
+
+### Added
+- Added support to download datasets from external datastores, which is the case for webknossos.org.  [#497](https://github.com/scalableminds/webknossos-libs/pull/497)
+
+### Changed
+- Adapt the dataset upload to new webKnossos api. [#484](https://github.com/scalableminds/webknossos-libs/pull/484)
+- `get_segmentation_layer()` and `get_color_layer()` were deprecated and should not be used, anymore, as they will fail if no or more than one layer exists for each category. Instead, `get_segmentation_layers()` and `get_color_layers()` should be used (if desired in combination with `[0]` to get the old, error-prone behavior).
+- Renamed the folder webknossos/script-collection to webknossos/script_collection to enable module imports. [#505](https://github.com/scalableminds/webknossos-libs/pull/505)
+
+## [v0.8.24](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.8.24) - 2021-11-30
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.23...v0.8.24)
 
 
 ## [v0.8.23](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.8.23) - 2021-11-29
@@ -31,6 +50,8 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 
 ### Changed
 - Improved performance for calculations with `Vec3Int` and `BoundingBox`. [#461](https://github.com/scalableminds/webknossos-libs/pull/461)
+
+### Fixed
 - Resolve path when symlinking layer and make_relative is False (instead of only making it absolute). [#492](https://github.com/scalableminds/webknossos-libs/pull/492)
 
 
@@ -71,7 +92,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 
 ### Breaking Changes
 - `View`s now always open the `wkw.Dataset` lazily. All explicit calls to `View.open()` and `View.close()` must be removed. [#448](https://github.com/scalableminds/webknossos-libs/pull/448)
-- 
+-
 ### Added
 - Added a new Annotation class which includes skeletons as well as volume-annotations. [#452](https://github.com/scalableminds/webknossos-libs/pull/452)
 - Added dataset down- and upload as well as annotation download, see the examples `learned_segmenter.py` and `upload_image_data.py`. [#452](https://github.com/scalableminds/webknossos-libs/pull/452)

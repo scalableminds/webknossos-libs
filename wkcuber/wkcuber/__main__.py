@@ -71,9 +71,7 @@ def create_parser() -> ArgumentParser:
     return parser
 
 
-def main(args: Namespace) -> None:
-    setup_logging(args)
-
+def cube_with_args(args: Namespace) -> None:
     if args.isotropic is not None:
         raise DeprecationWarning(
             "The flag 'isotropic' is deprecated. Consider using '--sampling_mode isotropic' instead."
@@ -106,7 +104,11 @@ def main(args: Namespace) -> None:
     refresh_metadata(args.target_path)
 
 
-if __name__ == "__main__":
+def main() -> None:
     args = create_parser().parse_args()
     setup_logging(args)
-    main(args)
+    cube_with_args(args)
+
+
+if __name__ == "__main__":
+    main()

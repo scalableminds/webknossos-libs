@@ -14,7 +14,7 @@ This example trains a segmenter from a volume annotation and applies it to the w
 It builds upon the two previous examples using the [Dataset API](dataset_usage.md) and [dataset upload](upload_image_data.md).
 Additionally, it downloads [this manual volume annotation of a subset of the skin example dataset](https://webknossos.org/annotations/Explorational/616457c2010000870032ced4) which is used for training.
 
-*This example additionally needs the scikit-learn package.*
+*This example additionally needs the scikit-learn and pooch packages.*
 
 ```python
 --8<--
