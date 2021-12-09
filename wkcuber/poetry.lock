@@ -145,22 +145,27 @@ importlib-metadata = {version = "*", markers = "python_version < \"3.8\""}
 
 [[package]]
 name = "cloudpickle"
-version = "1.6.0"
+version = "2.0.0"
 description = "Extended pickling support for Python objects"
 category = "main"
 optional = false
-python-versions = ">=3.5"
+python-versions = ">=3.6"
 
 [[package]]
 name = "cluster-tools"
-version = "1.61"
+version = "0.0.0"
 description = "Utility library for easily distributing code execution on clusters"
 category = "main"
 optional = false
-python-versions = "*"
+python-versions = "^3.6.2"
+develop = false
 
 [package.dependencies]
-cloudpickle = "*"
+cloudpickle = ">=2.0.0,<3.0.0"
+
+[package.source]
+type = "directory"
+url = "../cluster_tools"
 
 [[package]]
 name = "colorama"
@@ -838,25 +843,25 @@ version = "0.0.0"
 description = "Python package to work with webKnossos datasets and annotations"
 category = "main"
 optional = false
-python-versions = "^3.7"
+python-versions = "^3.7,>=3.7.1"
 develop = true
 
 [package.dependencies]
-attrs = "^21.1.0"
-boltons = "~21.0.0"
+attrs = ">=21.1.0,<22.0.0"
+boltons = ">=21.0.0,<21.1.0"
 cattrs = "1.7.1"
-cluster_tools = "^1.52"
+cluster_tools = "0.0.0"
 httpx = ">=0.15.4,<0.19.0"
-loxun = "^2.0"
-networkx = "^2.6.2"
-numpy = "^1.15.0"
-psutil = "^5.6.7"
-python-dateutil = "^2.8.0"
-python-dotenv = "^0.19.0"
-rich = "^10.9.0"
-scikit-image = "^0.18.3"
-scipy = "^1.4.0"
-typing-extensions = "^3.10.0"
+loxun = ">=2.0,<3.0"
+networkx = ">=2.6.2,<3.0.0"
+numpy = ">=1.15.0,<2.0.0"
+psutil = ">=5.6.7,<6.0.0"
+python-dateutil = ">=2.8.0,<3.0.0"
+python-dotenv = ">=0.19.0,<0.20.0"
+rich = ">=10.9.0,<11.0.0"
+scikit-image = ">=0.18.3,<0.19.0"
+scipy = ">=1.4.0,<2.0.0"
+typing-extensions = ">=3.7,<4.0"
 wkw = "1.1.11"
 
 [package.source]
@@ -897,8 +902,8 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 
 [metadata]
 lock-version = "1.1"
-python-versions = "^3.7"
-content-hash = "2668502d98eb735a8080da1aed684a46a7cc52e6d6c53fc586d562bda2449758"
+python-versions = "^3.7,>=3.7.1"
+content-hash = "e6a6916aa43470cc0fd5ac39add8ca27364ca6a7f7debd92ba90076023a8c8a0"
 
 [metadata.files]
 anyio = [
@@ -992,12 +997,10 @@ click = [
     {file = "click-8.0.1.tar.gz", hash = "sha256:8c04c11192119b1ef78ea049e0a6f0463e4c48ef00a30160c704337586f3ad7a"},
 ]
 cloudpickle = [
-    {file = "cloudpickle-1.6.0-py3-none-any.whl", hash = "sha256:3a32d0eb0bc6f4d0c57fbc4f3e3780f7a81e6fee0fa935072884d58ae8e1cc7c"},
-    {file = "cloudpickle-1.6.0.tar.gz", hash = "sha256:9bc994f9e9447593bd0a45371f0e7ac7333710fcf64a4eb9834bf149f4ef2f32"},
+    {file = "cloudpickle-2.0.0-py3-none-any.whl", hash = "sha256:6b2df9741d06f43839a3275c4e6632f7df6487a1f181f5f46a052d3c917c3d11"},
+    {file = "cloudpickle-2.0.0.tar.gz", hash = "sha256:5cd02f3b417a783ba84a4ec3e290ff7929009fe51f6405423cfccfadd43ba4a4"},
 ]
-cluster-tools = [
-    {file = "cluster_tools-1.61.tar.gz", hash = "sha256:b6824087406e7ba96555c6ed86f510d23989cbff0948654bf9d7a98c9a2811da"},
-]
+cluster-tools = []
 colorama = [
     {file = "colorama-0.4.4-py2.py3-none-any.whl", hash = "sha256:9f47eda37229f68eee03b24b9748937c7dc3868f906e8ba69fbcbdd3bc5dc3e2"},
     {file = "colorama-0.4.4.tar.gz", hash = "sha256:5941b2b48a20143d2267e95b1c2a7603ce057ee39fd88e7329b0c292aa16869b"},
