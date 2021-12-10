@@ -34,4 +34,4 @@ class Config:
     max_chunk_retries: int
     permanent_errors: Sequence[int]
     additional_query_params: Dict[str, Any]
-    generate_unique_identifier: Callable[[Path], str]
+    generate_unique_identifier: Callable[[Path, Path], str]
