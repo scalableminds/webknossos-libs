@@ -30,7 +30,7 @@ def _walk(
     if base_path is None:
         base_path = path
     if path.is_dir():
-        for p in Path(path).iterdir():
+        for p in path.iterdir():
             yield from _walk(p, base_path)
     else:
         yield (path.resolve(), path.relative_to(base_path), path.stat().st_size)
