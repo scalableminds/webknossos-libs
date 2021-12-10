@@ -1,3 +1,4 @@
+import os
 from functools import lru_cache
 from pathlib import Path
 from time import gmtime, strftime
@@ -67,7 +68,7 @@ def upload_dataset(dataset: Dataset) -> str:
     with Progress() as progress:
         with Resumable(
             f"{datastore_url}/data/datasets?token={datastore_token}",
-            simultaneous_uploads=5,
+            simultaneous_uploads=1 if "PYTEST_CURRENT_TEST" in os.environ else 5,
             query={
                 "owningOrganization": context.organization,
                 "name": dataset.name,
