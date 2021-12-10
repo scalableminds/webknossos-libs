@@ -561,7 +561,7 @@ class Layer:
         if self._properties.bounding_box.size.z == 1:
             if sampling_mode != SamplingModes.CONSTANT_Z:
                 warnings.warn(
-                    "The sampling_mode was changed to 'CONSTANT_Z'. Downsampling 2D data with a differnt sampling mode lead to darker images."
+                    "The sampling_mode was changed to 'CONSTANT_Z'. Downsampling 2D data with a different sampling mode mixes in black and thus leads to darkened images."
                 )
                 sampling_mode = SamplingModes.CONSTANT_Z
 
