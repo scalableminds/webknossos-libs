@@ -165,22 +165,6 @@ def read_image_file(
         raise exc
 
 
-def prepare_slices_for_wkw(
-    slices: List[np.ndarray], num_channels: Optional[int] = None
-) -> np.ndarray:
-    # Write batch buffer which will have shape (x, y, channel_count, z)
-    # since we concat along the last axis (z)
-    buffer = np.concatenate(slices, axis=-1)
-
-    # We transpose the data so that the first dimension is the channel,
-    # since the wkw library expects this.
-    # New shape will be (channel_count, x, y, z)
-    buffer = np.transpose(buffer, (2, 0, 1, 3))
-    if num_channels is not None:
-        assert buffer.shape[0] == num_channels
-    return buffer
-
-
 def cubing_job(
     args: Tuple[
         View,
@@ -191,6 +175,8 @@ def cubing_job(
         bool,
         Optional[int],
         Optional[int],
+        str,
+        int,
     ]
 ) -> Any:
     (
@@ -202,10 +188,14 @@ def cubing_job(
         pad,
         channel_index,
         sample_index,
+        dtype,
+        num_channels,
     ) = args
 
     downsampling_needed = target_mag != Mag(1)
     largest_value_in_chunk = 0  # This is used to compute the largest_segmentation_id if it is a segmentation layer
+
+    max_image_size = (target_view.size[0], target_view.size[1])
 
     # Iterate over batches of continuous z sections
     # The batches have a maximum size of `batch_size`
@@ -219,7 +209,15 @@ def cubing_job(
                     first_z_idx, first_z_idx + len(source_file_batch)
                 )
             )
-            slices = []
+
+            # Allocate a large buffer for all images in this batch
+            # Shape will be (channel_count, x, y, z)
+            # Using fortran order for the buffer, prevents that the data has to be copied in rust
+            buffer_shape = (
+                [num_channels] + list(max_image_size) + [len(source_file_batch)]
+            )
+            buffer = np.empty(buffer_shape, dtype=dtype, order="F")
+
             # Iterate over each z section in the batch
             for i, file_name in enumerate(source_file_batch):
                 z = first_z_idx + i
@@ -232,33 +230,26 @@ def cubing_job(
                     sample_index,
                 )
 
-                if not pad:
-                    assert (
-                        image.shape[0:2] == target_view.size[0:2]
-                    ), "Section z={} has the wrong dimensions: {} (expected {}). Consider using --pad.".format(
-                        z, image.shape, target_view.size[0:2]
-                    )
-                slices.append(image)
-
-            if pad:
-                x_max = target_view.size[0]
-                y_max = target_view.size[1]
-
-                slices = [
-                    np.pad(
-                        _slice,
+                if pad:
+                    image = np.pad(
+                        image,
                         mode="constant",
                         pad_width=[
-                            (0, x_max - _slice.shape[0]),
-                            (0, y_max - _slice.shape[1]),
+                            (0, max_image_size[0] - image.shape[0]),
+                            (0, max_image_size[1] - image.shape[1]),
                             (0, 0),
                             (0, 0),
                         ],
                     )
-                    for _slice in slices
-                ]
+                else:
+                    assert (
+                        image.shape[0:2] == max_image_size
+                    ), "Section z={} has the wrong dimensions: {} (expected {}). Consider using --pad.".format(
+                        z, image.shape, max_image_size
+                    )
+                buffer[:, :, :, i] = image.transpose((2, 0, 1, 3))[:, :, :, 0]
+            del image
 
-            buffer = prepare_slices_for_wkw(slices, target_view.header.num_channels)
             if downsampling_needed:
                 buffer = downsample_unpadded_data(
                     buffer, target_mag, interpolation_mode
@@ -434,6 +425,8 @@ def cubing(
                     pad,
                     channel_index,
                     sample_index,
+                    dtype,
+                    target_layer.num_channels,
                 )
             )
 

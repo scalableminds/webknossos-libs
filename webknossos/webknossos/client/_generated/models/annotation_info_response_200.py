@@ -2,6 +2,9 @@ from typing import Any, Dict, List, Type, TypeVar, cast
 
 import attr
 
+from ..models.annotation_info_response_200_annotation_layers_item import (
+    AnnotationInfoResponse200AnnotationLayersItem,
+)
 from ..models.annotation_info_response_200_data_store import (
     AnnotationInfoResponse200DataStore,
 )
@@ -12,9 +15,6 @@ from ..models.annotation_info_response_200_settings import (
     AnnotationInfoResponse200Settings,
 )
 from ..models.annotation_info_response_200_stats import AnnotationInfoResponse200Stats
-from ..models.annotation_info_response_200_tracing import (
-    AnnotationInfoResponse200Tracing,
-)
 from ..models.annotation_info_response_200_tracing_store import (
     AnnotationInfoResponse200TracingStore,
 )
@@ -37,7 +37,7 @@ class AnnotationInfoResponse200:
     stats: AnnotationInfoResponse200Stats
     restrictions: AnnotationInfoResponse200Restrictions
     formatted_hash: str
-    tracing: AnnotationInfoResponse200Tracing
+    annotation_layers: List[AnnotationInfoResponse200AnnotationLayersItem]
     data_set_name: str
     organization: str
     data_store: AnnotationInfoResponse200DataStore
@@ -63,7 +63,11 @@ class AnnotationInfoResponse200:
         restrictions = self.restrictions.to_dict()
 
         formatted_hash = self.formatted_hash
-        tracing = self.tracing.to_dict()
+        annotation_layers = []
+        for annotation_layers_item_data in self.annotation_layers:
+            annotation_layers_item = annotation_layers_item_data.to_dict()
+
+            annotation_layers.append(annotation_layers_item)
 
         data_set_name = self.data_set_name
         organization = self.organization
@@ -99,7 +103,7 @@ class AnnotationInfoResponse200:
                 "stats": stats,
                 "restrictions": restrictions,
                 "formattedHash": formatted_hash,
-                "tracing": tracing,
+                "annotationLayers": annotation_layers,
                 "dataSetName": data_set_name,
                 "organization": organization,
                 "dataStore": data_store,
@@ -140,7 +144,16 @@ class AnnotationInfoResponse200:
 
         formatted_hash = d.pop("formattedHash")
 
-        tracing = AnnotationInfoResponse200Tracing.from_dict(d.pop("tracing"))
+        annotation_layers = []
+        _annotation_layers = d.pop("annotationLayers")
+        for annotation_layers_item_data in _annotation_layers:
+            annotation_layers_item = (
+                AnnotationInfoResponse200AnnotationLayersItem.from_dict(
+                    annotation_layers_item_data
+                )
+            )
+
+            annotation_layers.append(annotation_layers_item)
 
         data_set_name = d.pop("dataSetName")
 
@@ -180,7 +193,7 @@ class AnnotationInfoResponse200:
             stats=stats,
             restrictions=restrictions,
             formatted_hash=formatted_hash,
-            tracing=tracing,
+            annotation_layers=annotation_layers,
             data_set_name=data_set_name,
             organization=organization,
             data_store=data_store,

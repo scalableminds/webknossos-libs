@@ -18,6 +18,12 @@ COPY webknossos/poetry.lock /webknossos/
 COPY webknossos/pyproject.toml /webknossos/
 COPY webknossos/README.md /webknossos/
 
+RUN mkdir /cluster_tools
+COPY cluster_tools/cluster_tools /cluster_tools/cluster_tools
+COPY cluster_tools/poetry.lock /cluster_tools/
+COPY cluster_tools/pyproject.toml /cluster_tools/
+COPY cluster_tools/README.md /cluster_tools/
+
 RUN poetry config virtualenvs.create false --local
 RUN poetry install --no-dev
 

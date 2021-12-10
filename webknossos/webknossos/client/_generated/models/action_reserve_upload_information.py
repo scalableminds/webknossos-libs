@@ -2,46 +2,30 @@ from typing import Any, Dict, List, Type, TypeVar
 
 import attr
 
-T = TypeVar("T", bound="AnnotationInfoResponse200Tracing")
+T = TypeVar("T", bound="ActionReserveUploadInformation")
 
 
 @attr.s(auto_attribs=True)
-class AnnotationInfoResponse200Tracing:
+class ActionReserveUploadInformation:
     """ """
 
-    skeleton: str
-    volume: str
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        skeleton = self.skeleton
-        volume = self.volume
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update(
-            {
-                "skeleton": skeleton,
-                "volume": volume,
-            }
-        )
+        field_dict.update({})
 
         return field_dict
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        skeleton = d.pop("skeleton")
+        action_reserve_upload_information = cls()
 
-        volume = d.pop("volume")
-
-        annotation_info_response_200_tracing = cls(
-            skeleton=skeleton,
-            volume=volume,
-        )
-
-        annotation_info_response_200_tracing.additional_properties = d
-        return annotation_info_response_200_tracing
+        action_reserve_upload_information.additional_properties = d
+        return action_reserve_upload_information
 
     @property
     def additional_keys(self) -> List[str]:
