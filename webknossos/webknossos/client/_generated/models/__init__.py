@@ -5,8 +5,12 @@ from .action_any_content import ActionAnyContent
 from .action_multipart_form_data_temporary_file import (
     ActionMultipartFormDataTemporaryFile,
 )
+from .action_reserve_upload_information import ActionReserveUploadInformation
 from .action_upload_information import ActionUploadInformation
 from .annotation_info_response_200 import AnnotationInfoResponse200
+from .annotation_info_response_200_annotation_layers_item import (
+    AnnotationInfoResponse200AnnotationLayersItem,
+)
 from .annotation_info_response_200_data_store import AnnotationInfoResponse200DataStore
 from .annotation_info_response_200_restrictions import (
     AnnotationInfoResponse200Restrictions,
@@ -16,7 +20,6 @@ from .annotation_info_response_200_settings_resolution_restrictions import (
     AnnotationInfoResponse200SettingsResolutionRestrictions,
 )
 from .annotation_info_response_200_stats import AnnotationInfoResponse200Stats
-from .annotation_info_response_200_tracing import AnnotationInfoResponse200Tracing
 from .annotation_info_response_200_tracing_store import (
     AnnotationInfoResponse200TracingStore,
 )

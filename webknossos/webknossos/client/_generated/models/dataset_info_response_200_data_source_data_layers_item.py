@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Type, TypeVar, cast
+from typing import Any, Dict, List, Type, TypeVar, Union, cast
 
 import attr
 
@@ -8,6 +8,7 @@ from ..models.dataset_info_response_200_data_source_data_layers_item_admin_view_
 from ..models.dataset_info_response_200_data_source_data_layers_item_bounding_box import (
     DatasetInfoResponse200DataSourceDataLayersItemBoundingBox,
 )
+from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="DatasetInfoResponse200DataSourceDataLayersItem")
 
@@ -21,7 +22,9 @@ class DatasetInfoResponse200DataSourceDataLayersItem:
     bounding_box: DatasetInfoResponse200DataSourceDataLayersItemBoundingBox
     resolutions: List[List[int]]
     element_class: str
-    admin_view_configuration: DatasetInfoResponse200DataSourceDataLayersItemAdminViewConfiguration
+    admin_view_configuration: Union[
+        Unset, DatasetInfoResponse200DataSourceDataLayersItemAdminViewConfiguration
+    ] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -36,7 +39,9 @@ class DatasetInfoResponse200DataSourceDataLayersItem:
             resolutions.append(resolutions_item)
 
         element_class = self.element_class
-        admin_view_configuration = self.admin_view_configuration.to_dict()
+        admin_view_configuration: Union[Unset, Dict[str, Any]] = UNSET
+        if not isinstance(self.admin_view_configuration, Unset):
+            admin_view_configuration = self.admin_view_configuration.to_dict()
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -47,9 +52,10 @@ class DatasetInfoResponse200DataSourceDataLayersItem:
                 "boundingBox": bounding_box,
                 "resolutions": resolutions,
                 "elementClass": element_class,
-                "adminViewConfiguration": admin_view_configuration,
             }
         )
+        if admin_view_configuration is not UNSET:
+            field_dict["adminViewConfiguration"] = admin_view_configuration
 
         return field_dict
 
@@ -75,9 +81,16 @@ class DatasetInfoResponse200DataSourceDataLayersItem:
 
         element_class = d.pop("elementClass")
 
-        admin_view_configuration = DatasetInfoResponse200DataSourceDataLayersItemAdminViewConfiguration.from_dict(
-            d.pop("adminViewConfiguration")
-        )
+        _admin_view_configuration = d.pop("adminViewConfiguration", UNSET)
+        admin_view_configuration: Union[
+            Unset, DatasetInfoResponse200DataSourceDataLayersItemAdminViewConfiguration
+        ]
+        if isinstance(_admin_view_configuration, Unset):
+            admin_view_configuration = UNSET
+        else:
+            admin_view_configuration = DatasetInfoResponse200DataSourceDataLayersItemAdminViewConfiguration.from_dict(
+                _admin_view_configuration
+            )
 
         dataset_info_response_200_data_source_data_layers_item = cls(
             name=name,
