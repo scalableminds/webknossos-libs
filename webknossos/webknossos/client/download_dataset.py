@@ -40,7 +40,7 @@ def download_dataset(
     assert parsed is not None
 
     datastore_client = _get_context().get_generated_datastore_client(
-        parsed.data_store.url
+        parsed.data_store.url, enforce_auth=True
     )
 
     actual_path = Path(dataset_name) if path is None else Path(path)

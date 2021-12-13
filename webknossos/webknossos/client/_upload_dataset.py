@@ -8,7 +8,15 @@ from uuid import uuid4
 import httpx
 from rich.progress import Progress
 
+from webknossos.client._generated.api.datastore import (
+    dataset_finish_upload,
+    dataset_reserve_upload,
+)
 from webknossos.client._generated.api.default import datastore_list
+from webknossos.client._generated.models import (
+    DatasetFinishUploadJsonBody,
+    DatasetReserveUploadJsonBody,
+)
 from webknossos.client._resumable import Resumable
 from webknossos.client.context import _get_context, _WebknossosContext
 from webknossos.dataset import Dataset
@@ -46,25 +54,25 @@ def upload_dataset(dataset: Dataset) -> str:
     upload_id = f"{time_str}__{uuid4()}"
     datastore_token = context.datastore_token
     datastore_url = _cached_get_upload_datastore(context)
+    datastore_client = _get_context().get_generated_datastore_client(datastore_url)
     for _ in range(5):
-        try:
-            httpx.post(
-                f"{datastore_url}/data/datasets/reserveUpload?token={datastore_token}",
-                params={"token": datastore_token},
-                json={
+        response = dataset_reserve_upload.sync_detailed(
+            client=datastore_client,
+            token=datastore_token,
+            json_body=DatasetReserveUploadJsonBody.from_dict(
+                {
                     "uploadId": upload_id,
                     "organization": context.organization,
                     "name": dataset.name,
                     "totalFileCount": len(file_infos),
                     "initialTeams": [],
-                },
-                timeout=60,
-            ).raise_for_status()
+                }
+            ),
+        )
+        if response.status_code == 200:
             break
-        except httpx.HTTPStatusError as e:
-            http_error = e
     else:
-        raise http_error
+        assert response.status_code == 200, response
     with Progress() as progress:
         with Resumable(
             f"{datastore_url}/data/datasets?token={datastore_token}",
@@ -87,22 +95,21 @@ def upload_dataset(dataset: Dataset) -> str:
                     lambda chunk: progress.advance(progress_task, chunk.size)
                 )
     for _ in range(5):
-        try:
-            httpx.post(
-                f"{datastore_url}/data/datasets/finishUpload?token={datastore_token}",
-                params={"token": datastore_token},
-                json={
+        response = dataset_finish_upload.sync_detailed(
+            client=datastore_client.with_timeout(None),  # type: ignore[arg-type]
+            token=datastore_token,
+            json_body=DatasetFinishUploadJsonBody.from_dict(
+                {
                     "uploadId": upload_id,
                     "organization": context.organization,
                     "name": dataset.name,
                     "needsConversion": False,
-                },
-                timeout=None,
-            ).raise_for_status()
+                }
+            ),
+        )
+        if response.status_code == 200:
             break
-        except httpx.HTTPStatusError as e:
-            http_error = e
     else:
-        raise http_error
+        assert response.status_code == 200, response
 
     return f"{context.url}/datasets/{context.organization}/{dataset.name}/view"
