@@ -328,9 +328,7 @@ def test_default_parameter() -> None:
 
 
 def test_default_anisotropic_scale() -> None:
-    ds = Dataset(
-        TESTOUTPUT_DIR / "default_anisotropic_scale", scale=(85, 85, 346)
-    )
+    ds = Dataset(TESTOUTPUT_DIR / "default_anisotropic_scale", scale=(85, 85, 346))
     layer = ds.add_layer("color", COLOR_CATEGORY)
     mag = layer.add_mag(1)
     mag.write(data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8))
