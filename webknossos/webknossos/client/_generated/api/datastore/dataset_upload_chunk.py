@@ -1,25 +1,32 @@
-from typing import Any, Dict
+from typing import Any, Dict, Union
 
 import httpx
 
 from ...client import Client
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
     client: Client,
+    token: Union[Unset, None, str] = UNSET,
 ) -> Dict[str, Any]:
     url = "{}/data/datasets".format(client.base_url)
 
     headers: Dict[str, Any] = client.get_headers()
     cookies: Dict[str, Any] = client.get_cookies()
 
+    params: Dict[str, Any] = {
+        "token": token,
+    }
+    params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
+
     return {
         "url": url,
         "headers": headers,
         "cookies": cookies,
         "timeout": client.get_timeout(),
+        "params": params,
     }
 
 
@@ -35,9 +42,11 @@ def _build_response(*, response: httpx.Response) -> Response[Any]:
 def sync_detailed(
     *,
     client: Client,
+    token: Union[Unset, None, str] = UNSET,
 ) -> Response[Any]:
     kwargs = _get_kwargs(
         client=client,
+        token=token,
     )
 
     response = httpx.post(
@@ -50,9 +59,11 @@ def sync_detailed(
 async def asyncio_detailed(
     *,
     client: Client,
+    token: Union[Unset, None, str] = UNSET,
 ) -> Response[Any]:
     kwargs = _get_kwargs(
         client=client,
+        token=token,
     )
 
     async with httpx.AsyncClient() as _client:
