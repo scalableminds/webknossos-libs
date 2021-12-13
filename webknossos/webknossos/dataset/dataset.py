@@ -17,7 +17,7 @@ import wkw
 from webknossos.dataset._utils.infer_bounding_box_existing_files import (
     infer_bounding_box_existing_files,
 )
-from webknossos.geometry import BoundingBox, Vec3Int
+from webknossos.geometry import BoundingBox, Mag, Vec3Int
 from webknossos.utils import copy_directory_with_symlinks, get_executor_for_args
 
 from .layer import (
@@ -172,6 +172,22 @@ class Dataset:
         )
 
         return cls(dataset_path)
+
+    @classmethod
+    def download(
+        cls,
+        dataset_name: str,
+        organization_name: str,
+        bbox: Optional[BoundingBox] = None,
+        layers: Optional[List[str]] = None,
+        mags: Optional[List[Mag]] = None,
+        path: Optional[Union[PathLike, str]] = None,
+    ) -> "Dataset":
+        from webknossos.client._download_dataset import download_dataset
+
+        return download_dataset(
+            dataset_name, organization_name, bbox, layers, mags, path
+        )
 
     @property
     def layers(self) -> Dict[str, Layer]:

@@ -72,6 +72,7 @@ nav:
       - webknossos-py/examples/skeleton_synapse_candidates.md
       - webknossos-py/examples/user_times.md
   - API Reference:
+    - Overview: api/webknossos.md
     - Geometry:
       - BoundingBox: api/webknossos/geometry/bounding_box.md
       - Mag: api/webknossos/geometry/mag.md
@@ -87,9 +88,9 @@ nav:
       - Graph: api/webknossos/skeleton/graph.md
       - Node: api/webknossos/skeleton/node.md
     - Annotation: api/webknossos/annotation/annotation.md
-    - Client:
-      - Overview: api/webknossos/client.md
-      - Authentication & Server Context: api/webknossos/client/context.md
+    - Authentication & Server Context: api/webknossos/client/context.md
+    - Admin Resources:
+      - User: api/webknossos/client/user.md
 - wkcuber CLI: wkcuber/index.md
 
 plugins:
