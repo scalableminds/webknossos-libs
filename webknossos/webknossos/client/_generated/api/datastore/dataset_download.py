@@ -12,6 +12,7 @@ def _get_kwargs(
     data_layer_name: str,
     *,
     client: Client,
+    token: Union[Unset, None, str] = UNSET,
     x: int,
     y: int,
     z: int,
@@ -32,6 +33,7 @@ def _get_kwargs(
     cookies: Dict[str, Any] = client.get_cookies()
 
     params: Dict[str, Any] = {
+        "token": token,
         "x": x,
         "y": y,
         "z": z,
@@ -67,6 +69,7 @@ def sync_detailed(
     data_layer_name: str,
     *,
     client: Client,
+    token: Union[Unset, None, str] = UNSET,
     x: int,
     y: int,
     z: int,
@@ -81,6 +84,7 @@ def sync_detailed(
         data_set_name=data_set_name,
         data_layer_name=data_layer_name,
         client=client,
+        token=token,
         x=x,
         y=y,
         z=z,
@@ -104,6 +108,7 @@ async def asyncio_detailed(
     data_layer_name: str,
     *,
     client: Client,
+    token: Union[Unset, None, str] = UNSET,
     x: int,
     y: int,
     z: int,
@@ -118,6 +123,7 @@ async def asyncio_detailed(
         data_set_name=data_set_name,
         data_layer_name=data_layer_name,
         client=client,
+        token=token,
         x=x,
         y=y,
         z=z,

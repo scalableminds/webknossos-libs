@@ -1,3 +1,5 @@
+#! /usr/bin/env -S poetry run python
+
 import calendar
 import json
 from datetime import datetime
@@ -17,7 +19,7 @@ from openapi_python_client import (
 from webknossos.client.context import _get_generated_client
 from webknossos.utils import snake_to_camel_case
 
-SCHEMA_URL = "https://converter.swagger.io/api/convert?url=https%3A%2F%2Fwebknossos.org%2Fswagger.json"
+SCHEMA_URL = "https://converter.swagger.io/api/convert?url=https%3A%2F%2Fmaster.webknossos.xyz%2Fswagger.json"
 
 
 def assert_valid_schema(openapi_schema: Dict) -> None:
@@ -27,7 +29,8 @@ def assert_valid_schema(openapi_schema: Dict) -> None:
 def generate_client(openapi_schema: Dict) -> None:
     assert_valid_schema(openapi_schema)
     with NamedTemporaryFile("w", suffix=".json") as schema_file:
-        schema_file.write(json.dumps(openapi_schema))
+        json.dump(openapi_schema, schema_file)
+        schema_file.flush()
         generator_config = Config(
             project_name_override="webknossos/client/_generated",
             package_name_override=".",
@@ -134,7 +137,11 @@ def make_properties_required(x: Any) -> None:
         properties = x["properties"]
         if isinstance(properties, dict) and len(properties) > 0:
             assert "required" not in x
-            x["required"] = list(properties.keys())
+            x["required"] = list(
+                property
+                for property in properties.keys()
+                if property not in FIELDS_WITH_VARYING_CONTENT
+            )
 
 
 def set_response_schema_by_example(
@@ -165,6 +172,16 @@ def set_response_schema_by_example(
     request_schema["responses"]["200"]["content"] = recorded_response_schema
 
 
+def fix_request_body(openapi_schema: Dict) -> None:
+    assert_valid_schema(openapi_schema)
+    for path_val in openapi_schema["paths"].values():
+        for method_val in path_val.values():
+            if "requestBody" in method_val:
+                method_val["requestBody"]["content"] = {
+                    "application/json": {"schema": {"type": "object"}}
+                }
+
+
 def bootstrap_response_schemas(openapi_schema: Dict) -> None:
     """Inserts the response schemas into openapi_schema (in-place),
     as recorded by example requests."""
@@ -181,5 +198,6 @@ if __name__ == "__main__":
     schema = json.loads(response.text)
     add_api_prefix_for_non_data_paths(schema)
     generate_client(schema)
+    fix_request_body(schema)
     bootstrap_response_schemas(schema)
     generate_client(schema)
