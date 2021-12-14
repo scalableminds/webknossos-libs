@@ -355,7 +355,7 @@ jobs:
     - name: Check links (on master)
       if: github.ref == 'refs/heads/master'
       env: # Or as an environment variable
-        SLACK_HOOK: ${{ secrets.link-checker-slack-hook }}
+        SLACK_HOOK: ${{ secrets.LINK_CHECKER_SLACK_HOOK }}
       run: |
         cd docs
         poetry run linkchecker https://docs.webknossos.org > link_status || \
