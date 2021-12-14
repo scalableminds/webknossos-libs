@@ -72,8 +72,8 @@ class Dataset:
     ) -> None:
         """
         Creates a new dataset and the associated `datasource-properties.json`.
-        Can also be used to open or create an existing dataset if unsure. The scale and name have to match in this case.
-        Please use `Dataset.open` to open an existing dataset.
+        If the dataset already exists, it is opened (the provided scale and name are asserted to match the existing dataset).
+        Please use `Dataset.open` if you intend to open an existing dataset and don't want/need the creation behavior.
         """
         dataset_path = Path(dataset_path)
 
@@ -100,7 +100,7 @@ class Dataset:
             # Write empty properties to disk
             assert (
                 scale is not None
-            ), "When creating a new dataset scale must be give, e.g. as Dataset.open(path, scale=(10, 10, 16.8))"
+            ), "When creating a new dataset, the scale must be given, e.g. as Dataset(path, scale=(10, 10, 16.8))"
             name = name or basename(normpath(dataset_path))
             dataset_properties = DatasetProperties(
                 id={"name": name, "team": ""}, scale=scale, data_layers=[]
@@ -152,9 +152,9 @@ class Dataset:
     def open(cls, dataset_path: Union[str, PathLike]) -> "Dataset":
         """
         To open an existing dataset on disk, simply call `Dataset.open("your_path")`.
-        This requires that `datasource-properties.json` exists in this folder. Based on the `datasource-properties.json`,
+        This requires `datasource-properties.json` to exist in this folder. Based on the `datasource-properties.json`,
         a dataset object is constructed. Only layers and magnifications that are listed in the properties are loaded
-        (even though there might exists more layer or magnifications on disk).
+        (even though there might exist more layers or magnifications on disk).
 
         The `dataset_path` refers to the top level directory of the dataset (excluding layer or magnification names).
         """
@@ -726,10 +726,10 @@ class Dataset:
         name: Optional[str] = None,
     ) -> "Dataset":
         """
-        **Deprecated**, please use the constructor `Dataset.open()` instead.
+        **Deprecated**, please use the constructor `Dataset()` instead.
         """
         warnings.warn(
-            "[DEPRECATION] Dataset() is deprecated in favor of the normal constructor Dataset.open()."
+            "[DEPRECATION] Dataset.create() is deprecated in favor of the normal constructor Dataset()."
         )
         return cls(dataset_path, scale, name)
 
@@ -741,15 +741,15 @@ class Dataset:
         name: Optional[str] = None,
     ) -> "Dataset":
         """
-        **Deprecated**, please use the constructor `Dataset.open()` instead.
+        **Deprecated**, please use the constructor `Dataset()` instead.
         """
         warnings.warn(
-            "[DEPRECATION] Dataset() is deprecated in favor of the normal constructor Dataset.open()."
+            "[DEPRECATION] Dataset.get_or_create() is deprecated in favor of the normal constructor Dataset()."
         )
         return cls(dataset_path, scale, name)
 
     def __repr__(self) -> str:
-        return repr("Dataset.open(%s)" % self.path)
+        return repr("Dataset(%s)" % self.path)
 
     def _export_as_json(self) -> None:
         with open(self.path / PROPERTIES_FILE_NAME, "w", encoding="utf-8") as outfile:
