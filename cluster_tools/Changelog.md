@@ -10,7 +10,6 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.28...HEAD)
 
 ### Breaking Changes
-- To download datasets, a recent webknossos server version is necessary (>= 21.12.0). webknossos.org is unaffected. [#510](https://github.com/scalableminds/webknossos-libs/pull/510)
 
 ### Added
 
