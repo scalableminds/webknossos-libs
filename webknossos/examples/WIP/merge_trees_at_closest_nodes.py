@@ -6,7 +6,7 @@ import networkx as nx
 
 import webknossos as wk
 
-nml = wk.open_nml("trees-in-groups.nml")
+nml = wk.Skeleton.load("trees-in-groups.nml")
 
 # Probably we want to keep groups and normal trees in distinct collections (groups/trees).
 # For many use-cases a common view groups_and_trees would be great, but not here:

@@ -13,7 +13,7 @@ import webknossos as wk
 def main() -> None:
     # We are going to use a public demo annotation for this example
 
-    annotation = wk.open_annotation(
+    annotation = wk.Annotation.download(
         "https://webknossos.org/annotations/Explorational/616457c2010000870032ced4"
     )
 

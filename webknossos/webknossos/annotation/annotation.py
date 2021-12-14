@@ -10,7 +10,7 @@ from boltons.cacheutils import cachedproperty
 
 from webknossos.client.context import _get_context
 from webknossos.dataset import Dataset, Layer, SegmentationLayer
-from webknossos.skeleton import Skeleton, open_nml
+from webknossos.skeleton import Skeleton
 
 MAG_RE = r"((\d+-\d+-)?\d+)"
 SEP_RE = r"(\/|\\)"
@@ -50,7 +50,7 @@ class Annotation:
     def skeleton(self) -> Skeleton:
         nml_files = [i for i in self._filelist if i.endswith(".nml")]
         assert len(nml_files) == 1
-        return open_nml(_ZipPath(self._zipfile, nml_files[0]))
+        return Skeleton.load(_ZipPath(self._zipfile, nml_files[0]))
 
     @cachedproperty
     def dataset_name(self) -> str:
@@ -86,18 +86,19 @@ class Annotation:
         layer.largest_segment_id = int(min_mag_view.read().max())
         return layer
 
-
-def open_annotation(annotation_path: Union[str, PathLike]) -> "Annotation":
-    if Path(annotation_path).exists():
+    @classmethod
+    def load(cls, annotation_path: Union[str, PathLike]) -> "Annotation":
+        assert Path(
+            annotation_path
+        ).exists(), f"Annotation path {annotation_path} does not exist."
         return Annotation(annotation_path)
-    else:
-        assert isinstance(
-            annotation_path, str
-        ), f"Called open_annotation with a path-like, but {annotation_path} does not exist."
+
+    @classmethod
+    def download(cls, annotation_path: str) -> "Annotation":
         match = re.match(annotation_url_regex, annotation_path)
         assert (
             match is not None
-        ), "open_annotation() must be called with a path or an annotation url, e.g. https://webknossos.org/annotations/Explorational/6114d9410100009f0096c640"
+        ), "Annotation.download() must be called an annotation url, e.g. https://webknossos.org/annotations/Explorational/6114d9410100009f0096c640"
         webknossos_url, annotation_type_str, annotation_id = match.groups()
         annotation_type = AnnotationType(annotation_type_str)
         assert webknossos_url == _get_context().url, (
