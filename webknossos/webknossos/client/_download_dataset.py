@@ -28,6 +28,7 @@ def download_dataset(
     layers: Optional[List[str]] = None,
     mags: Optional[List[Mag]] = None,
     path: Optional[Union[PathLike, str]] = None,
+    exist_ok: bool = False,
 ) -> Dataset:
     client = _get_generated_client()
     dataset_info_response = dataset_info.sync_detailed(
@@ -50,7 +51,7 @@ def download_dataset(
 
     scale = cast(Tuple[float, float, float], tuple(parsed.data_source.scale))
     data_layers = parsed.data_source.data_layers
-    dataset = Dataset(actual_path, name=parsed.name, scale=scale)
+    dataset = Dataset(actual_path, name=parsed.name, scale=scale, exist_ok=exist_ok)
     for layer_name in layers or [i.name for i in data_layers]:
 
         response_layers = [i for i in data_layers if i.name == layer_name]
