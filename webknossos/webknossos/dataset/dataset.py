@@ -54,6 +54,10 @@ def _copy_job(args: Tuple[View, View, int]) -> None:
 
 _UNSET = make_sentinel("UNSET", var_name="_UNSET")
 
+_UNSPECIFIED_SCALE_FROM_OPEN = make_sentinel(
+    "_UNSPECIFIED_SCALE_FROM_OPEN", var_name="_UNSPECIFIED_SCALE_FROM_OPEN"
+)
+
 
 class Dataset:
     """
@@ -161,6 +165,8 @@ class Dataset:
                     "[DEPRECATION] Please always supply the scale when using the constructor Dataset(your_path, scale=your_scale)."
                     + "If you just want to open an existing dataset, please use Dataset.open(your_path)."
                 )
+            elif scale == _UNSPECIFIED_SCALE_FROM_OPEN:
+                pass
             else:
                 assert self.scale == tuple(
                     scale
@@ -193,7 +199,7 @@ class Dataset:
             f"Cannot open Dataset: Could not find {dataset_path / PROPERTIES_FILE_NAME}"
         )
 
-        return cls(dataset_path, exist_ok=True)
+        return cls(dataset_path, scale=_UNSPECIFIED_SCALE_FROM_OPEN, exist_ok=True)
 
     @classmethod
     def download(
