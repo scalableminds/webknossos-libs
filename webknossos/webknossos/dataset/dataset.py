@@ -193,7 +193,7 @@ class Dataset:
             f"Cannot open Dataset: Could not find {dataset_path / PROPERTIES_FILE_NAME}"
         )
 
-        return cls(dataset_path)
+        return cls(dataset_path, exist_ok=True)
 
     @classmethod
     def download(
@@ -767,9 +767,9 @@ class Dataset:
         **Deprecated**, please use the constructor `Dataset()` instead.
         """
         warnings.warn(
-            "[DEPRECATION] Dataset.get_or_create() is deprecated in favor of the normal constructor Dataset()."
+            "[DEPRECATION] Dataset.get_or_create() is deprecated in favor of the normal constructor Dataset(…, exist_ok=True)."
         )
-        return cls(dataset_path, scale, name)
+        return cls(dataset_path, scale, name, exist_ok=True)
 
     def __repr__(self) -> str:
         return repr("Dataset(%s)" % self.path)

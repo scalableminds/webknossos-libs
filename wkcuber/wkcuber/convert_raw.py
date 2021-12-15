@@ -167,7 +167,7 @@ def convert_raw(
 
     if scale is None:
         scale = 1.0, 1.0, 1.0
-    wk_ds = Dataset(target_path, scale=scale)
+    wk_ds = Dataset(target_path, scale=scale, exist_ok=True)
     wk_layer = wk_ds.get_or_add_layer(
         layer_name,
         "color",

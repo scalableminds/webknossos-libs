@@ -65,7 +65,7 @@ def main() -> None:
     src_layer = src_dataset.get_layer(args.layer_name)
     src_mag = src_layer.get_mag("1")
 
-    dst_dataset = Dataset(args.target_path, args.scale)
+    dst_dataset = Dataset(args.target_path, args.scale, exist_ok=True)
     dst_layer = dst_dataset.add_layer(args.layer_name, "color")
     dst_layer.bounding_box = src_layer.bounding_box
 

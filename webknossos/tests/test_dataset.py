@@ -668,30 +668,30 @@ def test_typing_of_get_mag() -> None:
     assure_exported_properties(ds)
 
 
-def test_dataset_get_or_create() -> None:
-    ds_path = TESTOUTPUT_DIR / "wk_dataset_get_or_create"
+def test_dataset_exist_ok() -> None:
+    ds_path = TESTOUTPUT_DIR / "wk_dataset_exist_ok"
     delete_dir(ds_path)
 
     # dataset does not exists yet
-    ds1 = Dataset(ds_path, scale=(1, 1, 1))
+    ds1 = Dataset(ds_path, scale=(1, 1, 1), exist_ok=False)
     assert "color" not in ds1.layers.keys()
     ds1.add_layer("color", COLOR_CATEGORY)
     assert "color" in ds1.layers.keys()
 
     # dataset already exists
-    ds2 = Dataset(ds_path, scale=(1, 1, 1))
+    ds2 = Dataset(ds_path, scale=(1, 1, 1), exist_ok=True)
     assert "color" in ds2.layers.keys()
 
-    ds2 = Dataset(ds_path, scale=(1, 1, 1), name="wk_dataset_get_or_create")
+    ds2 = Dataset(ds_path, scale=(1, 1, 1), name="wk_dataset_exist_ok", exist_ok=True)
     assert "color" in ds2.layers.keys()
 
     with pytest.raises(AssertionError):
         # dataset already exists, but with a different scale
-        Dataset(ds_path, scale=(2, 2, 2))
+        Dataset(ds_path, scale=(2, 2, 2), exist_ok=True)
 
     with pytest.raises(AssertionError):
         # dataset already exists, but with a different name
-        Dataset(ds_path, scale=(1, 1, 1), name="some different name")
+        Dataset(ds_path, scale=(1, 1, 1), name="some different name", exist_ok=True)
 
     assure_exported_properties(ds1)
 
