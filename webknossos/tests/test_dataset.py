@@ -1720,19 +1720,17 @@ def test_get_largest_segment_id(tmp_path: Path) -> None:
 
 def test_get_or_add_layer_by_type(tmp_path: Path) -> None:
     ds = Dataset(tmp_path, scale=(1, 1, 1))
-    with pytest.raises(IndexError):
-        ds.get_segmentation_layer()  # fails
+    assert len(ds.get_segmentation_layers()) == 0
     _ = ds.add_layer(
         "segmentation", SEGMENTATION_CATEGORY, largest_segment_id=999
     )  # adds layer
-    _ = ds.get_segmentation_layer()  # works
+    assert len(ds.get_segmentation_layers()) == 1
     _ = ds.add_layer(
         "different_segmentation",
         SEGMENTATION_CATEGORY,
         largest_segment_id=999,
     )  # adds another layer
-    with pytest.raises(IndexError):
-        ds.get_segmentation_layer()  # fails
+    assert len(ds.get_segmentation_layers()) == 2
 
     with pytest.raises(IndexError):
         ds.get_color_layer()  # fails
