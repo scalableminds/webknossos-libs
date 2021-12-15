@@ -1,4 +1,5 @@
 import itertools
+import warnings
 from os import PathLike
 from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, Union
 
@@ -70,6 +71,19 @@ class Skeleton(Group):
         )
         with open(out_path, "wb") as f:
             wknml.write_nml(f, nml)
+
+    @staticmethod
+    def from_path(file_path: Union[Openable, PathLike, str]) -> "Skeleton":
+        warnings.warn(
+            "[DEPRECATION] Skeleton.from_path is deprecated, please use Skeleton.load instead."
+        )
+        return Skeleton.load(file_path)
+
+    def write(self, out_path: PathLike) -> None:
+        warnings.warn(
+            "[DEPRECATION] skeleton.write is deprecated, please use skeleton.save instead."
+        )
+        self.save(out_path)
 
     def _get_nml_parameters(self) -> Dict[str, Any]:
         return {

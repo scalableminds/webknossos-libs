@@ -1,4 +1,5 @@
 import re
+import warnings
 from enum import Enum, unique
 from os import PathLike
 from pathlib import Path
@@ -8,7 +9,6 @@ from zipfile import ZipFile
 from attr import dataclass
 from boltons.cacheutils import cachedproperty
 
-from webknossos.client.context import _get_context
 from webknossos.dataset import Dataset, Layer, SegmentationLayer
 from webknossos.skeleton import Skeleton
 
@@ -95,6 +95,8 @@ class Annotation:
 
     @classmethod
     def download(cls, annotation_path: str) -> "Annotation":
+        from webknossos.client.context import _get_context
+
         match = re.match(annotation_url_regex, annotation_path)
         assert (
             match is not None
@@ -122,3 +124,19 @@ class AnnotationType(Enum):
 annotation_url_regex = re.compile(
     fr"(https?://.*)/annotations/({'|'.join(i.value for i in AnnotationType.__members__.values())})/([0-9A-Fa-f]*)"
 )
+
+
+def open_annotation(annotation_path: Union[str, PathLike]) -> "Annotation":
+    if Path(annotation_path).exists():
+        warnings.warn(
+            "[DEPRECATION] open_annotation is deprecated, please use Annotation.load instead."
+        )
+        return Annotation.load(annotation_path)
+    else:
+        assert isinstance(
+            annotation_path, str
+        ), f"Called open_annotation with a path-like, but {annotation_path} does not exist."
+        warnings.warn(
+            "[DEPRECATION] open_annotation is deprecated, please use Annotation.download instead."
+        )
+        return Annotation.download(annotation_path)
