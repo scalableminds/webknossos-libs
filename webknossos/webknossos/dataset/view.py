@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, Optional, Tuple, Type, Un
 import cluster_tools
 import numpy as np
 from cluster_tools.schedulers.cluster_executor import ClusterExecutor
-from rich.progress import Progress
 from wkw import Dataset, wkw
 
 from webknossos.geometry import BoundingBox, Vec3Int, Vec3IntLike
