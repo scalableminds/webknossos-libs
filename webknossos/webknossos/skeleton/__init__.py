@@ -1,3 +1,4 @@
+import warnings
 from os import PathLike
 from typing import Union
 
@@ -9,4 +10,7 @@ from webknossos.skeleton.skeleton import Skeleton
 
 
 def open_nml(file_path: Union[Openable, PathLike, str]) -> Skeleton:
-    return Skeleton.from_path(file_path)
+    warnings.warn(
+        "[DEPRECATION] open_nml is deprecated, please use Skeleton.load instead."
+    )
+    return Skeleton.load(file_path)

@@ -352,6 +352,16 @@ jobs:
         CI_TAG=$(git describe --tags)
         aws s3 sync --acl public-read docs/out s3://static.webknossos.org/docs/${CI_TAG}
 
+    - name: Check links (on master)
+      if: github.ref == 'refs/heads/master'
+      env: # Or as an environment variable
+        SLACK_HOOK: ${{ secrets.LINK_CHECKER_SLACK_HOOK }}
+      run: |
+        cd docs
+        poetry run linkchecker https://docs.webknossos.org > link_status || \
+          curl -X POST --data-urlencode "payload={\"text\": \":warning: Broken Links on doc.webknossos.org :warning:\n"'```'"\n$(cat link_status)\n"'```"}' \
+            "$SLACK_HOOK"
+
 
   pypi:
     needs: [cluster_tools, webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac]

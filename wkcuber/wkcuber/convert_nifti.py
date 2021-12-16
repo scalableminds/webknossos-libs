@@ -206,8 +206,10 @@ def convert_nifti(
         ),
     )
 
-    wk_ds = Dataset.get_or_create(
-        target_path, scale=cast(Tuple[float, float, float], scale or (1, 1, 1))
+    wk_ds = Dataset(
+        target_path,
+        scale=cast(Tuple[float, float, float], scale or (1, 1, 1)),
+        exist_ok=True,
     )
     wk_layer = wk_ds.get_or_add_layer(
         layer_name,

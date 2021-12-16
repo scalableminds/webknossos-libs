@@ -10,7 +10,7 @@ def main() -> None:
     # Opening a dataset #
     #####################
 
-    dataset = wk.Dataset("testdata/simple_wk_dataset")
+    dataset = wk.Dataset.open("testdata/simple_wk_dataset")
     # Assuming that the dataset has a layer "color"
     # and the layer has the magnification 1
     layer = dataset.get_layer("color")
@@ -20,7 +20,7 @@ def main() -> None:
     # Creating a dataset #
     ######################
 
-    dataset = wk.Dataset.create("testoutput/my_new_dataset", scale=(1, 1, 1))
+    dataset = wk.Dataset("testoutput/my_new_dataset", scale=(1, 1, 1))
     layer = dataset.add_layer(
         layer_name="color", category="color", dtype_per_channel="uint8", num_channels=3
     )

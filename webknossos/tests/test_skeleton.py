@@ -124,7 +124,7 @@ def diff_files(path_a: PathLike, path_b: PathLike) -> None:
 def test_export_to_nml(tmp_path: Path) -> None:
     nml = create_dummy_skeleton()
     output_path = tmp_path / "out.nml"
-    nml.write(output_path)
+    nml.save(output_path)
 
     snapshot_path = TESTDATA_DIR / "nmls" / "generated_snapshot.nml"
 
@@ -146,13 +146,13 @@ def test_simple_initialization_and_representations(tmp_path: Path) -> None:
   <groups />
 </things>
 """
-    nml.write(nml_path)
+    nml.save(nml_path)
     with open(nml_path, "r", encoding="utf-8") as f:
         diff = diff_lines(f.readlines(), EXPECTED_NML.splitlines(keepends=True))
         assert (
             len(diff) == 0
         ), f"Written nml does not look as expected:\n{''.join(diff)}"
-    assert nml == wk.open_nml(nml_path)
+    assert nml == wk.Skeleton.load(nml_path)
     assert str(nml) == (
         "Skeleton(name='my_skeleton', _children=<No children>, scale=(0.5, 0.5, 0.5), offset=None, time=12345, "
         + "edit_position=None, edit_rotation=None, zoom_level=None, task_bounding_box=None, user_bounding_boxes=None)"
@@ -193,7 +193,7 @@ def test_simple_initialization_and_representations(tmp_path: Path) -> None:
   </groups>
 </things>
 """
-    nml.write(nml_path)
+    nml.save(nml_path)
     with open(nml_path, "r", encoding="utf-8") as f:
         diff = diff_lines(
             f.readlines(), EXPECTED_EXTENDED_NML.splitlines(keepends=True)
@@ -201,7 +201,7 @@ def test_simple_initialization_and_representations(tmp_path: Path) -> None:
         assert (
             len(diff) == 0
         ), f"Written nml does not look as expected:\n{''.join(diff)}"
-    assert nml == wk.open_nml(nml_path)
+    assert nml == wk.Skeleton.load(nml_path)
     assert str(nml) == (
         "Skeleton(name='my_skeleton', _children=<2 children>, scale=(0.5, 0.5, 0.5), offset=None, time=12345, "
         + "edit_position=None, edit_rotation=None, zoom_level=None, task_bounding_box=None, user_bounding_boxes=None)"
@@ -215,12 +215,12 @@ def test_simple_initialization_and_representations(tmp_path: Path) -> None:
 def test_import_export_round_trip(tmp_path: Path) -> None:
     snapshot_path = TESTDATA_DIR / "nmls" / "generated_snapshot.nml"
     export_path = tmp_path / "exported_in.nml"
-    nml = wk.open_nml(snapshot_path)
+    nml = wk.Skeleton.load(snapshot_path)
     assert nml.time == 1337
 
     g6 = nml.get_graph_by_id(6)
     assert g6.name == "Graph in Group"
     assert g6.get_node_by_id(7).position == (10.0, 3.0, 4.0)
 
-    nml.write(export_path)
+    nml.save(export_path)
     diff_files(snapshot_path, export_path)
