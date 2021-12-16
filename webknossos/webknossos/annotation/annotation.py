@@ -57,12 +57,17 @@ class Annotation:
         return self.skeleton.name
 
     def save_volume_annotation(
-        self, dataset: Dataset, layer_name: str = "volume_annotation"
+        self,
+        dataset: Dataset,
+        layer_name: str = "volume_annotation",
+        largest_segment_id: Optional[int] = None,
     ) -> Layer:
         # todo pylint: disable=fixme
         # the name is about to change with multiple volume annotations
-        assert "data.zip" in self._filelist
-        with self._zipfile.open("data.zip") as f:
+        # todo: the name is hard coded
+        data_archive_name = "data_Volume.zip"
+        assert data_archive_name in self._filelist
+        with self._zipfile.open(data_archive_name) as f:
             data_zip = ZipFile(f)
             wrong_files = [
                 i.filename
@@ -80,10 +85,13 @@ class Annotation:
             ),
         )
         min_mag_view = layer.mags[min(layer.mags)]
-        # todo pylint: disable=fixme
-        # this tries to read the entire DS into memory (beginning from 0, 0, 0).
-        # if the annotation begins at some other point, this will blow up the RAM unnecessarily.
-        layer.largest_segment_id = int(min_mag_view.read().max())
+        if largest_segment_id is None:
+            # todo pylint: disable=fixme
+            # this tries to read the entire DS into memory (beginning from 0, 0, 0).
+            # if the annotation begins at some other point, this will blow up the RAM unnecessarily.
+            layer.largest_segment_id = int(min_mag_view.read().max())
+        else:
+            layer.largest_segment_id = largest_segment_id
         return layer
 
     @classmethod
@@ -110,6 +118,11 @@ class Annotation:
         from webknossos.client._download_annotation import download_annotation
 
         return download_annotation(annotation_type, annotation_id)
+
+    def skeleton_binary(self) -> _ZipPath:
+        nml_files = [i for i in self._filelist if i.endswith(".nml")]
+        assert len(nml_files) == 1
+        return _ZipPath(self._zipfile, nml_files[0])
 
 
 @unique
