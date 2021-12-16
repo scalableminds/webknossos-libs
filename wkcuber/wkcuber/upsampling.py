@@ -108,7 +108,7 @@ def upsample_mags(
         from_mag = Mag(os.path.basename(path))
         path = path.parent.parent
 
-    Dataset(path).get_layer(layer_name).upsample(
+    Dataset.open(path).get_layer(layer_name).upsample(
         from_mag=from_mag,
         min_mag=target_mag,
         compress=compress,

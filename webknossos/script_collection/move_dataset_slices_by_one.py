@@ -61,11 +61,11 @@ def main() -> None:
 
     args = create_parser().parse_args()
 
-    src_dataset = Dataset(args.source_path)
+    src_dataset = Dataset.open(args.source_path)
     src_layer = src_dataset.get_layer(args.layer_name)
     src_mag = src_layer.get_mag("1")
 
-    dst_dataset = Dataset.get_or_create(args.target_path, args.scale)
+    dst_dataset = Dataset(args.target_path, args.scale, exist_ok=True)
     dst_layer = dst_dataset.add_layer(args.layer_name, "color")
     dst_layer.bounding_box = src_layer.bounding_box
 

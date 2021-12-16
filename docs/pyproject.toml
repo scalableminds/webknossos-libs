@@ -9,6 +9,7 @@ readme = "README.md"
 python = "^3.7"
 
 [tool.poetry.dev-dependencies]
+LinkChecker = "^10.0.1"
 mkdocs = "1.2.2"
 mkdocs-material = "^7.3.0"
 mkdocs-redirects = "^1.0.3"

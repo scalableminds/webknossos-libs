@@ -38,7 +38,7 @@ class NMLParameters(NamedTuple):
         editPosition (Optional[Vector3[float]]): The position of the wK camera when creating/downloading an annotation
         editRotation (Optional[Vector3[float]]): The rotation of the wK camera when creating/downloading an annotation
         zoomLevel (Optional[float]): The zoomLevel of the wK camera when creating/downloading an annotation
-        taskBoundingBox (Optional[IntVector6[int]]): A custom bounding box specified as part of a [wK task](https://docs.webknossos.org/guides/tasks). Will be rendered in wK.
+        taskBoundingBox (Optional[IntVector6[int]]): A custom bounding box specified as part of a [wK task](https://docs.webknossos.org/webknossos/tasks.html). Will be rendered in wK.
         userBoundingBoxes (Optional[List[IntVector6[int]]]): A list of custom user-defined bounding boxes. Will be rendered in wK.
     """
 

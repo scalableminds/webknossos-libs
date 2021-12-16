@@ -200,8 +200,8 @@ def temporary_annotation_view(volume_annotation_path: Path) -> Iterator[Layer]:
             Path(tmp_annotation_dir) / "tmp_annotation_dataset"
         )
 
-        input_annotation_dataset = wk.Dataset.get_or_create(
-            str(tmp_annotation_dataset_path), scale=(1, 1, 1)
+        input_annotation_dataset = wk.Dataset(
+            str(tmp_annotation_dataset_path), scale=(1, 1, 1), exist_ok=True
         )
 
         # Ideally, the following code would be used, but there are two problems:
@@ -236,7 +236,7 @@ def merge_with_fallback_layer(
     # Prepare output dataset by creatign a shallow copy of the dataset
     # determined by segmentation_layer_path, but do a deep copy of
     # segmentation_layer_path itself (so that we can mutate it).
-    input_segmentation_dataset = wk.Dataset(segmentation_layer_path.parent)
+    input_segmentation_dataset = wk.Dataset.open(segmentation_layer_path.parent)
     time_start("Prepare output dataset")
     output_dataset = input_segmentation_dataset.shallow_copy_dataset(
         output_path,

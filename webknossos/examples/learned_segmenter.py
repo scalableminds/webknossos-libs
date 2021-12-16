@@ -13,7 +13,7 @@ import webknossos as wk
 def main() -> None:
     # We are going to use a public demo annotation for this example
 
-    annotation = wk.open_annotation(
+    annotation = wk.Annotation.download(
         "https://webknossos.org/annotations/Explorational/616457c2010000870032ced4"
     )
 
@@ -23,7 +23,7 @@ def main() -> None:
     )
     time_str = strftime("%Y-%m-%d_%H-%M-%S", gmtime())
     new_dataset_name = annotation.dataset_name + f"_segmented_{time_str}"
-    dataset = wk.download_dataset(
+    dataset = wk.Dataset.download(
         annotation.dataset_name,
         organization_name="scalable_minds",
         path=new_dataset_name,
