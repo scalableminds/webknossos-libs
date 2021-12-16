@@ -1,5 +1,4 @@
 import logging
-import math
 import operator
 import os
 import re
@@ -673,11 +672,6 @@ class Layer:
 
         # perform downsampling
         with get_executor_for_args(args) as executor:
-            voxel_count_per_cube = np.prod(prev_mag_view._get_file_dimensions())
-            job_count_per_log = math.ceil(
-                1024 ** 3 / voxel_count_per_cube
-            )  # log every gigavoxel of processed data
-
             if buffer_edge_len is None:
                 buffer_edge_len = determine_buffer_edge_len(
                     prev_mag_view
@@ -687,7 +681,6 @@ class Layer:
                 mag_factors=mag_factors,
                 interpolation_mode=parsed_interpolation_mode,
                 buffer_edge_len=buffer_edge_len,
-                job_count_per_log=job_count_per_log,
             )
 
             source_view.for_zipped_chunks(
@@ -698,6 +691,7 @@ class Layer:
                 * mag_factors,
                 target_chunk_size=target_mag_view._get_file_dimensions(),
                 executor=executor,
+                progress_desc=f"Downsampling from Mag {from_mag} to Mag {target_mag}",
             )
 
         logging.info("Mag {0} successfully cubed".format(target_mag))
@@ -835,10 +829,6 @@ class Layer:
 
             # perform upsampling
             with get_executor_for_args(args) as executor:
-                voxel_count_per_cube = np.prod(prev_mag_view._get_file_dimensions())
-                job_count_per_log = math.ceil(
-                    1024 ** 3 / voxel_count_per_cube
-                )  # log every gigavoxel of processed data
 
                 if buffer_edge_len is None:
                     buffer_edge_len = determine_buffer_edge_len(
@@ -848,7 +838,6 @@ class Layer:
                     upsample_cube_job,
                     mag_factors=mag_factors,
                     buffer_edge_len=buffer_edge_len,
-                    job_count_per_log=job_count_per_log,
                 )
                 prev_mag_view.get_view().for_zipped_chunks(
                     # this view is restricted to the bounding box specified in the properties
@@ -858,6 +847,7 @@ class Layer:
                     target_chunk_size=target_mag_view._get_file_dimensions()
                     * np.array([int(1 / f) for f in mag_factors]),
                     executor=executor,
+                    progress_desc=f"Upsampling from Mag {prev_mag} to Mag {target_mag}",
                 )
 
             logging.info("Mag {0} successfully cubed".format(target_mag))

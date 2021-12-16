@@ -557,6 +557,7 @@ class Dataset:
                         source_chunk_size=target_mag._get_file_dimensions(),
                         target_chunk_size=target_mag._get_file_dimensions(),
                         executor=executor,
+                        progress_desc="Copying dataset",
                     )
         new_ds._export_as_json()
         return new_ds

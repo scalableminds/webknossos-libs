@@ -123,7 +123,6 @@ def downsample_test_helper(use_compress: bool) -> None:
         [2, 2, 2],
         InterpolationModes.MAX,
         128,
-        100,
     )
 
     assert np.any(source_buffer != 0)
@@ -176,7 +175,6 @@ def test_downsample_multi_channel() -> None:
         [2, 2, 2],
         InterpolationModes.MAX,
         CUBE_EDGE_LEN,
-        100,
     )
 
     channels = []

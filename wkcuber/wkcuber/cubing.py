@@ -1,4 +1,3 @@
-import time
 import logging
 from typing import List, Tuple, Optional, cast, Any
 
@@ -203,13 +202,6 @@ def cubing_job(
     first_z_idx = target_view.global_offset.z
     for source_file_batch in get_chunks(source_file_batches, batch_size):
         try:
-            ref_time = time.time()
-            logging.info(
-                "Cubing z={}-{}".format(
-                    first_z_idx, first_z_idx + len(source_file_batch)
-                )
-            )
-
             # Allocate a large buffer for all images in this batch
             # Shape will be (channel_count, x, y, z)
             # Using fortran order for the buffer, prevents that the data has to be copied in rust
@@ -259,13 +251,6 @@ def cubing_job(
             ) // target_mag.z
             target_view.write(offset=(0, 0, buffer_z_offset), data=buffer)
             largest_value_in_chunk = max(largest_value_in_chunk, np.max(buffer))
-            logging.debug(
-                "Cubing of z={}-{} took {:.8f}s".format(
-                    first_z_idx,
-                    first_z_idx + len(source_file_batch),
-                    time.time() - ref_time,
-                )
-            )
             first_z_idx += len(source_file_batch)
 
         except Exception as exc:
@@ -431,7 +416,8 @@ def cubing(
             )
 
         largest_segment_id_per_chunk = wait_and_ensure_success(
-            executor.map_to_futures(cubing_job, job_args)
+            executor.map_to_futures(cubing_job, job_args),
+            progress_desc=f"Cubing from {skip_first_z_slices} to {num_z}",
         )
         if is_segmentation_layer:
             largest_segment_id = max(largest_segment_id_per_chunk)

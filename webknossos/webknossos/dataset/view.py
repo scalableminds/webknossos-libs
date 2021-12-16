@@ -7,10 +7,11 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, Optional, Tuple, Type, Un
 import cluster_tools
 import numpy as np
 from cluster_tools.schedulers.cluster_executor import ClusterExecutor
+from rich.progress import Progress
 from wkw import Dataset, wkw
 
 from webknossos.geometry import BoundingBox, Vec3Int, Vec3IntLike
-from webknossos.utils import wait_and_ensure_success
+from webknossos.utils import get_rich_progress, wait_and_ensure_success
 
 if TYPE_CHECKING:
     from webknossos.dataset._utils.buffered_slice_reader import BufferedSliceReader
@@ -315,6 +316,7 @@ class View:
         executor: Optional[
             Union[ClusterExecutor, cluster_tools.WrappedProcessPoolExecutor]
         ] = None,
+        progress_desc: Optional[str] = None,
     ) -> None:
         """
         The view is chunked into multiple sub-views of size `chunk_size`.
@@ -368,10 +370,19 @@ class View:
 
         # execute the work for each chunk
         if executor is None:
-            for args in job_args:
-                work_on_chunk(args)
+            if progress_desc is None:
+                for args in job_args:
+                    work_on_chunk(args)
+            else:
+                with get_rich_progress() as progress:
+                    task = progress.add_task(progress_desc, total=len(job_args))
+                    for args in job_args:
+                        work_on_chunk(args)
+                        progress.update(task, advance=1)
         else:
-            wait_and_ensure_success(executor.map_to_futures(work_on_chunk, job_args))
+            wait_and_ensure_success(
+                executor.map_to_futures(work_on_chunk, job_args), progress_desc
+            )
 
     def for_zipped_chunks(
         self,
@@ -382,6 +393,7 @@ class View:
         executor: Optional[
             Union[ClusterExecutor, cluster_tools.WrappedProcessPoolExecutor]
         ] = None,
+        progress_desc: Optional[str] = None,
     ) -> None:
         """
         This method is similar to 'for_each_chunk' in the sense, that it delegates work to smaller chunks.
@@ -461,10 +473,19 @@ class View:
 
         # execute the work for each pair of chunks
         if executor is None:
-            for args in job_args:
-                work_on_chunk(args)
+            if progress_desc is None:
+                for args in job_args:
+                    work_on_chunk(args)
+            else:
+                with get_rich_progress() as progress:
+                    task = progress.add_task(progress_desc, total=len(job_args))
+                    for args in job_args:
+                        work_on_chunk(args)
+                        progress.update(task, advance=1)
         else:
-            wait_and_ensure_success(executor.map_to_futures(work_on_chunk, job_args))
+            wait_and_ensure_success(
+                executor.map_to_futures(work_on_chunk, job_args), progress_desc
+            )
 
     def _is_compressed(self) -> bool:
         return (

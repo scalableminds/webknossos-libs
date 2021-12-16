@@ -5,8 +5,6 @@ from typing import List, Tuple, cast
 
 import numpy as np
 
-from webknossos.utils import time_start, time_stop
-
 from .view import View
 
 
@@ -28,22 +26,14 @@ def upsample_cube_job(
     args: Tuple[View, View, int],
     mag_factors: List[float],
     buffer_edge_len: int,
-    job_count_per_log: int,
 ) -> None:
-    (source_view, target_view, i) = args
-    use_logging = i % job_count_per_log == 0
+    (source_view, target_view, _i) = args
 
     assert all(
         1 >= f for f in mag_factors
     ), f"mag_factors ({mag_factors}) for upsampling must be smaller than 1"
 
-    if use_logging:
-        logging.info(f"Upsampling of {target_view.global_offset}")
-
     try:
-        if use_logging:
-            time_start(f"Upsampling of {target_view.global_offset}")
-
         num_channels = target_view.header.num_channels
         shape = (num_channels,) + tuple(target_view.size)
         file_buffer = np.zeros(shape, target_view.get_dtype())
@@ -97,9 +87,9 @@ def upsample_cube_job(
         if source_view.header.num_channels == 1:
             file_buffer = file_buffer[0]  # remove channel dimension
         target_view.write(file_buffer)
-        if use_logging:
-            time_stop(f"Upsampling of {target_view.global_offset}")
 
     except Exception as exc:
-        logging.error(f"Upsampling of {target_view.global_offset} failed with {exc}")
+        logging.error(
+            f"Upsampling of target BoundingBox(offset={target_view.global_offset}, size={target_view.size}) failed with {exc}"
+        )
         raise exc
