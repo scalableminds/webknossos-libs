@@ -1,17 +1,7 @@
 import json
 import re
 from collections import defaultdict
-from typing import (
-    Dict,
-    Generator,
-    Iterable,
-    List,
-    NamedTuple,
-    Optional,
-    Tuple,
-    Union,
-    cast,
-)
+from typing import Dict, Generator, Iterable, List, Optional, Tuple, Union, cast
 
 import attr
 import numpy as np
