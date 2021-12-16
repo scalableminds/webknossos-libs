@@ -111,10 +111,6 @@ class BoundingBox:
         return BoundingBox(topleft, bottomright - topleft)
 
     @staticmethod
-    def from_named_tuple(bb_named_tuple: "BoundingBoxNamedTuple") -> "BoundingBox":
-        return BoundingBox(bb_named_tuple.topleft, bb_named_tuple.size)
-
-    @staticmethod
     def from_checkpoint_name(checkpoint_name: str) -> "BoundingBox":
         """This function extracts a bounding box in the format x_y_z_sx_sy_xz which is contained in a string."""
         regex = r"(([0-9]+_){5}([0-9]+))"
@@ -135,9 +131,7 @@ class BoundingBox:
         )
 
     @staticmethod
-    def from_auto(
-        obj: Union["BoundingBox", str, Dict, "BoundingBoxNamedTuple", List, Tuple]
-    ) -> "BoundingBox":
+    def from_auto(obj: Union["BoundingBox", str, Dict, List, Tuple]) -> "BoundingBox":
         if isinstance(obj, BoundingBox):
             return obj
         elif isinstance(obj, str):
@@ -149,8 +143,6 @@ class BoundingBox:
             if "size" in obj:
                 return BoundingBox.from_config_dict(obj)
             return BoundingBox.from_wkw_dict(obj)
-        elif isinstance(obj, BoundingBoxNamedTuple):
-            return BoundingBox.from_named_tuple(obj)
         elif isinstance(obj, list) or isinstance(obj, tuple):
             if len(obj) == 2:
                 return BoundingBox.from_tuple2(obj)  # type: ignore
@@ -212,12 +204,6 @@ class BoundingBox:
     def to_csv(self) -> str:
 
         return ",".join(map(str, self.to_tuple6()))
-
-    def to_named_tuple(self) -> "BoundingBoxNamedTuple":
-        return BoundingBoxNamedTuple(
-            topleft=cast(Tuple[int, int, int], tuple(self.topleft)),
-            size=cast(Tuple[int, int, int], tuple(self.size)),
-        )
 
     def __repr__(self) -> str:
 
@@ -406,8 +392,3 @@ class BoundingBox:
 
     def __hash__(self) -> int:
         return hash(self.to_tuple6())
-
-
-class BoundingBoxNamedTuple(NamedTuple):
-    topleft: Tuple[int, int, int]
-    size: Tuple[int, int, int]
