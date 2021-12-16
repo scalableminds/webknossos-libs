@@ -95,7 +95,7 @@ class Dataset:
         if dataset_existed_already:
             if exist_ok == _UNSET:
                 warnings.warn(
-                    f"[DEPRECATION] You are creating a dataset in the  a non-empty folder {dataset_path} without setting exist_ok=True. "
+                    f"[DEPRECATION] You are creating/opening a dataset at a non-empty folder {dataset_path} without setting exist_ok=True. "
                     + "This will fail in future releases, please supply exist_ok=True explicitly then."
                 )
                 exist_ok = True
