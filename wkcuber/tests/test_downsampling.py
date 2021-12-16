@@ -8,6 +8,7 @@ from shutil import rmtree
 from os import makedirs
 
 from wkcuber.api.dataset import Dataset
+from wkcuber.downsampling_utils import SamplingModes
 from wkcuber.api.layer_categories import COLOR_CATEGORY
 from wkcuber.downsampling_utils import (
     InterpolationModes,
@@ -20,7 +21,6 @@ from wkcuber.downsampling_utils import (
 from wkcuber.mag import Mag
 from wkcuber.utils import WkwDatasetInfo, open_wkw
 from wkcuber.downsampling_utils import _mode, non_linear_filter_3d
-
 
 CUBE_EDGE_LEN = 256
 
@@ -387,3 +387,20 @@ def test_downsample_compressed() -> None:
     assert Mag("1") in layer.mags.keys()
     assert Mag("2-2-1") in layer.mags.keys()
     assert Mag("4-4-2") in layer.mags.keys()
+
+
+def test_downsample_2d() -> None:
+    ds = Dataset.create(TESTOUTPUT_DIR / "downsample_compressed", scale=(1, 1, 2))
+    layer = ds.add_layer("color", COLOR_CATEGORY)
+    mag = layer.add_mag(1, block_len=8, file_len=8)
+    # write 2D data with all values set to "123"
+    mag.write(data=(np.ones((100, 100, 1)) * 123).astype(np.uint8))
+    with pytest.warns(Warning):
+        # This call produces a warning because only the mode "CONSTANT_Z" makes sense for 2D data.
+        layer.downsample(
+            from_mag=Mag(1),
+            max_mag=Mag(2),
+            sampling_mode=SamplingModes.ISOTROPIC,  # this mode is intentionally not "CONSTANT_Z" for this test
+        )
+    assert Mag("2-2-1") in layer.mags
+    assert np.all(layer.get_mag(Mag("2-2-1")).read() == 123)  # The data is not darkened
