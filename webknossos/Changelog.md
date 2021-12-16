@@ -7,10 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.28...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.29...HEAD)
 
 ### Breaking Changes
-- To download datasets, a recent webknossos server version is necessary (>= 21.12.0). webknossos.org is unaffected. [#510](https://github.com/scalableminds/webknossos-libs/pull/510)
 
 ### Added
 
@@ -18,6 +17,13 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 - Always use the sampling mode `CONSTANT_Z` when downsampling 2D data. [#516](https://github.com/scalableminds/webknossos-libs/pull/516)
 
 ### Fixed
+
+
+## [0.8.29](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.8.29) - 2021-12-14
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.28...v0.8.29)
+
+### Breaking Changes
+- To download datasets, a recent webknossos server version is necessary (>= 21.12.0). webknossos.org is unaffected. [#510](https://github.com/scalableminds/webknossos-libs/pull/510)
 
 
 ## [0.8.28](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.8.28) - 2021-12-09

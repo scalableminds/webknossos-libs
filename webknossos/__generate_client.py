@@ -172,6 +172,16 @@ def set_response_schema_by_example(
     request_schema["responses"]["200"]["content"] = recorded_response_schema
 
 
+def fix_request_body(openapi_schema: Dict) -> None:
+    assert_valid_schema(openapi_schema)
+    for path_val in openapi_schema["paths"].values():
+        for method_val in path_val.values():
+            if "requestBody" in method_val:
+                method_val["requestBody"]["content"] = {
+                    "application/json": {"schema": {"type": "object"}}
+                }
+
+
 def bootstrap_response_schemas(openapi_schema: Dict) -> None:
     """Inserts the response schemas into openapi_schema (in-place),
     as recorded by example requests."""
@@ -188,5 +198,6 @@ if __name__ == "__main__":
     schema = json.loads(response.text)
     add_api_prefix_for_non_data_paths(schema)
     generate_client(schema)
+    fix_request_body(schema)
     bootstrap_response_schemas(schema)
     generate_client(schema)

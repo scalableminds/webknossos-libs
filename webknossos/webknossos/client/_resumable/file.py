@@ -5,7 +5,7 @@ from collections import namedtuple
 from functools import partial
 from pathlib import Path
 from threading import Lock
-from typing import Callable, List
+from typing import Callable, List, Optional
 
 from .util import CallbackDispatcher
 
@@ -40,6 +40,8 @@ class ResumableFile:
     ----------
     path : str or pathlib.Path
         The path of the file
+    relative_path : pathlib.Path or None
+        The relative path of the file
     chunk_size : int
         The size, in bytes, of chunks uploaded in a single request
 
@@ -55,12 +57,19 @@ class ResumableFile:
     def __init__(
         self,
         path: Path,
+        relative_path: Optional[Path],
         chunk_size: int,
-        generate_unique_identifier: Callable[[Path], str],
+        generate_unique_identifier: Callable[[Path, Path], str],
     ) -> None:
 
         self.path = path
-        self.unique_identifier = generate_unique_identifier(path)
+        if relative_path is not None:
+            self.relative_path = relative_path
+        else:
+            self.relative_path = path
+        self.unique_identifier = generate_unique_identifier(
+            self.path, self.relative_path
+        )
         self.chunk_size = chunk_size
         self.size = os.path.getsize(self.path)
 
