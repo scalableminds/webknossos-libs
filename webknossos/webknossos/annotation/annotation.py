@@ -1,17 +1,20 @@
 import re
 import warnings
 from enum import Enum, unique
+from contextlib import contextmanager
 from os import PathLike
 from pathlib import Path
-from typing import IO, List, NamedTuple, Optional, Union, cast
+from typing import IO, List, NamedTuple, Optional, Union, cast, Iterator
 from zipfile import ZipFile
+from shutil import copyfile
+import webknossos.skeleton.nml as wknml
 
 from attr import dataclass
 from boltons.cacheutils import cachedproperty
 
-import webknossos.skeleton.nml as wknml
 from webknossos.dataset import Dataset, Layer, SegmentationLayer
 from webknossos.skeleton import Skeleton
+from webknossos._types import Openable
 
 MAG_RE = r"((\d+-\d+-)?\d+)"
 SEP_RE = r"(\/|\\)"
@@ -136,10 +139,38 @@ class Annotation:
 
         return download_annotation(annotation_type, annotation_id)
 
-    def skeleton_binary(self) -> _ZipPath:
+    def _skeleton_zip_path(self) -> Union[Openable, PathLike, str]:
         nml_files = [i for i in self._filelist if i.endswith(".nml")]
         assert len(nml_files) == 1
         return _ZipPath(self._zipfile, nml_files[0])
+
+    @contextmanager
+    def _open_nml(self) -> Iterator[IO[bytes]]:
+        """
+        This method can be used to open the annotation's inner NML
+        file directly.
+        """
+        file_path = self._skeleton_zip_path()
+
+        if isinstance(file_path, Openable):
+            with file_path.open(mode="rb") as file_handle:
+                yield file_handle
+        else:
+            with open(file_path, "rb") as file_handle:
+                yield file_handle
+
+    def save_to_file(self, path: Path) -> None:
+        """
+        Stores the annotation as a zip at the given path.
+        """
+
+        assert path.suffix == ".zip", "The target path should be a zip file."
+
+        if isinstance(self.file, str) or isinstance(self.file, PathLike):
+            copyfile(self.file, path)
+        else:
+            with open(path, "wb") as f:
+                f.write(self.file.read())
 
 
 @unique
