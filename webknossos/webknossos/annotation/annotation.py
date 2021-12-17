@@ -9,6 +9,7 @@ from zipfile import ZipFile
 from attr import dataclass
 from boltons.cacheutils import cachedproperty
 
+import webknossos.skeleton.nml as wknml
 from webknossos.dataset import Dataset, Layer, SegmentationLayer
 from webknossos.skeleton import Skeleton
 
@@ -47,10 +48,19 @@ class Annotation:
         return [i.filename for i in self._zipfile.filelist]
 
     @cachedproperty
-    def skeleton(self) -> Skeleton:
+    def _nml_file(self) -> _ZipPath:
         nml_files = [i for i in self._filelist if i.endswith(".nml")]
         assert len(nml_files) == 1
-        return Skeleton.load(_ZipPath(self._zipfile, nml_files[0]))
+        return _ZipPath(self._zipfile, nml_files[0])
+
+    @cachedproperty
+    def skeleton(self) -> Skeleton:
+        return Skeleton.load(self._nml_file)
+
+    @cachedproperty
+    def _nml(self) -> wknml.NML:
+        with self._nml_file.open(mode="rb") as file_handle:
+            return wknml.parse_nml(file_handle)
 
     @cachedproperty
     def dataset_name(self) -> str:
@@ -61,8 +71,10 @@ class Annotation:
     ) -> Layer:
         # todo pylint: disable=fixme
         # the name is about to change with multiple volume annotations
-        assert "data.zip" in self._filelist
-        with self._zipfile.open("data.zip") as f:
+        assert self._nml.volume is not None
+        volume_zip_path = self._nml.volume.location
+        assert volume_zip_path in self._filelist
+        with self._zipfile.open(volume_zip_path) as f:
             data_zip = ZipFile(f)
             wrong_files = [
                 i.filename
