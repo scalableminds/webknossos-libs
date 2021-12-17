@@ -62,6 +62,14 @@ class Annotation:
         layer_name: str = "volume_annotation",
         largest_segment_id: Optional[int] = None,
     ) -> Layer:
+        """
+        Given a dataset, this method will save the
+        volume annotation of this annotation into that dataset
+        by creating a new layer.
+        The largest_segment_id is computed automatically, unless provided
+        explicitly.
+        """
+
         # todo pylint: disable=fixme
         # the name is about to change with multiple volume annotations
         # todo: the name is hard coded
