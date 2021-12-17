@@ -70,7 +70,6 @@ class Annotation:
         self, dataset: Dataset, layer_name: str = "volume_annotation"
     ) -> Layer:
         # todo pylint: disable=fixme
-        # the name is about to change with multiple volume annotations
         assert self._nml.volume is not None
         volume_zip_path = self._nml.volume.location
         assert volume_zip_path in self._filelist
