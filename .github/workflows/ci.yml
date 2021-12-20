@@ -204,7 +204,7 @@ jobs:
     - name: CLI tests
       continue-on-error: true
       shell: bash
-      run: poetry run "C:\Program Files\Git\bin\bash.EXE" --noprofile --norc tests/scripts/all_tests.sh || true
+      run: poetry run "C:\Program Files\Git\bin\bash.EXE" --noprofile --norc tests/scripts/all_tests.sh
 
   wkcuber_mac:
     runs-on: macos-latest
