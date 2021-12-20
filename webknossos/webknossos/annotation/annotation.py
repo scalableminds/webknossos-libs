@@ -11,6 +11,7 @@ from boltons.cacheutils import cachedproperty
 
 import webknossos.skeleton.nml as wknml
 from webknossos.dataset import Dataset, Layer, SegmentationLayer
+from webknossos.geometry import Vec3Int
 from webknossos.skeleton import Skeleton
 
 MAG_RE = r"((\d+-\d+-)?\d+)"
@@ -91,10 +92,11 @@ class Annotation:
             ),
         )
         min_mag_view = layer.mags[min(layer.mags)]
-        # todo pylint: disable=fixme
-        # this tries to read the entire DS into memory (beginning from 0, 0, 0).
-        # if the annotation begins at some other point, this will blow up the RAM unnecessarily.
-        layer.largest_segment_id = int(min_mag_view.read().max())
+        max_value = max(
+            min_mag_view.read(Vec3Int(offset) - min_mag_view.global_offset, size).max()
+            for offset, size in min_mag_view.get_bounding_boxes_on_disk()
+        )
+        layer.largest_segment_id = int(max_value)
         return layer
 
     @classmethod
