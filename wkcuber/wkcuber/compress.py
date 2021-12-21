@@ -54,7 +54,7 @@ def compress_mag(
     mag: Mag,
     args: Optional[Namespace] = None,
 ) -> None:
-    Dataset(source_path).get_layer(layer_name).get_mag(mag).compress(
+    Dataset.open(source_path).get_layer(layer_name).get_mag(mag).compress(
         target_path=Path(target_path), args=args
     )
 
@@ -62,7 +62,7 @@ def compress_mag(
 def compress_mag_inplace(
     target_path: Path, layer_name: str, mag: Mag, args: Optional[Namespace] = None
 ) -> None:
-    Dataset(target_path).get_layer(layer_name).get_mag(mag).compress(args=args)
+    Dataset.open(target_path).get_layer(layer_name).get_mag(mag).compress(args=args)
 
 
 def compress_mags(
@@ -77,11 +77,11 @@ def compress_mags(
     else:
         target = target_path
 
-    layer = Dataset(source_path).get_layer(layer_name)
+    layer = Dataset.open(source_path).get_layer(layer_name)
     if mags is None:
         mags = list(layer.mags.keys())
 
-    for mag, mag_view in Dataset(source_path).get_layer(layer_name).mags.items():
+    for mag, mag_view in Dataset.open(source_path).get_layer(layer_name).mags.items():
         if mag in mags:
             mag_view.compress(target_path=Path(target), args=args)
 

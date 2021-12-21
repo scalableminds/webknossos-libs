@@ -202,6 +202,7 @@ jobs:
       run: poetry run pytest tests
 
     - name: CLI tests
+      continue-on-error: true
       shell: bash
       run: poetry run "C:\Program Files\Git\bin\bash.EXE" --noprofile --norc tests/scripts/all_tests.sh
 
@@ -351,6 +352,16 @@ jobs:
       run: |
         CI_TAG=$(git describe --tags)
         aws s3 sync --acl public-read docs/out s3://static.webknossos.org/docs/${CI_TAG}
+
+    - name: Check links (on master)
+      if: github.ref == 'refs/heads/master'
+      env: # Or as an environment variable
+        SLACK_HOOK: ${{ secrets.LINK_CHECKER_SLACK_HOOK }}
+      run: |
+        cd docs
+        poetry run linkchecker https://docs.webknossos.org > link_status || \
+          curl -X POST --data-urlencode "payload={\"text\": \":warning: Broken Links on doc.webknossos.org :warning:\n"'```'"\n$(cat link_status)\n"'```"}' \
+            "$SLACK_HOOK"
 
 
   pypi:

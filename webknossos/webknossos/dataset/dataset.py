@@ -4,7 +4,7 @@ import os
 import shutil
 import warnings
 from argparse import Namespace
-from os import makedirs
+from os import PathLike, makedirs
 from os.path import basename, join, normpath
 from pathlib import Path
 from shutil import rmtree
@@ -13,11 +13,12 @@ from typing import Any, Dict, List, Optional, Tuple, Union, cast
 import attr
 import numpy as np
 import wkw
+from boltons.typeutils import make_sentinel
 
 from webknossos.dataset._utils.infer_bounding_box_existing_files import (
     infer_bounding_box_existing_files,
 )
-from webknossos.geometry import BoundingBox, Vec3Int
+from webknossos.geometry import BoundingBox, Mag, Vec3Int
 from webknossos.utils import copy_directory_with_symlinks, get_executor_for_args
 
 from .layer import (
@@ -51,6 +52,13 @@ def _copy_job(args: Tuple[View, View, int]) -> None:
     target_view.write(source_view.read())
 
 
+_UNSET = make_sentinel("UNSET", var_name="_UNSET")
+
+_UNSPECIFIED_SCALE_FROM_OPEN = make_sentinel(
+    "_UNSPECIFIED_SCALE_FROM_OPEN", var_name="_UNSPECIFIED_SCALE_FROM_OPEN"
+)
+
+
 class Dataset:
     """
     A dataset is the entry point of the Dataset API.
@@ -64,19 +72,68 @@ class Dataset:
     which themselves can comprise multiple magnifications (webknossos.dataset.mag_view.MagView).
     """
 
-    def __init__(self, dataset_path: Union[str, Path]) -> None:
+    def __init__(
+        self,
+        dataset_path: Union[str, PathLike],
+        scale: Optional[Tuple[float, float, float]] = None,
+        name: Optional[str] = None,
+        exist_ok: bool = _UNSET,
+    ) -> None:
         """
-        To open an existing dataset on disk, simply call the constructor of `Dataset`.
-        This requires that the `datasource-properties.json` exists. Based on the `datasource-properties.json`,
-        a dataset object is constructed. Only layers and magnifications that are listed in the properties are loaded
-        (even though there might exists more layer or magnifications on disk).
-
-        The `dataset_path` refers to the top level directory of the dataset (excluding layer or magnification names).
+        Creates a new dataset and the associated `datasource-properties.json`.
+        If the dataset already exists and exist_ok is set to True,
+        it is opened (the provided scale and name are asserted to match the existing dataset).
+        Currently exist_ok=True is the deprecated default and will change in future releases.
+        Please use `Dataset.open` if you intend to open an existing dataset and don't want/need the creation behavior.
         """
+        dataset_path = Path(dataset_path)
 
-        self.path = Path(dataset_path)
-        """Location of the dataset"""
+        dataset_existed_already = (
+            dataset_path.is_dir() and next(dataset_path.iterdir(), None) is not None
+        )
 
+        if dataset_existed_already:
+            if exist_ok == _UNSET:
+                warnings.warn(
+                    f"[DEPRECATION] You are creating/opening a dataset at a non-empty folder {dataset_path} without setting exist_ok=True. "
+                    + "This will fail in future releases, please supply exist_ok=True explicitly then."
+                )
+                exist_ok = True
+            if not exist_ok:
+                raise RuntimeError(
+                    f"Creation of Dataset at {dataset_path} failed, because a non-empty folder already exists at this path."
+                )
+            assert (
+                dataset_path / PROPERTIES_FILE_NAME
+            ).is_file(), f"Cannot open Dataset: Could not find {PROPERTIES_FILE_NAME} in non-empty directory {dataset_path}"
+        else:
+            assert (
+                not dataset_path.exists() or dataset_path.is_dir()
+            ), f"Creation of Dataset at {dataset_path} failed, because a file already exists at this path."
+            # Create directories on disk and write datasource-properties.json
+            try:
+                makedirs(dataset_path, exist_ok=True)
+            except OSError as e:
+                raise type(e)(
+                    "Creation of Dataset {} failed. ".format(dataset_path) + repr(e)
+                )
+
+            # Write empty properties to disk
+            assert (
+                scale is not None
+            ), "When creating a new dataset, the scale must be given, e.g. as Dataset(path, scale=(10, 10, 16.8))"
+            name = name or basename(normpath(dataset_path))
+            dataset_properties = DatasetProperties(
+                id={"name": name, "team": ""}, scale=scale, data_layers=[]
+            )
+            with open(
+                dataset_path / PROPERTIES_FILE_NAME, "w", encoding="utf-8"
+            ) as outfile:
+                json.dump(
+                    dataset_converter.unstructure(dataset_properties), outfile, indent=4
+                )
+
+        self.path = dataset_path
         with open(
             self.path / PROPERTIES_FILE_NAME, encoding="utf-8"
         ) as datasource_properties:
@@ -85,11 +142,6 @@ class Dataset:
             self._properties: DatasetProperties = dataset_converter.structure(
                 data, DatasetProperties
             )
-
-            """
-            The metadata from the `datasource-properties.json`. 
-            The properties are exported to disk automatically, every time the metadata changes.
-            """
 
             self._layers: Dict[str, Layer] = {}
             # construct self.layer
@@ -106,6 +158,65 @@ class Dataset:
 
                 layer = self._initialize_layer_from_properties(layer_properties)
                 self._layers[layer_properties.name] = layer
+
+        if dataset_existed_already:
+            if scale is None:
+                warnings.warn(
+                    "[DEPRECATION] Please always supply the scale when using the constructor Dataset(your_path, scale=your_scale)."
+                    + "If you just want to open an existing dataset, please use Dataset.open(your_path)."
+                )
+            elif scale == _UNSPECIFIED_SCALE_FROM_OPEN:
+                pass
+            else:
+                assert self.scale == tuple(
+                    scale
+                ), f"Cannot open Dataset: The dataset {dataset_path} already exists, but the scales do not match ({self.scale} != {scale})"
+            if name is not None:
+                assert (
+                    self.name == name
+                ), f"Cannot open Dataset: The dataset {dataset_path} already exists, but the names do not match ({self.name} != {name})"
+
+    @classmethod
+    def open(cls, dataset_path: Union[str, PathLike]) -> "Dataset":
+        """
+        To open an existing dataset on disk, simply call `Dataset.open("your_path")`.
+        This requires `datasource-properties.json` to exist in this folder. Based on the `datasource-properties.json`,
+        a dataset object is constructed. Only layers and magnifications that are listed in the properties are loaded
+        (even though there might exist more layers or magnifications on disk).
+
+        The `dataset_path` refers to the top level directory of the dataset (excluding layer or magnification names).
+        """
+        dataset_path = Path(dataset_path)
+        assert (
+            dataset_path.exists()
+        ), f"Cannot open Dataset: Couldn't find {dataset_path}"
+        assert (
+            dataset_path.is_dir()
+        ), f"Cannot open Dataset: {dataset_path} is not a directory"
+        assert (
+            dataset_path / PROPERTIES_FILE_NAME
+        ).is_file(), (
+            f"Cannot open Dataset: Could not find {dataset_path / PROPERTIES_FILE_NAME}"
+        )
+
+        return cls(dataset_path, scale=_UNSPECIFIED_SCALE_FROM_OPEN, exist_ok=True)
+
+    @classmethod
+    def download(
+        cls,
+        dataset_name: str,
+        organization_name: str,
+        bbox: Optional[BoundingBox] = None,
+        layers: Optional[List[str]] = None,
+        mags: Optional[List[Mag]] = None,
+        path: Optional[Union[PathLike, str]] = None,
+        exist_ok: bool = False,
+    ) -> "Dataset":
+        from webknossos.client._download_dataset import download_dataset
+
+        return download_dataset(
+            dataset_name, organization_name, bbox, layers, mags, path, exist_ok
+        )
 
     @property
     def layers(self) -> Dict[str, Layer]:
@@ -444,7 +555,7 @@ class Dataset:
             else foreign_layer_path.resolve()
         )
         os.symlink(foreign_layer_symlink_path, join(self.path, layer_name))
-        original_layer = Dataset(foreign_layer_path.parent).get_layer(
+        original_layer = Dataset.open(foreign_layer_path.parent).get_layer(
             foreign_layer_name
         )
         layer_properties = copy.deepcopy(original_layer._properties)
@@ -483,7 +594,7 @@ class Dataset:
             )
 
         shutil.copytree(foreign_layer_path, join(self.path, layer_name))
-        original_layer = Dataset(foreign_layer_path.parent).get_layer(
+        original_layer = Dataset.open(foreign_layer_path.parent).get_layer(
             foreign_layer_name
         )
         layer_properties = copy.deepcopy(original_layer._properties)
@@ -513,7 +624,7 @@ class Dataset:
         new_dataset_path = Path(new_dataset_path)
         if scale is None:
             scale = self.scale
-        new_ds = Dataset.create(new_dataset_path, scale=scale)
+        new_ds = Dataset(new_dataset_path, scale=scale, exist_ok=False)
 
         with get_executor_for_args(args) as executor:
             for layer_name, layer in self.layers.items():
@@ -575,8 +686,8 @@ class Dataset:
         to make this method robust against additional files e.g. layer/mappings/agglomerate_view.hdf5.
         This method becomes useful when exposing a dataset to webknossos.
         """
-        new_dataset = Dataset.create(
-            new_dataset_path, scale=self.scale, name=name or self.name
+        new_dataset = Dataset(
+            new_dataset_path, scale=self.scale, name=name or self.name, exist_ok=False
         )
         for layer_name, layer in self.layers.items():
             if layers_to_ignore is not None and layer_name in layers_to_ignore:
@@ -640,47 +751,17 @@ class Dataset:
     @classmethod
     def create(
         cls,
-        dataset_path: Union[str, Path],
+        dataset_path: Union[str, PathLike],
         scale: Tuple[float, float, float],
         name: Optional[str] = None,
     ) -> "Dataset":
         """
-        Creates a new dataset and the associated `datasource-properties.json`.
+        **Deprecated**, please use the constructor `Dataset()` instead.
         """
-        dataset_path = Path(dataset_path)
-        name = name or basename(normpath(dataset_path))
-
-        if dataset_path.exists():
-            assert (
-                dataset_path.is_dir()
-            ), f"Creation of Dataset at {dataset_path} failed, because a file already exists at this path."
-            assert not os.listdir(
-                dataset_path
-            ), f"Creation of Dataset at {dataset_path} failed, because a non-empty folder already exists at this path."
-
-        # Create directories on disk and write datasource-properties.json
-        try:
-            makedirs(dataset_path, exist_ok=True)
-        except OSError as e:
-            raise type(e)(
-                "Creation of Dataset {} failed. ".format(dataset_path) + repr(e)
-            )
-
-        # Write empty properties to disk
-        data = {
-            "id": {"name": name, "team": ""},
-            "scale": scale,
-            "dataLayers": [],
-        }
-        with open(
-            dataset_path / PROPERTIES_FILE_NAME, "w", encoding="utf-8"
-        ) as outfile:
-            json.dump(data, outfile, indent=4)
-
-        # Initialize object
-        ds = cls(dataset_path)
-        ds._export_as_json()
-        return ds
+        warnings.warn(
+            "[DEPRECATION] Dataset.create() is deprecated in favor of the normal constructor Dataset()."
+        )
+        return cls(dataset_path, scale, name, exist_ok=False)
 
     @classmethod
     def get_or_create(
@@ -690,24 +771,12 @@ class Dataset:
         name: Optional[str] = None,
     ) -> "Dataset":
         """
-        Creates a new `Dataset`, in case it did not exist before, and then returns it.
-        The `datasource-properties.json` is used to check if the dataset already exist.
+        **Deprecated**, please use the constructor `Dataset()` instead.
         """
-        dataset_path = Path(dataset_path)
-        if (
-            dataset_path / PROPERTIES_FILE_NAME
-        ).exists():  # use the properties file to check if the Dataset exists
-            ds = Dataset(dataset_path)
-            assert tuple(ds.scale) == tuple(
-                scale
-            ), f"Cannot get_or_create Dataset: The dataset {dataset_path} already exists, but the scales do not match ({ds.scale} != {scale})"
-            if name is not None:
-                assert (
-                    ds.name == name
-                ), f"Cannot get_or_create Dataset: The dataset {dataset_path} already exists, but the names do not match ({ds.name} != {name})"
-            return ds
-        else:
-            return cls.create(dataset_path, scale, name)
+        warnings.warn(
+            "[DEPRECATION] Dataset.get_or_create() is deprecated in favor of the normal constructor Dataset(…, exist_ok=True)."
+        )
+        return cls(dataset_path, scale, name, exist_ok=True)
 
     def __repr__(self) -> str:
         return repr("Dataset(%s)" % self.path)

@@ -42,7 +42,7 @@ def test_main(order: str, flip_axes: Optional[Tuple[int, int]]) -> None:
     args = create_parser().parse_args(args_list)
     main(args)
 
-    dataset = Dataset(output_path)
+    dataset = Dataset.open(output_path)
     layer = dataset.get_color_layer()
     mag_view = layer.get_mag(1)
     view = mag_view.get_view()

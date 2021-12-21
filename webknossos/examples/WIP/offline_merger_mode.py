@@ -9,10 +9,10 @@ import webknossos as wk
 
 # for local nml:
 nml = wk.open("merger-mode.nml")
-# wk.open_nml or wk.open_skeleton works, too (and is type-safe)
+# wk.Skeleton.load or wk.open_skeleton works, too (and is type-safe)
 
 # for online annotation:
-annotation = wk.open_annotation(
+annotation = wk.Annotation.download(
     "https://webknossos.org/annotations/Explorational/6114d9410100009f0096c640"
 )
 nml = annotation.skeleton
