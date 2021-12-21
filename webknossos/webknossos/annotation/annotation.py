@@ -1,20 +1,20 @@
 import re
 import warnings
-from enum import Enum, unique
 from contextlib import contextmanager
+from enum import Enum, unique
 from os import PathLike
 from pathlib import Path
-from typing import IO, List, NamedTuple, Optional, Union, cast, Iterator
-from zipfile import ZipFile
 from shutil import copyfile
-import webknossos.skeleton.nml as wknml
+from typing import IO, Iterator, List, NamedTuple, Optional, Union, cast
+from zipfile import ZipFile
 
 from attr import dataclass
 from boltons.cacheutils import cachedproperty
 
+import webknossos.skeleton.nml as wknml
+from webknossos._types import Openable
 from webknossos.dataset import Dataset, Layer, SegmentationLayer
 from webknossos.skeleton import Skeleton
-from webknossos._types import Openable
 
 MAG_RE = r"((\d+-\d+-)?\d+)"
 SEP_RE = r"(\/|\\)"
