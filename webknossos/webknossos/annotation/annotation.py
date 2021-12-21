@@ -9,7 +9,9 @@ from zipfile import ZipFile
 from attr import dataclass
 from boltons.cacheutils import cachedproperty
 
+import webknossos.skeleton.nml as wknml
 from webknossos.dataset import Dataset, Layer, SegmentationLayer
+from webknossos.geometry import Vec3Int
 from webknossos.skeleton import Skeleton
 
 MAG_RE = r"((\d+-\d+-)?\d+)"
@@ -47,10 +49,19 @@ class Annotation:
         return [i.filename for i in self._zipfile.filelist]
 
     @cachedproperty
-    def skeleton(self) -> Skeleton:
+    def _nml_file(self) -> _ZipPath:
         nml_files = [i for i in self._filelist if i.endswith(".nml")]
         assert len(nml_files) == 1
-        return Skeleton.load(_ZipPath(self._zipfile, nml_files[0]))
+        return _ZipPath(self._zipfile, nml_files[0])
+
+    @cachedproperty
+    def skeleton(self) -> Skeleton:
+        return Skeleton.load(self._nml_file)
+
+    @cachedproperty
+    def _nml(self) -> wknml.NML:
+        with self._nml_file.open(mode="rb") as file_handle:
+            return wknml.parse_nml(file_handle)
 
     @cachedproperty
     def dataset_name(self) -> str:
@@ -60,9 +71,10 @@ class Annotation:
         self, dataset: Dataset, layer_name: str = "volume_annotation"
     ) -> Layer:
         # todo pylint: disable=fixme
-        # the name is about to change with multiple volume annotations
-        assert "data.zip" in self._filelist
-        with self._zipfile.open("data.zip") as f:
+        assert self._nml.volume is not None
+        volume_zip_path = self._nml.volume.location
+        assert volume_zip_path in self._filelist
+        with self._zipfile.open(volume_zip_path) as f:
             data_zip = ZipFile(f)
             wrong_files = [
                 i.filename
@@ -80,10 +92,11 @@ class Annotation:
             ),
         )
         min_mag_view = layer.mags[min(layer.mags)]
-        # todo pylint: disable=fixme
-        # this tries to read the entire DS into memory (beginning from 0, 0, 0).
-        # if the annotation begins at some other point, this will blow up the RAM unnecessarily.
-        layer.largest_segment_id = int(min_mag_view.read().max())
+        max_value = max(
+            min_mag_view.read(Vec3Int(offset) - min_mag_view.global_offset, size).max()
+            for offset, size in min_mag_view.get_bounding_boxes_on_disk()
+        )
+        layer.largest_segment_id = int(max_value)
         return layer
 
     @classmethod
