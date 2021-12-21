@@ -5,8 +5,10 @@ from enum import Enum, unique
 from os import PathLike
 from pathlib import Path
 from shutil import copyfile
-from typing import IO, Iterator, List, NamedTuple, Optional, Union, cast
+
+from typing import IO, List, NamedTuple, Optional, Union, cast, Iterator
 from zipfile import ZipFile
+from tempfile import TemporaryDirectory
 
 from attr import dataclass
 from boltons.cacheutils import cachedproperty
@@ -133,7 +135,7 @@ class Annotation:
         match = re.match(annotation_url_regex, annotation_path)
         assert (
             match is not None
-        ), "Annotation.download() must be called an annotation url, e.g. https://webknossos.org/annotations/Explorational/6114d9410100009f0096c640"
+        ), "Annotation.download() must be called with an annotation url, e.g. https://webknossos.org/annotations/Explorational/6114d9410100009f0096c640"
         webknossos_url, annotation_type_str, annotation_id = match.groups()
         annotation_type = AnnotationType(annotation_type_str)
         assert webknossos_url == _get_context().url, (
@@ -164,18 +166,42 @@ class Annotation:
             with open(file_path, "rb") as file_handle:
                 yield file_handle
 
-    def save_to_file(self, path: Path) -> None:
+    def save_to_file(self, path: Union[Path, str]) -> None:
         """
         Stores the annotation as a zip at the given path.
         """
 
-        assert path.suffix == ".zip", "The target path should be a zip file."
+        assert Path(path).suffix == ".zip", "The target path should be a zip file."
 
         if isinstance(self.file, str) or isinstance(self.file, PathLike):
             copyfile(self.file, path)
         else:
             with open(path, "wb") as f:
                 f.write(self.file.read())
+
+    @contextmanager
+    def temporary_annotation_view(self) -> Iterator[Layer]:
+
+        """
+        Given a volume annotation path, create a temporary dataset which
+        contains the volume annotation via a symlink. Yield the layer
+        so that one can work with the annotation as a wk.Dataset.
+        """
+
+        with TemporaryDirectory() as tmp_annotation_dir:
+            tmp_annotation_dataset_path = (
+                Path(tmp_annotation_dir) / "tmp_annotation_dataset"
+            )
+
+        input_annotation_dataset = Dataset.get_or_create(
+            str(tmp_annotation_dataset_path), scale=(1, 1, 1)
+        )
+
+        input_annotation_layer = self.save_volume_annotation(
+            input_annotation_dataset, "volume_annotation"
+        )
+
+        yield input_annotation_layer
 
 
 @unique
