@@ -78,7 +78,7 @@ def export_layer_to_nifti(
     name: str,
     padding: Optional[Tuple[int, ...]] = None,
 ) -> None:
-    dataset = Dataset(wkw_file_path)
+    dataset = Dataset.open(wkw_file_path)
     layer = dataset.get_layer(layer_name)
     mag_layer = layer.get_mag(mag)
 
@@ -117,7 +117,7 @@ def export_nifti(
     name: str,
     padding: Optional[Tuple[int, ...]] = None,
 ) -> None:
-    dataset = Dataset(wkw_file_path)
+    dataset = Dataset.open(wkw_file_path)
 
     for layer_name, layer in dataset.layers.items():
         logging.info(f"Starting nifti export for bounding box: {source_bbox}")

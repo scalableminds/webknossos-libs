@@ -8,6 +8,7 @@ from shutil import rmtree
 from os import makedirs
 
 from wkcuber.api.dataset import Dataset
+from wkcuber.downsampling_utils import SamplingModes
 from wkcuber.api.layer_categories import COLOR_CATEGORY
 from wkcuber.downsampling_utils import (
     InterpolationModes,
@@ -20,7 +21,6 @@ from wkcuber.downsampling_utils import (
 from wkcuber.mag import Mag
 from wkcuber.utils import WkwDatasetInfo, open_wkw
 from wkcuber.downsampling_utils import _mode, non_linear_filter_3d
-
 
 CUBE_EDGE_LEN = 256
 
@@ -87,7 +87,7 @@ def downsample_test_helper(use_compress: bool) -> None:
     source_path = TESTDATA_DIR / "WT1_wkw"
     target_path = TESTOUTPUT_DIR / "WT1_wkw"
 
-    source_ds = Dataset(source_path)
+    source_ds = Dataset.open(source_path)
     target_ds = source_ds.copy_dataset(target_path, block_len=16, file_len=16)
 
     target_layer = target_ds.get_layer("color")
@@ -155,7 +155,7 @@ def test_downsample_multi_channel() -> None:
     ).astype("uint8")
     file_len = 32
 
-    ds = Dataset.create(TESTOUTPUT_DIR / "multi-channel-test", (1, 1, 1))
+    ds = Dataset(TESTOUTPUT_DIR / "multi-channel-test", (1, 1, 1))
     l = ds.add_layer(
         "color",
         COLOR_CATEGORY,
@@ -313,7 +313,7 @@ def test_default_max_mag() -> None:
 def test_default_parameter() -> None:
     target_path = TESTOUTPUT_DIR / "downsaple_default"
 
-    ds = Dataset.create(target_path, scale=(1, 1, 1))
+    ds = Dataset(target_path, scale=(1, 1, 1))
     layer = ds.add_layer(
         "color", COLOR_CATEGORY, dtype_per_channel="uint8", num_channels=3
     )
@@ -326,9 +326,7 @@ def test_default_parameter() -> None:
 
 
 def test_default_anisotropic_scale() -> None:
-    ds = Dataset.create(
-        TESTOUTPUT_DIR / "default_anisotropic_scale", scale=(85, 85, 346)
-    )
+    ds = Dataset(TESTOUTPUT_DIR / "default_anisotropic_scale", scale=(85, 85, 346))
     layer = ds.add_layer("color", COLOR_CATEGORY)
     mag = layer.add_mag(1)
     mag.write(data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8))
@@ -338,7 +336,7 @@ def test_default_anisotropic_scale() -> None:
 
 
 def test_downsample_mag_list() -> None:
-    ds = Dataset.create(TESTOUTPUT_DIR / "downsample_mag_list", scale=(1, 1, 2))
+    ds = Dataset(TESTOUTPUT_DIR / "downsample_mag_list", scale=(1, 1, 2))
     layer = ds.add_layer("color", COLOR_CATEGORY)
     mag = layer.add_mag(1)
     mag.write(data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8))
@@ -352,7 +350,7 @@ def test_downsample_mag_list() -> None:
 
 
 def test_downsample_with_invalid_mag_list() -> None:
-    ds = Dataset.create(TESTOUTPUT_DIR / "downsample_mag_list", scale=(1, 1, 2))
+    ds = Dataset(TESTOUTPUT_DIR / "downsample_mag_list", scale=(1, 1, 2))
     layer = ds.add_layer("color", COLOR_CATEGORY)
     mag = layer.add_mag(1)
     mag.write(data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8))
@@ -365,7 +363,7 @@ def test_downsample_with_invalid_mag_list() -> None:
 
 
 def test_downsample_compressed() -> None:
-    ds = Dataset.create(TESTOUTPUT_DIR / "downsample_compressed", scale=(1, 1, 2))
+    ds = Dataset(TESTOUTPUT_DIR / "downsample_compressed", scale=(1, 1, 2))
     layer = ds.add_layer("color", COLOR_CATEGORY)
     mag = layer.add_mag(1, block_len=8, file_len=8)
     mag.write(data=(np.random.rand(80, 240, 15) * 255).astype(np.uint8))
@@ -387,3 +385,20 @@ def test_downsample_compressed() -> None:
     assert Mag("1") in layer.mags.keys()
     assert Mag("2-2-1") in layer.mags.keys()
     assert Mag("4-4-2") in layer.mags.keys()
+
+
+def test_downsample_2d() -> None:
+    ds = Dataset.create(TESTOUTPUT_DIR / "downsample_compressed", scale=(1, 1, 2))
+    layer = ds.add_layer("color", COLOR_CATEGORY)
+    mag = layer.add_mag(1, block_len=8, file_len=8)
+    # write 2D data with all values set to "123"
+    mag.write(data=(np.ones((100, 100, 1)) * 123).astype(np.uint8))
+    with pytest.warns(Warning):
+        # This call produces a warning because only the mode "CONSTANT_Z" makes sense for 2D data.
+        layer.downsample(
+            from_mag=Mag(1),
+            max_mag=Mag(2),
+            sampling_mode=SamplingModes.ISOTROPIC,  # this mode is intentionally not "CONSTANT_Z" for this test
+        )
+    assert Mag("2-2-1") in layer.mags
+    assert np.all(layer.get_mag(Mag("2-2-1")).read() == 123)  # The data is not darkened

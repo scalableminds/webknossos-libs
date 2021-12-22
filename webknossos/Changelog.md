@@ -10,10 +10,25 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.29...HEAD)
 
 ### Breaking Changes
+- The BoundingBoxNamedTuple was removed. Use BoundingBox instead. [#526](https://github.com/scalableminds/webknossos-libs/pull/526)
+- Some methods of creating, opening and saving have changed. The old methods are still available but deprecated. [The documentation gives a good overview](https://docs.webknossos.org/api/webknossos.html). Specifically, the changes are :
+  * `Dataset.create()` → `Dataset()`
+  * `Dataset.get_or_create()` → `Dataset(…, exist_ok=True)`
+  * `Dataset()` → `Dataset.open()`
+  * `download_dataset()` → `Dataset.download()`
+  * `open_annotation()` → `Annotation.load()` for local files, `Annotation.download()` to download from webKnossos
+  * `open_nml()` → `Skeleton.load()`
+  * `Skeleton.from_path()` → `Skeleton.load()`
+  * `Skeleton.write()` → `Skeleton.save()`
+  The deprecated methods will be removed in future releases.
+  [#520](https://github.com/scalableminds/webknossos-libs/pull/520)
+
 
 ### Added
 
 ### Changed
+- Always use the sampling mode `CONSTANT_Z` when downsampling 2D data. [#516](https://github.com/scalableminds/webknossos-libs/pull/516)
+- Make computation of `largestSegmentId` more efficient for volume annotations. [#531](https://github.com/scalableminds/webknossos-libs/pull/531)
 
 ### Fixed
 

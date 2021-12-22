@@ -404,7 +404,7 @@ class Layer:
 
             foreign_mag_view_path = Path(foreign_mag_view_or_path)
             foreign_mag_view = (
-                Dataset(foreign_mag_view_path.parent.parent)
+                Dataset.open(foreign_mag_view_path.parent.parent)
                 .get_layer(foreign_mag_view_path.parent.name)
                 .get_mag(foreign_mag_view_path.name)
             )
@@ -556,6 +556,13 @@ class Layer:
 
         if max_mag is None:
             max_mag = calculate_default_max_mag(self.bounding_box.size)
+
+        if self._properties.bounding_box.size.z == 1:
+            if sampling_mode != SamplingModes.CONSTANT_Z:
+                warnings.warn(
+                    "The sampling_mode was changed to 'CONSTANT_Z'. Downsampling 2D data with a different sampling mode mixes in black and thus leads to darkened images."
+                )
+                sampling_mode = SamplingModes.CONSTANT_Z
 
         scale: Optional[Tuple[float, float, float]] = None
         if sampling_mode == SamplingModes.ANISOTROPIC or sampling_mode == "auto":

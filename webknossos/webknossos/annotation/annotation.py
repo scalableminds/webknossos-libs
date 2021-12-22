@@ -1,4 +1,5 @@
 import re
+import warnings
 from enum import Enum, unique
 from os import PathLike
 from pathlib import Path
@@ -8,9 +9,10 @@ from zipfile import ZipFile
 from attr import dataclass
 from boltons.cacheutils import cachedproperty
 
-from webknossos.client.context import _get_context
+import webknossos.skeleton.nml as wknml
 from webknossos.dataset import Dataset, Layer, SegmentationLayer
-from webknossos.skeleton import Skeleton, open_nml
+from webknossos.geometry import Vec3Int
+from webknossos.skeleton import Skeleton
 
 MAG_RE = r"((\d+-\d+-)?\d+)"
 SEP_RE = r"(\/|\\)"
@@ -47,10 +49,19 @@ class Annotation:
         return [i.filename for i in self._zipfile.filelist]
 
     @cachedproperty
-    def skeleton(self) -> Skeleton:
+    def _nml_file(self) -> _ZipPath:
         nml_files = [i for i in self._filelist if i.endswith(".nml")]
         assert len(nml_files) == 1
-        return open_nml(_ZipPath(self._zipfile, nml_files[0]))
+        return _ZipPath(self._zipfile, nml_files[0])
+
+    @cachedproperty
+    def skeleton(self) -> Skeleton:
+        return Skeleton.load(self._nml_file)
+
+    @cachedproperty
+    def _nml(self) -> wknml.NML:
+        with self._nml_file.open(mode="rb") as file_handle:
+            return wknml.parse_nml(file_handle)
 
     @cachedproperty
     def dataset_name(self) -> str:
@@ -60,9 +71,10 @@ class Annotation:
         self, dataset: Dataset, layer_name: str = "volume_annotation"
     ) -> Layer:
         # todo pylint: disable=fixme
-        # the name is about to change with multiple volume annotations
-        assert "data.zip" in self._filelist
-        with self._zipfile.open("data.zip") as f:
+        assert self._nml.volume is not None
+        volume_zip_path = self._nml.volume.location
+        assert volume_zip_path in self._filelist
+        with self._zipfile.open(volume_zip_path) as f:
             data_zip = ZipFile(f)
             wrong_files = [
                 i.filename
@@ -80,24 +92,28 @@ class Annotation:
             ),
         )
         min_mag_view = layer.mags[min(layer.mags)]
-        # todo pylint: disable=fixme
-        # this tries to read the entire DS into memory (beginning from 0, 0, 0).
-        # if the annotation begins at some other point, this will blow up the RAM unnecessarily.
-        layer.largest_segment_id = int(min_mag_view.read().max())
+        max_value = max(
+            min_mag_view.read(Vec3Int(offset) - min_mag_view.global_offset, size).max()
+            for offset, size in min_mag_view.get_bounding_boxes_on_disk()
+        )
+        layer.largest_segment_id = int(max_value)
         return layer
 
-
-def open_annotation(annotation_path: Union[str, PathLike]) -> "Annotation":
-    if Path(annotation_path).exists():
+    @classmethod
+    def load(cls, annotation_path: Union[str, PathLike]) -> "Annotation":
+        assert Path(
+            annotation_path
+        ).exists(), f"Annotation path {annotation_path} does not exist."
         return Annotation(annotation_path)
-    else:
-        assert isinstance(
-            annotation_path, str
-        ), f"Called open_annotation with a path-like, but {annotation_path} does not exist."
+
+    @classmethod
+    def download(cls, annotation_path: str) -> "Annotation":
+        from webknossos.client.context import _get_context
+
         match = re.match(annotation_url_regex, annotation_path)
         assert (
             match is not None
-        ), "open_annotation() must be called with a path or an annotation url, e.g. https://webknossos.org/annotations/Explorational/6114d9410100009f0096c640"
+        ), "Annotation.download() must be called an annotation url, e.g. https://webknossos.org/annotations/Explorational/6114d9410100009f0096c640"
         webknossos_url, annotation_type_str, annotation_id = match.groups()
         annotation_type = AnnotationType(annotation_type_str)
         assert webknossos_url == _get_context().url, (
@@ -121,3 +137,19 @@ class AnnotationType(Enum):
 annotation_url_regex = re.compile(
     fr"(https?://.*)/annotations/({'|'.join(i.value for i in AnnotationType.__members__.values())})/([0-9A-Fa-f]*)"
 )
+
+
+def open_annotation(annotation_path: Union[str, PathLike]) -> "Annotation":
+    if Path(annotation_path).exists():
+        warnings.warn(
+            "[DEPRECATION] open_annotation is deprecated, please use Annotation.load instead."
+        )
+        return Annotation.load(annotation_path)
+    else:
+        assert isinstance(
+            annotation_path, str
+        ), f"Called open_annotation with a path-like, but {annotation_path} does not exist."
+        warnings.warn(
+            "[DEPRECATION] open_annotation is deprecated, please use Annotation.download instead."
+        )
+        return Annotation.download(annotation_path)

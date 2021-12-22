@@ -34,7 +34,7 @@ def test_export_nifti_file() -> None:
 
     export_wkw_as_nifti_from_arg_list(args_list)
 
-    wk_ds = Dataset(source_path)
+    wk_ds = Dataset.open(source_path)
 
     for layer_name, layer in wk_ds.layers.items():
         correct_image = layer.get_mag(Mag(1)).read(
