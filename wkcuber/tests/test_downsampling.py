@@ -388,7 +388,7 @@ def test_downsample_compressed() -> None:
 
 
 def test_downsample_2d() -> None:
-    ds = Dataset.create(TESTOUTPUT_DIR / "downsample_compressed", scale=(1, 1, 2))
+    ds = Dataset(TESTOUTPUT_DIR / "downsample_compressed", scale=(1, 1, 2))
     layer = ds.add_layer("color", COLOR_CATEGORY)
     mag = layer.add_mag(1, block_len=8, file_len=8)
     # write 2D data with all values set to "123"
