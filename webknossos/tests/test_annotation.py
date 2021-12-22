@@ -1,6 +1,7 @@
 from pathlib import Path
-from webknossos.geometry import Vec3Int
+
 import webknossos as wk
+from webknossos.geometry import Vec3Int
 
 TESTDATA_DIR = Path("testdata")
 
@@ -31,13 +32,18 @@ def test_annotation() -> None:
         skeleton_lines = file_handle.readlines()
         assert len(skeleton_lines) == 32
 
-    # why does this fail with a permission error?
-    # annotation = Annotation.download(
-    #     "https://webknossos.org/annotations/Explorational/61c20205010000cc004a6356"
-    # )
-    # print(annotation)
-    # print(annotation.dataset_name)
-    # annotation.save_to_file(...)
+    # this should work without a valid token, since the annotation is public
+    # a permission error?
+    annotation = wk.Annotation.download(
+        "https://webknossos.org/annotations/Explorational/61c20205010000cc004a6356"
+    )
+    assert annotation.dataset_name == "l4dense_motta_et_al_demo_v2"
+    assert len(list(annotation.skeleton.flattened_graphs())) == 1
+
+    annotation.save_to_file("testoutput/test_dummy_downloaded.zip")
+    annotation = wk.Annotation("testoutput/test_dummy_downloaded.zip")
+    assert annotation.dataset_name == "l4dense_motta_et_al_demo_v2"
+    assert len(list(annotation.skeleton.flattened_graphs())) == 1
 
 
 if __name__ == "__main__":

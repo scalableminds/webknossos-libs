@@ -5,10 +5,10 @@ from enum import Enum, unique
 from os import PathLike
 from pathlib import Path
 from shutil import copyfile
-
-from typing import IO, List, NamedTuple, Optional, Union, cast, Iterator
-from zipfile import ZipFile
 from tempfile import TemporaryDirectory
+from typing import IO, Iterator, List, NamedTuple, Optional, Union, cast
+from zipfile import ZipFile
+from io import BytesIO
 
 from attr import dataclass
 from boltons.cacheutils import cachedproperty
@@ -43,7 +43,7 @@ class _ZipPath(NamedTuple):
 
 @dataclass
 class Annotation:
-    file: Union[str, PathLike, IO[bytes]]
+    file: Union[str, PathLike, BytesIO]
 
     @cachedproperty
     def _zipfile(self) -> ZipFile:
@@ -177,7 +177,7 @@ class Annotation:
             copyfile(self.file, str(path))
         else:
             with open(path, "wb") as f:
-                f.write(self.file.read())
+                f.write(self.file.getbuffer())
 
     @contextmanager
     def temporary_annotation_view(self) -> Iterator[Layer]:
