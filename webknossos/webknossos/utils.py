@@ -12,8 +12,10 @@ from multiprocessing import cpu_count
 from pathlib import Path
 from typing import Any, Callable, Iterable, List, Optional, Union
 
+import rich
 from cluster_tools import WrappedProcessPoolExecutor, get_executor
 from cluster_tools.schedulers.cluster_executor import ClusterExecutor
+from rich.progress import Progress
 
 times = {}
 
@@ -84,12 +86,22 @@ def named_partial(func: F, *args: Any, **kwargs: Any) -> F:
     return partial_func
 
 
-def wait_and_ensure_success(futures: List[Future]) -> List[Any]:
+def wait_and_ensure_success(
+    futures: List[Future], progress_desc: Optional[str] = None
+) -> List[Any]:
     """Waits for all futures to complete and raises an exception
     as soon as a future resolves with an error."""
+
     results = []
-    for fut in as_completed(futures):
-        results.append(fut.result())
+    if progress_desc is None:
+        for fut in as_completed(futures):
+            results.append(fut.result())
+    else:
+        with get_rich_progress() as progress:
+            task = progress.add_task(progress_desc, total=len(futures))
+            for fut in as_completed(futures):
+                results.append(fut.result())
+                progress.update(task, advance=1)
     return results
 
 
@@ -141,3 +153,14 @@ def add_verbose_flag(parser: argparse.ArgumentParser) -> None:
     )
 
     parser.set_defaults(verbose=True)
+
+
+def get_rich_progress() -> Progress:
+    return Progress(
+        "[progress.description]{task.description}",
+        rich.progress.BarColumn(),
+        "[progress.percentage]{task.percentage:>3.0f}%",
+        rich.progress.TimeElapsedColumn(),
+        "|",
+        rich.progress.TimeRemainingColumn(),
+    )

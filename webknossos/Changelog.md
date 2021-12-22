@@ -27,6 +27,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Added
 
 ### Changed
+- The detailed output of e.g. downsampling was replaced with a progress bar. [#527](https://github.com/scalableminds/webknossos-libs/pull/527)
 - Always use the sampling mode `CONSTANT_Z` when downsampling 2D data. [#516](https://github.com/scalableminds/webknossos-libs/pull/516)
 - Make computation of `largestSegmentId` more efficient for volume annotations. [#531](https://github.com/scalableminds/webknossos-libs/pull/531)
 

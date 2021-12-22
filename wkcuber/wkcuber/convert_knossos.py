@@ -1,4 +1,3 @@
-import time
 import logging
 from pathlib import Path
 from typing import Tuple, cast, Optional
@@ -61,8 +60,6 @@ def convert_cube_job(
     args: Tuple[Tuple[int, int, int], KnossosDatasetInfo, WkwDatasetInfo]
 ) -> None:
     cube_xyz, source_knossos_info, target_wkw_info = args
-    logging.info("Converting {},{},{}".format(cube_xyz[0], cube_xyz[1], cube_xyz[2]))
-    ref_time = time.time()
     offset = cast(Tuple[int, int, int], tuple(x * CUBE_EDGE_LEN for x in cube_xyz))
     size = cast(Tuple[int, int, int], (CUBE_EDGE_LEN,) * 3)
 
@@ -71,11 +68,6 @@ def convert_cube_job(
     ) as target_wkw:
         cube_data = source_knossos.read(offset, size)
         target_wkw.write(offset, cube_data)
-    logging.debug(
-        "Converting of {},{},{} took {:.8f}s".format(
-            cube_xyz[0], cube_xyz[1], cube_xyz[2], time.time() - ref_time
-        )
-    )
 
 
 def convert_knossos(
@@ -107,7 +99,10 @@ def convert_knossos(
             for cube_xyz in knossos_cubes:
                 job_args.append((cube_xyz, source_knossos_info, target_wkw_info))
 
-            wait_and_ensure_success(executor.map_to_futures(convert_cube_job, job_args))
+            wait_and_ensure_success(
+                executor.map_to_futures(convert_cube_job, job_args),
+                f"Converting knossos layer {layer_name}",
+            )
 
 
 def main(args: Namespace) -> None:

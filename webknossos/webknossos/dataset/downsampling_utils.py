@@ -9,7 +9,6 @@ from scipy.ndimage import zoom
 from wkw import wkw
 
 from webknossos.geometry import Mag, Vec3Int, Vec3IntLike
-from webknossos.utils import time_start, time_stop
 
 from .layer_categories import LayerCategoryType
 from .view import View
@@ -234,9 +233,6 @@ def _mode(x: np.ndarray) -> np.ndarray:
 def downsample_unpadded_data(
     buffer: np.ndarray, target_mag: Mag, interpolation_mode: InterpolationModes
 ) -> np.ndarray:
-    logging.info(
-        f"Downsampling buffer of size {buffer.shape} to mag {target_mag.to_layer_name()}"
-    )
     target_mag_np = np.array(target_mag.to_list())
     current_dimension_size = np.array(buffer.shape[1:])
     padding_size_for_downsampling = (
@@ -282,18 +278,10 @@ def downsample_cube_job(
     mag_factors: List[int],
     interpolation_mode: InterpolationModes,
     buffer_edge_len: int,
-    job_count_per_log: int,
 ) -> None:
-    (source_view, target_view, i) = args
-    use_logging = i % job_count_per_log == 0
-
-    if use_logging:
-        logging.info(f"Downsampling of {target_view.global_offset}")
+    (source_view, target_view, _i) = args
 
     try:
-        if use_logging:
-            time_start(f"Downsampling of {target_view.global_offset}")
-
         num_channels = target_view.header.num_channels
         shape = (num_channels,) + tuple(target_view.size)
         file_buffer = np.zeros(shape, target_view.get_dtype())
@@ -350,9 +338,9 @@ def downsample_cube_job(
         if source_view.header.num_channels == 1:
             file_buffer = file_buffer[0]  # remove channel dimension
         target_view.write(file_buffer)
-        if use_logging:
-            time_stop(f"Downsampling of {target_view.global_offset}")
 
     except Exception as exc:
-        logging.error(f"Downsampling of {target_view.global_offset} failed with {exc}")
+        logging.error(
+            f"Downsampling of target BoundingBox(offset={target_view.global_offset}, size={target_view.size}) failed with {exc}"
+        )
         raise exc
