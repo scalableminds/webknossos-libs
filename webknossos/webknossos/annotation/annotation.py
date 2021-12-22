@@ -174,7 +174,7 @@ class Annotation:
         assert Path(path).suffix == ".zip", "The target path should be a zip file."
 
         if isinstance(self.file, str) or isinstance(self.file, PathLike):
-            copyfile(self.file, path)
+            copyfile(self.file, str(path))
         else:
             with open(path, "wb") as f:
                 f.write(self.file.read())
@@ -193,8 +193,8 @@ class Annotation:
                 Path(tmp_annotation_dir) / "tmp_annotation_dataset"
             )
 
-        input_annotation_dataset = Dataset.get_or_create(
-            str(tmp_annotation_dataset_path), scale=(1, 1, 1)
+        input_annotation_dataset = Dataset(
+            str(tmp_annotation_dataset_path), scale=(1, 1, 1), exist_ok=True
         )
 
         input_annotation_layer = self.save_volume_annotation(
