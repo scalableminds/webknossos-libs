@@ -1,4 +1,3 @@
-import time
 import logging
 from pathlib import Path
 
@@ -215,12 +214,8 @@ def tile_cubing_job(
     # Batching is useful to utilize IO more efficiently
     for z_batch in get_chunks(z_batches, batch_size):
         try:
-            ref_time = time.time()
-            logging.info("Cubing z={}-{}".format(z_batch[0], z_batch[-1]))
-
             for x in range(min_dimensions["x"], max_dimensions["x"] + 1):
                 for y in range(min_dimensions["y"], max_dimensions["y"] + 1):
-                    ref_time2 = time.time()
                     # Allocate a large buffer for all images in this batch
                     # Shape will be (channel_count, x, y, z)
                     # Using fortran order for the buffer, prevents that the data has to be copied in rust
@@ -266,16 +261,6 @@ def tile_cubing_job(
                         largest_value_in_chunk = max(
                             largest_value_in_chunk, np.max(buffer)
                         )
-                    logging.debug(
-                        "Cubing of z={}-{} x={} y={} took {:.8f}s".format(
-                            z_batch[0], z_batch[-1], x, y, time.time() - ref_time2
-                        )
-                    )
-            logging.debug(
-                "Cubing of z={}-{} took {:.8f}s".format(
-                    z_batch[0], z_batch[-1], time.time() - ref_time
-                )
-            )
         except Exception as exc:
             logging.error(
                 "Cubing of z={}-{} failed with: {}".format(z_batch[0], z_batch[-1], exc)
@@ -323,7 +308,7 @@ def tile_cubing(
     else:
         dtype = args.dtype
 
-    target_ds = Dataset.get_or_create(target_path, scale=scale)
+    target_ds = Dataset(target_path, scale=scale, exist_ok=True)
     is_segmentation_layer = layer_name == "segmentation"
     if is_segmentation_layer:
         target_layer = target_ds.get_or_add_layer(
@@ -386,7 +371,8 @@ def tile_cubing(
             )
 
         largest_segment_id_per_chunk = wait_and_ensure_success(
-            executor.map_to_futures(tile_cubing_job, job_args)
+            executor.map_to_futures(tile_cubing_job, job_args),
+            f"Tile cubing layer {layer_name}",
         )
 
         if is_segmentation_layer:
