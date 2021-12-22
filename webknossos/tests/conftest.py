@@ -1,5 +1,4 @@
 from os import makedirs
-from pathlib import Path
 from shutil import rmtree
 from typing import Any, Dict, Generator, Union
 from unittest.mock import MagicMock, patch
@@ -10,6 +9,7 @@ from vcr.request import Request as VcrRequest
 from vcr.stubs import httpx_stubs
 
 from webknossos.client.context import _clear_all_context_caches
+
 from .constants import TESTOUTPUT_DIR
 
 

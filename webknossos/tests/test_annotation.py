@@ -2,7 +2,8 @@ import pytest
 
 import webknossos as wk
 from webknossos.geometry import Vec3Int
-from .constants import TESTOUTPUT_DIR, TESTDATA_DIR
+
+from .constants import TESTDATA_DIR, TESTOUTPUT_DIR
 
 
 @pytest.mark.vcr()
