@@ -2,13 +2,13 @@ import re
 import warnings
 from contextlib import contextmanager
 from enum import Enum, unique
+from io import BytesIO
 from os import PathLike
 from pathlib import Path
 from shutil import copyfile
 from tempfile import TemporaryDirectory
 from typing import IO, Iterator, List, NamedTuple, Optional, Union, cast
 from zipfile import ZipFile
-from io import BytesIO
 
 from attr import dataclass
 from boltons.cacheutils import cachedproperty
