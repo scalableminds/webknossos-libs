@@ -10,6 +10,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.29...HEAD)
 
 ### Breaking Changes
+- The BoundingBoxNamedTuple was removed. Use BoundingBox instead. [#526](https://github.com/scalableminds/webknossos-libs/pull/526)
 - Some methods of creating, opening and saving have changed. The old methods are still available but deprecated. [The documentation gives a good overview](https://docs.webknossos.org/api/webknossos.html). Specifically, the changes are :
   * `Dataset.create()` → `Dataset()`
   * `Dataset.get_or_create()` → `Dataset(…, exist_ok=True)`
