@@ -357,9 +357,8 @@ class View:
 
         job_args = []
 
-        for i, chunk in enumerate(
-            BoundingBox(view.global_offset, view.size).chunk(chunk_size, chunk_size)
-        ):
+        bbox = BoundingBox(view.global_offset, view.size)
+        for i, chunk in enumerate(bbox.chunk(chunk_size, chunk_size)):
             relative_offset = chunk.topleft - view.global_offset
             chunk_view = view.get_view(
                 offset=relative_offset,
@@ -374,10 +373,11 @@ class View:
                     work_on_chunk(args)
             else:
                 with get_rich_progress() as progress:
-                    task = progress.add_task(progress_desc, total=len(job_args))
+                    task = progress.add_task(progress_desc, total=bbox.volume())
                     for args in job_args:
                         work_on_chunk(args)
-                        progress.update(task, advance=1)
+                        chunk_bbox = BoundingBox((0, 0, 0), args[0].size)
+                        progress.update(task, advance=chunk_bbox.volume())
         else:
             wait_and_ensure_success(
                 executor.map_to_futures(work_on_chunk, job_args), progress_desc
@@ -444,9 +444,8 @@ class View:
         ), f"Calling for_zipped_chunks failed. The target_chunk_size ({target_chunk_size}) must be a multiple of file_len*block_len of the target view ({target_view.header.file_len * target_view.header.block_len})"
 
         job_args = []
-        source_chunks = BoundingBox(source_offset, source_view.size).chunk(
-            source_chunk_size, source_chunk_size
-        )
+        source_bbox = BoundingBox(source_offset, source_view.size)
+        source_chunks = source_bbox.chunk(source_chunk_size, source_chunk_size)
         target_chunks = BoundingBox(target_offset, target_view.size).chunk(
             target_chunk_size, target_chunk_size
         )
@@ -477,10 +476,11 @@ class View:
                     work_on_chunk(args)
             else:
                 with get_rich_progress() as progress:
-                    task = progress.add_task(progress_desc, total=len(job_args))
+                    task = progress.add_task(progress_desc, total=source_bbox.volume())
                     for args in job_args:
                         work_on_chunk(args)
-                        progress.update(task, advance=1)
+                        chunk_bbox = BoundingBox((0, 0, 0), args[0].size)
+                        progress.update(task, advance=chunk_bbox.volume())
         else:
             wait_and_ensure_success(
                 executor.map_to_futures(work_on_chunk, job_args), progress_desc

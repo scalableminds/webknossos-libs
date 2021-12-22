@@ -691,10 +691,8 @@ class Layer:
                 * mag_factors,
                 target_chunk_size=target_mag_view._get_file_dimensions(),
                 executor=executor,
-                progress_desc=f"Downsampling from Mag {from_mag} to Mag {target_mag}",
+                progress_desc=f"Downsampling layer {self.name} from Mag {from_mag} to Mag {target_mag}",
             )
-
-        logging.info("Mag {0} successfully cubed".format(target_mag))
 
     def redownsample(
         self,
@@ -849,8 +847,6 @@ class Layer:
                     executor=executor,
                     progress_desc=f"Upsampling from Mag {prev_mag} to Mag {target_mag}",
                 )
-
-            logging.info("Mag {0} successfully cubed".format(target_mag))
 
     def _setup_mag(self, mag: Mag) -> None:
         # This method is used to initialize the mag when opening the Dataset. This does not create e.g. the wk_header.

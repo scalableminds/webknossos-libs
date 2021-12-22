@@ -17,7 +17,7 @@ def compress_file_job(args: Tuple[Path, Path]) -> None:
 
     except Exception as exc:
         logging.error(
-            "Compressing of '{}' to '{}' failed with {}".format(
+            "Compression of '{}' to '{}' failed with {}".format(
                 source_path, target_path, exc
             )
         )
