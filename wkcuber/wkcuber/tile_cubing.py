@@ -308,7 +308,7 @@ def tile_cubing(
     else:
         dtype = args.dtype
 
-    target_ds = Dataset.get_or_create(target_path, scale=scale)
+    target_ds = Dataset(target_path, scale=scale, exist_ok=True)
     is_segmentation_layer = layer_name == "segmentation"
     if is_segmentation_layer:
         target_layer = target_ds.get_or_add_layer(
