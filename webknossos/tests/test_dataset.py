@@ -30,8 +30,7 @@ from webknossos.dataset.properties import (
 from webknossos.geometry import BoundingBox, Mag
 from webknossos.utils import get_executor_for_args, named_partial, snake_to_camel_case
 
-TESTDATA_DIR = Path("testdata")
-TESTOUTPUT_DIR = Path("testoutput")
+from .constants import TESTOUTPUT_DIR, TESTDATA_DIR
 
 
 def delete_dir(relative_path: Path) -> None:

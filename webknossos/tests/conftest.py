@@ -10,8 +10,7 @@ from vcr.request import Request as VcrRequest
 from vcr.stubs import httpx_stubs
 
 from webknossos.client.context import _clear_all_context_caches
-
-TESTOUTPUT_DIR = Path("testoutput")
+from .constants import TESTOUTPUT_DIR
 
 
 @pytest.fixture(autouse=True, scope="function")

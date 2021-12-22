@@ -1,11 +1,8 @@
-from pathlib import Path
 import pytest
 
 import webknossos as wk
 from webknossos.geometry import Vec3Int
-
-TESTDATA_DIR = Path("testdata")
-TESTOUTPUT_DIR = Path("testoutput")
+from .constants import TESTOUTPUT_DIR, TESTDATA_DIR
 
 
 @pytest.mark.vcr()
