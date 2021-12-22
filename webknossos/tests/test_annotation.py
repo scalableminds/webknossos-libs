@@ -1,9 +1,3 @@
-import sys
-import os
-import pytest
-
-sys.path.insert(0, os.getcwd())
-
 from pathlib import Path
 from webknossos.geometry import Vec3Int
 import webknossos as wk
