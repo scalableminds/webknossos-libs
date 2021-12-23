@@ -136,7 +136,7 @@ def copy_directory_with_symlinks(
             if make_relative:
                 rel_or_abspath = os.path.relpath(item, symlink_path.parent)
             else:
-                rel_or_abspath = os.path.abspath(item)
+                rel_or_abspath = item.resolve()
             symlink_path.symlink_to(rel_or_abspath)
 
 

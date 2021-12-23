@@ -414,7 +414,7 @@ class Layer:
         foreign_normalized_mag_path = (
             Path(os.path.relpath(foreign_mag_view.path, self.path))
             if make_relative
-            else Path(os.path.abspath(foreign_mag_view.path))
+            else foreign_mag_view.path.resolve()
         )
 
         if symlink:
