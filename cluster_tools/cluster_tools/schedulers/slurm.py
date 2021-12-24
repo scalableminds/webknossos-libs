@@ -187,14 +187,26 @@ class SlurmExecutor(ClusterExecutor):
         job_resources_lines = []
         if self.job_resources is not None:
             for resource, value in self.job_resources.items():
-                job_resources_lines += ["#SBATCH --{}={}".format(resource, value)]
+                # job_resources_lines += ["#SBATCH --{}={}".format(resource, value)]
+                if resource not in ['maxjobsize', 'maxsubmit']:
+                    job_resources_lines += ["#SBATCH --{}={}".format(resource, value)]
 
-        max_array_size = self.get_max_array_size()
-        max_submit_jobs = self.get_max_submit_jobs()
+        # max_array_size = self.get_max_array_size()
+        # max_submit_jobs = self.get_max_submit_jobs()
+        if self.job_resources is not None and 'maxjobsize' in self.job_resources:
+            max_array_size = int(self.job_resources['maxjobsize'])
+        else:
+            max_array_size = self.get_max_array_size()
+        if self.job_resources is not None and 'maxsubmit' in self.job_resources:
+            max_submit_jobs = int(self.job_resources['maxsubmit'])
+        else:
+            max_submit_jobs = self.get_max_submit_jobs()
+
         # Only ever submit at most a third of max_submit_jobs at once (but at least one).
         # This way, multiple programs submitting slurm jobs will not block each other
         # by "occupying" more than half of the number of submittable jobs.
-        batch_size = max(min(max_array_size, max_submit_jobs // 3), 1)
+        #batch_size = max(min(max_array_size, max_submit_jobs // 3), 1)
+        batch_size = max_array_size
 
         scripts = []
         job_id_futures = []
@@ -231,7 +243,7 @@ class SlurmExecutor(ClusterExecutor):
         self.cleanup_submit_threads()
 
         submit_thread = JobSubmitThread(
-            scripts, job_sizes, job_id_futures, self.cfut_dir
+            scripts, job_sizes, job_id_futures, self.cfut_dir, max_submit_jobs=max_submit_jobs
         )
         self.submit_threads.append(submit_thread)
         submit_thread.start()
@@ -307,19 +319,24 @@ class SlurmExecutor(ClusterExecutor):
 
 
 class JobSubmitThread(threading.Thread):
-    def __init__(self, scripts, job_sizes, futures, cfut_dir, *args, **kwargs):
+    def __init__(self, scripts, job_sizes, futures, cfut_dir, max_submit_jobs=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._stop_event = threading.Event()
         self.scripts = scripts
         self.job_sizes = job_sizes
         self.futures = futures
         self.cfut_dir = cfut_dir
+        self.max_submit_jobs = max_submit_jobs
 
     def stop(self):
         self._stop_event.set()
 
     def run(self):
-        max_submit_jobs = SlurmExecutor.get_max_submit_jobs()
+        # max_submit_jobs = SlurmExecutor.get_max_submit_jobs()
+        if self.max_submit_jobs is not None:
+            max_submit_jobs = self.max_submit_jobs
+        else:
+            max_submit_jobs = SlurmExecutor.get_max_submit_jobs()
 
         for script, job_size, future in zip(self.scripts, self.job_sizes, self.futures):
             if self._stop_event.is_set():
