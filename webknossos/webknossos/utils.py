@@ -134,9 +134,9 @@ def copy_directory_with_symlinks(
         if item.name not in ignore:
             symlink_path = dst_path / item.name
             if make_relative:
-                rel_or_abspath = os.path.relpath(item, symlink_path.parent)
+                rel_or_abspath = Path(os.path.relpath(item, symlink_path.parent))
             else:
-                rel_or_abspath = os.path.abspath(item)
+                rel_or_abspath = item.resolve()
             symlink_path.symlink_to(rel_or_abspath)
 
 
