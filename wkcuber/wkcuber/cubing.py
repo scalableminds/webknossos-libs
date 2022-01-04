@@ -16,6 +16,7 @@ from webknossos.dataset import (
     Layer,
 )
 from webknossos.geometry import BoundingBox, Vec3Int
+from webknossos.utils import time_start, time_stop
 from .mag import Mag
 from .downsampling_utils import (
     parse_interpolation_mode,
@@ -26,7 +27,7 @@ from .utils import (
     get_chunks,
     find_files,
     add_batch_size_flag,
-    add_silent_flag,
+    add_verbose_flag,
     add_distribution_flags,
     add_interpolation_flag,
     get_executor_for_args,
@@ -122,7 +123,7 @@ def create_parser() -> ArgumentParser:
 
     add_scale_flag(parser)
     add_interpolation_flag(parser)
-    add_silent_flag(parser)
+    add_verbose_flag(parser)
     add_distribution_flags(parser)
 
     return parser
@@ -202,6 +203,9 @@ def cubing_job(
     first_z_idx = target_view.global_offset.z
     for source_file_batch in get_chunks(source_file_batches, batch_size):
         try:
+            time_start(
+                f"Cubing of z={first_z_idx}-{first_z_idx + len(source_file_batch)}"
+            )
             # Allocate a large buffer for all images in this batch
             # Shape will be (channel_count, x, y, z)
             # Using fortran order for the buffer, prevents that the data has to be copied in rust
@@ -252,6 +256,9 @@ def cubing_job(
             target_view.write(offset=(0, 0, buffer_z_offset), data=buffer)
             largest_value_in_chunk = max(largest_value_in_chunk, np.max(buffer))
             first_z_idx += len(source_file_batch)
+            time_stop(
+                f"Cubing of z={first_z_idx}-{first_z_idx + len(source_file_batch)}"
+            )
 
         except Exception as exc:
             logging.error(

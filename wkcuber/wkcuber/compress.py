@@ -9,7 +9,7 @@ from os import makedirs
 from wkcuber.api.dataset import Dataset
 from .mag import Mag
 
-from .utils import add_silent_flag, add_distribution_flags, setup_logging
+from .utils import add_verbose_flag, add_distribution_flags, setup_logging
 from typing import List
 
 BACKUP_EXT = ".bak"
@@ -41,7 +41,7 @@ def create_parser() -> ArgumentParser:
         "--mag", "-m", nargs="*", help="Magnification level", default=None
     )
 
-    add_silent_flag(parser)
+    add_verbose_flag(parser)
     add_distribution_flags(parser)
 
     return parser

@@ -9,7 +9,7 @@ from wkcuber.downsampling_utils import SamplingModes
 from .mag import Mag
 
 from .utils import (
-    add_silent_flag,
+    add_verbose_flag,
     add_distribution_flags,
     add_interpolation_flag,
     add_isotropic_flag,
@@ -77,7 +77,7 @@ def create_parser() -> ArgumentParser:
     )
 
     add_interpolation_flag(parser)
-    add_silent_flag(parser)
+    add_verbose_flag(parser)
     add_isotropic_flag(parser)
     add_sampling_mode_flag(parser)
     add_distribution_flags(parser)
