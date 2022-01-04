@@ -15,6 +15,7 @@ import numpy as np
 import wkw
 from boltons.typeutils import make_sentinel
 
+from webknossos.client._upload_dataset import LayerToLink
 from webknossos.dataset._utils.infer_bounding_box_existing_files import (
     infer_bounding_box_existing_files,
 )
@@ -225,10 +226,14 @@ class Dataset:
         """
         return self._layers
 
-    def upload(self) -> str:
+    def upload(
+        self,
+        new_dataset_name: Optional[str] = None,
+        layers_to_link: Optional[List[LayerToLink]] = None,
+    ) -> str:
         from webknossos.client._upload_dataset import upload_dataset
 
-        return upload_dataset(self)
+        return upload_dataset(self, new_dataset_name, layers_to_link)
 
     def get_layer(self, layer_name: str) -> Layer:
         """
