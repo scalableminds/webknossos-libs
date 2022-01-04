@@ -255,10 +255,10 @@ def cubing_job(
             ) // target_mag.z
             target_view.write(offset=(0, 0, buffer_z_offset), data=buffer)
             largest_value_in_chunk = max(largest_value_in_chunk, np.max(buffer))
-            first_z_idx += len(source_file_batch)
             time_stop(
                 f"Cubing of z={first_z_idx}-{first_z_idx + len(source_file_batch)}"
             )
+            first_z_idx += len(source_file_batch)
 
         except Exception as exc:
             logging.error(
