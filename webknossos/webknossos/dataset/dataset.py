@@ -8,14 +8,16 @@ from os import PathLike, makedirs
 from os.path import basename, join, normpath
 from pathlib import Path
 from shutil import rmtree
-from typing import Any, Dict, List, Optional, Tuple, Union, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union, cast
 
 import attr
 import numpy as np
 import wkw
 from boltons.typeutils import make_sentinel
 
-from webknossos.client._upload_dataset import LayerToLink
+if TYPE_CHECKING:
+    from webknossos.client._upload_dataset import LayerToLink
+
 from webknossos.dataset._utils.infer_bounding_box_existing_files import (
     infer_bounding_box_existing_files,
 )
