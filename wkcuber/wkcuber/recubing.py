@@ -10,7 +10,7 @@ from itertools import product
 from .metadata import detect_bbox
 
 from .utils import (
-    add_verbose_flag,
+    add_silent_flag,
     open_wkw,
     WkwDatasetInfo,
     ensure_wkw,
@@ -57,7 +57,7 @@ def create_parser() -> ArgumentParser:
         default=False,
     )
 
-    add_verbose_flag(parser)
+    add_silent_flag(parser)
     add_distribution_flags(parser)
 
     return parser

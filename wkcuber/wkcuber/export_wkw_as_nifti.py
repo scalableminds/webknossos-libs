@@ -12,7 +12,7 @@ from wkcuber.api.layer_categories import SEGMENTATION_CATEGORY
 from wkcuber.mag import Mag
 from wkcuber.utils import (
     add_distribution_flags,
-    add_verbose_flag,
+    add_silent_flag,
     parse_bounding_box,
     parse_padding,
     setup_logging,
@@ -63,7 +63,7 @@ def create_parser() -> ArgumentParser:
         type=parse_padding,
     )
 
-    add_verbose_flag(parser)
+    add_silent_flag(parser)
     add_distribution_flags(parser)
 
     return parser

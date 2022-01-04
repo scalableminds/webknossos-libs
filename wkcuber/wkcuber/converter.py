@@ -20,7 +20,7 @@ from .utils import (
     find_files,
     add_scale_flag,
     logger,
-    add_verbose_flag,
+    add_silent_flag,
     setup_logging,
     get_executor_args,
     is_wk_compatible_layer_format,
@@ -44,7 +44,7 @@ def create_parser() -> ArgumentParser:
     )
 
     add_scale_flag(parser)
-    add_verbose_flag(parser)
+    add_silent_flag(parser)
 
     return parser
 

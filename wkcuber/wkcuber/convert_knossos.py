@@ -6,7 +6,7 @@ import wkw
 from argparse import ArgumentParser, Namespace
 
 from .utils import (
-    add_verbose_flag,
+    add_silent_flag,
     open_wkw,
     open_knossos,
     WkwDatasetInfo,
@@ -50,7 +50,7 @@ def create_parser() -> ArgumentParser:
 
     parser.add_argument("--mag", "-m", help="Magnification level", type=int, default=1)
 
-    add_verbose_flag(parser)
+    add_silent_flag(parser)
     add_distribution_flags(parser)
 
     return parser

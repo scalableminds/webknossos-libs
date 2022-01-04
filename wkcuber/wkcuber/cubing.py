@@ -26,7 +26,7 @@ from .utils import (
     get_chunks,
     find_files,
     add_batch_size_flag,
-    add_verbose_flag,
+    add_silent_flag,
     add_distribution_flags,
     add_interpolation_flag,
     get_executor_for_args,
@@ -122,7 +122,7 @@ def create_parser() -> ArgumentParser:
 
     add_scale_flag(parser)
     add_interpolation_flag(parser)
-    add_verbose_flag(parser)
+    add_silent_flag(parser)
     add_distribution_flags(parser)
 
     return parser

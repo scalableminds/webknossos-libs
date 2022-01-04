@@ -9,7 +9,7 @@ import numpy as np
 
 from wkcuber.mag import Mag
 from .utils import (
-    add_verbose_flag,
+    add_silent_flag,
     open_wkw,
     WkwDatasetInfo,
     add_distribution_flags,
@@ -53,7 +53,7 @@ def create_parser() -> ArgumentParser:
         default=None,
     )
 
-    add_verbose_flag(parser)
+    add_silent_flag(parser)
     add_distribution_flags(parser)
 
     return parser

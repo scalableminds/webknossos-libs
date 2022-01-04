@@ -41,8 +41,8 @@ def create_parser() -> ArgumentParser:
 
 def upload_dataset(
     source_path: Path,
-    token: Optional[str],
     url: str,
+    token: Optional[str],
     jobs: int,
 ) -> None:
     with webknossos_context(url=url, token=token):

@@ -14,7 +14,7 @@ from .utils import (
     add_interpolation_flag,
     add_sampling_mode_flag,
     add_scale_flag,
-    add_verbose_flag,
+    add_silent_flag,
     DEFAULT_WKW_VOXELS_PER_BLOCK,
     get_executor_args,
     setup_logging,
@@ -121,7 +121,7 @@ def create_parser() -> argparse.ArgumentParser:
 
     add_distribution_flags(parser)
 
-    add_verbose_flag(parser)
+    add_silent_flag(parser)
 
     return parser
 

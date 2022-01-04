@@ -147,12 +147,20 @@ def setup_logging(args: argparse.Namespace) -> None:
     )
 
 
-def add_verbose_flag(parser: argparse.ArgumentParser) -> None:
+def add_silent_flag(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--silent", help="Silent output", dest="verbose", action="store_false"
     )
 
     parser.set_defaults(verbose=True)
+
+
+def add_verbose_flag(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--verbose", help="Verbose output", dest="verbose", action="store_true"
+    )
+
+    parser.set_defaults(verbose=False)
 
 
 def get_rich_progress() -> Progress:

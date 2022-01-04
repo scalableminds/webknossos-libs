@@ -14,7 +14,7 @@ from wkcuber.api.dataset import Dataset
 from wkcuber.api.bounding_box import BoundingBox
 from wkcuber.utils import (
     DEFAULT_WKW_VOXELS_PER_BLOCK,
-    add_verbose_flag,
+    add_silent_flag,
     add_scale_flag,
     pad_or_crop_to_size_and_topleft,
     parse_bounding_box,
@@ -89,7 +89,7 @@ def create_parser() -> ArgumentParser:
     )
 
     add_scale_flag(parser, required=False)
-    add_verbose_flag(parser)
+    add_silent_flag(parser)
 
     return parser
 

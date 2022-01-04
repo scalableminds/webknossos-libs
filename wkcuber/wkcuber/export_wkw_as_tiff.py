@@ -13,7 +13,7 @@ from typing import Tuple, Dict, Union, List
 
 from wkcuber.metadata import read_metadata_for_layer
 from wkcuber.utils import (
-    add_verbose_flag,
+    add_silent_flag,
     add_distribution_flags,
     get_executor_for_args,
     add_batch_size_flag,
@@ -87,7 +87,7 @@ def create_parser() -> ArgumentParser:
 
     add_batch_size_flag(parser)
 
-    add_verbose_flag(parser)
+    add_silent_flag(parser)
     add_distribution_flags(parser)
 
     return parser
