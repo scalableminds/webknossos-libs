@@ -225,10 +225,10 @@ class Dataset:
         """
         return self._layers
 
-    def upload(self) -> str:
+    def upload(self, jobs: Optional[int] = None) -> str:
         from webknossos.client._upload_dataset import upload_dataset
 
-        return upload_dataset(self)
+        return upload_dataset(self, jobs)
 
     def get_layer(self, layer_name: str) -> Layer:
         """

@@ -1,14 +1,12 @@
 from pathlib import Path
-from argparse import ArgumentParser, Namespace
+from argparse import ArgumentParser
 from typing import Optional
 from os import environ
 
 from webknossos import webknossos_context
 from wkcuber.api.dataset import Dataset
-from .mag import Mag
 
 from .utils import add_verbose_flag, setup_logging
-from typing import List
 
 
 def create_parser() -> ArgumentParser:
@@ -46,7 +44,6 @@ def upload_dataset(
     token: Optional[str],
     url: str,
     jobs: int,
-    args: Optional[Namespace] = None,
 ) -> None:
     with webknossos_context(url=url, token=token):
         Dataset.open(source_path).upload(jobs)
@@ -65,4 +62,4 @@ if __name__ == "__main__":
         token is not None
     ), "An auth token needs to be supplied either through the --token command line arg or the WK_TOKEN environment variable."
 
-    upload_dataset(args.source_path, url, token, args.jobs, args.mag, args)
+    upload_dataset(args.source_path, url, token, args.jobs)
