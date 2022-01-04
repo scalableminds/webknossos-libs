@@ -226,6 +226,13 @@ class Dataset:
         return self._layers
 
     def upload(self, jobs: Optional[int] = None) -> str:
+        """
+        Uploads this dataset to webKnossos.
+
+        If supplied, the `jobs` parameter will determine the number of simultaneous chunk uploads.
+
+        Returns URL to view the dataset in webKnossos, upon successful upload.
+        """
         from webknossos.client._upload_dataset import upload_dataset
 
         return upload_dataset(self, jobs)
