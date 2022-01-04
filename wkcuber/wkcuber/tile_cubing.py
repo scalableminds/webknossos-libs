@@ -15,7 +15,6 @@ from webknossos.dataset import SegmentationLayer
 from webknossos.utils import time_start, time_stop
 from .utils import (
     get_chunks,
-    add_verbose_flag,
     get_executor_for_args,
     wait_and_ensure_success,
     setup_logging,
@@ -396,7 +395,6 @@ def create_parser() -> ArgumentParser:
         type=check_input_pattern,
         default="{zzzzzzzzzz}/{yyyyyyyyyy}/{xxxxxxxxxx}.jpg",
     )
-    add_verbose_flag(parser)
 
     return parser
 
