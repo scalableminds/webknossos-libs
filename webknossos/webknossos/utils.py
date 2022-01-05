@@ -22,7 +22,7 @@ times = {}
 
 def time_start(identifier: str) -> None:
     times[identifier] = time.time()
-    logging.debug("{} started")
+    logging.debug("{} started".format(identifier))
 
 
 def time_stop(identifier: str) -> None:

@@ -229,7 +229,7 @@ class Dataset:
         """
         Uploads this dataset to webKnossos.
 
-        If supplied, the `jobs` parameter will determine the number of simultaneous chunk uploads.
+        If supplied, the `jobs` parameter will determine the number of simultaneous chunk uploads. Defaults to 5.
 
         Returns URL to view the dataset in webKnossos, upon successful upload.
         """
