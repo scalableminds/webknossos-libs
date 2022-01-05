@@ -8,7 +8,7 @@ from webknossos.dataset import COLOR_CATEGORY
 
 
 def main() -> None:
-    with wk.webknossos_context(url="http://localhost:9000", token="secretScmBoyToken"):
+    with wk.webknossos_context(url="http://localhost:9000", token="secretSampleUserToken"):
         # load your data - we use an example 3D dataset here
         img = data.cells3d()  # (z, c, y, x)
 
