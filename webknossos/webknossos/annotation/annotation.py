@@ -14,7 +14,6 @@ from attr import dataclass
 from boltons.cacheutils import cachedproperty
 
 import webknossos.skeleton.nml as wknml
-from webknossos._types import Openable
 from webknossos.dataset import Dataset, Layer, SegmentationLayer
 from webknossos.geometry import Vec3Int
 from webknossos.skeleton import Skeleton
@@ -146,27 +145,16 @@ class Annotation:
 
         return download_annotation(annotation_type, annotation_id)
 
-    def _skeleton_zip_path(self) -> Union[Openable, PathLike, str]:
-        nml_files = [i for i in self._filelist if i.endswith(".nml")]
-        assert len(nml_files) == 1
-        return _ZipPath(self._zipfile, nml_files[0])
-
     @contextmanager
     def _open_nml(self) -> Iterator[IO[bytes]]:
         """
         This method can be used to open the annotation's inner NML
         file directly.
         """
-        file_path = self._skeleton_zip_path()
+        with self._nml_file.open(mode="rb") as file_handle:
+            yield file_handle
 
-        if isinstance(file_path, Openable):
-            with file_path.open(mode="rb") as file_handle:
-                yield file_handle
-        else:
-            with open(file_path, "rb") as file_handle:
-                yield file_handle
-
-    def save_to_file(self, path: Union[Path, str]) -> None:
+    def save(self, path: Union[Path, str]) -> None:
         """
         Stores the annotation as a zip at the given path.
         """
@@ -180,7 +168,7 @@ class Annotation:
                 f.write(self.file.getbuffer())
 
     @contextmanager
-    def temporary_annotation_view(self) -> Iterator[Layer]:
+    def temporary_volume_annotation_layer_copy(self) -> Iterator[Layer]:
 
         """
         Given a volume annotation path, create a temporary dataset which
