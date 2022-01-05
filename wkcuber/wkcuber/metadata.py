@@ -15,7 +15,7 @@ from typing import Optional, Tuple, Iterable, Generator
 from webknossos.dataset.layer import LayerCategoryType
 from .mag import Mag
 from typing import List
-from .utils import add_silent_flag, setup_logging, add_scale_flag
+from .utils import add_verbose_flag, setup_logging, add_scale_flag
 from pathlib import Path
 from os.path import basename, normpath
 
@@ -44,7 +44,7 @@ def create_parser() -> ArgumentParser:
     group.add_argument("--max_id", help="set max id of segmentation.", default=0)
 
     add_scale_flag(parser, required=False)
-    add_silent_flag(parser)
+    add_verbose_flag(parser)
 
     return parser
 

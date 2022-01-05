@@ -13,11 +13,12 @@ from typing import Tuple, Dict, Union, List
 
 from wkcuber.metadata import read_metadata_for_layer
 from wkcuber.utils import (
-    add_silent_flag,
+    add_verbose_flag,
     add_distribution_flags,
     get_executor_for_args,
     add_batch_size_flag,
     parse_bounding_box,
+    setup_logging,
 )
 from wkcuber.mag import Mag
 from wkcuber.utils import wait_and_ensure_success
@@ -87,7 +88,7 @@ def create_parser() -> ArgumentParser:
 
     add_batch_size_flag(parser)
 
-    add_silent_flag(parser)
+    add_verbose_flag(parser)
     add_distribution_flags(parser)
 
     return parser
@@ -242,8 +243,7 @@ def export_tiff_stack(
 
 
 def export_wkw_as_tiff(args: Namespace) -> None:
-    if args.verbose:
-        logging.basicConfig(level=logging.DEBUG)
+    setup_logging(args)
 
     if args.bbox is None:
         _, _, bbox_dim, origin = read_metadata_for_layer(

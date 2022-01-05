@@ -1,6 +1,7 @@
 from argparse import ArgumentParser, Namespace
 from os import path, sep
 from pathlib import Path
+import logging
 from typing import Iterable, List, Any, Tuple, Dict, Set, Callable, cast, Optional
 
 from webknossos.dataset.properties import LayerViewConfiguration
@@ -19,13 +20,14 @@ from .metadata import write_webknossos_metadata
 from .utils import (
     find_files,
     add_scale_flag,
-    logger,
-    add_silent_flag,
+    add_verbose_flag,
     setup_logging,
     get_executor_args,
     is_wk_compatible_layer_format,
     get_channel_and_sample_iters_for_wk_compatibility,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def create_parser() -> ArgumentParser:
@@ -44,7 +46,7 @@ def create_parser() -> ArgumentParser:
     )
 
     add_scale_flag(parser)
-    add_silent_flag(parser)
+    add_verbose_flag(parser)
 
     return parser
 

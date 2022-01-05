@@ -12,7 +12,7 @@ from wkcuber.api.layer_categories import SEGMENTATION_CATEGORY
 from wkcuber.mag import Mag
 from wkcuber.utils import (
     add_distribution_flags,
-    add_silent_flag,
+    add_verbose_flag,
     parse_bounding_box,
     parse_padding,
     setup_logging,
@@ -63,7 +63,7 @@ def create_parser() -> ArgumentParser:
         type=parse_padding,
     )
 
-    add_silent_flag(parser)
+    add_verbose_flag(parser)
     add_distribution_flags(parser)
 
     return parser
@@ -134,8 +134,7 @@ def export_nifti(
 
 
 def export_wkw_as_nifti(args: Namespace) -> None:
-    if args.verbose:
-        logging.basicConfig(level=logging.DEBUG)
+    setup_logging(args)
 
     export_nifti(
         wkw_file_path=Path(args.source_path),
@@ -149,7 +148,6 @@ def export_wkw_as_nifti(args: Namespace) -> None:
 
 def export_wkw_as_nifti_from_arg_list(arg_list: Optional[List] = None) -> None:
     parsed_args = create_parser().parse_args(arg_list)
-    setup_logging(parsed_args)
     export_wkw_as_nifti(parsed_args)
 
 

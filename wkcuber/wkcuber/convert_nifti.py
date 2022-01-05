@@ -1,5 +1,4 @@
 import logging
-import time
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from sklearn.preprocessing import LabelEncoder
@@ -10,11 +9,12 @@ import numpy as np
 
 from webknossos.dataset import LayerCategoryType
 from webknossos.dataset.defaults import DEFAULT_WKW_FILE_LEN
+from webknossos.utils import time_start, time_stop
 from wkcuber.api.dataset import Dataset
 from wkcuber.api.bounding_box import BoundingBox
 from wkcuber.utils import (
     DEFAULT_WKW_VOXELS_PER_BLOCK,
-    add_silent_flag,
+    add_verbose_flag,
     add_scale_flag,
     pad_or_crop_to_size_and_topleft,
     parse_bounding_box,
@@ -89,7 +89,7 @@ def create_parser() -> ArgumentParser:
     )
 
     add_scale_flag(parser, required=False)
-    add_silent_flag(parser)
+    add_verbose_flag(parser)
 
     return parser
 
@@ -133,7 +133,7 @@ def convert_nifti(
     flip_axes: Optional[Union[int, Tuple[int, ...]]] = None,
 ) -> None:
     voxels_per_cube = file_len * DEFAULT_WKW_VOXELS_PER_BLOCK
-    ref_time = time.time()
+    time_start(f"Converting of {source_nifti_path}")
 
     source_nifti = nib.load(str(source_nifti_path.resolve()))
 
@@ -220,11 +220,7 @@ def convert_nifti(
     wk_mag = wk_layer.get_or_add_mag("1", file_len=file_len)
     wk_mag.write(cube_data)
 
-    logging.debug(
-        "Converting of {} took {:.8f}s".format(
-            source_nifti_path, time.time() - ref_time
-        )
-    )
+    time_stop(f"Converting of {source_nifti_path}")
 
 
 def convert_folder_nifti(

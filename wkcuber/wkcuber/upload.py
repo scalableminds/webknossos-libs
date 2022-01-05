@@ -61,6 +61,6 @@ if __name__ == "__main__":
     token = args.token if args.token is not None else environ.get("WK_TOKEN", None)
     assert (
         token is not None
-    ), f"An auth token needs to be supplied either through the --token command line arg or the WK_TOKEN environment variable. Retrieve your auth token on {webknossos_url}/auth/token."
+    ), f"An auth token needs to be supplied either through the --token command line arg or the WK_TOKEN environment variable. Retrieve your auth token on {url}/auth/token."
 
     upload_dataset(args.source_path, url, token, args.jobs)

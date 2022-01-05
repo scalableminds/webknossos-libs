@@ -2,19 +2,23 @@ import argparse
 from functools import partial
 import logging
 from pathlib import Path
-import time
 from typing import Optional, Tuple, Union
 import numpy as np
 
 from webknossos.dataset.defaults import DEFAULT_WKW_FILE_LEN
 from webknossos import BoundingBox, Dataset, Mag, MagView
-from webknossos.utils import get_executor_for_args, wait_and_ensure_success
+from webknossos.utils import (
+    get_executor_for_args,
+    time_start,
+    time_stop,
+    wait_and_ensure_success,
+)
 from .utils import (
     add_distribution_flags,
     add_interpolation_flag,
     add_sampling_mode_flag,
     add_scale_flag,
-    add_silent_flag,
+    add_verbose_flag,
     DEFAULT_WKW_VOXELS_PER_BLOCK,
     get_executor_args,
     setup_logging,
@@ -121,7 +125,7 @@ def create_parser() -> argparse.ArgumentParser:
 
     add_distribution_flags(parser)
 
-    add_silent_flag(parser)
+    add_verbose_flag(parser)
 
     return parser
 
@@ -163,7 +167,7 @@ def convert_raw(
     executor_args: Optional[argparse.Namespace] = None,
 ) -> MagView:
     assert order in ("C", "F")
-    ref_time = time.time()
+    time_start(f"Conversion of {source_raw_path}")
 
     if scale is None:
         scale = 1.0, 1.0, 1.0
@@ -196,9 +200,7 @@ def convert_raw(
             )
         )
 
-    logger.debug(
-        "Conversion of {} took {:.8f}s".format(source_raw_path, time.time() - ref_time)
-    )
+    time_stop(f"Conversion of {source_raw_path}")
     return wk_mag
 
 

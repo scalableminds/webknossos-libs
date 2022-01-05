@@ -12,6 +12,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes
 
 ### Added
+- `wkcuber.upload` for uploading local datasets to webKnossos. [#544](https://github.com/scalableminds/webknossos-libs/pull/544)
 
 ### Changed
 

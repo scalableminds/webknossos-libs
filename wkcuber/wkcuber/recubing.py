@@ -10,7 +10,7 @@ from itertools import product
 from .metadata import detect_bbox
 
 from .utils import (
-    add_silent_flag,
+    add_verbose_flag,
     open_wkw,
     WkwDatasetInfo,
     ensure_wkw,
@@ -57,7 +57,7 @@ def create_parser() -> ArgumentParser:
         default=False,
     )
 
-    add_silent_flag(parser)
+    add_verbose_flag(parser)
     add_distribution_flags(parser)
 
     return parser
@@ -171,7 +171,7 @@ def recubing_cube_job(
                 outer_bounding_box_tl[2] + target_cube_xyz[2],
             ]
 
-            logging.info("Writing at {}".format(top_left))
+            logging.debug("Writing at {}".format(top_left))
 
             data_cube = source_wkw_dataset.read(
                 top_left, (wkw_cube_size, wkw_cube_size, wkw_cube_size)
