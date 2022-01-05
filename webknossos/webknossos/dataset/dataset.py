@@ -231,7 +231,7 @@ class Dataset:
     def upload(
         self,
         new_dataset_name: Optional[str] = None,
-        layers_to_link: Optional[List[LayerToLink]] = None,
+        layers_to_link: Optional[List["LayerToLink"]] = None,
     ) -> str:
         from webknossos.client._upload_dataset import upload_dataset
 
