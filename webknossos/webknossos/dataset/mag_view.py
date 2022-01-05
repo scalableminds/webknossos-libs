@@ -298,10 +298,8 @@ class MagView(View):
                 job_args.append((Path(file), compressed_path / rel_file))
 
             wait_and_ensure_success(
-                executor.map_to_futures(compress_file_job, job_args)
+                executor.map_to_futures(compress_file_job, job_args), "Compressing"
             )
-
-        logging.info("Mag {0} successfully compressed".format(self.name))
 
         if target_path is None:
             shutil.rmtree(uncompressed_full_path)
