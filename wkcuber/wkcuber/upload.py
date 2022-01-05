@@ -4,6 +4,7 @@ from typing import Optional
 from os import environ
 
 from webknossos import webknossos_context
+from webknossos.client._defaults import DEFAULT_WEBKNOSSOS_URL
 from wkcuber.api.dataset import Dataset
 
 from .utils import add_verbose_flag, setup_logging
@@ -55,11 +56,11 @@ if __name__ == "__main__":
     url = (
         args.url
         if args.url is not None
-        else environ.get("WK_URL", "https://webknossos.org")
+        else environ.get("WK_URL", DEFAULT_WEBKNOSSOS_URL)
     )
     token = args.token if args.token is not None else environ.get("WK_TOKEN", None)
     assert (
         token is not None
-    ), "An auth token needs to be supplied either through the --token command line arg or the WK_TOKEN environment variable."
+    ), f"An auth token needs to be supplied either through the --token command line arg or the WK_TOKEN environment variable. Retrieve your auth token on {webknossos_url}/auth/token."
 
     upload_dataset(args.source_path, url, token, args.jobs)
