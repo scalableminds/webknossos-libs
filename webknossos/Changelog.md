@@ -24,6 +24,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 
 
 ### Added
+- Added `Annotation.save("file_name")` to save an annotation to a file and `Annotation.temporary_volume_annotation_layer_copy()` to read from the volume layer of an annotation as a WK dataset. [#528](https://github.com/scalableminds/webknossos-libs/pull/528)
 
 ### Changed
 - Always use the sampling mode `CONSTANT_Z` when downsampling 2D data. [#516](https://github.com/scalableminds/webknossos-libs/pull/516)
