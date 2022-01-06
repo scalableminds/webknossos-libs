@@ -2,7 +2,14 @@
 
 The `webknossos` Python package provides an API for working with [webKnossos](https://webknossos.org) datasets,
 annotations, and for webKnossos server interaction.
-To get started, check out the [installation instructions](installation.md).
+To get started, check out the [installation instructions](installation.md) and the code examples, such as
+
+* [Intro to Dataset Usage](examples/dataset_usage.md)
+* [How to Upload a Dataset](examples/upload_image_data.md)<br/>
+  ![Cell Dataset uploaded to webKnossos](examples/upload_image_data_dataset.jpg){: style="max-width: calc(100%/2 - 1em);"}
+* [Using a Volume Annotation to Train a Custom Segmenter](examples/learned_segmenter.md)<br/>
+  ![Volume Annotation used as Training Data](examples/learned_segmenter_annotation.png){: style="max-width: calc(100%/4 - 1em);"}
+  ![Result of the Segmenter on the Skin Dataset](examples/learned_segmenter_result.png){: style="max-width: calc(100%/4 - 1em);"}
 
 
 ## Features
@@ -23,7 +30,7 @@ To get started, check out the [installation instructions](installation.md).
 
 ## Source Code
 
-The `webknossos` Python package is [open-source on GitHub][https://github.com/scalableminds/webknossos-libs]. Feel free to report bugs there or open pull requests with your features and fixes.
+The `webknossos` Python package is [open-source on GitHub](https://github.com/scalableminds/webknossos-libs). Feel free to report bugs there or open pull requests with your features and fixes.
 
 ## License
 [AGPLv3](https://www.gnu.org/licenses/agpl-3.0.html)
