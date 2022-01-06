@@ -10,7 +10,7 @@ if [ $# -eq 1 ] && [ "$1" = "--refresh-snapshots" ]; then
         pushd $WK_DOCKER_DIR > /dev/null
         sed -i -e 's/webKnossos.sampleOrganization.enabled=false/webKnossos.sampleOrganization.enabled=true/g' docker-compose.yml
         mkdir -p binaryData
-        export DOCKER_TAG=master__16177
+        export DOCKER_TAG=master__16396
         docker-compose pull webknossos
         # TODO: either remove pg/db before starting or run tools/postgres/apply_evolutions.sh
         USER_UID=$(id -u) USER_GID=$(id -g) docker-compose up -d --no-build webknossos
