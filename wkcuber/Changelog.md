@@ -15,6 +15,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 - `wkcuber.upload` for uploading local datasets to webKnossos. [#544](https://github.com/scalableminds/webknossos-libs/pull/544)
 
 ### Changed
+- Logging is now set to log level `INFO` by default. `DEBUG` logging can be enabled with the `--verbose` flag. Consequently, the `--silent` flag has been removed. [#544](https://github.com/scalableminds/webknossos-libs/pull/544)
 
 ### Fixed
 
