@@ -26,6 +26,7 @@ from .utils import (
 
 logger = logging.getLogger(__name__)
 
+
 def parse_flip_axes(flip_axes: str) -> Tuple[int, ...]:
     try:
         indices = tuple(int(x) for x in flip_axes.split(","))
@@ -107,7 +108,7 @@ def _zarr_chunk_converter(
     logging.info(f"Conversion of {bounding_box.topleft}")
 
     slices = bounding_box.to_slices()
-    zarr_file = zarr.open(source_zarr_path, 'r')
+    zarr_file = zarr.open(source_zarr_path, "r")
     shape = zarr_file.shape
 
     slices = tuple(slice(s.start, min([s.stop, s_])) for s, s_ in zip(slices, shape))
@@ -116,9 +117,7 @@ def _zarr_chunk_converter(
     if flip_axes:
         source_data = np.flip(source_data, flip_axes)
 
-    contiguous_chunk = source_data.copy(
-        order="F"
-    )
+    contiguous_chunk = source_data.copy(order="F")
     target_mag_view.write(contiguous_chunk, bounding_box.topleft)
 
     return source_data.max()
@@ -136,7 +135,7 @@ def convert_zarr(
 ) -> MagView:
     ref_time = time.time()
 
-    f = zarr.open(source_zarr_path, 'r')
+    f = zarr.open(source_zarr_path, "r")
     input_dtype = f.dtype
     shape = f.shape
 
@@ -172,9 +171,7 @@ def convert_zarr(
     is_segmentation_layer = True
     if is_segmentation_layer:
         largest_segment_id = int(max(largest_segment_id_per_chunk))
-        cast(
-            SegmentationLayer, wk_layer
-        ).largest_segment_id = largest_segment_id
+        cast(SegmentationLayer, wk_layer).largest_segment_id = largest_segment_id
 
     logger.debug(
         "Conversion of {} took {:.8f}s".format(source_zarr_path, time.time() - ref_time)
