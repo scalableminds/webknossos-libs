@@ -1,9 +1,8 @@
 import os
-from collections import namedtuple
 from functools import lru_cache
 from pathlib import Path
 from time import gmtime, strftime
-from typing import Iterator, List, Optional, Tuple
+from typing import Iterator, List, Optional, Tuple, NamedTuple
 from uuid import uuid4
 
 import httpx
@@ -22,15 +21,33 @@ from webknossos.client._resumable import Resumable
 from webknossos.client.context import _get_context, _WebknossosContext
 from webknossos.dataset import Dataset
 
-LayerToLink = namedtuple(
-    "LayerToLink",
-    [
-        "organizationName",
-        "dataSetName",
-        "layerName",
-        "newLayerName",
-    ],
-)
+
+class LayerToLink(NamedTuple):
+    dataset_name: str
+    layer_name: str
+    new_layer_name: Optional[str] = None
+    organization_name: Optional[
+        str
+    ] = None  # defaults to the user's organization before uploading
+
+    def as_json(self):
+        context = _get_context()
+
+        print(
+            {
+                "dataSetName": self.dataset_name,
+                "layerName": self.layer_name,
+                "newLayerName": self.new_layer_name,
+                "organizationName": self.organization_name or context.organization,
+            }
+        )
+
+        return {
+            "dataSetName": self.dataset_name,
+            "layerName": self.layer_name,
+            "newLayerName": self.new_layer_name,
+            "organizationName": self.organization_name or context.organization,
+        }
 
 
 @lru_cache(maxsize=None)
@@ -88,7 +105,7 @@ def upload_dataset(
                     "name": new_dataset_name,
                     "totalFileCount": len(file_infos),
                     "initialTeams": [],
-                    "layersToLink": [layer._asdict() for layer in layers_to_link],
+                    "layersToLink": [layer.as_json() for layer in layers_to_link],
                 }
             ),
         )
