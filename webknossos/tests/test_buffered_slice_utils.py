@@ -9,7 +9,7 @@ import wkw
 from webknossos.dataset import COLOR_CATEGORY, Dataset
 from webknossos.geometry import Mag, Vec3Int
 
-TESTOUTPUT_DIR = Path("testoutput")
+from .constants import TESTOUTPUT_DIR
 
 
 def delete_dir(relative_path: Union[str, Path]) -> None:
