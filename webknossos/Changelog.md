@@ -13,6 +13,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 
 ### Added
 - Added `Annotation.save("file_name")` to save an annotation to a file and `Annotation.temporary_volume_annotation_layer_copy()` to read from the volume layer of an annotation as a WK dataset. [#528](https://github.com/scalableminds/webknossos-libs/pull/528)
+- Added `layers_to_link` parameter to `Dataset.upload()` so that layers don't need to be uploaded again if they already exist in another dataset on webKnossos. [#544](https://github.com/scalableminds/webknossos-libs/pull/544)
 
 ### Changed
 

@@ -78,7 +78,16 @@ def main() -> None:
     with wk.webknossos_context(
         url="http://localhost:9000", token="secretSampleUserToken"
     ):
-        url = dataset.upload()
+        url = dataset.upload(
+            layers_to_link=[
+                wk.LayerToLink(
+                    organization_name="scalable_minds",
+                    dataset_name=annotation.dataset_name,
+                    layer_name="color",
+                )
+            ]
+        )
+
     print(f"Successfully uploaded {url}")
 
 
