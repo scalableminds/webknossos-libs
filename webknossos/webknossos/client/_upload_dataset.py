@@ -21,6 +21,9 @@ from webknossos.client._resumable import Resumable
 from webknossos.client.context import _get_context, _WebknossosContext
 from webknossos.dataset import Dataset
 
+DEFAULT_SIMULTANEOUS_UPLOADS = 5
+MAXIMUM_RETRY_COUNT = 5
+
 
 class LayerToLink(NamedTuple):
     dataset_name: str
@@ -63,13 +66,11 @@ def _walk(
         yield (path.resolve(), path.relative_to(base_path), path.stat().st_size)
 
 
-MAXIMUM_RETRY_COUNT = 5
-
-
 def upload_dataset(
     dataset: Dataset,
     new_dataset_name: Optional[str] = None,
     layers_to_link: Optional[List[LayerToLink]] = None,
+    jobs: Optional[int] = None,
 ) -> str:
     if new_dataset_name is None:
         new_dataset_name = dataset.name
@@ -84,6 +85,9 @@ def upload_dataset(
     datastore_token = context.datastore_token
     datastore_url = _cached_get_upload_datastore(context)
     datastore_client = _get_context().get_generated_datastore_client(datastore_url)
+    simultaneous_uploads = jobs if jobs is not None else DEFAULT_SIMULTANEOUS_UPLOADS
+    if "PYTEST_CURRENT_TEST" in os.environ:
+        simultaneous_uploads = 1
     for _ in range(MAXIMUM_RETRY_COUNT):
         response = dataset_reserve_upload.sync_detailed(
             client=datastore_client,
@@ -106,7 +110,7 @@ def upload_dataset(
     with Progress() as progress:
         with Resumable(
             f"{datastore_url}/data/datasets?token={datastore_token}",
-            simultaneous_uploads=1 if "PYTEST_CURRENT_TEST" in os.environ else 5,
+            simultaneous_uploads=simultaneous_uploads,
             query={
                 "owningOrganization": context.organization,
                 "name": new_dataset_name,

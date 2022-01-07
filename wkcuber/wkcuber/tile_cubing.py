@@ -12,6 +12,7 @@ from webknossos.dataset import Dataset, View, COLOR_CATEGORY, SEGMENTATION_CATEG
 from webknossos.geometry import BoundingBox, Vec3Int, Mag
 
 from webknossos.dataset import SegmentationLayer
+from webknossos.utils import time_start, time_stop
 from .utils import (
     get_chunks,
     get_executor_for_args,
@@ -214,6 +215,7 @@ def tile_cubing_job(
     # Batching is useful to utilize IO more efficiently
     for z_batch in get_chunks(z_batches, batch_size):
         try:
+            time_start(f"Cubing of z={z_batch[0]}-{z_batch[-1]}")
             for x in range(min_dimensions["x"], max_dimensions["x"] + 1):
                 for y in range(min_dimensions["y"], max_dimensions["y"] + 1):
                     # Allocate a large buffer for all images in this batch
@@ -261,6 +263,7 @@ def tile_cubing_job(
                         largest_value_in_chunk = max(
                             largest_value_in_chunk, np.max(buffer)
                         )
+            time_stop(f"Cubing of z={z_batch[0]}-{z_batch[-1]}")
         except Exception as exc:
             logging.error(
                 "Cubing of z={}-{} failed with: {}".format(z_batch[0], z_batch[-1], exc)
@@ -392,6 +395,7 @@ def create_parser() -> ArgumentParser:
         type=check_input_pattern,
         default="{zzzzzzzzzz}/{yyyyyyyyyy}/{xxxxxxxxxx}.jpg",
     )
+
     return parser
 
 

@@ -22,6 +22,7 @@ times = {}
 
 def time_start(identifier: str) -> None:
     times[identifier] = time.time()
+    logging.debug("{} started".format(identifier))
 
 
 def time_stop(identifier: str) -> None:
@@ -149,10 +150,10 @@ def setup_logging(args: argparse.Namespace) -> None:
 
 def add_verbose_flag(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
-        "--silent", help="Silent output", dest="verbose", action="store_false"
+        "--verbose", help="Verbose output", dest="verbose", action="store_true"
     )
 
-    parser.set_defaults(verbose=True)
+    parser.set_defaults(verbose=False)
 
 
 def get_rich_progress() -> Progress:

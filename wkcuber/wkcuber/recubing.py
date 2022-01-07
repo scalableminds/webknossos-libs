@@ -171,7 +171,7 @@ def recubing_cube_job(
                 outer_bounding_box_tl[2] + target_cube_xyz[2],
             ]
 
-            logging.info("Writing at {}".format(top_left))
+            logging.debug("Writing at {}".format(top_left))
 
             data_cube = source_wkw_dataset.read(
                 top_left, (wkw_cube_size, wkw_cube_size, wkw_cube_size)
