@@ -25,6 +25,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 
 
 ### Added
+- Added `layers_to_link` parameter to `Dataset.upload()` so that layers don't need to be uploaded again if they already exist in another dataset on webKnossos. [#544](https://github.com/scalableminds/webknossos-libs/pull/544)
 
 ### Changed
 - Always use the sampling mode `CONSTANT_Z` when downsampling 2D data. [#516](https://github.com/scalableminds/webknossos-libs/pull/516)

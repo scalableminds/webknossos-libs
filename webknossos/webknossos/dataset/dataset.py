@@ -233,6 +233,17 @@ class Dataset:
         new_dataset_name: Optional[str] = None,
         layers_to_link: Optional[List["LayerToLink"]] = None,
     ) -> str:
+        """
+        Uploads this dataset to webKnossos.
+
+        The `new_dataset_name` parameter allows to assign a specific name for the dataset.
+        `layers_to_link` allows to add (or override) a layer in the uploaded dataset, so that
+        it links to a layer of an existing dataset in webKnossos. That way, already existing
+        layers don't need to be uploaded again.
+
+        Returns URL to view the dataset in webKnossos, upon successful upload.
+        """
+
         from webknossos.client._upload_dataset import upload_dataset
 
         return upload_dataset(self, new_dataset_name, layers_to_link)
