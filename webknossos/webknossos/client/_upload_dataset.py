@@ -2,7 +2,7 @@ import os
 from functools import lru_cache
 from pathlib import Path
 from time import gmtime, strftime
-from typing import Iterator, Optional, Tuple
+from typing import Dict, Iterator, List, NamedTuple, Optional, Tuple
 from uuid import uuid4
 
 import httpx
@@ -22,6 +22,25 @@ from webknossos.client.context import _get_context, _WebknossosContext
 from webknossos.dataset import Dataset
 
 DEFAULT_SIMULTANEOUS_UPLOADS = 5
+MAXIMUM_RETRY_COUNT = 5
+
+
+class LayerToLink(NamedTuple):
+    dataset_name: str
+    layer_name: str
+    new_layer_name: Optional[str] = None
+    organization_name: Optional[
+        str
+    ] = None  # defaults to the user's organization before uploading
+
+    def as_json(self) -> Dict[str, Optional[str]]:
+        context = _get_context()
+        return {
+            "dataSetName": self.dataset_name,
+            "layerName": self.layer_name,
+            "newLayerName": self.new_layer_name,
+            "organizationName": self.organization_name or context.organization,
+        }
 
 
 @lru_cache(maxsize=None)
@@ -47,7 +66,16 @@ def _walk(
         yield (path.resolve(), path.relative_to(base_path), path.stat().st_size)
 
 
-def upload_dataset(dataset: Dataset, jobs: Optional[int] = None) -> str:
+def upload_dataset(
+    dataset: Dataset,
+    new_dataset_name: Optional[str] = None,
+    layers_to_link: Optional[List[LayerToLink]] = None,
+    jobs: Optional[int] = None,
+) -> str:
+    if new_dataset_name is None:
+        new_dataset_name = dataset.name
+    if layers_to_link is None:
+        layers_to_link = []
     context = _get_context()
     file_infos = list(_walk(dataset.path))
     total_file_size = sum(size for _, _, size in file_infos)
@@ -60,7 +88,7 @@ def upload_dataset(dataset: Dataset, jobs: Optional[int] = None) -> str:
     simultaneous_uploads = jobs if jobs is not None else DEFAULT_SIMULTANEOUS_UPLOADS
     if "PYTEST_CURRENT_TEST" in os.environ:
         simultaneous_uploads = 1
-    for _ in range(5):
+    for _ in range(MAXIMUM_RETRY_COUNT):
         response = dataset_reserve_upload.sync_detailed(
             client=datastore_client,
             token=datastore_token,
@@ -68,9 +96,10 @@ def upload_dataset(dataset: Dataset, jobs: Optional[int] = None) -> str:
                 {
                     "uploadId": upload_id,
                     "organization": context.organization,
-                    "name": dataset.name,
+                    "name": new_dataset_name,
                     "totalFileCount": len(file_infos),
                     "initialTeams": [],
+                    "layersToLink": [layer.as_json() for layer in layers_to_link],
                 }
             ),
         )
@@ -84,7 +113,7 @@ def upload_dataset(dataset: Dataset, jobs: Optional[int] = None) -> str:
             simultaneous_uploads=simultaneous_uploads,
             query={
                 "owningOrganization": context.organization,
-                "name": dataset.name,
+                "name": new_dataset_name,
                 "totalFileCount": len(file_infos),
             },
             chunk_size=100 * 1024 * 1024,  # 100 MiB
@@ -99,7 +128,7 @@ def upload_dataset(dataset: Dataset, jobs: Optional[int] = None) -> str:
                 resumable_file.chunk_completed.register(
                     lambda chunk: progress.advance(progress_task, chunk.size)
                 )
-    for _ in range(5):
+    for _ in range(MAXIMUM_RETRY_COUNT):
         response = dataset_finish_upload.sync_detailed(
             client=datastore_client.with_timeout(None),  # type: ignore[arg-type]
             token=datastore_token,
@@ -107,8 +136,9 @@ def upload_dataset(dataset: Dataset, jobs: Optional[int] = None) -> str:
                 {
                     "uploadId": upload_id,
                     "organization": context.organization,
-                    "name": dataset.name,
+                    "name": new_dataset_name,
                     "needsConversion": False,
+                    "layersToLink": [layer.as_json() for layer in layers_to_link],
                 }
             ),
         )

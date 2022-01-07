@@ -8,12 +8,15 @@ from os import PathLike, makedirs
 from os.path import basename, join, normpath
 from pathlib import Path
 from shutil import rmtree
-from typing import Any, Dict, List, Optional, Tuple, Union, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union, cast
 
 import attr
 import numpy as np
 import wkw
 from boltons.typeutils import make_sentinel
+
+if TYPE_CHECKING:
+    from webknossos.client._upload_dataset import LayerToLink
 
 from webknossos.dataset._utils.infer_bounding_box_existing_files import (
     infer_bounding_box_existing_files,
@@ -225,17 +228,28 @@ class Dataset:
         """
         return self._layers
 
-    def upload(self, jobs: Optional[int] = None) -> str:
+    def upload(
+        self,
+        new_dataset_name: Optional[str] = None,
+        layers_to_link: Optional[List["LayerToLink"]] = None,
+        jobs: Optional[int] = None,
+    ) -> str:
         """
         Uploads this dataset to webKnossos.
+
+        The `new_dataset_name` parameter allows to assign a specific name for the dataset.
+        `layers_to_link` allows to add (or override) a layer in the uploaded dataset, so that
+        it links to a layer of an existing dataset in webKnossos. That way, already existing
+        layers don't need to be uploaded again.
 
         If supplied, the `jobs` parameter will determine the number of simultaneous chunk uploads. Defaults to 5.
 
         Returns URL to view the dataset in webKnossos, upon successful upload.
         """
+
         from webknossos.client._upload_dataset import upload_dataset
 
-        return upload_dataset(self, jobs)
+        return upload_dataset(self, new_dataset_name, layers_to_link, jobs)
 
     def get_layer(self, layer_name: str) -> Layer:
         """
