@@ -81,10 +81,9 @@ def main() -> None:
         url = dataset.upload(
             layers_to_link=[
                 wk.LayerToLink(
-                    annotation.dataset_name,
-                    "color",
-                    "color",
-                    "scalable_minds",
+                    organization_name="scalable_minds",
+                    dataset_name=annotation.dataset_name,
+                    layer_name="color",
                 )
             ]
         )
