@@ -18,6 +18,7 @@ from wkcuber.utils import (
     get_executor_for_args,
     add_batch_size_flag,
     parse_bounding_box,
+    setup_logging,
 )
 from wkcuber.mag import Mag
 from wkcuber.utils import wait_and_ensure_success
@@ -242,8 +243,7 @@ def export_tiff_stack(
 
 
 def export_wkw_as_tiff(args: Namespace) -> None:
-    if args.verbose:
-        logging.basicConfig(level=logging.DEBUG)
+    setup_logging(args)
 
     if args.bbox is None:
         _, _, bbox_dim, origin = read_metadata_for_layer(

@@ -232,6 +232,7 @@ class Dataset:
         self,
         new_dataset_name: Optional[str] = None,
         layers_to_link: Optional[List["LayerToLink"]] = None,
+        jobs: Optional[int] = None,
     ) -> str:
         """
         Uploads this dataset to webKnossos.
@@ -241,12 +242,14 @@ class Dataset:
         it links to a layer of an existing dataset in webKnossos. That way, already existing
         layers don't need to be uploaded again.
 
+        If supplied, the `jobs` parameter will determine the number of simultaneous chunk uploads. Defaults to 5.
+
         Returns URL to view the dataset in webKnossos, upon successful upload.
         """
 
         from webknossos.client._upload_dataset import upload_dataset
 
-        return upload_dataset(self, new_dataset_name, layers_to_link)
+        return upload_dataset(self, new_dataset_name, layers_to_link, jobs)
 
     def get_layer(self, layer_name: str) -> Layer:
         """
