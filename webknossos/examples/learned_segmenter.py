@@ -4,9 +4,9 @@ from time import gmtime, strftime
 import numpy as np
 from skimage import feature
 from skimage.future import TrainableSegmenter
-from webknossos.client._upload_dataset import LayerToLink
 
 import webknossos as wk
+from webknossos.client._upload_dataset import LayerToLink
 
 # pylint: disable=unsubscriptable-object
 

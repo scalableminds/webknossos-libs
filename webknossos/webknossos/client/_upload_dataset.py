@@ -2,7 +2,7 @@ import os
 from functools import lru_cache
 from pathlib import Path
 from time import gmtime, strftime
-from typing import Iterator, List, NamedTuple, Optional, Tuple
+from typing import Dict, Iterator, List, NamedTuple, Optional, Tuple
 from uuid import uuid4
 
 import httpx
@@ -30,7 +30,7 @@ class LayerToLink(NamedTuple):
         str
     ] = None  # defaults to the user's organization before uploading
 
-    def as_json(self):
+    def as_json(self) -> Dict[str, Optional[str]]:
         context = _get_context()
         return {
             "dataSetName": self.dataset_name,
