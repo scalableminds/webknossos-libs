@@ -2,7 +2,7 @@ import os
 from functools import lru_cache
 from pathlib import Path
 from time import gmtime, strftime
-from typing import Iterator, List, Optional, Tuple, NamedTuple
+from typing import Iterator, List, NamedTuple, Optional, Tuple
 from uuid import uuid4
 
 import httpx
