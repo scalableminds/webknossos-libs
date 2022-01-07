@@ -10,7 +10,7 @@ from cluster_tools.schedulers.cluster_executor import ClusterExecutor
 from wkw import Dataset, wkw
 
 from webknossos.geometry import BoundingBox, Vec3Int, Vec3IntLike
-from webknossos.utils import wait_and_ensure_success
+from webknossos.utils import get_rich_progress, wait_and_ensure_success
 
 if TYPE_CHECKING:
     from webknossos.dataset._utils.buffered_slice_reader import BufferedSliceReader
@@ -315,6 +315,7 @@ class View:
         executor: Optional[
             Union[ClusterExecutor, cluster_tools.WrappedProcessPoolExecutor]
         ] = None,
+        progress_desc: Optional[str] = None,
     ) -> None:
         """
         The view is chunked into multiple sub-views of size `chunk_size`.
@@ -356,9 +357,8 @@ class View:
 
         job_args = []
 
-        for i, chunk in enumerate(
-            BoundingBox(view.global_offset, view.size).chunk(chunk_size, chunk_size)
-        ):
+        bbox = BoundingBox(view.global_offset, view.size)
+        for i, chunk in enumerate(bbox.chunk(chunk_size, chunk_size)):
             relative_offset = chunk.topleft - view.global_offset
             chunk_view = view.get_view(
                 offset=relative_offset,
@@ -368,10 +368,20 @@ class View:
 
         # execute the work for each chunk
         if executor is None:
-            for args in job_args:
-                work_on_chunk(args)
+            if progress_desc is None:
+                for args in job_args:
+                    work_on_chunk(args)
+            else:
+                with get_rich_progress() as progress:
+                    task = progress.add_task(progress_desc, total=bbox.volume())
+                    for args in job_args:
+                        work_on_chunk(args)
+                        chunk_bbox = BoundingBox((0, 0, 0), args[0].size)
+                        progress.update(task, advance=chunk_bbox.volume())
         else:
-            wait_and_ensure_success(executor.map_to_futures(work_on_chunk, job_args))
+            wait_and_ensure_success(
+                executor.map_to_futures(work_on_chunk, job_args), progress_desc
+            )
 
     def for_zipped_chunks(
         self,
@@ -382,6 +392,7 @@ class View:
         executor: Optional[
             Union[ClusterExecutor, cluster_tools.WrappedProcessPoolExecutor]
         ] = None,
+        progress_desc: Optional[str] = None,
     ) -> None:
         """
         This method is similar to 'for_each_chunk' in the sense, that it delegates work to smaller chunks.
@@ -433,9 +444,8 @@ class View:
         ), f"Calling for_zipped_chunks failed. The target_chunk_size ({target_chunk_size}) must be a multiple of file_len*block_len of the target view ({target_view.header.file_len * target_view.header.block_len})"
 
         job_args = []
-        source_chunks = BoundingBox(source_offset, source_view.size).chunk(
-            source_chunk_size, source_chunk_size
-        )
+        source_bbox = BoundingBox(source_offset, source_view.size)
+        source_chunks = source_bbox.chunk(source_chunk_size, source_chunk_size)
         target_chunks = BoundingBox(target_offset, target_view.size).chunk(
             target_chunk_size, target_chunk_size
         )
@@ -461,10 +471,20 @@ class View:
 
         # execute the work for each pair of chunks
         if executor is None:
-            for args in job_args:
-                work_on_chunk(args)
+            if progress_desc is None:
+                for args in job_args:
+                    work_on_chunk(args)
+            else:
+                with get_rich_progress() as progress:
+                    task = progress.add_task(progress_desc, total=source_bbox.volume())
+                    for args in job_args:
+                        work_on_chunk(args)
+                        chunk_bbox = BoundingBox((0, 0, 0), args[0].size)
+                        progress.update(task, advance=chunk_bbox.volume())
         else:
-            wait_and_ensure_success(executor.map_to_futures(work_on_chunk, job_args))
+            wait_and_ensure_success(
+                executor.map_to_futures(work_on_chunk, job_args), progress_desc
+            )
 
     def _is_compressed(self) -> bool:
         return (

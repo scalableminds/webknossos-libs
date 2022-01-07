@@ -10,7 +10,7 @@ if [ $# -eq 1 ] && [ "$1" = "--refresh-snapshots" ]; then
         pushd $WK_DOCKER_DIR > /dev/null
         sed -i -e 's/webKnossos.sampleOrganization.enabled=false/webKnossos.sampleOrganization.enabled=true/g' docker-compose.yml
         mkdir -p binaryData
-        export DOCKER_TAG=master__16177
+        export DOCKER_TAG=master__16396
         docker-compose pull webknossos
         # TODO: either remove pg/db before starting or run tools/postgres/apply_evolutions.sh
         USER_UID=$(id -u) USER_GID=$(id -g) docker-compose up -d --no-build webknossos
@@ -28,7 +28,12 @@ if [ $# -eq 1 ] && [ "$1" = "--refresh-snapshots" ]; then
         done
     fi
     rm -rf tests/cassettes
-    poetry run pytest --record-mode once
+
+    # Note that pytest should be executed via `python -m`, since
+    # this will ensure that the current directory is added to sys.path
+    # (which is standard python behavior). This is necessary so that the imports
+    # refer to the checked out (and potentially modified) code.
+    poetry run python -m pytest --record-mode once
 else
-    poetry run pytest --block-network
+    poetry run python -m pytest --block-network
 fi

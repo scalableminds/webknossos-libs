@@ -19,7 +19,7 @@ The tools are modular components to allow easy integration into existing pipelin
 * `wkcuber.convert_knossos`: Convert KNOSSOS cubes to WKW cubes
 * `wkcuber.convert_nifti`: Convert NIFTI files to WKW files (Currently without applying transformations).
 * `wkcuber.convert_raw`: Convert RAW binary data (.raw, .vol) files to WKW datasets
-* `wkcuber.downsampling`: Create downsampled magnifications (with `median`, `mode` and linear interpolation modes). Downsampling compresses the new magnifications by default (disable via `--no-compress`).
+* `wkcuber.downsampling`: Create downsampled magnifications (with `median`, `mode` and linear interpolation modes). Downsampling compresses the new magnifications by default (disable via `--no_compress`).
 * `wkcuber.compress`: Compress WKW cubes for efficient file storage (especially useful for segmentation data)
 * `wkcuber.metadata`: Create (or refresh) metadata (with guessing of most parameters)
 * `wkcuber.recubing`: Read existing WKW cubes in and write them again specifying the WKW file length. Useful when dataset was written e.g. with file length 1.

@@ -7,7 +7,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.29...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.30...HEAD)
+
+### Breaking Changes
+
+### Added
+- Added `Annotation.save("file_name")` to save an annotation to a file and `Annotation.temporary_volume_annotation_layer_copy()` to read from the volume layer of an annotation as a WK dataset. [#528](https://github.com/scalableminds/webknossos-libs/pull/528)
+- Added `layers_to_link` parameter to `Dataset.upload()` so that layers don't need to be uploaded again if they already exist in another dataset on webKnossos. [#544](https://github.com/scalableminds/webknossos-libs/pull/544)
+
+### Changed
+
+### Fixed
+
+
+## [0.8.30](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.8.30) - 2021-12-27
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.29...v0.8.30)
 
 ### Breaking Changes
 - The BoundingBoxNamedTuple was removed. Use BoundingBox instead. [#526](https://github.com/scalableminds/webknossos-libs/pull/526)
@@ -23,15 +37,11 @@ For upgrade instructions, please check the respective *Breaking Changes* section
   The deprecated methods will be removed in future releases.
   [#520](https://github.com/scalableminds/webknossos-libs/pull/520)
 
-
-### Added
-- Added `layers_to_link` parameter to `Dataset.upload()` so that layers don't need to be uploaded again if they already exist in another dataset on webKnossos. [#544](https://github.com/scalableminds/webknossos-libs/pull/544)
-
 ### Changed
+- The detailed output of e.g. downsampling was replaced with a progress bar. [#527](https://github.com/scalableminds/webknossos-libs/pull/527)
 - Always use the sampling mode `CONSTANT_Z` when downsampling 2D data. [#516](https://github.com/scalableminds/webknossos-libs/pull/516)
 - Make computation of `largestSegmentId` more efficient for volume annotations. [#531](https://github.com/scalableminds/webknossos-libs/pull/531)
-
-### Fixed
+- Consistently use resolved instead of absolute path if make_relative is False. [#536](https://github.com/scalableminds/webknossos-libs/pull/536)
 
 
 ## [0.8.29](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.8.29) - 2021-12-14
