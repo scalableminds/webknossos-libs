@@ -6,7 +6,6 @@ from skimage import feature
 from skimage.future import TrainableSegmenter
 
 import webknossos as wk
-from webknossos.client._upload_dataset import LayerToLink
 
 # pylint: disable=unsubscriptable-object
 
@@ -76,10 +75,12 @@ def main() -> None:
     segmentation_layer.add_mag(mag, compress=True).write(segmentation)
 
     # Get your auth token from https://webknossos.org/auth/token
-    with wk.webknossos_context(url="http://localhost:9000", token="secretSampleUserToken"):
+    with wk.webknossos_context(
+        url="http://localhost:9000", token="secretSampleUserToken"
+    ):
         url = dataset.upload(
             layers_to_link=[
-                LayerToLink(
+                wk.LayerToLink(
                     annotation.dataset_name,
                     "color",
                     "color",
