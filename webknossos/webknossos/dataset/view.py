@@ -9,7 +9,7 @@ import numpy as np
 from cluster_tools.schedulers.cluster_executor import ClusterExecutor
 from wkw import Dataset, wkw
 
-from webknossos.geometry import BoundingBox, Vec3Int, Vec3IntLike
+from webknossos.geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 from webknossos.utils import get_rich_progress, wait_and_ensure_success
 
 if TYPE_CHECKING:
@@ -29,44 +29,40 @@ class View:
         self,
         path_to_mag_view: Path,
         header: wkw.Header,
-        size: Vec3IntLike,
-        global_offset: Vec3IntLike,
-        is_bounded: bool = True,
+        bounding_box: Optional[
+            BoundingBox
+        ],  # in mag 1, absolute coordinates, optional only for mag_view
+        mag: Mag,
         read_only: bool = False,
-        mag_view_bbox_at_creation: Optional[BoundingBox] = None,
     ):
         """
         Do not use this constructor manually. Instead use `webknossos.dataset.mag_view.MagView.get_view()` to get a `View`.
         """
         self._path = path_to_mag_view
         self._header: wkw.Header = header
-        self._size: Vec3Int = Vec3Int(size)
-        self._global_offset: Vec3Int = Vec3Int(global_offset)
-        self._is_bounded = is_bounded
+        self._bounding_box = bounding_box
         self._read_only = read_only
         self._cached_wkw_dataset = None
-        # The bounding box of the view is used to prevent warnings when writing compressed but unaligned data
-        # directly at the borders of the bounding box.
-        # A View is unable to get this information from the Dataset because it is detached from it.
-        # Adding the bounding box as parameter is a workaround for this.
-        # However, keep in mind that this bounding box is just a snapshot.
-        # This bounding box is not updated if the bounding box of the dataset is updated.
-        # Even though an outdated bounding box can lead to missed (or unwanted) warnings,
-        # this is sufficient for our use case because such scenarios are unlikely and not critical.
-        # This should not be misused to infer the size of the dataset because this might lead to problems.
-        self._mag_view_bbox_at_creation = mag_view_bbox_at_creation
+        self._mag = mag
 
     @property
     def header(self) -> wkw.Header:
         return self._header
 
     @property
+    def bounding_box(self) -> BoundingBox:
+        assert self._bounding_box is not None
+        return self._bounding_box
+
+    @property
     def size(self) -> Vec3Int:
-        return self._size
+        # TODO deprecate
+        return self.bounding_box.size // self._mag.to_vec3_int()
 
     @property
     def global_offset(self) -> Vec3Int:
-        return self._global_offset
+        # TODO deprecate
+        return self.bounding_box.topleft // self._mag.to_vec3_int()
 
     @property
     def read_only(self) -> bool:
@@ -75,7 +71,7 @@ class View:
     def write(
         self,
         data: np.ndarray,
-        offset: Vec3IntLike = Vec3Int(0, 0, 0),
+        offset: Vec3IntLike = Vec3Int(0, 0, 0),  # deprecated, relative, in current mag
     ) -> None:
         """
         Writes the `data` at the specified `offset` to disk.
@@ -86,23 +82,65 @@ class View:
         """
         assert not self.read_only, "Cannot write data to an read_only View"
 
-        offset = Vec3Int(offset)
-
-        # assert the size of the parameter data is not in conflict with the attribute self.size
+        mag1_absolute_offset = (
+            self.bounding_box.topleft + Vec3Int(offset) * self._mag.to_vec3_int()
+        )
         data_dims = Vec3Int(data.shape[-3:])
-        _assert_positive_dimensions(offset, data_dims)
-        self._assert_bounds(offset, data_dims)
+        mag1_size = data_dims * self._mag.to_vec3_int()
+
+        mag1_bbox = BoundingBox(mag1_absolute_offset, mag1_size)
+        assert self.bounding_box.contains_bbox(
+            mag1_bbox
+        ), f"The bounding box to write {mag1_bbox} is larger than the view's bounding box {self.bounding_box}"
 
         if len(data.shape) == 4 and data.shape[0] == 1:
-            data = data[0]  # remove channel dimension
+            data = data[0]  # remove channel dimension for single-channel data
 
-        # calculate the absolute offset
-        absolute_offset = self.global_offset + offset
+        current_mag_bbox = mag1_bbox.in_mag(self._mag)
 
         if self._is_compressed():
-            absolute_offset, data = self._handle_compressed_write(absolute_offset, data)
+            current_mag_bbox, data = self._handle_compressed_write(
+                current_mag_bbox, data
+            )
 
-        self._wkw_dataset.write(absolute_offset.to_np(), data)
+        self._wkw_dataset.write(current_mag_bbox.topleft, data)
+
+    def _handle_compressed_write(
+        self, current_mag_bbox: BoundingBox, data: np.ndarray
+    ) -> Tuple[BoundingBox, np.ndarray]:
+        aligned_bbox = current_mag_bbox.align_with_mag(
+            Mag(self.header.file_len * self.header.block_len), ceil=True
+        )
+
+        if current_mag_bbox != aligned_bbox:
+            current_mag_view_bbox = self.bounding_box.in_mag(self._mag)
+
+            # The data bbox should either be aligned or match the dataset's bounding box:
+            if current_mag_bbox != current_mag_view_bbox.intersected_with(aligned_bbox):
+                # the data is not aligned
+                # read the aligned bounding box
+
+                # We want to read the data at the absolute offset.
+                # The absolute offset might be outside of the current view.
+                # That is the case if the data is compressed but the view does not include the whole file on disk.
+                # In this case we avoid checking the bounds because the aligned_offset and aligned_shape are calculated internally.
+                warnings.warn(
+                    "Warning: write() was called on a compressed mag without block alignment. "
+                    + "Performance will be degraded as the data has to be padded first.",
+                    RuntimeWarning,
+                )
+            aligned_data = self._read_without_checks(
+                aligned_bbox.topleft, aligned_bbox.size
+            )
+
+            index_slice = (slice(None, None),) + current_mag_bbox.offset(
+                -aligned_bbox.topleft
+            ).to_slices()
+            # overwrite the specified data
+            aligned_data[index_slice] = data
+            return aligned_bbox, aligned_data
+        else:
+            return current_mag_bbox, data
 
     def read(
         self,
@@ -141,13 +179,9 @@ class View:
 
         offset = Vec3Int(offset)
         size = self.size if size is None else Vec3Int(size)
-
-        # assert the parameter size is not in conflict with the attribute self.size
-        _assert_positive_dimensions(offset, size)
-        self._assert_bounds(offset, size)
-
         # calculate the absolute offset
         absolute_offset = self.global_offset + offset
+        _assert_positive_dimensions(absolute_offset, size)
 
         return self._read_without_checks(absolute_offset, size)
 
@@ -208,24 +242,27 @@ class View:
         ), "Failed to get subview. The calling view is read_only. Therefore, the subview also has to be read_only."
 
         offset = Vec3Int(offset)
-        size = self.size if size is None else Vec3Int(size)
-
-        _assert_positive_dimensions(offset, size)
-        self._assert_bounds(offset, size, not read_only)
         view_offset = self.global_offset + offset
+        size = self.size if size is None else Vec3Int(size)
+        _assert_positive_dimensions(offset, size)
+        if not read_only:
+            self._assert_bounds(offset, size)
+            # TODO Maybe also check if it's chunk-aligned?
+        bounding_box = BoundingBox(
+            view_offset * self._mag.to_vec3_int(), size * self._mag.to_vec3_int()
+        )
+
         return View(
             self._path,
             self.header,
-            size=size,
-            global_offset=view_offset,
-            is_bounded=True,
+            bounding_box=bounding_box,
+            mag=self._mag,
             read_only=read_only,
-            mag_view_bbox_at_creation=self._mag_view_bounding_box_at_creation,
         )
 
     def get_buffered_slice_writer(
         self,
-        offset: Vec3IntLike = Vec3Int(0, 0, 0),
+        offset: Vec3IntLike = Vec3Int(0, 0, 0),  # TODO adapt
         buffer_size: int = 32,
         dimension: int = 2,  # z
     ) -> "BufferedSliceWriter":
@@ -260,8 +297,8 @@ class View:
 
     def get_buffered_slice_reader(
         self,
-        offset: Vec3IntLike = Vec3Int(0, 0, 0),
-        size: Optional[Vec3IntLike] = None,
+        offset: Vec3IntLike = Vec3Int(0, 0, 0),  # TODO adapt
+        size: Optional[Vec3IntLike] = None,  # TODO adapt
         buffer_size: int = 32,
         dimension: int = 2,  # z
     ) -> "BufferedSliceReader":
@@ -297,11 +334,8 @@ class View:
         self,
         offset: Vec3Int,
         size: Vec3Int,
-        strict: Optional[bool] = None,
     ) -> None:
-        if strict is None:
-            strict = self._is_bounded
-        if strict and not BoundingBox((0, 0, 0), self.size).contains_bbox(
+        if not BoundingBox((0, 0, 0), self.size).contains_bbox(
             BoundingBox(offset, size)
         ):
             raise AssertionError(
@@ -492,71 +526,6 @@ class View:
             or self.header.block_type == wkw.Header.BLOCK_TYPE_LZ4HC
         )
 
-    def _handle_compressed_write(
-        self, absolute_offset: Vec3Int, data: np.ndarray
-    ) -> Tuple[Vec3Int, np.ndarray]:
-        # calculate aligned bounding box
-        file_bb = np.full(3, self.header.file_len * self.header.block_len)
-        absolute_offset_np = np.array(absolute_offset)
-        margin_to_top_left = absolute_offset_np % file_bb
-        aligned_offset = absolute_offset_np - margin_to_top_left
-        bottom_right = absolute_offset_np + np.array(data.shape[-3:])
-        margin_to_bottom_right = (file_bb - (bottom_right % file_bb)) % file_bb
-        is_bottom_right_aligned = bottom_right + margin_to_bottom_right
-        aligned_shape = is_bottom_right_aligned - aligned_offset
-
-        if (
-            tuple(aligned_offset) != absolute_offset
-            or tuple(aligned_shape) != data.shape[-3:]
-        ):
-            mag_view_bbox_at_creation = self._mag_view_bounding_box_at_creation
-
-            # Calculate in which dimensions the data is aligned and in which dimensions it matches the bbox of the mag.
-            is_top_left_aligned = aligned_offset == np.array(absolute_offset)
-            is_bottom_right_aligned = is_bottom_right_aligned == bottom_right
-            is_at_border_top_left = np.array(
-                mag_view_bbox_at_creation.topleft
-            ) == np.array(absolute_offset)
-            is_at_border_bottom_right = (
-                np.array(mag_view_bbox_at_creation.bottomright) == bottom_right
-            )
-
-            if not (
-                np.all(np.logical_or(is_top_left_aligned, is_at_border_top_left))
-                and np.all(
-                    np.logical_or(is_bottom_right_aligned, is_at_border_bottom_right)
-                )
-            ):
-                # the data is not aligned
-                # read the aligned bounding box
-
-                # We want to read the data at the absolute offset.
-                # The absolute offset might be outside of the current view.
-                # That is the case if the data is compressed but the view does not include the whole file on disk.
-                # In this case we avoid checking the bounds because the aligned_offset and aligned_shape are calculated internally.
-                warnings.warn(
-                    "Warning: write() was called on a compressed mag without block alignment. Performance will be degraded as the data has to be padded first.",
-                    RuntimeWarning,
-                )
-            aligned_data = self._read_without_checks(
-                Vec3Int(aligned_offset), Vec3Int(aligned_shape)
-            )
-
-            index_slice = (
-                slice(None, None),
-                *(
-                    slice(start, end)
-                    for start, end in zip(
-                        margin_to_top_left, bottom_right - aligned_offset
-                    )
-                ),
-            )
-            # overwrite the specified data
-            aligned_data[tuple(index_slice)] = data
-            return Vec3Int(aligned_offset), aligned_data
-        else:
-            return absolute_offset, data
-
     def get_dtype(self) -> type:
         """
         Returns the dtype per channel of the data. For example `uint8`.
@@ -582,11 +551,6 @@ class View:
             "View(%s, global_offset=%s, size=%s)"
             % (self._path, self.global_offset, self.size)
         )
-
-    @property
-    def _mag_view_bounding_box_at_creation(self) -> BoundingBox:
-        assert self._mag_view_bbox_at_creation is not None
-        return self._mag_view_bbox_at_creation
 
     @property
     def _wkw_dataset(self) -> wkw.Dataset:

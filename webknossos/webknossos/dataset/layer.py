@@ -499,6 +499,7 @@ class Layer:
         """
         Updates the offset and size of the bounding box of this layer in the properties.
         """
+        # TODO assert bbox is positive, but handle that we used '(-1, -1, -1)' to indicate that there is no data written yet.
         self._properties.bounding_box = bbox
 
         for mag, mag_view in self.mags.items():

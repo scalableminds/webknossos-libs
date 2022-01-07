@@ -253,8 +253,7 @@ class BoundingBox:
         return BoundingBox(topleft, size)
 
     def is_empty(self) -> bool:
-
-        return not all(self.size.to_np() > 0)
+        return not self.size.is_positive(strictly_positive=True)
 
     def in_mag(self, mag: Mag) -> "BoundingBox":
 
@@ -278,7 +277,17 @@ class BoundingBox:
         :argument ceil: If true, the bounding box is enlarged when necessary. If false, it's shrinked when necessary.
         """
 
-        np_mag = np.array(mag.to_list())
+        # TODO: consider alternative implementation using ints only
+        # for ceil=True:
+
+        # mag_vec = mag.to_vec3_int
+        # margin_to_topleft = current_mag_bbox.topleft % mag_vec
+        # aligned_topleft = current_mag_bbox.topleft - margin_to_topleft
+        # margin_to_bottomright = (mag_vec - (current_mag_bbox.bottomright % mag_vec)) % mag_vec
+        # aligned_bottomright = current_mag_bbox.bottomright + margin_to_bottomright
+        # aligned_bbox = BoundingBox(aligned_topleft, aligned_bottomright-aligned_topleft)
+
+        np_mag = mag.to_np()
 
         align = (
             lambda point, round_fn: round_fn(point.to_np() / np_mag).astype(int)

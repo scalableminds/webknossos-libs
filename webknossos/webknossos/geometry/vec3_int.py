@@ -77,6 +77,12 @@ class Vec3Int(tuple):
     def contains(self, needle: int) -> bool:
         return self.x == needle or self.y == needle or self.z == needle
 
+    def is_positive(self, strictly_positive: bool = False) -> bool:
+        if strictly_positive:
+            return all(i > 0 for i in self)
+        else:
+            return all(i >= 0 for i in self)
+
     def _element_wise(
         self, other: Union[int, "Vec3IntLike"], fn: Callable[[int, Any], int]
     ) -> "Vec3Int":

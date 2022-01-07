@@ -82,18 +82,31 @@ class MagView(View):
                 self.layer.dataset.path, self.layer.name, mag.to_layer_name()
             ),
             header,
-            cast(
-                Tuple[int, int, int],
-                tuple(self._mag_view_bounding_box_at_creation.bottomright),
-            ),
-            (0, 0, 0),
-            False,
-            False,
-            None,
+            bounding_box=None,
+            mag=self.mag,
         )
 
         if create:
             wkw.Dataset.create(str(self.path), self.header)
+
+    # Overwrites of View methods:
+    @property
+    def bounding_box(self) -> BoundingBox:
+        return self.layer.bounding_box.align_with_mag(Mag(self.name), ceil=True)
+
+    # TODO: remove later
+    @property
+    def size(self) -> Vec3Int:
+        # TODO deprecate
+        return self.bounding_box.bottomright // self._mag.to_vec3_int()
+
+    # TODO: remove later
+    @property
+    def global_offset(self) -> Vec3Int:
+        # TODO deprecate
+        return Vec3Int.zeros()
+
+    # Own methods:
 
     @property
     def layer(self) -> "Layer":
@@ -132,7 +145,7 @@ class MagView(View):
         offset = Vec3Int(offset)
 
         self._assert_valid_num_channels(data.shape)
-        super().write(data, offset)
+
         current_offset_in_mag1 = self.layer.bounding_box.topleft.to_np()
         current_size_in_mag1 = self.layer.bounding_box.size.to_np()
 
@@ -162,6 +175,9 @@ class MagView(View):
             new_offset_in_mag1,
             total_size_in_mag1,
         )
+
+        # TODO: here, offset is absolute, in view its relative:
+        super().write(data, offset - self.bounding_box.in_mag(self.mag).topleft)
 
     def get_view(
         self,
@@ -318,12 +334,6 @@ class MagView(View):
 
     def _get_file_dimensions(self) -> Tuple[int, int, int]:
         return cast(Tuple[int, int, int], (self._properties.cube_length,) * 3)
-
-    @property
-    def _mag_view_bounding_box_at_creation(self) -> BoundingBox:
-        return self.layer.bounding_box.align_with_mag(Mag(self.name), ceil=True).in_mag(
-            Mag(self.name)
-        )
 
     def __repr__(self) -> str:
         return repr(
