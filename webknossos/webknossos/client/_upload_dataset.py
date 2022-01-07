@@ -32,16 +32,6 @@ class LayerToLink(NamedTuple):
 
     def as_json(self):
         context = _get_context()
-
-        print(
-            {
-                "dataSetName": self.dataset_name,
-                "layerName": self.layer_name,
-                "newLayerName": self.new_layer_name,
-                "organizationName": self.organization_name or context.organization,
-            }
-        )
-
         return {
             "dataSetName": self.dataset_name,
             "layerName": self.layer_name,
@@ -144,7 +134,7 @@ def upload_dataset(
                     "organization": context.organization,
                     "name": new_dataset_name,
                     "needsConversion": False,
-                    "layersToLink": [layer._asdict() for layer in layers_to_link],
+                    "layersToLink": [layer.as_json() for layer in layers_to_link],
                 }
             ),
         )

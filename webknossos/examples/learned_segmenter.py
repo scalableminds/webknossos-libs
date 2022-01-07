@@ -4,6 +4,7 @@ from time import gmtime, strftime
 import numpy as np
 from skimage import feature
 from skimage.future import TrainableSegmenter
+from webknossos.client._upload_dataset import LayerToLink
 
 import webknossos as wk
 
@@ -76,7 +77,16 @@ def main() -> None:
 
     # Get your auth token from https://webknossos.org/auth/token
     with wk.webknossos_context(url="http://localhost:9000", token="secretScmBoyToken"):
-        url = dataset.upload()
+        url = dataset.upload(
+            layers_to_link=[
+                LayerToLink(
+                    annotation.dataset_name,
+                    "color",
+                    "color",
+                    "scalable_minds",
+                )
+            ]
+        )
     print(f"Successfully uploaded {url}")
 
 
