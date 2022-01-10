@@ -33,12 +33,6 @@ def _find_mag_path_on_disk(dataset_path: Path, layer_name: str, mag_name: str) -
         return long_mag_file_path
 
 
-def _convert_mag1_offset(
-    mag1_offset: Union[List, np.ndarray], target_mag: Mag
-) -> np.ndarray:
-    return np.array(mag1_offset) // target_mag.to_np()  # floor div
-
-
 class MagView(View):
     """
     A `MagView` contains all information about the data of a single magnification of a `webknossos.dataset.layer.Layer`.
@@ -142,42 +136,35 @@ class MagView(View):
         Note that writing compressed data which is not aligned with the blocks on disk may result in
         diminished performance, as full blocks will automatically be read to pad the write actions.
         """
+
+        num_channels = self.layer.num_channels
+        if len(data.shape) == 3:
+            assert (
+                num_channels == 1
+            ), f"The number of channels of the dataset ({num_channels}) does not match the number of channels of the passed data (1)"
+        else:
+            assert (
+                num_channels == data.shape[0]
+            ), f"The number of channels of the dataset ({num_channels}) does not match the number of channels of the passed data ({data.shape[0]})"
+
         offset = Vec3Int(offset)
-
-        self._assert_valid_num_channels(data.shape)
-
-        current_offset_in_mag1 = self.layer.bounding_box.topleft.to_np()
-        current_size_in_mag1 = self.layer.bounding_box.size.to_np()
-
-        mag_np = self.mag.to_np()
-
-        offset_in_mag1 = offset.to_np() * mag_np
-
-        # The (-1, -1, -1) is for backwards compatibility because we used '(-1, -1, -1)' to indicate that there is no data written yet.
-        new_offset_in_mag1 = (
-            offset_in_mag1
-            if tuple(current_offset_in_mag1) == (-1, -1, -1)
-            or self.layer.bounding_box == BoundingBox((0, 0, 0), (0, 0, 0))
-            else np.minimum(current_offset_in_mag1, offset_in_mag1)
+        mag1_bbox = self._get_mag1_bbox(
+            abs_current_mag_offset=offset, current_mag_size=Vec3Int(data.shape[-3:])
         )
-
-        old_end_offset_in_mag1 = current_offset_in_mag1 + current_size_in_mag1
-        new_end_offset_in_mag1 = (np.array(offset) + np.array(data.shape[-3:])) * mag_np
-        max_end_offset_in_mag1 = np.array(
-            [old_end_offset_in_mag1, new_end_offset_in_mag1]
-        ).max(axis=0)
-        total_size_in_mag1 = max_end_offset_in_mag1 - np.array(new_offset_in_mag1)
-
-        # The base view of a MagDataset always starts at (0, 0, 0)
-        self._size = Vec3Int(_convert_mag1_offset(max_end_offset_in_mag1, self.mag))
-
-        self.layer.bounding_box = BoundingBox(
-            new_offset_in_mag1,
-            total_size_in_mag1,
-        )
+        self.layer.bounding_box = self.layer.bounding_box.extended_by(mag1_bbox)
 
         # TODO: here, offset is absolute, in view its relative:
         super().write(data, offset - self.bounding_box.in_mag(self.mag).topleft)
+
+    def read(
+        self,
+        offset: Vec3IntLike = Vec3Int(0, 0, 0),
+        size: Optional[Vec3IntLike] = None,
+    ) -> np.ndarray:
+        return super().read(
+            Vec3Int(offset) - self.bounding_box.in_mag(self.mag).topleft,
+            size,
+        )
 
     def get_view(
         self,
@@ -219,34 +206,18 @@ class MagView(View):
         ```
         """
 
-        bb = self.layer.bounding_box
-
-        # The (-1, -1, -1) is for backwards compatibility because we used '(-1, -1, -1)' to indicate that there is no data written yet.
-        if bb.topleft == Vec3Int(-1, -1, -1):
-            bb = bb.with_topleft((0, 0, 0))
-
-        bb = bb.align_with_mag(self.mag, ceil=True).in_mag(self.mag)
-
+        # This has other defaults than the View implementation
+        bb = self.layer.bounding_box.align_with_mag(self.mag, ceil=True).in_mag(
+            self.mag
+        )
         offset = Vec3Int(offset) if offset is not None else bb.topleft
         size = Vec3Int(size) if size is not None else bb.bottomright - offset
 
-        assert bb.contains_bbox(BoundingBox(offset, size)) or read_only
         return super().get_view(
-            offset,
+            offset - self.bounding_box.in_mag(self.mag).topleft,
             size,
             read_only,
         )
-
-    def _assert_valid_num_channels(self, write_data_shape: Tuple[int, ...]) -> None:
-        num_channels = self.layer.num_channels
-        if len(write_data_shape) == 3:
-            assert (
-                num_channels == 1
-            ), f"The number of channels of the dataset ({num_channels}) does not match the number of channels of the passed data (1)"
-        else:
-            assert (
-                num_channels == write_data_shape[0]
-            ), f"The number of channels of the dataset ({num_channels}) does not match the number of channels of the passed data ({write_data_shape[0]})"
 
     def get_bounding_boxes_on_disk(
         self,

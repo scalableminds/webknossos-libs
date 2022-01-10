@@ -31,7 +31,7 @@ class View:
         header: wkw.Header,
         bounding_box: Optional[
             BoundingBox
-        ],  # in mag 1, absolute coordinates, optional only for mag_view
+        ],  # in mag 1, absolute coordinates, optional only for mag_view since it overwrites the bounding_box property
         mag: Mag,
         read_only: bool = False,
     ):
@@ -68,6 +68,44 @@ class View:
     def read_only(self) -> bool:
         return self._read_only
 
+    def _get_mag1_bbox(
+        self,
+        mag1_bbox: Optional[BoundingBox] = None,
+        abs_mag1_offset: Optional[Vec3Int] = None,
+        rel_mag1_offset: Optional[Vec3Int] = None,
+        mag1_size: Optional[Vec3Int] = None,
+        current_mag_bbox: Optional[BoundingBox] = None,
+        abs_current_mag_offset: Optional[Vec3Int] = None,
+        rel_current_mag_offset: Optional[Vec3Int] = None,
+        current_mag_size: Optional[Vec3Int] = None,
+    ) -> BoundingBox:
+        mag_vec = self._mag.to_vec3_int()
+
+        if mag1_bbox is not None:
+            return mag1_bbox
+
+        elif current_mag_bbox is not None:
+            return BoundingBox(
+                current_mag_bbox.topleft * mag_vec, current_mag_bbox.size * mag_vec
+            )
+
+        else:
+            if rel_current_mag_offset is not None:
+                abs_mag1_offset = (
+                    self.bounding_box.topleft + rel_current_mag_offset * mag_vec
+                )
+            if abs_current_mag_offset is not None:
+                abs_mag1_offset = abs_current_mag_offset * mag_vec
+            if rel_mag1_offset is not None:
+                abs_mag1_offset = self.bounding_box.topleft + rel_mag1_offset
+
+            if current_mag_size is not None:
+                mag1_size = current_mag_size * mag_vec
+
+            assert abs_mag1_offset is not None
+            assert mag1_size is not None
+            return BoundingBox(abs_mag1_offset, mag1_size)
+
     def write(
         self,
         data: np.ndarray,
@@ -82,13 +120,10 @@ class View:
         """
         assert not self.read_only, "Cannot write data to an read_only View"
 
-        mag1_absolute_offset = (
-            self.bounding_box.topleft + Vec3Int(offset) * self._mag.to_vec3_int()
+        mag1_bbox = self._get_mag1_bbox(
+            rel_current_mag_offset=Vec3Int(offset),
+            current_mag_size=Vec3Int(data.shape[-3:]),
         )
-        data_dims = Vec3Int(data.shape[-3:])
-        mag1_size = data_dims * self._mag.to_vec3_int()
-
-        mag1_bbox = BoundingBox(mag1_absolute_offset, mag1_size)
         assert self.bounding_box.contains_bbox(
             mag1_bbox
         ), f"The bounding box to write {mag1_bbox} is larger than the view's bounding box {self.bounding_box}"
@@ -113,25 +148,17 @@ class View:
         )
 
         if current_mag_bbox != aligned_bbox:
-            current_mag_view_bbox = self.bounding_box.in_mag(self._mag)
 
             # The data bbox should either be aligned or match the dataset's bounding box:
+            current_mag_view_bbox = self.bounding_box.in_mag(self._mag)
             if current_mag_bbox != current_mag_view_bbox.intersected_with(aligned_bbox):
-                # the data is not aligned
-                # read the aligned bounding box
-
-                # We want to read the data at the absolute offset.
-                # The absolute offset might be outside of the current view.
-                # That is the case if the data is compressed but the view does not include the whole file on disk.
-                # In this case we avoid checking the bounds because the aligned_offset and aligned_shape are calculated internally.
                 warnings.warn(
                     "Warning: write() was called on a compressed mag without block alignment. "
                     + "Performance will be degraded as the data has to be padded first.",
                     RuntimeWarning,
                 )
-            aligned_data = self._read_without_checks(
-                aligned_bbox.topleft, aligned_bbox.size
-            )
+
+            aligned_data = self._read_without_checks(aligned_bbox)
 
             index_slice = (slice(None, None),) + current_mag_bbox.offset(
                 -aligned_bbox.topleft
@@ -176,20 +203,20 @@ class View:
         more_data = view.read(offset=(50, 60, 70), size=(999, 120, 230))
         ```
         """
+        mag1_bbox = self._get_mag1_bbox(
+            rel_current_mag_offset=Vec3Int(offset),
+            current_mag_size=self.size if size is None else Vec3Int(size),
+        )
+        _assert_positive_dimensions(mag1_bbox)
 
-        offset = Vec3Int(offset)
-        size = self.size if size is None else Vec3Int(size)
-        # calculate the absolute offset
-        absolute_offset = self.global_offset + offset
-        _assert_positive_dimensions(absolute_offset, size)
-
-        return self._read_without_checks(absolute_offset, size)
+        return self._read_without_checks(mag1_bbox.in_mag(self._mag))
 
     def read_bbox(self, bounding_box: Optional[BoundingBox] = None) -> np.ndarray:
         """
         The user can specify the `bounding_box` of the requested data.
         See `read()` for more details.
         """
+        # TODO deprecate
         if bounding_box is None:
             return self.read()
         else:
@@ -197,10 +224,11 @@ class View:
 
     def _read_without_checks(
         self,
-        absolute_offset: Vec3Int,
-        size: Vec3Int,
+        current_mag_bbox: BoundingBox,
     ) -> np.ndarray:
-        data = self._wkw_dataset.read(absolute_offset.to_np(), size.to_np())
+        data = self._wkw_dataset.read(
+            current_mag_bbox.topleft.to_np(), current_mag_bbox.size.to_np()
+        )
         return data
 
     def get_view(
@@ -237,25 +265,28 @@ class View:
         """
         if read_only is None:
             read_only = self.read_only
-        assert (
-            read_only or read_only == self.read_only
-        ), "Failed to get subview. The calling view is read_only. Therefore, the subview also has to be read_only."
+        else:
+            assert (
+                read_only or not self.read_only
+            ), "Failed to get subview. The calling view is read_only. Therefore, the subview also has to be read_only."
 
-        offset = Vec3Int(offset)
-        view_offset = self.global_offset + offset
-        size = self.size if size is None else Vec3Int(size)
-        _assert_positive_dimensions(offset, size)
-        if not read_only:
-            self._assert_bounds(offset, size)
-            # TODO Maybe also check if it's chunk-aligned?
-        bounding_box = BoundingBox(
-            view_offset * self._mag.to_vec3_int(), size * self._mag.to_vec3_int()
+        mag1_bbox = self._get_mag1_bbox(
+            rel_current_mag_offset=Vec3Int(offset),
+            current_mag_size=self.size if size is None else Vec3Int(size),
         )
+        _assert_positive_dimensions(mag1_bbox)
+
+        if not read_only:
+            assert self.bounding_box.contains_bbox(mag1_bbox), (
+                f"The bounding box of the new subview {mag1_bbox} is larger than the view's bounding box {self.bounding_box}. "
+                + "This is only allowed for read-only views."
+            )
+            # TODO Maybe also check if it's chunk-aligned?
 
         return View(
             self._path,
             self.header,
-            bounding_box=bounding_box,
+            bounding_box=mag1_bbox,
             mag=self._mag,
             read_only=read_only,
         )
@@ -330,22 +361,10 @@ class View:
             dimension=dimension,
         )
 
-    def _assert_bounds(
-        self,
-        offset: Vec3Int,
-        size: Vec3Int,
-    ) -> None:
-        if not BoundingBox((0, 0, 0), self.size).contains_bbox(
-            BoundingBox(offset, size)
-        ):
-            raise AssertionError(
-                f"Accessing data out of bounds: The passed parameter 'size' {size} exceeds the size of the current view ({self.size})"
-            )
-
     def for_each_chunk(
         self,
         work_on_chunk: Callable[[Tuple["View", int]], None],
-        chunk_size: Vec3IntLike,
+        chunk_size: Vec3IntLike,  # in current mag
         executor: Optional[
             Union[ClusterExecutor, cluster_tools.WrappedProcessPoolExecutor]
         ] = None,
@@ -387,13 +406,15 @@ class View:
         # This "view" object assures that the operation cannot exceed the bounding box of the properties.
         # `View.get_view()` returns a `View` of the same size as the current object (because of the default parameters).
         # `MagView.get_view()` returns a `View` with the bounding box from the properties.
-        view = self.get_view()
+        view = (
+            self.get_view()
+        )  # can be removed later, when abs_offset is used for get_view below
 
         job_args = []
 
-        bbox = BoundingBox(view.global_offset, view.size)
+        bbox = self.bounding_box.in_mag(self._mag)
         for i, chunk in enumerate(bbox.chunk(chunk_size, chunk_size)):
-            relative_offset = chunk.topleft - view.global_offset
+            relative_offset = chunk.topleft - bbox.topleft
             chunk_view = view.get_view(
                 offset=relative_offset,
                 size=chunk.size,
@@ -453,49 +474,47 @@ class View:
         _check_chunk_size(source_chunk_size)
         _check_chunk_size(target_chunk_size)
 
-        source_view = self.get_view()
-        target_view = target_view.get_view()
+        source_bbox = self.bounding_box.in_mag(self._mag)
+        target_bbox = target_view.bounding_box.in_mag(target_view._mag)
+        source_view = (
+            self.get_view()
+        )  # can be removed later, when abs_offset is used for get_view below
+        target_view = (
+            target_view.get_view()
+        )  # can be removed later, when abs_offset is used for get_view below
 
-        source_offset = source_view.global_offset
-        target_offset = target_view.global_offset
-        source_chunk_size_np = source_chunk_size.to_np()
-        target_chunk_size_np = target_chunk_size.to_np()
-
-        assert not source_view.size.contains(
+        assert not source_bbox.size.contains(
             0
         ), "Calling 'for_zipped_chunks' failed because the size of the source view contains a 0."
-        assert not target_view.size.contains(
+        assert not target_bbox.size.contains(
             0
         ), "Calling 'for_zipped_chunks' failed because the size of the target view contains a 0."
         assert np.array_equal(
-            source_view.size.to_np() / target_view.size.to_np(),
-            source_chunk_size_np / target_chunk_size_np,
-        ), f"Calling 'for_zipped_chunks' failed because the ratio of the view sizes (source size = {source_view.size}, target size = {target_view.size}) must be equal to the ratio of the chunk sizes (source_chunk_size = {source_chunk_size}, source_chunk_size = {target_chunk_size}))"
+            source_bbox.size.to_np() / target_bbox.size.to_np(),
+            source_chunk_size.to_np() / target_chunk_size.to_np(),
+        ), f"Calling 'for_zipped_chunks' failed because the ratio of the view sizes (source size = {source_bbox.size}, target size = {target_bbox.size}) must be equal to the ratio of the chunk sizes (source_chunk_size = {source_chunk_size}, source_chunk_size = {target_chunk_size}))"
 
         assert not any(
-            target_chunk_size_np
+            target_chunk_size.to_np()
             % (target_view.header.file_len * target_view.header.block_len)
         ), f"Calling for_zipped_chunks failed. The target_chunk_size ({target_chunk_size}) must be a multiple of file_len*block_len of the target view ({target_view.header.file_len * target_view.header.block_len})"
 
         job_args = []
-        source_bbox = BoundingBox(source_offset, source_view.size)
         source_chunks = source_bbox.chunk(source_chunk_size, source_chunk_size)
-        target_chunks = BoundingBox(target_offset, target_view.size).chunk(
-            target_chunk_size, target_chunk_size
-        )
+        target_chunks = target_bbox.chunk(target_chunk_size, target_chunk_size)
 
         for i, (source_chunk, target_chunk) in enumerate(
             zip(source_chunks, target_chunks)
         ):
             # source chunk
-            relative_source_offset = source_chunk.topleft - source_offset
+            relative_source_offset = source_chunk.topleft - source_bbox.topleft
             source_chunk_view = source_view.get_view(
                 offset=relative_source_offset,
                 size=source_chunk.size,
                 read_only=True,
             )
             # target chunk
-            relative_target_offset = target_chunk.topleft - target_offset
+            relative_target_offset = target_chunk.topleft - target_bbox.topleft
             target_chunk_view = target_view.get_view(
                 size=target_chunk.size,
                 offset=relative_target_offset,
@@ -510,11 +529,12 @@ class View:
                     work_on_chunk(args)
             else:
                 with get_rich_progress() as progress:
-                    task = progress.add_task(progress_desc, total=source_bbox.volume())
+                    task = progress.add_task(
+                        progress_desc, total=self.bounding_box.volume()
+                    )
                     for args in job_args:
                         work_on_chunk(args)
-                        chunk_bbox = BoundingBox((0, 0, 0), args[0].size)
-                        progress.update(task, advance=chunk_bbox.volume())
+                        progress.update(task, advance=args[0].bounding_box.volume())
         else:
             wait_and_ensure_success(
                 executor.map_to_futures(work_on_chunk, job_args), progress_desc
@@ -579,14 +599,14 @@ class View:
         self.__dict__ = d
 
 
-def _assert_positive_dimensions(offset: Vec3Int, size: Vec3Int) -> None:
-    if any(x < 0 for x in offset):
+def _assert_positive_dimensions(bbox: BoundingBox) -> None:
+    if not bbox.topleft.is_positive():
         raise AssertionError(
-            f"The offset ({offset}) contains a negative value. All dimensions must be larger or equal to '0'."
+            f"The offset ({bbox.topleft} in mag1) contains a negative value. All dimensions must be larger or equal to '0'."
         )
-    if any(x <= 0 for x in size):
+    if bbox.is_empty():
         raise AssertionError(
-            f"The size ({size}) contains a negative value (or zeros). All dimensions must be strictly larger than '0'."
+            f"The size ({bbox.size} in mag1) contains a negative value or zeros. All dimensions must be strictly larger than '0'."
         )
 
 

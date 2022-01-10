@@ -245,6 +245,10 @@ class BoundingBox:
         return intersection
 
     def extended_by(self, other: "BoundingBox") -> "BoundingBox":
+        if self.is_empty():
+            return other
+        if other.is_empty():
+            return self
 
         topleft = np.minimum(self.topleft, other.topleft)
         bottomright = np.maximum(self.bottomright, other.bottomright)
