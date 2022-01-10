@@ -7,7 +7,7 @@ import pytest
 
 import webknossos as wk
 
-TESTDATA_DIR = Path("testdata")
+from .constants import TESTDATA_DIR
 
 
 def create_dummy_skeleton() -> wk.Skeleton:

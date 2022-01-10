@@ -5,6 +5,8 @@ from typing import List, Tuple, cast
 
 import numpy as np
 
+from webknossos.utils import time_start, time_stop
+
 from .view import View
 
 
@@ -34,6 +36,7 @@ def upsample_cube_job(
     ), f"mag_factors ({mag_factors}) for upsampling must be smaller than 1"
 
     try:
+        time_start(f"Upsampling of {target_view.global_offset}")
         num_channels = target_view.header.num_channels
         shape = (num_channels,) + tuple(target_view.size)
         file_buffer = np.zeros(shape, target_view.get_dtype())
@@ -87,6 +90,7 @@ def upsample_cube_job(
         if source_view.header.num_channels == 1:
             file_buffer = file_buffer[0]  # remove channel dimension
         target_view.write(file_buffer)
+        time_stop(f"Upsampling of {target_view.global_offset}")
 
     except Exception as exc:
         logging.error(

@@ -1,6 +1,7 @@
 import logging
 from pathlib import Path
 from typing import Tuple, cast, Optional
+from webknossos.utils import time_start, time_stop
 
 import wkw
 from argparse import ArgumentParser, Namespace
@@ -62,12 +63,15 @@ def convert_cube_job(
     cube_xyz, source_knossos_info, target_wkw_info = args
     offset = cast(Tuple[int, int, int], tuple(x * CUBE_EDGE_LEN for x in cube_xyz))
     size = cast(Tuple[int, int, int], (CUBE_EDGE_LEN,) * 3)
+    time_start(f"Converting of {offset}")
 
     with open_knossos(source_knossos_info) as source_knossos, open_wkw(
         target_wkw_info
     ) as target_wkw:
         cube_data = source_knossos.read(offset, size)
         target_wkw.write(offset, cube_data)
+
+    time_stop(f"Converting of {offset}")
 
 
 def convert_knossos(
