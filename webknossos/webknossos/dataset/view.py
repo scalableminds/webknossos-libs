@@ -56,12 +56,12 @@ class View:
 
     @property
     def size(self) -> Vec3Int:
-        # TODO deprecate
+        warnings.warn("[DEPRECATION] view.size is deprecated.")
         return self.bounding_box.size // self._mag.to_vec3_int()
 
     @property
     def global_offset(self) -> Vec3Int:
-        # TODO deprecate
+        warnings.warn("[DEPRECATION] view.size is deprecated.")
         return self.bounding_box.topleft // self._mag.to_vec3_int()
 
     @property
@@ -216,7 +216,10 @@ class View:
         The user can specify the `bounding_box` of the requested data.
         See `read()` for more details.
         """
-        # TODO deprecate
+        warnings.warn(
+            "[DEPRECATION] read_bbox (with a bbox in the current mag) is deprecated, "
+            + "please use read(bounding_box=bounding_box_in_mag1) instead."
+        )
         if bounding_box is None:
             return self.read()
         else:
@@ -281,7 +284,7 @@ class View:
                 f"The bounding box of the new subview {mag1_bbox} is larger than the view's bounding box {self.bounding_box}. "
                 + "This is only allowed for read-only views."
             )
-            # TODO Maybe also check if it's chunk-aligned?
+            # TODO Maybe also check if it's chunk-aligned?  pylint: disable=fixme
 
         return View(
             self._path,
@@ -293,7 +296,7 @@ class View:
 
     def get_buffered_slice_writer(
         self,
-        offset: Vec3IntLike = Vec3Int(0, 0, 0),  # TODO adapt
+        offset: Vec3IntLike = Vec3Int(0, 0, 0),
         buffer_size: int = 32,
         dimension: int = 2,  # z
     ) -> "BufferedSliceWriter":
@@ -328,8 +331,8 @@ class View:
 
     def get_buffered_slice_reader(
         self,
-        offset: Vec3IntLike = Vec3Int(0, 0, 0),  # TODO adapt
-        size: Optional[Vec3IntLike] = None,  # TODO adapt
+        offset: Vec3IntLike = Vec3Int(0, 0, 0),
+        size: Optional[Vec3IntLike] = None,
         buffer_size: int = 32,
         dimension: int = 2,  # z
     ) -> "BufferedSliceReader":

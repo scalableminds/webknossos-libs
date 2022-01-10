@@ -18,7 +18,7 @@ from boltons.typeutils import make_sentinel
 from webknossos.dataset._utils.infer_bounding_box_existing_files import (
     infer_bounding_box_existing_files,
 )
-from webknossos.geometry import BoundingBox, Mag, Vec3Int
+from webknossos.geometry import BoundingBox, Mag
 from webknossos.utils import copy_directory_with_symlinks, get_executor_for_args
 
 from .layer import (

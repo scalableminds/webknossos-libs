@@ -1,9 +1,10 @@
 import logging
 import os
 import shutil
+import warnings
 from argparse import Namespace
 from pathlib import Path
-from typing import TYPE_CHECKING, Generator, List, Optional, Tuple, Union, cast
+from typing import TYPE_CHECKING, Generator, Optional, Tuple, Union, cast
 from uuid import uuid4
 
 import numpy as np
@@ -88,16 +89,14 @@ class MagView(View):
     def bounding_box(self) -> BoundingBox:
         return self.layer.bounding_box.align_with_mag(Mag(self.name), ceil=True)
 
-    # TODO: remove later
     @property
     def size(self) -> Vec3Int:
-        # TODO deprecate
+        warnings.warn("[DEPRECATION] mag_view.size is deprecated.")
         return self.bounding_box.bottomright // self._mag.to_vec3_int()
 
-    # TODO: remove later
     @property
     def global_offset(self) -> Vec3Int:
-        # TODO deprecate
+        warnings.warn("[DEPRECATION] mag_view.global_offset is deprecated.")
         return Vec3Int.zeros()
 
     # Own methods:
@@ -153,7 +152,7 @@ class MagView(View):
         )
         self.layer.bounding_box = self.layer.bounding_box.extended_by(mag1_bbox)
 
-        # TODO: here, offset is absolute, in view its relative:
+        # TODO: here, offset is absolute, in view its relative:  pylint: disable=fixme
         super().write(data, offset - self.bounding_box.in_mag(self.mag).topleft)
 
     def read(

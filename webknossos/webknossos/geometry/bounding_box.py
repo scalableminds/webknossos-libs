@@ -281,7 +281,7 @@ class BoundingBox:
         :argument ceil: If true, the bounding box is enlarged when necessary. If false, it's shrinked when necessary.
         """
 
-        # TODO: consider alternative implementation using ints only
+        # TODO: consider alternative implementation using ints only  pylint: disable=fixme
         # for ceil=True:
 
         # mag_vec = mag.to_vec3_int
