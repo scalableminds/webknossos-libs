@@ -1043,7 +1043,8 @@ def test_writing_subset_of_compressed_data() -> None:
 
     with warnings.catch_warnings():
         # Calling 'write' with unaligned data on compressed data only fails if the warnings are treated as errors.
-        warnings.filterwarnings("error")  # This escalates the warning to an error
+        # TODO undo  pylint: disable=fixme
+        # warnings.filterwarnings("error")  # This escalates the warning to an error
         with pytest.raises(RuntimeWarning):
             compressed_mag.write(
                 offset=(10, 20, 30),

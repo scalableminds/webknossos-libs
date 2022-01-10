@@ -280,17 +280,6 @@ class BoundingBox:
 
         :argument ceil: If true, the bounding box is enlarged when necessary. If false, it's shrinked when necessary.
         """
-
-        # TODO: consider alternative implementation using ints only  pylint: disable=fixme
-        # for ceil=True:
-
-        # mag_vec = mag.to_vec3_int
-        # margin_to_topleft = current_mag_bbox.topleft % mag_vec
-        # aligned_topleft = current_mag_bbox.topleft - margin_to_topleft
-        # margin_to_bottomright = (mag_vec - (current_mag_bbox.bottomright % mag_vec)) % mag_vec
-        # aligned_bottomright = current_mag_bbox.bottomright + margin_to_bottomright
-        # aligned_bbox = BoundingBox(aligned_topleft, aligned_bottomright-aligned_topleft)
-
         np_mag = mag.to_np()
 
         align = (
@@ -305,6 +294,20 @@ class BoundingBox:
             topleft = align(self.topleft, np.ceil)
             bottomright = align(self.bottomright, np.floor)
         return BoundingBox(topleft, bottomright - topleft)
+
+    def align_with_mag2(self, mag: Mag, ceil: bool = False) -> "BoundingBox":
+        # TODO: consider alternative implementation using ints only  pylint: disable=fixme
+        mag_vec = mag.to_vec3_int()
+        roundup = self.topleft if ceil else self.bottomright
+        rounddown = self.bottomright if ceil else self.topleft
+        margin_to_roundup = roundup % mag_vec
+        aligned_roundup = roundup - margin_to_roundup
+        margin_to_rounddown = (mag_vec - (rounddown % mag_vec)) % mag_vec
+        aligned_rounddown = rounddown + margin_to_rounddown
+        if ceil:
+            return BoundingBox(aligned_roundup, aligned_rounddown - aligned_roundup)
+        else:
+            return BoundingBox(aligned_rounddown, aligned_roundup - aligned_rounddown)
 
     def contains(self, coord: Union[Vec3IntLike, np.ndarray]) -> bool:
         """Check whether a point is inside of the bounding box.
