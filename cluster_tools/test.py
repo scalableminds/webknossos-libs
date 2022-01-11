@@ -418,7 +418,7 @@ def test_slurm_max_submit_user_env():
     executor = cluster_tools.get_executor("slurm", debug=True)
     original_max_submit_jobs = executor.get_max_submit_jobs()
 
-    os.environ["MAX_SUBMIT_JOBS"] = str(max_submit_jobs)
+    os.environ["SLURM_MAX_SUBMIT_JOBS"] = str(max_submit_jobs)
     new_max_submit_jobs = executor.get_max_submit_jobs()
 
     try:
@@ -434,7 +434,7 @@ def test_slurm_max_submit_user_env():
             # The 10 work packages should have been scheduled as 3 separate jobs.
             assert len(job_ids) == 3
     finally:
-        del os.environ["MAX_SUBMIT_JOBS"]
+        del os.environ["SLURM_MAX_SUBMIT_JOBS"]
         reset_max_submit_jobs = executor.get_max_submit_jobs()
         assert reset_max_submit_jobs == original_max_submit_jobs
 
@@ -577,7 +577,7 @@ def test_slurm_max_array_size_env():
     executor = cluster_tools.get_executor("slurm", debug=True)
     original_max_array_size = executor.get_max_array_size()
 
-    os.environ["MAX_ARRAY_SIZE"] = str(max_array_size)
+    os.environ["SLURM_MAX_ARRAY_SIZE"] = str(max_array_size)
     new_max_array_size = executor.get_max_array_size()
 
     try:
@@ -593,7 +593,7 @@ def test_slurm_max_array_size_env():
 
             assert all(array_size <= max_array_size for array_size in occurences)
     finally:
-        del os.environ["MAX_ARRAY_SIZE"]
+        del os.environ["SLURM_MAX_ARRAY_SIZE"]
         reset_max_array_size = executor.get_max_array_size()
         assert reset_max_array_size == original_max_array_size
 

@@ -87,10 +87,10 @@ class SlurmExecutor(ClusterExecutor):
     @staticmethod
     @cache_in_production
     def get_max_array_size():
-        max_array_size_env = os.environ.get("MAX_ARRAY_SIZE", None)
+        max_array_size_env = os.environ.get("SLURM_MAX_ARRAY_SIZE", None)
         if max_array_size_env is not None:
             logging.debug(
-                f"MAX_ARRAY_SIZE env variable specified which is {max_array_size_env}."
+                f"SLURM_MAX_ARRAY_SIZE env variable specified which is {max_array_size_env}."
             )
             return int(max_array_size_env)
 
@@ -111,10 +111,10 @@ class SlurmExecutor(ClusterExecutor):
     @staticmethod
     @cache_in_production
     def get_max_submit_jobs():
-        max_submit_jobs_env = os.environ.get("MAX_SUBMIT_JOBS", None)
+        max_submit_jobs_env = os.environ.get("SLURM_MAX_SUBMIT_JOBS", None)
         if max_submit_jobs_env is not None:
             logging.debug(
-                f"MAX_SUBMIT_JOBS env variable specified which is {max_submit_jobs_env}."
+                f"SLURM_MAX_SUBMIT_JOBS env variable specified which is {max_submit_jobs_env}."
             )
             return int(max_submit_jobs_env)
 
