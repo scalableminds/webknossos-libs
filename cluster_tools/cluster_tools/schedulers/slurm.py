@@ -205,10 +205,8 @@ class SlurmExecutor(ClusterExecutor):
 
         max_array_size = self.get_max_array_size()
         max_submit_jobs = self.get_max_submit_jobs()
-        # Only ever submit at most a third of max_submit_jobs at once (but at least one).
-        # This way, multiple programs submitting slurm jobs will not block each other
-        # by "occupying" more than half of the number of submittable jobs.
-        batch_size = max(min(max_array_size, max_submit_jobs // 3), 1)
+        # Only ever submit at most max_submit_jobs and max_array_size jobs at once (but at least one).
+        batch_size = max(min(max_array_size, max_submit_jobs), 1)
 
         scripts = []
         job_id_futures = []

@@ -401,9 +401,8 @@ def test_slurm_max_submit_user():
                 assert result == [i ** 2 for i in range(10)]
 
                 job_ids = {fut.cluster_jobid for fut in futures}
-                # The 10 work packages should have been scheduled as 5 separate jobs,
-                # because the cluster_tools schedule at most 1/3 of MaxSubmitJobs at once.
-                assert len(job_ids) == 5
+                # The 10 work packages should have been scheduled as 2 separate jobs.
+                assert len(job_ids) == 2
         finally:
             _, _, exit_code = call(
                 f"echo y | sacctmgr modify {command} set MaxSubmitJobs=-1"
