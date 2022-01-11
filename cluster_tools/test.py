@@ -412,6 +412,33 @@ def test_slurm_max_submit_user():
             assert reset_max_submit_jobs == original_max_submit_jobs
 
 
+def test_slurm_max_submit_user_env():
+    max_submit_jobs = 4
+
+    executor = cluster_tools.get_executor("slurm", debug=True)
+    original_max_submit_jobs = executor.get_max_submit_jobs()
+
+    os.environ["MAX_SUBMIT_JOBS"] = str(max_submit_jobs)
+    new_max_submit_jobs = executor.get_max_submit_jobs()
+
+    try:
+        assert new_max_submit_jobs == max_submit_jobs
+
+        with executor:
+            futures = executor.map_to_futures(square, range(10))
+
+            result = [fut.result() for fut in futures]
+            assert result == [i ** 2 for i in range(10)]
+
+            job_ids = {fut.cluster_jobid for fut in futures}
+            # The 10 work packages should have been scheduled as 3 separate jobs.
+            assert len(job_ids) == 3
+    finally:
+        del os.environ["MAX_SUBMIT_JOBS"]
+        reset_max_submit_jobs = executor.get_max_submit_jobs()
+        assert reset_max_submit_jobs == original_max_submit_jobs
+
+
 def test_slurm_deferred_submit():
     max_submit_jobs = 1
 
@@ -540,6 +567,33 @@ def test_slurm_max_array_size():
             f"sed -i 's/{command}//g' /etc/slurm/slurm.conf && scontrol reconfigure"
         )
         assert exit_code == 0
+        reset_max_array_size = executor.get_max_array_size()
+        assert reset_max_array_size == original_max_array_size
+
+
+def test_slurm_max_array_size_env():
+    max_array_size = 2
+
+    executor = cluster_tools.get_executor("slurm", debug=True)
+    original_max_array_size = executor.get_max_array_size()
+
+    os.environ["MAX_ARRAY_SIZE"] = str(max_array_size)
+    new_max_array_size = executor.get_max_array_size()
+
+    try:
+        assert new_max_array_size == max_array_size
+
+        with executor:
+            futures = executor.map_to_futures(square, range(6))
+            concurrent.futures.wait(futures)
+            job_ids = [fut.cluster_jobid for fut in futures]
+
+            # Count how often each job_id occurs which corresponds to the array size of the job
+            occurences = list(Counter(job_ids).values())
+
+            assert all(array_size <= max_array_size for array_size in occurences)
+    finally:
+        del os.environ["MAX_ARRAY_SIZE"]
         reset_max_array_size = executor.get_max_array_size()
         assert reset_max_array_size == original_max_array_size
 
