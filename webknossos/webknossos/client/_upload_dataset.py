@@ -8,12 +8,14 @@ from uuid import uuid4
 import httpx
 from rich.progress import Progress
 
-from webknossos.client._generated.api.default import new_dataset_name_is_valid
 from webknossos.client._generated.api.datastore import (
     dataset_finish_upload,
     dataset_reserve_upload,
 )
-from webknossos.client._generated.api.default import datastore_list
+from webknossos.client._generated.api.default import (
+    datastore_list,
+    new_dataset_name_is_valid,
+)
 from webknossos.client._generated.models import (
     DatasetFinishUploadJsonBody,
     DatasetReserveUploadJsonBody,
