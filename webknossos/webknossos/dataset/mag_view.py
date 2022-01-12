@@ -90,14 +90,22 @@ class MagView(View):
         return self.layer.bounding_box.align_with_mag(Mag(self.name), ceil=True)
 
     @property
-    def size(self) -> Vec3Int:
-        warnings.warn("[DEPRECATION] mag_view.size is deprecated.")
-        return self.bounding_box.bottomright // self._mag.to_vec3_int()
+    def global_offset(self) -> Vec3Int:
+        warnings.warn(
+            "[DEPRECATION] mag_view.global_offset is deprecated. "
+            + "Since this is a MagView, please use "
+            + "Vec3Int.zeros() instead."
+        )
+        return Vec3Int.zeros()
 
     @property
-    def global_offset(self) -> Vec3Int:
-        warnings.warn("[DEPRECATION] mag_view.global_offset is deprecated.")
-        return Vec3Int.zeros()
+    def size(self) -> Vec3Int:
+        warnings.warn(
+            "[DEPRECATION] mag_view.size is deprecated. "
+            + "Since this is a MagView, please use "
+            + "mag_view.bounding_box.in_mag(mag_view.mag).bottomright instead."
+        )
+        return self.bounding_box.in_mag(self._mag).bottomright
 
     # Own methods:
 
@@ -120,10 +128,6 @@ class MagView(View):
     @property
     def name(self) -> str:
         return self._mag.to_layer_name()
-
-    @property
-    def mag(self) -> Mag:
-        return self._mag
 
     def write(self, data: np.ndarray, offset: Vec3IntLike = Vec3Int(0, 0, 0)) -> None:
         """

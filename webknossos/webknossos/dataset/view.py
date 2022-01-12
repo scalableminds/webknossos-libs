@@ -55,14 +55,26 @@ class View:
         return self._bounding_box
 
     @property
-    def size(self) -> Vec3Int:
-        warnings.warn("[DEPRECATION] view.size is deprecated.")
-        return self.bounding_box.size // self._mag.to_vec3_int()
+    def mag(self) -> Mag:
+        return self._mag
 
     @property
     def global_offset(self) -> Vec3Int:
-        warnings.warn("[DEPRECATION] view.size is deprecated.")
-        return self.bounding_box.topleft // self._mag.to_vec3_int()
+        warnings.warn(
+            "[DEPRECATION] view.global_offset is deprecated. "
+            + "Since this is a MagView, please use "
+            + "view.bounding_box.in_mag(view.mag).topleft instead."
+        )
+        return self.bounding_box.in_mag(self._mag).topleft
+
+    @property
+    def size(self) -> Vec3Int:
+        warnings.warn(
+            "[DEPRECATION] view.size is deprecated. "
+            + "Since this is a MagView, please use "
+            + "view.bounding_box.in_mag(view.mag).size instead."
+        )
+        return self.bounding_box.in_mag(self._mag).size
 
     @property
     def read_only(self) -> bool:
@@ -85,9 +97,7 @@ class View:
             return mag1_bbox
 
         elif current_mag_bbox is not None:
-            return BoundingBox(
-                current_mag_bbox.topleft * mag_vec, current_mag_bbox.size * mag_vec
-            )
+            return BoundingBox(current_mag_bbox.from_mag_to_mag1(self._mag))
 
         else:
             if rel_current_mag_offset is not None:
