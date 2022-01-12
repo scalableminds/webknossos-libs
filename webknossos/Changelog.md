@@ -12,6 +12,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes
 
 ### Added
+- Added a check for dataset name availability before attempting to upload. [#555](https://github.com/scalableminds/webknossos-libs/pull/555)
 
 ### Changed
 
