@@ -142,8 +142,7 @@ def test_downsample_cube_job() -> None:
 
 def test_compressed_downsample_cube_job() -> None:
     with warnings.catch_warnings():
-        # TODO undo  pylint: disable=fixme
-        # warnings.filterwarnings("error")  # This escalates the warning to an error
+        warnings.filterwarnings("error")  # This escalates the warning to an error
         downsample_test_helper(True)
 
 

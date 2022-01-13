@@ -70,7 +70,6 @@ class MagView(View):
         )
 
         self._layer = layer
-        self._mag = mag
 
         super().__init__(
             _find_mag_path_on_disk(
@@ -87,7 +86,7 @@ class MagView(View):
     # Overwrites of View methods:
     @property
     def bounding_box(self) -> BoundingBox:
-        return self.layer.bounding_box.align_with_mag(Mag(self.name), ceil=True)
+        return self.layer.bounding_box.align_with_mag(self._mag, ceil=True)
 
     @property
     def global_offset(self) -> Vec3Int:
@@ -129,7 +128,13 @@ class MagView(View):
     def name(self) -> str:
         return self._mag.to_layer_name()
 
-    def write(self, data: np.ndarray, offset: Vec3IntLike = Vec3Int(0, 0, 0)) -> None:
+    def write(
+        self,
+        data: np.ndarray,
+        offset: Optional[Vec3IntLike] = None,  # deprecated, relative, in current mag
+        relative_offset: Optional[Vec3IntLike] = None,  # in mag1
+        absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
+    ) -> None:
         """
         Writes the `data` at the specified `offset` to disk (like `webknossos.dataset.view.View.write()`).
 
@@ -139,6 +144,20 @@ class MagView(View):
         Note that writing compressed data which is not aligned with the blocks on disk may result in
         diminished performance, as full blocks will automatically be read to pad the write actions.
         """
+        if offset is not None:
+            if self._mag == Mag(1):
+                alternative = "Since this is a MagView in Mag(1), please use mag_view.write(absolute_offset=my_vec)"
+            else:
+                alternative = (
+                    "Since this is a MagView, please use the coordinates in Mag(1) instead, e.g. "
+                    + "mag_view.write(absolute_offset=my_vec * mag_view.mag.to_vec3_int())"
+                )
+
+            warnings.warn(
+                "[DEPRECATION] Using mag_view.write(offset=my_vec) is deprecated. "
+                + "Please use relative_offset or absolute_offset instead. "
+                + alternative
+            )
 
         num_channels = self.layer.num_channels
         if len(data.shape) == 3:
@@ -150,24 +169,49 @@ class MagView(View):
                 num_channels == data.shape[0]
             ), f"The number of channels of the dataset ({num_channels}) does not match the number of channels of the passed data ({data.shape[0]})"
 
-        offset = Vec3Int(offset)
+        if all(i is None for i in [offset, absolute_offset, relative_offset]):
+            # TODO this is a breaking change!  pylint: disable=fixme
+            # Before, the default was absolute zeros.
+            # We should consider leaving the default as it was,
+            # but deprecating to use it.
+            # The behavior only changes on a mag_view with a
+            # bounding_box-offset other than 0,
+            # where write was called without specifying offset
+            # (which probably never was the case anyways)
+            relative_offset = Vec3Int.zeros()
+
         mag1_bbox = self._get_mag1_bbox(
-            abs_current_mag_offset=offset, current_mag_size=Vec3Int(data.shape[-3:])
+            abs_current_mag_offset=offset,
+            rel_mag1_offset=relative_offset,
+            abs_mag1_offset=absolute_offset,
+            current_mag_size=Vec3Int(data.shape[-3:]),
         )
         self.layer.bounding_box = self.layer.bounding_box.extended_by(mag1_bbox)
 
-        # TODO: here, offset is absolute, in view its relative:  pylint: disable=fixme
-        super().write(data, offset - self.bounding_box.in_mag(self.mag).topleft)
+        super().write(data, absolute_offset=mag1_bbox.topleft)
 
     def read(
         self,
-        offset: Vec3IntLike = Vec3Int(0, 0, 0),
-        size: Optional[Vec3IntLike] = None,
+        offset: Optional[Vec3IntLike] = None,  # deprecated, relative, in current mag
+        size: Optional[
+            Vec3IntLike
+        ] = None,  # usually in mag1, in current mag if offset is given
+        relative_offset: Optional[Vec3IntLike] = None,  # in mag1
+        absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
     ) -> np.ndarray:
-        return super().read(
-            Vec3Int(offset) - self.bounding_box.in_mag(self.mag).topleft,
-            size,
-        )
+        # THIS METHOD CAN BE REMOVED WHEN THE DEPRECATED OFFSET IS REMOVED
+
+        if relative_offset is not None or absolute_offset is not None:
+            return super().read(
+                None,
+                size,
+                relative_offset=relative_offset,
+                absolute_offset=absolute_offset,
+            )
+        else:
+            return self.get_view(offset=Vec3Int.zeros(), read_only=True).read(
+                offset, size
+            )
 
     def get_view(
         self,
@@ -210,9 +254,7 @@ class MagView(View):
         """
 
         # This has other defaults than the View implementation
-        bb = self.layer.bounding_box.align_with_mag(self.mag, ceil=True).in_mag(
-            self.mag
-        )
+        bb = self.bounding_box.in_mag(self._mag)
         offset = Vec3Int(offset) if offset is not None else bb.topleft
         size = Vec3Int(size) if size is not None else bb.bottomright - offset
 
@@ -310,10 +352,7 @@ class MagView(View):
         return cast(Tuple[int, int, int], (self._properties.cube_length,) * 3)
 
     def __repr__(self) -> str:
-        return repr(
-            "MagView(name=%s, global_offset=%s, size=%s)"
-            % (self.name, self.global_offset, self.size)
-        )
+        return repr(f"MagView(name={self.name}, bounding_box={self.bounding_box})")
 
 
 def _extract_file_index(file_path: Path) -> Tuple[int, int, int]:

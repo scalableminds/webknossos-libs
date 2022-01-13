@@ -10,6 +10,8 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.31...HEAD)
 
 ### Breaking Changes
+- TODO changelog for (Mag)View signatures:
+  * MagView.read: if nothing is supplied and the layer does not start at 0, 0, 0, the default behaviour changes
 
 ### Added
 

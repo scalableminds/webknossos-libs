@@ -286,23 +286,26 @@ def downsample_cube_job(
     (source_view, target_view, _i) = args
 
     try:
-        time_start(f"Downsampling of {target_view.global_offset}")
+        time_start(f"Downsampling of {target_view.bounding_box.topleft}")
         num_channels = target_view.header.num_channels
-        shape = (num_channels,) + tuple(target_view.size)
+        shape = (num_channels,) + target_view.bounding_box.in_mag(
+            target_view.mag
+        ).size.to_tuple()
         file_buffer = np.zeros(shape, target_view.get_dtype())
 
         tiles = product(
-            *list(
-                [
-                    list(range(0, math.ceil(len)))
-                    for len in np.array(target_view.size) / buffer_edge_len
-                ]
+            *(
+                list(range(0, math.ceil(len)))
+                for len in np.array(shape[-3:]) / buffer_edge_len
             )
         )
 
         for tile in tiles:
             target_offset = np.array(tile) * buffer_edge_len
             source_offset = (mag_factors * target_offset).astype(int)
+            source_size = source_view.bounding_box.in_mag(
+                source_view.mag
+            ).size.to_tuple()
             source_size = cast(
                 Tuple[int, int, int],
                 tuple(
@@ -310,7 +313,7 @@ def downsample_cube_job(
                         int(min(a, b))
                         for a, b in zip(
                             np.array(mag_factors) * buffer_edge_len,
-                            source_view.size - source_offset,
+                            source_size - source_offset,
                         )
                     ]
                 ),
@@ -343,10 +346,10 @@ def downsample_cube_job(
         if source_view.header.num_channels == 1:
             file_buffer = file_buffer[0]  # remove channel dimension
         target_view.write(file_buffer)
-        time_stop(f"Downsampling of {target_view.global_offset}")
+        time_stop(f"Downsampling of {target_view.bounding_box.topleft}")
 
     except Exception as exc:
         logging.error(
-            f"Downsampling of target BoundingBox(offset={target_view.global_offset}, size={target_view.size}) failed with {exc}"
+            f"Downsampling of target {target_view.bounding_box} failed with {exc}"
         )
         raise exc

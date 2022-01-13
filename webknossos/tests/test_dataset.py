@@ -741,10 +741,7 @@ def test_changing_layer_bounding_box() -> None:
     new_bbox_size = ds.get_layer("color").bounding_box.size
     assert tuple(new_bbox_offset) == (10, 10, 0)
     assert tuple(new_bbox_size) == (14, 14, 24)
-    # Note that even though the offset was changed (in the properties), the offset of 'mag.read()'
-    # still refers to the absolute position (relative to (0, 0, 0)).
-    # The default offset is (0, 0, 0). Since the bottom right did not change, the read data equals 'original_data'.
-    assert np.array_equal(original_data, mag.read())
+    assert np.array_equal(original_data, mag.read((0, 0, 0)))
 
     assert np.array_equal(
         original_data[:, 10:, 10:, :], mag.read(offset=(10, 10, 0), size=(14, 14, 24))
@@ -771,10 +768,8 @@ def test_get_view() -> None:
 
     # Creating this view works because the size is set to (0, 0, 0)
     # However, in practice a view with size (0, 0, 0) would not make sense
-    with pytest.raises(AssertionError):
-        # The offset and size default to (0, 0, 0).
-        # Sizes that contain "0" are not allowed
-        mag.get_view()
+    # Sizes that contain "0" are not allowed usually, except for an empty layer
+    assert mag.get_view().bounding_box.is_empty()
 
     with pytest.raises(AssertionError):
         # This view exceeds the bounding box
@@ -793,6 +788,11 @@ def test_get_view() -> None:
     write_data = (np.random.rand(100, 200, 300) * 255).astype(np.uint8)
     # This operation updates the bounding box of the dataset according to the written data
     mag.write(write_data, offset=(10, 20, 30))
+
+    with pytest.raises(AssertionError):
+        # The offset and size default to (0, 0, 0).
+        # Sizes that contain "0" are not allowed
+        mag.get_view(size=(10, 10, 0))
 
     assert mag.global_offset == (0, 0, 0)  # MagViews always start at (0, 0, 0)
     assert mag.size == (110, 220, 330)
@@ -1043,11 +1043,10 @@ def test_writing_subset_of_compressed_data() -> None:
 
     with warnings.catch_warnings():
         # Calling 'write' with unaligned data on compressed data only fails if the warnings are treated as errors.
-        # TODO undo  pylint: disable=fixme
-        # warnings.filterwarnings("error")  # This escalates the warning to an error
+        warnings.filterwarnings("error")  # This escalates the warning to an error
         with pytest.raises(RuntimeWarning):
             compressed_mag.write(
-                offset=(10, 20, 30),
+                relative_offset=(20, 40, 60),
                 data=(np.random.rand(10, 10, 10) * 255).astype(np.uint8),
             )
 
@@ -1276,7 +1275,7 @@ def test_search_dataset_also_for_long_layer_name() -> None:
     os.rename(short_mag_file_path, long_mag_file_path)
 
     # make sure that reading data still works
-    mag.read(offset=(10, 10, 10), size=(10, 10, 10))
+    mag.read(relative_offset=(10, 10, 10), size=(10, 10, 10))
 
     # when opening the dataset, it searches both for the long and the short path
     layer = Dataset.open(TESTOUTPUT_DIR / "long_layer_name").get_layer("color")
@@ -1940,7 +1939,10 @@ def test_pickle_view(tmp_path: Path) -> None:
 
     # Make sure that the pickled mag can still read data
     assert pickled_mag1._cached_wkw_dataset is None
-    assert np.array_equal(data_to_write, pickled_mag1.read())
+    assert np.array_equal(
+        data_to_write,
+        pickled_mag1.read(relative_offset=(0, 0, 0), size=data_to_write.shape[-3:]),
+    )
     assert pickled_mag1._cached_wkw_dataset is not None
 
     # Make sure that the attributes of the MagView (not View) still exist

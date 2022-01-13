@@ -83,43 +83,71 @@ class View:
     def _get_mag1_bbox(
         self,
         mag1_bbox: Optional[BoundingBox] = None,
-        abs_mag1_offset: Optional[Vec3Int] = None,
-        rel_mag1_offset: Optional[Vec3Int] = None,
-        mag1_size: Optional[Vec3Int] = None,
+        abs_mag1_offset: Optional[Vec3IntLike] = None,
+        rel_mag1_offset: Optional[Vec3IntLike] = None,
+        mag1_size: Optional[Vec3IntLike] = None,
         current_mag_bbox: Optional[BoundingBox] = None,
-        abs_current_mag_offset: Optional[Vec3Int] = None,
-        rel_current_mag_offset: Optional[Vec3Int] = None,
-        current_mag_size: Optional[Vec3Int] = None,
+        abs_current_mag_offset: Optional[Vec3IntLike] = None,
+        rel_current_mag_offset: Optional[Vec3IntLike] = None,
+        current_mag_size: Optional[Vec3IntLike] = None,
     ) -> BoundingBox:
+        num_bboxes = sum(i is not None for i in [mag1_bbox, current_mag_bbox])
+        num_offsets = sum(
+            i is not None
+            for i in [
+                abs_mag1_offset,
+                rel_mag1_offset,
+                abs_current_mag_offset,
+                rel_current_mag_offset,
+            ]
+        )
+        num_sizes = sum(i is not None for i in [mag1_size, current_mag_size])
+        if num_bboxes == 0:
+            assert num_offsets != 0, "You must supply an offset or a bounding box."
+            assert num_sizes != 0, "You must supply a size."
+            assert num_offsets == 1, "Only one bounding-box can be supplied."
+            assert num_sizes == 1, "Only one bounding-box can be supplied."
+        else:
+            assert num_bboxes == 1, "Only one bounding-box can be supplied."
+            assert (
+                num_offsets == 0
+            ), "A bounding-box was supplied, you cannot also supply an offset."
+            assert (
+                num_sizes == 0
+            ), "A bounding-box was supplied, you cannot also supply a size."
+
         mag_vec = self._mag.to_vec3_int()
 
         if mag1_bbox is not None:
             return mag1_bbox
 
         elif current_mag_bbox is not None:
-            return BoundingBox(current_mag_bbox.from_mag_to_mag1(self._mag))
+            return current_mag_bbox.from_mag_to_mag1(self._mag)
 
         else:
             if rel_current_mag_offset is not None:
                 abs_mag1_offset = (
-                    self.bounding_box.topleft + rel_current_mag_offset * mag_vec
+                    self.bounding_box.topleft
+                    + Vec3Int(rel_current_mag_offset) * mag_vec
                 )
             if abs_current_mag_offset is not None:
-                abs_mag1_offset = abs_current_mag_offset * mag_vec
+                abs_mag1_offset = Vec3Int(abs_current_mag_offset) * mag_vec
             if rel_mag1_offset is not None:
                 abs_mag1_offset = self.bounding_box.topleft + rel_mag1_offset
 
             if current_mag_size is not None:
-                mag1_size = current_mag_size * mag_vec
+                mag1_size = Vec3Int(current_mag_size) * mag_vec
 
-            assert abs_mag1_offset is not None
-            assert mag1_size is not None
-            return BoundingBox(abs_mag1_offset, mag1_size)
+            assert abs_mag1_offset is not None, "No offset was supplied."
+            assert mag1_size is not None, "No size was supplied."
+            return BoundingBox(Vec3Int(abs_mag1_offset), Vec3Int(mag1_size))
 
     def write(
         self,
         data: np.ndarray,
-        offset: Vec3IntLike = Vec3Int(0, 0, 0),  # deprecated, relative, in current mag
+        offset: Optional[Vec3IntLike] = None,  # deprecated, relative, in current mag
+        relative_offset: Optional[Vec3IntLike] = None,  # in mag1
+        absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
     ) -> None:
         """
         Writes the `data` at the specified `offset` to disk.
@@ -130,8 +158,28 @@ class View:
         """
         assert not self.read_only, "Cannot write data to an read_only View"
 
+        if all(i is None for i in [offset, absolute_offset, relative_offset]):
+            relative_offset = Vec3Int.zeros()
+
+        if offset is not None:
+            if self._mag == Mag(1):
+                alternative = "Since this is a View in Mag(1), please use view.write(relative_offset=my_vec)"
+            else:
+                alternative = (
+                    "Since this is a View, please use the coordinates in Mag(1) instead, e.g. "
+                    + "view.write(relative_offset=my_vec * view.mag.to_vec3_int())"
+                )
+
+            warnings.warn(
+                "[DEPRECATION] Using view.write(offset=my_vec) is deprecated. "
+                + "Please use relative_offset or absolute_offset instead. "
+                + alternative
+            )
+
         mag1_bbox = self._get_mag1_bbox(
-            rel_current_mag_offset=Vec3Int(offset),
+            rel_current_mag_offset=offset,
+            rel_mag1_offset=relative_offset,
+            abs_mag1_offset=absolute_offset,
             current_mag_size=Vec3Int(data.shape[-3:]),
         )
         assert self.bounding_box.contains_bbox(
@@ -181,8 +229,12 @@ class View:
 
     def read(
         self,
-        offset: Vec3IntLike = Vec3Int(0, 0, 0),
-        size: Optional[Vec3IntLike] = None,
+        offset: Optional[Vec3IntLike] = None,  # deprecated, relative, in current mag
+        size: Optional[
+            Vec3IntLike
+        ] = None,  # usually in mag1, in current mag if offset is given
+        relative_offset: Optional[Vec3IntLike] = None,  # in mag1
+        absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
     ) -> np.ndarray:
         """
         The user can specify the `offset` and the `size` of the requested data.
@@ -213,11 +265,73 @@ class View:
         more_data = view.read(offset=(50, 60, 70), size=(999, 120, 230))
         ```
         """
+
+        current_mag_size: Optional[Vec3IntLike]
+        mag1_size: Optional[Vec3IntLike]
+        if offset is None:
+            if size is None:
+                assert (
+                    relative_offset is None and absolute_offset is None
+                ), "You must supply size, when reading with an offset."
+                current_mag_size = None
+                mag1_size = self.bounding_box.size
+            else:
+                if relative_offset is None and absolute_offset is None:
+                    if isinstance(self, View):
+                        offset_param = "relative_offset"
+                    else:
+                        offset_param = "absolute_offset"
+                    warnings.warn(
+                        "[DEPRECATION] Using view.read(size=my_vec) only with a size is deprecated. "
+                        + f"Please use view.read({offset_param}=(0, 0, 0), size=size_vec * view.mag.to_vec3_int()) instead."
+                    )
+                    current_mag_size = size
+                    mag1_size = None
+                else:
+                    current_mag_size = None
+                    mag1_size = size
+        else:
+            view_class = type(self).__name__
+            if isinstance(self, View):
+                offset_param = "relative_offset"
+            else:
+                offset_param = "absolute_offset"
+            if self._mag == Mag(1):
+                alternative = f"Since this is a {view_class} in Mag(1), please use view.read({offset_param}=my_vec, size=size_vec)"
+            else:
+                alternative = (
+                    f"Since this is a {view_class}, please use the coordinates in Mag(1) instead, e.g. "
+                    + f"view.read({offset_param}=my_vec * view.mag.to_vec3_int(),  size=size_vec * view.mag.to_vec3_int())"
+                )
+
+            warnings.warn(
+                "[DEPRECATION] Using view.read(offset=my_vec) is deprecated. "
+                + "Please use relative_offset or absolute_offset instead. "
+                + alternative
+            )
+
+            if size is None:
+                current_mag_size = None
+                mag1_size = self.bounding_box.size
+            else:
+                # (deprecated) offset and size are given
+                current_mag_size = size
+                mag1_size = None
+
+        if all(i is None for i in [offset, absolute_offset, relative_offset]):
+            relative_offset = Vec3Int.zeros()
+
         mag1_bbox = self._get_mag1_bbox(
-            rel_current_mag_offset=Vec3Int(offset),
-            current_mag_size=self.size if size is None else Vec3Int(size),
+            rel_current_mag_offset=offset,
+            rel_mag1_offset=relative_offset,
+            abs_mag1_offset=absolute_offset,
+            current_mag_size=current_mag_size,
+            mag1_size=mag1_size,
         )
-        _assert_positive_dimensions(mag1_bbox)
+        assert not mag1_bbox.is_empty(), (
+            f"The size ({mag1_bbox.size} in mag1) contains a zero. "
+            + "All dimensions must be strictly larger than '0'."
+        )
 
         return self._read_without_checks(mag1_bbox.in_mag(self._mag))
 
@@ -284,10 +398,16 @@ class View:
             ), "Failed to get subview. The calling view is read_only. Therefore, the subview also has to be read_only."
 
         mag1_bbox = self._get_mag1_bbox(
-            rel_current_mag_offset=Vec3Int(offset),
-            current_mag_size=self.size if size is None else Vec3Int(size),
+            rel_current_mag_offset=offset,
+            current_mag_size=self.bounding_box.in_mag(self._mag).size
+            if size is None
+            else Vec3Int(size),
         )
-        _assert_positive_dimensions(mag1_bbox)
+        if not self.bounding_box.is_empty():
+            assert not mag1_bbox.is_empty(), (
+                f"The size ({mag1_bbox.size} in mag1) contains a zero. "
+                + "All dimensions must be strictly larger than '0'."
+            )
 
         if not read_only:
             assert self.bounding_box.contains_bbox(mag1_bbox), (
@@ -369,7 +489,9 @@ class View:
         return BufferedSliceReader(
             view=self,
             offset=Vec3Int(offset),
-            size=Vec3Int(size) if size is not None else self.size,
+            size=Vec3Int(size)
+            if size is not None
+            else self.bounding_box.in_mag(self._mag).size,
             buffer_size=buffer_size,
             dimension=dimension,
         )
@@ -580,10 +702,7 @@ class View:
         pass
 
     def __repr__(self) -> str:
-        return repr(
-            "View(%s, global_offset=%s, size=%s)"
-            % (self._path, self.global_offset, self.size)
-        )
+        return repr(f"View({self._path}, bounding_box={self.bounding_box})")
 
     @property
     def _wkw_dataset(self) -> wkw.Dataset:
@@ -610,17 +729,6 @@ class View:
     def __setstate__(self, d: Dict[str, Any]) -> None:
         d["_cached_wkw_dataset"] = None
         self.__dict__ = d
-
-
-def _assert_positive_dimensions(bbox: BoundingBox) -> None:
-    if not bbox.topleft.is_positive():
-        raise AssertionError(
-            f"The offset ({bbox.topleft} in mag1) contains a negative value. All dimensions must be larger or equal to '0'."
-        )
-    if bbox.is_empty():
-        raise AssertionError(
-            f"The size ({bbox.size} in mag1) contains a negative value or zeros. All dimensions must be strictly larger than '0'."
-        )
 
 
 def _check_chunk_size(chunk_size: Vec3Int) -> None:
