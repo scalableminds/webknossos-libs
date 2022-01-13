@@ -12,6 +12,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes
 
 ### Added
+- Allow to configure the MaxArraySize and MaxSubmitJobs slurm limits via the `SLURM_MAX_ARRAY_SIZE` and `SLURM_MAX_SUBMIT_JOBS` environment variables. If the environment variables are not specified, the limits are determined automatically. [#554](https://github.com/scalableminds/webknossos-libs/pull/554)
 
 ### Changed
 
