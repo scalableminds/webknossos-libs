@@ -415,6 +415,20 @@ class View:
                 + "This is only allowed for read-only views."
             )
             # TODO Maybe also check if it's chunk-aligned?  pylint: disable=fixme
+            current_mag_bbox = mag1_bbox.in_mag(self._mag)
+            current_mag_aligned_bbox = current_mag_bbox.align_with_mag(
+                Mag(self.header.file_len * self.header.block_len), ceil=True
+            )
+            # The data bbox should either be aligned or match the dataset's bounding box:
+            current_mag_view_bbox = self.bounding_box.in_mag(self._mag)
+            if current_mag_bbox != current_mag_view_bbox.intersected_with(
+                current_mag_aligned_bbox, dont_assert=True
+            ):
+                warnings.warn(
+                    "Warning: get_view() was called without block alignment. "
+                    + "Please only use sequentially, parallel access across such views is error-prone.",
+                    RuntimeWarning,
+                )
 
         return View(
             self._path,

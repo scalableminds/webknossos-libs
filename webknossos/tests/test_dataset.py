@@ -1061,12 +1061,12 @@ def test_writing_subset_of_compressed_data() -> None:
         # Writing unaligned data to the edge of the bounding box of the MagView does not raise an error.
         # This write operation writes unaligned data into the bottom-right corner of the MagView.
         compressed_mag.write(
-            offset=(64, 64, 64),
+            absolute_offset=(128, 128, 128),
             data=(np.random.rand(56, 76, 96) * 255).astype(np.uint8),
         )
         # This also works for normal Views but they only use the bounding box at the time of creation as reference.
         compressed_mag.get_view().write(
-            offset=(64, 64, 64),
+            absolute_offset=(128, 128, 128),
             data=(np.random.rand(56, 76, 96) * 255).astype(np.uint8),
         )
 

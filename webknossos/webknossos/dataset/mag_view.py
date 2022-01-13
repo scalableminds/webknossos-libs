@@ -69,16 +69,13 @@ class MagView(View):
             block_type=block_type,
         )
 
-        self._layer = layer
-
         super().__init__(
-            _find_mag_path_on_disk(
-                self.layer.dataset.path, self.layer.name, mag.to_layer_name()
-            ),
+            _find_mag_path_on_disk(layer.dataset.path, layer.name, mag.to_layer_name()),
             header,
             bounding_box=None,
-            mag=self.mag,
+            mag=mag,
         )
+        self._layer = layer
 
         if create:
             wkw.Dataset.create(str(self.path), self.header)
@@ -121,7 +118,7 @@ class MagView(View):
         return next(
             mag_property
             for mag_property in self.layer._properties.wkw_resolutions
-            if mag_property.resolution == self.mag
+            if mag_property.resolution == self._mag
         )
 
     @property
@@ -259,7 +256,7 @@ class MagView(View):
         size = Vec3Int(size) if size is not None else bb.bottomright - offset
 
         return super().get_view(
-            offset - self.bounding_box.in_mag(self.mag).topleft,
+            offset - self.bounding_box.in_mag(self._mag).topleft,
             size,
             read_only,
         )
@@ -342,7 +339,7 @@ class MagView(View):
             MagView.__init__(
                 self,
                 self.layer,
-                self.mag,
+                self._mag,
                 self.header.block_len,
                 self.header.file_len,
                 wkw.Header.BLOCK_TYPE_LZ4HC,
