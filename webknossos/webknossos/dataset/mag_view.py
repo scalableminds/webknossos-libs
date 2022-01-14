@@ -158,14 +158,6 @@ class MagView(View):
             )
 
         if all(i is None for i in [offset, absolute_offset, relative_offset]):
-            # TODO this is a breaking change!  pylint: disable=fixme
-            # Before, the default was absolute zeros.
-            # We should consider leaving the default as it was,
-            # but deprecating to use it.
-            # The behavior only changes on a mag_view with a
-            # bounding_box-offset other than 0,
-            # where write was called without specifying offset
-            # (which probably never was the case anyways)
             relative_offset = Vec3Int.zeros()
 
         mag1_bbox = self._get_mag1_bbox(
