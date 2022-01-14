@@ -129,6 +129,7 @@ class MagView(View):
         self,
         data: np.ndarray,
         offset: Optional[Vec3IntLike] = None,  # deprecated, relative, in current mag
+        *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
     ) -> None:
@@ -155,16 +156,6 @@ class MagView(View):
                 + "Please use relative_offset or absolute_offset instead. "
                 + alternative
             )
-
-        num_channels = self.layer.num_channels
-        if len(data.shape) == 3:
-            assert (
-                num_channels == 1
-            ), f"The number of channels of the dataset ({num_channels}) does not match the number of channels of the passed data (1)"
-        else:
-            assert (
-                num_channels == data.shape[0]
-            ), f"The number of channels of the dataset ({num_channels}) does not match the number of channels of the passed data ({data.shape[0]})"
 
         if all(i is None for i in [offset, absolute_offset, relative_offset]):
             # TODO this is a breaking change!  pylint: disable=fixme
@@ -193,17 +184,27 @@ class MagView(View):
         size: Optional[
             Vec3IntLike
         ] = None,  # usually in mag1, in current mag if offset is given
+        *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
+        absolute_bounding_box: Optional[BoundingBox] = None,  # in mag1
+        relative_bounding_box: Optional[BoundingBox] = None,  # in mag1
     ) -> np.ndarray:
         # THIS METHOD CAN BE REMOVED WHEN THE DEPRECATED OFFSET IS REMOVED
 
-        if relative_offset is not None or absolute_offset is not None:
+        if (
+            relative_offset is not None
+            or absolute_offset is not None
+            or absolute_bounding_box is not None
+            or relative_bounding_box is not None
+        ):
             return super().read(
-                None,
+                offset,
                 size,
                 relative_offset=relative_offset,
                 absolute_offset=absolute_offset,
+                absolute_bounding_box=absolute_bounding_box,
+                relative_bounding_box=relative_bounding_box,
             )
         else:
             return self.get_view(offset=Vec3Int.zeros(), read_only=True).read(
@@ -214,6 +215,9 @@ class MagView(View):
         self,
         offset: Optional[Vec3IntLike] = None,
         size: Optional[Vec3IntLike] = None,
+        *,
+        relative_offset: Optional[Vec3IntLike] = None,  # in mag1
+        absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
         read_only: Optional[bool] = None,
     ) -> View:
         """
@@ -249,16 +253,21 @@ class MagView(View):
         sub_view2 = mag1.get_view(offset=(50, 60, 70), size=(999, 120, 230), read_only=True)
         ```
         """
+        # THIS METHOD CAN BE REMOVED WHEN THE DEPRECATED OFFSET IS REMOVED
 
         # This has other defaults than the View implementation
+        # (all deprecations are handled in the subsclass)
         bb = self.bounding_box.in_mag(self._mag)
-        offset = Vec3Int(offset) if offset is not None else bb.topleft
-        size = Vec3Int(size) if size is not None else bb.bottomright - offset
+        if offset is not None and size is None:
+            offset = Vec3Int(offset)
+            size = bb.bottomright - offset
 
         return super().get_view(
-            offset - self.bounding_box.in_mag(self._mag).topleft,
+            None if offset is None else Vec3Int(offset) - bb.topleft,
             size,
-            read_only,
+            relative_offset=relative_offset,
+            absolute_offset=absolute_offset,
+            read_only=read_only,
         )
 
     def get_bounding_boxes_on_disk(

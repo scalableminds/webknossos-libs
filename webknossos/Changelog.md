@@ -12,6 +12,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes
 - TODO changelog for (Mag)View signatures:
   * MagView.read: if nothing is supplied and the layer does not start at 0, 0, 0, the default behaviour changes
+  * (Mag)View.get_view: read_only is kw-only argument now
 
 ### Added
 

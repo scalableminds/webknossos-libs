@@ -102,21 +102,19 @@ def downsample_test_helper(use_compress: bool) -> None:
     # The actual size of mag1 is (4600, 4600, 512).
     # To keep this test case fast, we are only downsampling a small part
     offset = (4096, 4096, 0)
-    target_offset = (2048, 2048, 0)
-    source_size = (504, 504, 512)
-    target_size = (252, 252, 256)
+    size = (504, 504, 512)
     source_buffer = mag1.read(
-        offset=offset,
-        size=source_size,
+        absolute_offset=offset,
+        size=size,
     )[0]
     assert np.any(source_buffer != 0)
 
     downsample_cube_job(
         (
-            mag1.get_view(offset=offset, size=source_size),
+            mag1.get_view(absolute_offset=offset, size=size),
             mag2.get_view(
-                offset=target_offset,
-                size=target_size,
+                absolute_offset=offset,
+                size=size,
             ),
             0,
         ),
@@ -127,7 +125,7 @@ def downsample_test_helper(use_compress: bool) -> None:
 
     assert np.any(source_buffer != 0)
 
-    target_buffer = mag2.read(offset=target_offset, size=target_size)[0]
+    target_buffer = mag2.read(absolute_offset=offset, size=size)[0]
     assert np.any(target_buffer != 0)
 
     assert np.all(

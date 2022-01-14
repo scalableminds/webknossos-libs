@@ -28,7 +28,7 @@ def log_memory_consumption(additional_output: str = "") -> None:
     )
 
 
-class BufferedSliceWriter(object):
+class BufferedSliceWriter:
     def __init__(
         self,
         view: "View",

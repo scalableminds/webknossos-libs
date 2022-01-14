@@ -2,13 +2,14 @@ import logging
 import math
 from enum import Enum
 from itertools import product
-from typing import Callable, List, Optional, Tuple, cast
+from typing import Callable, List, Optional, Tuple
 
 import numpy as np
 from scipy.ndimage import zoom
 from wkw import wkw
 
 from webknossos.geometry import Mag, Vec3Int, Vec3IntLike
+from webknossos.geometry.bounding_box import BoundingBox
 from webknossos.utils import time_start, time_stop
 
 from .layer_categories import LayerCategoryType
@@ -284,6 +285,7 @@ def downsample_cube_job(
     buffer_edge_len: int,
 ) -> None:
     (source_view, target_view, _i) = args
+    mag_factors_vec = Vec3Int(mag_factors)
 
     try:
         time_start(f"Downsampling of {target_view.bounding_box.topleft}")
@@ -294,32 +296,22 @@ def downsample_cube_job(
         file_buffer = np.zeros(shape, target_view.get_dtype())
 
         tiles = product(
-            *(
-                list(range(0, math.ceil(len)))
-                for len in np.array(shape[-3:]) / buffer_edge_len
-            )
+            *(list(range(0, math.ceil(len / buffer_edge_len))) for len in shape[-3:])
         )
 
         for tile in tiles:
-            target_offset = np.array(tile) * buffer_edge_len
-            source_offset = (mag_factors * target_offset).astype(int)
-            source_size = source_view.bounding_box.in_mag(
-                source_view.mag
-            ).size.to_tuple()
-            source_size = cast(
-                Tuple[int, int, int],
-                tuple(
-                    [
-                        int(min(a, b))
-                        for a, b in zip(
-                            np.array(mag_factors) * buffer_edge_len,
-                            source_size - source_offset,
-                        )
-                    ]
-                ),
+            target_offset = Vec3Int(tile) * buffer_edge_len
+            source_offset = mag_factors_vec * target_offset
+            source_size = source_view.bounding_box.in_mag(source_view.mag).size
+            source_size = (mag_factors_vec * buffer_edge_len).pairmin(
+                source_size - source_offset
             )
 
-            cube_buffer_channels = source_view.read(source_offset, source_size)
+            bbox = BoundingBox(source_offset, source_size)
+
+            cube_buffer_channels = source_view.read(
+                relative_bounding_box=bbox.from_mag_to_mag1(source_view.mag),
+            )
 
             for channel_index in range(num_channels):
                 cube_buffer = cube_buffer_channels[channel_index]
@@ -332,15 +324,8 @@ def downsample_cube_job(
                         interpolation_mode,
                     )
 
-                    buffer_offset = target_offset
-                    buffer_end = buffer_offset + data_cube.shape
-
-                    file_buffer[
-                        channel_index,
-                        buffer_offset[0] : buffer_end[0],
-                        buffer_offset[1] : buffer_end[1],
-                        buffer_offset[2] : buffer_end[2],
-                    ] = data_cube
+                    buffer_bbox = BoundingBox(target_offset, data_cube.shape)
+                    file_buffer[(channel_index,) + buffer_bbox.to_slices()] = data_cube
 
         # Write the downsampled buffer to target
         if source_view.header.num_channels == 1:
