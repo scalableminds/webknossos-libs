@@ -11,22 +11,22 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 
 ### Breaking Changes
 - Various changes in View & MagView signatures [#553](https://github.com/scalableminds/webknossos-libs/pull/553):
-  **Breaking Changes**:
-  * `MagView.read`: if nothing is supplied and the layer does not start at (0, 0, 0),
-    the default behaviour changes from starting at absolute (0, 0, 0) to the layer's bounding box
-  * `MagView.write`: if no offset is supplied and the layer does not start at (0, 0, 0),
-    the default behaviour changes from starting at absolute (0, 0, 0) to the layer's bounding box
-  * `(Mag)View.get_view`: read_only is a keyword-only argument now
-  **Deprecations**
-  The following usages are marked as deprecated with warnings and will be removed in future releases:
-  * Using the `offset` parameter for `read`/`write`/`get_view` in MagView and View is deprecated.
-    There are new counterparts `absolute_offset` and `relative_offset` which have to be specified in Mag(1),
-    whereas `offset` previously was specified in the Mag of the respective View.
-    Also, for `read`/`get_view` only using `size` is deprecated, since it used to refer to the size in the View's Mag.
-    Instead, `size` should always be used together with `absolute_offset` or `relative_offset`. Then it is interpreted in Mag(1).
-  * The (Mag)View attributes `view.global_offset` and `view.size` are deprecated now, which were in the Mag of the respective View.
-    Please use `view.bounding_box` instead, which is in Mag(1).
-  * `read_bbox` on the (Mag)View is deprecated as well, please use `read` with the `absolute_bounding_box`or `relative_bounding_box` parameter instead. You'll have to pass the bounding box in Mag(1) then.
+  - **Breaking Changes**:
+    * `MagView.read`: if nothing is supplied and the layer does not start at (0, 0, 0),
+      the default behaviour changes from starting at absolute (0, 0, 0) to the layer's bounding box
+    * `MagView.write`: if no offset is supplied and the layer does not start at (0, 0, 0),
+      the default behaviour changes from starting at absolute (0, 0, 0) to the layer's bounding box
+    * `(Mag)View.get_view`: read_only is a keyword-only argument now
+  - **Deprecations**
+    The following usages are marked as deprecated with warnings and will be removed in future releases:
+    * Using the `offset` parameter for `read`/`write`/`get_view` in MagView and View is deprecated.
+      There are new counterparts `absolute_offset` and `relative_offset` which have to be specified in Mag(1),
+      whereas `offset` previously was specified in the Mag of the respective View.
+      Also, for `read`/`get_view` only using `size` is deprecated, since it used to refer to the size in the View's Mag.
+      Instead, `size` should always be used together with `absolute_offset` or `relative_offset`. Then it is interpreted in Mag(1).
+    * The (Mag)View attributes `view.global_offset` and `view.size` are deprecated now, which were in the Mag of the respective View.
+      Please use `view.bounding_box` instead, which is in Mag(1).
+    * `read_bbox` on the (Mag)View is deprecated as well, please use `read` with the `absolute_bounding_box`or `relative_bounding_box` parameter instead. You'll have to pass the bounding box in Mag(1) then.
 
 
 ### Added
