@@ -113,7 +113,7 @@ class View:
         num_sizes = _count_defined_values([mag1_size, current_mag_size])
         if num_bboxes == 0:
             assert num_offsets != 0, "You must supply an offset or a bounding box."
-            assert num_sizes != 0, "You must supply a size."
+            assert num_sizes != 0, "When supplying an offset, you must also supply a size. Alternatively, supply a bounding box."
             assert num_offsets == 1, "Only one offset can be supplied."
             assert num_sizes == 1, "Only one size can be supplied."
         else:
