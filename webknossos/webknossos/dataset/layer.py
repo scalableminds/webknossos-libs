@@ -639,9 +639,7 @@ class Layer:
 
         prev_mag_view = self.mags[from_mag]
 
-        mag_factors = [
-            t // s for (t, s) in zip(target_mag.to_list(), from_mag.to_list())
-        ]
+        mag_factors = target_mag.to_vec3_int() // from_mag.to_vec3_int()
 
         if target_mag in self.mags.keys() and allow_overwrite:
             target_mag_view = self.get_mag(target_mag)
@@ -689,8 +687,7 @@ class Layer:
                 # this view is restricted to the bounding box specified in the properties
                 func,
                 target_view=target_view,
-                source_chunk_size=np.array(target_mag_view._get_file_dimensions())
-                * mag_factors,
+                source_chunk_size=target_mag_view._get_file_dimensions() * mag_factors,
                 target_chunk_size=target_mag_view._get_file_dimensions(),
                 executor=executor,
                 progress_desc=f"Downsampling layer {self.name} from Mag {from_mag} to Mag {target_mag}",

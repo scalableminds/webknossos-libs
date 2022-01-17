@@ -314,7 +314,7 @@ class BoundingBox:
         :argument ceil: If true, the bounding box is enlarged when necessary. If false, it's shrinked when necessary.
         """
         # This does the same as _align_with_mag_slow, which is more readable.
-        # Same behavior is tested in bla
+        # Same behavior is asserted in test_align_with_mag_against_numpy_implementation
         mag_vec = mag.to_vec3_int()
         roundup = self.topleft if ceil else self.bottomright
         rounddown = self.bottomright if ceil else self.topleft

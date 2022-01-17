@@ -264,7 +264,7 @@ class MagView(View):
 
     def get_bounding_boxes_on_disk(
         self,
-    ) -> Generator[Tuple[Tuple[int, int, int], Tuple[int, int, int]], None, None]:
+    ) -> Generator[Tuple[Vec3Int, Vec3Int], None, None]:
         """
         Returns a bounding box for each file on disk.
         A bounding box is represented as a tuple of the offset and the size.
@@ -277,9 +277,9 @@ class MagView(View):
         for filename in self._wkw_dataset.list_files():
             file_path = Path(os.path.splitext(filename)[0]).relative_to(self._path)
             cube_index = _extract_file_index(file_path)
-            cube_offset = [idx * size for idx, size in zip(cube_index, cube_size)]
+            cube_offset = cube_index * cube_size
 
-            yield (cube_offset[0], cube_offset[1], cube_offset[2]), cube_size
+            yield cube_offset, cube_size
 
     def compress(
         self,
@@ -346,13 +346,13 @@ class MagView(View):
                 wkw.Header.BLOCK_TYPE_LZ4HC,
             )
 
-    def _get_file_dimensions(self) -> Tuple[int, int, int]:
-        return cast(Tuple[int, int, int], (self._properties.cube_length,) * 3)
+    def _get_file_dimensions(self) -> Vec3Int:
+        return Vec3Int.full(self._properties.cube_length)
 
     def __repr__(self) -> str:
         return repr(f"MagView(name={self.name}, bounding_box={self.bounding_box})")
 
 
-def _extract_file_index(file_path: Path) -> Tuple[int, int, int]:
+def _extract_file_index(file_path: Path) -> Vec3Int:
     zyx_index = [int(el[1:]) for el in file_path.parts]
-    return zyx_index[2], zyx_index[1], zyx_index[0]
+    return Vec3Int(zyx_index[2], zyx_index[1], zyx_index[0])

@@ -18,7 +18,7 @@ from wkcuber.downsampling_utils import (
     calculate_mags_to_downsample,
     calculate_mags_to_upsample,
 )
-from wkcuber.mag import Mag
+from webknossos.geometry import Mag, Vec3Int
 from wkcuber.utils import WkwDatasetInfo, open_wkw
 from wkcuber.downsampling_utils import _mode, non_linear_filter_3d
 
@@ -118,7 +118,7 @@ def downsample_test_helper(use_compress: bool) -> None:
             ),
             0,
         ),
-        [2, 2, 2],
+        Vec3Int(2, 2, 2),
         InterpolationModes.MAX,
         128,
     )
@@ -170,7 +170,7 @@ def test_downsample_multi_channel() -> None:
 
     downsample_cube_job(
         (l.get_mag("1").get_view(), l.get_mag("2").get_view(), 0),
-        [2, 2, 2],
+        Vec3Int(2, 2, 2),
         InterpolationModes.MAX,
         CUBE_EDGE_LEN,
     )

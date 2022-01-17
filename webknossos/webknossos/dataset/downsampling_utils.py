@@ -280,12 +280,11 @@ def downsample_cube(
 
 def downsample_cube_job(
     args: Tuple[View, View, int],
-    mag_factors: List[int],
+    mag_factors: Vec3Int,
     interpolation_mode: InterpolationModes,
     buffer_edge_len: int,
 ) -> None:
     (source_view, target_view, _i) = args
-    mag_factors_vec = Vec3Int(mag_factors)
 
     try:
         time_start(f"Downsampling of {target_view.bounding_box.topleft}")
@@ -301,9 +300,9 @@ def downsample_cube_job(
 
         for tile in tiles:
             target_offset = Vec3Int(tile) * buffer_edge_len
-            source_offset = mag_factors_vec * target_offset
+            source_offset = mag_factors * target_offset
             source_size = source_view.bounding_box.in_mag(source_view.mag).size
-            source_size = (mag_factors_vec * buffer_edge_len).pairmin(
+            source_size = (mag_factors * buffer_edge_len).pairmin(
                 source_size - source_offset
             )
 
@@ -320,7 +319,7 @@ def downsample_cube_job(
                     # Downsample the buffer
                     data_cube = downsample_cube(
                         cube_buffer,
-                        mag_factors,
+                        mag_factors.to_list(),
                         interpolation_mode,
                     )
 

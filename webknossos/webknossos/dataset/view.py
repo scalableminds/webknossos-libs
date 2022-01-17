@@ -2,7 +2,17 @@ import math
 import warnings
 from pathlib import Path
 from types import TracebackType
-from typing import TYPE_CHECKING, Any, Callable, Dict, Optional, Tuple, Type, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    Optional,
+    Tuple,
+    Type,
+    Union,
+)
 
 import cluster_tools
 import numpy as np
@@ -87,27 +97,25 @@ class View:
         abs_mag1_offset: Optional[Vec3IntLike] = None,
         rel_mag1_offset: Optional[Vec3IntLike] = None,
         mag1_size: Optional[Vec3IntLike] = None,
-        # current_mag_bbox: Optional[BoundingBox] = None,
         abs_current_mag_offset: Optional[Vec3IntLike] = None,
         rel_current_mag_offset: Optional[Vec3IntLike] = None,
         current_mag_size: Optional[Vec3IntLike] = None,
     ) -> BoundingBox:
-        num_bboxes = sum(i is not None for i in [abs_mag1_bbox, rel_mag1_bbox])
-        num_offsets = sum(
-            i is not None
-            for i in [
+        num_bboxes = _count_defined_values([abs_mag1_bbox, rel_mag1_bbox])
+        num_offsets = _count_defined_values(
+            [
                 abs_mag1_offset,
                 rel_mag1_offset,
                 abs_current_mag_offset,
                 rel_current_mag_offset,
             ]
         )
-        num_sizes = sum(i is not None for i in [mag1_size, current_mag_size])
+        num_sizes = _count_defined_values([mag1_size, current_mag_size])
         if num_bboxes == 0:
             assert num_offsets != 0, "You must supply an offset or a bounding box."
             assert num_sizes != 0, "You must supply a size."
-            assert num_offsets == 1, "Only one bounding-box can be supplied."
-            assert num_sizes == 1, "Only one bounding-box can be supplied."
+            assert num_offsets == 1, "Only one offset can be supplied."
+            assert num_sizes == 1, "Only one size can be supplied."
         else:
             assert num_bboxes == 1, "Only one bounding-box can be supplied."
             assert (
@@ -117,8 +125,6 @@ class View:
                 num_sizes == 0
             ), "A bounding-box was supplied, you cannot also supply a size."
 
-        mag_vec = self._mag.to_vec3_int()
-
         if abs_mag1_bbox is not None:
             return abs_mag1_bbox
 
@@ -126,6 +132,7 @@ class View:
             return rel_mag1_bbox.offset(self.bounding_box.topleft)
 
         else:
+            mag_vec = self._mag.to_vec3_int()
             if rel_current_mag_offset is not None:
                 abs_mag1_offset = (
                     self.bounding_box.topleft
@@ -858,3 +865,7 @@ def _check_chunk_size(chunk_size: Vec3Int) -> None:
         raise AssertionError(
             f"The passed parameter 'chunk_size' {chunk_size} must be a multiple of (32, 32, 32)."
         )
+
+
+def _count_defined_values(values: Iterable[Optional[Any]]) -> int:
+    return sum(i is not None for i in values)

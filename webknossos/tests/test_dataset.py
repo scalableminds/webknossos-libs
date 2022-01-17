@@ -27,7 +27,7 @@ from webknossos.dataset.properties import (
     SegmentationLayerProperties,
     dataset_converter,
 )
-from webknossos.geometry import BoundingBox, Mag
+from webknossos.geometry import BoundingBox, Mag, Vec3Int
 from webknossos.utils import get_executor_for_args, named_partial, snake_to_camel_case
 
 from .constants import TESTDATA_DIR, TESTOUTPUT_DIR
@@ -1516,8 +1516,12 @@ def test_bounding_box_on_disk(
 ) -> None:
     mag = create_dataset
 
-    write_positions = [(0, 0, 0), (20, 80, 120), (1000, 2000, 4000)]
-    data_size = (10, 20, 30)
+    write_positions = [
+        Vec3Int(0, 0, 0),
+        Vec3Int(20, 80, 120),
+        Vec3Int(1000, 2000, 4000),
+    ]
+    data_size = Vec3Int(10, 20, 30)
     write_data = (np.random.rand(*data_size) * 255).astype(np.uint8)
     for offset in write_positions:
         mag.write(offset=offset, data=write_data)
@@ -1527,25 +1531,27 @@ def test_bounding_box_on_disk(
 
     expected_results = set()
     for offset in write_positions:
+        range_from = offset // file_size * file_size
+        range_to = offset + data_size
         # enumerate all bounding boxes of the current write operation
         x_range = range(
-            offset[0] // file_size[0] * file_size[0],
-            offset[0] + data_size[0],
+            range_from[0],
+            range_to[0],
             file_size[0],
         )
         y_range = range(
-            offset[1] // file_size[1] * file_size[1],
-            offset[1] + data_size[1],
+            range_from[1],
+            range_to[1],
             file_size[1],
         )
         z_range = range(
-            offset[2] // file_size[2] * file_size[2],
-            offset[2] + data_size[2],
+            range_from[2],
+            range_to[2],
             file_size[2],
         )
 
         for bb_offset in itertools.product(x_range, y_range, z_range):
-            expected_results.add((bb_offset, file_size))
+            expected_results.add((Vec3Int(bb_offset), file_size))
 
     assert set(bounding_boxes_on_disk) == expected_results
 
