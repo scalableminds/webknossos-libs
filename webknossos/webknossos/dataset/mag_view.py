@@ -4,7 +4,7 @@ import shutil
 import warnings
 from argparse import Namespace
 from pathlib import Path
-from typing import TYPE_CHECKING, Generator, Optional, Tuple, Union, cast
+from typing import TYPE_CHECKING, Generator, Optional, Tuple, Union
 from uuid import uuid4
 
 import numpy as np

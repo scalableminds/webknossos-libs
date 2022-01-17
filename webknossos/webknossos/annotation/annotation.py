@@ -15,7 +15,6 @@ from boltons.cacheutils import cachedproperty
 
 import webknossos.skeleton.nml as wknml
 from webknossos.dataset import Dataset, Layer, SegmentationLayer
-from webknossos.geometry import Vec3Int
 from webknossos.skeleton import Skeleton
 
 MAG_RE = r"((\d+-\d+-)?\d+)"
