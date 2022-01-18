@@ -254,10 +254,10 @@ def merge_with_fallback_layer(
     ).get_best_mag()
     with temporary_annotation_view(volume_annotation_path) as input_annotation_layer:
         input_annotation_mag = input_annotation_layer.get_best_mag()
-        bboxes = list(
-            BoundingBox.from_tuple2(tuple)
-            for tuple in input_annotation_mag.get_bounding_boxes_on_disk()
-        )
+        bboxes = [
+            bbox.in_mag(input_annotation_mag._mag)
+            for bbox in input_annotation_mag.get_bounding_boxes_on_disk()
+        ]
         output_mag = output_layer.get_mag(input_segmentation_mag.mag)
 
         cube_size = output_mag.header.file_len * output_mag.header.block_len

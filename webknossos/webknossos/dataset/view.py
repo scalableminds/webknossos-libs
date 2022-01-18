@@ -30,9 +30,9 @@ if TYPE_CHECKING:
 class View:
     """
     A `View` is essentially a bounding box to a region of a specific `wkw.Dataset` that also provides functionality.
-    Read- and write-operations are restricted to the bounding box.
+    Write-operations are restricted to the bounding box.
     `View`s are designed to be easily passed around as parameters.
-    A `View`, in its most basic form, does not have a reference to the `webknossos.dataset.dataset.Dataset`.
+    A `View`, in its most basic form, does not have a reference to its `Dataset`.
     """
 
     def __init__(
@@ -46,7 +46,7 @@ class View:
         read_only: bool = False,
     ):
         """
-        Do not use this constructor manually. Instead use `webknossos.dataset.mag_view.MagView.get_view()` to get a `View`.
+        Do not use this constructor manually. Instead use `View.get_view()` (also available on a `MagView`) to get a `View`.
         """
         self._path = path_to_mag_view
         self._header: wkw.Header = header
@@ -69,26 +69,28 @@ class View:
         return self._mag
 
     @property
+    def read_only(self) -> bool:
+        return self._read_only
+
+    @property
     def global_offset(self) -> Vec3Int:
+        """⚠️ Deprecated, use `view.bounding_box.in_mag(view.mag).topleft` instead."""
         warnings.warn(
             "[DEPRECATION] view.global_offset is deprecated. "
-            + "Since this is a MagView, please use "
+            + "Since this is a View, please use "
             + "view.bounding_box.in_mag(view.mag).topleft instead."
         )
         return self.bounding_box.in_mag(self._mag).topleft
 
     @property
     def size(self) -> Vec3Int:
+        """⚠️ Deprecated, use `view.bounding_box.in_mag(view.mag).size` instead."""
         warnings.warn(
             "[DEPRECATION] view.size is deprecated. "
-            + "Since this is a MagView, please use "
+            + "Since this is a View, please use "
             + "view.bounding_box.in_mag(view.mag).size instead."
         )
         return self.bounding_box.in_mag(self._mag).size
-
-    @property
-    def read_only(self) -> bool:
-        return self._read_only
 
     def _get_mag1_bbox(
         self,
@@ -113,7 +115,9 @@ class View:
         num_sizes = _count_defined_values([mag1_size, current_mag_size])
         if num_bboxes == 0:
             assert num_offsets != 0, "You must supply an offset or a bounding box."
-            assert num_sizes != 0, "When supplying an offset, you must also supply a size. Alternatively, supply a bounding box."
+            assert (
+                num_sizes != 0
+            ), "When supplying an offset, you must also supply a size. Alternatively, supply a bounding box."
             assert num_offsets == 1, "Only one offset can be supplied."
             assert num_sizes == 1, "Only one size can be supplied."
         else:
@@ -159,8 +163,11 @@ class View:
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
     ) -> None:
         """
-        Writes the `data` at the specified `offset` to disk.
-        The `offset` is relative to `global_offset`.
+        Writes the `data` at the specified `relative_offset` or `absolute_offset`, both specified in Mag(1).
+
+        ⚠️ The `offset` parameter is deprecated.
+        This parameter used to be relative for `View` and absolute for `MagView`,
+        and specified in the mag of the respective view.
 
         Note that writing compressed data which is not aligned with the blocks on disk may result in
         diminished performance, as full blocks will automatically be read to pad the write actions.
@@ -255,13 +262,20 @@ class View:
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
-        absolute_bounding_box: Optional[BoundingBox] = None,  # in mag1
         relative_bounding_box: Optional[BoundingBox] = None,  # in mag1
+        absolute_bounding_box: Optional[BoundingBox] = None,  # in mag1
     ) -> np.ndarray:
         """
-        The user can specify the `offset` and the `size` of the requested data.
-        The `offset` is relative to `global_offset`.
-        If no `size` is specified, the size of the view is used.
+        The user can specify which data should be read.
+        The default is to read all data of the view's bounding box.
+        Alternatively, one can supply one of the following keyword argument combinations:
+        * `relative_offset` and `size`, both in Mag(1)
+        * `absolute_offset` and `size`, both in Mag(1)
+        * `relative_bounding_box` in Mag(1)
+        * `absolute_bounding_box` in Mag(1)
+        * ⚠️ deprecated: `offset` and `size`, both in the current Mag.
+          `offset` used to be relative for `View` and absolute for `MagView`
+
         If the specified bounding box exceeds the data on disk, the rest is padded with `0`.
 
         Returns the specified data as a `np.array`.
@@ -272,19 +286,13 @@ class View:
         import numpy as np
 
         # ...
-        # let 'mag1' be a `MagView`
-        view = mag1.get_view(offset(10, 20, 30), size=(100, 200, 300))
+        # let mag1 be a MagView
+        view = mag1.get_view(absolute_offset(10, 20, 30), size=(100, 200, 300))
 
         assert np.array_equal(
-            view.read(offset=(0, 0, 0), size=(100, 200, 300)),
+            view.read(absolute_offset=(0, 0, 0), size=(100, 200, 300)),
             view.read(),
         )
-
-        # works because the specified data is completely in the bounding box of the view
-        some_data = view.read(offset=(50, 60, 70), size=(10, 120, 230))
-
-        # fails because the specified data is not completely in the bounding box of the view
-        more_data = view.read(offset=(50, 60, 70), size=(999, 120, 230))
         ```
         """
 
@@ -369,7 +377,8 @@ class View:
 
     def read_bbox(self, bounding_box: Optional[BoundingBox] = None) -> np.ndarray:
         """
-        The user can specify the `bounding_box` of the requested data.
+        ⚠️ Deprecated. Please use `read()` with `relative_bounding_box` or `absolute_bounding_box` in Mag(1) instead.
+        The user can specify the `bounding_box` in the current mag of the requested data.
         See `read()` for more details.
         """
 
@@ -416,28 +425,30 @@ class View:
     ) -> "View":
         """
         Returns a view that is limited to the specified bounding box.
-        The `offset` is relative to `global_offset`.
-        If no `size` is specified, the size of the view is used.
+        The new view may exceed the bounding box of the current view only if `read_only` is set to `True`.
 
-        The `offset` and `size` may only exceed the bounding box of the current view, if `read_only` is set to `True`.
-
-
-        If `read_only` is `True`, write operations are not allowed for the returned sub-view.
+        The default is to return the same view as the current bounding box,
+        in case of a `MagView` that's the layer bounding box.
+        One can supply one of the following keyword argument combinations:
+        * `relative_offset` and `size`, both in Mag(1)
+        * `absolute_offset` and `size`, both in Mag(1)
+        * ⚠️ deprecated: `offset` and `size`, both in the current Mag.
+          `offset` used to be relative for `View` and absolute for `MagView`
 
         Example:
         ```python
         # ...
-        # let 'mag1' be a `MagView`
-        view = mag1.get_view(offset(10, 20, 30), size=(100, 200, 300))
+        # let mag1 be a MagView
+        view = mag1.get_view(absolute_offset=(10, 20, 30), size=(100, 200, 300))
 
         # works because the specified sub-view is completely in the bounding box of the view
-        sub_view = view.get_view(offset=(50, 60, 70), size=(10, 120, 230))
+        sub_view = view.get_view(relative_offset=(50, 60, 70), size=(10, 120, 230))
 
         # fails because the specified sub-view is not completely in the bounding box of the view
-        invalid_sub_view = view.get_view(offset=(50, 60, 70), size=(999, 120, 230))
+        invalid_sub_view = view.get_view(relative_offset=(50, 60, 70), size=(999, 120, 230))
 
         # works because `read_only=True`
-        invalid_sub_view = view.get_view(offset=(50, 60, 70), size=(999, 120, 230), read_only=True)
+        valid_sub_view = view.get_view(relative_offset=(50, 60, 70), size=(999, 120, 230), read_only=True)
         ```
         """
         if read_only is None:
@@ -572,6 +583,10 @@ class View:
 
         """
         from webknossos.dataset._utils.buffered_slice_writer import BufferedSliceWriter
+
+        assert (
+            not self._read_only
+        ), "Cannot get a buffered slice writer on a read-only view."
 
         return BufferedSliceWriter(
             view=self,

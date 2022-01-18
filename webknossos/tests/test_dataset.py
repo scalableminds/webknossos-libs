@@ -1551,7 +1551,9 @@ def test_bounding_box_on_disk(
         )
 
         for bb_offset in itertools.product(x_range, y_range, z_range):
-            expected_results.add((Vec3Int(bb_offset), file_size))
+            expected_results.add(
+                BoundingBox(bb_offset, file_size).from_mag_to_mag1(mag.mag)
+            )
 
     assert set(bounding_boxes_on_disk) == expected_results
 

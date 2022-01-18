@@ -46,12 +46,14 @@ def main() -> None:
     # data from our annotated training data bounding box
     print("Starting training…")
     img_data_train = mag_view.read(
-        training_data_bbox.in_mag(mag).topleft, training_data_bbox.in_mag(mag).size
+        absolute_bounding_box=training_data_bbox
     )  # wk data has dimensions (Channels, X, Y, Z)
     # move channels to last dimension, remove z dimension to match skimage's shape
     X_train = np.moveaxis(np.squeeze(img_data_train), 0, -1)
-    Y_train = np.squeeze(volume_annotation.mags[mag].get_view().read())
+    print(volume_annotation.mags[mag].bounding_box)
+    Y_train = np.squeeze(volume_annotation.mags[mag].read())
 
+    print(training_data_bbox, X_train.shape, Y_train.shape)
     segmenter.fit(X_train, Y_train)
 
     # Step 4: Use our trained model and predict a class for each pixel in the dataset

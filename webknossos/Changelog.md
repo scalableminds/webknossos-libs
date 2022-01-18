@@ -17,6 +17,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
     * `MagView.write`: if no offset is supplied and the layer does not start at (0, 0, 0),
       the default behaviour changes from starting at absolute (0, 0, 0) to the layer's bounding box
     * `(Mag)View.get_view`: read_only is a keyword-only argument now
+    * `MagView.get_bounding_boxes_on_disk()` now returns an iterator yielding bounding boxes in Mag(1)
   - **Deprecations**
     The following usages are marked as deprecated with warnings and will be removed in future releases:
     * Using the `offset` parameter for `read`/`write`/`get_view` in MagView and View is deprecated.

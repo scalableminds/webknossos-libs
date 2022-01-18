@@ -1,9 +1,14 @@
-{% extends "default/module.html.jinja2" %}
-{%- set show_source = false -%}
+{% extends "module_pure_pdoc.html.jinja2" %}
+
 {%- set search = false -%}
+
 {% block nav %}
 {% endblock %}
+
 {% block style_layout %}{% endblock %}
+
+## The member and module_contents blocks are just to add extra divs for classes,
+## so that classes have a correct anchor when using mkdocs
 {% defaultmacro member(doc,add_div) %}
     {% if add_div %}
     <div id="{{ doc.qualname or doc.name }}">
@@ -25,6 +30,7 @@
     {% endif %}
     {{ docstring(doc) }}
 {% enddefaultmacro %}
+
 {% block module_contents %}
     {% for m in module.flattened_own_members if is_public(m) | trim %}
         <section>

@@ -109,8 +109,8 @@ class Annotation:
 
         if largest_segment_id is None:
             max_value = max(
-                min_mag_view.read(offset - min_mag_view.global_offset, size).max()
-                for offset, size in min_mag_view.get_bounding_boxes_on_disk()
+                min_mag_view.read(absolute_bounding_box=bbox).max()
+                for bbox in min_mag_view.get_bounding_boxes_on_disk()
             )
             layer.largest_segment_id = int(max_value)
         else:
