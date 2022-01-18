@@ -53,7 +53,6 @@ exclude = '''
     | \.venv
     | \.mypy_cache
     | dist
-    | tests/\.webknossos-server
   )/
 )
 '''

@@ -3,13 +3,8 @@ set -eEuo pipefail
 
 if [ $# -eq 1 ] && [ "$1" = "--refresh-snapshots" ]; then
     if ! curl -sf localhost:9000/api/health; then
-        WK_DOCKER_DIR="tests/.webknossos-server"
-        if [ ! -d "$WK_DOCKER_DIR" ]; then
-            git clone git@github.com:scalableminds/webknossos.git $WK_DOCKER_DIR --depth 1
-        fi
+        WK_DOCKER_DIR="tests"
         pushd $WK_DOCKER_DIR > /dev/null
-        sed -i -e 's/webKnossos.sampleOrganization.enabled=false/webKnossos.sampleOrganization.enabled=true/g' docker-compose.yml
-        mkdir -p binaryData
         export DOCKER_TAG=master__16396
         docker-compose pull webknossos
         # TODO: either remove pg/db before starting or run tools/postgres/apply_evolutions.sh

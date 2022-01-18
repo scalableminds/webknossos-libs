@@ -1,3 +1,4 @@
+import os
 from functools import partial
 from time import gmtime, strftime
 
@@ -86,6 +87,8 @@ def main() -> None:
                     layer_name="color",
                 )
             ]
+            if "PYTEST_CURRENT_TEST" not in os.environ
+            else None
         )
 
     print(f"Successfully uploaded {url}")
