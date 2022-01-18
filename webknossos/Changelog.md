@@ -7,15 +7,42 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.30...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.31...HEAD)
 
 ### Breaking Changes
+- Various changes in View & MagView signatures [#553](https://github.com/scalableminds/webknossos-libs/pull/553):
+  - **Breaking Changes**:
+    * `MagView.read`: if nothing is supplied and the layer does not start at (0, 0, 0),
+      the default behaviour changes from starting at absolute (0, 0, 0) to the layer's bounding box
+    * `MagView.write`: if no offset is supplied and the layer does not start at (0, 0, 0),
+      the default behaviour changes from starting at absolute (0, 0, 0) to the layer's bounding box
+    * `(Mag)View.get_view`: read_only is a keyword-only argument now
+    * `MagView.get_bounding_boxes_on_disk()` now returns an iterator yielding bounding boxes in Mag(1)
+  - **Deprecations**
+    The following usages are marked as deprecated with warnings and will be removed in future releases:
+    * Using the `offset` parameter for `read`/`write`/`get_view` in MagView and View is deprecated.
+      There are new counterparts `absolute_offset` and `relative_offset` which have to be specified in Mag(1),
+      whereas `offset` previously was specified in the Mag of the respective View.
+      Also, for `read`/`get_view` only using `size` is deprecated, since it used to refer to the size in the View's Mag.
+      Instead, `size` should always be used together with `absolute_offset` or `relative_offset`. Then it is interpreted in Mag(1).
+    * The (Mag)View attributes `view.global_offset` and `view.size` are deprecated now, which were in the Mag of the respective View.
+      Please use `view.bounding_box` instead, which is in Mag(1).
+    * `read_bbox` on the (Mag)View is deprecated as well, please use `read` with the `absolute_bounding_box`or `relative_bounding_box` parameter instead. You'll have to pass the bounding box in Mag(1) then.
+
 
 ### Added
 
 ### Changed
 
 ### Fixed
+
+
+## [0.8.31](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.8.31) - 2022-01-07
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.30...v0.8.31)
+
+### Added
+- Added `Annotation.save("file_name")` to save an annotation to a file and `Annotation.temporary_volume_annotation_layer_copy()` to read from the volume layer of an annotation as a WK dataset. [#528](https://github.com/scalableminds/webknossos-libs/pull/528)
+- Added `layers_to_link` parameter to `Dataset.upload()` so that layers don't need to be uploaded again if they already exist in another dataset on webKnossos. [#544](https://github.com/scalableminds/webknossos-libs/pull/544)
 
 
 ## [0.8.30](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.8.30) - 2021-12-27
@@ -34,7 +61,6 @@ For upgrade instructions, please check the respective *Breaking Changes* section
   * `Skeleton.write()` → `Skeleton.save()`
   The deprecated methods will be removed in future releases.
   [#520](https://github.com/scalableminds/webknossos-libs/pull/520)
-
 
 ### Changed
 - The detailed output of e.g. downsampling was replaced with a progress bar. [#527](https://github.com/scalableminds/webknossos-libs/pull/527)

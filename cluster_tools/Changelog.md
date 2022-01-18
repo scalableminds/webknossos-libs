@@ -7,15 +7,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.30...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.31...HEAD)
 
 ### Breaking Changes
 
 ### Added
+- Allow to configure the MaxArraySize and MaxSubmitJobs slurm limits via the `SLURM_MAX_ARRAY_SIZE` and `SLURM_MAX_SUBMIT_JOBS` environment variables. If the environment variables are not specified, the limits are determined automatically. [#554](https://github.com/scalableminds/webknossos-libs/pull/554)
 
 ### Changed
 
 ### Fixed
+
+
+## [0.8.31](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.8.31) - 2022-01-07
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.30...v0.8.31)
 
 
 ## [0.8.30](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.8.30) - 2021-12-27

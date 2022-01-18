@@ -1,17 +1,44 @@
 from os import makedirs
-from pathlib import Path
 from shutil import rmtree
 from typing import Any, Dict, Generator, Union
 from unittest.mock import MagicMock, patch
 
 import httpx
 import pytest
+from hypothesis import strategies as st
 from vcr.request import Request as VcrRequest
 from vcr.stubs import httpx_stubs
 
+import webknossos as wk
 from webknossos.client.context import _clear_all_context_caches
 
-TESTOUTPUT_DIR = Path("testoutput")
+from .constants import TESTOUTPUT_DIR
+
+_vec3_int_strategy = st.builds(wk.Vec3Int, st.integers(), st.integers(), st.integers())
+
+st.register_type_strategy(wk.Vec3Int, _vec3_int_strategy)
+
+_positive_vec3_int_strategy = st.builds(
+    wk.Vec3Int,
+    st.integers(min_value=0),
+    st.integers(min_value=0),
+    st.integers(min_value=0),
+)
+
+st.register_type_strategy(
+    wk.BoundingBox,
+    st.builds(wk.BoundingBox, _positive_vec3_int_strategy, _positive_vec3_int_strategy),
+)
+
+_mag_strategy = st.builds(
+    lambda mag_xy_log2, mag_z_log2: wk.Mag(
+        (2 ** mag_xy_log2, 2 ** mag_xy_log2, 2 ** mag_z_log2)
+    ),
+    st.integers(min_value=0, max_value=12),
+    st.integers(min_value=0, max_value=12),
+)
+
+st.register_type_strategy(wk.Mag, _mag_strategy)
 
 
 @pytest.fixture(autouse=True, scope="function")

@@ -87,6 +87,13 @@ class SlurmExecutor(ClusterExecutor):
     @staticmethod
     @cache_in_production
     def get_max_array_size():
+        max_array_size_env = os.environ.get("SLURM_MAX_ARRAY_SIZE", None)
+        if max_array_size_env is not None:
+            logging.debug(
+                f"SLURM_MAX_ARRAY_SIZE env variable specified which is {max_array_size_env}."
+            )
+            return int(max_array_size_env)
+
         max_array_size = 2 ** 32
         # See https://unix.stackexchange.com/a/364615
         stdout, stderr, exit_code = call(
@@ -104,6 +111,13 @@ class SlurmExecutor(ClusterExecutor):
     @staticmethod
     @cache_in_production
     def get_max_submit_jobs():
+        max_submit_jobs_env = os.environ.get("SLURM_MAX_SUBMIT_JOBS", None)
+        if max_submit_jobs_env is not None:
+            logging.debug(
+                f"SLURM_MAX_SUBMIT_JOBS env variable specified which is {max_submit_jobs_env}."
+            )
+            return int(max_submit_jobs_env)
+
         max_submit_jobs = 2 ** 32
         # Check whether there is a limit per user
         stdout_user, stderr_user, _ = call(
@@ -191,10 +205,8 @@ class SlurmExecutor(ClusterExecutor):
 
         max_array_size = self.get_max_array_size()
         max_submit_jobs = self.get_max_submit_jobs()
-        # Only ever submit at most a third of max_submit_jobs at once (but at least one).
-        # This way, multiple programs submitting slurm jobs will not block each other
-        # by "occupying" more than half of the number of submittable jobs.
-        batch_size = max(min(max_array_size, max_submit_jobs // 3), 1)
+        # Only ever submit at most max_submit_jobs and max_array_size jobs at once (but at least one).
+        batch_size = max(min(max_array_size, max_submit_jobs), 1)
 
         scripts = []
         job_id_futures = []

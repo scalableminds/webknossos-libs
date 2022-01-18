@@ -115,5 +115,5 @@ def download_dataset(
                     block_len=32,
                     file_len=_DOWNLOAD_CHUNK_SIZE[0] // 32,
                 )
-                mag_view.write(data, offset=aligned_chunk_in_mag.topleft)
+                mag_view.write(data, absolute_offset=chunk.topleft)
     return dataset

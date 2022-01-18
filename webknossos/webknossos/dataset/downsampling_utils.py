@@ -2,13 +2,15 @@ import logging
 import math
 from enum import Enum
 from itertools import product
-from typing import Callable, List, Optional, Tuple, cast
+from typing import Callable, List, Optional, Tuple
 
 import numpy as np
 from scipy.ndimage import zoom
 from wkw import wkw
 
 from webknossos.geometry import Mag, Vec3Int, Vec3IntLike
+from webknossos.geometry.bounding_box import BoundingBox
+from webknossos.utils import time_start, time_stop
 
 from .layer_categories import LayerCategoryType
 from .view import View
@@ -233,6 +235,9 @@ def _mode(x: np.ndarray) -> np.ndarray:
 def downsample_unpadded_data(
     buffer: np.ndarray, target_mag: Mag, interpolation_mode: InterpolationModes
 ) -> np.ndarray:
+    logging.debug(
+        f"Downsampling buffer of size {buffer.shape} to mag {target_mag.to_layer_name()}"
+    )
     target_mag_np = np.array(target_mag.to_list())
     current_dimension_size = np.array(buffer.shape[1:])
     padding_size_for_downsampling = (
@@ -275,43 +280,37 @@ def downsample_cube(
 
 def downsample_cube_job(
     args: Tuple[View, View, int],
-    mag_factors: List[int],
+    mag_factors: Vec3Int,
     interpolation_mode: InterpolationModes,
     buffer_edge_len: int,
 ) -> None:
     (source_view, target_view, _i) = args
 
     try:
+        time_start(f"Downsampling of {target_view.bounding_box.topleft}")
         num_channels = target_view.header.num_channels
-        shape = (num_channels,) + tuple(target_view.size)
+        shape = (num_channels,) + target_view.bounding_box.in_mag(
+            target_view.mag
+        ).size.to_tuple()
         file_buffer = np.zeros(shape, target_view.get_dtype())
 
         tiles = product(
-            *list(
-                [
-                    list(range(0, math.ceil(len)))
-                    for len in np.array(target_view.size) / buffer_edge_len
-                ]
-            )
+            *(list(range(0, math.ceil(len / buffer_edge_len))) for len in shape[-3:])
         )
 
         for tile in tiles:
-            target_offset = np.array(tile) * buffer_edge_len
-            source_offset = (mag_factors * target_offset).astype(int)
-            source_size = cast(
-                Tuple[int, int, int],
-                tuple(
-                    [
-                        int(min(a, b))
-                        for a, b in zip(
-                            np.array(mag_factors) * buffer_edge_len,
-                            source_view.size - source_offset,
-                        )
-                    ]
-                ),
+            target_offset = Vec3Int(tile) * buffer_edge_len
+            source_offset = mag_factors * target_offset
+            source_size = source_view.bounding_box.in_mag(source_view.mag).size
+            source_size = (mag_factors * buffer_edge_len).pairmin(
+                source_size - source_offset
             )
 
-            cube_buffer_channels = source_view.read(source_offset, source_size)
+            bbox = BoundingBox(source_offset, source_size)
+
+            cube_buffer_channels = source_view.read(
+                relative_bounding_box=bbox.from_mag_to_mag1(source_view.mag),
+            )
 
             for channel_index in range(num_channels):
                 cube_buffer = cube_buffer_channels[channel_index]
@@ -320,27 +319,21 @@ def downsample_cube_job(
                     # Downsample the buffer
                     data_cube = downsample_cube(
                         cube_buffer,
-                        mag_factors,
+                        mag_factors.to_list(),
                         interpolation_mode,
                     )
 
-                    buffer_offset = target_offset
-                    buffer_end = buffer_offset + data_cube.shape
-
-                    file_buffer[
-                        channel_index,
-                        buffer_offset[0] : buffer_end[0],
-                        buffer_offset[1] : buffer_end[1],
-                        buffer_offset[2] : buffer_end[2],
-                    ] = data_cube
+                    buffer_bbox = BoundingBox(target_offset, data_cube.shape)
+                    file_buffer[(channel_index,) + buffer_bbox.to_slices()] = data_cube
 
         # Write the downsampled buffer to target
         if source_view.header.num_channels == 1:
             file_buffer = file_buffer[0]  # remove channel dimension
         target_view.write(file_buffer)
+        time_stop(f"Downsampling of {target_view.bounding_box.topleft}")
 
     except Exception as exc:
         logging.error(
-            f"Downsampling of target BoundingBox(offset={target_view.global_offset}, size={target_view.size}) failed with {exc}"
+            f"Downsampling of target {target_view.bounding_box} failed with {exc}"
         )
         raise exc
