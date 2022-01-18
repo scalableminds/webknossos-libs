@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 from webknossos.dataset._utils.infer_bounding_box_existing_files import (
     infer_bounding_box_existing_files,
 )
-from webknossos.geometry import BoundingBox, Mag, Vec3Int
+from webknossos.geometry import BoundingBox, Mag
 from webknossos.utils import copy_directory_with_symlinks, get_executor_for_args
 
 from .layer import (
@@ -673,13 +673,7 @@ class Dataset:
                         mag, block_len, file_len, compress
                     )
 
-                    # The bounding box needs to be updated manually because chunked views do not have a reference to the dataset itself
-                    # The base view of a MagDataset always starts at (0, 0, 0)
-                    target_mag._global_offset = Vec3Int(0, 0, 0)
-                    target_mag._size = (
-                        bbox.align_with_mag(mag, ceil=True).in_mag(mag).bottomright
-                    )
-                    target_mag.layer.bounding_box = bbox
+                    target_layer.bounding_box = bbox
 
                     # The data gets written to the target_mag.
                     # Therefore, the chunk size is determined by the target_mag to prevent concurrent writes

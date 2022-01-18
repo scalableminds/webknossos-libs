@@ -27,7 +27,7 @@ from webknossos.dataset.properties import (
     SegmentationLayerProperties,
     dataset_converter,
 )
-from webknossos.geometry import BoundingBox, Mag
+from webknossos.geometry import BoundingBox, Mag, Vec3Int
 from webknossos.utils import get_executor_for_args, named_partial, snake_to_camel_case
 
 from .constants import TESTDATA_DIR, TESTOUTPUT_DIR
@@ -741,10 +741,7 @@ def test_changing_layer_bounding_box() -> None:
     new_bbox_size = ds.get_layer("color").bounding_box.size
     assert tuple(new_bbox_offset) == (10, 10, 0)
     assert tuple(new_bbox_size) == (14, 14, 24)
-    # Note that even though the offset was changed (in the properties), the offset of 'mag.read()'
-    # still refers to the absolute position (relative to (0, 0, 0)).
-    # The default offset is (0, 0, 0). Since the bottom right did not change, the read data equals 'original_data'.
-    assert np.array_equal(original_data, mag.read())
+    assert np.array_equal(original_data, mag.read((0, 0, 0)))
 
     assert np.array_equal(
         original_data[:, 10:, 10:, :], mag.read(offset=(10, 10, 0), size=(14, 14, 24))
@@ -771,10 +768,8 @@ def test_get_view() -> None:
 
     # Creating this view works because the size is set to (0, 0, 0)
     # However, in practice a view with size (0, 0, 0) would not make sense
-    with pytest.raises(AssertionError):
-        # The offset and size default to (0, 0, 0).
-        # Sizes that contain "0" are not allowed
-        mag.get_view()
+    # Sizes that contain "0" are not allowed usually, except for an empty layer
+    assert mag.get_view().bounding_box.is_empty()
 
     with pytest.raises(AssertionError):
         # This view exceeds the bounding box
@@ -793,6 +788,11 @@ def test_get_view() -> None:
     write_data = (np.random.rand(100, 200, 300) * 255).astype(np.uint8)
     # This operation updates the bounding box of the dataset according to the written data
     mag.write(write_data, offset=(10, 20, 30))
+
+    with pytest.raises(AssertionError):
+        # The offset and size default to (0, 0, 0).
+        # Sizes that contain "0" are not allowed
+        mag.get_view(size=(10, 10, 0))
 
     assert mag.global_offset == (0, 0, 0)  # MagViews always start at (0, 0, 0)
     assert mag.size == (110, 220, 330)
@@ -1046,27 +1046,27 @@ def test_writing_subset_of_compressed_data() -> None:
         warnings.filterwarnings("error")  # This escalates the warning to an error
         with pytest.raises(RuntimeWarning):
             compressed_mag.write(
-                offset=(10, 20, 30),
+                relative_offset=(20, 40, 60),
                 data=(np.random.rand(10, 10, 10) * 255).astype(np.uint8),
             )
 
-        assert compressed_mag._mag_view_bounding_box_at_creation == BoundingBox(
+        assert compressed_mag.bounding_box == BoundingBox(
             topleft=(
                 0,
                 0,
                 0,
             ),
-            size=(120, 140, 160),
+            size=(120 * 2, 140 * 2, 160 * 2),
         )
         # Writing unaligned data to the edge of the bounding box of the MagView does not raise an error.
         # This write operation writes unaligned data into the bottom-right corner of the MagView.
         compressed_mag.write(
-            offset=(64, 64, 64),
+            absolute_offset=(128, 128, 128),
             data=(np.random.rand(56, 76, 96) * 255).astype(np.uint8),
         )
         # This also works for normal Views but they only use the bounding box at the time of creation as reference.
         compressed_mag.get_view().write(
-            offset=(64, 64, 64),
+            absolute_offset=(128, 128, 128),
             data=(np.random.rand(56, 76, 96) * 255).astype(np.uint8),
         )
 
@@ -1275,7 +1275,7 @@ def test_search_dataset_also_for_long_layer_name() -> None:
     os.rename(short_mag_file_path, long_mag_file_path)
 
     # make sure that reading data still works
-    mag.read(offset=(10, 10, 10), size=(10, 10, 10))
+    mag.read(relative_offset=(10, 10, 10), size=(10, 10, 10))
 
     # when opening the dataset, it searches both for the long and the short path
     layer = Dataset.open(TESTOUTPUT_DIR / "long_layer_name").get_layer("color")
@@ -1516,8 +1516,12 @@ def test_bounding_box_on_disk(
 ) -> None:
     mag = create_dataset
 
-    write_positions = [(0, 0, 0), (20, 80, 120), (1000, 2000, 4000)]
-    data_size = (10, 20, 30)
+    write_positions = [
+        Vec3Int(0, 0, 0),
+        Vec3Int(20, 80, 120),
+        Vec3Int(1000, 2000, 4000),
+    ]
+    data_size = Vec3Int(10, 20, 30)
     write_data = (np.random.rand(*data_size) * 255).astype(np.uint8)
     for offset in write_positions:
         mag.write(offset=offset, data=write_data)
@@ -1527,25 +1531,29 @@ def test_bounding_box_on_disk(
 
     expected_results = set()
     for offset in write_positions:
+        range_from = offset // file_size * file_size
+        range_to = offset + data_size
         # enumerate all bounding boxes of the current write operation
         x_range = range(
-            offset[0] // file_size[0] * file_size[0],
-            offset[0] + data_size[0],
+            range_from[0],
+            range_to[0],
             file_size[0],
         )
         y_range = range(
-            offset[1] // file_size[1] * file_size[1],
-            offset[1] + data_size[1],
+            range_from[1],
+            range_to[1],
             file_size[1],
         )
         z_range = range(
-            offset[2] // file_size[2] * file_size[2],
-            offset[2] + data_size[2],
+            range_from[2],
+            range_to[2],
             file_size[2],
         )
 
         for bb_offset in itertools.product(x_range, y_range, z_range):
-            expected_results.add((bb_offset, file_size))
+            expected_results.add(
+                BoundingBox(bb_offset, file_size).from_mag_to_mag1(mag.mag)
+            )
 
     assert set(bounding_boxes_on_disk) == expected_results
 
@@ -1939,7 +1947,10 @@ def test_pickle_view(tmp_path: Path) -> None:
 
     # Make sure that the pickled mag can still read data
     assert pickled_mag1._cached_wkw_dataset is None
-    assert np.array_equal(data_to_write, pickled_mag1.read())
+    assert np.array_equal(
+        data_to_write,
+        pickled_mag1.read(relative_offset=(0, 0, 0), size=data_to_write.shape[-3:]),
+    )
     assert pickled_mag1._cached_wkw_dataset is not None
 
     # Make sure that the attributes of the MagView (not View) still exist

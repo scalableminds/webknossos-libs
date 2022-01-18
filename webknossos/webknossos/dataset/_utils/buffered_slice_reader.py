@@ -12,7 +12,7 @@ from webknossos.geometry import BoundingBox, Vec3Int
 from webknossos.utils import get_chunks
 
 
-class BufferedSliceReader(object):
+class BufferedSliceReader:
     def __init__(
         self,
         view: "View",

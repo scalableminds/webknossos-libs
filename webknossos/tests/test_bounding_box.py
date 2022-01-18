@@ -1,7 +1,8 @@
 import numpy as np
 import pytest
+from hypothesis import given, infer
 
-from webknossos.geometry import BoundingBox, Mag
+from webknossos import BoundingBox, Mag
 
 
 def test_align_with_mag_ceiled() -> None:
@@ -74,3 +75,20 @@ def test_contains() -> None:
     # nd-array may contain float values
     assert BoundingBox((1, 1, 1), (5, 5, 5)).contains(np.array([5.5, 5.5, 5.5]))
     assert not BoundingBox((1, 1, 1), (5, 5, 5)).contains(np.array([6.0, 6.0, 6.0]))
+
+
+@given(bb=infer, mag=infer, ceil=infer)
+def test_align_with_mag_against_numpy_implementation(
+    bb: BoundingBox,
+    mag: Mag,
+    ceil: bool,
+) -> None:
+    try:
+        slow_np_result = bb._align_with_mag_slow(mag, ceil)
+    # Very large numbers don't fit into the C-int anymore:
+    except OverflowError:
+        bb.align_with_mag(mag, ceil)
+    else:
+        # The slower numpy implementation is wrong for very large numbers:
+        if all(i < 12e15 for i in bb.bottomright):
+            assert bb.align_with_mag(mag, ceil) == slow_np_result

@@ -15,11 +15,12 @@ if [ ! -d "wk-repo" ]; then
     exit 1
 fi
 
+export PDOC_CLASS_MODULES="$(poetry run python -c 'import webknossos; import inspect; print("|".join(i.__name__ + ":" + i.__module__ for i in webknossos.__dict__.values() if inspect.isclass(i)))')"
 if [ $# -eq 1 ] && [ "$1" = "--api" ]; then
-    poetry run pdoc ../webknossos/webknossos ../wkcuber/wkcuber -h 0.0.0.0 -p 8196
+    poetry run pdoc ../webknossos/webknossos ../wkcuber/wkcuber -t pdoc_templates/pure_pdoc -h 0.0.0.0 -p 8196
 else
     rm -rf src/api
-    poetry run pdoc ../webknossos/webknossos ../wkcuber/wkcuber -t pdoc_templates -o src/api
+    poetry run pdoc ../webknossos/webknossos ../wkcuber/wkcuber -t pdoc_templates/with_mkdocs -o src/api
     # rename .html files to .md
     find src/api -iname "*.html" -exec sh -c 'mv "$0" "${0%.html}.md"' {} \;
     # assert that API docs are written
