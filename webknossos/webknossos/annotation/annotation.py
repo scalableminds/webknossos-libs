@@ -15,7 +15,6 @@ from boltons.cacheutils import cachedproperty
 
 import webknossos.skeleton.nml as wknml
 from webknossos.dataset import Dataset, Layer, SegmentationLayer
-from webknossos.geometry import Vec3Int
 from webknossos.skeleton import Skeleton
 
 MAG_RE = r"((\d+-\d+-)?\d+)"
@@ -110,10 +109,8 @@ class Annotation:
 
         if largest_segment_id is None:
             max_value = max(
-                min_mag_view.read(
-                    Vec3Int(offset) - min_mag_view.global_offset, size
-                ).max()
-                for offset, size in min_mag_view.get_bounding_boxes_on_disk()
+                min_mag_view.read(absolute_bounding_box=bbox).max()
+                for bbox in min_mag_view.get_bounding_boxes_on_disk()
             )
             layer.largest_segment_id = int(max_value)
         else:

@@ -50,9 +50,9 @@ def test_dataset_usage() -> None:
         "data_in_mag2_subset",
     )
 
-    assert data_in_mag1.shape == (3, 522, 532, 62)
+    assert data_in_mag1.shape == (3, 512, 512, 32)
     assert data_in_mag1_subset.shape == (3, 512, 512, 32)
-    assert data_in_mag2.shape == (3, 261, 266, 31)
+    assert data_in_mag2.shape == (3, 256, 256, 16)
     assert data_in_mag2_subset.shape == (3, 256, 256, 16)
 
 

@@ -1,7 +1,7 @@
 import json
 import re
 from collections import defaultdict
-from typing import Dict, Generator, Iterable, List, Optional, Tuple, Union, cast
+from typing import Any, Dict, Generator, Iterable, List, Optional, Tuple, Union, cast
 
 import attr
 import numpy as np
@@ -12,10 +12,17 @@ from .vec3_int import Vec3Int, Vec3IntLike
 
 @attr.frozen
 class BoundingBox:
-    topleft: Vec3Int = attr.ib(converter=Vec3Int)
-    size: Vec3Int = attr.ib(converter=Vec3Int)
+    topleft: Vec3Int = attr.field(converter=Vec3Int)
+    size: Vec3Int = attr.field(converter=Vec3Int)
+    bottomright = attr.field(init=False)
 
-    bottomright = attr.ib(init=False)
+    @topleft.validator
+    def validate_topleft(self, _attribute: Any, value: Vec3Int) -> None:
+        assert value.is_positive(), "topleft of a BoundingBox must not be negative"
+
+    @topleft.validator
+    def validate_size(self, _attribute: Any, value: Vec3Int) -> None:
+        assert value.is_positive(), "size of a BoundingBox must not be negative"
 
     def __attrs_post_init__(self) -> None:
         # Compute bottomright to avoid that it's recomputed every time
@@ -245,6 +252,10 @@ class BoundingBox:
         return intersection
 
     def extended_by(self, other: "BoundingBox") -> "BoundingBox":
+        if self.is_empty():
+            return other
+        if other.is_empty():
+            return self
 
         topleft = np.minimum(self.topleft, other.topleft)
         bottomright = np.maximum(self.bottomright, other.bottomright)
@@ -253,32 +264,36 @@ class BoundingBox:
         return BoundingBox(topleft, size)
 
     def is_empty(self) -> bool:
-
-        return not all(self.size.to_np() > 0)
+        return not self.size.is_positive(strictly_positive=True)
 
     def in_mag(self, mag: Mag) -> "BoundingBox":
-
-        np_mag = np.array(mag.to_list())
+        mag_vec = mag.to_vec3_int()
 
         assert (
-            np.count_nonzero(self.topleft.to_np() % np_mag) == 0
+            self.topleft % mag_vec == Vec3Int.zeros()
         ), f"topleft {self.topleft} is not aligned with the mag {mag}. Use BoundingBox.align_with_mag()."
         assert (
-            np.count_nonzero(self.bottomright.to_np() % np_mag) == 0
+            self.bottomright % mag_vec == Vec3Int.zeros()
         ), f"bottomright {self.bottomright} is not aligned with the mag {mag}. Use BoundingBox.align_with_mag()."
 
         return BoundingBox(
-            topleft=(self.topleft // np_mag),
-            size=(self.size // np_mag),
+            topleft=(self.topleft // mag_vec),
+            size=(self.size // mag_vec),
         )
 
-    def align_with_mag(self, mag: Mag, ceil: bool = False) -> "BoundingBox":
+    def from_mag_to_mag1(self, from_mag: Mag) -> "BoundingBox":
+        mag_vec = from_mag.to_vec3_int()
+        return BoundingBox(
+            topleft=(self.topleft * mag_vec),
+            size=(self.size * mag_vec),
+        )
+
+    def _align_with_mag_slow(self, mag: Mag, ceil: bool = False) -> "BoundingBox":
         """Rounds the bounding box, so that both topleft and bottomright are divisible by mag.
 
         :argument ceil: If true, the bounding box is enlarged when necessary. If false, it's shrinked when necessary.
         """
-
-        np_mag = np.array(mag.to_list())
+        np_mag = mag.to_np()
 
         align = (
             lambda point, round_fn: round_fn(point.to_np() / np_mag).astype(int)
@@ -292,6 +307,25 @@ class BoundingBox:
             topleft = align(self.topleft, np.ceil)
             bottomright = align(self.bottomright, np.floor)
         return BoundingBox(topleft, bottomright - topleft)
+
+    def align_with_mag(self, mag: Mag, ceil: bool = False) -> "BoundingBox":
+        """Rounds the bounding box, so that both topleft and bottomright are divisible by mag.
+
+        :argument ceil: If true, the bounding box is enlarged when necessary. If false, it's shrinked when necessary.
+        """
+        # This does the same as _align_with_mag_slow, which is more readable.
+        # Same behavior is asserted in test_align_with_mag_against_numpy_implementation
+        mag_vec = mag.to_vec3_int()
+        roundup = self.topleft if ceil else self.bottomright
+        rounddown = self.bottomright if ceil else self.topleft
+        margin_to_roundup = roundup % mag_vec
+        aligned_roundup = roundup - margin_to_roundup
+        margin_to_rounddown = (mag_vec - (rounddown % mag_vec)) % mag_vec
+        aligned_rounddown = rounddown + margin_to_rounddown
+        if ceil:
+            return BoundingBox(aligned_roundup, aligned_rounddown - aligned_roundup)
+        else:
+            return BoundingBox(aligned_rounddown, aligned_roundup - aligned_rounddown)
 
     def contains(self, coord: Union[Vec3IntLike, np.ndarray]) -> bool:
         """Check whether a point is inside of the bounding box.

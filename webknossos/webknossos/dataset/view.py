@@ -2,14 +2,24 @@ import math
 import warnings
 from pathlib import Path
 from types import TracebackType
-from typing import TYPE_CHECKING, Any, Callable, Dict, Optional, Tuple, Type, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    Optional,
+    Tuple,
+    Type,
+    Union,
+)
 
 import cluster_tools
 import numpy as np
 from cluster_tools.schedulers.cluster_executor import ClusterExecutor
 from wkw import Dataset, wkw
 
-from webknossos.geometry import BoundingBox, Vec3Int, Vec3IntLike
+from webknossos.geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 from webknossos.utils import get_rich_progress, wait_and_ensure_success
 
 if TYPE_CHECKING:
@@ -20,99 +30,252 @@ if TYPE_CHECKING:
 class View:
     """
     A `View` is essentially a bounding box to a region of a specific `wkw.Dataset` that also provides functionality.
-    Read- and write-operations are restricted to the bounding box.
+    Write-operations are restricted to the bounding box.
     `View`s are designed to be easily passed around as parameters.
-    A `View`, in its most basic form, does not have a reference to the `webknossos.dataset.dataset.Dataset`.
+    A `View`, in its most basic form, does not have a reference to its `Dataset`.
     """
 
     def __init__(
         self,
         path_to_mag_view: Path,
         header: wkw.Header,
-        size: Vec3IntLike,
-        global_offset: Vec3IntLike,
-        is_bounded: bool = True,
+        bounding_box: Optional[
+            BoundingBox
+        ],  # in mag 1, absolute coordinates, optional only for mag_view since it overwrites the bounding_box property
+        mag: Mag,
         read_only: bool = False,
-        mag_view_bbox_at_creation: Optional[BoundingBox] = None,
     ):
         """
-        Do not use this constructor manually. Instead use `webknossos.dataset.mag_view.MagView.get_view()` to get a `View`.
+        Do not use this constructor manually. Instead use `View.get_view()` (also available on a `MagView`) to get a `View`.
         """
         self._path = path_to_mag_view
         self._header: wkw.Header = header
-        self._size: Vec3Int = Vec3Int(size)
-        self._global_offset: Vec3Int = Vec3Int(global_offset)
-        self._is_bounded = is_bounded
+        self._bounding_box = bounding_box
         self._read_only = read_only
         self._cached_wkw_dataset = None
-        # The bounding box of the view is used to prevent warnings when writing compressed but unaligned data
-        # directly at the borders of the bounding box.
-        # A View is unable to get this information from the Dataset because it is detached from it.
-        # Adding the bounding box as parameter is a workaround for this.
-        # However, keep in mind that this bounding box is just a snapshot.
-        # This bounding box is not updated if the bounding box of the dataset is updated.
-        # Even though an outdated bounding box can lead to missed (or unwanted) warnings,
-        # this is sufficient for our use case because such scenarios are unlikely and not critical.
-        # This should not be misused to infer the size of the dataset because this might lead to problems.
-        self._mag_view_bbox_at_creation = mag_view_bbox_at_creation
+        self._mag = mag
 
     @property
     def header(self) -> wkw.Header:
         return self._header
 
     @property
-    def size(self) -> Vec3Int:
-        return self._size
+    def bounding_box(self) -> BoundingBox:
+        assert self._bounding_box is not None
+        return self._bounding_box
 
     @property
-    def global_offset(self) -> Vec3Int:
-        return self._global_offset
+    def mag(self) -> Mag:
+        return self._mag
 
     @property
     def read_only(self) -> bool:
         return self._read_only
 
+    @property
+    def global_offset(self) -> Vec3Int:
+        """⚠️ Deprecated, use `view.bounding_box.in_mag(view.mag).topleft` instead."""
+        warnings.warn(
+            "[DEPRECATION] view.global_offset is deprecated. "
+            + "Since this is a View, please use "
+            + "view.bounding_box.in_mag(view.mag).topleft instead."
+        )
+        return self.bounding_box.in_mag(self._mag).topleft
+
+    @property
+    def size(self) -> Vec3Int:
+        """⚠️ Deprecated, use `view.bounding_box.in_mag(view.mag).size` instead."""
+        warnings.warn(
+            "[DEPRECATION] view.size is deprecated. "
+            + "Since this is a View, please use "
+            + "view.bounding_box.in_mag(view.mag).size instead."
+        )
+        return self.bounding_box.in_mag(self._mag).size
+
+    def _get_mag1_bbox(
+        self,
+        abs_mag1_bbox: Optional[BoundingBox] = None,
+        rel_mag1_bbox: Optional[BoundingBox] = None,
+        abs_mag1_offset: Optional[Vec3IntLike] = None,
+        rel_mag1_offset: Optional[Vec3IntLike] = None,
+        mag1_size: Optional[Vec3IntLike] = None,
+        abs_current_mag_offset: Optional[Vec3IntLike] = None,
+        rel_current_mag_offset: Optional[Vec3IntLike] = None,
+        current_mag_size: Optional[Vec3IntLike] = None,
+    ) -> BoundingBox:
+        num_bboxes = _count_defined_values([abs_mag1_bbox, rel_mag1_bbox])
+        num_offsets = _count_defined_values(
+            [
+                abs_mag1_offset,
+                rel_mag1_offset,
+                abs_current_mag_offset,
+                rel_current_mag_offset,
+            ]
+        )
+        num_sizes = _count_defined_values([mag1_size, current_mag_size])
+        if num_bboxes == 0:
+            assert num_offsets != 0, "You must supply an offset or a bounding box."
+            assert (
+                num_sizes != 0
+            ), "When supplying an offset, you must also supply a size. Alternatively, supply a bounding box."
+            assert num_offsets == 1, "Only one offset can be supplied."
+            assert num_sizes == 1, "Only one size can be supplied."
+        else:
+            assert num_bboxes == 1, "Only one bounding-box can be supplied."
+            assert (
+                num_offsets == 0
+            ), "A bounding-box was supplied, you cannot also supply an offset."
+            assert (
+                num_sizes == 0
+            ), "A bounding-box was supplied, you cannot also supply a size."
+
+        if abs_mag1_bbox is not None:
+            return abs_mag1_bbox
+
+        elif rel_mag1_bbox is not None:
+            return rel_mag1_bbox.offset(self.bounding_box.topleft)
+
+        else:
+            mag_vec = self._mag.to_vec3_int()
+            if rel_current_mag_offset is not None:
+                abs_mag1_offset = (
+                    self.bounding_box.topleft
+                    + Vec3Int(rel_current_mag_offset) * mag_vec
+                )
+            if abs_current_mag_offset is not None:
+                abs_mag1_offset = Vec3Int(abs_current_mag_offset) * mag_vec
+            if rel_mag1_offset is not None:
+                abs_mag1_offset = self.bounding_box.topleft + rel_mag1_offset
+
+            if current_mag_size is not None:
+                mag1_size = Vec3Int(current_mag_size) * mag_vec
+
+            assert abs_mag1_offset is not None, "No offset was supplied."
+            assert mag1_size is not None, "No size was supplied."
+            return BoundingBox(Vec3Int(abs_mag1_offset), Vec3Int(mag1_size))
+
     def write(
         self,
         data: np.ndarray,
-        offset: Vec3IntLike = Vec3Int(0, 0, 0),
+        offset: Optional[Vec3IntLike] = None,  # deprecated, relative, in current mag
+        *,
+        relative_offset: Optional[Vec3IntLike] = None,  # in mag1
+        absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
     ) -> None:
         """
-        Writes the `data` at the specified `offset` to disk.
-        The `offset` is relative to `global_offset`.
+        Writes the `data` at the specified `relative_offset` or `absolute_offset`, both specified in Mag(1).
+
+        ⚠️ The `offset` parameter is deprecated.
+        This parameter used to be relative for `View` and absolute for `MagView`,
+        and specified in the mag of the respective view.
 
         Note that writing compressed data which is not aligned with the blocks on disk may result in
         diminished performance, as full blocks will automatically be read to pad the write actions.
         """
         assert not self.read_only, "Cannot write data to an read_only View"
 
-        offset = Vec3Int(offset)
+        if all(i is None for i in [offset, absolute_offset, relative_offset]):
+            relative_offset = Vec3Int.zeros()
 
-        # assert the size of the parameter data is not in conflict with the attribute self.size
-        data_dims = Vec3Int(data.shape[-3:])
-        _assert_positive_dimensions(offset, data_dims)
-        self._assert_bounds(offset, data_dims)
+        if offset is not None:
+            if self._mag == Mag(1):
+                alternative = "Since this is a View in Mag(1), please use view.write(relative_offset=my_vec)"
+            else:
+                alternative = (
+                    "Since this is a View, please use the coordinates in Mag(1) instead, e.g. "
+                    + "view.write(relative_offset=my_vec * view.mag.to_vec3_int())"
+                )
+
+            warnings.warn(
+                "[DEPRECATION] Using view.write(offset=my_vec) is deprecated. "
+                + "Please use relative_offset or absolute_offset instead. "
+                + alternative
+            )
+
+        num_channels = self._header.num_channels
+        if len(data.shape) == 3:
+            assert (
+                num_channels == 1
+            ), f"The number of channels of the dataset ({num_channels}) does not match the number of channels of the passed data (1)"
+        else:
+            assert (
+                num_channels == data.shape[0]
+            ), f"The number of channels of the dataset ({num_channels}) does not match the number of channels of the passed data ({data.shape[0]})"
+
+        mag1_bbox = self._get_mag1_bbox(
+            rel_current_mag_offset=offset,
+            rel_mag1_offset=relative_offset,
+            abs_mag1_offset=absolute_offset,
+            current_mag_size=Vec3Int(data.shape[-3:]),
+        )
+        assert self.bounding_box.contains_bbox(
+            mag1_bbox
+        ), f"The bounding box to write {mag1_bbox} is larger than the view's bounding box {self.bounding_box}"
 
         if len(data.shape) == 4 and data.shape[0] == 1:
-            data = data[0]  # remove channel dimension
+            data = data[0]  # remove channel dimension for single-channel data
 
-        # calculate the absolute offset
-        absolute_offset = self.global_offset + offset
+        current_mag_bbox = mag1_bbox.in_mag(self._mag)
 
         if self._is_compressed():
-            absolute_offset, data = self._handle_compressed_write(absolute_offset, data)
+            current_mag_bbox, data = self._handle_compressed_write(
+                current_mag_bbox, data
+            )
 
-        self._wkw_dataset.write(absolute_offset.to_np(), data)
+        self._wkw_dataset.write(current_mag_bbox.topleft, data)
+
+    def _handle_compressed_write(
+        self, current_mag_bbox: BoundingBox, data: np.ndarray
+    ) -> Tuple[BoundingBox, np.ndarray]:
+        aligned_bbox = current_mag_bbox.align_with_mag(
+            Mag(self.header.file_len * self.header.block_len), ceil=True
+        )
+
+        if current_mag_bbox != aligned_bbox:
+
+            # The data bbox should either be aligned or match the dataset's bounding box:
+            current_mag_view_bbox = self.bounding_box.in_mag(self._mag)
+            if current_mag_bbox != current_mag_view_bbox.intersected_with(aligned_bbox):
+                warnings.warn(
+                    "Warning: write() was called on a compressed mag without block alignment. "
+                    + "Performance will be degraded as the data has to be padded first.",
+                    RuntimeWarning,
+                )
+
+            aligned_data = self._read_without_checks(aligned_bbox)
+
+            index_slice = (slice(None, None),) + current_mag_bbox.offset(
+                -aligned_bbox.topleft
+            ).to_slices()
+            # overwrite the specified data
+            aligned_data[index_slice] = data
+            return aligned_bbox, aligned_data
+        else:
+            return current_mag_bbox, data
 
     def read(
         self,
-        offset: Vec3IntLike = Vec3Int(0, 0, 0),
-        size: Optional[Vec3IntLike] = None,
+        offset: Optional[Vec3IntLike] = None,  # deprecated, relative, in current mag
+        size: Optional[
+            Vec3IntLike
+        ] = None,  # usually in mag1, in current mag if offset is given
+        *,
+        relative_offset: Optional[Vec3IntLike] = None,  # in mag1
+        absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
+        relative_bounding_box: Optional[BoundingBox] = None,  # in mag1
+        absolute_bounding_box: Optional[BoundingBox] = None,  # in mag1
     ) -> np.ndarray:
         """
-        The user can specify the `offset` and the `size` of the requested data.
-        The `offset` is relative to `global_offset`.
-        If no `size` is specified, the size of the view is used.
+        The user can specify which data should be read.
+        The default is to read all data of the view's bounding box.
+        Alternatively, one can supply one of the following keyword argument combinations:
+        * `relative_offset` and `size`, both in Mag(1)
+        * `absolute_offset` and `size`, both in Mag(1)
+        * `relative_bounding_box` in Mag(1)
+        * `absolute_bounding_box` in Mag(1)
+        * ⚠️ deprecated: `offset` and `size`, both in the current Mag.
+          `offset` used to be relative for `View` and absolute for `MagView`
+
         If the specified bounding box exceeds the data on disk, the rest is padded with `0`.
 
         Returns the specified data as a `np.array`.
@@ -123,39 +286,120 @@ class View:
         import numpy as np
 
         # ...
-        # let 'mag1' be a `MagView`
-        view = mag1.get_view(offset(10, 20, 30), size=(100, 200, 300))
+        # let mag1 be a MagView
+        view = mag1.get_view(absolute_offset(10, 20, 30), size=(100, 200, 300))
 
         assert np.array_equal(
-            view.read(offset=(0, 0, 0), size=(100, 200, 300)),
+            view.read(absolute_offset=(0, 0, 0), size=(100, 200, 300)),
             view.read(),
         )
-
-        # works because the specified data is completely in the bounding box of the view
-        some_data = view.read(offset=(50, 60, 70), size=(10, 120, 230))
-
-        # fails because the specified data is not completely in the bounding box of the view
-        more_data = view.read(offset=(50, 60, 70), size=(999, 120, 230))
         ```
         """
 
-        offset = Vec3Int(offset)
-        size = self.size if size is None else Vec3Int(size)
+        current_mag_size: Optional[Vec3IntLike]
+        mag1_size: Optional[Vec3IntLike]
+        if absolute_bounding_box is None and relative_bounding_box is None:
+            if offset is None:
+                if size is None:
+                    assert (
+                        relative_offset is None and absolute_offset is None
+                    ), "You must supply size, when reading with an offset."
+                    current_mag_size = None
+                    mag1_size = self.bounding_box.size
+                else:
+                    if relative_offset is None and absolute_offset is None:
+                        if type(self) == View:
+                            offset_param = "relative_offset"
+                        else:
+                            offset_param = "absolute_offset"
+                        warnings.warn(
+                            "[DEPRECATION] Using view.read(size=my_vec) only with a size is deprecated. "
+                            + f"Please use view.read({offset_param}=(0, 0, 0), size=size_vec * view.mag.to_vec3_int()) instead."
+                        )
+                        current_mag_size = size
+                        mag1_size = None
+                    else:
+                        current_mag_size = None
+                        mag1_size = size
+            else:
+                view_class = type(self).__name__
+                if type(self) == View:
+                    offset_param = "relative_offset"
+                else:
+                    offset_param = "absolute_offset"
+                if self._mag == Mag(1):
+                    alternative = f"Since this is a {view_class} in Mag(1), please use view.read({offset_param}=my_vec, size=size_vec)"
+                else:
+                    alternative = (
+                        f"Since this is a {view_class}, please use the coordinates in Mag(1) instead, e.g. "
+                        + f"view.read({offset_param}=my_vec * view.mag.to_vec3_int(),  size=size_vec * view.mag.to_vec3_int())"
+                    )
 
-        # assert the parameter size is not in conflict with the attribute self.size
-        _assert_positive_dimensions(offset, size)
-        self._assert_bounds(offset, size)
+                warnings.warn(
+                    "[DEPRECATION] Using view.read(offset=my_vec) is deprecated. "
+                    + "Please use relative_offset or absolute_offset instead. "
+                    + alternative
+                )
 
-        # calculate the absolute offset
-        absolute_offset = self.global_offset + offset
+                if size is None:
+                    current_mag_size = None
+                    mag1_size = self.bounding_box.size
+                else:
+                    # (deprecated) offset and size are given
+                    current_mag_size = size
+                    mag1_size = None
 
-        return self._read_without_checks(absolute_offset, size)
+            if all(i is None for i in [offset, absolute_offset, relative_offset]):
+                relative_offset = Vec3Int.zeros()
+        else:
+            assert (
+                size is None
+            ), "Cannot supply a size when using bounding_box in view.read()"
+            # offset is asserted anyways in _get_mag1_bbox
+            current_mag_size = None
+            mag1_size = None
+
+        mag1_bbox = self._get_mag1_bbox(
+            rel_current_mag_offset=offset,
+            rel_mag1_offset=relative_offset,
+            abs_mag1_offset=absolute_offset,
+            current_mag_size=current_mag_size,
+            mag1_size=mag1_size,
+            abs_mag1_bbox=absolute_bounding_box,
+            rel_mag1_bbox=relative_bounding_box,
+        )
+        assert not mag1_bbox.is_empty(), (
+            f"The size ({mag1_bbox.size} in mag1) contains a zero. "
+            + "All dimensions must be strictly larger than '0'."
+        )
+
+        return self._read_without_checks(mag1_bbox.in_mag(self._mag))
 
     def read_bbox(self, bounding_box: Optional[BoundingBox] = None) -> np.ndarray:
         """
-        The user can specify the `bounding_box` of the requested data.
+        ⚠️ Deprecated. Please use `read()` with `relative_bounding_box` or `absolute_bounding_box` in Mag(1) instead.
+        The user can specify the `bounding_box` in the current mag of the requested data.
         See `read()` for more details.
         """
+
+        view_class = type(self).__name__
+        if type(self) == View:
+            offset_param = "relative_bounding_box"
+        else:
+            offset_param = "absolute_bounding_box"
+        if self._mag == Mag(1):
+            alternative = f"Since this is a {view_class} in Mag(1), please use view.read({offset_param}=bbox)"
+        else:
+            alternative = (
+                f"Since this is a {view_class}, please use the bbox in Mag(1) instead, e.g. "
+                + f"view.read({offset_param}=bbox.from_mag_to_mag1(view.mag))"
+            )
+
+        warnings.warn(
+            "[DEPRECATION] read_bbox() (with a bbox in the current mag) is deprecated. "
+            + "Please use read() with relative_bounding_box or absolute_bounding_box in Mag(1) instead. "
+            + alternative
+        )
         if bounding_box is None:
             return self.read()
         else:
@@ -163,64 +407,153 @@ class View:
 
     def _read_without_checks(
         self,
-        absolute_offset: Vec3Int,
-        size: Vec3Int,
+        current_mag_bbox: BoundingBox,
     ) -> np.ndarray:
-        data = self._wkw_dataset.read(absolute_offset.to_np(), size.to_np())
+        data = self._wkw_dataset.read(
+            current_mag_bbox.topleft.to_np(), current_mag_bbox.size.to_np()
+        )
         return data
 
     def get_view(
         self,
-        offset: Vec3IntLike = Vec3Int(0, 0, 0),
+        offset: Optional[Vec3IntLike] = None,
         size: Optional[Vec3IntLike] = None,
+        *,
+        relative_offset: Optional[Vec3IntLike] = None,  # in mag1
+        absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
         read_only: Optional[bool] = None,
     ) -> "View":
         """
         Returns a view that is limited to the specified bounding box.
-        The `offset` is relative to `global_offset`.
-        If no `size` is specified, the size of the view is used.
+        The new view may exceed the bounding box of the current view only if `read_only` is set to `True`.
 
-        The `offset` and `size` may only exceed the bounding box of the current view, if `read_only` is set to `True`.
-
-
-        If `read_only` is `True`, write operations are not allowed for the returned sub-view.
+        The default is to return the same view as the current bounding box,
+        in case of a `MagView` that's the layer bounding box.
+        One can supply one of the following keyword argument combinations:
+        * `relative_offset` and `size`, both in Mag(1)
+        * `absolute_offset` and `size`, both in Mag(1)
+        * ⚠️ deprecated: `offset` and `size`, both in the current Mag.
+          `offset` used to be relative for `View` and absolute for `MagView`
 
         Example:
         ```python
         # ...
-        # let 'mag1' be a `MagView`
-        view = mag1.get_view(offset(10, 20, 30), size=(100, 200, 300))
+        # let mag1 be a MagView
+        view = mag1.get_view(absolute_offset=(10, 20, 30), size=(100, 200, 300))
 
         # works because the specified sub-view is completely in the bounding box of the view
-        sub_view = view.get_view(offset=(50, 60, 70), size=(10, 120, 230))
+        sub_view = view.get_view(relative_offset=(50, 60, 70), size=(10, 120, 230))
 
         # fails because the specified sub-view is not completely in the bounding box of the view
-        invalid_sub_view = view.get_view(offset=(50, 60, 70), size=(999, 120, 230))
+        invalid_sub_view = view.get_view(relative_offset=(50, 60, 70), size=(999, 120, 230))
 
         # works because `read_only=True`
-        invalid_sub_view = view.get_view(offset=(50, 60, 70), size=(999, 120, 230), read_only=True)
+        valid_sub_view = view.get_view(relative_offset=(50, 60, 70), size=(999, 120, 230), read_only=True)
         ```
         """
         if read_only is None:
             read_only = self.read_only
-        assert (
-            read_only or read_only == self.read_only
-        ), "Failed to get subview. The calling view is read_only. Therefore, the subview also has to be read_only."
+        else:
+            assert (
+                read_only or not self.read_only
+            ), "Failed to get subview. The calling view is read_only. Therefore, the subview also has to be read_only."
 
-        offset = Vec3Int(offset)
-        size = self.size if size is None else Vec3Int(size)
+        current_mag_size: Optional[Vec3IntLike]
+        mag1_size: Optional[Vec3IntLike]
 
-        _assert_positive_dimensions(offset, size)
-        self._assert_bounds(offset, size, not read_only)
-        view_offset = self.global_offset + offset
+        if offset is None:
+            if size is None:
+                assert (
+                    relative_offset is None and absolute_offset is None
+                ), "You must supply a size, when using get_view with an offset."
+                current_mag_size = None
+                mag1_size = self.bounding_box.size
+            else:
+                if relative_offset is None and absolute_offset is None:
+                    if type(self) == View:
+                        offset_param = "relative_offset"
+                    else:
+                        offset_param = "absolute_offset"
+                    warnings.warn(
+                        "[DEPRECATION] Using view.get_view(size=my_vec) only with a size is deprecated. "
+                        + f"Please use view.get_view({offset_param}=(0, 0, 0), size=size_vec * view.mag.to_vec3_int()) instead."
+                    )
+                    current_mag_size = size
+                    mag1_size = None
+                else:
+                    current_mag_size = None
+                    mag1_size = size
+        else:
+            view_class = type(self).__name__
+            if type(self) == View:
+                offset_param = "relative_offset"
+            else:
+                offset_param = "absolute_offset"
+            if self._mag == Mag(1):
+                alternative = f"Since this is a {view_class} in Mag(1), please use view.get_view({offset_param}=my_vec, size=size_vec)"
+            else:
+                alternative = (
+                    f"Since this is a {view_class}, please use the coordinates in Mag(1) instead, e.g. "
+                    + f"view.get_view({offset_param}=my_vec * view.mag.to_vec3_int(),  size=size_vec * view.mag.to_vec3_int())"
+                )
+
+            warnings.warn(
+                "[DEPRECATION] Using view.get_view(offset=my_vec) is deprecated. "
+                + "Please use relative_offset or absolute_offset instead. "
+                + alternative
+            )
+
+            if size is None:
+                current_mag_size = None
+                mag1_size = self.bounding_box.size
+            else:
+                # (deprecated) offset and size are given
+                current_mag_size = size
+                mag1_size = None
+
+        if offset is None and relative_offset is None and absolute_offset is None:
+            relative_offset = Vec3Int.zeros()
+
+        mag1_bbox = self._get_mag1_bbox(
+            rel_current_mag_offset=offset,
+            rel_mag1_offset=relative_offset,
+            abs_mag1_offset=absolute_offset,
+            current_mag_size=current_mag_size,
+            mag1_size=mag1_size,
+        )
+        if not self.bounding_box.is_empty():
+            assert not mag1_bbox.is_empty(), (
+                f"The size ({mag1_bbox.size} in mag1) contains a zero. "
+                + "All dimensions must be strictly larger than '0'."
+            )
+
+        if not read_only:
+            assert self.bounding_box.contains_bbox(mag1_bbox), (
+                f"The bounding box of the new subview {mag1_bbox} is larger than the view's bounding box {self.bounding_box}. "
+                + "This is only allowed for read-only views."
+            )
+
+            current_mag_bbox = mag1_bbox.in_mag(self._mag)
+            current_mag_aligned_bbox = current_mag_bbox.align_with_mag(
+                Mag(self.header.file_len * self.header.block_len), ceil=True
+            )
+            # The data bbox should either be aligned or match the dataset's bounding box:
+            current_mag_view_bbox = self.bounding_box.in_mag(self._mag)
+            if current_mag_bbox != current_mag_view_bbox.intersected_with(
+                current_mag_aligned_bbox, dont_assert=True
+            ):
+                warnings.warn(
+                    "Warning: get_view() was called without block alignment. "
+                    + "Please only use sequentially, parallel access across such views is error-prone.",
+                    RuntimeWarning,
+                )
+
         return View(
             self._path,
             self.header,
-            size=size,
-            global_offset=view_offset,
-            is_bounded=True,
+            bounding_box=mag1_bbox,
+            mag=self._mag,
             read_only=read_only,
-            mag_view_bbox_at_creation=self._mag_view_bounding_box_at_creation,
         )
 
     def get_buffered_slice_writer(
@@ -250,6 +583,10 @@ class View:
 
         """
         from webknossos.dataset._utils.buffered_slice_writer import BufferedSliceWriter
+
+        assert (
+            not self._read_only
+        ), "Cannot get a buffered slice writer on a read-only view."
 
         return BufferedSliceWriter(
             view=self,
@@ -288,30 +625,17 @@ class View:
         return BufferedSliceReader(
             view=self,
             offset=Vec3Int(offset),
-            size=Vec3Int(size) if size is not None else self.size,
+            size=Vec3Int(size)
+            if size is not None
+            else self.bounding_box.in_mag(self._mag).size,
             buffer_size=buffer_size,
             dimension=dimension,
         )
 
-    def _assert_bounds(
-        self,
-        offset: Vec3Int,
-        size: Vec3Int,
-        strict: Optional[bool] = None,
-    ) -> None:
-        if strict is None:
-            strict = self._is_bounded
-        if strict and not BoundingBox((0, 0, 0), self.size).contains_bbox(
-            BoundingBox(offset, size)
-        ):
-            raise AssertionError(
-                f"Accessing data out of bounds: The passed parameter 'size' {size} exceeds the size of the current view ({self.size})"
-            )
-
     def for_each_chunk(
         self,
         work_on_chunk: Callable[[Tuple["View", int]], None],
-        chunk_size: Vec3IntLike,
+        chunk_size: Vec3IntLike,  # in current mag
         executor: Optional[
             Union[ClusterExecutor, cluster_tools.WrappedProcessPoolExecutor]
         ] = None,
@@ -348,20 +672,15 @@ class View:
         """
 
         chunk_size = Vec3Int(chunk_size)
-
         _check_chunk_size(chunk_size)
-        # This "view" object assures that the operation cannot exceed the bounding box of the properties.
-        # `View.get_view()` returns a `View` of the same size as the current object (because of the default parameters).
-        # `MagView.get_view()` returns a `View` with the bounding box from the properties.
-        view = self.get_view()
+        mag1_chunk_size = chunk_size * self.mag.to_vec3_int()
 
         job_args = []
-
-        bbox = BoundingBox(view.global_offset, view.size)
-        for i, chunk in enumerate(bbox.chunk(chunk_size, chunk_size)):
-            relative_offset = chunk.topleft - view.global_offset
-            chunk_view = view.get_view(
-                offset=relative_offset,
+        for i, chunk in enumerate(
+            self.bounding_box.chunk(mag1_chunk_size, mag1_chunk_size)
+        ):
+            chunk_view = self.get_view(
+                absolute_offset=chunk.topleft,
                 size=chunk.size,
             )
             job_args.append((chunk_view, i))
@@ -373,11 +692,15 @@ class View:
                     work_on_chunk(args)
             else:
                 with get_rich_progress() as progress:
-                    task = progress.add_task(progress_desc, total=bbox.volume())
+                    task = progress.add_task(
+                        progress_desc, total=self.bounding_box.volume()
+                    )
                     for args in job_args:
                         work_on_chunk(args)
-                        chunk_bbox = BoundingBox((0, 0, 0), args[0].size)
-                        progress.update(task, advance=chunk_bbox.volume())
+                        current_view: View = args[0]
+                        progress.update(
+                            task, advance=current_view.bounding_box.volume()
+                        )
         else:
             wait_and_ensure_success(
                 executor.map_to_futures(work_on_chunk, job_args), progress_desc
@@ -387,8 +710,8 @@ class View:
         self,
         work_on_chunk: Callable[[Tuple["View", "View", int]], None],
         target_view: "View",
-        source_chunk_size: Vec3IntLike,
-        target_chunk_size: Vec3IntLike,
+        source_chunk_size: Vec3IntLike,  # in current mag
+        target_chunk_size: Vec3IntLike,  # in target view mag
         executor: Optional[
             Union[ClusterExecutor, cluster_tools.WrappedProcessPoolExecutor]
         ] = None,
@@ -419,52 +742,49 @@ class View:
         _check_chunk_size(source_chunk_size)
         _check_chunk_size(target_chunk_size)
 
-        source_view = self.get_view()
-        target_view = target_view.get_view()
+        mag1_source_chunk_size = source_chunk_size * self.mag.to_vec3_int()
+        mag1_target_chunk_size = target_chunk_size * target_view.mag.to_vec3_int()
 
-        source_offset = source_view.global_offset
-        target_offset = target_view.global_offset
-        source_chunk_size_np = source_chunk_size.to_np()
-        target_chunk_size_np = target_chunk_size.to_np()
-
-        assert not source_view.size.contains(
-            0
+        assert (
+            not self.bounding_box.is_empty()
         ), "Calling 'for_zipped_chunks' failed because the size of the source view contains a 0."
-        assert not target_view.size.contains(
-            0
+        assert (
+            not target_view.bounding_box.is_empty()
         ), "Calling 'for_zipped_chunks' failed because the size of the target view contains a 0."
         assert np.array_equal(
-            source_view.size.to_np() / target_view.size.to_np(),
-            source_chunk_size_np / target_chunk_size_np,
-        ), f"Calling 'for_zipped_chunks' failed because the ratio of the view sizes (source size = {source_view.size}, target size = {target_view.size}) must be equal to the ratio of the chunk sizes (source_chunk_size = {source_chunk_size}, source_chunk_size = {target_chunk_size}))"
+            self.bounding_box.size.to_np() / target_view.bounding_box.size.to_np(),
+            mag1_source_chunk_size.to_np() / mag1_target_chunk_size.to_np(),
+        ), (
+            "Calling 'for_zipped_chunks' failed because the ratio of the view sizes "
+            + f"(source size = {self.bounding_box.size}, target size = {target_view.bounding_box.size}) "
+            + "must be equal to the ratio of the chunk sizes "
+            + f"(source_chunk_size in Mag(1) = {mag1_source_chunk_size}, target_chunk_size in Mag(1) = {mag1_target_chunk_size})"
+        )
 
         assert not any(
-            target_chunk_size_np
+            target_chunk_size.to_np()
             % (target_view.header.file_len * target_view.header.block_len)
         ), f"Calling for_zipped_chunks failed. The target_chunk_size ({target_chunk_size}) must be a multiple of file_len*block_len of the target view ({target_view.header.file_len * target_view.header.block_len})"
 
         job_args = []
-        source_bbox = BoundingBox(source_offset, source_view.size)
-        source_chunks = source_bbox.chunk(source_chunk_size, source_chunk_size)
-        target_chunks = BoundingBox(target_offset, target_view.size).chunk(
-            target_chunk_size, target_chunk_size
+        source_chunks = self.bounding_box.chunk(
+            mag1_source_chunk_size, mag1_source_chunk_size
+        )
+        target_chunks = target_view.bounding_box.chunk(
+            mag1_target_chunk_size, mag1_target_chunk_size
         )
 
         for i, (source_chunk, target_chunk) in enumerate(
             zip(source_chunks, target_chunks)
         ):
-            # source chunk
-            relative_source_offset = source_chunk.topleft - source_offset
-            source_chunk_view = source_view.get_view(
-                offset=relative_source_offset,
+            source_chunk_view = self.get_view(
+                absolute_offset=source_chunk.topleft,
                 size=source_chunk.size,
                 read_only=True,
             )
-            # target chunk
-            relative_target_offset = target_chunk.topleft - target_offset
             target_chunk_view = target_view.get_view(
+                absolute_offset=target_chunk.topleft,
                 size=target_chunk.size,
-                offset=relative_target_offset,
             )
 
             job_args.append((source_chunk_view, target_chunk_view, i))
@@ -476,11 +796,12 @@ class View:
                     work_on_chunk(args)
             else:
                 with get_rich_progress() as progress:
-                    task = progress.add_task(progress_desc, total=source_bbox.volume())
+                    task = progress.add_task(
+                        progress_desc, total=self.bounding_box.volume()
+                    )
                     for args in job_args:
                         work_on_chunk(args)
-                        chunk_bbox = BoundingBox((0, 0, 0), args[0].size)
-                        progress.update(task, advance=chunk_bbox.volume())
+                        progress.update(task, advance=args[0].bounding_box.volume())
         else:
             wait_and_ensure_success(
                 executor.map_to_futures(work_on_chunk, job_args), progress_desc
@@ -491,71 +812,6 @@ class View:
             self.header.block_type == wkw.Header.BLOCK_TYPE_LZ4
             or self.header.block_type == wkw.Header.BLOCK_TYPE_LZ4HC
         )
-
-    def _handle_compressed_write(
-        self, absolute_offset: Vec3Int, data: np.ndarray
-    ) -> Tuple[Vec3Int, np.ndarray]:
-        # calculate aligned bounding box
-        file_bb = np.full(3, self.header.file_len * self.header.block_len)
-        absolute_offset_np = np.array(absolute_offset)
-        margin_to_top_left = absolute_offset_np % file_bb
-        aligned_offset = absolute_offset_np - margin_to_top_left
-        bottom_right = absolute_offset_np + np.array(data.shape[-3:])
-        margin_to_bottom_right = (file_bb - (bottom_right % file_bb)) % file_bb
-        is_bottom_right_aligned = bottom_right + margin_to_bottom_right
-        aligned_shape = is_bottom_right_aligned - aligned_offset
-
-        if (
-            tuple(aligned_offset) != absolute_offset
-            or tuple(aligned_shape) != data.shape[-3:]
-        ):
-            mag_view_bbox_at_creation = self._mag_view_bounding_box_at_creation
-
-            # Calculate in which dimensions the data is aligned and in which dimensions it matches the bbox of the mag.
-            is_top_left_aligned = aligned_offset == np.array(absolute_offset)
-            is_bottom_right_aligned = is_bottom_right_aligned == bottom_right
-            is_at_border_top_left = np.array(
-                mag_view_bbox_at_creation.topleft
-            ) == np.array(absolute_offset)
-            is_at_border_bottom_right = (
-                np.array(mag_view_bbox_at_creation.bottomright) == bottom_right
-            )
-
-            if not (
-                np.all(np.logical_or(is_top_left_aligned, is_at_border_top_left))
-                and np.all(
-                    np.logical_or(is_bottom_right_aligned, is_at_border_bottom_right)
-                )
-            ):
-                # the data is not aligned
-                # read the aligned bounding box
-
-                # We want to read the data at the absolute offset.
-                # The absolute offset might be outside of the current view.
-                # That is the case if the data is compressed but the view does not include the whole file on disk.
-                # In this case we avoid checking the bounds because the aligned_offset and aligned_shape are calculated internally.
-                warnings.warn(
-                    "Warning: write() was called on a compressed mag without block alignment. Performance will be degraded as the data has to be padded first.",
-                    RuntimeWarning,
-                )
-            aligned_data = self._read_without_checks(
-                Vec3Int(aligned_offset), Vec3Int(aligned_shape)
-            )
-
-            index_slice = (
-                slice(None, None),
-                *(
-                    slice(start, end)
-                    for start, end in zip(
-                        margin_to_top_left, bottom_right - aligned_offset
-                    )
-                ),
-            )
-            # overwrite the specified data
-            aligned_data[tuple(index_slice)] = data
-            return Vec3Int(aligned_offset), aligned_data
-        else:
-            return absolute_offset, data
 
     def get_dtype(self) -> type:
         """
@@ -578,15 +834,7 @@ class View:
         pass
 
     def __repr__(self) -> str:
-        return repr(
-            "View(%s, global_offset=%s, size=%s)"
-            % (self._path, self.global_offset, self.size)
-        )
-
-    @property
-    def _mag_view_bounding_box_at_creation(self) -> BoundingBox:
-        assert self._mag_view_bbox_at_creation is not None
-        return self._mag_view_bbox_at_creation
+        return repr(f"View({self._path}, bounding_box={self.bounding_box})")
 
     @property
     def _wkw_dataset(self) -> wkw.Dataset:
@@ -615,17 +863,6 @@ class View:
         self.__dict__ = d
 
 
-def _assert_positive_dimensions(offset: Vec3Int, size: Vec3Int) -> None:
-    if any(x < 0 for x in offset):
-        raise AssertionError(
-            f"The offset ({offset}) contains a negative value. All dimensions must be larger or equal to '0'."
-        )
-    if any(x <= 0 for x in size):
-        raise AssertionError(
-            f"The size ({size}) contains a negative value (or zeros). All dimensions must be strictly larger than '0'."
-        )
-
-
 def _check_chunk_size(chunk_size: Vec3Int) -> None:
     assert chunk_size is not None
 
@@ -643,3 +880,7 @@ def _check_chunk_size(chunk_size: Vec3Int) -> None:
         raise AssertionError(
             f"The passed parameter 'chunk_size' {chunk_size} must be a multiple of (32, 32, 32)."
         )
+
+
+def _count_defined_values(values: Iterable[Optional[Any]]) -> int:
+    return sum(i is not None for i in values)

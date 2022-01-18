@@ -1,9 +1,10 @@
 import logging
 import os
 import shutil
+import warnings
 from argparse import Namespace
 from pathlib import Path
-from typing import TYPE_CHECKING, Generator, List, Optional, Tuple, Union, cast
+from typing import TYPE_CHECKING, Generator, Optional, Union
 from uuid import uuid4
 
 import numpy as np
@@ -33,24 +34,13 @@ def _find_mag_path_on_disk(dataset_path: Path, layer_name: str, mag_name: str) -
         return long_mag_file_path
 
 
-def _convert_mag1_offset(
-    mag1_offset: Union[List, np.ndarray], target_mag: Mag
-) -> np.ndarray:
-    return np.array(mag1_offset) // target_mag.to_np()  # floor div
-
-
 class MagView(View):
     """
-    A `MagView` contains all information about the data of a single magnification of a `webknossos.dataset.layer.Layer`.
-    `MagView` inherits from `webknossos.dataset.view.View`.
-    Therefore, the main difference between them is that a `MagView` handles the whole magnification,
-    whereas the `View` only handles a sub-region.
+    A `MagView` contains all information about the data of a single magnification of a `Layer`.
+    `MagView` inherits from `View`. The main difference is that the `MagView `has a reference to its `Layer`
 
-    A `MagView` can read/write outside the specified bounding box (unlike a normal `View`).
+    Therefore, a `MagView` can write outside the specified bounding box (unlike a normal `View`), resizing the layer's bounding box.
     If necessary, the properties are automatically updated (e.g. if the bounding box changed).
-    This is possible because a `MagView` does have a reference to the `webknossos.dataset.layer.Layer`.
-
-    The `global_offset` of a `MagView` is always `(0, 0, 0)` and its `size` is chosen so that the bounding box from the properties is fully inside this View.
     """
 
     def __init__(
@@ -63,7 +53,7 @@ class MagView(View):
         create: bool = False,
     ) -> None:
         """
-        Do not use this constructor manually. Instead use `webknossos.dataset.layer.Layer.add_mag()` to create a `MagView`.
+        Do not use this constructor manually. Instead use `webknossos.dataset.layer.Layer.add_mag()`.
         """
         header = wkw.Header(
             voxel_type=layer.dtype_per_channel,
@@ -74,26 +64,45 @@ class MagView(View):
             block_type=block_type,
         )
 
-        self._layer = layer
-        self._mag = mag
-
         super().__init__(
-            _find_mag_path_on_disk(
-                self.layer.dataset.path, self.layer.name, mag.to_layer_name()
-            ),
+            _find_mag_path_on_disk(layer.dataset.path, layer.name, mag.to_layer_name()),
             header,
-            cast(
-                Tuple[int, int, int],
-                tuple(self._mag_view_bounding_box_at_creation.bottomright),
-            ),
-            (0, 0, 0),
-            False,
-            False,
-            None,
+            bounding_box=None,
+            mag=mag,
         )
+        self._layer = layer
 
         if create:
             wkw.Dataset.create(str(self.path), self.header)
+
+    # Overwrites of View methods:
+    @property
+    def bounding_box(self) -> BoundingBox:
+        # Overwrites View's method since no extra bbox is stored for a MagView,
+        # but the Layer's bbox is used:
+        return self.layer.bounding_box.align_with_mag(self._mag, ceil=True)
+
+    @property
+    def global_offset(self) -> Vec3Int:
+        """⚠️ Deprecated, use `Vec3Int.zeros()` instead."""
+        warnings.warn(
+            "[DEPRECATION] mag_view.global_offset is deprecated. "
+            + "Since this is a MagView, please use "
+            + "Vec3Int.zeros() instead."
+        )
+        return Vec3Int.zeros()
+
+    @property
+    def size(self) -> Vec3Int:
+        """⚠️ Deprecated, use `mag_view.bounding_box.in_mag(mag_view.mag).bottomright` instead."""
+        warnings.warn(
+            "[DEPRECATION] mag_view.size is deprecated. "
+            + "Since this is a MagView, please use "
+            + "mag_view.bounding_box.in_mag(mag_view.mag).bottomright instead."
+        )
+        return self.bounding_box.in_mag(self._mag).bottomright
+
+    # Own methods:
 
     @property
     def layer(self) -> "Layer":
@@ -104,152 +113,130 @@ class MagView(View):
         return self._path
 
     @property
-    def _properties(self) -> MagViewProperties:
-        return next(
-            mag_property
-            for mag_property in self.layer._properties.wkw_resolutions
-            if mag_property.resolution == self.mag
-        )
-
-    @property
     def name(self) -> str:
         return self._mag.to_layer_name()
 
-    @property
-    def mag(self) -> Mag:
-        return self._mag
+    def write(
+        self,
+        data: np.ndarray,
+        offset: Optional[Vec3IntLike] = None,  # deprecated, relative, in current mag
+        *,
+        relative_offset: Optional[Vec3IntLike] = None,  # in mag1
+        absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
+    ) -> None:
+        if offset is not None:
+            if self._mag == Mag(1):
+                alternative = "Since this is a MagView in Mag(1), please use mag_view.write(absolute_offset=my_vec)"
+            else:
+                alternative = (
+                    "Since this is a MagView, please use the coordinates in Mag(1) instead, e.g. "
+                    + "mag_view.write(absolute_offset=my_vec * mag_view.mag.to_vec3_int())"
+                )
 
-    def write(self, data: np.ndarray, offset: Vec3IntLike = Vec3Int(0, 0, 0)) -> None:
-        """
-        Writes the `data` at the specified `offset` to disk (like `webknossos.dataset.view.View.write()`).
+            warnings.warn(
+                "[DEPRECATION] Using mag_view.write(offset=my_vec) is deprecated. "
+                + "Please use relative_offset or absolute_offset instead. "
+                + alternative
+            )
 
-        The `offset` refers to the absolute position, regardless of the offset in the properties (because the global_offset is set to (0, 0, 0)).
-        If the data exceeds the original bounding box, the properties are updated.
+        if all(i is None for i in [offset, absolute_offset, relative_offset]):
+            relative_offset = Vec3Int.zeros()
 
-        Note that writing compressed data which is not aligned with the blocks on disk may result in
-        diminished performance, as full blocks will automatically be read to pad the write actions.
-        """
-        offset = Vec3Int(offset)
-
-        self._assert_valid_num_channels(data.shape)
-        super().write(data, offset)
-        current_offset_in_mag1 = self.layer.bounding_box.topleft.to_np()
-        current_size_in_mag1 = self.layer.bounding_box.size.to_np()
-
-        mag_np = self.mag.to_np()
-
-        offset_in_mag1 = offset.to_np() * mag_np
-
-        # The (-1, -1, -1) is for backwards compatibility because we used '(-1, -1, -1)' to indicate that there is no data written yet.
-        new_offset_in_mag1 = (
-            offset_in_mag1
-            if tuple(current_offset_in_mag1) == (-1, -1, -1)
-            or self.layer.bounding_box == BoundingBox((0, 0, 0), (0, 0, 0))
-            else np.minimum(current_offset_in_mag1, offset_in_mag1)
+        mag1_bbox = self._get_mag1_bbox(
+            abs_current_mag_offset=offset,
+            rel_mag1_offset=relative_offset,
+            abs_mag1_offset=absolute_offset,
+            current_mag_size=Vec3Int(data.shape[-3:]),
         )
+        self.layer.bounding_box = self.layer.bounding_box.extended_by(mag1_bbox)
 
-        old_end_offset_in_mag1 = current_offset_in_mag1 + current_size_in_mag1
-        new_end_offset_in_mag1 = (np.array(offset) + np.array(data.shape[-3:])) * mag_np
-        max_end_offset_in_mag1 = np.array(
-            [old_end_offset_in_mag1, new_end_offset_in_mag1]
-        ).max(axis=0)
-        total_size_in_mag1 = max_end_offset_in_mag1 - np.array(new_offset_in_mag1)
+        super().write(data, absolute_offset=mag1_bbox.topleft)
 
-        # The base view of a MagDataset always starts at (0, 0, 0)
-        self._size = Vec3Int(_convert_mag1_offset(max_end_offset_in_mag1, self.mag))
+    def read(
+        self,
+        offset: Optional[Vec3IntLike] = None,  # deprecated, relative, in current mag
+        size: Optional[
+            Vec3IntLike
+        ] = None,  # usually in mag1, in current mag if offset is given
+        *,
+        relative_offset: Optional[Vec3IntLike] = None,  # in mag1
+        absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
+        relative_bounding_box: Optional[BoundingBox] = None,  # in mag1
+        absolute_bounding_box: Optional[BoundingBox] = None,  # in mag1
+    ) -> np.ndarray:
+        # THIS METHOD CAN BE REMOVED WHEN THE DEPRECATED OFFSET IS REMOVED
 
-        self.layer.bounding_box = BoundingBox(
-            new_offset_in_mag1,
-            total_size_in_mag1,
-        )
+        if (
+            relative_offset is not None
+            or absolute_offset is not None
+            or absolute_bounding_box is not None
+            or relative_bounding_box is not None
+        ) or (
+            offset is None
+            and size is None
+            and relative_offset is None
+            and absolute_offset is None
+            and absolute_bounding_box is None
+            and relative_bounding_box is None
+        ):
+            return super().read(
+                offset,
+                size,
+                relative_offset=relative_offset,
+                absolute_offset=absolute_offset,
+                absolute_bounding_box=absolute_bounding_box,
+                relative_bounding_box=relative_bounding_box,
+            )
+        else:
+            with warnings.catch_warnings():
+                warnings.filterwarnings(
+                    "ignore", category=UserWarning, module="webknossos"
+                )
+                view = self.get_view(offset=Vec3Int.zeros(), read_only=True)
+            return view.read(offset, size)
 
     def get_view(
         self,
         offset: Optional[Vec3IntLike] = None,
         size: Optional[Vec3IntLike] = None,
+        *,
+        relative_offset: Optional[Vec3IntLike] = None,  # in mag1
+        absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
         read_only: Optional[bool] = None,
     ) -> View:
-        """
-        Returns a view that is limited to the specified bounding box.
+        # THIS METHOD CAN BE REMOVED WHEN THE DEPRECATED OFFSET IS REMOVED
 
-        The `offset` refers to the absolute position, regardless of the offset in the properties (because the global_offset is set to (0, 0, 0)).
-        The default value for `offset` is the offset that is specified in the properties.
-        The default value for `size` is calculated so that the bounding box ends where the bounding box from the
-        properties ends.
-        Therefore, if both (`offset` and `size`) are not specified, then the bounding box of the view is equal to the
-        bounding box specified in the properties.
+        # This has other defaults than the View implementation
+        # (all deprecations are handled in the subsclass)
+        bb = self.bounding_box.in_mag(self._mag)
+        if offset is not None and size is None:
+            offset = Vec3Int(offset)
+            size = bb.bottomright - offset
 
-        The `offset` and `size` may only exceed the bounding box from the properties, if `read_only` is set to `True`.
-
-        If `read_only` is `True`, write operations are not allowed for the returned sub-view.
-
-        Example:
-        ```python
-        # ...
-        # Let 'mag1' be a `MagView` with offset (0, 0, 0) and size (100, 200, 300)
-
-        # Properties are used to determine the default parameter
-        view_with_bb_from_properties = mag1.get_view()
-
-        # Sub-view where the specified bounding box is completely in the bounding box of the MagView
-        sub_view1 = mag1.get_view(offset=(50, 60, 70), size=(10, 120, 230))
-
-        # Fails because the specified view is not completely in the bounding box from the properties.
-        sub_view2 = mag1.get_view(offset=(50, 60, 70), size=(999, 120, 230), read_only=True)
-
-        # Sub-view where the specified bounding box is NOT completely in the bounding box of the MagView.
-        # This still works because `read_only=True`.
-        sub_view2 = mag1.get_view(offset=(50, 60, 70), size=(999, 120, 230), read_only=True)
-        ```
-        """
-
-        bb = self.layer.bounding_box
-
-        # The (-1, -1, -1) is for backwards compatibility because we used '(-1, -1, -1)' to indicate that there is no data written yet.
-        if bb.topleft == Vec3Int(-1, -1, -1):
-            bb = bb.with_topleft((0, 0, 0))
-
-        bb = bb.align_with_mag(self.mag, ceil=True).in_mag(self.mag)
-
-        offset = Vec3Int(offset) if offset is not None else bb.topleft
-        size = Vec3Int(size) if size is not None else bb.bottomright - offset
-
-        assert bb.contains_bbox(BoundingBox(offset, size)) or read_only
         return super().get_view(
-            offset,
+            None if offset is None else Vec3Int(offset) - bb.topleft,
             size,
-            read_only,
+            relative_offset=relative_offset,
+            absolute_offset=absolute_offset,
+            read_only=read_only,
         )
-
-    def _assert_valid_num_channels(self, write_data_shape: Tuple[int, ...]) -> None:
-        num_channels = self.layer.num_channels
-        if len(write_data_shape) == 3:
-            assert (
-                num_channels == 1
-            ), f"The number of channels of the dataset ({num_channels}) does not match the number of channels of the passed data (1)"
-        else:
-            assert (
-                num_channels == write_data_shape[0]
-            ), f"The number of channels of the dataset ({num_channels}) does not match the number of channels of the passed data ({write_data_shape[0]})"
 
     def get_bounding_boxes_on_disk(
         self,
-    ) -> Generator[Tuple[Tuple[int, int, int], Tuple[int, int, int]], None, None]:
+    ) -> Generator[BoundingBox, None, None]:
         """
-        Returns a bounding box for each file on disk.
-        A bounding box is represented as a tuple of the offset and the size.
+        Returns a Mag(1) bounding box for each file on disk.
 
-        This differs from the bounding box in the properties in two ways:
-        - the bounding box in the properties is always specified in mag 1
-        - the bounding box in the properties is an "overall" bounding box, which abstracts from the files on disk
+        This differs from the bounding box in the properties, which is an "overall" bounding box,
+        abstracting from the files on disk.
         """
         cube_size = self._get_file_dimensions()
         for filename in self._wkw_dataset.list_files():
             file_path = Path(os.path.splitext(filename)[0]).relative_to(self._path)
             cube_index = _extract_file_index(file_path)
-            cube_offset = [idx * size for idx, size in zip(cube_index, cube_size)]
+            cube_offset = cube_index * cube_size
 
-            yield (cube_offset[0], cube_offset[1], cube_offset[2]), cube_size
+            yield BoundingBox(cube_offset, cube_size).from_mag_to_mag1(self._mag)
 
     def compress(
         self,
@@ -310,28 +297,27 @@ class MagView(View):
             MagView.__init__(
                 self,
                 self.layer,
-                self.mag,
+                self._mag,
                 self.header.block_len,
                 self.header.file_len,
                 wkw.Header.BLOCK_TYPE_LZ4HC,
             )
 
-    def _get_file_dimensions(self) -> Tuple[int, int, int]:
-        return cast(Tuple[int, int, int], (self._properties.cube_length,) * 3)
-
     @property
-    def _mag_view_bounding_box_at_creation(self) -> BoundingBox:
-        return self.layer.bounding_box.align_with_mag(Mag(self.name), ceil=True).in_mag(
-            Mag(self.name)
+    def _properties(self) -> MagViewProperties:
+        return next(
+            mag_property
+            for mag_property in self.layer._properties.wkw_resolutions
+            if mag_property.resolution == self._mag
         )
+
+    def _get_file_dimensions(self) -> Vec3Int:
+        return Vec3Int.full(self._properties.cube_length)
 
     def __repr__(self) -> str:
-        return repr(
-            "MagView(name=%s, global_offset=%s, size=%s)"
-            % (self.name, self.global_offset, self.size)
-        )
+        return repr(f"MagView(name={self.name}, bounding_box={self.bounding_box})")
 
 
-def _extract_file_index(file_path: Path) -> Tuple[int, int, int]:
+def _extract_file_index(file_path: Path) -> Vec3Int:
     zyx_index = [int(el[1:]) for el in file_path.parts]
-    return zyx_index[2], zyx_index[1], zyx_index[0]
+    return Vec3Int(zyx_index[2], zyx_index[1], zyx_index[0])
