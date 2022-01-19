@@ -1,6 +1,7 @@
 """ Contains all the data models used in inputs/outputs """
 
 from .action import Action
+from .action_annotation_layer_parameters import ActionAnnotationLayerParameters
 from .action_any_content import ActionAnyContent
 from .action_multipart_form_data_temporary_file import (
     ActionMultipartFormDataTemporaryFile,

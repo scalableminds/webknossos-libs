@@ -12,7 +12,10 @@ from webknossos.client._generated.api.datastore import (
     dataset_finish_upload,
     dataset_reserve_upload,
 )
-from webknossos.client._generated.api.default import datastore_list
+from webknossos.client._generated.api.default import (
+    datastore_list,
+    new_dataset_name_is_valid,
+)
 from webknossos.client._generated.models import (
     DatasetFinishUploadJsonBody,
     DatasetReserveUploadJsonBody,
@@ -88,6 +91,14 @@ def upload_dataset(
     simultaneous_uploads = jobs if jobs is not None else DEFAULT_SIMULTANEOUS_UPLOADS
     if "PYTEST_CURRENT_TEST" in os.environ:
         simultaneous_uploads = 1
+    response = new_dataset_name_is_valid.sync_detailed(
+        organization_name=context.organization,
+        data_set_name=new_dataset_name,
+        client=context.generated_auth_client,
+    )
+    assert (
+        response.status_code == 200
+    ), f"Dataset name {context.organization}/{new_dataset_name} does not seem to be valid: {response}"
     for _ in range(MAXIMUM_RETRY_COUNT):
         response = dataset_reserve_upload.sync_detailed(
             client=datastore_client,
