@@ -137,7 +137,14 @@ class _WebknossosContext:
         return _cached_get_org(self)
 
     @property
-    def datastore_token(self) -> str:
+    def datastore_token(self) -> Optional[str]:
+        if self.token is None:
+            return None
+        else:
+            return _cached_get_datastore_token(self)
+
+    @property
+    def datastore_required_token(self) -> str:
         return _cached_get_datastore_token(self)
 
     @property
@@ -148,9 +155,7 @@ class _WebknossosContext:
     def generated_auth_client(self) -> GeneratedClient:
         return _cached__get_generated_client(self.url, self.required_token)
 
-    def get_generated_datastore_client(
-        self, datastore_url: str
-    ) -> GeneratedClient:
+    def get_generated_datastore_client(self, datastore_url: str) -> GeneratedClient:
         return GeneratedClient(base_url=datastore_url, timeout=120)
 
 
