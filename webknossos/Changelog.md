@@ -35,6 +35,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+- Fixed the dataset download of private datasets which need a token. [#562](https://github.com/scalableminds/webknossos-libs/pull/562)
 
 
 ## [0.8.31](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.8.31) - 2022-01-07
