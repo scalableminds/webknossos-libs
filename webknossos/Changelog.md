@@ -7,7 +7,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.31...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.0...HEAD)
+
+### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [0.9.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.0) - 2022-01-19
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.31...v0.9.0)
 
 ### Breaking Changes
 - Various changes in View & MagView signatures [#553](https://github.com/scalableminds/webknossos-libs/pull/553):
@@ -33,10 +45,9 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Added
 - Added a check for dataset name availability before attempting to upload. [#555](https://github.com/scalableminds/webknossos-libs/pull/555)
 
-### Changed
-
 ### Fixed
 - Fixed the dataset download of private datasets which need a token. [#562](https://github.com/scalableminds/webknossos-libs/pull/562)
+
 
 
 ## [0.8.31](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.8.31) - 2022-01-07
