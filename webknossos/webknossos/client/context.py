@@ -137,7 +137,14 @@ class _WebknossosContext:
         return _cached_get_org(self)
 
     @property
-    def datastore_token(self) -> str:
+    def datastore_token(self) -> Optional[str]:
+        if self.token is None:
+            return None
+        else:
+            return _cached_get_datastore_token(self)
+
+    @property
+    def datastore_required_token(self) -> str:
         return _cached_get_datastore_token(self)
 
     @property
@@ -148,22 +155,8 @@ class _WebknossosContext:
     def generated_auth_client(self) -> GeneratedClient:
         return _cached__get_generated_client(self.url, self.required_token)
 
-    def get_generated_datastore_client(
-        self, datastore_url: str, enforce_auth: bool = False
-    ) -> GeneratedClient:
-        if enforce_auth:
-            token: Optional[str] = self.required_token
-        else:
-            token = self.token
-
-        if token is None:
-            return GeneratedClient(base_url=datastore_url, timeout=120)
-        else:
-            return GeneratedClient(
-                base_url=datastore_url,
-                headers={"X-Auth-Token": token},
-                timeout=120,
-            )
+    def get_generated_datastore_client(self, datastore_url: str) -> GeneratedClient:
+        return GeneratedClient(base_url=datastore_url, timeout=120)
 
 
 _webknossos_context_var: ContextVar[_WebknossosContext] = ContextVar(
