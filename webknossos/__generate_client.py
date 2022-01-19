@@ -19,7 +19,9 @@ from openapi_python_client import (
 from webknossos.client.context import _get_generated_client
 from webknossos.utils import snake_to_camel_case
 
-SCHEMA_URL = "https://converter.swagger.io/api/convert?url=https%3A%2F%2Fmaster.webknossos.xyz%2Fswagger.json"
+SCHEMA_URL = "https://master.webknossos.xyz/swagger.json"
+# SCHEMA_URL = "http://localhost:9000/swagger.json"
+CONVERTER_URL = "https://converter.swagger.io/api/convert"
 
 
 def assert_valid_schema(openapi_schema: Dict) -> None:
@@ -193,9 +195,15 @@ def bootstrap_response_schemas(openapi_schema: Dict) -> None:
 
 
 if __name__ == "__main__":
-    response = httpx.get(SCHEMA_URL)
-    response.raise_for_status()
-    schema = json.loads(response.text)
+    schema_response = httpx.get(SCHEMA_URL)
+    schema_response.raise_for_status()
+    converter_response = httpx.post(
+        CONVERTER_URL,
+        content=schema_response.text,
+        headers={"content-type": "application/json"},
+    )
+    converter_response.raise_for_status()
+    schema = json.loads(converter_response.text)
     add_api_prefix_for_non_data_paths(schema)
     generate_client(schema)
     fix_request_body(schema)
