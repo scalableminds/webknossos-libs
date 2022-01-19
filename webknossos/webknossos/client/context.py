@@ -161,7 +161,7 @@ class _WebknossosContext:
         else:
             return GeneratedClient(
                 base_url=datastore_url,
-                headers={"X-Auth-Token": token},
+                headers={"X-Auth-Token": self.datastore_token},
                 timeout=120,
             )
 
