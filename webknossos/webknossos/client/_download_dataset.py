@@ -43,6 +43,7 @@ def download_dataset(
     datastore_client = _get_context().get_generated_datastore_client(
         parsed.data_store.url
     )
+    optional_datastore_token = _get_context().datastore_token
 
     actual_path = Path(dataset_name) if path is None else Path(path)
     if actual_path.exists():
@@ -98,6 +99,7 @@ def download_dataset(
                     data_layer_name=layer_name,
                     resolution=mag.max_dim_log2,
                     client=datastore_client,
+                    token=optional_datastore_token,
                     x=aligned_chunk_in_mag.topleft.x,
                     y=aligned_chunk_in_mag.topleft.y,
                     z=aligned_chunk_in_mag.topleft.z,

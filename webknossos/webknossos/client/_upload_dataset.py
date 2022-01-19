@@ -85,7 +85,7 @@ def upload_dataset(
     # replicates https://github.com/scalableminds/webknossos/blob/master/frontend/javascripts/admin/dataset/dataset_upload_view.js
     time_str = strftime("%Y-%m-%dT%H-%M-%S", gmtime())
     upload_id = f"{time_str}__{uuid4()}"
-    datastore_token = context.datastore_token
+    datastore_token = context.datastore_required_token
     datastore_url = _cached_get_upload_datastore(context)
     datastore_client = _get_context().get_generated_datastore_client(datastore_url)
     simultaneous_uploads = jobs if jobs is not None else DEFAULT_SIMULTANEOUS_UPLOADS
