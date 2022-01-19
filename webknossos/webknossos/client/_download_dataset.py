@@ -98,6 +98,7 @@ def download_dataset(
                     data_layer_name=layer_name,
                     resolution=mag.max_dim_log2,
                     client=datastore_client,
+                    token=None if _get_context().token is None else _get_context().datastore_token,
                     x=aligned_chunk_in_mag.topleft.x,
                     y=aligned_chunk_in_mag.topleft.y,
                     z=aligned_chunk_in_mag.topleft.z,
