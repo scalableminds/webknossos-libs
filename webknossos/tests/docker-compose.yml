@@ -1,0 +1,48 @@
+version: "2.2"
+
+services:
+  webknossos:
+    build: .
+    image: scalableminds/webknossos:${DOCKER_TAG:-master}
+    ports:
+      - "9000:9000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      fossildb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command:
+      - -Dconfig.file=conf/application.conf
+      - -Djava.net.preferIPv4Stack=true
+      - -Dtracingstore.fossildb.address=fossildb
+      - -Dtracingstore.redis.address=redis
+      - -Ddatastore.redis.address=redis
+      - -Dslick.db.url=jdbc:postgresql://postgres/webknossos
+      - -DwebKnossos.sampleOrganization.enabled=true
+    volumes:
+      - ./binaryData:/webknossos/binaryData
+    environment:
+      - POSTGRES_URL=jdbc:postgresql://postgres/webknossos
+    user: ${USER_UID:-1000}:${USER_GID:-1000}
+
+  postgres:
+    image: postgres:10-alpine
+    environment:
+      POSTGRES_DB: webknossos
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+
+  fossildb:
+    image: scalableminds/fossildb:master__410
+    command:
+      - fossildb
+      - -c
+      - skeletons,skeletonUpdates,volumes,volumeData,volumeUpdates
+    user: ${USER_UID:-1000}:${USER_GID:-1000}
+
+  redis:
+    image: redis:5.0
+    command:
+      - redis-server
