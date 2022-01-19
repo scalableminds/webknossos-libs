@@ -7,12 +7,9 @@ services:
     ports:
       - "9000:9000"
     depends_on:
-      postgres:
-        condition: service_healthy
-      fossildb:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - postgres
+      - fossildb
+      - redis
     command:
       - -Dconfig.file=conf/application.conf
       - -Djava.net.preferIPv4Stack=true
