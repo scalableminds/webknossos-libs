@@ -14,6 +14,11 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Added
 
 ### Changed
+- Deprecations in `(Mag)View.get_buffered_slice_reader/_writer` [#564](https://github.com/scalableminds/webknossos-libs/pull/564):
+  * `(Mag)View.get_buffered_slice_reader`: using the parameters `offset` and `size` is deprecated.
+    Please use the parameter relative_bounding_box or absolute_bounding_box in Mag(1) instead.
+  * `(Mag)View.get_buffered_slice_writer`: using the parameter `offset` is deprecated.
+    Please use the parameter relative_offset or absolute_offset in Mag(1) instead.
 
 ### Fixed
 

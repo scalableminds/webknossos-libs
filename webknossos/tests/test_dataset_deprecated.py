@@ -33,6 +33,15 @@ from webknossos.utils import get_executor_for_args, named_partial, snake_to_came
 from .constants import TESTDATA_DIR, TESTOUTPUT_DIR
 
 
+@pytest.fixture(autouse=True, scope="function")
+def allow_deprecations() -> Generator:
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore", module="webknossos", message="\[DEPRECATION\]"
+        )
+        yield
+
+
 def delete_dir(relative_path: Path) -> None:
     if relative_path.exists() and relative_path.is_dir():
         rmtree(relative_path)
@@ -41,7 +50,7 @@ def delete_dir(relative_path: Path) -> None:
 def chunk_job(args: Tuple[View, int]) -> None:
     (view, _i) = args
     # increment the color value of each voxel
-    data = view.read()
+    data = view.read(size=view.size)
     if data.shape[0] == 1:
         data = data[0, :, :, :]
     data += 50
@@ -51,9 +60,9 @@ def chunk_job(args: Tuple[View, int]) -> None:
 def advanced_chunk_job(args: Tuple[View, int], dtype: type) -> None:
     view, _i = args
 
-    # write different data for each chunk (depending on the topleft of the chunk)
-    data = view.read()
-    data = np.ones(data.shape, dtype=dtype) * dtype(sum(view.bounding_box.topleft))
+    # write different data for each chunk (depending on the global_offset of the chunk)
+    data = view.read(size=view.size)
+    data = np.ones(data.shape, dtype=dtype) * dtype(sum(view.global_offset))
     view.write(data)
 
 
@@ -100,11 +109,11 @@ def for_each_chunking_advanced(ds: Dataset, view: View) -> None:
         ((128, 64, 10), (32, 64, 54)),
         ((128, 128, 10), (32, 32, 54)),
     ]:
-        chunk = ds.get_layer("color").get_mag("1").get_view(absolute_offset=offset, size=size)
-        chunk_data = chunk.read()
+        chunk = ds.get_layer("color").get_mag("1").get_view(size=size, offset=offset)
+        chunk_data = chunk.read(size=chunk.size)
         assert np.array_equal(
             np.ones(chunk_data.shape, dtype=np.uint8)
-            * np.uint8(sum(chunk.bounding_box.topleft)),
+            * np.uint8(sum(chunk.global_offset)),
             chunk_data,
         )
 
@@ -118,7 +127,7 @@ def copy_and_transform_job(args: Tuple[View, View, int], name: str, val: int) ->
     assert val == 42
 
     # increment the color value of each voxel
-    data = source_view.read()
+    data = source_view.read(size=source_view.size)
     if data.shape[0] == 1:
         data = data[0, :, :, :]
     data += 50
@@ -224,11 +233,11 @@ def test_view_read() -> None:
         Dataset.open(TESTDATA_DIR / "simple_wk_dataset")
         .get_layer("color")
         .get_mag("1")
-        .get_view(absolute_offset=(0, 0, 0), size=(16, 16, 16))
+        .get_view(size=(16, 16, 16))
     )
 
     # 'read()' checks if it was already opened. If not, it opens it automatically
-    data = wk_view.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))
+    data = wk_view.read(size=(10, 10, 10))
     assert data.shape == (3, 10, 10, 10)  # three channel
 
 
@@ -240,7 +249,7 @@ def test_view_write() -> None:
         Dataset.open(TESTOUTPUT_DIR / "simple_wk_dataset")
         .get_layer("color")
         .get_mag("1")
-        .get_view(absolute_offset=(0, 0, 0), size=(16, 16, 16))
+        .get_view(size=(16, 16, 16))
     )
 
     np.random.seed(1234)
@@ -248,7 +257,7 @@ def test_view_write() -> None:
 
     wk_view.write(write_data)
 
-    data = wk_view.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))
+    data = wk_view.read(size=(10, 10, 10))
     assert np.array_equal(data, write_data)
 
 
@@ -262,7 +271,7 @@ def test_view_write_out_of_bounds() -> None:
         Dataset.open(new_dataset_path)
         .get_layer("color")
         .get_mag("1")
-        .get_view(absolute_offset=(0, 0, 0), size=(16, 16, 16))
+        .get_view(size=(16, 16, 16))
     )
 
     with pytest.raises(AssertionError):
@@ -296,16 +305,15 @@ def test_mag_view_write_out_of_bounds_mag2() -> None:
     copytree(TESTDATA_DIR / "simple_wk_dataset", new_dataset_path)
 
     ds = Dataset.open(new_dataset_path)
-    color_layer = ds.get_layer("color")
-    mag_view = color_layer.get_or_add_mag("2-2-1")
+    mag_view = ds.get_layer("color").get_or_add_mag("2-2-1")
 
-    assert color_layer.bounding_box.topleft == Vec3Int(0, 0, 0)
-    assert color_layer.bounding_box.size == Vec3Int(24, 24, 24)
+    assert tuple(ds.get_layer("color").bounding_box.topleft) == (0, 0, 0)
+    assert tuple(ds.get_layer("color").bounding_box.size) == (24, 24, 24)
     mag_view.write(
-        np.zeros((3, 50, 1, 48), dtype=np.uint8), absolute_offset=(20, 20, 10)
+        np.zeros((3, 50, 1, 48), dtype=np.uint8), (10, 10, 10)
     )  # this is bigger than the bounding_box
-    assert color_layer.bounding_box.topleft == Vec3Int(0, 0, 0)
-    assert color_layer.bounding_box.size == Vec3Int(120, 24, 58)
+    assert tuple(ds.get_layer("color").bounding_box.topleft) == (0, 0, 0)
+    assert tuple(ds.get_layer("color").bounding_box.size) == (120, 24, 58)
 
     assure_exported_properties(ds)
 
@@ -314,24 +322,23 @@ def test_update_new_bounding_box_offset() -> None:
     delete_dir(TESTOUTPUT_DIR / "wk_dataset")
 
     ds = Dataset(TESTOUTPUT_DIR / "wk_dataset", scale=(1, 1, 1))
-    color_layer = ds.add_layer("color", COLOR_CATEGORY)
-    mag = color_layer.add_mag("1")
+    mag = ds.add_layer("color", COLOR_CATEGORY).add_mag("1")
 
-    assert color_layer.bounding_box.topleft == Vec3Int(0, 0, 0)
+    assert tuple(ds.get_layer("color").bounding_box.topleft) == (0, 0, 0)
 
     np.random.seed(1234)
     write_data = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
     mag.write(
-        write_data, absolute_offset=(10, 10, 10)
+        write_data, offset=(10, 10, 10)
     )  # the write method of MagDataset does always use the relative offset to (0, 0, 0)
-    assert color_layer.bounding_box.topleft == Vec3Int(10, 10, 10)
-    assert color_layer.bounding_box.size == Vec3Int(10, 10, 10)
+    assert tuple(ds.get_layer("color").bounding_box.topleft) == (10, 10, 10)
+    assert tuple(ds.get_layer("color").bounding_box.size) == (10, 10, 10)
 
     mag.write(
-        write_data, absolute_offset=(5, 5, 20)
+        write_data, offset=(5, 5, 20)
     )  # the write method of MagDataset does always use the relative offset to (0, 0, 0)
-    assert color_layer.bounding_box.topleft == Vec3Int(5, 5, 10)
-    assert color_layer.bounding_box.size == Vec3Int(15, 15, 20)
+    assert tuple(ds.get_layer("color").bounding_box.topleft) == (5, 5, 10)
+    assert tuple(ds.get_layer("color").bounding_box.size) == (15, 15, 20)
 
     assure_exported_properties(ds)
 
@@ -345,9 +352,9 @@ def test_write_multi_channel_uint8() -> None:
 
     data = get_multichanneled_data(np.uint8)
 
-    mag.write(data)
+    ds.get_layer("color").get_mag("1").write(data)
 
-    assert np.array_equal(data, mag.read())
+    assert np.array_equal(data, mag.read(size=(250, 200, 10)))
 
     assure_exported_properties(ds)
 
@@ -364,7 +371,7 @@ def test_wk_write_multi_channel_uint16() -> None:
     data = get_multichanneled_data(np.uint16)
 
     mag.write(data)
-    written_data = mag.read()
+    written_data = mag.read(size=(250, 200, 10))
 
     assert np.array_equal(data, written_data)
 
@@ -382,7 +389,7 @@ def test_empty_read() -> None:
     )
     with pytest.raises(AssertionError):
         # size
-        mag.read(absolute_offset=(0, 0, 0), size=(0, 0, 0))
+        mag.read(offset=(0, 0, 0), size=(0, 0, 0))
 
 
 def test_read_padded_data() -> None:
@@ -395,7 +402,7 @@ def test_read_padded_data() -> None:
         .add_mag("1")
     )
     # there is no data yet, however, this should not fail but pad the data with zeros
-    data = mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))
+    data = mag.read(size=(10, 10, 10))
 
     assert data.shape == (3, 10, 10, 10)
     assert np.array_equal(data, np.zeros((3, 10, 10, 10)))
@@ -596,7 +603,7 @@ def test_chunking_wk(tmp_path: Path) -> None:
     mag = layer.add_mag("1", file_len=8, block_len=8)
 
     original_data = (np.random.rand(50, 100, 150) * 205).astype(np.uint8)
-    mag.write(absolute_offset=(70, 80, 90), data=original_data)
+    mag.write(offset=(70, 80, 90), data=original_data)
 
     # Test with executor
     with get_executor_for_args(None) as executor:
@@ -608,7 +615,7 @@ def test_chunking_wk(tmp_path: Path) -> None:
     assert np.array_equal(original_data + 50, mag.get_view().read()[0])
 
     # Reset the data
-    mag.write(absolute_offset=(70, 80, 90), data=original_data)
+    mag.write(offset=(70, 80, 90), data=original_data)
 
     # Test without executor
     mag.for_each_chunk(
@@ -631,7 +638,7 @@ def test_chunking_wk_advanced() -> None:
         num_channels=3,
     ).add_mag("1")
     mag.write(data=(np.random.rand(3, 256, 256, 256) * 255).astype(np.uint8))
-    view = mag.get_view(absolute_offset=(10, 10, 10), size=(150, 150, 54))
+    view = mag.get_view(size=(150, 150, 54), offset=(10, 10, 10))
 
     for_each_chunking_advanced(ds, view)
 
@@ -650,7 +657,7 @@ def test_chunking_wk_wrong_chunk_size() -> None:
         num_channels=3,
     ).add_mag("1", block_len=8, file_len=8)
     mag.write(data=(np.random.rand(3, 256, 256, 256) * 255).astype(np.uint8))
-    view = mag.get_view()
+    view = mag.get_view(size=(256, 256, 256))
 
     for_each_chunking_with_wrong_chunk_size(view)
 
@@ -710,7 +717,7 @@ def test_changing_layer_bounding_box() -> None:
 
     bbox_size = ds.get_layer("color").bounding_box.size
     assert tuple(bbox_size) == (24, 24, 24)
-    original_data = mag.read(absolute_offset=(0, 0, 0), size=bbox_size)
+    original_data = mag.read(size=bbox_size)
     assert original_data.shape == (3, 24, 24, 24)
 
     layer.bounding_box = layer.bounding_box.with_size(
@@ -719,7 +726,7 @@ def test_changing_layer_bounding_box() -> None:
 
     bbox_size = ds.get_layer("color").bounding_box.size
     assert tuple(bbox_size) == (12, 12, 10)
-    less_data = mag.read(absolute_offset=(0, 0, 0), size=bbox_size)
+    less_data = mag.read(size=bbox_size)
     assert less_data.shape == (3, 12, 12, 10)
     assert np.array_equal(original_data[:, :12, :12, :10], less_data)
 
@@ -729,7 +736,7 @@ def test_changing_layer_bounding_box() -> None:
 
     bbox_size = ds.get_layer("color").bounding_box.size
     assert tuple(bbox_size) == (36, 48, 60)
-    more_data = mag.read(absolute_offset=(0, 0, 0), size=bbox_size)
+    more_data = mag.read(size=bbox_size)
     assert more_data.shape == (3, 36, 48, 60)
     assert np.array_equal(more_data[:, :24, :24, :24], original_data)
 
@@ -743,10 +750,10 @@ def test_changing_layer_bounding_box() -> None:
     new_bbox_size = ds.get_layer("color").bounding_box.size
     assert tuple(new_bbox_offset) == (10, 10, 0)
     assert tuple(new_bbox_size) == (14, 14, 24)
-    assert np.array_equal(original_data, mag.read(absolute_offset=(0, 0, 0), size=mag.bounding_box.bottomright))
+    assert np.array_equal(original_data, mag.read((0, 0, 0)))
 
     assert np.array_equal(
-        original_data[:, 10:, 10:, :], mag.read(absolute_offset=(10, 10, 0), size=(14, 14, 24))
+        original_data[:, 10:, 10:, :], mag.read(offset=(10, 10, 0), size=(14, 14, 24))
     )
 
     # resetting the offset to (0, 0, 0)
@@ -775,11 +782,12 @@ def test_get_view() -> None:
 
     with pytest.raises(AssertionError):
         # This view exceeds the bounding box
-        mag.get_view(relative_offset=(0, 0, 0), size=(16, 16, 16))
+        mag.get_view(size=(16, 16, 16))
 
     # read-only-views may exceed the bounding box
-    read_only_view = mag.get_view(relative_offset=(0, 0, 0), size=(16, 16, 16), read_only=True)
-    assert read_only_view.bounding_box == BoundingBox((0, 0, 0), (16, 16, 16))
+    read_only_view = mag.get_view(size=(16, 16, 16), read_only=True)
+    assert read_only_view.global_offset == tuple((0, 0, 0))
+    assert read_only_view.size == tuple((16, 16, 16))
 
     with pytest.raises(AssertionError):
         # Trying to get a writable sub-view of a read-only-view is not allowed
@@ -788,42 +796,54 @@ def test_get_view() -> None:
     np.random.seed(1234)
     write_data = (np.random.rand(100, 200, 300) * 255).astype(np.uint8)
     # This operation updates the bounding box of the dataset according to the written data
-    mag.write(write_data, absolute_offset=(10, 20, 30))
+    mag.write(write_data, offset=(10, 20, 30))
 
     with pytest.raises(AssertionError):
         # The offset and size default to (0, 0, 0).
         # Sizes that contain "0" are not allowed
-        mag.get_view(absolute_offset=(0, 0, 0), size=(10, 10, 0))
+        mag.get_view(size=(10, 10, 0))
 
-    assert mag.bounding_box.bottomright == Vec3Int(110, 220, 330)
+    assert mag.global_offset == (0, 0, 0)  # MagViews always start at (0, 0, 0)
+    assert mag.size == (110, 220, 330)
 
     # Therefore, creating a view with a size of (16, 16, 16) is now allowed
-    wk_view = mag.get_view(relative_offset=(0, 0, 0), size=(16, 16, 16))
-    assert wk_view.bounding_box == BoundingBox((10, 20, 30), (16, 16, 16))
+    wk_view = mag.get_view(size=(16, 16, 16))
+    assert wk_view.global_offset == (10, 20, 30)
+    assert wk_view.size == (16, 16, 16)
 
     with pytest.raises(AssertionError):
         # Creating this view does not work because the offset (0, 0, 0) would be outside
         # of the bounding box from the properties.json.
-        mag.get_view(size=(26, 36, 46), absolute_offset=(0, 0, 0))
+        mag.get_view(size=(26, 36, 46), offset=(0, 0, 0))
 
     # But setting "read_only=True" still works
-    mag.get_view(size=(26, 36, 46), absolute_offset=(0, 0, 0), read_only=True)
+    mag.get_view(size=(26, 36, 46), offset=(0, 0, 0), read_only=True)
 
     # Creating this subview works because the subview is completely inside the 'wk_view'.
     # Note that the offset in "get_view" is always relative to the "global_offset"-attribute of the called view.
-    sub_view = wk_view.get_view(relative_offset=(8, 8, 8), size=(8, 8, 8))
-    assert sub_view.bounding_box == BoundingBox((18, 28, 38), (8, 8, 8))
+    sub_view = wk_view.get_view(offset=(8, 8, 8), size=(8, 8, 8))
+    assert sub_view.global_offset == tuple((18, 28, 38))
+    assert sub_view.size == tuple((8, 8, 8))
 
     with pytest.raises(AssertionError):
         # Creating this subview does not work because it is not completely inside the 'wk_view'
-        wk_view.get_view(relative_offset=(8, 8, 8), size=(10, 10, 10))
+        wk_view.get_view(offset=(8, 8, 8), size=(10, 10, 10))
 
     # Again: read-only is allowed
-    wk_view.get_view(relative_offset=(8, 8, 8), size=(10, 10, 10), read_only=True)
+    wk_view.get_view(offset=(8, 8, 8), size=(10, 10, 10), read_only=True)
 
     with pytest.raises(AssertionError):
         # negative offsets are not allowed
-        mag.get_view(absolute_offset=(-1, -2, -3))
+        mag.get_view(offset=(-1, -2, -3))
+
+    with pytest.raises(AssertionError):
+        # The fact that this call fails, might be confusing at first glance, but this is intentional.
+        # MagViews always start at (0,0,0), regardless of the bounding box in the properties.
+        # In this case the offset of "mag" in the properties is (8, 8, 8).
+        # If this operation would return a View that starts already at (0, 0, 0). However, this view does
+        # not have a reference to the layer. As a result, write operations that do not update the properties
+        # would be allowed.
+        mag.get_view(mag.global_offset, mag.size)
 
     assure_exported_properties(ds)
 
@@ -953,16 +973,16 @@ def test_writing_subset_of_compressed_data_multi_channel() -> None:
         write_data2 = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
         # Writing unaligned data to a compressed dataset works because the data gets padded, but it prints a warning
         # Writing compressed data directly to "compressed_mag" also works, but using a View here covers an additional edge case
-        compressed_mag.get_view(relative_offset=(50, 60, 70), size=(50, 60, 70)).write(
-            relative_offset=(10, 20, 30), data=write_data2
+        compressed_mag.get_view(offset=(50, 60, 70)).write(
+            offset=(10, 20, 30), data=write_data2
         )
 
     assert np.array_equal(
-        write_data2, compressed_mag.read(relative_offset=(60, 80, 100), size=(10, 10, 10))
+        write_data2, compressed_mag.read(offset=(60, 80, 100), size=(10, 10, 10))
     )  # the new data was written
     assert np.array_equal(
         write_data1[:, :60, :80, :100],
-        compressed_mag.read(relative_offset=(0, 0, 0), size=(60, 80, 100)),
+        compressed_mag.read(offset=(0, 0, 0), size=(60, 80, 100)),
     )  # the old data is still there
 
 
@@ -991,16 +1011,16 @@ def test_writing_subset_of_compressed_data_single_channel() -> None:
         write_data2 = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
         # Writing unaligned data to a compressed dataset works because the data gets padded, but it prints a warning
         # Writing compressed data directly to "compressed_mag" also works, but using a View here covers an additional edge case
-        compressed_mag.get_view(absolute_offset=(50, 60, 70), size=(50, 60, 70)).write(
-            relative_offset=(10, 20, 30), data=write_data2
+        compressed_mag.get_view(offset=(50, 60, 70)).write(
+            offset=(10, 20, 30), data=write_data2
         )
 
     assert np.array_equal(
-        write_data2, compressed_mag.read(absolute_offset=(60, 80, 100), size=(10, 10, 10))[0]
+        write_data2, compressed_mag.read(offset=(60, 80, 100), size=(10, 10, 10))[0]
     )  # the new data was written
     assert np.array_equal(
         write_data1[:60, :80, :100],
-        compressed_mag.read(absolute_offset=(0, 0, 0), size=(60, 80, 100))[0],
+        compressed_mag.read(offset=(0, 0, 0), size=(60, 80, 100))[0],
     )  # the old data is still there
 
 
@@ -1026,7 +1046,7 @@ def test_writing_subset_of_compressed_data() -> None:
             "ignore", category=RuntimeWarning, module="webknossos"
         )  # This line is not necessary. It simply keeps the output of the tests clean.
         compressed_mag.write(
-            absolute_offset=(10, 20, 30),
+            offset=(10, 20, 30),
             data=(np.random.rand(10, 10, 10) * 255).astype(np.uint8),
         )
 
@@ -1081,7 +1101,7 @@ def test_writing_subset_of_chunked_compressed_data() -> None:
         Dataset.open(TESTOUTPUT_DIR / "compressed_data")
         .get_layer("color")
         .get_mag("1")
-        .get_view(absolute_offset=(0, 0, 0), size=(100, 200, 300))
+        .get_view(size=(100, 200, 300))
     )
 
     with warnings.catch_warnings():
@@ -1092,21 +1112,21 @@ def test_writing_subset_of_chunked_compressed_data() -> None:
         # Easy case:
         # The aligned data (offset=(0,0,0), size=(64, 64, 64)) IS fully within the bounding box of the view
         write_data2 = (np.random.rand(50, 40, 30) * 255).astype(np.uint8)
-        compressed_view.write(absolute_offset=(10, 20, 30), data=write_data2)
+        compressed_view.write(offset=(10, 20, 30), data=write_data2)
 
         # Advanced case:
         # The aligned data (offset=(0,0,0), size=(128, 128, 128)) is NOT fully within the bounding box of the view
         compressed_view.write(
-            absolute_offset=(10, 20, 30),
+            offset=(10, 20, 30),
             data=(np.random.rand(90, 80, 70) * 255).astype(np.uint8),
         )
 
     np.array_equal(
-        write_data2, compressed_view.read(absolute_offset=(10, 20, 30), size=(50, 40, 30))
+        write_data2, compressed_view.read(offset=(10, 20, 30), size=(50, 40, 30))
     )  # the new data was written
     np.array_equal(
         write_data1[:10, :20, :30],
-        compressed_view.read(absolute_offset=(0, 0, 0), size=(10, 20, 30)),
+        compressed_view.read(offset=(0, 0, 0), size=(10, 20, 30)),
     )  # the old data is still there
 
 
@@ -1150,8 +1170,8 @@ def test_add_symlink_layer() -> None:
     write_data = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
     mag.write(write_data)
 
-    assert np.array_equal(mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10)), write_data)
-    assert np.array_equal(original_mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10)), write_data)
+    assert np.array_equal(mag.read(size=(10, 10, 10)), write_data)
+    assert np.array_equal(original_mag.read(size=(10, 10, 10)), write_data)
 
     assure_exported_properties(ds)
 
@@ -1172,14 +1192,14 @@ def test_add_symlink_mag(tmp_path: Path) -> None:
     ds = Dataset(tmp_path / "link", scale=(1, 1, 1))
     layer = ds.add_layer("color", COLOR_CATEGORY, dtype_per_channel="uint8")
     layer.add_mag(1).write(
-        absolute_offset=(6, 6, 6), data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8)
+        offset=(6, 6, 6), data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8)
     )
 
     assert tuple(layer.bounding_box.topleft) == (6, 6, 6)
     assert tuple(layer.bounding_box.size) == (10, 20, 30)
 
     symlink_mag_2 = layer.add_symlink_mag(original_mag_2)
-    layer.add_symlink_mag(original_mag_4.path)
+    _symlink_mag_4 = layer.add_symlink_mag(original_mag_4.path)
 
     assert (tmp_path / "link" / "color" / "1").exists()
     assert len(layer._properties.wkw_resolutions) == 3
@@ -1191,10 +1211,10 @@ def test_add_symlink_mag(tmp_path: Path) -> None:
     # Note: The written data is fully inside the bounding box of the original data.
     # This is important because the bounding box of the foreign layer would not be updated if we use the linked dataset to write outside of its original bounds.
     write_data = (np.random.rand(5, 5, 5) * 255).astype(np.uint8)
-    symlink_mag_2.write(absolute_offset=(0, 0, 0), data=write_data)
+    symlink_mag_2.write(offset=(0, 0, 0), data=write_data)
 
-    assert np.array_equal(symlink_mag_2.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))[0], write_data)
-    assert np.array_equal(original_layer.get_mag(2).read(absolute_offset=(0, 0, 0), size=(10, 10, 10))[0], write_data)
+    assert np.array_equal(symlink_mag_2.read(size=(5, 5, 5))[0], write_data)
+    assert np.array_equal(original_layer.get_mag(2).read(size=(5, 5, 5))[0], write_data)
 
     assure_exported_properties(ds)
     assure_exported_properties(original_ds)
@@ -1215,7 +1235,7 @@ def test_add_copy_mag(tmp_path: Path) -> None:
     ds = Dataset(tmp_path / "link", scale=(1, 1, 1))
     layer = ds.add_layer("color", COLOR_CATEGORY, dtype_per_channel="uint8")
     layer.add_mag(1).write(
-        absolute_offset=(6, 6, 6), data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8)
+        offset=(6, 6, 6), data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8)
     )
 
     assert tuple(layer.bounding_box.topleft) == (6, 6, 6)
@@ -1231,9 +1251,9 @@ def test_add_copy_mag(tmp_path: Path) -> None:
 
     # Write data in copied layer
     write_data = (np.random.rand(5, 5, 5) * 255).astype(np.uint8)
-    copy_mag.write(absolute_offset=(0, 0, 0), data=write_data)
+    copy_mag.write(offset=(0, 0, 0), data=write_data)
 
-    assert np.array_equal(copy_mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))[0], write_data)
+    assert np.array_equal(copy_mag.read(size=(5, 5, 5))[0], write_data)
     assert np.array_equal(original_layer.get_mag(2).read()[0], original_data)
 
     assure_exported_properties(ds)
@@ -1254,23 +1274,23 @@ def test_search_dataset_also_for_long_layer_name() -> None:
     assert not os.path.exists(long_mag_file_path)
 
     write_data = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
-    mag.write(write_data, absolute_offset=(20, 20, 20))
+    mag.write(write_data, offset=(10, 10, 10))
 
     assert np.array_equal(
-        mag.read(absolute_offset=(20, 20, 20), size=(20, 20, 20)), np.expand_dims(write_data, 0)
+        mag.read(offset=(10, 10, 10), size=(10, 10, 10)), np.expand_dims(write_data, 0)
     )
 
     # rename the path from "long_layer_name/color/2" to "long_layer_name/color/2-2-2"
     os.rename(short_mag_file_path, long_mag_file_path)
 
     # make sure that reading data still works
-    mag.read(absolute_offset=(20, 20, 20), size=(20, 20, 20))
+    mag.read(relative_offset=(10, 10, 10), size=(10, 10, 10))
 
     # when opening the dataset, it searches both for the long and the short path
     layer = Dataset.open(TESTOUTPUT_DIR / "long_layer_name").get_layer("color")
     mag = layer.get_mag("2")
     assert np.array_equal(
-        mag.read(absolute_offset=(20, 20, 20), size=(20, 20, 20)), np.expand_dims(write_data, 0)
+        mag.read(offset=(10, 10, 10), size=(10, 10, 10)), np.expand_dims(write_data, 0)
     )
     layer.delete_mag("2")
 
@@ -1346,18 +1366,18 @@ def test_dataset_conversion() -> None:
         largest_segment_id=1000000000,
     )
     seg_layer.add_mag("1", block_len=8, file_len=16).write(
-        absolute_offset=(10, 20, 30), data=(np.random.rand(128, 128, 256) * 255).astype(np.uint8)
+        offset=(10, 20, 30), data=(np.random.rand(128, 128, 256) * 255).astype(np.uint8)
     )
     seg_layer.add_mag("2", block_len=8, file_len=16).write(
-        absolute_offset=(10, 20, 30), data=(np.random.rand(64, 64, 128) * 255).astype(np.uint8)
+        offset=(5, 10, 15), data=(np.random.rand(64, 64, 128) * 255).astype(np.uint8)
     )
     wk_color_layer = origin_ds.add_layer("layer2", COLOR_CATEGORY, num_channels=3)
     wk_color_layer.add_mag("1", block_len=8, file_len=16).write(
-        absolute_offset=(10, 20, 30),
+        offset=(10, 20, 30),
         data=(np.random.rand(3, 128, 128, 256) * 255).astype(np.uint8),
     )
     wk_color_layer.add_mag("2", block_len=8, file_len=16).write(
-        absolute_offset=(10, 20, 30), data=(np.random.rand(3, 64, 64, 128) * 255).astype(np.uint8)
+        offset=(5, 10, 15), data=(np.random.rand(3, 64, 64, 128) * 255).astype(np.uint8)
     )
     converted_ds = origin_ds.copy_dataset(converted_ds_path)
 
@@ -1395,7 +1415,7 @@ def test_for_zipped_chunks() -> None:
         num_channels=3,
     ).add_mag("1")
     mag.write(data=(np.random.rand(3, 256, 256, 256) * 255).astype(np.uint8))
-    source_view = mag.get_view(absolute_offset=(0, 0, 0), size=(256, 256, 256))
+    source_view = mag.get_view(size=(256, 256, 256))
 
     target_mag = (
         Dataset(TESTOUTPUT_DIR / "zipped_chunking_target", scale=(1, 1, 2))
@@ -1409,7 +1429,7 @@ def test_for_zipped_chunks() -> None:
     )
 
     target_mag.layer.bounding_box = BoundingBox((0, 0, 0), (256, 256, 256))
-    target_view = target_mag.get_view(absolute_offset=(0, 0, 0), size=(256, 256, 256))
+    target_view = target_mag.get_view(size=(256, 256, 256))
 
     with get_executor_for_args(None) as executor:
         func = named_partial(
@@ -1424,8 +1444,8 @@ def test_for_zipped_chunks() -> None:
         )
 
     assert np.array_equal(
-        source_view.read() + 50,
-        target_view.read(),
+        source_view.read(size=source_view.size) + 50,
+        target_view.read(size=target_view.size),
     )
 
     assure_exported_properties(ds)
@@ -1448,11 +1468,11 @@ def test_for_zipped_chunks_invalid_target_chunk_size_wk() -> None:
     layer2 = ds.get_or_add_layer("color2", COLOR_CATEGORY)
     target_mag_view = layer2.get_or_add_mag(1, block_len=8, file_len=8)
 
-    source_view = source_mag_view.get_view(absolute_offset=(0, 0, 0), size=(300, 300, 300), read_only=True)
+    source_view = source_mag_view.get_view(size=(300, 300, 300), read_only=True)
     # In this test case it is possible to simply set "read_only" for "target_view"
     # because the function "func" does not really write data to the target_view.
     # In a real scenario, calling "layer2.set_bounding_box(...)" and not setting "read_only" is recommended.
-    target_view = target_mag_view.get_view(absolute_offset=(0, 0, 0), size=(300, 300, 300), read_only=True)
+    target_view = target_mag_view.get_view(size=(300, 300, 300), read_only=True)
 
     def func(args: Tuple[View, View, int]) -> None:
         (_s, _t, _i) = args
@@ -1476,7 +1496,7 @@ def test_read_only_view() -> None:
     ds = Dataset(TESTOUTPUT_DIR / "read_only_view", scale=(1, 1, 1))
     mag = ds.get_or_add_layer("color", COLOR_CATEGORY).get_or_add_mag("1")
     mag.write(
-        data=(np.random.rand(1, 10, 10, 10) * 255).astype(np.uint8), absolute_offset=(10, 20, 30)
+        data=(np.random.rand(1, 10, 10, 10) * 255).astype(np.uint8), offset=(10, 20, 30)
     )
     v_write = mag.get_view()
     v_read = mag.get_view(read_only=True)
@@ -1513,7 +1533,7 @@ def test_bounding_box_on_disk(
     data_size = Vec3Int(10, 20, 30)
     write_data = (np.random.rand(*data_size) * 255).astype(np.uint8)
     for offset in write_positions:
-        mag.write(absolute_offset=offset * mag.mag.to_vec3_int(), data=write_data)
+        mag.write(offset=offset, data=write_data)
 
     bounding_boxes_on_disk = list(mag.get_bounding_boxes_on_disk())
     file_size = mag._get_file_dimensions()
@@ -1554,14 +1574,14 @@ def test_compression(tmp_path: Path) -> None:
 
     # writing unaligned data to an uncompressed dataset
     write_data = (np.random.rand(3, 10, 20, 30) * 255).astype(np.uint8)
-    mag1.write(write_data, absolute_offset=(60, 80, 100))
+    mag1.write(write_data, offset=(60, 80, 100))
 
     assert not mag1._is_compressed()
     mag1.compress()
     assert mag1._is_compressed()
 
     assert np.array_equal(
-        write_data, mag1.read(absolute_offset=(60, 80, 100), size=(10, 20, 30))
+        write_data, mag1.read(offset=(60, 80, 100), size=(10, 20, 30))
     )
 
     with warnings.catch_warnings():
@@ -1758,12 +1778,13 @@ def test_read_bbox(tmp_path: Path) -> None:
     layer = ds.add_layer("color", COLOR_CATEGORY)
     mag = layer.add_mag(1)
     mag.write(
-        absolute_offset=(10, 20, 30), data=(np.random.rand(50, 60, 70) * 255).astype(np.uint8)
+        offset=(10, 20, 30), data=(np.random.rand(50, 60, 70) * 255).astype(np.uint8)
     )
 
+    assert np.array_equal(mag.read(), mag.read_bbox())
     assert np.array_equal(
-        mag.read(absolute_offset=(20, 30, 40), size=(40, 50, 60)),
-        mag.read(absolute_bounding_box = BoundingBox(topleft=(20, 30, 40), size=(40, 50, 60))),
+        mag.read(offset=(20, 30, 40), size=(40, 50, 60)),
+        mag.read_bbox(BoundingBox(topleft=(20, 30, 40), size=(40, 50, 60))),
     )
 
 
@@ -1774,7 +1795,7 @@ def test_add_copy_layer(tmp_path: Path) -> None:
     other_ds = Dataset(tmp_path / "other_ds", scale=(2, 2, 1))
     original_color_layer = other_ds.add_layer("color", COLOR_CATEGORY)
     original_color_layer.add_mag(1).write(
-        absolute_offset=(10, 20, 30), data=(np.random.rand(32, 64, 128) * 255).astype(np.uint8)
+        offset=(10, 20, 30), data=(np.random.rand(32, 64, 128) * 255).astype(np.uint8)
     )
     other_ds.add_layer("segmentation", SEGMENTATION_CATEGORY, largest_segment_id=999)
 

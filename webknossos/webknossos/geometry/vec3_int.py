@@ -130,6 +130,9 @@ class Vec3Int(tuple):
     def __repr__(self) -> str:
         return f"Vec3Int({self.x},{self.y},{self.z})"
 
+    def optional_add(self, other: Optional["Vec3Int"]):
+        return None if other is None else self + other
+
     @classmethod
     def zeros(cls) -> "Vec3Int":
         return cls(0, 0, 0)

@@ -4,6 +4,7 @@ import traceback
 from os import getpid
 from types import TracebackType
 from typing import TYPE_CHECKING, Generator, List, Optional, Tuple, Type, cast
+import warnings
 
 import numpy as np
 import psutil
@@ -32,10 +33,13 @@ class BufferedSliceWriter:
     def __init__(
         self,
         view: "View",
-        offset: Vec3IntLike,
+        offset: Optional[Vec3IntLike] = None,
         # buffer_size specifies, how many slices should be aggregated until they are flushed.
         buffer_size: int = 32,
         dimension: int = 2,  # z
+        *,
+        relative_offset: Optional[Vec3IntLike] = None,  # in mag1
+        absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
     ) -> None:
         """
         view : datasource
@@ -48,7 +52,20 @@ class BufferedSliceWriter:
         self.view = view
         self.buffer_size = buffer_size
         self.dtype = self.view.get_dtype()
-        self.offset = Vec3Int(offset)
+        if offset is None and relative_offset is None and absolute_offset is None:
+            relative_offset = Vec3Int.zeros()
+        if offset is not None:
+            warnings.warn(
+                "[DEPRECATION] Using offset for a buffered slice writer is deprecated. "
+                + "Please use the parameter relative_offset or absolute_offset in Mag(1) instead."
+            )
+        self.offset = None if offset is None else Vec3Int(offset)
+        self.relative_offset = (
+            None if relative_offset is None else Vec3Int(relative_offset)
+        )
+        self.absolute_offset = (
+            None if absolute_offset is None else Vec3Int(absolute_offset)
+        )
         self.dimension = dimension
 
         assert 0 <= dimension <= 2
@@ -85,14 +102,6 @@ class BufferedSliceWriter:
             assert (
                 self.buffer_start_slice is not None
             ), "Failed to write buffer: The buffer_start_slice is not set."
-            buffer_start = [0, 0, 0]
-            buffer_start[self.dimension] = self.buffer_start_slice
-            offset = cast(
-                Tuple[int, int, int],
-                tuple(
-                    [off + buff_off for off, buff_off in zip(self.offset, buffer_start)]
-                ),
-            )
             max_width = max(slice.shape[-2] for slice in self.buffer)
             max_height = max(slice.shape[-1] for slice in self.buffer)
 
@@ -113,7 +122,16 @@ class BufferedSliceWriter:
                 [np.expand_dims(slice, self.dimension + 1) for slice in self.buffer],
                 axis=self.dimension + 1,
             )
-            self.view.write(data, offset)
+            buffer_start_list = [0, 0, 0]
+            buffer_start_list[self.dimension] = self.buffer_start_slice
+            buffer_start = Vec3Int(buffer_start_list)
+            buffer_start_mag1 = buffer_start * self.view.mag.to_vec3_int()
+            self.view.write(
+                data,
+                offset=buffer_start.optional_add(self.offset),
+                relative_offset=buffer_start_mag1.optional_add(self.relative_offset),
+                absolute_offset=buffer_start_mag1.optional_add(self.absolute_offset),
+            )
 
         except Exception as exc:
             logging.error(

@@ -1,3 +1,4 @@
+import warnings
 from os import makedirs
 from shutil import rmtree
 from typing import Any, Dict, Generator, Union
@@ -45,7 +46,9 @@ st.register_type_strategy(wk.Mag, _mag_strategy)
 def run_around_tests() -> Generator:
     makedirs(TESTOUTPUT_DIR, exist_ok=True)
     _clear_all_context_caches()
-    yield
+    with warnings.catch_warnings():
+        warnings.filterwarnings("error", module="webknossos", message="\[DEPRECATION\]")
+        yield
     rmtree(TESTOUTPUT_DIR)
 
 

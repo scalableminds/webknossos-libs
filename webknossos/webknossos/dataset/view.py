@@ -558,9 +558,12 @@ class View:
 
     def get_buffered_slice_writer(
         self,
-        offset: Vec3IntLike = Vec3Int(0, 0, 0),
+        offset: Optional[Vec3IntLike] = None,
         buffer_size: int = 32,
         dimension: int = 2,  # z
+        *,
+        relative_offset: Optional[Vec3IntLike] = None,  # in mag1
+        absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
     ) -> "BufferedSliceWriter":
         """
         The BufferedSliceWriter buffers multiple slices before they are written to disk.
@@ -590,17 +593,22 @@ class View:
 
         return BufferedSliceWriter(
             view=self,
-            offset=Vec3Int(offset),
+            offset=offset,
             buffer_size=buffer_size,
             dimension=dimension,
+            relative_offset=relative_offset,
+            absolute_offset=absolute_offset,
         )
 
     def get_buffered_slice_reader(
         self,
-        offset: Vec3IntLike = Vec3Int(0, 0, 0),
+        offset: Optional[Vec3IntLike] = None,
         size: Optional[Vec3IntLike] = None,
         buffer_size: int = 32,
         dimension: int = 2,  # z
+        *,
+        relative_bounding_box: Optional[BoundingBox] = None,  # in mag1
+        absolute_bounding_box: Optional[BoundingBox] = None,  # in mag1
     ) -> "BufferedSliceReader":
         """
         The BufferedSliceReader yields slices of data along a specified axis.
@@ -624,12 +632,12 @@ class View:
 
         return BufferedSliceReader(
             view=self,
-            offset=Vec3Int(offset),
-            size=Vec3Int(size)
-            if size is not None
-            else self.bounding_box.in_mag(self._mag).size,
+            offset=offset,
+            size=size,
             buffer_size=buffer_size,
             dimension=dimension,
+            relative_bounding_box=relative_bounding_box,
+            absolute_bounding_box=absolute_bounding_box,
         )
 
     def for_each_chunk(
