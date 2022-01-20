@@ -47,7 +47,9 @@ def run_around_tests() -> Generator:
     makedirs(TESTOUTPUT_DIR, exist_ok=True)
     _clear_all_context_caches()
     with warnings.catch_warnings():
-        warnings.filterwarnings("error", module="webknossos", message="\[DEPRECATION\]")
+        warnings.filterwarnings(
+            "error", module="webknossos", message=r"\[DEPRECATION\]"
+        )
         yield
     rmtree(TESTOUTPUT_DIR)
 

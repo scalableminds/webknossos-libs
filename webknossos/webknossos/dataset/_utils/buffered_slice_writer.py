@@ -1,10 +1,10 @@
 import logging
 import os
 import traceback
+import warnings
 from os import getpid
 from types import TracebackType
-from typing import TYPE_CHECKING, Generator, List, Optional, Tuple, Type, cast
-import warnings
+from typing import TYPE_CHECKING, Generator, List, Optional, Type
 
 import numpy as np
 import psutil

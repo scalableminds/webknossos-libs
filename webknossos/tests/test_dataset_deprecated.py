@@ -37,7 +37,7 @@ from .constants import TESTDATA_DIR, TESTOUTPUT_DIR
 def allow_deprecations() -> Generator:
     with warnings.catch_warnings():
         warnings.filterwarnings(
-            "ignore", module="webknossos", message="\[DEPRECATION\]"
+            "ignore", module="webknossos", message=r"\[DEPRECATION\]"
         )
         yield
 

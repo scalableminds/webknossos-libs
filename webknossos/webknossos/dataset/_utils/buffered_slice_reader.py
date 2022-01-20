@@ -2,14 +2,14 @@ import logging
 import warnings
 from os import getpid
 from types import TracebackType
-from typing import TYPE_CHECKING, Generator, Optional, Tuple, Type, cast
+from typing import TYPE_CHECKING, Generator, Optional, Type
 
 import numpy as np
 
 if TYPE_CHECKING:
     from webknossos.dataset import View
 
-from webknossos.geometry import BoundingBox, Vec3Int, Vec3IntLike
+from webknossos.geometry import BoundingBox, Vec3IntLike
 from webknossos.utils import get_chunks
 
 
