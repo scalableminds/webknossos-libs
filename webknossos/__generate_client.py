@@ -121,7 +121,7 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
     yield "userLoggedTime", user_logged_time_response.content
 
 
-FIELDS_WITH_VARYING_CONTENT = ["adminViewConfiguration", "novelUserExperienceInfos"]
+FIELDS_WITH_VARYING_CONTENT = ["adminViewConfiguration", "novelUserExperienceInfos", "viewConfiguration"]
 
 
 def make_properties_required(x: Any) -> None:
