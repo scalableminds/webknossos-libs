@@ -60,6 +60,14 @@ def create_parser() -> argparse.ArgumentParser:
     )
 
     parser.add_argument(
+        "--is_segmentation_layer",
+        "-sl",
+        help="Set whether this is a segmentation layer, defaulting to a color layer if nothing is set.",
+        default=False,
+        action="store_true",
+    )
+
+    parser.add_argument(
         "--flip_axes",
         help="The axes which should be flipped. "
         "Input format is a comma separated list of axis indices. "
@@ -145,7 +153,7 @@ def convert_zarr(
     wk_ds = Dataset(target_path, scale=scale, exist_ok=True)
     wk_layer = wk_ds.get_or_add_layer(
         layer_name,
-        "segmentation",
+        "segmentation" if is_segmentation_layer else "color",
         dtype_per_layer=np.dtype(input_dtype),
         num_channels=1,
         largest_segment_id=0,
@@ -169,7 +177,6 @@ def convert_zarr(
             )
         )
 
-    is_segmentation_layer = True
     if is_segmentation_layer:
         largest_segment_id = int(max(largest_segment_id_per_chunk))
         cast(SegmentationLayer, wk_layer).largest_segment_id = largest_segment_id
@@ -192,10 +199,11 @@ def main(args: argparse.Namespace) -> None:
     mag_view = convert_zarr(
         source_path,
         args.target_path,
-        args.layer_name,
-        args.scale,
-        args.flip_axes,
-        not args.no_compress,
+        layer_name=args.layer_name,
+        is_segmentation_layer=args.is_segmentation_layer,
+        scale=args.scale,
+        flip_axes=args.flip_axes,
+        compress=not args.no_compress,
         executor_args=executor_args,
     )
 
