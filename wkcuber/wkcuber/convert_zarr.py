@@ -127,6 +127,7 @@ def convert_zarr(
     source_zarr_path: Path,
     target_path: Path,
     layer_name: str,
+    is_segmentation_layer: bool = False,
     scale: Optional[Tuple[float, float, float]] = (1.0, 1.0, 1.0),
     flip_axes: Optional[Union[int, Tuple[int, ...]]] = None,
     compress: bool = True,
