@@ -12,7 +12,10 @@ from webknossos.client._generated.api.datastore import (
     dataset_finish_upload,
     dataset_reserve_upload,
 )
-from webknossos.client._generated.api.default import datastore_list
+from webknossos.client._generated.api.default import (
+    datastore_list,
+    new_dataset_name_is_valid,
+)
 from webknossos.client._generated.models import (
     DatasetFinishUploadJsonBody,
     DatasetReserveUploadJsonBody,
@@ -82,12 +85,20 @@ def upload_dataset(
     # replicates https://github.com/scalableminds/webknossos/blob/master/frontend/javascripts/admin/dataset/dataset_upload_view.js
     time_str = strftime("%Y-%m-%dT%H-%M-%S", gmtime())
     upload_id = f"{time_str}__{uuid4()}"
-    datastore_token = context.datastore_token
+    datastore_token = context.datastore_required_token
     datastore_url = _cached_get_upload_datastore(context)
     datastore_client = _get_context().get_generated_datastore_client(datastore_url)
     simultaneous_uploads = jobs if jobs is not None else DEFAULT_SIMULTANEOUS_UPLOADS
     if "PYTEST_CURRENT_TEST" in os.environ:
         simultaneous_uploads = 1
+    response = new_dataset_name_is_valid.sync_detailed(
+        organization_name=context.organization,
+        data_set_name=new_dataset_name,
+        client=context.generated_auth_client,
+    )
+    assert (
+        response.status_code == 200
+    ), f"Dataset name {context.organization}/{new_dataset_name} does not seem to be valid: {response}"
     for _ in range(MAXIMUM_RETRY_COUNT):
         response = dataset_reserve_upload.sync_detailed(
             client=datastore_client,
