@@ -41,14 +41,8 @@ class BufferedSliceWriter:
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
     ) -> None:
-        """
-        view : datasource
-        offset : specifies the offset of the data to write (relative to the `view`)
-        buffer_size : the number of slices that are read at once
-        dimension : specifies along which axis the data is sliced (0=x; 1=y; 2=z)
+        """see `View.get_buffered_slice_writer()`"""
 
-        The size is in the magnification of the `view`.
-        """
         self.view = view
         self.buffer_size = buffer_size
         self.dtype = self.view.get_dtype()
@@ -128,9 +122,9 @@ class BufferedSliceWriter:
             buffer_start_mag1 = buffer_start * self.view.mag.to_vec3_int()
             self.view.write(
                 data,
-                offset=buffer_start.optional_add(self.offset),
-                relative_offset=buffer_start_mag1.optional_add(self.relative_offset),
-                absolute_offset=buffer_start_mag1.optional_add(self.absolute_offset),
+                offset=buffer_start.add_or_none(self.offset),
+                relative_offset=buffer_start_mag1.add_or_none(self.relative_offset),
+                absolute_offset=buffer_start_mag1.add_or_none(self.absolute_offset),
             )
 
         except Exception as exc:

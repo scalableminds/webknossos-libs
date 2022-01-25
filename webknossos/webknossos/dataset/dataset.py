@@ -678,10 +678,8 @@ class Dataset:
                     # The data gets written to the target_mag.
                     # Therefore, the chunk size is determined by the target_mag to prevent concurrent writes
                     mag_view.for_zipped_chunks(
-                        work_on_chunk=_copy_job,
+                        func_per_chunk=_copy_job,
                         target_view=target_mag.get_view(),
-                        source_chunk_size=target_mag._get_file_dimensions(),
-                        target_chunk_size=target_mag._get_file_dimensions(),
                         executor=executor,
                         progress_desc=f"Copying mag {mag.to_layer_name()} from layer {layer_name}",
                     )

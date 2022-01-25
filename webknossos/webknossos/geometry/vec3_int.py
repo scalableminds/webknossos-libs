@@ -130,7 +130,7 @@ class Vec3Int(tuple):
     def __repr__(self) -> str:
         return f"Vec3Int({self.x},{self.y},{self.z})"
 
-    def optional_add(self, other: Optional["Vec3Int"]) -> Optional["Vec3Int"]:
+    def add_or_none(self, other: Optional["Vec3Int"]) -> Optional["Vec3Int"]:
         return None if other is None else self + other
 
     @classmethod
@@ -146,6 +146,4 @@ class Vec3Int(tuple):
         return cls(an_int, an_int, an_int)
 
 
-Vec3IntLike = Union[
-    Vec3Int, Tuple[int, int, int], Tuple[int, ...], np.ndarray, List[int], Iterable[int]
-]
+Vec3IntLike = Union[Vec3Int, Tuple[int, int, int], np.ndarray, Iterable[int]]

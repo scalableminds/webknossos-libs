@@ -89,12 +89,10 @@ def for_each_chunking_with_wrong_chunk_size(view: View) -> None:
 
 
 def for_each_chunking_advanced(ds: Dataset, view: View) -> None:
-    chunk_size = (64, 64, 64)
     with get_executor_for_args(None) as executor:
         func = named_partial(advanced_chunk_job, dtype=np.uint8)
         view.for_each_chunk(
             func,
-            chunk_size=chunk_size,
             executor=executor,
         )
 
@@ -636,7 +634,7 @@ def test_chunking_wk_advanced() -> None:
         category=COLOR_CATEGORY,
         dtype_per_channel="uint8",
         num_channels=3,
-    ).add_mag("1")
+    ).add_mag("1", block_len=8, file_len=8)
     mag.write(data=(np.random.rand(3, 256, 256, 256) * 255).astype(np.uint8))
     view = mag.get_view(size=(150, 150, 54), offset=(10, 10, 10))
 
@@ -1451,6 +1449,10 @@ def test_for_zipped_chunks() -> None:
     assure_exported_properties(ds)
 
 
+def _func_invalid_target_chunk_size_wk(args: Tuple[View, View, int]) -> None:
+    (_s, _t, _i) = args
+
+
 def test_for_zipped_chunks_invalid_target_chunk_size_wk() -> None:
     delete_dir(TESTOUTPUT_DIR / "zipped_chunking_source_invalid")
 
@@ -1469,19 +1471,14 @@ def test_for_zipped_chunks_invalid_target_chunk_size_wk() -> None:
     target_mag_view = layer2.get_or_add_mag(1, block_len=8, file_len=8)
 
     source_view = source_mag_view.get_view(size=(300, 300, 300), read_only=True)
-    # In this test case it is possible to simply set "read_only" for "target_view"
-    # because the function "func" does not really write data to the target_view.
-    # In a real scenario, calling "layer2.set_bounding_box(...)" and not setting "read_only" is recommended.
-    target_view = target_mag_view.get_view(size=(300, 300, 300), read_only=True)
-
-    def func(args: Tuple[View, View, int]) -> None:
-        (_s, _t, _i) = args
+    layer2.bounding_box = BoundingBox((0, 0, 0), (300, 300, 300))
+    target_view = target_mag_view.get_view()
 
     with get_executor_for_args(None) as executor:
         for test_case in test_cases_wk:
             with pytest.raises(AssertionError):
                 source_view.for_zipped_chunks(
-                    work_on_chunk=func,
+                    func_per_chunk=_func_invalid_target_chunk_size_wk,
                     target_view=target_view,
                     source_chunk_size=test_case,
                     target_chunk_size=test_case,

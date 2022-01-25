@@ -1,4 +1,3 @@
-import math
 import warnings
 from pathlib import Path
 from types import TracebackType
@@ -566,24 +565,31 @@ class View:
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
     ) -> "BufferedSliceWriter":
         """
-        The BufferedSliceWriter buffers multiple slices before they are written to disk.
-        The amount of slices that get buffered is specified by `buffer_size`.
+        The returned writer buffers multiple slices before they are written to disk.
         As soon as the buffer is full, the data gets written to disk.
 
-        The user can specify along which dimension the data is sliced by using the parameter `dimension`.
-        To slice along the x-axis use `0`, for the y-axis use `1`, or for the z-axis use `2` (default: dimension=2).
+        Arguments:
+        * The user can specify where the writer should start:
+            * `relative_offset` in Mag(1)
+            * `absolute_offset` in Mag(1)
+            * ⚠️ deprecated: `offset` in the current Mag,
+              used to be relative for `View` and absolute for `MagView`
+        * `buffer_size`: amount of slices that get buffered
+        * `dimension`: dimension along which the data is sliced
+          (x: `0`, y: `1`, z: `2`; default is `2`)).
 
-        The BufferedSliceWriter must be used as context manager using the `with` syntax (see example below),
+        The writer must be used as context manager using the `with` syntax (see example below),
         which results in a generator consuming np.ndarray-slices via `writer.send(slice)`.
         Exiting the context will automatically flush any remaining buffered data to disk.
 
         Usage:
+        ```python
         data_cube = ...
         view = ...
         with view.get_buffered_slice_writer() as writer:
             for data_slice in data_cube:
                 writer.send(data_slice)
-
+        ```
         """
         from webknossos.dataset._utils.buffered_slice_writer import BufferedSliceWriter
 
@@ -611,22 +617,29 @@ class View:
         absolute_bounding_box: Optional[BoundingBox] = None,  # in mag1
     ) -> "BufferedSliceReader":
         """
-        The BufferedSliceReader yields slices of data along a specified axis.
+        The returned reader yields slices of data along a specified axis.
         Internally, it reads multiple slices from disk at once and buffers the data.
-        The amount of slices that get buffered is specified by `buffer_size`.
 
-        The user can specify along which dimension the data is sliced by using the parameter `dimension`.
-        To slice along the x-axis use `0`, for the y-axis use `1`, or for the z-axis use `2` (default: dimension=2).
+        Arguments:
+        * The user can specify where the writer should start:
+            * `relative_bounding_box` in Mag(1)
+            * `absolute_bounding_box` in Mag(1)
+            * ⚠️ deprecated: `offset` and `size` in the current Mag,
+              `offset` used to be relative for `View` and absolute for `MagView`
+        * `buffer_size`: amount of slices that get buffered
+        * `dimension`: dimension along which the data is sliced
+          (x: `0`, y: `1`, z: `2`; default is `2`)).
 
-        The BufferedSliceReader must be used as a context manager using the `with` syntax (see example below).
-        Entering the context returns a generator with yields slices (np.ndarray).
+        The reader must be used as a context manager using the `with` syntax (see example below).
+        Entering the context returns an iterator yielding slices (np.ndarray).
 
         Usage:
+        ```python
         view = ...
         with view.get_buffered_slice_reader() as reader:
             for slice_data in reader:
                 ...
-
+        ```
         """
         from webknossos.dataset._utils.buffered_slice_reader import BufferedSliceReader
 
@@ -642,22 +655,24 @@ class View:
 
     def for_each_chunk(
         self,
-        work_on_chunk: Callable[[Tuple["View", int]], None],
-        chunk_size: Vec3IntLike,  # in current mag
+        func_per_chunk: Callable[[Tuple["View", int]], None],
+        chunk_size: Optional[Vec3IntLike] = None,  # in Mag(1)
         executor: Optional[
             Union[ClusterExecutor, cluster_tools.WrappedProcessPoolExecutor]
         ] = None,
         progress_desc: Optional[str] = None,
     ) -> None:
         """
-        The view is chunked into multiple sub-views of size `chunk_size`.
-        Then, `work_on_chunk` is performed on each sub-view.
-        Besides the view, the counter 'i' is passed to the 'work_on_chunk',
-        which can be used for logging. Additional parameter for 'work_on_chunk' can be specified.
+        The view is chunked into multiple sub-views of size `chunk_size` (in Mag(1)),
+        by default one chunk per file.
+        Then, `func_per_chunk` is performed on each sub-view.
+        Besides the view, the counter `i` is passed to the `func_per_chunk`,
+        which can be used for logging.
+        Additional parameters for `func_per_chunk` can be specified using `functools.partial`.
         The computation of each chunk has to be independent of each other.
         Therefore, the work can be parallelized with `executor`.
 
-        If the `View` is of type `MagView`, only the bounding box from the properties is chunked.
+        If the `View` is of type `MagView` only the bounding box from the properties is chunked.
 
         Example:
         ```python
@@ -670,23 +685,21 @@ class View:
 
         # ...
         # let 'mag1' be a `MagView`
-        view = mag1.get_view()
         func = named_partial(some_work, some_parameter=42)
-        view.for_each_chunk(
+        mag1.for_each_chunk(
             func,
-            chunk_size=(100, 100, 100),  # Use mag1._get_file_dimensions() if the size of the chunks should match the size of the files on disk
         )
         ```
         """
 
-        chunk_size = Vec3Int(chunk_size)
-        _check_chunk_size(chunk_size)
-        mag1_chunk_size = chunk_size * self.mag.to_vec3_int()
+        if chunk_size is None:
+            chunk_size = self._get_file_dimensions_mag1()
+        else:
+            chunk_size = Vec3Int(chunk_size)
+            self._check_chunk_size(chunk_size, write_operation=not self.read_only)
 
         job_args = []
-        for i, chunk in enumerate(
-            self.bounding_box.chunk(mag1_chunk_size, mag1_chunk_size)
-        ):
+        for i, chunk in enumerate(self.bounding_box.chunk(chunk_size, chunk_size)):
             chunk_view = self.get_view(
                 absolute_offset=chunk.topleft,
                 size=chunk.size,
@@ -697,61 +710,72 @@ class View:
         if executor is None:
             if progress_desc is None:
                 for args in job_args:
-                    work_on_chunk(args)
+                    func_per_chunk(args)
             else:
                 with get_rich_progress() as progress:
                     task = progress.add_task(
                         progress_desc, total=self.bounding_box.volume()
                     )
                     for args in job_args:
-                        work_on_chunk(args)
+                        func_per_chunk(args)
                         current_view: View = args[0]
                         progress.update(
                             task, advance=current_view.bounding_box.volume()
                         )
         else:
             wait_and_ensure_success(
-                executor.map_to_futures(work_on_chunk, job_args), progress_desc
+                executor.map_to_futures(func_per_chunk, job_args), progress_desc
             )
 
     def for_zipped_chunks(
         self,
-        work_on_chunk: Callable[[Tuple["View", "View", int]], None],
+        func_per_chunk: Callable[[Tuple["View", "View", int]], None],
         target_view: "View",
-        source_chunk_size: Vec3IntLike,  # in current mag
-        target_chunk_size: Vec3IntLike,  # in target view mag
+        source_chunk_size: Optional[Vec3IntLike] = None,  # in Mag(1)
+        target_chunk_size: Optional[Vec3IntLike] = None,  # in Mag(1)
         executor: Optional[
             Union[ClusterExecutor, cluster_tools.WrappedProcessPoolExecutor]
         ] = None,
         progress_desc: Optional[str] = None,
     ) -> None:
         """
-        This method is similar to 'for_each_chunk' in the sense, that it delegates work to smaller chunks.
+        This method is similar to `for_each_chunk` in the sense that it delegates work to smaller chunks,
+        given by `source_chunk_size` and `target_chunk_size` (both in Mag(1),
+        by default using the larger of the source_views and the target_views file-sizes).
         However, this method also takes another view as a parameter. Both views are chunked simultaneously
         and a matching pair of chunks is then passed to the function that shall be executed.
         This is useful if data from one view should be (transformed and) written to a different view,
         assuming that the transformation of the data can be handled on chunk-level.
-        Additionally to the two views, the counter 'i' is passed to the 'work_on_chunk',
-        which can be used for logging.
+        Additionally to the two views, the counter `i` is passed to the `func_per_chunk`, which can be used for logging.
+
         The mapping of chunks from the source view to the target is bijective.
-        The ratio between the size of the source_view (self) and the source_chunk_size must be equal to
-        the ratio between the target_view and the target_chunk_size. This guarantees that the number of chunks
-        in the source_view is equal to the number of chunks in the target_view.
+        The ratio between the size of the `source_view` (`self`) and the `source_chunk_size` must be equal to
+        the ratio between the `target_view` and the `target_chunk_size`. This guarantees that the number of chunks
+        in the `source_view` is equal to the number of chunks in the `target_view`.
 
-        Example use case: downsampling:
-        - size of source_view (Mag 1): (16384, 16384, 16384)
-        - size of target_view (Mag 2): (8192, 8192, 8192)
-        - source_chunk_size: (2048, 2048, 2048)
-        - target_chunk_size: (1024, 1024, 1024) // this must be a multiple of the file size on disk to avoid concurrent writes
+        Example use case: *downsampling*
+        - size of `source_view` (Mag 1): `(16384, 16384, 16384)`
+        - size of `target_view` (Mag 2): `(8192, 8192, 8192)`
+        - `source_chunk_size`: `(2048, 2048, 2048)`
+        - `target_chunk_size`: `(1024, 1024, 1024)`
+          (this must be a multiple of the file size on disk to avoid concurrent writes)
         """
-        source_chunk_size = Vec3Int(source_chunk_size)
-        target_chunk_size = Vec3Int(target_chunk_size)
 
-        _check_chunk_size(source_chunk_size)
-        _check_chunk_size(target_chunk_size)
-
-        mag1_source_chunk_size = source_chunk_size * self.mag.to_vec3_int()
-        mag1_target_chunk_size = target_chunk_size * target_view.mag.to_vec3_int()
+        if source_chunk_size is None or target_chunk_size is None:
+            assert (
+                source_chunk_size is None and target_chunk_size is None
+            ), "Either both source_chunk_size and target_chunk_size must be given or none."
+            source_chunk_size = self._get_file_dimensions_mag1().pairmax(
+                target_view._get_file_dimensions_mag1()
+            )
+            target_chunk_size = source_chunk_size
+        else:
+            source_chunk_size = Vec3Int(source_chunk_size)
+            target_chunk_size = Vec3Int(target_chunk_size)
+            self._check_chunk_size(source_chunk_size)
+            target_view._check_chunk_size(
+                target_chunk_size, write_operation=not target_view.read_only
+            )
 
         assert (
             not self.bounding_box.is_empty()
@@ -761,25 +785,18 @@ class View:
         ), "Calling 'for_zipped_chunks' failed because the size of the target view contains a 0."
         assert np.array_equal(
             self.bounding_box.size.to_np() / target_view.bounding_box.size.to_np(),
-            mag1_source_chunk_size.to_np() / mag1_target_chunk_size.to_np(),
+            source_chunk_size.to_np() / target_chunk_size.to_np(),
         ), (
             "Calling 'for_zipped_chunks' failed because the ratio of the view sizes "
             + f"(source size = {self.bounding_box.size}, target size = {target_view.bounding_box.size}) "
             + "must be equal to the ratio of the chunk sizes "
-            + f"(source_chunk_size in Mag(1) = {mag1_source_chunk_size}, target_chunk_size in Mag(1) = {mag1_target_chunk_size})"
+            + f"(source_chunk_size in Mag(1) = {source_chunk_size}, target_chunk_size in Mag(1) = {target_chunk_size})"
         )
-
-        assert not any(
-            target_chunk_size.to_np()
-            % (target_view.header.file_len * target_view.header.block_len)
-        ), f"Calling for_zipped_chunks failed. The target_chunk_size ({target_chunk_size}) must be a multiple of file_len*block_len of the target view ({target_view.header.file_len * target_view.header.block_len})"
 
         job_args = []
-        source_chunks = self.bounding_box.chunk(
-            mag1_source_chunk_size, mag1_source_chunk_size
-        )
+        source_chunks = self.bounding_box.chunk(source_chunk_size, source_chunk_size)
         target_chunks = target_view.bounding_box.chunk(
-            mag1_target_chunk_size, mag1_target_chunk_size
+            target_chunk_size, target_chunk_size
         )
 
         for i, (source_chunk, target_chunk) in enumerate(
@@ -801,18 +818,18 @@ class View:
         if executor is None:
             if progress_desc is None:
                 for args in job_args:
-                    work_on_chunk(args)
+                    func_per_chunk(args)
             else:
                 with get_rich_progress() as progress:
                     task = progress.add_task(
                         progress_desc, total=self.bounding_box.volume()
                     )
                     for args in job_args:
-                        work_on_chunk(args)
+                        func_per_chunk(args)
                         progress.update(task, advance=args[0].bounding_box.volume())
         else:
             wait_and_ensure_success(
-                executor.map_to_futures(work_on_chunk, job_args), progress_desc
+                executor.map_to_futures(func_per_chunk, job_args), progress_desc
             )
 
     def _is_compressed(self) -> bool:
@@ -844,6 +861,28 @@ class View:
     def __repr__(self) -> str:
         return repr(f"View({self._path}, bounding_box={self.bounding_box})")
 
+    def _check_chunk_size(
+        self, chunk_size: Vec3Int, write_operation: bool = False
+    ) -> None:
+        assert chunk_size.is_positive(
+            strictly_positive=True
+        ), f"The passed parameter 'chunk_size' {chunk_size} contains at least one 0. This is not allowed."
+
+        divisor = self.mag.to_vec3_int() * self.header.block_len
+        if write_operation:
+            divisor *= self.header.file_len
+        assert chunk_size % divisor == Vec3Int.zeros(), (
+            f"The chunk_size {chunk_size} must be a multiple of "
+            + f"mag*block_len{'*file_len' if write_operation else ''} of the view, "
+            + f"which is {divisor})."
+        )
+
+    def _get_file_dimensions(self) -> Vec3Int:
+        return Vec3Int.full(self.header.file_len * self.header.block_len)
+
+    def _get_file_dimensions_mag1(self) -> Vec3Int:
+        return self._get_file_dimensions() * self.mag.to_vec3_int()
+
     @property
     def _wkw_dataset(self) -> wkw.Dataset:
         if self._cached_wkw_dataset is None:
@@ -869,25 +908,6 @@ class View:
     def __setstate__(self, d: Dict[str, Any]) -> None:
         d["_cached_wkw_dataset"] = None
         self.__dict__ = d
-
-
-def _check_chunk_size(chunk_size: Vec3Int) -> None:
-    assert chunk_size is not None
-
-    if 0 in chunk_size:
-        raise AssertionError(
-            f"The passed parameter 'chunk_size' {chunk_size} contains at least one 0. This is not allowed."
-        )
-    if not np.all(
-        np.array([math.log2(size).is_integer() for size in np.array(chunk_size)])
-    ):
-        raise AssertionError(
-            f"Each element of the passed parameter 'chunk_size' {chunk_size} must be a power of 2.."
-        )
-    if (np.array(chunk_size) % (32, 32, 32)).any():
-        raise AssertionError(
-            f"The passed parameter 'chunk_size' {chunk_size} must be a multiple of (32, 32, 32)."
-        )
 
 
 def _count_defined_values(values: Iterable[Optional[Any]]) -> int:

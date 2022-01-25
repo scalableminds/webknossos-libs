@@ -26,15 +26,7 @@ class BufferedSliceReader:
         relative_bounding_box: Optional[BoundingBox] = None,  # in mag1
         absolute_bounding_box: Optional[BoundingBox] = None,  # in mag1
     ) -> None:
-        """
-        view : datasource
-        offset : specifies the offset of the data to read (relative to the `view`)
-        size : specifies the size of the data to read
-        buffer_size : the number of slices that are read at once
-        dimension : specifies along which axis the data is sliced (0=x; 1=y; 2=z)
-
-        The size and offset are in the magnification of the `view`.
-        """
+        """see `View.get_buffered_slice_reader()`"""
 
         self.view = view
         self.buffer_size = buffer_size
