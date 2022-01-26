@@ -696,7 +696,7 @@ class View:
             chunk_size = self._get_file_dimensions_mag1()
         else:
             chunk_size = Vec3Int(chunk_size)
-            self._check_chunk_size(chunk_size, write_operation=not self.read_only)
+            self._check_chunk_size(chunk_size, read_only=self.read_only)
 
         job_args = []
         for i, chunk in enumerate(self.bounding_box.chunk(chunk_size, chunk_size)):
@@ -752,13 +752,12 @@ class View:
         The ratio between the size of the `source_view` (`self`) and the `source_chunk_size` must be equal to
         the ratio between the `target_view` and the `target_chunk_size`. This guarantees that the number of chunks
         in the `source_view` is equal to the number of chunks in the `target_view`.
+        The `target_chunk_size` must be a multiple of the file size on disk to avoid concurrent writes.
 
-        Example use case: *downsampling*
-        - size of `source_view` (Mag 1): `(16384, 16384, 16384)`
-        - size of `target_view` (Mag 2): `(8192, 8192, 8192)`
-        - `source_chunk_size`: `(2048, 2048, 2048)`
-        - `target_chunk_size`: `(1024, 1024, 1024)`
-          (this must be a multiple of the file size on disk to avoid concurrent writes)
+        Example use case: *downsampling from Mag(1) to Mag(2)*
+        - size of the views: `16384³` (`8192³` in Mag(2) for `target_view`)
+        - automatic chunk sizes: `2048³`, assuming  default file-lengths
+          (`1024³` in Mag(2), which fits the default file-length of 32*32)
         """
 
         if source_chunk_size is None or target_chunk_size is None:
@@ -772,9 +771,9 @@ class View:
         else:
             source_chunk_size = Vec3Int(source_chunk_size)
             target_chunk_size = Vec3Int(target_chunk_size)
-            self._check_chunk_size(source_chunk_size)
+            self._check_chunk_size(source_chunk_size, read_only=True)
             target_view._check_chunk_size(
-                target_chunk_size, write_operation=not target_view.read_only
+                target_chunk_size, read_only=target_view.read_only
             )
 
         assert (
@@ -861,19 +860,17 @@ class View:
     def __repr__(self) -> str:
         return repr(f"View({self._path}, bounding_box={self.bounding_box})")
 
-    def _check_chunk_size(
-        self, chunk_size: Vec3Int, write_operation: bool = False
-    ) -> None:
+    def _check_chunk_size(self, chunk_size: Vec3Int, read_only: bool) -> None:
         assert chunk_size.is_positive(
             strictly_positive=True
         ), f"The passed parameter 'chunk_size' {chunk_size} contains at least one 0. This is not allowed."
 
         divisor = self.mag.to_vec3_int() * self.header.block_len
-        if write_operation:
+        if not read_only:
             divisor *= self.header.file_len
         assert chunk_size % divisor == Vec3Int.zeros(), (
             f"The chunk_size {chunk_size} must be a multiple of "
-            + f"mag*block_len{'*file_len' if write_operation else ''} of the view, "
+            + f"mag*block_len{'*file_len' if not read_only else ''} of the view, "
             + f"which is {divisor})."
         )
 
