@@ -12,6 +12,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes
 
 ### Added
+- Added `wkcuber.convert_zarr` tool to convert zarr files to wkw datasets. [#549](https://github.com/scalableminds/webknossos-libs/pull/549)
 
 ### Changed
 
