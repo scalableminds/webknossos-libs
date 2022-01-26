@@ -687,8 +687,6 @@ class Layer:
                 # this view is restricted to the bounding box specified in the properties
                 func,
                 target_view=target_view,
-                source_chunk_size=target_mag_view._get_file_dimensions() * mag_factors,
-                target_chunk_size=target_mag_view._get_file_dimensions(),
                 executor=executor,
                 progress_desc=f"Downsampling layer {self.name} from Mag {from_mag} to Mag {target_mag}",
             )
@@ -840,9 +838,6 @@ class Layer:
                     # this view is restricted to the bounding box specified in the properties
                     func,
                     target_view=target_view,
-                    source_chunk_size=target_mag_view._get_file_dimensions(),
-                    target_chunk_size=target_mag_view._get_file_dimensions()
-                    * np.array([int(1 / f) for f in mag_factors]),
                     executor=executor,
                     progress_desc=f"Upsampling from Mag {prev_mag} to Mag {target_mag}",
                 )

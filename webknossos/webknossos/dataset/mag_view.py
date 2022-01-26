@@ -311,9 +311,6 @@ class MagView(View):
             if mag_property.resolution == self._mag
         )
 
-    def _get_file_dimensions(self) -> Vec3Int:
-        return Vec3Int.full(self._properties.cube_length)
-
     def __repr__(self) -> str:
         return repr(f"MagView(name={self.name}, bounding_box={self.bounding_box})")
 

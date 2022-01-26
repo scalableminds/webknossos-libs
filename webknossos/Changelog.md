@@ -14,6 +14,16 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Added
 
 ### Changed
+- The signatures of `(Mag)View.for_each_chunk` and `(Mag)View.for_zipped_chunks` changed:
+  * The previous argument `work_on_chunk` is now called `func_per_chunk`.
+  * The various `chunk_size` arguments now have to be given in Mag(1). They now have default values.
+- Deprecations in `(Mag)View.get_buffered_slice_reader/_writer` [#564](https://github.com/scalableminds/webknossos-libs/pull/564):
+  * `(Mag)View.get_buffered_slice_reader`: using the parameters `offset` and `size` is deprecated.
+    Please use the parameter relative_bounding_box or absolute_bounding_box (both in Mag(1)) instead.
+    The old offset behavior was absolute for `MagView`s and relative for `View`s.
+  * `(Mag)View.get_buffered_slice_writer`: using the parameter `offset` is deprecated.
+    Please use the parameter relative_offset or absolute_offset (both in Mag(1)) instead.
+    The old offset behavior was absolute for `MagView`s and relative for `View`s.
 
 ### Fixed
 
