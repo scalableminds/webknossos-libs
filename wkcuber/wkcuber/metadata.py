@@ -53,12 +53,12 @@ def write_datasource_properties(
     dataset_path: Path, datasource_properties: dict
 ) -> None:
     datasource_properties_path = get_datasource_path(dataset_path)
-    with open(datasource_properties_path, "wt") as datasource_properties_file:
+    with open(datasource_properties_path, "wt", encoding="utf-8") as datasource_properties_file:
         json.dump(datasource_properties, datasource_properties_file, indent=2)
 
 
 def read_datasource_properties(dataset_path: Path) -> dict:
-    with open(get_datasource_path(dataset_path), "r") as datasource_properties_file:
+    with open(get_datasource_path(dataset_path), "r", encoding="utf-8") as datasource_properties_file:
         return json.load(datasource_properties_file)
 
 

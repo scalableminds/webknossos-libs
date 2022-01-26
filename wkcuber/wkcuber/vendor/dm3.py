@@ -625,7 +625,7 @@ class DM3(object):
             dump_dir, os.path.split(self._filename)[1] + ".tagdump.txt"
         )
         try:
-            dumpf = open(dump_file, "w")
+            dumpf = open(dump_file, "w", encoding="utf-8")
         except:
             print("Warning: cannot generate dump file.")
         else:
@@ -797,7 +797,7 @@ class DM3(object):
             self.tags["%s.ImageData.Calibrations.Dimension.0.Scale" % tag_root]
         )
         unit = self.tags["%s.ImageData.Calibrations.Dimension.0.Units" % tag_root]
-        if unit == u"\xb5m":
+        if unit == "\xb5m":
             unit = "micron"
         else:
             unit = unit.encode("ascii")
