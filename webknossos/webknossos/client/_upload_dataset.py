@@ -16,10 +16,6 @@ from webknossos.client._generated.api.default import (
     datastore_list,
     new_dataset_name_is_valid,
 )
-from webknossos.client._generated.models import (
-    DatasetFinishUploadJsonBody,
-    DatasetReserveUploadJsonBody,
-)
 from webknossos.client._resumable import Resumable
 from webknossos.client.context import _get_context, _WebknossosContext
 from webknossos.dataset import Dataset
@@ -75,6 +71,11 @@ def upload_dataset(
     layers_to_link: Optional[List[LayerToLink]] = None,
     jobs: Optional[int] = None,
 ) -> str:
+    from webknossos.client._generated.models import (
+        DatasetFinishUploadJsonBody,
+        DatasetReserveUploadJsonBody,
+    )
+
     if new_dataset_name is None:
         new_dataset_name = dataset.name
     if layers_to_link is None:

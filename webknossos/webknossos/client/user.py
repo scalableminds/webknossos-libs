@@ -1,4 +1,4 @@
-from typing import Dict, List, Union
+from typing import TYPE_CHECKING, Dict, List, Union
 
 import attr
 
@@ -7,12 +7,15 @@ from webknossos.client._generated.api.default import (
     user_list,
     user_logged_time,
 )
-from webknossos.client._generated.models.current_user_info_response_200 import (
-    CurrentUserInfoResponse200,
-)
-from webknossos.client._generated.models.user_list_response_200_item import (
-    UserListResponse200Item,
-)
+
+if TYPE_CHECKING:
+    from webknossos.client._generated.models.current_user_info_response_200 import (
+        CurrentUserInfoResponse200,
+    )
+    from webknossos.client._generated.models.user_list_response_200_item import (
+        UserListResponse200Item,
+    )
+
 from webknossos.client.context import _get_generated_client
 
 
@@ -51,7 +54,7 @@ class User:
 
     @classmethod
     def _from_generated_response(
-        cls, response: Union[UserListResponse200Item, CurrentUserInfoResponse200]
+        cls, response: Union["UserListResponse200Item", "CurrentUserInfoResponse200"]
     ) -> "User":
         return cls(
             id=response.id,

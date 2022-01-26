@@ -16,11 +16,10 @@ from openapi_python_client import (
     _get_project_for_url_or_path,
 )
 
-from webknossos.client.context import _get_generated_client
 from webknossos.utils import snake_to_camel_case
 
-SCHEMA_URL = "https://master.webknossos.xyz/swagger.json"
-# SCHEMA_URL = "http://localhost:9000/swagger.json"
+# SCHEMA_URL = "https://master.webknossos.xyz/swagger.json"
+SCHEMA_URL = "http://localhost:9000/swagger.json"
 CONVERTER_URL = "https://converter.swagger.io/api/convert"
 
 
@@ -71,9 +70,11 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
         dataset_info,
         datastore_list,
         generate_token_for_data_store,
+        task_info,
         user_list,
         user_logged_time,
     )
+    from webknossos.client.context import _get_generated_client
 
     d = datetime.utcnow()
     unixtime = calendar.timegm(d.utctimetuple())
@@ -85,7 +86,7 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
         client=client,
         timestamp=unixtime,
     )
-    assert annotation_info_response.status_code == 200
+    assert annotation_info_response.status_code == 200, annotation_info_response.content
     yield "annotationInfo", annotation_info_response.content
 
     dataset_info_response = dataset_info.sync_detailed(
@@ -93,8 +94,14 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
         data_set_name="l4dense_motta_et_al_demo",
         client=client,
     )
-    assert dataset_info_response.status_code == 200
+    assert dataset_info_response.status_code == 200, dataset_info_response.content
     yield "datasetInfo", dataset_info_response.content
+
+    task_info_response = task_info.sync_detailed(
+        id="61f151c10100000a01249afe", client=client
+    )
+    assert task_info_response.status_code == 200, task_info_response.content
+    yield "taskInfo", task_info_response.content
 
     for api_endpoint in [
         datastore_list,
@@ -107,7 +114,7 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
         api_endpoint_name = snake_to_camel_case(api_endpoint_name)
 
         api_endpoint_response = api_endpoint.sync_detailed(client=client)
-        assert api_endpoint_response.status_code == 200
+        assert api_endpoint_response.status_code == 200, api_endpoint_response.content
         yield api_endpoint_name, api_endpoint_response.content
 
         if api_endpoint == current_user_info:
@@ -117,7 +124,9 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
         id=user_id,
         client=client,
     )
-    assert user_logged_time_response.status_code == 200
+    assert (
+        user_logged_time_response.status_code == 200
+    ), user_logged_time_response.content
     yield "userLoggedTime", user_logged_time_response.content
 
 

@@ -2,24 +2,27 @@ from typing import Any, Dict, List, Type, TypeVar
 
 import attr
 
-T = TypeVar("T", bound="CurrentUserInfoResponse200Experiences")
+T = TypeVar("T", bound="TaskInfoResponse200NeededExperience")
 
 
 @attr.s(auto_attribs=True)
-class CurrentUserInfoResponse200Experiences:
+class TaskInfoResponse200NeededExperience:
     """ """
 
-    sample_exp: int
+    domain: str
+    value: int
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        sample_exp = self.sample_exp
+        domain = self.domain
+        value = self.value
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "sampleExp": sample_exp,
+                "domain": domain,
+                "value": value,
             }
         )
 
@@ -28,14 +31,17 @@ class CurrentUserInfoResponse200Experiences:
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        sample_exp = d.pop("sampleExp")
+        domain = d.pop("domain")
 
-        current_user_info_response_200_experiences = cls(
-            sample_exp=sample_exp,
+        value = d.pop("value")
+
+        task_info_response_200_needed_experience = cls(
+            domain=domain,
+            value=value,
         )
 
-        current_user_info_response_200_experiences.additional_properties = d
-        return current_user_info_response_200_experiences
+        task_info_response_200_needed_experience.additional_properties = d
+        return task_info_response_200_needed_experience
 
     @property
     def additional_keys(self) -> List[str]:
