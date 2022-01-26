@@ -1,25 +1,35 @@
-from typing import Any, Dict, List, Type, TypeVar
+from typing import Any, Dict, List, Type, TypeVar, cast
 
 import attr
 
-T = TypeVar("T", bound="CurrentUserInfoResponse200Experiences")
+T = TypeVar("T", bound="TaskInfoResponse200BoundingBox")
 
 
 @attr.s(auto_attribs=True)
-class CurrentUserInfoResponse200Experiences:
+class TaskInfoResponse200BoundingBox:
     """ """
 
-    sample_exp: int
+    top_left: List[int]
+    width: int
+    height: int
+    depth: int
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        sample_exp = self.sample_exp
+        top_left = self.top_left
+
+        width = self.width
+        height = self.height
+        depth = self.depth
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "sampleExp": sample_exp,
+                "topLeft": top_left,
+                "width": width,
+                "height": height,
+                "depth": depth,
             }
         )
 
@@ -28,14 +38,23 @@ class CurrentUserInfoResponse200Experiences:
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        sample_exp = d.pop("sampleExp")
+        top_left = cast(List[int], d.pop("topLeft"))
 
-        current_user_info_response_200_experiences = cls(
-            sample_exp=sample_exp,
+        width = d.pop("width")
+
+        height = d.pop("height")
+
+        depth = d.pop("depth")
+
+        task_info_response_200_bounding_box = cls(
+            top_left=top_left,
+            width=width,
+            height=height,
+            depth=depth,
         )
 
-        current_user_info_response_200_experiences.additional_properties = d
-        return current_user_info_response_200_experiences
+        task_info_response_200_bounding_box.additional_properties = d
+        return task_info_response_200_bounding_box
 
     @property
     def additional_keys(self) -> List[str]:

@@ -3,6 +3,7 @@
 from .action import Action
 from .action_annotation_layer_parameters import ActionAnnotationLayerParameters
 from .action_any_content import ActionAnyContent
+from .action_js_value import ActionJsValue
 from .action_multipart_form_data_temporary_file import (
     ActionMultipartFormDataTemporaryFile,
 )
@@ -31,6 +32,7 @@ from .annotation_info_response_200_user_teams_item import (
 from .build_info_response_200 import BuildInfoResponse200
 from .build_info_response_200_webknossos import BuildInfoResponse200Webknossos
 from .build_info_response_200_webknossos_wrap import BuildInfoResponse200WebknossosWrap
+from .create_json_body import CreateJsonBody
 from .current_user_info_response_200 import CurrentUserInfoResponse200
 from .current_user_info_response_200_experiences import (
     CurrentUserInfoResponse200Experiences,
@@ -59,6 +61,18 @@ from .dataset_reserve_upload_json_body import DatasetReserveUploadJsonBody
 from .datastore_list_response_200_item import DatastoreListResponse200Item
 from .generate_token_for_data_store_response_200 import (
     GenerateTokenForDataStoreResponse200,
+)
+from .task_create_from_files_json_body import TaskCreateFromFilesJsonBody
+from .task_info_response_200 import TaskInfoResponse200
+from .task_info_response_200_bounding_box import TaskInfoResponse200BoundingBox
+from .task_info_response_200_needed_experience import (
+    TaskInfoResponse200NeededExperience,
+)
+from .task_info_response_200_status import TaskInfoResponse200Status
+from .task_info_response_200_type import TaskInfoResponse200Type
+from .task_info_response_200_type_settings import TaskInfoResponse200TypeSettings
+from .task_info_response_200_type_settings_resolution_restrictions import (
+    TaskInfoResponse200TypeSettingsResolutionRestrictions,
 )
 from .user_list_response_200_item import UserListResponse200Item
 from .user_list_response_200_item_experiences import UserListResponse200ItemExperiences
