@@ -77,7 +77,6 @@ def main() -> None:
         func = named_partial(move_by_one, src_mag)
         dst_view.for_each_chunk(
             func,
-            chunk_size=dst_mag._get_file_dimensions(),
             executor=executor,
         )
 

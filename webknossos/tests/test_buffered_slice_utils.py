@@ -7,7 +7,7 @@ import numpy as np
 import wkw
 
 from webknossos.dataset import COLOR_CATEGORY, Dataset
-from webknossos.geometry import Mag, Vec3Int
+from webknossos.geometry import BoundingBox, Mag, Vec3Int
 
 from .constants import TESTOUTPUT_DIR
 
@@ -20,7 +20,7 @@ def delete_dir(relative_path: Union[str, Path]) -> None:
 def test_buffered_slice_writer() -> None:
     test_img = np.arange(24 * 24).reshape(24, 24).astype(np.uint16) + 1
     dtype = test_img.dtype
-    origin = Vec3Int(0, 0, 0)
+    origin = Vec3Int.zeros()
     layer_name = "color"
     mag = Mag(1)
     dataset_dir = TESTOUTPUT_DIR / "buffered_slice_writer"
@@ -32,7 +32,7 @@ def test_buffered_slice_writer() -> None:
         mag
     )
 
-    with mag_view.get_buffered_slice_writer(origin) as writer:
+    with mag_view.get_buffered_slice_writer(absolute_offset=origin) as writer:
         for i in range(13):
             writer.send(test_img)
         with wkw.Dataset.open(dataset_path, wkw.Header(dtype)) as data:
@@ -92,7 +92,7 @@ def test_buffered_slice_writer_along_different_axis(tmp_path: Path) -> None:
         mag_view = ds.add_layer("color", COLOR_CATEGORY, num_channels=3).add_mag(1)
 
         with mag_view.get_buffered_slice_writer(
-            offset, buffer_size=5, dimension=dim
+            absolute_offset=offset, buffer_size=5, dimension=dim
         ) as writer:
             for i in range(cube_size_without_channel[dim]):
                 if dim == 0:
@@ -103,7 +103,8 @@ def test_buffered_slice_writer_along_different_axis(tmp_path: Path) -> None:
                     current_slice = test_cube[:, :, :, i]
                 writer.send(current_slice)
         assert np.array_equal(
-            mag_view.read(offset=offset, size=cube_size_without_channel), test_cube
+            mag_view.read(absolute_offset=offset, size=cube_size_without_channel),
+            test_cube,
         )
 
 
@@ -115,13 +116,17 @@ def test_buffered_slice_reader_along_different_axis(tmp_path: Path) -> None:
     for dim in [0, 1, 2]:
         ds = Dataset(tmp_path / f"buffered_slice_reader_{dim}", scale=(1, 1, 1))
         mag_view = ds.add_layer("color", COLOR_CATEGORY, num_channels=3).add_mag(1)
-        mag_view.write(test_cube, offset=offset)
+        mag_view.write(test_cube, absolute_offset=offset)
 
         with mag_view.get_buffered_slice_reader(
-            offset, cube_size_without_channel, buffer_size=5, dimension=dim
-        ) as reader:
+            buffer_size=5, dimension=dim
+        ) as reader_a, mag_view.get_buffered_slice_reader(
+            absolute_bounding_box=BoundingBox(offset, cube_size_without_channel),
+            buffer_size=5,
+            dimension=dim,
+        ) as reader_b:
             i = 0
-            for slice_data in reader:
+            for slice_data_a, slice_data_b in zip(reader_a, reader_b):
                 if dim == 0:
                     original_slice = test_cube[:, i, :, :]
                 elif dim == 1:
@@ -130,4 +135,5 @@ def test_buffered_slice_reader_along_different_axis(tmp_path: Path) -> None:
                     original_slice = test_cube[:, :, :, i]
                 i += 1
 
-                assert np.array_equal(slice_data, original_slice)
+                assert np.array_equal(slice_data_a, original_slice)
+                assert np.array_equal(slice_data_b, original_slice)

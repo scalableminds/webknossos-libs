@@ -25,7 +25,9 @@ def test_annotation_from_file() -> None:
 
     with annotation.temporary_volume_annotation_layer_copy() as volume_layer:
         input_annotation_mag = volume_layer.get_best_mag()
-        voxel_id = input_annotation_mag.read(Vec3Int(2830, 4356, 1792), Vec3Int.full(1))
+        voxel_id = input_annotation_mag.read(
+            absolute_offset=Vec3Int(2830, 4356, 1792), size=Vec3Int.full(1)
+        )
 
         assert voxel_id == 2504698
 
