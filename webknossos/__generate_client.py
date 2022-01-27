@@ -70,11 +70,10 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
         dataset_info,
         datastore_list,
         generate_token_for_data_store,
+        project_info_by_id,
         task_info,
         user_info_by_id,
         user_list,
-        project_info_by_id,
-        project_info_by_name,
         user_logged_time,
     )
     from webknossos.client.context import _get_generated_client
@@ -115,16 +114,18 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
     project_info_by_id_response = project_info_by_id.sync_detailed(
         id="61f1515e0100002f01249afa", client=client
     )
-    assert project_info_by_id_response.status_code == 200, project_info_by_id_response.content
+    assert (
+        project_info_by_id_response.status_code == 200
+    ), project_info_by_id_response.content
     yield "projectInfoById", project_info_by_id_response.content
 
     # blocked until this code can run against local webKnossos
     #
-    #project_info_by_name_response = project_info_by_name.sync_detailed(
+    # project_info_by_name_response = project_info_by_name.sync_detailed(
     #    name="sampleProject", client=client
-    #)
-    #assert project_info_by_name_response.status_code == 200, project_info_by_name_response.content
-    #yield "projectInfoByName", project_info_by_name_response.content
+    # )
+    # assert project_info_by_name_response.status_code == 200, project_info_by_name_response.content
+    # yield "projectInfoByName", project_info_by_name_response.content
 
     for api_endpoint in [
         datastore_list,
