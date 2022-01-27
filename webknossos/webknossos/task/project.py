@@ -1,20 +1,17 @@
-from typing import List
+from typing import TYPE_CHECKING, List
 
 import attr
 
 from webknossos.client import User
-from webknossos.task import Task
-
-from webknossos.client.context import _get_generated_client
-
 from webknossos.client._generated.api.default import project_info_by_id
-
-from typing import TYPE_CHECKING
+from webknossos.client.context import _get_generated_client
+from webknossos.task import Task
 
 if TYPE_CHECKING:
     from webknossos.client._generated.models.project_info_by_id_response_200 import (
-        ProjectInfoResponse200,
+        ProjectInfoByIdResponse200,
     )
+
 
 @attr.frozen
 class Project:
@@ -48,14 +45,16 @@ class Project:
         return User.get_by_id(self.owner_id)
 
     @classmethod
-    def _from_generated_response(cls, response: "ProjectInfoResponse200") -> "Project":
+    def _from_generated_response(
+        cls, response: "ProjectInfoByIdResponse200"
+    ) -> "Project":
         return Project(
             response.id,
             response.name,
             response.team,
             response.team_name,
-            response.owner,
+            response.owner.id,
             response.priority,
-            response.paused,
-            response.expected_time
+            bool(response.paused),
+            response.expected_time,
         )
