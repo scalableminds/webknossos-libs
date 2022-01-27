@@ -71,6 +71,7 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
         datastore_list,
         generate_token_for_data_store,
         task_info,
+        user_info_by_id,
         user_list,
         user_logged_time,
     )
@@ -102,6 +103,12 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
     )
     assert task_info_response.status_code == 200, task_info_response.content
     yield "taskInfo", task_info_response.content
+
+    user_info_by_id_response = user_info_by_id.sync_detailed(
+        id="5b5dd2fb1c00008230ec8174", client=client
+    )
+    assert user_info_by_id_response.status_code == 200, user_info_by_id_response.content
+    yield "userInfoById", user_info_by_id_response.content
 
     for api_endpoint in [
         datastore_list,
