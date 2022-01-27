@@ -7,10 +7,12 @@ from webknossos.task import Task
 
 from webknossos.client.context import _get_generated_client
 
-from webknossos.client._generated.api.default import project_info
+from webknossos.client._generated.api.default import project_info_by_id
+
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from webknossos.client._generated.models.project_info_response_200 import (
+    from webknossos.client._generated.models.project_info_by_id_response_200 import (
         ProjectInfoResponse200,
     )
 
@@ -30,7 +32,7 @@ class Project:
 
         """Returns the user specified by the passed id if your token authorizes you to see them."""
         client = _get_generated_client(enforce_auth=True)
-        response = project_info.sync(id, client=client)
+        response = project_info_by_id.sync(id, client=client)
         assert response is not None, "Could not fetch project by id."
         return cls._from_generated_response(response)
 
@@ -47,7 +49,7 @@ class Project:
 
     @classmethod
     def _from_generated_response(cls, response: "ProjectInfoResponse200") -> "Project":
-        Project(
+        return Project(
             response.id,
             response.name,
             response.team,
