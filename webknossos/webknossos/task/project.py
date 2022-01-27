@@ -5,6 +5,14 @@ import attr
 from webknossos.client import User
 from webknossos.task import Task
 
+from webknossos.client.context import _get_generated_client
+
+from webknossos.client._generated.api.default import project_info
+
+if TYPE_CHECKING:
+    from webknossos.client._generated.models.project_info_response_200 import (
+        ProjectInfoResponse200,
+    )
 
 @attr.frozen
 class Project:
@@ -19,10 +27,16 @@ class Project:
 
     @classmethod
     def get_by_id(cls, id: str) -> "Project":  # pylint: disable=redefined-builtin
-        pass
+
+        """Returns the user specified by the passed id if your token authorizes you to see them."""
+        client = _get_generated_client(enforce_auth=True)
+        response = project_info.sync(id, client=client)
+        assert response is not None, "Could not fetch project by id."
+        return cls._from_generated_response(response)
 
     @classmethod
     def get_by_name(cls, name: str) -> "Project":
+        # blocked until generate_client can run against local webKnossos
         pass
 
     def get_tasks(self) -> List[Task]:
@@ -30,3 +44,16 @@ class Project:
 
     def get_owner(self) -> User:
         return User.get_by_id(self.owner_id)
+
+    @classmethod
+    def _from_generated_response(cls, response: "ProjectInfoResponse200") -> "Project":
+        Project(
+            response.id,
+            response.name,
+            response.team,
+            response.team_name,
+            response.owner,
+            response.priority,
+            response.paused,
+            response.expected_time
+        )

@@ -7,11 +7,11 @@ from ...types import Response
 
 
 def _get_kwargs(
-    id: str,
+    name: str,
     *,
     client: Client,
 ) -> Dict[str, Any]:
-    url = "{}/api/projects/{id}".format(client.base_url, id=id)
+    url = "{}/api/projects/byName/{name}".format(client.base_url, name=name)
 
     headers: Dict[str, Any] = client.get_headers()
     cookies: Dict[str, Any] = client.get_cookies()
@@ -34,12 +34,12 @@ def _build_response(*, response: httpx.Response) -> Response[Any]:
 
 
 def sync_detailed(
-    id: str,
+    name: str,
     *,
     client: Client,
 ) -> Response[Any]:
     kwargs = _get_kwargs(
-        id=id,
+        name=name,
         client=client,
     )
 
@@ -51,12 +51,12 @@ def sync_detailed(
 
 
 async def asyncio_detailed(
-    id: str,
+    name: str,
     *,
     client: Client,
 ) -> Response[Any]:
     kwargs = _get_kwargs(
-        id=id,
+        name=name,
         client=client,
     )
 
