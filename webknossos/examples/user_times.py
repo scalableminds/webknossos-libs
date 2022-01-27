@@ -8,7 +8,7 @@ def main() -> None:
     df.columns = pd.MultiIndex([[], []], [[], []], names=("year", "month"))
     df.index.name = "email"
 
-    users = wk.User.get_all_managed_users()
+    users = wk.administration.User.get_all_managed_users()
     for user in users:
         for logged_time in user.get_logged_times():
             df.loc[

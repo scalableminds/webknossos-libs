@@ -1,11 +1,20 @@
-from typing import List, Optional
+from typing import TYPE_CHECKING, List, Optional, Union
 
 import attr
 
 from webknossos.administration import Project
 from webknossos.annotation import Annotation, AnnotationInfo
-from webknossos.client.context import _get_context
+from webknossos.client._generated.api.default import task_info
+from webknossos.client.context import _get_context, _get_generated_client
 from webknossos.geometry import BoundingBox
+
+if TYPE_CHECKING:
+    from webknossos.client._generated.models.task_info_response_200 import (
+        TaskInfoResponse200,
+    )
+    from webknossos.client._generated.models.task_infos_by_project_id_response_200_item import (
+        TaskInfosByProjectIdResponse200Item,
+    )
 
 
 @attr.frozen
@@ -16,9 +25,10 @@ class Task:
 
     @classmethod
     def get_by_id(cls, id: str) -> "Task":  # pylint: disable=redefined-builtin
-        from webknossos.client._get_task_info import get_task_info
-
-        return get_task_info(id)
+        client = _get_generated_client()
+        response = task_info.sync(id=id, client=client)
+        assert response is not None
+        return cls._from_generated_response(response)
 
     @classmethod
     def create_from_annotations(
@@ -34,6 +44,13 @@ class Task:
     ) -> "Task":
         context = _get_context()
         token = context.required_token
+
+    @classmethod
+    def _from_generated_response(
+        cls,
+        response: Union["TaskInfoResponse200", "TaskInfosByProjectIdResponse200Item"],
+    ) -> "Task":
+        return cls(response.id, response.project_name, response.data_set)
 
     def get_annotation_infos(self) -> List[AnnotationInfo]:
         return []
