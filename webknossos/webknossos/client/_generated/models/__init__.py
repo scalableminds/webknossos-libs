@@ -74,6 +74,12 @@ from .task_info_response_200_type_settings import TaskInfoResponse200TypeSetting
 from .task_info_response_200_type_settings_resolution_restrictions import (
     TaskInfoResponse200TypeSettingsResolutionRestrictions,
 )
+from .user_info_by_id_response_200 import UserInfoByIdResponse200
+from .user_info_by_id_response_200_experiences import UserInfoByIdResponse200Experiences
+from .user_info_by_id_response_200_novel_user_experience_infos import (
+    UserInfoByIdResponse200NovelUserExperienceInfos,
+)
+from .user_info_by_id_response_200_teams_item import UserInfoByIdResponse200TeamsItem
 from .user_list_response_200_item import UserListResponse200Item
 from .user_list_response_200_item_experiences import UserListResponse200ItemExperiences
 from .user_list_response_200_item_novel_user_experience_infos import (

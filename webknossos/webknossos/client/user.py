@@ -4,6 +4,7 @@ import attr
 
 from webknossos.client._generated.api.default import (
     current_user_info,
+    user_info_by_id,
     user_list,
     user_logged_time,
 )
@@ -14,6 +15,9 @@ if TYPE_CHECKING:
     )
     from webknossos.client._generated.models.user_list_response_200_item import (
         UserListResponse200Item,
+    )
+    from webknossos.client._generated.models.user_info_by_id_response_200 import (
+        UserInfoByIdResponse200,
     )
 
 from webknossos.client.context import _get_generated_client
@@ -54,7 +58,12 @@ class User:
 
     @classmethod
     def _from_generated_response(
-        cls, response: Union["UserListResponse200Item", "CurrentUserInfoResponse200"]
+        cls,
+        response: Union[
+            "UserListResponse200Item",
+            "CurrentUserInfoResponse200",
+            "UserInfoByIdResponse200",
+        ],
     ) -> "User":
         return cls(
             id=response.id,
@@ -70,6 +79,14 @@ class User:
             is_admin=bool(response.is_admin),
             is_dataset_manager=bool(response.is_dataset_manager),
         )
+
+    @classmethod
+    def get_by_id(cls, id: str) -> "User":  # pylint: disable=redefined-builtin
+        """Returns the user specified by the passed id if your token authorizes you to see them."""
+        client = _get_generated_client(enforce_auth=True)
+        response = user_info_by_id.sync(id, client=client)
+        assert response is not None, "Could not fetch user by id."
+        return cls._from_generated_response(response)
 
     @classmethod
     def get_current_user(cls) -> "User":
