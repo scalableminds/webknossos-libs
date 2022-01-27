@@ -19,22 +19,15 @@ interactions:
     headers:
       Connection:
       - keep-alive
-      Content-Encoding:
-      - gzip
+      Content-Length:
+      - '445'
       Content-Type:
       - application/json
-      Date:
-      - Wed, 01 Dec 2021 11:22:19 GMT
+      Date: Mon, 01 Jan 2000 00:00:00 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
-      Server:
-      - nginx/1.17.10
       Strict-Transport-Security:
       - max-age=15724800; includeSubDomains
-      Transfer-Encoding:
-      - chunked
-      Vary:
-      - Accept-Encoding
       X-Permitted-Cross-Domain-Policies:
       - master-only
       X-XSS-Protection:

@@ -1,6 +1,5 @@
 import inspect
 import os
-import re
 from contextlib import contextmanager
 from tempfile import TemporaryDirectory
 from types import ModuleType
@@ -9,7 +8,6 @@ from typing import Any, Iterator, Tuple
 import numpy as np
 import pytest
 from scipy.spatial import cKDTree
-from vcr.request import Request as VcrRequest
 
 from webknossos.geometry import Mag
 
@@ -71,19 +69,10 @@ def test_skeleton_synapse_candidates() -> None:
     assert len(ids) == len(id_set), "Graph IDs are not unique."
 
 
-def _filter_timestamp_in_request(request: VcrRequest) -> VcrRequest:
-    request.uri = re.sub(
-        r"\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}", "TIMESTAMP", request.uri
-    )
-    return request
-
-
 # Allowing requests to download the cells3d dataset via pooch,
 # which are not snapshotted
 @pytest.mark.block_network(allowed_hosts=[".*"])
-@pytest.mark.vcr(
-    ignore_hosts=["gitlab.com"], before_record_request=_filter_timestamp_in_request
-)
+@pytest.mark.vcr(ignore_hosts=["gitlab.com"])
 def test_upload_image_data() -> None:
     with tmp_cwd():
         import examples.upload_image_data as example
@@ -129,7 +118,7 @@ class _DummyNearestNeighborClassifier:
         return self.labels[nearest_neighbors]
 
 
-@pytest.mark.vcr(before_record_request=_filter_timestamp_in_request)
+@pytest.mark.vcr()
 def test_learned_segmenter() -> None:
     with tmp_cwd():
         from skimage.future import trainable_segmentation
