@@ -2,14 +2,15 @@ from typing import List, Optional
 
 import attr
 
+from webknossos.administration import Project
 from webknossos.annotation import Annotation, AnnotationInfo
+from webknossos.client.context import _get_context
 from webknossos.geometry import BoundingBox
-from webknossos.task import Project
 
 
 @attr.frozen
 class Task:
-    id: str
+    task_id: str
     project_id: str
     dataset_name: str
 
@@ -31,7 +32,8 @@ class Task:
         bounding_box: Optional[BoundingBox],
         base_annotations: List[Annotation],
     ) -> "Task":
-        pass
+        context = _get_context()
+        token = context.required_token
 
     def get_annotation_infos(self) -> List[AnnotationInfo]:
         return []

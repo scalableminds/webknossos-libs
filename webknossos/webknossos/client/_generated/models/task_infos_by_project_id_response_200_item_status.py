@@ -2,32 +2,52 @@ from typing import Any, Dict, List, Type, TypeVar
 
 import attr
 
-T = TypeVar("T", bound="CurrentUserInfoResponse200NovelUserExperienceInfos")
+T = TypeVar("T", bound="TaskInfosByProjectIdResponse200ItemStatus")
 
 
 @attr.s(auto_attribs=True)
-class CurrentUserInfoResponse200NovelUserExperienceInfos:
+class TaskInfosByProjectIdResponse200ItemStatus:
     """ """
 
+    open_: int
+    active: int
+    finished: int
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
+        open_ = self.open_
+        active = self.active
+        finished = self.finished
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update({})
+        field_dict.update(
+            {
+                "open": open_,
+                "active": active,
+                "finished": finished,
+            }
+        )
 
         return field_dict
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        current_user_info_response_200_novel_user_experience_infos = cls()
+        open_ = d.pop("open")
 
-        current_user_info_response_200_novel_user_experience_infos.additional_properties = (
-            d
+        active = d.pop("active")
+
+        finished = d.pop("finished")
+
+        task_infos_by_project_id_response_200_item_status = cls(
+            open_=open_,
+            active=active,
+            finished=finished,
         )
-        return current_user_info_response_200_novel_user_experience_infos
+
+        task_infos_by_project_id_response_200_item_status.additional_properties = d
+        return task_infos_by_project_id_response_200_item_status
 
     @property
     def additional_keys(self) -> List[str]:

@@ -28,7 +28,7 @@ class User:
     """Represents a user of a webknossos instance.
     You can get users via `get_current_user` and `get_all_managed_users`."""
 
-    id: str
+    user_id: str
     email: str
     organization: str
     first_name: str
@@ -45,7 +45,7 @@ class User:
         """Get the logged times of this user.
         Returns a list of `LoggedTime` objects where one represents one month."""
         client = _get_generated_client(enforce_auth=True)
-        response = user_logged_time.sync(id=self.id, client=client)
+        response = user_logged_time.sync(id=self.user_id, client=client)
         assert response is not None, f"Could not fetch logged time of {self}"
         return [
             LoggedTime(
@@ -66,7 +66,7 @@ class User:
         ],
     ) -> "User":
         return cls(
-            id=response.id,
+            user_id=response.id,
             email=response.email,
             organization=response.organization,
             first_name=response.first_name,

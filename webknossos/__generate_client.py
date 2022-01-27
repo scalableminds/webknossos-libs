@@ -71,7 +71,9 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
         datastore_list,
         generate_token_for_data_store,
         project_info_by_id,
+        project_info_by_name,
         task_info,
+        task_infos_by_project_id,
         user_info_by_id,
         user_list,
         user_logged_time,
@@ -84,7 +86,8 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
 
     annotation_info_response = annotation_info.sync_detailed(
         typ="Explorational",
-        id="6114d9410100009f0096c640",
+        # id="6114d9410100009f0096c640",
+        id="61f28f06fc0100ba02768032",
         client=client,
         timestamp=unixtime,
     )
@@ -92,40 +95,58 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
     yield "annotationInfo", annotation_info_response.content
 
     dataset_info_response = dataset_info.sync_detailed(
-        organization_name="scalable_minds",
-        data_set_name="l4dense_motta_et_al_demo",
+        # organization_name="scalable_minds",
+        # data_set_name="l4dense_motta_et_al_demo",
+        organization_name="sample_organization",
+        data_set_name="l4_sample",
         client=client,
     )
     assert dataset_info_response.status_code == 200, dataset_info_response.content
     yield "datasetInfo", dataset_info_response.content
 
     task_info_response = task_info.sync_detailed(
-        id="61f151c10100000a01249afe", client=client
+        # id="61f151c10100000a01249afe", client=client
+        id="61f28ecbfc0100b702768030",
+        client=client,
     )
     assert task_info_response.status_code == 200, task_info_response.content
     yield "taskInfo", task_info_response.content
 
     user_info_by_id_response = user_info_by_id.sync_detailed(
-        id="5b5dd2fb1c00008230ec8174", client=client
+        # id="5b5dd2fb1c00008230ec8174", client=client
+        id="61efb24ff90100f901d637eb",
+        client=client,
     )
     assert user_info_by_id_response.status_code == 200, user_info_by_id_response.content
     yield "userInfoById", user_info_by_id_response.content
 
     project_info_by_id_response = project_info_by_id.sync_detailed(
-        id="61f1515e0100002f01249afa", client=client
+        # id="61f1515e0100002f01249afa", client=client
+        id="61efb258f901004c02d637ef",
+        client=client,
     )
     assert (
         project_info_by_id_response.status_code == 200
     ), project_info_by_id_response.content
     yield "projectInfoById", project_info_by_id_response.content
 
-    # blocked until this code can run against local webKnossos
-    #
-    # project_info_by_name_response = project_info_by_name.sync_detailed(
-    #    name="sampleProject", client=client
-    # )
-    # assert project_info_by_name_response.status_code == 200, project_info_by_name_response.content
-    # yield "projectInfoByName", project_info_by_name_response.content
+    project_info_by_name_response = project_info_by_name.sync_detailed(
+        name="sampleProject", client=client
+    )
+    assert (
+        project_info_by_name_response.status_code == 200
+    ), project_info_by_name_response.content
+    yield "projectInfoByName", project_info_by_name_response.content
+
+    task_infos_by_project_id_response = task_infos_by_project_id.sync_detailed(
+        # id="61f1515e0100002f01249afa", client=client
+        id="61efb258f901004c02d637ef",
+        client=client,
+    )
+    assert (
+        task_infos_by_project_id_response.status_code == 200
+    ), task_infos_by_project_id_response.content
+    yield "taskInfosByProjectId", task_infos_by_project_id_response.content
 
     for api_endpoint in [
         datastore_list,

@@ -1,35 +1,28 @@
-from typing import Any, Dict, List, Type, TypeVar, cast
+from typing import Any, Dict, List, Type, TypeVar
 
 import attr
 
-T = TypeVar("T", bound="TaskInfoResponse200BoundingBox")
+T = TypeVar("T", bound="TaskInfosByProjectIdResponse200ItemNeededExperience")
 
 
 @attr.s(auto_attribs=True)
-class TaskInfoResponse200BoundingBox:
+class TaskInfosByProjectIdResponse200ItemNeededExperience:
     """ """
 
-    top_left: List[int]
-    width: int
-    height: int
-    depth: int
+    domain: str
+    value: int
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        top_left = self.top_left
-
-        width = self.width
-        height = self.height
-        depth = self.depth
+        domain = self.domain
+        value = self.value
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "topLeft": top_left,
-                "width": width,
-                "height": height,
-                "depth": depth,
+                "domain": domain,
+                "value": value,
             }
         )
 
@@ -38,23 +31,19 @@ class TaskInfoResponse200BoundingBox:
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        top_left = cast(List[int], d.pop("topLeft"))
+        domain = d.pop("domain")
 
-        width = d.pop("width")
+        value = d.pop("value")
 
-        height = d.pop("height")
-
-        depth = d.pop("depth")
-
-        task_info_response_200_bounding_box = cls(
-            top_left=top_left,
-            width=width,
-            height=height,
-            depth=depth,
+        task_infos_by_project_id_response_200_item_needed_experience = cls(
+            domain=domain,
+            value=value,
         )
 
-        task_info_response_200_bounding_box.additional_properties = d
-        return task_info_response_200_bounding_box
+        task_infos_by_project_id_response_200_item_needed_experience.additional_properties = (
+            d
+        )
+        return task_infos_by_project_id_response_200_item_needed_experience
 
     @property
     def additional_keys(self) -> List[str]:

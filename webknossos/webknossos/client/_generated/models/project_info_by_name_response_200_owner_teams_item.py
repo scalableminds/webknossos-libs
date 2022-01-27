@@ -2,32 +2,52 @@ from typing import Any, Dict, List, Type, TypeVar
 
 import attr
 
-T = TypeVar("T", bound="CurrentUserInfoResponse200NovelUserExperienceInfos")
+T = TypeVar("T", bound="ProjectInfoByNameResponse200OwnerTeamsItem")
 
 
 @attr.s(auto_attribs=True)
-class CurrentUserInfoResponse200NovelUserExperienceInfos:
+class ProjectInfoByNameResponse200OwnerTeamsItem:
     """ """
 
+    id: str
+    name: str
+    is_team_manager: int
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
+        id = self.id
+        name = self.name
+        is_team_manager = self.is_team_manager
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update({})
+        field_dict.update(
+            {
+                "id": id,
+                "name": name,
+                "isTeamManager": is_team_manager,
+            }
+        )
 
         return field_dict
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        current_user_info_response_200_novel_user_experience_infos = cls()
+        id = d.pop("id")
 
-        current_user_info_response_200_novel_user_experience_infos.additional_properties = (
-            d
+        name = d.pop("name")
+
+        is_team_manager = d.pop("isTeamManager")
+
+        project_info_by_name_response_200_owner_teams_item = cls(
+            id=id,
+            name=name,
+            is_team_manager=is_team_manager,
         )
-        return current_user_info_response_200_novel_user_experience_infos
+
+        project_info_by_name_response_200_owner_teams_item.additional_properties = d
+        return project_info_by_name_response_200_owner_teams_item
 
     @property
     def additional_keys(self) -> List[str]:

@@ -2,17 +2,21 @@ from typing import Any, Dict, List, Type, TypeVar, cast
 
 import attr
 
-from ..models.task_info_response_200_needed_experience import (
-    TaskInfoResponse200NeededExperience,
+from ..models.task_infos_by_project_id_response_200_item_needed_experience import (
+    TaskInfosByProjectIdResponse200ItemNeededExperience,
 )
-from ..models.task_info_response_200_status import TaskInfoResponse200Status
-from ..models.task_info_response_200_type import TaskInfoResponse200Type
+from ..models.task_infos_by_project_id_response_200_item_status import (
+    TaskInfosByProjectIdResponse200ItemStatus,
+)
+from ..models.task_infos_by_project_id_response_200_item_type import (
+    TaskInfosByProjectIdResponse200ItemType,
+)
 
-T = TypeVar("T", bound="TaskInfoResponse200")
+T = TypeVar("T", bound="TaskInfosByProjectIdResponse200Item")
 
 
 @attr.s(auto_attribs=True)
-class TaskInfoResponse200:
+class TaskInfosByProjectIdResponse200Item:
     """ """
 
     id: str
@@ -20,11 +24,11 @@ class TaskInfoResponse200:
     project_id: str
     project_name: str
     team: str
-    type: TaskInfoResponse200Type
+    type: TaskInfosByProjectIdResponse200ItemType
     data_set: str
-    needed_experience: TaskInfoResponse200NeededExperience
+    needed_experience: TaskInfosByProjectIdResponse200ItemNeededExperience
     created: int
-    status: TaskInfoResponse200Status
+    status: TaskInfosByProjectIdResponse200ItemStatus
     script: str
     tracing_time: int
     creation_info: str
@@ -93,17 +97,19 @@ class TaskInfoResponse200:
 
         team = d.pop("team")
 
-        type = TaskInfoResponse200Type.from_dict(d.pop("type"))
+        type = TaskInfosByProjectIdResponse200ItemType.from_dict(d.pop("type"))
 
         data_set = d.pop("dataSet")
 
-        needed_experience = TaskInfoResponse200NeededExperience.from_dict(
-            d.pop("neededExperience")
+        needed_experience = (
+            TaskInfosByProjectIdResponse200ItemNeededExperience.from_dict(
+                d.pop("neededExperience")
+            )
         )
 
         created = d.pop("created")
 
-        status = TaskInfoResponse200Status.from_dict(d.pop("status"))
+        status = TaskInfosByProjectIdResponse200ItemStatus.from_dict(d.pop("status"))
 
         script = d.pop("script")
 
@@ -117,7 +123,7 @@ class TaskInfoResponse200:
 
         edit_rotation = cast(List[int], d.pop("editRotation"))
 
-        task_info_response_200 = cls(
+        task_infos_by_project_id_response_200_item = cls(
             id=id,
             formatted_hash=formatted_hash,
             project_id=project_id,
@@ -136,8 +142,8 @@ class TaskInfoResponse200:
             edit_rotation=edit_rotation,
         )
 
-        task_info_response_200.additional_properties = d
-        return task_info_response_200
+        task_infos_by_project_id_response_200_item.additional_properties = d
+        return task_infos_by_project_id_response_200_item
 
     @property
     def additional_keys(self) -> List[str]:
