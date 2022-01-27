@@ -49,9 +49,6 @@ from .dataset_info_response_200_data_source import DatasetInfoResponse200DataSou
 from .dataset_info_response_200_data_source_data_layers_item import (
     DatasetInfoResponse200DataSourceDataLayersItem,
 )
-from .dataset_info_response_200_data_source_data_layers_item_admin_view_configuration import (
-    DatasetInfoResponse200DataSourceDataLayersItemAdminViewConfiguration,
-)
 from .dataset_info_response_200_data_source_data_layers_item_bounding_box import (
     DatasetInfoResponse200DataSourceDataLayersItemBoundingBox,
 )
@@ -67,9 +64,13 @@ from .project_info_by_id_response_200_owner import ProjectInfoByIdResponse200Own
 from .project_info_by_id_response_200_owner_teams_item import (
     ProjectInfoByIdResponse200OwnerTeamsItem,
 )
+from .project_info_by_name_response_200 import ProjectInfoByNameResponse200
+from .project_info_by_name_response_200_owner import ProjectInfoByNameResponse200Owner
+from .project_info_by_name_response_200_owner_teams_item import (
+    ProjectInfoByNameResponse200OwnerTeamsItem,
+)
 from .task_create_from_files_json_body import TaskCreateFromFilesJsonBody
 from .task_info_response_200 import TaskInfoResponse200
-from .task_info_response_200_bounding_box import TaskInfoResponse200BoundingBox
 from .task_info_response_200_needed_experience import (
     TaskInfoResponse200NeededExperience,
 )
@@ -78,6 +79,24 @@ from .task_info_response_200_type import TaskInfoResponse200Type
 from .task_info_response_200_type_settings import TaskInfoResponse200TypeSettings
 from .task_info_response_200_type_settings_resolution_restrictions import (
     TaskInfoResponse200TypeSettingsResolutionRestrictions,
+)
+from .task_infos_by_project_id_response_200_item import (
+    TaskInfosByProjectIdResponse200Item,
+)
+from .task_infos_by_project_id_response_200_item_needed_experience import (
+    TaskInfosByProjectIdResponse200ItemNeededExperience,
+)
+from .task_infos_by_project_id_response_200_item_status import (
+    TaskInfosByProjectIdResponse200ItemStatus,
+)
+from .task_infos_by_project_id_response_200_item_type import (
+    TaskInfosByProjectIdResponse200ItemType,
+)
+from .task_infos_by_project_id_response_200_item_type_settings import (
+    TaskInfosByProjectIdResponse200ItemTypeSettings,
+)
+from .task_infos_by_project_id_response_200_item_type_settings_resolution_restrictions import (
+    TaskInfosByProjectIdResponse200ItemTypeSettingsResolutionRestrictions,
 )
 from .user_info_by_id_response_200 import UserInfoByIdResponse200
 from .user_info_by_id_response_200_experiences import UserInfoByIdResponse200Experiences

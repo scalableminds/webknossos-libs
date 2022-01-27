@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Type, TypeVar, cast
+from typing import Any, Dict, List, Type, TypeVar
 
 import attr
 
@@ -35,7 +35,7 @@ class DatasetInfoResponse200:
     is_unreported: int
     is_foreign: int
     jobs_enabled: int
-    tags: List[str]
+    tags: List[Any]
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -65,7 +65,11 @@ class DatasetInfoResponse200:
         is_unreported = self.is_unreported
         is_foreign = self.is_foreign
         jobs_enabled = self.jobs_enabled
-        tags = self.tags
+        tags = []
+        for tags_item_data in self.tags:
+            tags_item = tags_item_data
+
+            tags.append(tags_item)
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -142,7 +146,12 @@ class DatasetInfoResponse200:
 
         jobs_enabled = d.pop("jobsEnabled")
 
-        tags = cast(List[str], d.pop("tags"))
+        tags = []
+        _tags = d.pop("tags")
+        for tags_item_data in _tags:
+            tags_item = tags_item_data
+
+            tags.append(tags_item)
 
         dataset_info_response_200 = cls(
             name=name,

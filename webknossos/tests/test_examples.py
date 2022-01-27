@@ -66,7 +66,7 @@ def test_skeleton_synapse_candidates() -> None:
     )
 
     assert synapse_parent_group.get_total_node_count() == 57
-    ids = [g.id for g in nml.flattened_graphs()]
+    ids = [g.user_id for g in nml.flattened_graphs()]
     id_set = set(ids)
     assert len(ids) == len(id_set), "Graph IDs are not unique."
 

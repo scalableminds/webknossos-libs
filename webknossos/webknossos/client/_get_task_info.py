@@ -1,6 +1,6 @@
+from webknossos.administration.task import Task
 from webknossos.client._generated.api.default import task_info
 from webknossos.client.context import _get_generated_client
-from webknossos.task.task import Task
 
 
 def get_task_info(id: str) -> Task:  # pylint: disable=redefined-builtin

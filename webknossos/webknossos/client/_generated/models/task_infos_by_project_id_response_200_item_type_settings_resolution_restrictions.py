@@ -2,11 +2,13 @@ from typing import Any, Dict, List, Type, TypeVar
 
 import attr
 
-T = TypeVar("T", bound="CurrentUserInfoResponse200NovelUserExperienceInfos")
+T = TypeVar(
+    "T", bound="TaskInfosByProjectIdResponse200ItemTypeSettingsResolutionRestrictions"
+)
 
 
 @attr.s(auto_attribs=True)
-class CurrentUserInfoResponse200NovelUserExperienceInfos:
+class TaskInfosByProjectIdResponse200ItemTypeSettingsResolutionRestrictions:
     """ """
 
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
@@ -22,12 +24,14 @@ class CurrentUserInfoResponse200NovelUserExperienceInfos:
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        current_user_info_response_200_novel_user_experience_infos = cls()
+        task_infos_by_project_id_response_200_item_type_settings_resolution_restrictions = (
+            cls()
+        )
 
-        current_user_info_response_200_novel_user_experience_infos.additional_properties = (
+        task_infos_by_project_id_response_200_item_type_settings_resolution_restrictions.additional_properties = (
             d
         )
-        return current_user_info_response_200_novel_user_experience_infos
+        return task_infos_by_project_id_response_200_item_type_settings_resolution_restrictions
 
     @property
     def additional_keys(self) -> List[str]:
