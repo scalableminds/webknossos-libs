@@ -117,9 +117,6 @@ def _zarr_chunk_converter(
 
     slices = bounding_box.to_slices()
     zarr_file = zarr.open(source_zarr_path, "r")
-    shape = zarr_file.shape
-
-    slices = tuple(slice(s.start, min([s.stop, s_])) for s, s_ in zip(slices, shape))
     source_data = zarr_file[slices][None, ...]
 
     if flip_axes:
