@@ -20,7 +20,7 @@ from webknossos.client.context import _clear_all_context_caches
 
 from .constants import TESTOUTPUT_DIR
 
-### HYPOTHESIS STRATEGIES
+### HYPOTHESIS STRATEGIES (library to test many combinations for data class input)
 
 
 _vec3_int_strategy = st.builds(wk.Vec3Int, st.integers(), st.integers(), st.integers())
@@ -99,6 +99,8 @@ _REPLACE_IN_REQUEST_MULTIFORM = {
 
 
 def _before_record_request(request: VcrRequest) -> VcrRequest:
+    """This function formats and cleans request data to make it
+    more readable and idempotent when re-snapshotting"""
     request.uri = re.sub(
         r"\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}", "2000-01-01_00-00-00", request.uri
     )
@@ -175,21 +177,25 @@ def _decode_if_possible(value: Any) -> Any:
     return value
 
 
+def _clean_zip_file_content(filename: str, value: Any) -> Any:
+    value = _handle_special_formats(value)
+    if isinstance(value, str) and filename.endswith(".nml"):
+        return re.sub(
+            r"<meta name=\"timestamp\" content=\"\d+\" />",
+            '<meta name="timestamp" content="1643210000000" />',
+            value,
+        )
+    return value
+
+
 def _unzip_if_possible(value: Any) -> Any:
     if isinstance(value, bytes):
         try:
             with ZipFile(BytesIO(value)) as zipfile:
                 files = {}
                 for name in zipfile.namelist():
-                    entry: Any = zipfile.read(name)
-                    entry = _handle_special_formats(entry)
-                    if isinstance(entry, str) and name.endswith(".nml"):
-                        entry = re.sub(
-                            r"<meta name=\"timestamp\" content=\"\d+\" />",
-                            '<meta name="timestamp" content="1643210000000" />',
-                            entry,
-                        )
-                    files[name] = entry
+                    entry = zipfile.read(name)
+                    files[name] = _clean_zip_file_content(name, entry)
             return {"zip": files}
         except Exception:
             pass
@@ -236,6 +242,8 @@ httpx_stubs._to_serialized_response = _to_serialized_response
 
 
 def _from_special_formats(value: Any) -> bytes:
+    # zip-files were previously decoded as dicts with the key "zip",
+    # see _unzip_if_possible()
     if isinstance(value, dict) and "zip" in value:
         buffer = BytesIO()
         with ZipFile(buffer, mode="a") as zipfile:
