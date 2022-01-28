@@ -1,9 +1,11 @@
-from webknossos.annotation.annotation import AnnotationType
+from webknossos.administration import Project
 
 
 def main() -> None:
-    # task = Task.get_by_id("61f151c10100000a01249afe")
-    print(f"Task: . {AnnotationType.EXPLORATIONAL.value}")
+    p = Project.get_by_name("sampleProject")
+    tasks = p.get_tasks()
+    annotations = [t.get_annotation_infos() for t in tasks]
+    print(annotations)
 
 
 if __name__ == "__main__":

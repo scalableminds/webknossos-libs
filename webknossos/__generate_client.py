@@ -63,8 +63,10 @@ def add_api_prefix_for_non_data_paths(openapi_schema: Dict) -> None:
 
 
 def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
+    """Send requests to webKnossos and record the schema of their replies"""
     from webknossos.client._generated.api.default import (
         annotation_info,
+        annotation_infos_by_task_id,
         build_info,
         current_user_info,
         dataset_info,
@@ -80,73 +82,93 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
     )
     from webknossos.client.context import _get_generated_client
 
+    # explorative_annotation_id = "6114d9410100009f0096c640"
+    # organization_name = "scalable_minds",
+    # data_set_name = "l4dense_motta_et_al_demo"
+    # task_id = "61f151c10100000a01249afe"
+    # user_id = "5b5dd2fb1c00008230ec8174"
+    # project_id = "61f1515e0100002f01249afa"
+    # project_name = "sampleProject"
+    explorative_annotation_id = "61f28f06fc0100ba02768032"
+    organization_name = "sample_organization"
+    dataset_name = "l4_sample"
+    task_id = "61f28ecbfc0100b702768030"
+    user_id = "61efb24ff90100f901d637eb"
+    project_id = "61efb258f901004c02d637ef"
+    project_name = "sampleProject"
+
     d = datetime.utcnow()
     unixtime = calendar.timegm(d.utctimetuple())
     client = _get_generated_client(enforce_auth=True)
 
-    annotation_info_response = annotation_info.sync_detailed(
-        typ="Explorational",
-        # id="6114d9410100009f0096c640",
-        id="61f28f06fc0100ba02768032",
-        client=client,
-        timestamp=unixtime,
+    yield extract_200_response(
+        "annotationInfo",
+        annotation_info.sync_detailed(
+            typ="Explorational",
+            id=explorative_annotation_id,
+            client=client,
+            timestamp=unixtime,
+        ),
     )
-    assert annotation_info_response.status_code == 200, annotation_info_response.content
-    yield "annotationInfo", annotation_info_response.content
 
-    dataset_info_response = dataset_info.sync_detailed(
-        # organization_name="scalable_minds",
-        # data_set_name="l4dense_motta_et_al_demo",
-        organization_name="sample_organization",
-        data_set_name="l4_sample",
-        client=client,
+    yield extract_200_response(
+        "datasetInfo",
+        dataset_info.sync_detailed(
+            organization_name=organization_name,
+            data_set_name=dataset_name,
+            client=client,
+        ),
     )
-    assert dataset_info_response.status_code == 200, dataset_info_response.content
-    yield "datasetInfo", dataset_info_response.content
 
-    task_info_response = task_info.sync_detailed(
-        # id="61f151c10100000a01249afe", client=client
-        id="61f28ecbfc0100b702768030",
-        client=client,
+    yield extract_200_response(
+        "taskInfo",
+        task_info.sync_detailed(
+            id=task_id,
+            client=client,
+        ),
     )
-    assert task_info_response.status_code == 200, task_info_response.content
-    yield "taskInfo", task_info_response.content
 
-    user_info_by_id_response = user_info_by_id.sync_detailed(
-        # id="5b5dd2fb1c00008230ec8174", client=client
-        id="61efb24ff90100f901d637eb",
-        client=client,
+    yield extract_200_response(
+        "userInfoById",
+        user_info_by_id.sync_detailed(
+            id=user_id,
+            client=client,
+        ),
     )
-    assert user_info_by_id_response.status_code == 200, user_info_by_id_response.content
-    yield "userInfoById", user_info_by_id_response.content
 
-    project_info_by_id_response = project_info_by_id.sync_detailed(
-        # id="61f1515e0100002f01249afa", client=client
-        id="61efb258f901004c02d637ef",
-        client=client,
+    yield extract_200_response(
+        "projectInfoById",
+        project_info_by_id.sync_detailed(
+            id=project_id,
+            client=client,
+        ),
     )
-    assert (
-        project_info_by_id_response.status_code == 200
-    ), project_info_by_id_response.content
-    yield "projectInfoById", project_info_by_id_response.content
 
-    project_info_by_name_response = project_info_by_name.sync_detailed(
-        name="sampleProject", client=client
+    yield extract_200_response(
+        "projectInfoByName",
+        project_info_by_name.sync_detailed(name=project_name, client=client),
     )
-    assert (
-        project_info_by_name_response.status_code == 200
-    ), project_info_by_name_response.content
-    yield "projectInfoByName", project_info_by_name_response.content
 
-    task_infos_by_project_id_response = task_infos_by_project_id.sync_detailed(
-        # id="61f1515e0100002f01249afa", client=client
-        id="61efb258f901004c02d637ef",
-        client=client,
+    yield extract_200_response(
+        "taskInfosByProjectId",
+        task_infos_by_project_id.sync_detailed(
+            id=project_id,
+            client=client,
+        ),
     )
-    assert (
-        task_infos_by_project_id_response.status_code == 200
-    ), task_infos_by_project_id_response.content
-    yield "taskInfosByProjectId", task_infos_by_project_id_response.content
+
+    yield extract_200_response(
+        "annotationInfosByTaskId",
+        annotation_infos_by_task_id.sync_detailed(id=task_id, client=client),
+    )
+
+    yield extract_200_response(
+        "userLoggedTime",
+        user_logged_time.sync_detailed(
+            id=user_id,
+            client=client,
+        ),
+    )
 
     for api_endpoint in [
         datastore_list,
@@ -158,21 +180,9 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
         api_endpoint_name = api_endpoint.__name__.split(".")[-1]
         api_endpoint_name = snake_to_camel_case(api_endpoint_name)
 
-        api_endpoint_response = api_endpoint.sync_detailed(client=client)
-        assert api_endpoint_response.status_code == 200, api_endpoint_response.content
-        yield api_endpoint_name, api_endpoint_response.content
-
-        if api_endpoint == current_user_info:
-            user_id = json.loads(api_endpoint_response.content)["id"]
-
-    user_logged_time_response = user_logged_time.sync_detailed(
-        id=user_id,
-        client=client,
-    )
-    assert (
-        user_logged_time_response.status_code == 200
-    ), user_logged_time_response.content
-    yield "userLoggedTime", user_logged_time_response.content
+        yield extract_200_response(
+            api_endpoint_name, api_endpoint.sync_detailed(client=client)
+        )
 
 
 FIELDS_WITH_VARYING_CONTENT = [
@@ -180,6 +190,11 @@ FIELDS_WITH_VARYING_CONTENT = [
     "novelUserExperienceInfos",
     "viewConfiguration",
 ]
+
+
+def extract_200_response(name: str, response: Any) -> Tuple[str, bytes]:
+    assert response.status_code == 200, response.content
+    return name, response.content
 
 
 def make_properties_required(x: Any) -> None:

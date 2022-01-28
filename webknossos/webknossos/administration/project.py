@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, List, Union
 
 import attr
 
-from webknossos.administration import User
+from webknossos.administration.user import User
 from webknossos.client._generated.api.default import (
     project_info_by_id,
     project_info_by_name,

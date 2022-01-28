@@ -29,6 +29,54 @@ from .annotation_info_response_200_user import AnnotationInfoResponse200User
 from .annotation_info_response_200_user_teams_item import (
     AnnotationInfoResponse200UserTeamsItem,
 )
+from .annotation_infos_by_task_id_response_200_item import (
+    AnnotationInfosByTaskIdResponse200Item,
+)
+from .annotation_infos_by_task_id_response_200_item_annotation_layers_item import (
+    AnnotationInfosByTaskIdResponse200ItemAnnotationLayersItem,
+)
+from .annotation_infos_by_task_id_response_200_item_data_store import (
+    AnnotationInfosByTaskIdResponse200ItemDataStore,
+)
+from .annotation_infos_by_task_id_response_200_item_restrictions import (
+    AnnotationInfosByTaskIdResponse200ItemRestrictions,
+)
+from .annotation_infos_by_task_id_response_200_item_settings import (
+    AnnotationInfosByTaskIdResponse200ItemSettings,
+)
+from .annotation_infos_by_task_id_response_200_item_settings_resolution_restrictions import (
+    AnnotationInfosByTaskIdResponse200ItemSettingsResolutionRestrictions,
+)
+from .annotation_infos_by_task_id_response_200_item_stats import (
+    AnnotationInfosByTaskIdResponse200ItemStats,
+)
+from .annotation_infos_by_task_id_response_200_item_task import (
+    AnnotationInfosByTaskIdResponse200ItemTask,
+)
+from .annotation_infos_by_task_id_response_200_item_task_needed_experience import (
+    AnnotationInfosByTaskIdResponse200ItemTaskNeededExperience,
+)
+from .annotation_infos_by_task_id_response_200_item_task_status import (
+    AnnotationInfosByTaskIdResponse200ItemTaskStatus,
+)
+from .annotation_infos_by_task_id_response_200_item_task_type import (
+    AnnotationInfosByTaskIdResponse200ItemTaskType,
+)
+from .annotation_infos_by_task_id_response_200_item_task_type_settings import (
+    AnnotationInfosByTaskIdResponse200ItemTaskTypeSettings,
+)
+from .annotation_infos_by_task_id_response_200_item_task_type_settings_resolution_restrictions import (
+    AnnotationInfosByTaskIdResponse200ItemTaskTypeSettingsResolutionRestrictions,
+)
+from .annotation_infos_by_task_id_response_200_item_tracing_store import (
+    AnnotationInfosByTaskIdResponse200ItemTracingStore,
+)
+from .annotation_infos_by_task_id_response_200_item_user import (
+    AnnotationInfosByTaskIdResponse200ItemUser,
+)
+from .annotation_infos_by_task_id_response_200_item_user_teams_item import (
+    AnnotationInfosByTaskIdResponse200ItemUserTeamsItem,
+)
 from .build_info_response_200 import BuildInfoResponse200
 from .build_info_response_200_webknossos import BuildInfoResponse200Webknossos
 from .build_info_response_200_webknossos_wrap import BuildInfoResponse200WebknossosWrap

@@ -4,7 +4,10 @@ import attr
 
 from webknossos.administration import Project
 from webknossos.annotation import Annotation, AnnotationInfo
-from webknossos.client._generated.api.default import task_info
+from webknossos.client._generated.api.default import (
+    annotation_infos_by_task_id,
+    task_info,
+)
 from webknossos.client.context import _get_context, _get_generated_client
 from webknossos.geometry import BoundingBox
 
@@ -53,7 +56,10 @@ class Task:
         return cls(response.id, response.project_name, response.data_set)
 
     def get_annotation_infos(self) -> List[AnnotationInfo]:
-        return []
+        client = _get_generated_client()
+        response = annotation_infos_by_task_id.sync(id=self.task_id, client=client)
+        assert response is not None
+        return [AnnotationInfo._from_generated_response(a) for a in response]
 
     def get_project(self) -> Project:
         return Project.get_by_id(self.project_id)
