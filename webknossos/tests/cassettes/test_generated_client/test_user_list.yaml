@@ -1,0 +1,45 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - webknossos.org
+      user-agent:
+      - python-httpx/0.18.2
+    method: GET
+    uri: https://webknossos.org/api/users
+  response:
+    content: '[{"id":"6006a44d0100007e0070d734","email":"jonathan@scm.io","firstName":"Jonathan","lastName":"Striebel","isAdmin":true,"isDatasetManager":false,"isActive":true,"teams":[{"id":"5b3ce78557b7414e59269427","name":"scalable
+      minds","isTeamManager":false}],"experiences":{},"lastActivity":1611048013169,"isAnonymous":false,"isEditable":true,"organization":"scalable_minds","novelUserExperienceInfos":{"lastViewedWhatsNewTimestamp":1643210728966,"shouldSeeModernControlsModal":false,"hasSeenDashboardWelcomeBanner":true},"selectedTheme":"auto","created":1611048013169,"lastTaskTypeId":null}]'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 26 Oct 2021 15:29:45 GMT
+      Referrer-Policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      Server:
+      - nginx/1.17.10
+      Strict-Transport-Security:
+      - max-age=15724800; includeSubDomains
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+      X-Permitted-Cross-Domain-Policies:
+      - master-only
+      X-XSS-Protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+version: 1
