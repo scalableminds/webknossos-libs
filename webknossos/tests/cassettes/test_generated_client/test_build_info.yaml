@@ -9,30 +9,31 @@ interactions:
       connection:
       - keep-alive
       host:
-      - webknossos.org
+      - localhost:9000
       user-agent:
       - python-httpx/0.18.2
     method: GET
-    uri: https://webknossos.org/api/buildinfo
+    uri: http://localhost:9000/api/buildinfo
   response:
-    content: '{"webknossos":{"name":"webknossos","ciTag":"","commitHash":"12f1c1970fbc40ada2a530b5e95e75d55dca4009","ciBuild":"16685","scalaVersion":"2.12.12","version":"16685","sbtVersion":"1.4.1","datastoreApiVersion":"1.0","commitDate":"Wed
+    content: '{"webknossos":{"name":"webknossos","ciTag":"","commitHash":"12f1c1970fbc40ada2a530b5e95e75d55dca4009","ciBuild":"","scalaVersion":"2.12.12","version":"dev","sbtVersion":"1.4.1","datastoreApiVersion":"1.0","commitDate":"Wed
       Jan 26 15:18:52 2022 +0000"},"webknossos-wrap":{"builtAtMillis":"1640035836569","name":"webknossos-wrap","commitHash":"8b842648702f469a3ffd90dc8a68c4310e64b351","scalaVersion":"2.12.7","version":"1.1.15","sbtVersion":"1.4.1","builtAtString":"2021-12-20
-      21:30:36.569"},"schemaVersion":80,"token":"xxxsecrettokenxxx","localDataStoreEnabled":false,"localTracingStoreEnabled":true}'
+      21:30:36.569"},"schemaVersion":80,"token":"xxxsecrettokenxxx","localDataStoreEnabled":true,"localTracingStoreEnabled":true}'
     headers:
-      Connection:
-      - keep-alive
-      Content-Length:
-      - '612'
-      Content-Type:
+      X-Powered-By:
+      - Express
+      connection:
+      - close
+      content-length:
+      - '604'
+      content-type:
       - application/json
-      Date: Mon, 01 Jan 2000 00:00:00 GMT
-      Referrer-Policy:
+      date:
+      - Mon, 31 Jan 2022 16:35:37 GMT
+      referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
-      Strict-Transport-Security:
-      - max-age=15724800; includeSubDomains
-      X-Permitted-Cross-Domain-Policies:
+      x-permitted-cross-domain-policies:
       - master-only
-      X-XSS-Protection:
+      x-xss-protection:
       - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200

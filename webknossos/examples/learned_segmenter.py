@@ -28,6 +28,7 @@ def main() -> None:
         annotation.dataset_name,
         organization_name="scalable_minds",
         path=new_dataset_name,
+        webknossos_url="https://webknossos.org",
     )
     dataset.name = new_dataset_name
 
@@ -77,21 +78,17 @@ def main() -> None:
     segmentation_layer.bounding_box = dataset.layers["color"].bounding_box
     segmentation_layer.add_mag(mag, compress=True).write(segmentation)
 
-    # Get your auth token from https://webknossos.org/auth/token
-    with wk.webknossos_context(
-        url="http://localhost:9000", token="secretSampleUserToken"
-    ):
-        url = dataset.upload(
-            layers_to_link=[
-                wk.LayerToLink(
-                    organization_name="scalable_minds",
-                    dataset_name=annotation.dataset_name,
-                    layer_name="color",
-                )
-            ]
-            if "PYTEST_CURRENT_TEST" not in os.environ
-            else None
-        )
+    url = dataset.upload(
+        layers_to_link=[
+            wk.LayerToLink(
+                organization_name="scalable_minds",
+                dataset_name=annotation.dataset_name,
+                layer_name="color",
+            )
+        ]
+        if "PYTEST_CURRENT_TEST" not in os.environ
+        else None
+    )
 
     print(f"Successfully uploaded {url}")
 

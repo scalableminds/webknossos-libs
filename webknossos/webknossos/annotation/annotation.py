@@ -1,13 +1,13 @@
 import re
 import warnings
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from enum import Enum, unique
 from io import BytesIO
 from os import PathLike
 from pathlib import Path
 from shutil import copyfile
 from tempfile import TemporaryDirectory
-from typing import IO, Iterator, List, NamedTuple, Optional, Union, cast
+from typing import IO, ContextManager, Iterator, List, NamedTuple, Optional, Union, cast
 from zipfile import ZipFile
 
 from attr import dataclass
@@ -126,7 +126,7 @@ class Annotation:
 
     @classmethod
     def download(cls, annotation_path: str) -> "Annotation":
-        from webknossos.client.context import _get_context
+        from webknossos.client.context import _get_context, webknossos_context
 
         match = re.match(annotation_url_regex, annotation_path)
         assert (
@@ -134,13 +134,23 @@ class Annotation:
         ), "Annotation.download() must be called with an annotation url, e.g. https://webknossos.org/annotations/Explorational/6114d9410100009f0096c640"
         webknossos_url, annotation_type_str, annotation_id = match.groups()
         annotation_type = AnnotationType(annotation_type_str)
-        assert webknossos_url == _get_context().url, (
-            f"The supplied url {webknossos_url} does not match your current context {_get_context().url},\n"
-            + "please adapt it e.g. via 'with webknossos_context(…)'"
-        )
+
         from webknossos.client._download_annotation import download_annotation
 
-        return download_annotation(annotation_type, annotation_id)
+        if webknossos_url != _get_context().url:
+            warnings.warn(
+                f"The supplied url {webknossos_url} does not match your current context {_get_context().url}. "
+                + "Only public annotations can be downloaded this way, using no token. "
+                + "Please see https://docs.webknossos.org/api/webknossos/client/context.html to adapt the URL and token."
+            )
+            context: ContextManager[None] = webknossos_context(
+                webknossos_url, token=None
+            )
+        else:
+            context = nullcontext()
+
+        with context:
+            return download_annotation(annotation_type, annotation_id)
 
     @contextmanager
     def _open_nml(self) -> Iterator[IO[bytes]]:

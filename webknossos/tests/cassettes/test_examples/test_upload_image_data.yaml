@@ -19,16 +19,21 @@ interactions:
   response:
     content: '{"token":"xxxsecrettokenxxx"}'
     headers:
-      Content-Length:
+      X-Powered-By:
+      - Express
+      connection:
+      - close
+      content-length:
       - '34'
-      Content-Type:
+      content-type:
       - application/json
-      Date: Mon, 01 Jan 2000 00:00:00 GMT
-      Referrer-Policy:
+      date:
+      - Mon, 31 Jan 2022 16:35:20 GMT
+      referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
-      X-Permitted-Cross-Domain-Policies:
+      x-permitted-cross-domain-policies:
       - master-only
-      X-XSS-Protection:
+      x-xss-protection:
       - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
@@ -48,18 +53,23 @@ interactions:
     method: GET
     uri: http://localhost:9000/api/datastores
   response:
-    content: '[{"name":"localhost","url":"http://localhost:9000","isForeign":false,"isScratch":false,"isConnector":false,"allowsUpload":true}]'
+    content: '[{"name":"connect","url":"http://localhost:8000","isForeign":false,"isScratch":false,"isConnector":true,"allowsUpload":false},{"name":"localhost","url":"http://localhost:9000","isForeign":false,"isScratch":false,"isConnector":false,"allowsUpload":true}]'
     headers:
-      Content-Length:
-      - '128'
-      Content-Type:
+      X-Powered-By:
+      - Express
+      connection:
+      - close
+      content-length:
+      - '253'
+      content-type:
       - application/json
-      Date: Mon, 01 Jan 2000 00:00:00 GMT
-      Referrer-Policy:
+      date:
+      - Mon, 31 Jan 2022 16:35:20 GMT
+      referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
-      X-Permitted-Cross-Domain-Policies:
+      x-permitted-cross-domain-policies:
       - master-only
-      X-XSS-Protection:
+      x-xss-protection:
       - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
@@ -79,18 +89,23 @@ interactions:
     method: GET
     uri: http://localhost:9000/api/user
   response:
-    content: '{"id":"61f273eb0100000100a72f50","email":"sample@scm.io","firstName":"Sample","lastName":"User","isAdmin":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"61f273eb0100000100a72f4e","name":"sample_organization","isTeamManager":true}],"experiences":{"sampleExp":10},"lastActivity":1643279339776,"isAnonymous":false,"isEditable":true,"organization":"sample_organization","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1643279339777,"lastTaskTypeId":null}'
+    content: '{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1460379469053,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null}'
     headers:
-      Content-Length:
-      - '479'
-      Content-Type:
+      X-Powered-By:
+      - Express
+      connection:
+      - close
+      content-length:
+      - '611'
+      content-type:
       - application/json
-      Date: Mon, 01 Jan 2000 00:00:00 GMT
-      Referrer-Policy:
+      date:
+      - Mon, 31 Jan 2022 16:35:20 GMT
+      referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
-      X-Permitted-Cross-Domain-Policies:
+      x-permitted-cross-domain-policies:
       - master-only
-      X-XSS-Protection:
+      x-xss-protection:
       - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
@@ -108,23 +123,28 @@ interactions:
       user-agent:
       - python-httpx/0.18.2
     method: GET
-    uri: http://localhost:9000/api/datasets/sample_organization/cell_2000-01-01_00-00-00/isValidNewName
+    uri: http://localhost:9000/api/datasets/Organization_X/cell_2000-01-01_00-00-00/isValidNewName
   response:
     content: ''
     headers:
-      Content-Length:
+      X-Powered-By:
+      - Express
+      connection:
+      - close
+      content-length:
       - '0'
-      Date: Mon, 01 Jan 2000 00:00:00 GMT
-      Referrer-Policy:
+      date:
+      - Mon, 31 Jan 2022 16:35:20 GMT
+      referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
-      X-Permitted-Cross-Domain-Policies:
+      x-permitted-cross-domain-policies:
       - master-only
-      X-XSS-Protection:
+      x-xss-protection:
       - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
-    body: '{"uploadId": "2000-01-01T00-00-00__0011", "organization": "sample_organization",
+    body: '{"uploadId": "2000-01-01T00-00-00__0011", "organization": "Organization_X",
       "name": "cell_2000-01-01_00-00-00", "totalFileCount": 5, "initialTeams": [],
       "layersToLink": []}'
     headers:
@@ -135,7 +155,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '209'
+      - '204'
       content-type:
       - application/json
       host:
@@ -147,18 +167,23 @@ interactions:
   response:
     content: ''
     headers:
-      Access-Control-Allow-Origin:
+      X-Powered-By:
+      - Express
+      access-control-allow-origin:
       - '*'
-      Access-Control-Max-Age:
+      access-control-max-age:
       - '600'
-      Content-Length:
+      connection:
+      - close
+      content-length:
       - '0'
-      Date: Mon, 01 Jan 2000 00:00:00 GMT
-      Referrer-Policy:
+      date:
+      - Mon, 31 Jan 2022 16:35:20 GMT
+      referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
-      X-Permitted-Cross-Domain-Policies:
+      x-permitted-cross-domain-policies:
       - master-only
-      X-XSS-Protection:
+      x-xss-protection:
       - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
@@ -171,7 +196,7 @@ interactions:
       form-data; name=\"resumableRelativePath\"\n\ndatasource-properties.json\n--\nContent-Disposition:
       form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
       name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n1572\n--\nContent-Disposition:
-      form-data; name=\"owningOrganization\"\n\nsample_organization\n--\nContent-Disposition:
+      form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
       form-data; name=\"name\"\n\ncell_2000-01-01_00-00-00\n--\nContent-Disposition:
       form-data; name=\"totalFileCount\"\n\n5\n--\nContent-Disposition: form-data;
       name=\"file\"; filename=\"upload\"\nContent-Type: application/octet-stream\n\n{\n
@@ -204,7 +229,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '3148'
+      - '3143'
       content-type:
       - multipart/form-data; boundary=fffffff0000000
       host:
@@ -216,18 +241,23 @@ interactions:
   response:
     content: ''
     headers:
-      Access-Control-Allow-Origin:
+      X-Powered-By:
+      - Express
+      access-control-allow-origin:
       - '*'
-      Access-Control-Max-Age:
+      access-control-max-age:
       - '600'
-      Content-Length:
+      connection:
+      - close
+      content-length:
       - '0'
-      Date: Mon, 01 Jan 2000 00:00:00 GMT
-      Referrer-Policy:
+      date:
+      - Mon, 31 Jan 2022 16:35:20 GMT
+      referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
-      X-Permitted-Cross-Domain-Policies:
+      x-permitted-cross-domain-policies:
       - master-only
-      X-XSS-Protection:
+      x-xss-protection:
       - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
@@ -299,7 +329,7 @@ interactions:
       Content-Disposition: form-data; name="owningOrganization"
 
 
-      sample_organization
+      Organization_X
 
       --
 
@@ -328,7 +358,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '15349254'
+      - '15349249'
       content-type:
       - multipart/form-data; boundary=fffffff0000000
       host:
@@ -340,18 +370,23 @@ interactions:
   response:
     content: ''
     headers:
-      Access-Control-Allow-Origin:
+      X-Powered-By:
+      - Express
+      access-control-allow-origin:
       - '*'
-      Access-Control-Max-Age:
+      access-control-max-age:
       - '600'
-      Content-Length:
+      connection:
+      - close
+      content-length:
       - '0'
-      Date: Mon, 01 Jan 2000 00:00:00 GMT
-      Referrer-Policy:
+      date:
+      - Mon, 31 Jan 2022 16:35:21 GMT
+      referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
-      X-Permitted-Cross-Domain-Policies:
+      x-permitted-cross-domain-policies:
       - master-only
-      X-XSS-Protection:
+      x-xss-protection:
       - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
@@ -363,7 +398,7 @@ interactions:
       form-data; name=\"resumableRelativePath\"\n\nnuclei/1/header.wkw\n--\nContent-Disposition:
       form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
       name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n16\n--\nContent-Disposition:
-      form-data; name=\"owningOrganization\"\n\nsample_organization\n--\nContent-Disposition:
+      form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
       form-data; name=\"name\"\n\ncell_2000-01-01_00-00-00\n--\nContent-Disposition:
       form-data; name=\"totalFileCount\"\n\n5\n--\nContent-Disposition: form-data;
       name=\"file\"; filename=\"upload\"\nContent-Type: application/octet-stream\n\nWKW\x01U\x03\x02\x02\0\0\0\0\0\0\0\0\n----\n"
@@ -375,7 +410,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1542'
+      - '1537'
       content-type:
       - multipart/form-data; boundary=fffffff0000000
       host:
@@ -387,18 +422,23 @@ interactions:
   response:
     content: ''
     headers:
-      Access-Control-Allow-Origin:
+      X-Powered-By:
+      - Express
+      access-control-allow-origin:
       - '*'
-      Access-Control-Max-Age:
+      access-control-max-age:
       - '600'
-      Content-Length:
+      connection:
+      - close
+      content-length:
       - '0'
-      Date: Mon, 01 Jan 2000 00:00:00 GMT
-      Referrer-Policy:
+      date:
+      - Mon, 31 Jan 2022 16:35:21 GMT
+      referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
-      X-Permitted-Cross-Domain-Policies:
+      x-permitted-cross-domain-policies:
       - master-only
-      X-XSS-Protection:
+      x-xss-protection:
       - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
@@ -470,7 +510,7 @@ interactions:
       Content-Disposition: form-data; name="owningOrganization"
 
 
-      sample_organization
+      Organization_X
 
       --
 
@@ -499,7 +539,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '16626815'
+      - '16626810'
       content-type:
       - multipart/form-data; boundary=fffffff0000000
       host:
@@ -511,18 +551,23 @@ interactions:
   response:
     content: ''
     headers:
-      Access-Control-Allow-Origin:
+      X-Powered-By:
+      - Express
+      access-control-allow-origin:
       - '*'
-      Access-Control-Max-Age:
+      access-control-max-age:
       - '600'
-      Content-Length:
+      connection:
+      - close
+      content-length:
       - '0'
-      Date: Mon, 01 Jan 2000 00:00:00 GMT
-      Referrer-Policy:
+      date:
+      - Mon, 31 Jan 2022 16:35:21 GMT
+      referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
-      X-Permitted-Cross-Domain-Policies:
+      x-permitted-cross-domain-policies:
       - master-only
-      X-XSS-Protection:
+      x-xss-protection:
       - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
@@ -534,7 +579,7 @@ interactions:
       form-data; name=\"resumableRelativePath\"\n\ncell membranes/1/header.wkw\n--\nContent-Disposition:
       form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
       name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n16\n--\nContent-Disposition:
-      form-data; name=\"owningOrganization\"\n\nsample_organization\n--\nContent-Disposition:
+      form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
       form-data; name=\"name\"\n\ncell_2000-01-01_00-00-00\n--\nContent-Disposition:
       form-data; name=\"totalFileCount\"\n\n5\n--\nContent-Disposition: form-data;
       name=\"file\"; filename=\"upload\"\nContent-Type: application/octet-stream\n\nWKW\x01U\x03\x02\x02\0\0\0\0\0\0\0\0\n----\n"
@@ -546,7 +591,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1558'
+      - '1553'
       content-type:
       - multipart/form-data; boundary=fffffff0000000
       host:
@@ -558,23 +603,28 @@ interactions:
   response:
     content: ''
     headers:
-      Access-Control-Allow-Origin:
+      X-Powered-By:
+      - Express
+      access-control-allow-origin:
       - '*'
-      Access-Control-Max-Age:
+      access-control-max-age:
       - '600'
-      Content-Length:
+      connection:
+      - close
+      content-length:
       - '0'
-      Date: Mon, 01 Jan 2000 00:00:00 GMT
-      Referrer-Policy:
+      date:
+      - Mon, 31 Jan 2022 16:35:21 GMT
+      referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
-      X-Permitted-Cross-Domain-Policies:
+      x-permitted-cross-domain-policies:
       - master-only
-      X-XSS-Protection:
+      x-xss-protection:
       - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
 - request:
-    body: '{"uploadId": "2000-01-01T00-00-00__0011", "organization": "sample_organization",
+    body: '{"uploadId": "2000-01-01T00-00-00__0011", "organization": "Organization_X",
       "name": "cell_2000-01-01_00-00-00", "needsConversion": false, "layersToLink":
       []}'
     headers:
@@ -585,7 +635,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '194'
+      - '189'
       content-type:
       - application/json
       host:
@@ -597,18 +647,23 @@ interactions:
   response:
     content: ''
     headers:
-      Access-Control-Allow-Origin:
+      X-Powered-By:
+      - Express
+      access-control-allow-origin:
       - '*'
-      Access-Control-Max-Age:
+      access-control-max-age:
       - '600'
-      Content-Length:
+      connection:
+      - close
+      content-length:
       - '0'
-      Date: Mon, 01 Jan 2000 00:00:00 GMT
-      Referrer-Policy:
+      date:
+      - Mon, 31 Jan 2022 16:35:21 GMT
+      referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
-      X-Permitted-Cross-Domain-Policies:
+      x-permitted-cross-domain-policies:
       - master-only
-      X-XSS-Protection:
+      x-xss-protection:
       - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200

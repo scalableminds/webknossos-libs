@@ -9,37 +9,29 @@ interactions:
       connection:
       - keep-alive
       host:
-      - webknossos.org
+      - localhost:9000
       user-agent:
       - python-httpx/0.18.2
     method: GET
-    uri: https://webknossos.org/api/users
+    uri: http://localhost:9000/api/users
   response:
-    content: '[{"id":"5bfecf6e010000fa035248bb","email":"tony.tester@mail.com","firstName":"Tony","lastName":"Tester","isAdmin":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"5b3ce78557b7414e59269427","name":"scalable
-      minds","isTeamManager":true}],"experiences":{},"lastActivity":1543425902059,"isAnonymous":false,"isEditable":true,"organization":"scalable_minds","novelUserExperienceInfos":{"shouldSeeModernControlsModal":true,"hasSeenDashboardWelcomeBanner":true},"selectedTheme":"auto","created":1543425902059,"lastTaskTypeId":null},{"id":"60f17acf0100008e003484ea","email":"taylor.tester@mail.com","firstName":"Taylor","lastName":"Tester","isAdmin":false,"isDatasetManager":false,"isActive":true,"teams":[{"id":"5b3ce78557b7414e59269427","name":"scalable
-      minds","isTeamManager":false}],"experiences":{},"lastActivity":1626438351807,"isAnonymous":false,"isEditable":true,"organization":"scalable_minds","novelUserExperienceInfos":{"hasSeenDashboardWelcomeBanner":true},"selectedTheme":"auto","created":1626438351807,"lastTaskTypeId":null}]'
+    content: '[{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1460379469053,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null},{"id":"670b9f4d2a7c0e4d008da6ef","email":"user_B@scalableminds.com","firstName":"user_B","lastName":"BoyB","isAdmin":false,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true}],"experiences":{},"lastActivity":1460465869053,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null},{"id":"770b9f4d2a7c0e4d008da6ef","email":"user_C@scalableminds.com","firstName":"user_C","lastName":"BoyC","isAdmin":false,"isDatasetManager":false,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":false}],"experiences":{},"lastActivity":1460552269053,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null},{"id":"870b9f4d2a7c0e4d008da6ef","email":"user_D@scalableminds.com","firstName":"user_D","lastName":"BoyD","isAdmin":false,"isDatasetManager":false,"isActive":true,"teams":[{"id":"69882b370d889b84020efd4f","name":"team_X2","isTeamManager":true}],"experiences":{},"lastActivity":1460638669053,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"light","created":1460379469000,"lastTaskTypeId":null}]'
     headers:
-      Connection:
-      - keep-alive
-      Content-Encoding:
-      - gzip
-      Content-Type:
+      X-Powered-By:
+      - Express
+      connection:
+      - close
+      content-length:
+      - '2000'
+      content-type:
       - application/json
-      Date:
-      - Wed, 27 Oct 2021 09:41:53 GMT
-      Referrer-Policy:
+      date:
+      - Mon, 31 Jan 2022 16:35:37 GMT
+      referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
-      Server:
-      - nginx/1.17.10
-      Strict-Transport-Security:
-      - max-age=15724800; includeSubDomains
-      Transfer-Encoding:
-      - chunked
-      Vary:
-      - Accept-Encoding
-      X-Permitted-Cross-Domain-Policies:
+      x-permitted-cross-domain-policies:
       - master-only
-      X-XSS-Protection:
+      x-xss-protection:
       - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200

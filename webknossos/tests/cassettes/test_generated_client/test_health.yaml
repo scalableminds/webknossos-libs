@@ -9,26 +9,27 @@ interactions:
       connection:
       - keep-alive
       host:
-      - webknossos.org
+      - localhost:9000
       user-agent:
       - python-httpx/0.18.2
     method: GET
-    uri: https://webknossos.org/api/health
+    uri: http://localhost:9000/api/health
   response:
     content: ''
     headers:
-      Connection:
-      - keep-alive
-      Content-Length:
+      X-Powered-By:
+      - Express
+      connection:
+      - close
+      content-length:
       - '0'
-      Date: Mon, 01 Jan 2000 00:00:00 GMT
-      Referrer-Policy:
+      date:
+      - Mon, 31 Jan 2022 16:35:36 GMT
+      referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
-      Strict-Transport-Security:
-      - max-age=15724800; includeSubDomains
-      X-Permitted-Cross-Domain-Policies:
+      x-permitted-cross-domain-policies:
       - master-only
-      X-XSS-Protection:
+      x-xss-protection:
       - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
