@@ -16,26 +16,19 @@ interactions:
     uri: https://webknossos.org/api/user
   response:
     content: '{"id":"6006a44d0100007e0070d734","email":"jonathan@scm.io","firstName":"Jonathan","lastName":"Striebel","isAdmin":true,"isDatasetManager":false,"isActive":true,"teams":[{"id":"5b3ce78557b7414e59269427","name":"scalable
-      minds","isTeamManager":false}],"experiences":{},"lastActivity":1611048013169,"isAnonymous":false,"isEditable":true,"organization":"scalable_minds","novelUserExperienceInfos":{"lastViewedWhatsNewTimestamp":1634559953377,"shouldSeeModernControlsModal":false,"hasSeenDashboardWelcomeBanner":true},"selectedTheme":"auto","created":1611048013169,"lastTaskTypeId":null}'
+      minds","isTeamManager":false}],"experiences":{},"lastActivity":1611048013169,"isAnonymous":false,"isEditable":true,"organization":"scalable_minds","novelUserExperienceInfos":{"lastViewedWhatsNewTimestamp":1643210728966,"shouldSeeModernControlsModal":false,"hasSeenDashboardWelcomeBanner":true},"selectedTheme":"auto","created":1611048013169,"lastTaskTypeId":null}'
     headers:
       Connection:
       - keep-alive
-      Content-Encoding:
-      - gzip
+      Content-Length:
+      - '582'
       Content-Type:
       - application/json
-      Date:
-      - Tue, 26 Oct 2021 15:29:44 GMT
+      Date: Mon, 01 Jan 2000 00:00:00 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
-      Server:
-      - nginx/1.17.10
       Strict-Transport-Security:
       - max-age=15724800; includeSubDomains
-      Transfer-Encoding:
-      - chunked
-      Vary:
-      - Accept-Encoding
       X-Permitted-Cross-Domain-Policies:
       - master-only
       X-XSS-Protection:
@@ -58,26 +51,23 @@ interactions:
     method: GET
     uri: https://webknossos.org/api/users/6006a44d0100007e0070d734/loggedTime
   response:
-    content: '{"loggedTime":[{"paymentInterval":{"month":1,"year":1970},"durationInSeconds":4},{"paymentInterval":{"month":10,"year":2021},"durationInSeconds":1169},{"paymentInterval":{"month":8,"year":2021},"durationInSeconds":0},{"paymentInterval":{"month":9,"year":2021},"durationInSeconds":17}]}'
+    content: '{"loggedTime": [{"paymentInterval": {"month": 10, "year": 2021}, "durationInSeconds":
+      1169}, {"paymentInterval": {"month": 1, "year": 1970}, "durationInSeconds":
+      16}, {"paymentInterval": {"month": 12, "year": 2021}, "durationInSeconds": 10},
+      {"paymentInterval": {"month": 9, "year": 2021}, "durationInSeconds": 17}, {"paymentInterval":
+      {"month": 8, "year": 2021}, "durationInSeconds": 0}]}'
     headers:
       Connection:
       - keep-alive
-      Content-Encoding:
-      - gzip
+      Content-Length:
+      - '421'
       Content-Type:
       - application/json
-      Date:
-      - Tue, 26 Oct 2021 15:29:44 GMT
+      Date: Mon, 01 Jan 2000 00:00:00 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
-      Server:
-      - nginx/1.17.10
       Strict-Transport-Security:
       - max-age=15724800; includeSubDomains
-      Transfer-Encoding:
-      - chunked
-      Vary:
-      - Accept-Encoding
       X-Permitted-Cross-Domain-Policies:
       - master-only
       X-XSS-Protection:

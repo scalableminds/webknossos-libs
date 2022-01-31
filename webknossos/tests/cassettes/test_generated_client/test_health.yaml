@@ -21,12 +21,9 @@ interactions:
       - keep-alive
       Content-Length:
       - '0'
-      Date:
-      - Tue, 19 Oct 2021 17:15:33 GMT
+      Date: Mon, 01 Jan 2000 00:00:00 GMT
       Referrer-Policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
-      Server:
-      - nginx/1.17.10
       Strict-Transport-Security:
       - max-age=15724800; includeSubDomains
       X-Permitted-Cross-Domain-Policies:
