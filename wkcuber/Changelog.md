@@ -7,17 +7,26 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.0...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.1...HEAD)
 
 ### Breaking Changes
 
 ### Added
-- Added `wkcuber.convert_zarr` tool to convert zarr files to wkw datasets. [#549](https://github.com/scalableminds/webknossos-libs/pull/549)
 
 ### Changed
 
 ### Fixed
+
+
+## [0.9.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.1) - 2022-01-31
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.0...v0.9.1)
+
+### Added
+- Added `wkcuber.convert_zarr` tool to convert zarr files to wkw datasets. [#549](https://github.com/scalableminds/webknossos-libs/pull/549)
+
+### Fixed
 - Fixed automatic conversion of 3D tiff files which only have a single page. [#575](https://github.com/scalableminds/webknossos-libs/pull/575)
+
 
 ## [0.9.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.0) - 2022-01-19
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.31...v0.9.0)

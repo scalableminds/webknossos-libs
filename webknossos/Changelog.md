@@ -7,11 +7,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.0...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.1...HEAD)
 
 ### Breaking Changes
 
 ### Added
+
+### Changed
+
+### Fixed
+
+
+## [0.9.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.1) - 2022-01-31
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.0...v0.9.1)
 
 ### Changed
 - The signatures of `(Mag)View.for_each_chunk` and `(Mag)View.for_zipped_chunks` changed:
@@ -24,8 +32,6 @@ For upgrade instructions, please check the respective *Breaking Changes* section
   * `(Mag)View.get_buffered_slice_writer`: using the parameter `offset` is deprecated.
     Please use the parameter relative_offset or absolute_offset (both in Mag(1)) instead.
     The old offset behavior was absolute for `MagView`s and relative for `View`s.
-
-### Fixed
 
 
 ## [0.9.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.0) - 2022-01-19
