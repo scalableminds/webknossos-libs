@@ -180,6 +180,9 @@ class TiffImageReader(ImageReader):
         if 0 <= page_index < len(tif_file.pages):
             return tif_file.pages[page_index].asarray()
         elif tif_file.is_imagej:
+            # ImageJ can export 3-dimensional, single-page tiff files.
+            # In that case, we manually read from the correct filehandle
+            # by seeking to the correct position.
             shape = tif_file.pages[0].shape
             elements_per_page = 1
             for i in shape:
