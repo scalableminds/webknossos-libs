@@ -22,6 +22,7 @@ webKnossos user information can be retrieved via the [`User`](webknossos/client/
 
 # The table above contains zero-width spaces in the code examples after each dot to enforce correct line-breaks.
 
+from webknossos.administration import *
 from webknossos.annotation import *
 from webknossos.client import *
 from webknossos.dataset import *
