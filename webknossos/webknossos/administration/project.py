@@ -52,7 +52,7 @@ class Project:
     def get_tasks(self, fetch_all: bool = True) -> List["Task"]:
         from webknossos.administration import Task
 
-        pagination_limit = 1000
+        pagination_limit = 3
         pagination_page = 0
 
         client = _get_generated_client(enforce_auth=True)
@@ -66,13 +66,32 @@ class Project:
         total_count_raw = response_raw.headers.get("X-Total-Count")
         assert total_count_raw is not None, "X-Total-Count header missing from response"
         total_count = int(total_count_raw)
-        if total_count > pagination_limit and not fetch_all:
-            print(
-                f"Fetched only {pagination_limit} of {total_count} tasks. Pass fetch_all=True to fetch all tasks iteratively (may be slow!)"
-            )
         response = response_raw.parsed
         assert response is not None, "Could not fetch task infos by project id."
-        return [Task._from_generated_response(t) for t in response]
+        all_tasks = [Task._from_generated_response(t) for t in response]
+        if total_count > pagination_limit:
+            if fetch_all:
+                while total_count > len(all_tasks):
+                    pagination_page += 1
+                    response = task_infos_by_project_id.sync(
+                        self.project_id,
+                        limit=pagination_limit,
+                        page_number=pagination_page,
+                        include_total_count=True,
+                        client=client,
+                    )
+                    assert (
+                        response is not None
+                    ), "Could not fetch task infos by project id."
+                    new_tasks = [Task._from_generated_response(t) for t in response]
+                    all_tasks.extend(new_tasks)
+
+            else:
+                print(
+                    f"Fetched only {pagination_limit} of {total_count} tasks. Pass fetch_all=True to fetch all tasks iteratively (may be slow!)"
+                )
+
+        return all_tasks
 
     def get_owner(self) -> User:
         return User.get_by_id(self.owner_id)
