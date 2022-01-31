@@ -176,6 +176,23 @@ class Dm4ImageReader(ImageReader):
 
 class TiffImageReader(ImageReader):
     @staticmethod
+    def _get_page_data(tif_file: TiffFile, page_index: int) -> np.ndarray:
+        if 0 <= page_index < len(tif_file.pages):
+            return tif_file.pages[page_index].asarray()
+        elif tif_file.is_imagej:
+            shape = tif_file.pages[0].shape
+            elements_per_page = 1
+            for i in shape:
+                elements_per_page *= i
+            series = tif_file.series[0]
+            tif_file.filehandle.seek(series.offset + page_index * np.dtype(series.dtype).itemsize * elements_per_page)
+            data = tif_file.filehandle.read_array(series.dtype, elements_per_page)
+            data = data.reshape(shape)
+            return data
+        else:
+            raise Exception("Cannot read page data!")
+
+    @staticmethod
     def _get_page_index(
         tif_file: TiffFile,
         z_index: int,
@@ -202,8 +219,8 @@ class TiffImageReader(ImageReader):
                 page_index += s_index
         return page_index
 
+    @staticmethod
     def _find_correct_pages(
-        self,
         tif_file: TiffFile,
         channel_index: Optional[int],
         sample_index: Optional[int],
@@ -335,7 +352,7 @@ class TiffImageReader(ImageReader):
                 z_axis_name,
                 page_axes,
             ).items():
-                page_data = tif_file.pages[page_index].asarray()
+                page_data = self._get_page_data(tif_file, page_index)
                 # remove any axis that we do not use
                 # left over axes [(C)YX(S)] (Z axis is not on same TiffPage)
                 for axis in page_axes:
