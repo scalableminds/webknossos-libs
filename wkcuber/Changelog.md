@@ -17,7 +17,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
-
+- Fixed automatic conversion of 3D tiff files which only have a single page. [#575](https://github.com/scalableminds/webknossos-libs/pull/575)
 
 ## [0.9.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.0) - 2022-01-19
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.8.31...v0.9.0)
