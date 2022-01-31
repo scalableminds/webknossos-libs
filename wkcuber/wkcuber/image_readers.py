@@ -185,7 +185,10 @@ class TiffImageReader(ImageReader):
             for i in shape:
                 elements_per_page *= i
             series = tif_file.series[0]
-            tif_file.filehandle.seek(series.offset + page_index * np.dtype(series.dtype).itemsize * elements_per_page)
+            tif_file.filehandle.seek(
+                series.offset
+                + page_index * np.dtype(series.dtype).itemsize * elements_per_page
+            )
             data = tif_file.filehandle.read_array(series.dtype, elements_per_page)
             data = data.reshape(shape)
             return data
