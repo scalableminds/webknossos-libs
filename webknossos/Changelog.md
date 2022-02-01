@@ -12,8 +12,10 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes
 
 ### Added
+- A custom network request timeout can be set using `webknossos_context(…, timeout=300)` or `export WK_TIMEOUT="300"`. [#577](https://github.com/scalableminds/webknossos-libs/pull/577)
 
 ### Changed
+- The default network request timeout changed from ½min to 2 min. [#577](https://github.com/scalableminds/webknossos-libs/pull/577)
 
 ### Fixed
 
