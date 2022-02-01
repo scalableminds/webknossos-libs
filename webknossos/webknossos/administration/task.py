@@ -25,12 +25,18 @@ if TYPE_CHECKING:
         TaskInfosByProjectIdResponse200Item,
     )
 
+@attr.frozen
+class TaskStatus:
+    open_instance_count: int
+    active_instance_count: int
+    finished_instance_count: int
 
 @attr.frozen
 class Task:
     task_id: str
     project_id: str
     dataset_name: str
+    status: TaskStatus
 
     @classmethod
     def get_by_id(cls, id: str) -> "Task":  # pylint: disable=redefined-builtin
@@ -129,7 +135,7 @@ class Task:
         cls,
         response: Union["TaskInfoResponse200", "TaskInfosByProjectIdResponse200Item"],
     ) -> "Task":
-        return cls(response.id, response.project_name, response.data_set)
+        return cls(response.id, response.project_name, response.data_set, TaskStatus(response.status.open_, response.status.active, response.status.finished))
 
     def get_annotation_infos(self) -> List[AnnotationInfo]:
         client = _get_generated_client()

@@ -89,12 +89,12 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
     # user_id = "5b5dd2fb1c00008230ec8174"
     # project_id = "61f1515e0100002f01249afa"
     # project_name = "sampleProject"
-    explorative_annotation_id = "61f28f06fc0100ba02768032"
+    explorative_annotation_id = "61f91018fe0100b002553010"
     organization_name = "sample_organization"
     dataset_name = "l4_sample"
-    task_id = "61f28ecbfc0100b702768030"
-    user_id = "61efb24ff90100f901d637eb"
-    project_id = "61efb258f901004c02d637ef"
+    task_id = "61f90e61fe0100a00255300a"
+    user_id = "61f90b45fc01000402ff5b4d"
+    project_id = "61f90b4afc01006704ff5b51"
     project_name = "sampleProject"
 
     d = datetime.utcnow()

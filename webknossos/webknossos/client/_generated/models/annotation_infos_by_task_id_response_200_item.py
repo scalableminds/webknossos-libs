@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Type, TypeVar, cast
+from typing import Any, Dict, List, Type, TypeVar, Union, cast
 
 import attr
 
@@ -26,6 +26,7 @@ from ..models.annotation_infos_by_task_id_response_200_item_tracing_store import
 from ..models.annotation_infos_by_task_id_response_200_item_user import (
     AnnotationInfosByTaskIdResponse200ItemUser,
 )
+from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="AnnotationInfosByTaskIdResponse200Item")
 
@@ -55,6 +56,7 @@ class AnnotationInfosByTaskIdResponse200Item:
     tags: List[str]
     user: AnnotationInfosByTaskIdResponse200ItemUser
     meshes: List[Any]
+    view_configuration: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -97,6 +99,8 @@ class AnnotationInfosByTaskIdResponse200Item:
 
             meshes.append(meshes_item)
 
+        view_configuration = self.view_configuration
+
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -124,6 +128,8 @@ class AnnotationInfosByTaskIdResponse200Item:
                 "meshes": meshes,
             }
         )
+        if view_configuration is not UNSET:
+            field_dict["viewConfiguration"] = view_configuration
 
         return field_dict
 
@@ -194,6 +200,8 @@ class AnnotationInfosByTaskIdResponse200Item:
 
             meshes.append(meshes_item)
 
+        view_configuration = d.pop("viewConfiguration", UNSET)
+
         annotation_infos_by_task_id_response_200_item = cls(
             modified=modified,
             state=state,
@@ -216,6 +224,7 @@ class AnnotationInfosByTaskIdResponse200Item:
             tags=tags,
             user=user,
             meshes=meshes,
+            view_configuration=view_configuration,
         )
 
         annotation_infos_by_task_id_response_200_item.additional_properties = d

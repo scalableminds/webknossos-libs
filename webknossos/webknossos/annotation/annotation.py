@@ -198,6 +198,14 @@ class AnnotationType(Enum):
     COMPOUND_TASK_TYPE = "CompoundTaskType"
 
 
+@unique
+class AnnotationState(Enum):
+    FINISHED = "Finished"
+    ACTIVE = "Active"
+    CANCELLED = "Cancelled"
+    INITIALIZING = "Initializing"
+
+
 annotation_url_regex = re.compile(
     fr"(https?://.*)/annotations/({'|'.join(i.value for i in AnnotationType.__members__.values())})/([0-9A-Fa-f]*)"
 )

@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, Union
 
 import attr
 
-from webknossos.annotation.annotation import Annotation, AnnotationType
+from webknossos.annotation.annotation import Annotation, AnnotationType, AnnotationState
 
 if TYPE_CHECKING:
     from webknossos.client._generated.models.annotation_info_response_200 import (
@@ -20,6 +20,7 @@ class AnnotationInfo:
     name: str
     description: str
     type: AnnotationType
+    state: AnnotationState
 
     def download_annotation(self) -> Annotation:
         from webknossos.client._download_annotation import download_annotation
@@ -39,4 +40,5 @@ class AnnotationInfo:
             name=response.name,
             description=response.description,
             type=AnnotationType(response.typ),
+            state=AnnotationState(response.state),
         )
