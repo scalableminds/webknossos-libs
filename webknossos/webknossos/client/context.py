@@ -8,7 +8,8 @@ You can copy your token from
 [https://webknossos.org/auth/token](https://webknossos.org/auth/token)
 
 Using the same methods, you can also specify the webknossos-server if you
-are not using the default [webknossos.org](https://webknossos.org) instance.
+are not using the default [webknossos.org](https://webknossos.org) instance,
+as well as a timeout for network requests (default is 120 seconds).
 
 There are the following four options to specify which server context to use:
 
@@ -36,6 +37,7 @@ There are the following four options to specify which server context to use:
     # content of .env
     WK_TOKEN="my_webknossos_token"
     WK_URL="…"
+    WK_TIMEOUT="600"  # in seconds
     ```
 
 4. If nothing else is specified and authentication is needed,
@@ -101,13 +103,14 @@ def _cached_get_datastore_token(context: "_WebknossosContext") -> str:
 def _cached__get_generated_client(
     webknossos_url: str,
     token: Optional[str],
+    timeout: int,
 ) -> GeneratedClient:
     """Generates a client which might contain an x-auth-token header."""
     if token is None:
-        return GeneratedClient(base_url=webknossos_url, timeout=30)
+        return GeneratedClient(base_url=webknossos_url, timeout=timeout)
     else:
         return GeneratedClient(
-            base_url=webknossos_url, headers={"X-Auth-Token": token}, timeout=30
+            base_url=webknossos_url, headers={"X-Auth-Token": token}, timeout=timeout
         )
 
 
@@ -122,6 +125,7 @@ def _clear_all_context_caches() -> None:
 class _WebknossosContext:
     url: str = os.environ.get("WK_URL", default=DEFAULT_WEBKNOSSOS_URL)
     token: Optional[str] = os.environ.get("WK_TOKEN", default=None)
+    timeout: int = int(os.environ.get("WK_TIMEOUT", default=120))
 
     # all properties are cached outside to allow re-usability
     # if same context is instantiated twice
@@ -149,14 +153,16 @@ class _WebknossosContext:
 
     @property
     def generated_client(self) -> GeneratedClient:
-        return _cached__get_generated_client(self.url, self.token)
+        return _cached__get_generated_client(self.url, self.token, self.timeout)
 
     @property
     def generated_auth_client(self) -> GeneratedClient:
-        return _cached__get_generated_client(self.url, self.required_token)
+        return _cached__get_generated_client(
+            self.url, self.required_token, self.timeout
+        )
 
     def get_generated_datastore_client(self, datastore_url: str) -> GeneratedClient:
-        return GeneratedClient(base_url=datastore_url, timeout=120)
+        return GeneratedClient(base_url=datastore_url, timeout=self.timeout)
 
 
 _webknossos_context_var: ContextVar[_WebknossosContext] = ContextVar(
@@ -168,8 +174,13 @@ _webknossos_context_var: ContextVar[_WebknossosContext] = ContextVar(
 def webknossos_context(
     url: str = DEFAULT_WEBKNOSSOS_URL,
     token: Optional[str] = None,
+    timeout: Optional[int] = None,
 ) -> Iterator[None]:
-    context_var_token = _webknossos_context_var.set(_WebknossosContext(url, token))
+    if timeout is None:
+        timeout = _get_context().timeout
+    context_var_token = _webknossos_context_var.set(
+        _WebknossosContext(url, token, timeout)
+    )
     try:
         yield
     finally:
