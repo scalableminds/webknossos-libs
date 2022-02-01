@@ -1,5 +1,6 @@
 import json
 import logging
+from io import BytesIO
 from typing import TYPE_CHECKING, Dict, List, Optional, Union
 
 import attr
@@ -69,7 +70,12 @@ class Task:
             else None,
         }
         form_data = {"formJSON": json.dumps(task_parameters)}
-        files = {a._nml_file.path: open(a.file, "rb") for a in base_annotations}
+        files = {
+            a._nml_file.path: a.file
+            if isinstance(a.file, BytesIO)
+            else open(a.file, "rb")
+            for a in base_annotations
+        }
         print(files)
         response = httpx.post(
             url=url,
