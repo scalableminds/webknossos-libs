@@ -19,16 +19,11 @@ interactions:
   response:
     content: '{"token":"xxxsecrettokenxxx"}'
     headers:
-      X-Powered-By:
-      - Express
-      connection:
-      - close
       content-length:
       - '34'
       content-type:
       - application/json
-      date:
-      - Mon, 31 Jan 2022 16:35:20 GMT
+      date: Mon, 01 Jan 2000 00:00:00 GMT
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
@@ -55,16 +50,11 @@ interactions:
   response:
     content: '[{"name":"connect","url":"http://localhost:8000","isForeign":false,"isScratch":false,"isConnector":true,"allowsUpload":false},{"name":"localhost","url":"http://localhost:9000","isForeign":false,"isScratch":false,"isConnector":false,"allowsUpload":true}]'
     headers:
-      X-Powered-By:
-      - Express
-      connection:
-      - close
       content-length:
       - '253'
       content-type:
       - application/json
-      date:
-      - Mon, 31 Jan 2022 16:35:20 GMT
+      date: Mon, 01 Jan 2000 00:00:00 GMT
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
@@ -91,16 +81,11 @@ interactions:
   response:
     content: '{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1460379469053,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null}'
     headers:
-      X-Powered-By:
-      - Express
-      connection:
-      - close
       content-length:
       - '611'
       content-type:
       - application/json
-      date:
-      - Mon, 31 Jan 2022 16:35:20 GMT
+      date: Mon, 01 Jan 2000 00:00:00 GMT
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
@@ -127,14 +112,9 @@ interactions:
   response:
     content: ''
     headers:
-      X-Powered-By:
-      - Express
-      connection:
-      - close
       content-length:
       - '0'
-      date:
-      - Mon, 31 Jan 2022 16:35:20 GMT
+      date: Mon, 01 Jan 2000 00:00:00 GMT
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
@@ -167,18 +147,13 @@ interactions:
   response:
     content: ''
     headers:
-      X-Powered-By:
-      - Express
       access-control-allow-origin:
       - '*'
       access-control-max-age:
       - '600'
-      connection:
-      - close
       content-length:
       - '0'
-      date:
-      - Mon, 31 Jan 2022 16:35:20 GMT
+      date: Mon, 01 Jan 2000 00:00:00 GMT
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
@@ -241,18 +216,13 @@ interactions:
   response:
     content: ''
     headers:
-      X-Powered-By:
-      - Express
       access-control-allow-origin:
       - '*'
       access-control-max-age:
       - '600'
-      connection:
-      - close
       content-length:
       - '0'
-      date:
-      - Mon, 31 Jan 2022 16:35:20 GMT
+      date: Mon, 01 Jan 2000 00:00:00 GMT
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
@@ -370,18 +340,13 @@ interactions:
   response:
     content: ''
     headers:
-      X-Powered-By:
-      - Express
       access-control-allow-origin:
       - '*'
       access-control-max-age:
       - '600'
-      connection:
-      - close
       content-length:
       - '0'
-      date:
-      - Mon, 31 Jan 2022 16:35:21 GMT
+      date: Mon, 01 Jan 2000 00:00:00 GMT
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
@@ -422,18 +387,13 @@ interactions:
   response:
     content: ''
     headers:
-      X-Powered-By:
-      - Express
       access-control-allow-origin:
       - '*'
       access-control-max-age:
       - '600'
-      connection:
-      - close
       content-length:
       - '0'
-      date:
-      - Mon, 31 Jan 2022 16:35:21 GMT
+      date: Mon, 01 Jan 2000 00:00:00 GMT
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
@@ -551,18 +511,13 @@ interactions:
   response:
     content: ''
     headers:
-      X-Powered-By:
-      - Express
       access-control-allow-origin:
       - '*'
       access-control-max-age:
       - '600'
-      connection:
-      - close
       content-length:
       - '0'
-      date:
-      - Mon, 31 Jan 2022 16:35:21 GMT
+      date: Mon, 01 Jan 2000 00:00:00 GMT
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
@@ -603,18 +558,13 @@ interactions:
   response:
     content: ''
     headers:
-      X-Powered-By:
-      - Express
       access-control-allow-origin:
       - '*'
       access-control-max-age:
       - '600'
-      connection:
-      - close
       content-length:
       - '0'
-      date:
-      - Mon, 31 Jan 2022 16:35:21 GMT
+      date: Mon, 01 Jan 2000 00:00:00 GMT
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:
@@ -647,18 +597,13 @@ interactions:
   response:
     content: ''
     headers:
-      X-Powered-By:
-      - Express
       access-control-allow-origin:
       - '*'
       access-control-max-age:
       - '600'
-      connection:
-      - close
       content-length:
       - '0'
-      date:
-      - Mon, 31 Jan 2022 16:35:21 GMT
+      date: Mon, 01 Jan 2000 00:00:00 GMT
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:

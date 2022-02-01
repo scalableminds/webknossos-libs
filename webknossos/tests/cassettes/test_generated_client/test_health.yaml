@@ -17,14 +17,9 @@ interactions:
   response:
     content: ''
     headers:
-      X-Powered-By:
-      - Express
-      connection:
-      - close
       content-length:
       - '0'
-      date:
-      - Mon, 31 Jan 2022 16:35:36 GMT
+      date: Mon, 01 Jan 2000 00:00:00 GMT
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:

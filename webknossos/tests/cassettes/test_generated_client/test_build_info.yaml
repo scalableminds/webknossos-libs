@@ -15,20 +15,15 @@ interactions:
     method: GET
     uri: http://localhost:9000/api/buildinfo
   response:
-    content: '{"webknossos":{"name":"webknossos","ciTag":"","commitHash":"12f1c1970fbc40ada2a530b5e95e75d55dca4009","ciBuild":"","scalaVersion":"2.12.12","version":"dev","sbtVersion":"1.4.1","datastoreApiVersion":"1.0","commitDate":"Wed
-      Jan 26 15:18:52 2022 +0000"},"webknossos-wrap":{"builtAtMillis":"1640035836569","name":"webknossos-wrap","commitHash":"8b842648702f469a3ffd90dc8a68c4310e64b351","scalaVersion":"2.12.7","version":"1.1.15","sbtVersion":"1.4.1","builtAtString":"2021-12-20
-      21:30:36.569"},"schemaVersion":80,"token":"xxxsecrettokenxxx","localDataStoreEnabled":true,"localTracingStoreEnabled":true}'
+    content: '{"webknossos":{"name":"webknossos","ciTag":"","commitHash":"9e5cf915409dd896239d2cd03988924a4405c4b3","ciBuild":"16745","scalaVersion":"2.12.12","version":"16745","sbtVersion":"1.4.1","datastoreApiVersion":"1.0","commitDate":"Tue
+      Feb 1 11:20:15 2022 +0100"},"webknossos-wrap":{"builtAtMillis":"1640035836569","name":"webknossos-wrap","commitHash":"8b842648702f469a3ffd90dc8a68c4310e64b351","scalaVersion":"2.12.7","version":"1.1.15","sbtVersion":"1.4.1","builtAtString":"2021-12-20
+      21:30:36.569"},"schemaVersion":81,"token":"xxxsecrettokenxxx","localDataStoreEnabled":true,"localTracingStoreEnabled":true}'
     headers:
-      X-Powered-By:
-      - Express
-      connection:
-      - close
       content-length:
-      - '604'
+      - '610'
       content-type:
       - application/json
-      date:
-      - Mon, 31 Jan 2022 16:35:37 GMT
+      date: Mon, 01 Jan 2000 00:00:00 GMT
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:

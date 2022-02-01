@@ -136,9 +136,17 @@ _REPLACE_IN_RESPONSE_CONTENT = {
 }
 
 
+_HEADERS_TO_REMOVE = ["x-powered-by"]
+
+
 def _before_record_response(response: Dict[str, Any]) -> Dict[str, Any]:
-    if "Date" in response["headers"]:
-        response["headers"]["Date"] = "Mon, 01 Jan 2000 00:00:00 GMT"
+    for key, value in sorted(response["headers"].items()):
+        del response["headers"][key]
+        if key.lower() not in _HEADERS_TO_REMOVE:
+            if not (key.lower() == "connection" and (value == "close" or "close" in value)):
+                response["headers"][key.lower()] = value
+    if "date" in response["headers"]:
+        response["headers"]["date"] = "Mon, 01 Jan 2000 00:00:00 GMT"
     if isinstance(response["content"], str):
         for regex_to_replace, replace_with in _REPLACE_IN_RESPONSE_CONTENT.items():
             response["content"] = re.sub(

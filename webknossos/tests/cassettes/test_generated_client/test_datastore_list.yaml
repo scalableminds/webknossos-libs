@@ -17,16 +17,11 @@ interactions:
   response:
     content: '[{"name":"connect","url":"http://localhost:8000","isForeign":false,"isScratch":false,"isConnector":true,"allowsUpload":false},{"name":"localhost","url":"http://localhost:9000","isForeign":false,"isScratch":false,"isConnector":false,"allowsUpload":true}]'
     headers:
-      X-Powered-By:
-      - Express
-      connection:
-      - close
       content-length:
       - '253'
       content-type:
       - application/json
-      date:
-      - Mon, 31 Jan 2022 16:35:36 GMT
+      date: Mon, 01 Jan 2000 00:00:00 GMT
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       x-permitted-cross-domain-policies:

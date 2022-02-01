@@ -3,30 +3,38 @@ set -eEuo pipefail
 
 export WK_TOKEN=1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
 export WK_URL=http://localhost:9000
+export DOCKER_TAG=master__16748
 
 if [ $# -eq 1 ] && [ "$1" = "--refresh-snapshots" ]; then
     if ! curl -sf localhost:9000/api/health; then
         WK_DOCKER_DIR="tests"
         pushd $WK_DOCKER_DIR > /dev/null
-        export DOCKER_TAG=master__16396
         docker-compose pull webknossos
         # TODO: either remove pg/db before starting or run tools/postgres/apply_evolutions.sh
         USER_UID=$(id -u) USER_GID=$(id -g) docker-compose up -d --no-build webknossos
-        popd > /dev/null
         stop_wk () {
             ARG=$?
             pushd $WK_DOCKER_DIR > /dev/null
             docker-compose down
             popd > /dev/null
             exit $ARG
-        } 
+        }
         trap stop_wk EXIT
         while ! curl -sf localhost:9000/api/health; do
             sleep 5
         done
+        OUT=$(docker-compose exec webknossos tools/postgres/prepareTestDB.sh 2>&1) || echo $OUT
+        popd > /dev/null
     fi
     rm -rf tests/cassettes
     rm -rf tests/**/cassettes
+
+    if ! curl -s -H "X-Auth-Token: $WK_TOKEN" localhost:9000/api/user | grep user_A@scalableminds.com > /dev/null; then
+        echo "The login user user_A@scalableminds.com could not be found or changed."
+        echo "Please ensure that the test-db is prepared by running this in the webknossos repo:"
+        echo "tools/postgres/prepareTestDB.sh"
+        exit 1
+    fi
 
     # Note that pytest should be executed via `python -m`, since
     # this will ensure that the current directory is added to sys.path
