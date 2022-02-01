@@ -143,7 +143,9 @@ def _before_record_response(response: Dict[str, Any]) -> Dict[str, Any]:
     for key, value in sorted(response["headers"].items()):
         del response["headers"][key]
         if key.lower() not in _HEADERS_TO_REMOVE:
-            if not (key.lower() == "connection" and (value == "close" or "close" in value)):
+            if not (
+                key.lower() == "connection" and (value == "close" or "close" in value)
+            ):
                 response["headers"][key.lower()] = value
     if "date" in response["headers"]:
         response["headers"]["date"] = "Mon, 01 Jan 2000 00:00:00 GMT"
