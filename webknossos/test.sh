@@ -28,7 +28,7 @@ if [ $# -eq 1 ] && [ "$1" = "--refresh-snapshots" ]; then
         done
         OUT=$(docker-compose exec webknossos tools/postgres/prepareTestDB.sh 2>&1) || echo $OUT
         popd > /dev/null
-    elif
+    else
         echo "Using the already running local webknossos setup at localhost:9000"
     fi
 
