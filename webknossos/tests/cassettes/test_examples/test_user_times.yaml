@@ -9,35 +9,24 @@ interactions:
       connection:
       - keep-alive
       host:
-      - webknossos.org
+      - localhost:9000
       user-agent:
       - python-httpx/0.18.2
     method: GET
-    uri: https://webknossos.org/api/users
+    uri: http://localhost:9000/api/users
   response:
-    content: '[{"id":"5bfecf6e010000fa035248bb","email":"tony.tester@mail.com","firstName":"Tony","lastName":"Tester","isAdmin":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"5b3ce78557b7414e59269427","name":"scalable
-      minds","isTeamManager":true}],"experiences":{},"lastActivity":1543425902059,"isAnonymous":false,"isEditable":true,"organization":"scalable_minds","novelUserExperienceInfos":{"shouldSeeModernControlsModal":true,"hasSeenDashboardWelcomeBanner":true},"selectedTheme":"auto","created":1543425902059,"lastTaskTypeId":null},{"id":"60f17acf0100008e003484ea","email":"taylor.tester@mail.com","firstName":"Taylor","lastName":"Tester","isAdmin":false,"isDatasetManager":false,"isActive":true,"teams":[{"id":"5b3ce78557b7414e59269427","name":"scalable
-      minds","isTeamManager":false}],"experiences":{},"lastActivity":1626438351807,"isAnonymous":false,"isEditable":true,"organization":"scalable_minds","novelUserExperienceInfos":{"hasSeenDashboardWelcomeBanner":true},"selectedTheme":"auto","created":1626438351807,"lastTaskTypeId":null}]'
+    content: '[{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1460379469053,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null},{"id":"670b9f4d2a7c0e4d008da6ef","email":"user_B@scalableminds.com","firstName":"user_B","lastName":"BoyB","isAdmin":false,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true}],"experiences":{},"lastActivity":1460465869053,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null},{"id":"770b9f4d2a7c0e4d008da6ef","email":"user_C@scalableminds.com","firstName":"user_C","lastName":"BoyC","isAdmin":false,"isDatasetManager":false,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":false}],"experiences":{},"lastActivity":1460552269053,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null},{"id":"870b9f4d2a7c0e4d008da6ef","email":"user_D@scalableminds.com","firstName":"user_D","lastName":"BoyD","isAdmin":false,"isDatasetManager":false,"isActive":true,"teams":[{"id":"69882b370d889b84020efd4f","name":"team_X2","isTeamManager":true}],"experiences":{},"lastActivity":1460638669053,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"light","created":1460379469000,"lastTaskTypeId":null}]'
     headers:
-      Connection:
-      - keep-alive
-      Content-Encoding:
-      - gzip
-      Content-Type:
+      content-length:
+      - '2000'
+      content-type:
       - application/json
-      Referrer-Policy:
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
-      Server:
-      - nginx/1.17.10
-      Strict-Transport-Security:
-      - max-age=15724800; includeSubDomains
-      Transfer-Encoding:
-      - chunked
-      Vary:
-      - Accept-Encoding
-      X-Permitted-Cross-Domain-Policies:
+      x-permitted-cross-domain-policies:
       - master-only
-      X-XSS-Protection:
+      x-xss-protection:
       - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
@@ -51,31 +40,30 @@ interactions:
       connection:
       - keep-alive
       host:
-      - webknossos.org
+      - localhost:9000
       user-agent:
       - python-httpx/0.18.2
     method: GET
-    uri: https://webknossos.org/api/users/5bfecf6e010000fa035248bb/loggedTime
+    uri: http://localhost:9000/api/users/570b9f4d2a7c0e4d008da6ef/loggedTime
   response:
-    content: '{"loggedTime":[{"paymentInterval":{"month":10,"year":2021},"durationInSeconds":40}]}'
+    content: '{"loggedTime": [{"paymentInterval": {"month": 8, "year": 2018}, "durationInSeconds":
+      265}, {"paymentInterval": {"month": 5, "year": 2021}, "durationInSeconds": 158},
+      {"paymentInterval": {"month": 11, "year": 2021}, "durationInSeconds": 12}, {"paymentInterval":
+      {"month": 1, "year": 2021}, "durationInSeconds": 510}, {"paymentInterval": {"month":
+      4, "year": 2016}, "durationInSeconds": 58}, {"paymentInterval": {"month": 3,
+      "year": 2021}, "durationInSeconds": 24}, {"paymentInterval": {"month": 8, "year":
+      2021}, "durationInSeconds": 14}]}'
     headers:
-      Connection:
-      - keep-alive
-      Content-Length:
-      - '84'
-      Content-Type:
+      content-length:
+      - '489'
+      content-type:
       - application/json
-      Referrer-Policy:
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
-      Server:
-      - nginx/1.17.10
-      Strict-Transport-Security:
-      - max-age=15724800; includeSubDomains
-      Vary:
-      - Accept-Encoding
-      X-Permitted-Cross-Domain-Policies:
+      x-permitted-cross-domain-policies:
       - master-only
-      X-XSS-Protection:
+      x-xss-protection:
       - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200
@@ -89,29 +77,88 @@ interactions:
       connection:
       - keep-alive
       host:
-      - webknossos.org
+      - localhost:9000
       user-agent:
       - python-httpx/0.18.2
     method: GET
-    uri: https://webknossos.org/api/users/60f17acf0100008e003484ea/loggedTime
+    uri: http://localhost:9000/api/users/670b9f4d2a7c0e4d008da6ef/loggedTime
   response:
-    content: '{"loggedTime":[{"paymentInterval":{"month":5,"year":2019},"durationInSeconds":0},{"paymentInterval":{"month":7,"year":2021},"durationInSeconds":10},{"paymentInterval":{"month":2,"year":2019},"durationInSeconds":452},{"paymentInterval":{"month":12,"year":2018},"durationInSeconds":116},{"paymentInterval":{"month":1,"year":2021},"durationInSeconds":13},{"paymentInterval":{"month":3,"year":2021},"durationInSeconds":152},{"paymentInterval":{"month":1,"year":2019},"durationInSeconds":365},{"paymentInterval":{"month":9,"year":2021},"durationInSeconds":98}]}'
+    content: '{"loggedTime": []}'
     headers:
-      Connection:
-      - keep-alive
-      Content-Length:
+      content-length:
       - '17'
-      Content-Type:
+      content-type:
       - application/json
-      Referrer-Policy:
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
-      Server:
-      - nginx/1.17.10
-      Strict-Transport-Security:
-      - max-age=15724800; includeSubDomains
-      X-Permitted-Cross-Domain-Policies:
+      x-permitted-cross-domain-policies:
       - master-only
-      X-XSS-Protection:
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: ''
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.18.2
+    method: GET
+    uri: http://localhost:9000/api/users/770b9f4d2a7c0e4d008da6ef/loggedTime
+  response:
+    content: '{"loggedTime": [{"paymentInterval": {"month": 4, "year": 2016}, "durationInSeconds":
+      58}, {"paymentInterval": {"month": 1, "year": 2021}, "durationInSeconds": 32},
+      {"paymentInterval": {"month": 2, "year": 2021}, "durationInSeconds": 210}]}'
+    headers:
+      content-length:
+      - '218'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: ''
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.18.2
+    method: GET
+    uri: http://localhost:9000/api/users/870b9f4d2a7c0e4d008da6ef/loggedTime
+  response:
+    content: '{"loggedTime": []}'
+    headers:
+      content-length:
+      - '17'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
       - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200

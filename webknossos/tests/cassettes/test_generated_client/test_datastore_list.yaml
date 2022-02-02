@@ -9,28 +9,24 @@ interactions:
       connection:
       - keep-alive
       host:
-      - webknossos.org
+      - localhost:9000
       user-agent:
       - python-httpx/0.18.2
     method: GET
-    uri: https://webknossos.org/api/datastores
+    uri: http://localhost:9000/api/datastores
   response:
-    content: '[{"name":"data5.connect","url":"https://data5.connect.demo.webknossos.org","isForeign":false,"isScratch":false,"isConnector":true,"allowsUpload":false},{"name":"demo-mhlab","url":"https://demo.data1-brain.esc.rzg.mpg.de","isForeign":false,"isScratch":false,"isConnector":false,"allowsUpload":false},{"name":"webknossos.org","url":"https://data-humerus.webknossos.org","isForeign":false,"isScratch":false,"isConnector":false,"allowsUpload":true}]'
+    content: '[{"name":"connect","url":"http://localhost:8000","isForeign":false,"isScratch":false,"isConnector":true,"allowsUpload":false},{"name":"localhost","url":"http://localhost:9000","isForeign":false,"isScratch":false,"isConnector":false,"allowsUpload":true}]'
     headers:
-      Connection:
-      - keep-alive
-      Content-Length:
-      - '445'
-      Content-Type:
+      content-length:
+      - '253'
+      content-type:
       - application/json
-      Date: Mon, 01 Jan 2000 00:00:00 GMT
-      Referrer-Policy:
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
-      Strict-Transport-Security:
-      - max-age=15724800; includeSubDomains
-      X-Permitted-Cross-Domain-Policies:
+      x-permitted-cross-domain-policies:
       - master-only
-      X-XSS-Protection:
+      x-xss-protection:
       - 1; mode=block
     http_version: HTTP/1.1
     status_code: 200

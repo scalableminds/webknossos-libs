@@ -17,7 +17,6 @@ services:
       - -Dtracingstore.redis.address=redis
       - -Ddatastore.redis.address=redis
       - -Dslick.db.url=jdbc:postgresql://postgres/webknossos
-      - -DwebKnossos.sampleOrganization.enabled=true
     volumes:
       - ./binaryData:/webknossos/binaryData
     environment:
