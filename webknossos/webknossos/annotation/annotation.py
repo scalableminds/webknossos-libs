@@ -7,7 +7,7 @@ from os import PathLike
 from pathlib import Path
 from shutil import copyfile
 from tempfile import TemporaryDirectory
-from typing import IO, Iterator, List, NamedTuple, Optional, Union, cast
+from typing import IO, BinaryIO, Iterator, List, NamedTuple, Optional, Union, cast
 from zipfile import ZipFile
 
 from attr import dataclass
@@ -69,6 +69,17 @@ class Annotation:
     @cachedproperty
     def dataset_name(self) -> str:
         return self.skeleton.name
+
+    @cachedproperty
+    def name(self) -> str:
+        return self._nml_file.path[:-4]
+
+    @cachedproperty
+    def binary(self) -> Union[bytes, BinaryIO]:
+        if isinstance(self.file, BytesIO):
+            return self.file.getvalue()
+        else:
+            return open(self.file, "rb")
 
     def save_volume_annotation(
         self,

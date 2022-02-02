@@ -1,2 +1,6 @@
 from webknossos.annotation.annotation import Annotation, open_annotation
-from webknossos.annotation.annotation_info import AnnotationInfo, AnnotationType, AnnotationState
+from webknossos.annotation.annotation_info import (
+    AnnotationInfo,
+    AnnotationState,
+    AnnotationType,
+)

@@ -1,5 +1,5 @@
 from webknossos.administration import Project, Task
-from webknossos.annotation import Annotation, AnnotationState
+from webknossos.annotation import AnnotationState
 
 
 def main() -> None:
@@ -8,7 +8,9 @@ def main() -> None:
 
     annotation_infos = [t.get_annotation_infos() for t in tasks]
     annotation_infos_flat = [a for infos in annotation_infos for a in infos]
-    finished_annotation_infos = [a for a in annotation_infos_flat if a.state == AnnotationState.FINISHED]
+    finished_annotation_infos = [
+        a for a in annotation_infos_flat if a.state == AnnotationState.FINISHED
+    ]
 
     finished_annotations = [a.download_annotation() for a in finished_annotation_infos]
 
@@ -16,7 +18,14 @@ def main() -> None:
 
     task_type_id = "61f90e4efe0100b102553009"  # from wk web interface
     tasks = Task.create_from_annotations(
-        task_type_id, "sampleExp", 1, 1, "sampleProject", None, None, finished_annotations
+        task_type_id,
+        "sampleExp",
+        1,
+        1,
+        "sampleProject",
+        None,
+        None,
+        finished_annotations,
     )
     print(f"New tasks: {tasks}")
 

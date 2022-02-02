@@ -1,7 +1,6 @@
 import json
 import logging
-from io import BytesIO
-from typing import TYPE_CHECKING, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, BinaryIO, Dict, List, Mapping, Optional, Tuple, Union
 
 import attr
 import httpx
@@ -25,11 +24,13 @@ if TYPE_CHECKING:
         TaskInfosByProjectIdResponse200Item,
     )
 
+
 @attr.frozen
 class TaskStatus:
     open_instance_count: int
     active_instance_count: int
     finished_instance_count: int
+
 
 @attr.frozen
 class Task:
@@ -76,13 +77,9 @@ class Task:
             else None,
         }
         form_data = {"formJSON": json.dumps(task_parameters)}
-        files = {
-            a._nml_file.path: a.file
-            if isinstance(a.file, BytesIO)
-            else open(a.file, "rb")
-            for a in base_annotations
+        files: Mapping[str, Tuple[str, Union[bytes, BinaryIO]]] = {
+            f"{a.name}.zip": (f"{a.name}.zip", a.binary()) for a in base_annotations
         }
-        print(files)
         response = httpx.post(
             url=url,
             headers=client.get_headers(),
@@ -135,7 +132,14 @@ class Task:
         cls,
         response: Union["TaskInfoResponse200", "TaskInfosByProjectIdResponse200Item"],
     ) -> "Task":
-        return cls(response.id, response.project_name, response.data_set, TaskStatus(response.status.open_, response.status.active, response.status.finished))
+        return cls(
+            response.id,
+            response.project_name,
+            response.data_set,
+            TaskStatus(
+                response.status.open_, response.status.active, response.status.finished
+            ),
+        )
 
     def get_annotation_infos(self) -> List[AnnotationInfo]:
         client = _get_generated_client()

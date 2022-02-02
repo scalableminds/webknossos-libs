@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, Union
 
 import attr
 
-from webknossos.annotation.annotation import Annotation, AnnotationType, AnnotationState
+from webknossos.annotation.annotation import Annotation, AnnotationState, AnnotationType
 
 if TYPE_CHECKING:
     from webknossos.client._generated.models.annotation_info_response_200 import (
