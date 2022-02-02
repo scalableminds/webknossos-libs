@@ -186,10 +186,16 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
 
 
 FIELDS_WITH_VARYING_CONTENT = [
+    "experiences",
     "adminViewConfiguration",
     "novelUserExperienceInfos",
     "viewConfiguration",
-    "experiences",
+]
+
+OPTIONAL_FIELDS = [
+    "adminViewConfiguration",
+    "novelUserExperienceInfos",
+    "viewConfiguration",
 ]
 
 
@@ -216,7 +222,7 @@ def make_properties_required(x: Any) -> None:
             x["required"] = list(
                 property
                 for property in properties.keys()
-                if property not in FIELDS_WITH_VARYING_CONTENT
+                if property not in OPTIONAL_FIELDS
             )
 
 

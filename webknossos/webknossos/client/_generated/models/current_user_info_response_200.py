@@ -28,6 +28,7 @@ class CurrentUserInfoResponse200:
     is_dataset_manager: int
     is_active: int
     teams: List[CurrentUserInfoResponse200TeamsItem]
+    experiences: CurrentUserInfoResponse200Experiences
     last_activity: int
     is_anonymous: int
     is_editable: int
@@ -35,7 +36,6 @@ class CurrentUserInfoResponse200:
     selected_theme: str
     created: int
     last_task_type_id: str
-    experiences: Union[Unset, CurrentUserInfoResponse200Experiences] = UNSET
     novel_user_experience_infos: Union[
         Unset, CurrentUserInfoResponse200NovelUserExperienceInfos
     ] = UNSET
@@ -55,6 +55,8 @@ class CurrentUserInfoResponse200:
 
             teams.append(teams_item)
 
+        experiences = self.experiences.to_dict()
+
         last_activity = self.last_activity
         is_anonymous = self.is_anonymous
         is_editable = self.is_editable
@@ -62,10 +64,6 @@ class CurrentUserInfoResponse200:
         selected_theme = self.selected_theme
         created = self.created
         last_task_type_id = self.last_task_type_id
-        experiences: Union[Unset, Dict[str, Any]] = UNSET
-        if not isinstance(self.experiences, Unset):
-            experiences = self.experiences.to_dict()
-
         novel_user_experience_infos: Union[Unset, Dict[str, Any]] = UNSET
         if not isinstance(self.novel_user_experience_infos, Unset):
             novel_user_experience_infos = self.novel_user_experience_infos.to_dict()
@@ -82,6 +80,7 @@ class CurrentUserInfoResponse200:
                 "isDatasetManager": is_dataset_manager,
                 "isActive": is_active,
                 "teams": teams,
+                "experiences": experiences,
                 "lastActivity": last_activity,
                 "isAnonymous": is_anonymous,
                 "isEditable": is_editable,
@@ -91,8 +90,6 @@ class CurrentUserInfoResponse200:
                 "lastTaskTypeId": last_task_type_id,
             }
         )
-        if experiences is not UNSET:
-            field_dict["experiences"] = experiences
         if novel_user_experience_infos is not UNSET:
             field_dict["novelUserExperienceInfos"] = novel_user_experience_infos
 
@@ -122,6 +119,10 @@ class CurrentUserInfoResponse200:
 
             teams.append(teams_item)
 
+        experiences = CurrentUserInfoResponse200Experiences.from_dict(
+            d.pop("experiences")
+        )
+
         last_activity = d.pop("lastActivity")
 
         is_anonymous = d.pop("isAnonymous")
@@ -135,13 +136,6 @@ class CurrentUserInfoResponse200:
         created = d.pop("created")
 
         last_task_type_id = d.pop("lastTaskTypeId")
-
-        _experiences = d.pop("experiences", UNSET)
-        experiences: Union[Unset, CurrentUserInfoResponse200Experiences]
-        if isinstance(_experiences, Unset):
-            experiences = UNSET
-        else:
-            experiences = CurrentUserInfoResponse200Experiences.from_dict(_experiences)
 
         _novel_user_experience_infos = d.pop("novelUserExperienceInfos", UNSET)
         novel_user_experience_infos: Union[
@@ -165,6 +159,7 @@ class CurrentUserInfoResponse200:
             is_dataset_manager=is_dataset_manager,
             is_active=is_active,
             teams=teams,
+            experiences=experiences,
             last_activity=last_activity,
             is_anonymous=is_anonymous,
             is_editable=is_editable,
@@ -172,7 +167,6 @@ class CurrentUserInfoResponse200:
             selected_theme=selected_theme,
             created=created,
             last_task_type_id=last_task_type_id,
-            experiences=experiences,
             novel_user_experience_infos=novel_user_experience_infos,
         )
 
