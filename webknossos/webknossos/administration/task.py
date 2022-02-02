@@ -78,7 +78,7 @@ class Task:
         }
         form_data = {"formJSON": json.dumps(task_parameters)}
         files: Mapping[str, Tuple[str, Union[bytes, BinaryIO]]] = {
-            f"{a.name}.zip": (f"{a.name}.zip", a.binary()) for a in base_annotations
+            f"{a.name}.zip": (f"{a.name}.zip", a.binary) for a in base_annotations
         }
         response = httpx.post(
             url=url,

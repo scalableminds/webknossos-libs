@@ -189,6 +189,7 @@ FIELDS_WITH_VARYING_CONTENT = [
     "adminViewConfiguration",
     "novelUserExperienceInfos",
     "viewConfiguration",
+    "experiences",
 ]
 
 
