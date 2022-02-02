@@ -140,7 +140,7 @@ class Annotation:
         if webknossos_url != _get_context().url:
             warnings.warn(
                 f"The supplied url {webknossos_url} does not match your current context {_get_context().url}. "
-                + "Only public annotations can be downloaded this way, using no token. "
+                + "Using no token, only public annotations can be downloaded. "
                 + "Please see https://docs.webknossos.org/api/webknossos/client/context.html to adapt the URL and token."
             )
             context: ContextManager[None] = webknossos_context(

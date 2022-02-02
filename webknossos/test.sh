@@ -7,6 +7,9 @@ export DOCKER_TAG=master__16748
 
 if [ $# -eq 1 ] && [ "$1" = "--refresh-snapshots" ]; then
     if ! curl -sf localhost:9000/api/health; then
+        echo "Using docker-compose setup with the docker tag $DOCKER_TAG"
+        echo "  To change this, please update DOCKER_TAG in test.sh"
+
         WK_DOCKER_DIR="tests"
         pushd $WK_DOCKER_DIR > /dev/null
         docker-compose pull webknossos
@@ -25,7 +28,10 @@ if [ $# -eq 1 ] && [ "$1" = "--refresh-snapshots" ]; then
         done
         OUT=$(docker-compose exec webknossos tools/postgres/prepareTestDB.sh 2>&1) || echo $OUT
         popd > /dev/null
+    elif
+        echo "Using the already running local webknossos setup at localhost:9000"
     fi
+
     rm -rf tests/cassettes
     rm -rf tests/**/cassettes
 
@@ -34,6 +40,13 @@ if [ $# -eq 1 ] && [ "$1" = "--refresh-snapshots" ]; then
         echo "Please ensure that the test-db is prepared by running this in the webknossos repo:"
         echo "tools/postgres/prepareTestDB.sh"
         exit 1
+    fi
+
+    WK_ORG_VERSION="$(curl -s https://webknossos.org/api/buildinfo | tr ',"' "\n" | sed -n '/version/{n;n;p;q;}')"
+    LOCAL_VERSION="$(curl -s http://localhost:9000/api/buildinfo | tr ',"' "\n" | sed -n '/version/{n;n;p;q;}')"
+
+    if [ "$WK_ORG_VERSION" != "$LOCAL_VERSION" ]; then
+        echo "The local webknossos version is $LOCAL_VERSION, differing from the webknossos.org version $WK_ORG_VERSION"
     fi
 
     # Note that pytest should be executed via `python -m`, since
