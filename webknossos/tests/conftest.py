@@ -101,6 +101,7 @@ _REPLACE_IN_REQUEST_MULTIFORM = {
 def _before_record_request(request: VcrRequest) -> VcrRequest:
     """This function formats and cleans request data to make it
     more readable and idempotent when re-snapshotting"""
+
     request.uri = re.sub(
         r"\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}", "2000-01-01_00-00-00", request.uri
     )
@@ -136,9 +137,24 @@ _REPLACE_IN_RESPONSE_CONTENT = {
 }
 
 
+_HEADERS_TO_REMOVE = ["x-powered-by"]
+
+
 def _before_record_response(response: Dict[str, Any]) -> Dict[str, Any]:
-    if "Date" in response["headers"]:
-        response["headers"]["Date"] = "Mon, 01 Jan 2000 00:00:00 GMT"
+    """This function formats and cleans response data to make it
+    more readable and idempotent when re-snapshotting"""
+
+    # sort and lower-case all headers to stay consistent across servers, also cleanup:
+    for key, value in sorted(response["headers"].items()):
+        del response["headers"][key]
+        if key.lower() not in _HEADERS_TO_REMOVE:
+            if not (
+                key.lower() == "connection" and (value == "close" or "close" in value)
+            ):
+                response["headers"][key.lower()] = value
+    if "date" in response["headers"]:
+        response["headers"]["date"] = "Mon, 01 Jan 2000 00:00:00 GMT"
+
     if isinstance(response["content"], str):
         for regex_to_replace, replace_with in _REPLACE_IN_RESPONSE_CONTENT.items():
             response["content"] = re.sub(
@@ -152,6 +168,7 @@ def _before_record_response(response: Dict[str, Any]) -> Dict[str, Any]:
                 if i["paymentInterval"]["year"] <= 2021
             ]
             response["content"] = json.dumps(json_content)
+
     return response
 
 

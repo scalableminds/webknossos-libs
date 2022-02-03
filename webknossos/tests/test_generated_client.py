@@ -15,7 +15,7 @@ from webknossos.client._generated.client import Client
 from webknossos.client._generated.models.datastore_list_response_200_item import (
     DatastoreListResponse200Item,
 )
-from webknossos.client.context import _get_generated_client
+from webknossos.client.context import _get_generated_client, webknossos_context
 from webknossos.utils import time_since_epoch_in_ms
 
 DATASTORE_URL = "https://data-humerus.webknossos.org"
@@ -41,24 +41,24 @@ def test_health(client: Client) -> None:
 
 
 @pytest.mark.vcr()
-def test_annotation_info(client: Client) -> None:
-    id = "616457c2010000870032ced4"  # pylint: disable=redefined-builtin
+def test_annotation_info(auth_client: Client) -> None:
+    id = "570ba0092a7c0e980056fe9b"  # pylint: disable=redefined-builtin
     typ = "Explorational"
     info_object = annotation_info.sync(
-        typ=typ, id=id, client=client, timestamp=time_since_epoch_in_ms()
+        typ=typ, id=id, client=auth_client, timestamp=time_since_epoch_in_ms()
     )
     assert info_object is not None
     assert info_object.id == id
     assert info_object.typ == typ
-    assert info_object.data_store.url == DATASTORE_URL
+    assert info_object.data_store.url == auth_client.base_url
 
 
 @pytest.mark.vcr()
 def test_datastore_list(auth_client: Client) -> None:
     datastores = datastore_list.sync(client=auth_client)
     internal_datastore = DatastoreListResponse200Item(
-        name="webknossos.org",
-        url=DATASTORE_URL,
+        name="localhost",
+        url="http://localhost:9000",
         is_foreign=False,
         is_scratch=False,
         is_connector=False,
@@ -98,7 +98,9 @@ def test_user_list(auth_client: Client) -> None:
 
 
 @pytest.mark.vcr()
-def test_dataset_info(client: Client) -> None:
+def test_dataset_info() -> None:
+    with webknossos_context():
+        client = _get_generated_client()
     response = dataset_info.sync(
         organization_name="scalable_minds",
         data_set_name="l4dense_motta_et_al_demo",
@@ -125,5 +127,5 @@ def test_build_info(client: Client) -> None:
     assert response is not None
     assert response.webknossos.name == "webknossos"
     assert response.webknossos_wrap.name == "webknossos-wrap"
-    assert not response.local_data_store_enabled
+    assert response.local_data_store_enabled
     assert response.local_tracing_store_enabled
