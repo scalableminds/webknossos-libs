@@ -22,6 +22,8 @@ if TYPE_CHECKING:
 
 @attr.frozen
 class Project:
+    """Data class containing information about a webKnossos project"""
+
     project_id: str
     name: str
     team_id: str
@@ -50,9 +52,11 @@ class Project:
         return cls._from_generated_response(response)
 
     def get_tasks(self, fetch_all: bool = True) -> List["Task"]:
+        """Returns the tasks of this project. Pagination is used if there are more than 1000 tasks"""
+
         from webknossos.administration import Task
 
-        pagination_limit = 3
+        pagination_limit = 1000
         pagination_page = 0
 
         client = _get_generated_client(enforce_auth=True)
@@ -94,6 +98,7 @@ class Project:
         return all_tasks
 
     def get_owner(self) -> User:
+        """Returns the user that is the owner of this task"""
         return User.get_by_id(self.owner_id)
 
     @classmethod

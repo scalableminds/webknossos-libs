@@ -10,7 +10,9 @@ def main() -> None:
     tasks = p.get_tasks()
     total_active_instances = sum([t.status.active_instance_count for t in tasks])
     total_open_instances = sum([t.status.open_instance_count for t in tasks])
-    print(f"There are {total_active_instances} active and {total_open_instances} open task instances.")
+    print(
+        f"There are {total_active_instances} active and {total_open_instances} open task instances."
+    )
 
     # Fetch info about annotation instances that annotators have already started
     annotation_infos = [t.get_annotation_infos() for t in tasks]
@@ -32,14 +34,14 @@ def main() -> None:
 
     task_type_id = "61f90e4efe0100b102553009"  # from webKnossos web interface
     tasks = Task.create_from_annotations(
-        task_type_id, # New task type instructs annotators what to do in the task
-        "sampleExp", # Only annotators with the experience "sampleExp" of at least value 2 will get this task
-        2, # experience value (see line above)
-        1, # create one instance of each task, no redundant annotating
-        "sampleProject2", # The new task is part of a second project to track the progress separately
-        None, # No custom user script for this task
-        None, # No restricted bounding box for this task
-        finished_annotations, # create a new task based on each annotation that was previously finished
+        task_type_id,  # New task type instructs annotators what to do in the task
+        "sampleExp",  # Only annotators with the experience "sampleExp" of at least value 2 will get this task
+        2,  # experience value (see line above)
+        1,  # create one instance of each task, no redundant annotating
+        "sampleProject2",  # The new task is part of a second project to track the progress separately
+        None,  # No custom user script for this task
+        None,  # No restricted bounding box for this task
+        finished_annotations,  # create a new task based on each annotation that was previously finished
     )
     print(f"New tasks: {tasks}")
 

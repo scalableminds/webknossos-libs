@@ -15,6 +15,8 @@ if TYPE_CHECKING:
 
 @attr.frozen
 class AnnotationInfo:
+    """Data class containing information about a webKnossos annotation"""
+
     id: str
     user_id: str
     name: str
@@ -23,6 +25,7 @@ class AnnotationInfo:
     state: AnnotationState
 
     def download_annotation(self) -> Annotation:
+        """Downloads and returns the annotation that is discribed by this AnnotationInfo object"""
         from webknossos.client._download_annotation import download_annotation
 
         return download_annotation(self.type, self.id)

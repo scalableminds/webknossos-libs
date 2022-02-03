@@ -34,15 +34,18 @@ class TaskStatus:
 
 @attr.frozen
 class Task:
+    """Data class containing information about a webKnossos task"""
+
     task_id: str
     project_id: str
     dataset_name: str
     status: TaskStatus
 
     @classmethod
-    def get_by_id(cls, id: str) -> "Task":  # pylint: disable=redefined-builtin
+    def get_by_id(cls, task_id: str) -> "Task":  # pylint: disable=redefined-builtin
+        """Returns the task specified by the passed id (if your token authorizes you to see it)"""
         client = _get_generated_client()
-        response = task_info.sync(id=id, client=client)
+        response = task_info.sync(id=task_id, client=client)
         assert response is not None
         return cls._from_generated_response(response)
 
@@ -58,6 +61,7 @@ class Task:
         bounding_box: Optional[BoundingBox],
         base_annotations: List[Annotation],
     ) -> List["Task"]:
+        """Submits tasks in webKnossos based on existing annotations, and returns the Task objects"""
         assert (
             len(base_annotations) > 0
         ), "Must supply at least one base annotation to create tasks"
@@ -142,10 +146,12 @@ class Task:
         )
 
     def get_annotation_infos(self) -> List[AnnotationInfo]:
+        """Returns AnnotationInfo objects describing all task instances that have been started by annotators for this task"""
         client = _get_generated_client()
         response = annotation_infos_by_task_id.sync(id=self.task_id, client=client)
         assert response is not None
         return [AnnotationInfo._from_generated_response(a) for a in response]
 
     def get_project(self) -> Project:
+        """Returns the project this task belongs to"""
         return Project.get_by_id(self.project_id)
