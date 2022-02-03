@@ -7,7 +7,17 @@ from os import PathLike
 from pathlib import Path
 from shutil import copyfile
 from tempfile import TemporaryDirectory
-from typing import IO, BinaryIO, ContextManager, Iterator, List, NamedTuple, Optional, Union, cast
+from typing import (
+    IO,
+    BinaryIO,
+    ContextManager,
+    Iterator,
+    List,
+    NamedTuple,
+    Optional,
+    Union,
+    cast,
+)
 from zipfile import ZipFile
 
 from attr import dataclass
