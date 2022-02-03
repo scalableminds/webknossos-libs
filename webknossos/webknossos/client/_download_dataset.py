@@ -23,7 +23,7 @@ _DOWNLOAD_CHUNK_SIZE = (512, 512, 512)
 
 def download_dataset(
     dataset_name: str,
-    organization_name: str,
+    organization_name: Optional[str] = None,
     bbox: Optional[BoundingBox] = None,
     layers: Optional[List[str]] = None,
     mags: Optional[List[Mag]] = None,
@@ -31,6 +31,11 @@ def download_dataset(
     exist_ok: bool = False,
 ) -> Dataset:
     client = _get_generated_client()
+    context = _get_context()
+
+    if organization_name is None:
+        organization_name = context.organization
+
     dataset_info_response = dataset_info.sync_detailed(
         organization_name=organization_name,
         data_set_name=dataset_name,
@@ -40,10 +45,8 @@ def download_dataset(
     parsed = dataset_info_response.parsed
     assert parsed is not None
 
-    datastore_client = _get_context().get_generated_datastore_client(
-        parsed.data_store.url
-    )
-    optional_datastore_token = _get_context().datastore_token
+    datastore_client = context.get_generated_datastore_client(parsed.data_store.url)
+    optional_datastore_token = context.datastore_token
 
     actual_path = Path(dataset_name) if path is None else Path(path)
     if actual_path.exists():

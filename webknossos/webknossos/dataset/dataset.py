@@ -219,7 +219,7 @@ class Dataset:
     def download(
         cls,
         dataset_name: str,
-        organization_name: str,
+        organization_name: Optional[str] = None,
         bbox: Optional[BoundingBox] = None,
         layers: Optional[List[str]] = None,
         mags: Optional[List[Mag]] = None,

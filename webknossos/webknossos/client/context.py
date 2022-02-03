@@ -125,7 +125,7 @@ def _clear_all_context_caches() -> None:
 class _WebknossosContext:
     url: str = os.environ.get("WK_URL", default=DEFAULT_WEBKNOSSOS_URL)
     token: Optional[str] = os.environ.get("WK_TOKEN", default=None)
-    timeout: int = int(os.environ.get("WK_TIMEOUT", default=120))
+    timeout: int = int(os.environ.get("WK_TIMEOUT", default=1800))
 
     # all properties are cached outside to allow re-usability
     # if same context is instantiated twice
@@ -172,10 +172,26 @@ _webknossos_context_var: ContextVar[_WebknossosContext] = ContextVar(
 
 @contextmanager
 def webknossos_context(
-    url: str = DEFAULT_WEBKNOSSOS_URL,
+    url: Optional[str] = None,
     token: Optional[str] = None,
     timeout: Optional[int] = None,
 ) -> Iterator[None]:
+    """Returns a new webKnossos server contextmanager. Use with the `with` statement:
+    ```python
+    with webknossos_context(token="my_webknossos_token"):
+       # code that interacts with webknossos
+    ```
+
+    You can specify the following arguments:
+    * `url`, by default [webknossos.org](https://webknossos.org),
+    * `token`, as displayed on [https://webknossos.org/auth/token](https://webknossos.org/auth/token),
+    * `timeout` to specify a custom network request timeout in seconds, `1800` (30min) by default.
+
+    `url` and `timeout` are taken from the previous context (e.g. environment variables) if not specified.
+    `token` must be set explicitly, it is not available when not specified.
+    """
+    if url is None:
+        url = _get_context().url
     if timeout is None:
         timeout = _get_context().timeout
     context_var_token = _webknossos_context_var.set(
