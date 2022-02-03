@@ -9,7 +9,7 @@ You can copy your token from
 
 Using the same methods, you can also specify the webknossos-server if you
 are not using the default [webknossos.org](https://webknossos.org) instance,
-as well as a timeout for network requests (default is 120 seconds).
+as well as a timeout for network requests (default is 30 minutes).
 
 There are the following four options to specify which server context to use:
 
@@ -37,7 +37,7 @@ There are the following four options to specify which server context to use:
     # content of .env
     WK_TOKEN="my_webknossos_token"
     WK_URL="…"
-    WK_TIMEOUT="600"  # in seconds
+    WK_TIMEOUT="3600"  # in seconds
     ```
 
 4. If nothing else is specified and authentication is needed,
