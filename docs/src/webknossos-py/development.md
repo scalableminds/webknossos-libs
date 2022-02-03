@@ -44,18 +44,18 @@ Internal workflows for scalable minds:
   This updates the changelog and pushes a new tag, which triggers another CI run building and publishing the package.
 
 
-### webknossos package
+### `webknossos` package
 
 The `webknossos` folder contains examples, which are not part of the package, but are tested via `tests/test_examples.py` and added to the documentation (see `docs/src/webknossos-py/examples`).
 
-The tests also contain functionality for the webknossos client. There a two modes to run the tests:
+The tests also contain functionality for the webKnossos client. There a two modes to run the tests:
 
-1. `test.sh --refresh-snapshots`, sending network requests to a webknossos instance:
-  This expects a local webknossos setup with specific test data, which is shipped with webknossos. If you're starting and running webknossos manually, please use port 9000 (the default) and run the `tools/postgres/prepareTestDb.sh` script in the webknossos repository (⚠️ this overwrites your local webknossos database). Alternatively, a docker-compose setup is started automatically for the tests, see `test.sh` and `tests/docker-compose.yml` for details. The network requests & response are recorded as "cassettes" by [vcr.py](https://vcrpy.readthedocs.io), see next point:
+1. `test.sh --refresh-snapshots`, sending network requests to a webKnossos instance:
+  This expects a local webKnossos setup with specific test data, which is shipped with webKnossos. If you're starting and running webKnossos manually, please use port 9000 (the default) and run the `tools/postgres/prepareTestDb.sh` script in the webKnossos repository (⚠️ this overwrites your local webKnossos database). Alternatively, a docker-compose setup is started automatically for the tests, see `test.sh` and `tests/docker-compose.yml` for details. The network requests & response are recorded as "cassettes" by [vcr.py](https://vcrpy.readthedocs.io), see next point:
 2. `test.sh` replays responses from previous network snapshots using [vcr.py](https://vcrpy.readthedocs.io) via [pytest-recording](https://github.com/kiwicom/pytest-recording). No additional network requests are allowed in this mode.
 
 
-### wkcuber package
+### `wkcuber` package
 
 Currently the test setup consists of different scripts as well as pytest tests. The following commands are run in CI:
 ```bash
@@ -67,7 +67,7 @@ poetry run tests/scripts/all_tests.sh
 There is also a `test.sh` which is currently outdated, see [issue #580](https://github.com/scalableminds/webknossos-libs/issues/580).
 
 
-### cluster_tools package
+### `cluster_tools` package
 
 For testing the SLURM setup a docker-compose setup is availble. Please see the [respective Readme](https://github.com/scalableminds/webknossos-libs/blob/master/cluster_tools/README.md) for details.
 
@@ -82,7 +82,7 @@ We render a common documentation for webKnossos itself and webknossos-libs from 
 
 The structure of the documentation page is given by `docs/mkdocs.yml`.
 
-To generate the documentation locally, clone or link the webknossos repository to `docs/wk-repo` first and then start the documentation server
+To generate the documentation locally, clone or link the webKnossos repository to `docs/wk-repo` first and then start the documentation server
 ```shell
 git clone --depth 1 git@github.com:scalableminds/webknossos.git docs/wk-repo
 docs/generate.sh
