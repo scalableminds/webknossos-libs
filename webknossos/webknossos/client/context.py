@@ -183,13 +183,14 @@ def webknossos_context(
     ```
 
     You can specify the following arguments:
-    * `url`, by default [webknossos.org](https://webknossos.org),
+    * `url`, by default [https://webknossos.org](https://www.webknossos.org),
     * `token`, as displayed on [https://webknossos.org/auth/token](https://webknossos.org/auth/token),
     * `timeout` to specify a custom network request timeout in seconds, `1800` (30min) by default.
 
     `url` and `timeout` are taken from the previous context (e.g. environment variables) if not specified.
     `token` must be set explicitly, it is not available when not specified.
     """
+
     if url is None:
         url = _get_context().url
     if timeout is None:
