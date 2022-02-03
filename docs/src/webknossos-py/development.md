@@ -28,13 +28,16 @@ See below for specifics of the different packages. Let's have a look at the comm
   [see here for details](https://python-poetry.org/docs/configuration/#virtualenvscreate).
   To install the preferred version for this repository, run
   [`pip install -f requirements.txt`](https://github.com/scalableminds/webknossos-libs/blob/master/requirements.txt)
-* **CI**: We use continuous integration with [github actions](https://github.com/scalableminds/webknossos-libs/actions),
-  please see the `CI` workflow for details.
 * **Tooling** we try to use across projects (still WIP, see [#581](https://github.com/scalableminds/webknossos-libs/issues/581)):
     * `format.sh`: black and isort
     * `lint.sh`: pylint
     * `typecheck.sh`: mypy
     * `test.sh`: pytest and custom scripts
+
+Internal workflows for scalable minds:
+
+* **CI**: We use continuous integration with [github actions](https://github.com/scalableminds/webknossos-libs/actions),
+  please see the `CI` workflow for details.
 * **Releases** are triggered via the
   [`Automatic release` github action](https://github.com/scalableminds/webknossos-libs/actions/workflows/release.yml),
   using the `Run workflow` button in the topright corner.
@@ -45,9 +48,11 @@ See below for specifics of the different packages. Let's have a look at the comm
 
 The `webknossos` folder contains examples, which are not part of the package, but are tested via `tests/test_examples.py` and added to the documentation (see `docs/src/webknossos-py/examples`).
 
-The tests also contain functionality for the webknossos client, sending network requests to a webknossos instance. For normal tests, those requests are read from previous network snapshots using [vcr.py](https://vcrpy.readthedocs.io) via [pytest-recording](https://github.com/kiwicom/pytest-recording).
+The tests also contain functionality for the webknossos client. There a two modes to run the tests:
 
-This expects a local webknossos setup with specific test data, which is shipped with webknossos. If you're starting and running webknossos manually, please use port 9000 (the default) and run the `tools/postgres/prepareTestDb.sh` script in the webknossos repository (⚠️ this overwrites your local webknossos database). Alternatively, a docker-compose setup is started automatically for the tests, see `test.sh` and `tests/docker-compose.yml` for details.
+1. `test.sh --refresh-snapshots`, sending network requests to a webknossos instance:
+  This expects a local webknossos setup with specific test data, which is shipped with webknossos. If you're starting and running webknossos manually, please use port 9000 (the default) and run the `tools/postgres/prepareTestDb.sh` script in the webknossos repository (⚠️ this overwrites your local webknossos database). Alternatively, a docker-compose setup is started automatically for the tests, see `test.sh` and `tests/docker-compose.yml` for details. The network requests & response are recorded as "cassettes" by [vcr.py](https://vcrpy.readthedocs.io), see next point:
+2. `test.sh` replays responses from previous network snapshots using [vcr.py](https://vcrpy.readthedocs.io) via [pytest-recording](https://github.com/kiwicom/pytest-recording). No additional network requests are allowed in this mode.
 
 
 ### wkcuber package
@@ -73,17 +78,18 @@ We render a common documentation for webKnossos itself and webknossos-libs from 
 
 * `docs/src/webknossos`: Server & Website documentation, linked from the [webknossos repository](https://github.com/scalableminds/webknossos) (must be available under `docs/wk-repo`, see below).
 * `docs/src/api`: Generated using [pdoc](https://pdoc.dev) from Python docstrings.
-* `docs/src/webknossos-py` & `docs/src/wkcuber` Documentation for the respective Python Packages
+* `docs/src/webknossos-py` & `docs/src/wkcuber`: Documentation for the respective Python Packages
 
 The structure of the documentation page is given by `docs/mkdocs.yml`.
 
-To generate the documentation locally, use
+To generate the documentation locally, clone or link the webknossos repository to `docs/wk-repo` first and then start the documentation server
 ```shell
-# Clone or link the webknossos repo to docs/wk-repo:
 git clone --depth 1 git@github.com:scalableminds/webknossos.git docs/wk-repo
-
-# To generate the documentation, use one of
-docs/generate.sh            # hot-reloading markdown docs
-docs/generate.sh --api      # pure pdoc documentation, hot-reloading docstrings
-docs/generate.sh --persist  # persists the docs under docs/out
+docs/generate.sh
 ```
+
+You can use
+
+* `docs/generate.sh` for hot-reloading markdown docs,
+* `docs/generate.sh --api` to get the pure pdoc documentation, hot-reloading docstrings,
+* `docs/generate.sh --persist` to persist the docs under docs/out.
