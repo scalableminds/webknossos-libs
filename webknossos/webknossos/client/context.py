@@ -56,7 +56,7 @@ import attr
 from dotenv import load_dotenv
 from rich.prompt import Prompt
 
-from webknossos.client._defaults import DEFAULT_WEBKNOSSOS_URL
+from webknossos.client._defaults import DEFAULT_HTTP_TIMEOUT, DEFAULT_WEBKNOSSOS_URL
 from webknossos.client._generated import Client as GeneratedClient
 
 load_dotenv()
@@ -125,7 +125,7 @@ def _clear_all_context_caches() -> None:
 class _WebknossosContext:
     url: str = os.environ.get("WK_URL", default=DEFAULT_WEBKNOSSOS_URL)
     token: Optional[str] = os.environ.get("WK_TOKEN", default=None)
-    timeout: int = int(os.environ.get("WK_TIMEOUT", default=1800))
+    timeout: int = int(os.environ.get("WK_TIMEOUT", default=DEFAULT_HTTP_TIMEOUT))
 
     # all properties are cached outside to allow re-usability
     # if same context is instantiated twice

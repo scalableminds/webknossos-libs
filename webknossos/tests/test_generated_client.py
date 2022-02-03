@@ -1,5 +1,6 @@
 import pytest
 
+from webknossos.client._defaults import DEFAULT_WEBKNOSSOS_URL
 from webknossos.client._generated.api.default import (
     annotation_info,
     build_info,
@@ -99,7 +100,7 @@ def test_user_list(auth_client: Client) -> None:
 
 @pytest.mark.vcr()
 def test_dataset_info() -> None:
-    with webknossos_context():
+    with webknossos_context(url=DEFAULT_WEBKNOSSOS_URL):
         client = _get_generated_client()
     response = dataset_info.sync(
         organization_name="scalable_minds",
