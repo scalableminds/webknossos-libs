@@ -38,6 +38,9 @@ pip install webknossos
 ## Examples
 See the [examples folder](examples) or the [the documentation](https://docs.webknossos.org/webknossos-py).
 
+## Contributions & Development
+Please see the [respective documentation page](https://docs.webknossos.org/webknossos-py/development.html).
+
 ## License
 [AGPLv3](https://www.gnu.org/licenses/agpl-3.0.html)
 Copyright [scalable minds](https://scalableminds.com)

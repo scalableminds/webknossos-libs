@@ -92,6 +92,11 @@ nav:
     - Authentication & Server Context: api/webknossos/client/context.md
     - Admin Resources:
       - User: api/webknossos/client/user.md
+  - Getting Help:
+    - webknossos-py/development.md
+    - Community Support: https://forum.image.sc/tag/webknossos" target="_blank
+    - Email Support: mailto:hello@webknossos.org
+    - Commercial Support: https://scalableminds.com" target="_blank
 - wkcuber CLI: wkcuber/index.md
 
 plugins:

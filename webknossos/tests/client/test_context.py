@@ -13,4 +13,4 @@ def env_context() -> _WebknossosContext:
 
 @pytest.mark.vcr()
 def test_user_organization(env_context: _WebknossosContext) -> None:
-    assert env_context.organization == "scalable_minds"
+    assert env_context.organization == "Organization_X"
