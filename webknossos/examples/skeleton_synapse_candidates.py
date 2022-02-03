@@ -56,7 +56,7 @@ def main() -> None:
         ):
             synapse_graph.add_node(
                 position=(partner_a + partner_b) / nml.scale / 2,
-                comment=f"{tree_a.name} ({tree_a.user_id}) <-> {tree_b.name} ({tree_b.user_id})",
+                comment=f"{tree_a.name} ({tree_a.id}) <-> {tree_b.name} ({tree_b.id})",
             )
 
     # nml can be used for further processing or written to a file:
