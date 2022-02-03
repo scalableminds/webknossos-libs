@@ -82,9 +82,7 @@ def test_upload_image_data() -> None:
         )
 
         assert layer_nuclei.bounding_box.size == img.shape[1:]
-        assert url.startswith(
-            "http://localhost:9000/datasets/sample_organization/cell_"
-        )
+        assert url.startswith("http://localhost:9000/datasets/Organization_X/cell_")
 
 
 class _DummyNearestNeighborClassifier:
@@ -138,7 +136,7 @@ def test_learned_segmenter() -> None:
         counts = dict(zip(*np.unique(segmentation_data, return_counts=True)))
         assert counts == {1: 209066, 2: 37803, 3: 164553, 4: 817378}
         assert url.startswith(
-            "http://localhost:9000/datasets/sample_organization/skin_segmented_"
+            "http://localhost:9000/datasets/Organization_X/skin_segmented_"
         )
 
         if old_default_classifier is None:
@@ -155,5 +153,5 @@ def test_user_times() -> None:
     (df,) = exec_main_and_get_vars(example, "df")
 
     assert len(df) > 0
-    assert sum(df.loc[:, (2021, 10)]) > 0
-    assert "taylor.tester@mail.com" in df.index
+    assert sum(df.loc[:, (2021, 5)]) > 11
+    assert "user_A@scalableminds.com" in df.index

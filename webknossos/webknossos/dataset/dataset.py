@@ -4,11 +4,22 @@ import os
 import shutil
 import warnings
 from argparse import Namespace
+from contextlib import nullcontext
 from os import PathLike, makedirs
 from os.path import basename, join, normpath
 from pathlib import Path
 from shutil import rmtree
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    ContextManager,
+    Dict,
+    List,
+    Optional,
+    Tuple,
+    Union,
+    cast,
+)
 
 import attr
 import numpy as np
@@ -214,12 +225,27 @@ class Dataset:
         mags: Optional[List[Mag]] = None,
         path: Optional[Union[PathLike, str]] = None,
         exist_ok: bool = False,
+        webknossos_url: Optional[str] = None,
     ) -> "Dataset":
         from webknossos.client._download_dataset import download_dataset
+        from webknossos.client.context import _get_context, webknossos_context
 
-        return download_dataset(
-            dataset_name, organization_name, bbox, layers, mags, path, exist_ok
-        )
+        if webknossos_url is not None and webknossos_url != _get_context().url:
+            warnings.warn(
+                f"The supplied url {webknossos_url} does not match your current context {_get_context().url}. "
+                + "Using no token, only public datasets can be downloaded. "
+                + "Please see https://docs.webknossos.org/api/webknossos/client/context.html to adapt the URL and token."
+            )
+            context: ContextManager[None] = webknossos_context(
+                webknossos_url, token=None
+            )
+        else:
+            context = nullcontext()
+
+        with context:
+            return download_dataset(
+                dataset_name, organization_name, bbox, layers, mags, path, exist_ok
+            )
 
     @property
     def layers(self) -> Dict[str, Layer]:

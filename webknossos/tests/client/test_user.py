@@ -13,7 +13,9 @@ def assert_valid_user(user: User) -> None:
 
 @pytest.mark.vcr()
 def test_get_current_user() -> None:
-    assert_valid_user(User.get_current_user())
+    user = User.get_current_user()
+    assert_valid_user(user)
+    assert user.email == "user_A@scalableminds.com"
 
 
 @pytest.mark.vcr()
