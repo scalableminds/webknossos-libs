@@ -47,7 +47,7 @@ The `webknossos` folder contains examples, which are not part of the package, bu
 
 The tests also contain functionality for the webknossos client, sending network requests to a webknossos instance. For normal tests, those requests are read from previous network snapshots using [vcr.py](https://vcrpy.readthedocs.io) via [pytest-recording](https://github.com/kiwicom/pytest-recording).
 
-This expects a local webknossos setup with specific test data, that is shipped with webknossos. If you're starting and running webknossos manually, please use port 9000 (the default) and run the `tools/postgres/prepareTestDb.sh` script in the webknossos repository (⚠️ this overwrites your local webknossos database). Alternatively, a docker-compose setup is started automatically for the tests, see `test.sh` and `tests/docker-compose.yml` for details.
+This expects a local webknossos setup with specific test data, which is shipped with webknossos. If you're starting and running webknossos manually, please use port 9000 (the default) and run the `tools/postgres/prepareTestDb.sh` script in the webknossos repository (⚠️ this overwrites your local webknossos database). Alternatively, a docker-compose setup is started automatically for the tests, see `test.sh` and `tests/docker-compose.yml` for details.
 
 
 ### wkcuber package
@@ -59,17 +59,17 @@ poetry run pytest tests
 poetry run tests/scripts/all_tests.sh
 ```
 
-There's also a `test.sh` which is outdated atm, see [issue #580](https://github.com/scalableminds/webknossos-libs/issues/580).
+There is also a `test.sh` which is currently outdated, see [issue #580](https://github.com/scalableminds/webknossos-libs/issues/580).
 
 
 ### cluster_tools package
 
-To test the SLURM setup a docker-compose setup is availble. Please see the the [respective Readme](https://github.com/scalableminds/webknossos-libs/blob/master/cluster_tools/README.md) for details.
+For testing the SLURM setup a docker-compose setup is availble. Please see the [respective Readme](https://github.com/scalableminds/webknossos-libs/blob/master/cluster_tools/README.md) for details.
 
 
 ## Documentation
 
-We render a common documentation for the webKnossos Server/Website and webknossos-libs from this repository using [mkdocs](https://www.mkdocs.org/). Source-files for the documentation are stored at `docs/src`:
+We render a common documentation for webKnossos itself and webknossos-libs from this repository using [mkdocs](https://www.mkdocs.org/). Source-files for the documentation are stored at `docs/src`:
 
 * `docs/src/webknossos`: Server & Website documentation, linked from the [webknossos repository](https://github.com/scalableminds/webknossos) (must be available under `docs/wk-repo`, see below).
 * `docs/src/api`: Generated using [pdoc](https://pdoc.dev) from Python docstrings.
