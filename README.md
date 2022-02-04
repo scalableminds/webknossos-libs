@@ -25,3 +25,6 @@ Use this for:
 - converting Tiff-stacks and other data formats for volume image data to webKnossos-compatible *.wkw files from the CLI
 - up/downsampling of *.wkw files to different magnification levels (image pyramid) from the CLI
 - compressing your *.wkw files to save disk space from the CLI
+
+## [Cluster Tools](cluster_tools)
+The `cluster_tools` package provides python `Executor` classes for distributing tasks on a slurm cluster or via multi processing.
