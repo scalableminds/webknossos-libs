@@ -14,6 +14,7 @@ from typing import (
     Any,
     ContextManager,
     Dict,
+    Iterable,
     List,
     Optional,
     Tuple,
@@ -502,6 +503,26 @@ class Dataset:
         layer.bounding_box = infer_bounding_box_existing_files(min_mag_view)
         return layer
 
+    def remove_layer(self, layer_name: str, remove_files: bool = False) -> None:
+        if layer_name not in self.layers.keys():
+            raise IndexError(
+                f"Removing layer {layer_name} failed. There is no layer with this name."
+            )
+
+        self._properties.data_layers = [
+            i for i in self._properties.data_layers if i.name != layer_name
+        ]
+        self._export_as_json()
+        if remove_files:
+            layer_path = self.layers[layer_name].path
+            if layer_path.exists:
+                if layer_path.is_symlink():
+                    layer_path.unlink()
+                else:
+                    # rmtree does not recurse into linked dirs, but removes the link
+                    shutil.rmtree(layer_path)
+        del self._layers[layer_name]
+
     def get_segmentation_layer(self) -> SegmentationLayer:
         """
         Returns the only segmentation layer. Prefer `get_segmentation_layers`,
@@ -714,10 +735,10 @@ class Dataset:
 
     def shallow_copy_dataset(
         self,
-        new_dataset_path: Path,
+        new_dataset_path: Union[str, PathLike],
         name: Optional[str] = None,
         make_relative: bool = False,
-        layers_to_ignore: Optional[List[str]] = None,
+        layers_to_ignore: Optional[Iterable[str]] = None,
     ) -> "Dataset":
         """
         Create a new dataset at the given path. Link all mags of all existing layers.
