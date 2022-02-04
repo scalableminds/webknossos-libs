@@ -559,12 +559,12 @@ class Dataset:
             raise IndexError(
                 f"Removing layer {layer_name} failed. There is no layer with this name"
             )
+        layer_path = self._layers[layer_name].path
         del self._layers[layer_name]
         self._properties.data_layers = [
             layer for layer in self._properties.data_layers if layer.name != layer_name
         ]
         # delete files on disk
-        layer_path = self.layers[layer_name].path
         if layer_path.is_symlink():
             layer_path.unlink()
         else:
