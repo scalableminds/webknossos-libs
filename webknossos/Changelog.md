@@ -12,7 +12,6 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes
 
 ### Added
-- Added `remove_layer` to the `Dataset` class. [#584](https://github.com/scalableminds/webknossos-libs/pull/584)
 
 ### Changed
 
