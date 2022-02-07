@@ -85,7 +85,7 @@ class Annotation:
     def name(self) -> str:
         return self._nml_file.path[:-4]
 
-    @lru_cache
+    @lru_cache(maxsize=128)
     def binary(self) -> Union[bytes, BinaryIO]:
         if isinstance(self.file, BytesIO):
             return self.file.getvalue()
