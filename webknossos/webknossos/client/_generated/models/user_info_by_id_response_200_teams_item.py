@@ -7,7 +7,7 @@ T = TypeVar("T", bound="UserInfoByIdResponse200TeamsItem")
 
 @attr.s(auto_attribs=True)
 class UserInfoByIdResponse200TeamsItem:
-    """ """
+    """  """
 
     id: str
     name: str

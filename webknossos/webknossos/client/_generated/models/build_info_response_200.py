@@ -12,7 +12,7 @@ T = TypeVar("T", bound="BuildInfoResponse200")
 
 @attr.s(auto_attribs=True)
 class BuildInfoResponse200:
-    """ """
+    """  """
 
     webknossos: BuildInfoResponse200Webknossos
     webknossos_wrap: BuildInfoResponse200WebknossosWrap

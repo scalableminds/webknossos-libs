@@ -7,7 +7,7 @@ T = TypeVar("T", bound="AnnotationInfoResponse200SettingsResolutionRestrictions"
 
 @attr.s(auto_attribs=True)
 class AnnotationInfoResponse200SettingsResolutionRestrictions:
-    """ """
+    """  """
 
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 

@@ -7,7 +7,7 @@ T = TypeVar("T", bound="BuildInfoResponse200WebknossosWrap")
 
 @attr.s(auto_attribs=True)
 class BuildInfoResponse200WebknossosWrap:
-    """ """
+    """  """
 
     built_at_millis: str
     name: str

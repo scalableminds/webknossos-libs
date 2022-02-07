@@ -26,7 +26,7 @@ T = TypeVar("T", bound="AnnotationInfoResponse200")
 
 @attr.s(auto_attribs=True)
 class AnnotationInfoResponse200:
-    """ """
+    """  """
 
     modified: int
     state: str

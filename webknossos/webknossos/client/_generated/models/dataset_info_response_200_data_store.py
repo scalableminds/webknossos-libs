@@ -7,7 +7,7 @@ T = TypeVar("T", bound="DatasetInfoResponse200DataStore")
 
 @attr.s(auto_attribs=True)
 class DatasetInfoResponse200DataStore:
-    """ """
+    """  """
 
     name: str
     url: str

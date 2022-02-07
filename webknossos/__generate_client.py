@@ -83,22 +83,22 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
     from webknossos.client.context import _get_generated_client
 
     # webKnossos.org setup:
-    explorative_annotation_id = "6114d9410100009f0096c640"
-    organization_name = "scalable_minds",
-    dataset_name = "l4dense_motta_et_al_demo"
-    task_id = "61f151c10100000a01249afe"
-    user_id = "5b5dd2fb1c00008230ec8174"
-    project_id = "61f1515e0100002f01249afa"
-    project_name = "sampleProject"
+    # explorative_annotation_id = "6114d9410100009f0096c640"
+    # organization_name = "scalable_minds",
+    # dataset_name = "l4dense_motta_et_al_demo"
+    # task_id = "61f151c10100000a01249afe"
+    # user_id = "5b5dd2fb1c00008230ec8174"
+    # project_id = "61f1515e0100002f01249afa"
+    # project_name = "sampleProject"
 
     # local setup, probably long gone by the time you read this:
-    # explorative_annotation_id = "61f91018fe0100b002553010"
-    # organization_name = "sample_organization"
-    # dataset_name = "l4_sample"
-    # task_id = "61f90e61fe0100a00255300a"
-    # user_id = "61f90b45fc01000402ff5b4d"
-    # project_id = "61f90b4afc01006704ff5b51"
-    # project_name = "sampleProject"
+    explorative_annotation_id = "62011da6fa0100b202ec50db"
+    organization_name = "sample_organization"
+    dataset_name = "l4_sample"
+    task_id = "62011dddfa0100ad02ec50de"
+    user_id = "6200df39f70100f70157d983"
+    project_id = "6200df45f70100440257d987"
+    project_name = "sampleProject"
 
     d = datetime.utcnow()
     unixtime = calendar.timegm(d.utctimetuple())

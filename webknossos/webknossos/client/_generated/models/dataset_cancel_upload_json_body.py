@@ -7,7 +7,7 @@ T = TypeVar("T", bound="DatasetCancelUploadJsonBody")
 
 @attr.s(auto_attribs=True)
 class DatasetCancelUploadJsonBody:
-    """ """
+    """  """
 
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 

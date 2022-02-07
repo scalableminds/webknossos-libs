@@ -81,7 +81,7 @@ from .annotation_infos_by_task_id_response_200_item_user_teams_item import (
 from .build_info_response_200 import BuildInfoResponse200
 from .build_info_response_200_webknossos import BuildInfoResponse200Webknossos
 from .build_info_response_200_webknossos_wrap import BuildInfoResponse200WebknossosWrap
-from .create_json_body import CreateJsonBody
+from .create_project_json_body import CreateProjectJsonBody
 from .current_user_info_response_200 import CurrentUserInfoResponse200
 from .current_user_info_response_200_experiences import (
     CurrentUserInfoResponse200Experiences,

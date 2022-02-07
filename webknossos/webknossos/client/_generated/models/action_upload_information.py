@@ -7,7 +7,7 @@ T = TypeVar("T", bound="ActionUploadInformation")
 
 @attr.s(auto_attribs=True)
 class ActionUploadInformation:
-    """ """
+    """  """
 
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 

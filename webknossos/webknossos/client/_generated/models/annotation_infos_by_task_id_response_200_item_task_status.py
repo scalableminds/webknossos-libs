@@ -7,7 +7,7 @@ T = TypeVar("T", bound="AnnotationInfosByTaskIdResponse200ItemTaskStatus")
 
 @attr.s(auto_attribs=True)
 class AnnotationInfosByTaskIdResponse200ItemTaskStatus:
-    """ """
+    """  """
 
     open_: int
     active: int

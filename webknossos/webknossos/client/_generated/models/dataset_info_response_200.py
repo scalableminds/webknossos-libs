@@ -14,7 +14,7 @@ T = TypeVar("T", bound="DatasetInfoResponse200")
 
 @attr.s(auto_attribs=True)
 class DatasetInfoResponse200:
-    """ """
+    """  """
 
     name: str
     data_source: DatasetInfoResponse200DataSource

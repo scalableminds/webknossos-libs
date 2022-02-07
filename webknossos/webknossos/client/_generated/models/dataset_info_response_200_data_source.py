@@ -14,7 +14,7 @@ T = TypeVar("T", bound="DatasetInfoResponse200DataSource")
 
 @attr.s(auto_attribs=True)
 class DatasetInfoResponse200DataSource:
-    """ """
+    """  """
 
     id: DatasetInfoResponse200DataSourceId
     data_layers: List[DatasetInfoResponse200DataSourceDataLayersItem]

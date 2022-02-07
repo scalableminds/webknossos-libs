@@ -7,7 +7,7 @@ T = TypeVar("T", bound="AnnotationInfosByTaskIdResponse200ItemDataStore")
 
 @attr.s(auto_attribs=True)
 class AnnotationInfosByTaskIdResponse200ItemDataStore:
-    """ """
+    """  """
 
     name: str
     url: str

@@ -7,7 +7,7 @@ T = TypeVar("T", bound="DatasetReserveUploadJsonBody")
 
 @attr.s(auto_attribs=True)
 class DatasetReserveUploadJsonBody:
-    """ """
+    """  """
 
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 

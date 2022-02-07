@@ -11,7 +11,7 @@ T = TypeVar("T", bound="TaskInfosByProjectIdResponse200ItemTypeSettings")
 
 @attr.s(auto_attribs=True)
 class TaskInfosByProjectIdResponse200ItemTypeSettings:
-    """ """
+    """  """
 
     allowed_modes: List[str]
     branch_points_allowed: int

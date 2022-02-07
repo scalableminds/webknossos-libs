@@ -7,7 +7,7 @@ T = TypeVar("T", bound="CurrentUserInfoResponse200NovelUserExperienceInfos")
 
 @attr.s(auto_attribs=True)
 class CurrentUserInfoResponse200NovelUserExperienceInfos:
-    """ """
+    """  """
 
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 

@@ -7,7 +7,7 @@ T = TypeVar("T", bound="ProjectInfoByIdResponse200OwnerTeamsItem")
 
 @attr.s(auto_attribs=True)
 class ProjectInfoByIdResponse200OwnerTeamsItem:
-    """ """
+    """  """
 
     id: str
     name: str

@@ -7,7 +7,7 @@ T = TypeVar("T", bound="AnnotationInfosByTaskIdResponse200ItemUserTeamsItem")
 
 @attr.s(auto_attribs=True)
 class AnnotationInfosByTaskIdResponse200ItemUserTeamsItem:
-    """ """
+    """  """
 
     id: str
     name: str

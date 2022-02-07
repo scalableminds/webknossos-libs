@@ -2,12 +2,12 @@ from typing import Any, Dict, List, Type, TypeVar
 
 import attr
 
-T = TypeVar("T", bound="CreateJsonBody")
+T = TypeVar("T", bound="CreateProjectJsonBody")
 
 
 @attr.s(auto_attribs=True)
-class CreateJsonBody:
-    """ """
+class CreateProjectJsonBody:
+    """  """
 
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
@@ -22,10 +22,10 @@ class CreateJsonBody:
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        create_json_body = cls()
+        create_project_json_body = cls()
 
-        create_json_body.additional_properties = d
-        return create_json_body
+        create_project_json_body.additional_properties = d
+        return create_project_json_body
 
     @property
     def additional_keys(self) -> List[str]:

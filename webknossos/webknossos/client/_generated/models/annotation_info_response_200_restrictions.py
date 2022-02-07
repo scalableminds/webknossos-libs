@@ -7,7 +7,7 @@ T = TypeVar("T", bound="AnnotationInfoResponse200Restrictions")
 
 @attr.s(auto_attribs=True)
 class AnnotationInfoResponse200Restrictions:
-    """ """
+    """  """
 
     allow_access: int
     allow_update: int

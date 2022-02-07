@@ -7,15 +7,17 @@ T = TypeVar("T", bound="AnnotationInfoResponse200AnnotationLayersItem")
 
 @attr.s(auto_attribs=True)
 class AnnotationInfoResponse200AnnotationLayersItem:
-    """ """
+    """  """
 
     tracing_id: str
     typ: str
+    name: str
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         tracing_id = self.tracing_id
         typ = self.typ
+        name = self.name
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -23,6 +25,7 @@ class AnnotationInfoResponse200AnnotationLayersItem:
             {
                 "tracingId": tracing_id,
                 "typ": typ,
+                "name": name,
             }
         )
 
@@ -35,9 +38,12 @@ class AnnotationInfoResponse200AnnotationLayersItem:
 
         typ = d.pop("typ")
 
+        name = d.pop("name")
+
         annotation_info_response_200_annotation_layers_item = cls(
             tracing_id=tracing_id,
             typ=typ,
+            name=name,
         )
 
         annotation_info_response_200_annotation_layers_item.additional_properties = d

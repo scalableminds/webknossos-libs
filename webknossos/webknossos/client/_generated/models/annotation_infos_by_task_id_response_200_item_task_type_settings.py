@@ -11,7 +11,7 @@ T = TypeVar("T", bound="AnnotationInfosByTaskIdResponse200ItemTaskTypeSettings")
 
 @attr.s(auto_attribs=True)
 class AnnotationInfosByTaskIdResponse200ItemTaskTypeSettings:
-    """ """
+    """  """
 
     allowed_modes: List[str]
     branch_points_allowed: int

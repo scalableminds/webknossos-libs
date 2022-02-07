@@ -13,7 +13,7 @@ T = TypeVar("T", bound="TaskInfoResponse200")
 
 @attr.s(auto_attribs=True)
 class TaskInfoResponse200:
-    """ """
+    """  """
 
     id: str
     formatted_hash: str
@@ -26,7 +26,7 @@ class TaskInfoResponse200:
     created: int
     status: TaskInfoResponse200Status
     script: str
-    tracing_time: int
+    tracing_time: str
     creation_info: str
     bounding_box: str
     edit_position: List[int]

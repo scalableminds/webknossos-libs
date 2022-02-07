@@ -78,7 +78,7 @@ def sync(
     client: Client,
     timestamp: int,
 ) -> Optional[AnnotationInfoResponse200]:
-    """ """
+    """  """
 
     return sync_detailed(
         typ=typ,
@@ -115,7 +115,7 @@ async def asyncio(
     client: Client,
     timestamp: int,
 ) -> Optional[AnnotationInfoResponse200]:
-    """ """
+    """  """
 
     return (
         await asyncio_detailed(

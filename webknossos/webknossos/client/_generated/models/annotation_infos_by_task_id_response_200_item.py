@@ -33,7 +33,7 @@ T = TypeVar("T", bound="AnnotationInfosByTaskIdResponse200Item")
 
 @attr.s(auto_attribs=True)
 class AnnotationInfosByTaskIdResponse200Item:
-    """ """
+    """  """
 
     modified: int
     state: str
@@ -52,7 +52,7 @@ class AnnotationInfosByTaskIdResponse200Item:
     tracing_store: AnnotationInfosByTaskIdResponse200ItemTracingStore
     visibility: str
     settings: AnnotationInfosByTaskIdResponse200ItemSettings
-    tracing_time: int
+    tracing_time: str
     tags: List[str]
     user: AnnotationInfosByTaskIdResponse200ItemUser
     meshes: List[Any]

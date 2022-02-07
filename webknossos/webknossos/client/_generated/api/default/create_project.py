@@ -3,14 +3,14 @@ from typing import Any, Dict
 import httpx
 
 from ...client import Client
-from ...models.create_json_body import CreateJsonBody
+from ...models.create_project_json_body import CreateProjectJsonBody
 from ...types import Response
 
 
 def _get_kwargs(
     *,
     client: Client,
-    json_body: CreateJsonBody,
+    json_body: CreateProjectJsonBody,
 ) -> Dict[str, Any]:
     url = "{}/api/projects".format(client.base_url)
 
@@ -40,7 +40,7 @@ def _build_response(*, response: httpx.Response) -> Response[Any]:
 def sync_detailed(
     *,
     client: Client,
-    json_body: CreateJsonBody,
+    json_body: CreateProjectJsonBody,
 ) -> Response[Any]:
     kwargs = _get_kwargs(
         client=client,
@@ -57,7 +57,7 @@ def sync_detailed(
 async def asyncio_detailed(
     *,
     client: Client,
-    json_body: CreateJsonBody,
+    json_body: CreateProjectJsonBody,
 ) -> Response[Any]:
     kwargs = _get_kwargs(
         client=client,

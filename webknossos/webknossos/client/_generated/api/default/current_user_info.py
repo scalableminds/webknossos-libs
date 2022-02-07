@@ -64,7 +64,7 @@ def sync(
     *,
     client: Client,
 ) -> Optional[CurrentUserInfoResponse200]:
-    """ """
+    """  """
 
     return sync_detailed(
         client=client,
@@ -89,7 +89,7 @@ async def asyncio(
     *,
     client: Client,
 ) -> Optional[CurrentUserInfoResponse200]:
-    """ """
+    """  """
 
     return (
         await asyncio_detailed(

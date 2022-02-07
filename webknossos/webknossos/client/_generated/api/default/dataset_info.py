@@ -80,7 +80,7 @@ def sync(
     client: Client,
     sharing_token: Union[Unset, None, str] = UNSET,
 ) -> Optional[DatasetInfoResponse200]:
-    """ """
+    """  """
 
     return sync_detailed(
         organization_name=organization_name,
@@ -117,7 +117,7 @@ async def asyncio(
     client: Client,
     sharing_token: Union[Unset, None, str] = UNSET,
 ) -> Optional[DatasetInfoResponse200]:
-    """ """
+    """  """
 
     return (
         await asyncio_detailed(

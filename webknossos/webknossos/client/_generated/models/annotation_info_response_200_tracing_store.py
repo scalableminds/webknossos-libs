@@ -7,7 +7,7 @@ T = TypeVar("T", bound="AnnotationInfoResponse200TracingStore")
 
 @attr.s(auto_attribs=True)
 class AnnotationInfoResponse200TracingStore:
-    """ """
+    """  """
 
     name: str
     url: str

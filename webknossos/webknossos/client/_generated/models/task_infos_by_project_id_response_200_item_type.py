@@ -11,7 +11,7 @@ T = TypeVar("T", bound="TaskInfosByProjectIdResponse200ItemType")
 
 @attr.s(auto_attribs=True)
 class TaskInfosByProjectIdResponse200ItemType:
-    """ """
+    """  """
 
     id: str
     summary: str

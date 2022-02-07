@@ -17,7 +17,7 @@ T = TypeVar("T", bound="AnnotationInfosByTaskIdResponse200ItemTask")
 
 @attr.s(auto_attribs=True)
 class AnnotationInfosByTaskIdResponse200ItemTask:
-    """ """
+    """  """
 
     id: str
     formatted_hash: str
@@ -30,7 +30,7 @@ class AnnotationInfosByTaskIdResponse200ItemTask:
     created: int
     status: AnnotationInfosByTaskIdResponse200ItemTaskStatus
     script: str
-    tracing_time: int
+    tracing_time: str
     creation_info: str
     bounding_box: str
     edit_position: List[int]

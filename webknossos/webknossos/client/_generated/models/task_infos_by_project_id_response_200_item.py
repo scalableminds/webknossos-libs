@@ -17,7 +17,7 @@ T = TypeVar("T", bound="TaskInfosByProjectIdResponse200Item")
 
 @attr.s(auto_attribs=True)
 class TaskInfosByProjectIdResponse200Item:
-    """ """
+    """  """
 
     id: str
     formatted_hash: str
