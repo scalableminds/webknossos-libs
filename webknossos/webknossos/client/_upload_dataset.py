@@ -1,6 +1,7 @@
 import os
 from functools import lru_cache
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from time import gmtime, strftime
 from typing import Dict, Iterator, List, NamedTuple, Optional, Tuple
 from uuid import uuid4
@@ -58,7 +59,8 @@ def _cached_get_upload_datastore(context: _WebknossosContext) -> str:
 
 
 def _walk(
-    path: Path, base_path: Optional[Path] = None
+    path: Path,
+    base_path: Optional[Path] = None,
 ) -> Iterator[Tuple[Path, Path, int]]:
     if base_path is None:
         base_path = path
@@ -80,6 +82,19 @@ def upload_dataset(
     if layers_to_link is None:
         layers_to_link = []
     context = _get_context()
+    layer_names_to_link = set(i.new_layer_name or i.layer_name for i in layers_to_link)
+    if len(layer_names_to_link.intersection(dataset.layers.keys())) > 0:
+        with TemporaryDirectory() as tmpdir:
+            tmp_ds = dataset.shallow_copy_dataset(
+                tmpdir, name=dataset.name, layers_to_ignore=layer_names_to_link
+            )
+            return upload_dataset(
+                tmp_ds,
+                new_dataset_name=new_dataset_name,
+                layers_to_link=layers_to_link,
+                jobs=jobs,
+            )
+
     file_infos = list(_walk(dataset.path))
     total_file_size = sum(size for _, _, size in file_infos)
     # replicates https://github.com/scalableminds/webknossos/blob/master/frontend/javascripts/admin/dataset/dataset_upload_view.js

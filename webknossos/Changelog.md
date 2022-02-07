@@ -16,6 +16,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+- `dataset.upload(layers_to_link=…)`: Fixed a bug where the upload did not complete if layers_to_link contained layers present in uploading dataset. [#584](https://github.com/scalableminds/webknossos-libs/pull/584)
 
 
 ## [0.9.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.2) - 2022-02-03
