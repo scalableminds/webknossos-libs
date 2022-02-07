@@ -42,24 +42,26 @@ class Task:
     status: TaskStatus
 
     @classmethod
-    def get_by_id(cls, task_id: str) -> "Task":  # pylint: disable=redefined-builtin
+    def get_by_id(cls, task_id: str) -> "Task":
         """Returns the task specified by the passed id (if your token authorizes you to see it)"""
         client = _get_generated_client()
         response = task_info.sync(id=task_id, client=client)
-        assert response is not None
+        assert (
+            response is not None
+        ), f"Requesting task infos from {client.base_url} failed."
         return cls._from_generated_response(response)
 
     @classmethod
     def create_from_annotations(
         cls,
         task_type_id: str,
+        project_name: str,
+        base_annotations: List[Annotation],
         needed_experience_domain: str,
         needed_experience_value: int,
-        instances: int,
-        project_name: str,
-        script_id: Optional[str],
-        bounding_box: Optional[BoundingBox],
-        base_annotations: List[Annotation],
+        instances: int = 1,
+        script_id: Optional[str] = None,
+        bounding_box: Optional[BoundingBox] = None,
     ) -> List["Task"]:
         """Submits tasks in webKnossos based on existing annotations, and returns the Task objects"""
         assert (
@@ -149,7 +151,9 @@ class Task:
         """Returns AnnotationInfo objects describing all task instances that have been started by annotators for this task"""
         client = _get_generated_client()
         response = annotation_infos_by_task_id.sync(id=self.task_id, client=client)
-        assert response is not None
+        assert (
+            response is not None
+        ), f"Requesting annotation infos for task from {client.base_url} failed."
         return [AnnotationInfo._from_generated_response(a) for a in response]
 
     def get_project(self) -> Project:

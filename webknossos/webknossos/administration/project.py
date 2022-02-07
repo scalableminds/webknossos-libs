@@ -1,3 +1,4 @@
+import warnings
 from typing import TYPE_CHECKING, List, Union
 
 import attr
@@ -51,18 +52,20 @@ class Project:
         assert response is not None, "Could not fetch project by name."
         return cls._from_generated_response(response)
 
-    def get_tasks(self, fetch_all: bool = True) -> List["Task"]:
-        """Returns the tasks of this project. Pagination is used if there are more than 1000 tasks"""
+    def get_tasks(self, fetch_all: bool = False) -> List["Task"]:
+        """Returns the tasks of this project.
+        Note: will fetch only the first 1000 entries by default, warns if that means some are missing.
+        set parameter pass fetch_all=True to use pagination to fetch all tasks iteratively with pagination."""
 
         from webknossos.administration import Task
 
-        pagination_limit = 1000
+        PAGINATION_LIMIT = 1000
         pagination_page = 0
 
         client = _get_generated_client(enforce_auth=True)
         response_raw = task_infos_by_project_id.sync_detailed(
             self.project_id,
-            limit=pagination_limit,
+            limit=PAGINATION_LIMIT,
             page_number=pagination_page,
             include_total_count=True,
             client=client,
@@ -73,15 +76,15 @@ class Project:
         response = response_raw.parsed
         assert response is not None, "Could not fetch task infos by project id."
         all_tasks = [Task._from_generated_response(t) for t in response]
-        if total_count > pagination_limit:
+        if total_count > PAGINATION_LIMIT:
             if fetch_all:
                 while total_count > len(all_tasks):
                     pagination_page += 1
                     response = task_infos_by_project_id.sync(
                         self.project_id,
-                        limit=pagination_limit,
+                        limit=PAGINATION_LIMIT,
                         page_number=pagination_page,
-                        include_total_count=True,
+                        include_total_count=False,
                         client=client,
                     )
                     assert (
@@ -91,8 +94,8 @@ class Project:
                     all_tasks.extend(new_tasks)
 
             else:
-                print(
-                    f"Fetched only {pagination_limit} of {total_count} tasks. Pass fetch_all=True to fetch all tasks iteratively (may be slow!)"
+                warnings.warn(
+                    f"Fetched only {PAGINATION_LIMIT} of {total_count} tasks. Pass fetch_all=True to fetch all tasks iteratively (may be slow!)"
                 )
 
         return all_tasks
