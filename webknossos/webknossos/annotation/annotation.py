@@ -4,6 +4,7 @@ from contextlib import contextmanager, nullcontext
 from enum import Enum, unique
 from io import BytesIO
 from os import PathLike
+from functools import lru_cache
 from pathlib import Path
 from shutil import copyfile
 from tempfile import TemporaryDirectory
@@ -84,7 +85,7 @@ class Annotation:
     def name(self) -> str:
         return self._nml_file.path[:-4]
 
-    @cachedproperty
+    @lru_cache
     def binary(self) -> Union[bytes, BinaryIO]:
         if isinstance(self.file, BytesIO):
             return self.file.getvalue()
