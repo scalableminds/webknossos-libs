@@ -30,7 +30,7 @@ class TaskInfosByProjectIdResponse200Item:
     created: int
     status: TaskInfosByProjectIdResponse200ItemStatus
     script: str
-    tracing_time: str
+    tracing_time: int
     creation_info: str
     bounding_box: str
     edit_position: List[int]

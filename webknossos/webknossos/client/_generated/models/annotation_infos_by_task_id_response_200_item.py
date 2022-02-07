@@ -52,7 +52,7 @@ class AnnotationInfosByTaskIdResponse200Item:
     tracing_store: AnnotationInfosByTaskIdResponse200ItemTracingStore
     visibility: str
     settings: AnnotationInfosByTaskIdResponse200ItemSettings
-    tracing_time: str
+    tracing_time: int
     tags: List[str]
     user: AnnotationInfosByTaskIdResponse200ItemUser
     meshes: List[Any]

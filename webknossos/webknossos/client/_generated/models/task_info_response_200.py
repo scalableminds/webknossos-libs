@@ -26,7 +26,7 @@ class TaskInfoResponse200:
     created: int
     status: TaskInfoResponse200Status
     script: str
-    tracing_time: str
+    tracing_time: int
     creation_info: str
     bounding_box: str
     edit_position: List[int]
