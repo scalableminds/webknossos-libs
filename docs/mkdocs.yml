@@ -72,6 +72,7 @@ nav:
       - webknossos-py/examples/learned_segmenter.md
       - webknossos-py/examples/skeleton_synapse_candidates.md
       - webknossos-py/examples/user_times.md
+      - webknossos-py/examples/annotation_project_administration.md
   - API Reference:
     - Overview: api/webknossos.md
     - Geometry:
@@ -90,8 +91,10 @@ nav:
       - Node: api/webknossos/skeleton/node.md
     - Annotation: api/webknossos/annotation/annotation.md
     - Authentication & Server Context: api/webknossos/client/context.md
-    - Admin Resources:
-      - User: api/webknossos/client/user.md
+    - Administration:
+      - User: api/webknossos/administration/user.md
+      - Project: api/webknossos/administration/project.md
+      - Task: api/webknossos/administration/task.md
   - Getting Help:
     - webknossos-py/development.md
     - Community Support: https://forum.image.sc/tag/webknossos" target="_blank

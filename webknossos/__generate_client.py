@@ -16,11 +16,10 @@ from openapi_python_client import (
     _get_project_for_url_or_path,
 )
 
-from webknossos.client.context import _get_generated_client
 from webknossos.utils import snake_to_camel_case
 
-SCHEMA_URL = "https://master.webknossos.xyz/swagger.json"
-# SCHEMA_URL = "http://localhost:9000/swagger.json"
+# SCHEMA_URL = "https://master.webknossos.xyz/swagger.json"
+SCHEMA_URL = "http://localhost:9000/swagger.json"
 CONVERTER_URL = "https://converter.swagger.io/api/convert"
 
 
@@ -64,37 +63,114 @@ def add_api_prefix_for_non_data_paths(openapi_schema: Dict) -> None:
 
 
 def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
+    """Send requests to webKnossos and record the schema of their replies"""
     from webknossos.client._generated.api.default import (
         annotation_info,
+        annotation_infos_by_task_id,
         build_info,
         current_user_info,
         dataset_info,
         datastore_list,
         generate_token_for_data_store,
+        project_info_by_id,
+        project_info_by_name,
+        task_info,
+        task_infos_by_project_id,
+        user_info_by_id,
         user_list,
         user_logged_time,
     )
+    from webknossos.client.context import _get_generated_client
+
+    # webKnossos.org setup:
+    # explorative_annotation_id = "6114d9410100009f0096c640"
+    # organization_name = "scalable_minds",
+    # dataset_name = "l4dense_motta_et_al_demo"
+    # task_id = "61f151c10100000a01249afe"
+    # user_id = "5b5dd2fb1c00008230ec8174"
+    # project_id = "61f1515e0100002f01249afa"
+    # project_name = "sampleProject"
+    # local setup, probably long gone by the time you read this:
+    explorative_annotation_id = "62011da6fa0100b202ec50db"
+    organization_name = "sample_organization"
+    dataset_name = "l4_sample"
+    task_id = "62011dddfa0100ad02ec50de"
+    user_id = "6200df39f70100f70157d983"
+    project_id = "6200df45f70100440257d987"
+    project_name = "sampleProject"
 
     d = datetime.utcnow()
     unixtime = calendar.timegm(d.utctimetuple())
     client = _get_generated_client(enforce_auth=True)
 
-    annotation_info_response = annotation_info.sync_detailed(
-        typ="Explorational",
-        id="6114d9410100009f0096c640",
-        client=client,
-        timestamp=unixtime,
+    yield extract_200_response(
+        "annotationInfo",
+        annotation_info.sync_detailed(
+            typ="Explorational",
+            id=explorative_annotation_id,
+            client=client,
+            timestamp=unixtime,
+        ),
     )
-    assert annotation_info_response.status_code == 200
-    yield "annotationInfo", annotation_info_response.content
 
-    dataset_info_response = dataset_info.sync_detailed(
-        organization_name="scalable_minds",
-        data_set_name="l4dense_motta_et_al_demo",
-        client=client,
+    yield extract_200_response(
+        "datasetInfo",
+        dataset_info.sync_detailed(
+            organization_name=organization_name,
+            data_set_name=dataset_name,
+            client=client,
+        ),
     )
-    assert dataset_info_response.status_code == 200
-    yield "datasetInfo", dataset_info_response.content
+
+    yield extract_200_response(
+        "taskInfo",
+        task_info.sync_detailed(
+            id=task_id,
+            client=client,
+        ),
+    )
+
+    yield extract_200_response(
+        "userInfoById",
+        user_info_by_id.sync_detailed(
+            id=user_id,
+            client=client,
+        ),
+    )
+
+    yield extract_200_response(
+        "projectInfoById",
+        project_info_by_id.sync_detailed(
+            id=project_id,
+            client=client,
+        ),
+    )
+
+    yield extract_200_response(
+        "projectInfoByName",
+        project_info_by_name.sync_detailed(name=project_name, client=client),
+    )
+
+    yield extract_200_response(
+        "taskInfosByProjectId",
+        task_infos_by_project_id.sync_detailed(
+            id=project_id,
+            client=client,
+        ),
+    )
+
+    yield extract_200_response(
+        "annotationInfosByTaskId",
+        annotation_infos_by_task_id.sync_detailed(id=task_id, client=client),
+    )
+
+    yield extract_200_response(
+        "userLoggedTime",
+        user_logged_time.sync_detailed(
+            id=user_id,
+            client=client,
+        ),
+    )
 
     for api_endpoint in [
         datastore_list,
@@ -106,26 +182,28 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
         api_endpoint_name = api_endpoint.__name__.split(".")[-1]
         api_endpoint_name = snake_to_camel_case(api_endpoint_name)
 
-        api_endpoint_response = api_endpoint.sync_detailed(client=client)
-        assert api_endpoint_response.status_code == 200
-        yield api_endpoint_name, api_endpoint_response.content
-
-        if api_endpoint == current_user_info:
-            user_id = json.loads(api_endpoint_response.content)["id"]
-
-    user_logged_time_response = user_logged_time.sync_detailed(
-        id=user_id,
-        client=client,
-    )
-    assert user_logged_time_response.status_code == 200
-    yield "userLoggedTime", user_logged_time_response.content
+        yield extract_200_response(
+            api_endpoint_name, api_endpoint.sync_detailed(client=client)
+        )
 
 
 FIELDS_WITH_VARYING_CONTENT = [
+    "experiences",
     "adminViewConfiguration",
     "novelUserExperienceInfos",
     "viewConfiguration",
 ]
+
+OPTIONAL_FIELDS = [
+    "adminViewConfiguration",
+    "novelUserExperienceInfos",
+    "viewConfiguration",
+]
+
+
+def extract_200_response(name: str, response: Any) -> Tuple[str, bytes]:
+    assert response.status_code == 200, response.content
+    return name, response.content
 
 
 def make_properties_required(x: Any) -> None:
@@ -146,7 +224,7 @@ def make_properties_required(x: Any) -> None:
             x["required"] = list(
                 property
                 for property in properties.keys()
-                if property not in FIELDS_WITH_VARYING_CONTENT
+                if property not in OPTIONAL_FIELDS
             )
 
 

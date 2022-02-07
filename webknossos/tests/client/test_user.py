@@ -4,7 +4,7 @@ from webknossos import User
 
 
 def assert_valid_user(user: User) -> None:
-    assert user.id
+    assert user.user_id
     assert user.first_name
     assert user.last_name
     assert user.email

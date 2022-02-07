@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Type, TypeVar, cast
+from typing import Any, Dict, List, Type, TypeVar, Union, cast
 
 import attr
 
@@ -19,6 +19,7 @@ from ..models.annotation_info_response_200_tracing_store import (
     AnnotationInfoResponse200TracingStore,
 )
 from ..models.annotation_info_response_200_user import AnnotationInfoResponse200User
+from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="AnnotationInfoResponse200")
 
@@ -48,6 +49,7 @@ class AnnotationInfoResponse200:
     tags: List[str]
     user: AnnotationInfoResponse200User
     meshes: List[Any]
+    view_configuration: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -89,6 +91,8 @@ class AnnotationInfoResponse200:
 
             meshes.append(meshes_item)
 
+        view_configuration = self.view_configuration
+
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -116,6 +120,8 @@ class AnnotationInfoResponse200:
                 "meshes": meshes,
             }
         )
+        if view_configuration is not UNSET:
+            field_dict["viewConfiguration"] = view_configuration
 
         return field_dict
 
@@ -182,6 +188,8 @@ class AnnotationInfoResponse200:
 
             meshes.append(meshes_item)
 
+        view_configuration = d.pop("viewConfiguration", UNSET)
+
         annotation_info_response_200 = cls(
             modified=modified,
             state=state,
@@ -204,6 +212,7 @@ class AnnotationInfoResponse200:
             tags=tags,
             user=user,
             meshes=meshes,
+            view_configuration=view_configuration,
         )
 
         annotation_info_response_200.additional_properties = d

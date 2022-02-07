@@ -1,18 +1,25 @@
-from typing import Dict, List, Union
+from typing import TYPE_CHECKING, Dict, List, Union
 
 import attr
 
 from webknossos.client._generated.api.default import (
     current_user_info,
+    user_info_by_id,
     user_list,
     user_logged_time,
 )
-from webknossos.client._generated.models.current_user_info_response_200 import (
-    CurrentUserInfoResponse200,
-)
-from webknossos.client._generated.models.user_list_response_200_item import (
-    UserListResponse200Item,
-)
+
+if TYPE_CHECKING:
+    from webknossos.client._generated.models.current_user_info_response_200 import (
+        CurrentUserInfoResponse200,
+    )
+    from webknossos.client._generated.models.user_list_response_200_item import (
+        UserListResponse200Item,
+    )
+    from webknossos.client._generated.models.user_info_by_id_response_200 import (
+        UserInfoByIdResponse200,
+    )
+
 from webknossos.client.context import _get_generated_client
 
 
@@ -21,7 +28,7 @@ class User:
     """Represents a user of a webknossos instance.
     You can get users via `get_current_user` and `get_all_managed_users`."""
 
-    id: str
+    user_id: str
     email: str
     organization: str
     first_name: str
@@ -38,7 +45,7 @@ class User:
         """Get the logged times of this user.
         Returns a list of `LoggedTime` objects where one represents one month."""
         client = _get_generated_client(enforce_auth=True)
-        response = user_logged_time.sync(id=self.id, client=client)
+        response = user_logged_time.sync(id=self.user_id, client=client)
         assert response is not None, f"Could not fetch logged time of {self}"
         return [
             LoggedTime(
@@ -51,10 +58,15 @@ class User:
 
     @classmethod
     def _from_generated_response(
-        cls, response: Union[UserListResponse200Item, CurrentUserInfoResponse200]
+        cls,
+        response: Union[
+            "UserListResponse200Item",
+            "CurrentUserInfoResponse200",
+            "UserInfoByIdResponse200",
+        ],
     ) -> "User":
         return cls(
-            id=response.id,
+            user_id=response.id,
             email=response.email,
             organization=response.organization,
             first_name=response.first_name,
@@ -67,6 +79,14 @@ class User:
             is_admin=bool(response.is_admin),
             is_dataset_manager=bool(response.is_dataset_manager),
         )
+
+    @classmethod
+    def get_by_id(cls, id: str) -> "User":  # pylint: disable=redefined-builtin
+        """Returns the user specified by the passed id if your token authorizes you to see them."""
+        client = _get_generated_client(enforce_auth=True)
+        response = user_info_by_id.sync(id, client=client)
+        assert response is not None, "Could not fetch user by id."
+        return cls._from_generated_response(response)
 
     @classmethod
     def get_current_user(cls) -> "User":

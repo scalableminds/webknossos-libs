@@ -1,6 +1,8 @@
-from typing import Any, Dict, List, Type, TypeVar
+from typing import Any, Dict, List, Type, TypeVar, Union
 
 import attr
+
+from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="CurrentUserInfoResponse200Experiences")
 
@@ -9,20 +11,28 @@ T = TypeVar("T", bound="CurrentUserInfoResponse200Experiences")
 class CurrentUserInfoResponse200Experiences:
     """ """
 
+    sample_exp: Union[Unset, int] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
+        sample_exp = self.sample_exp
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
+        if sample_exp is not UNSET:
+            field_dict["sampleExp"] = sample_exp
 
         return field_dict
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        current_user_info_response_200_experiences = cls()
+        sample_exp = d.pop("sampleExp", UNSET)
+
+        current_user_info_response_200_experiences = cls(
+            sample_exp=sample_exp,
+        )
 
         current_user_info_response_200_experiences.additional_properties = d
         return current_user_info_response_200_experiences

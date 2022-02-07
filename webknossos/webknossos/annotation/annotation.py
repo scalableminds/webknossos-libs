@@ -2,12 +2,23 @@ import re
 import warnings
 from contextlib import contextmanager, nullcontext
 from enum import Enum, unique
+from functools import lru_cache
 from io import BytesIO
 from os import PathLike
 from pathlib import Path
 from shutil import copyfile
 from tempfile import TemporaryDirectory
-from typing import IO, ContextManager, Iterator, List, NamedTuple, Optional, Union, cast
+from typing import (
+    IO,
+    BinaryIO,
+    ContextManager,
+    Iterator,
+    List,
+    NamedTuple,
+    Optional,
+    Union,
+    cast,
+)
 from zipfile import ZipFile
 
 from attr import dataclass
@@ -69,6 +80,17 @@ class Annotation:
     @cachedproperty
     def dataset_name(self) -> str:
         return self.skeleton.name
+
+    @cachedproperty
+    def name(self) -> str:
+        return self._nml_file.path[:-4]
+
+    @lru_cache(maxsize=128)
+    def binary(self) -> Union[bytes, BinaryIO]:
+        if isinstance(self.file, BytesIO):
+            return self.file.getvalue()
+        else:
+            return open(self.file, "rb")
 
     def save_volume_annotation(
         self,
@@ -206,6 +228,14 @@ class AnnotationType(Enum):
     COMPOUND_TASK = "CompoundTask"
     COMPOUND_PROJECT = "CompoundProject"
     COMPOUND_TASK_TYPE = "CompoundTaskType"
+
+
+@unique
+class AnnotationState(Enum):
+    FINISHED = "Finished"
+    ACTIVE = "Active"
+    CANCELLED = "Cancelled"
+    INITIALIZING = "Initializing"
 
 
 annotation_url_regex = re.compile(
