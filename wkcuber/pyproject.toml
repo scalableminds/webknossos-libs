@@ -9,23 +9,23 @@ include = ["wkcuber/version.py"]
 
 [tool.poetry.dependencies]
 python = "^3.7,>=3.7.1"
-scipy = "^1.6.0"
-numpy = "1.19.5"
-pillow = ">=6.2.1,<9.0.0"
-wkw = "1.1.11"
-requests = "^2.22.0"
-cluster_tools = { path = "../cluster_tools/", develop = true }
-natsort = "^6.2.0"
-nibabel = "^2.5.1"
-scikit-image = "^0.18.3"
-scikit-learn = "^0.24.0"
-tifffile = "^2020.11.26"
-imagecodecs = "^2020.5.30"
-czifile = "^2019.7.2"
 attrs = "^21.1.0"
 cattrs = "1.7.1"
-webknossos = { path = "../webknossos/", develop = true }
+cluster_tools = { path = "../cluster_tools/", develop = true }
+czifile = "^2019.7.2"
 GitPython = "^3.0.5"
+imagecodecs = "^2020.5.30"
+natsort = "^6.2.0"
+nibabel = "^2.5.1"
+numpy = "1.19.5"
+pillow = ">=6.2.1,<9.0.0"
+requests = "^2.22.0"
+scikit-image = "^0.18.3"
+scikit-learn = "^0.24.0"
+scipy = "^1.6.0"
+tifffile = "^2020.11.26"
+webknossos = { path = "../webknossos/", develop = true }
+wkw = "1.1.11"
 zarr = "^2.10.3"
 
 [tool.poetry.dev-dependencies]

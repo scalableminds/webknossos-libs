@@ -8,12 +8,12 @@ from contextlib import nullcontext
 from os import PathLike, makedirs
 from os.path import basename, join, normpath
 from pathlib import Path
-from shutil import rmtree
 from typing import (
     TYPE_CHECKING,
     Any,
     ContextManager,
     Dict,
+    Iterable,
     List,
     Optional,
     Tuple,
@@ -219,7 +219,7 @@ class Dataset:
     def download(
         cls,
         dataset_name: str,
-        organization_name: str,
+        organization_name: Optional[str] = None,
         bbox: Optional[BoundingBox] = None,
         layers: Optional[List[str]] = None,
         mags: Optional[List[Mag]] = None,
@@ -559,12 +559,17 @@ class Dataset:
             raise IndexError(
                 f"Removing layer {layer_name} failed. There is no layer with this name"
             )
+        layer_path = self._layers[layer_name].path
         del self._layers[layer_name]
         self._properties.data_layers = [
             layer for layer in self._properties.data_layers if layer.name != layer_name
         ]
         # delete files on disk
-        rmtree(join(self.path, layer_name))
+        if layer_path.is_symlink():
+            layer_path.unlink()
+        else:
+            # rmtree does not recurse into linked dirs, but removes the link
+            shutil.rmtree(layer_path)
         self._export_as_json()
 
     def add_symlink_layer(
@@ -714,10 +719,10 @@ class Dataset:
 
     def shallow_copy_dataset(
         self,
-        new_dataset_path: Path,
+        new_dataset_path: Union[str, PathLike],
         name: Optional[str] = None,
         make_relative: bool = False,
-        layers_to_ignore: Optional[List[str]] = None,
+        layers_to_ignore: Optional[Iterable[str]] = None,
     ) -> "Dataset":
         """
         Create a new dataset at the given path. Link all mags of all existing layers.

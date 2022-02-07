@@ -1,1 +1,2 @@
 DEFAULT_WEBKNOSSOS_URL = "https://webknossos.org"
+DEFAULT_HTTP_TIMEOUT = 1800
