@@ -7,7 +7,7 @@ T = TypeVar("T", bound="ActionAnyContent")
 
 @attr.s(auto_attribs=True)
 class ActionAnyContent:
-    """  """
+    """ """
 
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 

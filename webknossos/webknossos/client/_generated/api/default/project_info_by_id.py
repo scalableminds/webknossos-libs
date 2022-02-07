@@ -68,7 +68,7 @@ def sync(
     *,
     client: Client,
 ) -> Optional[ProjectInfoByIdResponse200]:
-    """  """
+    """ """
 
     return sync_detailed(
         id=id,
@@ -97,7 +97,7 @@ async def asyncio(
     *,
     client: Client,
 ) -> Optional[ProjectInfoByIdResponse200]:
-    """  """
+    """ """
 
     return (
         await asyncio_detailed(

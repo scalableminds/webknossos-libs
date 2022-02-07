@@ -11,7 +11,7 @@ T = TypeVar("T", bound="TaskInfoResponse200Type")
 
 @attr.s(auto_attribs=True)
 class TaskInfoResponse200Type:
-    """  """
+    """ """
 
     id: str
     summary: str

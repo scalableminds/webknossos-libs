@@ -7,7 +7,7 @@ T = TypeVar("T", bound="AnnotationInfosByTaskIdResponse200ItemStats")
 
 @attr.s(auto_attribs=True)
 class AnnotationInfosByTaskIdResponse200ItemStats:
-    """  """
+    """ """
 
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 

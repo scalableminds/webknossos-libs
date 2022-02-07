@@ -11,7 +11,7 @@ T = TypeVar("T", bound="TaskInfoResponse200TypeSettings")
 
 @attr.s(auto_attribs=True)
 class TaskInfoResponse200TypeSettings:
-    """  """
+    """ """
 
     allowed_modes: List[str]
     branch_points_allowed: int

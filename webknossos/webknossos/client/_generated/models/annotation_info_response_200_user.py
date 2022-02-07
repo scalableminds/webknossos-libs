@@ -11,7 +11,7 @@ T = TypeVar("T", bound="AnnotationInfoResponse200User")
 
 @attr.s(auto_attribs=True)
 class AnnotationInfoResponse200User:
-    """  """
+    """ """
 
     id: str
     email: str

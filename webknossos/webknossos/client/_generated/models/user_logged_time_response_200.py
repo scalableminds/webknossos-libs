@@ -11,7 +11,7 @@ T = TypeVar("T", bound="UserLoggedTimeResponse200")
 
 @attr.s(auto_attribs=True)
 class UserLoggedTimeResponse200:
-    """  """
+    """ """
 
     logged_time: List[UserLoggedTimeResponse200LoggedTimeItem]
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)

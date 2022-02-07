@@ -77,7 +77,7 @@ def sync(
     *,
     client: Client,
 ) -> Optional[List[AnnotationInfosByTaskIdResponse200Item]]:
-    """  """
+    """ """
 
     return sync_detailed(
         id=id,
@@ -106,7 +106,7 @@ async def asyncio(
     *,
     client: Client,
 ) -> Optional[List[AnnotationInfosByTaskIdResponse200Item]]:
-    """  """
+    """ """
 
     return (
         await asyncio_detailed(

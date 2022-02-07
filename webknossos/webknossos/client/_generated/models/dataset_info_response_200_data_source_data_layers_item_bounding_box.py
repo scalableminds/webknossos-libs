@@ -7,7 +7,7 @@ T = TypeVar("T", bound="DatasetInfoResponse200DataSourceDataLayersItemBoundingBo
 
 @attr.s(auto_attribs=True)
 class DatasetInfoResponse200DataSourceDataLayersItemBoundingBox:
-    """  """
+    """ """
 
     top_left: List[int]
     width: int

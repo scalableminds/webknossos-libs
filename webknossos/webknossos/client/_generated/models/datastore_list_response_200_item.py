@@ -7,7 +7,7 @@ T = TypeVar("T", bound="DatastoreListResponse200Item")
 
 @attr.s(auto_attribs=True)
 class DatastoreListResponse200Item:
-    """  """
+    """ """
 
     name: str
     url: str

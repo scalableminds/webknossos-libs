@@ -7,7 +7,7 @@ T = TypeVar("T", bound="TaskInfoResponse200TypeSettingsResolutionRestrictions")
 
 @attr.s(auto_attribs=True)
 class TaskInfoResponse200TypeSettingsResolutionRestrictions:
-    """  """
+    """ """
 
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 

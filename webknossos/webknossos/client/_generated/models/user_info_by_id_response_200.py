@@ -18,7 +18,7 @@ T = TypeVar("T", bound="UserInfoByIdResponse200")
 
 @attr.s(auto_attribs=True)
 class UserInfoByIdResponse200:
-    """  """
+    """ """
 
     id: str
     email: str

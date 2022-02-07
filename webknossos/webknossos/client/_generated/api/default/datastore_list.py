@@ -71,7 +71,7 @@ def sync(
     *,
     client: Client,
 ) -> Optional[List[DatastoreListResponse200Item]]:
-    """  """
+    """ """
 
     return sync_detailed(
         client=client,
@@ -96,7 +96,7 @@ async def asyncio(
     *,
     client: Client,
 ) -> Optional[List[DatastoreListResponse200Item]]:
-    """  """
+    """ """
 
     return (
         await asyncio_detailed(

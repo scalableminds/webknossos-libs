@@ -7,7 +7,7 @@ T = TypeVar("T", bound="TaskInfosByProjectIdResponse200ItemNeededExperience")
 
 @attr.s(auto_attribs=True)
 class TaskInfosByProjectIdResponse200ItemNeededExperience:
-    """  """
+    """ """
 
     domain: str
     value: int

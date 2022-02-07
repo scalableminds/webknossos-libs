@@ -11,7 +11,7 @@ T = TypeVar("T", bound="UserLoggedTimeResponse200LoggedTimeItem")
 
 @attr.s(auto_attribs=True)
 class UserLoggedTimeResponse200LoggedTimeItem:
-    """  """
+    """ """
 
     payment_interval: UserLoggedTimeResponse200LoggedTimeItemPaymentInterval
     duration_in_seconds: int

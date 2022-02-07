@@ -7,7 +7,7 @@ T = TypeVar("T", bound="AnnotationInfoResponse200AnnotationLayersItem")
 
 @attr.s(auto_attribs=True)
 class AnnotationInfoResponse200AnnotationLayersItem:
-    """  """
+    """ """
 
     tracing_id: str
     typ: str

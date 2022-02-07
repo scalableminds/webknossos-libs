@@ -9,7 +9,7 @@ T = TypeVar(
 
 @attr.s(auto_attribs=True)
 class TaskInfosByProjectIdResponse200ItemTypeSettingsResolutionRestrictions:
-    """  """
+    """ """
 
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 

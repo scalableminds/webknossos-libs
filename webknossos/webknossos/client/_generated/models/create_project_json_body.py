@@ -7,7 +7,7 @@ T = TypeVar("T", bound="CreateProjectJsonBody")
 
 @attr.s(auto_attribs=True)
 class CreateProjectJsonBody:
-    """  """
+    """ """
 
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 

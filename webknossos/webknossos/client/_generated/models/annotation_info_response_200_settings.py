@@ -11,7 +11,7 @@ T = TypeVar("T", bound="AnnotationInfoResponse200Settings")
 
 @attr.s(auto_attribs=True)
 class AnnotationInfoResponse200Settings:
-    """  """
+    """ """
 
     allowed_modes: List[str]
     branch_points_allowed: int

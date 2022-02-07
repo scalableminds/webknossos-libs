@@ -13,7 +13,7 @@ T = TypeVar("T", bound="TaskInfoResponse200")
 
 @attr.s(auto_attribs=True)
 class TaskInfoResponse200:
-    """  """
+    """ """
 
     id: str
     formatted_hash: str

@@ -7,7 +7,7 @@ T = TypeVar("T", bound="ActionMultipartFormDataTemporaryFile")
 
 @attr.s(auto_attribs=True)
 class ActionMultipartFormDataTemporaryFile:
-    """  """
+    """ """
 
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 

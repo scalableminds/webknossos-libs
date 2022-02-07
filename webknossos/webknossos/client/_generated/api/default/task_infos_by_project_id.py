@@ -97,7 +97,7 @@ def sync(
     page_number: Union[Unset, None, int] = UNSET,
     include_total_count: Union[Unset, None, bool] = UNSET,
 ) -> Optional[List[TaskInfosByProjectIdResponse200Item]]:
-    """  """
+    """ """
 
     return sync_detailed(
         id=id,
@@ -138,7 +138,7 @@ async def asyncio(
     page_number: Union[Unset, None, int] = UNSET,
     include_total_count: Union[Unset, None, bool] = UNSET,
 ) -> Optional[List[TaskInfosByProjectIdResponse200Item]]:
-    """  """
+    """ """
 
     return (
         await asyncio_detailed(

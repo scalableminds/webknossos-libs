@@ -11,7 +11,7 @@ T = TypeVar("T", bound="DatasetInfoResponse200DataSourceDataLayersItem")
 
 @attr.s(auto_attribs=True)
 class DatasetInfoResponse200DataSourceDataLayersItem:
-    """  """
+    """ """
 
     name: str
     category: str
