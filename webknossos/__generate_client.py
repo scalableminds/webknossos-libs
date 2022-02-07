@@ -90,7 +90,6 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
     # user_id = "5b5dd2fb1c00008230ec8174"
     # project_id = "61f1515e0100002f01249afa"
     # project_name = "sampleProject"
-
     # local setup, probably long gone by the time you read this:
     explorative_annotation_id = "62011da6fa0100b202ec50db"
     organization_name = "sample_organization"

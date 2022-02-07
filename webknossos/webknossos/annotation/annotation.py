@@ -2,9 +2,9 @@ import re
 import warnings
 from contextlib import contextmanager, nullcontext
 from enum import Enum, unique
+from functools import lru_cache
 from io import BytesIO
 from os import PathLike
-from functools import lru_cache
 from pathlib import Path
 from shutil import copyfile
 from tempfile import TemporaryDirectory
