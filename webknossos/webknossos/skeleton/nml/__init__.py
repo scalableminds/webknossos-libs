@@ -382,7 +382,7 @@ def __parse_volume(nml_volume: Element) -> Volume:
     return Volume(
         int(enforce_not_null(nml_volume.get("id"))),
         enforce_not_null(nml_volume.get("location")),
-        nml_volume.get("fallback_layer", default=None),
+        nml_volume.get("fallbackLayer", default=None),
     )
 
 
