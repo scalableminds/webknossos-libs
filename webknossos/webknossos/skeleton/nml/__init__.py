@@ -164,11 +164,17 @@ class Volume(NamedTuple):
         id (int): A unique identifier
         location (str): A path to a ZIP file containing a wK volume annotation
         fallback_layer (Optional[str]): Name of an already existing wK volume annotation segmentation layer (aka "fallback layer")
+        name (Optional[str]): Name of the volume layer. Older webKnossos versions did not serialize the name which is why the property is optional.
     """
 
     id: int
     location: str
     fallback_layer: Optional[str] = None
+    name: Optional[str] = None
+
+    def _get_name_or_id(self):
+        # Older annotations don't have the name attribute. Use the index instead then.
+        return self.name or self.id
 
 
 class NML(NamedTuple):
@@ -189,7 +195,7 @@ class NML(NamedTuple):
     branchpoints: List[Branchpoint]
     comments: List[Comment]
     groups: List[Group]
-    volume: Optional[Volume] = None
+    volumes: List[Volume] = []
 
 
 def __parse_user_bounding_boxes(nml_parameters: Element) -> Optional[List[IntVector6]]:
@@ -383,6 +389,7 @@ def __parse_volume(nml_volume: Element) -> Volume:
         int(enforce_not_null(nml_volume.get("id"))),
         enforce_not_null(nml_volume.get("location")),
         nml_volume.get("fallbackLayer", default=None),
+        nml_volume.get("name", default=None),
     )
 
 
@@ -411,7 +418,7 @@ def parse_nml(file: BinaryIO) -> NML:
     root_group = Group(-1, "", [])
     group_stack = [root_group]
     element_stack = []
-    volume = None
+    volumes = []
 
     for event, elem in ET.iterparse(file, events=("start", "end")):
         if event == "start":
@@ -434,7 +441,7 @@ def parse_nml(file: BinaryIO) -> NML:
             elif elem.tag == "comment":
                 comments.append(__parse_comment(elem))
             elif elem.tag == "volume":
-                volume = __parse_volume(elem)
+                volumes.append(__parse_volume(elem))
             elif elem.tag == "group":
                 group = __parse_group(elem)
                 group_stack[-1].children.append(group)
@@ -462,7 +469,7 @@ def parse_nml(file: BinaryIO) -> NML:
         branchpoints=branchpoints,
         comments=comments,
         groups=root_group.children,
-        volume=volume,
+        volumes=volumes,
     )
 
 
@@ -637,6 +644,7 @@ def __dump_volume(xf: XmlWriter, volume: Optional[Volume]) -> None:
                     "id": str(volume.id),
                     "location": volume.location,
                     "fallbackLayer": volume.fallback_layer,
+                    "name": volume.name,
                 },
             )
         else:
@@ -645,6 +653,7 @@ def __dump_volume(xf: XmlWriter, volume: Optional[Volume]) -> None:
                 {
                     "id": str(volume.id),
                     "location": volume.location,
+                    "name": volume.name,
                 },
             )
 
@@ -677,7 +686,8 @@ def __dump_nml(xf: XmlWriter, nml: NML) -> None:
         __dump_group(xf, g)
     xf.endTag()  # groups
 
-    __dump_volume(xf, nml.volume)
+    for volume in nml.volumes:
+        __dump_volume(xf, volume)
 
     xf.endTag()  # things
 

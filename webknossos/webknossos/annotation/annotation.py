@@ -12,6 +12,7 @@ from typing import (
     IO,
     BinaryIO,
     ContextManager,
+    Iterable,
     Iterator,
     List,
     NamedTuple,
@@ -92,11 +93,20 @@ class Annotation:
         else:
             return open(self.file, "rb")
 
+    def get_volume_layer_names(self) -> Iterable[str]:
+
+        return (volume._get_name_or_id() for volume in self._nml.volumes)
+
     def save_volume_annotation(
         self,
         dataset: Dataset,
         layer_name: str = "volume_annotation",
         largest_segment_id: Optional[int] = None,
+        # If the annotation contains multiple volume layers,
+        # source_volume_name has to be provided.
+        # Use Annotation.get_volume_layer_names() to look up
+        # available layers.
+        source_volume_name: Optional[str] = None,
     ) -> Layer:
         """
         Given a dataset, this method will save the
@@ -107,9 +117,28 @@ class Annotation:
         """
 
         # todo pylint: disable=fixme
-        assert self._nml.volume is not None
-        volume_zip_path = self._nml.volume.location
-        assert volume_zip_path in self._filelist
+        assert len(self._nml.volumes) > 0
+
+        if len(self._nml.volumes) == 1:
+            volume_zip_path = self._nml.volumes[0].location
+        else:
+            assert source_volume_name != None, (
+                "The annotation contains multiple volume layers. "
+                "Please specify which layer should be used via `source_volume_name`."
+            )
+
+            volume = next(
+                filter(
+                    lambda volume: volume._get_name_or_id() == source_volume_name,
+                    self._nml.volumes,
+                )
+            )
+
+            volume_zip_path = volume.location
+
+        assert (
+            volume_zip_path in self._filelist
+        ), f"Cannot find {volume_zip_path} in {self._filelist}"
         with self._zipfile.open(volume_zip_path) as f:
             data_zip = ZipFile(f)
             wrong_files = [
@@ -197,12 +226,17 @@ class Annotation:
                 f.write(self.file.getbuffer())
 
     @contextmanager
-    def temporary_volume_annotation_layer_copy(self) -> Iterator[Layer]:
+    def temporary_volume_annotation_layer_copy(
+        self, source_volume_name: Optional[str] = None
+    ) -> Iterator[Layer]:
 
         """
         Given a volume annotation path, create a temporary dataset which
         contains the volume annotation via a symlink. Yield the layer
         so that one can work with the annotation as a wk.Dataset.
+
+        If the annotation contains multiple volume layers, the name of the
+        desired volume layer has to be passed via `source_volume_name`.
         """
 
         with TemporaryDirectory() as tmp_annotation_dir:
@@ -215,7 +249,9 @@ class Annotation:
         )
 
         input_annotation_layer = self.save_volume_annotation(
-            input_annotation_dataset, "volume_annotation"
+            input_annotation_dataset,
+            "volume_annotation",
+            source_volume_name=source_volume_name,
         )
 
         yield input_annotation_layer
