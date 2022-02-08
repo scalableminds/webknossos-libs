@@ -224,3 +224,22 @@ def test_import_export_round_trip(tmp_path: Path) -> None:
 
     nml.save(export_path)
     diff_files(snapshot_path, export_path)
+
+def test_volume_dump_round_trip(tmp_path: Path) -> None:
+    from webknossos.skeleton.nml import Volume, __dump_volume, __parse_volume
+    from loxun import XmlWriter
+    import xml.etree.ElementTree as ET
+
+    export_path = tmp_path / "volume_dump.xml"
+    volume_in = Volume(id=0, location="data_Volume.zip", fallback_layer="my_very_important_layer")
+    volume_out = None
+
+    with open(export_path, 'wb') as f:
+        with XmlWriter(f) as xf:
+            __dump_volume(xf, volume_in)
+
+    with open(export_path, 'rb') as f:
+        tree = ET.parse(export_path)
+        volume_out = __parse_volume(next(tree.iter()))
+
+    assert volume_in == volume_out
