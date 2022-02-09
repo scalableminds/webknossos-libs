@@ -1,5 +1,6 @@
 from pathlib import Path
 from shutil import copyfileobj
+from typing import Tuple, cast
 from urllib.request import urlopen
 from zipfile import ZipFile
 
@@ -27,7 +28,7 @@ def main() -> None:
     ZipFile("testdata/l4_segmentation.zip").extractall("testdata")
 
     dataset = wk.Dataset.open("testdata/l4_segmentation")
-    in_layer = dataset.get_layer("segmentation")
+    in_layer = cast(wk.SegmentationLayer, dataset.get_layer("segmentation"))
     in_mag1 = in_layer.get_mag("1")
 
     ###############################
@@ -43,10 +44,10 @@ def main() -> None:
     ]
 
     equiv_map = {}
-    for klass in equiv_classes:
-        base = next(iter(klass))
-        for id in klass:
-            equiv_map[id] = base
+    for segment_ids in equiv_classes:
+        base = next(iter(segment_ids))
+        for segment_id in segment_ids:
+            equiv_map[segment_id] = base
 
     print(f"Found {len(equiv_classes)} equivalence classes with {len(equiv_map)} nodes")
 
@@ -69,9 +70,10 @@ def main() -> None:
     # Apply remapping #
     ###################
 
-    def apply_mapping_for_chunk(args):
+    def apply_mapping_for_chunk(args: Tuple[wk.View, int]) -> None:
         (view, _) = args
         cube_data = view.read()[0]
+        # pylint: disable=c-extension-no-member
         fastremap.remap(
             cube_data,
             equiv_map,
