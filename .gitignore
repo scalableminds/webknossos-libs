@@ -2,6 +2,7 @@
 *.sublime-workspace
 .vagrant
 .history
+__MACOSX
 wk_data
 
 .idea
