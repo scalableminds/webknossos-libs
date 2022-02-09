@@ -371,6 +371,9 @@ class View:
             f"The size ({mag1_bbox.size} in mag1) contains a zero. "
             + "All dimensions must be strictly larger than '0'."
         )
+        assert (
+            mag1_bbox.topleft.is_positive()
+        ), f"The offset ({mag1_bbox.topleft} in mag1) must not contain negative dimensions."
 
         return self._read_without_checks(mag1_bbox.in_mag(self._mag))
 
@@ -525,6 +528,9 @@ class View:
                 f"The size ({mag1_bbox.size} in mag1) contains a zero. "
                 + "All dimensions must be strictly larger than '0'."
             )
+        assert (
+            mag1_bbox.topleft.is_positive()
+        ), f"The offset ({mag1_bbox.topleft} in mag1) must not contain negative dimensions."
 
         if not read_only:
             assert self.bounding_box.contains_bbox(mag1_bbox), (
