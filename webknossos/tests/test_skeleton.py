@@ -131,6 +131,14 @@ def test_export_to_nml(tmp_path: Path) -> None:
     diff_files(output_path, snapshot_path)
 
 
+def test_import_from_nml() -> None:
+    nml = create_dummy_skeleton()
+    snapshot_path = TESTDATA_DIR / "nmls" / "generated_snapshot.nml"
+    loaded_nml = wk.Skeleton.load(snapshot_path)
+
+    assert nml == loaded_nml
+
+
 def test_simple_initialization_and_representations(tmp_path: Path) -> None:
     nml = wk.Skeleton(name="my_skeleton", scale=(0.5, 0.5, 0.5), time=12345)
     nml_path = tmp_path / "my_skeleton.nml"

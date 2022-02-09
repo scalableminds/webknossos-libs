@@ -8,10 +8,10 @@ if TYPE_CHECKING:
 Vector3 = Tuple[float, float, float]
 
 
-@attr.define()
+@attr.define(order=True)
 class Node:
     position: Vector3
-    _skeleton: "Skeleton" = attr.ib(eq=False, repr=False)
+    _skeleton: "Skeleton" = attr.ib(eq=False, repr=False, order=False)
     _id: int = attr.ib(init=False)
     comment: Optional[str] = None
     radius: Optional[float] = None

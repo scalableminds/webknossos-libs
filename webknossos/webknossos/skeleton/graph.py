@@ -144,12 +144,8 @@ class Graph(nx.Graph):
         )
 
     def __eq__(self, o: object) -> bool:
-        assert isinstance(
-            o, type(self)
-        ), "Can only compare wk.Graph to another wk.Graph."
-        return (
-            self.__to_tuple_for_comparison()
-            == cast("Graph", o).__to_tuple_for_comparison()
+        return isinstance(o, Graph) and (
+            self.__to_tuple_for_comparison() == o.__to_tuple_for_comparison()
         )
 
     @property
