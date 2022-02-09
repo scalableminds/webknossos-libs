@@ -5,6 +5,7 @@ from tempfile import TemporaryDirectory
 from types import ModuleType
 from typing import Any, Iterator, Tuple
 
+
 import numpy as np
 import pytest
 from scipy.spatial import cKDTree
@@ -54,6 +55,12 @@ def test_dataset_usage() -> None:
     assert data_in_mag1_subset.shape == (3, 512, 512, 32)
     assert data_in_mag2.shape == (3, 256, 256, 16)
     assert data_in_mag2_subset.shape == (3, 256, 256, 16)
+
+
+def test_apply_merger_mode() -> None:
+    import examples.apply_merger_mode as example
+
+    exec_main_and_get_vars(example)
 
 
 def test_skeleton_synapse_candidates() -> None:

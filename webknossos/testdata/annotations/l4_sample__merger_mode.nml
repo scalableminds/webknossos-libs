@@ -1,0 +1,61 @@
+<things>
+  <meta name="writer" content="nml_helpers.js" />
+  <meta name="writerGitCommit" content="0b7c76c3610ece8f69fa7f68b2bf780391c6b9fb" />
+  <meta name="timestamp" content="1644411326127" />
+  <meta name="annotationId" content="6203b978010000c70003da99" />
+  <meta name="username" content="Norman Rzepka" />
+  <parameters>
+    <experiment name="l4_sample" description="" organization="scalable_minds" />
+    <scale x="11.239999771118164" y="11.239999771118164" z="28" />
+    <offset x="0" y="0" z="0" />
+    <time ms="1644411256157" />
+    <editPosition x="3805" y="3520" z="1024" />
+    <editRotation xRot="0" yRot="0" zRot="0" />
+    <zoomLevel zoom="1.3" />
+  </parameters>
+  <thing id="1" color.r="0.6784313725490196" color.g="0.1411764705882353" color.b="0.050980392156862744" color.a="1" name="explorative_2022-02-09_Norman_Rzepka_001" groupId="">
+    <nodes>
+      <node id="1" radius="1" x="3691" y="3686" z="1024" rotX="0" rotY="0" rotZ="0" inVp="0" inMag="1" bitDepth="8" interpolation="true" time="1644411274012" />
+      <node id="2" radius="1" x="3750" y="3656" z="1024" rotX="0" rotY="0" rotZ="0" inVp="0" inMag="1" bitDepth="8" interpolation="true" time="1644411274604" />
+      <node id="3" radius="1" x="3815" y="3602" z="1024" rotX="0" rotY="0" rotZ="0" inVp="0" inMag="1" bitDepth="8" interpolation="true" time="1644411277866" />
+      <node id="4" radius="1" x="3865" y="3561" z="1024" rotX="0" rotY="0" rotZ="0" inVp="0" inMag="1" bitDepth="8" interpolation="true" time="1644411279636" />
+      <node id="5" radius="1" x="3956" y="3446" z="1024" rotX="0" rotY="0" rotZ="0" inVp="0" inMag="1" bitDepth="8" interpolation="true" time="1644411281368" />
+      <node id="6" radius="1" x="3899" y="3422" z="1024" rotX="0" rotY="0" rotZ="0" inVp="0" inMag="1" bitDepth="8" interpolation="true" time="1644411282293" />
+      <node id="7" radius="1" x="3983" y="3372" z="1024" rotX="0" rotY="0" rotZ="0" inVp="0" inMag="1" bitDepth="8" interpolation="true" time="1644411283177" />
+      <node id="8" radius="1" x="3983" y="3320" z="1024" rotX="0" rotY="0" rotZ="0" inVp="0" inMag="1" bitDepth="8" interpolation="true" time="1644411285903" />
+      <node id="9" radius="1" x="4040" y="3415" z="1024" rotX="0" rotY="0" rotZ="0" inVp="0" inMag="1" bitDepth="8" interpolation="true" time="1644411288542" />
+      <node id="10" radius="1" x="4007" y="3454" z="1024" rotX="0" rotY="0" rotZ="0" inVp="0" inMag="1" bitDepth="8" interpolation="true" time="1644411289823" />
+      <node id="11" radius="1" x="4061" y="3581" z="1024" rotX="0" rotY="0" rotZ="0" inVp="0" inMag="1" bitDepth="8" interpolation="true" time="1644411291486" />
+      <node id="12" radius="1" x="4049" y="3673" z="1024" rotX="0" rotY="0" rotZ="0" inVp="0" inMag="1" bitDepth="8" interpolation="true" time="1644411294489" />
+      <node id="13" radius="1" x="3983" y="3637" z="1024" rotX="0" rotY="0" rotZ="0" inVp="0" inMag="1" bitDepth="8" interpolation="true" time="1644411295225" />
+      <node id="14" radius="1" x="3994" y="3515" z="1024" rotX="0" rotY="0" rotZ="0" inVp="0" inMag="1" bitDepth="8" interpolation="true" time="1644411296717" />
+      <node id="15" radius="1" x="3908" y="3593" z="1024" rotX="0" rotY="0" rotZ="0" inVp="0" inMag="1" bitDepth="8" interpolation="true" time="1644411300929" />
+      <node id="16" radius="1" x="3886" y="3590" z="1024" rotX="0" rotY="0" rotZ="0" inVp="0" inMag="1" bitDepth="8" interpolation="true" time="1644411302450" />
+      <node id="17" radius="1" x="3875" y="3615" z="1024" rotX="0" rotY="0" rotZ="0" inVp="0" inMag="1" bitDepth="8" interpolation="true" time="1644411303225" />
+    </nodes>
+    <edges>
+      <edge source="1" target="2" />
+      <edge source="2" target="3" />
+      <edge source="3" target="4" />
+      <edge source="4" target="5" />
+      <edge source="5" target="6" />
+      <edge source="6" target="7" />
+      <edge source="7" target="8" />
+      <edge source="8" target="9" />
+      <edge source="9" target="10" />
+      <edge source="10" target="11" />
+      <edge source="11" target="12" />
+      <edge source="12" target="13" />
+      <edge source="13" target="14" />
+      <edge source="14" target="15" />
+      <edge source="15" target="16" />
+      <edge source="16" target="17" />
+    </edges>
+  </thing>
+  <branchpoints>
+  </branchpoints>
+  <comments>
+  </comments>
+  <groups>
+  </groups>
+</things>
