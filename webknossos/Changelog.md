@@ -7,9 +7,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.3...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.4...HEAD)
 
 ### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [0.9.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.4) - 2022-02-09
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.3...v0.9.4)
 
 ### Added
  - Added AnnotationInfo, Project and Task classes for handling annotation information and annotation project administration. [#574](https://github.com/scalableminds/webknossos-libs/pull/574):
@@ -17,8 +27,6 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 - Lifted the restriction that `BoundingBox` cannot have a negative topleft (introduced in v0.9.0). Also, negative size dimensions are flipped, so that the topleft <= bottomright,
   e.g. `BoundingBox((10, 10, 10), (-5, 5, 5))` -> `BoundingBox((5, 10, 10), (5, 5, 5))`. [#589](https://github.com/scalableminds/webknossos-libs/pull/589)
-
-### Fixed
 
 
 ## [0.9.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.3) - 2022-02-07
