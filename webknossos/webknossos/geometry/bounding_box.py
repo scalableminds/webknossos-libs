@@ -18,6 +18,8 @@ class BoundingBox:
 
     def __attrs_post_init__(self) -> None:
         if not self.size.is_positive():
+            # Flip the size in negative dimensions, so that the topleft is smaller than bottomright.
+            # E.g. BoundingBox((10, 10, 10), (-5, 5, 5)) -> BoundingBox((5, 10, 10), (5, 5, 5)).
             negative_size = self.size.pairmin(Vec3Int.zeros())
             new_topleft = self.topleft + negative_size
             new_size = self.size.pairmax(-self.size)
