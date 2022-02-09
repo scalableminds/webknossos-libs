@@ -15,6 +15,8 @@ For upgrade instructions, please check the respective *Breaking Changes* section
  - Added AnnotationInfo, Project and Task classes for handling annotation information and annotation project administration. [#574](https://github.com/scalableminds/webknossos-libs/pull/574):
 
 ### Changed
+- Lifted the restriction that `BoundingBox` cannot have a negative topleft (introduced in v0.9.0). Also, negative size dimensions are flipped, so that the topleft <= bottomright,
+  e.g. `BoundingBox((10, 10, 10), (-5, 5, 5))` -> `BoundingBox((5, 10, 10), (5, 5, 5))`. [#589](https://github.com/scalableminds/webknossos-libs/pull/589)
 
 ### Fixed
 
@@ -65,6 +67,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
       the default behaviour changes from starting at absolute (0, 0, 0) to the layer's bounding box
     * `(Mag)View.get_view`: read_only is a keyword-only argument now
     * `MagView.get_bounding_boxes_on_disk()` now returns an iterator yielding bounding boxes in Mag(1)
+    * `BoundingBox` cannot have negative topleft or size entries anymore (lifted in v0.9.4).
   - **Deprecations**
     The following usages are marked as deprecated with warnings and will be removed in future releases:
     * Using the `offset` parameter for `read`/`write`/`get_view` in MagView and View is deprecated.
