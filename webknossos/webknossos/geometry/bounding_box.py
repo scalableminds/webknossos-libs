@@ -1,7 +1,7 @@
 import json
 import re
 from collections import defaultdict
-from typing import Any, Dict, Generator, Iterable, List, Optional, Tuple, Union, cast
+from typing import Dict, Generator, Iterable, List, Optional, Tuple, Union, cast
 
 import attr
 import numpy as np
@@ -16,15 +16,16 @@ class BoundingBox:
     size: Vec3Int = attr.field(converter=Vec3Int)
     bottomright = attr.field(init=False)
 
-    @topleft.validator
-    def validate_topleft(self, _attribute: Any, value: Vec3Int) -> None:
-        assert value.is_positive(), "topleft of a BoundingBox must not be negative"
-
-    @topleft.validator
-    def validate_size(self, _attribute: Any, value: Vec3Int) -> None:
-        assert value.is_positive(), "size of a BoundingBox must not be negative"
-
     def __attrs_post_init__(self) -> None:
+        if not self.size.is_positive():
+            # Flip the size in negative dimensions, so that the topleft is smaller than bottomright.
+            # E.g. BoundingBox((10, 10, 10), (-5, 5, 5)) -> BoundingBox((5, 10, 10), (5, 5, 5)).
+            negative_size = self.size.pairmin(Vec3Int.zeros())
+            new_topleft = self.topleft + negative_size
+            new_size = self.size.pairmax(-self.size)
+            object.__setattr__(self, "topleft", new_topleft)
+            object.__setattr__(self, "size", new_size)
+
         # Compute bottomright to avoid that it's recomputed every time
         # it is needed.
         object.__setattr__(self, "bottomright", self.topleft + self.size)
@@ -238,9 +239,9 @@ class BoundingBox:
     ) -> "BoundingBox":
         """If dont_assert is set to False, this method may return empty bounding boxes (size == (0, 0, 0))"""
 
-        topleft = np.maximum(self.topleft.to_np(), other.topleft.to_np())
-        bottomright = np.minimum(self.bottomright.to_np(), other.bottomright.to_np())
-        size = np.maximum(bottomright - topleft, (0, 0, 0))
+        topleft = self.topleft.pairmax(other.topleft)
+        bottomright = self.bottomright.pairmin(other.bottomright)
+        size = (bottomright - topleft).pairmax(Vec3Int.zeros())
 
         intersection = BoundingBox(topleft, size)
 
@@ -257,8 +258,8 @@ class BoundingBox:
         if other.is_empty():
             return self
 
-        topleft = np.minimum(self.topleft, other.topleft)
-        bottomright = np.maximum(self.bottomright, other.bottomright)
+        topleft = self.topleft.pairmin(other.topleft)
+        bottomright = self.bottomright.pairmax(other.bottomright)
         size = bottomright - topleft
 
         return BoundingBox(topleft, size)
