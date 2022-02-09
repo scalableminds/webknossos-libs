@@ -5,7 +5,6 @@ from tempfile import TemporaryDirectory
 from types import ModuleType
 from typing import Any, Iterator, Tuple
 
-
 import numpy as np
 import pytest
 from scipy.spatial import cKDTree

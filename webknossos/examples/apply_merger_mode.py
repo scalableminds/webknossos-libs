@@ -1,8 +1,9 @@
-import fastremap
 from pathlib import Path
+from shutil import copyfileobj
 from urllib.request import urlopen
 from zipfile import ZipFile
-from shutil import copyfileobj
+
+import fastremap
 
 import webknossos as wk
 
