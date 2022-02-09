@@ -86,12 +86,6 @@ def main() -> None:
 
     in_mag1.for_each_chunk(apply_mapping_for_chunk)
 
-    ###############################
-    # Downsample new segmentation #
-    ###############################
-
-    out_layer.downsample()
-
 
 if __name__ == "__main__":
     main()

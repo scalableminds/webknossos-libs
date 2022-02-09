@@ -56,6 +56,7 @@ def test_dataset_usage() -> None:
     assert data_in_mag2_subset.shape == (3, 256, 256, 16)
 
 
+@pytest.mark.block_network(allowed_hosts=[".*"])
 def test_apply_merger_mode() -> None:
     import examples.apply_merger_mode as example
 
