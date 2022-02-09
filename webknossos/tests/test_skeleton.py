@@ -137,7 +137,6 @@ def test_import_from_nml() -> None:
     loaded_nml = wk.Skeleton.load(snapshot_path)
 
     assert nml == loaded_nml
-    nml.get_graph_by_id(1) == 3
 
 
 def test_simple_initialization_and_representations(tmp_path: Path) -> None:
