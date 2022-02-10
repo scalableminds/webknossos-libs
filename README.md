@@ -17,6 +17,7 @@ Use this for:
 - up- & downloading annotations and datasets from your webKnossos instance
 - executing any of the wkcuber operations from below from your code
 
+[Read more in the docs.](https://docs.webknossos.org/webknossos-py/)
 
 ## [webKnossos cuber (wkcuber) CLI](wkcuber)
 CLI tool for creating and manipulating [webKnossos](https://webknossos.org) [WKW](https://github.com/scalableminds/webknossos-wrap) datasets. WKW is a container format for efficiently storing large-scale 3D images as found in microscopy data.
@@ -25,6 +26,8 @@ Use this for:
 - converting Tiff-stacks and other data formats for volume image data to webKnossos-compatible *.wkw files from the CLI
 - up/downsampling of *.wkw files to different magnification levels (image pyramid) from the CLI
 - compressing your *.wkw files to save disk space from the CLI
+
+[Read more in the docs.](https://docs.webknossos.org/wkcuber)
 
 ## [Cluster Tools](cluster_tools)
 The `cluster_tools` package provides python `Executor` classes for distributing tasks on a slurm cluster or via multi processing.
