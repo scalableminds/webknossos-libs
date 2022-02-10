@@ -136,7 +136,7 @@ def test_import_from_nml() -> None:
     snapshot_path = TESTDATA_DIR / "nmls" / "generated_snapshot.nml"
     loaded_nml = wk.Skeleton.load(snapshot_path)
 
-    assert nml == loaded_nml
+    assert nml == loaded_nml, "NML created by create_dummy_skeleton() should equal NML loaded from disk."
 
 
 def test_simple_initialization_and_representations(tmp_path: Path) -> None:
