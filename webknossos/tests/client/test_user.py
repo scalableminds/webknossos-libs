@@ -1,5 +1,3 @@
-import pytest
-
 from webknossos import User
 
 
