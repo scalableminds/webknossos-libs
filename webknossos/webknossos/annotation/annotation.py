@@ -127,16 +127,14 @@ class Annotation:
                 "Please specify which layer should be used via `source_volume_name`."
             )
 
-            volumeLocation = None
+            volume_zip_path = None
             for volume in self._nml.volumes:
                 if volume._get_name_or_id() == source_volume_name:
-                    volumeLocation = volume.location
+                    volume_zip_path = volume.location
                     break
             assert (
-                volumeLocation is not None
+                volume_zip_path is not None
             ), f"The specified volume name {source_volume_name} could not be found in this annotation."
-
-            volume_zip_path = volumeLocation
 
         assert (
             volume_zip_path in self._filelist
