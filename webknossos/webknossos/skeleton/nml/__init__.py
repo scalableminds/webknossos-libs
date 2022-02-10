@@ -1,5 +1,5 @@
 import xml.etree.ElementTree as ET
-from typing import BinaryIO, Dict, List, NamedTuple, Optional, Text, Tuple, TypeVar
+from typing import IO, BinaryIO, Dict, List, NamedTuple, Optional, Text, Tuple, TypeVar
 from xml.etree.ElementTree import Element
 
 from loxun import XmlWriter
@@ -389,7 +389,7 @@ def __parse_volume(nml_volume: Element) -> Volume:
     )
 
 
-def parse_nml(file: BinaryIO) -> NML:
+def parse_nml(file: IO[bytes]) -> NML:
     """
     Reads a webKnossos NML skeleton file from disk, parses it and returns an NML Python object
 

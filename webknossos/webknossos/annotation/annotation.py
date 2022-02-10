@@ -95,7 +95,7 @@ class Annotation:
 
     def get_volume_layer_names(self) -> Iterable[str]:
 
-        return (volume.name or volume.id for volume in self._nml.volumes)
+        return (volume.name or str(volume.id) for volume in self._nml.volumes)
 
     def save_volume_annotation(
         self,
@@ -119,6 +119,7 @@ class Annotation:
         # todo pylint: disable=fixme
         assert len(self._nml.volumes) > 0
 
+        volume_zip_path: Optional[str] = None
         if len(self._nml.volumes) == 1:
             volume_zip_path = self._nml.volumes[0].location
         else:
