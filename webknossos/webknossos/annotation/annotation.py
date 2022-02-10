@@ -111,8 +111,8 @@ class Annotation:
         The largest_segment_id is computed automatically, unless provided
         explicitly.
 
-        source_volume_name has to be provided, if the annotation contains
-        multiple volume layers. Use Annotation.get_volume_layer_names() to look up
+        `source_volume_name` has to be provided, if the annotation contains
+        multiple volume layers. Use `get_volume_layer_names()` to look up
         available layers.
         """
 
