@@ -1,5 +1,5 @@
 from calendar import day_abbr
-from pathlib import Path
+from os import environ
 from typing import Tuple, cast
 
 import fastremap
@@ -83,19 +83,19 @@ def main() -> None:
     # Optionally, downsample and re-upload #
     ########################################
 
-    # out_layer.downsample()
-    # dataset.delete_layer("color")
-    # dataset.delete_layer("segmentation")
-    # dataset.upload(
-    #     "l4_sample_remapped",
-    #     layers_to_link=[
-    #         wk.LayerToLink(
-    #             dataset_name="l4_sample_dev",
-    #             layer_name="color",
-    #             organization_name="scalable_minds",
-    #         )
-    #     ],
-    # )
+    if "PYTEST_CURRENT_TEST" not in environ:
+        out_layer.downsample()
+        dataset.delete_layer("segmentation")
+        dataset.upload(
+            "l4_sample_remapped",
+            layers_to_link=[
+                wk.LayerToLink(
+                    dataset_name="l4_sample_dev",
+                    layer_name="color",
+                    organization_name="scalable_minds",
+                )
+            ],
+        )
 
 
 if __name__ == "__main__":
