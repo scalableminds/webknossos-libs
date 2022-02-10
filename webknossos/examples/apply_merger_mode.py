@@ -35,21 +35,16 @@ def main() -> None:
     # Compute equivalence classes #
     ###############################
 
-    equiv_classes = [
-        set(
-            in_mag1.read(absolute_offset=node.position, size=(1, 1, 1))[0, 0, 0, 0]
-            for node in graph.nodes
-        )
-        for graph in nml.flattened_graphs()
-    ]
+    equivalence_map = {}
+    for graph in nml.flattened_graphs():
+        base = None
+        for node in graph.nodes:
+            segment_id = in_mag1.read(absolute_offset=node.position, size=(1, 1, 1)).item()
+            if base is None:
+                base = segment_id
+            equivalence_map[segment_id] = base
 
-    equiv_map = {}
-    for segment_ids in equiv_classes:
-        base = next(iter(segment_ids))
-        for segment_id in segment_ids:
-            equiv_map[segment_id] = base
-
-    print(f"Found {len(equiv_classes)} equivalence classes with {len(equiv_map)} nodes")
+    print(f"Found {len(nml.flattened_graphs())} equivalence classes with {len(equiv_map)} nodes")
 
     ############################
     # Creating an output layer #
