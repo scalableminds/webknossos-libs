@@ -1,0 +1,37 @@
+<things>
+  <parameters>
+    <experiment name="ds_name" organization="orga" description="" />
+    <scale x="4.0" y="4.0" z="35.0" />
+    <offset x="0" y="0" z="0" />
+    <time ms="1644425515615" />
+    <editPosition x="199480" y="199906" z="3593" />
+    <editRotation xRot="0.0" yRot="0.0" zRot="0.0" />
+    <zoomLevel zoom="2.0" />
+    <activeNode id="3" />
+  </parameters>
+  <thing id="3" color.r="0.8509804010391235" color.g="0.5215686559677124" color.b="0.07058823853731155" color.a="1.0" name="003" groupId="2">
+    <nodes>
+      <node id="3" radius="1.0" x="199480" y="199906" z="3593" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="1" bitDepth="8" interpolation="true" time="1644425546725" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="2" color.r="0.0" color.g="0.0" color.b="1.0" color.a="1.0" name="002" groupId="2">
+    <nodes>
+      <node id="2" radius="1.0" x="199355" y="199679" z="3593" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="1" bitDepth="8" interpolation="true" time="1644425544361" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="1" color.r="0.6784313917160034" color.g="0.1411764770746231" color.b="0.05098039284348488" color.a="1.0" name="001">
+    <nodes>
+      <node id="1" radius="1.0" x="199196" y="199290" z="3593" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="1" bitDepth="8" interpolation="true" time="1644425520594" />
+    </nodes>
+    <edges />
+  </thing>
+  <branchpoints />
+  <comments />
+  <groups>
+    <group name="Group 1" id="1">
+      <group name="Group 2" id="2" />
+    </group>
+  </groups>
+</things>
