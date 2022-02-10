@@ -172,10 +172,6 @@ class Volume(NamedTuple):
     fallback_layer: Optional[str] = None
     name: Optional[str] = None
 
-    def _get_name_or_id(self):
-        # Older annotations don't have the name attribute. Use the index instead then.
-        return self.name or self.id
-
 
 class NML(NamedTuple):
     """

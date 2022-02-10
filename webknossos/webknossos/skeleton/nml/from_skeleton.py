@@ -96,12 +96,14 @@ def from_skeleton(
             )
         )
 
-    volume = None
+    volumes = []
     if volume_dict is not None and "location" in volume_dict and "id" in volume_dict:
-        volume = NmlVolume(
-            id=int(enforce_not_null(volume_dict.get("id"))),
-            location=enforce_not_null(volume_dict.get("location")),
-            fallback_layer=volume_dict.get("fallback_layer"),
+        volumes.append(
+            NmlVolume(
+                id=int(enforce_not_null(volume_dict.get("id"))),
+                location=enforce_not_null(volume_dict.get("location")),
+                fallback_layer=volume_dict.get("fallback_layer"),
+            )
         )
 
     nml = NML(
@@ -110,7 +112,7 @@ def from_skeleton(
         branchpoints=branchpoints,
         comments=comments,
         groups=group.as_nml_group().children,
-        volume=volume,
+        volumes=volumes,
     )
 
     return nml
