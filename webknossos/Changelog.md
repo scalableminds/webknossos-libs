@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.4...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.5...HEAD)
 
 ### Breaking Changes
 
@@ -16,7 +16,14 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+
+
+## [0.9.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.5) - 2022-02-10
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.4...v0.9.5)
+
+### Fixed
 - Skeleton: Fixed a bug when comparing `Graph` instances, this fixes failing loads which had the error message `Can only compare wk.Graph to another wk.Graph.` before. [#593](https://github.com/scalableminds/webknossos-libs/pull/593)
+
 
 ## [0.9.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.4) - 2022-02-09
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.3...v0.9.4)
