@@ -6,7 +6,6 @@ from webknossos.geometry import Vec3Int
 from .constants import TESTDATA_DIR, TESTOUTPUT_DIR
 
 
-@pytest.mark.vcr()
 def test_annotation_from_file() -> None:
 
     annotation = wk.Annotation(
@@ -36,7 +35,6 @@ def test_annotation_from_file() -> None:
         assert len(skeleton_lines) == 32
 
 
-@pytest.mark.vcr()
 def test_annotation_from_file_with_multi_volume() -> None:
     annotation = wk.Annotation(
         TESTDATA_DIR / "annotations" / "multi_volume_example_CREMI.zip"
@@ -97,7 +95,6 @@ def test_annotation_from_file_with_multi_volume() -> None:
             pass
 
 
-@pytest.mark.vcr()
 def test_annotation_from_url() -> None:
 
     annotation = wk.Annotation.download(

@@ -35,13 +35,11 @@ def auth_client() -> Client:
 # pylint: disable=redefined-outer-name
 
 
-@pytest.mark.vcr()
 def test_health(client: Client) -> None:
     response = health.sync_detailed(client=client)
     assert response.status_code == 200
 
 
-@pytest.mark.vcr()
 def test_annotation_info(auth_client: Client) -> None:
     id = "570ba0092a7c0e980056fe9b"  # pylint: disable=redefined-builtin
     typ = "Explorational"
@@ -54,7 +52,6 @@ def test_annotation_info(auth_client: Client) -> None:
     assert info_object.data_store.url == auth_client.base_url
 
 
-@pytest.mark.vcr()
 def test_datastore_list(auth_client: Client) -> None:
     datastores = datastore_list.sync(client=auth_client)
     internal_datastore = DatastoreListResponse200Item(
@@ -69,7 +66,6 @@ def test_datastore_list(auth_client: Client) -> None:
     assert internal_datastore in datastores
 
 
-@pytest.mark.vcr()
 def test_generate_token_for_data_store(auth_client: Client) -> None:
     generate_token_for_data_store_response = generate_token_for_data_store.sync(
         client=auth_client
@@ -78,7 +74,6 @@ def test_generate_token_for_data_store(auth_client: Client) -> None:
     assert len(generate_token_for_data_store_response.token) > 0
 
 
-@pytest.mark.vcr()
 def test_current_user_info_and_user_logged_time(auth_client: Client) -> None:
     current_user_info_response = current_user_info.sync(client=auth_client)
     assert current_user_info_response is not None
@@ -92,13 +87,11 @@ def test_current_user_info_and_user_logged_time(auth_client: Client) -> None:
     assert isinstance(user_logged_time_response.logged_time, list)
 
 
-@pytest.mark.vcr()
 def test_user_list(auth_client: Client) -> None:
     user_list_response = user_list.sync(client=auth_client)
     assert isinstance(user_list_response, list)
 
 
-@pytest.mark.vcr()
 def test_dataset_info() -> None:
     with webknossos_context(url=DEFAULT_WEBKNOSSOS_URL):
         client = _get_generated_client()
@@ -120,7 +113,6 @@ def test_dataset_info() -> None:
     ]
 
 
-@pytest.mark.vcr()
 def test_build_info(client: Client) -> None:
     response = build_info.sync(
         client=client,
