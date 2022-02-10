@@ -1,4 +1,3 @@
-from calendar import day_abbr
 from os import environ
 from typing import Tuple, cast
 
@@ -21,11 +20,9 @@ def main() -> None:
     # Download and open the corresponding dataset #
     ###############################################
 
-    wk.Dataset.download(
-        "l4_sample_dev", "scalable_minds", path="testdata/l4_sample_dev"
+    dataset = wk.Dataset.download(
+        "l4_sample_dev", "scalable_minds", path="testoutput/l4_sample_dev"
     )
-
-    dataset = wk.Dataset.open("testdata/l4_sample_dev")
     in_layer = cast(wk.SegmentationLayer, dataset.get_layer("segmentation"))
     in_mag1 = in_layer.get_mag("1")
 
@@ -47,6 +44,7 @@ def main() -> None:
     print(
         f"Found {len(list(nml.flattened_graphs()))} segment id groups with {len(segment_id_mapping)} nodes"
     )
+    print(segment_id_mapping)
 
     ############################
     # Creating an output layer #

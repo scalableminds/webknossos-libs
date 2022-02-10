@@ -60,7 +60,15 @@ def test_dataset_usage() -> None:
 def test_apply_merger_mode() -> None:
     import examples.apply_merger_mode as example
 
-    exec_main_and_get_vars(example)
+    (out_mag1,) = exec_main_and_get_vars(example, "out_mag1")
+    assert (
+        out_mag1.read(absolute_offset=(2746, 4334, 1832), size=(1, 1, 1))[0, 0, 0, 0]
+        != 5233922
+    )
+    assert (
+        out_mag1.read(absolute_offset=(2746, 4334, 1832), size=(1, 1, 1))[0, 0, 0, 0]
+        == 5233967
+    )
 
 
 def test_skeleton_synapse_candidates() -> None:
