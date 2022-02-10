@@ -1,5 +1,5 @@
 import xml.etree.ElementTree as ET
-from typing import BinaryIO, List, NamedTuple, Optional, Text, Tuple, TypeVar
+from typing import BinaryIO, Dict, List, NamedTuple, Optional, Text, Tuple, TypeVar
 from xml.etree.ElementTree import Element
 
 from loxun import XmlWriter
@@ -631,26 +631,35 @@ def __dump_comment(xf: XmlWriter, comment: Comment) -> None:
         xf.tag("comment", {"node": str(comment.node)})
 
 
+def filter_none_values(_dict: Dict[str, Optional[str]]) -> Dict[str, str]:
+    """XML values must not be None."""
+    return {key: value for key, value in _dict.items() if value is not None}
+
+
 def __dump_volume(xf: XmlWriter, volume: Optional[Volume]) -> None:
     if volume is not None:
         if volume.fallback_layer is not None:
             xf.tag(
                 "volume",
-                {
-                    "id": str(volume.id),
-                    "location": volume.location,
-                    "fallbackLayer": volume.fallback_layer,
-                    "name": volume.name,
-                },
+                filter_none_values(
+                    {
+                        "id": str(volume.id),
+                        "location": volume.location,
+                        "fallbackLayer": volume.fallback_layer,
+                        "name": volume.name,
+                    }
+                ),
             )
         else:
             xf.tag(
                 "volume",
-                {
-                    "id": str(volume.id),
-                    "location": volume.location,
-                    "name": volume.name,
-                },
+                filter_none_values(
+                    {
+                        "id": str(volume.id),
+                        "location": volume.location,
+                        "name": volume.name,
+                    }
+                ),
             )
 
 
