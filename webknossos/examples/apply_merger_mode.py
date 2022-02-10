@@ -1,8 +1,6 @@
+from calendar import day_abbr
 from pathlib import Path
-from shutil import copyfileobj
 from typing import Tuple, cast
-from urllib.request import urlopen
-from zipfile import ZipFile
 
 import fastremap
 
@@ -15,43 +13,44 @@ def main() -> None:
     # Opening a merger mode annotation #
     ####################################
 
-    nml = wk.Skeleton.load(Path("testdata/annotations/l4_sample__merger_mode.nml"))
+    nml = wk.Annotation.download(
+        "https://webknossos.org/annotations/Explorational/6204d2cd010000db0003db91"
+    ).skeleton
 
     ###############################################
     # Download and open the corresponding dataset #
     ###############################################
 
-    copyfileobj(
-        urlopen("https://static.webknossos.org/data/l4_segmentation.zip"),
-        open("testdata/l4_segmentation.zip", "wb"),
+    wk.Dataset.download(
+        "l4_sample_dev", "scalable_minds", path="testdata/l4_sample_dev"
     )
-    ZipFile("testdata/l4_segmentation.zip").extractall("testdata")
 
-    dataset = wk.Dataset.open("testdata/l4_segmentation")
+    dataset = wk.Dataset.open("testdata/l4_sample_dev")
     in_layer = cast(wk.SegmentationLayer, dataset.get_layer("segmentation"))
     in_mag1 = in_layer.get_mag("1")
 
-    ###############################
-    # Compute equivalence classes #
-    ###############################
+    ##############################
+    # Compute segment id mapping #
+    ##############################
 
-    equivalence_map = {}
+    segment_id_mapping = {}
     for graph in nml.flattened_graphs():
         base = None
         for node in graph.nodes:
-            segment_id = in_mag1.read(absolute_offset=node.position, size=(1, 1, 1)).item()
+            segment_id = in_mag1.read(
+                absolute_offset=node.position, size=(1, 1, 1)
+            ).item()
             if base is None:
                 base = segment_id
-            equivalence_map[segment_id] = base
+            segment_id_mapping[segment_id] = base
 
-    print(f"Found {len(nml.flattened_graphs())} equivalence classes with {len(equiv_map)} nodes")
+    print(
+        f"Found {len(list(nml.flattened_graphs()))} segment id groups with {len(segment_id_mapping)} nodes"
+    )
 
     ############################
     # Creating an output layer #
     ############################
-
-    if "segmentation_remapped" in dataset.layers:
-        dataset.delete_layer("segmentation_remapped")
 
     out_layer = dataset.add_layer(
         "segmentation_remapped",
@@ -59,27 +58,44 @@ def main() -> None:
         dtype_per_layer=in_layer.dtype_per_layer,
         largest_segment_id=in_layer.largest_segment_id,
     )
-    out_mag1 = out_layer.add_mag("1")
+    out_mag1 = out_layer.add_mag("1", compress=True)
+    out_layer.bounding_box = in_layer.bounding_box
 
     ###################
     # Apply remapping #
     ###################
 
-    def apply_mapping_for_chunk(args: Tuple[wk.View, int]) -> None:
-        (view, _) = args
-        cube_data = view.read()[0]
+    def apply_mapping_for_chunk(args: Tuple[wk.View, wk.View, int]) -> None:
+        (in_view, out_view, _) = args
+        cube_data = in_view.read()[0]
         # pylint: disable=c-extension-no-member
         fastremap.remap(
             cube_data,
-            equiv_map,
+            segment_id_mapping,
             preserve_missing_labels=True,
             in_place=True,
         )
-        out_mag1.write(
-            cube_data, absolute_offset=view.bounding_box.in_mag(out_mag1.mag).topleft
-        )
+        out_view.write(cube_data)
 
-    in_mag1.for_each_chunk(apply_mapping_for_chunk)
+    in_mag1.for_zipped_chunks(apply_mapping_for_chunk, out_mag1)
+
+    ########################################
+    # Optionally, downsample and re-upload #
+    ########################################
+
+    # out_layer.downsample()
+    # dataset.delete_layer("color")
+    # dataset.delete_layer("segmentation")
+    # dataset.upload(
+    #     "l4_sample_remapped",
+    #     layers_to_link=[
+    #         wk.LayerToLink(
+    #             dataset_name="l4_sample_dev",
+    #             layer_name="color",
+    #             organization_name="scalable_minds",
+    #         )
+    #     ],
+    # )
 
 
 if __name__ == "__main__":
