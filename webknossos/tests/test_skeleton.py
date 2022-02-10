@@ -256,3 +256,11 @@ def test_volume_dump_round_trip(tmp_path: Path) -> None:
         volume_out = __parse_volume(next(tree.iter()))
 
     assert volume_in == volume_out
+
+
+def test_load_nml(tmp_path: Path) -> None:
+    input_path = TESTDATA_DIR / "nmls" / "test_a.nml"
+    output_path = tmp_path / "test_a.nml"
+    skeleton_a = wk.Skeleton.load(input_path)
+    skeleton_a.save(output_path)
+    assert skeleton_a == wk.Skeleton.load(output_path)
