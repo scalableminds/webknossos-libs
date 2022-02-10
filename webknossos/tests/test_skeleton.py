@@ -131,6 +131,16 @@ def test_export_to_nml(tmp_path: Path) -> None:
     diff_files(output_path, snapshot_path)
 
 
+def test_import_from_nml() -> None:
+    nml = create_dummy_skeleton()
+    snapshot_path = TESTDATA_DIR / "nmls" / "generated_snapshot.nml"
+    loaded_nml = wk.Skeleton.load(snapshot_path)
+
+    assert (
+        nml == loaded_nml
+    ), "NML created by create_dummy_skeleton() should equal NML loaded from disk."
+
+
 def test_simple_initialization_and_representations(tmp_path: Path) -> None:
     nml = wk.Skeleton(name="my_skeleton", scale=(0.5, 0.5, 0.5), time=12345)
     nml_path = tmp_path / "my_skeleton.nml"
@@ -248,3 +258,11 @@ def test_volume_dump_round_trip(tmp_path: Path) -> None:
         volume_out = __parse_volume(next(tree.iter()))
 
     assert volume_in == volume_out
+
+
+def test_load_nml(tmp_path: Path) -> None:
+    input_path = TESTDATA_DIR / "nmls" / "test_a.nml"
+    output_path = tmp_path / "test_a.nml"
+    skeleton_a = wk.Skeleton.load(input_path)
+    skeleton_a.save(output_path)
+    assert skeleton_a == wk.Skeleton.load(output_path)
