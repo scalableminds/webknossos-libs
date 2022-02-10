@@ -42,7 +42,7 @@ def test_annotation_from_file_with_multi_volume() -> None:
         TESTDATA_DIR / "annotations" / "multi_volume_example_CREMI.zip"
     )
 
-    volume_names = sorted(list(annotation.get_volume_layer_names()))
+    volume_names = sorted(annotation.get_volume_layer_names())
 
     assert volume_names == ["Volume", "Volume_2"]
 
