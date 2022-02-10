@@ -90,6 +90,12 @@ def download_dataset(
         if mags is None:
             mags = [Mag(mag) for mag in response_layer.resolutions]
         for mag in mags:
+            mag_view = layer.get_or_add_mag(
+                mag,
+                compress=True,
+                block_len=32,
+                file_len=_DOWNLOAD_CHUNK_SIZE[0] // 32,
+            )
             aligned_bbox = layer.bounding_box.align_with_mag(mag, ceil=True)
             for chunk in track(
                 list(aligned_bbox.chunk(_DOWNLOAD_CHUNK_SIZE, _DOWNLOAD_CHUNK_SIZE)),
@@ -114,11 +120,5 @@ def download_dataset(
                 data = np.frombuffer(
                     response.content, dtype=layer.dtype_per_channel
                 ).reshape(layer.num_channels, *aligned_chunk_in_mag.size, order="F")
-                mag_view = layer.get_or_add_mag(
-                    mag,
-                    compress=True,
-                    block_len=32,
-                    file_len=_DOWNLOAD_CHUNK_SIZE[0] // 32,
-                )
                 mag_view.write(data, absolute_offset=chunk.topleft)
     return dataset
