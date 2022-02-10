@@ -499,6 +499,9 @@ class Layer:
         """
         Updates the offset and size of the bounding box of this layer in the properties.
         """
+        assert (
+            bbox.topleft.is_positive()
+        ), f"Updating the bounding box of layer {self} to {bbox} failed, topleft must not contain negative dimensions."
         self._properties.bounding_box = bbox
         self.dataset._export_as_json()
 

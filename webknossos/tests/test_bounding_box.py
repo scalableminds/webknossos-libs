@@ -92,3 +92,20 @@ def test_align_with_mag_against_numpy_implementation(
         # The slower numpy implementation is wrong for very large numbers:
         if all(i < 12e15 for i in bb.bottomright):
             assert bb.align_with_mag(mag, ceil) == slow_np_result
+
+
+def test_negative_size() -> None:
+    assert BoundingBox((10, 10, 10), (-5, 5, 5)) == BoundingBox((5, 10, 10), (5, 5, 5))
+    assert BoundingBox((10, 10, 10), (-5, 5, -5)) == BoundingBox((5, 10, 5), (5, 5, 5))
+    assert BoundingBox((10, 10, 10), (-5, 5, -50)) == BoundingBox(
+        (5, 10, -40), (5, 5, 50)
+    )
+
+
+@given(bbox=infer)
+def test_negative_inversion(
+    bbox: BoundingBox,
+) -> None:
+    """Flipping the topleft and bottomright (by padding both with the negative size)
+    results in the original bbox, as negative sizes are converted to positive ones."""
+    assert bbox == bbox.padded_with_margins(-bbox.size, -bbox.size)
