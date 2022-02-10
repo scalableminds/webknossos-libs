@@ -102,10 +102,6 @@ class Annotation:
         dataset: Dataset,
         layer_name: str = "volume_annotation",
         largest_segment_id: Optional[int] = None,
-        # If the annotation contains multiple volume layers,
-        # source_volume_name has to be provided.
-        # Use Annotation.get_volume_layer_names() to look up
-        # available layers.
         source_volume_name: Optional[str] = None,
     ) -> Layer:
         """
@@ -114,6 +110,10 @@ class Annotation:
         by creating a new layer.
         The largest_segment_id is computed automatically, unless provided
         explicitly.
+
+        source_volume_name has to be provided, if the annotation contains
+        multiple volume layers. Use Annotation.get_volume_layer_names() to look up
+        available layers.
         """
 
         # todo pylint: disable=fixme
@@ -127,14 +127,16 @@ class Annotation:
                 "Please specify which layer should be used via `source_volume_name`."
             )
 
-            volume = next(
-                filter(
-                    lambda volume: volume._get_name_or_id() == source_volume_name,
-                    self._nml.volumes,
-                )
-            )
+            volumeLocation = None
+            for volume in self._nml.volumes:
+                if volume._get_name_or_id() == source_volume_name:
+                    volumeLocation = volume.location
+                    break
+            assert (
+                volumeLocation is not None
+            ), f"The specified volume name {source_volume_name} could not be found in this annotation."
 
-            volume_zip_path = volume.location
+            volume_zip_path = volumeLocation
 
         assert (
             volume_zip_path in self._filelist

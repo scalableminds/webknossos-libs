@@ -46,6 +46,7 @@ def test_annotation_from_file_with_multi_volume() -> None:
 
     assert volume_names == ["Volume", "Volume_2"]
 
+    # Read from first layer
     with annotation.temporary_volume_annotation_layer_copy(
         source_volume_name=volume_names[0]
     ) as layer:
@@ -68,6 +69,7 @@ def test_annotation_from_file_with_multi_volume() -> None:
             read_voxel == 0
         ), f"Expected to see voxel id 0, but saw {read_voxel} instead."
 
+    # Read from second layer
     with annotation.temporary_volume_annotation_layer_copy(
         source_volume_name=volume_names[1]
     ) as layer:
@@ -86,6 +88,13 @@ def test_annotation_from_file_with_multi_volume() -> None:
         assert (
             read_voxel == 0
         ), f"Expected to see voxel id 0, but saw {read_voxel} instead."
+
+    # Reading from not-existing layer should raise an error
+    with pytest.raises(AssertionError):
+        with annotation.temporary_volume_annotation_layer_copy(
+            source_volume_name="not existing name"
+        ) as layer:
+            pass
 
 
 @pytest.mark.vcr()
