@@ -8,6 +8,8 @@ if TYPE_CHECKING:
 Vector3 = Tuple[float, float, float]
 
 
+# Defining an order on nodes is necessary to allow to sort them,
+# which is used in the graph's equality check, see Graph.__eq__().
 @attr.define(order=True)
 class Node:
     position: Vector3
