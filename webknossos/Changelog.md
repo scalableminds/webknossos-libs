@@ -12,6 +12,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes
 
 ### Added
+- Added `apply_merger_mode.py` example. [#592](https://github.com/scalableminds/webknossos-libs/pull/592)
 
 ### Changed
 
