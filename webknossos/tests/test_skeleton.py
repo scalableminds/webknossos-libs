@@ -1,7 +1,7 @@
 import difflib
 from os import PathLike
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 import pytest
 
@@ -236,7 +236,8 @@ def test_import_export_round_trip(tmp_path: Path) -> None:
     diff_files(snapshot_path, export_path)
 
 
-def test_volume_dump_round_trip(tmp_path: Path) -> None:
+@pytest.mark.parametrize("layer_name", [None, "my_layer"])
+def test_volume_dump_round_trip(tmp_path: Path, layer_name: Optional[str]) -> None:
     import xml.etree.ElementTree as ET
 
     from loxun import XmlWriter
@@ -245,7 +246,10 @@ def test_volume_dump_round_trip(tmp_path: Path) -> None:
 
     export_path = tmp_path / "volume_dump.xml"
     volume_in = Volume(
-        id=0, location="data_Volume.zip", fallback_layer="my_very_important_layer"
+        id=0,
+        location="data_Volume.zip",
+        fallback_layer="my_very_important_layer",
+        name=layer_name,
     )
     volume_out = None
 
