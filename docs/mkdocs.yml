@@ -69,6 +69,7 @@ nav:
   - Usage Examples:
       - webknossos-py/examples/dataset_usage.md
       - webknossos-py/examples/upload_image_data.md
+      - webknossos-py/examples/apply_merger_mode.md
       - webknossos-py/examples/learned_segmenter.md
       - webknossos-py/examples/skeleton_synapse_candidates.md
       - webknossos-py/examples/user_times.md
