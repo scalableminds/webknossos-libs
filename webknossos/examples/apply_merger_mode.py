@@ -21,7 +21,10 @@ def main() -> None:
     ###############################################
 
     dataset = wk.Dataset.download(
-        "l4_sample_dev", "scalable_minds", path="testoutput/l4_sample_dev"
+        "l4_sample_dev",
+        "scalable_minds",
+        path="testoutput/l4_sample_dev",
+        webknossos_url="https://webknossos.org",
     )
     in_layer = cast(wk.SegmentationLayer, dataset.get_layer("segmentation"))
     in_mag1 = in_layer.get_mag("1")
