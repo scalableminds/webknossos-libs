@@ -132,7 +132,6 @@ class _DummyNearestNeighborClassifier:
         return self.labels[nearest_neighbors]
 
 
-@pytest.mark.vcr()
 def test_learned_segmenter() -> None:
     with tmp_cwd():
         from skimage.future import trainable_segmentation
@@ -162,7 +161,6 @@ def test_learned_segmenter() -> None:
             trainable_segmentation.RandomForestClassifier = old_default_classifier
 
 
-@pytest.mark.vcr()
 def test_user_times() -> None:
     import examples.user_times as example
 
