@@ -57,7 +57,7 @@ def test_dataset_usage() -> None:
 
 
 @pytest.mark.block_network(allowed_hosts=[".*"])
-@pytest.mark.vcr(ignore_hosts=["webknossos.org"])
+@pytest.mark.vcr(ignore_hosts=["webknossos.org", "data-humerus.webknossos.org])
 def test_apply_merger_mode() -> None:
     import examples.apply_merger_mode as example
 
