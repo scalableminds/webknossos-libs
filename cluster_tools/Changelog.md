@@ -12,6 +12,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes
 
 ### Added
+- Automatically detect when a multiprocessing context is set up without using an `if __name__ == "__main__"` guard in the main module. [#598](https://github.com/scalableminds/webknossos-libs/pull/598)
 
 ### Changed
 
