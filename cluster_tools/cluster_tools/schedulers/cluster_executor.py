@@ -114,7 +114,7 @@ class ClusterExecutor(futures.Executor):
         """
 
         jobids_futures, job_index_ranges = self.inner_submit(
-            f"{sys.executable} -m cluster_tools.remote {workerid} {self.cfut_dir}",
+            f"{self.get_python_executable()} -m cluster_tools.remote {workerid} {self.cfut_dir}",
             job_name=self.job_name if self.job_name is not None else job_name,
             additional_setup_lines=self.additional_setup_lines,
             job_count=job_count,
@@ -168,6 +168,9 @@ class ClusterExecutor(futures.Executor):
     @staticmethod
     def format_outfile_name(cfut_dir, job_id):
         return os.path.join(cfut_dir, "cfut.out.%s.pickle" % job_id)
+
+    def get_python_executable(self):
+        return sys.executable
 
     def _completion(self, jobid, failed_early):
         """Called whenever a job finishes."""

@@ -10,9 +10,9 @@ from pathlib import Path
 
 from . import pickling
 from .multiprocessing_logging_handler import get_multiprocessing_logging_setup_fn
+from .schedulers.kube import KubernetesExecutor
 from .schedulers.pbs import PBSExecutor
 from .schedulers.slurm import SlurmExecutor
-from .schedulers.kube import KubernetesExecutor
 from .util import enrich_future_with_uncaught_warning
 
 
