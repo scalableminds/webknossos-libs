@@ -829,7 +829,7 @@ def test_multiprocessing_validation():
     import sys
     from subprocess import PIPE, STDOUT, Popen
 
-    cmd = [sys.executable, "tests/guardless_multiprocessing.py"]
+    cmd = [sys.executable, "guardless_multiprocessing.py"]
     p = Popen(cmd, shell=False, stdin=PIPE, stdout=PIPE, stderr=STDOUT)
     output = p.stdout.read()
 
