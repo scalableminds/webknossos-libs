@@ -68,8 +68,8 @@ jobs:
       - name: Run tests
         run: |
           cd ./dockered-slurm
-          docker exec slurmctld bash -c "cd /cluster_tools && poetry run python -m pytest -s tests/test.py"
-          docker exec slurmctld bash -c "cd /cluster_tools && poetry run python tests/test.py"
+          docker exec slurmctld bash -c "cd /cluster_tools && poetry run python -m pytest -s tests/tests.py"
+          docker exec slurmctld bash -c "cd /cluster_tools && poetry run python tests/tests.py"
 
   webknossos_linux:
     needs: changes
