@@ -5,7 +5,6 @@ import os
 from typing import List, Optional, Union
 from uuid import uuid4
 
-import kubernetes
 
 from .cluster_executor import ClusterExecutor
 
@@ -41,7 +40,24 @@ class KubernetesExecutor(ClusterExecutor):
     def get_jobid_with_index(self, jobid: str, index: int) -> str:
         return f"{jobid}--{index}"
 
+    def ensure_kubernetes_namespace(self):
+        kubernetes_client = self.get_kubernetes_client()
+
+        resp = kubernetes_client.read_namespace(self.job_resources["namespace"])
+        if resp.status == 404:
+            kubernetes_client.create_namespace(
+                body={
+                    "apiVersion": "v1",
+                    "kind": "Namespace",
+                    "metadata": {
+                        "name": self.job_resources["namespace"],
+                    },
+                }
+            )
+
     def get_kubernetes_client(self):
+        import kubernetes
+
         kubernetes.config.load_kube_config()
         core_v1 = kubernetes.client.api.core_v1_api.CoreV1Api()
         return core_v1
@@ -141,6 +157,7 @@ class KubernetesExecutor(ClusterExecutor):
                 )
             except Exception as e:
                 print(e)
+                raise e
 
         return job_id_futures, ranges
 
