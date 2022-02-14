@@ -824,6 +824,18 @@ def test_preliminary_file_map():
                 ), "Preliminary output file should not exist anymore"
 
 
+def test_multiprocessing_validation():
+
+    from subprocess import Popen, PIPE, STDOUT
+    import sys
+
+    cmd = [sys.executable, "tests/guardless_multiprocessing.py"]
+    p = Popen(cmd, shell=False, stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+    output = p.stdout.read()
+
+    assert "current process has finished its bootstrapping phase." in str(output), "S"
+
+
 if __name__ == "__main__":
     # Validate that slurm_executor.submit also works when being called from a __main__ module
     test_dereferencing_main()
