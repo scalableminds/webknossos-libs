@@ -826,8 +826,8 @@ def test_preliminary_file_map():
 
 def test_multiprocessing_validation():
 
-    from subprocess import Popen, PIPE, STDOUT
     import sys
+    from subprocess import PIPE, STDOUT, Popen
 
     cmd = [sys.executable, "tests/guardless_multiprocessing.py"]
     p = Popen(cmd, shell=False, stdin=PIPE, stdout=PIPE, stderr=STDOUT)
