@@ -16,8 +16,13 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 - Added support for reading from multiple volume layers in annotations. If an annotation contains multiple volume layers, the layer name has to be provided when reading from a volume layer in an annotation (in `Annotation.save_volume_annotation()` and `Annotation.temporary_volume_annotation_layer_copy()`). Also, added the method `Annotation.get_volume_layer_names()` to see available volume layers. [#588](https://github.com/scalableminds/webknossos-libs/pull/588)
 
 ### Changed
+- Dataset writes in higher mags do not increase the bounding box if the written data fits in the rounded up box. [#595](https://github.com/scalableminds/webknossos-libs/pull/595)
 
 ### Fixed
+- Dataset down- & upload: [#595](https://github.com/scalableminds/webknossos-libs/pull/595)
+  * Fixed download of higher mags.
+  * Bounding box after download is set correctly (was inflated before when downloading higher mags).
+  * The returned URL for uploads is corrected, this did not respect `new_dataset_name` before.
 
 
 ## [0.9.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.5) - 2022-02-10
