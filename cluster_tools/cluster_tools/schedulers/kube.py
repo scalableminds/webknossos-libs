@@ -50,7 +50,7 @@ class KubernetesExecutor(ClusterExecutor):
         return self.job_resources.get("python_executable", "python")
 
     def inner_submit(
-        self, cmdline: str, job_name: Optional[str] = None, job_count: int = 1
+        self, cmdline: str, job_name: Optional[str] = None, job_count: int = 1, **_
     ):
         """Starts a Kubernetes pod that runs the specified shell command line."""
 
@@ -71,16 +71,18 @@ class KubernetesExecutor(ClusterExecutor):
         for job_index in range(0, job_count):
             pod_name = f"{array_job_id}--{job_index}"
             stdout_path = self.format_log_file_path(self.cfut_dir, pod_name)
-            stderr_path = self.format_log_file_path(self.cfut_dir, pod_name)
+            stderr_path = self.format_log_file_path(
+                self.cfut_dir, pod_name, suffix=".stderr"
+            )
             pod_manifest = {
                 "apiVersion": "v1",
                 "kind": "Pod",
                 "metadata": {
                     "name": pod_name,
                     "annotations": {
-                        "cluster_tools.scalableminds.com/job_id": array_job_id,
-                        "cluster_tools.scalableminds.com/job_index": job_index,
-                        "cluster_tools.scalableminds.com/job_name": job_name,
+                        "cluster-tools.scalableminds.com/job_id": array_job_id,
+                        "cluster-tools.scalableminds.com/job_index": job_index,
+                        "cluster-tools.scalableminds.com/job_name": job_name,
                     },
                 },
                 "spec": {
@@ -118,7 +120,7 @@ class KubernetesExecutor(ClusterExecutor):
                             ],
                         }
                     ],
-                    "nodeSelector": self.job_resources["node_selector"],
+                    "nodeSelector": self.job_resources.get("node_selector"),
                     "restartPolicy": "Never",
                     "volumes": [
                         # {
@@ -133,9 +135,12 @@ class KubernetesExecutor(ClusterExecutor):
                     ],
                 },
             }
-            kubernetes_client.create_namespaced_pod(
-                body=pod_manifest, namespace=self.job_resources["namespace"]
-            )
+            try:
+                kubernetes_client.create_namespaced_pod(
+                    body=pod_manifest, namespace=self.job_resources["namespace"]
+                )
+            except Exception as e:
+                print(e)
 
         return job_id_futures, ranges
 
