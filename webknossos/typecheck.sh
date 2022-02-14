@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -eEuo pipefail
 
+export MYPYPATH=./stubs 
+
 echo "Typecheck webknossos..."
 poetry run python -m mypy -p webknossos
 

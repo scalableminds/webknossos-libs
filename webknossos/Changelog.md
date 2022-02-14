@@ -12,6 +12,8 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes
 
 ### Added
+- Added `apply_merger_mode.py` example. [#592](https://github.com/scalableminds/webknossos-libs/pull/592)
+- Added support for reading from multiple volume layers in annotations. If an annotation contains multiple volume layers, the layer name has to be provided when reading from a volume layer in an annotation (in `Annotation.save_volume_annotation()` and `Annotation.temporary_volume_annotation_layer_copy()`). Also, added the method `Annotation.get_volume_layer_names()` to see available volume layers. [#588](https://github.com/scalableminds/webknossos-libs/pull/588)
 
 ### Changed
 
