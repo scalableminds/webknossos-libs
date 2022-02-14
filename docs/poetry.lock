@@ -541,6 +541,7 @@ description = "API Documentation for Python Projects"
 category = "dev"
 optional = false
 python-versions = ">=3.7"
+develop = false
 
 [package.dependencies]
 astunparse = {version = "*", markers = "python_version < \"3.9\""}
@@ -550,6 +551,12 @@ pygments = "*"
 
 [package.extras]
 dev = ["flake8", "hypothesis", "mypy", "pytest", "pytest-cov", "pytest-timeout", "tox"]
+
+[package.source]
+type = "git"
+url = "https://github.com/mitmproxy/pdoc.git"
+reference = "1574222ab0568e072dc04e3569027d39aa124256"
+resolved_reference = "1574222ab0568e072dc04e3569027d39aa124256"
 
 [[package]]
 name = "pillow"
@@ -936,7 +943,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "00d55a3bf6cd3515d96c686544208960aca7b0d3c659c7b27c2d2ec1a4bde422"
+content-hash = "50c0fe9065692b8364877d33077d46ee71b12c3de4482643e1370c7594c2ed12"
 
 [metadata.files]
 anyio = [
@@ -1303,9 +1310,7 @@ packaging = [
     {file = "packaging-21.0-py3-none-any.whl", hash = "sha256:c86254f9220d55e31cc94d69bade760f0847da8000def4dfe1c6b872fd14ff14"},
     {file = "packaging-21.0.tar.gz", hash = "sha256:7dc96269f53a4ccec5c0670940a4281106dd0bb343f47b7471f779df49c2fbe7"},
 ]
-pdoc = [
-    {file = "pdoc-9.0.1-py3-none-any.whl", hash = "sha256:de3784b5692397fa2f9ddb57a61513a1cabf38281f084aef32b5ed4ee6fbc09e"},
-]
+pdoc = []
 pillow = [
     {file = "Pillow-8.4.0-cp310-cp310-macosx_10_10_universal2.whl", hash = "sha256:81f8d5c81e483a9442d72d182e1fb6dcb9723f289a57e8030811bac9ea3fef8d"},
     {file = "Pillow-8.4.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:3f97cfb1e5a392d75dd8b9fd274d205404729923840ca94ca45a0af57e13dbe6"},

@@ -1,10 +1,10 @@
 name: CI
 
-on: push
+on: [push, pull_request]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
 
 jobs:
   changes:
@@ -251,7 +251,8 @@ jobs:
     if: |
       always() &&
       !contains(needs.*.result, 'failure') &&
-      !contains(needs.*.result, 'cancelled')
+      !contains(needs.*.result, 'cancelled') &&
+      !github.event.pull_request.head.repo.fork
     runs-on: ubuntu-latest
 
     steps:
@@ -314,7 +315,8 @@ jobs:
     if: |
       always() &&
       !contains(needs.*.result, 'failure') &&
-      !contains(needs.*.result, 'cancelled')
+      !contains(needs.*.result, 'cancelled') &&
+      !github.event.pull_request.head.repo.fork
 
     steps:
     - uses: actions/checkout@v2
@@ -374,8 +376,10 @@ jobs:
       always() &&
       !contains(needs.*.result, 'failure') &&
       !contains(needs.*.result, 'cancelled') &&
-      startsWith(github.event.ref, 'refs/tags')
+      startsWith(github.event.ref, 'refs/tags') &&
+      !github.event.pull_request.head.repo.fork
     runs-on: ubuntu-latest
+
     strategy:
       max-parallel: 4
 

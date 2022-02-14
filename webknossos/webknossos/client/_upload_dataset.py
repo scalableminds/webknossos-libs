@@ -1,4 +1,5 @@
 import os
+import warnings
 from functools import lru_cache
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -85,6 +86,10 @@ def upload_dataset(
     context = _get_context()
     layer_names_to_link = set(i.new_layer_name or i.layer_name for i in layers_to_link)
     if len(layer_names_to_link.intersection(dataset.layers.keys())) > 0:
+        warnings.warn(
+            "Excluding the following layers from upload, since they will be linked: "
+            + f"{layer_names_to_link.intersection(dataset.layers.keys())}"
+        )
         with TemporaryDirectory() as tmpdir:
             tmp_ds = dataset.shallow_copy_dataset(
                 tmpdir, name=dataset.name, layers_to_ignore=layer_names_to_link

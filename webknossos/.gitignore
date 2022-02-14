@@ -104,3 +104,4 @@ ENV/
 .mypy_cache/
 
 /webknossos/version.py
+testoutput
