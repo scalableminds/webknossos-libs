@@ -6,13 +6,14 @@ import traceback
 
 from cluster_tools.schedulers.pbs import PBSExecutor
 from cluster_tools.schedulers.slurm import SlurmExecutor
+from cluster_tools.schedulers.kube import KubernetesExecutor
 from cluster_tools.util import with_preliminary_postfix
 
 from . import pickling
 
 
 def get_executor_class():
-    for executor in [SlurmExecutor, PBSExecutor]:
+    for executor in [SlurmExecutor, PBSExecutor, KubernetesExecutor]:
         if executor.get_current_job_id() is not None:
             return executor
 
