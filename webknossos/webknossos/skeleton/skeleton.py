@@ -45,7 +45,7 @@ class Skeleton(Group):
     edit_rotation: Optional[Vector3] = None
     zoom_level: Optional[float] = None
     active_node: Optional[int] = None
-    meta: Optional[Dict[str, str]] = None
+    meta: Dict[str, str] = attr.Factory(dict)
     task_bounding_box: Optional[IntVector6] = None
     user_bounding_boxes: Optional[List[IntVector6]] = None
 
