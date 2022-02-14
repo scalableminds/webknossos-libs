@@ -12,6 +12,7 @@ from . import pickling
 from .multiprocessing_logging_handler import get_multiprocessing_logging_setup_fn
 from .schedulers.pbs import PBSExecutor
 from .schedulers.slurm import SlurmExecutor
+from .schedulers.kube import KubernetesExecutor
 from .util import enrich_future_with_uncaught_warning
 
 
@@ -291,6 +292,8 @@ def get_executor(environment, **kwargs):
         return SlurmExecutor(**kwargs)
     elif environment == "pbs":
         return PBSExecutor(**kwargs)
+    elif environment == "kubernetes":
+        return KubernetesExecutor(**kwargs)
     elif environment == "multiprocessing":
         return WrappedProcessPoolExecutor(**kwargs)
     elif environment == "sequential":
