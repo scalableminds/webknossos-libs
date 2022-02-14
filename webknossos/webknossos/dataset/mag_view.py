@@ -148,7 +148,8 @@ class MagView(View):
             abs_mag1_offset=absolute_offset,
             current_mag_size=Vec3Int(data.shape[-3:]),
         )
-        self.layer.bounding_box = self.layer.bounding_box.extended_by(mag1_bbox)
+        if not self.bounding_box.contains_bbox(mag1_bbox):
+            self.layer.bounding_box = self.layer.bounding_box.extended_by(mag1_bbox)
 
         super().write(data, absolute_offset=mag1_bbox.topleft)
 
