@@ -5,7 +5,6 @@ import os
 from typing import List, Optional, Union
 from uuid import uuid4
 
-
 from .cluster_executor import ClusterExecutor
 
 
@@ -41,10 +40,15 @@ class KubernetesExecutor(ClusterExecutor):
         return f"{jobid}--{index}"
 
     def ensure_kubernetes_namespace(self):
+        import kubernetes
+
         kubernetes_client = self.get_kubernetes_client()
 
-        resp = kubernetes_client.read_namespace(self.job_resources["namespace"])
-        if resp.status == 404:
+        try:
+            kubernetes_client.read_namespace(self.job_resources["namespace"])
+        except kubernetes.client.exceptions.ApiException as e:
+            if e.status != 404:
+                raise e
             kubernetes_client.create_namespace(
                 body={
                     "apiVersion": "v1",
@@ -71,6 +75,7 @@ class KubernetesExecutor(ClusterExecutor):
         """Starts a Kubernetes pod that runs the specified shell command line."""
 
         kubernetes_client = self.get_kubernetes_client()
+        self.ensure_kubernetes_namespace()
         array_job_id = str(uuid4())
 
         job_id_future = concurrent.futures.Future()
