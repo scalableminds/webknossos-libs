@@ -55,7 +55,7 @@ class KubernetesExecutor(ClusterExecutor):
         """Starts a Kubernetes pod that runs the specified shell command line."""
 
         kubernetes_client = self.get_kubernetes_client()
-        array_job_id = uuid4()
+        array_job_id = str(uuid4())
 
         job_id_future = concurrent.futures.Future()
         job_id_future.set_result(array_job_id)
@@ -81,7 +81,7 @@ class KubernetesExecutor(ClusterExecutor):
                     "name": pod_name,
                     "annotations": {
                         "cluster-tools.scalableminds.com/job_id": array_job_id,
-                        "cluster-tools.scalableminds.com/job_index": job_index,
+                        "cluster-tools.scalableminds.com/job_index": str(job_index),
                         "cluster-tools.scalableminds.com/job_name": job_name,
                     },
                 },
