@@ -55,4 +55,12 @@
 {% block libs %}
 	{{ super() }}
 	<script src="{{ base_url }}/js/lightbox-plus-jquery.min.js"></script>
+	<script async src="https://www.googletagmanager.com/gtag/js?id=G-5ZWBGTPH13"></script>
+	<script>
+		window.dataLayer = window.dataLayer || [];
+		function gtag(){dataLayer.push(arguments);}
+		gtag('js', new Date());
+
+		gtag('config', 'G-5ZWBGTPH13', { 'anonymize_ip': true, 'cookie_expires': 0 });
+	</script>
 {% endblock libs %}
