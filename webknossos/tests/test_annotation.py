@@ -8,7 +8,7 @@ from .constants import TESTDATA_DIR, TESTOUTPUT_DIR
 
 def test_annotation_from_file() -> None:
 
-    annotation = wk.Annotation(
+    annotation = wk.Annotation.load(
         TESTDATA_DIR
         / "annotations"
         / "l4dense_motta_et_al_demo_v2__explorational__4a6356.zip"
@@ -18,7 +18,7 @@ def test_annotation_from_file() -> None:
     assert len(list(annotation.skeleton.flattened_graphs())) == 1
 
     annotation.save(TESTOUTPUT_DIR / "test_dummy.zip")
-    copied_annotation = wk.Annotation(TESTOUTPUT_DIR / "test_dummy.zip")
+    copied_annotation = wk.Annotation.load(TESTOUTPUT_DIR / "test_dummy.zip")
     assert copied_annotation.dataset_name == "l4dense_motta_et_al_demo_v2"
     assert len(list(copied_annotation.skeleton.flattened_graphs())) == 1
 
@@ -36,7 +36,7 @@ def test_annotation_from_file() -> None:
 
 
 def test_annotation_from_file_with_multi_volume() -> None:
-    annotation = wk.Annotation(
+    annotation = wk.Annotation.load(
         TESTDATA_DIR / "annotations" / "multi_volume_example_CREMI.zip"
     )
 
@@ -104,6 +104,6 @@ def test_annotation_from_url() -> None:
     assert len(list(annotation.skeleton.flattened_graphs())) == 1
 
     annotation.save(TESTOUTPUT_DIR / "test_dummy_downloaded.zip")
-    annotation = wk.Annotation(TESTOUTPUT_DIR / "test_dummy_downloaded.zip")
+    annotation = wk.Annotation.load(TESTOUTPUT_DIR / "test_dummy_downloaded.zip")
     assert annotation.dataset_name == "l4dense_motta_et_al_demo_v2"
     assert len(list(annotation.skeleton.flattened_graphs())) == 1

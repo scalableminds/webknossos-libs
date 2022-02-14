@@ -96,12 +96,15 @@ nav:
       - User: api/webknossos/administration/user.md
       - Project: api/webknossos/administration/project.md
       - Task: api/webknossos/administration/task.md
+    - webknossos-py/changelog.md
   - Getting Help:
     - webknossos-py/development.md
     - Community Support: https://forum.image.sc/tag/webknossos" target="_blank
     - Email Support: mailto:hello@webknossos.org
     - Commercial Support: https://scalableminds.com" target="_blank
-- wkcuber CLI: wkcuber/index.md
+- wkcuber CLI:
+  - Overview: wkcuber/index.md
+  - wkcuber/changelog.md
 
 plugins:
 - search

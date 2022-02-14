@@ -1,7 +1,8 @@
+from io import BytesIO
 import itertools
 import warnings
 from os import PathLike
-from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, Union
+from typing import IO, Any, Dict, Iterator, List, Optional, Set, Tuple, Union
 
 import attr
 from boltons.strutils import unit_len
@@ -43,6 +44,8 @@ class Skeleton(Group):
     edit_position: Optional[Vector3] = None
     edit_rotation: Optional[Vector3] = None
     zoom_level: Optional[float] = None
+    active_node: Optional[int] = None
+    meta: Optional[Dict[str, str]] = None
     task_bounding_box: Optional[IntVector6] = None
     user_bounding_boxes: Optional[List[IntVector6]] = None
 
@@ -71,6 +74,15 @@ class Skeleton(Group):
         )
         with open(out_path, "wb") as f:
             wknml.write_nml(f, nml)
+
+    def _nml_string(self) -> str:
+        nml = nml_from_skeleton(
+            self,
+            self._get_nml_parameters(),
+        )
+        buffer = BytesIO()
+        wknml.write_nml(buffer, nml)
+        return buffer.getvalue().decode("utf-8")
 
     @staticmethod
     def from_path(file_path: Union[Openable, PathLike, str]) -> "Skeleton":

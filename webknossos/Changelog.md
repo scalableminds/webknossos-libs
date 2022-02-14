@@ -1,4 +1,4 @@
-# Change Log
+# Changelog
 
 All notable changes to the webknossos python library are documented in this file.
 

@@ -20,4 +20,4 @@ def download_annotation(
     client = _get_generated_client()
     response = annotation_download.sync_detailed(typ=type.value, id=id, client=client)
     assert response.status_code == 200, response
-    return Annotation(BytesIO(response.content))
+    return Annotation._load_from_zip(BytesIO(response.content))

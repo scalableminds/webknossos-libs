@@ -3,7 +3,6 @@ import warnings
 from contextlib import contextmanager, nullcontext
 from enum import Enum, unique
 from functools import lru_cache
-from io import BytesIO
 from os import PathLike
 from pathlib import Path
 from shutil import copyfile
@@ -12,20 +11,18 @@ from typing import (
     IO,
     BinaryIO,
     ContextManager,
+    Dict,
     Iterable,
     Iterator,
-    List,
     NamedTuple,
     Optional,
     Union,
     cast,
 )
-from zipfile import ZipFile
+from zipfile import ZipFile, ZIP_DEFLATED
+from zlib import Z_BEST_SPEED
+from zipp import Path as ZipPath
 
-from attr import dataclass
-from boltons.cacheutils import cachedproperty
-
-import webknossos.skeleton.nml as wknml
 from webknossos.dataset import Dataset, Layer, SegmentationLayer
 from webknossos.skeleton import Skeleton
 
@@ -51,49 +48,84 @@ class _ZipPath(NamedTuple):
         )
 
 
-@dataclass
 class Annotation:
-    file: Union[str, PathLike, BytesIO]
+    name: str
+    skeleton: Skeleton
+    _volume_layers: Dict[str, ZipPath]
+    # file: Union[str, PathLike, BytesIO]
 
-    @cachedproperty
-    def _zipfile(self) -> ZipFile:
-        return ZipFile(self.file)
+    def __init__(self, name: str, skeleton: Skeleton) -> None:
+        self.name = name
+        self.skeleton = skeleton
+        self._volume_layers = {}
 
-    @cachedproperty
-    def _filelist(self) -> List[str]:
-        return [i.filename for i in self._zipfile.filelist]
+    @classmethod
+    def load(cls, annotation_path: Union[str, PathLike]) -> "Annotation":
+        annotation_path = Path(annotation_path)
+        assert annotation_path.exists(), f"Annotation path {annotation_path} does not exist."
+        if annotation_path.suffix == ".zip":
+            return cls._load_from_zip(annotation_path)
+        elif annotation_path.suffix == ".nml":
+            return cls(name=annotation_path.stem, skeleton=Skeleton.load(annotation_path))
+        else:
+            raise RuntimeError("The loaded annotation must have the suffix .zip or .nml, but is {annotation_path.suffix}")
 
-    @cachedproperty
-    def _nml_file(self) -> _ZipPath:
-        nml_files = [i for i in self._filelist if i.endswith(".nml")]
-        assert len(nml_files) == 1
-        return _ZipPath(self._zipfile, nml_files[0])
+    @classmethod
+    def download(cls, annotation_path: str) -> "Annotation":
+        from webknossos.client.context import _get_context, webknossos_context
 
-    @cachedproperty
-    def skeleton(self) -> Skeleton:
-        return Skeleton.load(self._nml_file)
+        match = re.match(annotation_url_regex, annotation_path)
+        assert (
+            match is not None
+        ), "Annotation.download() must be called with an annotation url, e.g. https://webknossos.org/annotations/Explorational/6114d9410100009f0096c640"
+        webknossos_url, annotation_type_str, annotation_id = match.groups()
+        annotation_type = AnnotationType(annotation_type_str)
 
-    @cachedproperty
-    def _nml(self) -> wknml.NML:
-        with self._nml_file.open(mode="rb") as file_handle:
-            return wknml.parse_nml(file_handle)
+        from webknossos.client._download_annotation import download_annotation
 
-    @cachedproperty
+        if webknossos_url != _get_context().url:
+            warnings.warn(
+                f"The supplied url {webknossos_url} does not match your current context {_get_context().url}. "
+                + "Using no token, only public annotations can be downloaded. "
+                + "Please see https://docs.webknossos.org/api/webknossos/client/context.html to adapt the URL and token."
+            )
+            context: ContextManager[None] = webknossos_context(
+                webknossos_url, token=None
+            )
+        else:
+            context = nullcontext()
+
+        with context:
+            return download_annotation(annotation_type, annotation_id)
+
+    @classmethod
+    def _load_from_zip(cls, content: Union[str, PathLike, BinaryIO]) -> "Annotation":
+        zipfile = ZipFile(content)
+        paths = [ZipPath(zipfile, i.filename) for i in zipfile.filelist]
+        nml_paths = [i for i in paths if i.suffix == ".nml"]
+        assert len(nml_paths) == 1, "TODO"
+        annotation = cls(name=nml_paths[0].stem, skeleton=Skeleton.load(nml_paths[0]))
+        # TODO select zips by volume tags in nml
+        annotation._volume_layers = {
+            str(i): i
+            for i in paths if i.suffix == ".zip"
+        }
+        return annotation
+
+    @property
     def dataset_name(self) -> str:
         return self.skeleton.name
 
-    @cachedproperty
-    def name(self) -> str:
-        return self._nml_file.path[:-4]
-
     @lru_cache(maxsize=128)
     def binary(self) -> Union[bytes, BinaryIO]:
-        if isinstance(self.file, BytesIO):
-            return self.file.getvalue()
-        else:
-            return open(self.file, "rb")
+        return b""
+        # if isinstance(self.file, BytesIO):
+        #     return self.file.getvalue()
+        # else:
+        #     return open(self.file, "rb")
 
     def get_volume_layer_names(self) -> Iterable[str]:
+        return self._volume_layers.keys()
 
         return (volume.name or str(volume.id) for volume in self._nml.volumes)
 
@@ -117,6 +149,7 @@ class Annotation:
         """
 
         # todo pylint: disable=fixme
+        return None
         assert len(self._nml.volumes) > 0
 
         volume_zip_path: Optional[str] = None
@@ -169,62 +202,16 @@ class Annotation:
             layer.largest_segment_id = largest_segment_id
         return layer
 
-    @classmethod
-    def load(cls, annotation_path: Union[str, PathLike]) -> "Annotation":
-        assert Path(
-            annotation_path
-        ).exists(), f"Annotation path {annotation_path} does not exist."
-        return Annotation(annotation_path)
-
-    @classmethod
-    def download(cls, annotation_path: str) -> "Annotation":
-        from webknossos.client.context import _get_context, webknossos_context
-
-        match = re.match(annotation_url_regex, annotation_path)
-        assert (
-            match is not None
-        ), "Annotation.download() must be called with an annotation url, e.g. https://webknossos.org/annotations/Explorational/6114d9410100009f0096c640"
-        webknossos_url, annotation_type_str, annotation_id = match.groups()
-        annotation_type = AnnotationType(annotation_type_str)
-
-        from webknossos.client._download_annotation import download_annotation
-
-        if webknossos_url != _get_context().url:
-            warnings.warn(
-                f"The supplied url {webknossos_url} does not match your current context {_get_context().url}. "
-                + "Using no token, only public annotations can be downloaded. "
-                + "Please see https://docs.webknossos.org/api/webknossos/client/context.html to adapt the URL and token."
-            )
-            context: ContextManager[None] = webknossos_context(
-                webknossos_url, token=None
-            )
-        else:
-            context = nullcontext()
-
-        with context:
-            return download_annotation(annotation_type, annotation_id)
-
-    @contextmanager
-    def _open_nml(self) -> Iterator[IO[bytes]]:
-        """
-        This method can be used to open the annotation's inner NML
-        file directly.
-        """
-        with self._nml_file.open(mode="rb") as file_handle:
-            yield file_handle
-
     def save(self, path: Union[Path, str]) -> None:
         """
         Stores the annotation as a zip at the given path.
         """
-
+        # TODO maybe allow .nml if no volume-annotations?
         assert Path(path).suffix == ".zip", "The target path should be a zip file."
 
-        if isinstance(self.file, str) or isinstance(self.file, PathLike):
-            copyfile(self.file, str(path))
-        else:
-            with open(path, "wb") as f:
-                f.write(self.file.getbuffer())
+        with ZipFile(path, mode="x", compression=ZIP_DEFLATED, compresslevel=Z_BEST_SPEED) as zipfile:
+            zipfile.writestr(self.name + ".nml", self.skeleton._nml_string())
+            # TODO add volume layers
 
     @contextmanager
     def temporary_volume_annotation_layer_copy(

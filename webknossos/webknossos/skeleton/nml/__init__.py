@@ -53,6 +53,27 @@ class NMLParameters(NamedTuple):
     userBoundingBoxes: Optional[List[IntVector6]] = None
 
 
+class NMLMeta(NamedTuple):
+    """
+    A webKnossos skeleton node annotation object.
+
+    Attributes:
+        id (int): A unique identifier
+        position (Vector3): 3D position of a node. Format: [x, y, z]
+        radius (Optional[float]): Radius of a node when rendered in wK. Unit: nanometers (nm)
+        rotation (Optional[Vector3]): 3D rotation of the camera when the node was annotated. Mostly relevant for `Flight` mode to resume in the same direction when returning to `Flight` mode.
+        inVp (Optional[int]): Enumeration of the wK UI viewport in which the node was annotated. `0`: XY plane, `1`: YZ plane. `2`: XY plane, `3`: 3D viewport
+        inMag (Optional[int]): wK rendering magnification-level when the node was annotated. Lower magnification levels typically indicate a "zoomed-in" workflow resulting in more accurate annotations.
+        bitDepth (Optional[int]): wK rendering bit-depth when the node was annotated. 4bit (lower data quality) or 8bit (regular quality). Lower quality data rendering might lead to less accurate annotations.
+        interpolation (Optional[bool]): wK rendering interpolation flag when the node was annotated. Interpolated data rendering might lead to less accurate annotations.
+        time (Optional[int]): A Unix timestamp marking the creation time of the node.
+
+    """
+
+    name: str
+    content: str
+
+
 class Node(NamedTuple):
     """
     A webKnossos skeleton node annotation object.
@@ -186,6 +207,7 @@ class NML(NamedTuple):
         volume (Optional[Volume]): A reference to any volume data that is part of this annotation.
     """
 
+    meta: List[NMLMeta]
     parameters: NMLParameters
     trees: List[Tree]
     branchpoints: List[Branchpoint]
