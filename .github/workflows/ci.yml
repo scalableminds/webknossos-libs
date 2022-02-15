@@ -56,13 +56,14 @@ jobs:
       
       - name: Setup Kubernetes-in-Docker
         run: |
-          GO111MODULE="on" go get sigs.k8s.io/kind@v0.11.1
+          curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.11.1/kind-linux-amd64
+          chmod +x ./kind
           sed -i "s#__PATH__#$(pwd)#g" tests/cluster-config.yaml
-          kind create cluster --config=tests/cluster-config.yaml
-          kind export kubeconfig
+          ./kind create cluster --config=tests/cluster-config.yaml
+          ./kind export kubeconfig
 
           docker build -f tests/Dockerfile -t scalableminds/cluster_tools:latest .
-          kind load docker-image scalableminds/cluster_tools:latest
+          ./kind load docker-image scalableminds/cluster_tools:latest
 
       - name: Install dependencies (without docker)
         run: |
@@ -80,6 +81,9 @@ jobs:
           cd ./dockered-slurm
           docker exec slurmctld bash -c "cd /cluster_tools/tests && poetry run python -m pytest -s tests.py"
           docker exec slurmctld bash -c "cd /cluster_tools/tests && poetry run python tests.py"
+      
+      - name: Run kubernetes tests
+        run: poetry run python tests/test_kubernetes.py
 
   webknossos_linux:
     needs: changes
