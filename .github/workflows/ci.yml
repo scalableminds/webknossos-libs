@@ -68,8 +68,8 @@ jobs:
       - name: Run tests
         run: |
           cd ./dockered-slurm
-          docker exec slurmctld bash -c "cd /cluster_tools && poetry run python -m pytest -s test.py"
-          docker exec slurmctld bash -c "cd /cluster_tools && poetry run python test.py"
+          docker exec slurmctld bash -c "cd /cluster_tools/tests && poetry run python -m pytest -s tests.py"
+          docker exec slurmctld bash -c "cd /cluster_tools/tests && poetry run python tests.py"
   
   cluster_tools_kubernetes:
     needs: changes
@@ -346,7 +346,7 @@ jobs:
         fi
 
   docs:
-    needs: [cluster_tools, webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac]
+    needs: [cluster_tools, cluster_tools_kubernetes, webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac]
     runs-on: ubuntu-latest
     if: |
       always() &&
@@ -407,7 +407,7 @@ jobs:
 
 
   pypi:
-    needs: [cluster_tools, webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac]
+    needs: [cluster_tools, cluster_tools_kubernetes, webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac]
     if: |
       always() &&
       !contains(needs.*.result, 'failure') &&
@@ -435,7 +435,7 @@ jobs:
         run: ./publish.sh
 
   complete:
-    needs: [cluster_tools, webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac, wkcuber_docker, docs, pypi]
+    needs: [cluster_tools, cluster_tools_kubernetes, webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac, wkcuber_docker, docs, pypi]
     if: always()
     runs-on: ubuntu-latest
     steps:
