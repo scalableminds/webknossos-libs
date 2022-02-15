@@ -1,5 +1,4 @@
-"""Abstracts access to a Slurm cluster via its command-line tools.
-"""
+"""Abstracts access to a Kubernetes cluster via its Python library."""
 import concurrent
 import os
 import re
@@ -9,6 +8,13 @@ from uuid import uuid4
 import kubernetes
 
 from .cluster_executor import ClusterExecutor
+
+
+class KubernetesClient:
+    def __init__(self):
+        kubernetes.config.load_kube_config()
+        self.core = kubernetes.client.api.core_v1_api.CoreV1Api()
+        self.batch = kubernetes.client.api.batch_v1_api.BatchV1Api()
 
 
 class KubernetesExecutor(ClusterExecutor):
@@ -29,11 +35,11 @@ class KubernetesExecutor(ClusterExecutor):
 
     @staticmethod
     def get_job_array_index() -> Optional[str]:
-        return os.environ.get("CLUSTER_JOB_INDEX", None)
+        return os.environ.get("JOB_COMPLETION_INDEX", None)
 
     @staticmethod
     def get_current_job_id() -> Optional[str]:
-        return os.environ.get("CLUSTER_JOB_ID")
+        return os.environ.get("JOB_ID")
 
     @classmethod
     def get_job_id_string(cls) -> Optional[str]:
@@ -43,13 +49,13 @@ class KubernetesExecutor(ClusterExecutor):
         return f"{jobid}--{index}"
 
     def ensure_kubernetes_namespace(self):
-        kubernetes_client = self.get_kubernetes_client()
+        kubernetes_client = KubernetesClient()
         try:
-            kubernetes_client.read_namespace(self.job_resources["namespace"])
+            kubernetes_client.core.read_namespace(self.job_resources["namespace"])
         except kubernetes.client.exceptions.ApiException as e:
             if e.status != 404:
                 raise e
-            kubernetes_client.create_namespace(
+            kubernetes_client.core.create_namespace(
                 body={
                     "apiVersion": "v1",
                     "kind": "Namespace",
@@ -59,11 +65,6 @@ class KubernetesExecutor(ClusterExecutor):
                 }
             )
 
-    def get_kubernetes_client(self):
-        kubernetes.config.load_kube_config()
-        core_v1 = kubernetes.client.api.core_v1_api.CoreV1Api()
-        return core_v1
-
     def get_python_executable(self):
         return self.job_resources.get("python_executable", "python")
 
@@ -72,7 +73,7 @@ class KubernetesExecutor(ClusterExecutor):
     ):
         """Starts a Kubernetes pod that runs the specified shell command line."""
 
-        kubernetes_client = self.get_kubernetes_client()
+        kubernetes_client = KubernetesClient()
         self.ensure_kubernetes_namespace()
         array_job_id = str(uuid4())
 
@@ -92,116 +93,144 @@ class KubernetesExecutor(ClusterExecutor):
             else ""
         )
 
-        for job_index in range(0, job_count):
-            pod_name = f"{array_job_id}--{job_index}"
-            stdout_path = self.format_log_file_path(self.cfut_dir, pod_name)
-            stderr_path = self.format_log_file_path(
-                self.cfut_dir, pod_name, suffix=".stderr"
-            )
-            pod_manifest = {
-                "apiVersion": "v1",
-                "kind": "Pod",
-                "metadata": {
-                    "name": pod_name,
-                    "annotations": {
-                        "cluster-tools.scalableminds.com/job_id": array_job_id,
-                        "cluster-tools.scalableminds.com/job_index": str(job_index),
-                        "cluster-tools.scalableminds.com/job_name": job_name,
+        job_manifest = {
+            "apiVersion": "batch/v1",
+            "kind": "Job",
+            "metadata": {
+                "name": array_job_id,
+            },
+            "spec": {
+                "completionMode": "Indexed",
+                "completions": job_count,
+                "parallelism": job_count,
+                "template": {
+                    "metadata": {
+                        "annotations": {
+                            "cluster-tools.scalableminds.com/job_id": array_job_id,
+                            "cluster-tools.scalableminds.com/job_name": job_name,
+                        },
+                    },
+                    "spec": {
+                        "containers": [
+                            {
+                                "image": self.job_resources["image"],
+                                "imagePullPolicy": "IfNotPresent",
+                                "workingDir": os.path.abspath(os.path.curdir),
+                                "command": ["/bin/bash"],
+                                "name": "worker",
+                                "args": [
+                                    "-c",
+                                    f"{umaskline}{cmdline} 0",
+                                ],
+                                "env": [
+                                    {"name": name, "value": value}
+                                    for name, value in os.environ.items()
+                                    if name not in ("PWD", "OLDPWD")
+                                    and re.match("^[-._a-zA-Z][-._a-zA-Z0-9]*$", name)
+                                    is not None
+                                ]
+                                + [
+                                    {"name": "JOB_ID", "value": array_job_id},
+                                ],
+                                "securityContext": {
+                                    "runAsUser": os.getuid(),
+                                    "runAsGroup": os.getgid(),
+                                },
+                                "resources": {"requests": requested_resources},
+                                "volumeMounts": [
+                                    # {
+                                    #     "name": "cfut-dir",
+                                    #     "mountPath": os.path.abspath(self.cfut_dir),
+                                    # },
+                                    {"name": "srv", "mountPath": "/srv"},
+                                    {
+                                        "name": "cwd",
+                                        "mountPath": os.path.abspath(os.path.curdir),
+                                    },
+                                ],
+                            }
+                        ],
+                        "nodeSelector": self.job_resources.get("node_selector"),
+                        "restartPolicy": "Never",
+                        "volumes": [
+                            # {
+                            #     "name": "cfut-dir",
+                            #     "hostPath": {"path": os.path.abspath(self.cfut_dir)},
+                            # },
+                            {"name": "srv", "hostPath": {"path": "/srv"}},
+                            {
+                                "name": "cwd",
+                                "hostPath": {"path": os.path.abspath(os.path.curdir)},
+                            },
+                        ],
                     },
                 },
-                "spec": {
-                    "containers": [
-                        {
-                            "image": self.job_resources["image"],
-                            "imagePullPolicy": "IfNotPresent",
-                            "name": pod_name,
-                            "workingDir": os.path.abspath(os.path.curdir),
-                            "command": ["/bin/bash"],
-                            "args": [
-                                "-c",
-                                f"{umaskline}{cmdline} 0 > >(tee -a {stdout_path}) 2> >(tee -a {stderr_path} >&2)",
-                            ],
-                            "env": [
-                                {"name": name, "value": value}
-                                for name, value in os.environ.items()
-                                if name not in ("PWD", "OLDPWD")
-                                and re.match("^[-._a-zA-Z][-._a-zA-Z0-9]*$", name)
-                                is not None
-                            ]
-                            + [
-                                {"name": "CLUSTER_JOB_ID", "value": pod_name},
-                                {"name": "CLUSTER_JOB_INDEX", "value": str(job_index)},
-                            ],
-                            "securityContext": {
-                                "runAsUser": os.getuid(),
-                                "runAsGroup": os.getgid(),
-                            },
-                            "resources": {"requests": requested_resources},
-                            "volumeMounts": [
-                                # {
-                                #     "name": "cfut-dir",
-                                #     "mountPath": os.path.abspath(self.cfut_dir),
-                                # },
-                                {"name": "srv", "mountPath": "/srv"},
-                                {
-                                    "name": "cwd",
-                                    "mountPath": os.path.abspath(os.path.curdir),
-                                },
-                            ],
-                        }
-                    ],
-                    "nodeSelector": self.job_resources.get("node_selector"),
-                    "restartPolicy": "Never",
-                    "volumes": [
-                        # {
-                        #     "name": "cfut-dir",
-                        #     "hostPath": {"path": os.path.abspath(self.cfut_dir)},
-                        # },
-                        {"name": "srv", "hostPath": {"path": "/srv"}},
-                        {
-                            "name": "cwd",
-                            "hostPath": {"path": os.path.abspath(os.path.curdir)},
-                        },
-                    ],
-                },
-            }
-            try:
-                kubernetes_client.create_namespaced_pod(
-                    body=pod_manifest, namespace=self.job_resources["namespace"]
-                )
-            except Exception as e:
-                print(e)
-                raise e
+            },
+        }
+        kubernetes_client.batch.create_namespaced_job(
+            body=job_manifest, namespace=self.job_resources["namespace"]
+        )
 
         return job_id_futures, ranges
 
     def check_for_crashed_job(
         self, job_id: str
     ) -> Union["failed", "ignore", "completed"]:
-        kubernetes_client = self.get_kubernetes_client()
-        resp = kubernetes_client.read_namespaced_pod(
-            name=job_id, namespace=self.job_resources["namespace"]
+        kubernetes_client = KubernetesClient()
+        [array_job_id, job_index] = job_id.split("--")
+        resp = kubernetes_client.core.list_namespaced_pod(
+            name=job_id,
+            namespace=self.job_resources["namespace"],
+            label_selector=f"job-name={array_job_id}",
         )
-        if resp.status.phase == "Failed":
-            return "failed"
-        if resp.status.phase == "Succeeded":
-            return "completed"
+        for pod in resp.items:
+            if (
+                pod.metadata.annotations["batch.kubernetes.io/job-completion-index"]
+                == job_index
+            ):
+                if resp.status.phase == "Failed":
+                    return "failed"
+                if resp.status.phase == "Succeeded":
+                    return "completed"
+                return "ignore"
         return "ignore"
 
     def get_number_of_submitted_jobs(self) -> int:
-        kubernetes_client = self.get_kubernetes_client()
-        resp = kubernetes_client.list_namespaced_pod(
+        kubernetes_client = KubernetesClient()
+        resp = kubernetes_client.batch.list_namespaced_job(
             namespace=self.job_resources["namespace"]
         )
-        return len(resp.items)
+        return sum(
+            (0 if job.status.active is None else job.status.active)
+            + (0 if job.status.failed is None else job.status.failed)
+            + (0 if job.status.succeeded is None else job.status.succeeded)
+            for job in resp.items
+        )
 
     def get_pending_tasks(self) -> List[str]:
-        kubernetes_client = self.get_kubernetes_client()
-        resp = kubernetes_client.list_namespaced_pod(
+        kubernetes_client = KubernetesClient()
+        resp = kubernetes_client.batch.list_namespaced_job(
             namespace=self.job_resources["namespace"]
         )
-        return [
-            pod.metadata.name
-            for pod in resp.items
-            if pod.status.phase in ("Pending", "Running", "Unknown")
-        ]
+        output = []
+        for job in resp.items:
+            if job.status.active is not None and job.status.active > 0:
+                resp = kubernetes_client.core.list_namespaced_pod(
+                    namespace=self.job_resources["namespace"],
+                    label_selector=f"job-name={job.metadata.name}",
+                )
+                for pod in resp.items:
+                    if pod.status.phase in ("Pending", "Running", "Unknown"):
+                        output.append(
+                            self.get_jobid_with_index(
+                                pod.metadata.annotations[
+                                    "cluster-tools.scalableminds.com/job_id"
+                                ],
+                                int(
+                                    pod.metadata.annotations[
+                                        "batch.kubernetes.io/job-completion-index"
+                                    ]
+                                ),
+                            )
+                        )
+        return output
