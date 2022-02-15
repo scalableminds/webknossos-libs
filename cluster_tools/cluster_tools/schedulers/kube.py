@@ -106,6 +106,7 @@ class KubernetesExecutor(ClusterExecutor):
                 "completionMode": "Indexed",
                 "completions": job_count,
                 "parallelism": job_count,
+                "ttlSecondsAfterFinished": 604800,  # 7 * 24 * 60 * 60
                 "template": {
                     "metadata": {
                         "annotations": {
