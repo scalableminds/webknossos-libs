@@ -83,7 +83,7 @@ jobs:
       - name: Install Kubernetes-in-Docker
         run: |
           GO111MODULE="on" go get sigs.k8s.io/kind@v0.11.1
-          sed -i "s/__PATH__/$(pwd)/g" testdata/cluster-config.yaml
+          sed -i "s#__PATH__#$(pwd)#g" testdata/cluster-config.yaml
           kind create cluster --config=testdata/cluster-config.yaml
           kind export kubeconfig
 
