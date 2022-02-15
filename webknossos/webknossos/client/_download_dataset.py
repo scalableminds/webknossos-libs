@@ -10,7 +10,7 @@ from webknossos.client._generated.api.datastore import dataset_download
 from webknossos.client._generated.api.default import dataset_info
 from webknossos.client.context import _get_context, _get_generated_client
 from webknossos.dataset import Dataset, LayerCategoryType
-from webknossos.geometry import BoundingBox, Mag
+from webknossos.geometry import BoundingBox, Mag, Vec3Int
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 T = TypeVar("T")
 
 
-_DOWNLOAD_CHUNK_SIZE = (512, 512, 512)
+_DOWNLOAD_CHUNK_SIZE = Vec3Int(512, 512, 512)
 
 
 def download_dataset(
@@ -90,12 +90,23 @@ def download_dataset(
         if mags is None:
             mags = [Mag(mag) for mag in response_layer.resolutions]
         for mag in mags:
+            mag_view = layer.get_or_add_mag(
+                mag,
+                compress=True,
+                block_len=32,
+                file_len=_DOWNLOAD_CHUNK_SIZE[0] // 32,
+            )
             aligned_bbox = layer.bounding_box.align_with_mag(mag, ceil=True)
+            download_chunk_size_in_mag = _DOWNLOAD_CHUNK_SIZE * mag.to_vec3_int()
             for chunk in track(
-                list(aligned_bbox.chunk(_DOWNLOAD_CHUNK_SIZE, _DOWNLOAD_CHUNK_SIZE)),
+                list(
+                    aligned_bbox.chunk(
+                        download_chunk_size_in_mag, download_chunk_size_in_mag
+                    )
+                ),
                 description=f"Downloading layer={layer.name} mag={mag}",
             ):
-                aligned_chunk_in_mag = chunk.in_mag(mag)
+                chunk_in_mag = chunk.in_mag(mag)
                 response = dataset_download.sync_detailed(
                     organization_name=organization_name,
                     data_set_name=dataset_name,
@@ -103,22 +114,19 @@ def download_dataset(
                     resolution=mag.max_dim_log2,
                     client=datastore_client,
                     token=optional_datastore_token,
-                    x=aligned_chunk_in_mag.topleft.x,
-                    y=aligned_chunk_in_mag.topleft.y,
-                    z=aligned_chunk_in_mag.topleft.z,
-                    width=aligned_chunk_in_mag.size.x,
-                    height=aligned_chunk_in_mag.size.y,
-                    depth=aligned_chunk_in_mag.size.z,
+                    x=chunk.topleft.x,
+                    y=chunk.topleft.y,
+                    z=chunk.topleft.z,
+                    width=chunk_in_mag.size.x,
+                    height=chunk_in_mag.size.y,
+                    depth=chunk_in_mag.size.z,
                 )
                 assert response.status_code == 200, response
+                assert (
+                    response.headers["missing-buckets"] == "[]"
+                ), f"Download contained missing buckets {response.headers['missing-buckets']}."
                 data = np.frombuffer(
                     response.content, dtype=layer.dtype_per_channel
-                ).reshape(layer.num_channels, *aligned_chunk_in_mag.size, order="F")
-                mag_view = layer.get_or_add_mag(
-                    mag,
-                    compress=True,
-                    block_len=32,
-                    file_len=_DOWNLOAD_CHUNK_SIZE[0] // 32,
-                )
+                ).reshape(layer.num_channels, *chunk_in_mag.size, order="F")
                 mag_view.write(data, absolute_offset=chunk.topleft)
     return dataset

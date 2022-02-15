@@ -287,7 +287,42 @@ class PickleExecutor(WrappedProcessPoolExecutor):
         return super().submit(pickle_identity_executor, func, *args, **kwargs)
 
 
+def noop():
+    return True
+
+
+did_start_test_multiprocessing = False
+
+
+def test_valid_multiprocessing():
+
+    msg = """
+    ###############################################################
+    An attempt has been made to start a new process before the
+    current process has finished its bootstrapping phase.
+
+    This probably means that you are not using fork to start your
+    child processes and you have forgotten to use the proper idiom
+    in the main module:
+
+        if __name__ == '__main__':
+            main()
+            ...
+    ###############################################################
+    """
+
+    with get_executor("multiprocessing") as executor:
+        try:
+            res_fut = executor.submit(noop)
+            assert res_fut.result() == True, msg
+        except RuntimeError as exc:
+            raise Exception(msg) from exc
+        except EOFError as exc:
+            raise Exception(msg) from exc
+
+
 def get_executor(environment, **kwargs):
+
     if environment == "slurm":
         return SlurmExecutor(**kwargs)
     elif environment == "pbs":
@@ -295,6 +330,11 @@ def get_executor(environment, **kwargs):
     elif environment == "kubernetes":
         return KubernetesExecutor(**kwargs)
     elif environment == "multiprocessing":
+        global did_start_test_multiprocessing
+        if not did_start_test_multiprocessing:
+            did_start_test_multiprocessing = True
+            test_valid_multiprocessing()
+
         return WrappedProcessPoolExecutor(**kwargs)
     elif environment == "sequential":
         return SequentialExecutor(**kwargs)

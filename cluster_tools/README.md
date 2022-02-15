@@ -38,7 +38,7 @@ docker exec -it slurmctld bash
 docker exec -it c1 bash
 ```
 
-Tests can be executed with `poetry run pytest -s test.py` after entering the container.
+Tests can be executed with `cd tests && poetry run pytest -s tests.py` after entering the container.
 Linting can be run with `./lint.sh`.
 Code formatting (black) can be run with `./format.sh`.
 
