@@ -5,7 +5,7 @@ def square(n):
     return n * n
 
 
-def test_kubernetes():
+def main():
     with cluster_tools.get_executor(
         "kubernetes",
         job_resources={
@@ -21,4 +21,4 @@ def test_kubernetes():
 
 
 if __name__ == "__main__":
-    test_kubernetes()
+    main()
