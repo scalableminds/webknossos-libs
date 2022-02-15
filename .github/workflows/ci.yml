@@ -52,7 +52,7 @@ jobs:
           # Run setup.py on all three nodes
           docker exec slurmctld bash -c "cd /cluster_tools && poetry install"
           docker exec c1 bash -c "cd /cluster_tools && poetry install"
-          docker exec c2 bash -c "cd /cluster_tools && poetry install"#
+          docker exec c2 bash -c "cd /cluster_tools && poetry install"
       
       - name: Setup Kubernetes-in-Docker
         run: |
