@@ -45,9 +45,6 @@ class KubernetesExecutor(ClusterExecutor):
     def get_job_id_string(cls) -> Optional[str]:
         return cls.get_current_job_id()
 
-    def get_jobid_with_index(self, jobid: str, index: int) -> str:
-        return f"{jobid}--{index}"
-
     def ensure_kubernetes_namespace(self):
         kubernetes_client = KubernetesClient()
         try:
@@ -92,6 +89,12 @@ class KubernetesExecutor(ClusterExecutor):
             if "umask" in self.job_resources
             else ""
         )
+        stdout_path = self.format_log_file_path(
+            self.cfut_dir, f"{array_job_id}_$JOB_COMPLETION_INDEX"
+        )
+        stderr_path = self.format_log_file_path(
+            self.cfut_dir, f"{array_job_id}_$JOB_COMPLETION_INDEX", suffix=".stderr"
+        )
 
         job_manifest = {
             "apiVersion": "batch/v1",
@@ -120,7 +123,7 @@ class KubernetesExecutor(ClusterExecutor):
                                 "name": "worker",
                                 "args": [
                                     "-c",
-                                    f"{umaskline}{cmdline} 0",
+                                    f"{umaskline}{cmdline} 0 > >(tee -a {stdout_path}) 2> >(tee -a {stderr_path} >&2)",
                                 ],
                                 "env": [
                                     {"name": name, "value": value}
@@ -177,7 +180,7 @@ class KubernetesExecutor(ClusterExecutor):
         self, job_id: str
     ) -> Union["failed", "ignore", "completed"]:
         kubernetes_client = KubernetesClient()
-        [array_job_id, job_index] = job_id.split("--")
+        [array_job_id, job_index] = job_id.split("_")
         resp = kubernetes_client.core.list_namespaced_pod(
             name=job_id,
             namespace=self.job_resources["namespace"],
