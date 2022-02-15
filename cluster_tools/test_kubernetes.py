@@ -12,7 +12,7 @@ def main():
             "memory": "100M",
             "python_executable": "python",
             "image": "scalableminds/cluster_tools:latest",
-            "node_selector": {"kubernetes.io/hostname": "asterix.scm.io"},
+            "node_selector": {},
             "namespace": "cluster-tools",
         },
         debug=True,
