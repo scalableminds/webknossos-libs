@@ -2,8 +2,11 @@
 """
 import concurrent
 import os
+import re
 from typing import List, Optional, Union
 from uuid import uuid4
+
+import kubernetes
 
 from .cluster_executor import ClusterExecutor
 
@@ -40,10 +43,7 @@ class KubernetesExecutor(ClusterExecutor):
         return f"{jobid}--{index}"
 
     def ensure_kubernetes_namespace(self):
-        import kubernetes
-
         kubernetes_client = self.get_kubernetes_client()
-
         try:
             kubernetes_client.read_namespace(self.job_resources["namespace"])
         except kubernetes.client.exceptions.ApiException as e:
@@ -60,8 +60,6 @@ class KubernetesExecutor(ClusterExecutor):
             )
 
     def get_kubernetes_client(self):
-        import kubernetes
-
         kubernetes.config.load_kube_config()
         core_v1 = kubernetes.client.api.core_v1_api.CoreV1Api()
         return core_v1
@@ -88,6 +86,11 @@ class KubernetesExecutor(ClusterExecutor):
             for k, v in self.job_resources.items()
             if k in ("memory", "cpu") or k.startswith("hugepages-")
         }
+        umaskline = (
+            f"umask {self.job_resources['umask']}; "
+            if "umask" in self.job_resources
+            else ""
+        )
 
         for job_index in range(0, job_count):
             pod_name = f"{array_job_id}--{job_index}"
@@ -116,17 +119,23 @@ class KubernetesExecutor(ClusterExecutor):
                             "command": ["/bin/bash"],
                             "args": [
                                 "-c",
-                                f"{cmdline} 0 > >(tee -a {stdout_path}) 2> >(tee -a {stderr_path} >&2)",
+                                f"{umaskline}{cmdline} 0 > >(tee -a {stdout_path}) 2> >(tee -a {stderr_path} >&2)",
                             ],
                             "env": [
                                 {"name": name, "value": value}
                                 for name, value in os.environ.items()
                                 if name not in ("PWD", "OLDPWD")
+                                and re.match("^[-._a-zA-Z][-._a-zA-Z0-9]*$", name)
+                                is not None
                             ]
                             + [
                                 {"name": "CLUSTER_JOB_ID", "value": pod_name},
                                 {"name": "CLUSTER_JOB_INDEX", "value": str(job_index)},
                             ],
+                            "securityContext": {
+                                "runAsUser": os.getuid(),
+                                "runAsGroup": os.getgid(),
+                            },
                             "resources": {"requests": requested_resources},
                             "volumeMounts": [
                                 # {
