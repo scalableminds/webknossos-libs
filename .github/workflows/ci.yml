@@ -82,7 +82,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Install Kubernetes-in-Docker
         run: |
-          go install sigs.k8s.io/kind@v0.11.1
+          GO111MODULE="on" go get sigs.k8s.io/kind@v0.11.1
           kind create cluster --config=testdata/cluster-config.yaml
           kind export kubeconfig
 
