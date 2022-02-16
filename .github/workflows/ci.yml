@@ -62,8 +62,8 @@ jobs:
           ./kind create cluster --config=tests/cluster-config.yaml
           ./kind export kubeconfig
 
-          docker build -f tests/Dockerfile -t scalableminds/cluster_tools:latest .
-          ./kind load docker-image scalableminds/cluster_tools:latest
+          sudo docker build -f tests/Dockerfile -t scalableminds/cluster_tools:latest .
+          sudo ./kind load docker-image scalableminds/cluster_tools:latest
 
       - name: Install dependencies (without docker)
         run: |
@@ -83,7 +83,7 @@ jobs:
           docker exec slurmctld bash -c "cd /cluster_tools/tests && poetry run python tests.py"
       
       - name: Run kubernetes tests
-        run: poetry run python tests/test_kubernetes.py
+        run: cd tests && poetry run python test_kubernetes.py
 
   webknossos_linux:
     needs: changes
