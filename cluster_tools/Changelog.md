@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.5...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.6...HEAD)
 
 ### Breaking Changes
 
@@ -16,6 +16,13 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+
+
+## [0.9.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.6) - 2022-02-15
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.5...v0.9.6)
+
+### Added
+- Automatically detect when a multiprocessing context is set up without using an `if __name__ == "__main__"` guard in the main module. [#598](https://github.com/scalableminds/webknossos-libs/pull/598)
 
 
 ## [0.9.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.5) - 2022-02-10

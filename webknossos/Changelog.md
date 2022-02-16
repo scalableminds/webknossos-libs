@@ -7,9 +7,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.5...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.6...HEAD)
 
 ### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [0.9.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.6) - 2022-02-15
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.5...v0.9.6)
 
 ### Added
 - Added `apply_merger_mode.py` example. [#592](https://github.com/scalableminds/webknossos-libs/pull/592)
@@ -23,6 +33,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
   * Fixed download of higher mags.
   * Bounding box after download is set correctly (was inflated before when downloading higher mags).
   * The returned URL for uploads is corrected, this did not respect `new_dataset_name` before.
+
 
 
 ## [0.9.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.5) - 2022-02-10
