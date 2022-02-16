@@ -142,30 +142,30 @@ class KubernetesExecutor(ClusterExecutor):
                                 },
                                 "resources": {"requests": requested_resources},
                                 "volumeMounts": [
-                                    # {
-                                    #     "name": "cfut-dir",
-                                    #     "mountPath": os.path.abspath(self.cfut_dir),
-                                    # },
                                     {"name": "srv", "mountPath": "/srv"},
                                     {
                                         "name": "cwd",
                                         "mountPath": os.path.abspath(os.path.curdir),
                                     },
+                                    # {
+                                    #     "name": "cfut-dir",
+                                    #     "mountPath": os.path.abspath(self.cfut_dir),
+                                    # },
                                 ],
                             }
                         ],
                         "nodeSelector": self.job_resources.get("node_selector"),
                         "restartPolicy": "Never",
                         "volumes": [
-                            # {
-                            #     "name": "cfut-dir",
-                            #     "hostPath": {"path": os.path.abspath(self.cfut_dir)},
-                            # },
                             {"name": "srv", "hostPath": {"path": "/srv"}},
                             {
                                 "name": "cwd",
                                 "hostPath": {"path": os.path.abspath(os.path.curdir)},
                             },
+                            # {
+                            #     "name": "cfut-dir",
+                            #     "hostPath": {"path": os.path.abspath(self.cfut_dir)},
+                            # },
                         ],
                     },
                 },
@@ -191,9 +191,9 @@ class KubernetesExecutor(ClusterExecutor):
                 pod.metadata.annotations["batch.kubernetes.io/job-completion-index"]
                 == job_index
             ):
-                if resp.status.phase == "Failed":
+                if pod.status.phase == "Failed":
                     return "failed"
-                if resp.status.phase == "Succeeded":
+                if pod.status.phase == "Succeeded":
                     return "completed"
                 return "ignore"
         return "ignore"

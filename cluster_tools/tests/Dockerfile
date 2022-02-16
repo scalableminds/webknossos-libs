@@ -9,3 +9,5 @@ WORKDIR /cluster_tools
 RUN pip install poetry && poetry config virtualenvs.create false && poetry install
 
 COPY . /cluster_tools
+
+RUN poetry install

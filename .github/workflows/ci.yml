@@ -62,8 +62,8 @@ jobs:
           ./kind create cluster --config=tests/cluster-config.yaml
           ./kind export kubeconfig
 
-          sudo docker build -f tests/Dockerfile -t scalableminds/cluster_tools:latest .
-          sudo ./kind load docker-image scalableminds/cluster_tools:latest
+          docker build -f tests/Dockerfile -t scalableminds/cluster_tools:latest .
+          ./kind load docker-image scalableminds/cluster_tools:latest
 
       - name: Install dependencies (without docker)
         run: |
