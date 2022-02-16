@@ -81,9 +81,12 @@ jobs:
           cd ./dockered-slurm
           docker exec slurmctld bash -c "cd /cluster_tools/tests && poetry run python -m pytest -s tests.py"
           docker exec slurmctld bash -c "cd /cluster_tools/tests && poetry run python tests.py"
+          sudo rm -r ../tests/.cfut
       
       - name: Run kubernetes tests
-        run: cd tests && poetry run python test_kubernetes.py
+        run: |
+          cd tests
+          poetry run python test_kubernetes.py
 
   webknossos_linux:
     needs: changes
