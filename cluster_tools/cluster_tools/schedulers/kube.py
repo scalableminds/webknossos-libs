@@ -12,7 +12,7 @@ from .cluster_executor import ClusterExecutor
 
 
 def volume_name_from_path(path: str) -> str:
-    return f"{(hash(path) & sys.maxsize):016X}"
+    return f"{(hash(path) & sys.maxsize):016x}"
 
 
 class KubernetesClient:
@@ -157,6 +157,10 @@ class KubernetesExecutor(ClusterExecutor):
                                 ]
                                 + [
                                     {
+                                        "name": "cwd",
+                                        "mountPath": os.path.abspath(os.curdir),
+                                    },
+                                    {
                                         "name": "cfut-dir",
                                         "mountPath": os.path.abspath(self.cfut_dir),
                                     },
@@ -174,6 +178,10 @@ class KubernetesExecutor(ClusterExecutor):
                         ]
                         + [
                             {
+                                "name": "cwd",
+                                "hostPath": {"path": os.path.abspath(os.curdir)},
+                            },
+                            {
                                 "name": "cfut-dir",
                                 "hostPath": {"path": os.path.abspath(self.cfut_dir)},
                             },
@@ -182,9 +190,13 @@ class KubernetesExecutor(ClusterExecutor):
                 },
             },
         }
-        kubernetes_client.batch.create_namespaced_job(
-            body=job_manifest, namespace=self.job_resources["namespace"]
-        )
+        try:
+            kubernetes_client.batch.create_namespaced_job(
+                body=job_manifest, namespace=self.job_resources["namespace"]
+            )
+        except Exception as e:
+            print(e, type(e))
+            raise e
 
         return job_id_futures, ranges
 

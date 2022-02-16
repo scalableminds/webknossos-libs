@@ -27,6 +27,7 @@ def test_simple():
 
 
 def test_mounts():
+    parent_dir = os.path.abspath(os.path.join(os.pardir, os.curdir))
     with cluster_tools.get_executor(
         "kubernetes",
         job_resources={
@@ -35,11 +36,11 @@ def test_mounts():
             "image": "scalableminds/cluster_tools:latest",
             "node_selector": {},
             "namespace": "cluster-tools",
-            "mounts": [os.path.abspath(os.curdir())],
+            "mounts": [parent_dir],
         },
         debug=True,
     ) as exec:
-        print(exec.map(list_dir, [os.path.abspath(os.curdir())]))
+        assert "cluster_tools" in list(exec.map(list_dir, [parent_dir]))[0]
 
 
 if __name__ == "__main__":
