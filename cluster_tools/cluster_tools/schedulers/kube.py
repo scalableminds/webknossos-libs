@@ -2,12 +2,17 @@
 import concurrent
 import os
 import re
+import sys
 from typing import List, Optional, Union
 from uuid import uuid4
 
 import kubernetes
 
 from .cluster_executor import ClusterExecutor
+
+
+def volume_name_from_path(path: str) -> str:
+    return f"{(hash(path) & sys.maxsize):016X}"
 
 
 class KubernetesClient:
@@ -28,6 +33,8 @@ class KubernetesExecutor(ClusterExecutor):
             self.job_resources["node_selector"] = {}
         if "image" not in self.job_resources:
             self.job_resources["image"] = "scalableminds/webknossos-cuber:latest"
+        if "mounts" not in self.job_resources:
+            self.job_resources["mounts"] = []
 
     @staticmethod
     def format_log_file_name(jobid: str, suffix=".stdout") -> str:
@@ -142,30 +149,34 @@ class KubernetesExecutor(ClusterExecutor):
                                 },
                                 "resources": {"requests": requested_resources},
                                 "volumeMounts": [
-                                    {"name": "srv", "mountPath": "/srv"},
                                     {
-                                        "name": "cwd",
-                                        "mountPath": os.path.abspath(os.path.curdir),
+                                        "name": volume_name_from_path(mount),
+                                        "mountPath": mount,
+                                    }
+                                    for mount in self.job_resources["mounts"]
+                                ]
+                                + [
+                                    {
+                                        "name": "cfut-dir",
+                                        "mountPath": os.path.abspath(self.cfut_dir),
                                     },
-                                    # {
-                                    #     "name": "cfut-dir",
-                                    #     "mountPath": os.path.abspath(self.cfut_dir),
-                                    # },
                                 ],
                             }
                         ],
                         "nodeSelector": self.job_resources.get("node_selector"),
                         "restartPolicy": "Never",
                         "volumes": [
-                            {"name": "srv", "hostPath": {"path": "/srv"}},
                             {
-                                "name": "cwd",
-                                "hostPath": {"path": os.path.abspath(os.path.curdir)},
+                                "name": volume_name_from_path(mount),
+                                "hostPath": {"path": mount},
+                            }
+                            for mount in self.job_resources["mounts"]
+                        ]
+                        + [
+                            {
+                                "name": "cfut-dir",
+                                "hostPath": {"path": os.path.abspath(self.cfut_dir)},
                             },
-                            # {
-                            #     "name": "cfut-dir",
-                            #     "hostPath": {"path": os.path.abspath(self.cfut_dir)},
-                            # },
                         ],
                     },
                 },
