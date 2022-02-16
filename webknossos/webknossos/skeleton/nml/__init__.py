@@ -411,6 +411,13 @@ def __parse_volume(nml_volume: Element) -> Volume:
     )
 
 
+def __parse_meta(nml_meta: Element) -> NMLMeta:
+    return NMLMeta(
+        enforce_not_null(nml_meta.get("name", default=None)),
+        enforce_not_null(nml_meta.get("content", default=None)),
+    )
+
+
 def parse_nml(file: IO[bytes]) -> NML:
     """
     Reads a webKnossos NML skeleton file from disk, parses it and returns an NML Python object
@@ -428,6 +435,7 @@ def parse_nml(file: IO[bytes]) -> NML:
         ```
     """
 
+    meta = []
     parameters = None
     trees = []
     branchpoints = []
@@ -460,6 +468,8 @@ def parse_nml(file: IO[bytes]) -> NML:
                 comments.append(__parse_comment(elem))
             elif elem.tag == "volume":
                 volumes.append(__parse_volume(elem))
+            elif elem.tag == "meta":
+                meta.append(__parse_meta(elem))
             elif elem.tag == "group":
                 group = __parse_group(elem)
                 group_stack[-1].children.append(group)
@@ -482,6 +492,7 @@ def parse_nml(file: IO[bytes]) -> NML:
     assert parameters is not None, "No parameters found in NML"
 
     return NML(
+        meta=meta,
         parameters=parameters,
         trees=trees,
         branchpoints=branchpoints,

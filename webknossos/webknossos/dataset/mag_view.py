@@ -148,6 +148,9 @@ class MagView(View):
             abs_mag1_offset=absolute_offset,
             current_mag_size=Vec3Int(data.shape[-3:]),
         )
+
+        # Only update the layer's bbox if we are actually larger
+        # than the mag-aligned, rounded up bbox (self.bounding_box):
         if not self.bounding_box.contains_bbox(mag1_bbox):
             self.layer.bounding_box = self.layer.bounding_box.extended_by(mag1_bbox)
 

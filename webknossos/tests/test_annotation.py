@@ -30,17 +30,13 @@ def test_annotation_from_file() -> None:
 
         assert voxel_id == 2504698
 
-    with annotation._open_nml() as file_handle:
-        skeleton_lines = file_handle.readlines()
-        assert len(skeleton_lines) == 32
-
 
 def test_annotation_from_file_with_multi_volume() -> None:
     annotation = wk.Annotation.load(
         TESTDATA_DIR / "annotations" / "multi_volume_example_CREMI.zip"
     )
 
-    volume_names = sorted(annotation.get_volume_layer_names())
+    volume_names = sorted(annotation.get_volume_annotation_names())
 
     assert volume_names == ["Volume", "Volume_2"]
 

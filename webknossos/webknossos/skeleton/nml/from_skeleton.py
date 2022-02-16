@@ -8,11 +8,11 @@ from webknossos.skeleton.nml import NML
 from webknossos.skeleton.nml import Branchpoint as NmlBranchpoint
 from webknossos.skeleton.nml import Comment as NmlComment
 from webknossos.skeleton.nml import Edge as NmlEdge
+from webknossos.skeleton.nml import NMLMeta as NmlMeta
 from webknossos.skeleton.nml import NMLParameters as NmlParameters
 from webknossos.skeleton.nml import Node as NmlNode
 from webknossos.skeleton.nml import Tree as NmlTree
 from webknossos.skeleton.nml import Volume as NmlVolume
-from webknossos.skeleton.nml import enforce_not_null
 
 if TYPE_CHECKING:
     from webknossos.skeleton import Group
@@ -33,10 +33,11 @@ def _random_color_rgba() -> Tuple[float, float, float, float]:
     return (r, g, b, 1.0)
 
 
-def from_skeleton(
+def from_skeleton(  # pylint: disable=dangerous-default-value
     group: "Group",
     parameters: Optional[Dict[str, Any]] = None,
-    volume_dict: Optional[Dict[str, Any]] = None,
+    metadata: Dict[str, str] = {},
+    volume_dicts: List[Dict[str, Any]] = [],
 ) -> NML:
     """
     A utility to convert a [NetworkX graph object](https://networkx.org/) into wK NML skeleton annotation object. Accepts both a simple list of multiple skeletons/trees or a dictionary grouping skeleton inputs.
@@ -97,16 +98,18 @@ def from_skeleton(
         )
 
     volumes = []
-    if volume_dict is not None and "location" in volume_dict and "id" in volume_dict:
+    for volume_dict in volume_dicts:
         volumes.append(
             NmlVolume(
-                id=int(enforce_not_null(volume_dict.get("id"))),
-                location=enforce_not_null(volume_dict.get("location")),
+                id=int(volume_dict["id"]),
+                location=volume_dict["location"],
                 fallback_layer=volume_dict.get("fallback_layer"),
+                name=volume_dict.get("name"),
             )
         )
 
     nml = NML(
+        meta=[NmlMeta(name=key, content=value) for key, value in metadata.items()],
         parameters=nmlParameters,
         trees=graphs,
         branchpoints=branchpoints,

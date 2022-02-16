@@ -20,7 +20,7 @@ def to_skeleton(nml: wknml.NML) -> "Skeleton":
         zoom_level=nml.parameters.zoomLevel,
         task_bounding_box=nml.parameters.taskBoundingBox,
         user_bounding_boxes=nml.parameters.userBoundingBoxes,
-        meta={i.name: i.content for i in nml.meta}
+        metadata={i.name: i.content for i in nml.meta},
     )
 
     groups_by_id = {}

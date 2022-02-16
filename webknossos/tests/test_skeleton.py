@@ -165,7 +165,7 @@ def test_simple_initialization_and_representations(tmp_path: Path) -> None:
     assert nml == wk.Skeleton.load(nml_path)
     assert str(nml) == (
         "Skeleton(name='my_skeleton', _children=<No children>, scale=(0.5, 0.5, 0.5), offset=None, time=12345, "
-        + "edit_position=None, edit_rotation=None, zoom_level=None, task_bounding_box=None, user_bounding_boxes=None)"
+        + "edit_position=None, edit_rotation=None, zoom_level=None, metadata={}, task_bounding_box=None, user_bounding_boxes=None)"
     )
 
     my_group = nml.add_group("my_group")
@@ -214,7 +214,7 @@ def test_simple_initialization_and_representations(tmp_path: Path) -> None:
     assert nml == wk.Skeleton.load(nml_path)
     assert str(nml) == (
         "Skeleton(name='my_skeleton', _children=<2 children>, scale=(0.5, 0.5, 0.5), offset=None, time=12345, "
-        + "edit_position=None, edit_rotation=None, zoom_level=None, task_bounding_box=None, user_bounding_boxes=None)"
+        + "edit_position=None, edit_rotation=None, zoom_level=None, metadata={}, task_bounding_box=None, user_bounding_boxes=None)"
     )
     assert str(my_group) == "Group(_id=1, name='my_group', _children=<2 children>)"
     assert (

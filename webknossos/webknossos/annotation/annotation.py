@@ -2,247 +2,36 @@ import re
 import warnings
 from contextlib import contextmanager, nullcontext
 from enum import Enum, unique
-from functools import lru_cache
+from io import BytesIO
 from os import PathLike
 from pathlib import Path
-from shutil import copyfile
 from tempfile import TemporaryDirectory
 from typing import (
-    IO,
     BinaryIO,
     ContextManager,
-    Dict,
     Iterable,
     Iterator,
-    NamedTuple,
+    List,
     Optional,
     Union,
     cast,
 )
-from zipfile import ZipFile, ZIP_DEFLATED
+from zipfile import ZIP_DEFLATED, ZipFile
 from zlib import Z_BEST_SPEED
+
+import attr
 from zipp import Path as ZipPath
 
+import webknossos.skeleton.nml as wknml
 from webknossos.dataset import Dataset, Layer, SegmentationLayer
 from webknossos.skeleton import Skeleton
+from webknossos.skeleton.nml.from_skeleton import from_skeleton as nml_from_skeleton
+from webknossos.skeleton.nml.to_skeleton import to_skeleton as nml_to_skeleton
 
 MAG_RE = r"((\d+-\d+-)?\d+)"
 SEP_RE = r"(\/|\\)"
 CUBE_RE = fr"z\d+{SEP_RE}y\d+{SEP_RE}x\d+\.wkw"
 ANNOTATION_WKW_PATH_RE = re.compile(fr"{MAG_RE}{SEP_RE}(header\.wkw|{CUBE_RE})")
-
-
-class _ZipPath(NamedTuple):
-    """Small wrapper around a zipfile.Zipfile object, pointing to a path within this zipfile."""
-
-    zipfile: ZipFile
-    path: str  # path within the zipfile itself
-
-    def open(
-        self, mode: str = "r", *, pwd: Optional[bytes] = None, force_zip64: bool = True
-    ) -> IO[bytes]:
-        assert "b" in mode, "Opening a ZipFile currently only supports binary mode"
-        zip_mode = mode[0]
-        return self.zipfile.open(
-            self.path, mode=zip_mode, pwd=pwd, force_zip64=force_zip64
-        )
-
-
-class Annotation:
-    name: str
-    skeleton: Skeleton
-    _volume_layers: Dict[str, ZipPath]
-    # file: Union[str, PathLike, BytesIO]
-
-    def __init__(self, name: str, skeleton: Skeleton) -> None:
-        self.name = name
-        self.skeleton = skeleton
-        self._volume_layers = {}
-
-    @classmethod
-    def load(cls, annotation_path: Union[str, PathLike]) -> "Annotation":
-        annotation_path = Path(annotation_path)
-        assert annotation_path.exists(), f"Annotation path {annotation_path} does not exist."
-        if annotation_path.suffix == ".zip":
-            return cls._load_from_zip(annotation_path)
-        elif annotation_path.suffix == ".nml":
-            return cls(name=annotation_path.stem, skeleton=Skeleton.load(annotation_path))
-        else:
-            raise RuntimeError("The loaded annotation must have the suffix .zip or .nml, but is {annotation_path.suffix}")
-
-    @classmethod
-    def download(cls, annotation_path: str) -> "Annotation":
-        from webknossos.client.context import _get_context, webknossos_context
-
-        match = re.match(annotation_url_regex, annotation_path)
-        assert (
-            match is not None
-        ), "Annotation.download() must be called with an annotation url, e.g. https://webknossos.org/annotations/Explorational/6114d9410100009f0096c640"
-        webknossos_url, annotation_type_str, annotation_id = match.groups()
-        annotation_type = AnnotationType(annotation_type_str)
-
-        from webknossos.client._download_annotation import download_annotation
-
-        if webknossos_url != _get_context().url:
-            warnings.warn(
-                f"The supplied url {webknossos_url} does not match your current context {_get_context().url}. "
-                + "Using no token, only public annotations can be downloaded. "
-                + "Please see https://docs.webknossos.org/api/webknossos/client/context.html to adapt the URL and token."
-            )
-            context: ContextManager[None] = webknossos_context(
-                webknossos_url, token=None
-            )
-        else:
-            context = nullcontext()
-
-        with context:
-            return download_annotation(annotation_type, annotation_id)
-
-    @classmethod
-    def _load_from_zip(cls, content: Union[str, PathLike, BinaryIO]) -> "Annotation":
-        zipfile = ZipFile(content)
-        paths = [ZipPath(zipfile, i.filename) for i in zipfile.filelist]
-        nml_paths = [i for i in paths if i.suffix == ".nml"]
-        assert len(nml_paths) == 1, "TODO"
-        annotation = cls(name=nml_paths[0].stem, skeleton=Skeleton.load(nml_paths[0]))
-        # TODO select zips by volume tags in nml
-        annotation._volume_layers = {
-            str(i): i
-            for i in paths if i.suffix == ".zip"
-        }
-        return annotation
-
-    @property
-    def dataset_name(self) -> str:
-        return self.skeleton.name
-
-    @lru_cache(maxsize=128)
-    def binary(self) -> Union[bytes, BinaryIO]:
-        return b""
-        # if isinstance(self.file, BytesIO):
-        #     return self.file.getvalue()
-        # else:
-        #     return open(self.file, "rb")
-
-    def get_volume_layer_names(self) -> Iterable[str]:
-        return self._volume_layers.keys()
-
-        return (volume.name or str(volume.id) for volume in self._nml.volumes)
-
-    def save_volume_annotation(
-        self,
-        dataset: Dataset,
-        layer_name: str = "volume_annotation",
-        largest_segment_id: Optional[int] = None,
-        source_volume_name: Optional[str] = None,
-    ) -> Layer:
-        """
-        Given a dataset, this method will save the
-        volume annotation of this annotation into that dataset
-        by creating a new layer.
-        The largest_segment_id is computed automatically, unless provided
-        explicitly.
-
-        `source_volume_name` has to be provided, if the annotation contains
-        multiple volume layers. Use `get_volume_layer_names()` to look up
-        available layers.
-        """
-
-        # todo pylint: disable=fixme
-        return None
-        assert len(self._nml.volumes) > 0
-
-        volume_zip_path: Optional[str] = None
-        if len(self._nml.volumes) == 1:
-            volume_zip_path = self._nml.volumes[0].location
-        else:
-            assert source_volume_name != None, (
-                "The annotation contains multiple volume layers. "
-                "Please specify which layer should be used via `source_volume_name`."
-            )
-
-            volume_zip_path = None
-            for volume in self._nml.volumes:
-                if (volume.name or volume.id) == source_volume_name:
-                    volume_zip_path = volume.location
-                    break
-            assert (
-                volume_zip_path is not None
-            ), f"The specified volume name {source_volume_name} could not be found in this annotation."
-
-        assert (
-            volume_zip_path in self._filelist
-        ), f"Cannot find {volume_zip_path} in {self._filelist}"
-        with self._zipfile.open(volume_zip_path) as f:
-            data_zip = ZipFile(f)
-            wrong_files = [
-                i.filename
-                for i in data_zip.filelist
-                if ANNOTATION_WKW_PATH_RE.search(i.filename) is None
-            ]
-            assert (
-                len(wrong_files) == 0
-            ), f"The annotation contains unexpected files: {wrong_files}"
-            data_zip.extractall(dataset.path / layer_name)
-        layer = cast(
-            SegmentationLayer,
-            dataset.add_layer_for_existing_files(
-                layer_name, category="segmentation", largest_segment_id=0
-            ),
-        )
-        min_mag_view = layer.mags[min(layer.mags)]
-
-        if largest_segment_id is None:
-            max_value = max(
-                min_mag_view.read(absolute_bounding_box=bbox).max()
-                for bbox in min_mag_view.get_bounding_boxes_on_disk()
-            )
-            layer.largest_segment_id = int(max_value)
-        else:
-            layer.largest_segment_id = largest_segment_id
-        return layer
-
-    def save(self, path: Union[Path, str]) -> None:
-        """
-        Stores the annotation as a zip at the given path.
-        """
-        # TODO maybe allow .nml if no volume-annotations?
-        assert Path(path).suffix == ".zip", "The target path should be a zip file."
-
-        with ZipFile(path, mode="x", compression=ZIP_DEFLATED, compresslevel=Z_BEST_SPEED) as zipfile:
-            zipfile.writestr(self.name + ".nml", self.skeleton._nml_string())
-            # TODO add volume layers
-
-    @contextmanager
-    def temporary_volume_annotation_layer_copy(
-        self, source_volume_name: Optional[str] = None
-    ) -> Iterator[Layer]:
-
-        """
-        Given a volume annotation path, create a temporary dataset which
-        contains the volume annotation via a symlink. Yield the layer
-        so that one can work with the annotation as a wk.Dataset.
-
-        If the annotation contains multiple volume layers, the name of the
-        desired volume layer has to be passed via `source_volume_name`.
-        """
-
-        with TemporaryDirectory() as tmp_annotation_dir:
-            tmp_annotation_dataset_path = (
-                Path(tmp_annotation_dir) / "tmp_annotation_dataset"
-            )
-
-        input_annotation_dataset = Dataset(
-            str(tmp_annotation_dataset_path), scale=(1, 1, 1), exist_ok=True
-        )
-
-        input_annotation_layer = self.save_volume_annotation(
-            input_annotation_dataset,
-            "volume_annotation",
-            source_volume_name=source_volume_name,
-        )
-
-        yield input_annotation_layer
 
 
 @unique
@@ -262,9 +51,349 @@ class AnnotationState(Enum):
     INITIALIZING = "Initializing"
 
 
-annotation_url_regex = re.compile(
+_COMPOUND_ANNOTATION_TYPES = [
+    AnnotationType.COMPOUND_PROJECT,
+    AnnotationType.COMPOUND_TASK,
+    AnnotationType.COMPOUND_TASK_TYPE,
+]
+
+_ANNOTATION_URL_REGEX = re.compile(
     fr"(https?://.*)/annotations/({'|'.join(i.value for i in AnnotationType.__members__.values())})/([0-9A-Fa-f]*)"
 )
+
+
+@attr.define
+class _VolumeAnnotation:
+    id: int
+    name: str
+    fallback_layer_name: Optional[str]
+    zip: ZipPath
+
+    def _default_zip_name(self) -> str:
+        return f"data_{self.id}_{self.name}"
+
+
+class Annotation:
+    name: str
+    skeleton: Skeleton
+    _volume_annotations: List[_VolumeAnnotation]
+
+    def __init__(self, name: str, skeleton: Skeleton) -> None:
+        # TODO: allow to create without skeleton
+        self.name = name
+        self.skeleton = skeleton
+        self._volume_annotations = []
+
+    @property
+    def dataset_name(self) -> str:
+        return self.skeleton.name
+
+    @dataset_name.setter
+    def dataset_name(self, val: str) -> None:
+        self.skeleton.name = val
+
+    # TODO add more proxy properties (e.g. user, annotation id, name, editposition/rotation, …)
+
+    @classmethod
+    def load(cls, annotation_path: Union[str, PathLike]) -> "Annotation":
+        annotation_path = Path(annotation_path)
+        assert (
+            annotation_path.exists()
+        ), f"Annotation path {annotation_path} does not exist."
+        if annotation_path.suffix == ".zip":
+            return cls._load_from_zip(annotation_path)
+        elif annotation_path.suffix == ".nml":
+            # TODO assert no volume in nml
+            return cls(
+                name=annotation_path.stem, skeleton=Skeleton.load(annotation_path)
+            )
+        else:
+            raise RuntimeError(
+                "The loaded annotation must have the suffix .zip or .nml, but is {annotation_path.suffix}"
+            )
+
+    @classmethod
+    def download(
+        cls,
+        annotation_id_or_url: str,
+        annotation_type: Union[str, AnnotationType, None] = None,
+        webknossos_url: Optional[str] = None,
+    ) -> "Annotation":
+        from webknossos.client._generated.api.default import annotation_download
+        from webknossos.client.context import (
+            _get_context,
+            _get_generated_client,
+            webknossos_context,
+        )
+
+        match = re.match(_ANNOTATION_URL_REGEX, annotation_id_or_url)
+        if match is not None:
+            assert webknossos_url is None and annotation_type is None, (
+                "When Annotation.download() is be called with an annotation url, "
+                + "e.g. Annotation.download('https://webknossos.org/annotations/Explorational/6114d9410100009f0096c640'), "
+                + "annotation_type and webknossos_url must not be set."
+            )
+            webknossos_url, annotation_type, annotation_id = match.groups()
+        else:
+            assert annotation_type is not None, (
+                "When calling Annotation.download() with an id you must supply the argument annotation_type, "
+                + "e.g. 'Task' or 'Explorational'. Alternatively, you can use the full annotation url, "
+                + "e.g. Annotation.download('https://webknossos.org/annotations/Explorational/6114d9410100009f0096c640')."
+            )
+        annotation_type = AnnotationType(annotation_type)
+        assert (
+            annotation_type not in _COMPOUND_ANNOTATION_TYPES
+        ), f"Currently compund annotation types are not supported, got {annotation_type}"
+
+        if webknossos_url is not None and webknossos_url != _get_context().url:
+            warnings.warn(
+                f"The supplied url {webknossos_url} does not match your current context {_get_context().url}. "
+                + "Using no token, only public annotations can be downloaded. "
+                + "Please see https://docs.webknossos.org/api/webknossos/client/context.html to adapt the URL and token."
+            )
+            context: ContextManager[None] = webknossos_context(
+                webknossos_url, token=None
+            )
+        else:
+            context = nullcontext()
+
+        with context:
+            client = _get_generated_client()
+            response = annotation_download.sync_detailed(
+                typ=annotation_type.value, id=annotation_id, client=client
+            )
+            assert response.status_code == 200, response
+            return Annotation._load_from_zip(BytesIO(response.content))
+
+    @classmethod
+    def _load_from_zip(cls, content: Union[str, PathLike, BinaryIO]) -> "Annotation":
+        zipfile = ZipFile(content)
+        paths = [ZipPath(zipfile, i.filename) for i in zipfile.filelist]
+        nml_paths = [i for i in paths if i.suffix == ".nml"]
+        assert len(nml_paths) > 0, "Couldn't find an nml file in the supplied zip-file."
+        assert (
+            len(nml_paths) == 1
+        ), f"There must be exactly one nml file in the zip-file, buf found {len(nml_paths)}."
+        nml_path = nml_paths[0]
+        with nml_path.open(mode="rb") as file_handle:
+            nml = wknml.parse_nml(file_handle)
+        annotation = cls(name=nml_paths[0].stem, skeleton=nml_to_skeleton(nml))
+        volume_annotations = []
+        for volume in nml.volumes:
+            fitting_volume_paths = [i for i in paths if str(i.at) == volume.location]
+            assert (
+                len(fitting_volume_paths) == 1
+            ), f"Couldn't find the file {volume.location} for the volume annotation {volume.name or volume.id}"
+            volume_annotations.append(
+                _VolumeAnnotation(
+                    id=volume.id,
+                    name="Volume" if volume.name is None else volume.name,
+                    fallback_layer_name=volume.fallback_layer,
+                    zip=fitting_volume_paths[0],
+                )
+            )
+        annotation._volume_annotations = volume_annotations
+        return annotation
+
+    def save(self, path: Union[Path, str]) -> None:
+        """
+        Stores the annotation as a zip at the given path.
+        """
+        # TODO maybe allow to save .nml if no volume-annotations present
+        assert Path(path).suffix == ".zip", "The target path should be a zip file."
+
+        with ZipFile(
+            path, mode="x", compression=ZIP_DEFLATED, compresslevel=Z_BEST_SPEED
+        ) as zipfile:
+            self._write_to_zip(zipfile)
+
+    def _binary_zip(self) -> bytes:
+        with BytesIO() as buffer:
+            with ZipFile(
+                buffer, mode="a", compression=ZIP_DEFLATED, compresslevel=Z_BEST_SPEED
+            ) as zipfile:
+                self._write_to_zip(zipfile)
+            return buffer.getvalue()
+
+    def _write_to_zip(self, zipfile: ZipFile) -> None:
+        nml = nml_from_skeleton(
+            group=self.skeleton,
+            parameters=self.skeleton._get_nml_parameters(),
+            metadata=self.skeleton.metadata,
+            volume_dicts=[
+                {
+                    "id": i.id,
+                    "name": i.name,
+                    "fallback_layer": i.fallback_layer_name,
+                    "location": i._default_zip_name(),
+                }
+                for i in self._volume_annotations
+            ],
+        )
+        with BytesIO() as buffer:
+            wknml.write_nml(buffer, nml)
+            nml_str = buffer.getvalue().decode("utf-8")
+        zipfile.writestr(self.name + ".nml", nml_str)
+
+        for volume_annotation in self._volume_annotations:
+            zipfile.writestr(
+                volume_annotation._default_zip_name(),
+                volume_annotation.zip.read_bytes(),
+            )
+
+    def get_volume_annotation_names(self) -> Iterable[str]:
+        return (i.name for i in self._volume_annotations)
+
+    # TODO add more methods, e.g. add_volume_annotation
+
+    def _get_volume_annotation(
+        self,
+        volume_annotation_name: Optional[str],
+        volume_annotation_id: Optional[int],
+    ) -> _VolumeAnnotation:
+        assert len(self._volume_annotations) > 0, "No volume annotations present."
+
+        if len(self._volume_annotations) == 1:
+            volume_layer = self._volume_annotations[0]
+            if (
+                volume_annotation_id is not None
+                and volume_annotation_id != volume_layer.id
+            ):
+                warnings.warn(
+                    f"Only a single volume annotation is present and its id {volume_layer.id} does not fit the given id {volume_annotation_id}."
+                )
+            if (
+                volume_annotation_name is not None
+                and volume_layer.name is not None
+                and volume_annotation_name != volume_layer.name
+            ):
+                warnings.warn(
+                    f"Only a single volume annotation is present and its name {volume_layer.name} "
+                    + f"does not fit the given name {volume_annotation_name}."
+                )
+            return volume_layer
+
+        if volume_annotation_id is not None:
+            for volume_layer in self._volume_annotations:
+                if volume_annotation_id == volume_layer.id:
+                    if (
+                        volume_annotation_name is not None
+                        and volume_layer.name is not None
+                        and volume_annotation_name != volume_layer.name
+                    ):
+                        warnings.warn(
+                            f"The volume annotation was matched by id {volume_annotation_id}, "
+                            + f"but its name {volume_layer.name} does not fit the given name {volume_annotation_name}."
+                        )
+                    return volume_layer
+            available_ids = [
+                volume_layer.id for volume_layer in self._volume_annotations
+            ]
+            raise ValueError(
+                f"Couldn't find a volume annotation with the id {volume_annotation_id}, available are {available_ids}."
+            )
+        elif volume_annotation_name is not None:
+            fitting_volume_annotations = [
+                i for i in self._volume_annotations if i.name == volume_annotation_name
+            ]
+            assert (
+                len(fitting_volume_annotations) != 0
+            ), f"The specified volume name {volume_annotation_name} could not be found in this annotation."
+            assert len(fitting_volume_annotations) == 1, (
+                f"More than one volume annotation has the name {volume_annotation_name}. "
+                + "Please specify the exact annotation via the volume_annotation_id argument. "
+                + f"The matching annotations have the ids {[i.id for i in fitting_volume_annotations]}"
+            )
+            return fitting_volume_annotations[0]
+        else:
+            raise ValueError(
+                "The annotation contains multiple volume layers. "
+                + "Please specify which layer should be used via volume_annotation_name or volume_annotation_id."
+            )
+
+    def save_volume_annotation(
+        self,
+        dataset: Dataset,
+        layer_name: str = "volume_annotation",
+        largest_segment_id: Optional[int] = None,
+        volume_annotation_name: Optional[str] = None,
+        volume_annotation_id: Optional[int] = None,
+    ) -> Layer:
+        """
+        Given a dataset, this method will save the
+        volume annotation of this annotation into that dataset
+        by creating a new layer.
+        The largest_segment_id is computed automatically, unless provided
+        explicitly.
+
+        `volume_annotation_name` has to be provided, if the annotation contains
+        multiple volume layers. Use `get_volume_annotation_names()` to look up
+        available layers.
+        """
+        volume_zip_path = self._get_volume_annotation(
+            volume_annotation_name=volume_annotation_name,
+            volume_annotation_id=volume_annotation_id,
+        ).zip
+
+        with volume_zip_path.open(mode="rb") as f:
+            data_zip = ZipFile(f)
+            wrong_files = [
+                i.filename
+                for i in data_zip.filelist
+                if ANNOTATION_WKW_PATH_RE.search(i.filename) is None
+            ]
+            assert (
+                len(wrong_files) == 0
+            ), f"The annotation contains unexpected files: {wrong_files}"
+            data_zip.extractall(dataset.path / layer_name)
+        layer = cast(
+            SegmentationLayer,
+            dataset.add_layer_for_existing_files(
+                layer_name, category="segmentation", largest_segment_id=0
+            ),
+        )
+        best_mag_view = layer.get_best_mag()
+
+        if largest_segment_id is None:
+            max_value = max(
+                best_mag_view.read(absolute_bounding_box=bbox).max()
+                for bbox in best_mag_view.get_bounding_boxes_on_disk()
+            )
+            layer.largest_segment_id = int(max_value)
+        else:
+            layer.largest_segment_id = largest_segment_id
+        return layer
+
+    @contextmanager
+    def temporary_volume_annotation_layer_copy(
+        self, volume_annotation_name: Optional[str] = None
+    ) -> Iterator[Layer]:
+
+        """
+        Given a volume annotation path, create a temporary dataset which
+        contains the volume annotation via a symlink. Yield the layer
+        so that one can work with the annotation as a wk.Dataset.
+
+        If the annotation contains multiple volume layers, the name of the
+        desired volume layer has to be passed via `volume_annotation_name`.
+        """
+
+        with TemporaryDirectory() as tmp_annotation_dir:
+            tmp_annotation_dataset_path = (
+                Path(tmp_annotation_dir) / "tmp_annotation_dataset"
+            )
+
+        input_annotation_dataset = Dataset(
+            str(tmp_annotation_dataset_path), scale=(1, 1, 1), exist_ok=True
+        )
+
+        input_annotation_layer = self.save_volume_annotation(
+            input_annotation_dataset,
+            "volume_annotation",
+            volume_annotation_name=volume_annotation_name,
+        )
+
+        yield input_annotation_layer
 
 
 def open_annotation(annotation_path: Union[str, PathLike]) -> "Annotation":
