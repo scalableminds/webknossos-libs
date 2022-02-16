@@ -183,7 +183,6 @@ class KubernetesExecutor(ClusterExecutor):
         kubernetes_client = KubernetesClient()
         [array_job_id, job_index] = job_id.split("_")
         resp = kubernetes_client.core.list_namespaced_pod(
-            name=job_id,
             namespace=self.job_resources["namespace"],
             label_selector=f"job-name={array_job_id}",
         )
