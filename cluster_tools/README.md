@@ -34,7 +34,7 @@ If you would like to configure these limits independently, you can do so by sett
 
 | Key                 | Description                                                                                                                                                                                                                                                              | Example                                 |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------- |
-| `namespace`         | Kubernetes namespace for the resources to be created.                                                                                                                                                                                                                    | `cluster-tools`                         |
+| `namespace`         | Kubernetes namespace for the resources to be created. Will be created if not existent.                                                                                                                                                                                   | `cluster-tools`                         |
 | `node_selector`     | Which nodes to utilize for the processing. Needs to be a [Kubernetes `nodeSelector` object](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/).                                                                                                   | `{"kubernetes.io/hostname": "node001"}` |
 | `image`             | The docker image for the containerized jobs to run in. The image needs to have the same version of `cluster_tools` installed.                                                                                                                                            | `scalableminds/voxelytics:latest`       |
 | `mounts`            | Additional mounts for the containerized jobs. The current working directory and the `.cfut` directory are automatically mounted.                                                                                                                                         | `["/srv", "/data"]`                     |
@@ -50,7 +50,7 @@ If you would like to configure these limits independently, you can do so by sett
 - The logs are stored in the `.cfut` directory. This is actually redundant, because Kubernetes also stores them.
 - Pods are not restarted upon error.
 - Requires Kubernetes ≥ 1.23.
-- Kubernetes cluster configuration is excepted to be the same as for `kubectl`, ie. in `~/.kube/config` or similar.
+- [Kubernetes cluster configuration](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/) is excepted to be the same as for `kubectl`, i.e. in `~/.kube/config` or similar.
 
 ## Dev Setup
 
