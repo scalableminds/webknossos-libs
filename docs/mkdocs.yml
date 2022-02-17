@@ -101,7 +101,15 @@ nav:
     - Community Support: https://forum.image.sc/tag/webknossos" target="_blank
     - Email Support: mailto:hello@webknossos.org
     - Commercial Support: https://scalableminds.com" target="_blank
-- wkcuber CLI: wkcuber/index.md
+  - GitHub: https://github.com/scalableminds/webknossos-libs/tree/master/webknossos" target="_blank
+- webKnossos Cuber:
+  - wkcuber CLI: wkcuber/index.md
+  - Getting Help:
+    - Community Support: https://forum.image.sc/tag/webknossos" target="_blank
+    - Email Support: mailto:hello@webknossos.org
+    - Commercial Support: https://scalableminds.com" target="_blank
+  - GitHub: https://github.com/scalableminds/webknossos-libs/tree/master/wkcuber" target="_blank
+  
 
 plugins:
 - search
