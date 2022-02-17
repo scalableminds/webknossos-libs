@@ -35,25 +35,25 @@ jobs:
         working-directory: cluster_tools
     steps:
       - uses: actions/checkout@v2
-      - name: Build/pull dockered-slurm image
-        run: |
-          cd ./dockered-slurm
+      # - name: Build/pull dockered-slurm image
+      #   run: |
+      #     cd ./dockered-slurm
 
-          echo docker-compose up
-          docker-compose up -d
+      #     echo docker-compose up
+      #     docker-compose up -d
 
-          # Register cluster (with retry)
-          for i in {1..5}; do
-            echo register_cluster
-            ./register_cluster.sh && s=0 && break || s=$?
-            sleep 10
-          done
+      #     # Register cluster (with retry)
+      #     for i in {1..5}; do
+      #       echo register_cluster
+      #       ./register_cluster.sh && s=0 && break || s=$?
+      #       sleep 10
+      #     done
 
-          # Run setup.py on all three nodes
-          docker exec -w /cluster_tools slurmctld bash -c "poetry install" &
-          docker exec -w /cluster_tools c1 bash -c "poetry install" &
-          docker exec -w /cluster_tools c2 bash -c "poetry install" &
-          wait
+      #     # Run setup.py on all three nodes
+      #     docker exec -w /cluster_tools slurmctld bash -c "poetry install" &
+      #     docker exec -w /cluster_tools c1 bash -c "poetry install" &
+      #     docker exec -w /cluster_tools c2 bash -c "poetry install" &
+      #     wait
       
       - name: Setup Kubernetes-in-Docker
         run: |
@@ -71,30 +71,30 @@ jobs:
           pip install poetry
           poetry install
 
-      - name: Check formatting
-        run: ./format.sh check
+      # - name: Check formatting
+      #   run: ./format.sh check
 
-      - name: Lint code
-        run: ./lint.sh
+      # - name: Lint code
+      #   run: ./lint.sh
 
-      - name: Run tests
-        run: |
-          cd tests
-          PYTEST_EXECUTORS=multiprocessing,sequential,test_pickling,debug_sequential \
-            poetry run python -m pytest -s test_all.py
-          poetry run python -m pytest -s test_multiprocessing.py
+      # - name: Run tests
+      #   run: |
+      #     cd tests
+      #     PYTEST_EXECUTORS=multiprocessing,sequential,test_pickling,debug_sequential \
+      #       poetry run python -m pytest -s test_all.py
+      #     poetry run python -m pytest -s test_multiprocessing.py
       
-      - name: Run slurm tests
-        run: |
-          cd ./dockered-slurm
-          docker exec \
-            -w /cluster_tools/tests \
-            -e PYTEST_EXECUTORS=slurm \
-            slurmctld bash -c "poetry run python -m pytest -s test_all.py test_slurm.py"
-          docker exec \
-            -w /cluster_tools/tests \
-            slurmctld bash -c "poetry run python test_deref_main.py"
-          sudo rm -r ../tests/.cfut
+      # - name: Run slurm tests
+      #   run: |
+      #     cd ./dockered-slurm
+      #     docker exec \
+      #       -w /cluster_tools/tests \
+      #       -e PYTEST_EXECUTORS=slurm \
+      #       slurmctld bash -c "poetry run python -m pytest -s test_all.py test_slurm.py"
+      #     docker exec \
+      #       -w /cluster_tools/tests \
+      #       slurmctld bash -c "poetry run python test_deref_main.py"
+      #     sudo rm -r ../tests/.cfut
       
       - name: Run kubernetes tests
         run: |

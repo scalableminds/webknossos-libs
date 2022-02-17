@@ -281,7 +281,7 @@ class ClusterExecutor(futures.Executor):
         jobid = jobids_futures[0].result()
 
         if self.debug:
-            print("job submitted: %i" % jobid, file=sys.stderr)
+            print(f"job submitted: {jobid}", file=sys.stderr)
 
         # Thread will wait for it to finish.
         self.wait_thread.waitFor(preliminary_output_pickle_path, jobid)
