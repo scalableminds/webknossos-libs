@@ -111,7 +111,7 @@ python -m wkcuber.check_equality /data/source /data/target
 
 ### Parallelization
 
-Most tasks can be configured to be executed in a parallelized manner. Via `--distribution_strategy` you can pass `multiprocessing` or `slurm`. The first can be further configured with `--jobs` and the latter via `--job_resources='{"mem": "10M"}'`. Use `--help` to get more information.
+Most tasks can be configured to be executed in a parallelized manner. Via `--distribution_strategy` you can pass `multiprocessing`, `slurm` or `kubernetes`. The first can be further configured with `--jobs` and the latter via `--job_resources='{"mem": "10M"}'`. Use `--help` to get more information.
 
 ## Development
 Make sure to install all the required dependencies using Poetry:

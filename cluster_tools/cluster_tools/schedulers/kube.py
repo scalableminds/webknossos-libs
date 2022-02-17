@@ -50,7 +50,7 @@ class KubernetesExecutor(ClusterExecutor):
 
     @classmethod
     def get_job_id_string(cls) -> Optional[str]:
-        return cls.get_current_job_id()
+        return f"{cls.get_current_job_id()}_{cls.get_job_array_index()}"
 
     def ensure_kubernetes_namespace(self):
         kubernetes_client = KubernetesClient()
@@ -96,11 +96,8 @@ class KubernetesExecutor(ClusterExecutor):
             if "umask" in self.job_resources
             else ""
         )
-        stdout_path = self.format_log_file_path(
+        log_path = self.format_log_file_path(
             self.cfut_dir, f"{array_job_id}_$JOB_COMPLETION_INDEX"
-        )
-        stderr_path = self.format_log_file_path(
-            self.cfut_dir, f"{array_job_id}_$JOB_COMPLETION_INDEX", suffix=".stderr"
         )
 
         job_manifest = {
@@ -131,7 +128,7 @@ class KubernetesExecutor(ClusterExecutor):
                                 "name": "worker",
                                 "args": [
                                     "-c",
-                                    f"{umaskline}{cmdline} 0 > >(tee -a {stdout_path}) 2> >(tee -a {stderr_path} >&2)",
+                                    f"{umaskline}{cmdline} 0 2>&1 > >(tee -a {log_path})",
                                 ],
                                 "env": [
                                     {"name": name, "value": value}

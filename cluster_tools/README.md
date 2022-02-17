@@ -50,7 +50,7 @@ If you would like to configure these limits independently, you can do so by sett
 - The logs are stored in the `.cfut` directory. This is actually redundant, because Kubernetes also stores them.
 - Pods are not restarted upon error.
 - Requires Kubernetes ≥ 1.23.
-- [Kubernetes cluster configuration](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/) is excepted to be the same as for `kubectl`, i.e. in `~/.kube/config` or similar.
+- [Kubernetes cluster configuration](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/) is expected to be the same as for `kubectl`, i.e. in `~/.kube/config` or similar.
 
 ## Dev Setup
 
