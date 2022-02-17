@@ -42,7 +42,9 @@ class KubernetesExecutor(ClusterExecutor):
 
     @staticmethod
     def get_job_array_index() -> Optional[str]:
-        return os.environ.get("JOB_COMPLETION_INDEX", None)
+        if bool(os.environ.get("JOB_IS_ARRAY_JOB", False)):
+            return os.environ.get("JOB_COMPLETION_INDEX", None)
+        return None
 
     @staticmethod
     def get_current_job_id() -> Optional[str]:
@@ -73,7 +75,11 @@ class KubernetesExecutor(ClusterExecutor):
         return self.job_resources.get("python_executable", "python")
 
     def inner_submit(
-        self, cmdline: str, job_name: Optional[str] = None, job_count: int = 1, **_
+        self,
+        cmdline: str,
+        job_name: Optional[str] = None,
+        job_count: Optional[int] = None,
+        **_,
     ):
         """Starts a Kubernetes pod that runs the specified shell command line."""
 
@@ -84,7 +90,9 @@ class KubernetesExecutor(ClusterExecutor):
         job_id_future = concurrent.futures.Future()
         job_id_future.set_result(array_job_id)
         job_id_futures = [job_id_future]
-        ranges = [(0, job_count)]
+
+        number_of_jobs = 1 if job_count is None else job_count
+        ranges = [(0, number_of_jobs)]
 
         requested_resources = {
             k: v
@@ -96,8 +104,12 @@ class KubernetesExecutor(ClusterExecutor):
             if "umask" in self.job_resources
             else ""
         )
-        log_path = self.format_log_file_path(
-            self.cfut_dir, f"{array_job_id}_$JOB_COMPLETION_INDEX"
+        log_path = (
+            self.format_log_file_path(self.cfut_dir, array_job_id)
+            if job_count is None
+            else self.format_log_file_path(
+                self.cfut_dir, f"{array_job_id}_$JOB_COMPLETION_INDEX"
+            )
         )
 
         job_manifest = {
@@ -108,8 +120,8 @@ class KubernetesExecutor(ClusterExecutor):
             },
             "spec": {
                 "completionMode": "Indexed",
-                "completions": job_count,
-                "parallelism": job_count,
+                "completions": number_of_jobs,
+                "parallelism": number_of_jobs,
                 "ttlSecondsAfterFinished": 604800,  # 7 days
                 "template": {
                     "metadata": {
@@ -139,6 +151,10 @@ class KubernetesExecutor(ClusterExecutor):
                                 ]
                                 + [
                                     {"name": "JOB_ID", "value": array_job_id},
+                                    {
+                                        "name": "JOB_IS_ARRAY_JOB",
+                                        "value": job_count is not None,
+                                    },
                                 ],
                                 "securityContext": {
                                     "runAsUser": os.getuid(),
