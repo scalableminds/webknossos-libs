@@ -20,7 +20,6 @@ def expect_spawn():
 
 
 def test_map_with_spawn():
-
     with cluster_tools.get_executor("multiprocessing", max_workers=5) as executor:
         assert executor.submit(
             expect_fork
@@ -39,13 +38,6 @@ def test_map_with_spawn():
         assert executor.submit(
             expect_spawn
         ).result(), "Multiprocessing should use spawn if requested"
-
-    with cluster_tools.get_executor(
-        "slurm", max_workers=5, start_method="spawn"
-    ) as executor:
-        assert executor.submit(
-            expect_fork
-        ).result(), "Slurm should ignore provided start_method"
 
 
 def accept_high_mem(data):
