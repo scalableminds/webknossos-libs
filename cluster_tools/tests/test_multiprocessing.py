@@ -75,6 +75,15 @@ def test_high_ram_usage():
     del os.environ["MULTIPROCESSING_VIA_IO"]
 
 
+def test_executor_args():
+    def pass_with(exc):
+        with exc:
+            pass
+
+    pass_with(cluster_tools.get_executor("multiprocessing", non_existent_arg=True))
+    # Test should succeed if the above lines don't raise an exception
+
+
 def test_multiprocessing_validation():
 
     import sys

@@ -31,29 +31,45 @@ def raise_if(msg, bool):
 
 
 def get_executors(with_debug_sequential=False):
-    executors = {
-        "slurm": cluster_tools.get_executor(
-            "slurm", debug=True, job_resources={"mem": "100M"}
-        ),
-        "kubernetes": cluster_tools.get_executor(
-            "kubernetes", debug=True, job_resources={"memory": "1G"}
-        ),
-        "multiprocessing": cluster_tools.get_executor("multiprocessing", max_workers=5),
-        "sequential": cluster_tools.get_executor("sequential"),
-        "test_pickling": cluster_tools.get_executor("test_pickling"),
-        # "pbs": cluster_tools.get_executor("pbs"),
+    executor_keys = {
+        "slurm",
+        "kubernetes",
+        "multiprocessing",
+        "sequential",
+        "test_pickling",
     }
-
     if with_debug_sequential:
-        executors["debug_sequential"] = cluster_tools.get_executor("debug_sequential")
+        executor_keys.add("debug_sequential")
 
     if "PYTEST_EXECUTORS" in os.environ:
-        return [
-            e
-            for key, e in executors.items()
-            if key in os.environ["PYTEST_EXECUTORS"].split(",")
-        ]
-    return list(executors.values())
+        executor_keys = executor_keys.intersection(
+            os.environ["PYTEST_EXECUTORS"].split(",")
+        )
+
+    executors = []
+    if "slurm" in executor_keys:
+        executors.append(
+            cluster_tools.get_executor(
+                "slurm", debug=True, job_resources={"mem": "100M"}
+            )
+        )
+    if "kubernetes" in executor_keys:
+        executors.append(
+            cluster_tools.get_executor(
+                "kubernetes", debug=True, job_resources={"memory": "1G"}
+            )
+        )
+    if "multiprocessing" in executor_keys:
+        executors.append(cluster_tools.get_executor("multiprocessing", max_workers=5))
+    if "sequential" in executor_keys:
+        executors.append(cluster_tools.get_executor("sequential"))
+    if "test_pickling" in executor_keys:
+        executors.append(cluster_tools.get_executor("test_pickling"))
+    if "pbs" in executor_keys:
+        executors.append(cluster_tools.get_executor("pbs"))
+    if "debug_sequential" in executor_keys:
+        executors.append(cluster_tools.get_executor("debug_sequential"))
+    return executors
 
 
 @pytest.mark.skip(
@@ -306,14 +322,7 @@ def test_executor_args():
         with exc:
             pass
 
-    pass_with(
-        cluster_tools.get_executor(
-            "slurm", job_resources={"mem": "10M"}, non_existent_arg=True
-        )
-    )
-    pass_with(cluster_tools.get_executor("multiprocessing", non_existent_arg=True))
     pass_with(cluster_tools.get_executor("sequential", non_existent_arg=True))
-
     # Test should succeed if the above lines don't raise an exception
 
 

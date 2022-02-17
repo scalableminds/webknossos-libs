@@ -381,6 +381,19 @@ def test_preliminary_file_submit():
             ), "Preliminary output file should not exist anymore"
 
 
+def test_executor_args():
+    def pass_with(exc):
+        with exc:
+            pass
+
+    pass_with(
+        cluster_tools.get_executor(
+            "slurm", job_resources={"mem": "10M"}, non_existent_arg=True
+        )
+    )
+    # Test should succeed if the above lines don't raise an exception
+
+
 def test_preliminary_file_map():
 
     a_range = range(1, 4)
