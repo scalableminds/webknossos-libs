@@ -50,9 +50,10 @@ jobs:
           done
 
           # Run setup.py on all three nodes
-          docker exec -d -w /cluster_tools slurmctld bash -c "poetry install"
-          docker exec -d -w /cluster_tools c1 bash -c "poetry install"
-          docker exec -d -w /cluster_tools c2 bash -c "poetry install"
+          docker exec -w /cluster_tools slurmctld bash -c "poetry install" &
+          docker exec -w /cluster_tools c1 bash -c "poetry install" &
+          docker exec -w /cluster_tools c2 bash -c "poetry install" &
+          wait
       
       - name: Setup Kubernetes-in-Docker
         run: |
@@ -88,12 +89,10 @@ jobs:
           cd ./dockered-slurm
           docker exec \
             -w /cluster_tools/tests \
-            -u $(id -u):$(id -g) \
             -e PYTEST_EXECUTORS=slurm \
             slurmctld bash -c "poetry run python -m pytest -s test_all.py test_slurm.py"
           docker exec \
             -w /cluster_tools/tests \
-            -u $(id -u):$(id -g) \
             slurmctld bash -c "poetry run python test_deref_main.py"
           sudo rm -r ../tests/.cfut
       
