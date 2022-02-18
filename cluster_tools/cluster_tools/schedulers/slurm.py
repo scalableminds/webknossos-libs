@@ -68,8 +68,8 @@ class SlurmExecutor(ClusterExecutor):
         return os.environ.get("SLURM_JOB_ID")
 
     @staticmethod
-    def format_log_file_name(jobid, suffix=".stdout"):
-        return "slurmpy.{}.log{}".format(str(jobid), suffix)
+    def format_log_file_name(job_id_with_index, suffix=".stdout"):
+        return "slurmpy.{}.log{}".format(str(job_id_with_index), suffix)
 
     @classmethod
     def get_job_id_string(cls):
@@ -250,13 +250,15 @@ class SlurmExecutor(ClusterExecutor):
 
         return job_id_futures, ranges
 
-    def check_for_crashed_job(self, job_id) -> Union["failed", "ignore", "completed"]:
+    def check_for_crashed_job(
+        self, job_id_with_index
+    ) -> Union["failed", "ignore", "completed"]:
 
         job_states = []
 
         # If the output file was not found, we determine the job status so that
         # we can recognize jobs which failed hard (in this case, they don't produce output files)
-        stdout, _, exit_code = call("scontrol show job {}".format(job_id))
+        stdout, _, exit_code = call("scontrol show job {}".format(job_id_with_index))
         stdout = stdout.decode("utf8")
 
         if exit_code == 0:
@@ -268,7 +270,9 @@ class SlurmExecutor(ClusterExecutor):
                     "Could not extract slurm job state? {}".format(stdout[0:10])
                 )
         else:
-            stdout, _, exit_code = call("sacct -j {} -o State -P".format(job_id))
+            stdout, _, exit_code = call(
+                "sacct -j {} -o State -P".format(job_id_with_index)
+            )
             stdout = stdout.decode("utf8")
 
             if exit_code == 0:
@@ -290,7 +294,7 @@ class SlurmExecutor(ClusterExecutor):
         elif matches_states(SLURM_STATES["Unclear"]):
             logging.warning(
                 "The job state for {} is {}. It's unclear whether the job will recover. Will wait further".format(
-                    job_id, job_states
+                    job_id_with_index, job_states
                 )
             )
             return "ignore"
@@ -298,7 +302,9 @@ class SlurmExecutor(ClusterExecutor):
             return "completed"
         else:
             logging.error(
-                "Unhandled slurm job state for job id {}? {}".format(job_id, job_states)
+                "Unhandled slurm job state for job id {}? {}".format(
+                    job_id_with_index, job_states
+                )
             )
             return "ignore"
 

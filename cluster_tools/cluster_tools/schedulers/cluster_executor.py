@@ -104,7 +104,9 @@ class ClusterExecutor(futures.Executor):
         sys.exit(130)
 
     @abstractmethod
-    def check_for_crashed_job(self, job_id) -> Union["failed", "ignore", "completed"]:
+    def check_for_crashed_job(
+        self, job_id_with_index
+    ) -> Union["failed", "ignore", "completed"]:
         pass
 
     def _start(self, workerid, job_count=None, job_name=None):
@@ -145,12 +147,14 @@ class ClusterExecutor(futures.Executor):
 
     @staticmethod
     @abstractmethod
-    def format_log_file_name(jobid, suffix=".stdout"):
+    def format_log_file_name(job_id_with_index, suffix=".stdout"):
         pass
 
     @classmethod
-    def format_log_file_path(cls, cfut_dir, jobid, suffix=".stdout"):
-        return os.path.join(cfut_dir, cls.format_log_file_name(jobid, suffix))
+    def format_log_file_path(cls, cfut_dir, job_id_with_index, suffix=".stdout"):
+        return os.path.join(
+            cfut_dir, cls.format_log_file_name(job_id_with_index, suffix)
+        )
 
     @classmethod
     @abstractmethod
@@ -292,10 +296,12 @@ class ClusterExecutor(futures.Executor):
         fut.cluster_jobid = jobid
         return fut
 
-    def get_workerid_with_index(self, workerid, index):
+    @classmethod
+    def get_workerid_with_index(cls, workerid, index):
         return workerid + "_" + str(index)
 
-    def get_jobid_with_index(self, jobid, index):
+    @classmethod
+    def get_jobid_with_index(cls, jobid, index):
         return str(jobid) + "_" + str(index)
 
     def get_function_pickle_path(self, workerid):

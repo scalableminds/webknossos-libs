@@ -37,13 +37,13 @@ class KubernetesExecutor(ClusterExecutor):
             self.job_resources["mounts"] = []
 
     @staticmethod
-    def format_log_file_name(jobid: str, suffix=".stdout") -> str:
-        return "kube.{}.log{}".format(str(jobid), suffix)
+    def format_log_file_name(job_id_with_index: str, suffix=".stdout") -> str:
+        return "kube.{}.log{}".format(str(job_id_with_index), suffix)
 
     @staticmethod
-    def get_job_array_index() -> Optional[str]:
+    def get_job_array_index() -> Optional[int]:
         if bool(os.environ.get("JOB_IS_ARRAY_JOB", False)):
-            return os.environ.get("JOB_COMPLETION_INDEX", None)
+            return int(os.environ["JOB_COMPLETION_INDEX"])
         return None
 
     @staticmethod
@@ -52,7 +52,11 @@ class KubernetesExecutor(ClusterExecutor):
 
     @classmethod
     def get_job_id_string(cls) -> Optional[str]:
-        return f"{cls.get_current_job_id()}_{cls.get_job_array_index()}"
+        job_id = cls.get_current_job_id()
+        job_index = cls.get_job_array_index()
+        if job_index is None:
+            return job_id
+        return cls.get_jobid_with_index(job_id, job_index)
 
     def ensure_kubernetes_namespace(self):
         kubernetes_client = KubernetesClient()
@@ -85,14 +89,15 @@ class KubernetesExecutor(ClusterExecutor):
 
         kubernetes_client = KubernetesClient()
         self.ensure_kubernetes_namespace()
-        array_job_id = str(uuid4())
+        job_id = str(uuid4())
 
         job_id_future = concurrent.futures.Future()
-        job_id_future.set_result(array_job_id)
+        job_id_future.set_result(job_id)
         job_id_futures = [job_id_future]
 
-        number_of_jobs = 1 if job_count is None else job_count
-        ranges = [(0, number_of_jobs)]
+        is_array_job = job_count is not None
+        number_of_subjobs = job_count if is_array_job else 1
+        ranges = [(0, number_of_subjobs)]
 
         requested_resources = {
             k: v
@@ -105,29 +110,30 @@ class KubernetesExecutor(ClusterExecutor):
             else ""
         )
         log_path = (
-            self.format_log_file_path(self.cfut_dir, array_job_id)
-            if job_count is None
-            else self.format_log_file_path(
-                self.cfut_dir, f"{array_job_id}_$JOB_COMPLETION_INDEX"
-            )
+            self.format_log_file_path(self.cfut_dir, f"{job_id}_$JOB_COMPLETION_INDEX")
+            if is_array_job
+            else self.format_log_file_path(self.cfut_dir, job_id)
         )
 
         job_manifest = {
             "apiVersion": "batch/v1",
             "kind": "Job",
             "metadata": {
-                "name": array_job_id,
+                "name": job_id,
             },
             "spec": {
                 "completionMode": "Indexed",
-                "completions": number_of_jobs,
-                "parallelism": number_of_jobs,
+                "completions": number_of_subjobs,
+                "parallelism": number_of_subjobs,
                 "ttlSecondsAfterFinished": 604800,  # 7 days
                 "template": {
                     "metadata": {
                         "annotations": {
-                            "cluster-tools.scalableminds.com/job_id": array_job_id,
-                            "cluster-tools.scalableminds.com/job_name": job_name,
+                            "cluster-tools.scalableminds.com/job-id": job_id,
+                            "cluster-tools.scalableminds.com/job-is-array-job": str(
+                                is_array_job
+                            ),
+                            "cluster-tools.scalableminds.com/job-name": job_name,
                         },
                     },
                     "spec": {
@@ -150,10 +156,10 @@ class KubernetesExecutor(ClusterExecutor):
                                     is not None
                                 ]
                                 + [
-                                    {"name": "JOB_ID", "value": array_job_id},
+                                    {"name": "JOB_ID", "value": job_id},
                                     {
                                         "name": "JOB_IS_ARRAY_JOB",
-                                        "value": str(job_count is not None),
+                                        "value": str(is_array_job),
                                     },
                                 ],
                                 "securityContext": {
@@ -214,13 +220,15 @@ class KubernetesExecutor(ClusterExecutor):
         return job_id_futures, ranges
 
     def check_for_crashed_job(
-        self, job_id: str
+        self, job_id_with_index: str
     ) -> Union["failed", "ignore", "completed"]:
         kubernetes_client = KubernetesClient()
-        [array_job_id, job_index] = job_id.split("_")
+        [job_id, job_index] = (
+            job_id_with_index.split("_") if "_" in job_id else [job_id, 0]
+        )
         resp = kubernetes_client.core.list_namespaced_pod(
             namespace=self.job_resources["namespace"],
-            label_selector=f"job-name={array_job_id}",
+            label_selector=f"job-name={job_id}",
         )
         for pod in resp.items:
             if (
@@ -260,16 +268,26 @@ class KubernetesExecutor(ClusterExecutor):
                 )
                 for pod in resp.items:
                     if pod.status.phase in ("Pending", "Running", "Unknown"):
-                        output.append(
-                            self.get_jobid_with_index(
-                                pod.metadata.annotations[
-                                    "cluster-tools.scalableminds.com/job_id"
-                                ],
-                                int(
-                                    pod.metadata.annotations[
-                                        "batch.kubernetes.io/job-completion-index"
-                                    ]
-                                ),
-                            )
+                        job_id = pod.metadata.annotations[
+                            "cluster-tools.scalableminds.com/job-id"
+                        ]
+                        is_array_job = bool(
+                            pod.metadata.annotations[
+                                "cluster-tools.scalableminds.com/job-is-array-job"
+                            ]
                         )
+                        if is_array_job:
+                            job_index = int(
+                                pod.metadata.annotations[
+                                    "batch.kubernetes.io/job-completion-index"
+                                ]
+                            )
+                            output.append(
+                                self.get_jobid_with_index(
+                                    job_id,
+                                    job_index,
+                                )
+                            )
+                        else:
+                            output.append(job_id)
         return output
