@@ -69,7 +69,7 @@ _ANNOTATION_URL_REGEX = re.compile(
 
 
 @attr.define
-class _VolumeAnnotation:
+class _VolumeLayer:
     id: int
     name: str
     fallback_layer_name: Optional[str]
@@ -98,7 +98,7 @@ class Annotation:
     metadata: Dict[str, str] = attr.Factory(dict)
     task_bounding_box: Optional[IntVector6] = None
     user_bounding_boxes: Optional[List[IntVector6]] = None
-    _volume_annotations: List[_VolumeAnnotation] = attr.field(factory=list, init=False)
+    _volume_layers: List[_VolumeLayer] = attr.field(factory=list, init=False)
 
     def __attrs_post_init__(self) -> None:
         if self.skeleton is None:
@@ -245,21 +245,21 @@ class Annotation:
             len(nml_paths) == 1
         ), f"There must be exactly one nml file in the zip-file, buf found {len(nml_paths)}."
         annotation, nml = cls._load_from_nml(nml_paths[0])
-        volume_annotations = []
+        volume_layers = []
         for volume in nml.volumes:
             fitting_volume_paths = [i for i in paths if str(i.at) == volume.location]
             assert (
                 len(fitting_volume_paths) == 1
             ), f"Couldn't find the file {volume.location} for the volume annotation {volume.name or volume.id}"
-            volume_annotations.append(
-                _VolumeAnnotation(
+            volume_layers.append(
+                _VolumeLayer(
                     id=volume.id,
                     name="Volume" if volume.name is None else volume.name,
                     fallback_layer_name=volume.fallback_layer,
                     zip=fitting_volume_paths[0],
                 )
             )
-        annotation._volume_annotations = volume_annotations
+        annotation._volume_layers = volume_layers
         return annotation
 
     def save(self, path: Union[str, PathLike]) -> None:
@@ -278,7 +278,7 @@ class Annotation:
             ) as zipfile:
                 self._write_to_zip(zipfile)
         else:
-            assert len(self._volume_annotations) == 0, (
+            assert len(self._volume_layers) == 0, (
                 f"Annotation {self.name} contains volume annotations and cannot be saved as an NML file. "
                 + "Please use a .zip path instead."
             )
@@ -301,89 +301,84 @@ class Annotation:
             nml_str = buffer.getvalue().decode("utf-8")
         zipfile.writestr(self.name + ".nml", nml_str)
 
-        for volume_annotation in self._volume_annotations:
+        for volume_layer in self._volume_layers:
             zipfile.writestr(
-                volume_annotation._default_zip_name(),
-                volume_annotation.zip.read_bytes(),
+                volume_layer._default_zip_name(),
+                volume_layer.zip.read_bytes(),
             )
 
-    def get_volume_annotation_names(self) -> Iterable[str]:
-        return (i.name for i in self._volume_annotations)
+    def get_volume_layer_names(self) -> Iterable[str]:
+        return (i.name for i in self._volume_layers)
 
-    # TODO add more methods, e.g. add_volume_annotation
+    # TODO add more methods, e.g. add_volume_layer
 
-    def _get_volume_annotation(
+    def _get_volume_layer(
         self,
-        volume_annotation_name: Optional[str],
-        volume_annotation_id: Optional[int],
-    ) -> _VolumeAnnotation:
-        assert len(self._volume_annotations) > 0, "No volume annotations present."
+        volume_layer_name: Optional[str],
+        volume_layer_id: Optional[int],
+    ) -> _VolumeLayer:
+        assert len(self._volume_layers) > 0, "No volume annotations present."
 
-        if len(self._volume_annotations) == 1:
-            volume_layer = self._volume_annotations[0]
-            if (
-                volume_annotation_id is not None
-                and volume_annotation_id != volume_layer.id
-            ):
+        if len(self._volume_layers) == 1:
+            volume_layer = self._volume_layers[0]
+            if volume_layer_id is not None and volume_layer_id != volume_layer.id:
                 warnings.warn(
-                    f"Only a single volume annotation is present and its id {volume_layer.id} does not fit the given id {volume_annotation_id}."
+                    f"Only a single volume annotation is present and its id {volume_layer.id} does not fit the given id {volume_layer_id}."
                 )
             if (
-                volume_annotation_name is not None
+                volume_layer_name is not None
                 and volume_layer.name is not None
-                and volume_annotation_name != volume_layer.name
+                and volume_layer_name != volume_layer.name
             ):
                 warnings.warn(
                     f"Only a single volume annotation is present and its name {volume_layer.name} "
-                    + f"does not fit the given name {volume_annotation_name}."
+                    + f"does not fit the given name {volume_layer_name}."
                 )
             return volume_layer
 
-        if volume_annotation_id is not None:
-            for volume_layer in self._volume_annotations:
-                if volume_annotation_id == volume_layer.id:
+        if volume_layer_id is not None:
+            for volume_layer in self._volume_layers:
+                if volume_layer_id == volume_layer.id:
                     if (
-                        volume_annotation_name is not None
+                        volume_layer_name is not None
                         and volume_layer.name is not None
-                        and volume_annotation_name != volume_layer.name
+                        and volume_layer_name != volume_layer.name
                     ):
                         warnings.warn(
-                            f"The volume annotation was matched by id {volume_annotation_id}, "
-                            + f"but its name {volume_layer.name} does not fit the given name {volume_annotation_name}."
+                            f"The volume annotation was matched by id {volume_layer_id}, "
+                            + f"but its name {volume_layer.name} does not fit the given name {volume_layer_name}."
                         )
                     return volume_layer
-            available_ids = [
-                volume_layer.id for volume_layer in self._volume_annotations
-            ]
+            available_ids = [volume_layer.id for volume_layer in self._volume_layers]
             raise ValueError(
-                f"Couldn't find a volume annotation with the id {volume_annotation_id}, available are {available_ids}."
+                f"Couldn't find a volume annotation with the id {volume_layer_id}, available are {available_ids}."
             )
-        elif volume_annotation_name is not None:
-            fitting_volume_annotations = [
-                i for i in self._volume_annotations if i.name == volume_annotation_name
+        elif volume_layer_name is not None:
+            fitting_volume_layers = [
+                i for i in self._volume_layers if i.name == volume_layer_name
             ]
             assert (
-                len(fitting_volume_annotations) != 0
-            ), f"The specified volume name {volume_annotation_name} could not be found in this annotation."
-            assert len(fitting_volume_annotations) == 1, (
-                f"More than one volume annotation has the name {volume_annotation_name}. "
-                + "Please specify the exact annotation via the volume_annotation_id argument. "
-                + f"The matching annotations have the ids {[i.id for i in fitting_volume_annotations]}"
+                len(fitting_volume_layers) != 0
+            ), f"The specified volume name {volume_layer_name} could not be found in this annotation."
+            assert len(fitting_volume_layers) == 1, (
+                f"More than one volume annotation has the name {volume_layer_name}. "
+                + "Please specify the exact annotation via the volume_layer_id argument. "
+                + f"The matching annotations have the ids {[i.id for i in fitting_volume_layers]}"
             )
-            return fitting_volume_annotations[0]
+            return fitting_volume_layers[0]
         else:
             raise ValueError(
                 "The annotation contains multiple volume layers. "
-                + "Please specify which layer should be used via volume_annotation_name or volume_annotation_id."
+                + "Please specify which layer should be used via volume_layer_name or volume_layer_id."
             )
 
-    def save_volume_annotation(
+    def export_volume_layer_to_dataset(
         self,
         dataset: Dataset,
-        layer_name: str = "volume_annotation",
+        layer_name: str = "volume_layer",
         largest_segment_id: Optional[int] = None,
-        volume_annotation_name: Optional[str] = None,
-        volume_annotation_id: Optional[int] = None,
+        volume_layer_name: Optional[str] = None,
+        volume_layer_id: Optional[int] = None,
     ) -> Layer:
         """
         Given a dataset, this method will save the
@@ -392,13 +387,13 @@ class Annotation:
         The largest_segment_id is computed automatically, unless provided
         explicitly.
 
-        `volume_annotation_name` has to be provided, if the annotation contains
-        multiple volume layers. Use `get_volume_annotation_names()` to look up
+        `volume_layer_name` has to be provided, if the annotation contains
+        multiple volume layers. Use `get_volume_layer_names()` to look up
         available layers.
         """
-        volume_zip_path = self._get_volume_annotation(
-            volume_annotation_name=volume_annotation_name,
-            volume_annotation_id=volume_annotation_id,
+        volume_zip_path = self._get_volume_layer(
+            volume_layer_name=volume_layer_name,
+            volume_layer_id=volume_layer_id,
         ).zip
 
         with volume_zip_path.open(mode="rb") as f:
@@ -431,8 +426,8 @@ class Annotation:
         return layer
 
     @contextmanager
-    def temporary_volume_annotation_layer_copy(
-        self, volume_annotation_name: Optional[str] = None
+    def temporary_volume_layer_copy(
+        self, volume_layer_name: Optional[str] = None
     ) -> Iterator[Layer]:
 
         """
@@ -441,7 +436,7 @@ class Annotation:
         so that one can work with the annotation as a wk.Dataset.
 
         If the annotation contains multiple volume layers, the name of the
-        desired volume layer has to be passed via `volume_annotation_name`.
+        desired volume layer has to be passed via `volume_layer_name`.
         """
 
         with TemporaryDirectory() as tmp_annotation_dir:
@@ -453,10 +448,10 @@ class Annotation:
             str(tmp_annotation_dataset_path), scale=(1, 1, 1), exist_ok=True
         )
 
-        input_annotation_layer = self.save_volume_annotation(
+        input_annotation_layer = self.export_volume_layer_to_dataset(
             input_annotation_dataset,
-            "volume_annotation",
-            volume_annotation_name=volume_annotation_name,
+            "volume_layer",
+            volume_layer_name=volume_layer_name,
         )
 
         yield input_annotation_layer

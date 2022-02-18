@@ -163,7 +163,7 @@ def annotation_to_nml(  # pylint: disable=dangerous-default-value
     groups = annotation.skeleton.as_nml_group().children
 
     volumes = []
-    for volume in annotation._volume_annotations:
+    for volume in annotation._volume_layers:
         volumes.append(
             wknml.Volume(
                 id=volume.id,
