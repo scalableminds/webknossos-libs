@@ -194,7 +194,7 @@ class KubernetesExecutor(ClusterExecutor):
                                 "volumeMounts": [
                                     {
                                         "name": volume_name_from_path(mount),
-                                        "mountPath": mount,
+                                        "mountPath": str(mount),
                                     }
                                     for mount in mounts
                                 ],
@@ -205,7 +205,7 @@ class KubernetesExecutor(ClusterExecutor):
                         "volumes": [
                             {
                                 "name": volume_name_from_path(mount),
-                                "hostPath": {"path": mount},
+                                "hostPath": {"path": str(mount)},
                             }
                             for mount in mounts
                         ],
