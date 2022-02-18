@@ -42,16 +42,16 @@ class KubernetesExecutor(ClusterExecutor):
 
     @staticmethod
     def get_job_array_index() -> Optional[int]:
-        if bool(os.environ.get("JOB_IS_ARRAY_JOB", False)):
+        if bool(os.environ["JOB_IS_ARRAY_JOB"]):
             return int(os.environ["JOB_COMPLETION_INDEX"])
         return None
 
     @staticmethod
-    def get_current_job_id() -> Optional[str]:
-        return os.environ.get("JOB_ID")
+    def get_current_job_id() -> str:
+        return os.environ["JOB_ID"]
 
     @classmethod
-    def get_job_id_string(cls) -> Optional[str]:
+    def get_job_id_string(cls) -> str:
         job_id = cls.get_current_job_id()
         job_index = cls.get_job_array_index()
         if job_index is None:
@@ -133,7 +133,9 @@ class KubernetesExecutor(ClusterExecutor):
                             "cluster-tools.scalableminds.com/job-is-array-job": str(
                                 is_array_job
                             ),
-                            "cluster-tools.scalableminds.com/job-name": job_name,
+                            "cluster-tools.scalableminds.com/job-name": job_name
+                            if job_name is not None
+                            else "",
                         },
                     },
                     "spec": {
