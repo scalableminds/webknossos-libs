@@ -79,9 +79,11 @@ jobs:
           poetry install
 
       - name: Check formatting
+        if: ${{ matrix.executors == 'multiprocessing' }}
         run: ./format.sh check
 
       - name: Lint code
+        if: ${{ matrix.executors == 'multiprocessing' }}
         run: ./lint.sh
 
       - name: Run multiprocessing tests
