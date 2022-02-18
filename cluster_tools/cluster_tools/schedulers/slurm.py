@@ -55,6 +55,10 @@ class SlurmExecutor(ClusterExecutor):
         super().__init__(*args, **kwargs)
         self.submit_threads = []
 
+    @classmethod
+    def executor_key(cls) -> str:
+        return "slurm"
+
     @staticmethod
     def get_job_array_index():
         return os.environ.get("SLURM_ARRAY_TASK_ID", None)

@@ -36,19 +36,27 @@ class KubernetesExecutor(ClusterExecutor):
         if "mounts" not in self.job_resources:
             self.job_resources["mounts"] = []
 
+    @classmethod
+    def executor_key(cls) -> str:
+        return "kubernetes"
+
     @staticmethod
     def format_log_file_name(job_id_with_index: str, suffix=".stdout") -> str:
         return "kube.{}.log{}".format(str(job_id_with_index), suffix)
 
     @staticmethod
     def get_job_array_index() -> Optional[int]:
-        if bool(os.environ["JOB_IS_ARRAY_JOB"]):
+        if (
+            "JOB_IS_ARRAY_JOB" in os.environ
+            and "JOB_COMPLETION_INDEX" in os.environ
+            and os.environ["JOB_IS_ARRAY_JOB"] == "True"
+        ):
             return int(os.environ["JOB_COMPLETION_INDEX"])
         return None
 
     @staticmethod
-    def get_current_job_id() -> str:
-        return os.environ["JOB_ID"]
+    def get_current_job_id() -> Optional[str]:
+        return os.environ.get("JOB_ID", None)
 
     @classmethod
     def get_job_id_string(cls) -> str:
@@ -273,10 +281,11 @@ class KubernetesExecutor(ClusterExecutor):
                         job_id = pod.metadata.annotations[
                             "cluster-tools.scalableminds.com/job-id"
                         ]
-                        is_array_job = bool(
+                        is_array_job = (
                             pod.metadata.annotations[
                                 "cluster-tools.scalableminds.com/job-is-array-job"
                             ]
+                            == "True"
                         )
                         if is_array_job:
                             job_index = int(

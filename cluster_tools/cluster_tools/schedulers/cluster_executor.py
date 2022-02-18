@@ -93,6 +93,11 @@ class ClusterExecutor(futures.Executor):
         if "logging_setup_fn" in kwargs:
             self.meta_data["logging_setup_fn"] = kwargs["logging_setup_fn"]
 
+    @classmethod
+    @abstractmethod
+    def executor_key(cls):
+        pass
+
     def handle_kill(self, _signum, _frame):
         self.wait_thread.stop()
         job_ids = ",".join(str(id) for id in self.jobs.keys())
@@ -112,11 +117,11 @@ class ClusterExecutor(futures.Executor):
     def _start(self, workerid, job_count=None, job_name=None):
         """Start job(s) with the given worker ID and return IDs
         identifying the new job(s). The job should run ``python -m
-        cfut.remote <workerid>.
+        cfut.remote <executorkey> <workerid>.
         """
 
         jobids_futures, job_index_ranges = self.inner_submit(
-            f"{self.get_python_executable()} -m cluster_tools.remote {workerid} {self.cfut_dir}",
+            f"{self.get_python_executable()} -m cluster_tools.remote {self.executor_key()} {workerid} {self.cfut_dir}",
             job_name=self.job_name if self.job_name is not None else job_name,
             additional_setup_lines=self.additional_setup_lines,
             job_count=job_count,

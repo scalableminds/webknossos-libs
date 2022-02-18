@@ -30,6 +30,7 @@ jobs:
     needs: changes
     if: ${{ needs.changes.outputs.cluster_tools == 'true' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     defaults:
       run:
         working-directory: cluster_tools

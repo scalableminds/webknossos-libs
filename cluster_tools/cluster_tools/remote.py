@@ -12,10 +12,12 @@ from cluster_tools.util import with_preliminary_postfix
 from . import pickling
 
 
-def get_executor_class():
-    for executor in [SlurmExecutor, PBSExecutor, KubernetesExecutor]:
-        if executor.get_current_job_id() is not None:
-            return executor
+def get_executor_class(executor_key):
+    return {
+        "slurm": SlurmExecutor,
+        "pbs": PBSExecutor,
+        "kubernetes": KubernetesExecutor,
+    }.get(executor_key)
 
 
 def format_remote_exc():
@@ -24,16 +26,16 @@ def format_remote_exc():
     return "".join(traceback.format_exception(typ, value, tb))
 
 
-def get_custom_main_path(workerid):
+def get_custom_main_path(workerid, executor):
     custom_main_path = None
-    main_meta_path = get_executor_class().get_main_meta_path(cfut_dir, workerid)
+    main_meta_path = executor.get_main_meta_path(cfut_dir, workerid)
     if os.path.exists(main_meta_path):
         with open(main_meta_path, "r") as file:
             custom_main_path = file.read()
     return custom_main_path
 
 
-def worker(workerid, job_array_index, job_array_index_offset, cfut_dir):
+def worker(executor, workerid, job_array_index, job_array_index_offset, cfut_dir):
     """Called to execute a job on a remote host."""
 
     if job_array_index is not None:
@@ -43,13 +45,12 @@ def worker(workerid, job_array_index, job_array_index_offset, cfut_dir):
     else:
         workerid_with_idx = worker_id
 
-    executor = get_executor_class()
     try:
         input_file_name = executor.format_infile_name(cfut_dir, workerid_with_idx)
         print("trying to read: ", input_file_name)
         print("working dir: ", os.getcwd())
 
-        custom_main_path = get_custom_main_path(workerid)
+        custom_main_path = get_custom_main_path(workerid, executor)
         with open(input_file_name, "rb") as f:
             unpickled_tuple = pickling.load(f, custom_main_path)
             if len(unpickled_tuple) == 4:
@@ -130,12 +131,14 @@ def setup_logging(meta_data, executor, cfut_dir):
 
 
 if __name__ == "__main__":
-    worker_id = sys.argv[1]
-    cfut_dir = sys.argv[2]
-    job_array_index_offset = sys.argv[3] if len(sys.argv) > 3 else "0"
-    job_array_index = get_executor_class().get_job_array_index()
+    executor_key = sys.argv[1]
+    executor = get_executor_class(executor_key)
+    worker_id = sys.argv[2]
+    cfut_dir = sys.argv[3]
+    job_array_index_offset = sys.argv[4] if len(sys.argv) > 4 else "0"
+    job_array_index = executor.get_job_array_index()
 
-    worker(worker_id, job_array_index, job_array_index_offset, cfut_dir)
+    worker(executor, worker_id, job_array_index, job_array_index_offset, cfut_dir)
     # This is a workaround for the case that some subprocesses are still hanging around and are waited for.
     # If this point is reached, results were written to disk and we can "safely" shut down everything.
     sys.exit()

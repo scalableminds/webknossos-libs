@@ -31,6 +31,10 @@ PBS_STATES = {
 
 
 class PBSExecutor(ClusterExecutor):
+    @classmethod
+    def executor_key(cls) -> str:
+        return "pbs"
+
     @staticmethod
     def get_job_array_index():
         return os.environ.get("PBS_ARRAYID", None)
