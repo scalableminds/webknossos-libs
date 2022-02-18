@@ -100,7 +100,6 @@ jobs:
         run: |
           cd tests
           docker run \
-            -it \
             -v $(pwd):$(pwd) \
             -v $HOME/.kube:/root/.kube \
             -w $(pwd) \
