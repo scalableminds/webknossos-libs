@@ -64,8 +64,8 @@ jobs:
           ./kind create cluster --config=tests/cluster-config.yaml
           ./kind export kubeconfig
 
-          docker build -f tests/Dockerfile -t scalableminds/cluster_tools:latest .
-          ./kind load docker-image scalableminds/cluster_tools:latest
+          docker build -f tests/Dockerfile -t scalableminds/cluster-tools:latest .
+          ./kind load docker-image scalableminds/cluster-tools:latest
 
       # - name: Install dependencies (without docker)
       #   run: |
@@ -106,7 +106,7 @@ jobs:
             -w $(pwd) \
             --network host \
             -e PYTEST_EXECUTORS=kubernetes \
-            scalableminds/cluster_tools:latest \
+            scalableminds/cluster-tools:latest \
             bash -c "python -m pytest -s -v test_all.py test_kubernetes.py"
           sudo rm -rf .cfut
 

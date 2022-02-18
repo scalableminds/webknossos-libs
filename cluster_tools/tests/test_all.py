@@ -56,7 +56,12 @@ def get_executors(with_debug_sequential=False):
     if "kubernetes" in executor_keys:
         executors.append(
             cluster_tools.get_executor(
-                "kubernetes", debug=True, job_resources={"memory": "1G"}
+                "kubernetes",
+                debug=True,
+                job_resources={
+                    "memory": "1G",
+                    "image": "scalableminds/cluster-tools:latest",
+                },
             )
         )
     if "multiprocessing" in executor_keys:

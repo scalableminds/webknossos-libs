@@ -17,7 +17,7 @@ def test_simple():
         job_resources={
             "memory": "100M",
             "python_executable": "python",
-            "image": "scalableminds/cluster_tools:latest",
+            "image": "scalableminds/cluster-tools:latest",
             "node_selector": {},
             "namespace": "cluster-tools",
         },
@@ -33,7 +33,7 @@ def test_mounts():
         job_resources={
             "memory": "100M",
             "python_executable": "python",
-            "image": "scalableminds/cluster_tools:latest",
+            "image": "scalableminds/cluster-tools:latest",
             "node_selector": {},
             "namespace": "cluster-tools",
             "mounts": [parent_dir],
