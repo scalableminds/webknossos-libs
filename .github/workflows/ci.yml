@@ -41,7 +41,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Build/pull dockered-slurm image
-        if: ${{ matrix.executors == "slurm" }}
+        if: ${{ matrix.executors == 'slurm' }}
         run: |
           cd ./dockered-slurm
 
@@ -62,7 +62,7 @@ jobs:
           wait
       
       - name: Setup Kubernetes-in-Docker
-        if: ${{ matrix.executors == "kubernetes" }}
+        if: ${{ matrix.executors == 'kubernetes' }}
         run: |
           curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.11.1/kind-linux-amd64
           chmod +x ./kind
@@ -85,14 +85,14 @@ jobs:
         run: ./lint.sh
 
       - name: Run multiprocessing tests
-        if: ${{ matrix.executors == "multiprocessing" }}
+        if: ${{ matrix.executors == 'multiprocessing' }}
         run: |
           cd tests
           PYTEST_EXECUTORS=multiprocessing,sequential,test_pickling,debug_sequential \
             poetry run python -m pytest -sv test_all.py test_multiprocessing.py
       
       - name: Run slurm tests
-        if: ${{ matrix.executors == "slurm" }}
+        if: ${{ matrix.executors == 'slurm' }}
         run: |
           cd ./dockered-slurm
           docker exec \
@@ -105,7 +105,7 @@ jobs:
           sudo rm -rf ../tests/.cfut
       
       - name: Run kubernetes tests
-        if: ${{ matrix.executors == "kubernetes" }}
+        if: ${{ matrix.executors == 'kubernetes' }}
         run: |
           cd tests
           PYTEST_EXECUTORS=kubernetes poetry run python -m pytest -sv test_all.py test_kubernetes.py
