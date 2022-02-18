@@ -74,6 +74,7 @@ jobs:
           ./kind load docker-image scalableminds/cluster-tools:latest
 
       - name: Install dependencies (without docker)
+        if: ${{ matrix.executors == 'multiprocessing' || matrix.executors == 'kubernetes' }}
         run: |
           pip install poetry
           poetry install
@@ -104,14 +105,12 @@ jobs:
           docker exec \
             -w /cluster_tools/tests \
             slurmctld bash -c "poetry run python test_deref_main.py"
-          sudo rm -rf ../tests/.cfut
       
       - name: Run kubernetes tests
         if: ${{ matrix.executors == 'kubernetes' }}
         run: |
           cd tests
           PYTEST_EXECUTORS=kubernetes poetry run python -m pytest -sv test_all.py test_kubernetes.py
-          sudo rm -rf .cfut
 
   webknossos_linux:
     needs: changes
