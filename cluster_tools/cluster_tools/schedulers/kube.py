@@ -8,6 +8,7 @@ from typing import List, Optional, Union
 from uuid import uuid4
 
 import kubernetes
+import kubernetes.client.models as kubernetes_models
 
 from .cluster_executor import ClusterExecutor
 
@@ -84,13 +85,13 @@ class KubernetesExecutor(ClusterExecutor):
             if e.status != 404:
                 raise e
             kubernetes_client.core.create_namespace(
-                body={
-                    "apiVersion": "v1",
-                    "kind": "Namespace",
-                    "metadata": {
-                        "name": self.job_resources["namespace"],
-                    },
-                }
+                body=kubernetes_models.V1Namespace(
+                    api_version="v1",
+                    kind="Namespace",
+                    metadata=kubernetes_models.V1ObjectMeta(
+                        name=self.job_resources["namespace"]
+                    ),
+                )
             )
 
     def get_python_executable(self):
@@ -137,20 +138,18 @@ class KubernetesExecutor(ClusterExecutor):
             + [Path.cwd(), Path(self.cfut_dir).absolute()]
         )
 
-        job_manifest = {
-            "apiVersion": "batch/v1",
-            "kind": "Job",
-            "metadata": {
-                "name": job_id,
-            },
-            "spec": {
-                "completionMode": "Indexed",
-                "completions": number_of_subjobs,
-                "parallelism": number_of_subjobs,
-                "ttlSecondsAfterFinished": 604800,  # 7 days
-                "template": {
-                    "metadata": {
-                        "annotations": {
+        job_manifest = kubernetes_models.V1Job(
+            api_version="batch/v1",
+            kind="Job",
+            metadata=kubernetes_models.V1ObjectMeta(name=job_id),
+            spec=kubernetes_models.V1JobSpec(
+                completion_mode="Indexed",
+                completions=number_of_subjobs,
+                parallelism=number_of_subjobs,
+                ttl_seconds_after_finished=604800,  # 7 days
+                template=kubernetes_models.V1PodTemplateSpec(
+                    metadata=kubernetes_models.V1ObjectMeta(
+                        annotations={
                             "cluster-tools.scalableminds.com/job-id": job_id,
                             "cluster-tools.scalableminds.com/job-is-array-job": str(
                                 is_array_job
@@ -158,61 +157,66 @@ class KubernetesExecutor(ClusterExecutor):
                             "cluster-tools.scalableminds.com/job-name": job_name
                             if job_name is not None
                             else "",
-                        },
-                    },
-                    "spec": {
-                        "containers": [
-                            {
-                                "image": self.job_resources["image"],
-                                "imagePullPolicy": "IfNotPresent",
-                                "workingDir": os.path.abspath(os.path.curdir),
-                                "command": ["/bin/bash"],
-                                "name": "worker",
-                                "args": [
+                        }
+                    ),
+                    spec=kubernetes_models.V1PodSpec(
+                        containers=[
+                            kubernetes_models.V1Container(
+                                image=self.job_resources["image"],
+                                image_pull_policy="IfNotPresent",
+                                working_dir=str(Path.cwd().absolute()),
+                                command=["/bin/bash"],
+                                name="worker",
+                                args=[
                                     "-c",
                                     f"{umaskline}{cmdline} 0 2>&1 > >(tee -a {log_path})",
                                 ],
-                                "env": [
-                                    {"name": name, "value": value}
+                                env=[
+                                    kubernetes_models.V1EnvVar(name=name, value=value)
                                     for name, value in os.environ.items()
                                     if name not in ("PWD", "OLDPWD")
                                     and re.match("^[-._a-zA-Z][-._a-zA-Z0-9]*$", name)
                                     is not None
                                 ]
                                 + [
-                                    {"name": "JOB_ID", "value": job_id},
-                                    {
-                                        "name": "JOB_IS_ARRAY_JOB",
-                                        "value": str(is_array_job),
-                                    },
+                                    kubernetes_models.V1EnvVar(
+                                        name="JOB_ID", value=job_id
+                                    ),
+                                    kubernetes_models.V1EnvVar(
+                                        name="JOB_IS_ARRAY_JOB", value=str(is_array_job)
+                                    ),
                                 ],
-                                "securityContext": {
-                                    "runAsUser": os.getuid(),
-                                    "runAsGroup": os.getgid(),
-                                },
-                                "resources": {"requests": requested_resources},
-                                "volumeMounts": [
-                                    {
-                                        "name": volume_name_from_path(mount),
-                                        "mountPath": str(mount),
-                                    }
+                                security_context=kubernetes_models.V1SecurityContext(
+                                    run_as_user=os.getuid(), run_as_group=os.getgid()
+                                ),
+                                resources=kubernetes_models.V1ResourceRequirements(
+                                    requests=requested_resources
+                                ),
+                                volume_mounts=[
+                                    kubernetes_models.V1VolumeMount(
+                                        name=volume_name_from_path(mount),
+                                        mount_path=str(mount),
+                                    )
                                     for mount in mounts
                                 ],
-                            }
+                            )
                         ],
-                        "nodeSelector": self.job_resources.get("node_selector"),
-                        "restartPolicy": "Never",
-                        "volumes": [
-                            {
-                                "name": volume_name_from_path(mount),
-                                "hostPath": {"path": str(mount)},
-                            }
+                        node_selector=self.job_resources.get("node_selector"),
+                        restart_policy="Never",
+                        volumes=[
+                            kubernetes_models.V1Volume(
+                                name=volume_name_from_path(mount),
+                                host_path=kubernetes_models.V1HostPathVolumeSource(
+                                    path=str(mount)
+                                ),
+                            )
                             for mount in mounts
                         ],
-                    },
-                },
-            },
-        }
+                    ),
+                ),
+            ),
+        )
+
         try:
             kubernetes_client.batch.create_namespaced_job(
                 body=job_manifest, namespace=self.job_resources["namespace"]
@@ -228,7 +232,9 @@ class KubernetesExecutor(ClusterExecutor):
     ) -> Union["failed", "ignore", "completed"]:
         kubernetes_client = KubernetesClient()
         [job_id, job_index] = (
-            job_id_with_index.split("_") if "_" in job_id else [job_id, 0]
+            job_id_with_index.split("_")
+            if "_" in job_id_with_index
+            else [job_id_with_index, 0]
         )
         resp = kubernetes_client.core.list_namespaced_pod(
             namespace=self.job_resources["namespace"],
