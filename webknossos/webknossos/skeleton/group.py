@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Generator, Iterator, Optional, Set, Tuple, Uni
 import attr
 from boltons.strutils import unit_len
 
-import webknossos.skeleton.nml as wknml
+import webknossos._nml as wknml
 
 from .graph import Graph
 

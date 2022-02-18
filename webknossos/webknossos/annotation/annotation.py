@@ -9,10 +9,12 @@ from tempfile import TemporaryDirectory
 from typing import (
     BinaryIO,
     ContextManager,
+    Dict,
     Iterable,
     Iterator,
     List,
     Optional,
+    Tuple,
     Union,
     cast,
 )
@@ -22,11 +24,15 @@ from zlib import Z_BEST_SPEED
 import attr
 from zipp import Path as ZipPath
 
-import webknossos.skeleton.nml as wknml
+import webknossos._nml as wknml
+from webknossos.annotation._nml_conversion import annotation_to_nml, nml_to_skeleton
 from webknossos.dataset import Dataset, Layer, SegmentationLayer
 from webknossos.skeleton import Skeleton
-from webknossos.skeleton.nml.from_skeleton import from_skeleton as nml_from_skeleton
-from webknossos.skeleton.nml.to_skeleton import to_skeleton as nml_to_skeleton
+from webknossos.utils import time_since_epoch_in_ms
+
+Vector3 = Tuple[float, float, float]
+IntVector6 = Tuple[int, int, int, int, int, int]
+
 
 MAG_RE = r"((\d+-\d+-)?\d+)"
 SEP_RE = r"(\/|\\)"
@@ -73,26 +79,61 @@ class _VolumeAnnotation:
         return f"data_{self.id}_{self.name}"
 
 
+@attr.define
 class Annotation:
     name: str
-    skeleton: Skeleton
-    _volume_annotations: List[_VolumeAnnotation]
+    skeleton: Skeleton = None  # type: ignore[assignment]
+    _dataset_name: Optional[
+        str
+    ] = None  # just for initialization, attribute is always None
+    _scale: Optional[
+        Vector3
+    ] = None  # just for initialization, attribute is always None
+    username: Optional[str] = None
+    annotation_id: Optional[str] = None
+    time: Optional[int] = attr.ib(factory=time_since_epoch_in_ms)
+    edit_position: Optional[Vector3] = None
+    edit_rotation: Optional[Vector3] = None
+    zoom_level: Optional[float] = None
+    metadata: Dict[str, str] = attr.Factory(dict)
+    task_bounding_box: Optional[IntVector6] = None
+    user_bounding_boxes: Optional[List[IntVector6]] = None
+    _volume_annotations: List[_VolumeAnnotation] = attr.field(factory=list, init=False)
 
-    def __init__(self, name: str, skeleton: Skeleton) -> None:
-        # TODO: allow to create without skeleton
-        self.name = name
-        self.skeleton = skeleton
-        self._volume_annotations = []
+    def __attrs_post_init__(self) -> None:
+        if self.skeleton is None:
+            assert (
+                self._dataset_name is not None
+            ), "Please either supply a skeleton or dataset_name for Annotation()."
+            assert self._scale is not None, "Please supply a scale for Annotation()."
+            self.skeleton = Skeleton(dataset_name=self._dataset_name, scale=self._scale)
+            self._dataset_name = None
+            self._scale = None
+        else:
+            assert self._dataset_name is None, (
+                "When supplying a skeleton for Annotation(), passing dataset_name is not allowed. "
+                + "The dataset_name of the skeleton is used."
+            )
+            assert self._scale is None, (
+                "When supplying a skeleton for Annotation(), passing scale is not allowed. "
+                + "The scale of the skeleton is used."
+            )
 
     @property
     def dataset_name(self) -> str:
-        return self.skeleton.name
+        return self.skeleton.dataset_name
 
     @dataset_name.setter
-    def dataset_name(self, val: str) -> None:
-        self.skeleton.name = val
+    def dataset_name(self, dataset_name: str) -> None:
+        self.skeleton.dataset_name = dataset_name
 
-    # TODO add more proxy properties (e.g. user, annotation id, name, editposition/rotation, …)
+    @property
+    def scale(self) -> Tuple[float, float, float]:
+        return self.skeleton.scale
+
+    @scale.setter
+    def scale(self, scale: Tuple[float, float, float]) -> None:
+        self.skeleton.scale = scale
 
     @classmethod
     def load(cls, annotation_path: Union[str, PathLike]) -> "Annotation":
@@ -103,10 +144,14 @@ class Annotation:
         if annotation_path.suffix == ".zip":
             return cls._load_from_zip(annotation_path)
         elif annotation_path.suffix == ".nml":
-            # TODO assert no volume in nml
-            return cls(
-                name=annotation_path.stem, skeleton=Skeleton.load(annotation_path)
-            )
+            annotation, nml = cls._load_from_nml(annotation_path)
+            if len(nml.volumes) > 0:
+                warnings.warn(
+                    "The loaded nml contains references to volume layer annotations. "
+                    + "Those can only be loaded from a zip-file containing the nml and the volume annotation layer zips. "
+                    + "Omitting the volume layer annotations."
+                )
+            return annotation
         else:
             raise RuntimeError(
                 "The loaded annotation must have the suffix .zip or .nml, but is {annotation_path.suffix}"
@@ -162,8 +207,33 @@ class Annotation:
             response = annotation_download.sync_detailed(
                 typ=annotation_type.value, id=annotation_id, client=client
             )
-            assert response.status_code == 200, response
-            return Annotation._load_from_zip(BytesIO(response.content))
+        assert response.status_code == 200, response
+        # TODO allow nml-only download
+        return Annotation._load_from_zip(BytesIO(response.content))
+
+    @classmethod
+    def _load_from_nml(
+        cls, nml_path: Union[Path, ZipPath]
+    ) -> Tuple["Annotation", wknml.Nml]:
+        with nml_path.open(mode="rb") as f:
+            nml = wknml.Nml.parse(f)
+
+        return (
+            cls(
+                name=nml_path.stem,
+                skeleton=nml_to_skeleton(nml),
+                username=nml.get_meta("username"),
+                annotation_id=nml.get_meta("annotationId"),
+                time=nml.parameters.time,
+                edit_position=nml.parameters.editPosition,
+                edit_rotation=nml.parameters.editRotation,
+                zoom_level=nml.parameters.zoomLevel,
+                task_bounding_box=nml.parameters.taskBoundingBox,
+                user_bounding_boxes=nml.parameters.userBoundingBoxes,
+                metadata={i.name: i.content for i in nml.meta},
+            ),
+            nml,
+        )
 
     @classmethod
     def _load_from_zip(cls, content: Union[str, PathLike, BinaryIO]) -> "Annotation":
@@ -174,10 +244,7 @@ class Annotation:
         assert (
             len(nml_paths) == 1
         ), f"There must be exactly one nml file in the zip-file, buf found {len(nml_paths)}."
-        nml_path = nml_paths[0]
-        with nml_path.open(mode="rb") as file_handle:
-            nml = wknml.parse_nml(file_handle)
-        annotation = cls(name=nml_paths[0].stem, skeleton=nml_to_skeleton(nml))
+        annotation, nml = cls._load_from_nml(nml_paths[0])
         volume_annotations = []
         for volume in nml.volumes:
             fitting_volume_paths = [i for i in paths if str(i.at) == volume.location]
@@ -195,17 +262,29 @@ class Annotation:
         annotation._volume_annotations = volume_annotations
         return annotation
 
-    def save(self, path: Union[Path, str]) -> None:
+    def save(self, path: Union[str, PathLike]) -> None:
         """
-        Stores the annotation as a zip at the given path.
+        Stores the annotation as a zip or nml at the given path.
         """
-        # TODO maybe allow to save .nml if no volume-annotations present
-        assert Path(path).suffix == ".zip", "The target path should be a zip file."
+        path = Path(path)
+        assert path.suffix in [
+            ".zip",
+            ".nml",
+        ], "The target path must have a .zip or .nml suffix."
 
-        with ZipFile(
-            path, mode="x", compression=ZIP_DEFLATED, compresslevel=Z_BEST_SPEED
-        ) as zipfile:
-            self._write_to_zip(zipfile)
+        if path.suffix == ".zip":
+            with ZipFile(
+                path, mode="x", compression=ZIP_DEFLATED, compresslevel=Z_BEST_SPEED
+            ) as zipfile:
+                self._write_to_zip(zipfile)
+        else:
+            assert len(self._volume_annotations) == 0, (
+                f"Annotation {self.name} contains volume annotations and cannot be saved as an NML file. "
+                + "Please use a .zip path instead."
+            )
+            nml = annotation_to_nml(self)
+            with open(path, "wb") as f:
+                nml.write(f)
 
     def _binary_zip(self) -> bytes:
         with BytesIO() as buffer:
@@ -216,22 +295,9 @@ class Annotation:
             return buffer.getvalue()
 
     def _write_to_zip(self, zipfile: ZipFile) -> None:
-        nml = nml_from_skeleton(
-            group=self.skeleton,
-            parameters=self.skeleton._get_nml_parameters(),
-            metadata=self.skeleton.metadata,
-            volume_dicts=[
-                {
-                    "id": i.id,
-                    "name": i.name,
-                    "fallback_layer": i.fallback_layer_name,
-                    "location": i._default_zip_name(),
-                }
-                for i in self._volume_annotations
-            ],
-        )
+        nml = annotation_to_nml(self)
         with BytesIO() as buffer:
-            wknml.write_nml(buffer, nml)
+            nml.write(buffer)
             nml_str = buffer.getvalue().decode("utf-8")
         zipfile.writestr(self.name + ".nml", nml_str)
 

@@ -42,7 +42,7 @@ def test_annotation_from_file_with_multi_volume() -> None:
 
     # Read from first layer
     with annotation.temporary_volume_annotation_layer_copy(
-        source_volume_name=volume_names[0]
+        volume_annotation_name=volume_names[0]
     ) as layer:
         read_voxel = layer.get_best_mag().read(
             absolute_offset=(590, 512, 16),
@@ -65,7 +65,7 @@ def test_annotation_from_file_with_multi_volume() -> None:
 
     # Read from second layer
     with annotation.temporary_volume_annotation_layer_copy(
-        source_volume_name=volume_names[1]
+        volume_annotation_name=volume_names[1]
     ) as layer:
         read_voxel = layer.get_best_mag().read(
             absolute_offset=(590, 512, 16),
@@ -86,7 +86,7 @@ def test_annotation_from_file_with_multi_volume() -> None:
     # Reading from not-existing layer should raise an error
     with pytest.raises(AssertionError):
         with annotation.temporary_volume_annotation_layer_copy(
-            source_volume_name="not existing name"
+            volume_annotation_name="not existing name"
         ) as layer:
             pass
 
