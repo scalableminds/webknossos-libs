@@ -100,14 +100,7 @@ jobs:
       - name: Run kubernetes tests
         run: |
           cd tests
-          docker run \
-            -v $(pwd):$(pwd) \
-            -v $HOME/.kube:/root/.kube \
-            -w $(pwd) \
-            --network host \
-            -e PYTEST_EXECUTORS=kubernetes \
-            scalableminds/cluster-tools:latest \
-            bash -c "python -m pytest -s -v test_all.py test_kubernetes.py"
+          PYTEST_EXECUTORS=kubernetes poetry run python -m pytest -s -v test_all.py test_kubernetes.py
           sudo rm -rf .cfut
 
   webknossos_linux:
