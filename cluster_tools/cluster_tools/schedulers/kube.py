@@ -20,7 +20,7 @@ def deduplicate_mounts(mounts: List[Path]) -> List[Path]:
     output = []
     mounts = set(mounts)
     for mount in mounts:
-        if not any(m in mount.parents() for m in mounts):
+        if not any(m in mount.parents for m in mounts):
             output.append(mount)
     return output
 
