@@ -3,6 +3,7 @@ import concurrent
 import os
 import re
 import sys
+from pathlib import Path
 from typing import List, Optional, Union
 from uuid import uuid4
 
@@ -11,8 +12,17 @@ import kubernetes
 from .cluster_executor import ClusterExecutor
 
 
-def volume_name_from_path(path: str) -> str:
-    return f"{(hash(path) & sys.maxsize):016x}"
+def volume_name_from_path(path: Path) -> str:
+    return f"{(hash(str(path)) & sys.maxsize):016x}"
+
+
+def deduplicate_mounts(mounts: List[Path]) -> List[Path]:
+    output = []
+    mounts = set(mounts)
+    for mount in mounts:
+        if not any(m in mount.parents() for m in mounts):
+            output.append(mount)
+    return output
 
 
 class KubernetesClient:
@@ -122,6 +132,10 @@ class KubernetesExecutor(ClusterExecutor):
             if is_array_job
             else self.format_log_file_path(self.cfut_dir, job_id)
         )
+        mounts = deduplicate_mounts(
+            [Path(mount) for mount in self.job_resources["mounts"]]
+            + [Path.cwd(), Path(self.cfut_dir).absolute()]
+        )
 
         job_manifest = {
             "apiVersion": "batch/v1",
@@ -182,17 +196,7 @@ class KubernetesExecutor(ClusterExecutor):
                                         "name": volume_name_from_path(mount),
                                         "mountPath": mount,
                                     }
-                                    for mount in self.job_resources["mounts"]
-                                ]
-                                + [
-                                    {
-                                        "name": "cwd",
-                                        "mountPath": os.path.abspath(os.curdir),
-                                    },
-                                    {
-                                        "name": "cfut-dir",
-                                        "mountPath": os.path.abspath(self.cfut_dir),
-                                    },
+                                    for mount in mounts
                                 ],
                             }
                         ],
@@ -203,17 +207,7 @@ class KubernetesExecutor(ClusterExecutor):
                                 "name": volume_name_from_path(mount),
                                 "hostPath": {"path": mount},
                             }
-                            for mount in self.job_resources["mounts"]
-                        ]
-                        + [
-                            {
-                                "name": "cwd",
-                                "hostPath": {"path": os.path.abspath(os.curdir)},
-                            },
-                            {
-                                "name": "cfut-dir",
-                                "hostPath": {"path": os.path.abspath(self.cfut_dir)},
-                            },
+                            for mount in mounts
                         ],
                     },
                 },
