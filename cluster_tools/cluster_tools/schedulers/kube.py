@@ -153,7 +153,7 @@ class KubernetesExecutor(ClusterExecutor):
                                     {"name": "JOB_ID", "value": array_job_id},
                                     {
                                         "name": "JOB_IS_ARRAY_JOB",
-                                        "value": job_count is not None,
+                                        "value": str(job_count is not None),
                                     },
                                 ],
                                 "securityContext": {
