@@ -55,17 +55,6 @@ jobs:
           docker exec -w /cluster_tools c1 bash -c "poetry install" &
           docker exec -w /cluster_tools c2 bash -c "poetry install" &
           wait
-      
-      - name: Setup Kubernetes-in-Docker
-        run: |
-          curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.11.1/kind-linux-amd64
-          chmod +x ./kind
-          sed -i "s#__PATH__#$(pwd)#g" tests/cluster-config.yaml
-          ./kind create cluster --config=tests/cluster-config.yaml
-          ./kind export kubeconfig
-
-          docker build -f tests/Dockerfile -t scalableminds/cluster-tools:latest .
-          ./kind load docker-image scalableminds/cluster-tools:latest
 
       - name: Install dependencies (without docker)
         run: |
@@ -96,6 +85,33 @@ jobs:
             -w /cluster_tools/tests \
             slurmctld bash -c "poetry run python test_deref_main.py"
           sudo rm -rf ../tests/.cfut
+  
+  cluster_tools_kubernetes:
+    needs: changes
+    if: ${{ needs.changes.outputs.cluster_tools == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: cluster_tools
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Setup Kubernetes-in-Docker
+        run: |
+          curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.11.1/kind-linux-amd64
+          chmod +x ./kind
+          sed -i "s#__PATH__#$(pwd)#g" tests/cluster-config.yaml
+          ./kind create cluster --config=tests/cluster-config.yaml
+          ./kind export kubeconfig
+
+          docker build -f tests/Dockerfile -t scalableminds/cluster-tools:latest .
+          ./kind load docker-image scalableminds/cluster-tools:latest
+
+      - name: Install dependencies (without docker)
+        run: |
+          pip install poetry
+          poetry install
       
       - name: Run kubernetes tests
         run: |
@@ -279,7 +295,7 @@ jobs:
       run: poetry run tests/scripts/all_tests.sh
 
   wkcuber_docker:
-    needs: [cluster_tools, webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac]
+    needs: [cluster_tools, cluster_tools_kubernetes, webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac]
     if: |
       always() &&
       !contains(needs.*.result, 'failure') &&
@@ -342,7 +358,7 @@ jobs:
         fi
 
   docs:
-    needs: [cluster_tools, webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac]
+    needs: [cluster_tools, cluster_tools_kubernetes, webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac]
     runs-on: ubuntu-latest
     if: |
       always() &&
@@ -403,7 +419,7 @@ jobs:
 
 
   pypi:
-    needs: [cluster_tools, webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac]
+    needs: [cluster_tools, cluster_tools_kubernetes, webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac]
     if: |
       always() &&
       !contains(needs.*.result, 'failure') &&
@@ -431,7 +447,7 @@ jobs:
         run: ./publish.sh
 
   complete:
-    needs: [cluster_tools, webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac, wkcuber_docker, docs, pypi]
+    needs: [cluster_tools, cluster_tools_kubernetes, webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac, wkcuber_docker, docs, pypi]
     if: always()
     runs-on: ubuntu-latest
     steps:
