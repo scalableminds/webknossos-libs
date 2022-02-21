@@ -57,6 +57,9 @@ class KubernetesExecutor(ClusterExecutor):
 
     @staticmethod
     def get_job_array_index() -> Optional[int]:
+        # In kubernetes all jobs are array jobs. `JOB_COMPLETION_INDEX` is set by
+        # kubernetes directly. Both variables should exist (if it is a kubernetes
+        # job), but `JOB_IS_ARRAY_JOB` can be `False`.
         if (
             "JOB_IS_ARRAY_JOB" in os.environ
             and "JOB_COMPLETION_INDEX" in os.environ
