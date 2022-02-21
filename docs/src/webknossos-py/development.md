@@ -69,7 +69,7 @@ There is also a `test.sh` which is currently outdated, see [issue #580](https://
 
 ### `cluster_tools` package
 
-For testing the `slurm` setup a docker-compose setup is availble. Please see the [respective Readme](https://github.com/scalableminds/webknossos-libs/blob/master/cluster_tools/README.md) for details.
+For testing the `slurm` setup a docker-compose setup is available. Please see the [respective Readme](https://github.com/scalableminds/webknossos-libs/blob/master/cluster_tools/README.md) for details.
 
 For testing the `kubernetes` setup, we recommend a [Kubernetes-in-Docker setup](https://kind.sigs.k8s.io/).
 

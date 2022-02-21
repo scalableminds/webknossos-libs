@@ -42,7 +42,3 @@ def test_mounts():
     ) as exec:
         assert "cluster_tools" in list(exec.map(list_dir, [parent_dir]))[0]
 
-
-if __name__ == "__main__":
-    test_simple()
-    test_mounts()
