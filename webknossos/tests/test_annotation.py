@@ -22,7 +22,7 @@ def test_annotation_from_file() -> None:
     assert copied_annotation.dataset_name == "l4dense_motta_et_al_demo_v2"
     assert len(list(copied_annotation.skeleton.flattened_graphs())) == 1
 
-    with annotation.temporary_volume_annotation_layer_copy() as volume_layer:
+    with annotation.temporary_volume_layer_copy() as volume_layer:
         input_annotation_mag = volume_layer.get_best_mag()
         voxel_id = input_annotation_mag.read(
             absolute_offset=Vec3Int(2830, 4356, 1792), size=Vec3Int.full(1)
@@ -36,13 +36,13 @@ def test_annotation_from_file_with_multi_volume() -> None:
         TESTDATA_DIR / "annotations" / "multi_volume_example_CREMI.zip"
     )
 
-    volume_names = sorted(annotation.get_volume_annotation_names())
+    volume_names = sorted(annotation.get_volume_layer_names())
 
     assert volume_names == ["Volume", "Volume_2"]
 
     # Read from first layer
-    with annotation.temporary_volume_annotation_layer_copy(
-        volume_annotation_name=volume_names[0]
+    with annotation.temporary_volume_layer_copy(
+        volume_layer_name=volume_names[0]
     ) as layer:
         read_voxel = layer.get_best_mag().read(
             absolute_offset=(590, 512, 16),
@@ -64,8 +64,8 @@ def test_annotation_from_file_with_multi_volume() -> None:
         ), f"Expected to see voxel id 0, but saw {read_voxel} instead."
 
     # Read from second layer
-    with annotation.temporary_volume_annotation_layer_copy(
-        volume_annotation_name=volume_names[1]
+    with annotation.temporary_volume_layer_copy(
+        volume_layer_name=volume_names[1]
     ) as layer:
         read_voxel = layer.get_best_mag().read(
             absolute_offset=(590, 512, 16),
@@ -85,8 +85,8 @@ def test_annotation_from_file_with_multi_volume() -> None:
 
     # Reading from not-existing layer should raise an error
     with pytest.raises(AssertionError):
-        with annotation.temporary_volume_annotation_layer_copy(
-            volume_annotation_name="not existing name"
+        with annotation.temporary_volume_layer_copy(
+            volume_layer_name="not existing name"
         ) as layer:
             pass
 

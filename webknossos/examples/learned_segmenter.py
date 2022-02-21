@@ -32,7 +32,7 @@ def main() -> None:
     )
     dataset.name = new_dataset_name
 
-    volume_annotation = annotation.save_volume_annotation(dataset)
+    volume_annotation = annotation.export_volume_layer_to_dataset(dataset)
     volume_annotation.bounding_box = training_data_bbox
 
     mag = wk.Mag(1)

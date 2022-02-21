@@ -1,3 +1,4 @@
+import cgi
 import re
 import warnings
 from contextlib import contextmanager, nullcontext
@@ -26,7 +27,7 @@ from zipp import Path as ZipPath
 
 import webknossos._nml as wknml
 from webknossos.annotation._nml_conversion import annotation_to_nml, nml_to_skeleton
-from webknossos.dataset import Dataset, Layer, SegmentationLayer
+from webknossos.dataset import SEGMENTATION_CATEGORY, Dataset, Layer, SegmentationLayer
 from webknossos.skeleton import Skeleton
 from webknossos.utils import time_since_epoch_in_ms
 
@@ -73,10 +74,10 @@ class _VolumeLayer:
     id: int
     name: str
     fallback_layer_name: Optional[str]
-    zip: ZipPath
+    zip: Optional[ZipPath]
 
     def _default_zip_name(self) -> str:
-        return f"data_{self.id}_{self.name}"
+        return f"data_{self.id}_{self.name}.zip"
 
 
 @attr.define
@@ -144,7 +145,8 @@ class Annotation:
         if annotation_path.suffix == ".zip":
             return cls._load_from_zip(annotation_path)
         elif annotation_path.suffix == ".nml":
-            annotation, nml = cls._load_from_nml(annotation_path)
+            with annotation_path.open(mode="rb") as f:
+                annotation, nml = cls._load_from_nml(annotation_path.stem, f)
             if len(nml.volumes) > 0:
                 warnings.warn(
                     "The loaded nml contains references to volume layer annotations. "
@@ -185,6 +187,7 @@ class Annotation:
                 + "e.g. 'Task' or 'Explorational'. Alternatively, you can use the full annotation url, "
                 + "e.g. Annotation.download('https://webknossos.org/annotations/Explorational/6114d9410100009f0096c640')."
             )
+            annotation_id = annotation_id_or_url
         annotation_type = AnnotationType(annotation_type)
         assert (
             annotation_type not in _COMPOUND_ANNOTATION_TYPES
@@ -208,19 +211,32 @@ class Annotation:
                 typ=annotation_type.value, id=annotation_id, client=client
             )
         assert response.status_code == 200, response
-        # TODO allow nml-only download
-        return Annotation._load_from_zip(BytesIO(response.content))
+        content_disposition_header = response.headers.get("content-disposition", "")
+        _header_value, header_params = cgi.parse_header(content_disposition_header)
+        filename = header_params.get("filename", "")
+        if filename.endswith(".nml"):
+            annotation, nml = Annotation._load_from_nml(
+                filename[:-4], BytesIO(response.content)
+            )
+            assert (
+                len(nml.volumes) == 0
+            ), "The downloaded NML contains volume tags, it should have downloaded a zip instead."
+            return annotation
+        else:
+            assert filename.endswith(
+                ".zip"
+            ), f"Downloaded annoation should have the suffix .zip or .nml, but has filename {filename}"
+            return Annotation._load_from_zip(BytesIO(response.content))
 
     @classmethod
     def _load_from_nml(
-        cls, nml_path: Union[Path, ZipPath]
+        cls, name: str, nml_content: BinaryIO
     ) -> Tuple["Annotation", wknml.Nml]:
-        with nml_path.open(mode="rb") as f:
-            nml = wknml.Nml.parse(f)
+        nml = wknml.Nml.parse(nml_content)
 
         return (
             cls(
-                name=nml_path.stem,
+                name=name,
                 skeleton=nml_to_skeleton(nml),
                 username=nml.get_meta("username"),
                 annotation_id=nml.get_meta("annotationId"),
@@ -244,21 +260,31 @@ class Annotation:
         assert (
             len(nml_paths) == 1
         ), f"There must be exactly one nml file in the zip-file, buf found {len(nml_paths)}."
-        annotation, nml = cls._load_from_nml(nml_paths[0])
+        with nml_paths[0].open(mode="rb") as f:
+            annotation, nml = cls._load_from_nml(nml_paths[0].stem, f)
         volume_layers = []
         for volume in nml.volumes:
             fitting_volume_paths = [i for i in paths if str(i.at) == volume.location]
             assert (
                 len(fitting_volume_paths) == 1
             ), f"Couldn't find the file {volume.location} for the volume annotation {volume.name or volume.id}"
+            with fitting_volume_paths[0].open(mode="rb") as f:
+                with ZipFile(f) as volume_layer_zipfile:
+                    if len(volume_layer_zipfile.filelist) == 0:
+                        volume_path = None
+                    else:
+                        volume_path = fitting_volume_paths[0]
             volume_layers.append(
                 _VolumeLayer(
                     id=volume.id,
                     name="Volume" if volume.name is None else volume.name,
                     fallback_layer_name=volume.fallback_layer,
-                    zip=fitting_volume_paths[0],
+                    zip=volume_path,
                 )
             )
+        assert len(set(i.id for i in volume_layers)) == len(
+            volume_layers
+        ), "Some volume layers have the same id, this is not allowed."
         annotation._volume_layers = volume_layers
         return annotation
 
@@ -302,15 +328,51 @@ class Annotation:
         zipfile.writestr(self.name + ".nml", nml_str)
 
         for volume_layer in self._volume_layers:
+            if volume_layer.zip is None:
+                with BytesIO() as buffer:
+                    with ZipFile(buffer, mode="a"):
+                        pass
+                    layer_content = buffer.getvalue()
+            else:
+                layer_content = volume_layer.zip.read_bytes()
             zipfile.writestr(
                 volume_layer._default_zip_name(),
-                volume_layer.zip.read_bytes(),
+                layer_content,
             )
 
     def get_volume_layer_names(self) -> Iterable[str]:
         return (i.name for i in self._volume_layers)
 
-    # TODO add more methods, e.g. add_volume_layer
+    def add_volume_layer(
+        self,
+        name: str,
+        fallback_layer: Union[Layer, str, None] = None,
+        volume_layer_id: Optional[int] = None,
+    ) -> None:
+        if volume_layer_id is None:
+            volume_layer_id = max((i.id for i in self._volume_layers), default=-1) + 1
+        else:
+            assert volume_layer_id not in [
+                i.id for i in self._volume_layers
+            ], f"volume layer id {volume_layer_id} already exists in annotation {self.name}."
+        fallback_layer_name: Optional[str]
+        if isinstance(fallback_layer, Layer):
+            assert (
+                fallback_layer.category == SEGMENTATION_CATEGORY
+            ), "The fallback layer must be a segmentation layer."
+            fallback_layer_name = fallback_layer.name
+        elif fallback_layer is not None:
+            fallback_layer_name = str(fallback_layer)
+        else:
+            fallback_layer_name = None
+        self._volume_layers.append(
+            _VolumeLayer(
+                id=volume_layer_id,
+                name=name,
+                fallback_layer_name=fallback_layer_name,
+                zip=None,
+            )
+        )
 
     def _get_volume_layer(
         self,
@@ -372,6 +434,17 @@ class Annotation:
                 + "Please specify which layer should be used via volume_layer_name or volume_layer_id."
             )
 
+    def delete_volume_layer(
+        self,
+        volume_layer_name: Optional[str] = None,
+        volume_layer_id: Optional[int] = None,
+    ) -> None:
+        layer_id = self._get_volume_layer(
+            volume_layer_name=volume_layer_name,
+            volume_layer_id=volume_layer_id,
+        ).id
+        self._volume_layers = [i for i in self._volume_layers if i.id != layer_id]
+
     def export_volume_layer_to_dataset(
         self,
         dataset: Dataset,
@@ -395,6 +468,10 @@ class Annotation:
             volume_layer_name=volume_layer_name,
             volume_layer_id=volume_layer_id,
         ).zip
+
+        assert (
+            volume_zip_path is not None
+        ), "The selected volume layer is empty and cannot be exported."
 
         with volume_zip_path.open(mode="rb") as f:
             data_zip = ZipFile(f)

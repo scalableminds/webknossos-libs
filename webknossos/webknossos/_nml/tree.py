@@ -48,14 +48,14 @@ class Tree(NamedTuple):
         name = nml_tree.get("name", "") or nml_tree.get("comment", "")
 
         color = None
-        if "color.r" in nml_tree.attrib:
+        if nml_tree.get("color.r"):  # also checks for empty strings
             color = (
                 float(enforce_not_null(nml_tree.get("color.r"))),
                 float(enforce_not_null(nml_tree.get("color.g"))),
                 float(enforce_not_null(nml_tree.get("color.b"))),
                 float(enforce_not_null(nml_tree.get("color.a"))),
             )
-        if "colorr" in nml_tree.attrib:
+        if nml_tree.get("colorr"):
             color = (
                 float(enforce_not_null(nml_tree.get("colorr"))),
                 float(enforce_not_null(nml_tree.get("colorg"))),
