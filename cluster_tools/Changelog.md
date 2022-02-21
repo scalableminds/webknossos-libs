@@ -12,6 +12,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes
 
 ### Added
+* Added `KubernetesExecutor` for parallelizing Python scripts on a Kubernetes cluster. [#600](https://github.com/scalableminds/webknossos-libs/pull/600)
 
 ### Changed
 
