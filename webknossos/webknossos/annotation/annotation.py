@@ -23,6 +23,7 @@ from zipfile import ZIP_DEFLATED, ZipFile
 from zlib import Z_BEST_SPEED
 
 import attr
+import httpx
 from zipp import Path as ZipPath
 
 import webknossos._nml as wknml
@@ -135,6 +136,22 @@ class Annotation:
     @scale.setter
     def scale(self, scale: Tuple[float, float, float]) -> None:
         self.skeleton.scale = scale
+
+    @property
+    def organization_id(self) -> Optional[str]:
+        return self.skeleton.organization_id
+
+    @organization_id.setter
+    def organization_id(self, organization_id: Optional[str]) -> None:
+        self.skeleton.organization_id = organization_id
+
+    @property
+    def description(self) -> Optional[str]:
+        return self.skeleton.description
+
+    @description.setter
+    def description(self, description: Optional[str]) -> None:
+        self.skeleton.description = description
 
     @classmethod
     def load(cls, annotation_path: Union[str, PathLike]) -> "Annotation":
@@ -311,6 +328,28 @@ class Annotation:
             nml = annotation_to_nml(self)
             with open(path, "wb") as f:
                 nml.write(f)
+
+    def upload(self) -> str:
+        from webknossos.client.context import _get_generated_client
+
+        client = _get_generated_client()
+        url = f"{client.base_url}/api/annotations/upload"
+
+        response = httpx.post(
+            url=url,
+            headers=client.get_headers(),
+            cookies=client.get_cookies(),
+            timeout=client.get_timeout(),
+            data={"createGroupForEachFile": False},
+            files={
+                f"{self.name}.zip": (f"{self.name}.zip", self._binary_zip()),
+            },
+        )
+        assert (
+            response.status_code == 200
+        ), f"Failed to upload annotation {self.name}: {response.status_code}: {response.text}"
+        response_annotation_info = response.json()["annotation"]
+        return f"{client.base_url}/annotations/{response_annotation_info['typ']}/{response_annotation_info['id']}"
 
     def _binary_zip(self) -> bytes:
         with BytesIO() as buffer:

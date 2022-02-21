@@ -3,12 +3,14 @@ from xml.etree.ElementTree import Element
 
 from loxun import XmlWriter
 
-from .utils import IntVector6, Vector3, enforce_not_null
+from .utils import IntVector6, Vector3, enforce_not_null, filter_none_values
 
 
 class Parameters(NamedTuple):
     name: str  # dataset name
     scale: Vector3  # dataset scale
+    description: Optional[str] = None
+    organization: Optional[str] = None
     offset: Optional[Vector3] = None  # deprecated. Kept for backward compatibility.
     time: Optional[
         int
@@ -49,7 +51,16 @@ class Parameters(NamedTuple):
 
     def _dump(self, xf: XmlWriter) -> None:
         xf.startTag("parameters")
-        xf.tag("experiment", {"name": self.name})
+        xf.tag(
+            "experiment",
+            filter_none_values(
+                {
+                    "name": self.name,
+                    "organization": self.organization,
+                    "description": self.description,
+                }
+            ),
+        )
         xf.tag(
             "scale",
             {
@@ -182,10 +193,11 @@ class Parameters(NamedTuple):
         userBoundingBoxes = cls._parse_user_bounding_boxes(nml_parameters)
 
         scale_element = enforce_not_null(nml_parameters.find("scale"))
+        experiment_element = enforce_not_null(nml_parameters.find("experiment"))
         return cls(
-            name=enforce_not_null(nml_parameters.find("experiment")).get(
-                "name", "Unnamed Experiment"
-            ),
+            name=experiment_element.get("name", "Unnamed Experiment"),
+            description=experiment_element.get("description"),
+            organization=experiment_element.get("organization"),
             scale=(
                 float(scale_element.get("x", 0)),
                 float(scale_element.get("y", 0)),

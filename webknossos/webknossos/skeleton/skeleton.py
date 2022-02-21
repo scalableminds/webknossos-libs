@@ -25,6 +25,8 @@ class Skeleton(Group):
 
     dataset_name: str
     scale: Vector3
+    organization_id: Optional[str] = None
+    description: Optional[str] = None
     # from Group parent to support mypy:
     _enforced_id: Optional[int] = attr.field(default=None, eq=False, repr=False)
     name: str = attr.field(default="Root", init=False, eq=False, repr=False)
