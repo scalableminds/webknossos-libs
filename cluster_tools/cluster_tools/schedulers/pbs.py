@@ -31,6 +31,10 @@ PBS_STATES = {
 
 
 class PBSExecutor(ClusterExecutor):
+    @classmethod
+    def executor_key(cls) -> str:
+        return "pbs"
+
     @staticmethod
     def get_job_array_index():
         return os.environ.get("PBS_ARRAYID", None)
@@ -40,8 +44,8 @@ class PBSExecutor(ClusterExecutor):
         return os.environ.get("PBS_JOBID")
 
     @staticmethod
-    def format_log_file_name(jobid, suffix=".stdout"):
-        return "pbs.{}.log{}".format(str(jobid), suffix)
+    def format_log_file_name(job_id_with_index, suffix=".stdout"):
+        return "pbs.{}.log{}".format(str(job_id_with_index), suffix)
 
     @classmethod
     def get_job_id_string(cls):
@@ -118,19 +122,21 @@ class PBSExecutor(ClusterExecutor):
 
         return [job_id_future], [(0, job_count or 1)]
 
-    def check_for_crashed_job(self, job_id) -> Union["failed", "ignore", "completed"]:
-        if len(str(job_id).split("_")) >= 2:
-            a, b = job_id.split("_")
-            job_id = f"{a}[{b}]"
+    def check_for_crashed_job(
+        self, job_id_with_index
+    ) -> Union["failed", "ignore", "completed"]:
+        if len(str(job_id_with_index).split("_")) >= 2:
+            a, b = job_id_with_index.split("_")
+            job_id_with_index = f"{a}[{b}]"
 
         # If the output file was not found, we determine the job status so that
         # we can recognize jobs which failed hard (in this case, they don't produce output files)
-        stdout, _, exit_code = call("qstat -f {}".format(job_id))
+        stdout, _, exit_code = call("qstat -f {}".format(job_id_with_index))
 
         if exit_code != 0:
             logging.error(
                 "Couldn't call checkjob to determine job's status. {}. Continuing to poll for output file. This could be an indicator for a failed job which was already cleaned up from the pbs db. If this is the case, the process will hang forever.".format(
-                    job_id
+                    job_id_with_index
                 )
             )
             return "ignore"
@@ -147,7 +153,7 @@ class PBSExecutor(ClusterExecutor):
                 elif job_state in PBS_STATES["Unclear"]:
                     logging.warning(
                         "The job state for {} is {}. It's unclear whether the job will recover. Will wait further".format(
-                            job_id, job_state
+                            job_id_with_index, job_state
                         )
                     )
                     return "ignore"

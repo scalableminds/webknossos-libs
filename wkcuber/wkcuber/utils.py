@@ -165,7 +165,7 @@ def add_distribution_flags(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--distribution_strategy",
         default="multiprocessing",
-        choices=["slurm", "multiprocessing"],
+        choices=["slurm", "kubernetes", "multiprocessing"],
         help="Strategy to distribute the task across CPUs or nodes.",
     )
 
