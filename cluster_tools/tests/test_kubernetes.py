@@ -42,3 +42,15 @@ def test_mounts():
     ) as exec:
         assert "cluster_tools" in list(exec.map(list_dir, [parent_dir]))[0]
 
+    with cluster_tools.get_executor(
+        "kubernetes",
+        job_resources={
+            "memory": "100M",
+            "python_executable": "python",
+            "image": "scalableminds/cluster-tools:latest",
+            "node_selector": {},
+            "namespace": "cluster-tools",
+        },
+        debug=True,
+    ) as exec:
+        assert "cluster_tools" not in list(exec.map(list_dir, [parent_dir]))[0]
