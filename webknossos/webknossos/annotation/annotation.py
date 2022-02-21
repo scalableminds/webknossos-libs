@@ -85,12 +85,12 @@ class _VolumeLayer:
 class Annotation:
     name: str
     skeleton: Skeleton = None  # type: ignore[assignment]
-    _dataset_name: Optional[
-        str
-    ] = None  # just for initialization, attribute is always None
-    _scale: Optional[
-        Vector3
-    ] = None  # just for initialization, attribute is always None
+    # The following underscored attributes are just for initialization
+    # in case the skeleton is not given. They are always None as attributes.
+    _dataset_name: Optional[str] = None
+    _scale: Optional[Vector3] = None
+    _organization_id: Optional[str] = None
+    _description: Optional[str] = None
     username: Optional[str] = None
     annotation_id: Optional[str] = None
     time: Optional[int] = attr.ib(factory=time_since_epoch_in_ms)
@@ -108,17 +108,28 @@ class Annotation:
                 self._dataset_name is not None
             ), "Please either supply a skeleton or dataset_name for Annotation()."
             assert self._scale is not None, "Please supply a scale for Annotation()."
-            self.skeleton = Skeleton(dataset_name=self._dataset_name, scale=self._scale)
+            self.skeleton = Skeleton(
+                dataset_name=self._dataset_name,
+                scale=self._scale,
+                organization_id=self._organization_id,
+                description=self._description,
+            )
             self._dataset_name = None
             self._scale = None
+            self._organization_id = None
+            self._description = None
         else:
-            assert self._dataset_name is None, (
-                "When supplying a skeleton for Annotation(), passing dataset_name is not allowed. "
-                + "The dataset_name of the skeleton is used."
-            )
-            assert self._scale is None, (
-                "When supplying a skeleton for Annotation(), passing scale is not allowed. "
-                + "The scale of the skeleton is used."
+            assert all(
+                i is None
+                for i in [
+                    self._dataset_name,
+                    self._scale,
+                    self._organization_id,
+                    self._description,
+                ]
+            ), (
+                "When supplying a skeleton for Annotation(), passing dataset_name, scale, organization_id or description is not allowed. "
+                + "The attributes of the skeleton are used in this case."
             )
 
     @property

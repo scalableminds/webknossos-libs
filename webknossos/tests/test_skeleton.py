@@ -157,7 +157,7 @@ def test_simple_initialization_and_representations(tmp_path: Path) -> None:
         ), f"Written nml does not look as expected:\n{''.join(diff)}"
     assert nml == wk.Skeleton.load(nml_path)
     assert str(nml) == (
-        "Skeleton(dataset_name='ds_name', scale=(0.5, 0.5, 0.5), _children=<No children>)"
+        "Skeleton(dataset_name='ds_name', scale=(0.5, 0.5, 0.5), organization_id=None, description=None, _children=<No children>)"
     )
 
     my_group = nml.add_group("my_group")
@@ -204,7 +204,7 @@ def test_simple_initialization_and_representations(tmp_path: Path) -> None:
         ), f"Written nml does not look as expected:\n{''.join(diff)}"
     assert nml == wk.Skeleton.load(nml_path)
     assert str(nml) == (
-        "Skeleton(dataset_name='ds_name', scale=(0.5, 0.5, 0.5), _children=<2 children>)"
+        "Skeleton(dataset_name='ds_name', scale=(0.5, 0.5, 0.5), organization_id=None, description=None, _children=<2 children>)"
     )
     assert str(my_group) == "Group(_id=1, name='my_group', _children=<2 children>)"
     assert (
