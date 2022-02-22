@@ -229,7 +229,7 @@ plugins = ["setuptools"]
 
 [[package]]
 name = "kubernetes"
-version = "21.7.0"
+version = "22.6.0"
 description = "Kubernetes python client"
 category = "main"
 optional = false
@@ -569,7 +569,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6.2"
-content-hash = "b4d83daa5bd4f177bbe9ad5d4cee939098cb73b5413cc6d64d069820f7fe1cfa"
+content-hash = "a57ae264a345c4d6ca01d9f8ac1867650878f1053f26006c0fee78a5cb2d7072"
 
 [metadata.files]
 astroid = [
@@ -649,8 +649,8 @@ isort = [
     {file = "isort-5.10.1.tar.gz", hash = "sha256:e8443a5e7a020e9d7f97f1d7d9cd17c88bcb3bc7e218bf9cf5095fe550be2951"},
 ]
 kubernetes = [
-    {file = "kubernetes-21.7.0-py2.py3-none-any.whl", hash = "sha256:044c20253f8577491a87af8f9edea1f929ed6d62ce306376a6cb8aed24e572c5"},
-    {file = "kubernetes-21.7.0.tar.gz", hash = "sha256:c9849afc2eafdce60efa210049ee7a94e7ef6cf3a7afa14a69b3bf0447825977"},
+    {file = "kubernetes-22.6.0-py2.py3-none-any.whl", hash = "sha256:5d329ee9b40e333e32f7bb62339cdce3eac47ab7c50b305ec21c114c49447e20"},
+    {file = "kubernetes-22.6.0.tar.gz", hash = "sha256:8578afa0fd4e7e86cfa4eeec204e4bad8a2c109ce52f85f8f3c593e9b0d47960"},
 ]
 lazy-object-proxy = [
     {file = "lazy-object-proxy-1.6.0.tar.gz", hash = "sha256:489000d368377571c6f982fba6497f2aa13c6d1facc40660963da62f5c379726"},
