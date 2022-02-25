@@ -1,7 +1,7 @@
 import difflib
 from os import PathLike
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 import pytest
 
@@ -131,6 +131,16 @@ def test_export_to_nml(tmp_path: Path) -> None:
     diff_files(output_path, snapshot_path)
 
 
+def test_import_from_nml() -> None:
+    nml = create_dummy_skeleton()
+    snapshot_path = TESTDATA_DIR / "nmls" / "generated_snapshot.nml"
+    loaded_nml = wk.Skeleton.load(snapshot_path)
+
+    assert (
+        nml == loaded_nml
+    ), "NML created by create_dummy_skeleton() should equal NML loaded from disk."
+
+
 def test_simple_initialization_and_representations(tmp_path: Path) -> None:
     nml = wk.Skeleton(name="my_skeleton", scale=(0.5, 0.5, 0.5), time=12345)
     nml_path = tmp_path / "my_skeleton.nml"
@@ -226,7 +236,8 @@ def test_import_export_round_trip(tmp_path: Path) -> None:
     diff_files(snapshot_path, export_path)
 
 
-def test_volume_dump_round_trip(tmp_path: Path) -> None:
+@pytest.mark.parametrize("layer_name", [None, "my_layer"])
+def test_volume_dump_round_trip(tmp_path: Path, layer_name: Optional[str]) -> None:
     import xml.etree.ElementTree as ET
 
     from loxun import XmlWriter
@@ -235,7 +246,10 @@ def test_volume_dump_round_trip(tmp_path: Path) -> None:
 
     export_path = tmp_path / "volume_dump.xml"
     volume_in = Volume(
-        id=0, location="data_Volume.zip", fallback_layer="my_very_important_layer"
+        id=0,
+        location="data_Volume.zip",
+        fallback_layer="my_very_important_layer",
+        name=layer_name,
     )
     volume_out = None
 
@@ -248,3 +262,11 @@ def test_volume_dump_round_trip(tmp_path: Path) -> None:
         volume_out = __parse_volume(next(tree.iter()))
 
     assert volume_in == volume_out
+
+
+def test_load_nml(tmp_path: Path) -> None:
+    input_path = TESTDATA_DIR / "nmls" / "test_a.nml"
+    output_path = tmp_path / "test_a.nml"
+    skeleton_a = wk.Skeleton.load(input_path)
+    skeleton_a.save(output_path)
+    assert skeleton_a == wk.Skeleton.load(output_path)

@@ -11,7 +11,7 @@ if [ ! -d "wk-repo" ]; then
     echo
     echo ERROR!
     echo 'Either link or clone the webknossos repository to "docs/wk-repo", e.g. with'
-    echo 'git clone git@github.com:scalableminds/webknossos.git docs/wk-repo'
+    echo 'git clone --depth 1 git@github.com:scalableminds/webknossos.git docs/wk-repo'
     exit 1
 fi
 

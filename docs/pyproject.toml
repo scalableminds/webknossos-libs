@@ -13,7 +13,7 @@ LinkChecker = "^10.0.1"
 mkdocs = "1.2.2"
 mkdocs-material = "^7.3.0"
 mkdocs-redirects = "^1.0.3"
-pdoc = "^9.0.1"
+pdoc = { git = "https://github.com/mitmproxy/pdoc.git", rev = "1574222ab0568e072dc04e3569027d39aa124256"}
 webknossos = { path = "../webknossos/", develop = true }
 wkcuber = { path = "../wkcuber/", develop = true }
 

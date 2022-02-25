@@ -7,18 +7,53 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.3...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.6...HEAD)
 
 ### Breaking Changes
 
 ### Added
- - Added AnnotationInfo, Project and Task classes for handling annotation information and annotation project administration. [#574](https://github.com/scalableminds/webknossos-libs/pull/574):
 - Added `only_setup_mag` parameter to downsample-related methods in `Layer`. This parameter allows creating output magnifications before parallelizing downsampling invocations to avoid outdated writes to datasource-properties.json. [#610](https://github.com/scalableminds/webknossos-libs/pull/610)
-
+- Added `Task.create()` method to create tasks by prodiving a dataset name, location, and rotation. [#605](https://github.com/scalableminds/webknossos-libs/pull/605)
 
 ### Changed
 
 ### Fixed
+
+
+## [0.9.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.6) - 2022-02-15
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.5...v0.9.6)
+
+### Added
+- Added `apply_merger_mode.py` example. [#592](https://github.com/scalableminds/webknossos-libs/pull/592)
+- Added support for reading from multiple volume layers in annotations. If an annotation contains multiple volume layers, the layer name has to be provided when reading from a volume layer in an annotation (in `Annotation.save_volume_annotation()` and `Annotation.temporary_volume_annotation_layer_copy()`). Also, added the method `Annotation.get_volume_layer_names()` to see available volume layers. [#588](https://github.com/scalableminds/webknossos-libs/pull/588)
+
+### Changed
+- Dataset writes in higher mags do not increase the bounding box if the written data fits in the rounded up box. [#595](https://github.com/scalableminds/webknossos-libs/pull/595)
+
+### Fixed
+- Dataset down- & upload: [#595](https://github.com/scalableminds/webknossos-libs/pull/595)
+  * Fixed download of higher mags.
+  * Bounding box after download is set correctly (was inflated before when downloading higher mags).
+  * The returned URL for uploads is corrected, this did not respect `new_dataset_name` before.
+
+
+
+## [0.9.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.5) - 2022-02-10
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.4...v0.9.5)
+
+### Fixed
+- Skeleton: Fixed a bug when comparing `Graph` instances, this fixes failing loads which had the error message `Can only compare wk.Graph to another wk.Graph.` before. [#593](https://github.com/scalableminds/webknossos-libs/pull/593)
+
+
+## [0.9.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.4) - 2022-02-09
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.3...v0.9.4)
+
+### Added
+- Added AnnotationInfo, Project and Task classes for handling annotation information and annotation project administration. [#574](https://github.com/scalableminds/webknossos-libs/pull/574)
+
+### Changed
+- Lifted the restriction that `BoundingBox` cannot have a negative topleft (introduced in v0.9.0). Also, negative size dimensions are flipped, so that the topleft <= bottomright,
+  e.g. `BoundingBox((10, 10, 10), (-5, 5, 5))` -> `BoundingBox((5, 10, 10), (5, 5, 5))`. [#589](https://github.com/scalableminds/webknossos-libs/pull/589)
 
 
 ## [0.9.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.3) - 2022-02-07
@@ -67,6 +102,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
       the default behaviour changes from starting at absolute (0, 0, 0) to the layer's bounding box
     * `(Mag)View.get_view`: read_only is a keyword-only argument now
     * `MagView.get_bounding_boxes_on_disk()` now returns an iterator yielding bounding boxes in Mag(1)
+    * `BoundingBox` cannot have negative topleft or size entries anymore (lifted in v0.9.4).
   - **Deprecations**
     The following usages are marked as deprecated with warnings and will be removed in future releases:
     * Using the `offset` parameter for `read`/`write`/`get_view` in MagView and View is deprecated.

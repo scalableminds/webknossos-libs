@@ -93,6 +93,11 @@ class ClusterExecutor(futures.Executor):
         if "logging_setup_fn" in kwargs:
             self.meta_data["logging_setup_fn"] = kwargs["logging_setup_fn"]
 
+    @classmethod
+    @abstractmethod
+    def executor_key(cls):
+        pass
+
     def handle_kill(self, _signum, _frame):
         self.wait_thread.stop()
         job_ids = ",".join(str(id) for id in self.jobs.keys())
@@ -104,17 +109,19 @@ class ClusterExecutor(futures.Executor):
         sys.exit(130)
 
     @abstractmethod
-    def check_for_crashed_job(self, job_id) -> Union["failed", "ignore", "completed"]:
+    def check_for_crashed_job(
+        self, job_id_with_index
+    ) -> Union["failed", "ignore", "completed"]:
         pass
 
     def _start(self, workerid, job_count=None, job_name=None):
         """Start job(s) with the given worker ID and return IDs
         identifying the new job(s). The job should run ``python -m
-        cfut.remote <workerid>.
+        cfut.remote <executorkey> <workerid>.
         """
 
         jobids_futures, job_index_ranges = self.inner_submit(
-            f"{sys.executable} -m cluster_tools.remote {workerid} {self.cfut_dir}",
+            f"{self.get_python_executable()} -m cluster_tools.remote {self.executor_key()} {workerid} {self.cfut_dir}",
             job_name=self.job_name if self.job_name is not None else job_name,
             additional_setup_lines=self.additional_setup_lines,
             job_count=job_count,
@@ -145,12 +152,14 @@ class ClusterExecutor(futures.Executor):
 
     @staticmethod
     @abstractmethod
-    def format_log_file_name(jobid, suffix=".stdout"):
+    def format_log_file_name(job_id_with_index, suffix=".stdout"):
         pass
 
     @classmethod
-    def format_log_file_path(cls, cfut_dir, jobid, suffix=".stdout"):
-        return os.path.join(cfut_dir, cls.format_log_file_name(jobid, suffix))
+    def format_log_file_path(cls, cfut_dir, job_id_with_index, suffix=".stdout"):
+        return os.path.join(
+            cfut_dir, cls.format_log_file_name(job_id_with_index, suffix)
+        )
 
     @classmethod
     @abstractmethod
@@ -168,6 +177,9 @@ class ClusterExecutor(futures.Executor):
     @staticmethod
     def format_outfile_name(cfut_dir, job_id):
         return os.path.join(cfut_dir, "cfut.out.%s.pickle" % job_id)
+
+    def get_python_executable(self):
+        return sys.executable
 
     def _completion(self, jobid, failed_early):
         """Called whenever a job finishes."""
@@ -278,7 +290,7 @@ class ClusterExecutor(futures.Executor):
         jobid = jobids_futures[0].result()
 
         if self.debug:
-            print("job submitted: %i" % jobid, file=sys.stderr)
+            print(f"job submitted: {jobid}", file=sys.stderr)
 
         # Thread will wait for it to finish.
         self.wait_thread.waitFor(preliminary_output_pickle_path, jobid)
@@ -289,10 +301,12 @@ class ClusterExecutor(futures.Executor):
         fut.cluster_jobid = jobid
         return fut
 
-    def get_workerid_with_index(self, workerid, index):
+    @classmethod
+    def get_workerid_with_index(cls, workerid, index):
         return workerid + "_" + str(index)
 
-    def get_jobid_with_index(self, jobid, index):
+    @classmethod
+    def get_jobid_with_index(cls, jobid, index):
         return str(jobid) + "_" + str(index)
 
     def get_function_pickle_path(self, workerid):

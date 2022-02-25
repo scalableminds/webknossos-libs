@@ -1,10 +1,10 @@
 name: CI
 
-on: push
+on: [push, pull_request]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
 
 jobs:
   changes:
@@ -30,12 +30,18 @@ jobs:
     needs: changes
     if: ${{ needs.changes.outputs.cluster_tools == 'true' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      max-parallel: 4
+      matrix:
+        executors: [multiprocessing, slurm, kubernetes]
     defaults:
       run:
         working-directory: cluster_tools
     steps:
       - uses: actions/checkout@v2
       - name: Build/pull dockered-slurm image
+        if: ${{ matrix.executors == 'slurm' }}
         run: |
           cd ./dockered-slurm
 
@@ -50,26 +56,61 @@ jobs:
           done
 
           # Run setup.py on all three nodes
-          docker exec slurmctld bash -c "cd /cluster_tools && poetry install"
-          docker exec c1 bash -c "cd /cluster_tools && poetry install"
-          docker exec c2 bash -c "cd /cluster_tools && poetry install"
+          docker exec -w /cluster_tools slurmctld bash -c "poetry install" &
+          docker exec -w /cluster_tools c1 bash -c "poetry install" &
+          docker exec -w /cluster_tools c2 bash -c "poetry install" &
+          wait
+      
+      - name: Setup Kubernetes-in-Docker
+        if: ${{ matrix.executors == 'kubernetes' }}
+        run: |
+          curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.11.1/kind-linux-amd64
+          chmod +x ./kind
+          sed -i "s#__PATH__#$(pwd)#g" tests/cluster-config.yaml
+          ./kind create cluster --config=tests/cluster-config.yaml
+          ./kind export kubeconfig
+
+          docker build -f tests/Dockerfile -t scalableminds/cluster-tools:latest .
+          ./kind load docker-image scalableminds/cluster-tools:latest
 
       - name: Install dependencies (without docker)
+        if: ${{ matrix.executors == 'multiprocessing' || matrix.executors == 'kubernetes' }}
         run: |
           pip install poetry
           poetry install
 
       - name: Check formatting
+        if: ${{ matrix.executors == 'multiprocessing' }}
         run: ./format.sh check
 
       - name: Lint code
+        if: ${{ matrix.executors == 'multiprocessing' }}
         run: ./lint.sh
 
-      - name: Run tests
+      - name: Run multiprocessing tests
+        if: ${{ matrix.executors == 'multiprocessing' }}
+        run: |
+          cd tests
+          PYTEST_EXECUTORS=multiprocessing,sequential,test_pickling,debug_sequential \
+            poetry run python -m pytest -sv test_all.py test_multiprocessing.py
+      
+      - name: Run slurm tests
+        if: ${{ matrix.executors == 'slurm' }}
         run: |
           cd ./dockered-slurm
-          docker exec slurmctld bash -c "cd /cluster_tools && poetry run python -m pytest -s test.py"
-          docker exec slurmctld bash -c "cd /cluster_tools && poetry run python test.py"
+          docker exec \
+            -w /cluster_tools/tests \
+            -e PYTEST_EXECUTORS=slurm \
+            slurmctld bash -c "poetry run python -m pytest -sv test_all.py test_slurm.py"
+          docker exec \
+            -w /cluster_tools/tests \
+            slurmctld bash -c "poetry run python test_deref_main.py"
+      
+      - name: Run kubernetes tests
+        if: ${{ matrix.executors == 'kubernetes' }}
+        run: |
+          cd tests
+          PYTEST_EXECUTORS=kubernetes poetry run python -m pytest -sv test_all.py test_kubernetes.py
 
   webknossos_linux:
     needs: changes
@@ -251,7 +292,8 @@ jobs:
     if: |
       always() &&
       !contains(needs.*.result, 'failure') &&
-      !contains(needs.*.result, 'cancelled')
+      !contains(needs.*.result, 'cancelled') &&
+      !github.event.pull_request.head.repo.fork
     runs-on: ubuntu-latest
 
     steps:
@@ -314,7 +356,8 @@ jobs:
     if: |
       always() &&
       !contains(needs.*.result, 'failure') &&
-      !contains(needs.*.result, 'cancelled')
+      !contains(needs.*.result, 'cancelled') &&
+      !github.event.pull_request.head.repo.fork
 
     steps:
     - uses: actions/checkout@v2
@@ -374,8 +417,10 @@ jobs:
       always() &&
       !contains(needs.*.result, 'failure') &&
       !contains(needs.*.result, 'cancelled') &&
-      startsWith(github.event.ref, 'refs/tags')
+      startsWith(github.event.ref, 'refs/tags') &&
+      !github.event.pull_request.head.repo.fork
     runs-on: ubuntu-latest
+
     strategy:
       max-parallel: 4
 

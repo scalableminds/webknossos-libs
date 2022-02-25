@@ -8,10 +8,12 @@ if TYPE_CHECKING:
 Vector3 = Tuple[float, float, float]
 
 
-@attr.define()
+# Defining an order on nodes is necessary to allow to sort them,
+# which is used in the graph's equality check, see Graph.__eq__().
+@attr.define(order=True)
 class Node:
     position: Vector3
-    _skeleton: "Skeleton" = attr.ib(eq=False, repr=False)
+    _skeleton: "Skeleton" = attr.ib(eq=False, repr=False, order=False)
     _id: int = attr.ib(init=False)
     comment: Optional[str] = None
     radius: Optional[float] = None

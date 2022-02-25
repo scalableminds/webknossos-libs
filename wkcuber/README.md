@@ -111,7 +111,7 @@ python -m wkcuber.check_equality /data/source /data/target
 
 ### Parallelization
 
-Most tasks can be configured to be executed in a parallelized manner. Via `--distribution_strategy` you can pass `multiprocessing` or `slurm`. The first can be further configured with `--jobs` and the latter via `--job_resources='{"mem": "10M"}'`. Use `--help` to get more information.
+Most tasks can be configured to be executed in a parallelized manner. Via `--distribution_strategy` you can pass `multiprocessing`, `slurm` or `kubernetes`. The first can be further configured with `--jobs` and the latter via `--job_resources='{"mem": "10M"}'`. Use `--help` to get more information.
 
 ## Development
 Make sure to install all the required dependencies using Poetry:
@@ -135,7 +135,7 @@ tests/scripts/all_tests.sh
 PyPi releases are automatically pushed when creating a new Git tag/Github release. 
 
 ## API documentation
-Check out the [latest version of the API documentation](https://static.webknossos.org/lib-docs/master/wkcuber/api.html).
+Check out the [latest version of the API documentation](https://docs.webknossos.org/api/wkcuber.html).
 
 ### Generate the API documentation
 Run `docs/generate.sh` to open a server displaying the API docs. `docs/generate.sh --persist` persists the html to `docs/api`.
