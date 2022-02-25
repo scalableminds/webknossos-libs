@@ -4,11 +4,11 @@ import functools
 import json
 import logging
 import time
-from os.path import relpath
 from concurrent.futures import as_completed
 from concurrent.futures._base import Future
 from datetime import datetime
 from multiprocessing import cpu_count
+from os.path import relpath
 from pathlib import Path
 from typing import Any, Callable, Iterable, List, Optional, Union
 

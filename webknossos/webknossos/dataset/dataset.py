@@ -5,6 +5,7 @@ import warnings
 from argparse import Namespace
 from contextlib import nullcontext
 from os import PathLike
+from os.path import relpath
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
@@ -18,8 +19,6 @@ from typing import (
     Union,
     cast,
 )
-from os.path import relpath
-
 
 import attr
 import numpy as np
@@ -136,7 +135,7 @@ class Dataset:
             assert (
                 scale is not None
             ), "When creating a new dataset, the scale must be given, e.g. as Dataset(path, scale=(10, 10, 16.8))"
-            name = name or dataset_path.absolute.name
+            name = name or dataset_path.absolute().name
             dataset_properties = DatasetProperties(
                 id={"name": name, "team": ""}, scale=scale, data_layers=[]
             )

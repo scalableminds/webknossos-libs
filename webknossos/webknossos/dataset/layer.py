@@ -1,11 +1,11 @@
 import logging
 import operator
-from os import PathLike
-from os.path import relpath
 import re
 import shutil
 import warnings
 from argparse import Namespace
+from os import PathLike
+from os.path import relpath
 from pathlib import Path
 from shutil import rmtree
 from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
@@ -863,7 +863,7 @@ class Layer:
                 wk_header.file_len,
                 wk_header.block_type,
             )
-        except wkw.WKWException as e:
+        except wkw.wkw.WKWException as e:
             logging.error(
                 f"Failed to setup magnification {mag_name}, which is specified in the datasource-properties.json. See {e}"
             )

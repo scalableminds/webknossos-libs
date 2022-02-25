@@ -31,8 +31,8 @@ def _extract_num_channels(
         )
 
     mag = Mag(mag)
-    wkw_ds_file_path = path / layer/ mag.to_layer_name())
-    if not (wkw_ds_file_path/ "header.wkw").is_file():
+    wkw_ds_file_path = path / layer / mag.to_layer_name()
+    if not (wkw_ds_file_path / "header.wkw").is_file():
         raise Exception(
             f"The dataset you are trying to open does not have the attribute 'numChannels' for layer {layer}. "
             f"However, this attribute is necessary. To mitigate this problem, it was tried to locate "
