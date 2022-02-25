@@ -512,6 +512,7 @@ class Layer:
         buffer_edge_len: Optional[int] = None,
         force_sampling_scheme: bool = False,
         args: Optional[Namespace] = None,
+        only_setup_mags: bool = False,
     ) -> None:
         """
         Downsamples the data starting from `from_mag` until a magnification is `>= max(max_mag)`.
@@ -599,6 +600,7 @@ class Layer:
                 compress=compress,
                 buffer_edge_len=buffer_edge_len,
                 args=args,
+                only_setup_mag=only_setup_mags,
             )
 
     def downsample_mag(
@@ -610,6 +612,7 @@ class Layer:
         buffer_edge_len: Optional[int] = None,
         args: Optional[Namespace] = None,
         allow_overwrite: bool = False,
+        only_setup_mag: bool = False,
     ) -> None:
         """
         Performs a single downsampling step from `from_mag` to `target_mag`.
@@ -623,6 +626,11 @@ class Layer:
 
         The `args` can contain information to distribute the computation.
         If allow_overwrite is True, an existing Mag may be overwritten.
+
+        If only_setup_mag is True, the magnification is created, but left
+        empty. This parameter can be used to prepare for parallel downsampling
+        of multiple layers while avoiding parallel writes with outdated updates
+        to the datasource-properties.json file.
         """
         assert (
             from_mag in self.mags.keys()
@@ -648,6 +656,9 @@ class Layer:
             target_mag_view = self._initialize_mag_from_other_mag(
                 target_mag, prev_mag_view, compress
             )
+
+        if only_setup_mag:
+            return
 
         bb_mag1 = self.bounding_box
 
@@ -728,6 +739,7 @@ class Layer:
         buffer_edge_len: Optional[int] = None,
         args: Optional[Namespace] = None,
         allow_overwrite: bool = False,
+        only_setup_mags: bool = False,
     ) -> None:
         """
         Downsamples the data starting at `from_mag` to each magnification in `target_mags` iteratively.
@@ -759,6 +771,7 @@ class Layer:
                 buffer_edge_len=buffer_edge_len,
                 args=args,
                 allow_overwrite=allow_overwrite,
+                only_setup_mag=only_setup_mags,
             )
             source_mag = target_mag
 
