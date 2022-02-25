@@ -1,12 +1,10 @@
 import copy
 import json
-import os
 import shutil
 import warnings
 from argparse import Namespace
 from contextlib import nullcontext
-from os import PathLike, makedirs
-from os.path import basename, join, normpath
+from os import PathLike
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
@@ -20,6 +18,8 @@ from typing import (
     Union,
     cast,
 )
+from os.path import relpath
+
 
 import attr
 import numpy as np
@@ -126,7 +126,7 @@ class Dataset:
             ), f"Creation of Dataset at {dataset_path} failed, because a file already exists at this path."
             # Create directories on disk and write datasource-properties.json
             try:
-                makedirs(dataset_path, exist_ok=True)
+                dataset_path.mkdir(parents=True, exist_ok=True)
             except OSError as e:
                 raise type(e)(
                     "Creation of Dataset {} failed. ".format(dataset_path) + repr(e)
@@ -136,7 +136,7 @@ class Dataset:
             assert (
                 scale is not None
             ), "When creating a new dataset, the scale must be given, e.g. as Dataset(path, scale=(10, 10, 16.8))"
-            name = name or basename(normpath(dataset_path))
+            name = name or dataset_path.absolute.name
             dataset_properties = DatasetProperties(
                 id={"name": name, "team": ""}, scale=scale, data_layers=[]
             )
@@ -602,11 +602,11 @@ class Dataset:
             )
 
         foreign_layer_symlink_path = (
-            Path(os.path.relpath(foreign_layer_path, self.path))
+            Path(relpath(foreign_layer_path, self.path))
             if make_relative
             else foreign_layer_path.resolve()
         )
-        os.symlink(foreign_layer_symlink_path, join(self.path, layer_name))
+        foreign_layer_symlink_path.symlink_to(self.path / layer_name)
         original_layer = Dataset.open(foreign_layer_path.parent).get_layer(
             foreign_layer_name
         )
@@ -645,7 +645,7 @@ class Dataset:
                 f"Cannot copy {foreign_layer_path}. This dataset already has a layer called {layer_name}."
             )
 
-        shutil.copytree(foreign_layer_path, join(self.path, layer_name))
+        shutil.copytree(foreign_layer_path, self.path / layer_name)
         original_layer = Dataset.open(foreign_layer_path.parent).get_layer(
             foreign_layer_name
         )

@@ -58,7 +58,7 @@ class KnossosDataset:
             filename = path.join(
                 self.__get_cube_folder(cube_xyz), self.__get_cube_file_name(cube_xyz)
             )
-        os.makedirs(path.dirname(filename), exist_ok=True)
+        filename.parent.mkdir(parents=True, exist_ok=True)
         with open(filename, "wb") as cube_file:
             cube_data.ravel(order="F").tofile(cube_file)
 

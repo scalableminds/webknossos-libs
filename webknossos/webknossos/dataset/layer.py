@@ -1,18 +1,17 @@
 import logging
 import operator
-import os
+from os import PathLike
+from os.path import relpath
 import re
 import shutil
 import warnings
 from argparse import Namespace
-from os import makedirs
-from os.path import join
 from pathlib import Path
 from shutil import rmtree
 from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 
 import numpy as np
-from wkw import wkw
+import wkw
 
 from webknossos.geometry import BoundingBox, Mag
 
@@ -159,7 +158,7 @@ class Layer:
         )
         self._mags: Dict[Mag, MagView] = {}
 
-        makedirs(self.path, exist_ok=True)
+        self.path.mkdir(parents=True, exist_ok=True)
 
         for resolution in properties.wkw_resolutions:
             self._setup_mag(Mag(resolution.resolution))
@@ -173,7 +172,7 @@ class Layer:
 
     @property
     def path(self) -> Path:
-        return Path(join(self.dataset.path, self.name))
+        return self.dataset.path / self.name
 
     @property
     def _properties(self) -> LayerProperties:
@@ -195,7 +194,7 @@ class Layer:
         assert (
             layer_name not in self.dataset.layers.keys()
         ), f"Failed to rename layer {self.name} to {layer_name}: The new name already exists."
-        os.rename(self.dataset.path / self.name, self.dataset.path / layer_name)
+        (self.dataset.path / self.name).rename(self.dataset.path / layer_name)
         del self.dataset.layers[self.name]
         self.dataset.layers[layer_name] = self
         self._properties.name = layer_name
@@ -385,7 +384,7 @@ class Layer:
 
     def _add_foreign_mag(
         self,
-        foreign_mag_view_or_path: Union[os.PathLike, str, MagView],
+        foreign_mag_view_or_path: Union[PathLike, str, MagView],
         symlink: bool,
         make_relative: bool,
         extend_layer_bounding_box: bool = True,
@@ -412,20 +411,19 @@ class Layer:
         self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
 
         foreign_normalized_mag_path = (
-            Path(os.path.relpath(foreign_mag_view.path, self.path))
+            Path(relpath(foreign_mag_view.path, self.path))
             if make_relative
             else foreign_mag_view.path.resolve()
         )
 
         if symlink:
-            os.symlink(
-                foreign_normalized_mag_path,
-                join(self.dataset.path, self.name, str(foreign_mag_view.mag)),
+            foreign_normalized_mag_path.symlink_to(
+                self.dataset.path / self.name / str(foreign_mag_view.mag),
             )
         else:
             shutil.copytree(
                 foreign_normalized_mag_path,
-                join(self.dataset.path, self.name, str(foreign_mag_view.mag)),
+                self.dataset.path / self.name / str(foreign_mag_view.mag),
             )
 
         self.add_mag_for_existing_files(foreign_mag_view.mag)
@@ -439,7 +437,7 @@ class Layer:
 
     def add_symlink_mag(
         self,
-        foreign_mag_view_or_path: Union[os.PathLike, str, MagView],
+        foreign_mag_view_or_path: Union[PathLike, str, MagView],
         make_relative: bool = False,
         extend_layer_bounding_box: bool = True,
     ) -> MagView:
@@ -459,7 +457,7 @@ class Layer:
 
     def add_copy_mag(
         self,
-        foreign_mag_view_or_path: Union[os.PathLike, str, MagView],
+        foreign_mag_view_or_path: Union[PathLike, str, MagView],
         extend_layer_bounding_box: bool = True,
     ) -> MagView:
         """
@@ -477,8 +475,8 @@ class Layer:
         self, mag: Union[int, str, list, tuple, np.ndarray, Mag]
     ) -> None:
         mag = Mag(mag).to_layer_name()
-        full_path = join(self.dataset.path, self.name, mag)
-        makedirs(full_path, exist_ok=True)
+        full_path = self.dataset.path / self.name / mag
+        full_path.mkdir(parents=True, exist_ok=True)
 
     def _assert_mag_does_not_exist_yet(
         self, mag: Union[int, str, list, tuple, np.ndarray, Mag]

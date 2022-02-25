@@ -3,8 +3,8 @@ import calendar
 import functools
 import json
 import logging
-import os
 import time
+from os.path import relpath
 from concurrent.futures import as_completed
 from concurrent.futures._base import Future
 from datetime import datetime
@@ -140,7 +140,7 @@ def copy_directory_with_symlinks(
         if item.name not in ignore:
             symlink_path = dst_path / item.name
             if make_relative:
-                rel_or_abspath = Path(os.path.relpath(item, symlink_path.parent))
+                rel_or_abspath = Path(relpath(item, symlink_path.parent))
             else:
                 rel_or_abspath = item.resolve()
             symlink_path.symlink_to(rel_or_abspath)

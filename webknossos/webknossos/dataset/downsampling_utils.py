@@ -6,7 +6,7 @@ from typing import Callable, List, Optional, Tuple
 
 import numpy as np
 from scipy.ndimage import zoom
-from wkw import wkw
+from wkw import Dataset
 
 from webknossos.geometry import Mag, Vec3Int, Vec3IntLike
 from webknossos.geometry.bounding_box import BoundingBox
@@ -35,7 +35,7 @@ class InterpolationModes(Enum):
 DEFAULT_EDGE_LEN = 256
 
 
-def determine_buffer_edge_len(dataset: wkw.Dataset) -> int:
+def determine_buffer_edge_len(dataset: Dataset) -> int:
     return min(DEFAULT_EDGE_LEN, dataset.header.file_len * dataset.header.block_len)
 
 

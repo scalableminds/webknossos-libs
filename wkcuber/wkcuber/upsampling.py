@@ -1,5 +1,4 @@
 from argparse import ArgumentParser, Namespace
-import os
 from pathlib import Path
 
 from typing import Optional
@@ -104,8 +103,8 @@ def upsample_mags(
         " (e.g dataset/color/1)."
     )
     if not layer_name or not from_mag:
-        layer_name = os.path.basename(os.path.dirname(path))
-        from_mag = Mag(os.path.basename(path))
+        layer_name = path.parent.name
+        from_mag = Mag(path.name)
         path = path.parent.parent
 
     Dataset.open(path).get_layer(layer_name).upsample(

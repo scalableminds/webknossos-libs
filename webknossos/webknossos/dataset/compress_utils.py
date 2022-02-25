@@ -1,5 +1,4 @@
 import logging
-from os import makedirs, path
 from pathlib import Path
 from typing import Tuple
 
@@ -13,10 +12,10 @@ def compress_file_job(args: Tuple[Path, Path]) -> None:
     try:
         time_start("Compressing '{}' to '{}'".format(source_path, target_path))
 
-        makedirs(path.dirname(target_path), exist_ok=True)
+        target_path.parent.mkdir(parents=True, exist_ok=True)
         wkw.File.compress(str(source_path), str(target_path))
 
-        if not path.exists(target_path):
+        if not target_path.exists():
             raise Exception("Did not create compressed file {}".format(target_path))
 
         time_stop("Compressing '{}' to '{}'".format(source_path, target_path))

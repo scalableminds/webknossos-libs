@@ -1,5 +1,4 @@
 import logging
-import os
 import shutil
 import warnings
 from argparse import Namespace
@@ -8,7 +7,7 @@ from typing import TYPE_CHECKING, Generator, Optional, Union
 from uuid import uuid4
 
 import numpy as np
-from wkw import wkw
+import wkw
 
 from webknossos.geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 from webknossos.utils import get_executor_for_args, wait_and_ensure_success
@@ -28,7 +27,7 @@ def _find_mag_path_on_disk(dataset_path: Path, layer_name: str, mag_name: str) -
     mag = Mag(mag_name)
     short_mag_file_path = dataset_path / layer_name / mag.to_layer_name()
     long_mag_file_path = dataset_path / layer_name / mag.to_long_layer_name()
-    if os.path.exists(short_mag_file_path):
+    if short_mag_file_path.exists():
         return short_mag_file_path
     else:
         return long_mag_file_path
@@ -233,7 +232,8 @@ class MagView(View):
         """
         cube_size = self._get_file_dimensions()
         for filename in self._wkw_dataset.list_files():
-            file_path = Path(os.path.splitext(filename)[0]).relative_to(self._path)
+            filename = Path(filename)
+            file_path = Path(filename.stem).relative_to(self._path)
             cube_index = _extract_file_index(file_path)
             cube_offset = cube_index * cube_size
 

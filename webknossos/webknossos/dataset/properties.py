@@ -1,4 +1,3 @@
-from os.path import isfile, join
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
@@ -32,8 +31,8 @@ def _extract_num_channels(
         )
 
     mag = Mag(mag)
-    wkw_ds_file_path = join(path, layer, mag.to_layer_name())
-    if not isfile(join(wkw_ds_file_path, "header.wkw")):
+    wkw_ds_file_path = path / layer/ mag.to_layer_name())
+    if not (wkw_ds_file_path/ "header.wkw").is_file():
         raise Exception(
             f"The dataset you are trying to open does not have the attribute 'numChannels' for layer {layer}. "
             f"However, this attribute is necessary. To mitigate this problem, it was tried to locate "
