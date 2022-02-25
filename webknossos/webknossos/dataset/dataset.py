@@ -227,6 +227,7 @@ class Dataset:
         exist_ok: bool = False,
         webknossos_url: Optional[str] = None,
     ) -> "Dataset":
+        """Downloads a dataset and returns the Dataset instance."""
         from webknossos.client._download_dataset import download_dataset
         from webknossos.client.context import _get_context, webknossos_context
 
