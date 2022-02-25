@@ -53,19 +53,24 @@ def get_executor_for_args(
 
         executor = get_executor("multiprocessing", max_workers=jobs)
         logging.info("Using pool of {} workers.".format(jobs))
-    elif args.distribution_strategy == "slurm":
+    elif args.distribution_strategy in ("slurm", "kubernetes"):
         if args.job_resources is None:
+            resources_example = (
+                '{"mem": "1G"}'
+                if args.distribution_strategy == "slurm"
+                else '{"memory": "1G"}'
+            )
             raise argparse.ArgumentTypeError(
-                'Job resources (--job_resources) has to be provided when using slurm as distribution strategy. Example: --job_resources=\'{"mem": "10M"}\''
+                f"Job resources (--job_resources) has to be provided when using {args.distribution_strategy} as distribution strategy. Example: --job_resources='{resources_example}'"
             )
 
         executor = get_executor(
-            "slurm",
+            args.distribution_strategy,
             debug=True,
             keep_logs=True,
             job_resources=json.loads(args.job_resources),
         )
-        logging.info("Using slurm cluster.")
+        logging.info(f"Using {args.distribution_strategy} cluster.")
     else:
         logging.error(
             "Unknown distribution strategy: {}".format(args.distribution_strategy)

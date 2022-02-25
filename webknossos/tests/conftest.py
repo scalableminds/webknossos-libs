@@ -4,7 +4,7 @@ import warnings
 from io import BytesIO
 from os import makedirs
 from shutil import rmtree
-from typing import Any, Dict, Generator
+from typing import Any, Dict, Generator, List
 from unittest.mock import MagicMock, patch
 from zipfile import ZipFile
 
@@ -300,3 +300,11 @@ def _from_serialized_response(
 
 
 httpx_stubs._from_serialized_response = _from_serialized_response
+
+
+def pytest_collection_modifyitems(items: List[pytest.Item]) -> None:
+    # Automatically add the vcr marker to all tests
+    # which don't already have it.
+    for item in items:
+        if item.get_closest_marker("vcr") is None:
+            item.add_marker("vcr")

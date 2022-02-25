@@ -69,6 +69,7 @@ nav:
   - Usage Examples:
       - webknossos-py/examples/dataset_usage.md
       - webknossos-py/examples/upload_image_data.md
+      - webknossos-py/examples/apply_merger_mode.md
       - webknossos-py/examples/learned_segmenter.md
       - webknossos-py/examples/skeleton_synapse_candidates.md
       - webknossos-py/examples/user_times.md
@@ -100,7 +101,15 @@ nav:
     - Community Support: https://forum.image.sc/tag/webknossos" target="_blank
     - Email Support: mailto:hello@webknossos.org
     - Commercial Support: https://scalableminds.com" target="_blank
-- wkcuber CLI: wkcuber/index.md
+  - GitHub: https://github.com/scalableminds/webknossos-libs/tree/master/webknossos" target="_blank
+- webKnossos Cuber:
+  - wkcuber CLI: wkcuber/index.md
+  - Getting Help:
+    - Community Support: https://forum.image.sc/tag/webknossos" target="_blank
+    - Email Support: mailto:hello@webknossos.org
+    - Commercial Support: https://scalableminds.com" target="_blank
+  - GitHub: https://github.com/scalableminds/webknossos-libs/tree/master/wkcuber" target="_blank
+  
 
 plugins:
 - search
