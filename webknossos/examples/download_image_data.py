@@ -8,7 +8,7 @@ def main() -> None:
 
     # Choose layers and mags to download
     layers = ["color"]
-    mags = wk.Mag(1)
+    mags = [wk.Mag(1)]
 
     # Set the bounding box which should be downloaded
     bbox = wk.BoundingBox([50, 50, 50], [50, 50, 50])
