@@ -7,6 +7,7 @@ from loxun import XmlWriter
 Vector3 = Tuple[float, float, float]
 Vector4 = Tuple[float, float, float, float]
 IntVector6 = Tuple[int, int, int, int, int, int]
+MixVector7 = Tuple[int, int, int, int, int, int, str]
 
 T = TypeVar("T")
 
@@ -39,7 +40,7 @@ class NMLParameters(NamedTuple):
         editRotation (Optional[Vector3[float]]): The rotation of the wK camera when creating/downloading an annotation
         zoomLevel (Optional[float]): The zoomLevel of the wK camera when creating/downloading an annotation
         taskBoundingBox (Optional[IntVector6[int]]): A custom bounding box specified as part of a [wK task](https://docs.webknossos.org/webknossos/tasks.html). Will be rendered in wK.
-        userBoundingBoxes (Optional[List[IntVector6[int]]]): A list of custom user-defined bounding boxes. Will be rendered in wK.
+        userBoundingBoxes (Optional[List[MixVector7[int]]]): A list of custom user-defined bounding boxes. Will be rendered in wK.
     """
 
     name: str
@@ -50,7 +51,7 @@ class NMLParameters(NamedTuple):
     editRotation: Optional[Vector3] = None
     zoomLevel: Optional[float] = None
     taskBoundingBox: Optional[IntVector6] = None
-    userBoundingBoxes: Optional[List[IntVector6]] = None
+    userBoundingBoxes: Optional[List[MixVector7]] = None
 
 
 class Node(NamedTuple):
@@ -194,7 +195,7 @@ class NML(NamedTuple):
     volumes: List[Volume] = []
 
 
-def __parse_user_bounding_boxes(nml_parameters: Element) -> Optional[List[IntVector6]]:
+def __parse_user_bounding_boxes(nml_parameters: Element) -> Optional[List[MixVector7]]:
     # ToDo support color, id, name, isVisible attributes pylint: disable=fixme
     # https://github.com/scalableminds/wknml/issues/46
     if nml_parameters.find("userBoundingBox") is None:
@@ -211,7 +212,7 @@ def __parse_task_bounding_box(nml_parameters: Element) -> Optional[IntVector6]:
     return None
 
 
-def __parse_bounding_box(bounding_box_element: Element) -> IntVector6:
+def __parse_bounding_box(bounding_box_element: Element) -> MixVector7:
     return (
         int(bounding_box_element.get("topLeftX", 0)),
         int(bounding_box_element.get("topLeftY", 0)),
@@ -219,6 +220,7 @@ def __parse_bounding_box(bounding_box_element: Element) -> IntVector6:
         int(bounding_box_element.get("width", 0)),
         int(bounding_box_element.get("height", 0)),
         int(bounding_box_element.get("depth", 0)),
+        int(bounding_box_element.get("name", 0)),
     )
 
 
@@ -484,7 +486,7 @@ def __dump_user_bounding_boxes(xf: XmlWriter, parameters: NMLParameters) -> None
 
 
 def __dump_bounding_box(
-    xf: XmlWriter, bounding_box: IntVector6, tag_name: Text
+    xf: XmlWriter, bounding_box: MixVector7, tag_name: Text
 ) -> None:
     xf.tag(
         tag_name,
@@ -495,6 +497,7 @@ def __dump_bounding_box(
             "width": str(bounding_box[3]),
             "height": str(bounding_box[4]),
             "depth": str(bounding_box[5]),
+            "name": str(bounding_box[6]),
         },
     )
 

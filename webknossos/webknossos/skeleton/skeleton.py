@@ -17,6 +17,7 @@ from .group import Group
 
 Vector3 = Tuple[float, float, float]
 IntVector6 = Tuple[int, int, int, int, int, int]
+MixVector7 = Tuple[int, int, int, int, int, int, str]
 
 GroupOrGraph = Union[Group, Graph]
 
@@ -44,7 +45,7 @@ class Skeleton(Group):
     edit_rotation: Optional[Vector3] = None
     zoom_level: Optional[float] = None
     task_bounding_box: Optional[IntVector6] = None
-    user_bounding_boxes: Optional[List[IntVector6]] = None
+    user_bounding_boxes: Optional[List[MixVector7]] = None
 
     _id: int = attr.ib(init=False, repr=False)
     element_id_generator: Iterator[int] = attr.ib(init=False, eq=False, repr=False)
