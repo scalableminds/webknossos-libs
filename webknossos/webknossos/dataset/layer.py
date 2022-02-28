@@ -515,6 +515,7 @@ class Layer:
         buffer_edge_len: Optional[int] = None,
         force_sampling_scheme: bool = False,
         args: Optional[Namespace] = None,
+        allow_overwrite: bool = False,
         only_setup_mags: bool = False,
     ) -> None:
         """
@@ -603,6 +604,7 @@ class Layer:
                 compress=compress,
                 buffer_edge_len=buffer_edge_len,
                 args=args,
+                allow_overwrite=allow_overwrite,
                 only_setup_mag=only_setup_mags,
             )
 

@@ -12,6 +12,9 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes
 
 ### Added
+- Added `only_setup_mag` parameter to downsample-related methods in `Layer`. This parameter allows creating output magnifications before parallelizing downsampling invocations to avoid outdated writes to datasource-properties.json. [#610](https://github.com/scalableminds/webknossos-libs/pull/610)
+- Added `Task.create()` method to create tasks by prodiving a dataset name, location, and rotation. [#605](https://github.com/scalableminds/webknossos-libs/pull/605)
+- Added `allow_overwrite` parameter to `Layer.downsample()`. [#614](https://github.com/scalableminds/webknossos-libs/pull/614)
 
 ### Changed
 

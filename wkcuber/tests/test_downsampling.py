@@ -364,6 +364,13 @@ def test_downsample_mag_list_with_only_setup_mags() -> None:
             layer.get_mag(m).read((0, 0, 0), (10, 20, 30)) == 0
         ), "The mags should be empty."
 
+    layer.downsample_mag_list(
+        from_mag=Mag(1), target_mags=target_mags, allow_overwrite=True
+    )
+
+    for m in target_mags:
+        assert m in layer.mags
+
 
 def test_downsample_with_invalid_mag_list() -> None:
     ds = Dataset(TESTOUTPUT_DIR / "downsample_mag_list", scale=(1, 1, 2))
