@@ -1,12 +1,15 @@
 import shutil
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import numpy as np
 import wkw
+import zarr
+from numcodecs import Blosc
 
-from webknossos.geometry import Vec3Int
+from webknossos.geometry import Vec3Int, Vec3IntLike
 
 
 @dataclass
@@ -22,13 +25,48 @@ class StorageBackendInfo:
         return self.chunk_size * self.chunks_per_shard
 
 
-class WKWStorageBackend:
+class StorageBackend(ABC):
+    @property
+    @abstractmethod
+    def info(self) -> StorageBackendInfo:
+        pass
+
+    @abstractmethod
+    def compress_shard(self, source_path: Path, target_path: Path) -> None:
+        pass
+
+    @abstractmethod
+    def compress(self, target_path: Path) -> None:
+        pass
+
+    @abstractmethod
+    def remove(self) -> None:
+        pass
+
+    @abstractmethod
+    def move(self, target_path: Path) -> "StorageBackend":
+        pass
+
+    @abstractmethod
+    def read(self, offset: Vec3IntLike, shape: Vec3IntLike) -> np.ndarray:
+        pass
+
+    @abstractmethod
+    def write(self, offset: Vec3IntLike, data: np.ndarray) -> None:
+        pass
+
+    @abstractmethod
+    def list_files(self) -> List[Path]:
+        pass
+
+
+class WKWStorageBackend(StorageBackend):
     _path: Path
     _cached_wkw_dataset: Optional[wkw.Dataset]
 
     def __init__(self, path: Path):
         self._path = path
-        self._cached_backend = None
+        self._cached_wkw_dataset = None
 
     def compress_shard(self, source_path: Path, target_path: Path) -> None:
         wkw.File.compress(str(source_path), str(target_path))
@@ -76,24 +114,24 @@ class WKWStorageBackend:
         return WKWStorageBackend(path)
 
     def remove(self) -> None:
-        self.close()
+        self._close()
         shutil.rmtree(self._path)
 
     def move(self, target_path: Path) -> "WKWStorageBackend":
-        self.close()
+        self._close()
         shutil.move(str(self._path), target_path)
         return WKWStorageBackend(target_path)
 
-    def read(self, offset, shape) -> np.ndarray:
+    def read(self, offset: Vec3IntLike, shape: Vec3IntLike) -> np.ndarray:
         return self._wkw_dataset.read(offset, shape)
 
-    def write(self, offset, data) -> None:
+    def write(self, offset: Vec3IntLike, data: np.ndarray) -> None:
         self._wkw_dataset.write(offset, data)
 
     def list_files(self) -> List[Path]:
         return [Path(path) for path in self._wkw_dataset.list_files()]
 
-    def close(self) -> None:
+    def _close(self) -> None:
         if self._cached_wkw_dataset is not None:
             self._cached_wkw_dataset.close()
             self._cached_wkw_dataset = None
@@ -108,7 +146,7 @@ class WKWStorageBackend:
 
     @_wkw_dataset.deleter
     def _wkw_dataset(self) -> None:
-        self.close()
+        self._close()
 
     def __del__(self) -> None:
         del self._cached_wkw_dataset
@@ -121,3 +159,78 @@ class WKWStorageBackend:
     def __setstate__(self, d: Dict[str, Any]) -> None:
         d["_cached_wkw_dataset"] = None
         self.__dict__ = d
+
+
+class ZarrStorageBackend(StorageBackend):
+    _path: Path
+
+    def __init__(self, path: Path):
+        self._path = path
+
+    def compress_shard(self, source_path: Path, target_path: Path) -> None:
+        raise NotImplementedError()
+
+    def compress(self, target_path: Path) -> None:
+        raise NotImplementedError()
+
+    @property
+    def info(self) -> StorageBackendInfo:
+        zarray = zarr.open_array(self._path)
+        return StorageBackendInfo(
+            num_channels=zarray.shape[0],
+            voxel_type=zarray.dtype,
+            compression_mode=zarray.compressor is not None,
+            chunk_size=zarray.chunks or Vec3Int.full(1),
+            chunks_per_shard=Vec3Int.full(1),
+        )
+
+    @classmethod
+    def create(
+        cls, path: Path, storage_info: StorageBackendInfo
+    ) -> "ZarrStorageBackend":
+        assert storage_info.chunks_per_shard == Vec3Int.full(1)
+        zarr.create(
+            (storage_info.num_channels, 0, 0, 0),
+            chunks=storage_info.chunk_size,
+            dtype=storage_info.voxel_type,
+            compressor=(
+                Blosc(cname="zstd", clevel=3, shuffle=Blosc.SHUFFLE)
+                if storage_info.compression_mode
+                else None
+            ),
+            store=path,
+        )
+        return ZarrStorageBackend(path)
+
+    def remove(self) -> None:
+        shutil.rmtree(self._path)
+
+    def move(self, target_path: Path) -> "ZarrStorageBackend":
+        shutil.move(str(self._path), target_path)
+        return ZarrStorageBackend(target_path)
+
+    def read(self, offset: Vec3IntLike, shape: Vec3IntLike) -> np.ndarray:
+        offset = Vec3Int(offset)
+        shape = Vec3Int(shape)
+        return zarr.open(store=self._path)[
+            :,
+            offset.x : (offset.x + shape.x),
+            offset.y : (offset.y + shape.y),
+            offset.z : (offset.z + shape.z),
+        ]
+
+    def write(self, offset: Vec3IntLike, data: np.ndarray) -> None:
+        offset = Vec3Int(offset)
+        zarray = zarr.open(store=self._path)
+        if data.ndim == 3:
+            data = data.reshape((1,) + data.shape)
+        assert data.ndim == 4
+        zarray[
+            :,
+            offset.x : (offset.x + data.shape[1]),
+            offset.y : (offset.y + data.shape[2]),
+            offset.z : (offset.z + data.shape[3]),
+        ] = data
+
+    def list_files(self) -> List[Path]:
+        raise NotImplementedError()

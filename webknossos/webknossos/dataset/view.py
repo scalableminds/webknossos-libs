@@ -16,9 +16,12 @@ from typing import (
 import cluster_tools
 import numpy as np
 from cluster_tools.schedulers.cluster_executor import ClusterExecutor
-from wkw import Dataset, wkw
 
-from webknossos.dataset.backends import StorageBackendInfo
+from webknossos.dataset.backends import (
+    StorageBackend,
+    StorageBackendInfo,
+    WKWStorageBackend,
+)
 from webknossos.geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 from webknossos.utils import get_rich_progress, wait_and_ensure_success
 
@@ -29,10 +32,10 @@ if TYPE_CHECKING:
 
 class View:
     """
-    A `View` is essentially a bounding box to a region of a specific `wkw.Dataset` that also provides functionality.
+    A `View` is essentially a bounding box to a region of a specific `StorageBackend` that also provides functionality.
     Write-operations are restricted to the bounding box.
     `View`s are designed to be easily passed around as parameters.
-    A `View`, in its most basic form, does not have a reference to its `Dataset`.
+    A `View`, in its most basic form, does not have a reference to its `StorageBackend`.
     """
 
     def __init__(
@@ -885,10 +888,10 @@ class View:
         return self._get_file_dimensions() * self.mag.to_vec3_int()
 
     @property
-    def _backend(self) -> wkw.Dataset:
+    def _backend(self) -> StorageBackend:
         if self._cached_backend is None:
-            self._cached_backend = Dataset.open(
-                str(self._path)
+            self._cached_backend = WKWStorageBackend(
+                self._path
             )  # No need to pass the header to the wkw.Dataset
         return self._backend
 

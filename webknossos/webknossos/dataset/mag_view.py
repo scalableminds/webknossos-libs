@@ -275,7 +275,7 @@ class MagView(View):
             )
         )
         # create empty wkw.Dataset
-        self._backend.compress(str(compressed_full_path))
+        self._backend.compress(compressed_full_path)
 
         # compress all files to and move them to 'compressed_path'
         with get_executor_for_args(args) as executor:

@@ -1,8 +1,8 @@
 import logging
 from pathlib import Path
 from typing import Tuple
+from webknossos.dataset.backends import WKWStorageBackend
 
-import wkw
 
 from ..utils import time_start, time_stop
 
@@ -13,7 +13,7 @@ def compress_file_job(args: Tuple[Path, Path]) -> None:
         time_start("Compressing '{}' to '{}'".format(source_path, target_path))
 
         target_path.parent.mkdir(parents=True, exist_ok=True)
-        wkw.File.compress(str(source_path), str(target_path))
+        WKWStorageBackend.compress_shard(source_path, target_path)
 
         if not target_path.exists():
             raise Exception("Did not create compressed file {}".format(target_path))

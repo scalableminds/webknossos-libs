@@ -4,8 +4,8 @@ from itertools import product
 from typing import List, Tuple, cast
 
 import numpy as np
-from webknossos.geometry import Vec3Int
 
+from webknossos.geometry import Vec3Int
 from webknossos.utils import time_start, time_stop
 
 from .view import View
