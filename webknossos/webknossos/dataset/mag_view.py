@@ -2,6 +2,7 @@ import logging
 import shutil
 import warnings
 from argparse import Namespace
+from os.path import relpath
 from pathlib import Path
 from typing import TYPE_CHECKING, Generator, Optional, Union
 from uuid import uuid4
@@ -282,7 +283,7 @@ class MagView(View):
         with get_executor_for_args(args) as executor:
             job_args = []
             for file in self._wkw_dataset.list_files():
-                rel_file = Path(file).relative_to(self.layer.dataset.path)
+                rel_file = Path(relpath(file, self.layer.dataset.path))
                 job_args.append((Path(file), compressed_path / rel_file))
 
             wait_and_ensure_success(
