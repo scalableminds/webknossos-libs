@@ -163,6 +163,61 @@ def test_create_dataset_with_layer_and_mag() -> None:
     assure_exported_properties(ds)
 
 
+def test_instance_caching() -> None:
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore", module="webknossos", message=r"\[DEPRECATION\]"
+        )
+
+        delete_dir(TESTOUTPUT_DIR / "wk_dataset")
+
+        # Create the dataset and afterwards open it again with exist_ok=True
+        ds1 = Dataset(TESTOUTPUT_DIR / "wk_dataset", scale=(1, 1, 1))
+        ds2 = Dataset(TESTOUTPUT_DIR / "wk_dataset", scale=(1, 1, 1), exist_ok=True)
+
+        ds3 = Dataset.open(TESTOUTPUT_DIR / "wk_dataset")
+        ds4 = Dataset.open(TESTOUTPUT_DIR / "wk_dataset")
+
+        assert ds1 is not None, "Dataset instance must not be None"
+        assert ds1 is ds2, "Dataset instances for the same properties should be equal"
+        assert ds2 is ds3, "Dataset instances for the same properties should be equal"
+        assert ds3 is ds4, "Dataset instances for the same properties should be equal"
+
+        # The dataset already exists. Not specifying exist_ok, currently defaults to
+        # True. Therefore, this should succeed:
+        ds5 = Dataset(TESTOUTPUT_DIR / "wk_dataset", scale=(1, 1, 1))
+        assert ds1 is ds5
+
+        # Same for explicitly specifying exist_ok:
+        ds6 = Dataset(TESTOUTPUT_DIR / "wk_dataset", scale=(1, 1, 1), exist_ok=True)
+        assert ds1 is ds6
+
+        # Using exist_ok=False should fail
+        with pytest.raises(RuntimeError):
+            ds7 = Dataset(
+                TESTOUTPUT_DIR / "wk_dataset", scale=(1, 1, 1), exist_ok=False
+            )
+            del ds7
+
+        # Opening the dataset with another scale or name should fail, too:
+        with pytest.raises(AssertionError):
+            ds8 = Dataset(TESTOUTPUT_DIR / "wk_dataset", scale=(1, 2, 1), exist_ok=True)
+            del ds8
+        with pytest.raises(AssertionError):
+            ds8 = Dataset(
+                TESTOUTPUT_DIR / "wk_dataset",
+                name="differing_name",
+                scale=(1, 1, 1),
+                exist_ok=True,
+            )
+            del ds8
+
+        ds9 = Dataset(
+            TESTOUTPUT_DIR / "different_wk_dataset", scale=(1, 1, 1), exist_ok=True
+        )
+        assert ds1 is not ds9
+
+
 def test_create_dataset_with_explicit_header_fields() -> None:
     delete_dir(TESTOUTPUT_DIR / "wk_dataset_advanced")
 

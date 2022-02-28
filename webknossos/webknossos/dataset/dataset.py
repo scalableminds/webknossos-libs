@@ -20,6 +20,7 @@ from typing import (
     Union,
     cast,
 )
+from boltons.cacheutils import cachedmethod, LRU
 
 import attr
 import numpy as np
@@ -72,6 +73,8 @@ _UNSPECIFIED_SCALE_FROM_OPEN = make_sentinel(
     "_UNSPECIFIED_SCALE_FROM_OPEN", var_name="_UNSPECIFIED_SCALE_FROM_OPEN"
 )
 
+instance_cache = LRU(max_size=1024)
+
 
 class Dataset:
     """
@@ -85,6 +88,40 @@ class Dataset:
     Each dataset consists of one or more layers (webknossos.dataset.layer.Layer),
     which themselves can comprise multiple magnifications (webknossos.dataset.mag_view.MagView).
     """
+
+    def __new__(
+        cls,
+        dataset_path: Union[str, PathLike],
+        scale: Optional[Tuple[float, float, float]] = None,
+        name: Optional[str] = None,
+        exist_ok: bool = _UNSET,
+    ) -> "Dataset":
+
+        dataset_path = Path(dataset_path)
+
+        if dataset_path in instance_cache:
+
+            instance = instance_cache[dataset_path]
+            if exist_ok == _UNSET:
+                exist_ok = True
+            if not exist_ok:
+                raise RuntimeError(
+                    f"Creation of Dataset at {dataset_path} failed, because a non-empty folder already exists at this path."
+                )
+
+            if scale is not None:
+                instance._assert_equal_scale(dataset_path, scale)
+            if name is not None:
+                instance._assert_equal_name(dataset_path, name)
+
+            return instance
+
+        instance = super().__new__(cls)
+        Dataset.__init__(instance, dataset_path, scale, name, exist_ok)
+
+        instance_cache[dataset_path] = instance
+
+        return instance
 
     def __init__(
         self,
@@ -182,13 +219,9 @@ class Dataset:
             elif scale == _UNSPECIFIED_SCALE_FROM_OPEN:
                 pass
             else:
-                assert self.scale == tuple(
-                    scale
-                ), f"Cannot open Dataset: The dataset {dataset_path} already exists, but the scales do not match ({self.scale} != {scale})"
+                self._assert_equal_scale(dataset_path, scale)
             if name is not None:
-                assert (
-                    self.name == name
-                ), f"Cannot open Dataset: The dataset {dataset_path} already exists, but the names do not match ({self.name} != {name})"
+                self._assert_equal_name(dataset_path, name)
 
     @classmethod
     def open(cls, dataset_path: Union[str, PathLike]) -> "Dataset":
@@ -201,6 +234,10 @@ class Dataset:
         The `dataset_path` refers to the top level directory of the dataset (excluding layer or magnification names).
         """
         dataset_path = Path(dataset_path)
+
+        if dataset_path in instance_cache:
+            return instance_cache[dataset_path]
+
         assert (
             dataset_path.exists()
         ), f"Cannot open Dataset: Couldn't find {dataset_path}"
@@ -213,7 +250,10 @@ class Dataset:
             f"Cannot open Dataset: Could not find {dataset_path / PROPERTIES_FILE_NAME}"
         )
 
-        return cls(dataset_path, scale=_UNSPECIFIED_SCALE_FROM_OPEN, exist_ok=True)
+        instance = cls(dataset_path, scale=_UNSPECIFIED_SCALE_FROM_OPEN, exist_ok=True)
+        instance_cache[dataset_path] = instance
+
+        return instance
 
     @classmethod
     def download(
@@ -823,7 +863,9 @@ class Dataset:
         return cls(dataset_path, scale, name, exist_ok=True)
 
     def __repr__(self) -> str:
-        return repr("Dataset(%s)" % self.path)
+        if hasattr(self, "path"):
+            return repr("Dataset(%s)" % self.path)
+        return repr("Dataset()")
 
     def _export_as_json(self) -> None:
         with open(self.path / PROPERTIES_FILE_NAME, "w", encoding="utf-8") as outfile:
@@ -842,3 +884,15 @@ class Dataset:
             raise RuntimeError(
                 f"Failed to initialize layer: the specified category ({properties.category}) does not exist."
             )
+
+    def _assert_equal_scale(
+        self, dataset_path: Path, scale: Tuple[float, float, float]
+    ):
+        assert self.scale == tuple(
+            scale
+        ), f"Cannot open Dataset: The dataset {dataset_path} already exists, but the scales do not match ({self.scale} != {scale})"
+
+    def _assert_equal_name(self, dataset_path: Path, name: str):
+        assert (
+            self.name == name
+        ), f"Cannot open Dataset: The dataset {dataset_path} already exists, but the names do not match ({self.name} != {name})"
