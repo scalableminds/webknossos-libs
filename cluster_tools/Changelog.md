@@ -7,16 +7,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.6...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.7...HEAD)
 
 ### Breaking Changes
 
 ### Added
-* Added `KubernetesExecutor` for parallelizing Python scripts on a Kubernetes cluster. [#600](https://github.com/scalableminds/webknossos-libs/pull/600)
 
 ### Changed
 
 ### Fixed
+
+
+## [0.9.7](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.7) - 2022-02-28
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.6...v0.9.7)
+
+### Added
+* Added `KubernetesExecutor` for parallelizing Python scripts on a Kubernetes cluster. [#600](https://github.com/scalableminds/webknossos-libs/pull/600)
 
 
 ## [0.9.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.6) - 2022-02-15
