@@ -3,15 +3,14 @@ from types import TracebackType
 from typing import Tuple, Any, Generator, Iterator, Optional, Type, Union
 
 import numpy as np
-import os
+from os.path import sep
 import re
-from os import path
 
 CUBE_EDGE_LEN = 128
 CUBE_SIZE = CUBE_EDGE_LEN ** 3
 CUBE_SHAPE = (CUBE_EDGE_LEN,) * 3
 KNOSSOS_CUBE_REGEX = re.compile(
-    fr"x(\d+){re.escape(os.path.sep)}y(\d+){re.escape(os.path.sep)}z(\d+){re.escape(os.path.sep)}(.*\.raw)$"
+    fr"x(\d+){re.escape(sep)}y(\d+){re.escape(sep)}z(\d+){re.escape(sep)}(.*\.raw)$"
 )
 
 

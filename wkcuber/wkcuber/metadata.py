@@ -5,11 +5,8 @@ from webknossos.dataset._utils.infer_bounding_box_existing_files import (
 import wkw
 import logging
 import numpy as np
-import glob
 
 from argparse import ArgumentParser
-from glob import iglob
-from os import path, listdir
 from typing import Optional, Tuple, Iterable, Generator
 
 from webknossos.dataset.layer import LayerCategoryType
@@ -17,7 +14,6 @@ from .mag import Mag
 from typing import List
 from .utils import add_verbose_flag, setup_logging, add_scale_flag
 from pathlib import Path
-from os.path import basename, normpath
 
 
 def get_datasource_path(dataset_path: Path) -> Path:
@@ -115,7 +111,7 @@ def refresh_metadata(
     In this case, use write_webknossos_metadata instead.
     """
     dataset_path = get_datasource_path(wkw_path)
-    if not path.exists(dataset_path):
+    if not dataset_path.exists():
         raise Exception(
             "datasource-properties.json file could not be found. Please use write_webknossos_metadata to create it."
         )
@@ -235,13 +231,13 @@ def detect_bbox(dataset_path: Path, layer: str, mag: Mag = Mag(1)) -> Optional[d
     if layer_path is None:
         return None
 
-    def list_files(layer_path: str) -> Iterable[str]:
-        return iglob(path.join(layer_path, "*", "*", "*.wkw"), recursive=True)
+    def list_files(layer_path: Path) -> Iterable[str]:
+        return layer_path.rglob("*/*/*.wkw")
 
-    def list_cubes(layer_path: str) -> Iterable[Tuple[int, int, int]]:
+    def list_cubes(layer_path: Path) -> Iterable[Tuple[int, int, int]]:
         return (parse_cube_file_name(f) for f in list_files(layer_path))
 
-    xs, ys, zs = list(zip(*list_cubes(str(layer_path))))
+    xs, ys, zs = list(zip(*list_cubes(layer_path)))
 
     min_x, min_y, min_z = min(xs), min(ys), min(zs)
     max_x, max_y, max_z = max(xs), max(ys), max(zs)
@@ -259,9 +255,9 @@ def detect_bbox(dataset_path: Path, layer: str, mag: Mag = Mag(1)) -> Optional[d
 
 
 def detect_resolutions(dataset_path: Path, layer: str) -> Generator[Mag, None, None]:
-    for mag in listdir(path.join(dataset_path, layer)):
+    for mag in (dataset_path / layer).iterdir():
         try:
-            yield Mag(mag)
+            yield Mag(mag.name)
         except ValueError:
             logging.info("ignoring {} as resolution".format(mag))
 
@@ -327,9 +323,8 @@ def detect_standard_layer(
 
 
 def detect_mappings(dataset_path: Path, layer_name: str) -> List[str]:
-    pattern = dataset_path / layer_name / "mappings" / "*.json"
-    mapping_files = glob.glob(str(pattern))
-    mapping_file_names = [path.basename(mapping_file) for mapping_file in mapping_files]
+    mapping_files = (dataset_path / layer_name / "mappings").glob("*.json")
+    mapping_file_names = [mapping_file.name for mapping_file in mapping_files]
     return mapping_file_names
 
 
@@ -379,21 +374,21 @@ def detect_layers(
     if view_configuration is None:
         view_configuration = dict()
     # Detect metadata for well-known layers (i.e., color, prediction and segmentation)
-    if path.exists(path.join(dataset_path, "color")):
+    if (dataset_path / "color").exists():
         yield detect_standard_layer(
             dataset_path,
             "color",
             exact_bounding_box,
             layer_view_configuration=view_configuration.get("color"),
         )
-    if path.exists(path.join(dataset_path, "segmentation")):
+    if (dataset_path / "segmentation").exists():
         yield detect_segmentation_layer(
             dataset_path, "segmentation", max_id, compute_max_id, exact_bounding_box
         )
     available_layer_names = set(
         [
-            basename(normpath(Path(x).parent.parent))
-            for x in glob.glob(path.join(dataset_path, "*/*/header.wkw"))
+            Path(x).parent.parent.absolute().name
+            for x in dataset_path.glob("*/*/header.wkw")
         ]
     )
     for layer_name in available_layer_names:
