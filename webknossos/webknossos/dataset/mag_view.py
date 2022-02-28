@@ -234,7 +234,7 @@ class MagView(View):
         cube_size = self._get_file_dimensions()
         for filename in self._wkw_dataset.list_files():
             filename = Path(filename)
-            file_path = Path(filename.stem).relative_to(self._path)
+            file_path = Path(relpath(filename.stem, self._path))
             cube_index = _extract_file_index(file_path)
             cube_offset = cube_index * cube_size
 
