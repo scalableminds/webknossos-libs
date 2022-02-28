@@ -42,34 +42,6 @@ CUBE_RE = fr"z\d+{SEP_RE}y\d+{SEP_RE}x\d+\.wkw"
 ANNOTATION_WKW_PATH_RE = re.compile(fr"{MAG_RE}{SEP_RE}(header\.wkw|{CUBE_RE})")
 
 
-@unique
-class AnnotationType(Enum):
-    TASK = "Task"
-    EXPLORATIONAL = "Explorational"
-    COMPOUND_TASK = "CompoundTask"
-    COMPOUND_PROJECT = "CompoundProject"
-    COMPOUND_TASK_TYPE = "CompoundTaskType"
-
-
-@unique
-class AnnotationState(Enum):
-    FINISHED = "Finished"
-    ACTIVE = "Active"
-    CANCELLED = "Cancelled"
-    INITIALIZING = "Initializing"
-
-
-_COMPOUND_ANNOTATION_TYPES = [
-    AnnotationType.COMPOUND_PROJECT,
-    AnnotationType.COMPOUND_TASK,
-    AnnotationType.COMPOUND_TASK_TYPE,
-]
-
-_ANNOTATION_URL_REGEX = re.compile(
-    fr"(https?://.*)/annotations/({'|'.join(i.value for i in AnnotationType.__members__.values())})/([0-9A-Fa-f]*)"
-)
-
-
 @attr.define
 class _VolumeLayer:
     id: int
@@ -83,6 +55,26 @@ class _VolumeLayer:
 
 @attr.define
 class Annotation:
+    """Annotations can contain annotated data in two forms:
+      - [skeleton data](/webknossos/skeleton_annotation.html), as provided by the `Skeleton` class, and
+      - [volume annotation layers](/webknossos/volume_annotation.html) (or volume layers short),
+        which can be exported as a `SegmentationLayer`, see `export_volume_layer_to_dataset()`
+        and `temporary_volume_layer_copy()`.
+
+    Usually, annotations should be created manually in the webKnossos interface and can be downloaded using
+    `Annotation.download()`. The downloaded instance is not persisted to disk automatically, please use `save()`
+    for this purpose. The general purpose file format is `.zip` files containing an `.nml` file with
+    meta-information and the skeleton data and also containing inner `.zip` files for the volume layers.
+    For skeleton-only annotations without volume layers `.nml` files can be used directly. Both formats
+    are compatible with the webKnossos up- and downloads.
+
+    To prepare volume annotations in the code for correction of segmentation data in the webKnossos interface,
+    please use `add_volume_layer()` with the `fallback_layer` argument, referencing a segmentation layer that
+    is available on webKnossos (e.g. using the `Dataset` upload before).
+    Correcting segmentations using fallback layers is much more efficient, adding volume
+    annotation data programmatically is discouraged therefore.
+    """
+
     name: str
     skeleton: Skeleton = None  # type: ignore[assignment]
     # The following underscored attributes are just for initialization
@@ -101,6 +93,15 @@ class Annotation:
     task_bounding_box: Optional[IntVector6] = None
     user_bounding_boxes: Optional[List[IntVector6]] = None
     _volume_layers: List[_VolumeLayer] = attr.field(factory=list, init=False)
+
+    @classmethod
+    def _set_init_docstring(cls) -> None:
+        Annotation.__init__.__doc__ = """
+        To initialize a local annotation, please provide the `name` argument, and either
+        the `skeleton` argument, or a `dataset_name` and `scale`.
+        When supplying `skeleton` passing `dataset_name`, `scale`, `organization_id` or
+        `description` is not allowed as the attributes of the skeleton are used in this case.
+        """
 
     def __attrs_post_init__(self) -> None:
         if self.skeleton is None:
@@ -134,6 +135,7 @@ class Annotation:
 
     @property
     def dataset_name(self) -> str:
+        """This attribute is a proxy for `skeleton.dataset_name`."""
         return self.skeleton.dataset_name
 
     @dataset_name.setter
@@ -142,6 +144,7 @@ class Annotation:
 
     @property
     def scale(self) -> Tuple[float, float, float]:
+        """This attribute is a proxy for `skeleton.scale`."""
         return self.skeleton.scale
 
     @scale.setter
@@ -150,6 +153,7 @@ class Annotation:
 
     @property
     def organization_id(self) -> Optional[str]:
+        """This attribute is a proxy for `skeleton.organization_id`."""
         return self.skeleton.organization_id
 
     @organization_id.setter
@@ -158,6 +162,7 @@ class Annotation:
 
     @property
     def description(self) -> Optional[str]:
+        """This attribute is a proxy for `skeleton.description`."""
         return self.skeleton.description
 
     @description.setter
@@ -166,6 +171,8 @@ class Annotation:
 
     @classmethod
     def load(cls, annotation_path: Union[str, PathLike]) -> "Annotation":
+        """Loads a `.nml` file or a `.zip` file containing an NML and possibly also volume
+        layers. Returns the `Annotation` object."""
         annotation_path = Path(annotation_path)
         assert (
             annotation_path.exists()
@@ -191,9 +198,16 @@ class Annotation:
     def download(
         cls,
         annotation_id_or_url: str,
-        annotation_type: Union[str, AnnotationType, None] = None,
+        annotation_type: Union[str, "AnnotationType", None] = None,
         webknossos_url: Optional[str] = None,
     ) -> "Annotation":
+        """
+        * `annotation_id_or_url` may be an annotation id or a full URL to an annotation, e.g.
+          `https://webknossos.org/annotations/Explorational/6114d9410100009f0096c640`
+        * `annotation_type` must be supplied iff an annotation id was used in the previous argument
+        * `webknossos_url` may be supplied if an annotation id was used in the previous argument,
+          it defaults to the url from your current `webknossos_context`.
+        """
         from webknossos.client._generated.api.default import annotation_download
         from webknossos.client.context import (
             _get_context,
@@ -274,7 +288,7 @@ class Annotation:
                 zoom_level=nml.parameters.zoomLevel,
                 task_bounding_box=nml.parameters.taskBoundingBox,
                 user_bounding_boxes=nml.parameters.userBoundingBoxes,
-                metadata={i.name: i.content for i in nml.meta},
+                metadata={i.name: i.content for i in nml.meta if i.name not in ["username", "annotationId"]},
             ),
             nml,
         )
@@ -341,9 +355,10 @@ class Annotation:
                 nml.write(f)
 
     def upload(self) -> str:
+        """Uploads the annotation to your current `webknossos_context`."""
         from webknossos.client.context import _get_generated_client
 
-        client = _get_generated_client()
+        client = _get_generated_client(enforce_auth=True)
         url = f"{client.base_url}/api/annotations/upload"
 
         response = httpx.post(
@@ -399,6 +414,14 @@ class Annotation:
         fallback_layer: Union[Layer, str, None] = None,
         volume_layer_id: Optional[int] = None,
     ) -> None:
+        """
+        Adds a volume layer to the annotation, wihthout manual annotations but possibly referring to
+        segmentation data using the `fallback_layer`.
+        To prepare volume annotations in the code for correction of segmentation data in the webKnossos interface,
+        please use the `fallback_layer` argument, referencing a segmentation layer that is available on webKnossos
+        (e.g. using the `Dataset` upload before).
+        Correcting segmentations using fallback layers is much more efficient, adding volume annotation data
+        programmatically is discouraged therefore."""
         if volume_layer_id is None:
             volume_layer_id = max((i.id for i in self._volume_layers), default=-1) + 1
         else:
@@ -502,17 +525,17 @@ class Annotation:
         largest_segment_id: Optional[int] = None,
         volume_layer_name: Optional[str] = None,
         volume_layer_id: Optional[int] = None,
-    ) -> Layer:
+    ) -> SegmentationLayer:
         """
-        Given a dataset, this method will save the
+        Given a dataset, this method will export the specified
         volume annotation of this annotation into that dataset
         by creating a new layer.
         The largest_segment_id is computed automatically, unless provided
         explicitly.
 
-        `volume_layer_name` has to be provided, if the annotation contains
-        multiple volume layers. Use `get_volume_layer_names()` to look up
-        available layers.
+        `volume_layer_name` or `volume_layer_id` has to be provided,
+        if the annotation contains multiple volume layers.
+        Use `get_volume_layer_names()` to look up available layers.
         """
         volume_zip_path = self._get_volume_layer(
             volume_layer_name=volume_layer_name,
@@ -554,16 +577,16 @@ class Annotation:
 
     @contextmanager
     def temporary_volume_layer_copy(
-        self, volume_layer_name: Optional[str] = None
-    ) -> Iterator[Layer]:
+        self, volume_layer_name: Optional[str] = None,
+        volume_layer_id: Optional[int] = None,
+    ) -> Iterator[SegmentationLayer]:
 
         """
         Given a volume annotation path, create a temporary dataset which
-        contains the volume annotation via a symlink. Yield the layer
-        so that one can work with the annotation as a wk.Dataset.
+        contains the volume annotation. Returns the corresponding `Layer`.
 
-        If the annotation contains multiple volume layers, the name of the
-        desired volume layer has to be passed via `volume_layer_name`.
+        `volume_layer_name` or `volume_layer_id` has to be provided,
+        if the annotation contains multiple volume layers.
         """
 
         with TemporaryDirectory() as tmp_annotation_dir:
@@ -579,12 +602,60 @@ class Annotation:
             input_annotation_dataset,
             "volume_layer",
             volume_layer_name=volume_layer_name,
+            volume_layer_id=volume_layer_id,
         )
 
         yield input_annotation_layer
 
 
+Annotation._set_init_docstring()
+
+
+@unique
+class AnnotationType(Enum):
+    """Annotations can be of different types which has to be specified when using `Annotation.download()`
+    with an annotation id."""
+    EXPLORATIONAL = "Explorational"
+    """**Explorational** annotations are all annotations created without the task system, e.g.
+    by uploading an annotation or using the "Create Annotation" Button in the dataset view in webknossos."""
+    TASK = "Task"
+    """The **Task** type is automatically assigned to all annotations that are instances of a task.
+    See also `Task`."""
+    _COMPOUND_TASK = "CompoundTask"
+    """A collection of annotations of all instances of a task. Currently not supported,
+    please download all annotations individually instead, see `Task`."""
+    _COMPOUND_PROJECT = "CompoundProject"
+    """A collection of annotations of all instances of all tasks in a project. Currently not supported,
+    please download all annotations individually instead, see `Project`."""
+    _COMPOUND_TASK_TYPE = "CompoundTaskType"
+    """A collection of annotations of all instances of all tasks in a project. Currently not supported,
+    please download all annotations individually instead, see `Project`."""
+
+
+@unique
+class AnnotationState(Enum):
+    """This Enum contains the state of annotations belonging to tasks.
+    Can be retrieved via `Task` instances, getting `AnnotationInfo` from `task.get_annotation_infos()`.
+    """
+    FINISHED = "Finished"
+    ACTIVE = "Active"
+    CANCELLED = "Cancelled"
+    INITIALIZING = "Initializing"
+
+
+_COMPOUND_ANNOTATION_TYPES = [
+    AnnotationType._COMPOUND_PROJECT,
+    AnnotationType._COMPOUND_TASK,
+    AnnotationType._COMPOUND_TASK_TYPE,
+]
+
+_ANNOTATION_URL_REGEX = re.compile(
+    fr"(https?://.*)/annotations/({'|'.join(i.value for i in AnnotationType.__members__.values())})/([0-9A-Fa-f]*)"
+)
+
+
 def open_annotation(annotation_path: Union[str, PathLike]) -> "Annotation":
+    """Deprecated."""
     if Path(annotation_path).exists():
         warnings.warn(
             "[DEPRECATION] open_annotation is deprecated, please use Annotation.load instead."
