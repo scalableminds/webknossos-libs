@@ -6,7 +6,7 @@ from webknossos.geometry import Vec3Int
 from .constants import TESTDATA_DIR, TESTOUTPUT_DIR
 
 
-def test_annotation_from_file() -> None:
+def test_annotation_from_zip_file() -> None:
 
     annotation = wk.Annotation.load(
         TESTDATA_DIR
@@ -15,12 +15,28 @@ def test_annotation_from_file() -> None:
     )
 
     assert annotation.dataset_name == "l4dense_motta_et_al_demo_v2"
+    assert annotation.organization_id == "scalable_minds"
+    assert annotation.username == "Philipp Otto"
+    assert annotation.annotation_id == "61c20205010000cc004a6356"
+    assert "timestamp" in annotation.metadata
+    assert len(list(annotation.get_volume_layer_names())) == 1
     assert len(list(annotation.skeleton.flattened_graphs())) == 1
 
     annotation.save(TESTOUTPUT_DIR / "test_dummy.zip")
     copied_annotation = wk.Annotation.load(TESTOUTPUT_DIR / "test_dummy.zip")
+
     assert copied_annotation.dataset_name == "l4dense_motta_et_al_demo_v2"
+    assert copied_annotation.organization_id == "scalable_minds"
+    assert copied_annotation.username == "Philipp Otto"
+    assert copied_annotation.annotation_id == "61c20205010000cc004a6356"
+    assert "timestamp" in copied_annotation.metadata
+    assert len(list(copied_annotation.get_volume_layer_names())) == 1
     assert len(list(copied_annotation.skeleton.flattened_graphs())) == 1
+
+    copied_annotation.add_volume_layer(name="new_volume_layer")
+    assert len(list(copied_annotation.get_volume_layer_names())) == 2
+    copied_annotation.delete_volume_layer(volume_layer_name="new_volume_layer")
+    assert len(list(copied_annotation.get_volume_layer_names())) == 1
 
     with annotation.temporary_volume_layer_copy() as volume_layer:
         input_annotation_mag = volume_layer.get_best_mag()
@@ -29,6 +45,22 @@ def test_annotation_from_file() -> None:
         )
 
         assert voxel_id == 2504698
+
+
+def test_annotation_from_nml_file() -> None:
+    snapshot_path = TESTDATA_DIR / "nmls" / "generated_annotation_snapshot.nml"
+
+    annotation = wk.Annotation.load(snapshot_path)
+
+    assert annotation.dataset_name == "My Dataset"
+    assert annotation.organization_id is None
+    assert len(list(annotation.skeleton.flattened_graphs())) == 3
+
+    annotation.save(TESTOUTPUT_DIR / "test_dummy.zip")
+    copied_annotation = wk.Annotation.load(TESTOUTPUT_DIR / "test_dummy.zip")
+    assert copied_annotation.dataset_name == "My Dataset"
+    assert copied_annotation.organization_id is None
+    assert len(list(copied_annotation.skeleton.flattened_graphs())) == 3
 
 
 def test_annotation_from_file_with_multi_volume() -> None:
