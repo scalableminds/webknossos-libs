@@ -419,7 +419,7 @@ class Annotation:
         volume_layer_id: Optional[int] = None,
     ) -> None:
         """
-        Adds a volume layer to the annotation, wihthout manual annotations but possibly referring to
+        Adds a volume layer to the annotation, without manual annotations but possibly referring to
         segmentation data using the `fallback_layer`.
         To prepare volume annotations in the code for correction of segmentation data in the webKnossos interface,
         please use the `fallback_layer` argument, referencing a segmentation layer that is available on webKnossos
