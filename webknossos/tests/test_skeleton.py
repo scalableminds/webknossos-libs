@@ -12,7 +12,7 @@ from .constants import TESTDATA_DIR
 
 def create_dummy_skeleton() -> wk.Skeleton:
     nml = wk.Skeleton(
-        dataset_name="My NML",
+        dataset_name="My Dataset",
         scale=(11, 11, 25),
     )
 
@@ -137,7 +137,7 @@ def test_import_from_nml() -> None:
 
 def test_simple_initialization_and_representations(tmp_path: Path) -> None:
     nml = wk.Skeleton(dataset_name="ds_name", scale=(0.5, 0.5, 0.5))
-    nml_path = tmp_path / "ds_name.nml"
+    nml_path = tmp_path / "my_skeleton.nml"
     EXPECTED_NML = """<?xml version="1.0" encoding="utf-8"?>
 <things>
   <parameters>
@@ -157,7 +157,7 @@ def test_simple_initialization_and_representations(tmp_path: Path) -> None:
         ), f"Written nml does not look as expected:\n{''.join(diff)}"
     assert nml == wk.Skeleton.load(nml_path)
     assert str(nml) == (
-        "Skeleton(dataset_name='ds_name', scale=(0.5, 0.5, 0.5), organization_id=None, description=None, _children=<No children>)"
+        "Skeleton(scale=(0.5, 0.5, 0.5), dataset_name='ds_name', organization_id=None, description=None, _children=<No children>)"
     )
 
     my_group = nml.add_group("my_group")
@@ -204,7 +204,7 @@ def test_simple_initialization_and_representations(tmp_path: Path) -> None:
         ), f"Written nml does not look as expected:\n{''.join(diff)}"
     assert nml == wk.Skeleton.load(nml_path)
     assert str(nml) == (
-        "Skeleton(dataset_name='ds_name', scale=(0.5, 0.5, 0.5), organization_id=None, description=None, _children=<2 children>)"
+        "Skeleton(scale=(0.5, 0.5, 0.5), dataset_name='ds_name', organization_id=None, description=None, _children=<2 children>)"
     )
     assert str(my_group) == "Group(_id=1, name='my_group', _children=<2 children>)"
     assert (
