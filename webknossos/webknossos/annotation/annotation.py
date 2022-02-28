@@ -288,7 +288,11 @@ class Annotation:
                 zoom_level=nml.parameters.zoomLevel,
                 task_bounding_box=nml.parameters.taskBoundingBox,
                 user_bounding_boxes=nml.parameters.userBoundingBoxes,
-                metadata={i.name: i.content for i in nml.meta if i.name not in ["username", "annotationId"]},
+                metadata={
+                    i.name: i.content
+                    for i in nml.meta
+                    if i.name not in ["username", "annotationId"]
+                },
             ),
             nml,
         )
@@ -577,7 +581,8 @@ class Annotation:
 
     @contextmanager
     def temporary_volume_layer_copy(
-        self, volume_layer_name: Optional[str] = None,
+        self,
+        volume_layer_name: Optional[str] = None,
         volume_layer_id: Optional[int] = None,
     ) -> Iterator[SegmentationLayer]:
 
@@ -615,6 +620,7 @@ Annotation._set_init_docstring()
 class AnnotationType(Enum):
     """Annotations can be of different types which has to be specified when using `Annotation.download()`
     with an annotation id."""
+
     EXPLORATIONAL = "Explorational"
     """**Explorational** annotations are all annotations created without the task system, e.g.
     by uploading an annotation or using the "Create Annotation" Button in the dataset view in webknossos."""
@@ -637,6 +643,7 @@ class AnnotationState(Enum):
     """This Enum contains the state of annotations belonging to tasks.
     Can be retrieved via `Task` instances, getting `AnnotationInfo` from `task.get_annotation_infos()`.
     """
+
     FINISHED = "Finished"
     ACTIVE = "Active"
     CANCELLED = "Cancelled"
