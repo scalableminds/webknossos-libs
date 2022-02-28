@@ -236,7 +236,8 @@ class Dataset:
         The `path` and `exist_ok` parameter specify where to save the downloaded dataset and whether to overwrite
         if the `path` exists.
 
-        The `webknossos_url` specifies in which webknossos instance to search for the dataset.
+        The `webknossos_url` specifies in which webknossos instance to search for the dataset. By default the
+        configured url from `webknossos_context` is used, using https://webknossos.org as a fallback.
         """
 
         from webknossos.client._download_dataset import download_dataset
