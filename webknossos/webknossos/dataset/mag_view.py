@@ -8,8 +8,8 @@ from typing import TYPE_CHECKING, Generator, Optional, Union
 from uuid import uuid4
 
 import numpy as np
-import wkw
 
+from webknossos.dataset.backends import StorageBackendInfo, WKWStorageBackend
 from webknossos.geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 from webknossos.utils import get_executor_for_args, wait_and_ensure_success
 
@@ -47,33 +47,32 @@ class MagView(View):
         self,
         layer: "Layer",
         mag: Mag,
-        block_len: int,
-        file_len: int,
-        block_type: int,
+        chunk_size: Vec3Int,
+        chunks_per_shard: Vec3Int,
+        compression_mode: bool,
         create: bool = False,
     ) -> None:
         """
         Do not use this constructor manually. Instead use `webknossos.dataset.layer.Layer.add_mag()`.
         """
-        header = wkw.Header(
+        storage_info = StorageBackendInfo(
             voxel_type=layer.dtype_per_channel,
             num_channels=layer.num_channels,
-            version=1,
-            block_len=block_len,
-            file_len=file_len,
-            block_type=block_type,
+            chunk_size=chunk_size,
+            chunks_per_shard=chunks_per_shard,
+            compression_mode=compression_mode,
         )
 
         super().__init__(
             _find_mag_path_on_disk(layer.dataset.path, layer.name, mag.to_layer_name()),
-            header,
+            storage_info,
             bounding_box=None,
             mag=mag,
         )
         self._layer = layer
 
         if create:
-            wkw.Dataset.create(str(self.path), self.header)
+            WKWStorageBackend.create(self.path, storage_info)
 
     # Overwrites of View methods:
     @property
@@ -232,8 +231,7 @@ class MagView(View):
         abstracting from the files on disk.
         """
         cube_size = self._get_file_dimensions()
-        for filename in self._wkw_dataset.list_files():
-            filename = Path(filename)
+        for filename in self._backend.list_files():
             file_path = Path(relpath(filename.stem, self._path))
             cube_index = _extract_file_index(file_path)
             cube_offset = cube_index * cube_size
@@ -277,12 +275,12 @@ class MagView(View):
             )
         )
         # create empty wkw.Dataset
-        self._wkw_dataset.compress(str(compressed_full_path))
+        self._backend.compress(str(compressed_full_path))
 
         # compress all files to and move them to 'compressed_path'
         with get_executor_for_args(args) as executor:
             job_args = []
-            for file in self._wkw_dataset.list_files():
+            for file in self._backend.list_files():
                 rel_file = Path(relpath(file, self.layer.dataset.path))
                 job_args.append((Path(file), compressed_path / rel_file))
 
@@ -300,9 +298,9 @@ class MagView(View):
                 self,
                 self.layer,
                 self._mag,
-                self.header.block_len,
-                self.header.file_len,
-                wkw.Header.BLOCK_TYPE_LZ4HC,
+                self.info.chunk_size,
+                self.info.chunks_per_shard,
+                True,
             )
 
     @property

@@ -31,7 +31,7 @@ def infer_bounding_box_existing_files(mag_view: MagView) -> BoundingBox:
 
     # N x 3 array of cube addresses
     addresses = np.array(cube_addresses(mag_view))
-    voxel_length = mag_view.header.file_len * mag_view.header.block_len
+    voxel_length = mag_view.info.shard_size
 
     top_left = addresses.min(axis=0) * voxel_length
     bottom_right = (addresses.max(axis=0) + 1) * voxel_length

@@ -30,7 +30,7 @@ def main() -> None:
         dtype_per_layer=img.dtype,
     )
 
-    layer_membranes.add_mag(1, compress=True).write(img[0, :])
+    layer_membranes.add_mag(1, compression_mode=True).write(img[0, :])
 
     layer_nuclei = ds.add_layer(
         "nuclei",
@@ -38,7 +38,7 @@ def main() -> None:
         dtype_per_layer=img.dtype,
     )
 
-    layer_nuclei.add_mag(1, compress=True).write(img[1, :])
+    layer_nuclei.add_mag(1, compression_mode=True).write(img[1, :])
 
     url = ds.upload()
     print(f"Successfully uploaded {url}")

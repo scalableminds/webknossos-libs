@@ -22,8 +22,10 @@ from typing import (
 
 import attr
 import numpy as np
-import wkw
 from boltons.typeutils import make_sentinel
+
+from webknossos.dataset.backends import WKWStorageBackend
+from webknossos.geometry.vec3_int import Vec3Int
 
 if TYPE_CHECKING:
     from webknossos.client._upload_dataset import LayerToLink
@@ -486,8 +488,7 @@ class Dataset:
         assert (
             len(mag_headers) != 0
         ), f"Could not find any header.wkw files in {self.path / layer_name}, cannot add layer."
-        with wkw.Dataset.open(str(mag_headers[0].parent)) as wkw_dataset:
-            header = wkw_dataset.header
+        header = WKWStorageBackend(mag_headers[0].parent).info
         layer = self.add_layer(
             layer_name,
             category=category,
@@ -662,14 +663,14 @@ class Dataset:
         self,
         new_dataset_path: Union[str, Path],
         scale: Optional[Tuple[float, float, float]] = None,
-        block_len: Optional[int] = None,
-        file_len: Optional[int] = None,
-        compress: Optional[bool] = None,
+        chunk_size: Optional[Vec3Int] = None,
+        chunks_per_shard: Optional[Vec3Int] = None,
+        compression_mode: Optional[bool] = None,
         args: Optional[Namespace] = None,
     ) -> "Dataset":
         """
         Creates a new dataset at `new_dataset_path` and copies the data from the current dataset to `empty_target_ds`.
-        If not specified otherwise, the `scale`, `block_len`, `file_len` and `block_type` of the current dataset are also used for the new dataset.
+        If not specified otherwise, the `scale`, `chunk_size`, `chunks_per_size` and `compression_mode` of the current dataset are also used for the new dataset.
         """
 
         new_dataset_path = Path(new_dataset_path)
@@ -694,13 +695,15 @@ class Dataset:
                 bbox = self.get_layer(layer_name).bounding_box
 
                 for mag, mag_view in layer.mags.items():
-                    block_len = block_len or mag_view.header.block_len
-                    compress = compress or (
-                        mag_view.header.block_type != wkw.Header.BLOCK_TYPE_RAW
+                    chunk_size = chunk_size or mag_view.info.chunk_size
+                    compression_mode = (
+                        compression_mode or mag_view.info.compression_mode
                     )
-                    file_len = file_len or mag_view.header.file_len
+                    chunks_per_shard = (
+                        chunks_per_shard or mag_view.info.chunks_per_shard
+                    )
                     target_mag = target_layer.add_mag(
-                        mag, block_len, file_len, compress
+                        mag, chunk_size, chunks_per_shard, compression_mode
                     )
 
                     target_layer.bounding_box = bbox

@@ -61,9 +61,9 @@ def main() -> None:
 
     copy_of_dataset = dataset.copy_dataset(
         "testoutput/copy_of_dataset",
-        block_len=8,
-        file_len=8,
-        compress=True,
+        chunk_size=(8, 8, 8),
+        chunks_per_shard=(8, 8, 8),
+        compression_mode=True,
     )
     new_layer = dataset.add_layer(
         layer_name="segmentation",

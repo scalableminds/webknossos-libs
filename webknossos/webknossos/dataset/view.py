@@ -18,6 +18,7 @@ import numpy as np
 from cluster_tools.schedulers.cluster_executor import ClusterExecutor
 from wkw import Dataset, wkw
 
+from webknossos.dataset.backends import StorageBackendInfo
 from webknossos.geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 from webknossos.utils import get_rich_progress, wait_and_ensure_success
 
@@ -37,7 +38,7 @@ class View:
     def __init__(
         self,
         path_to_mag_view: Path,
-        header: wkw.Header,
+        storage_info: StorageBackendInfo,
         bounding_box: Optional[
             BoundingBox
         ],  # in mag 1, absolute coordinates, optional only for mag_view since it overwrites the bounding_box property
@@ -48,15 +49,15 @@ class View:
         Do not use this constructor manually. Instead use `View.get_view()` (also available on a `MagView`) to get a `View`.
         """
         self._path = path_to_mag_view
-        self._header: wkw.Header = header
+        self._storage_info = storage_info
         self._bounding_box = bounding_box
         self._read_only = read_only
-        self._cached_wkw_dataset = None
+        self._cached_backend = None
         self._mag = mag
 
     @property
-    def header(self) -> wkw.Header:
-        return self._header
+    def info(self) -> StorageBackendInfo:
+        return self._storage_info
 
     @property
     def bounding_box(self) -> BoundingBox:
@@ -191,7 +192,7 @@ class View:
                 + alternative
             )
 
-        num_channels = self._header.num_channels
+        num_channels = self._storage_info.num_channels
         if len(data.shape) == 3:
             assert (
                 num_channels == 1
@@ -221,13 +222,13 @@ class View:
                 current_mag_bbox, data
             )
 
-        self._wkw_dataset.write(current_mag_bbox.topleft, data)
+        self._backend.write(current_mag_bbox.topleft, data)
 
     def _handle_compressed_write(
         self, current_mag_bbox: BoundingBox, data: np.ndarray
     ) -> Tuple[BoundingBox, np.ndarray]:
         aligned_bbox = current_mag_bbox.align_with_mag(
-            Mag(self.header.file_len * self.header.block_len), ceil=True
+            Mag(self.info.shard_size), ceil=True
         )
 
         if current_mag_bbox != aligned_bbox:
@@ -411,7 +412,7 @@ class View:
         self,
         current_mag_bbox: BoundingBox,
     ) -> np.ndarray:
-        data = self._wkw_dataset.read(
+        data = self._backend.read(
             current_mag_bbox.topleft.to_np(), current_mag_bbox.size.to_np()
         )
         return data
@@ -540,7 +541,7 @@ class View:
 
             current_mag_bbox = mag1_bbox.in_mag(self._mag)
             current_mag_aligned_bbox = current_mag_bbox.align_with_mag(
-                Mag(self.header.file_len * self.header.block_len), ceil=True
+                Mag(self.info.shard_size), ceil=True
             )
             # The data bbox should either be aligned or match the dataset's bounding box:
             current_mag_view_bbox = self.bounding_box.in_mag(self._mag)
@@ -555,7 +556,7 @@ class View:
 
         return View(
             self._path,
-            self.header,
+            self.info,
             bounding_box=mag1_bbox,
             mag=self._mag,
             read_only=read_only,
@@ -838,16 +839,13 @@ class View:
             )
 
     def _is_compressed(self) -> bool:
-        return (
-            self.header.block_type == wkw.Header.BLOCK_TYPE_LZ4
-            or self.header.block_type == wkw.Header.BLOCK_TYPE_LZ4HC
-        )
+        return self.info.compression_mode
 
     def get_dtype(self) -> type:
         """
         Returns the dtype per channel of the data. For example `uint8`.
         """
-        return self.header.voxel_type
+        return self.info.voxel_type
 
     def __enter__(self) -> "View":
         warnings.warn(
@@ -871,45 +869,45 @@ class View:
             strictly_positive=True
         ), f"The passed parameter 'chunk_size' {chunk_size} contains at least one 0. This is not allowed."
 
-        divisor = self.mag.to_vec3_int() * self.header.block_len
+        divisor = self.mag.to_vec3_int() * self.info.chunk_size
         if not read_only:
-            divisor *= self.header.file_len
+            divisor *= self.info.chunks_per_shard
         assert chunk_size % divisor == Vec3Int.zeros(), (
             f"The chunk_size {chunk_size} must be a multiple of "
-            + f"mag*block_len{'*file_len' if not read_only else ''} of the view, "
+            + f"mag*chunk_size{'*chunks_per_shard' if not read_only else ''} of the view, "
             + f"which is {divisor})."
         )
 
     def _get_file_dimensions(self) -> Vec3Int:
-        return Vec3Int.full(self.header.file_len * self.header.block_len)
+        return self.info.shard_size
 
     def _get_file_dimensions_mag1(self) -> Vec3Int:
         return self._get_file_dimensions() * self.mag.to_vec3_int()
 
     @property
-    def _wkw_dataset(self) -> wkw.Dataset:
-        if self._cached_wkw_dataset is None:
-            self._cached_wkw_dataset = Dataset.open(
+    def _backend(self) -> wkw.Dataset:
+        if self._cached_backend is None:
+            self._cached_backend = Dataset.open(
                 str(self._path)
             )  # No need to pass the header to the wkw.Dataset
-        return self._cached_wkw_dataset
+        return self._backend
 
-    @_wkw_dataset.deleter
-    def _wkw_dataset(self) -> None:
-        if self._cached_wkw_dataset is not None:
-            self._cached_wkw_dataset.close()
-            self._cached_wkw_dataset = None
+    @_backend.deleter
+    def _backend(self) -> None:
+        if self._cached_backend is not None:
+            self._cached_backend.close()
+            self._cached_backend = None
 
     def __del__(self) -> None:
-        del self._cached_wkw_dataset
+        del self._cached_backend
 
     def __getstate__(self) -> Dict[str, Any]:
         d = dict(self.__dict__)
-        del d["_cached_wkw_dataset"]
+        del d["_cached_backend"]
         return d
 
     def __setstate__(self, d: Dict[str, Any]) -> None:
-        d["_cached_wkw_dataset"] = None
+        d["_cached_backend"] = None
         self.__dict__ = d
 
 

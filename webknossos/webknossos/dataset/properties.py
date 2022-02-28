@@ -4,11 +4,11 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 import attr
 import cattr
 import numpy as np
-import wkw
 from cattr.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 
+from webknossos.dataset.backends import WKWStorageBackend
 from webknossos.dataset.layer_categories import LayerCategoryType
-from webknossos.geometry import BoundingBox, Mag
+from webknossos.geometry import BoundingBox, Mag, Vec3Int
 from webknossos.utils import snake_to_camel_case
 
 
@@ -41,8 +41,7 @@ def _extract_num_channels(
             f"Please add the attribute manually to solve the problem. "
             f"If the layer does not contain any data, you can also delete the layer and add it again."
         )
-    wkw_ds = wkw.Dataset.open(wkw_ds_file_path)
-    return wkw_ds.header.num_channels
+    return WKWStorageBackend(wkw_ds_file_path).info.num_channels
 
 
 _properties_floating_type_to_python_type: Dict[Union[str, type], np.dtype] = {
@@ -99,7 +98,7 @@ class LayerViewConfiguration:
 @attr.define
 class MagViewProperties:
     resolution: Mag
-    cube_length: int
+    cube_length: Vec3Int
 
 
 @attr.define

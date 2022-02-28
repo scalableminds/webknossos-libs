@@ -92,9 +92,9 @@ def download_dataset(
         for mag in mags:
             mag_view = layer.get_or_add_mag(
                 mag,
-                compress=True,
-                block_len=32,
-                file_len=_DOWNLOAD_CHUNK_SIZE[0] // 32,
+                compression_mode=True,
+                chunk_size=Vec3Int.full(32),
+                chunks_per_shard=_DOWNLOAD_CHUNK_SIZE // 32,
             )
             aligned_bbox = layer.bounding_box.align_with_mag(mag, ceil=True)
             download_chunk_size_in_mag = _DOWNLOAD_CHUNK_SIZE * mag.to_vec3_int()

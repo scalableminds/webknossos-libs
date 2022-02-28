@@ -13,14 +13,16 @@ from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 import numpy as np
 import wkw
 
+from webknossos.dataset.backends import WKWStorageBackend
 from webknossos.geometry import BoundingBox, Mag
+from webknossos.geometry.vec3_int import Vec3Int
 
 from .downsampling_utils import (
     SamplingModes,
     calculate_default_max_mag,
     calculate_mags_to_downsample,
     calculate_mags_to_upsample,
-    determine_buffer_edge_len,
+    determine_buffer_shape,
     downsample_cube_job,
     parse_interpolation_mode,
 )
@@ -205,7 +207,7 @@ class Layer:
             mag._path = _find_mag_path_on_disk(self.dataset.path, self.name, mag.name)
             # Deleting the dataset will close the file handle.
             # The new dataset will be opened automatically when needed.
-            del mag._wkw_dataset
+            del mag._backend
 
         self.dataset._export_as_json()
 
@@ -260,13 +262,13 @@ class Layer:
     def add_mag(
         self,
         mag: Union[int, str, list, tuple, np.ndarray, Mag],
-        block_len: int = 32,
-        file_len: int = DEFAULT_WKW_FILE_LEN,
-        compress: bool = False,
+        chunk_size: Vec3Int = Vec3Int.full(32),
+        chunks_per_shard: Vec3Int = Vec3Int.full(DEFAULT_WKW_FILE_LEN),
+        compression_mode: bool = False,
     ) -> MagView:
         """
         Creates a new mag called and adds it to the layer.
-        The parameter `block_len`, `file_len` and `compress` can be
+        The parameter `chunk_size`, `chunks_per_shard` and `compress` can be
         specified to adjust how the data is stored on disk.
         Note that writing compressed data which is not aligned with the blocks on disk may result in
         diminished performance, as full blocks will automatically be read to pad the write actions. Alternatively,
@@ -278,20 +280,22 @@ class Layer:
         """
         # normalize the name of the mag
         mag = Mag(mag)
-        block_type = (
-            wkw.Header.BLOCK_TYPE_LZ4HC if compress else wkw.Header.BLOCK_TYPE_RAW
-        )
 
         self._assert_mag_does_not_exist_yet(mag)
         self._create_dir_for_mag(mag)
 
-        mag_view = MagView(self, mag, block_len, file_len, block_type, create=True)
+        mag_view = MagView(
+            self,
+            mag,
+            chunk_size=chunk_size,
+            chunks_per_shard=chunks_per_shard,
+            compression_mode=compression_mode,
+            create=True,
+        )
 
         self._mags[mag] = mag_view
         self._properties.wkw_resolutions += [
-            MagViewProperties(
-                Mag(mag_view.name), mag_view.header.block_len * mag_view.header.file_len
-            )
+            MagViewProperties(Mag(mag_view.name), mag_view.info.shard_size)
         ]
 
         self.dataset._export_as_json()
@@ -313,7 +317,7 @@ class Layer:
         ), f"Cannot add mag {mag} as it already exists for layer {self}"
         self._setup_mag(mag)
         mag_view = self._mags[mag]
-        cube_length = mag_view.header.file_len * mag_view.header.block_len
+        cube_length = mag_view.info.shard_size
         self._properties.wkw_resolutions.append(
             MagViewProperties(resolution=mag, cube_length=cube_length)
         )
@@ -324,9 +328,9 @@ class Layer:
     def get_or_add_mag(
         self,
         mag: Union[int, str, list, tuple, np.ndarray, Mag],
-        block_len: int = 32,
-        file_len: int = DEFAULT_WKW_FILE_LEN,
-        compress: bool = False,
+        chunk_size: Vec3Int = Vec3Int.full(32),
+        chunks_per_shard: Vec3Int = Vec3Int.full(DEFAULT_WKW_FILE_LEN),
+        compression_mode: bool = False,
     ) -> MagView:
         """
         Creates a new mag called and adds it to the dataset, in case it did not exist before.
@@ -337,24 +341,26 @@ class Layer:
 
         # normalize the name of the mag
         mag = Mag(mag)
-        block_type = (
-            wkw.Header.BLOCK_TYPE_LZ4HC if compress else wkw.Header.BLOCK_TYPE_RAW
-        )
 
         if mag in self._mags.keys():
             assert (
-                block_len is None or self._mags[mag].header.block_len == block_len
-            ), f"Cannot get_or_add_mag: The mag {mag} already exists, but the block lengths do not match"
+                chunk_size is None or self._mags[mag].info.chunk_size == chunk_size
+            ), f"Cannot get_or_add_mag: The mag {mag} already exists, but the chunk sizes do not match"
             assert (
-                file_len is None or self._mags[mag].header.file_len == file_len
-            ), f"Cannot get_or_add_mag: The mag {mag} already exists, but the file lengths do not match"
+                chunks_per_shard is None
+                or self._mags[mag].info.chunks_per_shard == chunks_per_shard
+            ), f"Cannot get_or_add_mag: The mag {mag} already exists, but the chunks per shard do not match"
             assert (
-                block_type is None or self._mags[mag].header.block_type == block_type
-            ), f"Cannot get_or_add_mag: The mag {mag} already exists, but the block types do not match"
+                compression_mode is None
+                or self._mags[mag].info.compression_mode == compression_mode
+            ), f"Cannot get_or_add_mag: The mag {mag} already exists, but the compression modes do not match"
             return self.get_mag(mag)
         else:
             return self.add_mag(
-                mag, block_len=block_len, file_len=file_len, compress=compress
+                mag,
+                chunk_size=chunk_size,
+                chunks_per_shard=chunks_per_shard,
+                compression_mode=compression_mode,
             )
 
     def delete_mag(self, mag: Union[int, str, list, tuple, np.ndarray, Mag]) -> None:
@@ -508,9 +514,9 @@ class Layer:
         from_mag: Optional[Mag] = None,
         max_mag: Optional[Mag] = None,
         interpolation_mode: str = "default",
-        compress: bool = True,
+        compression_mode: bool = True,
         sampling_mode: str = SamplingModes.ANISOTROPIC,
-        buffer_edge_len: Optional[int] = None,
+        buffer_shape: Optional[Vec3Int] = None,
         force_sampling_scheme: bool = False,
         args: Optional[Namespace] = None,
         allow_overwrite: bool = False,
@@ -599,8 +605,8 @@ class Layer:
                 from_mag=prev_mag,
                 target_mag=target_mag,
                 interpolation_mode=interpolation_mode,
-                compress=compress,
-                buffer_edge_len=buffer_edge_len,
+                compression_mode=compression_mode,
+                buffer_shape=buffer_shape,
                 args=args,
                 allow_overwrite=allow_overwrite,
                 only_setup_mag=only_setup_mags,
@@ -611,8 +617,8 @@ class Layer:
         from_mag: Mag,
         target_mag: Mag,
         interpolation_mode: str = "default",
-        compress: bool = True,
-        buffer_edge_len: Optional[int] = None,
+        compression_mode: bool = True,
+        buffer_shape: Optional[Vec3Int] = None,
         args: Optional[Namespace] = None,
         allow_overwrite: bool = False,
         only_setup_mag: bool = False,
@@ -657,7 +663,7 @@ class Layer:
         else:
             # initialize the new mag
             target_mag_view = self._initialize_mag_from_other_mag(
-                target_mag, prev_mag_view, compress
+                target_mag, prev_mag_view, compression_mode
             )
 
         if only_setup_mag:
@@ -686,15 +692,13 @@ class Layer:
 
         # perform downsampling
         with get_executor_for_args(args) as executor:
-            if buffer_edge_len is None:
-                buffer_edge_len = determine_buffer_edge_len(
-                    prev_mag_view
-                )  # DEFAULT_EDGE_LEN
+            if buffer_shape is None:
+                buffer_shape = determine_buffer_shape(prev_mag_view.info)
             func = named_partial(
                 downsample_cube_job,
                 mag_factors=mag_factors,
                 interpolation_mode=parsed_interpolation_mode,
-                buffer_edge_len=buffer_edge_len,
+                buffer_shape=buffer_shape,
             )
 
             source_view.for_zipped_chunks(
@@ -708,8 +712,8 @@ class Layer:
     def redownsample(
         self,
         interpolation_mode: str = "default",
-        compress: bool = True,
-        buffer_edge_len: Optional[int] = None,
+        compression_mode: bool = True,
+        buffer_shape: Optional[Vec3Int] = None,
         args: Optional[Namespace] = None,
     ) -> None:
         """
@@ -727,8 +731,8 @@ class Layer:
             from_mag,
             target_mags,
             interpolation_mode,
-            compress,
-            buffer_edge_len,
+            compression_mode,
+            buffer_shape,
             args,
             allow_overwrite=True,
         )
@@ -738,8 +742,8 @@ class Layer:
         from_mag: Mag,
         target_mags: List[Mag],
         interpolation_mode: str = "default",
-        compress: bool = True,
-        buffer_edge_len: Optional[int] = None,
+        compression_mode: bool = True,
+        buffer_shape: Optional[Vec3Int] = None,
         args: Optional[Namespace] = None,
         allow_overwrite: bool = False,
         only_setup_mags: bool = False,
@@ -770,8 +774,8 @@ class Layer:
                 source_mag,
                 target_mag,
                 interpolation_mode=interpolation_mode,
-                compress=compress,
-                buffer_edge_len=buffer_edge_len,
+                compression_mode=compression_mode,
+                buffer_shape=buffer_shape,
                 args=args,
                 allow_overwrite=allow_overwrite,
                 only_setup_mag=only_setup_mags,
@@ -782,9 +786,9 @@ class Layer:
         self,
         from_mag: Mag,
         min_mag: Optional[Mag],
-        compress: bool,
+        compression_mode: bool,
         sampling_mode: str = SamplingModes.ANISOTROPIC,
-        buffer_edge_len: Optional[int] = None,
+        buffer_shape: Optional[Vec3Int] = None,
         args: Optional[Namespace] = None,
     ) -> None:
         """
@@ -832,7 +836,7 @@ class Layer:
 
             # initialize the new mag
             target_mag_view = self._initialize_mag_from_other_mag(
-                target_mag, prev_mag_view, compress
+                target_mag, prev_mag_view, compression_mode
             )
 
             # Get target view
@@ -841,14 +845,12 @@ class Layer:
             # perform upsampling
             with get_executor_for_args(args) as executor:
 
-                if buffer_edge_len is None:
-                    buffer_edge_len = determine_buffer_edge_len(
-                        prev_mag_view
-                    )  # DEFAULT_EDGE_LEN
+                if buffer_shape is None:
+                    buffer_shape = determine_buffer_shape(prev_mag_view.info)
                 func = named_partial(
                     upsample_cube_job,
                     mag_factors=mag_factors,
-                    buffer_edge_len=buffer_edge_len,
+                    buffer_shape=buffer_shape,
                 )
                 prev_mag_view.get_view().for_zipped_chunks(
                     # this view is restricted to the bounding box specified in the properties
@@ -866,17 +868,15 @@ class Layer:
         self._assert_mag_does_not_exist_yet(mag)
 
         try:
-            with wkw.Dataset.open(
-                str(_find_mag_path_on_disk(self.dataset.path, self.name, mag_name))
-            ) as wkw_dataset:
-                wk_header = wkw_dataset.header
-
+            info = WKWStorageBackend(
+                _find_mag_path_on_disk(self.dataset.path, self.name, mag_name)
+            ).info
             self._mags[mag] = MagView(
                 self,
                 mag,
-                wk_header.block_len,
-                wk_header.file_len,
-                wk_header.block_type,
+                info.chunk_size,
+                info.chunks_per_shard,
+                info.compression_mode,
             )
         except wkw.wkw.WKWException as e:
             logging.error(
@@ -884,13 +884,13 @@ class Layer:
             )
 
     def _initialize_mag_from_other_mag(
-        self, new_mag_name: Union[str, Mag], other_mag: MagView, compress: bool
+        self, new_mag_name: Union[str, Mag], other_mag: MagView, compression_mode: bool
     ) -> MagView:
         return self.add_mag(
             new_mag_name,
-            block_len=other_mag.header.block_len,
-            file_len=other_mag.header.file_len,
-            compress=compress,
+            chunk_size=other_mag.info.chunk_size,
+            chunks_per_shard=other_mag.info.chunks_per_shard,
+            compression_mode=compression_mode,
         )
 
     def __repr__(self) -> str:
