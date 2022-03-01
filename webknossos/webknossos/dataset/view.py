@@ -900,7 +900,7 @@ class View:
             self._cached_backend = WKWStorageBackend(
                 self._path
             )  # No need to pass the header to the wkw.Dataset
-        return self._backend
+        return self._cached_backend
 
     @_backend.deleter
     def _backend(self) -> None:
