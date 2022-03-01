@@ -85,10 +85,6 @@ def test_skeleton_synapse_candidates() -> None:
     assert len(ids) == len(id_set), "Graph IDs are not unique."
 
 
-# Allowing requests to download the cells3d dataset via pooch,
-# which are not snapshotted
-@pytest.mark.block_network(allowed_hosts=[".*"])
-@pytest.mark.vcr(ignore_hosts=["gitlab.com"])
 def test_upload_image_data() -> None:
     with tmp_cwd():
         import examples.upload_image_data as example
