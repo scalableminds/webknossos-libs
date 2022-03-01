@@ -1554,7 +1554,7 @@ def create_dataset(tmp_path: Path) -> Generator[MagView, None, None]:
     ds = Dataset(Path(tmp_path), scale=(2, 2, 1))
 
     mag = ds.add_layer("color", "color").add_mag(
-        "2-2-1", chunk_size=Vec3Int(8), chunks_per_shard=Vec3Int(8)
+        "2-2-1", chunk_size=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(8)
     )  # cube_size = 8*8 = 64
     yield mag
 
