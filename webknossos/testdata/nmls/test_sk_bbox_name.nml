@@ -1,0 +1,22 @@
+<things>
+  <meta name="writer" content="NmlWriter.scala" />
+  <meta name="writerGitCommit" content="0fd9157b33a02236ba0664de6f682ed5f4d1f056" />
+  <meta name="timestamp" content="1645536953837" />
+  <meta name="annotationId" content="6214d85f010000b40049dd33" />
+  <meta name="username" content="Norman Rzepka" />
+  <parameters>
+    <experiment name="l4dense_motta_et_al_demo" organization="scalable_minds" description="" />
+    <scale x="11.24" y="11.24" z="28.0" />
+    <offset x="0" y="0" z="0" />
+    <time ms="1645533279398" />
+    <editPosition x="2948" y="4359" z="1792" />
+    <editRotation xRot="0.0" yRot="0.0" zRot="0.0" />
+    <zoomLevel zoom="1.0" />
+    <userBoundingBox id="1" name="Foo" isVisible="true" color.r="0.9058823585510254" color.g="0.9686274528503418" color.b="0.05882352963089943" color.a="1.0" topLeftX="2718" topLeftY="4255" topLeftZ="1753" width="196" height="194" depth="78" />
+    <userBoundingBox id="2" name="Bar" isVisible="true" color.r="0.3490196168422699" color.g="0.7058823704719543" color.b="0.5215686559677124" color.a="1.0" topLeftX="2956" topLeftY="4240" topLeftZ="1753" width="196" height="194" depth="78" />
+  </parameters>
+  <branchpoints />
+  <comments />
+  <groups />
+  <volume id="0" location="data_Volume.zip" name="Volume" fallbackLayer="segmentation" />
+</things>
