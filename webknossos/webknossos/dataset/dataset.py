@@ -606,7 +606,7 @@ class Dataset:
             if make_relative
             else foreign_layer_path.resolve()
         )
-        foreign_layer_symlink_path.symlink_to(self.path / layer_name)
+        (self.path / layer_name).symlink_to(foreign_layer_symlink_path)
         original_layer = Dataset.open(foreign_layer_path.parent).get_layer(
             foreign_layer_name
         )

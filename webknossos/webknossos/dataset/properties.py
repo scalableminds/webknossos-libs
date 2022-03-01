@@ -144,7 +144,9 @@ dataset_converter.register_structure_hook(Mag, lambda d, _: Mag(d))
 
 vec3int_to_array: Callable[[Vec3Int], List[int]] = lambda o: o.to_list()
 dataset_converter.register_unstructure_hook(Vec3Int, vec3int_to_array)
-dataset_converter.register_structure_hook(Vec3Int, lambda d, _: Vec3Int(d))
+dataset_converter.register_structure_hook(
+    Vec3Int, lambda d, _: Vec3Int.full(d) if isinstance(d, int) else Vec3Int(d)
+)
 
 dataset_converter.register_structure_hook(LayerCategoryType, lambda d, _: str(d))
 

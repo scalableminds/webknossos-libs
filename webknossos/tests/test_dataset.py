@@ -480,8 +480,8 @@ def test_get_or_add_mag() -> None:
     # The mag did not exist before
     mag = layer.get_or_add_mag(
         "1",
-        chunk_size=Vec3Int(32),
-        chunks_per_shard=Vec3Int(32),
+        chunk_size=Vec3Int.full(32),
+        chunks_per_shard=Vec3Int.full(32),
         compression_mode=False,
     )
     assert Mag(1) in layer.mags.keys()
@@ -490,8 +490,8 @@ def test_get_or_add_mag() -> None:
     # The mag did exist before
     layer.get_or_add_mag(
         "1",
-        chunk_size=Vec3Int(32),
-        chunks_per_shard=Vec3Int(32),
+        chunk_size=Vec3Int.full(32),
+        chunks_per_shard=Vec3Int.full(32),
         compression_mode=False,
     )
     assert Mag(1) in layer.mags.keys()
@@ -501,8 +501,8 @@ def test_get_or_add_mag() -> None:
         # The mag "1" did exist before but with another 'chunk_size' (this would work the same for 'chunks_per_shard' and 'compression')
         layer.get_or_add_mag(
             "1",
-            chunk_size=Vec3Int(64),
-            chunks_per_shard=Vec3Int(32),
+            chunk_size=Vec3Int.full(64),
+            chunks_per_shard=Vec3Int.full(32),
             compression_mode=False,
         )
 
@@ -616,7 +616,9 @@ def test_properties_with_segmentation() -> None:
 def test_chunking_wk(tmp_path: Path) -> None:
     ds = Dataset(Path(tmp_path), scale=(2, 2, 1))
     layer = ds.add_layer("color", COLOR_CATEGORY)
-    mag = layer.add_mag("1", chunks_per_shard=Vec3Int(8), chunk_size=Vec3Int(8))
+    mag = layer.add_mag(
+        "1", chunks_per_shard=Vec3Int.full(8), chunk_size=Vec3Int.full(8)
+    )
 
     original_data = (np.random.rand(50, 100, 150) * 205).astype(np.uint8)
     mag.write(absolute_offset=(70, 80, 90), data=original_data)
@@ -652,7 +654,7 @@ def test_chunking_wk_advanced() -> None:
         category=COLOR_CATEGORY,
         dtype_per_channel="uint8",
         num_channels=3,
-    ).add_mag("1", chunk_size=Vec3Int(8), chunks_per_shard=Vec3Int(8))
+    ).add_mag("1", chunk_size=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(8))
     mag.write(data=(np.random.rand(3, 256, 256, 256) * 255).astype(np.uint8))
     view = mag.get_view(absolute_offset=(10, 10, 10), size=(150, 150, 54))
     for_each_chunking_advanced(ds, view)
@@ -670,7 +672,7 @@ def test_chunking_wk_wrong_chunk_size() -> None:
         category=COLOR_CATEGORY,
         dtype_per_channel="uint8",
         num_channels=3,
-    ).add_mag("1", chunk_size=Vec3Int(8), chunks_per_shard=Vec3Int(8))
+    ).add_mag("1", chunk_size=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(8))
     mag.write(data=(np.random.rand(3, 256, 256, 256) * 255).astype(np.uint8))
     view = mag.get_view()
 
@@ -964,7 +966,7 @@ def test_writing_subset_of_compressed_data_multi_channel() -> None:
     mag_view = (
         Dataset(TESTOUTPUT_DIR / "compressed_data", scale=(1, 1, 1))
         .add_layer("color", COLOR_CATEGORY, num_channels=3)
-        .add_mag("1", chunk_size=Vec3Int(8), chunks_per_shard=Vec3Int(8))
+        .add_mag("1", chunk_size=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(8))
     )
     mag_view.write(write_data1)
     mag_view.compress()
@@ -1003,7 +1005,7 @@ def test_writing_subset_of_compressed_data_single_channel() -> None:
     mag_view = (
         Dataset(TESTOUTPUT_DIR / "compressed_data", scale=(1, 1, 1))
         .add_layer("color", COLOR_CATEGORY)
-        .add_mag("1", chunk_size=Vec3Int(8), chunks_per_shard=Vec3Int(8))
+        .add_mag("1", chunk_size=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(8))
     )
     mag_view.write(write_data1)
     mag_view.compress()
@@ -1041,7 +1043,7 @@ def test_writing_subset_of_compressed_data() -> None:
     mag_view = (
         Dataset(TESTOUTPUT_DIR / "compressed_data", scale=(1, 1, 1))
         .add_layer("color", COLOR_CATEGORY)
-        .add_mag("2", chunk_size=Vec3Int(8), chunks_per_shard=Vec3Int(8))
+        .add_mag("2", chunk_size=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(8))
     )
     mag_view.write((np.random.rand(120, 140, 160) * 255).astype(np.uint8))
     mag_view.compress()
@@ -1101,7 +1103,7 @@ def test_writing_subset_of_chunked_compressed_data() -> None:
     mag_view = (
         Dataset(TESTOUTPUT_DIR / "compressed_data", scale=(1, 1, 1))
         .add_layer("color", COLOR_CATEGORY)
-        .add_mag("1", chunk_size=Vec3Int(8), chunks_per_shard=Vec3Int(8))
+        .add_mag("1", chunk_size=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(8))
     )
     mag_view.write(write_data1)
     mag_view.compress()
@@ -1391,23 +1393,27 @@ def test_dataset_conversion() -> None:
         num_channels=1,
         largest_segment_id=1000000000,
     )
-    seg_layer.add_mag("1", chunk_size=Vec3Int(8), chunks_per_shard=Vec3Int(16)).write(
+    seg_layer.add_mag(
+        "1", chunk_size=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(16)
+    ).write(
         absolute_offset=(10, 20, 30),
         data=(np.random.rand(128, 128, 256) * 255).astype(np.uint8),
     )
-    seg_layer.add_mag("2", chunk_size=Vec3Int(8), chunks_per_shard=Vec3Int(16)).write(
+    seg_layer.add_mag(
+        "2", chunk_size=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(16)
+    ).write(
         absolute_offset=(10, 20, 30),
         data=(np.random.rand(64, 64, 128) * 255).astype(np.uint8),
     )
     wk_color_layer = origin_ds.add_layer("layer2", COLOR_CATEGORY, num_channels=3)
     wk_color_layer.add_mag(
-        "1", chunk_size=Vec3Int(8), chunks_per_shard=Vec3Int(16)
+        "1", chunk_size=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(16)
     ).write(
         absolute_offset=(10, 20, 30),
         data=(np.random.rand(3, 128, 128, 256) * 255).astype(np.uint8),
     )
     wk_color_layer.add_mag(
-        "2", chunk_size=Vec3Int(8), chunks_per_shard=Vec3Int(16)
+        "2", chunk_size=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(16)
     ).write(
         absolute_offset=(10, 20, 30),
         data=(np.random.rand(3, 64, 64, 128) * 255).astype(np.uint8),
@@ -1458,7 +1464,9 @@ def test_for_zipped_chunks() -> None:
             dtype_per_channel="uint8",
             num_channels=3,
         )
-        .get_or_add_mag("1", chunk_size=Vec3Int(8), chunks_per_shard=Vec3Int(4))
+        .get_or_add_mag(
+            "1", chunk_size=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(4)
+        )
     )
 
     target_mag.layer.bounding_box = BoundingBox((0, 0, 0), (256, 256, 256))
@@ -1501,12 +1509,12 @@ def test_for_zipped_chunks_invalid_target_chunk_size_wk() -> None:
     ds = Dataset(TESTOUTPUT_DIR / "zipped_chunking_source_invalid", scale=(1, 1, 1))
     layer1 = ds.get_or_add_layer("color1", COLOR_CATEGORY)
     source_mag_view = layer1.get_or_add_mag(
-        1, chunk_size=Vec3Int(8), chunks_per_shard=Vec3Int(8)
+        1, chunk_size=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(8)
     )
 
     layer2 = ds.get_or_add_layer("color2", COLOR_CATEGORY)
     target_mag_view = layer2.get_or_add_mag(
-        1, chunk_size=Vec3Int(8), chunks_per_shard=Vec3Int(8)
+        1, chunk_size=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(8)
     )
 
     source_view = source_mag_view.get_view(

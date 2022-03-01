@@ -423,8 +423,8 @@ class Layer:
         )
 
         if symlink:
-            foreign_normalized_mag_path.symlink_to(
-                self.dataset.path / self.name / str(foreign_mag_view.mag),
+            (self.dataset.path / self.name / str(foreign_mag_view.mag)).symlink_to(
+                foreign_normalized_mag_path
             )
         else:
             shutil.copytree(
