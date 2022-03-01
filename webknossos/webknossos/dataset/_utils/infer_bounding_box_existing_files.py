@@ -14,7 +14,7 @@ WKW_CUBE_REGEX = re.compile(
 
 def cube_addresses(mag_view: MagView) -> List[Tuple[int, int, int]]:
     # Gathers all WKW cubes in the dataset
-    wkw_files = mag_view.path.glob("z*/y*/x*.wkw")
+    wkw_files = mag_view._backend.list_files()
     return sorted(parse_cube_file_name(f) for f in wkw_files)
 
 

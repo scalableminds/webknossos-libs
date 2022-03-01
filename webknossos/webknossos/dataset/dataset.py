@@ -483,12 +483,18 @@ class Dataset:
         self, layer_name: str, category: LayerCategoryType, **kwargs: Any
     ) -> Layer:
         assert layer_name not in self.layers, f"Layer {layer_name} already exists!"
-        mag_headers = list((self.path / layer_name).glob("*/header.wkw"))
+        mag_headers = [
+            WKWStorageBackend.try_open(f)
+            for f in (self.path / layer_name).iterdir()
+            if f.is_dir()
+        ]
+        mag_headers = [m for m in mag_headers if m is not None]
 
         assert (
-            len(mag_headers) != 0
+            len(mag_headers) > 0
         ), f"Could not find any header.wkw files in {self.path / layer_name}, cannot add layer."
-        header = WKWStorageBackend(mag_headers[0].parent).info
+        assert mag_headers[0] is not None
+        header = mag_headers[0].info
         layer = self.add_layer(
             layer_name,
             category=category,

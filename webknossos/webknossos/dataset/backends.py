@@ -33,6 +33,11 @@ class StorageBackend(ABC):
 
     @classmethod
     @abstractmethod
+    def try_open(cls, path: Path) -> Optional["StorageBackend"]:
+        pass
+
+    @classmethod
+    @abstractmethod
     def compress_shard(cls, source_path: Path, target_path: Path) -> None:
         pass
 
@@ -72,6 +77,12 @@ class WKWStorageBackend(StorageBackend):
     def __init__(self, path: Path):
         self._path = path
         self._cached_wkw_dataset = None
+
+    @classmethod
+    def try_open(cls, path: Path) -> Optional["WKWStorageBackend"]:
+        if (path / "header.wkw").is_file():
+            return cls(path)
+        return None
 
     @classmethod
     def compress_shard(_cls, source_path: Path, target_path: Path) -> None:
@@ -172,6 +183,12 @@ class ZarrStorageBackend(StorageBackend):
 
     def __init__(self, path: Path):
         self._path = path
+
+    @classmethod
+    def try_open(cls, path: Path) -> Optional["ZarrStorageBackend"]:
+        if (path / ".zarray").is_file():
+            return cls(path)
+        return None
 
     @classmethod
     def compress_shard(cls, source_path: Path, target_path: Path) -> None:

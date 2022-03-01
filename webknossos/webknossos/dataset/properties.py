@@ -32,7 +32,8 @@ def _extract_num_channels(
 
     mag = Mag(mag)
     wkw_ds_file_path = path / layer / mag.to_layer_name()
-    if not (wkw_ds_file_path / "header.wkw").is_file():
+    wkw_backend = WKWStorageBackend.try_open(wkw_ds_file_path)
+    if wkw_backend is None:
         raise Exception(
             f"The dataset you are trying to open does not have the attribute 'numChannels' for layer {layer}. "
             f"However, this attribute is necessary. To mitigate this problem, it was tried to locate "
@@ -41,7 +42,7 @@ def _extract_num_channels(
             f"Please add the attribute manually to solve the problem. "
             f"If the layer does not contain any data, you can also delete the layer and add it again."
         )
-    return WKWStorageBackend(wkw_ds_file_path).info.num_channels
+    return wkw_backend.info.num_channels
 
 
 _properties_floating_type_to_python_type: Dict[Union[str, type], np.dtype] = {
