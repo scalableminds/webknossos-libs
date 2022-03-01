@@ -38,6 +38,13 @@ class View:
     A `View`, in its most basic form, does not have a reference to its `StorageBackend`.
     """
 
+    _path: Path
+    _storage_info: StorageBackendInfo
+    _bounding_box: Optional[BoundingBox]
+    _read_only: bool
+    _cached_backend: Optional[StorageBackend]
+    _mag: Mag
+
     def __init__(
         self,
         path_to_mag_view: Path,
@@ -844,7 +851,7 @@ class View:
     def _is_compressed(self) -> bool:
         return self.info.compression_mode
 
-    def get_dtype(self) -> type:
+    def get_dtype(self) -> np.dtype:
         """
         Returns the dtype per channel of the data. For example `uint8`.
         """
@@ -898,7 +905,7 @@ class View:
     @_backend.deleter
     def _backend(self) -> None:
         if self._cached_backend is not None:
-            self._cached_backend._close()
+            self._cached_backend.close()
             self._cached_backend = None
 
     def __del__(self) -> None:

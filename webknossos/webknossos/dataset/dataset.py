@@ -25,7 +25,7 @@ import numpy as np
 from boltons.typeutils import make_sentinel
 
 from webknossos.dataset.backends import WKWStorageBackend
-from webknossos.geometry.vec3_int import Vec3Int
+from webknossos.geometry.vec3_int import Vec3Int, Vec3IntLike
 
 if TYPE_CHECKING:
     from webknossos.client._upload_dataset import LayerToLink
@@ -663,8 +663,8 @@ class Dataset:
         self,
         new_dataset_path: Union[str, Path],
         scale: Optional[Tuple[float, float, float]] = None,
-        chunk_size: Optional[Vec3Int] = None,
-        chunks_per_shard: Optional[Vec3Int] = None,
+        chunk_size: Optional[Vec3IntLike] = None,
+        chunks_per_shard: Optional[Vec3IntLike] = None,
         compression_mode: Optional[bool] = None,
         args: Optional[Namespace] = None,
     ) -> "Dataset":
@@ -672,6 +672,11 @@ class Dataset:
         Creates a new dataset at `new_dataset_path` and copies the data from the current dataset to `empty_target_ds`.
         If not specified otherwise, the `scale`, `chunk_size`, `chunks_per_size` and `compression_mode` of the current dataset are also used for the new dataset.
         """
+
+        chunk_size = Vec3Int(chunk_size) if chunk_size is not None else None
+        chunks_per_shard = (
+            Vec3Int(chunks_per_shard) if chunks_per_shard is not None else None
+        )
 
         new_dataset_path = Path(new_dataset_path)
         if scale is None:

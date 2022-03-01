@@ -1425,7 +1425,7 @@ def test_dataset_conversion() -> None:
             converted_info = converted_ds.layers[layer_name].mags[mag].info
             assert origin_info.voxel_type == converted_info.voxel_type
             assert origin_info.num_channels == converted_info.num_channels
-            assert origin_info.compression == converted_info.compression
+            assert origin_info.compression_mode == converted_info.compression_mode
             assert origin_info.chunk_size == converted_info.chunk_size
             assert np.array_equal(
                 origin_ds.layers[layer_name].mags[mag].read(),

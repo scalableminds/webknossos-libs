@@ -60,6 +60,10 @@ class StorageBackend(ABC):
     def list_files(self) -> List[Path]:
         pass
 
+    @abstractmethod
+    def close(self) -> None:
+        pass
+
 
 class WKWStorageBackend(StorageBackend):
     _path: Path
@@ -116,11 +120,11 @@ class WKWStorageBackend(StorageBackend):
         return WKWStorageBackend(path)
 
     def remove(self) -> None:
-        self._close()
+        self.close()
         shutil.rmtree(self._path)
 
     def move(self, target_path: Path) -> "WKWStorageBackend":
-        self._close()
+        self.close()
         shutil.move(str(self._path), target_path)
         return WKWStorageBackend(target_path)
 
@@ -133,7 +137,7 @@ class WKWStorageBackend(StorageBackend):
     def list_files(self) -> List[Path]:
         return [Path(path) for path in self._wkw_dataset.list_files()]
 
-    def _close(self) -> None:
+    def close(self) -> None:
         if self._cached_wkw_dataset is not None:
             self._cached_wkw_dataset.close()
             self._cached_wkw_dataset = None
@@ -148,7 +152,7 @@ class WKWStorageBackend(StorageBackend):
 
     @_wkw_dataset.deleter
     def _wkw_dataset(self) -> None:
-        self._close()
+        self.close()
 
     def __del__(self) -> None:
         del self._cached_wkw_dataset
@@ -237,3 +241,6 @@ class ZarrStorageBackend(StorageBackend):
 
     def list_files(self) -> List[Path]:
         raise NotImplementedError()
+
+    def close(self) -> None:
+        pass
