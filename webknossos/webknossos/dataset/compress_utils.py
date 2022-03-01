@@ -1,8 +1,8 @@
 import logging
 from pathlib import Path
 from typing import Tuple
-from webknossos.dataset.backends import WKWStorageBackend
 
+from webknossos.dataset.backends import WKWStorageBackend
 
 from ..utils import time_start, time_stop
 
