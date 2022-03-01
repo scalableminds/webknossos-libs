@@ -142,6 +142,10 @@ mag_to_array: Callable[[Mag], List[int]] = lambda o: o.to_list()
 dataset_converter.register_unstructure_hook(Mag, mag_to_array)
 dataset_converter.register_structure_hook(Mag, lambda d, _: Mag(d))
 
+vec3int_to_array: Callable[[Vec3Int], List[int]] = lambda o: o.to_list()
+dataset_converter.register_unstructure_hook(Vec3Int, vec3int_to_array)
+dataset_converter.register_structure_hook(Vec3Int, lambda d, _: Vec3Int(d))
+
 dataset_converter.register_structure_hook(LayerCategoryType, lambda d, _: str(d))
 
 # Register (un-)structure hooks for attr-classes to bring the data into the expected format.
