@@ -31,8 +31,9 @@ class StorageBackend(ABC):
     def info(self) -> StorageBackendInfo:
         pass
 
+    @classmethod
     @abstractmethod
-    def compress_shard(self, source_path: Path, target_path: Path) -> None:
+    def compress_shard(cls, source_path: Path, target_path: Path) -> None:
         pass
 
     @abstractmethod
@@ -68,7 +69,8 @@ class WKWStorageBackend(StorageBackend):
         self._path = path
         self._cached_wkw_dataset = None
 
-    def compress_shard(self, source_path: Path, target_path: Path) -> None:
+    @classmethod
+    def compress_shard(_cls, source_path: Path, target_path: Path) -> None:
         wkw.File.compress(str(source_path), str(target_path))
 
     def compress(self, target_path: Path) -> None:
@@ -167,7 +169,8 @@ class ZarrStorageBackend(StorageBackend):
     def __init__(self, path: Path):
         self._path = path
 
-    def compress_shard(self, source_path: Path, target_path: Path) -> None:
+    @classmethod
+    def compress_shard(cls, source_path: Path, target_path: Path) -> None:
         raise NotImplementedError()
 
     def compress(self, target_path: Path) -> None:

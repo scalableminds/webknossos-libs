@@ -898,7 +898,7 @@ class View:
     @_backend.deleter
     def _backend(self) -> None:
         if self._cached_backend is not None:
-            self._cached_backend.close()
+            self._cached_backend._close()
             self._cached_backend = None
 
     def __del__(self) -> None:
