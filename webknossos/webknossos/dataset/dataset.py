@@ -24,7 +24,7 @@ from typing import (
 import attr
 import numpy as np
 import wkw
-from boltons.cacheutils import LRU, cachedmethod
+from boltons.cacheutils import LRU
 from boltons.typeutils import make_sentinel
 
 if TYPE_CHECKING:
