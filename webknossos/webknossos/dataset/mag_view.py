@@ -10,7 +10,7 @@ from uuid import uuid4
 
 import numpy as np
 
-from webknossos.dataset.backends import StorageBackendInfo, WKWStorageBackend
+from webknossos.dataset.storage import StorageArrayInfo, WKWStorageArray
 from webknossos.geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 from webknossos.utils import get_executor_for_args, wait_and_ensure_success
 
@@ -56,7 +56,7 @@ class MagView(View):
         """
         Do not use this constructor manually. Instead use `webknossos.dataset.layer.Layer.add_mag()`.
         """
-        storage_info = StorageBackendInfo(
+        storage_info = StorageArrayInfo(
             voxel_type=layer.dtype_per_channel,
             num_channels=layer.num_channels,
             chunk_size=chunk_size,
@@ -73,7 +73,7 @@ class MagView(View):
         self._layer = layer
 
         if create:
-            WKWStorageBackend.create(self.path, storage_info)
+            WKWStorageArray.create(self.path, storage_info)
 
     # Overwrites of View methods:
     @property
@@ -232,7 +232,7 @@ class MagView(View):
         abstracting from the files on disk.
         """
         cube_size = self._get_file_dimensions()
-        for filename in self._backend.list_files():
+        for filename in self._array.list_files():
             file_path = Path(relpath(filename, self._path))
             cube_index = _extract_file_index(file_path)
             cube_offset = cube_index * cube_size
@@ -276,12 +276,12 @@ class MagView(View):
             )
         )
         # create empty wkw.Dataset
-        self._backend.compress(compressed_full_path)
+        self._array.compress(compressed_full_path)
 
         # compress all files to and move them to 'compressed_path'
         with get_executor_for_args(args) as executor:
             job_args = []
-            for file in self._backend.list_files():
+            for file in self._array.list_files():
                 rel_file = Path(relpath(file, self.layer.dataset.path))
                 job_args.append((Path(file), compressed_path / rel_file))
 

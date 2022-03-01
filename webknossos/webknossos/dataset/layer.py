@@ -1,4 +1,3 @@
-import logging
 import operator
 import re
 import shutil
@@ -11,9 +10,8 @@ from shutil import rmtree
 from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 
 import numpy as np
-import wkw
 
-from webknossos.dataset.backends import WKWStorageBackend
+from webknossos.dataset.storage import WKWStorageArray
 from webknossos.geometry import BoundingBox, Mag
 from webknossos.geometry.vec3_int import Vec3Int
 
@@ -207,7 +205,7 @@ class Layer:
             mag._path = _find_mag_path_on_disk(self.dataset.path, self.name, mag.name)
             # Deleting the dataset will close the file handle.
             # The new dataset will be opened automatically when needed.
-            del mag._backend
+            del mag._array
 
         self.dataset._export_as_json()
 
@@ -867,21 +865,16 @@ class Layer:
 
         self._assert_mag_does_not_exist_yet(mag)
 
-        try:
-            info = WKWStorageBackend(
-                _find_mag_path_on_disk(self.dataset.path, self.name, mag_name)
-            ).info
-            self._mags[mag] = MagView(
-                self,
-                mag,
-                info.chunk_size,
-                info.chunks_per_shard,
-                info.compression_mode,
-            )
-        except wkw.wkw.WKWException as e:
-            logging.error(
-                f"Failed to setup magnification {mag_name}, which is specified in the datasource-properties.json. See {e}"
-            )
+        info = WKWStorageArray(
+            _find_mag_path_on_disk(self.dataset.path, self.name, mag_name)
+        ).info
+        self._mags[mag] = MagView(
+            self,
+            mag,
+            info.chunk_size,
+            info.chunks_per_shard,
+            info.compression_mode,
+        )
 
     def _initialize_mag_from_other_mag(
         self, new_mag_name: Union[str, Mag], other_mag: MagView, compression_mode: bool

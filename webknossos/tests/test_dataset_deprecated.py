@@ -1980,21 +1980,21 @@ def test_pickle_view(tmp_path: Path) -> None:
     ds = Dataset(tmp_path / "ds", scale=(1, 1, 1))
     mag1 = ds.add_layer("color", COLOR_CATEGORY).add_mag(1)
 
-    assert mag1._cached_backend is None
+    assert mag1._cached_array is None
     data_to_write = (np.random.rand(1, 10, 10, 10) * 255).astype(np.uint8)
     mag1.write(data_to_write)
-    assert mag1._cached_backend is not None
+    assert mag1._cached_array is not None
 
     pickle.dump(mag1, open(str(tmp_path / "save.p"), "wb"))
     pickled_mag1 = pickle.load(open(str(tmp_path / "save.p"), "rb"))
 
     # Make sure that the pickled mag can still read data
-    assert pickled_mag1._cached_backend is None
+    assert pickled_mag1._cached_array is None
     assert np.array_equal(
         data_to_write,
         pickled_mag1.read(relative_offset=(0, 0, 0), size=data_to_write.shape[-3:]),
     )
-    assert pickled_mag1._cached_backend is not None
+    assert pickled_mag1._cached_array is not None
 
     # Make sure that the attributes of the MagView (not View) still exist
     assert pickled_mag1.layer is not None

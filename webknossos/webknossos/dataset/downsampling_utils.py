@@ -7,7 +7,7 @@ from typing import Callable, List, Optional, Tuple
 import numpy as np
 from scipy.ndimage import zoom
 
-from webknossos.dataset.backends import StorageBackendInfo
+from webknossos.dataset.storage import StorageArrayInfo
 from webknossos.geometry import Mag, Vec3Int, Vec3IntLike
 from webknossos.geometry.bounding_box import BoundingBox
 from webknossos.utils import time_start, time_stop
@@ -35,7 +35,7 @@ class InterpolationModes(Enum):
 DEFAULT_BUFFER_SHAPE = Vec3Int.full(256)
 
 
-def determine_buffer_shape(storage_info: StorageBackendInfo) -> Vec3Int:
+def determine_buffer_shape(storage_info: StorageArrayInfo) -> Vec3Int:
     return min(DEFAULT_BUFFER_SHAPE, storage_info.shard_size)
 
 

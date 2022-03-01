@@ -17,11 +17,7 @@ import cluster_tools
 import numpy as np
 from cluster_tools.schedulers.cluster_executor import ClusterExecutor
 
-from webknossos.dataset.backends import (
-    StorageBackend,
-    StorageBackendInfo,
-    WKWStorageBackend,
-)
+from webknossos.dataset.storage import StorageArray, StorageArrayInfo, WKWStorageArray
 from webknossos.geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 from webknossos.utils import get_rich_progress, wait_and_ensure_success
 
@@ -39,16 +35,16 @@ class View:
     """
 
     _path: Path
-    _storage_info: StorageBackendInfo
+    _storage_info: StorageArrayInfo
     _bounding_box: Optional[BoundingBox]
     _read_only: bool
-    _cached_backend: Optional[StorageBackend]
+    _cached_array: Optional[StorageArray]
     _mag: Mag
 
     def __init__(
         self,
         path_to_mag_view: Path,
-        storage_info: StorageBackendInfo,
+        storage_info: StorageArrayInfo,
         bounding_box: Optional[
             BoundingBox
         ],  # in mag 1, absolute coordinates, optional only for mag_view since it overwrites the bounding_box property
@@ -62,11 +58,11 @@ class View:
         self._storage_info = storage_info
         self._bounding_box = bounding_box
         self._read_only = read_only
-        self._cached_backend = None
+        self._cached_array = None
         self._mag = mag
 
     @property
-    def info(self) -> StorageBackendInfo:
+    def info(self) -> StorageArrayInfo:
         return self._storage_info
 
     @property
@@ -232,7 +228,7 @@ class View:
                 current_mag_bbox, data
             )
 
-        self._backend.write(current_mag_bbox.topleft, data)
+        self._array.write(current_mag_bbox.topleft, data)
 
     def _handle_compressed_write(
         self, current_mag_bbox: BoundingBox, data: np.ndarray
@@ -422,7 +418,7 @@ class View:
         self,
         current_mag_bbox: BoundingBox,
     ) -> np.ndarray:
-        data = self._backend.read(
+        data = self._array.read(
             current_mag_bbox.topleft.to_np(), current_mag_bbox.size.to_np()
         )
         return data
@@ -895,29 +891,29 @@ class View:
         return self._get_file_dimensions() * self.mag.to_vec3_int()
 
     @property
-    def _backend(self) -> StorageBackend:
-        if self._cached_backend is None:
-            self._cached_backend = WKWStorageBackend(
+    def _array(self) -> StorageArray:
+        if self._cached_array is None:
+            self._cached_array = WKWStorageArray(
                 self._path
             )  # No need to pass the header to the wkw.Dataset
-        return self._cached_backend
+        return self._cached_array
 
-    @_backend.deleter
-    def _backend(self) -> None:
-        if self._cached_backend is not None:
-            self._cached_backend.close()
-            self._cached_backend = None
+    @_array.deleter
+    def _array(self) -> None:
+        if self._cached_array is not None:
+            self._cached_array.close()
+            self._cached_array = None
 
     def __del__(self) -> None:
-        del self._cached_backend
+        del self._cached_array
 
     def __getstate__(self) -> Dict[str, Any]:
         d = dict(self.__dict__)
-        del d["_cached_backend"]
+        del d["_cached_array"]
         return d
 
     def __setstate__(self, d: Dict[str, Any]) -> None:
-        d["_cached_backend"] = None
+        d["_cached_array"] = None
         self.__dict__ = d
 
 

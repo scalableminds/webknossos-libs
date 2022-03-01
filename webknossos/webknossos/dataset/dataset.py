@@ -24,7 +24,7 @@ import attr
 import numpy as np
 from boltons.typeutils import make_sentinel
 
-from webknossos.dataset.backends import WKWStorageBackend
+from webknossos.dataset.storage import WKWStorageArray
 from webknossos.geometry.vec3_int import Vec3Int, Vec3IntLike
 
 if TYPE_CHECKING:
@@ -484,7 +484,7 @@ class Dataset:
     ) -> Layer:
         assert layer_name not in self.layers, f"Layer {layer_name} already exists!"
         mag_headers = [
-            WKWStorageBackend.try_open(f)
+            WKWStorageArray.try_open(f)
             for f in (self.path / layer_name).iterdir()
             if f.is_dir()
         ]
