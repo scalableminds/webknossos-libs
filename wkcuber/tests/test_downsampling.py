@@ -22,7 +22,7 @@ from webknossos.geometry import Mag, Vec3Int
 from wkcuber.utils import WkwDatasetInfo, open_wkw
 from wkcuber.downsampling_utils import _mode, non_linear_filter_3d
 
-CUBE_EDGE_LEN = 256
+BUFFER_SHAPE = Vec3Int.full(256)
 
 TESTOUTPUT_DIR = Path("testoutput")
 TESTDATA_DIR = Path("testdata")
@@ -36,15 +36,15 @@ def read_wkw(
 
 
 def test_downsample_cube() -> None:
-    buffer = np.zeros((CUBE_EDGE_LEN,) * 3, dtype=np.uint8)
-    buffer[:, :, :] = np.arange(0, CUBE_EDGE_LEN)
+    buffer = np.zeros(BUFFER_SHAPE.to_tuple(), dtype=np.uint8)
+    buffer[:, :, :] = np.arange(0, BUFFER_SHAPE.x)
 
     output = downsample_cube(buffer, [2, 2, 2], InterpolationModes.MODE)
 
-    assert output.shape == (CUBE_EDGE_LEN // 2,) * 3
+    assert output.shape == BUFFER_SHAPE.to_np() // 2
     assert buffer[0, 0, 0] == 0
     assert buffer[0, 0, 1] == 1
-    assert np.all(output[:, :, :] == np.arange(0, CUBE_EDGE_LEN, 2))
+    assert np.all(output[:, :, :] == np.arange(0, BUFFER_SHAPE.x, 2))
 
 
 def test_downsample_mode() -> None:
@@ -120,7 +120,7 @@ def downsample_test_helper(use_compress: bool) -> None:
         ),
         Vec3Int(2, 2, 2),
         InterpolationModes.MAX,
-        128,
+        Vec3Int.full(128),
     )
 
     assert np.any(source_buffer != 0)
@@ -172,7 +172,7 @@ def test_downsample_multi_channel() -> None:
         (l.get_mag("1").get_view(), l.get_mag("2").get_view(), 0),
         Vec3Int(2, 2, 2),
         InterpolationModes.MAX,
-        CUBE_EDGE_LEN,
+        BUFFER_SHAPE,
     )
 
     channels = []

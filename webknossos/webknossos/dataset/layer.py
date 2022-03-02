@@ -263,8 +263,8 @@ class Layer:
         chunk_size: Optional[Vec3Int] = None,  # DEFAULT_CHUNK_SIZE,
         chunks_per_shard: Optional[Vec3Int] = None,  # DEFAULT_CHUNKS_PER_SHARD,
         compress: bool = False,
-        block_len: Optional[int] = None,
-        file_len: Optional[int] = None,
+        block_len: Optional[int] = None,  # deprecated
+        file_len: Optional[int] = None,  # deprecated
     ) -> MagView:
         """
         Creates a new mag called and adds it to the layer.
@@ -350,8 +350,8 @@ class Layer:
         chunk_size: Optional[Vec3Int] = None,
         chunks_per_shard: Optional[Vec3Int] = None,
         compress: Optional[bool] = None,
-        block_len: Optional[int] = None,
-        file_len: Optional[int] = None,
+        block_len: Optional[int] = None,  # deprecated
+        file_len: Optional[int] = None,  # deprecated
     ) -> MagView:
         """
         Creates a new mag called and adds it to the dataset, in case it did not exist before.
@@ -823,6 +823,7 @@ class Layer:
         compress: bool,
         sampling_mode: str = SamplingModes.ANISOTROPIC,
         buffer_shape: Optional[Vec3Int] = None,
+        buffer_edge_len: Optional[int] = None,
         args: Optional[Namespace] = None,
     ) -> None:
         """
@@ -853,6 +854,9 @@ class Layer:
             raise AttributeError(
                 f"Upsampling failed: {sampling_mode} is not a valid UpsamplingMode ({SamplingModes.ANISOTROPIC}, {SamplingModes.ISOTROPIC}, {SamplingModes.CONSTANT_Z})"
             )
+
+        if buffer_shape is None and buffer_edge_len is not None:
+            buffer_shape = Vec3Int.full(buffer_edge_len)
 
         mags_to_upsample = calculate_mags_to_upsample(from_mag, min_mag, scale)
 

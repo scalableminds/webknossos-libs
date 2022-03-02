@@ -1,3 +1,4 @@
+import chunk
 import copy
 import json
 import shutil
@@ -672,6 +673,8 @@ class Dataset:
         chunk_size: Optional[Vec3IntLike] = None,
         chunks_per_shard: Optional[Vec3IntLike] = None,
         compress: Optional[bool] = None,
+        block_len: Optional[int] = None,  # deprecated
+        file_len: Optional[int] = None,  # deprecated
         args: Optional[Namespace] = None,
     ) -> "Dataset":
         """
@@ -679,10 +682,21 @@ class Dataset:
         If not specified otherwise, the `scale`, `chunk_size`, `chunks_per_size` and `compress` of the current dataset are also used for the new dataset.
         """
 
-        chunk_size = Vec3Int(chunk_size) if chunk_size is not None else None
-        chunks_per_shard = (
-            Vec3Int(chunks_per_shard) if chunks_per_shard is not None else None
-        )
+        if chunk_size is not None:
+            chunk_size = Vec3Int(chunk_size)
+        elif block_len is not None:
+            warnings.warn(
+                "[DEPRECATION] `block_len` is deprecated, please use `chunk_size` instead."
+            )
+            chunk_size = Vec3Int.full(block_len)
+
+        if chunks_per_shard is not None:
+            chunks_per_shard = Vec3Int(chunks_per_shard)
+        elif file_len is not None:
+            warnings.warn(
+                "[DEPRECATION] `file_len` is deprecated, please use `chunks_per_shard` instead."
+            )
+            chunks_per_shard = Vec3Int.full(file_len)
 
         new_dataset_path = Path(new_dataset_path)
         if scale is None:

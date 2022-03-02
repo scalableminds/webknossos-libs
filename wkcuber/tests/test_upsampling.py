@@ -1,6 +1,7 @@
 import tempfile
 from pathlib import Path
 from typing import Tuple, cast
+from webknossos.geometry import Vec3Int
 
 from wkcuber.api.dataset import Dataset
 from wkcuber.api.layer_categories import COLOR_CATEGORY
@@ -11,7 +12,7 @@ import numpy as np
 
 
 WKW_CUBE_SIZE = 1024
-CUBE_EDGE_LEN = 256
+BUFFER_SHAPE = Vec3Int.full(256)
 
 TESTOUTPUT_DIR = Path("testoutput")
 
@@ -36,17 +37,17 @@ def test_upsampling() -> None:
 
 
 def test_upsample_cube() -> None:
-    buffer = np.zeros((CUBE_EDGE_LEN,) * 3, dtype=np.uint8)
-    buffer[:, :, :] = np.arange(0, CUBE_EDGE_LEN)
+    buffer = np.zeros(BUFFER_SHAPE.to_tuple(), dtype=np.uint8)
+    buffer[:, :, :] = np.arange(0, BUFFER_SHAPE.x)
 
     output = upsample_cube(buffer, [2, 2, 2])
 
-    assert output.shape == (CUBE_EDGE_LEN * 2,) * 3
+    assert output.shape == BUFFER_SHAPE.to_np() * 2
     assert output[0, 0, 0] == 0
     assert output[0, 0, 1] == 0
     assert output[0, 0, 2] == 1
     assert output[0, 0, 3] == 1
-    assert np.all(output[:, :, :] == np.repeat(np.arange(0, CUBE_EDGE_LEN), 2))
+    assert np.all(output[:, :, :] == np.repeat(np.arange(0, BUFFER_SHAPE.x), 2))
 
 
 def upsample_test_helper(use_compress: bool) -> None:
@@ -59,8 +60,8 @@ def upsample_test_helper(use_compress: bool) -> None:
         target_offset = cast(
             Tuple[int, int, int], tuple([o * 2 for o in source_offset])
         )
-        source_size = (CUBE_EDGE_LEN, CUBE_EDGE_LEN, CUBE_EDGE_LEN)
-        target_size = (CUBE_EDGE_LEN * 2, CUBE_EDGE_LEN * 2, CUBE_EDGE_LEN)
+        source_size = BUFFER_SHAPE.to_tuple()
+        target_size = (BUFFER_SHAPE * 2).to_tuple()
 
         mag2.write(
             offset=source_offset,
@@ -84,7 +85,7 @@ def upsample_test_helper(use_compress: bool) -> None:
                 0,
             ),
             [0.5, 0.5, 1.0],
-            CUBE_EDGE_LEN,
+            BUFFER_SHAPE,
         )
 
         assert np.any(source_buffer != 0)
@@ -128,7 +129,7 @@ def test_upsample_multi_channel() -> None:
     upsample_cube_job(
         (mag2.get_view(), l.get_mag("1").get_view(), 0),
         [0.5, 0.5, 0.5],
-        CUBE_EDGE_LEN,
+        BUFFER_SHAPE,
     )
 
     channels = []

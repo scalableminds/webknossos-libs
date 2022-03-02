@@ -68,6 +68,7 @@ class View:
 
     @property
     def header(self) -> wkw.Header:
+        """Deprecated"""
         warnings.warn(
             "[DEPRECATION] `header` is deprecated, please use `info` instead."
         )
