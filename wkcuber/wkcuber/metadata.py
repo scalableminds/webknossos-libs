@@ -1,19 +1,30 @@
 import json
-from webknossos.dataset._utils.infer_bounding_box_existing_files import (
-    parse_cube_file_name,
-)
 import wkw
+import re
 import logging
 import numpy as np
+from os import PathLike
+from os.path import sep
 
 from argparse import ArgumentParser
-from typing import Optional, Tuple, Iterable, Generator
+from typing import Optional, Tuple, Iterable, Generator, Union
 
 from webknossos.dataset.layer import LayerCategoryType
 from .mag import Mag
 from typing import List
 from .utils import add_verbose_flag, setup_logging, add_scale_flag
 from pathlib import Path
+
+WKW_CUBE_REGEX = re.compile(
+    fr"z(\d+){re.escape(sep)}y(\d+){re.escape(sep)}x(\d+)(\.wkw)$"
+)
+
+
+def parse_cube_file_name(filename: Union[PathLike, str]) -> Tuple[int, int, int]:
+    match = WKW_CUBE_REGEX.search(str(filename))
+    if match is None:
+        raise ValueError(f"Failed to parse cube file name {filename}")
+    return int(match.group(3)), int(match.group(2)), int(match.group(1))
 
 
 def get_datasource_path(dataset_path: Path) -> Path:

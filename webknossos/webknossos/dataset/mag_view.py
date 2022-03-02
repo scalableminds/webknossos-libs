@@ -1,5 +1,4 @@
 import logging
-import re
 import shutil
 import warnings
 from argparse import Namespace
@@ -231,13 +230,8 @@ class MagView(View):
         This differs from the bounding box in the properties, which is an "overall" bounding box,
         abstracting from the files on disk.
         """
-        cube_size = self._get_file_dimensions()
-        for filename in self._array.list_files():
-            file_path = Path(relpath(filename, self._path))
-            cube_index = _extract_file_index(file_path)
-            cube_offset = cube_index * cube_size
-
-            yield BoundingBox(cube_offset, cube_size).from_mag_to_mag1(self._mag)
+        for bbox in self._array.list_bounding_boxes():
+            yield bbox.from_mag_to_mag1(self._mag)
 
     def compress(
         self,
@@ -314,13 +308,3 @@ class MagView(View):
 
     def __repr__(self) -> str:
         return repr(f"MagView(name={self.name}, bounding_box={self.bounding_box})")
-
-
-def _extract_file_index(file_path: Path) -> Vec3Int:
-    def _extract_num(s: str) -> int:
-        match = re.search("[0-9]+", s)
-        assert match is not None
-        return int(match[0])
-
-    zyx_index = [_extract_num(el) for el in file_path.parts]
-    return Vec3Int(zyx_index[2], zyx_index[1], zyx_index[0])

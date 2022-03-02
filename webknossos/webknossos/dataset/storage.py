@@ -1,15 +1,17 @@
+import re
 import shutil
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from os.path import relpath
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Iterator, Optional
 
 import numpy as np
 import wkw
 import zarr
 from numcodecs import Blosc
 
-from webknossos.geometry import Vec3Int, Vec3IntLike
+from webknossos.geometry import BoundingBox, Vec3Int, Vec3IntLike
 
 
 class StorageArrayException(Exception):
@@ -66,7 +68,11 @@ class StorageArray(ABC):
         pass
 
     @abstractmethod
-    def list_files(self) -> List[Path]:
+    def list_files(self) -> Iterator[Path]:
+        pass
+
+    @abstractmethod
+    def list_bounding_boxes(self) -> Iterator[BoundingBox]:
         pass
 
     @abstractmethod
@@ -153,8 +159,28 @@ class WKWStorageArray(StorageArray):
     def write(self, offset: Vec3IntLike, data: np.ndarray) -> None:
         self._wkw_dataset.write(offset, data)
 
-    def list_files(self) -> List[Path]:
-        return [Path(path) for path in self._wkw_dataset.list_files()]
+    def list_files(self) -> Iterator[Path]:
+        return (
+            Path(relpath(filename, self._path))
+            for filename in self._wkw_dataset.list_files()
+        )
+
+    def list_bounding_boxes(self) -> Iterator[BoundingBox]:
+        def _extract_num(s: str) -> int:
+            match = re.search("[0-9]+", s)
+            assert match is not None
+            return int(match[0])
+
+        def _extract_file_index(file_path: Path) -> Vec3Int:
+            zyx_index = [_extract_num(el) for el in file_path.parts]
+            return Vec3Int(zyx_index[2], zyx_index[1], zyx_index[0])
+
+        shard_size = self.info.shard_size
+        for file_path in self.list_files():
+            cube_index = _extract_file_index(file_path)
+            cube_offset = cube_index * shard_size
+
+            yield BoundingBox(cube_offset, shard_size)
 
     def close(self) -> None:
         if self._cached_wkw_dataset is not None:
@@ -262,7 +288,10 @@ class ZarrStorageArray(StorageArray):
             offset.z : (offset.z + data.shape[3]),
         ] = data
 
-    def list_files(self) -> List[Path]:
+    def list_files(self) -> Iterator[Path]:
+        raise NotImplementedError()
+
+    def list_bounding_boxes(self) -> Iterator[BoundingBox]:
         raise NotImplementedError()
 
     def close(self) -> None:
