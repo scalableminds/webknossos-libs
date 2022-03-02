@@ -493,7 +493,7 @@ class Dataset:
         assert (
             len(mag_headers) > 0
         ), f"Could not find any header.wkw files in {self.path / layer_name}, cannot add layer."
-        assert mag_headers[0] is not None
+        assert mag_headers[0] is not None  # for mypy
         header = mag_headers[0].info
         layer = self.add_layer(
             layer_name,

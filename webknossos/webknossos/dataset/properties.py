@@ -1,5 +1,6 @@
+import warnings
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union, cast
 
 import attr
 import cattr
@@ -99,7 +100,16 @@ class LayerViewConfiguration:
 @attr.define
 class MagViewProperties:
     resolution: Mag
-    cube_length: Vec3Int
+    shard_size: Vec3Int
+
+    @property
+    def cube_length(self) -> int:
+        warnings.warn(
+            "[DEPRECATION] `cube_length` is deprecated, please use `shard_size` instead."
+        )
+        assert self.shard_size.x == self.shard_size.y
+        assert self.shard_size.x == self.shard_size.z
+        return self.shard_size.x
 
 
 @attr.define
@@ -139,8 +149,31 @@ dataset_converter.register_structure_hook(
     BoundingBox, lambda d, _: BoundingBox.from_wkw_dict(d)
 )
 
-mag_to_array: Callable[[Mag], List[int]] = lambda o: o.to_list()
-dataset_converter.register_unstructure_hook(Mag, mag_to_array)
+
+def mag_unstructure(mag: Mag) -> List[int]:
+    return mag.to_list()
+
+
+def mag_properties_unstructure(mag_properties: MagViewProperties) -> Dict[str, Any]:
+    return {
+        "resolution": mag_unstructure(mag_properties.resolution),
+        "cubeLength": mag_properties.shard_size.x,
+        "shardSize": mag_properties.shard_size.to_list(),
+    }
+
+
+def mag_properties_structure(d: Any, _: Any) -> MagViewProperties:
+    d = cast(Dict[str, Any], d)
+    resolution = Mag(d["resolution"])
+    if "shardSize" in d:
+        shard_size = Vec3Int(*d["shardSize"])
+        return MagViewProperties(resolution=resolution, shard_size=shard_size)
+    return MagViewProperties(
+        resolution=resolution, shard_size=Vec3Int.full(d["cubeLength"])
+    )
+
+
+dataset_converter.register_unstructure_hook(Mag, mag_unstructure)
 dataset_converter.register_structure_hook(Mag, lambda d, _: Mag(d))
 
 vec3int_to_array: Callable[[Vec3Int], List[int]] = lambda o: o.to_list()
@@ -150,6 +183,11 @@ dataset_converter.register_structure_hook(
 )
 
 dataset_converter.register_structure_hook(LayerCategoryType, lambda d, _: str(d))
+
+dataset_converter.register_unstructure_hook(
+    MagViewProperties, mag_properties_unstructure
+)
+dataset_converter.register_structure_hook(MagViewProperties, mag_properties_structure)
 
 # Register (un-)structure hooks for attr-classes to bring the data into the expected format.
 # The properties on disk (in datasource-properties.json) use camel case for the names of the attributes.
@@ -161,7 +199,6 @@ for cls in [
     DatasetProperties,
     LayerProperties,
     SegmentationLayerProperties,
-    MagViewProperties,
     DatasetViewConfiguration,
     LayerViewConfiguration,
 ]:

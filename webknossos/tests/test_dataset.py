@@ -184,7 +184,7 @@ def test_create_dataset_with_explicit_header_fields() -> None:
     assert ds.get_layer("color")._properties.element_class == "uint48"
     assert ds.get_layer("color").get_mag(1).info.chunk_size == Vec3Int.full(64)
     assert ds.get_layer("color").get_mag(1).info.chunks_per_shard == Vec3Int.full(64)
-    assert ds.get_layer("color").get_mag(1)._properties.cube_length == Vec3Int.full(
+    assert ds.get_layer("color").get_mag(1)._properties.shard_size == Vec3Int.full(
         64 * 64
     )
     assert ds.get_layer("color").get_mag("2-2-1").info.chunk_size == Vec3Int.full(
@@ -195,7 +195,7 @@ def test_create_dataset_with_explicit_header_fields() -> None:
     )  # defaults are used
     assert ds.get_layer("color").get_mag(
         "2-2-1"
-    )._properties.cube_length == Vec3Int.full(32 * 32)
+    )._properties.shard_size == Vec3Int.full(32 * 32)
 
     assure_exported_properties(ds)
 
@@ -482,7 +482,7 @@ def test_get_or_add_mag() -> None:
         "1",
         chunk_size=Vec3Int.full(32),
         chunks_per_shard=Vec3Int.full(32),
-        compression_mode=False,
+        compress=False,
     )
     assert Mag(1) in layer.mags.keys()
     assert mag.name == "1"
@@ -492,7 +492,7 @@ def test_get_or_add_mag() -> None:
         "1",
         chunk_size=Vec3Int.full(32),
         chunks_per_shard=Vec3Int.full(32),
-        compression_mode=False,
+        compress=False,
     )
     assert Mag(1) in layer.mags.keys()
     assert mag.name == "1"
@@ -503,7 +503,7 @@ def test_get_or_add_mag() -> None:
             "1",
             chunk_size=Vec3Int.full(64),
             chunks_per_shard=Vec3Int.full(32),
-            compression_mode=False,
+            compress=False,
         )
 
     assure_exported_properties(layer.dataset)

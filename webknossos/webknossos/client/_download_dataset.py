@@ -92,7 +92,7 @@ def download_dataset(
         for mag in mags:
             mag_view = layer.get_or_add_mag(
                 mag,
-                compression_mode=True,
+                compress=True,
                 chunk_size=Vec3Int.full(32),
                 chunks_per_shard=_DOWNLOAD_CHUNK_SIZE // 32,
             )

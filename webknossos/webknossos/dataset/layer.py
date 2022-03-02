@@ -40,7 +40,7 @@ if TYPE_CHECKING:
 
 from webknossos.utils import get_executor_for_args, named_partial
 
-from .defaults import DEFAULT_WKW_FILE_LEN
+from .defaults import DEFAULT_CHUNK_SIZE, DEFAULT_CHUNKS_PER_SHARD
 from .mag_view import MagView, _find_mag_path_on_disk
 
 
@@ -260,9 +260,11 @@ class Layer:
     def add_mag(
         self,
         mag: Union[int, str, list, tuple, np.ndarray, Mag],
-        chunk_size: Vec3Int = Vec3Int.full(32),
-        chunks_per_shard: Vec3Int = Vec3Int.full(DEFAULT_WKW_FILE_LEN),
-        compression_mode: bool = False,
+        chunk_size: Optional[Vec3Int] = None,  # DEFAULT_CHUNK_SIZE,
+        chunks_per_shard: Optional[Vec3Int] = None,  # DEFAULT_CHUNKS_PER_SHARD,
+        compress: bool = False,
+        block_len: Optional[int] = None,
+        file_len: Optional[int] = None,
     ) -> MagView:
         """
         Creates a new mag called and adds it to the layer.
@@ -278,6 +280,25 @@ class Layer:
         """
         # normalize the name of the mag
         mag = Mag(mag)
+        compression_mode = compress
+
+        if chunk_size is None:
+            if block_len is not None:
+                warnings.warn(
+                    "[DEPRECATION] `block_len` is deprecated, please use `chunk_size` instead."
+                )
+                chunk_size = Vec3Int.full(block_len)
+            else:
+                chunk_size = DEFAULT_CHUNK_SIZE
+
+        if chunks_per_shard is None:
+            if file_len is not None:
+                warnings.warn(
+                    "[DEPRECATION] `file_len` is deprecated, please use `chunks_per_shard` instead."
+                )
+                chunks_per_shard = Vec3Int.full(file_len)
+            else:
+                chunks_per_shard = DEFAULT_CHUNKS_PER_SHARD
 
         self._assert_mag_does_not_exist_yet(mag)
         self._create_dir_for_mag(mag)
@@ -315,9 +336,9 @@ class Layer:
         ), f"Cannot add mag {mag} as it already exists for layer {self}"
         self._setup_mag(mag)
         mag_view = self._mags[mag]
-        cube_length = mag_view.info.shard_size
+        shard_size = mag_view.info.shard_size
         self._properties.wkw_resolutions.append(
-            MagViewProperties(resolution=mag, cube_length=cube_length)
+            MagViewProperties(resolution=mag, shard_size=shard_size)
         )
         self.dataset._export_as_json()
 
@@ -326,9 +347,11 @@ class Layer:
     def get_or_add_mag(
         self,
         mag: Union[int, str, list, tuple, np.ndarray, Mag],
-        chunk_size: Vec3Int = Vec3Int.full(32),
-        chunks_per_shard: Vec3Int = Vec3Int.full(DEFAULT_WKW_FILE_LEN),
-        compression_mode: bool = False,
+        chunk_size: Optional[Vec3Int] = None,
+        chunks_per_shard: Optional[Vec3Int] = None,
+        compress: Optional[bool] = None,
+        block_len: Optional[int] = None,
+        file_len: Optional[int] = None,
     ) -> MagView:
         """
         Creates a new mag called and adds it to the dataset, in case it did not exist before.
@@ -339,6 +362,19 @@ class Layer:
 
         # normalize the name of the mag
         mag = Mag(mag)
+        compression_mode = compress
+
+        if chunk_size is None and block_len is not None:
+            warnings.warn(
+                "[DEPRECATION] `block_len` is deprecated, please use `chunk_size` instead."
+            )
+            chunk_size = Vec3Int.full(block_len)
+
+        if chunks_per_shard is None and file_len is not None:
+            warnings.warn(
+                "[DEPRECATION] `file_len` is deprecated, please use `chunks_per_shard` instead."
+            )
+            chunks_per_shard = Vec3Int.full(file_len)
 
         if mag in self._mags.keys():
             assert (
@@ -358,7 +394,7 @@ class Layer:
                 mag,
                 chunk_size=chunk_size,
                 chunks_per_shard=chunks_per_shard,
-                compression_mode=compression_mode,
+                compress=compression_mode or False,
             )
 
     def delete_mag(self, mag: Union[int, str, list, tuple, np.ndarray, Mag]) -> None:
@@ -883,7 +919,7 @@ class Layer:
             new_mag_name,
             chunk_size=other_mag.info.chunk_size,
             chunks_per_shard=other_mag.info.chunks_per_shard,
-            compression_mode=compression_mode,
+            compress=compression_mode,
         )
 
     def __repr__(self) -> str:

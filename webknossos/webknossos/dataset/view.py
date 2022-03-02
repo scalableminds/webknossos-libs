@@ -15,6 +15,7 @@ from typing import (
 
 import cluster_tools
 import numpy as np
+import wkw
 from cluster_tools.schedulers.cluster_executor import ClusterExecutor
 
 from webknossos.dataset.storage import StorageArray, StorageArrayInfo, WKWStorageArray
@@ -64,6 +65,14 @@ class View:
     @property
     def info(self) -> StorageArrayInfo:
         return self._storage_info
+
+    @property
+    def header(self) -> wkw.Header:
+        warnings.warn(
+            "[DEPRECATION] `header` is deprecated, please use `info` instead."
+        )
+        assert isinstance(self._array, WKWStorageArray)
+        return self._array._wkw_dataset.header
 
     @property
     def bounding_box(self) -> BoundingBox:

@@ -174,9 +174,7 @@ def test_create_dataset_with_explicit_header_fields() -> None:
     ds = Dataset(TESTOUTPUT_DIR / "wk_dataset_advanced", scale=(1, 1, 1))
     ds.add_layer("color", COLOR_CATEGORY, dtype_per_layer="uint48", num_channels=3)
 
-    ds.get_layer("color").add_mag(
-        "1", chunk_size=Vec3Int.full(64), chunks_per_shard=Vec3Int.full(64)
-    )
+    ds.get_layer("color").add_mag("1", block_len=64, file_len=64)
     ds.get_layer("color").add_mag("2-2-1")
 
     assert (TESTOUTPUT_DIR / "wk_dataset_advanced" / "color" / "1").exists()
@@ -187,20 +185,16 @@ def test_create_dataset_with_explicit_header_fields() -> None:
 
     assert ds.get_layer("color").dtype_per_channel == np.dtype("uint16")
     assert ds.get_layer("color")._properties.element_class == "uint48"
-    assert ds.get_layer("color").get_mag(1).info.chunk_size == Vec3Int.full(64)
-    assert ds.get_layer("color").get_mag(1).info.chunks_per_shard == Vec3Int.full(64)
-    assert ds.get_layer("color").get_mag(1)._properties.cube_length == Vec3Int.full(
-        64 * 64
-    )
-    assert ds.get_layer("color").get_mag("2-2-1").info.chunk_size == Vec3Int.full(
-        32
+    assert ds.get_layer("color").get_mag(1).header.block_len == 64
+    assert ds.get_layer("color").get_mag(1).header.file_len == 64
+    assert ds.get_layer("color").get_mag(1)._properties.cube_length == 64 * 64
+    assert (
+        ds.get_layer("color").get_mag("2-2-1").header.block_len == 32
     )  # defaults are used
-    assert ds.get_layer("color").get_mag("2-2-1").info.chunks_per_shard == Vec3Int.full(
-        32
+    assert (
+        ds.get_layer("color").get_mag("2-2-1").header.file_len == 32
     )  # defaults are used
-    assert ds.get_layer("color").get_mag(
-        "2-2-1"
-    )._properties.cube_length == Vec3Int.full(32 * 32)
+    assert ds.get_layer("color").get_mag("2-2-1")._properties.cube_length == 32 * 32
 
     assure_exported_properties(ds)
 
@@ -481,33 +475,18 @@ def test_get_or_add_mag() -> None:
     assert Mag(1) not in layer.mags.keys()
 
     # The mag did not exist before
-    mag = layer.get_or_add_mag(
-        "1",
-        chunk_size=Vec3Int.full(32),
-        chunks_per_shard=Vec3Int.full(32),
-        compression_mode=False,
-    )
+    mag = layer.get_or_add_mag("1", block_len=32, file_len=32, compress=False)
     assert Mag(1) in layer.mags.keys()
     assert mag.name == "1"
 
     # The mag did exist before
-    layer.get_or_add_mag(
-        "1",
-        chunk_size=Vec3Int.full(32),
-        chunks_per_shard=Vec3Int.full(32),
-        compression_mode=False,
-    )
+    layer.get_or_add_mag("1", block_len=32, file_len=32, compress=False)
     assert Mag(1) in layer.mags.keys()
     assert mag.name == "1"
 
     with pytest.raises(AssertionError):
-        # The mag "1" did exist before but with another 'chunk_size' (this would work the same for 'chunks_per_shard' and 'compression')
-        layer.get_or_add_mag(
-            "1",
-            chunk_size=Vec3Int.full(64),
-            chunks_per_shard=Vec3Int.full(32),
-            compression_mode=False,
-        )
+        # The mag "1" did exist before but with another 'block_len' (this would work the same for 'file_len' and 'block_type')
+        layer.get_or_add_mag("1", block_len=64, file_len=32, compress=False)
 
     assure_exported_properties(layer.dataset)
 
@@ -619,9 +598,7 @@ def test_properties_with_segmentation() -> None:
 def test_chunking_wk(tmp_path: Path) -> None:
     ds = Dataset(Path(tmp_path), scale=(2, 2, 1))
     layer = ds.add_layer("color", COLOR_CATEGORY)
-    mag = layer.add_mag(
-        "1", chunks_per_shard=Vec3Int.full(8), chunk_size=Vec3Int.full(8)
-    )
+    mag = layer.add_mag("1", file_len=8, block_len=8)
 
     original_data = (np.random.rand(50, 100, 150) * 205).astype(np.uint8)
     mag.write(offset=(70, 80, 90), data=original_data)
@@ -657,7 +634,7 @@ def test_chunking_wk_advanced() -> None:
         category=COLOR_CATEGORY,
         dtype_per_channel="uint8",
         num_channels=3,
-    ).add_mag("1", chunk_size=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(8))
+    ).add_mag("1", block_len=8, file_len=8)
     mag.write(data=(np.random.rand(3, 256, 256, 256) * 255).astype(np.uint8))
     view = mag.get_view(size=(150, 150, 54), offset=(10, 10, 10))
 
@@ -676,7 +653,7 @@ def test_chunking_wk_wrong_chunk_size() -> None:
         category=COLOR_CATEGORY,
         dtype_per_channel="uint8",
         num_channels=3,
-    ).add_mag("1", chunk_size=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(8))
+    ).add_mag("1", block_len=8, file_len=8)
     mag.write(data=(np.random.rand(3, 256, 256, 256) * 255).astype(np.uint8))
     view = mag.get_view(size=(256, 256, 256))
 
@@ -977,7 +954,7 @@ def test_writing_subset_of_compressed_data_multi_channel() -> None:
     mag_view = (
         Dataset(TESTOUTPUT_DIR / "compressed_data", scale=(1, 1, 1))
         .add_layer("color", COLOR_CATEGORY, num_channels=3)
-        .add_mag("1", chunk_size=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(8))
+        .add_mag("1", block_len=8, file_len=8)
     )
     mag_view.write(write_data1)
     mag_view.compress()
@@ -1015,7 +992,7 @@ def test_writing_subset_of_compressed_data_single_channel() -> None:
     mag_view = (
         Dataset(TESTOUTPUT_DIR / "compressed_data", scale=(1, 1, 1))
         .add_layer("color", COLOR_CATEGORY)
-        .add_mag("1", chunk_size=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(8))
+        .add_mag("1", block_len=8, file_len=8)
     )
     mag_view.write(write_data1)
     mag_view.compress()
@@ -1052,7 +1029,7 @@ def test_writing_subset_of_compressed_data() -> None:
     mag_view = (
         Dataset(TESTOUTPUT_DIR / "compressed_data", scale=(1, 1, 1))
         .add_layer("color", COLOR_CATEGORY)
-        .add_mag("2", chunk_size=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(8))
+        .add_mag("2", block_len=8, file_len=8)
     )
     mag_view.write((np.random.rand(120, 140, 160) * 255).astype(np.uint8))
     mag_view.compress()
@@ -1112,7 +1089,7 @@ def test_writing_subset_of_chunked_compressed_data() -> None:
     mag_view = (
         Dataset(TESTOUTPUT_DIR / "compressed_data", scale=(1, 1, 1))
         .add_layer("color", COLOR_CATEGORY)
-        .add_mag("1", chunk_size=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(8))
+        .add_mag("1", block_len=8, file_len=8)
     )
     mag_view.write(write_data1)
     mag_view.compress()
@@ -1386,26 +1363,18 @@ def test_dataset_conversion() -> None:
         num_channels=1,
         largest_segment_id=1000000000,
     )
-    seg_layer.add_mag(
-        "1", chunk_size=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(16)
-    ).write(
+    seg_layer.add_mag("1", block_len=8, file_len=16).write(
         offset=(10, 20, 30), data=(np.random.rand(128, 128, 256) * 255).astype(np.uint8)
     )
-    seg_layer.add_mag(
-        "2", chunk_size=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(16)
-    ).write(
+    seg_layer.add_mag("2", block_len=8, file_len=16).write(
         offset=(5, 10, 15), data=(np.random.rand(64, 64, 128) * 255).astype(np.uint8)
     )
     wk_color_layer = origin_ds.add_layer("layer2", COLOR_CATEGORY, num_channels=3)
-    wk_color_layer.add_mag(
-        "1", chunk_size=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(16)
-    ).write(
+    wk_color_layer.add_mag("1", block_len=8, file_len=16).write(
         offset=(10, 20, 30),
         data=(np.random.rand(3, 128, 128, 256) * 255).astype(np.uint8),
     )
-    wk_color_layer.add_mag(
-        "2", chunk_size=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(16)
-    ).write(
+    wk_color_layer.add_mag("2", block_len=8, file_len=16).write(
         offset=(5, 10, 15), data=(np.random.rand(3, 64, 64, 128) * 255).astype(np.uint8)
     )
     converted_ds = origin_ds.copy_dataset(converted_ds_path)
@@ -1417,12 +1386,12 @@ def test_dataset_conversion() -> None:
             == converted_ds.layers[layer_name].mags.keys()
         )
         for mag in origin_ds.layers[layer_name].mags:
-            origin_info = origin_ds.layers[layer_name].mags[mag].info
-            converted_info = converted_ds.layers[layer_name].mags[mag].info
-            assert origin_info.voxel_type == converted_info.voxel_type
-            assert origin_info.num_channels == converted_info.num_channels
-            assert origin_info.compression_mode == converted_info.compression_mode
-            assert origin_info.chunk_size == converted_info.chunk_size
+            origin_header = origin_ds.layers[layer_name].mags[mag].header
+            converted_header = converted_ds.layers[layer_name].mags[mag].header
+            assert origin_header.voxel_type == converted_header.voxel_type
+            assert origin_header.num_channels == converted_header.num_channels
+            assert origin_header.block_type == converted_header.block_type
+            assert origin_header.block_len == converted_header.block_len
             assert np.array_equal(
                 origin_ds.layers[layer_name].mags[mag].read(),
                 converted_ds.layers[layer_name].mags[mag].read(),
@@ -1454,9 +1423,7 @@ def test_for_zipped_chunks() -> None:
             dtype_per_channel="uint8",
             num_channels=3,
         )
-        .get_or_add_mag(
-            "1", chunk_size=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(4)
-        )
+        .get_or_add_mag("1", block_len=8, file_len=4)
     )
 
     target_mag.layer.bounding_box = BoundingBox((0, 0, 0), (256, 256, 256))
@@ -1498,14 +1465,10 @@ def test_for_zipped_chunks_invalid_target_chunk_size_wk() -> None:
 
     ds = Dataset(TESTOUTPUT_DIR / "zipped_chunking_source_invalid", scale=(1, 1, 1))
     layer1 = ds.get_or_add_layer("color1", COLOR_CATEGORY)
-    source_mag_view = layer1.get_or_add_mag(
-        1, chunk_size=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(8)
-    )
+    source_mag_view = layer1.get_or_add_mag(1, block_len=8, file_len=8)
 
     layer2 = ds.get_or_add_layer("color2", COLOR_CATEGORY)
-    target_mag_view = layer2.get_or_add_mag(
-        1, chunk_size=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(8)
-    )
+    target_mag_view = layer2.get_or_add_mag(1, block_len=8, file_len=8)
 
     source_view = source_mag_view.get_view(size=(300, 300, 300), read_only=True)
     layer2.bounding_box = BoundingBox((0, 0, 0), (300, 300, 300))
@@ -1549,7 +1512,7 @@ def create_dataset(tmp_path: Path) -> Generator[MagView, None, None]:
     ds = Dataset(Path(tmp_path), scale=(2, 2, 1))
 
     mag = ds.add_layer("color", "color").add_mag(
-        "2-2-1", chunk_size=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(8)
+        "2-2-1", block_len=8, file_len=8
     )  # cube_size = 8*8 = 64
     yield mag
 
