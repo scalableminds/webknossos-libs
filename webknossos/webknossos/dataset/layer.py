@@ -13,7 +13,7 @@ import numpy as np
 
 from webknossos.dataset.storage import WKWStorageArray
 from webknossos.geometry import BoundingBox, Mag
-from webknossos.geometry.vec3_int import Vec3Int
+from webknossos.geometry import Vec3Int, Vec3IntLike
 
 from .downsampling_utils import (
     SamplingModes,
@@ -260,8 +260,8 @@ class Layer:
     def add_mag(
         self,
         mag: Union[int, str, list, tuple, np.ndarray, Mag],
-        chunk_size: Optional[Vec3Int] = None,  # DEFAULT_CHUNK_SIZE,
-        chunks_per_shard: Optional[Vec3Int] = None,  # DEFAULT_CHUNKS_PER_SHARD,
+        chunk_size: Optional[Vec3IntLike] = None,  # DEFAULT_CHUNK_SIZE,
+        chunks_per_shard: Optional[Vec3IntLike] = None,  # DEFAULT_CHUNKS_PER_SHARD,
         compress: bool = False,
         block_len: Optional[int] = None,  # deprecated
         file_len: Optional[int] = None,  # deprecated
@@ -290,6 +290,8 @@ class Layer:
                 chunk_size = Vec3Int.full(block_len)
             else:
                 chunk_size = DEFAULT_CHUNK_SIZE
+        else:
+            chunk_size = Vec3Int(chunk_size)
 
         if chunks_per_shard is None:
             if file_len is not None:
@@ -299,6 +301,8 @@ class Layer:
                 chunks_per_shard = Vec3Int.full(file_len)
             else:
                 chunks_per_shard = DEFAULT_CHUNKS_PER_SHARD
+        else:
+            chunks_per_shard = Vec3Int(chunks_per_shard)
 
         self._assert_mag_does_not_exist_yet(mag)
         self._create_dir_for_mag(mag)
@@ -347,8 +351,8 @@ class Layer:
     def get_or_add_mag(
         self,
         mag: Union[int, str, list, tuple, np.ndarray, Mag],
-        chunk_size: Optional[Vec3Int] = None,
-        chunks_per_shard: Optional[Vec3Int] = None,
+        chunk_size: Optional[Vec3IntLike] = None,
+        chunks_per_shard: Optional[Vec3IntLike] = None,
         compress: Optional[bool] = None,
         block_len: Optional[int] = None,  # deprecated
         file_len: Optional[int] = None,  # deprecated
@@ -364,13 +368,17 @@ class Layer:
         mag = Mag(mag)
         compression_mode = compress
 
-        if chunk_size is None and block_len is not None:
+        if chunk_size is not None:
+            chunk_size = Vec3Int(chunk_size)
+        elif chunk_size is None and block_len is not None:
             warnings.warn(
                 "[DEPRECATION] `block_len` is deprecated, please use `chunk_size` instead."
             )
             chunk_size = Vec3Int.full(block_len)
 
-        if chunks_per_shard is None and file_len is not None:
+        if chunks_per_shard is not None:
+            chunks_per_shard = Vec3Int(chunks_per_shard)
+        elif chunks_per_shard is None and file_len is not None:
             warnings.warn(
                 "[DEPRECATION] `file_len` is deprecated, please use `chunks_per_shard` instead."
             )

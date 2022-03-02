@@ -41,7 +41,7 @@ def test_downsample_cube() -> None:
 
     output = downsample_cube(buffer, [2, 2, 2], InterpolationModes.MODE)
 
-    assert output.shape == BUFFER_SHAPE.to_np() // 2
+    assert np.all(output.shape == (BUFFER_SHAPE.to_np() // 2))
     assert buffer[0, 0, 0] == 0
     assert buffer[0, 0, 1] == 1
     assert np.all(output[:, :, :] == np.arange(0, BUFFER_SHAPE.x, 2))
@@ -88,7 +88,9 @@ def downsample_test_helper(use_compress: bool) -> None:
     target_path = TESTOUTPUT_DIR / "WT1_wkw"
 
     source_ds = Dataset.open(source_path)
-    target_ds = source_ds.copy_dataset(target_path, block_len=16, file_len=16)
+    target_ds = source_ds.copy_dataset(
+        target_path, chunk_size=(16, 16, 16), chunks_per_shard=(16, 16, 16)
+    )
 
     target_layer = target_ds.get_layer("color")
     mag1 = target_layer.get_mag("1")

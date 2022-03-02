@@ -42,7 +42,7 @@ def test_upsample_cube() -> None:
 
     output = upsample_cube(buffer, [2, 2, 2])
 
-    assert output.shape == BUFFER_SHAPE.to_np() * 2
+    assert np.all(output.shape == (BUFFER_SHAPE.to_np() * 2))
     assert output[0, 0, 0] == 0
     assert output[0, 0, 1] == 0
     assert output[0, 0, 2] == 1
@@ -61,7 +61,7 @@ def upsample_test_helper(use_compress: bool) -> None:
             Tuple[int, int, int], tuple([o * 2 for o in source_offset])
         )
         source_size = BUFFER_SHAPE.to_tuple()
-        target_size = (BUFFER_SHAPE * 2).to_tuple()
+        target_size = (BUFFER_SHAPE * Vec3Int(2, 2, 1)).to_tuple()
 
         mag2.write(
             offset=source_offset,
