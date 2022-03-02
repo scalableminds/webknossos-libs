@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Optional
 
 from argparse import ArgumentParser, Namespace
+from webknossos.geometry import Vec3Int
 
 from wkcuber.api.dataset import Dataset
 from wkcuber.downsampling_utils import SamplingModes
@@ -102,7 +103,7 @@ def downsample_mags(
     from_mag: Optional[Mag] = None,
     max_mag: Optional[Mag] = None,
     interpolation_mode: str = "default",
-    buffer_edge_len: Optional[int] = None,
+    buffer_shape: Optional[Vec3Int] = None,
     compress: bool = True,
     args: Optional[Namespace] = None,
     sampling_mode: str = SamplingModes.ANISOTROPIC,
@@ -127,7 +128,7 @@ def downsample_mags(
         interpolation_mode=interpolation_mode,
         compress=compress,
         sampling_mode=sampling_mode,
-        buffer_edge_len=buffer_edge_len,
+        buffer_shape=buffer_shape,
         force_sampling_scheme=force_sampling_scheme,
         args=args,
     )
@@ -149,6 +150,11 @@ if __name__ == "__main__":
 
     from_mag = Mag(args.from_mag)
     max_mag = None if args.max is None else Mag(args.max)
+    buffer_shape = (
+        Vec3Int.full(args.buffer_cube_size)
+        if args.buffer_cube_size is not None
+        else None
+    )
 
     downsample_mags(
         path=args.path,
@@ -158,7 +164,7 @@ if __name__ == "__main__":
         interpolation_mode=args.interpolation_mode,
         compress=not args.no_compress,
         sampling_mode=args.sampling_mode,
-        buffer_edge_len=args.buffer_cube_size,
+        buffer_shape=buffer_shape,
         force_sampling_scheme=args.force_sampling_scheme,
         args=get_executor_args(args),
     )

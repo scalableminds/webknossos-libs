@@ -2,6 +2,7 @@ from argparse import ArgumentParser, Namespace
 from pathlib import Path
 
 from typing import Optional
+from webknossos.geometry import Vec3Int
 
 from wkcuber.api.dataset import Dataset
 from wkcuber.downsampling_utils import SamplingModes
@@ -89,7 +90,7 @@ def upsample_mags(
     layer_name: Optional[str] = None,
     from_mag: Optional[Mag] = None,
     target_mag: Mag = Mag(1),
-    buffer_edge_len: Optional[int] = None,
+    buffer_shape: Optional[Vec3Int] = None,
     compress: bool = True,
     args: Optional[Namespace] = None,
     sampling_mode: str = SamplingModes.ANISOTROPIC,
@@ -112,7 +113,7 @@ def upsample_mags(
         min_mag=target_mag,
         compress=compress,
         sampling_mode=sampling_mode,
-        buffer_edge_len=buffer_edge_len,
+        buffer_shape=buffer_shape,
         args=args,
     )
 
@@ -133,13 +134,18 @@ if __name__ == "__main__":
 
     from_mag = Mag(args.from_mag)
     target_mag = Mag(args.target_mag)
+    buffer_shape = (
+        Vec3Int.full(args.buffer_cube_size)
+        if args.buffer_cube_size is not None
+        else None
+    )
 
     upsample_mags(
         args.path,
         args.layer_name,
         from_mag,
         target_mag,
-        buffer_edge_len=args.buffer_cube_size,
+        buffer_shape=buffer_shape,
         compress=not args.no_compress,
         sampling_mode=args.sampling_mode,
         args=args,

@@ -74,7 +74,7 @@ def main() -> None:
         largest_segment_id=int(segmentation.max()),
     )
     segmentation_layer.bounding_box = dataset.layers["color"].bounding_box
-    segmentation_layer.add_mag(mag, compression_mode=True).write(segmentation)
+    segmentation_layer.add_mag(mag, compress=True).write(segmentation)
 
     url = dataset.upload(
         layers_to_link=[

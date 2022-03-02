@@ -548,7 +548,7 @@ class Layer:
         from_mag: Optional[Mag] = None,
         max_mag: Optional[Mag] = None,
         interpolation_mode: str = "default",
-        compression_mode: bool = True,
+        compress: bool = True,
         sampling_mode: str = SamplingModes.ANISOTROPIC,
         buffer_shape: Optional[Vec3Int] = None,
         force_sampling_scheme: bool = False,
@@ -639,7 +639,7 @@ class Layer:
                 from_mag=prev_mag,
                 target_mag=target_mag,
                 interpolation_mode=interpolation_mode,
-                compression_mode=compression_mode,
+                compress=compress,
                 buffer_shape=buffer_shape,
                 args=args,
                 allow_overwrite=allow_overwrite,
@@ -651,7 +651,7 @@ class Layer:
         from_mag: Mag,
         target_mag: Mag,
         interpolation_mode: str = "default",
-        compression_mode: bool = True,
+        compress: bool = True,
         buffer_shape: Optional[Vec3Int] = None,
         args: Optional[Namespace] = None,
         allow_overwrite: bool = False,
@@ -697,7 +697,7 @@ class Layer:
         else:
             # initialize the new mag
             target_mag_view = self._initialize_mag_from_other_mag(
-                target_mag, prev_mag_view, compression_mode
+                target_mag, prev_mag_view, compress
             )
 
         if only_setup_mag:
@@ -746,7 +746,7 @@ class Layer:
     def redownsample(
         self,
         interpolation_mode: str = "default",
-        compression_mode: bool = True,
+        compress: bool = True,
         buffer_shape: Optional[Vec3Int] = None,
         args: Optional[Namespace] = None,
     ) -> None:
@@ -762,12 +762,12 @@ class Layer:
         from_mag = mags[0]
         target_mags = mags[1:]
         self.downsample_mag_list(
-            from_mag,
-            target_mags,
-            interpolation_mode,
-            compression_mode,
-            buffer_shape,
-            args,
+            from_mag=from_mag,
+            target_mags=target_mags,
+            interpolation_mode=interpolation_mode,
+            compress=compress,
+            buffer_shape=buffer_shape,
+            args=args,
             allow_overwrite=True,
         )
 
@@ -776,7 +776,7 @@ class Layer:
         from_mag: Mag,
         target_mags: List[Mag],
         interpolation_mode: str = "default",
-        compression_mode: bool = True,
+        compress: bool = True,
         buffer_shape: Optional[Vec3Int] = None,
         args: Optional[Namespace] = None,
         allow_overwrite: bool = False,
@@ -808,7 +808,7 @@ class Layer:
                 source_mag,
                 target_mag,
                 interpolation_mode=interpolation_mode,
-                compression_mode=compression_mode,
+                compress=compress,
                 buffer_shape=buffer_shape,
                 args=args,
                 allow_overwrite=allow_overwrite,
@@ -820,7 +820,7 @@ class Layer:
         self,
         from_mag: Mag,
         min_mag: Optional[Mag],
-        compression_mode: bool,
+        compress: bool,
         sampling_mode: str = SamplingModes.ANISOTROPIC,
         buffer_shape: Optional[Vec3Int] = None,
         args: Optional[Namespace] = None,
@@ -870,7 +870,7 @@ class Layer:
 
             # initialize the new mag
             target_mag_view = self._initialize_mag_from_other_mag(
-                target_mag, prev_mag_view, compression_mode
+                target_mag, prev_mag_view, compress
             )
 
             # Get target view
@@ -913,13 +913,13 @@ class Layer:
         )
 
     def _initialize_mag_from_other_mag(
-        self, new_mag_name: Union[str, Mag], other_mag: MagView, compression_mode: bool
+        self, new_mag_name: Union[str, Mag], other_mag: MagView, compress: bool
     ) -> MagView:
         return self.add_mag(
             new_mag_name,
             chunk_size=other_mag.info.chunk_size,
             chunks_per_shard=other_mag.info.chunks_per_shard,
-            compress=compression_mode,
+            compress=compress,
         )
 
     def __repr__(self) -> str:

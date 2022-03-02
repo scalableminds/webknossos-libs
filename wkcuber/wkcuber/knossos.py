@@ -73,18 +73,18 @@ class KnossosDataset:
 
     def __get_only_raw_file_path(self, cube_xyz: Tuple[int, ...]) -> Optional[Path]:
         cube_folder = self.__get_cube_folder(cube_xyz)
-        raw_files = cube_folder.glob("*.raw")
+        raw_files = list(cube_folder.glob("*.raw"))
         assert len(raw_files) <= 1, "Found %d .raw files in %s" % (
             len(raw_files),
             cube_folder,
         )
         return raw_files[0] if len(raw_files) > 0 else None
 
-    def list_files(self) -> Iterator[str]:
+    def list_files(self) -> Iterator[Path]:
         return self.root.glob("*/*/*/*.raw")
 
-    def __parse_cube_file_name(self, filename: str) -> Optional[Tuple[int, int, int]]:
-        m = KNOSSOS_CUBE_REGEX.search(filename)
+    def __parse_cube_file_name(self, filename: Path) -> Optional[Tuple[int, int, int]]:
+        m = KNOSSOS_CUBE_REGEX.search(str(filename))
         if m is None:
             return None
         return int(m.group(1)), int(m.group(2)), int(m.group(3))

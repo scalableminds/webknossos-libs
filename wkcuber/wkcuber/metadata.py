@@ -231,8 +231,8 @@ def detect_bbox(dataset_path: Path, layer: str, mag: Mag = Mag(1)) -> Optional[d
     if layer_path is None:
         return None
 
-    def list_files(layer_path: Path) -> Iterable[str]:
-        return layer_path.rglob("*/*/*.wkw")
+    def list_files(layer_path: Path) -> Iterable[Path]:
+        return list(layer_path.rglob("*/*/*.wkw"))
 
     def list_cubes(layer_path: Path) -> Iterable[Tuple[int, int, int]]:
         return (parse_cube_file_name(f) for f in list_files(layer_path))

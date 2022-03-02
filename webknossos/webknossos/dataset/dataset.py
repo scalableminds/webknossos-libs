@@ -671,12 +671,12 @@ class Dataset:
         scale: Optional[Tuple[float, float, float]] = None,
         chunk_size: Optional[Vec3IntLike] = None,
         chunks_per_shard: Optional[Vec3IntLike] = None,
-        compression_mode: Optional[bool] = None,
+        compress: Optional[bool] = None,
         args: Optional[Namespace] = None,
     ) -> "Dataset":
         """
         Creates a new dataset at `new_dataset_path` and copies the data from the current dataset to `empty_target_ds`.
-        If not specified otherwise, the `scale`, `chunk_size`, `chunks_per_size` and `compression_mode` of the current dataset are also used for the new dataset.
+        If not specified otherwise, the `scale`, `chunk_size`, `chunks_per_size` and `compress` of the current dataset are also used for the new dataset.
         """
 
         chunk_size = Vec3Int(chunk_size) if chunk_size is not None else None
@@ -707,9 +707,7 @@ class Dataset:
 
                 for mag, mag_view in layer.mags.items():
                     chunk_size = chunk_size or mag_view.info.chunk_size
-                    compression_mode = (
-                        compression_mode or mag_view.info.compression_mode
-                    )
+                    compression_mode = compress or mag_view.info.compression_mode
                     chunks_per_shard = (
                         chunks_per_shard or mag_view.info.chunks_per_shard
                     )
