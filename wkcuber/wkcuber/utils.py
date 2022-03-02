@@ -134,10 +134,10 @@ def get_channel_and_sample_iters_for_wk_compatibility(
 
 def find_files(
     source_path: str, extensions: Iterable[str]
-) -> Generator[str, Any, None]:
+) -> Generator[Path, Any, None]:
     # Find all files with a matching file extension
     return (
-        f
+        Path(f)
         for f in iglob(source_path, recursive=True)
         if any([f.lower().endswith(suffix) for suffix in extensions])
     )

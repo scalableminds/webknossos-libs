@@ -12,6 +12,10 @@ from numcodecs import Blosc
 from webknossos.geometry import Vec3Int, Vec3IntLike
 
 
+class StorageArrayException(Exception):
+    pass
+
+
 @dataclass
 class StorageArrayInfo:
     num_channels: int
@@ -94,17 +98,20 @@ class WKWStorageArray(StorageArray):
 
     @property
     def info(self) -> StorageArrayInfo:
-        with wkw.Dataset.open(str(self._path)) as wkw_dataset:
-            return StorageArrayInfo(
-                num_channels=wkw_dataset.header.num_channels,
-                voxel_type=wkw_dataset.header.voxel_type,
-                compression_mode=wkw_dataset.header.block_type
-                != wkw.Header.BLOCK_TYPE_RAW,
-                chunk_size=Vec3Int.full(wkw_dataset.header.block_len),
-                chunks_per_shard=Vec3Int.full(
-                    wkw_dataset.header.file_len,
-                ),
-            )
+        try:
+            with wkw.Dataset.open(str(self._path)) as wkw_dataset:
+                return StorageArrayInfo(
+                    num_channels=wkw_dataset.header.num_channels,
+                    voxel_type=wkw_dataset.header.voxel_type,
+                    compression_mode=wkw_dataset.header.block_type
+                    != wkw.Header.BLOCK_TYPE_RAW,
+                    chunk_size=Vec3Int.full(wkw_dataset.header.block_len),
+                    chunks_per_shard=Vec3Int.full(
+                        wkw_dataset.header.file_len,
+                    ),
+                )
+        except wkw.wkw.WKWException as e:
+            raise StorageArrayException("Exception while fetching storage info") from e
 
     @classmethod
     def create(cls, path: Path, storage_info: StorageArrayInfo) -> "WKWStorageArray":
@@ -112,20 +119,23 @@ class WKWStorageArray(StorageArray):
         assert storage_info.chunk_size[0] == storage_info.chunk_size[2]
         assert storage_info.chunks_per_shard[0] == storage_info.chunks_per_shard[1]
         assert storage_info.chunks_per_shard[0] == storage_info.chunks_per_shard[2]
-        wkw.Dataset.create(
-            str(path),
-            wkw.Header(
-                voxel_type=storage_info.voxel_type,
-                num_channels=storage_info.num_channels,
-                block_len=storage_info.chunk_size[0],
-                file_len=storage_info.chunks_per_shard[0],
-                block_type=(
-                    wkw.Header.BLOCK_TYPE_LZ4HC
-                    if storage_info.compression_mode
-                    else wkw.Header.BLOCK_TYPE_RAW
+        try:
+            wkw.Dataset.create(
+                str(path),
+                wkw.Header(
+                    voxel_type=storage_info.voxel_type,
+                    num_channels=storage_info.num_channels,
+                    block_len=storage_info.chunk_size[0],
+                    file_len=storage_info.chunks_per_shard[0],
+                    block_type=(
+                        wkw.Header.BLOCK_TYPE_LZ4HC
+                        if storage_info.compression_mode
+                        else wkw.Header.BLOCK_TYPE_RAW
+                    ),
                 ),
-            ),
-        ).close()
+            ).close()
+        except wkw.wkw.WKWException as e:
+            raise StorageArrayException("Exception while creating storage array") from e
         return WKWStorageArray(path)
 
     def remove(self) -> None:

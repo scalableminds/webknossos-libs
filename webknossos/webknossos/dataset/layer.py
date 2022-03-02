@@ -1,3 +1,4 @@
+import logging
 import operator
 import re
 import shutil
@@ -11,7 +12,7 @@ from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 
-from webknossos.dataset.storage import WKWStorageArray
+from webknossos.dataset.storage import StorageArrayException, WKWStorageArray
 from webknossos.geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 
 from .downsampling_utils import (
@@ -912,16 +913,21 @@ class Layer:
 
         self._assert_mag_does_not_exist_yet(mag)
 
-        info = WKWStorageArray(
-            _find_mag_path_on_disk(self.dataset.path, self.name, mag_name)
-        ).info
-        self._mags[mag] = MagView(
-            self,
-            mag,
-            info.chunk_size,
-            info.chunks_per_shard,
-            info.compression_mode,
-        )
+        try:
+            info = WKWStorageArray(
+                _find_mag_path_on_disk(self.dataset.path, self.name, mag_name)
+            ).info
+            self._mags[mag] = MagView(
+                self,
+                mag,
+                info.chunk_size,
+                info.chunks_per_shard,
+                info.compression_mode,
+            )
+        except StorageArrayException as e:
+            logging.error(
+                f"Failed to setup magnification {mag_name}, which is specified in the datasource-properties.json. See {e}"
+            )
 
     def _initialize_mag_from_other_mag(
         self, new_mag_name: Union[str, Mag], other_mag: MagView, compress: bool
