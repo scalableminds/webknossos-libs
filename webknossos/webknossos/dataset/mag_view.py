@@ -4,7 +4,7 @@ import shutil
 import warnings
 from argparse import Namespace
 from pathlib import Path
-from typing import TYPE_CHECKING, Generator, Optional, Union
+from typing import TYPE_CHECKING, Iterator, Optional, Union
 from uuid import uuid4
 
 import numpy as np
@@ -227,7 +227,7 @@ class MagView(View):
 
     def get_bounding_boxes_on_disk(
         self,
-    ) -> Generator[BoundingBox, None, None]:
+    ) -> Iterator[BoundingBox]:
         """
         Returns a Mag(1) bounding box for each file on disk.
 
@@ -241,6 +241,18 @@ class MagView(View):
             cube_offset = cube_index * cube_size
 
             yield BoundingBox(cube_offset, cube_size).from_mag_to_mag1(self._mag)
+
+    def get_views_on_disk(
+        self,
+        read_only: Optional[bool] = None,
+    ) -> Iterator[View]:
+        """
+        Yields a view for each file on disk, which can be used for efficient parallelization.
+        """
+        for bbox in self.get_bounding_boxes_on_disk():
+            yield self.get_view(
+                absolute_offset=bbox.topleft, size=bbox.size, read_only=read_only
+            )
 
     def compress(
         self,

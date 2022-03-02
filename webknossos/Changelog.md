@@ -34,6 +34,8 @@ For upgrade instructions, please check the respective *Breaking Changes* section
   * `Annotation`s can now be initialized from their attributes and an optional skeleton.
   * New methods on `Annotation`: `upload`, `add_volume_layer`, `delete_volume_layer`
   * `Annotation.load()` and `annoation.save()` also works with `.nml` files.
+- Added `MagView.get_views_on_disk()` as a shortcut to turning `get_bounding_boxes_on_disk` into views.
+  [#621](https://github.com/scalableminds/webknossos-libs/pull/621)
 
 ### Changed
 
