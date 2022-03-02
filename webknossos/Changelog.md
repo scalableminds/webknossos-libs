@@ -1,4 +1,4 @@
-# Change Log
+# Changelog
 
 All notable changes to the webknossos python library are documented in this file.
 
@@ -10,20 +10,41 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.8...HEAD)
 
 ### Breaking Changes
+- Changed the interface and behavior of `Annotation`s and `Skeleton`s, as well as nml-parsing related code.
+  [#602](https://github.com/scalableminds/webknossos-libs/pull/602)
+  * `webknossos.skeleton.nml` is not exposed anymore. The previous functionality may be found in
+    `webknossos._nml` and `webknossos/annotation/_nml_conversion.py ` if needed, but please not that
+    this is not part of the public API and may change at any time. Please use the respective logic on the
+    `Annotation` class instead.
+  * The `name` attribute on the `Skeleton` class changed to `dataset_name`.
+  * The deprecated `Skeleton.offset` attribute is removed.
+  * The following attributes are removed from the `Skeleton` class, instead they are part of the
+    `Annotation` class now: `time`, `edit_position`, `edit_rotation`, `zoom_level`, `task_bounding_box`,
+    `user_bounding_boxes`.
+  * The following `Annotation` methods were renamed and their arguments changed slightly:
+    - `save_volume_annotation` ➜ `export_volume_layer_to_dataset`
+    - `temporary_volume_annotation_layer_copy` ➜ `temporary_volume_layer_copy`
+    
 
 ### Added
+- Added new features to the `Annotation` and `Skeleton` classes. [#602](https://github.com/scalableminds/webknossos-libs/pull/602)
+  * The `Skeleton` class has new attributes `description` and `organization_id`.
+  * The `Annotation` class has new attributes `username` and `annotation_id`, as well as the following
+    attributes that are proxies for the skeleton attributes: `dataset_name`, `scale`, `organization_id`, `description`
+  * `Annotation`s can now be initialized from their attributes and an optional skeleton.
+  * New methods on `Annotation`: `upload`, `add_volume_layer`, `delete_volume_layer`
+  * `Annotation.load()` and `annoation.save()` also works with `.nml` files.
 
 ### Changed
 
 ### Fixed
+- Fixed the download of skeleton-only annotations. [#602](https://github.com/scalableminds/webknossos-libs/pull/602)
 
 
 ## [0.9.8](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.8) - 2022-02-28
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.7...v0.9.8)
 
 ### Added
-- Added `only_setup_mag` parameter to downsample-related methods in `Layer`. This parameter allows creating output magnifications before parallelizing downsampling invocations to avoid outdated writes to datasource-properties.json. [#610](https://github.com/scalableminds/webknossos-libs/pull/610)
-- Added `Task.create()` method to create tasks by prodiving a dataset name, location, and rotation. [#605](https://github.com/scalableminds/webknossos-libs/pull/605)
 - Added `allow_overwrite` parameter to `Layer.downsample()`. [#614](https://github.com/scalableminds/webknossos-libs/pull/614)
 
 

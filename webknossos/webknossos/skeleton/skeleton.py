@@ -1,16 +1,11 @@
 import itertools
 import warnings
 from os import PathLike
-from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, Union
+from pathlib import Path
+from typing import Iterator, Optional, Set, Tuple, Union
 
 import attr
 from boltons.strutils import unit_len
-
-import webknossos.skeleton.nml as wknml
-from webknossos._types import Openable
-from webknossos.skeleton.nml.from_skeleton import from_skeleton as nml_from_skeleton
-from webknossos.skeleton.nml.to_skeleton import to_skeleton as nml_to_skeleton
-from webknossos.utils import time_since_epoch_in_ms
 
 from .graph import Graph
 from .group import Group
@@ -24,79 +19,65 @@ GroupOrGraph = Union[Group, Graph]
 @attr.define()
 class Skeleton(Group):
     """
-    Contains metadata and is the root-group of sub-groups and graphs.
-    See the parent webknossos.skeleton.group.Group for methods about group and graph handling.
+    Representation of the [skeleton tracing](/webknossos/skeleton_annotation.html) of an `Annotation`.
+    It contains metadata to identify the related dataset and is the root-group of sub-groups and graphs.
+    See the parent class `Group` for methods about group and graph handling.
+    To upload a skeleton to webknossos, please create an `Annotation()` with it.
     """
 
+    scale: Vector3
+    dataset_name: str
+    organization_id: Optional[str] = None
+    description: Optional[str] = None
     # from Group parent to support mypy:
-    name: str
+    _enforced_id: Optional[int] = attr.field(default=None, eq=False, repr=False)
+    name: str = attr.field(default="Root", init=False, eq=False, repr=False)
+    """Should not be used with `Skeleton`, this attribute is only useful for sub-groups. Set to `Root`."""
     _children: Set[GroupOrGraph] = attr.ib(
         factory=set,
         init=False,
         repr=lambda children: f"<{unit_len(children, 'children')}>",
     )
-
-    scale: Vector3
-    _enforced_id: Optional[int] = attr.ib(None, eq=False, repr=False)
-    offset: Optional[Vector3] = None
-    time: Optional[int] = attr.ib(factory=time_since_epoch_in_ms)
-    edit_position: Optional[Vector3] = None
-    edit_rotation: Optional[Vector3] = None
-    zoom_level: Optional[float] = None
-    task_bounding_box: Optional[IntVector6] = None
-    user_bounding_boxes: Optional[List[IntVector6]] = None
-
-    _id: int = attr.ib(init=False, repr=False)
-    element_id_generator: Iterator[int] = attr.ib(init=False, eq=False, repr=False)
-    _skeleton: "Skeleton" = attr.ib(init=False, eq=False, repr=False)
+    # initialized in post_init:
+    _id: int = attr.field(init=False, repr=False)
+    _element_id_generator: Iterator[int] = attr.field(init=False, eq=False, repr=False)
+    _skeleton: "Skeleton" = attr.field(init=False, eq=False, repr=False)
 
     def __attrs_post_init__(self) -> None:
-        self.element_id_generator = itertools.count()
+        self._element_id_generator = itertools.count()
         self._skeleton = self
-        super().__attrs_post_init__()
+        super().__attrs_post_init__()  # sets self._id
 
     @staticmethod
-    def load(file_path: Union[Openable, PathLike, str]) -> "Skeleton":
-        if isinstance(file_path, Openable):
-            with file_path.open(mode="rb") as file_handle:
-                return nml_to_skeleton(wknml.parse_nml(file_handle))
-        else:
-            with open(file_path, "rb") as file_handle:
-                return nml_to_skeleton(wknml.parse_nml(file_handle))
+    def load(file_path: Union[PathLike, str]) -> "Skeleton":
+        from webknossos import Annotation
+
+        return Annotation.load(file_path).skeleton
 
     def save(self, out_path: Union[str, PathLike]) -> None:
-        nml = nml_from_skeleton(
-            self,
-            self._get_nml_parameters(),
-        )
-        with open(out_path, "wb") as f:
-            wknml.write_nml(f, nml)
+        from webknossos import Annotation
+
+        out_path = Path(out_path)
+        assert (
+            out_path.suffix == ".nml"
+        ), f"The suffix if the file must be .nml, not {out_path.suffix}"
+        annotation = Annotation(name=out_path.stem, skeleton=self, time=None)
+        annotation.save(out_path)
 
     @staticmethod
-    def from_path(file_path: Union[Openable, PathLike, str]) -> "Skeleton":
+    def from_path(file_path: Union[PathLike, str]) -> "Skeleton":
+        """Deprecated."""
         warnings.warn(
             "[DEPRECATION] Skeleton.from_path is deprecated, please use Skeleton.load instead."
         )
         return Skeleton.load(file_path)
 
     def write(self, out_path: PathLike) -> None:
+        """Deprecated."""
         warnings.warn(
             "[DEPRECATION] skeleton.write is deprecated, please use skeleton.save instead."
         )
         self.save(out_path)
-
-    def _get_nml_parameters(self) -> Dict[str, Any]:
-        return {
-            "name": self.name,
-            "scale": self.scale,
-            "offset": self.offset,
-            "time": self.time,
-            "editPosition": self.edit_position,
-            "editRotation": self.edit_rotation,
-            "zoomLevel": self.zoom_level,
-            "taskBoundingBox": self.task_bounding_box,
-            "userBoundingBoxes": self.user_bounding_boxes,
-        }
 
     def __hash__(self) -> int:
         return id(self)

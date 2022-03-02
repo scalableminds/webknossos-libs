@@ -32,7 +32,7 @@ class Node:
         if self._enforced_id is not None:
             self._id = self._enforced_id
         else:
-            self._id = self._skeleton.element_id_generator.__next__()
+            self._id = self._skeleton._element_id_generator.__next__()
 
     @property
     def id(self) -> int:

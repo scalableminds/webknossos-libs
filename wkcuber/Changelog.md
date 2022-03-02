@@ -1,4 +1,4 @@
-# Change Log
+# Changelog
 
 All notable changes to webknossos-cuber are documented in this file.
 

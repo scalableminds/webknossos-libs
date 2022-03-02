@@ -3,21 +3,19 @@ This package package provides methods to modify or interact with webKnossos reso
 
 The core classes and can be created and saved as shown:
 
-|                                                                    | Create ✨                                                            | Open/Load 📂                                                                  | Save 💾                                                                       | Download 📥                                                                                       | Upload 📤                                                                |
-|--------------------------------------------------------------------|----------------------------------------------------------------------|-------------------------------------------------------------------------------|-------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------|
-| **[Dataset](webknossos/dataset/dataset.html#Dataset)**             | [`Dataset(​…)`](webknossos/dataset/dataset.html#Dataset.__init__)     | [`Dataset.​open(…)`](webknossos/dataset/dataset.html#Dataset.open)             | *N/A*[^ds-save]                                                               | [`Dataset.​download(…)`](webknossos/dataset/dataset.html#Dataset.download)                         | [`dataset_obj.​upload(…)`](webknossos/dataset/dataset.html#Dataset.upload) |
-| **[Annotation](webknossos/annotation/annotation.html#Annotation)** | *N/A yet*                                                            | [`Annotation.​load(…)`](webknossos/annotation/annotation.html#Annotation.load) | [`annotation_obj.save(…)`](webknossos/annotation/annotation.html#Annotation.save) | [`Annotation.​download(…)`](webknossos/annotation/annotation.html#Annotation.download)[^anno-down] | *N/A yet*                                                                 |
-| **[Skeleton](webknossos/skeleton/skeleton.html#Skeleton)**         | [`Skeleton(​…)`](webknossos/skeleton/skeleton.html#Skeleton.__init__) | [`Skeleton.​load(…)`](webknossos/skeleton/skeleton.html#Skeleton.load)         | [`skeleton_obj.​save(…)`](webknossos/skeleton/skeleton.html#Skeleton.save)     | *only in an annotation*                                                                           | *only in an annotation*                                                   |
+|                  | Create ✨                                                                    | Open/Load 📂                                                                  | Save 💾                                                                       | Download 📥                                                                                       | Upload 📤                                                                         |
+|------------------|------------------------------------------------------------------------------|-------------------------------------------------------------------------------|-------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------|
+| **`Dataset`**    | [`Dataset(​…)`](webknossos/dataset/dataset.html#Dataset.__init__)             | [`Dataset.​open(…)`](webknossos/dataset/dataset.html#Dataset.open)             | *N/A*[^ds-save]                                                               | [`Dataset.​download(…)`](webknossos/dataset/dataset.html#Dataset.download)                         | [`dataset.​upload(…)`](webknossos/dataset/dataset.html#Dataset.upload)              |
+| **`Annotation`** | [`Annotation(​…)`](webknossos/annotation/annotation.html#Annotation.__init__) | [`Annotation.​load(…)`](webknossos/annotation/annotation.html#Annotation.load) | [`annotation.save(…)`](webknossos/annotation/annotation.html#Annotation.save) | [`Annotation.​download(…)`](webknossos/annotation/annotation.html#Annotation.download)[^anno-down] | [`annotation.​upload(…)`](webknossos/annotation/annotation.html#Annotation.upload)  |
+| **`Skeleton`**   | [`Skeleton(​…)`](webknossos/skeleton/skeleton.html#Skeleton.__init__)         | [`Skeleton.​load(…)`](webknossos/skeleton/skeleton.html#Skeleton.load)         | [`skeleton.​save(…)`](webknossos/skeleton/skeleton.html#Skeleton.save)         | *only in an annotation*                                                                           | *only in an annotation*                                                            |
 
 [^ds-save]: Since the state of a dataset is continously persisted it cannot be saved.
-[^anno-down]: Downloaded annotations are not persisted on disk so far.
+[^anno-down]: Downloaded annotations are not persisted on disk automatically.
 
-Additionally, we provide the geometrical primitives
-[Vec3Int](webknossos/geometry/vec3_int.html#Vec3Int),
-[BoundingBox](webknossos/geometry/bounding_box.html#BoundingBox) and
-[Mag](webknossos/geometry/mag.html#Mag).
+Additionally, we provide the geometrical primitives `Vec3Int`, `BoundingBox` and `Mag`.
 
-webKnossos user information can be retrieved via the [`User`](webknossos/client/user.html#User) class.
+The `User`, `Project` and `Task` classes provide webKnossos server interactions for administration purposes.
+Server interactions may require [authentication](webknossos/client/context.html) e.g. via `webknossos_context`.
 """
 
 # The table above contains zero-width spaces in the code examples after each dot to enforce correct line-breaks.
