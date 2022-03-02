@@ -12,8 +12,7 @@ from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 import numpy as np
 
 from webknossos.dataset.storage import WKWStorageArray
-from webknossos.geometry import BoundingBox, Mag
-from webknossos.geometry import Vec3Int, Vec3IntLike
+from webknossos.geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 
 from .downsampling_utils import (
     SamplingModes,
