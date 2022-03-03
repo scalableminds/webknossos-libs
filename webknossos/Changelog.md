@@ -37,7 +37,6 @@ For upgrade instructions, please check the respective *Breaking Changes* section
     - `save_volume_annotation` ➜ `export_volume_layer_to_dataset`
     - `temporary_volume_annotation_layer_copy` ➜ `temporary_volume_layer_copy`
 
-
 ### Added
 - Added new features to the `Annotation` and `Skeleton` classes. [#602](https://github.com/scalableminds/webknossos-libs/pull/602)
   * The `Skeleton` class has new attributes `description` and `organization_id`.
