@@ -256,39 +256,25 @@ class MagView(View):
         uncompressed_full_path = (
             Path(self.layer.dataset.path) / self.layer.name / self.name
         )
-        compressed_mag = None
-        if target_path is not None:
-
-            compressed_dataset = Dataset.open(target_path)
-            compressed_mag = compressed_dataset.get_or_add_layer(
-                layer_name=self.layer.name,
-                category=self.layer.category,
-                dtype_per_channel=self.layer.dtype_per_channel,
-                num_channels=self.layer.num_channels,
-            ).get_or_add_mag(
-                mag=self.mag,
-                chunk_size=self.info.chunk_size,
-                chunks_per_shard=self.info.chunks_per_shard,
-                compress=True,
-            )
-        else:
-            tmp_dataset_path = Path(
-                "{}.compress-{}".format(self.layer.dataset.path, uuid4())
-            )
-            compressed_dataset = Dataset(
-                tmp_dataset_path, scale=self.layer.dataset.scale
-            )
-            compressed_mag = compressed_dataset.add_layer(
-                layer_name=self.layer.name,
-                category=self.layer.category,
-                dtype_per_channel=self.layer.dtype_per_channel,
-                num_channels=self.layer.num_channels,
-            ).add_mag(
-                mag=self.mag,
-                chunk_size=self.info.chunk_size,
-                chunks_per_shard=self.info.chunks_per_shard,
-                compress=True,
-            )
+        compressed_dataset_path = (
+            Path("{}.compress-{}".format(self.layer.dataset.path, uuid4()))
+            if target_path is None
+            else target_path
+        )
+        compressed_dataset = Dataset(
+            compressed_dataset_path, scale=self.layer.dataset.scale, exist_ok=True
+        )
+        compressed_mag = compressed_dataset.get_or_add_layer(
+            layer_name=self.layer.name,
+            category=self.layer.category,
+            dtype_per_channel=self.layer.dtype_per_channel,
+            num_channels=self.layer.num_channels,
+        ).get_or_add_mag(
+            mag=self.mag,
+            chunk_size=self.info.chunk_size,
+            chunks_per_shard=self.info.chunks_per_shard,
+            compress=True,
+        )
         compressed_mag.layer.bounding_box = self.layer.bounding_box
 
         logging.info(
