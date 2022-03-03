@@ -68,10 +68,6 @@ class StorageArray(ABC):
         pass
 
     @abstractmethod
-    def list_files(self) -> Iterator[Path]:
-        pass
-
-    @abstractmethod
     def list_bounding_boxes(self) -> Iterator[BoundingBox]:
         pass
 
@@ -96,11 +92,21 @@ class WKWStorageArray(StorageArray):
 
     @classmethod
     def compress_shard(_cls, source_path: Path, target_path: Path) -> None:
-        wkw.File.compress(str(source_path), str(target_path))
+        try:
+            wkw.File.compress(str(source_path), str(target_path))
+        except wkw.wkw.WKWException as e:
+            raise StorageArrayException(
+                f"Exception while compressing shard {source_path} to {target_path}"
+            ) from e
 
     def compress(self, target_path: Path) -> None:
-        with wkw.Dataset.open(str(self._path)) as wkw_dataset:
-            wkw_dataset.compress(str(target_path))
+        try:
+            with wkw.Dataset.open(str(self._path)) as wkw_dataset:
+                wkw_dataset.compress(str(target_path), compress_files=False)
+        except wkw.wkw.WKWException as e:
+            raise StorageArrayException(
+                f"Exception while compressing array {self._path}"
+            ) from e
 
     @property
     def info(self) -> StorageArrayInfo:
@@ -117,7 +123,9 @@ class WKWStorageArray(StorageArray):
                     ),
                 )
         except wkw.wkw.WKWException as e:
-            raise StorageArrayException("Exception while fetching storage info") from e
+            raise StorageArrayException(
+                f"Exception while fetching storage info for {self._path}"
+            ) from e
 
     @classmethod
     def create(cls, path: Path, storage_info: StorageArrayInfo) -> "WKWStorageArray":
@@ -141,7 +149,7 @@ class WKWStorageArray(StorageArray):
                 ),
             ).close()
         except wkw.wkw.WKWException as e:
-            raise StorageArrayException("Exception while creating storage array") from e
+            raise StorageArrayException(f"Exception while creating array {path}") from e
         return WKWStorageArray(path)
 
     def remove(self) -> None:
@@ -159,7 +167,7 @@ class WKWStorageArray(StorageArray):
     def write(self, offset: Vec3IntLike, data: np.ndarray) -> None:
         self._wkw_dataset.write(offset, data)
 
-    def list_files(self) -> Iterator[Path]:
+    def _list_files(self) -> Iterator[Path]:
         return (
             Path(relpath(filename, self._path))
             for filename in self._wkw_dataset.list_files()
@@ -176,7 +184,7 @@ class WKWStorageArray(StorageArray):
             return Vec3Int(zyx_index[2], zyx_index[1], zyx_index[0])
 
         shard_size = self.info.shard_size
-        for file_path in self.list_files():
+        for file_path in self._list_files():
             cube_index = _extract_file_index(file_path)
             cube_offset = cube_index * shard_size
 
@@ -287,9 +295,6 @@ class ZarrStorageArray(StorageArray):
             offset.y : (offset.y + data.shape[2]),
             offset.z : (offset.z + data.shape[3]),
         ] = data
-
-    def list_files(self) -> Iterator[Path]:
-        raise NotImplementedError()
 
     def list_bounding_boxes(self) -> Iterator[BoundingBox]:
         raise NotImplementedError()

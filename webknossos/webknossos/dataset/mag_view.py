@@ -2,9 +2,8 @@ import logging
 import shutil
 import warnings
 from argparse import Namespace
-from os.path import relpath
 from pathlib import Path
-from typing import TYPE_CHECKING, Generator, Optional, Union
+from typing import TYPE_CHECKING, Generator, Optional, Tuple, Union
 from uuid import uuid4
 
 import numpy as np
@@ -13,7 +12,6 @@ from webknossos.dataset.storage import StorageArrayInfo, WKWStorageArray
 from webknossos.geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 from webknossos.utils import get_executor_for_args, wait_and_ensure_success
 
-from .compress_utils import compress_file_job
 from .properties import MagViewProperties
 
 if TYPE_CHECKING:
@@ -32,6 +30,11 @@ def _find_mag_path_on_disk(dataset_path: Path, layer_name: str, mag_name: str) -
         return short_mag_file_path
     else:
         return long_mag_file_path
+
+
+def _compress_cube_job(args: Tuple[View, View]) -> None:
+    source_view, target_view = args
+    target_view.write(source_view.read())
 
 
 class MagView(View):
@@ -245,48 +248,76 @@ class MagView(View):
         Otherwise it is written to target_path/layer_name/mag.
         """
 
+        from webknossos.dataset.dataset import Dataset
+
         if target_path is not None:
             target_path = Path(target_path)
 
         uncompressed_full_path = (
             Path(self.layer.dataset.path) / self.layer.name / self.name
         )
-        compressed_path = (
-            target_path
-            if target_path is not None
-            else Path("{}.compress-{}".format(self.layer.dataset.path, uuid4()))
-        )
-        compressed_full_path = compressed_path / self.layer.name / self.name
+        compressed_mag = None
+        if target_path is not None:
 
-        if compressed_full_path.exists():
-            logging.error(
-                "Target path '{}' already exists".format(compressed_full_path)
+            compressed_dataset = Dataset.open(target_path)
+            compressed_mag = compressed_dataset.get_or_add_layer(
+                layer_name=self.layer.name,
+                category=self.layer.category,
+                dtype_per_channel=self.layer.dtype_per_channel,
+                num_channels=self.layer.num_channels,
+            ).get_or_add_mag(
+                mag=self.mag,
+                chunk_size=self.info.chunk_size,
+                chunks_per_shard=self.info.chunks_per_shard,
+                compress=True,
             )
-            exit(1)
+        else:
+            tmp_dataset_path = Path(
+                "{}.compress-{}".format(self.layer.dataset.path, uuid4())
+            )
+            compressed_dataset = Dataset(
+                tmp_dataset_path, scale=self.layer.dataset.scale
+            )
+            compressed_mag = compressed_dataset.add_layer(
+                layer_name=self.layer.name,
+                category=self.layer.category,
+                dtype_per_channel=self.layer.dtype_per_channel,
+                num_channels=self.layer.num_channels,
+            ).add_mag(
+                mag=self.mag,
+                chunk_size=self.info.chunk_size,
+                chunks_per_shard=self.info.chunks_per_shard,
+                compress=True,
+            )
+        compressed_mag.layer.bounding_box = self.layer.bounding_box
 
         logging.info(
             "Compressing mag {0} in '{1}'".format(
                 self.name, str(uncompressed_full_path)
             )
         )
-        # create empty wkw.Dataset
-        self._array.compress(compressed_full_path)
-
-        # compress all files to and move them to 'compressed_path'
         with get_executor_for_args(args) as executor:
+
             job_args = []
-            for file in self._array.list_files():
-                rel_file = Path(relpath(file, self.layer.dataset.path))
-                job_args.append((Path(file), compressed_path / rel_file))
+            for bbox in self.get_bounding_boxes_on_disk():
+                bbox = bbox.intersected_with(self.layer.bounding_box, dont_assert=True)
+                if not bbox.is_empty():
+                    source_view = self.get_view(
+                        absolute_offset=bbox.topleft, size=bbox.size
+                    )
+                    target_view = compressed_mag.get_view(
+                        absolute_offset=bbox.topleft, size=bbox.size
+                    )
+                    job_args.append((source_view, target_view))
 
             wait_and_ensure_success(
-                executor.map_to_futures(compress_file_job, job_args), "Compressing"
+                executor.map_to_futures(_compress_cube_job, job_args), "Compressing"
             )
 
         if target_path is None:
-            shutil.rmtree(uncompressed_full_path)
-            shutil.move(str(compressed_full_path), uncompressed_full_path)
-            shutil.rmtree(compressed_path)
+            shutil.rmtree(self.path)
+            shutil.move(str(compressed_mag.path), self.path)
+            shutil.rmtree(compressed_mag.layer.dataset.path)
 
             # update the handle to the new dataset
             MagView.__init__(
