@@ -7,7 +7,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.8...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.9...HEAD)
+
+### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [0.9.9](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.9) - 2022-03-03
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.8...v0.9.9)
 
 ### Breaking Changes
 - Changed the interface and behavior of `Annotation`s and `Skeleton`s, as well as nml-parsing related code.
@@ -24,7 +36,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
   * The following `Annotation` methods were renamed and their arguments changed slightly:
     - `save_volume_annotation` ➜ `export_volume_layer_to_dataset`
     - `temporary_volume_annotation_layer_copy` ➜ `temporary_volume_layer_copy`
-    
+
 
 ### Added
 - Added new features to the `Annotation` and `Skeleton` classes. [#602](https://github.com/scalableminds/webknossos-libs/pull/602)
@@ -37,10 +49,9 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 - Added `MagView.get_views_on_disk()` as a shortcut to turning `get_bounding_boxes_on_disk` into views.
   [#621](https://github.com/scalableminds/webknossos-libs/pull/621)
 
-### Changed
-
 ### Fixed
 - Fixed the download of skeleton-only annotations. [#602](https://github.com/scalableminds/webknossos-libs/pull/602)
+
 
 
 ## [0.9.8](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.8) - 2022-02-28
