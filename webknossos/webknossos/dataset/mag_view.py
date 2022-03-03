@@ -3,7 +3,7 @@ import shutil
 import warnings
 from argparse import Namespace
 from pathlib import Path
-from typing import TYPE_CHECKING, Generator, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, Optional, Tuple, Union
 from uuid import uuid4
 
 import numpy as np
@@ -150,6 +150,9 @@ class MagView(View):
             abs_mag1_offset=absolute_offset,
             current_mag_size=Vec3Int(data.shape[-3:]),
         )
+
+        # Only update the layer's bbox if we are actually larger
+        # than the mag-aligned, rounded up bbox (self.bounding_box):
         if not self.bounding_box.contains_bbox(mag1_bbox):
             self.layer.bounding_box = self.layer.bounding_box.extended_by(mag1_bbox)
 
@@ -226,7 +229,7 @@ class MagView(View):
 
     def get_bounding_boxes_on_disk(
         self,
-    ) -> Generator[BoundingBox, None, None]:
+    ) -> Iterator[BoundingBox]:
         """
         Returns a Mag(1) bounding box for each file on disk.
 
@@ -235,6 +238,18 @@ class MagView(View):
         """
         for bbox in self._array.list_bounding_boxes():
             yield bbox.from_mag_to_mag1(self._mag)
+
+    def get_views_on_disk(
+        self,
+        read_only: Optional[bool] = None,
+    ) -> Iterator[View]:
+        """
+        Yields a view for each file on disk, which can be used for efficient parallelization.
+        """
+        for bbox in self.get_bounding_boxes_on_disk():
+            yield self.get_view(
+                absolute_offset=bbox.topleft, size=bbox.size, read_only=read_only
+            )
 
     def compress(
         self,
@@ -283,7 +298,6 @@ class MagView(View):
             )
         )
         with get_executor_for_args(args) as executor:
-
             job_args = []
             for bbox in self.get_bounding_boxes_on_disk():
                 bbox = bbox.intersected_with(self.layer.bounding_box, dont_assert=True)

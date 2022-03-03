@@ -96,6 +96,7 @@ nav:
       - User: api/webknossos/administration/user.md
       - Project: api/webknossos/administration/project.md
       - Task: api/webknossos/administration/task.md
+    - webknossos-py/changelog.md
   - Getting Help:
     - webknossos-py/development.md
     - Community Support: https://forum.image.sc/tag/webknossos" target="_blank
@@ -104,6 +105,7 @@ nav:
   - GitHub: https://github.com/scalableminds/webknossos-libs/tree/master/webknossos" target="_blank
 - webKnossos Cuber:
   - wkcuber CLI: wkcuber/index.md
+  - wkcuber/changelog.md
   - Getting Help:
     - Community Support: https://forum.image.sc/tag/webknossos" target="_blank
     - Email Support: mailto:hello@webknossos.org
