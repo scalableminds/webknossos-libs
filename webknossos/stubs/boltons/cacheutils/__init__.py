@@ -15,3 +15,8 @@ class cachedproperty(Generic[T, KT]):
 
     def __get__(self, obj: Any, objtype: Optional[Type]) -> T:
         ...
+
+
+class LRU(dict):
+    def __init__(self, max_size: Optional[int]):
+        ...

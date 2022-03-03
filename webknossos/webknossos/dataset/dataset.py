@@ -887,12 +887,12 @@ class Dataset:
 
     def _assert_equal_scale(
         self, dataset_path: Path, scale: Tuple[float, float, float]
-    ):
+    ) -> None:
         assert self.scale == tuple(
             scale
         ), f"Cannot open Dataset: The dataset {dataset_path} already exists, but the scales do not match ({self.scale} != {scale})"
 
-    def _assert_equal_name(self, dataset_path: Path, name: str):
+    def _assert_equal_name(self, dataset_path: Path, name: str) -> None:
         assert (
             self.name == name
         ), f"Cannot open Dataset: The dataset {dataset_path} already exists, but the names do not match ({self.name} != {name})"
