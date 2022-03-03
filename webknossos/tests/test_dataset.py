@@ -19,7 +19,7 @@ from webknossos.dataset import (
     SegmentationLayer,
     View,
 )
-from webknossos.dataset.dataset import PROPERTIES_FILE_NAME
+from webknossos.dataset.dataset import PROPERTIES_FILE_NAME, _clear_instance_cache
 from webknossos.dataset.properties import (
     DatasetProperties,
     DatasetViewConfiguration,
@@ -1346,7 +1346,9 @@ def test_search_dataset_also_for_long_layer_name() -> None:
     mag.read(absolute_offset=(20, 20, 20), size=(20, 20, 20))
 
     # when opening the dataset, it searches both for the long and the short path
-    layer = Dataset.open(TESTOUTPUT_DIR / "long_layer_name").get_layer("color")
+    layer = Dataset.open(
+        TESTOUTPUT_DIR / "long_layer_name", dont_use_instance_cache=True
+    ).get_layer("color")
     mag = layer.get_mag("2")
     assert np.array_equal(
         mag.read(absolute_offset=(20, 20, 20), size=(20, 20, 20)),

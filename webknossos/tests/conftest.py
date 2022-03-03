@@ -17,6 +17,7 @@ from vcr.stubs import httpx_stubs
 
 import webknossos as wk
 from webknossos.client.context import _clear_all_context_caches
+from webknossos.dataset.dataset import _clear_instance_cache
 
 from .constants import TESTOUTPUT_DIR
 
@@ -63,6 +64,12 @@ def clear_testoutput() -> Generator:
 @pytest.fixture(autouse=True, scope="function")
 def clear_context_caches() -> Generator:
     _clear_all_context_caches()
+    yield
+
+
+@pytest.fixture(autouse=True, scope="function")
+def clear_instance_cache() -> Generator:
+    _clear_instance_cache()
     yield
 
 

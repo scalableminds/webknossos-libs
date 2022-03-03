@@ -76,6 +76,10 @@ _UNSPECIFIED_SCALE_FROM_OPEN = make_sentinel(
 instance_cache = LRU(max_size=1024)
 
 
+def _clear_instance_cache():
+    instance_cache.clear()
+
+
 class Dataset:
     """
     A dataset is the entry point of the Dataset API.
@@ -95,11 +99,12 @@ class Dataset:
         scale: Optional[Tuple[float, float, float]] = None,
         name: Optional[str] = None,
         exist_ok: bool = _UNSET,
+        dont_use_instance_cache: bool = False,
     ) -> "Dataset":
 
         dataset_path = Path(dataset_path)
 
-        if dataset_path in instance_cache:
+        if not dont_use_instance_cache and dataset_path in instance_cache:
 
             instance = instance_cache[dataset_path]
             if exist_ok == _UNSET:
@@ -109,7 +114,7 @@ class Dataset:
                     f"Creation of Dataset at {dataset_path} failed, because a non-empty folder already exists at this path."
                 )
 
-            if scale is not None:
+            if scale is not None and scale is not _UNSPECIFIED_SCALE_FROM_OPEN:
                 instance._assert_equal_scale(dataset_path, scale)
             if name is not None:
                 instance._assert_equal_name(dataset_path, name)
@@ -117,11 +122,16 @@ class Dataset:
             return instance
 
         instance = super().__new__(cls)
-        Dataset.__init__(instance, dataset_path, scale, name, exist_ok)
-
         instance_cache[dataset_path] = instance
 
         return instance
+
+    def __reduce__(self):
+        # When unpickling an instance of Dataset, __new__ will be called
+        # with __class__ and the following parameters.
+        # Defining this __reduce__ method is necessary, as we are overriding
+        # __new__.
+        return (self.__class__, (self.path, self.scale, self.name, True))
 
     def __init__(
         self,
@@ -129,6 +139,7 @@ class Dataset:
         scale: Optional[Tuple[float, float, float]] = None,
         name: Optional[str] = None,
         exist_ok: bool = _UNSET,
+        dont_use_instance_cache: bool = False,
     ) -> None:
         """
         Creates a new dataset and the associated `datasource-properties.json`.
@@ -136,8 +147,15 @@ class Dataset:
         it is opened (the provided scale and name are asserted to match the existing dataset).
         Currently exist_ok=True is the deprecated default and will change in future releases.
         Please use `Dataset.open` if you intend to open an existing dataset and don't want/need the creation behavior.
+
+        When instantiating a Dataset, instances are saved to a cache so that later instantiations for the same dataset path
+        yield the same instances. This avoids that different instances cause diverging datasource-properties.json files.
+        In rare scenarios, it can be useful to avoid reading from the cache. This can be done by passing dont_use_instance_cache=True.
         """
         dataset_path = Path(dataset_path)
+
+        # This is only used in __new__
+        del dont_use_instance_cache
 
         dataset_existed_already = (
             dataset_path.is_dir() and next(dataset_path.iterdir(), None) is not None
@@ -224,7 +242,11 @@ class Dataset:
                 self._assert_equal_name(dataset_path, name)
 
     @classmethod
-    def open(cls, dataset_path: Union[str, PathLike]) -> "Dataset":
+    def open(
+        cls,
+        dataset_path: Union[str, PathLike],
+        dont_use_instance_cache: bool = False,
+    ) -> "Dataset":
         """
         To open an existing dataset on disk, simply call `Dataset.open("your_path")`.
         This requires `datasource-properties.json` to exist in this folder. Based on the `datasource-properties.json`,
@@ -232,10 +254,11 @@ class Dataset:
         (even though there might exist more layers or magnifications on disk).
 
         The `dataset_path` refers to the top level directory of the dataset (excluding layer or magnification names).
+        See __init__ for details for dont_use_instance_cache.
         """
         dataset_path = Path(dataset_path)
 
-        if dataset_path in instance_cache:
+        if not dont_use_instance_cache and dataset_path in instance_cache:
             return instance_cache[dataset_path]
 
         assert (
@@ -254,6 +277,9 @@ class Dataset:
         instance_cache[dataset_path] = instance
 
         return instance
+
+    def __reduce__(self):
+        return (self.__class__, (self.path, self.scale, self.name, True))
 
     @classmethod
     def download(
