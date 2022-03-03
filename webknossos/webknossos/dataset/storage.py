@@ -1,5 +1,4 @@
 import re
-import shutil
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from os.path import relpath
@@ -59,23 +58,6 @@ class StorageArray(ABC):
     def create(cls, path: Path, storage_info: StorageArrayInfo) -> "StorageArray":
         pass
 
-    @classmethod
-    @abstractmethod
-    def compress_shard(cls, source_path: Path, target_path: Path) -> None:
-        pass
-
-    @abstractmethod
-    def compress(self, target_path: Path) -> None:
-        pass
-
-    @abstractmethod
-    def remove(self) -> None:
-        pass
-
-    @abstractmethod
-    def move(self, target_path: Path) -> "StorageArray":
-        pass
-
     @abstractmethod
     def read(self, offset: Vec3IntLike, shape: Vec3IntLike) -> np.ndarray:
         pass
@@ -114,24 +96,6 @@ class WKWStorageArray(StorageArray):
         if (path / "header.wkw").is_file():
             return cls(path)
         return None
-
-    @classmethod
-    def compress_shard(_cls, source_path: Path, target_path: Path) -> None:
-        try:
-            wkw.File.compress(str(source_path), str(target_path))
-        except wkw.wkw.WKWException as e:
-            raise StorageArrayException(
-                f"Exception while compressing shard {source_path} to {target_path}"
-            ) from e
-
-    def compress(self, target_path: Path) -> None:
-        try:
-            with wkw.Dataset.open(str(self._path)) as wkw_dataset:
-                wkw_dataset.compress(str(target_path), compress_files=False)
-        except wkw.wkw.WKWException as e:
-            raise StorageArrayException(
-                f"Exception while compressing array {self._path}"
-            ) from e
 
     @property
     def info(self) -> StorageArrayInfo:
@@ -178,15 +142,6 @@ class WKWStorageArray(StorageArray):
         except wkw.wkw.WKWException as e:
             raise StorageArrayException(f"Exception while creating array {path}") from e
         return WKWStorageArray(path)
-
-    def remove(self) -> None:
-        self.close()
-        shutil.rmtree(self._path)
-
-    def move(self, target_path: Path) -> "WKWStorageArray":
-        self.close()
-        shutil.move(str(self._path), target_path)
-        return WKWStorageArray(target_path)
 
     def read(self, offset: Vec3IntLike, shape: Vec3IntLike) -> np.ndarray:
         return self._wkw_dataset.read(offset, shape)
@@ -256,13 +211,6 @@ class ZarrStorageArray(StorageArray):
             return cls(path)
         return None
 
-    @classmethod
-    def compress_shard(cls, source_path: Path, target_path: Path) -> None:
-        raise NotImplementedError()
-
-    def compress(self, target_path: Path) -> None:
-        raise NotImplementedError()
-
     @property
     def info(self) -> StorageArrayInfo:
         zarray = zarr.open_array(self._path)
@@ -271,7 +219,7 @@ class ZarrStorageArray(StorageArray):
             num_channels=zarray.shape[0],
             voxel_type=zarray.dtype,
             compression_mode=zarray.compressor is not None,
-            chunk_size=zarray.chunks or Vec3Int.full(1),
+            chunk_size=Vec3Int(*zarray.chunks[1:4]) or Vec3Int.full(1),
             chunks_per_shard=Vec3Int.full(1),
         )
 
@@ -280,8 +228,8 @@ class ZarrStorageArray(StorageArray):
         assert storage_info.data_format == cls.data_format
         assert storage_info.chunks_per_shard == Vec3Int.full(1)
         zarr.create(
-            (storage_info.num_channels, 0, 0, 0),
-            chunks=storage_info.chunk_size,
+            shape=(storage_info.num_channels, 0, 0, 0),
+            chunks=storage_info.chunk_size.to_tuple(),
             dtype=storage_info.voxel_type,
             compressor=(
                 Blosc(cname="zstd", clevel=3, shuffle=Blosc.SHUFFLE)
@@ -291,13 +239,6 @@ class ZarrStorageArray(StorageArray):
             store=path,
         )
         return ZarrStorageArray(path)
-
-    def remove(self) -> None:
-        shutil.rmtree(self._path)
-
-    def move(self, target_path: Path) -> "ZarrStorageArray":
-        shutil.move(str(self._path), target_path)
-        return ZarrStorageArray(target_path)
 
     def read(self, offset: Vec3IntLike, shape: Vec3IntLike) -> np.ndarray:
         offset = Vec3Int(offset)
@@ -315,6 +256,8 @@ class ZarrStorageArray(StorageArray):
         if data.ndim == 3:
             data = data.reshape((1,) + data.shape)
         assert data.ndim == 4
+        new_shape = np.array((zarray.shape, offset.to_np() + data.shape[1:4]))
+        zarray.resize(tuple(new_shape))
         zarray[
             :,
             offset.x : (offset.x + data.shape[1]),
