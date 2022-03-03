@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from os.path import relpath
 from pathlib import Path
-from typing import Any, Dict, Iterator, Optional
+from typing import Any, Dict, Iterator, Optional, Type
 
 import numpy as np
 import wkw
@@ -20,6 +20,7 @@ class StorageArrayException(Exception):
 
 @dataclass
 class StorageArrayInfo:
+    data_format: str
     num_channels: int
     voxel_type: np.dtype
     chunk_size: Vec3Int
@@ -32,6 +33,13 @@ class StorageArrayInfo:
 
 
 class StorageArray(ABC):
+    data_format = ""
+
+    _path: Path
+
+    def __init__(self, path: Path):
+        self._path = path
+
     @property
     @abstractmethod
     def info(self) -> StorageArrayInfo:
@@ -39,7 +47,16 @@ class StorageArray(ABC):
 
     @classmethod
     @abstractmethod
-    def try_open(cls, path: Path) -> Optional["StorageArray"]:
+    def try_open(_cls, path: Path) -> Optional["StorageArray"]:
+        for cls in (WKWStorageArray, ZarrStorageArray):
+            array_maybe = cls.try_open(path)
+            if array_maybe is not None:
+                return array_maybe
+        return None
+
+    @classmethod
+    @abstractmethod
+    def create(cls, path: Path, storage_info: StorageArrayInfo) -> "StorageArray":
         pass
 
     @classmethod
@@ -75,13 +92,21 @@ class StorageArray(ABC):
     def close(self) -> None:
         pass
 
+    @staticmethod
+    def get_class(data_format: str) -> Type["StorageArray"]:
+        for cls in (WKWStorageArray, ZarrStorageArray):
+            if cls.data_format == data_format:
+                return cls
+        raise ValueError(f"Data format `{data_format}` is invalid.")
+
 
 class WKWStorageArray(StorageArray):
-    _path: Path
+    data_format = "wkw"
+
     _cached_wkw_dataset: Optional[wkw.Dataset]
 
     def __init__(self, path: Path):
-        self._path = path
+        super().__init__(path)
         self._cached_wkw_dataset = None
 
     @classmethod
@@ -113,6 +138,7 @@ class WKWStorageArray(StorageArray):
         try:
             with wkw.Dataset.open(str(self._path)) as wkw_dataset:
                 return StorageArrayInfo(
+                    data_format=self.data_format,
                     num_channels=wkw_dataset.header.num_channels,
                     voxel_type=wkw_dataset.header.voxel_type,
                     compression_mode=wkw_dataset.header.block_type
@@ -129,6 +155,7 @@ class WKWStorageArray(StorageArray):
 
     @classmethod
     def create(cls, path: Path, storage_info: StorageArrayInfo) -> "WKWStorageArray":
+        assert storage_info.data_format == cls.data_format
         assert storage_info.chunk_size[0] == storage_info.chunk_size[1]
         assert storage_info.chunk_size[0] == storage_info.chunk_size[2]
         assert storage_info.chunks_per_shard[0] == storage_info.chunks_per_shard[1]
@@ -221,10 +248,7 @@ class WKWStorageArray(StorageArray):
 
 
 class ZarrStorageArray(StorageArray):
-    _path: Path
-
-    def __init__(self, path: Path):
-        self._path = path
+    data_format = "zarr"
 
     @classmethod
     def try_open(cls, path: Path) -> Optional["ZarrStorageArray"]:
@@ -243,6 +267,7 @@ class ZarrStorageArray(StorageArray):
     def info(self) -> StorageArrayInfo:
         zarray = zarr.open_array(self._path)
         return StorageArrayInfo(
+            data_format=self.data_format,
             num_channels=zarray.shape[0],
             voxel_type=zarray.dtype,
             compression_mode=zarray.compressor is not None,
@@ -252,6 +277,7 @@ class ZarrStorageArray(StorageArray):
 
     @classmethod
     def create(cls, path: Path, storage_info: StorageArrayInfo) -> "ZarrStorageArray":
+        assert storage_info.data_format == cls.data_format
         assert storage_info.chunks_per_shard == Vec3Int.full(1)
         zarr.create(
             (storage_info.num_channels, 0, 0, 0),

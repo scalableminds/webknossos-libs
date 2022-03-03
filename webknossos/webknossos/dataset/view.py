@@ -72,7 +72,9 @@ class View:
         warnings.warn(
             "[DEPRECATION] `header` is deprecated, please use `info` instead."
         )
-        assert isinstance(self._array, WKWStorageArray)
+        assert isinstance(
+            self._array, WKWStorageArray
+        ), "`header` only works with WKW datasets."
         return self._array._wkw_dataset.header
 
     @property
@@ -903,9 +905,8 @@ class View:
     @property
     def _array(self) -> StorageArray:
         if self._cached_array is None:
-            self._cached_array = WKWStorageArray(
-                self._path
-            )  # No need to pass the header to the wkw.Dataset
+            cls_array = StorageArray.get_class(self.info.data_format)
+            self._cached_array = cls_array(self._path)
         return self._cached_array
 
     @_array.deleter

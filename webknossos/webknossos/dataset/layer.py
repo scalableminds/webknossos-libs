@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 
-from webknossos.dataset.storage import StorageArrayException, WKWStorageArray
+from webknossos.dataset.storage import StorageArray, StorageArrayException
 from webknossos.geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 
 from .downsampling_utils import (
@@ -914,7 +914,8 @@ class Layer:
         self._assert_mag_does_not_exist_yet(mag)
 
         try:
-            info = WKWStorageArray(
+            cls_array = StorageArray.get_class(self._properties.data_format)
+            info = cls_array(
                 _find_mag_path_on_disk(self.dataset.path, self.name, mag_name)
             ).info
             self._mags[mag] = MagView(

@@ -1,3 +1,4 @@
+from cmath import inf
 import copy
 import json
 import shutil
@@ -24,7 +25,7 @@ import attr
 import numpy as np
 from boltons.typeutils import make_sentinel
 
-from webknossos.dataset.storage import WKWStorageArray
+from webknossos.dataset.storage import StorageArray
 from webknossos.geometry.vec3_int import Vec3Int, Vec3IntLike
 
 if TYPE_CHECKING:
@@ -57,7 +58,7 @@ from .properties import (
 from .view import View
 
 DEFAULT_BIT_DEPTH = 8
-
+DEFAULT_DATA_FORMAT = "wkw"
 PROPERTIES_FILE_NAME = "datasource-properties.json"
 
 
@@ -297,6 +298,7 @@ class Dataset:
         dtype_per_layer: Optional[Union[str, np.dtype, type]] = None,
         dtype_per_channel: Optional[Union[str, np.dtype, type]] = None,
         num_channels: Optional[int] = None,
+        data_format: str = DEFAULT_DATA_FORMAT,
         **kwargs: Any,
     ) -> Layer:
         """
@@ -356,7 +358,7 @@ class Dataset:
             ),
             wkw_resolutions=[],
             num_channels=num_channels,
-            data_format="wkw",
+            data_format=data_format,
         )
 
         if category == COLOR_CATEGORY:
@@ -396,6 +398,7 @@ class Dataset:
         dtype_per_layer: Optional[Union[str, np.dtype, type]] = None,
         dtype_per_channel: Optional[Union[str, np.dtype, type]] = None,
         num_channels: Optional[int] = None,
+        data_format: str = DEFAULT_DATA_FORMAT,
         **kwargs: Any,
     ) -> Layer:
         """
@@ -454,6 +457,7 @@ class Dataset:
                 dtype_per_layer=dtype_per_layer,
                 dtype_per_channel=dtype_per_channel,
                 num_channels=num_channels,
+                data_format=data_format,
                 **kwargs,
             )
 
@@ -480,26 +484,30 @@ class Dataset:
         return self._layers[layer_name]
 
     def add_layer_for_existing_files(
-        self, layer_name: str, category: LayerCategoryType, **kwargs: Any
+        self,
+        layer_name: str,
+        category: LayerCategoryType,
+        **kwargs: Any,
     ) -> Layer:
         assert layer_name not in self.layers, f"Layer {layer_name} already exists!"
-        mag_headers = [
-            WKWStorageArray.try_open(f)
+        mag_infos = [
+            StorageArray.try_open(f)
             for f in (self.path / layer_name).iterdir()
             if f.is_dir()
         ]
-        mag_headers = [m for m in mag_headers if m is not None]
+        mag_infos = [m for m in mag_infos if m is not None]
 
         assert (
-            len(mag_headers) > 0
+            len(mag_infos) > 0
         ), f"Could not find any header.wkw files in {self.path / layer_name}, cannot add layer."
-        assert mag_headers[0] is not None  # for mypy
-        header = mag_headers[0].info
+        assert mag_infos[0] is not None  # for mypy
+        info = mag_infos[0].info
         layer = self.add_layer(
             layer_name,
             category=category,
-            num_channels=header.num_channels,
-            dtype_per_channel=header.voxel_type,
+            num_channels=info.num_channels,
+            dtype_per_channel=info.voxel_type,
+            data_format=info.data_format,
             **kwargs,
         )
         for mag_dir in layer.path.iterdir():

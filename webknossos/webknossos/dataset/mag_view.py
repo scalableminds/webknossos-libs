@@ -8,7 +8,7 @@ from uuid import uuid4
 
 import numpy as np
 
-from webknossos.dataset.storage import StorageArrayInfo, WKWStorageArray
+from webknossos.dataset.storage import StorageArray, StorageArrayInfo
 from webknossos.geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 from webknossos.utils import get_executor_for_args, wait_and_ensure_success
 
@@ -59,6 +59,7 @@ class MagView(View):
         Do not use this constructor manually. Instead use `webknossos.dataset.layer.Layer.add_mag()`.
         """
         storage_info = StorageArrayInfo(
+            data_format=layer._properties.data_format,
             voxel_type=layer.dtype_per_channel,
             num_channels=layer.num_channels,
             chunk_size=chunk_size,
@@ -75,7 +76,9 @@ class MagView(View):
         self._layer = layer
 
         if create:
-            WKWStorageArray.create(self.path, storage_info)
+            StorageArray.get_class(storage_info.data_format).create(
+                self.path, storage_info
+            )
 
     # Overwrites of View methods:
     @property
