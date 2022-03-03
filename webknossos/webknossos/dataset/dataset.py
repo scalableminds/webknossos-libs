@@ -535,15 +535,15 @@ class Dataset:
 
         Fails with a RuntimeError if there are multiple color layers or none.
         """
+        warnings.warn(
+            "[DEPRECATION] get_color_layer() fails if no or more than one color layer exists. Prefer get_color_layers()."
+        )
         return self._get_layer_by_category(COLOR_CATEGORY)
 
     def get_color_layers(self) -> List[Layer]:
         """
         Returns all color layers.
         """
-        warnings.warn(
-            "[DEPRECATION] get_color_layer() fails if no or more than one color layer exists. Prefer get_color_layers()."
-        )
         return [
             cast(Layer, layer)
             for layer in self.layers.values()
