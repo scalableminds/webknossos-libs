@@ -20,3 +20,6 @@ class cachedproperty(Generic[T, KT]):
 class LRU(dict):
     def __init__(self, max_size: Optional[int]):
         ...
+
+    def clear(self) -> None:
+        ...

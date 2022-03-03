@@ -76,7 +76,7 @@ _UNSPECIFIED_SCALE_FROM_OPEN = make_sentinel(
 instance_cache = LRU(max_size=1024)
 
 
-def _clear_instance_cache():
+def _clear_instance_cache() -> None:
     instance_cache.clear()
 
 
@@ -126,7 +126,7 @@ class Dataset:
 
         return instance
 
-    def __reduce__(self):
+    def __reduce__(self) -> Tuple[Any, Any]:
         # When unpickling an instance of Dataset, __new__ will be called
         # with __class__ and the following parameters.
         # Defining this __reduce__ method is necessary, as we are overriding
@@ -277,9 +277,6 @@ class Dataset:
         instance_cache[dataset_path] = instance
 
         return instance
-
-    def __reduce__(self):
-        return (self.__class__, (self.path, self.scale, self.name, True))
 
     @classmethod
     def download(

@@ -19,7 +19,7 @@ from webknossos.dataset import (
     SegmentationLayer,
     View,
 )
-from webknossos.dataset.dataset import PROPERTIES_FILE_NAME, _clear_instance_cache
+from webknossos.dataset.dataset import PROPERTIES_FILE_NAME
 from webknossos.dataset.properties import (
     DatasetProperties,
     DatasetViewConfiguration,
