@@ -347,6 +347,31 @@ def test_downsample_mag_list() -> None:
         assert m in layer.mags
 
 
+def test_downsample_mag_list_with_only_setup_mags() -> None:
+    ds = Dataset(TESTOUTPUT_DIR / "downsample_mag_list", scale=(1, 1, 2))
+    layer = ds.add_layer("color", COLOR_CATEGORY)
+    mag = layer.add_mag(1)
+    mag.write(data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8))
+
+    target_mags = [Mag([4, 4, 8]), Mag(2), Mag([32, 32, 8]), Mag(32)]  # unsorted list
+
+    layer.downsample_mag_list(
+        from_mag=Mag(1), target_mags=target_mags, only_setup_mags=True
+    )
+
+    for m in target_mags:
+        assert np.all(
+            layer.get_mag(m).read((0, 0, 0), (10, 20, 30)) == 0
+        ), "The mags should be empty."
+
+    layer.downsample_mag_list(
+        from_mag=Mag(1), target_mags=target_mags, allow_overwrite=True
+    )
+
+    for m in target_mags:
+        assert m in layer.mags
+
+
 def test_downsample_with_invalid_mag_list() -> None:
     ds = Dataset(TESTOUTPUT_DIR / "downsample_mag_list", scale=(1, 1, 2))
     layer = ds.add_layer("color", COLOR_CATEGORY)

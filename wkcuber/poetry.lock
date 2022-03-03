@@ -1067,7 +1067,7 @@ develop = true
 attrs = "^21.1.0"
 boltons = "~21.0.0"
 cattrs = "1.7.1"
-cluster_tools = "0.0.0"
+cluster_tools = {path = "../cluster_tools", develop = true}
 httpx = ">=0.15.4,<0.19.0"
 loxun = "^2.0"
 networkx = "^2.6.2"
@@ -1080,6 +1080,7 @@ scikit-image = "^0.18.3"
 scipy = "^1.4.0"
 typing-extensions = "^3.7"
 wkw = "1.1.11"
+zipp = "^3.5.0"
 
 [package.source]
 type = "directory"
@@ -1139,7 +1140,7 @@ jupyter = ["notebook", "ipytree"]
 name = "zipp"
 version = "3.7.0"
 description = "Backport of pathlib-compatible object wrapper for zip files"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 

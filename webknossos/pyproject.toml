@@ -27,6 +27,7 @@ scikit-image = "^0.18.3"
 scipy = "^1.4.0"
 typing-extensions = "^3.7"
 wkw = "1.1.11"
+zipp = "^3.5.0"
 
 [tool.poetry.dev-dependencies]
 # autoflake
@@ -37,14 +38,15 @@ inducoapi = "2.0.0"
 isort = "^5.9.3"
 mypy = "0.910"
 openapi-python-client = "0.10.3"
-pandas = "^1.3.4"
-pooch = "^1.5.2"
 pylint = "^2.10.2"
 pytest = "^6.2.4"
 pytest-recording = "^0.12.0"
-tabulate = "^0.8.9"
 types-python-dateutil = "^0.1.6"
+# packages for examples:
 fastremap = "^1.12.2"
+pandas = "^1.3.4"
+pooch = "^1.5.2"
+tabulate = "^0.8.9"
 
 [tool.black]
 target_version = ['py37', 'py38']

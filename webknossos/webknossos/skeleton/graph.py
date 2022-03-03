@@ -129,7 +129,7 @@ class Graph(nx.Graph):
         if enforced_id is not None:
             self._id = enforced_id
         else:
-            self._id = skeleton.element_id_generator.__next__()
+            self._id = skeleton._element_id_generator.__next__()
 
         # only used internally
         self._skeleton = skeleton
