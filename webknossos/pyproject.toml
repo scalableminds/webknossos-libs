@@ -1,13 +1,13 @@
 [tool.poetry]
 name = "webknossos"
 version = "0.0.0"  # filled by dunamai
-description = "Python package to work with webKnossos datasets and annotations"
+description = "Python API for working with webKnossos datasets, annotations, and for webKnossos server interaction."
 authors = ["scalable minds <hello@scalableminds.com>"]
 readme = "README.md"
 license = "AGPL-3.0"
 repository = "https://github.com/scalableminds/webknossos-libs"
-homepage = "https://docs.webknossos.org"
-include = ["webknossos/version.py"]
+homepage = "https://docs.webknossos.org/webknossos-py"
+include = ["webknossos/version.py"]  # included explicitly since it's in .gitignore
 
 [tool.poetry.dependencies]
 python = "^3.7,>=3.7.1"
