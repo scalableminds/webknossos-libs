@@ -26,9 +26,7 @@ class AnnotationInfo:
 
     def download_annotation(self) -> Annotation:
         """Downloads and returns the annotation that is discribed by this AnnotationInfo object"""
-        from webknossos.client._download_annotation import download_annotation
-
-        return download_annotation(self.type, self.id)
+        return Annotation.download(self.id, annotation_type=self.type)
 
     @classmethod
     def _from_generated_response(
