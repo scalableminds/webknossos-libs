@@ -228,8 +228,8 @@ class ZarrStorageArray(StorageArray):
         assert storage_info.data_format == cls.data_format
         assert storage_info.chunks_per_shard == Vec3Int.full(1)
         zarr.create(
-            shape=(storage_info.num_channels, 0, 0, 0),
-            chunks=storage_info.chunk_size.to_tuple(),
+            shape=(storage_info.num_channels, 1, 1, 1),
+            chunks=(storage_info.num_channels,) + storage_info.chunk_size.to_tuple(),
             dtype=storage_info.voxel_type,
             compressor=(
                 Blosc(cname="zstd", clevel=3, shuffle=Blosc.SHUFFLE)
@@ -243,12 +243,25 @@ class ZarrStorageArray(StorageArray):
     def read(self, offset: Vec3IntLike, shape: Vec3IntLike) -> np.ndarray:
         offset = Vec3Int(offset)
         shape = Vec3Int(shape)
-        return zarr.open(store=self._path)[
+        zarray = zarr.open(store=self._path)
+        data = zarray[
             :,
             offset.x : (offset.x + shape.x),
             offset.y : (offset.y + shape.y),
             offset.z : (offset.z + shape.z),
         ]
+        if data.shape != shape:
+            padded_data = np.zeros(
+                (self.info.num_channels,) + shape.to_tuple(), dtype=data.dtype
+            )
+            padded_data[
+                :,
+                0 : data.shape[1],
+                0 : data.shape[2],
+                0 : data.shape[3],
+            ] = data
+            data = padded_data
+        return data
 
     def write(self, offset: Vec3IntLike, data: np.ndarray) -> None:
         offset = Vec3Int(offset)
@@ -256,8 +269,16 @@ class ZarrStorageArray(StorageArray):
         if data.ndim == 3:
             data = data.reshape((1,) + data.shape)
         assert data.ndim == 4
-        new_shape = np.array((zarray.shape, offset.to_np() + data.shape[1:4]))
-        zarray.resize(tuple(new_shape))
+
+        new_shape = (
+            zarray.shape[0],
+            max(zarray.shape[1], offset.x + data.shape[1]),
+            max(zarray.shape[2], offset.y + data.shape[2]),
+            max(zarray.shape[3], offset.z + data.shape[3]),
+        )
+        if new_shape != zarray.shape:
+            # print("RESIZE", zarray.shape, new_shape)
+            zarray.resize(new_shape)
         zarray[
             :,
             offset.x : (offset.x + data.shape[1]),
@@ -266,7 +287,13 @@ class ZarrStorageArray(StorageArray):
         ] = data
 
     def list_bounding_boxes(self) -> Iterator[BoundingBox]:
-        raise NotImplementedError()
+        zarray = zarr.open(store=self._path)
+        chunk_size = Vec3Int(*zarray.chunks[1:4])
+        for key in zarray.store.keys():
+            if not key.startswith("."):
+                key_parts = [int(p) for p in key.split(zarray._dimension_separator)]
+                chunk_idx = Vec3Int(key_parts[1:4])
+                yield BoundingBox(topleft=chunk_idx * chunk_size, size=chunk_size)
 
     def close(self) -> None:
         pass

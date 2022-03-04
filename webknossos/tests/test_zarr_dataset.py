@@ -287,16 +287,16 @@ def test_dataset_conversion() -> None:
         absolute_offset=(10, 20, 30),
         data=(np.random.rand(64, 64, 128) * 255).astype(np.uint8),
     )
-    zarr_color_layer = origin_ds.add_layer(
+    color_layer = origin_ds.add_layer(
         "layer2", COLOR_CATEGORY, num_channels=3, data_format="zarr"
     )
-    zarr_color_layer.add_mag(
+    color_layer.add_mag(
         "1", chunk_size=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(1)
     ).write(
         absolute_offset=(10, 20, 30),
         data=(np.random.rand(3, 128, 128, 256) * 255).astype(np.uint8),
     )
-    zarr_color_layer.add_mag(
+    color_layer.add_mag(
         "2", chunk_size=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(1)
     ).write(
         absolute_offset=(10, 20, 30),

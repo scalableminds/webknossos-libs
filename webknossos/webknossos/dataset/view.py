@@ -245,9 +245,7 @@ class View:
     def _handle_compressed_write(
         self, current_mag_bbox: BoundingBox, data: np.ndarray
     ) -> Tuple[BoundingBox, np.ndarray]:
-        aligned_bbox = current_mag_bbox.align_with_mag(
-            Mag(self.info.shard_size), ceil=True
-        )
+        aligned_bbox = current_mag_bbox.align_with_mag(self.info.shard_size, ceil=True)
 
         if current_mag_bbox != aligned_bbox:
 
@@ -559,7 +557,7 @@ class View:
 
             current_mag_bbox = mag1_bbox.in_mag(self._mag)
             current_mag_aligned_bbox = current_mag_bbox.align_with_mag(
-                Mag(self.info.shard_size), ceil=True
+                self.info.shard_size, ceil=True
             )
             # The data bbox should either be aligned or match the dataset's bounding box:
             current_mag_view_bbox = self.bounding_box.in_mag(self._mag)
