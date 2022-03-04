@@ -140,7 +140,7 @@ class Dataset:
             name = name or basename(normpath(dataset_path))
             assert self._is_valid_dataset_name(
                 name
-            ), "Invalid name. A dataset name can only contain letters, digits and underscores"
+            ), f"Invalid name {name}. A dataset name can only contain letters, digits and underscores."
 
             dataset_properties = DatasetProperties(
                 id={"name": name, "team": ""}, scale=scale, data_layers=[]
