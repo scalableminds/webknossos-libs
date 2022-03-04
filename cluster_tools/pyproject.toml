@@ -1,9 +1,11 @@
 [tool.poetry]
 name = "cluster_tools"
-version = "0.0.0"
+version = "0.0.0"  # filled by dunamai
 description = "Utility library for easily distributing code execution on clusters"
 authors = ["scalable minds <hello@scalableminds.com>"]
+readme = "README.md"
 license = "MIT"
+repository = "https://github.com/scalableminds/webknossos-libs"
 
 [tool.poetry.dependencies]
 python = "^3.6.2"
