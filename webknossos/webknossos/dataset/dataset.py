@@ -832,7 +832,7 @@ class Dataset:
 
         if properties_on_disk != self._last_read_properties:
             warnings.warn(
-                "[WARNING] While exporting the dataset's properties, different properties were found on disk which will be overwritten now. This is likely happening because multiple processes change the metadata of this dataset."
+                "[WARNING] While exporting the dataset's properties, properties were found on disk which are newer than the ones that were seen last time. The properties will be overwritten. This is likely happening because multiple processes changed the metadata of this dataset."
             )
 
         with open(self.path / PROPERTIES_FILE_NAME, "w", encoding="utf-8") as outfile:
