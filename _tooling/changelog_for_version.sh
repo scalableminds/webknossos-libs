@@ -9,8 +9,7 @@ else
 fi
 VERSION_END="^## \["
 
-for PKG in */pyproject.toml; do
-    PKG="$(dirname "$PKG")"
+for PKG in $(make list_packages_by_priority); do
     if [ ! -f "$PKG/Changelog.md" ]; then
         continue
     fi

@@ -443,11 +443,11 @@ jobs:
         env:
           PYPI_USERNAME: ${{ secrets.PYPI_USERNAME }}
           PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-        run: ./publish.sh
+        run: _tooling/publish.sh
       - name: Prepare github release
         run: |
           VERSION="$(dunamai from git)"
-          ./changelog_for_version.sh $VERSION > Changelog.md
+          _tooling/changelog_for_version.sh $VERSION > Changelog.md
       - name: Publish github release
         id: create_release
         uses: actions/create-release@v1
