@@ -1745,13 +1745,11 @@ def test_get_or_add_layer_by_type(tmp_path: Path) -> None:
     )  # adds another layer
     assert len(ds.get_segmentation_layers()) == 2
 
-    with pytest.raises(IndexError):
-        ds.get_color_layer()  # fails
+    assert len(ds.get_color_layers()) == 0
     _ = ds.add_layer("color", COLOR_CATEGORY)  # adds layer
-    _ = ds.get_color_layer()  # works
+    assert len(ds.get_color_layers()) == 1
     _ = ds.add_layer("different_color", COLOR_CATEGORY)  # adds another layer
-    with pytest.raises(IndexError):
-        ds.get_color_layer()  # fails
+    assert len(ds.get_color_layers()) == 2
 
     assure_exported_properties(ds)
 

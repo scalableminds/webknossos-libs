@@ -504,9 +504,9 @@ class Dataset:
 
     def get_segmentation_layer(self) -> SegmentationLayer:
         """
-        Returns the only segmentation layer. Prefer `get_segmentation_layers`,
-        because multiple segmentation layers can exist.
+        Deprecated, please use `get_segmentation_layers()`.
 
+        Returns the only segmentation layer.
         Fails with a IndexError if there are multiple segmentation layers or none.
         """
 
@@ -530,20 +530,20 @@ class Dataset:
 
     def get_color_layer(self) -> Layer:
         """
-        Returns the only color layer. Prefer `get_color_layers`, because multiple
-        color layers can exist.
+        Deprecated, please use `get_color_layers()`.
 
+        Returns the only color layer.
         Fails with a RuntimeError if there are multiple color layers or none.
         """
+        warnings.warn(
+            "[DEPRECATION] get_color_layer() fails if no or more than one color layer exists. Prefer get_color_layers()."
+        )
         return self._get_layer_by_category(COLOR_CATEGORY)
 
     def get_color_layers(self) -> List[Layer]:
         """
         Returns all color layers.
         """
-        warnings.warn(
-            "[DEPRECATION] get_color_layer() fails if no or more than one color layer exists. Prefer get_color_layers()."
-        )
         return [
             cast(Layer, layer)
             for layer in self.layers.values()
