@@ -136,7 +136,12 @@ class Dataset:
             assert (
                 scale is not None
             ), "When creating a new dataset, the scale must be given, e.g. as Dataset(path, scale=(10, 10, 16.8))"
+
             name = name or basename(normpath(dataset_path))
+            assert self._is_valid_dataset_name(
+                name
+            ), "Invalid name. A dataset name can only contain letters, digits and underscores"
+
             dataset_properties = DatasetProperties(
                 id={"name": name, "team": ""}, scale=scale, data_layers=[]
             )
@@ -842,3 +847,24 @@ class Dataset:
             raise RuntimeError(
                 f"Failed to initialize layer: the specified category ({properties.category}) does not exist."
             )
+
+    def _is_valid_dataset_name(self, name: str) -> bool:
+        forbidden_characters = [
+            " ",
+            "!",
+            ":",
+            "#",
+            ";",
+            "@",
+            "+",
+            "*",
+            "?",
+            "=",
+            "(",
+            ")",
+            "/",
+            "%",
+            "&",
+            "$",
+        ]
+        return not any([character in name for character in forbidden_characters])
