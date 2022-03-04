@@ -9,7 +9,7 @@ fi
 
 PKG_VERSION="$1"
 
-if ! python check_version.py ${PKG_VERSION}; then
+if ! python _tooling/check_version.py ${PKG_VERSION}; then
     echo "A higher version is already present."
     exit 1
 fi
@@ -24,7 +24,7 @@ for PKG in */pyproject.toml; do
 
     pushd "$PKG" > /dev/null
 
-    python ../make_changelog.py "$PKG_VERSION"
+    python ../_tooling/changelog_bump_version.py "$PKG_VERSION"
 
     popd > /dev/null
 done

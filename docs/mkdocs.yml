@@ -49,15 +49,18 @@ nav:
     - webknossos/tasks.md
     - webknossos/sharing.md
     - webknossos/installation.md
+    - webknossos/automated_analysis.md
+    - webknossos/jobs.md
+    - webknossos/tooling.md
   - Reference:
+    - webknossos/publications.md
     - webknossos/data_formats.md
     - Keyboard Shortcuts: webknossos/keyboard_shortcuts.md
     - Backend REST API: webknossos/rest_api.md
-    - Code Readme: webknossos/code-readme.md
+    - Frontend Scripting API: https://webknossos.org/assets/docs/frontend-api/index.html" target="_blank
     - Changelog: webknossos/CHANGELOG.released.md
     - Migration Guide: webknossos/MIGRATIONS.released.md
-    - webknossos/publications.md
-    - webknossos/tooling.md
+    - GitHub: https://github.com/scalableminds/webknossos" target="_blank
   - Getting Help:
     - webknossos/faq.md
     - Community Support: https://forum.image.sc/tag/webknossos" target="_blank
