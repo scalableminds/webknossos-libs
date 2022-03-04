@@ -83,9 +83,9 @@ def test_non_linear_filter_reshape() -> None:
     assert np.all(expected_result == a_filtered)
 
 
-def downsample_test_helper(use_compress: bool) -> None:
+def downsample_test_helper(use_compress: bool, output_suffix: str) -> None:
     source_path = TESTDATA_DIR / "WT1_wkw"
-    target_path = TESTOUTPUT_DIR / "WT1_wkw"
+    target_path = TESTOUTPUT_DIR / f"WT1_wkw_{output_suffix}"
 
     source_ds = Dataset.open(source_path)
     target_ds = source_ds.copy_dataset(target_path, block_len=16, file_len=16)
@@ -135,13 +135,13 @@ def downsample_test_helper(use_compress: bool) -> None:
 
 
 def test_downsample_cube_job() -> None:
-    downsample_test_helper(False)
+    downsample_test_helper(False, "no_compression")
 
 
 def test_compressed_downsample_cube_job() -> None:
     with warnings.catch_warnings():
         warnings.filterwarnings("error")  # This escalates the warning to an error
-        downsample_test_helper(True)
+        downsample_test_helper(True, "with_compression")
 
 
 def test_downsample_multi_channel() -> None:
