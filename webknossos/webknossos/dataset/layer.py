@@ -300,8 +300,8 @@ class Layer:
 
         if chunk_size not in (Vec3Int.full(32), Vec3Int.full(64)):
             warnings.warn(
-                f"[WARNING] `chunk_size` of `32, 32, 32` or `64, 64, 64` is recommended for optimal "
-                + "performance in webKnossos. Got {chunk_size}."
+                "[WARNING] `chunk_size` of `32, 32, 32` or `64, 64, 64` is recommended for optimal "
+                + f"performance in webKnossos. Got {chunk_size}."
             )
 
         if chunks_per_shard is None:
