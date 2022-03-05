@@ -213,7 +213,7 @@ class ZarrStorageArray(StorageArray):
 
     @property
     def info(self) -> StorageArrayInfo:
-        zarray = zarr.open_array(self._path)
+        zarray = zarr.open_array(self._path, mode="r")
         return StorageArrayInfo(
             data_format=self.data_format,
             num_channels=zarray.shape[0],
@@ -226,7 +226,9 @@ class ZarrStorageArray(StorageArray):
     @classmethod
     def create(cls, path: Path, storage_info: StorageArrayInfo) -> "ZarrStorageArray":
         assert storage_info.data_format == cls.data_format
-        assert storage_info.chunks_per_shard == Vec3Int.full(1)
+        assert storage_info.chunks_per_shard == Vec3Int.full(
+            1
+        ), "Zarr storage doesn't support sharding yet"
         zarr.create(
             shape=(storage_info.num_channels, 1, 1, 1),
             chunks=(storage_info.num_channels,) + storage_info.chunk_size.to_tuple(),
@@ -243,7 +245,8 @@ class ZarrStorageArray(StorageArray):
     def read(self, offset: Vec3IntLike, shape: Vec3IntLike) -> np.ndarray:
         offset = Vec3Int(offset)
         shape = Vec3Int(shape)
-        zarray = zarr.open(store=self._path)
+        zarray = zarr.open_array(store=self._path, mode="r")
+        # print("READ", self._path, offset, offset + shape, shape, zarray.shape)
         data = zarray[
             :,
             offset.x : (offset.x + shape.x),
@@ -265,7 +268,7 @@ class ZarrStorageArray(StorageArray):
 
     def write(self, offset: Vec3IntLike, data: np.ndarray) -> None:
         offset = Vec3Int(offset)
-        zarray = zarr.open(store=self._path)
+        zarray = zarr.open_array(store=self._path, mode="a")
         if data.ndim == 3:
             data = data.reshape((1,) + data.shape)
         assert data.ndim == 4
@@ -287,7 +290,7 @@ class ZarrStorageArray(StorageArray):
         ] = data
 
     def list_bounding_boxes(self) -> Iterator[BoundingBox]:
-        zarray = zarr.open(store=self._path)
+        zarray = zarr.open_array(store=self._path, mode="r")
         chunk_size = Vec3Int(*zarray.chunks[1:4])
         for key in zarray.store.keys():
             if not key.startswith("."):

@@ -223,6 +223,11 @@ class Layer:
         return self._properties.num_channels
 
     @property
+    def data_format(self) -> str:
+        assert self._properties.data_format is not None
+        return self._properties.data_format
+
+    @property
     def default_view_configuration(self) -> Optional[LayerViewConfiguration]:
         return self._properties.default_view_configuration
 
@@ -292,6 +297,12 @@ class Layer:
                 chunk_size = DEFAULT_CHUNK_SIZE
         else:
             chunk_size = Vec3Int(chunk_size)
+
+        if chunk_size not in (Vec3Int.full(32), Vec3Int.full(64)):
+            warnings.warn(
+                f"[WARNING] `chunk_size` of `32, 32, 32` or `64, 64, 64` is recommended for optimal "
+                + "performance in webKnossos. Got {chunk_size}."
+            )
 
         if chunks_per_shard is None:
             if file_len is not None:

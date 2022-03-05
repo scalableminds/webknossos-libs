@@ -287,6 +287,7 @@ class MagView(View):
             category=self.layer.category,
             dtype_per_channel=self.layer.dtype_per_channel,
             num_channels=self.layer.num_channels,
+            data_format=self.layer.data_format,
         ).get_or_add_mag(
             mag=self.mag,
             chunk_size=self.info.chunk_size,
