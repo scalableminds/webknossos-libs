@@ -1,7 +1,7 @@
 from wkcuber.converter import ImageStackConverter, KnossosConverter
 from os.path import sep
 
-TEST_PREFIXES = ["", "/", f"../"]
+TEST_PREFIXES = ["", "/", "../"]
 
 
 def fix_sep(path: str) -> str:

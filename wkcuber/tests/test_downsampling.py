@@ -4,8 +4,6 @@ from typing import Tuple
 
 import numpy as np
 import pytest
-from shutil import rmtree
-from os import makedirs
 
 from wkcuber.api.dataset import Dataset
 from wkcuber.downsampling_utils import SamplingModes
@@ -83,13 +81,13 @@ def test_non_linear_filter_reshape() -> None:
     assert np.all(expected_result == a_filtered)
 
 
-def downsample_test_helper(use_compress: bool) -> None:
+def downsample_test_helper(use_compress: bool, chunk_size: Vec3Int) -> None:
     source_path = TESTDATA_DIR / "WT1_wkw"
     target_path = TESTOUTPUT_DIR / "WT1_wkw"
 
     source_ds = Dataset.open(source_path)
     target_ds = source_ds.copy_dataset(
-        target_path, chunk_size=(16, 16, 16), chunks_per_shard=(16, 16, 16)
+        target_path, chunk_size=chunk_size, chunks_per_shard=Vec3Int.full(16)
     )
 
     target_layer = target_ds.get_layer("color")
@@ -137,13 +135,13 @@ def downsample_test_helper(use_compress: bool) -> None:
 
 
 def test_downsample_cube_job() -> None:
-    downsample_test_helper(False)
+    downsample_test_helper(False, Vec3Int.full(16))
 
 
 def test_compressed_downsample_cube_job() -> None:
     with warnings.catch_warnings():
         warnings.filterwarnings("error")  # This escalates the warning to an error
-        downsample_test_helper(True)
+        downsample_test_helper(True, Vec3Int.full(32))
 
 
 def test_downsample_multi_channel() -> None:

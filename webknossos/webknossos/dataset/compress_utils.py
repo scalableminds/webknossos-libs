@@ -9,7 +9,7 @@ from ..utils import time_start, time_stop
 
 
 def compress_file_job(args: Tuple[Path, Path]) -> None:
-    warnings.warn("[DEPRECATION] compress_file_job is deprecated.")
+    warnings.warn("[DEPRECATION] compress_file_job is deprecated.", DeprecationWarning)
     source_path, target_path = args
     try:
         time_start("Compressing '{}' to '{}'".format(source_path, target_path))

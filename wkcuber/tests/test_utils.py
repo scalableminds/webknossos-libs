@@ -2,8 +2,6 @@ from pathlib import Path
 from shutil import rmtree
 from typing import Union
 
-import numpy as np
-
 from webknossos.utils import get_chunks
 from wkcuber.utils import get_regular_chunks
 

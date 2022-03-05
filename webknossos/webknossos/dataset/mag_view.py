@@ -93,7 +93,8 @@ class MagView(View):
         warnings.warn(
             "[DEPRECATION] mag_view.global_offset is deprecated. "
             + "Since this is a MagView, please use "
-            + "Vec3Int.zeros() instead."
+            + "Vec3Int.zeros() instead.",
+            DeprecationWarning,
         )
         return Vec3Int.zeros()
 
@@ -103,7 +104,8 @@ class MagView(View):
         warnings.warn(
             "[DEPRECATION] mag_view.size is deprecated. "
             + "Since this is a MagView, please use "
-            + "mag_view.bounding_box.in_mag(mag_view.mag).bottomright instead."
+            + "mag_view.bounding_box.in_mag(mag_view.mag).bottomright instead.",
+            DeprecationWarning,
         )
         return self.bounding_box.in_mag(self._mag).bottomright
 
@@ -141,7 +143,8 @@ class MagView(View):
             warnings.warn(
                 "[DEPRECATION] Using mag_view.write(offset=my_vec) is deprecated. "
                 + "Please use relative_offset or absolute_offset instead. "
-                + alternative
+                + alternative,
+                DeprecationWarning,
             )
 
         if all(i is None for i in [offset, absolute_offset, relative_offset]):

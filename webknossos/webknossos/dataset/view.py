@@ -70,7 +70,8 @@ class View:
     def header(self) -> wkw.Header:
         """⚠️ Deprecated, use `info` instead."""
         warnings.warn(
-            "[DEPRECATION] `header` is deprecated, please use `info` instead."
+            "[DEPRECATION] `header` is deprecated, please use `info` instead.",
+            DeprecationWarning,
         )
         assert isinstance(
             self._array, WKWStorageArray
@@ -96,7 +97,8 @@ class View:
         warnings.warn(
             "[DEPRECATION] view.global_offset is deprecated. "
             + "Since this is a View, please use "
-            + "view.bounding_box.in_mag(view.mag).topleft instead."
+            + "view.bounding_box.in_mag(view.mag).topleft instead.",
+            DeprecationWarning,
         )
         return self.bounding_box.in_mag(self._mag).topleft
 
@@ -106,7 +108,8 @@ class View:
         warnings.warn(
             "[DEPRECATION] view.size is deprecated. "
             + "Since this is a View, please use "
-            + "view.bounding_box.in_mag(view.mag).size instead."
+            + "view.bounding_box.in_mag(view.mag).size instead.",
+            DeprecationWarning,
         )
         return self.bounding_box.in_mag(self._mag).size
 
@@ -207,7 +210,8 @@ class View:
             warnings.warn(
                 "[DEPRECATION] Using view.write(offset=my_vec) is deprecated. "
                 + "Please use relative_offset or absolute_offset instead. "
-                + alternative
+                + alternative,
+                DeprecationWarning,
             )
 
         num_channels = self._storage_info.num_channels
@@ -330,7 +334,8 @@ class View:
                             offset_param = "absolute_offset"
                         warnings.warn(
                             "[DEPRECATION] Using view.read(size=my_vec) only with a size is deprecated. "
-                            + f"Please use view.read({offset_param}=(0, 0, 0), size=size_vec * view.mag.to_vec3_int()) instead."
+                            + f"Please use view.read({offset_param}=(0, 0, 0), size=size_vec * view.mag.to_vec3_int()) instead.",
+                            DeprecationWarning,
                         )
                         current_mag_size = size
                         mag1_size = None
@@ -354,7 +359,8 @@ class View:
                 warnings.warn(
                     "[DEPRECATION] Using view.read(offset=my_vec) is deprecated. "
                     + "Please use relative_offset or absolute_offset instead. "
-                    + alternative
+                    + alternative,
+                    DeprecationWarning,
                 )
 
                 if size is None:
@@ -417,7 +423,8 @@ class View:
         warnings.warn(
             "[DEPRECATION] read_bbox() (with a bbox in the current mag) is deprecated. "
             + "Please use read() with relative_bounding_box or absolute_bounding_box in Mag(1) instead. "
-            + alternative
+            + alternative,
+            DeprecationWarning,
         )
         if bounding_box is None:
             return self.read()
@@ -495,7 +502,8 @@ class View:
                         offset_param = "absolute_offset"
                     warnings.warn(
                         "[DEPRECATION] Using view.get_view(size=my_vec) only with a size is deprecated. "
-                        + f"Please use view.get_view({offset_param}=(0, 0, 0), size=size_vec * view.mag.to_vec3_int()) instead."
+                        + f"Please use view.get_view({offset_param}=(0, 0, 0), size=size_vec * view.mag.to_vec3_int()) instead.",
+                        DeprecationWarning,
                     )
                     current_mag_size = size
                     mag1_size = None
@@ -519,7 +527,8 @@ class View:
             warnings.warn(
                 "[DEPRECATION] Using view.get_view(offset=my_vec) is deprecated. "
                 + "Please use relative_offset or absolute_offset instead. "
-                + alternative
+                + alternative,
+                DeprecationWarning,
             )
 
             if size is None:
@@ -865,7 +874,8 @@ class View:
 
     def __enter__(self) -> "View":
         warnings.warn(
-            "[DEPRECATION] Entering a View to open it is deprecated. The internal dataset will be opened automatically."
+            "[DEPRECATION] Entering a View to open it is deprecated. The internal dataset will be opened automatically.",
+            DeprecationWarning,
         )
         return self
 

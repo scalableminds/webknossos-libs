@@ -18,7 +18,8 @@ def download_dataset(
     exist_ok: bool = False,
 ) -> Dataset:
     warnings.warn(
-        "[DEPRECATION] download_dataset is deprecated, please use Dataset.download instead."
+        "[DEPRECATION] download_dataset is deprecated, please use Dataset.download instead.",
+        DeprecationWarning,
     )
     return actual_download_dataset(
         dataset_name, organization_name, bbox, layers, mags, path, exist_ok

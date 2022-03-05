@@ -290,7 +290,8 @@ class Layer:
         if chunk_size is None:
             if block_len is not None:
                 warnings.warn(
-                    "[DEPRECATION] `block_len` is deprecated, please use `chunk_size` instead."
+                    "[DEPRECATION] `block_len` is deprecated, please use `chunk_size` instead.",
+                    DeprecationWarning,
                 )
                 chunk_size = Vec3Int.full(block_len)
             else:
@@ -307,7 +308,8 @@ class Layer:
         if chunks_per_shard is None:
             if file_len is not None:
                 warnings.warn(
-                    "[DEPRECATION] `file_len` is deprecated, please use `chunks_per_shard` instead."
+                    "[DEPRECATION] `file_len` is deprecated, please use `chunks_per_shard` instead.",
+                    DeprecationWarning,
                 )
                 chunks_per_shard = Vec3Int.full(file_len)
             else:
@@ -383,7 +385,8 @@ class Layer:
             chunk_size = Vec3Int(chunk_size)
         elif chunk_size is None and block_len is not None:
             warnings.warn(
-                "[DEPRECATION] `block_len` is deprecated, please use `chunk_size` instead."
+                "[DEPRECATION] `block_len` is deprecated, please use `chunk_size` instead.",
+                DeprecationWarning,
             )
             chunk_size = Vec3Int.full(block_len)
 
@@ -391,7 +394,8 @@ class Layer:
             chunks_per_shard = Vec3Int(chunks_per_shard)
         elif chunks_per_shard is None and file_len is not None:
             warnings.warn(
-                "[DEPRECATION] `file_len` is deprecated, please use `chunks_per_shard` instead."
+                "[DEPRECATION] `file_len` is deprecated, please use `chunks_per_shard` instead.",
+                DeprecationWarning,
             )
             chunks_per_shard = Vec3Int.full(file_len)
 

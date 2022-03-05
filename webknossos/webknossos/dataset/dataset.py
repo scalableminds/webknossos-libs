@@ -111,7 +111,8 @@ class Dataset:
             if exist_ok == _UNSET:
                 warnings.warn(
                     f"[DEPRECATION] You are creating/opening a dataset at a non-empty folder {dataset_path} without setting exist_ok=True. "
-                    + "This will fail in future releases, please supply exist_ok=True explicitly then."
+                    + "This will fail in future releases, please supply exist_ok=True explicitly then.",
+                    DeprecationWarning,
                 )
                 exist_ok = True
             if not exist_ok:
@@ -178,7 +179,8 @@ class Dataset:
             if scale is None:
                 warnings.warn(
                     "[DEPRECATION] Please always supply the scale when using the constructor Dataset(your_path, scale=your_scale)."
-                    + "If you just want to open an existing dataset, please use Dataset.open(your_path)."
+                    + "If you just want to open an existing dataset, please use Dataset.open(your_path).",
+                    DeprecationWarning,
                 )
             elif scale == _UNSPECIFIED_SCALE_FROM_OPEN:
                 pass
@@ -524,7 +526,8 @@ class Dataset:
         """
 
         warnings.warn(
-            "[DEPRECATION] get_segmentation_layer() fails if no or more than one segmentation layer exists. Prefer get_segmentation_layers()."
+            "[DEPRECATION] get_segmentation_layer() fails if no or more than one segmentation layer exists. Prefer get_segmentation_layers().",
+            DeprecationWarning,
         )
         return cast(
             SegmentationLayer,
@@ -555,7 +558,8 @@ class Dataset:
         Returns all color layers.
         """
         warnings.warn(
-            "[DEPRECATION] get_color_layer() fails if no or more than one color layer exists. Prefer get_color_layers()."
+            "[DEPRECATION] get_color_layer() fails if no or more than one color layer exists. Prefer get_color_layers().",
+            DeprecationWarning,
         )
         return [
             cast(Layer, layer)
@@ -692,7 +696,8 @@ class Dataset:
             chunk_size = Vec3Int(chunk_size)
         elif block_len is not None:
             warnings.warn(
-                "[DEPRECATION] `block_len` is deprecated, please use `chunk_size` instead."
+                "[DEPRECATION] `block_len` is deprecated, please use `chunk_size` instead.",
+                DeprecationWarning,
             )
             chunk_size = Vec3Int.full(block_len)
 
@@ -700,7 +705,8 @@ class Dataset:
             chunks_per_shard = Vec3Int(chunks_per_shard)
         elif file_len is not None:
             warnings.warn(
-                "[DEPRECATION] `file_len` is deprecated, please use `chunks_per_shard` instead."
+                "[DEPRECATION] `file_len` is deprecated, please use `chunks_per_shard` instead.",
+                DeprecationWarning,
             )
             chunks_per_shard = Vec3Int.full(file_len)
 
@@ -834,7 +840,8 @@ class Dataset:
         **Deprecated**, please use the constructor `Dataset()` instead.
         """
         warnings.warn(
-            "[DEPRECATION] Dataset.create() is deprecated in favor of the normal constructor Dataset()."
+            "[DEPRECATION] Dataset.create() is deprecated in favor of the normal constructor Dataset().",
+            DeprecationWarning,
         )
         return cls(dataset_path, scale, name, exist_ok=False)
 
@@ -849,7 +856,8 @@ class Dataset:
         **Deprecated**, please use the constructor `Dataset()` instead.
         """
         warnings.warn(
-            "[DEPRECATION] Dataset.get_or_create() is deprecated in favor of the normal constructor Dataset(…, exist_ok=True)."
+            "[DEPRECATION] Dataset.get_or_create() is deprecated in favor of the normal constructor Dataset(…, exist_ok=True).",
+            DeprecationWarning,
         )
         return cls(dataset_path, scale, name, exist_ok=True)
 

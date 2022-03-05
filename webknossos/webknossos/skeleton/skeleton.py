@@ -68,14 +68,16 @@ class Skeleton(Group):
     def from_path(file_path: Union[PathLike, str]) -> "Skeleton":
         """Deprecated."""
         warnings.warn(
-            "[DEPRECATION] Skeleton.from_path is deprecated, please use Skeleton.load instead."
+            "[DEPRECATION] Skeleton.from_path is deprecated, please use Skeleton.load instead.",
+            DeprecationWarning,
         )
         return Skeleton.load(file_path)
 
     def write(self, out_path: PathLike) -> None:
         """Deprecated."""
         warnings.warn(
-            "[DEPRECATION] skeleton.write is deprecated, please use skeleton.save instead."
+            "[DEPRECATION] skeleton.write is deprecated, please use skeleton.save instead.",
+            DeprecationWarning,
         )
         self.save(out_path)
 

@@ -105,7 +105,8 @@ class MagViewProperties:
     @property
     def cube_length(self) -> int:
         warnings.warn(
-            "[DEPRECATION] `cube_length` is deprecated, please use `shard_size` instead."
+            "[DEPRECATION] `cube_length` is deprecated, please use `shard_size` instead.",
+            DeprecationWarning,
         )
         assert self.shard_size.x == self.shard_size.y
         assert self.shard_size.x == self.shard_size.z

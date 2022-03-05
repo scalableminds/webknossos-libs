@@ -11,6 +11,7 @@ from webknossos.skeleton.skeleton import Skeleton
 def open_nml(file_path: Union[PathLike, str]) -> Skeleton:
     """open_nml is deprecated, please use Skeleton.load instead."""
     warnings.warn(
-        "[DEPRECATION] open_nml is deprecated, please use Skeleton.load instead."
+        "[DEPRECATION] open_nml is deprecated, please use Skeleton.load instead.",
+        DeprecationWarning,
     )
     return Skeleton.load(file_path)
