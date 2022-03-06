@@ -314,13 +314,13 @@ class ZarrStorageArray(StorageArray):
 
     def write(self, offset: Vec3IntLike, data: np.ndarray) -> None:
         offset = Vec3Int(offset)
-        zarray = zarr.open_array(store=self._path, mode="a")
 
         if data.ndim == 3:
             data = data.reshape((1,) + data.shape)
         assert data.ndim == 4
 
-        self.resize(offset + Vec3Int(data.shape))
+        self.resize(offset + Vec3Int(data.shape[1:4]))
+        zarray = zarr.open_array(store=self._path, mode="a")
         zarray[
             :,
             offset.x : (offset.x + data.shape[1]),

@@ -169,9 +169,7 @@ def test_create_dataset_with_explicit_header_fields() -> None:
     ds = Dataset(TESTOUTPUT_DIR / "wk_dataset_advanced", scale=(1, 1, 1))
     ds.add_layer("color", COLOR_CATEGORY, dtype_per_layer="uint48", num_channels=3)
 
-    ds.get_layer("color").add_mag(
-        "1", chunk_size=Vec3Int.full(64), chunks_per_shard=Vec3Int.full(64)
-    )
+    ds.get_layer("color").add_mag("1", chunk_size=64, chunks_per_shard=64)
     ds.get_layer("color").add_mag("2-2-1")
 
     assert (TESTOUTPUT_DIR / "wk_dataset_advanced" / "color" / "1").exists()
