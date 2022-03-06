@@ -147,3 +147,12 @@ class Vec3Int(tuple):
 
 
 Vec3IntLike = Union[Vec3Int, Tuple[int, int, int], np.ndarray, Iterable[int]]
+
+
+def assert_uniform_vec(vec: Vec3Int) -> None:
+    assert (
+        vec.x == vec.y
+    ), f"All components of the Vec3Int must have the same value. Got {vec}."
+    assert (
+        vec.x == vec.z
+    ), f"All components of the Vec3Int must have the same value. Got {vec}."

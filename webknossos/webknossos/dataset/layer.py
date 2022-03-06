@@ -265,8 +265,10 @@ class Layer:
     def add_mag(
         self,
         mag: Union[int, str, list, tuple, np.ndarray, Mag],
-        chunk_size: Optional[Vec3IntLike] = None,  # DEFAULT_CHUNK_SIZE,
-        chunks_per_shard: Optional[Vec3IntLike] = None,  # DEFAULT_CHUNKS_PER_SHARD,
+        chunk_size: Optional[Union[Vec3IntLike, int]] = None,  # DEFAULT_CHUNK_SIZE,
+        chunks_per_shard: Optional[
+            Union[int, Vec3IntLike]
+        ] = None,  # DEFAULT_CHUNKS_PER_SHARD,
         compress: bool = False,
         block_len: Optional[int] = None,  # deprecated
         file_len: Optional[int] = None,  # deprecated
@@ -296,6 +298,8 @@ class Layer:
                 chunk_size = Vec3Int.full(block_len)
             else:
                 chunk_size = DEFAULT_CHUNK_SIZE
+        elif isinstance(chunk_size, int):
+            chunk_size = Vec3Int.full(chunk_size)
         else:
             chunk_size = Vec3Int(chunk_size)
 
@@ -314,6 +318,8 @@ class Layer:
                 chunks_per_shard = Vec3Int.full(file_len)
             else:
                 chunks_per_shard = DEFAULT_CHUNKS_PER_SHARD
+        elif isinstance(chunks_per_shard, int):
+            chunks_per_shard = Vec3Int.full(chunks_per_shard)
         else:
             chunks_per_shard = Vec3Int(chunks_per_shard)
 
@@ -364,8 +370,8 @@ class Layer:
     def get_or_add_mag(
         self,
         mag: Union[int, str, list, tuple, np.ndarray, Mag],
-        chunk_size: Optional[Vec3IntLike] = None,
-        chunks_per_shard: Optional[Vec3IntLike] = None,
+        chunk_size: Optional[Union[Vec3IntLike, int]] = None,
+        chunks_per_shard: Optional[Union[Vec3IntLike, int]] = None,
         compress: Optional[bool] = None,
         block_len: Optional[int] = None,  # deprecated
         file_len: Optional[int] = None,  # deprecated
@@ -382,7 +388,10 @@ class Layer:
         compression_mode = compress
 
         if chunk_size is not None:
-            chunk_size = Vec3Int(chunk_size)
+            if isinstance(chunk_size, int):
+                chunk_size = Vec3Int.full(chunk_size)
+            else:
+                chunk_size = Vec3Int(chunk_size)
         elif chunk_size is None and block_len is not None:
             warnings.warn(
                 "[DEPRECATION] `block_len` is deprecated, please use `chunk_size` instead.",
@@ -391,7 +400,10 @@ class Layer:
             chunk_size = Vec3Int.full(block_len)
 
         if chunks_per_shard is not None:
-            chunks_per_shard = Vec3Int(chunks_per_shard)
+            if isinstance(chunks_per_shard, int):
+                chunks_per_shard = Vec3Int.full(chunks_per_shard)
+            else:
+                chunks_per_shard = Vec3Int(chunks_per_shard)
         elif chunks_per_shard is None and file_len is not None:
             warnings.warn(
                 "[DEPRECATION] `file_len` is deprecated, please use `chunks_per_shard` instead.",

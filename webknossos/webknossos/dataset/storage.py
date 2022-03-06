@@ -11,6 +11,11 @@ import zarr
 from numcodecs import Blosc
 
 from webknossos.geometry import BoundingBox, Vec3Int, Vec3IntLike
+from webknossos.geometry.vec3_int import assert_uniform_vec
+
+
+def assert_power_of_two(num: int, msg: str) -> None:
+    assert num & (num - 1) == 0, msg
 
 
 class StorageArrayException(Exception):
@@ -120,10 +125,26 @@ class WKWStorageArray(StorageArray):
     @classmethod
     def create(cls, path: Path, storage_info: StorageArrayInfo) -> "WKWStorageArray":
         assert storage_info.data_format == cls.data_format
-        assert storage_info.chunk_size[0] == storage_info.chunk_size[1]
-        assert storage_info.chunk_size[0] == storage_info.chunk_size[2]
-        assert storage_info.chunks_per_shard[0] == storage_info.chunks_per_shard[1]
-        assert storage_info.chunks_per_shard[0] == storage_info.chunks_per_shard[2]
+
+        assert_uniform_vec(storage_info.chunk_size)
+        assert_power_of_two(
+            storage_info.chunk_size.x,
+            f"`chunk_size` needs to be a power of 2 for WKW storage. Got {storage_info.chunk_size.x}.",
+        )
+        assert (
+            1 <= storage_info.chunk_size.x and storage_info.chunk_size.x <= 32768
+        ), f"`chunk_size` needs to be a value between 1 and 32768 for WKW storage. Got {storage_info.chunk_size.x}."
+
+        assert_uniform_vec(storage_info.chunks_per_shard)
+        assert_power_of_two(
+            storage_info.chunks_per_shard.x,
+            f"`chunks_per_shard` needs to be a power of 2 for WKW storage. Got {storage_info.chunks_per_shard.x}.",
+        )
+        assert (
+            1 <= storage_info.chunks_per_shard.x
+            and storage_info.chunks_per_shard.x <= 32768
+        ), f"`chunks_per_shard` needs to be a value between 1 and 32768 for WKW storage. Got {storage_info.chunks_per_shard.x}."
+
         try:
             wkw.Dataset.create(
                 str(path),
