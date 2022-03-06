@@ -335,6 +335,8 @@ class Layer:
             create=True,
         )
 
+        mag_view._array.resize(self.bounding_box.in_mag(Mag(mag)).bottomright)
+
         self._mags[mag] = mag_view
         self._properties.wkw_resolutions += [
             MagViewProperties(Mag(mag_view.name), mag_view.info.shard_size)
@@ -577,6 +579,8 @@ class Layer:
         ), f"Updating the bounding box of layer {self} to {bbox} failed, topleft must not contain negative dimensions."
         self._properties.bounding_box = bbox
         self.dataset._export_as_json()
+        for mag in self.mags.values():
+            mag._array.resize(bbox.in_mag(mag.mag).bottomright)
 
     def downsample(
         self,

@@ -1,4 +1,5 @@
 import re
+import warnings
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from os.path import relpath
@@ -71,7 +72,9 @@ class StorageArray(ABC):
         pass
 
     @abstractmethod
-    def resize(self, new_shape: Vec3IntLike) -> None:
+    def resize(
+        self, new_shape: Vec3IntLike, align_with_shards: bool = True, warn: bool = False
+    ) -> None:
         pass
 
     @abstractmethod
@@ -177,7 +180,12 @@ class WKWStorageArray(StorageArray):
     def write(self, offset: Vec3IntLike, data: np.ndarray) -> None:
         self._wkw_dataset.write(Vec3Int(offset).to_tuple(), data)
 
-    def resize(self, _new_shape: Vec3IntLike) -> None:
+    def resize(
+        self,
+        new_shape: Vec3IntLike,
+        align_with_shards: bool = True,
+        warn: bool = False,
+    ) -> None:
         pass
 
     def _list_files(self) -> Iterator[Path]:
@@ -296,13 +304,12 @@ class ZarrStorageArray(StorageArray):
             data = padded_data
         return data
 
-    def resize(self, new_shape: Vec3IntLike) -> None:
+    def resize(
+        self, new_shape: Vec3IntLike, align_with_shards: bool = True, warn: bool = False
+    ) -> None:
         new_shape = Vec3Int(new_shape)
         zarray = zarr.open_array(store=self._path, mode="a")
-        chunk_size = Vec3Int(zarray.shape[1:4])
 
-        # Should be aligned with shards instead of chunks, when available
-        new_shape = new_shape.ceildiv(chunk_size) * chunk_size
         new_shape_tuple = (
             zarray.shape[0],
             max(zarray.shape[1], new_shape.x),
@@ -310,6 +317,18 @@ class ZarrStorageArray(StorageArray):
             max(zarray.shape[3], new_shape.z),
         )
         if new_shape_tuple != zarray.shape:
+
+            if align_with_shards:
+                chunk_size = Vec3Int(zarray.chunks[1:4])
+                chunks_per_shard = Vec3Int.full(1)
+                shard_size = chunk_size * chunks_per_shard
+                new_shape = new_shape.ceildiv(shard_size) * shard_size
+                new_shape_tuple = (zarray.shape[0],) + new_shape.to_tuple()
+
+            if warn:
+                warnings.warn(
+                    f"[WARNING] Resizing zarr storage array from `{zarray.shape}` to `{new_shape_tuple}`."
+                )
             zarray.resize(new_shape_tuple)
 
     def write(self, offset: Vec3IntLike, data: np.ndarray) -> None:
@@ -319,7 +338,7 @@ class ZarrStorageArray(StorageArray):
             data = data.reshape((1,) + data.shape)
         assert data.ndim == 4
 
-        self.resize(offset + Vec3Int(data.shape[1:4]))
+        self.resize(offset + Vec3Int(data.shape[1:4]), warn=True)
         zarray = zarr.open_array(store=self._path, mode="a")
         zarray[
             :,

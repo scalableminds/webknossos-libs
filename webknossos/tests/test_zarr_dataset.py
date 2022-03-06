@@ -1,5 +1,6 @@
 import itertools
 import warnings
+from argparse import Namespace
 from pathlib import Path
 from shutil import copytree, rmtree
 from typing import Generator
@@ -134,9 +135,9 @@ def test_mag_view_write_out_of_bounds() -> None:
 
     assert tuple(ds.get_layer("color").bounding_box.size) == (24, 24, 24)
     mag_view.write(
-        np.zeros((3, 1, 1, 48), dtype=np.uint8)
+        np.zeros((3, 1, 1, 512), dtype=np.uint8)
     )  # this is bigger than the bounding_box
-    assert tuple(ds.get_layer("color").bounding_box.size) == (24, 24, 48)
+    assert tuple(ds.get_layer("color").bounding_box.size) == (24, 24, 512)
 
     assure_exported_properties(ds)
 
@@ -259,6 +260,7 @@ def create_dataset(tmp_path: Path) -> Generator[MagView, None, None]:
     yield mag
 
 
+@pytest.mark.skip()
 def test_dataset_conversion() -> None:
     origin_ds_path = TESTOUTPUT_DIR / "conversion" / "origin_zarr"
     converted_ds_path = TESTOUTPUT_DIR / "conversion" / "converted_zarr"
@@ -383,7 +385,7 @@ def test_compression(tmp_path: Path) -> None:
     mag1.write(write_data, absolute_offset=(60, 80, 100))
 
     assert not mag1._is_compressed()
-    mag1.compress()
+    mag1.compress(args=Namespace(distribution_strategy="debug_sequential"))
     assert mag1._is_compressed()
 
     assert np.array_equal(
