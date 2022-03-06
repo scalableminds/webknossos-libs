@@ -159,16 +159,12 @@ def mag_properties_unstructure(mag_properties: MagViewProperties) -> Dict[str, A
     return {
         "resolution": mag_unstructure(mag_properties.resolution),
         "cubeLength": mag_properties.shard_size.x,
-        "shardSize": mag_properties.shard_size.to_list(),
     }
 
 
 def mag_properties_structure(d: Any, _: Any) -> MagViewProperties:
     d = cast(Dict[str, Any], d)
     resolution = Mag(d["resolution"])
-    if "shardSize" in d:
-        shard_size = Vec3Int(*d["shardSize"])
-        return MagViewProperties(resolution=resolution, shard_size=shard_size)
     return MagViewProperties(
         resolution=resolution, shard_size=Vec3Int.full(d["cubeLength"])
     )

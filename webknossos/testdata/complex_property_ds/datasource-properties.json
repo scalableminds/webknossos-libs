@@ -16,33 +16,27 @@
       "wkwResolutions": [
         {
           "resolution": [1, 1, 1],
-          "cubeLength": 1024,
-          "shardSize": [1024, 1024, 1024]
+          "cubeLength": 1024
         },
         {
           "resolution": [16, 16, 16],
-          "cubeLength": 64,
-          "shardSize": [64, 64, 64]
+          "cubeLength": 64
         },
         {
           "resolution": [2, 2, 2],
-          "cubeLength": 512,
-          "shardSize": [512, 512, 512]
+          "cubeLength": 512
         },
         {
           "resolution": [32, 32, 32],
-          "cubeLength": 32,
-          "shardSize": [32, 32, 32]
+          "cubeLength": 32
         },
         {
           "resolution": [4, 4, 4],
-          "cubeLength": 256,
-          "shardSize": [256, 256, 256]
+          "cubeLength": 256
         },
         {
           "resolution": [8, 8, 8],
-          "cubeLength": 128,
-          "shardSize": [128, 128, 128]
+          "cubeLength": 128
         }
       ],
       "elementClass": "uint8",
@@ -59,33 +53,27 @@
       "wkwResolutions": [
         {
           "resolution": [1, 1, 1],
-          "cubeLength": 1024,
-          "shardSize": [1024, 1024, 1024]
+          "cubeLength": 1024
         },
         {
           "resolution": [16, 16, 16],
-          "cubeLength": 64,
-          "shardSize": [64, 64, 64]
+          "cubeLength": 64
         },
         {
           "resolution": [2, 2, 2],
-          "cubeLength": 512,
-          "shardSize": [512, 512, 512]
+          "cubeLength": 512
         },
         {
           "resolution": [32, 32, 32],
-          "cubeLength": 32,
-          "shardSize": [32, 32, 32]
+          "cubeLength": 32
         },
         {
           "resolution": [4, 4, 4],
-          "cubeLength": 256,
-          "shardSize": [256, 256, 256]
+          "cubeLength": 256
         },
         {
           "resolution": [8, 8, 8],
-          "cubeLength": 128,
-          "shardSize": [128, 128, 128]
+          "cubeLength": 128
         }
       ],
       "elementClass": "uint32",
