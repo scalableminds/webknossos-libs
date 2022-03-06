@@ -13,7 +13,7 @@ from numcodecs import Blosc
 from webknossos.geometry import BoundingBox, Vec3Int, Vec3IntLike
 
 
-def power_of_two(num: int) -> bool:
+def is_power_of_two(num: int) -> bool:
     return num & (num - 1) == 0
 
 
@@ -132,7 +132,7 @@ class WKWStorageArray(StorageArray):
         assert (
             storage_info.chunk_size.is_uniform()
         ), f"`chunk_size` needs to be uniform for WKW storage. Got {storage_info.chunk_size}."
-        assert power_of_two(
+        assert is_power_of_two(
             storage_info.chunk_size.x
         ), f"`chunk_size` needs to be a power of 2 for WKW storage. Got {storage_info.chunk_size.x}."
         assert (
@@ -142,7 +142,7 @@ class WKWStorageArray(StorageArray):
         assert (
             storage_info.chunks_per_shard.is_uniform()
         ), f"`chunks_per_shard` needs to be uniform for WKW storage. Got {storage_info.chunks_per_shard}."
-        assert power_of_two(
+        assert is_power_of_two(
             storage_info.chunks_per_shard.x
         ), f"`chunks_per_shard` needs to be a power of 2 for WKW storage. Got {storage_info.chunks_per_shard.x}."
         assert (
