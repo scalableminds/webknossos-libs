@@ -11,11 +11,10 @@ import zarr
 from numcodecs import Blosc
 
 from webknossos.geometry import BoundingBox, Vec3Int, Vec3IntLike
-from webknossos.geometry.vec3_int import assert_uniform_vec
 
 
-def assert_power_of_two(num: int, msg: str) -> None:
-    assert num & (num - 1) == 0, msg
+def power_of_two(num: int) -> bool:
+    return num & (num - 1) == 0
 
 
 class StorageArrayException(Exception):
@@ -69,6 +68,10 @@ class StorageArray(ABC):
 
     @abstractmethod
     def write(self, offset: Vec3IntLike, data: np.ndarray) -> None:
+        pass
+
+    @abstractmethod
+    def resize(self, new_shape: Vec3IntLike) -> None:
         pass
 
     @abstractmethod
@@ -126,20 +129,22 @@ class WKWStorageArray(StorageArray):
     def create(cls, path: Path, storage_info: StorageArrayInfo) -> "WKWStorageArray":
         assert storage_info.data_format == cls.data_format
 
-        assert_uniform_vec(storage_info.chunk_size)
-        assert_power_of_two(
-            storage_info.chunk_size.x,
-            f"`chunk_size` needs to be a power of 2 for WKW storage. Got {storage_info.chunk_size.x}.",
-        )
+        assert (
+            storage_info.chunk_size.is_uniform()
+        ), f"`chunk_size` needs to be uniform for WKW storage. Got {storage_info.chunk_size}."
+        assert power_of_two(
+            storage_info.chunk_size.x
+        ), f"`chunk_size` needs to be a power of 2 for WKW storage. Got {storage_info.chunk_size.x}."
         assert (
             1 <= storage_info.chunk_size.x and storage_info.chunk_size.x <= 32768
         ), f"`chunk_size` needs to be a value between 1 and 32768 for WKW storage. Got {storage_info.chunk_size.x}."
 
-        assert_uniform_vec(storage_info.chunks_per_shard)
-        assert_power_of_two(
-            storage_info.chunks_per_shard.x,
-            f"`chunks_per_shard` needs to be a power of 2 for WKW storage. Got {storage_info.chunks_per_shard.x}.",
-        )
+        assert (
+            storage_info.chunks_per_shard.is_uniform()
+        ), f"`chunks_per_shard` needs to be uniform for WKW storage. Got {storage_info.chunks_per_shard}."
+        assert power_of_two(
+            storage_info.chunks_per_shard.x
+        ), f"`chunks_per_shard` needs to be a power of 2 for WKW storage. Got {storage_info.chunks_per_shard.x}."
         assert (
             1 <= storage_info.chunks_per_shard.x
             and storage_info.chunks_per_shard.x <= 32768
@@ -151,8 +156,8 @@ class WKWStorageArray(StorageArray):
                 wkw.Header(
                     voxel_type=storage_info.voxel_type,
                     num_channels=storage_info.num_channels,
-                    block_len=storage_info.chunk_size[0],
-                    file_len=storage_info.chunks_per_shard[0],
+                    block_len=storage_info.chunk_size.x,
+                    file_len=storage_info.chunks_per_shard.x,
                     block_type=(
                         wkw.Header.BLOCK_TYPE_LZ4HC
                         if storage_info.compression_mode
@@ -165,10 +170,15 @@ class WKWStorageArray(StorageArray):
         return WKWStorageArray(path)
 
     def read(self, offset: Vec3IntLike, shape: Vec3IntLike) -> np.ndarray:
-        return self._wkw_dataset.read(offset, shape)
+        return self._wkw_dataset.read(
+            Vec3Int(offset).to_tuple(), Vec3Int(shape).to_tuple()
+        )
 
     def write(self, offset: Vec3IntLike, data: np.ndarray) -> None:
-        self._wkw_dataset.write(offset, data)
+        self._wkw_dataset.write(Vec3Int(offset).to_tuple(), data)
+
+    def resize(self, _new_shape: Vec3IntLike) -> None:
+        pass
 
     def _list_files(self) -> Iterator[Path]:
         return (
@@ -267,7 +277,6 @@ class ZarrStorageArray(StorageArray):
         offset = Vec3Int(offset)
         shape = Vec3Int(shape)
         zarray = zarr.open_array(store=self._path, mode="r")
-        # print("READ", self._path, offset, offset + shape, shape, zarray.shape)
         data = zarray[
             :,
             offset.x : (offset.x + shape.x),
@@ -287,22 +296,31 @@ class ZarrStorageArray(StorageArray):
             data = padded_data
         return data
 
+    def resize(self, new_shape: Vec3IntLike) -> None:
+        new_shape = Vec3Int(new_shape)
+        zarray = zarr.open_array(store=self._path, mode="a")
+        chunk_size = Vec3Int(zarray.shape[1:4])
+
+        # Should be aligned with shards instead of chunks, when available
+        new_shape = new_shape.ceildiv(chunk_size) * chunk_size
+        new_shape_tuple = (
+            zarray.shape[0],
+            max(zarray.shape[1], new_shape.x),
+            max(zarray.shape[2], new_shape.y),
+            max(zarray.shape[3], new_shape.z),
+        )
+        if new_shape_tuple != zarray.shape:
+            zarray.resize(new_shape_tuple)
+
     def write(self, offset: Vec3IntLike, data: np.ndarray) -> None:
         offset = Vec3Int(offset)
         zarray = zarr.open_array(store=self._path, mode="a")
+
         if data.ndim == 3:
             data = data.reshape((1,) + data.shape)
         assert data.ndim == 4
 
-        new_shape = (
-            zarray.shape[0],
-            max(zarray.shape[1], offset.x + data.shape[1]),
-            max(zarray.shape[2], offset.y + data.shape[2]),
-            max(zarray.shape[3], offset.z + data.shape[3]),
-        )
-        if new_shape != zarray.shape:
-            # print("RESIZE", zarray.shape, new_shape)
-            zarray.resize(new_shape)
+        self.resize(offset + Vec3Int(data.shape))
         zarray[
             :,
             offset.x : (offset.x + data.shape[1]),

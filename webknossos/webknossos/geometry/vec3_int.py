@@ -83,6 +83,9 @@ class Vec3Int(tuple):
         else:
             return all(i >= 0 for i in self)
 
+    def is_uniform(self) -> bool:
+        return self.x == self.y and self.x == self.z
+
     def _element_wise(
         self, other: Union[int, "Vec3IntLike"], fn: Callable[[int, Any], int]
     ) -> "Vec3Int":
@@ -147,12 +150,3 @@ class Vec3Int(tuple):
 
 
 Vec3IntLike = Union[Vec3Int, Tuple[int, int, int], np.ndarray, Iterable[int]]
-
-
-def assert_uniform_vec(vec: Vec3Int) -> None:
-    assert (
-        vec.x == vec.y
-    ), f"All components of the Vec3Int must have the same value. Got {vec}."
-    assert (
-        vec.x == vec.z
-    ), f"All components of the Vec3Int must have the same value. Got {vec}."
