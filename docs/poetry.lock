@@ -1087,7 +1087,7 @@ watchmedo = ["PyYAML (>=3.10)"]
 [[package]]
 name = "webknossos"
 version = "0.0.0"
-description = "Python package to work with webKnossos datasets and annotations"
+description = "Python API for working with webKnossos datasets, annotations, and for webKnossos server interaction."
 category = "dev"
 optional = false
 python-versions = "^3.7,>=3.7.1"

@@ -75,6 +75,13 @@ def error_on_deprecations() -> Generator:
         yield
 
 
+@pytest.fixture(autouse=True, scope="function")
+def error_on_warnings() -> Generator:
+    with warnings.catch_warnings():
+        warnings.filterwarnings("error", module="webknossos", message=r"\[WARNING\]")
+        yield
+
+
 ### VCR.py / pytest-recording CONFIG
 
 
