@@ -70,13 +70,15 @@ nav:
   - webknossos-py/index.md
   - webknossos-py/installation.md
   - Usage Examples:
-      - webknossos-py/examples/dataset_usage.md
-      - webknossos-py/examples/upload_image_data.md
+      - Dataset Examples:
+        - webknossos-py/examples/dataset_usage.md
+        - webknossos-py/examples/upload_image_data.md
       - webknossos-py/examples/apply_merger_mode.md
       - webknossos-py/examples/learned_segmenter.md
       - webknossos-py/examples/skeleton_synapse_candidates.md
-      - webknossos-py/examples/user_times.md
-      - webknossos-py/examples/annotation_project_administration.md
+      - Administration Examples:
+        - webknossos-py/examples/user_times.md
+        - webknossos-py/examples/annotation_project_administration.md
   - API Reference:
     - Overview: api/webknossos.md
     - Geometry:
@@ -88,24 +90,26 @@ nav:
       - Layer: api/webknossos/dataset/layer.md
       - MagView: api/webknossos/dataset/mag_view.md
       - View: api/webknossos/dataset/view.md
+    - Annotation: api/webknossos/annotation/annotation.md
     - Skeleton:
       - Skeleton: api/webknossos/skeleton/skeleton.md
       - Group: api/webknossos/skeleton/group.md
       - Graph: api/webknossos/skeleton/graph.md
       - Node: api/webknossos/skeleton/node.md
-    - Annotation: api/webknossos/annotation/annotation.md
     - Authentication & Server Context: api/webknossos/client/context.md
     - Administration:
       - User: api/webknossos/administration/user.md
       - Project: api/webknossos/administration/project.md
       - Task: api/webknossos/administration/task.md
+  - Other:
     - webknossos-py/changelog.md
-  - Getting Help:
-    - webknossos-py/development.md
-    - Community Support: https://forum.image.sc/tag/webknossos" target="_blank
-    - Email Support: mailto:hello@webknossos.org
-    - Commercial Support: https://scalableminds.com" target="_blank
-  - GitHub: https://github.com/scalableminds/webknossos-libs/tree/master/webknossos" target="_blank
+    - webknossos-py/stability_policy.md
+    - Getting Help:
+      - webknossos-py/development.md
+      - Community Support: https://forum.image.sc/tag/webknossos" target="_blank
+      - Email Support: mailto:hello@webknossos.org
+      - Commercial Support: https://scalableminds.com" target="_blank
+    - GitHub: https://github.com/scalableminds/webknossos-libs/tree/master/webknossos" target="_blank
 - webKnossos Cuber:
   - wkcuber CLI: wkcuber/index.md
   - wkcuber/changelog.md
@@ -114,7 +118,6 @@ nav:
     - Email Support: mailto:hello@webknossos.org
     - Commercial Support: https://scalableminds.com" target="_blank
   - GitHub: https://github.com/scalableminds/webknossos-libs/tree/master/wkcuber" target="_blank
-  
 
 plugins:
 - search
