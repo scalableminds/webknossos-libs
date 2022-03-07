@@ -14,7 +14,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Added
 
 ### Changed
-- Dataset: Moved the deprecation warning from `get_color_layers()` to the actually deprecate method `get_color_layer()`.
+- Dataset: Moved the deprecation warning from `get_color_layers()` to the actually deprecated method `get_color_layer()`.
   [#635](https://github.com/scalableminds/webknossos-libs/pull/635)
 
 ### Fixed
