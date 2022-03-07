@@ -182,18 +182,14 @@ def test_create_dataset_with_explicit_header_fields() -> None:
     assert ds.get_layer("color")._properties.element_class == "uint48"
     assert ds.get_layer("color").get_mag(1).info.chunk_size == Vec3Int.full(64)
     assert ds.get_layer("color").get_mag(1).info.chunks_per_shard == Vec3Int.full(64)
-    assert ds.get_layer("color").get_mag(1)._properties.shard_size == Vec3Int.full(
-        64 * 64
-    )
+    assert ds.get_layer("color").get_mag(1)._properties.cube_length == 64 * 64
     assert ds.get_layer("color").get_mag("2-2-1").info.chunk_size == Vec3Int.full(
         32
     )  # defaults are used
     assert ds.get_layer("color").get_mag("2-2-1").info.chunks_per_shard == Vec3Int.full(
         32
     )  # defaults are used
-    assert ds.get_layer("color").get_mag(
-        "2-2-1"
-    )._properties.shard_size == Vec3Int.full(32 * 32)
+    assert ds.get_layer("color").get_mag("2-2-1")._properties.cube_length == 32 * 32
 
     assure_exported_properties(ds)
 
@@ -1218,7 +1214,7 @@ def test_add_symlink_mag(tmp_path: Path) -> None:
     layer.add_symlink_mag(original_mag_4.path)
 
     assert (tmp_path / "link" / "color" / "1").exists()
-    assert len(layer._properties.wkw_resolutions) == 3
+    assert len(layer._properties.resolutions) == 3
 
     assert tuple(layer.bounding_box.topleft) == (0, 0, 0)
     assert tuple(layer.bounding_box.size) == (16, 26, 36)
@@ -1266,7 +1262,7 @@ def test_add_copy_mag(tmp_path: Path) -> None:
     copy_mag = layer.add_copy_mag(original_mag_2)
 
     assert (tmp_path / "link" / "color" / "1").exists()
-    assert len(layer._properties.wkw_resolutions) == 2
+    assert len(layer._properties.resolutions) == 2
 
     assert tuple(layer.bounding_box.topleft) == (0, 0, 0)
     assert tuple(layer.bounding_box.size) == (16, 26, 36)
@@ -1909,15 +1905,15 @@ def test_delete_layer_and_mag(tmp_path: Path) -> None:
     assert "segmentation" in ds.layers
     assert len([l for l in ds._properties.data_layers if l.name == "color"]) == 1
     assert len([l for l in ds._properties.data_layers if l.name == "segmentation"]) == 1
-    assert len(color_layer._properties.wkw_resolutions) == 2
+    assert len(color_layer._properties.resolutions) == 2
 
     color_layer.delete_mag(1)
-    assert len(color_layer._properties.wkw_resolutions) == 1
+    assert len(color_layer._properties.resolutions) == 1
     assert (
         len(
             [
                 m
-                for m in color_layer._properties.wkw_resolutions
+                for m in color_layer._properties.resolutions
                 if Mag(m.resolution) == Mag(2)
             ]
         )

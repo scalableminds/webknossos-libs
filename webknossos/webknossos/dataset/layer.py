@@ -160,13 +160,13 @@ class Layer:
 
         self.path.mkdir(parents=True, exist_ok=True)
 
-        for resolution in properties.wkw_resolutions:
+        for resolution in properties.resolutions:
             self._setup_mag(Mag(resolution.resolution))
         # Only keep the properties of resolutions that were initialized.
         # Sometimes the directory of a resolution is removed from disk manually, but the properties are not updated.
-        self._properties.wkw_resolutions = [
+        self._properties.resolutions = [
             res
-            for res in self._properties.wkw_resolutions
+            for res in self._properties.resolutions
             if Mag(res.resolution) in self._mags
         ]
 
@@ -340,8 +340,16 @@ class Layer:
         )
 
         self._mags[mag] = mag_view
-        self._properties.wkw_resolutions += [
-            MagViewProperties(Mag(mag_view.name), mag_view.info.shard_size)
+        mag_storage_info = mag_view.info
+        self._properties.resolutions += [
+            MagViewProperties(
+                resolution=Mag(mag_view.name),
+                cube_length=(
+                    mag_storage_info.shard_size.x
+                    if mag_storage_info.data_format == "wkw"
+                    else None
+                ),
+            )
         ]
 
         self.dataset._export_as_json()
@@ -363,9 +371,16 @@ class Layer:
         ), f"Cannot add mag {mag} as it already exists for layer {self}"
         self._setup_mag(mag)
         mag_view = self._mags[mag]
-        shard_size = mag_view.info.shard_size
-        self._properties.wkw_resolutions.append(
-            MagViewProperties(resolution=mag, shard_size=shard_size)
+        mag_storage_info = mag_view.info
+        self._properties.resolutions.append(
+            MagViewProperties(
+                resolution=mag,
+                cube_length=(
+                    mag_storage_info.shard_size.x
+                    if mag_storage_info.data_format == "wkw"
+                    else None
+                ),
+            )
         )
         self.dataset._export_as_json()
 
@@ -449,10 +464,8 @@ class Layer:
             )
 
         del self._mags[mag]
-        self._properties.wkw_resolutions = [
-            res
-            for res in self._properties.wkw_resolutions
-            if Mag(res.resolution) != mag
+        self._properties.resolutions = [
+            res for res in self._properties.resolutions if Mag(res.resolution) != mag
         ]
         self.dataset._export_as_json()
         # delete files on disk

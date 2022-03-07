@@ -260,7 +260,6 @@ def create_dataset(tmp_path: Path) -> Generator[MagView, None, None]:
     yield mag
 
 
-@pytest.mark.skip()
 def test_dataset_conversion() -> None:
     origin_ds_path = TESTOUTPUT_DIR / "conversion" / "origin_zarr"
     converted_ds_path = TESTOUTPUT_DIR / "conversion" / "converted_zarr"
@@ -441,15 +440,15 @@ def test_delete_layer_and_mag(tmp_path: Path) -> None:
     assert "segmentation" in ds.layers
     assert len([l for l in ds._properties.data_layers if l.name == "color"]) == 1
     assert len([l for l in ds._properties.data_layers if l.name == "segmentation"]) == 1
-    assert len(color_layer._properties.wkw_resolutions) == 2
+    assert len(color_layer._properties.resolutions) == 2
 
     color_layer.delete_mag(1)
-    assert len(color_layer._properties.wkw_resolutions) == 1
+    assert len(color_layer._properties.resolutions) == 1
     assert (
         len(
             [
                 m
-                for m in color_layer._properties.wkw_resolutions
+                for m in color_layer._properties.resolutions
                 if Mag(m.resolution) == Mag(2)
             ]
         )

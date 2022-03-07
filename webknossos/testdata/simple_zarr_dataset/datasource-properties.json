@@ -20,10 +20,9 @@
         "height": 24,
         "depth": 24
       },
-      "wkwResolutions": [
+      "resolutions": [
         {
-          "resolution": [1, 1, 1],
-          "cubeLength": 32
+          "resolution": [1, 1, 1]
         }
       ],
       "defaultViewConfiguration": {

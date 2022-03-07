@@ -340,7 +340,7 @@ class MagView(View):
     def _properties(self) -> MagViewProperties:
         return next(
             mag_property
-            for mag_property in self.layer._properties.wkw_resolutions
+            for mag_property in self.layer._properties.resolutions
             if mag_property.resolution == self._mag
         )
 
