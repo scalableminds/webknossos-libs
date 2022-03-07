@@ -2,6 +2,9 @@
 
 All notable changes to the webknossos python library are documented in this file.
 
+Please see the [Stability Policy](./stability_policy.md) for details about the version schema
+and compatibility implications.
+
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MINOR.PATCH`.
 For upgrade instructions, please check the respective *Breaking Changes* sections.
