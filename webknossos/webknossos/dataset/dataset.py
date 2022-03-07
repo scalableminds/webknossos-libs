@@ -24,7 +24,7 @@ import attr
 import numpy as np
 from boltons.typeutils import make_sentinel
 
-from webknossos.dataset.storage import StorageArray
+from webknossos.dataset.storage import StorageArray, StorageArrayFormat
 from webknossos.geometry.vec3_int import Vec3Int, Vec3IntLike
 
 if TYPE_CHECKING:
@@ -57,7 +57,7 @@ from .properties import (
 from .view import View
 
 DEFAULT_BIT_DEPTH = 8
-DEFAULT_DATA_FORMAT = "wkw"
+DEFAULT_DATA_FORMAT = StorageArrayFormat.WKW
 PROPERTIES_FILE_NAME = "datasource-properties.json"
 
 
@@ -293,7 +293,7 @@ class Dataset:
         dtype_per_layer: Optional[Union[str, np.dtype, type]] = None,
         dtype_per_channel: Optional[Union[str, np.dtype, type]] = None,
         num_channels: Optional[int] = None,
-        data_format: str = DEFAULT_DATA_FORMAT,
+        data_format: Union[str, StorageArrayFormat] = DEFAULT_DATA_FORMAT,
         **kwargs: Any,
     ) -> Layer:
         """
@@ -353,7 +353,7 @@ class Dataset:
             ),
             resolutions=[],
             num_channels=num_channels,
-            data_format=data_format,
+            data_format=StorageArrayFormat(data_format),
         )
 
         if category == COLOR_CATEGORY:
@@ -393,7 +393,7 @@ class Dataset:
         dtype_per_layer: Optional[Union[str, np.dtype, type]] = None,
         dtype_per_channel: Optional[Union[str, np.dtype, type]] = None,
         num_channels: Optional[int] = None,
-        data_format: str = DEFAULT_DATA_FORMAT,
+        data_format: Union[str, StorageArrayFormat] = DEFAULT_DATA_FORMAT,
         **kwargs: Any,
     ) -> Layer:
         """
@@ -452,7 +452,7 @@ class Dataset:
                 dtype_per_layer=dtype_per_layer,
                 dtype_per_channel=dtype_per_channel,
                 num_channels=num_channels,
-                data_format=data_format,
+                data_format=StorageArrayFormat(data_format),
                 **kwargs,
             )
 
@@ -675,6 +675,7 @@ class Dataset:
         scale: Optional[Tuple[float, float, float]] = None,
         chunk_size: Optional[Union[Vec3IntLike, int]] = None,
         chunks_per_shard: Optional[Union[Vec3IntLike, int]] = None,
+        data_format: Optional[Union[str, StorageArrayFormat]] = None,
         compress: Optional[bool] = None,
         block_len: Optional[int] = None,  # deprecated
         file_len: Optional[int] = None,  # deprecated
@@ -722,6 +723,8 @@ class Dataset:
                 # Initializing a layer with non-empty resolutions requires that the files on disk already exist.
                 # The MagViews are added manually afterwards
                 new_ds_properties.resolutions = []
+                if data_format is not None:
+                    new_ds_properties.data_format = StorageArrayFormat(data_format)
                 new_ds._properties.data_layers += [new_ds_properties]
                 target_layer = new_ds._initialize_layer_from_properties(
                     new_ds_properties

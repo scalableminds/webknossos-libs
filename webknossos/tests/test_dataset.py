@@ -172,8 +172,12 @@ def test_create_dataset_with_explicit_header_fields() -> None:
     ds.get_layer("color").add_mag("1", chunk_size=64, chunks_per_shard=64)
     ds.get_layer("color").add_mag("2-2-1")
 
-    assert (TESTOUTPUT_DIR / "wk_dataset_advanced" / "color" / "1").exists()
-    assert (TESTOUTPUT_DIR / "wk_dataset_advanced" / "color" / "2-2-1").exists()
+    assert (
+        TESTOUTPUT_DIR / "wk_dataset_advanced" / "color" / "1" / "header.wkw"
+    ).exists()
+    assert (
+        TESTOUTPUT_DIR / "wk_dataset_advanced" / "color" / "2-2-1" / "header.wkw"
+    ).exists()
 
     assert len(ds.layers) == 1
     assert len(ds.get_layer("color").mags) == 2

@@ -2,6 +2,7 @@ import re
 import warnings
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from enum import Enum
 from os.path import relpath
 from pathlib import Path
 from typing import Any, Dict, Iterator, Optional, Type
@@ -22,9 +23,14 @@ class StorageArrayException(Exception):
     pass
 
 
+class StorageArrayFormat(Enum):
+    WKW = "wkw"
+    Zarr = "zarr"
+
+
 @dataclass
 class StorageArrayInfo:
-    data_format: str
+    data_format: StorageArrayFormat
     num_channels: int
     voxel_type: np.dtype
     chunk_size: Vec3Int
@@ -37,7 +43,7 @@ class StorageArrayInfo:
 
 
 class StorageArray(ABC):
-    data_format = ""
+    data_format = StorageArrayFormat.WKW
 
     _path: Path
 
@@ -86,7 +92,7 @@ class StorageArray(ABC):
         pass
 
     @staticmethod
-    def get_class(data_format: str) -> Type["StorageArray"]:
+    def get_class(data_format: StorageArrayFormat) -> Type["StorageArray"]:
         for cls in (WKWStorageArray, ZarrStorageArray):
             if cls.data_format == data_format:
                 return cls
@@ -94,7 +100,7 @@ class StorageArray(ABC):
 
 
 class WKWStorageArray(StorageArray):
-    data_format = "wkw"
+    data_format = StorageArrayFormat.WKW
 
     _cached_wkw_dataset: Optional[wkw.Dataset]
 
@@ -242,7 +248,7 @@ class WKWStorageArray(StorageArray):
 
 
 class ZarrStorageArray(StorageArray):
-    data_format = "zarr"
+    data_format = StorageArrayFormat.Zarr
 
     @classmethod
     def try_open(cls, path: Path) -> Optional["ZarrStorageArray"]:

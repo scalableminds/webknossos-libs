@@ -7,7 +7,7 @@ import numpy as np
 from cattr.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 
 from webknossos.dataset.layer_categories import LayerCategoryType
-from webknossos.dataset.storage import StorageArray
+from webknossos.dataset.storage import StorageArray, StorageArrayFormat
 from webknossos.geometry import BoundingBox, Mag, Vec3Int
 from webknossos.utils import snake_to_camel_case
 
@@ -108,7 +108,7 @@ class LayerProperties:
     category: LayerCategoryType
     bounding_box: BoundingBox
     element_class: str
-    data_format: str
+    data_format: StorageArrayFormat
     resolutions: List[MagViewProperties]
     num_channels: Optional[int] = None
     default_view_configuration: Optional[LayerViewConfiguration] = None

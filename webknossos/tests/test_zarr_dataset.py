@@ -9,9 +9,12 @@ import numpy as np
 import pytest
 
 from webknossos.dataset import COLOR_CATEGORY, SEGMENTATION_CATEGORY, Dataset, MagView
+from webknossos.dataset.storage import StorageArrayFormat
 from webknossos.geometry import BoundingBox, Mag, Vec3Int
 
 from .constants import TESTDATA_DIR, TESTOUTPUT_DIR
+
+ZARR_DATA_FORMAT = StorageArrayFormat.Zarr
 
 
 def delete_dir(relative_path: Path) -> None:
@@ -41,13 +44,13 @@ def test_create_dataset_with_layer_and_mag() -> None:
     delete_dir(TESTOUTPUT_DIR / "zarr_dataset")
 
     ds = Dataset(TESTOUTPUT_DIR / "zarr_dataset", scale=(1, 1, 1))
-    ds.add_layer("color", "color", data_format="zarr")
+    ds.add_layer("color", "color", data_format=ZARR_DATA_FORMAT)
 
     ds.get_layer("color").add_mag("1", chunks_per_shard=Vec3Int.full(1))
     ds.get_layer("color").add_mag("2-2-1", chunks_per_shard=Vec3Int.full(1))
 
-    assert (TESTOUTPUT_DIR / "zarr_dataset" / "color" / "1").exists()
-    assert (TESTOUTPUT_DIR / "zarr_dataset" / "color" / "2-2-1").exists()
+    assert (TESTOUTPUT_DIR / "zarr_dataset" / "color" / "1" / ".zarray").exists()
+    assert (TESTOUTPUT_DIR / "zarr_dataset" / "color" / "2-2-1" / ".zarray").exists()
 
     assert len(ds.layers) == 1
     assert len(ds.get_layer("color").mags) == 2
@@ -70,7 +73,7 @@ def test_modify_existing_dataset() -> None:
         COLOR_CATEGORY,
         dtype_per_layer="float",
         num_channels=1,
-        data_format="zarr",
+        data_format=ZARR_DATA_FORMAT,
     )
 
     ds2 = Dataset.open(TESTOUTPUT_DIR / "simple_zarr_dataset")
@@ -80,7 +83,7 @@ def test_modify_existing_dataset() -> None:
         SEGMENTATION_CATEGORY,
         "uint8",
         largest_segment_id=100000,
-        data_format="zarr",
+        data_format=ZARR_DATA_FORMAT,
     )
 
     assert (TESTOUTPUT_DIR / "simple_zarr_dataset" / "segmentation").is_dir()
@@ -152,7 +155,7 @@ def test_zarr_write_multi_channel_uint16() -> None:
         COLOR_CATEGORY,
         num_channels=3,
         dtype_per_layer="uint48",
-        data_format="zarr",
+        data_format=ZARR_DATA_FORMAT,
     ).add_mag("1", chunks_per_shard=Vec3Int.full(1))
 
     data = get_multichanneled_data(np.uint16)
@@ -171,7 +174,7 @@ def test_empty_read() -> None:
 
     mag = (
         Dataset(filename, scale=(1, 1, 1))
-        .add_layer("color", COLOR_CATEGORY, data_format="zarr")
+        .add_layer("color", COLOR_CATEGORY, data_format=ZARR_DATA_FORMAT)
         .add_mag("1", chunks_per_shard=Vec3Int.full(1))
     )
     with pytest.raises(AssertionError):
@@ -185,7 +188,9 @@ def test_read_padded_data() -> None:
 
     mag = (
         Dataset(filename, scale=(1, 1, 1))
-        .add_layer("color", COLOR_CATEGORY, num_channels=3, data_format="zarr")
+        .add_layer(
+            "color", COLOR_CATEGORY, num_channels=3, data_format=ZARR_DATA_FORMAT
+        )
         .add_mag("1", chunks_per_shard=Vec3Int.full(1))
     )
     # there is no data yet, however, this should not fail but pad the data with zeros
@@ -208,7 +213,7 @@ def test_get_or_add_layer() -> None:
         COLOR_CATEGORY,
         dtype_per_layer="uint8",
         num_channels=1,
-        data_format="zarr",
+        data_format=ZARR_DATA_FORMAT,
     )
     assert "color" in ds.layers.keys()
     assert layer.name == "color"
@@ -219,7 +224,7 @@ def test_get_or_add_layer() -> None:
         COLOR_CATEGORY,
         dtype_per_layer="uint8",
         num_channels=1,
-        data_format="zarr",
+        data_format=ZARR_DATA_FORMAT,
     )
     assert "color" in ds.layers.keys()
     assert layer.name == "color"
@@ -231,7 +236,7 @@ def test_get_or_add_layer() -> None:
             COLOR_CATEGORY,
             dtype_per_layer="uint16",
             num_channels=1,
-            data_format="zarr",
+            data_format=ZARR_DATA_FORMAT,
         )
 
     assure_exported_properties(ds)
@@ -240,12 +245,12 @@ def test_get_or_add_layer() -> None:
 def test_get_or_add_layer_idempotence() -> None:
     delete_dir(TESTOUTPUT_DIR / "zarr_dataset")
     ds = Dataset(TESTOUTPUT_DIR / "zarr_dataset", scale=(1, 1, 1))
-    ds.get_or_add_layer("color2", "color", np.uint8, data_format="zarr").get_or_add_mag(
-        "1", chunks_per_shard=Vec3Int.full(1)
-    )
-    ds.get_or_add_layer("color2", "color", np.uint8, data_format="zarr").get_or_add_mag(
-        "1", chunks_per_shard=Vec3Int.full(1)
-    )
+    ds.get_or_add_layer(
+        "color2", "color", np.uint8, data_format=ZARR_DATA_FORMAT
+    ).get_or_add_mag("1", chunks_per_shard=Vec3Int.full(1))
+    ds.get_or_add_layer(
+        "color2", "color", np.uint8, data_format=ZARR_DATA_FORMAT
+    ).get_or_add_mag("1", chunks_per_shard=Vec3Int.full(1))
 
     assure_exported_properties(ds)
 
@@ -254,7 +259,7 @@ def test_get_or_add_layer_idempotence() -> None:
 def create_dataset(tmp_path: Path) -> Generator[MagView, None, None]:
     ds = Dataset(Path(tmp_path), scale=(2, 2, 1))
 
-    mag = ds.add_layer("color", "color", data_format="zarr").add_mag(
+    mag = ds.add_layer("color", "color", data_format=ZARR_DATA_FORMAT).add_mag(
         "2-2-1", chunk_size=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(1)
     )  # cube_size = 8*8 = 64
     yield mag
@@ -274,7 +279,7 @@ def test_dataset_conversion() -> None:
         SEGMENTATION_CATEGORY,
         num_channels=1,
         largest_segment_id=1000000000,
-        data_format="zarr",
+        data_format=ZARR_DATA_FORMAT,
     )
     seg_layer.add_mag(
         "1", chunk_size=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(1)
@@ -289,7 +294,7 @@ def test_dataset_conversion() -> None:
         data=(np.random.rand(64, 64, 128) * 255).astype(np.uint8),
     )
     color_layer = origin_ds.add_layer(
-        "layer2", COLOR_CATEGORY, num_channels=3, data_format="zarr"
+        "layer2", COLOR_CATEGORY, num_channels=3, data_format=ZARR_DATA_FORMAT
     )
     color_layer.add_mag(
         "1", chunk_size=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(1)
@@ -324,6 +329,24 @@ def test_dataset_conversion() -> None:
             )
 
     assure_exported_properties(origin_ds)
+    assure_exported_properties(converted_ds)
+
+
+def test_dataset_conversion_from_wkw() -> None:
+    converted_ds_path = TESTOUTPUT_DIR / "conversion" / "converted_zarr"
+    delete_dir(converted_ds_path)
+
+    input_ds = Dataset.open(TESTDATA_DIR / "simple_wk_dataset")
+    converted_ds = input_ds.copy_dataset(
+        converted_ds_path, data_format=ZARR_DATA_FORMAT, chunks_per_shard=1
+    )
+
+    assert (converted_ds_path / "color" / "1" / ".zarray").exists()
+    assert np.all(
+        input_ds.get_layer("color").get_mag("1").read()
+        == converted_ds.get_layer("color").get_mag("1").read()
+    )
+
     assure_exported_properties(converted_ds)
 
 
@@ -405,7 +428,7 @@ def test_compression(tmp_path: Path) -> None:
 
 def test_rename_layer(tmp_path: Path) -> None:
     ds = Dataset(tmp_path / "ds", scale=(1, 1, 1))
-    layer = ds.add_layer("color", COLOR_CATEGORY, data_format="zarr")
+    layer = ds.add_layer("color", COLOR_CATEGORY, data_format=ZARR_DATA_FORMAT)
     mag = layer.add_mag(1, chunks_per_shard=Vec3Int.full(1))
     write_data = (np.random.rand(10, 20, 30) * 255).astype(np.uint8)
     mag.write(data=write_data)
@@ -427,14 +450,14 @@ def test_rename_layer(tmp_path: Path) -> None:
 
 def test_delete_layer_and_mag(tmp_path: Path) -> None:
     ds = Dataset(tmp_path / "ds", scale=(1, 1, 1))
-    color_layer = ds.add_layer("color", COLOR_CATEGORY, data_format="zarr")
+    color_layer = ds.add_layer("color", COLOR_CATEGORY, data_format=ZARR_DATA_FORMAT)
     color_layer.add_mag(1, chunks_per_shard=Vec3Int.full(1))
     color_layer.add_mag(2, chunks_per_shard=Vec3Int.full(1))
     ds.add_layer(
         "segmentation",
         SEGMENTATION_CATEGORY,
         largest_segment_id=999,
-        data_format="zarr",
+        data_format=ZARR_DATA_FORMAT,
     )
     assert "color" in ds.layers
     assert "segmentation" in ds.layers

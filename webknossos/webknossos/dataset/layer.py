@@ -12,7 +12,11 @@ from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 
-from webknossos.dataset.storage import StorageArray, StorageArrayException
+from webknossos.dataset.storage import (
+    StorageArray,
+    StorageArrayException,
+    StorageArrayFormat,
+)
 from webknossos.geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 
 from .downsampling_utils import (
@@ -223,7 +227,7 @@ class Layer:
         return self._properties.num_channels
 
     @property
-    def data_format(self) -> str:
+    def data_format(self) -> StorageArrayFormat:
         assert self._properties.data_format is not None
         return self._properties.data_format
 
@@ -346,7 +350,7 @@ class Layer:
                 resolution=Mag(mag_view.name),
                 cube_length=(
                     mag_storage_info.shard_size.x
-                    if mag_storage_info.data_format == "wkw"
+                    if mag_storage_info.data_format == StorageArrayFormat.WKW
                     else None
                 ),
             )
@@ -377,7 +381,7 @@ class Layer:
                 resolution=mag,
                 cube_length=(
                     mag_storage_info.shard_size.x
-                    if mag_storage_info.data_format == "wkw"
+                    if mag_storage_info.data_format == StorageArrayFormat.WKW
                     else None
                 ),
             )
