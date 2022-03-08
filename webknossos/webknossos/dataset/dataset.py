@@ -221,6 +221,19 @@ class Dataset:
         exist_ok: bool = False,
         webknossos_url: Optional[str] = None,
     ) -> "Dataset":
+        """Downloads a dataset and returns the Dataset instance.
+
+        The `dataset_name` and `organization_name` specify which dataset to download.
+        The `bbox`, `layers`, and `mags` parameters specify which parts of the dataset to download.
+        If nothing is specified the whole image, all layers, and all mags are downloaded respectively.
+
+        The `path` and `exist_ok` parameter specify where to save the downloaded dataset and whether to overwrite
+        if the `path` exists.
+
+        The `webknossos_url` specifies in which webknossos instance to search for the dataset. By default the
+        configured url from `webknossos_context` is used, using https://webknossos.org as a fallback.
+        """
+
         from webknossos.client._download_dataset import download_dataset
         from webknossos.client.context import _get_context, webknossos_context
 

@@ -7,6 +7,7 @@ To get started, check out the [installation instructions](installation.md) and t
 * [Intro to Dataset Usage](examples/dataset_usage.md)
 * [How to Upload a Dataset](examples/upload_image_data.md)<br/>
   ![Cell Dataset uploaded to webKnossos](examples/upload_image_data_dataset.jpg){: style="max-width: calc(100%/2 - 1em);"}
+* [How to Download a Dataset](examples/download_image_data.md)
 * [Using a Volume Annotation to Train a Custom Segmenter](examples/learned_segmenter.md)<br/>
   ![Volume Annotation used as Training Data](examples/learned_segmenter_annotation.png){: style="max-width: calc(100%/4 - 1em);"}
   ![Result of the Segmenter on the Skin Dataset](examples/learned_segmenter_result.png){: style="max-width: calc(100%/4 - 1em);"}

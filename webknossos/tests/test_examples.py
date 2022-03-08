@@ -101,6 +101,17 @@ def test_upload_image_data() -> None:
         assert url.startswith("http://localhost:9000/datasets/Organization_X/cell_")
 
 
+@pytest.mark.block_network(allowed_hosts=[".*"])
+@pytest.mark.vcr(ignore_hosts=["webknossos.org", "data-humerus.webknossos.org"])
+def test_download_image_data() -> None:
+    with tmp_cwd():
+        import examples.download_image_data as example
+
+        (ds,) = exec_main_and_get_vars(example, "ds")
+
+        assert list(ds.layers.keys()) == ["color"]
+
+
 class _DummyNearestNeighborClassifier:
     """Faster replacement for a sklearn classifier,
     also removing the need for sklearn as a dependency."""
