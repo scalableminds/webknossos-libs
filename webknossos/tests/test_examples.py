@@ -107,7 +107,7 @@ def test_download_image_data() -> None:
     with tmp_cwd():
         import examples.download_image_data as example
 
-        ds = exec_main_and_get_vars(
+        (ds,) = exec_main_and_get_vars(
             example, "ds"
         )
 
