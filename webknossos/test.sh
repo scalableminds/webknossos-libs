@@ -13,7 +13,6 @@ if [ $# -eq 1 ] && [ "$1" = "--refresh-snapshots" ]; then
         WK_DOCKER_DIR="tests"
         pushd $WK_DOCKER_DIR > /dev/null
         docker-compose pull webknossos
-        # TODO: either remove pg/db before starting or run tools/postgres/apply_evolutions.sh
         USER_UID=$(id -u) USER_GID=$(id -g) docker-compose up -d --no-build webknossos
         stop_wk () {
             ARG=$?

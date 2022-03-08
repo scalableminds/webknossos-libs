@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Generator, Iterator, Optional, Set, Tuple, Uni
 import attr
 from boltons.strutils import unit_len
 
-import webknossos.skeleton.nml as wknml
+import webknossos._nml as wknml
 
 from .graph import Graph
 
@@ -32,10 +32,11 @@ class Group:
         if self._enforced_id is not None:
             self._id = self._enforced_id
         else:
-            self._id = self._skeleton.element_id_generator.__next__()
+            self._id = self._skeleton._element_id_generator.__next__()
 
     @property
     def id(self) -> int:
+        """Read-only property."""
         return self._id
 
     def add_graph(

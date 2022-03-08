@@ -1,4 +1,4 @@
-# Change Log
+# Changelog
 
 All notable changes to webknossos-cuber are documented in this file.
 
@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.6...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.9...HEAD)
 
 ### Breaking Changes
 
@@ -16,6 +16,18 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+- Fixed that wkcuber.downsampling didn't support an anisotropic mag for `--from`. [#638](https://github.com/scalableminds/webknossos-libs/pull/638)
+
+## [0.9.9](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.9) - 2022-03-03
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.8...v0.9.9)
+
+
+## [0.9.8](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.8) - 2022-02-28
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.7...v0.9.8)
+
+
+## [0.9.7](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.7) - 2022-02-28
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.6...v0.9.7)
 
 
 ## [0.9.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.6) - 2022-02-15
