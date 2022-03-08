@@ -37,7 +37,7 @@ jobs:
 
     - name: Make and push release
       run: |
-        ./make_release.sh ${VERSION}
+        _tooling/make_release.sh ${VERSION}
         git add */Changelog.md
 
         git commit -m "Release for v${VERSION}"

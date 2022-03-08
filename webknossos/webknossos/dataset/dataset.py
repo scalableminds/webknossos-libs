@@ -148,30 +148,24 @@ class Dataset:
                 )
 
         self.path = dataset_path
-        with open(
-            self.path / PROPERTIES_FILE_NAME, encoding="utf-8"
-        ) as datasource_properties:
-            data = json.load(datasource_properties)
+        self._properties: DatasetProperties = self._load_properties()
+        self._last_read_properties = copy.deepcopy(self._properties)
 
-            self._properties: DatasetProperties = dataset_converter.structure(
-                data, DatasetProperties
+        self._layers: Dict[str, Layer] = {}
+        # construct self.layer
+        for layer_properties in self._properties.data_layers:
+            num_channels = _extract_num_channels(
+                layer_properties.num_channels,
+                Path(dataset_path),
+                layer_properties.name,
+                layer_properties.wkw_resolutions[0].resolution
+                if len(layer_properties.wkw_resolutions) > 0
+                else None,
             )
+            layer_properties.num_channels = num_channels
 
-            self._layers: Dict[str, Layer] = {}
-            # construct self.layer
-            for layer_properties in self._properties.data_layers:
-                num_channels = _extract_num_channels(
-                    layer_properties.num_channels,
-                    Path(dataset_path),
-                    layer_properties.name,
-                    layer_properties.wkw_resolutions[0].resolution
-                    if len(layer_properties.wkw_resolutions) > 0
-                    else None,
-                )
-                layer_properties.num_channels = num_channels
-
-                layer = self._initialize_layer_from_properties(layer_properties)
-                self._layers[layer_properties.name] = layer
+            layer = self._initialize_layer_from_properties(layer_properties)
+            self._layers[layer_properties.name] = layer
 
         if dataset_existed_already:
             if scale is None:
@@ -504,9 +498,9 @@ class Dataset:
 
     def get_segmentation_layer(self) -> SegmentationLayer:
         """
-        Returns the only segmentation layer. Prefer `get_segmentation_layers`,
-        because multiple segmentation layers can exist.
+        Deprecated, please use `get_segmentation_layers()`.
 
+        Returns the only segmentation layer.
         Fails with a IndexError if there are multiple segmentation layers or none.
         """
 
@@ -530,20 +524,20 @@ class Dataset:
 
     def get_color_layer(self) -> Layer:
         """
-        Returns the only color layer. Prefer `get_color_layers`, because multiple
-        color layers can exist.
+        Deprecated, please use `get_color_layers()`.
 
+        Returns the only color layer.
         Fails with a RuntimeError if there are multiple color layers or none.
         """
+        warnings.warn(
+            "[DEPRECATION] get_color_layer() fails if no or more than one color layer exists. Prefer get_color_layers()."
+        )
         return self._get_layer_by_category(COLOR_CATEGORY)
 
     def get_color_layers(self) -> List[Layer]:
         """
         Returns all color layers.
         """
-        warnings.warn(
-            "[DEPRECATION] get_color_layer() fails if no or more than one color layer exists. Prefer get_color_layers()."
-        )
         return [
             cast(Layer, layer)
             for layer in self.layers.values()
@@ -825,13 +819,30 @@ class Dataset:
     def __repr__(self) -> str:
         return repr("Dataset(%s)" % self.path)
 
+    def _load_properties(self) -> DatasetProperties:
+        with open(
+            self.path / PROPERTIES_FILE_NAME, encoding="utf-8"
+        ) as datasource_properties:
+            data = json.load(datasource_properties)
+        return dataset_converter.structure(data, DatasetProperties)
+
     def _export_as_json(self) -> None:
+
+        properties_on_disk = self._load_properties()
+
+        if properties_on_disk != self._last_read_properties:
+            warnings.warn(
+                "[WARNING] While exporting the dataset's properties, properties were found on disk which are newer than the ones that were seen last time. The properties will be overwritten. This is likely happening because multiple processes changed the metadata of this dataset."
+            )
+
         with open(self.path / PROPERTIES_FILE_NAME, "w", encoding="utf-8") as outfile:
             json.dump(
                 dataset_converter.unstructure(self._properties),
                 outfile,
                 indent=4,
             )
+
+            self._last_read_properties = copy.deepcopy(self._properties)
 
     def _initialize_layer_from_properties(self, properties: LayerProperties) -> Layer:
         if properties.category == COLOR_CATEGORY:
