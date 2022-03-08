@@ -5,7 +5,9 @@ description = "Python package to create, cube, and work with webKnossos WKW data
 authors = ["scalable minds <hello@scalableminds.com>"]
 readme = "README.md"
 license = "AGPL-3.0"
-include = ["wkcuber/version.py"]
+repository = "https://github.com/scalableminds/webknossos-libs"
+homepage = "https://docs.webknossos.org/wkcuber"
+include = ["wkcuber/version.py"]  # included explicitly since it's in .gitignore
 
 [tool.poetry.dependencies]
 python = "^3.7,>=3.7.1"

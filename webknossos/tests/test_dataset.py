@@ -1758,13 +1758,11 @@ def test_get_or_add_layer_by_type(tmp_path: Path) -> None:
     )  # adds another layer
     assert len(ds.get_segmentation_layers()) == 2
 
-    with pytest.raises(IndexError):
-        ds.get_color_layer()  # fails
+    assert len(ds.get_color_layers()) == 0
     _ = ds.add_layer("color", COLOR_CATEGORY)  # adds layer
-    _ = ds.get_color_layer()  # works
+    assert len(ds.get_color_layers()) == 1
     _ = ds.add_layer("different_color", COLOR_CATEGORY)  # adds another layer
-    with pytest.raises(IndexError):
-        ds.get_color_layer()  # fails
+    assert len(ds.get_color_layers()) == 2
 
     assure_exported_properties(ds)
 
@@ -1977,3 +1975,24 @@ def test_pickle_view(tmp_path: Path) -> None:
 
     # Make sure that the attributes of the MagView (not View) still exist
     assert pickled_mag1.layer is not None
+
+
+def test_warn_outdated_properties(tmp_path: Path) -> None:
+
+    ds1 = Dataset(tmp_path / "ds", scale=(1, 1, 1))
+    ds2 = Dataset.open(tmp_path / "ds")
+
+    # Change ds1 and undo it again
+    ds1.add_layer("color", COLOR_CATEGORY).add_mag(1)
+    ds1.delete_layer("color")
+
+    # Changing ds2 should work fine, since the properties on disk
+    # haven't changed.
+    ds2.add_layer("segmentation", SEGMENTATION_CATEGORY, largest_segment_id=1).add_mag(
+        1
+    )
+
+    with pytest.raises(UserWarning):
+        # Changing ds1 should raise a warning, since ds1
+        # does not know about the change in ds2
+        ds1.add_layer("color", COLOR_CATEGORY)

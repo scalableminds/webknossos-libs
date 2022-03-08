@@ -53,7 +53,7 @@ def create_parser() -> ArgumentParser:
         "equal or larger than 8. "
         "The default value is calculated depending on the dataset size. In the lowest Mag, the size will be "
         "smaller than 100vx per dimension",
-        type=int,
+        type=str,
         default=None,
     )
 
