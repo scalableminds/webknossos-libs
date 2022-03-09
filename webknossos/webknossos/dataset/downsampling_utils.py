@@ -117,7 +117,13 @@ def parse_interpolation_mode(
 def linear_filter_3d(data: np.ndarray, factors: List[int], order: int) -> np.ndarray:
     factors_np = np.array(factors)
 
-    assert np.all(factors_np == factors[0]), "The selected filtering strategy does not support anisotropic downsampling."
+    if not np.all(factors_np == factors[0]):
+         logging.debug(
+             "the selected filtering strategy does not support anisotropic downsampling. Selecting {} as uniform downsampling factor".format(
+                 factors[0]
+             )
+         )
+    
     factor = factors[0]
 
     ds = data.shape
