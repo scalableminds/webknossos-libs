@@ -6,7 +6,7 @@ authors = ["scalable minds <hello@scalableminds.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.7,>=3.7.1"
 
 [tool.poetry.dev-dependencies]
 LinkChecker = "^10.0.1"

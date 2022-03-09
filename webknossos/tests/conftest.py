@@ -75,6 +75,13 @@ def error_on_deprecations() -> Generator:
         yield
 
 
+@pytest.fixture(autouse=True, scope="function")
+def error_on_warnings() -> Generator:
+    with warnings.catch_warnings():
+        warnings.filterwarnings("error", module="webknossos", message=r"\[WARNING\]")
+        yield
+
+
 ### VCR.py / pytest-recording CONFIG
 
 
@@ -208,12 +215,13 @@ def _clean_zip_file_content(filename: str, value: Any) -> Any:
 def _unzip_if_possible(value: Any) -> Any:
     if isinstance(value, bytes):
         try:
-            with ZipFile(BytesIO(value)) as zipfile:
-                files = {}
-                for name in zipfile.namelist():
-                    entry = zipfile.read(name)
-                    files[name] = _clean_zip_file_content(name, entry)
-            return {"zip": files}
+            with BytesIO(value) as buffer:
+                with ZipFile(buffer) as zipfile:
+                    files = {}
+                    for name in zipfile.namelist():
+                        entry = zipfile.read(name)
+                        files[name] = _clean_zip_file_content(name, entry)
+                return {"zip": files}
         except Exception:
             pass
     return value
@@ -262,12 +270,12 @@ def _from_special_formats(value: Any) -> bytes:
     # zip-files were previously decoded as dicts with the key "zip",
     # see _unzip_if_possible()
     if isinstance(value, dict) and "zip" in value:
-        buffer = BytesIO()
-        with ZipFile(buffer, mode="a") as zipfile:
-            for name, entry in value["zip"].items():
-                entry = _from_special_formats(entry)
-                zipfile.writestr(name, entry)
-        return buffer.getvalue()
+        with BytesIO() as buffer:
+            with ZipFile(buffer, mode="a") as zipfile:
+                for name, entry in value["zip"].items():
+                    entry = _from_special_formats(entry)
+                    zipfile.writestr(name, entry)
+            return buffer.getvalue()
 
     if not isinstance(value, bytes):
         try:

@@ -12,13 +12,8 @@ from .constants import TESTDATA_DIR
 
 def create_dummy_skeleton() -> wk.Skeleton:
     nml = wk.Skeleton(
-        name="My NML",
+        dataset_name="My Dataset",
         scale=(11, 11, 25),
-        offset=(1, 1, 1),
-        time=1337,
-        edit_position=(3, 6, 0),
-        edit_rotation=(4, 2, 0),
-        zoom_level=100,
     )
 
     g = nml.add_graph(
@@ -77,7 +72,6 @@ def test_immutability() -> None:
 
 def test_skeleton_creation() -> None:
     nml = create_dummy_skeleton()
-    assert nml.time == 1337
 
     graphs = list(nml.flattened_graphs())
     assert len(graphs) == 3
@@ -126,14 +120,14 @@ def test_export_to_nml(tmp_path: Path) -> None:
     output_path = tmp_path / "out.nml"
     nml.save(output_path)
 
-    snapshot_path = TESTDATA_DIR / "nmls" / "generated_snapshot.nml"
+    snapshot_path = TESTDATA_DIR / "nmls" / "generated_skeleton_snapshot.nml"
 
     diff_files(output_path, snapshot_path)
 
 
 def test_import_from_nml() -> None:
     nml = create_dummy_skeleton()
-    snapshot_path = TESTDATA_DIR / "nmls" / "generated_snapshot.nml"
+    snapshot_path = TESTDATA_DIR / "nmls" / "generated_skeleton_snapshot.nml"
     loaded_nml = wk.Skeleton.load(snapshot_path)
 
     assert (
@@ -142,14 +136,13 @@ def test_import_from_nml() -> None:
 
 
 def test_simple_initialization_and_representations(tmp_path: Path) -> None:
-    nml = wk.Skeleton(name="my_skeleton", scale=(0.5, 0.5, 0.5), time=12345)
+    nml = wk.Skeleton(dataset_name="ds_name", scale=(0.5, 0.5, 0.5))
     nml_path = tmp_path / "my_skeleton.nml"
     EXPECTED_NML = """<?xml version="1.0" encoding="utf-8"?>
 <things>
   <parameters>
-    <experiment name="my_skeleton" />
+    <experiment name="ds_name" />
     <scale x="0.5" y="0.5" z="0.5" />
-    <time ms="12345" />
   </parameters>
   <branchpoints />
   <comments />
@@ -164,8 +157,7 @@ def test_simple_initialization_and_representations(tmp_path: Path) -> None:
         ), f"Written nml does not look as expected:\n{''.join(diff)}"
     assert nml == wk.Skeleton.load(nml_path)
     assert str(nml) == (
-        "Skeleton(name='my_skeleton', _children=<No children>, scale=(0.5, 0.5, 0.5), offset=None, time=12345, "
-        + "edit_position=None, edit_rotation=None, zoom_level=None, task_bounding_box=None, user_bounding_boxes=None)"
+        "Skeleton(scale=(0.5, 0.5, 0.5), dataset_name='ds_name', organization_id=None, description=None, _children=<No children>)"
     )
 
     my_group = nml.add_group("my_group")
@@ -178,9 +170,8 @@ def test_simple_initialization_and_representations(tmp_path: Path) -> None:
     EXPECTED_EXTENDED_NML = """<?xml version="1.0" encoding="utf-8"?>
 <things>
   <parameters>
-    <experiment name="my_skeleton" />
+    <experiment name="ds_name" />
     <scale x="0.5" y="0.5" z="0.5" />
-    <time ms="12345" />
   </parameters>
   <thing color.a="1.0" color.b="0.3" color.g="0.2" color.r="0.1" groupId="1" id="3" name="my_other_tree">
     <nodes />
@@ -213,8 +204,7 @@ def test_simple_initialization_and_representations(tmp_path: Path) -> None:
         ), f"Written nml does not look as expected:\n{''.join(diff)}"
     assert nml == wk.Skeleton.load(nml_path)
     assert str(nml) == (
-        "Skeleton(name='my_skeleton', _children=<2 children>, scale=(0.5, 0.5, 0.5), offset=None, time=12345, "
-        + "edit_position=None, edit_rotation=None, zoom_level=None, task_bounding_box=None, user_bounding_boxes=None)"
+        "Skeleton(scale=(0.5, 0.5, 0.5), dataset_name='ds_name', organization_id=None, description=None, _children=<2 children>)"
     )
     assert str(my_group) == "Group(_id=1, name='my_group', _children=<2 children>)"
     assert (
@@ -223,10 +213,9 @@ def test_simple_initialization_and_representations(tmp_path: Path) -> None:
 
 
 def test_import_export_round_trip(tmp_path: Path) -> None:
-    snapshot_path = TESTDATA_DIR / "nmls" / "generated_snapshot.nml"
+    snapshot_path = TESTDATA_DIR / "nmls" / "generated_skeleton_snapshot.nml"
     export_path = tmp_path / "exported_in.nml"
     nml = wk.Skeleton.load(snapshot_path)
-    assert nml.time == 1337
 
     g6 = nml.get_graph_by_id(6)
     assert g6.name == "Graph in Group"
@@ -242,7 +231,7 @@ def test_volume_dump_round_trip(tmp_path: Path, layer_name: Optional[str]) -> No
 
     from loxun import XmlWriter
 
-    from webknossos.skeleton.nml import Volume, __dump_volume, __parse_volume
+    from webknossos._nml import Volume
 
     export_path = tmp_path / "volume_dump.xml"
     volume_in = Volume(
@@ -255,11 +244,11 @@ def test_volume_dump_round_trip(tmp_path: Path, layer_name: Optional[str]) -> No
 
     with open(export_path, "wb") as f:
         with XmlWriter(f) as xf:
-            __dump_volume(xf, volume_in)
+            volume_in._dump(xf)
 
     with open(export_path, "rb") as f:
         tree = ET.parse(export_path)
-        volume_out = __parse_volume(next(tree.iter()))
+        volume_out = Volume._parse(next(tree.iter()))
 
     assert volume_in == volume_out
 

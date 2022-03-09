@@ -20,6 +20,7 @@ def main() -> None:
         bbox=bbox,
         layers=layers,
         mags=mags,
+        webknossos_url="https://webknossos.org",
     )
 
     # Check that the layer was downloaded

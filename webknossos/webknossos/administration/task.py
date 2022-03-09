@@ -44,7 +44,7 @@ class Task:
     @classmethod
     def get_by_id(cls, task_id: str) -> "Task":
         """Returns the task specified by the passed id (if your token authorizes you to see it)"""
-        client = _get_generated_client()
+        client = _get_generated_client(enforce_auth=True)
         response = task_info.sync(id=task_id, client=client)
         assert (
             response is not None
@@ -69,7 +69,7 @@ class Task:
             len(base_annotations) > 0
         ), "Must supply at least one base annotation to create tasks"
 
-        client = _get_generated_client()
+        client = _get_generated_client(enforce_auth=True)
         url = f"{client.base_url}/api/tasks/createFromFiles"
         task_parameters = {
             "taskTypeId": task_type_id,
@@ -86,7 +86,8 @@ class Task:
         }
         form_data = {"formJSON": json.dumps(task_parameters)}
         files: Mapping[str, Tuple[str, Union[bytes, BinaryIO]]] = {
-            f"{a.name}.zip": (f"{a.name}.zip", a.binary()) for a in base_annotations
+            f"{a.name}.zip": (f"{a.name}.zip", a._binary_zip())
+            for a in base_annotations
         }
 
         response = httpx.post(
@@ -99,7 +100,7 @@ class Task:
         )
         assert (
             response.status_code == 200
-        ), f"Failed to create tasks from files: {response.status_code}: {response.content.decode('utf-8')}"
+        ), f"Failed to create tasks from files: {response.status_code}: {response.text}"
 
         return cls._handle_task_creation_response(response)
 
@@ -119,7 +120,7 @@ class Task:
     ) -> List["Task"]:
         """Submits tasks in webKnossos based on a dataset, starting position + rotation, and returns the Task objects"""
 
-        client = _get_generated_client()
+        client = _get_generated_client(enforce_auth=True)
         url = f"{client.base_url}/api/tasks"
         task_parameters = {
             "taskTypeId": task_type_id,
@@ -147,7 +148,7 @@ class Task:
         )
         assert (
             response.status_code == 200
-        ), f"Failed to create tasks: {response.status_code}: {response.content.decode('utf-8')}"
+        ), f"Failed to create tasks: {response.status_code}: {response.text}"
 
         return cls._handle_task_creation_response(response)
 
@@ -177,7 +178,7 @@ class Task:
 
     def get_annotation_infos(self) -> List[AnnotationInfo]:
         """Returns AnnotationInfo objects describing all task instances that have been started by annotators for this task"""
-        client = _get_generated_client()
+        client = _get_generated_client(enforce_auth=True)
         response = annotation_infos_by_task_id.sync(id=self.task_id, client=client)
         assert (
             response is not None
@@ -190,7 +191,7 @@ class Task:
 
     @classmethod
     def _handle_task_creation_response(cls, response: httpx.Response) -> List["Task"]:
-        result = json.loads(response.content)
+        result = response.json()
         if "warnings" in result:
             warnings = result["warnings"]
             if len(warnings) > 0:
