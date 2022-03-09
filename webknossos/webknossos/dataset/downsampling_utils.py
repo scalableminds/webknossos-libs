@@ -118,12 +118,11 @@ def linear_filter_3d(data: np.ndarray, factors: List[int], order: int) -> np.nda
     factors_np = np.array(factors)
 
     if not np.all(factors_np == factors[0]):
-         logging.debug(
-             "the selected filtering strategy does not support anisotropic downsampling. Selecting {} as uniform downsampling factor".format(
-                 factors[0]
-             )
-         )
-    
+        logging.debug(
+            "the selected filtering strategy does not support anisotropic downsampling. Selecting {} as uniform downsampling factor".format(
+                factors[0]
+            )
+        )
     factor = factors[0]
 
     ds = data.shape
