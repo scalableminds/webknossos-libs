@@ -59,7 +59,7 @@ class MagView(View):
         Do not use this constructor manually. Instead use `webknossos.dataset.layer.Layer.add_mag()`.
         """
         storage_info = StorageArrayInfo(
-            data_format=layer._properties.data_format,
+            array_format=layer._properties.data_format,
             voxel_type=layer.dtype_per_channel,
             num_channels=layer.num_channels,
             chunk_size=chunk_size,
@@ -76,7 +76,7 @@ class MagView(View):
         self._layer = layer
 
         if create:
-            StorageArray.get_class(storage_info.data_format).create(
+            StorageArray.get_class(storage_info.array_format).create(
                 self.path, storage_info
             )
 

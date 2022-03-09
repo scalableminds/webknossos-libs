@@ -7,7 +7,11 @@ import numpy as np
 from cattr.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 
 from webknossos.dataset.layer_categories import LayerCategoryType
-from webknossos.dataset.storage import StorageArray, StorageArrayFormat
+from webknossos.dataset.storage import (
+    StorageArray,
+    StorageArrayException,
+    StorageArrayFormat,
+)
 from webknossos.geometry import BoundingBox, Mag, Vec3Int
 from webknossos.utils import snake_to_camel_case
 
@@ -32,16 +36,17 @@ def _extract_num_channels(
 
     mag = Mag(mag)
     array_file_path = path / layer / mag.to_layer_name()
-    array = StorageArray.try_open(array_file_path)
-    if array is None:
+    try:
+        array = StorageArray.open(array_file_path)
+    except StorageArrayException as e:
         raise Exception(
             f"The dataset you are trying to open does not have the attribute 'numChannels' for layer {layer}. "
             f"However, this attribute is necessary. To mitigate this problem, it was tried to locate "
             f"the file {array_file_path} to extract the num_channels from there. "
             f"Since this file does not exist, the attempt to open the dataset failed. "
             f"Please add the attribute manually to solve the problem. "
-            f"If the layer does not contain any data, you can also delete the layer and add it again."
-        )
+            f"If the layer does not contain any data, you can also delete the layer and add it again.",
+        ) from e
     return array.info.num_channels
 
 

@@ -24,7 +24,11 @@ import attr
 import numpy as np
 from boltons.typeutils import make_sentinel
 
-from webknossos.dataset.storage import StorageArray, StorageArrayFormat
+from webknossos.dataset.storage import (
+    StorageArray,
+    StorageArrayException,
+    StorageArrayFormat,
+)
 from webknossos.geometry.vec3_int import Vec3Int, Vec3IntLike
 
 if TYPE_CHECKING:
@@ -485,24 +489,26 @@ class Dataset:
         **kwargs: Any,
     ) -> Layer:
         assert layer_name not in self.layers, f"Layer {layer_name} already exists!"
-        mag_infos = [
-            StorageArray.try_open(f)
-            for f in (self.path / layer_name).iterdir()
-            if f.is_dir()
-        ]
-        mag_infos = [m for m in mag_infos if m is not None]
+
+        storage_info = None
+        for f in (self.path / layer_name).iterdir():
+            if f.is_dir():
+                try:
+                    array = StorageArray.open(f)
+                    storage_info = array.info
+                    break
+                except StorageArrayException:
+                    continue
 
         assert (
-            len(mag_infos) > 0
-        ), f"Could not find any header.wkw files in {self.path / layer_name}, cannot add layer."
-        assert mag_infos[0] is not None  # for mypy
-        info = mag_infos[0].info
+            storage_info is not None
+        ), f"Could not find any valid mags in {self.path /layer_name}. Cannot add layer."
         layer = self.add_layer(
             layer_name,
             category=category,
-            num_channels=info.num_channels,
-            dtype_per_channel=info.voxel_type,
-            data_format=info.data_format,
+            num_channels=storage_info.num_channels,
+            dtype_per_channel=storage_info.voxel_type,
+            data_format=storage_info.array_format,
             **kwargs,
         )
         for mag_dir in layer.path.iterdir():

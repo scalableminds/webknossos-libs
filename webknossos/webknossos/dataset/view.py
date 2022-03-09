@@ -913,7 +913,7 @@ class View:
     @property
     def _array(self) -> StorageArray:
         if self._cached_array is None:
-            cls_array = StorageArray.get_class(self.info.data_format)
+            cls_array = StorageArray.get_class(self.info.array_format)
             self._cached_array = cls_array(self._path)
         return self._cached_array
 

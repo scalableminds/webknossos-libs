@@ -350,7 +350,7 @@ class Layer:
                 resolution=Mag(mag_view.name),
                 cube_length=(
                     mag_storage_info.shard_size.x
-                    if mag_storage_info.data_format == StorageArrayFormat.WKW
+                    if mag_storage_info.array_format == StorageArrayFormat.WKW
                     else None
                 ),
             )
@@ -381,7 +381,7 @@ class Layer:
                 resolution=mag,
                 cube_length=(
                     mag_storage_info.shard_size.x
-                    if mag_storage_info.data_format == StorageArrayFormat.WKW
+                    if mag_storage_info.array_format == StorageArrayFormat.WKW
                     else None
                 ),
             )

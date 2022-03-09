@@ -30,7 +30,7 @@ class StorageArrayFormat(Enum):
 
 @dataclass
 class StorageArrayInfo:
-    data_format: StorageArrayFormat
+    array_format: StorageArrayFormat
     num_channels: int
     voxel_type: np.dtype
     chunk_size: Vec3Int
@@ -43,7 +43,7 @@ class StorageArrayInfo:
 
 
 class StorageArray(ABC):
-    data_format = StorageArrayFormat.WKW
+    array_format = StorageArrayFormat.WKW
 
     _path: Path
 
@@ -57,12 +57,14 @@ class StorageArray(ABC):
 
     @classmethod
     @abstractmethod
-    def try_open(_cls, path: Path) -> Optional["StorageArray"]:
+    def open(_cls, path: Path) -> "StorageArray":
         for cls in (WKWStorageArray, ZarrStorageArray):
-            array_maybe = cls.try_open(path)
-            if array_maybe is not None:
-                return array_maybe
-        return None
+            try:
+                array = cls.open(path)
+                return array
+            except StorageArrayException as e:
+                pass
+        raise StorageArrayException(f"Could not open the storage array at {path}.")
 
     @classmethod
     @abstractmethod
@@ -92,15 +94,15 @@ class StorageArray(ABC):
         pass
 
     @staticmethod
-    def get_class(data_format: StorageArrayFormat) -> Type["StorageArray"]:
+    def get_class(array_format: StorageArrayFormat) -> Type["StorageArray"]:
         for cls in (WKWStorageArray, ZarrStorageArray):
-            if cls.data_format == data_format:
+            if cls.array_format == array_format:
                 return cls
-        raise ValueError(f"Data format `{data_format}` is invalid.")
+        raise ValueError(f"Array format `{array_format}` is invalid.")
 
 
 class WKWStorageArray(StorageArray):
-    data_format = StorageArrayFormat.WKW
+    array_format = StorageArrayFormat.WKW
 
     _cached_wkw_dataset: Optional[wkw.Dataset]
 
@@ -109,17 +111,19 @@ class WKWStorageArray(StorageArray):
         self._cached_wkw_dataset = None
 
     @classmethod
-    def try_open(cls, path: Path) -> Optional["WKWStorageArray"]:
+    def open(cls, path: Path) -> "WKWStorageArray":
         if (path / "header.wkw").is_file():
             return cls(path)
-        return None
+        raise StorageArrayException(
+            f"Could not open WKW storage array at {path}. `header.wkw` not found."
+        )
 
     @property
     def info(self) -> StorageArrayInfo:
         try:
             with wkw.Dataset.open(str(self._path)) as wkw_dataset:
                 return StorageArrayInfo(
-                    data_format=self.data_format,
+                    array_format=self.array_format,
                     num_channels=wkw_dataset.header.num_channels,
                     voxel_type=wkw_dataset.header.voxel_type,
                     compression_mode=wkw_dataset.header.block_type
@@ -136,7 +140,7 @@ class WKWStorageArray(StorageArray):
 
     @classmethod
     def create(cls, path: Path, storage_info: StorageArrayInfo) -> "WKWStorageArray":
-        assert storage_info.data_format == cls.data_format
+        assert storage_info.array_format == cls.array_format
 
         assert (
             storage_info.chunk_size.is_uniform()
@@ -248,19 +252,21 @@ class WKWStorageArray(StorageArray):
 
 
 class ZarrStorageArray(StorageArray):
-    data_format = StorageArrayFormat.Zarr
+    array_format = StorageArrayFormat.Zarr
 
     @classmethod
-    def try_open(cls, path: Path) -> Optional["ZarrStorageArray"]:
+    def open(cls, path: Path) -> "ZarrStorageArray":
         if (path / ".zarray").is_file():
             return cls(path)
-        return None
+        raise StorageArrayException(
+            f"Could not open Zarr storage array at {path}. `.zarray` not found."
+        )
 
     @property
     def info(self) -> StorageArrayInfo:
         zarray = zarr.open_array(self._path, mode="r")
         return StorageArrayInfo(
-            data_format=self.data_format,
+            array_format=self.array_format,
             num_channels=zarray.shape[0],
             voxel_type=zarray.dtype,
             compression_mode=zarray.compressor is not None,
@@ -270,7 +276,7 @@ class ZarrStorageArray(StorageArray):
 
     @classmethod
     def create(cls, path: Path, storage_info: StorageArrayInfo) -> "ZarrStorageArray":
-        assert storage_info.data_format == cls.data_format
+        assert storage_info.array_format == cls.array_format
         assert storage_info.chunks_per_shard == Vec3Int.full(
             1
         ), "Zarr storage doesn't support sharding yet"
