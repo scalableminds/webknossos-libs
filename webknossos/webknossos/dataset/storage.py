@@ -180,11 +180,11 @@ class WKWStorageArray(StorageArray):
 
     def read(self, offset: Vec3IntLike, shape: Vec3IntLike) -> np.ndarray:
         return self._wkw_dataset.read(
-            Vec3Int(offset).to_tuple(), Vec3Int(shape).to_tuple()
+            Vec3Int(offset), Vec3Int(shape)
         )
 
     def write(self, offset: Vec3IntLike, data: np.ndarray) -> None:
-        self._wkw_dataset.write(Vec3Int(offset).to_tuple(), data)
+        self._wkw_dataset.write(Vec3Int(offset), data)
 
     def resize(
         self,
@@ -207,8 +207,8 @@ class WKWStorageArray(StorageArray):
             return int(match[0])
 
         def _extract_file_index(file_path: Path) -> Vec3Int:
-            zyx_index = [_extract_num(el) for el in file_path.parts]
-            return Vec3Int(zyx_index[2], zyx_index[1], zyx_index[0])
+            z, y, x = [_extract_num(el) for el in file_path.parts]
+            return Vec3Int(x, y, z)
 
         shard_size = self.info.shard_size
         for file_path in self._list_files():

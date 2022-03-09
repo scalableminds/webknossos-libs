@@ -84,7 +84,7 @@ class Vec3Int(tuple):
             return all(i >= 0 for i in self)
 
     def is_uniform(self) -> bool:
-        return self.x == self.y and self.x == self.z
+        return self.x == self.y == self.z
 
     def _element_wise(
         self, other: Union[int, "Vec3IntLike"], fn: Callable[[int, Any], int]

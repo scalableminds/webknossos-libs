@@ -37,7 +37,7 @@ def test_upsampling() -> None:
 
 
 def test_upsample_cube() -> None:
-    buffer = np.zeros(BUFFER_SHAPE.to_tuple(), dtype=np.uint8)
+    buffer = np.zeros(BUFFER_SHAPE, dtype=np.uint8)
     buffer[:, :, :] = np.arange(0, BUFFER_SHAPE.x)
 
     output = upsample_cube(buffer, [2, 2, 2])
