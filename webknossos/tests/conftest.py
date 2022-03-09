@@ -322,5 +322,7 @@ def pytest_collection_modifyitems(items: List[pytest.Item]) -> None:
             item.get_closest_marker("block_network") is None
             and multiprocessing.get_start_method() != "fork"
         ):
+            # To allow for UNIX socket communication necessary for spawn multiprocessing
+            # addresses starting with `/` are allowed
             marker = pytest.mark.block_network(allowed_hosts=["/.*"])
             item.add_marker(marker)
