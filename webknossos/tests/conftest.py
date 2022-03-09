@@ -318,6 +318,9 @@ def pytest_collection_modifyitems(items: List[pytest.Item]) -> None:
         if item.get_closest_marker("vcr") is None:
             item.add_marker("vcr")
 
-        if item.get_closest_marker("block_network") is None and multiprocessing.get_start_method() != "fork":
+        if (
+            item.get_closest_marker("block_network") is None
+            and multiprocessing.get_start_method() != "fork"
+        ):
             marker = pytest.mark.block_network(allowed_hosts=["/.*"])
             item.add_marker(marker)
