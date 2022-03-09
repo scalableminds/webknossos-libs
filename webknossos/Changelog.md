@@ -22,6 +22,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 - Inconsistent writes to datasets properties (e.g., caused due to multiprocessing) are detected automatically. The warning can be escalated to an exception with `warnings.filterwarnings("error", module="webknossos", message=r"\[WARNING\]")`. [#633](https://github.com/scalableminds/webknossos-libs/pull/633)
 
 ### Fixed
+- Tests: The `./test.sh` script works on macOS again and doesn't throw Network Errors anymore. However the introduced fix could lead to slightly different behaviour on macOS tests vs CI tests, when UNIX socket communication is involved. [#618](https://github.com/scalableminds/webknossos-libs/pull/618)
 
 
 ## [0.9.9](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.9) - 2022-03-03
