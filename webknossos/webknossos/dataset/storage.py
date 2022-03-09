@@ -120,23 +120,17 @@ class WKWStorageArray(StorageArray):
 
     @property
     def info(self) -> StorageArrayInfo:
-        try:
-            with wkw.Dataset.open(str(self._path)) as wkw_dataset:
-                return StorageArrayInfo(
-                    array_format=self.array_format,
-                    num_channels=wkw_dataset.header.num_channels,
-                    voxel_type=wkw_dataset.header.voxel_type,
-                    compression_mode=wkw_dataset.header.block_type
-                    != wkw.Header.BLOCK_TYPE_RAW,
-                    chunk_size=Vec3Int.full(wkw_dataset.header.block_len),
-                    chunks_per_shard=Vec3Int.full(
-                        wkw_dataset.header.file_len,
-                    ),
-                )
-        except wkw.wkw.WKWException as e:
-            raise StorageArrayException(
-                f"Exception while fetching storage info for {self._path}"
-            ) from e
+        header = self._wkw_dataset.header
+        return StorageArrayInfo(
+            array_format=self.array_format,
+            num_channels=header.num_channels,
+            voxel_type=header.voxel_type,
+            compression_mode=header.block_type != wkw.Header.BLOCK_TYPE_RAW,
+            chunk_size=Vec3Int.full(header.block_len),
+            chunks_per_shard=Vec3Int.full(
+                header.file_len,
+            ),
+        )
 
     @classmethod
     def create(cls, path: Path, storage_info: StorageArrayInfo) -> "WKWStorageArray":
@@ -183,9 +177,7 @@ class WKWStorageArray(StorageArray):
         return WKWStorageArray(path)
 
     def read(self, offset: Vec3IntLike, shape: Vec3IntLike) -> np.ndarray:
-        return self._wkw_dataset.read(
-            Vec3Int(offset), Vec3Int(shape)
-        )
+        return self._wkw_dataset.read(Vec3Int(offset), Vec3Int(shape))
 
     def write(self, offset: Vec3IntLike, data: np.ndarray) -> None:
         self._wkw_dataset.write(Vec3Int(offset), data)
@@ -229,9 +221,14 @@ class WKWStorageArray(StorageArray):
     @property
     def _wkw_dataset(self) -> wkw.Dataset:
         if self._cached_wkw_dataset is None:
-            self._cached_wkw_dataset = wkw.Dataset.open(
-                str(self._path)
-            )  # No need to pass the header to the wkw.Dataset
+            try:
+                self._cached_wkw_dataset = wkw.Dataset.open(
+                    str(self._path)
+                )  # No need to pass the header to the wkw.Dataset
+            except wkw.wkw.WKWException as e:
+                raise StorageArrayException(
+                    f"Exception while opening WKW storage array for {self._path}"
+                ) from e
         return self._cached_wkw_dataset
 
     @_wkw_dataset.deleter
@@ -254,6 +251,8 @@ class WKWStorageArray(StorageArray):
 class ZarrStorageArray(StorageArray):
     array_format = StorageArrayFormat.Zarr
 
+    _cached_zarray: Optional[zarr.Array]
+
     @classmethod
     def open(cls, path: Path) -> "ZarrStorageArray":
         if (path / ".zarray").is_file():
@@ -264,7 +263,7 @@ class ZarrStorageArray(StorageArray):
 
     @property
     def info(self) -> StorageArrayInfo:
-        zarray = zarr.open_array(self._path, mode="r")
+        zarray = self._zarray
         return StorageArrayInfo(
             array_format=self.array_format,
             num_channels=zarray.shape[0],
@@ -296,7 +295,7 @@ class ZarrStorageArray(StorageArray):
     def read(self, offset: Vec3IntLike, shape: Vec3IntLike) -> np.ndarray:
         offset = Vec3Int(offset)
         shape = Vec3Int(shape)
-        zarray = zarr.open_array(store=self._path, mode="r")
+        zarray = self._zarray
         data = zarray[
             :,
             offset.x : (offset.x + shape.x),
@@ -320,7 +319,7 @@ class ZarrStorageArray(StorageArray):
         self, new_shape: Vec3IntLike, align_with_shards: bool = True, warn: bool = False
     ) -> None:
         new_shape = Vec3Int(new_shape)
-        zarray = zarr.open_array(store=self._path, mode="a")
+        zarray = self._zarray
 
         new_shape_tuple = (
             zarray.shape[0],
@@ -329,7 +328,6 @@ class ZarrStorageArray(StorageArray):
             max(zarray.shape[3], new_shape.z),
         )
         if new_shape_tuple != zarray.shape:
-
             if align_with_shards:
                 chunk_size = Vec3Int(zarray.chunks[1:4])
                 chunks_per_shard = Vec3Int.full(1)
@@ -351,7 +349,7 @@ class ZarrStorageArray(StorageArray):
         assert data.ndim == 4
 
         self.resize(offset + Vec3Int(data.shape[1:4]), warn=True)
-        zarray = zarr.open_array(store=self._path, mode="a")
+        zarray = self._zarray
         zarray[
             :,
             offset.x : (offset.x + data.shape[1]),
@@ -360,7 +358,7 @@ class ZarrStorageArray(StorageArray):
         ] = data
 
     def list_bounding_boxes(self) -> Iterator[BoundingBox]:
-        zarray = zarr.open_array(store=self._path, mode="r")
+        zarray = self._zarray
         chunk_size = Vec3Int(*zarray.chunks[1:4])
         for key in zarray.store.keys():
             if not key.startswith("."):
@@ -369,4 +367,32 @@ class ZarrStorageArray(StorageArray):
                 yield BoundingBox(topleft=chunk_idx * chunk_size, size=chunk_size)
 
     def close(self) -> None:
-        pass
+        if self._cached_zarray is not None:
+            self._cached_zarray = None
+
+    @property
+    def _zarray(self) -> zarr.Array:
+        if self._cached_zarray is None:
+            try:
+                self._cached_zarray = zarr.open_array(store=self._path, mode="a")
+            except Exception as e:
+                raise StorageArrayException(
+                    f"Exception while opening Zarr storage array for {self._path}"
+                ) from e
+        return self._cached_zarray
+
+    @_zarray.deleter
+    def _zarray(self) -> None:
+        self.close()
+
+    def __del__(self) -> None:
+        del self._cached_zarray
+
+    def __getstate__(self) -> Dict[str, Any]:
+        d = dict(self.__dict__)
+        del d["_cached_zarray"]
+        return d
+
+    def __setstate__(self, d: Dict[str, Any]) -> None:
+        d["_cached_zarray"] = None
+        self.__dict__ = d
