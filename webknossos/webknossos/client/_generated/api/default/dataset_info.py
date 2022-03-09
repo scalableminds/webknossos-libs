@@ -8,15 +8,13 @@ from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
-    organization_name: str,
+    organization_id: str,
     data_set_name: str,
     *,
     client: Client,
     sharing_token: Union[Unset, None, str] = UNSET,
 ) -> Dict[str, Any]:
-    url = "{}/api/datasets/{organizationName}/{dataSetName}".format(
-        client.base_url, organizationName=organization_name, dataSetName=data_set_name
-    )
+    url = f"{client.base_url}/api/datasets/{organization_id}/{data_set_name}"
 
     headers: Dict[str, Any] = client.get_headers()
     cookies: Dict[str, Any] = client.get_cookies()
@@ -53,14 +51,14 @@ def _build_response(*, response: httpx.Response) -> Response[DatasetInfoResponse
 
 
 def sync_detailed(
-    organization_name: str,
+    organization_id: str,
     data_set_name: str,
     *,
     client: Client,
     sharing_token: Union[Unset, None, str] = UNSET,
 ) -> Response[DatasetInfoResponse200]:
     kwargs = _get_kwargs(
-        organization_name=organization_name,
+        organization_id=organization_id,
         data_set_name=data_set_name,
         client=client,
         sharing_token=sharing_token,
@@ -74,7 +72,7 @@ def sync_detailed(
 
 
 def sync(
-    organization_name: str,
+    organization_id: str,
     data_set_name: str,
     *,
     client: Client,
@@ -83,7 +81,7 @@ def sync(
     """ """
 
     return sync_detailed(
-        organization_name=organization_name,
+        organization_id=organization_id,
         data_set_name=data_set_name,
         client=client,
         sharing_token=sharing_token,
@@ -91,14 +89,14 @@ def sync(
 
 
 async def asyncio_detailed(
-    organization_name: str,
+    organization_id: str,
     data_set_name: str,
     *,
     client: Client,
     sharing_token: Union[Unset, None, str] = UNSET,
 ) -> Response[DatasetInfoResponse200]:
     kwargs = _get_kwargs(
-        organization_name=organization_name,
+        organization_id=organization_id,
         data_set_name=data_set_name,
         client=client,
         sharing_token=sharing_token,
@@ -111,7 +109,7 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    organization_name: str,
+    organization_id: str,
     data_set_name: str,
     *,
     client: Client,
@@ -121,7 +119,7 @@ async def asyncio(
 
     return (
         await asyncio_detailed(
-            organization_name=organization_name,
+            organization_id=organization_id,
             data_set_name=data_set_name,
             client=client,
             sharing_token=sharing_token,

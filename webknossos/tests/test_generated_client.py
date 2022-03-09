@@ -96,7 +96,7 @@ def test_dataset_info() -> None:
     with webknossos_context(url=DEFAULT_WEBKNOSSOS_URL):
         client = _get_generated_client()
     response = dataset_info.sync(
-        organization_name="scalable_minds",
+        organization_id="scalable_minds",
         data_set_name="l4dense_motta_et_al_demo",
         client=client,
     )

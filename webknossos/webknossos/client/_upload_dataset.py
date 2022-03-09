@@ -30,7 +30,7 @@ class LayerToLink(NamedTuple):
     dataset_name: str
     layer_name: str
     new_layer_name: Optional[str] = None
-    organization_name: Optional[
+    organization_id: Optional[
         str
     ] = None  # defaults to the user's organization before uploading
 
@@ -40,7 +40,7 @@ class LayerToLink(NamedTuple):
             "dataSetName": self.dataset_name,
             "layerName": self.layer_name,
             "newLayerName": self.new_layer_name,
-            "organizationName": self.organization_name or context.organization,
+            "organizationName": self.organization_id or context.organization,
         }
 
 
@@ -113,7 +113,7 @@ def upload_dataset(
     if "PYTEST_CURRENT_TEST" in os.environ:
         simultaneous_uploads = 1
     response = new_dataset_name_is_valid.sync_detailed(
-        organization_name=context.organization,
+        organization_id=context.organization,
         data_set_name=new_dataset_name,
         client=context.generated_auth_client,
     )

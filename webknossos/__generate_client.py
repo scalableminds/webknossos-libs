@@ -84,7 +84,7 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
 
     # webKnossos.org setup:
     # explorative_annotation_id = "6114d9410100009f0096c640"
-    # organization_name = "scalable_minds",
+    # organization_id = "scalable_minds",
     # dataset_name = "l4dense_motta_et_al_demo"
     # task_id = "61f151c10100000a01249afe"
     # user_id = "5b5dd2fb1c00008230ec8174"
@@ -92,7 +92,7 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
     # project_name = "sampleProject"
     # local setup, probably long gone by the time you read this:
     explorative_annotation_id = "62011da6fa0100b202ec50db"
-    organization_name = "sample_organization"
+    organization_id = "sample_organization"
     dataset_name = "l4_sample"
     task_id = "62011dddfa0100ad02ec50de"
     user_id = "6200df39f70100f70157d983"
@@ -116,7 +116,7 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
     yield extract_200_response(
         "datasetInfo",
         dataset_info.sync_detailed(
-            organization_name=organization_name,
+            organization_id=organization_id,
             data_set_name=dataset_name,
             client=client,
         ),

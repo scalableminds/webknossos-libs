@@ -7,14 +7,12 @@ from ...types import Response
 
 
 def _get_kwargs(
-    organization_name: str,
+    organization_id: str,
     data_set_name: str,
     *,
     client: Client,
 ) -> Dict[str, Any]:
-    url = "{}/api/datasets/{organizationName}/{dataSetName}/isValidNewName".format(
-        client.base_url, organizationName=organization_name, dataSetName=data_set_name
-    )
+    url = f"{client.base_url}/api/datasets/{organization_id}/{data_set_name}/isValidNewName"
 
     headers: Dict[str, Any] = client.get_headers()
     cookies: Dict[str, Any] = client.get_cookies()
@@ -37,13 +35,13 @@ def _build_response(*, response: httpx.Response) -> Response[Any]:
 
 
 def sync_detailed(
-    organization_name: str,
+    organization_id: str,
     data_set_name: str,
     *,
     client: Client,
 ) -> Response[Any]:
     kwargs = _get_kwargs(
-        organization_name=organization_name,
+        organization_id=organization_id,
         data_set_name=data_set_name,
         client=client,
     )
@@ -56,13 +54,13 @@ def sync_detailed(
 
 
 async def asyncio_detailed(
-    organization_name: str,
+    organization_id: str,
     data_set_name: str,
     *,
     client: Client,
 ) -> Response[Any]:
     kwargs = _get_kwargs(
-        organization_name=organization_name,
+        organization_id=organization_id,
         data_set_name=data_set_name,
         client=client,
     )
