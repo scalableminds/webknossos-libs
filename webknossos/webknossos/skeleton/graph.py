@@ -96,7 +96,7 @@ class Graph(nx.Graph):
 
     A small usage example:
 
-    ```
+    ```python
     graph = skeleton.add_graph("a graph")
     node_1 = graph.add_node(position=(0, 0, 0), comment="node 1")
     node_2 = graph.add_node(position=(100, 100, 100), comment="node 2")
