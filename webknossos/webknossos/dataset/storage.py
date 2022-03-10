@@ -80,7 +80,7 @@ class StorageArray(ABC):
         pass
 
     @abstractmethod
-    def resize(
+    def ensure_size(
         self, new_shape: Vec3IntLike, align_with_shards: bool = True, warn: bool = False
     ) -> None:
         pass
@@ -182,7 +182,7 @@ class WKWStorageArray(StorageArray):
     def write(self, offset: Vec3IntLike, data: np.ndarray) -> None:
         self._wkw_dataset.write(Vec3Int(offset), data)
 
-    def resize(
+    def ensure_size(
         self,
         new_shape: Vec3IntLike,
         align_with_shards: bool = True,
@@ -315,7 +315,7 @@ class ZarrStorageArray(StorageArray):
             data = padded_data
         return data
 
-    def resize(
+    def ensure_size(
         self, new_shape: Vec3IntLike, align_with_shards: bool = True, warn: bool = False
     ) -> None:
         new_shape = Vec3Int(new_shape)
@@ -327,11 +327,10 @@ class ZarrStorageArray(StorageArray):
             max(zarray.shape[2], new_shape.y),
             max(zarray.shape[3], new_shape.z),
         )
+        # TODO: Re-open zarray to check for in-between changes
         if new_shape_tuple != zarray.shape:
             if align_with_shards:
-                chunk_size = Vec3Int(zarray.chunks[1:4])
-                chunks_per_shard = Vec3Int.full(1)
-                shard_size = chunk_size * chunks_per_shard
+                shard_size = self.info.shard_size
                 new_shape = new_shape.ceildiv(shard_size) * shard_size
                 new_shape_tuple = (zarray.shape[0],) + new_shape.to_tuple()
 
@@ -348,7 +347,7 @@ class ZarrStorageArray(StorageArray):
             data = data.reshape((1,) + data.shape)
         assert data.ndim == 4
 
-        self.resize(offset + Vec3Int(data.shape[1:4]), warn=True)
+        self.ensure_size(offset + Vec3Int(data.shape[1:4]), warn=True)
         zarray = self._zarray
         zarray[
             :,
