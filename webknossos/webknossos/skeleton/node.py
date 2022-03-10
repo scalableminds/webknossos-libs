@@ -28,6 +28,24 @@ class Node:
     branchpoint_time: Optional[int] = None
     _enforced_id: Optional[int] = attr.ib(None, eq=False, repr=False)
 
+    @classmethod
+    def _set_init_docstring(cls) -> None:
+        Node.__init__.__doc__ = """
+        To create a node, it is recommended to use `Graph.add_node`. That way,
+        the newly created group is automatically attached as a child to the
+        graph.
+
+        A small usage example:
+
+        ```python
+        graph = skeleton.add_graph("a graph")
+        node_1 = graph.add_node(position=(0, 0, 0), comment="node 1")
+        node_2 = graph.add_node(position=(100, 100, 100), comment="node 2")
+
+        graph.add_edge(node_1, node_2)
+        ```
+        """
+
     def __attrs_post_init__(self) -> None:
         if self._enforced_id is not None:
             self._id = self._enforced_id
@@ -40,3 +58,6 @@ class Node:
 
     def __hash__(self) -> int:
         return self._id
+
+
+Node._set_init_docstring()

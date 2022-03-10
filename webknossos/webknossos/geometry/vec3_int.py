@@ -13,6 +13,23 @@ class Vec3Int(tuple):
         y: Optional[int] = None,
         z: Optional[int] = None,
     ) -> "Vec3Int":
+        """
+        Class to represent a 3D vector. Inherits from tuple and provides useful
+        methods and operations on top.
+
+        A small usage example:
+
+        ```python
+        from webknossos import Vec3Int
+
+        vector_1 = Vec3Int(1, 2, 3)
+        vector_2 = Vec3Int.full(1)
+        assert vector_2.x == vector_2.y == vector_2.y
+
+        assert vector_1 + vector_2 == (2, 3, 4)
+        ```
+        """
+
         if isinstance(vec, Vec3Int):
             return vec
 

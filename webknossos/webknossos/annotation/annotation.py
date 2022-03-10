@@ -1,3 +1,23 @@
+"""Annotations can contain annotated data in two forms:
+  - [skeleton data](/webknossos/skeleton_annotation.html), as provided by the `Skeleton` class, and
+  - [volume annotation layers](/webknossos/volume_annotation.html) (or volume layers short),
+    which can be exported as a `SegmentationLayer`, see `export_volume_layer_to_dataset()`
+    and `temporary_volume_layer_copy()`.
+
+Usually, annotations should be created manually in the webKnossos interface and can be downloaded using
+`Annotation.download()`. The downloaded instance is not persisted to disk automatically, please use `save()`
+for this purpose. The general purpose file format is `.zip` files containing an `.nml` file with
+meta-information and the skeleton data and also containing inner `.zip` files for the volume layers.
+For skeleton-only annotations without volume layers `.nml` files can be used directly. Both formats
+are compatible with the webKnossos up- and downloads.
+
+To prepare volume annotations in the code for correction of segmentation data in the webKnossos interface,
+please use `add_volume_layer()` with the `fallback_layer` argument, referencing a segmentation layer that
+is available on webKnossos (e.g. using the `Dataset` upload before).
+Correcting segmentations using fallback layers is much more efficient, adding volume
+annotation data programmatically is discouraged therefore.
+"""
+
 import cgi
 import re
 import warnings
@@ -55,26 +75,6 @@ class _VolumeLayer:
 
 @attr.define
 class Annotation:
-    """Annotations can contain annotated data in two forms:
-      - [skeleton data](/webknossos/skeleton_annotation.html), as provided by the `Skeleton` class, and
-      - [volume annotation layers](/webknossos/volume_annotation.html) (or volume layers short),
-        which can be exported as a `SegmentationLayer`, see `export_volume_layer_to_dataset()`
-        and `temporary_volume_layer_copy()`.
-
-    Usually, annotations should be created manually in the webKnossos interface and can be downloaded using
-    `Annotation.download()`. The downloaded instance is not persisted to disk automatically, please use `save()`
-    for this purpose. The general purpose file format is `.zip` files containing an `.nml` file with
-    meta-information and the skeleton data and also containing inner `.zip` files for the volume layers.
-    For skeleton-only annotations without volume layers `.nml` files can be used directly. Both formats
-    are compatible with the webKnossos up- and downloads.
-
-    To prepare volume annotations in the code for correction of segmentation data in the webKnossos interface,
-    please use `add_volume_layer()` with the `fallback_layer` argument, referencing a segmentation layer that
-    is available on webKnossos (e.g. using the `Dataset` upload before).
-    Correcting segmentations using fallback layers is much more efficient, adding volume
-    annotation data programmatically is discouraged therefore.
-    """
-
     name: str
     skeleton: Skeleton = None  # type: ignore[assignment]
     # The following underscored attributes are just for initialization

@@ -28,6 +28,22 @@ class Group:
     _skeleton: "Skeleton" = attr.ib(eq=False, repr=False)
     _enforced_id: Optional[int] = attr.ib(None, eq=False, repr=False)
 
+    @classmethod
+    def _set_init_docstring(cls) -> None:
+        Group.__init__.__doc__ = """
+        To create a group, it is recommended to use `webknossos.skeleton.skeleton.Skeleton.add_group` or
+        `Group.add_group`. That way, the newly created group
+        is automatically attached as a child to the object the method was
+        called on.
+
+        A small usage example:
+
+        ```python
+        subgroup = group.add_group("a subgroup")
+        graph = subgroup.add_graph("a graph")
+        ```
+        """
+
     def __attrs_post_init__(self) -> None:
         if self._enforced_id is not None:
             self._id = self._enforced_id
@@ -45,6 +61,8 @@ class Group:
         color: Optional[Union[Vector4, Vector3]] = None,
         _enforced_id: Optional[int] = None,
     ) -> Graph:
+        """Adds a graph to the current group with the provided name (and color if specified)."""
+
         if color is not None and len(color) == 3:
             color = cast(Optional[Vector4], color + (1.0,))
         color = cast(Optional[Vector4], color)
@@ -61,6 +79,7 @@ class Group:
 
     @property
     def children(self) -> Iterator[GroupOrGraph]:
+        """Returns all children (groups and graphs) as an iterator."""
         return (child for child in self._children)
 
     def add_group(
@@ -68,23 +87,28 @@ class Group:
         name: str,
         _enforced_id: Optional[int] = None,
     ) -> "Group":
+        """Adds a (sub) group to the current group with the provided name."""
         new_group = Group(name, skeleton=self._skeleton, enforced_id=_enforced_id)
         self._children.add(new_group)
         return new_group
 
     def get_total_node_count(self) -> int:
+        """Returns the total number of nodes of all graphs within this group (and its subgroups)."""
         return sum(graph.number_of_nodes() for graph in self.flattened_graphs())
 
     def get_max_graph_id(self) -> int:
+        """Returns the highest graph id of all graphs within this group (and its subgroups)."""
         return max((graph.id for graph in self.flattened_graphs()), default=0)
 
     def get_max_node_id(self) -> int:
+        """Returns the highest node id of all nodes of all graphs within this group (and its subgroups)."""
         return max(
             (graph.get_max_node_id() for graph in self.flattened_graphs()),
             default=0,
         )
 
     def flattened_graphs(self) -> Generator[Graph, None, None]:
+        """Returns an iterator of all graphs within this group (and its subgroups)."""
         for child in self._children:
             if isinstance(child, Group):
                 yield from child.flattened_graphs()
@@ -92,12 +116,14 @@ class Group:
                 yield child
 
     def flattened_groups(self) -> Generator["Group", None, None]:
+        """Returns an iterator of all groups within this group (and its subgroups)."""
         for child in self._children:
             if isinstance(child, Group):
                 yield child
                 yield from child.flattened_groups()
 
     def get_node_by_id(self, node_id: int) -> "Node":
+        """Returns the node which has the specified node id."""
         for graph in self.flattened_graphs():
             if graph.has_node(node_id):
                 return graph.get_node_by_id(node_id)
@@ -105,6 +131,7 @@ class Group:
         raise ValueError("Node id not found")
 
     def get_graph_by_id(self, graph_id: int) -> Graph:
+        """Returns the graph which has the specified graph id."""
         # Todo: Use hashed access if it turns out to be worth it? pylint: disable=fixme
         for graph in self.flattened_graphs():
             if graph.id == graph_id:
@@ -112,6 +139,7 @@ class Group:
         raise ValueError(f"No graph with id {graph_id} was found")
 
     def get_group_by_id(self, group_id: int) -> "Group":
+        """Returns the group which has the specified group id."""
         # Todo: Use hashed access if it turns out to be worth it? pylint: disable=fixme
         for group in self.flattened_groups():
             if group.id == group_id:
@@ -119,6 +147,7 @@ class Group:
         raise ValueError(f"No group with id {group_id} was found")
 
     def as_nml_group(self) -> wknml.Group:
+        """Returns a named tuple representation of this group."""
         return wknml.Group(
             self.id,
             self.name,
@@ -127,3 +156,6 @@ class Group:
 
     def __hash__(self) -> int:
         return self._id
+
+
+Group._set_init_docstring()
