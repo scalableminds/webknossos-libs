@@ -10,7 +10,7 @@ def main() -> None:
     # Opening a dataset #
     #####################
 
-    dataset = wk.Dataset.open("testdata/simple_wk_dataset")
+    dataset = wk.Dataset.open("testdata/simple_wkw_dataset")
     # Assuming that the dataset has a layer "color"
     # and the layer has the magnification 1
     layer = dataset.get_layer("color")
