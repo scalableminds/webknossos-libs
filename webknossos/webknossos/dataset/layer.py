@@ -12,11 +12,6 @@ from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 
-from webknossos.dataset.storage import (
-    StorageArray,
-    StorageArrayException,
-    StorageArrayFormat,
-)
 from webknossos.geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 
 from .downsampling_utils import (
@@ -37,6 +32,7 @@ from .properties import (
     _properties_floating_type_to_python_type,
     _python_floating_type_to_properties_type,
 )
+from .storage import StorageArray, StorageArrayException, StorageArrayFormat
 from .upsampling_utils import upsample_cube_job
 
 if TYPE_CHECKING:
@@ -44,7 +40,11 @@ if TYPE_CHECKING:
 
 from webknossos.utils import get_executor_for_args, named_partial, warn_deprecated
 
-from .defaults import DEFAULT_CHUNK_SIZE, DEFAULT_CHUNKS_PER_SHARD
+from .defaults import (
+    DEFAULT_CHUNK_SIZE,
+    DEFAULT_CHUNKS_PER_SHARD,
+    DEFAULT_CHUNKS_PER_SHARD_ZARR,
+)
 from .mag_view import MagView, _find_mag_path_on_disk
 
 
@@ -145,25 +145,18 @@ def _get_sharding_parameters(
     chunks_per_shard: Optional[Union[Vec3IntLike, int]],
     block_len: Optional[int],
     file_len: Optional[int],
-    use_defaults: Optional[bool] = False,
 ) -> Tuple[Optional[Vec3Int], Optional[Vec3Int]]:
     if chunk_size is not None:
         chunk_size = Vec3Int.from_vec_or_int(chunk_size)
-    else:
-        if block_len is not None:
-            warn_deprecated("block_len", "chunk_size")
-            chunk_size = Vec3Int.full(block_len)
-        elif use_defaults:
-            chunk_size = DEFAULT_CHUNK_SIZE
+    elif block_len is not None:
+        warn_deprecated("block_len", "chunk_size")
+        chunk_size = Vec3Int.full(block_len)
 
     if chunks_per_shard is not None:
         chunks_per_shard = Vec3Int.from_vec_or_int(chunks_per_shard)
-    else:
-        if file_len is not None:
-            warn_deprecated("file_len", "chunks_per_shard")
-            chunks_per_shard = Vec3Int.full(file_len)
-        elif use_defaults:
-            chunks_per_shard = DEFAULT_CHUNKS_PER_SHARD
+    elif file_len is not None:
+        warn_deprecated("file_len", "chunks_per_shard")
+        chunks_per_shard = Vec3Int.full(file_len)
 
     return (chunk_size, chunks_per_shard)
 
@@ -330,7 +323,10 @@ class Layer:
         if chunk_size is None:
             chunk_size = DEFAULT_CHUNK_SIZE
         if chunks_per_shard is None:
-            chunks_per_shard = DEFAULT_CHUNKS_PER_SHARD
+            if self.data_format == StorageArrayFormat.Zarr:
+                chunks_per_shard = DEFAULT_CHUNKS_PER_SHARD_ZARR
+            else:
+                chunks_per_shard = DEFAULT_CHUNKS_PER_SHARD
 
         if chunk_size not in (Vec3Int.full(32), Vec3Int.full(64)):
             warnings.warn(

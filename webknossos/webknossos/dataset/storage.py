@@ -253,6 +253,10 @@ class ZarrStorageArray(StorageArray):
 
     _cached_zarray: Optional[zarr.Array]
 
+    def __init__(self, path: Path):
+        super().__init__(path)
+        self._cached_zarray = None
+
     @classmethod
     def open(cls, path: Path) -> "ZarrStorageArray":
         if (path / ".zarray").is_file():

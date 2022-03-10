@@ -6,14 +6,11 @@ import cattr
 import numpy as np
 from cattr.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 
-from webknossos.dataset.layer_categories import LayerCategoryType
-from webknossos.dataset.storage import (
-    StorageArray,
-    StorageArrayException,
-    StorageArrayFormat,
-)
 from webknossos.geometry import BoundingBox, Mag, Vec3Int
 from webknossos.utils import snake_to_camel_case
+
+from .layer_categories import LayerCategoryType
+from .storage import StorageArray, StorageArrayException, StorageArrayFormat
 
 
 def _extract_num_channels(

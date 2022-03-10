@@ -18,13 +18,14 @@ import numpy as np
 import wkw
 from cluster_tools.schedulers.cluster_executor import ClusterExecutor
 
-from webknossos.dataset.storage import StorageArray, StorageArrayInfo, WKWStorageArray
 from webknossos.geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 from webknossos.utils import get_rich_progress, wait_and_ensure_success, warn_deprecated
 
+from .storage import StorageArray, StorageArrayInfo, WKWStorageArray
+
 if TYPE_CHECKING:
-    from webknossos.dataset._utils.buffered_slice_reader import BufferedSliceReader
-    from webknossos.dataset._utils.buffered_slice_writer import BufferedSliceWriter
+    from ._utils.buffered_slice_reader import BufferedSliceReader
+    from ._utils.buffered_slice_writer import BufferedSliceWriter
 
 
 class View:

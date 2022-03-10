@@ -7,12 +7,12 @@ from typing import Callable, List, Optional, Tuple
 import numpy as np
 from scipy.ndimage import zoom
 
-from webknossos.dataset.storage import StorageArrayInfo
 from webknossos.geometry import Mag, Vec3Int, Vec3IntLike
 from webknossos.geometry.bounding_box import BoundingBox
 from webknossos.utils import time_start, time_stop
 
 from .layer_categories import LayerCategoryType
+from .storage import StorageArrayInfo
 from .view import View
 
 

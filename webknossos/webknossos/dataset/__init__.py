@@ -13,4 +13,5 @@ from .dataset import Dataset
 from .layer import Layer, SegmentationLayer
 from .layer_categories import COLOR_CATEGORY, SEGMENTATION_CATEGORY, LayerCategoryType
 from .mag_view import MagView
+from .storage import StorageArrayFormat
 from .view import View

@@ -8,11 +8,11 @@ from uuid import uuid4
 
 import numpy as np
 
-from webknossos.dataset.storage import StorageArray, StorageArrayInfo
 from webknossos.geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 from webknossos.utils import get_executor_for_args, wait_and_ensure_success
 
 from .properties import MagViewProperties
+from .storage import StorageArray, StorageArrayInfo
 
 if TYPE_CHECKING:
     from .layer import (
