@@ -28,6 +28,7 @@ from webknossos.dataset.storage import (
     StorageArray,
     StorageArrayException,
     StorageArrayFormat,
+    StorageArrayInfo,
 )
 from webknossos.geometry.vec3_int import Vec3IntLike
 
@@ -70,6 +71,17 @@ def _copy_job(args: Tuple[View, View, int]) -> None:
     (source_view, target_view, _) = args
     # Copy the data form one view to the other in a buffered fashion
     target_view.write(source_view.read())
+
+
+def _find_storage_array_info(layer_path: Path) -> Optional[StorageArrayInfo]:
+    for f in layer_path.iterdir():
+        if f.is_dir():
+            try:
+                array = StorageArray.open(f)
+                return array.info
+            except StorageArrayException:
+                pass
+    return None
 
 
 _UNSET = make_sentinel("UNSET", var_name="_UNSET")
@@ -504,16 +516,7 @@ class Dataset:
     ) -> Layer:
         assert layer_name not in self.layers, f"Layer {layer_name} already exists!"
 
-        storage_info = None
-        for f in (self.path / layer_name).iterdir():
-            if f.is_dir():
-                try:
-                    array = StorageArray.open(f)
-                    storage_info = array.info
-                    break
-                except StorageArrayException:
-                    continue
-
+        storage_info = _find_storage_array_info(self.path / layer_name)
         assert (
             storage_info is not None
         ), f"Could not find any valid mags in {self.path /layer_name}. Cannot add layer."
@@ -884,9 +887,9 @@ class Dataset:
 
         if properties_on_disk != self._last_read_properties:
             warnings.warn(
-                "[WARNING] While exporting the dataset's properties, properties were found on disk which are "+
-                "newer than the ones that were seen last time. The properties will be overwritten. This is "+
-                "likely happening because multiple processes changed the metadata of this dataset."
+                "[WARNING] While exporting the dataset's properties, properties were found on disk which are "
+                + "newer than the ones that were seen last time. The properties will be overwritten. This is "
+                + "likely happening because multiple processes changed the metadata of this dataset."
             )
 
         with open(self.path / PROPERTIES_FILE_NAME, "w", encoding="utf-8") as outfile:
