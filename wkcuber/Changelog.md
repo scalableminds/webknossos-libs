@@ -16,7 +16,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
-
+- Fixed that wkcuber.downsampling didn't support an anisotropic mag for `--from`. [#638](https://github.com/scalableminds/webknossos-libs/pull/638)
 
 ## [0.9.9](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.9) - 2022-03-03
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.8...v0.9.9)

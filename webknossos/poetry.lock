@@ -201,7 +201,7 @@ develop = true
 
 [package.dependencies]
 cloudpickle = "^2.0.0"
-kubernetes = "^21.7.0"
+kubernetes = "^23.3.0"
 
 [package.source]
 type = "directory"
@@ -496,7 +496,7 @@ python-versions = ">=3.7"
 
 [[package]]
 name = "kubernetes"
-version = "21.7.0"
+version = "23.3.0"
 description = "Kubernetes python client"
 category = "main"
 optional = false
@@ -1595,8 +1595,8 @@ kiwisolver = [
     {file = "kiwisolver-1.3.2.tar.gz", hash = "sha256:fc4453705b81d03568d5b808ad8f09c77c47534f6ac2e72e733f9ca4714aa75c"},
 ]
 kubernetes = [
-    {file = "kubernetes-21.7.0-py2.py3-none-any.whl", hash = "sha256:044c20253f8577491a87af8f9edea1f929ed6d62ce306376a6cb8aed24e572c5"},
-    {file = "kubernetes-21.7.0.tar.gz", hash = "sha256:c9849afc2eafdce60efa210049ee7a94e7ef6cf3a7afa14a69b3bf0447825977"},
+    {file = "kubernetes-23.3.0-py2.py3-none-any.whl", hash = "sha256:223ff8f0ece5bc20fb65545f09a2308c5e1e9c0be83ae68504c1b1c6baa38f5b"},
+    {file = "kubernetes-23.3.0.tar.gz", hash = "sha256:05c98e4bd92f7091fa0fa58f594490e712c9151144d5f458235663a8909e342a"},
 ]
 lazy-object-proxy = [
     {file = "lazy-object-proxy-1.6.0.tar.gz", hash = "sha256:489000d368377571c6f982fba6497f2aa13c6d1facc40660963da62f5c379726"},
