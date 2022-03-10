@@ -7,7 +7,7 @@ from io import BytesIO
 from os import PathLike
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import ((
+from typing import (
     BinaryIO,
     ContextManager,
     Dict,
