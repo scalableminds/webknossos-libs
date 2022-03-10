@@ -689,7 +689,7 @@ class Dataset:
     ) -> "Dataset":
         """
         Creates a new dataset at `new_dataset_path` and copies the data from the current dataset to `empty_target_ds`.
-        If not specified otherwise, the `scale`, `chunk_size`, `chunks_per_size` and `compress` of the current dataset are also used for the new dataset.
+        If not specified otherwise, the `scale`, `chunk_size`, `chunks_per_shard` and `compress` of the current dataset are also used for the new dataset. The method also accepts the parameters `block_len` and `file_size` which were deprecated by `chunk_size` and `chunks_per_shard`.
         """
 
         if chunk_size is not None:
