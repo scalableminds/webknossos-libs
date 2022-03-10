@@ -7,7 +7,7 @@ from io import BytesIO
 from os import PathLike
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import (
+from typing import ((
     BinaryIO,
     ContextManager,
     Dict,
@@ -600,7 +600,7 @@ class Annotation:
             )
 
         input_annotation_dataset = Dataset(
-            str(tmp_annotation_dataset_path), scale=(1, 1, 1), exist_ok=True
+            str(tmp_annotation_dataset_path), scale=self.scale, exist_ok=True
         )
 
         input_annotation_layer = self.export_volume_layer_to_dataset(
