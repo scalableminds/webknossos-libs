@@ -42,7 +42,7 @@ from .upsampling_utils import upsample_cube_job
 if TYPE_CHECKING:
     from .dataset import Dataset
 
-from webknossos.utils import get_executor_for_args, named_partial
+from webknossos.utils import get_executor_for_args, named_partial, warn_deprecated
 
 from .defaults import DEFAULT_CHUNK_SIZE, DEFAULT_CHUNKS_PER_SHARD
 from .mag_view import MagView, _find_mag_path_on_disk
@@ -138,6 +138,34 @@ def _element_class_to_dtype_per_channel(
         element_class, element_class
     )
     return _dtype_per_layer_to_dtype_per_channel(dtype_per_layer, num_channels)
+
+
+def _get_sharding_parameters(
+    chunk_size: Optional[Union[Vec3IntLike, int]],
+    chunks_per_shard: Optional[Union[Vec3IntLike, int]],
+    block_len: Optional[int],
+    file_len: Optional[int],
+    use_defaults: Optional[bool] = False,
+) -> Tuple[Optional[Vec3Int], Optional[Vec3Int]]:
+    if chunk_size is not None:
+        chunk_size = Vec3Int.from_vec_or_int(chunk_size)
+    else:
+        if block_len is not None:
+            warn_deprecated("block_len", "chunk_size")
+            chunk_size = Vec3Int.full(block_len)
+        elif use_defaults:
+            chunk_size = DEFAULT_CHUNK_SIZE
+
+    if chunks_per_shard is not None:
+        chunks_per_shard = Vec3Int.from_vec_or_int(chunks_per_shard)
+    else:
+        if file_len is not None:
+            warn_deprecated("file_len", "chunks_per_shard")
+            chunks_per_shard = Vec3Int.full(file_len)
+        elif use_defaults:
+            chunks_per_shard = DEFAULT_CHUNKS_PER_SHARD
+
+    return (chunk_size, chunks_per_shard)
 
 
 class Layer:
@@ -293,39 +321,22 @@ class Layer:
         mag = Mag(mag)
         compression_mode = compress
 
+        chunk_size, chunks_per_shard = _get_sharding_parameters(
+            chunk_size=chunk_size,
+            chunks_per_shard=chunks_per_shard,
+            block_len=block_len,
+            file_len=file_len,
+        )
         if chunk_size is None:
-            if block_len is not None:
-                warnings.warn(
-                    "[DEPRECATION] `block_len` is deprecated, please use `chunk_size` instead.",
-                    DeprecationWarning,
-                )
-                chunk_size = Vec3Int.full(block_len)
-            else:
-                chunk_size = DEFAULT_CHUNK_SIZE
-        elif isinstance(chunk_size, int):
-            chunk_size = Vec3Int.full(chunk_size)
-        else:
-            chunk_size = Vec3Int(chunk_size)
+            chunk_size = DEFAULT_CHUNK_SIZE
+        if chunks_per_shard is None:
+            chunks_per_shard = DEFAULT_CHUNKS_PER_SHARD
 
         if chunk_size not in (Vec3Int.full(32), Vec3Int.full(64)):
             warnings.warn(
                 "[INFO] `chunk_size` of `32, 32, 32` or `64, 64, 64` is recommended for optimal "
                 + f"performance in webKnossos. Got {chunk_size}."
             )
-
-        if chunks_per_shard is None:
-            if file_len is not None:
-                warnings.warn(
-                    "[DEPRECATION] `file_len` is deprecated, please use `chunks_per_shard` instead.",
-                    DeprecationWarning,
-                )
-                chunks_per_shard = Vec3Int.full(file_len)
-            else:
-                chunks_per_shard = DEFAULT_CHUNKS_PER_SHARD
-        elif isinstance(chunks_per_shard, int):
-            chunks_per_shard = Vec3Int.full(chunks_per_shard)
-        else:
-            chunks_per_shard = Vec3Int(chunks_per_shard)
 
         self._assert_mag_does_not_exist_yet(mag)
         self._create_dir_for_mag(mag)
@@ -410,29 +421,12 @@ class Layer:
         mag = Mag(mag)
         compression_mode = compress
 
-        if chunk_size is not None:
-            if isinstance(chunk_size, int):
-                chunk_size = Vec3Int.full(chunk_size)
-            else:
-                chunk_size = Vec3Int(chunk_size)
-        elif chunk_size is None and block_len is not None:
-            warnings.warn(
-                "[DEPRECATION] `block_len` is deprecated, please use `chunk_size` instead.",
-                DeprecationWarning,
-            )
-            chunk_size = Vec3Int.full(block_len)
-
-        if chunks_per_shard is not None:
-            if isinstance(chunks_per_shard, int):
-                chunks_per_shard = Vec3Int.full(chunks_per_shard)
-            else:
-                chunks_per_shard = Vec3Int(chunks_per_shard)
-        elif chunks_per_shard is None and file_len is not None:
-            warnings.warn(
-                "[DEPRECATION] `file_len` is deprecated, please use `chunks_per_shard` instead.",
-                DeprecationWarning,
-            )
-            chunks_per_shard = Vec3Int.full(file_len)
+        chunk_size, chunks_per_shard = _get_sharding_parameters(
+            chunk_size=chunk_size,
+            chunks_per_shard=chunks_per_shard,
+            block_len=block_len,
+            file_len=file_len,
+        )
 
         if mag in self._mags.keys():
             assert (

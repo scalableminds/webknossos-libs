@@ -20,7 +20,7 @@ from cluster_tools.schedulers.cluster_executor import ClusterExecutor
 
 from webknossos.dataset.storage import StorageArray, StorageArrayInfo, WKWStorageArray
 from webknossos.geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
-from webknossos.utils import get_rich_progress, wait_and_ensure_success
+from webknossos.utils import get_rich_progress, wait_and_ensure_success, warn_deprecated
 
 if TYPE_CHECKING:
     from webknossos.dataset._utils.buffered_slice_reader import BufferedSliceReader
@@ -69,10 +69,7 @@ class View:
     @property
     def header(self) -> wkw.Header:
         """⚠️ Deprecated, use `info` instead."""
-        warnings.warn(
-            "[DEPRECATION] `header` is deprecated, please use `info` instead.",
-            DeprecationWarning,
-        )
+        warn_deprecated("header", "info")
         assert isinstance(
             self._array, WKWStorageArray
         ), "`header` only works with WKW datasets."

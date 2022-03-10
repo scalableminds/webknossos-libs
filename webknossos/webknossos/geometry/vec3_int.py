@@ -44,6 +44,13 @@ class Vec3Int(tuple):
         # the tolerant (and potentially) slow Vec3Int.__new__ method.
         return tuple.__new__(Vec3Int, (x, y, z))
 
+    @staticmethod
+    def from_vec_or_int(vec_or_int: Union["Vec3IntLike", int]) -> "Vec3Int":
+        if isinstance(vec_or_int, int):
+            return Vec3Int.full(vec_or_int)
+        else:
+            return Vec3Int(vec_or_int)
+
     @property
     def x(self) -> int:
         return self[0]

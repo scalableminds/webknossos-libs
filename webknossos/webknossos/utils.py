@@ -4,6 +4,7 @@ import functools
 import json
 import logging
 import time
+import warnings
 from concurrent.futures import as_completed
 from concurrent.futures._base import Future
 from datetime import datetime
@@ -175,4 +176,11 @@ def get_rich_progress() -> Progress:
         rich.progress.TimeElapsedColumn(),
         "|",
         rich.progress.TimeRemainingColumn(),
+    )
+
+
+def warn_deprecated(deprecated_item: str, alternative_item: str) -> None:
+    warnings.warn(
+        f"[DEPRECATION] `{deprecated_item}` is deprecated, please use `{alternative_item}` instead.",
+        DeprecationWarning,
     )

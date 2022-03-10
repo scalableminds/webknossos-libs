@@ -1,11 +1,12 @@
 import itertools
-import warnings
 from os import PathLike
 from pathlib import Path
 from typing import Iterator, Optional, Set, Tuple, Union
 
 import attr
 from boltons.strutils import unit_len
+
+from webknossos.utils import warn_deprecated
 
 from .graph import Graph
 from .group import Group
@@ -67,18 +68,12 @@ class Skeleton(Group):
     @staticmethod
     def from_path(file_path: Union[PathLike, str]) -> "Skeleton":
         """Deprecated."""
-        warnings.warn(
-            "[DEPRECATION] Skeleton.from_path is deprecated, please use Skeleton.load instead.",
-            DeprecationWarning,
-        )
+        warn_deprecated("Skeleton.from_path", "Skeleton.load")
         return Skeleton.load(file_path)
 
     def write(self, out_path: PathLike) -> None:
         """Deprecated."""
-        warnings.warn(
-            "[DEPRECATION] skeleton.write is deprecated, please use skeleton.save instead.",
-            DeprecationWarning,
-        )
+        warn_deprecated("Skeleton.write", "skeleton.save")
         self.save(out_path)
 
     def __hash__(self) -> int:

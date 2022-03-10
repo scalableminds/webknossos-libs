@@ -30,7 +30,7 @@ import webknossos._nml as wknml
 from webknossos.annotation._nml_conversion import annotation_to_nml, nml_to_skeleton
 from webknossos.dataset import SEGMENTATION_CATEGORY, Dataset, Layer, SegmentationLayer
 from webknossos.skeleton import Skeleton
-from webknossos.utils import time_since_epoch_in_ms
+from webknossos.utils import time_since_epoch_in_ms, warn_deprecated
 
 Vector3 = Tuple[float, float, float]
 IntVector6 = Tuple[int, int, int, int, int, int]
@@ -600,7 +600,7 @@ class Annotation:
             )
 
         input_annotation_dataset = Dataset(
-            str(tmp_annotation_dataset_path), scale=(1, 1, 1), exist_ok=True
+            str(tmp_annotation_dataset_path), scale=self.scale, exist_ok=True
         )
 
         input_annotation_layer = self.export_volume_layer_to_dataset(
@@ -664,15 +664,11 @@ _ANNOTATION_URL_REGEX = re.compile(
 def open_annotation(annotation_path: Union[str, PathLike]) -> "Annotation":
     """Deprecated."""
     if Path(annotation_path).exists():
-        warnings.warn(
-            "[DEPRECATION] open_annotation is deprecated, please use Annotation.load instead."
-        )
+        warn_deprecated("open_annotation", "Annotation.load")
         return Annotation.load(annotation_path)
     else:
         assert isinstance(
             annotation_path, str
         ), f"Called open_annotation with a path-like, but {annotation_path} does not exist."
-        warnings.warn(
-            "[DEPRECATION] open_annotation is deprecated, please use Annotation.download instead."
-        )
+        warn_deprecated("open_annotation", "Annotation.download")
         return Annotation.download(annotation_path)

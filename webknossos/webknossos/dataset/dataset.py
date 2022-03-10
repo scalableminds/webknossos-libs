@@ -29,7 +29,7 @@ from webknossos.dataset.storage import (
     StorageArrayException,
     StorageArrayFormat,
 )
-from webknossos.geometry.vec3_int import Vec3Int, Vec3IntLike
+from webknossos.geometry.vec3_int import Vec3IntLike
 
 if TYPE_CHECKING:
     from webknossos.client._upload_dataset import LayerToLink
@@ -45,6 +45,7 @@ from .layer import (
     SegmentationLayer,
     _dtype_per_channel_to_element_class,
     _dtype_per_layer_to_dtype_per_channel,
+    _get_sharding_parameters,
     _normalize_dtype_per_channel,
     _normalize_dtype_per_layer,
 )
@@ -702,32 +703,17 @@ class Dataset:
     ) -> "Dataset":
         """
         Creates a new dataset at `new_dataset_path` and copies the data from the current dataset to `empty_target_ds`.
-        If not specified otherwise, the `scale`, `chunk_size`, `chunks_per_shard` and `compress` of the current dataset are also used for the new dataset. The method also accepts the parameters `block_len` and `file_size` which were deprecated by `chunk_size` and `chunks_per_shard`.
+        If not specified otherwise, the `scale`, `chunk_size`, `chunks_per_shard` and `compress` of the current dataset
+        are also used for the new dataset. The method also accepts the parameters `block_len` and `file_size`,
+        which were deprecated by `chunk_size` and `chunks_per_shard`.
         """
 
-        if chunk_size is not None:
-            if isinstance(chunk_size, int):
-                chunk_size = Vec3Int.full(chunk_size)
-            else:
-                chunk_size = Vec3Int(chunk_size)
-        elif block_len is not None:
-            warnings.warn(
-                "[DEPRECATION] `block_len` is deprecated, please use `chunk_size` instead.",
-                DeprecationWarning,
-            )
-            chunk_size = Vec3Int.full(block_len)
-
-        if chunks_per_shard is not None:
-            if isinstance(chunks_per_shard, int):
-                chunks_per_shard = Vec3Int.full(chunks_per_shard)
-            else:
-                chunks_per_shard = Vec3Int(chunks_per_shard)
-        elif file_len is not None:
-            warnings.warn(
-                "[DEPRECATION] `file_len` is deprecated, please use `chunks_per_shard` instead.",
-                DeprecationWarning,
-            )
-            chunks_per_shard = Vec3Int.full(file_len)
+        chunk_size, chunks_per_shard = _get_sharding_parameters(
+            chunk_size=chunk_size,
+            chunks_per_shard=chunks_per_shard,
+            block_len=block_len,
+            file_len=file_len,
+        )
 
         new_dataset_path = Path(new_dataset_path)
         if scale is None:
@@ -898,7 +884,9 @@ class Dataset:
 
         if properties_on_disk != self._last_read_properties:
             warnings.warn(
-                "[WARNING] While exporting the dataset's properties, properties were found on disk which are newer than the ones that were seen last time. The properties will be overwritten. This is likely happening because multiple processes changed the metadata of this dataset."
+                "[WARNING] While exporting the dataset's properties, properties were found on disk which are "+
+                "newer than the ones that were seen last time. The properties will be overwritten. This is "+
+                "likely happening because multiple processes changed the metadata of this dataset."
             )
 
         with open(self.path / PROPERTIES_FILE_NAME, "w", encoding="utf-8") as outfile:

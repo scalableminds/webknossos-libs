@@ -327,12 +327,19 @@ class ZarrStorageArray(StorageArray):
             max(zarray.shape[2], new_shape.y),
             max(zarray.shape[3], new_shape.z),
         )
-        # TODO: Re-open zarray to check for in-between changes
         if new_shape_tuple != zarray.shape:
             if align_with_shards:
                 shard_size = self.info.shard_size
                 new_shape = new_shape.ceildiv(shard_size) * shard_size
                 new_shape_tuple = (zarray.shape[0],) + new_shape.to_tuple()
+
+            # Check on-disk for changes to shape
+            current_zarray = zarr.open_array(store=self._path, mode="r")
+            if zarray.shape != current_zarray.shape:
+                warnings.warn(
+                    f"[WARNING] While resizing the Zarr storage array at {self._path}, a differing shape ({zarray.shape} != {current_zarray.shape}) was found in the currently persisted metadata."
+                    + "This is likely happening because multiple processes changed the metadata of this storage array."
+                )
 
             if warn:
                 warnings.warn(
