@@ -34,7 +34,6 @@ from webknossos.skeleton import Skeleton
 from webknossos.utils import time_since_epoch_in_ms
 
 Vector3 = Tuple[float, float, float]
-IntVector6 = Tuple[int, int, int, int, int, int]
 
 
 MAG_RE = r"((\d+-\d+-)?\d+)"

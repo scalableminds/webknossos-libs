@@ -11,7 +11,6 @@ from .graph import Graph
 from .group import Group
 
 Vector3 = Tuple[float, float, float]
-IntVector6 = Tuple[int, int, int, int, int, int]
 
 GroupOrGraph = Union[Group, Graph]
 

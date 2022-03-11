@@ -17,7 +17,8 @@ class BoundingBox:
     bottomright: Vec3Int = attr.field(init=False)
     name: Optional[str] = attr.field(default="Unnamed Bounding Box")
     is_visible: bool = attr.field(default=True)
-    # _id: Optional[str] = attr.field()
+    id: Optional[str] = attr.field(default=None)
+    color: Optional[Tuple[float, float, float, float]] = attr.field(default=None)
 
     def __attrs_post_init__(self) -> None:
         if not self.size.is_positive():
