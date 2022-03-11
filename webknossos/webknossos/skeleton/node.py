@@ -2,22 +2,24 @@ from typing import TYPE_CHECKING, Optional, Tuple
 
 import attr
 
+from webknossos.geometry import Vec3Int
+
 if TYPE_CHECKING:
     from webknossos.skeleton import Skeleton
 
-Vector3 = Tuple[float, float, float]
+Vec3Float = Tuple[float, float, float]
 
 
 # Defining an order on nodes is necessary to allow to sort them,
 # which is used in the graph's equality check, see Graph.__eq__().
 @attr.define(order=True)
 class Node:
-    position: Vector3
+    position: Vec3Int
     _skeleton: "Skeleton" = attr.ib(eq=False, repr=False, order=False)
     _id: int = attr.ib(init=False)
     comment: Optional[str] = None
     radius: Optional[float] = None
-    rotation: Optional[Vector3] = None
+    rotation: Optional[Vec3Float] = None
     inVp: Optional[int] = None
     inMag: Optional[int] = None
     bitDepth: Optional[int] = None
