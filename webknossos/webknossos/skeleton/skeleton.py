@@ -32,6 +32,7 @@ class Skeleton(Group):
     # from Group parent to support mypy:
     _enforced_id: Optional[int] = attr.field(default=None, eq=False, repr=False)
     name: str = attr.field(default="Root", init=False, eq=False, repr=False)
+
     """Should not be used with `Skeleton`, this attribute is only useful for sub-groups. Set to `Root`."""
     _children: Set[GroupOrGraph] = attr.ib(
         factory=set,

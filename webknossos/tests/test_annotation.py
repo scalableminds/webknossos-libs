@@ -1,7 +1,7 @@
 import pytest
 
 import webknossos as wk
-from webknossos.geometry import Vec3Int
+from webknossos.geometry import BoundingBox, Vec3Int
 
 from .constants import TESTDATA_DIR, TESTOUTPUT_DIR
 
@@ -141,3 +141,21 @@ def test_annotation_from_url() -> None:
     annotation = wk.Annotation.load(TESTOUTPUT_DIR / "test_dummy_downloaded.zip")
     assert annotation.dataset_name == "l4dense_motta_et_al_demo_v2"
     assert len(list(annotation.skeleton.flattened_graphs())) == 1
+
+
+def test_reading_bounding_boxes() -> None:
+    input_path = TESTDATA_DIR / "annotations" / "bounding-boxes-example.zip"
+
+    annotation = wk.Annotation.load(input_path)
+
+    assert len(annotation.user_bounding_boxes) == 2
+    assert annotation.user_bounding_boxes[0].topleft.x == 2371
+    assert annotation.user_bounding_boxes[0].name == "Bounding box 1"
+    assert annotation.user_bounding_boxes[0].is_visible
+
+    assert annotation.user_bounding_boxes[1] == BoundingBox(
+        (2371, 4063, 1676), (891, 579, 232)
+    )
+    assert annotation.user_bounding_boxes[1].name == "Bounding box 2"
+    assert not annotation.user_bounding_boxes[1].is_visible
+    # assert annotation.user_bounding_boxes[0]._id == 1
