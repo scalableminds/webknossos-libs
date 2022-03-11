@@ -106,7 +106,7 @@ class Skeleton(Group):
         return Skeleton.load(file_path)
 
     def write(self, out_path: PathLike) -> None:
-        """Deprecated. Skeleton.save"""
+        """Deprecated. Use Skeleton.save instead."""
         warnings.warn(
             "[DEPRECATION] skeleton.write is deprecated, please use Skeleton.save instead.",
             DeprecationWarning,

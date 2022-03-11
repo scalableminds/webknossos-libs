@@ -13,7 +13,7 @@ from .vec3_int import Vec3Int, Vec3IntLike
 @attr.frozen
 class BoundingBox:
     """
-    This classed is used to represent a cuboid in 3D.
+    This class is used to represent a cuboid in 3D.
     The top-left coordinate is inclusive and the bottom-right coordinate is exclusive.
 
     A small usage example:
