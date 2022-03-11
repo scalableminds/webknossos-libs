@@ -79,8 +79,20 @@ class Group:
 
     @property
     def children(self) -> Iterator[GroupOrGraph]:
-        """Returns all children (groups and graphs) as an iterator."""
+        """Returns all (immediate) children (groups and graphs) as an iterator."""
         return (child for child in self._children)
+
+    @property
+    def graphs(self) -> Iterator[GroupOrGraph]:
+        """Returns all (immediate) graph children as an iterator.
+        Use flattened_graphs if you need also need graphs within subgroups."""
+        return (child for child in self._children if isinstance(child, Graph))
+
+    @property
+    def groups(self) -> Iterator[GroupOrGraph]:
+        """Returns all (immediate) group children as an iterator.
+        Use flattened_groups if you need also need groups within subgroups."""
+        return (child for child in self._children if isinstance(child, Group))
 
     def add_group(
         self,
