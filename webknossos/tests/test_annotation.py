@@ -147,7 +147,7 @@ def test_annotation_from_url() -> None:
 
 
 def test_reading_bounding_boxes() -> None:
-    def check_properties(annotation):
+    def check_properties(annotation) -> None:
         assert len(annotation.user_bounding_boxes) == 2
         assert annotation.user_bounding_boxes[0].topleft.x == 2371
         assert annotation.user_bounding_boxes[0].name == "Bounding box 1"
