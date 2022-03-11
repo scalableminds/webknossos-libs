@@ -162,6 +162,33 @@ def test_create_dataset_with_layer_and_mag(array_format: StorageArrayFormat) -> 
         TESTOUTPUT_DIR / f"{array_format.value}_dataset" / "color" / "2-2-1"
     ).exists()
 
+    if array_format == StorageArrayFormat.WKW:
+        assert (
+            TESTOUTPUT_DIR
+            / f"{array_format.value}_dataset"
+            / "color"
+            / "1"
+            / "header.wkw"
+        ).exists()
+        assert (
+            TESTOUTPUT_DIR
+            / f"{array_format.value}_dataset"
+            / "color"
+            / "2-2-1"
+            / "header.wkw"
+        ).exists()
+    elif array_format == StorageArrayFormat.Zarr:
+        assert (
+            TESTOUTPUT_DIR / f"{array_format.value}_dataset" / "color" / "1" / ".zarray"
+        ).exists()
+        assert (
+            TESTOUTPUT_DIR
+            / f"{array_format.value}_dataset"
+            / "color"
+            / "2-2-1"
+            / ".zarray"
+        ).exists()
+
     assert len(ds.layers) == 1
     assert len(ds.get_layer("color").mags) == 2
 
@@ -209,6 +236,7 @@ def test_open_dataset(array_format: StorageArrayFormat) -> None:
 
     assert len(ds.layers) == 1
     assert len(ds.get_layer("color").mags) == 1
+    assert ds.get_layer("color").data_format == array_format
 
 
 @pytest.mark.parametrize("array_format", STORAGE_ARRAY_FORMATS)
@@ -255,6 +283,7 @@ def test_view_read(array_format: StorageArrayFormat) -> None:
     # 'read()' checks if it was already opened. If not, it opens it automatically
     data = wk_view.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))
     assert data.shape == (3, 10, 10, 10)  # three channel
+    assert wk_view.info.array_format == array_format
 
 
 @pytest.mark.parametrize("array_format", STORAGE_ARRAY_FORMATS)
@@ -272,6 +301,8 @@ def test_view_write(array_format: StorageArrayFormat) -> None:
         .get_view(absolute_offset=(0, 0, 0), size=(16, 16, 16))
     )
 
+    assert wk_view.info.array_format == array_format
+
     np.random.seed(1234)
     write_data = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
 
@@ -281,11 +312,14 @@ def test_view_write(array_format: StorageArrayFormat) -> None:
     assert np.array_equal(data, write_data)
 
 
-def test_view_write_out_of_bounds() -> None:
-    new_dataset_path = TESTOUTPUT_DIR / "wkw_view_dataset_out_of_bounds"
+@pytest.mark.parametrize("array_format", STORAGE_ARRAY_FORMATS)
+def test_view_write_out_of_bounds(array_format: StorageArrayFormat) -> None:
+    new_dataset_path = (
+        TESTOUTPUT_DIR / f"{array_format.value}_view_dataset_out_of_bounds"
+    )
 
     delete_dir(new_dataset_path)
-    copytree(TESTDATA_DIR / "simple_wkw_dataset", new_dataset_path)
+    copytree(TESTDATA_DIR / f"simple_{array_format.value}_dataset", new_dataset_path)
 
     view = (
         Dataset.open(new_dataset_path)
@@ -312,6 +346,8 @@ def test_mag_view_write_out_of_bounds(array_format: StorageArrayFormat) -> None:
     ds = Dataset.open(new_dataset_path)
     mag_view = ds.get_layer("color").get_mag("1")
 
+    assert mag_view.info.array_format == array_format
+
     assert tuple(ds.get_layer("color").bounding_box.size) == (24, 24, 24)
     mag_view.write(
         np.zeros((3, 1, 1, 48), dtype=np.uint8)
@@ -321,11 +357,14 @@ def test_mag_view_write_out_of_bounds(array_format: StorageArrayFormat) -> None:
     assure_exported_properties(ds)
 
 
-def test_mag_view_write_out_of_bounds_mag2() -> None:
-    new_dataset_path = TESTOUTPUT_DIR / "simple_wkw_dataset_out_of_bounds"
+@pytest.mark.parametrize("array_format", STORAGE_ARRAY_FORMATS)
+def test_mag_view_write_out_of_bounds_mag2(array_format: StorageArrayFormat) -> None:
+    new_dataset_path = (
+        TESTOUTPUT_DIR / f"simple_{array_format.value}_dataset_out_of_bounds"
+    )
 
     delete_dir(new_dataset_path)
-    copytree(TESTDATA_DIR / "simple_wkw_dataset", new_dataset_path)
+    copytree(TESTDATA_DIR / f"simple_{array_format.value}_dataset", new_dataset_path)
 
     ds = Dataset.open(new_dataset_path)
     color_layer = ds.get_layer("color")
@@ -342,10 +381,11 @@ def test_mag_view_write_out_of_bounds_mag2() -> None:
     assure_exported_properties(ds)
 
 
-def test_update_new_bounding_box_offset() -> None:
-    delete_dir(TESTOUTPUT_DIR / "wkw_dataset")
+@pytest.mark.parametrize("array_format", STORAGE_ARRAY_FORMATS)
+def test_update_new_bounding_box_offset(array_format: StorageArrayFormat) -> None:
+    delete_dir(TESTOUTPUT_DIR / f"{array_format.value}_dataset")
 
-    ds = Dataset(TESTOUTPUT_DIR / "wkw_dataset", scale=(1, 1, 1))
+    ds = Dataset(TESTOUTPUT_DIR / f"{array_format.value}_dataset", scale=(1, 1, 1))
     color_layer = ds.add_layer("color", COLOR_CATEGORY)
     mag = color_layer.add_mag("1")
 
@@ -418,7 +458,7 @@ def test_empty_read(array_format: StorageArrayFormat) -> None:
 
     mag = (
         Dataset(filename, scale=(1, 1, 1))
-        .add_layer("color", COLOR_CATEGORY, data_format=array_format)
+        .add_layer("color", category=COLOR_CATEGORY, data_format=array_format)
         .add_mag("1")
     )
     with pytest.raises(AssertionError):
@@ -433,7 +473,9 @@ def test_read_padded_data(array_format: StorageArrayFormat) -> None:
 
     mag = (
         Dataset(filename, scale=(1, 1, 1))
-        .add_layer("color", COLOR_CATEGORY, num_channels=3, data_format=array_format)
+        .add_layer(
+            "color", category=COLOR_CATEGORY, num_channels=3, data_format=array_format
+        )
         .add_mag("1")
     )
     # there is no data yet, however, this should not fail but pad the data with zeros
@@ -443,11 +485,14 @@ def test_read_padded_data(array_format: StorageArrayFormat) -> None:
     assert np.array_equal(data, np.zeros((3, 10, 10, 10)))
 
 
-def test_num_channel_mismatch_assertion() -> None:
-    delete_dir(TESTOUTPUT_DIR / "wkw_dataset")
+@pytest.mark.parametrize("array_format", STORAGE_ARRAY_FORMATS)
+def test_num_channel_mismatch_assertion(array_format: StorageArrayFormat) -> None:
+    delete_dir(TESTOUTPUT_DIR / f"{array_format.value}_dataset")
 
-    ds = Dataset(TESTOUTPUT_DIR / "wkw_dataset", scale=(1, 1, 1))
-    mag = ds.add_layer("color", COLOR_CATEGORY, num_channels=1).add_mag(
+    ds = Dataset(TESTOUTPUT_DIR / f"{array_format.value}_dataset", scale=(1, 1, 1))
+    mag = ds.add_layer(
+        "color", category=COLOR_CATEGORY, num_channels=1, data_format=array_format
+    ).add_mag(
         "1"
     )  # num_channel=1 is also the default
 
@@ -471,24 +516,26 @@ def test_get_or_add_layer(array_format: StorageArrayFormat) -> None:
     # layer did not exist before
     layer = ds.get_or_add_layer(
         "color",
-        COLOR_CATEGORY,
+        category=COLOR_CATEGORY,
         dtype_per_layer="uint8",
         num_channels=1,
         data_format=array_format,
     )
     assert "color" in ds.layers.keys()
     assert layer.name == "color"
+    assert layer.data_format == array_format
 
     # layer did exist before
     layer = ds.get_or_add_layer(
         "color",
-        COLOR_CATEGORY,
+        category=COLOR_CATEGORY,
         dtype_per_layer="uint8",
         num_channels=1,
         data_format=array_format,
     )
     assert "color" in ds.layers.keys()
     assert layer.name == "color"
+    assert layer.data_format == array_format
 
     with pytest.raises(AssertionError):
         # The layer "color" did exist before but with another 'dtype_per_layer' (this would work the same for 'category' and 'num_channels')
@@ -517,12 +564,16 @@ def test_get_or_add_layer_idempotence(array_format: StorageArrayFormat) -> None:
     assure_exported_properties(ds)
 
 
-def test_get_or_add_mag() -> None:
-    delete_dir(TESTOUTPUT_DIR / "wkw_dataset")
+@pytest.mark.parametrize("array_format", STORAGE_ARRAY_FORMATS)
+def test_get_or_add_mag(array_format: StorageArrayFormat) -> None:
+    delete_dir(TESTOUTPUT_DIR / f"{array_format.value}_dataset")
 
-    layer = Dataset(TESTOUTPUT_DIR / "wkw_dataset", scale=(1, 1, 1)).add_layer(
-        "color", COLOR_CATEGORY
+    chunks_per_shard = (
+        Vec3Int.full(1) if array_format == StorageArrayFormat.Zarr else Vec3Int.full(32)
     )
+    layer = Dataset(
+        TESTOUTPUT_DIR / f"{array_format.value}_dataset", scale=(1, 1, 1)
+    ).add_layer("color", category=COLOR_CATEGORY, data_format=array_format)
 
     assert Mag(1) not in layer.mags.keys()
 
@@ -530,28 +581,30 @@ def test_get_or_add_mag() -> None:
     mag = layer.get_or_add_mag(
         "1",
         chunk_size=Vec3Int.full(32),
-        chunks_per_shard=Vec3Int.full(32),
+        chunks_per_shard=chunks_per_shard,
         compress=False,
     )
     assert Mag(1) in layer.mags.keys()
     assert mag.name == "1"
+    assert mag.info.array_format == array_format
 
     # The mag did exist before
     layer.get_or_add_mag(
         "1",
         chunk_size=Vec3Int.full(32),
-        chunks_per_shard=Vec3Int.full(32),
+        chunks_per_shard=chunks_per_shard,
         compress=False,
     )
     assert Mag(1) in layer.mags.keys()
     assert mag.name == "1"
+    assert mag.info.array_format == array_format
 
     with pytest.raises(AssertionError):
         # The mag "1" did exist before but with another 'chunk_size' (this would work the same for 'chunks_per_shard' and 'compression')
         layer.get_or_add_mag(
             "1",
             chunk_size=Vec3Int.full(64),
-            chunks_per_shard=Vec3Int.full(32),
+            chunks_per_shard=chunks_per_shard,
             compress=False,
         )
 
@@ -1506,6 +1559,11 @@ def test_dataset_conversion_from_wkw_to_zarr() -> None:
         input_ds.get_layer("color").get_mag("1").read()
         == converted_ds.get_layer("color").get_mag("1").read()
     )
+    assert converted_ds.get_layer("color").data_format == StorageArrayFormat.Zarr
+    assert (
+        converted_ds.get_layer("color").get_mag("1").info.array_format
+        == StorageArrayFormat.Zarr
+    )
 
     assure_exported_properties(converted_ds)
 
@@ -1692,6 +1750,7 @@ def test_compression(tmp_path: Path, array_format: StorageArrayFormat) -> None:
     assert not mag1._is_compressed()
     mag1.compress()
     assert mag1._is_compressed()
+    assert mag1.info.array_format == array_format
 
     assert np.array_equal(
         write_data, mag1.read(absolute_offset=(60, 80, 100), size=(10, 20, 30))
@@ -1959,6 +2018,7 @@ def test_rename_layer(tmp_path: Path, array_format: StorageArrayFormat) -> None:
     assert len([l for l in ds._properties.data_layers if l.name == "color2"]) == 1
     assert "color2" in ds.layers.keys()
     assert "color" not in ds.layers.keys()
+    assert ds.get_layer("color2").data_format == array_format
 
     # The "mag" object which was created before renaming the layer is still valid
     assert np.array_equal(mag.read()[0], write_data)
@@ -2066,9 +2126,7 @@ def test_add_layer_like(tmp_path: Path) -> None:
 def test_pickle_view(tmp_path: Path) -> None:
     ds = Dataset(tmp_path / "ds", scale=(1, 1, 1))
     mag1 = ds.add_layer("color", COLOR_CATEGORY).add_mag(1)
-    del mag1._array
 
-    assert mag1._cached_array is None
     data_to_write = (np.random.rand(1, 10, 10, 10) * 255).astype(np.uint8)
     mag1.write(data_to_write)
     assert mag1._cached_array is not None
