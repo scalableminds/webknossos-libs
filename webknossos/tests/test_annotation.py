@@ -1,6 +1,7 @@
-import pytest
 import tempfile
 from pathlib import Path
+
+import pytest
 
 import webknossos as wk
 from webknossos.geometry import BoundingBox, Vec3Int
