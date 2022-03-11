@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional, Tuple, Union
 import networkx as nx
 import numpy as np
 
-from webknossos.geometry import Vec3Int
+from webknossos.geometry import Vec3Int, Vec3IntLike
 
 from .node import Node
 
@@ -182,7 +182,7 @@ class Graph(nx.Graph):
 
     def add_node(  # pylint: disable=arguments-differ
         self,
-        position: Vec3Int,
+        position: Vec3IntLike,
         comment: Optional[str] = None,
         radius: Optional[float] = None,
         rotation: Optional[Vector3] = None,
@@ -202,7 +202,7 @@ class Graph(nx.Graph):
         webKnossos UI.
         """
         node = Node(
-            position=position,
+            position=Vec3Int(position),
             comment=comment,
             radius=radius,
             rotation=rotation,
