@@ -1,15 +1,14 @@
 import tempfile
 from pathlib import Path
 from typing import Tuple, cast
-from webknossos.geometry import Vec3Int
 
+import numpy as np
+from webknossos.geometry import Vec3Int
 from wkcuber.api.dataset import Dataset
 from wkcuber.api.layer_categories import COLOR_CATEGORY
 from wkcuber.downsampling_utils import SamplingModes
-from wkcuber.upsampling_utils import upsample_cube, upsample_cube_job
 from wkcuber.mag import Mag
-import numpy as np
-
+from wkcuber.upsampling_utils import upsample_cube, upsample_cube_job
 
 WKW_CUBE_SIZE = 1024
 BUFFER_SHAPE = Vec3Int.full(256)
@@ -60,8 +59,8 @@ def upsample_test_helper(use_compress: bool) -> None:
         target_offset = cast(
             Tuple[int, int, int], tuple([o * 2 for o in source_offset])
         )
-        source_size = BUFFER_SHAPE.to_tuple()
-        target_size = (BUFFER_SHAPE * Vec3Int(2, 2, 1)).to_tuple()
+        source_size = BUFFER_SHAPE
+        target_size = BUFFER_SHAPE * Vec3Int(2, 2, 1)
 
         mag2.write(
             offset=source_offset,

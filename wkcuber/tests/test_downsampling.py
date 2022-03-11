@@ -4,21 +4,21 @@ from typing import Tuple
 
 import numpy as np
 import pytest
-
+from webknossos.geometry import Mag, Vec3Int
 from wkcuber.api.dataset import Dataset
-from wkcuber.downsampling_utils import SamplingModes
 from wkcuber.api.layer_categories import COLOR_CATEGORY
 from wkcuber.downsampling_utils import (
     InterpolationModes,
-    downsample_cube,
-    downsample_cube_job,
+    SamplingModes,
+    _mode,
     calculate_default_max_mag,
     calculate_mags_to_downsample,
     calculate_mags_to_upsample,
+    downsample_cube,
+    downsample_cube_job,
+    non_linear_filter_3d,
 )
-from webknossos.geometry import Mag, Vec3Int
 from wkcuber.utils import WkwDatasetInfo, open_wkw
-from wkcuber.downsampling_utils import _mode, non_linear_filter_3d
 
 BUFFER_SHAPE = Vec3Int.full(256)
 
@@ -34,7 +34,7 @@ def read_wkw(
 
 
 def test_downsample_cube() -> None:
-    buffer = np.zeros(BUFFER_SHAPE.to_tuple(), dtype=np.uint8)
+    buffer = np.zeros(BUFFER_SHAPE, dtype=np.uint8)
     buffer[:, :, :] = np.arange(0, BUFFER_SHAPE.x)
 
     output = downsample_cube(buffer, [2, 2, 2], InterpolationModes.MODE)
