@@ -1,3 +1,4 @@
+from math import floor
 from operator import add, floordiv, mod, mul, sub
 from typing import Any, Callable, Iterable, List, Optional, Tuple, Union, cast
 
@@ -60,6 +61,11 @@ class Vec3Int(tuple):
         # By calling __new__ of tuple directly, we circumvent
         # the tolerant (and potentially) slow Vec3Int.__new__ method.
         return tuple.__new__(Vec3Int, (x, y, z))
+
+    @staticmethod
+    def from_vec3_float(vec: Tuple[float, float, float]) -> "Vec3Int":
+
+        return Vec3Int(floor(vec[0]), floor(vec[1]), floor(vec[2]))
 
     @property
     def x(self) -> int:

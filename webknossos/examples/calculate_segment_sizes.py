@@ -1,5 +1,6 @@
-import webknossos as wk
 import numpy as np
+
+import webknossos as wk
 
 ANNOTATION_URL = (
     "https://webknossos.org/annotations/Explorational/622b130a010000220122ebd1"

@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional, Tuple, Union
 import networkx as nx
 import numpy as np
 
+from webknossos.geometry import Vec3Int
+
 from .node import Node
 
 if TYPE_CHECKING:
@@ -180,7 +182,7 @@ class Graph(nx.Graph):
 
     def add_node(  # pylint: disable=arguments-differ
         self,
-        position: Vector3,
+        position: Vec3Int,
         comment: Optional[str] = None,
         radius: Optional[float] = None,
         rotation: Optional[Vector3] = None,
