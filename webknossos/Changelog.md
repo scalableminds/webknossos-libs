@@ -13,8 +13,10 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.9...HEAD)
 
 ### Breaking Changes
+- The annotation class now exposes bounding objects instead of tuples. [#646](https://github.com/scalableminds/webknossos-libs/pull/646)
 
 ### Added
+- The bounding box class now supports the following additional properties: `id`, `name`, `is_visible` and `color'. [#646](https://github.com/scalableminds/webknossos-libs/pull/646)
 
 ### Changed
 - Dataset: Moved the deprecation warning from `get_color_layers()` to the actually deprecated method `get_color_layer()`.
