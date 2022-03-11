@@ -38,7 +38,7 @@ def pairs_within_distance(
 def main() -> None:
     nml = wk.Skeleton.load("testdata/nmls/nml_with_small_distance_nodes.nml")
 
-    synapse_candidate_max_distance = 0.5  # in nm
+    synapse_candidate_max_distance = 150  # in nm
 
     input_graphs = list(nml.flattened_graphs())
     synapse_parent_group = nml.add_group("all synapse candidates")
@@ -55,7 +55,7 @@ def main() -> None:
             positions_a, positions_b, synapse_candidate_max_distance
         ):
             synapse_graph.add_node(
-                position=(partner_a + partner_b) / nml.scale / 2,
+                position=np.round((partner_a + partner_b) / nml.scale / 2),
                 comment=f"{tree_a.name} ({tree_a.id}) <-> {tree_b.name} ({tree_b.id})",
             )
 
