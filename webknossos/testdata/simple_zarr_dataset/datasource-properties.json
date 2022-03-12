@@ -20,9 +20,9 @@
         "height": 24,
         "depth": 24
       },
-      "resolutions": [
+      "mags": [
         {
-          "resolution": [1, 1, 1]
+          "mag": [1, 1, 1]
         }
       ],
       "defaultViewConfiguration": {

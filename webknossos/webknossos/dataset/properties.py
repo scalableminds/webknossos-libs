@@ -7,7 +7,7 @@ import numpy as np
 from cattr.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 
 from webknossos.geometry import BoundingBox, Mag, Vec3Int
-from webknossos.utils import snake_to_camel_case
+from webknossos.utils import snake_to_camel_case, warn_deprecated
 
 from .layer_categories import LayerCategoryType
 from .storage import StorageArray, StorageArrayException, StorageArrayFormat
@@ -100,8 +100,13 @@ class LayerViewConfiguration:
 
 @attr.define
 class MagViewProperties:
-    resolution: Mag
+    mag: Mag
     cube_length: Optional[int] = None
+
+    @property
+    def resolution(self) -> Mag:
+        warn_deprecated("resolution", "mag")
+        return self.mag
 
 
 @attr.define
@@ -111,9 +116,14 @@ class LayerProperties:
     bounding_box: BoundingBox
     element_class: str
     data_format: StorageArrayFormat
-    resolutions: List[MagViewProperties]
+    mags: List[MagViewProperties]
     num_channels: Optional[int] = None
     default_view_configuration: Optional[LayerViewConfiguration] = None
+
+    @property
+    def resolutions(self) -> List[MagViewProperties]:
+        warn_deprecated("resolutions", "mags")
+        return self.mags
 
 
 @attr.define
@@ -201,6 +211,18 @@ for cls in [
 
 # The serialization of `LayerProperties` differs slightly based on whether it is a `wkw` or `zarr` layer.
 # These post-unstructure and pre-structure functions perform the conditional field renames.
+def mag_view_properties_post_structure(d: Dict[str, Any]) -> Dict[str, Any]:
+    d["resolution"] = d["mag"]
+    del d["mag"]
+    return d
+
+
+def mag_view_properties_pre_unstructure(d: Dict[str, Any]) -> Dict[str, Any]:
+    d["mag"] = d["resolution"]
+    del d["resolution"]
+    return d
+
+
 def layer_properties_post_unstructure(
     converter_fn: Callable[
         [Union[LayerProperties, SegmentationLayerProperties]], Dict[str, Any]
@@ -211,8 +233,10 @@ def layer_properties_post_unstructure(
     ) -> Dict[str, Any]:
         d = converter_fn(obj)
         if d["dataFormat"] == "wkw":
-            d["wkwResolutions"] = d["resolutions"]
-            del d["resolutions"]
+            d["wkwResolutions"] = [
+                mag_view_properties_post_structure(m) for m in d["mags"]
+            ]
+            del d["mags"]
         return d
 
     return __layer_properties_post_unstructure
@@ -231,7 +255,9 @@ def layer_properties_pre_structure(
         _type: Type[Union[LayerProperties, SegmentationLayerProperties]],
     ) -> Union[LayerProperties, SegmentationLayerProperties]:
         if d["dataFormat"] == "wkw":
-            d["resolutions"] = d["wkwResolutions"]
+            d["mags"] = [
+                mag_view_properties_pre_unstructure(m) for m in d["wkwResolutions"]
+            ]
             del d["wkwResolutions"]
         obj = converter_fn(d)
         return obj

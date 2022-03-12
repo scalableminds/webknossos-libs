@@ -340,8 +340,8 @@ class MagView(View):
     def _properties(self) -> MagViewProperties:
         return next(
             mag_property
-            for mag_property in self.layer._properties.resolutions
-            if mag_property.resolution == self._mag
+            for mag_property in self.layer._properties.mags
+            if mag_property.mag == self._mag
         )
 
     def __repr__(self) -> str:

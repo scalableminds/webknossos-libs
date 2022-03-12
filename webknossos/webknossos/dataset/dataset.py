@@ -176,8 +176,8 @@ class Dataset:
                 layer_properties.num_channels,
                 Path(dataset_path),
                 layer_properties.name,
-                layer_properties.resolutions[0].resolution
-                if len(layer_properties.resolutions) > 0
+                layer_properties.mags[0].mag
+                if len(layer_properties.mags) > 0
                 else None,
             )
             layer_properties.num_channels = num_channels
@@ -380,7 +380,7 @@ class Dataset:
             element_class=_dtype_per_channel_to_element_class(
                 dtype_per_channel, num_channels
             ),
-            resolutions=[],
+            mags=[],
             num_channels=num_channels,
             data_format=StorageArrayFormat(data_format),
         )
@@ -492,7 +492,7 @@ class Dataset:
             )
 
         layer_properties = copy.copy(other_layer._properties)
-        layer_properties.resolutions = []
+        layer_properties.mags = []
         layer_properties.name = layer_name
 
         self._properties.data_layers += [layer_properties]
@@ -727,9 +727,9 @@ class Dataset:
                 new_ds_properties = copy.deepcopy(
                     self.get_layer(layer_name)._properties
                 )
-                # Initializing a layer with non-empty resolutions requires that the files on disk already exist.
+                # Initializing a layer with non-empty mags requires that the files on disk already exist.
                 # The MagViews are added manually afterwards
-                new_ds_properties.resolutions = []
+                new_ds_properties.mags = []
                 if data_format is not None:
                     new_ds_properties.data_format = StorageArrayFormat(data_format)
                 new_ds._properties.data_layers += [new_ds_properties]

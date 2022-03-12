@@ -185,14 +185,12 @@ class Layer:
 
         self.path.mkdir(parents=True, exist_ok=True)
 
-        for resolution in properties.resolutions:
-            self._setup_mag(Mag(resolution.resolution))
-        # Only keep the properties of resolutions that were initialized.
-        # Sometimes the directory of a resolution is removed from disk manually, but the properties are not updated.
-        self._properties.resolutions = [
-            res
-            for res in self._properties.resolutions
-            if Mag(res.resolution) in self._mags
+        for resolution in properties.mags:
+            self._setup_mag(Mag(resolution.mag))
+        # Only keep the properties of mags that were initialized.
+        # Sometimes the directory of a mag is removed from disk manually, but the properties are not updated.
+        self._properties.mags = [
+            res for res in self._properties.mags if Mag(res.mag) in self._mags
         ]
 
     @property
@@ -352,9 +350,9 @@ class Layer:
 
         self._mags[mag] = mag_view
         mag_storage_info = mag_view.info
-        self._properties.resolutions += [
+        self._properties.mags += [
             MagViewProperties(
-                resolution=Mag(mag_view.name),
+                mag=Mag(mag_view.name),
                 cube_length=(
                     mag_storage_info.shard_size.x
                     if mag_storage_info.array_format == StorageArrayFormat.WKW
@@ -383,9 +381,9 @@ class Layer:
         self._setup_mag(mag)
         mag_view = self._mags[mag]
         mag_storage_info = mag_view.info
-        self._properties.resolutions.append(
+        self._properties.mags.append(
             MagViewProperties(
-                resolution=mag,
+                mag=mag,
                 cube_length=(
                     mag_storage_info.shard_size.x
                     if mag_storage_info.array_format == StorageArrayFormat.WKW
@@ -458,8 +456,8 @@ class Layer:
             )
 
         del self._mags[mag]
-        self._properties.resolutions = [
-            res for res in self._properties.resolutions if Mag(res.resolution) != mag
+        self._properties.mags = [
+            res for res in self._properties.mags if Mag(res.mag) != mag
         ]
         self.dataset._export_as_json()
         # delete files on disk

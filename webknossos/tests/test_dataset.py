@@ -1322,7 +1322,7 @@ def test_add_symlink_mag(tmp_path: Path) -> None:
     layer.add_symlink_mag(original_mag_4.path)
 
     assert (tmp_path / "link" / "color" / "1").exists()
-    assert len(layer._properties.resolutions) == 3
+    assert len(layer._properties.mags) == 3
 
     assert tuple(layer.bounding_box.topleft) == (0, 0, 0)
     assert tuple(layer.bounding_box.size) == (16, 26, 36)
@@ -1370,7 +1370,7 @@ def test_add_copy_mag(tmp_path: Path) -> None:
     copy_mag = layer.add_copy_mag(original_mag_2)
 
     assert (tmp_path / "link" / "color" / "1").exists()
-    assert len(layer._properties.resolutions) == 2
+    assert len(layer._properties.mags) == 2
 
     assert tuple(layer.bounding_box.topleft) == (0, 0, 0)
     assert tuple(layer.bounding_box.size) == (16, 26, 36)
@@ -2042,20 +2042,11 @@ def test_delete_layer_and_mag(tmp_path: Path, array_format: StorageArrayFormat) 
     assert "segmentation" in ds.layers
     assert len([l for l in ds._properties.data_layers if l.name == "color"]) == 1
     assert len([l for l in ds._properties.data_layers if l.name == "segmentation"]) == 1
-    assert len(color_layer._properties.resolutions) == 2
+    assert len(color_layer._properties.mags) == 2
 
     color_layer.delete_mag(1)
-    assert len(color_layer._properties.resolutions) == 1
-    assert (
-        len(
-            [
-                m
-                for m in color_layer._properties.resolutions
-                if Mag(m.resolution) == Mag(2)
-            ]
-        )
-        == 1
-    )
+    assert len(color_layer._properties.mags) == 1
+    assert len([m for m in color_layer._properties.mags if Mag(m.mag) == Mag(2)]) == 1
 
     ds.delete_layer("color")
     assert "color" not in ds.layers
