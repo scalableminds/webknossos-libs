@@ -149,14 +149,23 @@ jobs:
     - name: Lint code
       run: ./lint.sh
 
-    - name: Check typing
+    # - name: Check typing
+    #   run: |
+    #     ./typecheck.sh
+
+    - name: Install minio
       run: |
-        ./typecheck.sh
+        wget https://dl.min.io/server/minio/release/linux-amd64/minio
+        chmod +x minio
 
     - name: Python tests
       env:
         WK_TOKEN: ${{ secrets.WK_TOKEN }}
-      run: ./test.sh
+        MINIO_SECRET_KEY: TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur
+        MINIO_ACCESS_KEY: ANTN35UAENTS5UIAEATD
+      run: |
+        ./minio server /tmp/minio_data &
+        ./test.sh
 
     - name: Check if git is dirty
       run: |

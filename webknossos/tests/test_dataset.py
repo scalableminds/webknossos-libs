@@ -4,12 +4,12 @@ import os
 import pickle
 import warnings
 from os.path import join
-from pathlib import Path
 from shutil import copytree, rmtree
 from typing import Tuple, cast
 
 import numpy as np
 import pytest
+from upath import UPath as Path
 
 from webknossos.dataset import (
     COLOR_CATEGORY,
@@ -2134,6 +2134,35 @@ def test_pickle_view(tmp_path: Path) -> None:
 
     # Make sure that the attributes of the MagView (not View) still exist
     assert pickled_mag1.layer is not None
+
+
+@pytest.mark.block_network(allowed_hosts=[".*"])
+@pytest.mark.vcr(ignore_hosts=[".*"])
+def test_s3_dataset() -> None:
+    import s3fs  # pylint: disable=unused-import
+
+    bucket = Path(
+        "s3://test",
+        key="ANTN35UAENTS5UIAEATD",
+        secret="TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur",
+        client_kwargs={"endpoint_url": "http://localhost:9000"},
+    )
+    bucket.mkdir(exist_ok=True)
+
+    ds_path = bucket / "ds1"
+    ds_path.rmdir()
+
+    ds = Dataset(ds_path, scale=(1, 1, 1))
+    layer = ds.add_layer("color", COLOR_CATEGORY, data_format=DataFormat.Zarr)
+    mag1 = layer.add_mag(1)
+
+    data_to_write = (np.random.rand(1, 10, 10, 10) * 255).astype(np.uint8)
+    mag1.write(data_to_write)
+
+    assert np.array_equal(
+        data_to_write,
+        mag1.read(relative_offset=(0, 0, 0), size=data_to_write.shape[-3:]),
+    )
 
 
 def test_warn_outdated_properties(tmp_path: Path) -> None:

@@ -2,11 +2,11 @@ import logging
 import shutil
 import warnings
 from argparse import Namespace
-from pathlib import Path
 from typing import TYPE_CHECKING, Iterator, Optional, Tuple, Union
 from uuid import uuid4
 
 import numpy as np
+from upath import UPath as Path
 
 from webknossos.geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 from webknossos.utils import get_executor_for_args, wait_and_ensure_success
@@ -20,6 +20,10 @@ if TYPE_CHECKING:
     )
 
 from .view import View
+
+
+def _make_path(maybe_path: Union[str, Path]) -> Path:
+    return maybe_path if isinstance(maybe_path, Path) else Path(maybe_path)
 
 
 def _find_mag_path_on_disk(dataset_path: Path, layer_name: str, mag_name: str) -> Path:
@@ -270,13 +274,13 @@ class MagView(View):
         from webknossos.dataset.dataset import Dataset
 
         if target_path is not None:
-            target_path = Path(target_path)
+            target_path = _make_path(target_path)
 
         uncompressed_full_path = (
-            Path(self.layer.dataset.path) / self.layer.name / self.name
+            _make_path(self.layer.dataset.path) / self.layer.name / self.name
         )
         compressed_dataset_path = (
-            Path("{}.compress-{}".format(self.layer.dataset.path, uuid4()))
+            _make_path("{}.compress-{}".format(self.layer.dataset.path, uuid4()))
             if target_path is None
             else target_path
         )

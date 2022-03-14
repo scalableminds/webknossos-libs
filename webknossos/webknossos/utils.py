@@ -10,13 +10,13 @@ from concurrent.futures._base import Future
 from datetime import datetime
 from multiprocessing import cpu_count
 from os.path import relpath
-from pathlib import Path
 from typing import Any, Callable, Iterable, List, Optional, Union
 
 import rich
 from cluster_tools import WrappedProcessPoolExecutor, get_executor
 from cluster_tools.schedulers.cluster_executor import ClusterExecutor
 from rich.progress import Progress
+from upath import UPath as Path
 
 times = {}
 

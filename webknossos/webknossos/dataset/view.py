@@ -1,5 +1,4 @@
 import warnings
-from pathlib import Path
 from types import TracebackType
 from typing import (
     TYPE_CHECKING,
@@ -17,6 +16,7 @@ import cluster_tools
 import numpy as np
 import wkw
 from cluster_tools.schedulers.cluster_executor import ClusterExecutor
+from upath import UPath as Path
 
 from webknossos.geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 from webknossos.utils import get_rich_progress, wait_and_ensure_success, warn_deprecated

@@ -6,11 +6,11 @@ import warnings
 from argparse import Namespace
 from os import PathLike
 from os.path import relpath
-from pathlib import Path
 from shutil import rmtree
 from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 
 import numpy as np
+from upath import UPath as Path
 
 from webknossos.geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 
@@ -46,6 +46,10 @@ from .defaults import (
     DEFAULT_CHUNKS_PER_SHARD_ZARR,
 )
 from .mag_view import MagView, _find_mag_path_on_disk
+
+
+def _make_path(maybe_path: Union[str, PathLike, Path]) -> Path:
+    return maybe_path if isinstance(maybe_path, Path) else Path(maybe_path)
 
 
 def _is_int(s: str) -> bool:
@@ -485,7 +489,7 @@ class Layer:
             # local import to prevent circular dependency
             from .dataset import Dataset
 
-            foreign_mag_view_path = Path(foreign_mag_view_or_path)
+            foreign_mag_view_path = _make_path(foreign_mag_view_or_path)
             foreign_mag_view = (
                 Dataset.open(foreign_mag_view_path.parent.parent)
                 .get_layer(foreign_mag_view_path.parent.name)
@@ -495,7 +499,7 @@ class Layer:
         self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
 
         foreign_normalized_mag_path = (
-            Path(relpath(foreign_mag_view.path, self.path))
+            _make_path(relpath(foreign_mag_view.path, self.path))
             if make_relative
             else foreign_mag_view.path.resolve()
         )

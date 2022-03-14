@@ -4,19 +4,26 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
 from os.path import relpath
-from pathlib import Path
 from typing import Any, Dict, Iterator, Optional, Type
 
 import numpy as np
 import wkw
 import zarr
 from numcodecs import Blosc
+from upath import UPath as Path
+from zarr.storage import FSStore
 
 from webknossos.geometry import BoundingBox, Vec3Int, Vec3IntLike
 
 
-def is_power_of_two(num: int) -> bool:
+def _is_power_of_two(num: int) -> bool:
     return num & (num - 1) == 0
+
+
+def _make_store(path: Path) -> FSStore:
+    storage_options = path._kwargs.copy()
+    del storage_options["_url"]
+    return FSStore(url=str(path), **storage_options)
 
 
 class ArrayException(Exception):
@@ -139,7 +146,7 @@ class WKWArray(BaseArray):
         assert (
             array_info.chunk_size.is_uniform()
         ), f"`chunk_size` needs to be uniform for WKW storage. Got {array_info.chunk_size}."
-        assert is_power_of_two(
+        assert _is_power_of_two(
             array_info.chunk_size.x
         ), f"`chunk_size` needs to be a power of 2 for WKW storage. Got {array_info.chunk_size.x}."
         assert (
@@ -149,7 +156,7 @@ class WKWArray(BaseArray):
         assert (
             array_info.chunks_per_shard.is_uniform()
         ), f"`chunks_per_shard` needs to be uniform for WKW storage. Got {array_info.chunks_per_shard}."
-        assert is_power_of_two(
+        assert _is_power_of_two(
             array_info.chunks_per_shard.x
         ), f"`chunks_per_shard` needs to be a power of 2 for WKW storage. Got {array_info.chunks_per_shard.x}."
         assert (
@@ -283,6 +290,7 @@ class ZarrArray(BaseArray):
         assert array_info.chunks_per_shard == Vec3Int.full(
             1
         ), "Zarr storage doesn't support sharding yet"
+
         zarr.create(
             shape=(array_info.num_channels, 1, 1, 1),
             chunks=(array_info.num_channels,) + array_info.chunk_size.to_tuple(),
@@ -292,7 +300,7 @@ class ZarrArray(BaseArray):
                 if array_info.compression_mode
                 else None
             ),
-            store=path,
+            store=_make_store(path),
         )
         return ZarrArray(path)
 
@@ -338,7 +346,7 @@ class ZarrArray(BaseArray):
                 new_shape_tuple = (zarray.shape[0],) + new_shape.to_tuple()
 
             # Check on-disk for changes to shape
-            current_zarray = zarr.open_array(store=self._path, mode="r")
+            current_zarray = zarr.open_array(store=_make_store(self._path), mode="r")
             if zarray.shape != current_zarray.shape:
                 warnings.warn(
                     f"[WARNING] While resizing the Zarr array at {self._path}, a differing shape ({zarray.shape} != {current_zarray.shape}) was found in the currently persisted metadata."
@@ -384,7 +392,10 @@ class ZarrArray(BaseArray):
     def _zarray(self) -> zarr.Array:
         if self._cached_zarray is None:
             try:
-                self._cached_zarray = zarr.open_array(store=self._path, mode="a")
+
+                self._cached_zarray = zarr.open_array(
+                    store=_make_store(self._path), mode="a"
+                )
             except Exception as e:
                 raise ArrayException(
                     f"Exception while opening Zarr array for {self._path}"

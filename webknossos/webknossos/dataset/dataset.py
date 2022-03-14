@@ -6,7 +6,6 @@ from argparse import Namespace
 from contextlib import nullcontext
 from os import PathLike
 from os.path import relpath
-from pathlib import Path
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -23,6 +22,7 @@ from typing import (
 import attr
 import numpy as np
 from boltons.typeutils import make_sentinel
+from upath import UPath as Path
 
 from webknossos.geometry.vec3_int import Vec3IntLike
 
@@ -78,6 +78,10 @@ def _find_array_info(layer_path: Path) -> Optional[ArrayInfo]:
     return None
 
 
+def _make_path(maybe_path: Union[str, PathLike, Path]) -> Path:
+    return maybe_path if isinstance(maybe_path, Path) else Path(maybe_path)
+
+
 _UNSET = make_sentinel("UNSET", var_name="_UNSET")
 
 _UNSPECIFIED_SCALE_FROM_OPEN = make_sentinel(
@@ -112,10 +116,12 @@ class Dataset:
         Currently exist_ok=True is the deprecated default and will change in future releases.
         Please use `Dataset.open` if you intend to open an existing dataset and don't want/need the creation behavior.
         """
-        dataset_path = Path(dataset_path)
+        dataset_path = _make_path(dataset_path)
 
         dataset_existed_already = (
-            dataset_path.is_dir() and next(dataset_path.iterdir(), None) is not None
+            dataset_path.exists()
+            and dataset_path.is_dir()
+            and next(dataset_path.iterdir(), None) is not None
         )
 
         if dataset_existed_already:
@@ -153,8 +159,8 @@ class Dataset:
             dataset_properties = DatasetProperties(
                 id={"name": name, "team": ""}, scale=scale, data_layers=[]
             )
-            with open(
-                dataset_path / PROPERTIES_FILE_NAME, "w", encoding="utf-8"
+            with (dataset_path / PROPERTIES_FILE_NAME).open(
+                "w", encoding="utf-8"
             ) as outfile:
                 json.dump(
                     dataset_converter.unstructure(dataset_properties), outfile, indent=4
@@ -169,7 +175,7 @@ class Dataset:
         for layer_properties in self._properties.data_layers:
             num_channels = _extract_num_channels(
                 layer_properties.num_channels,
-                Path(dataset_path),
+                _make_path(dataset_path),
                 layer_properties.name,
                 layer_properties.mags[0].mag
                 if len(layer_properties.mags) > 0
@@ -208,7 +214,7 @@ class Dataset:
 
         The `dataset_path` refers to the top level directory of the dataset (excluding layer or magnification names).
         """
-        dataset_path = Path(dataset_path)
+        dataset_path = _make_path(dataset_path)
         assert (
             dataset_path.exists()
         ), f"Cannot open Dataset: Couldn't find {dataset_path}"
@@ -617,7 +623,7 @@ class Dataset:
         if isinstance(foreign_layer, Layer):
             foreign_layer_path = foreign_layer.path
         else:
-            foreign_layer_path = Path(foreign_layer)
+            foreign_layer_path = _make_path(foreign_layer)
 
         foreign_layer_name = foreign_layer_path.name
         layer_name = (
@@ -629,7 +635,7 @@ class Dataset:
             )
 
         foreign_layer_symlink_path = (
-            Path(relpath(foreign_layer_path, self.path))
+            _make_path(relpath(foreign_layer_path, self.path))
             if make_relative
             else foreign_layer_path.resolve()
         )
@@ -661,7 +667,7 @@ class Dataset:
         if isinstance(foreign_layer, Layer):
             foreign_layer_path = foreign_layer.path
         else:
-            foreign_layer_path = Path(foreign_layer)
+            foreign_layer_path = _make_path(foreign_layer)
 
         foreign_layer_name = foreign_layer_path.name
         layer_name = (
@@ -712,7 +718,7 @@ class Dataset:
             file_len=file_len,
         )
 
-        new_dataset_path = Path(new_dataset_path)
+        new_dataset_path = _make_path(new_dataset_path)
         if scale is None:
             scale = self.scale
         new_ds = Dataset(new_dataset_path, scale=scale, exist_ok=False)
@@ -869,8 +875,8 @@ class Dataset:
         return repr("Dataset(%s)" % self.path)
 
     def _load_properties(self) -> DatasetProperties:
-        with open(
-            self.path / PROPERTIES_FILE_NAME, encoding="utf-8"
+        with (self.path / PROPERTIES_FILE_NAME).open(
+            encoding="utf-8"
         ) as datasource_properties:
             data = json.load(datasource_properties)
         return dataset_converter.structure(data, DatasetProperties)
@@ -886,7 +892,7 @@ class Dataset:
                 + "likely happening because multiple processes changed the metadata of this dataset."
             )
 
-        with open(self.path / PROPERTIES_FILE_NAME, "w", encoding="utf-8") as outfile:
+        with (self.path / PROPERTIES_FILE_NAME).open("w", encoding="utf-8") as outfile:
             json.dump(
                 dataset_converter.unstructure(self._properties),
                 outfile,
