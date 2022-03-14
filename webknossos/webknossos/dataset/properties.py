@@ -9,8 +9,8 @@ from cattr.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 from webknossos.geometry import BoundingBox, Mag, Vec3Int
 from webknossos.utils import snake_to_camel_case, warn_deprecated
 
+from ._array import ArrayException, BaseArray, DataFormat
 from .layer_categories import LayerCategoryType
-from .storage import StorageArray, StorageArrayException, StorageArrayFormat
 
 
 def _extract_num_channels(
@@ -34,8 +34,8 @@ def _extract_num_channels(
     mag = Mag(mag)
     array_file_path = path / layer / mag.to_layer_name()
     try:
-        array = StorageArray.open(array_file_path)
-    except StorageArrayException as e:
+        array = BaseArray.open(array_file_path)
+    except ArrayException as e:
         raise Exception(
             f"The dataset you are trying to open does not have the attribute 'numChannels' for layer {layer}. "
             f"However, this attribute is necessary. To mitigate this problem, it was tried to locate "
@@ -115,7 +115,7 @@ class LayerProperties:
     category: LayerCategoryType
     bounding_box: BoundingBox
     element_class: str
-    data_format: StorageArrayFormat
+    data_format: DataFormat
     mags: List[MagViewProperties]
     num_channels: Optional[int] = None
     default_view_configuration: Optional[LayerViewConfiguration] = None

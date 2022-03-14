@@ -21,7 +21,7 @@ from cluster_tools.schedulers.cluster_executor import ClusterExecutor
 from webknossos.geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 from webknossos.utils import get_rich_progress, wait_and_ensure_success, warn_deprecated
 
-from .storage import StorageArray, StorageArrayInfo, WKWStorageArray
+from ._array import ArrayInfo, BaseArray, WKWArray
 
 if TYPE_CHECKING:
     from ._utils.buffered_slice_reader import BufferedSliceReader
@@ -37,16 +37,16 @@ class View:
     """
 
     _path: Path
-    _storage_info: StorageArrayInfo
+    _array_info: ArrayInfo
     _bounding_box: Optional[BoundingBox]
     _read_only: bool
-    _cached_array: Optional[StorageArray]
+    _cached_array: Optional[BaseArray]
     _mag: Mag
 
     def __init__(
         self,
         path_to_mag_view: Path,
-        storage_info: StorageArrayInfo,
+        array_info: ArrayInfo,
         bounding_box: Optional[
             BoundingBox
         ],  # in mag 1, absolute coordinates, optional only for mag_view since it overwrites the bounding_box property
@@ -57,22 +57,22 @@ class View:
         Do not use this constructor manually. Instead use `View.get_view()` (also available on a `MagView`) to get a `View`.
         """
         self._path = path_to_mag_view
-        self._storage_info = storage_info
+        self._array_info = array_info
         self._bounding_box = bounding_box
         self._read_only = read_only
         self._cached_array = None
         self._mag = mag
 
     @property
-    def info(self) -> StorageArrayInfo:
-        return self._storage_info
+    def info(self) -> ArrayInfo:
+        return self._array_info
 
     @property
     def header(self) -> wkw.Header:
         """⚠️ Deprecated, use `info` instead."""
         warn_deprecated("header", "info")
         assert isinstance(
-            self._array, WKWStorageArray
+            self._array, WKWArray
         ), "`header` only works with WKW datasets."
         return self._array._wkw_dataset.header
 
@@ -212,7 +212,7 @@ class View:
                 DeprecationWarning,
             )
 
-        num_channels = self._storage_info.num_channels
+        num_channels = self._array_info.num_channels
         if len(data.shape) == 3:
             assert (
                 num_channels == 1
@@ -909,9 +909,9 @@ class View:
         return self._get_file_dimensions() * self.mag.to_vec3_int()
 
     @property
-    def _array(self) -> StorageArray:
+    def _array(self) -> BaseArray:
         if self._cached_array is None:
-            cls_array = StorageArray.get_class(self.info.array_format)
+            cls_array = BaseArray.get_class(self.info.data_format)
             self._cached_array = cls_array(self._path)
         return self._cached_array
 

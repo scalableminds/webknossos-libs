@@ -266,13 +266,7 @@ def merge_with_fallback_layer(
         )
 
         assert (
-            input_annotation_mag.info.chunks_per_shard[0] == 1
-        ), "volume annotation must have file_len=1"
-        assert (
-            input_annotation_mag.info.chunks_per_shard[1] == 1
-        ), "volume annotation must have file_len=1"
-        assert (
-            input_annotation_mag.info.chunks_per_shard[2] == 1
+            input_annotation_mag.info.chunks_per_shard == Vec3Int.ones()
         ), "volume annotation must have file_len=1"
         assert (
             input_annotation_mag.info.voxel_type

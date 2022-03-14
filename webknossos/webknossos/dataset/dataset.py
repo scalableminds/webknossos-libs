@@ -26,12 +26,7 @@ from boltons.typeutils import make_sentinel
 
 from webknossos.geometry.vec3_int import Vec3IntLike
 
-from .storage import (
-    StorageArray,
-    StorageArrayException,
-    StorageArrayFormat,
-    StorageArrayInfo,
-)
+from ._array import ArrayException, ArrayInfo, BaseArray, DataFormat
 
 if TYPE_CHECKING:
     from webknossos.client._upload_dataset import LayerToLink
@@ -62,7 +57,7 @@ from .properties import (
 from .view import View
 
 DEFAULT_BIT_DEPTH = 8
-DEFAULT_DATA_FORMAT = StorageArrayFormat.WKW
+DEFAULT_DATA_FORMAT = DataFormat.WKW
 PROPERTIES_FILE_NAME = "datasource-properties.json"
 
 
@@ -72,13 +67,13 @@ def _copy_job(args: Tuple[View, View, int]) -> None:
     target_view.write(source_view.read())
 
 
-def _find_storage_array_info(layer_path: Path) -> Optional[StorageArrayInfo]:
+def _find_array_info(layer_path: Path) -> Optional[ArrayInfo]:
     for f in layer_path.iterdir():
         if f.is_dir():
             try:
-                array = StorageArray.open(f)
+                array = BaseArray.open(f)
                 return array.info
-            except StorageArrayException:
+            except ArrayException:
                 pass
     return None
 
@@ -322,7 +317,7 @@ class Dataset:
         dtype_per_layer: Optional[Union[str, np.dtype, type]] = None,
         dtype_per_channel: Optional[Union[str, np.dtype, type]] = None,
         num_channels: Optional[int] = None,
-        data_format: Union[str, StorageArrayFormat] = DEFAULT_DATA_FORMAT,
+        data_format: Union[str, DataFormat] = DEFAULT_DATA_FORMAT,
         **kwargs: Any,
     ) -> Layer:
         """
@@ -382,7 +377,7 @@ class Dataset:
             ),
             mags=[],
             num_channels=num_channels,
-            data_format=StorageArrayFormat(data_format),
+            data_format=DataFormat(data_format),
         )
 
         if category == COLOR_CATEGORY:
@@ -422,7 +417,7 @@ class Dataset:
         dtype_per_layer: Optional[Union[str, np.dtype, type]] = None,
         dtype_per_channel: Optional[Union[str, np.dtype, type]] = None,
         num_channels: Optional[int] = None,
-        data_format: Union[str, StorageArrayFormat] = DEFAULT_DATA_FORMAT,
+        data_format: Union[str, DataFormat] = DEFAULT_DATA_FORMAT,
         **kwargs: Any,
     ) -> Layer:
         """
@@ -481,7 +476,7 @@ class Dataset:
                 dtype_per_layer=dtype_per_layer,
                 dtype_per_channel=dtype_per_channel,
                 num_channels=num_channels,
-                data_format=StorageArrayFormat(data_format),
+                data_format=DataFormat(data_format),
                 **kwargs,
             )
 
@@ -515,16 +510,16 @@ class Dataset:
     ) -> Layer:
         assert layer_name not in self.layers, f"Layer {layer_name} already exists!"
 
-        storage_info = _find_storage_array_info(self.path / layer_name)
+        array_info = _find_array_info(self.path / layer_name)
         assert (
-            storage_info is not None
+            array_info is not None
         ), f"Could not find any valid mags in {self.path /layer_name}. Cannot add layer."
         layer = self.add_layer(
             layer_name,
             category=category,
-            num_channels=storage_info.num_channels,
-            dtype_per_channel=storage_info.voxel_type,
-            data_format=storage_info.array_format,
+            num_channels=array_info.num_channels,
+            dtype_per_channel=array_info.voxel_type,
+            data_format=array_info.data_format,
             **kwargs,
         )
         for mag_dir in layer.path.iterdir():
@@ -697,7 +692,7 @@ class Dataset:
         scale: Optional[Tuple[float, float, float]] = None,
         chunk_size: Optional[Union[Vec3IntLike, int]] = None,
         chunks_per_shard: Optional[Union[Vec3IntLike, int]] = None,
-        data_format: Optional[Union[str, StorageArrayFormat]] = None,
+        data_format: Optional[Union[str, DataFormat]] = None,
         compress: Optional[bool] = None,
         block_len: Optional[int] = None,  # deprecated
         file_len: Optional[int] = None,  # deprecated
@@ -731,7 +726,7 @@ class Dataset:
                 # The MagViews are added manually afterwards
                 new_ds_properties.mags = []
                 if data_format is not None:
-                    new_ds_properties.data_format = StorageArrayFormat(data_format)
+                    new_ds_properties.data_format = DataFormat(data_format)
                 new_ds._properties.data_layers += [new_ds_properties]
                 target_layer = new_ds._initialize_layer_from_properties(
                     new_ds_properties

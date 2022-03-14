@@ -14,6 +14,7 @@ import numpy as np
 
 from webknossos.geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 
+from ._array import ArrayException, BaseArray, DataFormat
 from .downsampling_utils import (
     SamplingModes,
     calculate_default_max_mag,
@@ -32,7 +33,6 @@ from .properties import (
     _properties_floating_type_to_python_type,
     _python_floating_type_to_properties_type,
 )
-from .storage import StorageArray, StorageArrayException, StorageArrayFormat
 from .upsampling_utils import upsample_cube_job
 
 if TYPE_CHECKING:
@@ -246,7 +246,7 @@ class Layer:
         return self._properties.num_channels
 
     @property
-    def data_format(self) -> StorageArrayFormat:
+    def data_format(self) -> DataFormat:
         assert self._properties.data_format is not None
         return self._properties.data_format
 
@@ -321,7 +321,7 @@ class Layer:
         if chunk_size is None:
             chunk_size = DEFAULT_CHUNK_SIZE
         if chunks_per_shard is None:
-            if self.data_format == StorageArrayFormat.Zarr:
+            if self.data_format == DataFormat.Zarr:
                 chunks_per_shard = DEFAULT_CHUNKS_PER_SHARD_ZARR
             else:
                 chunks_per_shard = DEFAULT_CHUNKS_PER_SHARD
@@ -349,13 +349,13 @@ class Layer:
         )
 
         self._mags[mag] = mag_view
-        mag_storage_info = mag_view.info
+        mag_array_info = mag_view.info
         self._properties.mags += [
             MagViewProperties(
                 mag=Mag(mag_view.name),
                 cube_length=(
-                    mag_storage_info.shard_size.x
-                    if mag_storage_info.array_format == StorageArrayFormat.WKW
+                    mag_array_info.shard_size.x
+                    if mag_array_info.data_format == DataFormat.WKW
                     else None
                 ),
             )
@@ -380,13 +380,13 @@ class Layer:
         ), f"Cannot add mag {mag} as it already exists for layer {self}"
         self._setup_mag(mag)
         mag_view = self._mags[mag]
-        mag_storage_info = mag_view.info
+        mag_array_info = mag_view.info
         self._properties.mags.append(
             MagViewProperties(
                 mag=mag,
                 cube_length=(
-                    mag_storage_info.shard_size.x
-                    if mag_storage_info.array_format == StorageArrayFormat.WKW
+                    mag_array_info.shard_size.x
+                    if mag_array_info.data_format == DataFormat.WKW
                     else None
                 ),
             )
@@ -954,7 +954,7 @@ class Layer:
         self._assert_mag_does_not_exist_yet(mag)
 
         try:
-            cls_array = StorageArray.get_class(self._properties.data_format)
+            cls_array = BaseArray.get_class(self._properties.data_format)
             info = cls_array(
                 _find_mag_path_on_disk(self.dataset.path, self.name, mag_name)
             ).info
@@ -965,7 +965,7 @@ class Layer:
                 info.chunks_per_shard,
                 info.compression_mode,
             )
-        except StorageArrayException as e:
+        except ArrayException as e:
             logging.error(
                 f"Failed to setup magnification {mag_name}, which is specified in the datasource-properties.json. See {e}"
             )

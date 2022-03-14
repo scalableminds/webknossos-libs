@@ -11,8 +11,8 @@ from webknossos.geometry import Mag, Vec3Int, Vec3IntLike
 from webknossos.geometry.bounding_box import BoundingBox
 from webknossos.utils import time_start, time_stop
 
+from ._array import ArrayInfo
 from .layer_categories import LayerCategoryType
-from .storage import StorageArrayInfo
 from .view import View
 
 
@@ -35,8 +35,8 @@ class InterpolationModes(Enum):
 DEFAULT_BUFFER_SHAPE = Vec3Int.full(256)
 
 
-def determine_buffer_shape(storage_info: StorageArrayInfo) -> Vec3Int:
-    return min(DEFAULT_BUFFER_SHAPE, storage_info.shard_size)
+def determine_buffer_shape(array_info: ArrayInfo) -> Vec3Int:
+    return min(DEFAULT_BUFFER_SHAPE, array_info.shard_size)
 
 
 def calculate_mags_to_downsample(

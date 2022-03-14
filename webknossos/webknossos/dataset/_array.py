@@ -19,18 +19,18 @@ def is_power_of_two(num: int) -> bool:
     return num & (num - 1) == 0
 
 
-class StorageArrayException(Exception):
+class ArrayException(Exception):
     pass
 
 
-class StorageArrayFormat(Enum):
+class DataFormat(Enum):
     WKW = "wkw"
     Zarr = "zarr"
 
 
 @dataclass
-class StorageArrayInfo:
-    array_format: StorageArrayFormat
+class ArrayInfo:
+    data_format: DataFormat
     num_channels: int
     voxel_type: np.dtype
     chunk_size: Vec3Int
@@ -42,8 +42,8 @@ class StorageArrayInfo:
         return self.chunk_size * self.chunks_per_shard
 
 
-class StorageArray(ABC):
-    array_format = StorageArrayFormat.WKW
+class BaseArray(ABC):
+    data_format = DataFormat.WKW
 
     _path: Path
 
@@ -52,23 +52,23 @@ class StorageArray(ABC):
 
     @property
     @abstractmethod
-    def info(self) -> StorageArrayInfo:
+    def info(self) -> ArrayInfo:
         pass
 
     @classmethod
     @abstractmethod
-    def open(_cls, path: Path) -> "StorageArray":
-        for cls in (WKWStorageArray, ZarrStorageArray):
+    def open(_cls, path: Path) -> "BaseArray":
+        for cls in (WKWArray, ZarrArray):
             try:
                 array = cls.open(path)
                 return array
-            except StorageArrayException as e:
+            except ArrayException as e:
                 pass
-        raise StorageArrayException(f"Could not open the storage array at {path}.")
+        raise ArrayException(f"Could not open the array at {path}.")
 
     @classmethod
     @abstractmethod
-    def create(cls, path: Path, storage_info: StorageArrayInfo) -> "StorageArray":
+    def create(cls, path: Path, array_info: ArrayInfo) -> "BaseArray":
         pass
 
     @abstractmethod
@@ -94,15 +94,15 @@ class StorageArray(ABC):
         pass
 
     @staticmethod
-    def get_class(array_format: StorageArrayFormat) -> Type["StorageArray"]:
-        for cls in (WKWStorageArray, ZarrStorageArray):
-            if cls.array_format == array_format:
+    def get_class(data_format: DataFormat) -> Type["BaseArray"]:
+        for cls in (WKWArray, ZarrArray):
+            if cls.data_format == data_format:
                 return cls
-        raise ValueError(f"Array format `{array_format}` is invalid.")
+        raise ValueError(f"Array format `{data_format}` is invalid.")
 
 
-class WKWStorageArray(StorageArray):
-    array_format = StorageArrayFormat.WKW
+class WKWArray(BaseArray):
+    data_format = DataFormat.WKW
 
     _cached_wkw_dataset: Optional[wkw.Dataset]
 
@@ -111,18 +111,18 @@ class WKWStorageArray(StorageArray):
         self._cached_wkw_dataset = None
 
     @classmethod
-    def open(cls, path: Path) -> "WKWStorageArray":
+    def open(cls, path: Path) -> "WKWArray":
         if (path / "header.wkw").is_file():
             return cls(path)
-        raise StorageArrayException(
-            f"Could not open WKW storage array at {path}. `header.wkw` not found."
+        raise ArrayException(
+            f"Could not open WKW array at {path}. `header.wkw` not found."
         )
 
     @property
-    def info(self) -> StorageArrayInfo:
+    def info(self) -> ArrayInfo:
         header = self._wkw_dataset.header
-        return StorageArrayInfo(
-            array_format=self.array_format,
+        return ArrayInfo(
+            data_format=self.data_format,
             num_channels=header.num_channels,
             voxel_type=header.voxel_type,
             compression_mode=header.block_type != wkw.Header.BLOCK_TYPE_RAW,
@@ -133,48 +133,48 @@ class WKWStorageArray(StorageArray):
         )
 
     @classmethod
-    def create(cls, path: Path, storage_info: StorageArrayInfo) -> "WKWStorageArray":
-        assert storage_info.array_format == cls.array_format
+    def create(cls, path: Path, array_info: ArrayInfo) -> "WKWArray":
+        assert array_info.data_format == cls.data_format
 
         assert (
-            storage_info.chunk_size.is_uniform()
-        ), f"`chunk_size` needs to be uniform for WKW storage. Got {storage_info.chunk_size}."
+            array_info.chunk_size.is_uniform()
+        ), f"`chunk_size` needs to be uniform for WKW storage. Got {array_info.chunk_size}."
         assert is_power_of_two(
-            storage_info.chunk_size.x
-        ), f"`chunk_size` needs to be a power of 2 for WKW storage. Got {storage_info.chunk_size.x}."
+            array_info.chunk_size.x
+        ), f"`chunk_size` needs to be a power of 2 for WKW storage. Got {array_info.chunk_size.x}."
         assert (
-            1 <= storage_info.chunk_size.x and storage_info.chunk_size.x <= 32768
-        ), f"`chunk_size` needs to be a value between 1 and 32768 for WKW storage. Got {storage_info.chunk_size.x}."
+            1 <= array_info.chunk_size.x and array_info.chunk_size.x <= 32768
+        ), f"`chunk_size` needs to be a value between 1 and 32768 for WKW storage. Got {array_info.chunk_size.x}."
 
         assert (
-            storage_info.chunks_per_shard.is_uniform()
-        ), f"`chunks_per_shard` needs to be uniform for WKW storage. Got {storage_info.chunks_per_shard}."
+            array_info.chunks_per_shard.is_uniform()
+        ), f"`chunks_per_shard` needs to be uniform for WKW storage. Got {array_info.chunks_per_shard}."
         assert is_power_of_two(
-            storage_info.chunks_per_shard.x
-        ), f"`chunks_per_shard` needs to be a power of 2 for WKW storage. Got {storage_info.chunks_per_shard.x}."
+            array_info.chunks_per_shard.x
+        ), f"`chunks_per_shard` needs to be a power of 2 for WKW storage. Got {array_info.chunks_per_shard.x}."
         assert (
-            1 <= storage_info.chunks_per_shard.x
-            and storage_info.chunks_per_shard.x <= 32768
-        ), f"`chunks_per_shard` needs to be a value between 1 and 32768 for WKW storage. Got {storage_info.chunks_per_shard.x}."
+            1 <= array_info.chunks_per_shard.x
+            and array_info.chunks_per_shard.x <= 32768
+        ), f"`chunks_per_shard` needs to be a value between 1 and 32768 for WKW storage. Got {array_info.chunks_per_shard.x}."
 
         try:
             wkw.Dataset.create(
                 str(path),
                 wkw.Header(
-                    voxel_type=storage_info.voxel_type,
-                    num_channels=storage_info.num_channels,
-                    block_len=storage_info.chunk_size.x,
-                    file_len=storage_info.chunks_per_shard.x,
+                    voxel_type=array_info.voxel_type,
+                    num_channels=array_info.num_channels,
+                    block_len=array_info.chunk_size.x,
+                    file_len=array_info.chunks_per_shard.x,
                     block_type=(
                         wkw.Header.BLOCK_TYPE_LZ4HC
-                        if storage_info.compression_mode
+                        if array_info.compression_mode
                         else wkw.Header.BLOCK_TYPE_RAW
                     ),
                 ),
             ).close()
         except wkw.wkw.WKWException as e:
-            raise StorageArrayException(f"Exception while creating array {path}") from e
-        return WKWStorageArray(path)
+            raise ArrayException(f"Exception while creating array {path}") from e
+        return WKWArray(path)
 
     def read(self, offset: Vec3IntLike, shape: Vec3IntLike) -> np.ndarray:
         return self._wkw_dataset.read(Vec3Int(offset), Vec3Int(shape))
@@ -226,8 +226,8 @@ class WKWStorageArray(StorageArray):
                     str(self._path)
                 )  # No need to pass the header to the wkw.Dataset
             except wkw.wkw.WKWException as e:
-                raise StorageArrayException(
-                    f"Exception while opening WKW storage array for {self._path}"
+                raise ArrayException(
+                    f"Exception while opening WKW array for {self._path}"
                 ) from e
         return self._cached_wkw_dataset
 
@@ -248,8 +248,8 @@ class WKWStorageArray(StorageArray):
         self.__dict__ = d
 
 
-class ZarrStorageArray(StorageArray):
-    array_format = StorageArrayFormat.Zarr
+class ZarrArray(BaseArray):
+    data_format = DataFormat.Zarr
 
     _cached_zarray: Optional[zarr.Array]
 
@@ -258,18 +258,18 @@ class ZarrStorageArray(StorageArray):
         self._cached_zarray = None
 
     @classmethod
-    def open(cls, path: Path) -> "ZarrStorageArray":
+    def open(cls, path: Path) -> "ZarrArray":
         if (path / ".zarray").is_file():
             return cls(path)
-        raise StorageArrayException(
-            f"Could not open Zarr storage array at {path}. `.zarray` not found."
+        raise ArrayException(
+            f"Could not open Zarr array at {path}. `.zarray` not found."
         )
 
     @property
-    def info(self) -> StorageArrayInfo:
+    def info(self) -> ArrayInfo:
         zarray = self._zarray
-        return StorageArrayInfo(
-            array_format=self.array_format,
+        return ArrayInfo(
+            data_format=self.data_format,
             num_channels=zarray.shape[0],
             voxel_type=zarray.dtype,
             compression_mode=zarray.compressor is not None,
@@ -278,23 +278,23 @@ class ZarrStorageArray(StorageArray):
         )
 
     @classmethod
-    def create(cls, path: Path, storage_info: StorageArrayInfo) -> "ZarrStorageArray":
-        assert storage_info.array_format == cls.array_format
-        assert storage_info.chunks_per_shard == Vec3Int.full(
+    def create(cls, path: Path, array_info: ArrayInfo) -> "ZarrArray":
+        assert array_info.data_format == cls.data_format
+        assert array_info.chunks_per_shard == Vec3Int.full(
             1
         ), "Zarr storage doesn't support sharding yet"
         zarr.create(
-            shape=(storage_info.num_channels, 1, 1, 1),
-            chunks=(storage_info.num_channels,) + storage_info.chunk_size.to_tuple(),
-            dtype=storage_info.voxel_type,
+            shape=(array_info.num_channels, 1, 1, 1),
+            chunks=(array_info.num_channels,) + array_info.chunk_size.to_tuple(),
+            dtype=array_info.voxel_type,
             compressor=(
                 Blosc(cname="zstd", clevel=3, shuffle=Blosc.SHUFFLE)
-                if storage_info.compression_mode
+                if array_info.compression_mode
                 else None
             ),
             store=path,
         )
-        return ZarrStorageArray(path)
+        return ZarrArray(path)
 
     def read(self, offset: Vec3IntLike, shape: Vec3IntLike) -> np.ndarray:
         offset = Vec3Int(offset)
@@ -341,13 +341,13 @@ class ZarrStorageArray(StorageArray):
             current_zarray = zarr.open_array(store=self._path, mode="r")
             if zarray.shape != current_zarray.shape:
                 warnings.warn(
-                    f"[WARNING] While resizing the Zarr storage array at {self._path}, a differing shape ({zarray.shape} != {current_zarray.shape}) was found in the currently persisted metadata."
-                    + "This is likely happening because multiple processes changed the metadata of this storage array."
+                    f"[WARNING] While resizing the Zarr array at {self._path}, a differing shape ({zarray.shape} != {current_zarray.shape}) was found in the currently persisted metadata."
+                    + "This is likely happening because multiple processes changed the metadata of this array."
                 )
 
             if warn:
                 warnings.warn(
-                    f"[WARNING] Resizing zarr storage array from `{zarray.shape}` to `{new_shape_tuple}`."
+                    f"[WARNING] Resizing zarr array from `{zarray.shape}` to `{new_shape_tuple}`."
                 )
             zarray.resize(new_shape_tuple)
 
@@ -386,8 +386,8 @@ class ZarrStorageArray(StorageArray):
             try:
                 self._cached_zarray = zarr.open_array(store=self._path, mode="a")
             except Exception as e:
-                raise StorageArrayException(
-                    f"Exception while opening Zarr storage array for {self._path}"
+                raise ArrayException(
+                    f"Exception while opening Zarr array for {self._path}"
                 ) from e
         return self._cached_zarray
 
