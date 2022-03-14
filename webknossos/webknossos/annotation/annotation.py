@@ -595,14 +595,11 @@ class Annotation:
         """
 
         with TemporaryDirectory() as tmp_annotation_dir:
-            tmp_annotation_dataset_path = (
-                Path(tmp_annotation_dir) / "tmp_annotation_dataset"
-            )
-
             input_annotation_dataset = Dataset(
-                tmp_annotation_dataset_path,
-                scale=self.scale,
+                tmp_annotation_dir,
                 name="tmp_annotation_dataset",
+                scale=self.scale,
+                exist_ok=True,
             )
 
             input_annotation_layer = self.export_volume_layer_to_dataset(
