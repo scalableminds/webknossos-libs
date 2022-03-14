@@ -24,16 +24,14 @@ import numpy as np
 from boltons.typeutils import make_sentinel
 from upath import UPath as Path
 
-from webknossos.geometry.vec3_int import Vec3IntLike
-
+from ..geometry.vec3_int import Vec3IntLike
 from ._array import ArrayException, ArrayInfo, BaseArray, DataFormat
 
 if TYPE_CHECKING:
-    from webknossos.client._upload_dataset import LayerToLink
+    from ..client._upload_dataset import LayerToLink
 
-from webknossos.geometry import BoundingBox, Mag
-from webknossos.utils import copy_directory_with_symlinks, get_executor_for_args
-
+from ..geometry import BoundingBox, Mag
+from ..utils import copy_directory_with_symlinks, get_executor_for_args, make_path
 from ._utils.infer_bounding_box_existing_files import infer_bounding_box_existing_files
 from .layer import (
     Layer,
@@ -78,10 +76,6 @@ def _find_array_info(layer_path: Path) -> Optional[ArrayInfo]:
     return None
 
 
-def _make_path(maybe_path: Union[str, PathLike, Path]) -> Path:
-    return maybe_path if isinstance(maybe_path, Path) else Path(maybe_path)
-
-
 _UNSET = make_sentinel("UNSET", var_name="_UNSET")
 
 _UNSPECIFIED_SCALE_FROM_OPEN = make_sentinel(
@@ -116,7 +110,7 @@ class Dataset:
         Currently exist_ok=True is the deprecated default and will change in future releases.
         Please use `Dataset.open` if you intend to open an existing dataset and don't want/need the creation behavior.
         """
-        dataset_path = _make_path(dataset_path)
+        dataset_path = make_path(dataset_path)
 
         dataset_existed_already = (
             dataset_path.exists()
@@ -175,7 +169,7 @@ class Dataset:
         for layer_properties in self._properties.data_layers:
             num_channels = _extract_num_channels(
                 layer_properties.num_channels,
-                _make_path(dataset_path),
+                make_path(dataset_path),
                 layer_properties.name,
                 layer_properties.mags[0].mag
                 if len(layer_properties.mags) > 0
@@ -214,7 +208,7 @@ class Dataset:
 
         The `dataset_path` refers to the top level directory of the dataset (excluding layer or magnification names).
         """
-        dataset_path = _make_path(dataset_path)
+        dataset_path = make_path(dataset_path)
         assert (
             dataset_path.exists()
         ), f"Cannot open Dataset: Couldn't find {dataset_path}"
@@ -623,7 +617,7 @@ class Dataset:
         if isinstance(foreign_layer, Layer):
             foreign_layer_path = foreign_layer.path
         else:
-            foreign_layer_path = _make_path(foreign_layer)
+            foreign_layer_path = make_path(foreign_layer)
 
         foreign_layer_name = foreign_layer_path.name
         layer_name = (
@@ -635,7 +629,7 @@ class Dataset:
             )
 
         foreign_layer_symlink_path = (
-            _make_path(relpath(foreign_layer_path, self.path))
+            make_path(relpath(foreign_layer_path, self.path))
             if make_relative
             else foreign_layer_path.resolve()
         )
@@ -667,7 +661,7 @@ class Dataset:
         if isinstance(foreign_layer, Layer):
             foreign_layer_path = foreign_layer.path
         else:
-            foreign_layer_path = _make_path(foreign_layer)
+            foreign_layer_path = make_path(foreign_layer)
 
         foreign_layer_name = foreign_layer_path.name
         layer_name = (
@@ -718,7 +712,7 @@ class Dataset:
             file_len=file_len,
         )
 
-        new_dataset_path = _make_path(new_dataset_path)
+        new_dataset_path = make_path(new_dataset_path)
         if scale is None:
             scale = self.scale
         new_ds = Dataset(new_dataset_path, scale=scale, exist_ok=False)

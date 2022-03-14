@@ -9,6 +9,7 @@ from concurrent.futures import as_completed
 from concurrent.futures._base import Future
 from datetime import datetime
 from multiprocessing import cpu_count
+from os import PathLike
 from os.path import relpath
 from typing import Any, Callable, Iterable, List, Optional, Union
 
@@ -184,3 +185,7 @@ def warn_deprecated(deprecated_item: str, alternative_item: str) -> None:
         f"[DEPRECATION] `{deprecated_item}` is deprecated, please use `{alternative_item}` instead.",
         DeprecationWarning,
     )
+
+
+def make_path(maybe_path: Union[str, PathLike, Path]) -> Path:
+    return maybe_path if isinstance(maybe_path, Path) else Path(maybe_path)

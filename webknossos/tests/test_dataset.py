@@ -2137,7 +2137,7 @@ def test_pickle_view(tmp_path: Path) -> None:
 
 
 @pytest.mark.block_network(allowed_hosts=[".*"])
-@pytest.mark.vcr(ignore_hosts=[".*"])
+@pytest.mark.vcr(record_mode="all")
 def test_s3_dataset() -> None:
     import s3fs  # pylint: disable=unused-import
 
@@ -2147,10 +2147,11 @@ def test_s3_dataset() -> None:
         secret="TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur",
         client_kwargs={"endpoint_url": "http://localhost:9000"},
     )
-    bucket.mkdir(exist_ok=True)
+    bucket.fs.mkdirs("test", exist_ok=True)
 
     ds_path = bucket / "ds1"
-    ds_path.rmdir()
+    if ds_path.exists():
+        ds_path.rmdir()
 
     ds = Dataset(ds_path, scale=(1, 1, 1))
     layer = ds.add_layer("color", COLOR_CATEGORY, data_format=DataFormat.Zarr)

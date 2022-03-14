@@ -20,9 +20,12 @@ def _is_power_of_two(num: int) -> bool:
     return num & (num - 1) == 0
 
 
-def _make_store(path: Path) -> FSStore:
-    storage_options = path._kwargs.copy()
-    del storage_options["_url"]
+def _fsstore_from_path(path: Path) -> FSStore:
+    try:
+        storage_options = path._kwargs.copy()
+        del storage_options["_url"]
+    except AttributeError:
+        storage_options = {}
     return FSStore(url=str(path), **storage_options)
 
 
@@ -300,7 +303,7 @@ class ZarrArray(BaseArray):
                 if array_info.compression_mode
                 else None
             ),
-            store=_make_store(path),
+            store=_fsstore_from_path(path),
         )
         return ZarrArray(path)
 
@@ -346,7 +349,9 @@ class ZarrArray(BaseArray):
                 new_shape_tuple = (zarray.shape[0],) + new_shape.to_tuple()
 
             # Check on-disk for changes to shape
-            current_zarray = zarr.open_array(store=_make_store(self._path), mode="r")
+            current_zarray = zarr.open_array(
+                store=_fsstore_from_path(self._path), mode="r"
+            )
             if zarray.shape != current_zarray.shape:
                 warnings.warn(
                     f"[WARNING] While resizing the Zarr array at {self._path}, a differing shape ({zarray.shape} != {current_zarray.shape}) was found in the currently persisted metadata."
@@ -394,7 +399,7 @@ class ZarrArray(BaseArray):
             try:
 
                 self._cached_zarray = zarr.open_array(
-                    store=_make_store(self._path), mode="a"
+                    store=_fsstore_from_path(self._path), mode="a"
                 )
             except Exception as e:
                 raise ArrayException(
