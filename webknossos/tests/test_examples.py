@@ -11,10 +11,6 @@ from scipy.spatial import cKDTree
 
 from webknossos.geometry import Mag
 
-from .vcr_utils import install_vcr
-
-install_vcr()
-
 
 @contextmanager
 def tmp_cwd() -> Iterator[None]:
