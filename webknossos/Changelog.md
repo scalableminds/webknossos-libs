@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.9...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.10...HEAD)
 
 ### Breaking Changes
 
@@ -30,6 +30,14 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 
 ### Changed
 - Dataset: `block_len` and `file_len` attributes are now deprecated, but still available for backwards compatibility. Use `chunk_size` and `chunks_per_shard` instead. These new attributes are `Vec3Int`, so they can be set non-uniformly. However, WKW-backed layers still require uniform `chunk_size` and `chunks_per_shard`. [#627](https://github.com/scalableminds/webknossos-libs/pull/627)
+
+### Fixed
+
+
+## [0.9.10](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.10) - 2022-03-15
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.9...v0.9.10)
+
+### Changed
 - Annotation: `Annotation.temporary_volume_layer_copy` now uses the NML-provided `scale`. [#644](https://github.com/scalableminds/webknossos-libs/pull/644)
 - Dataset: Moved the deprecation warning from `get_color_layers()` to the actually deprecated method `get_color_layer()`.
   [#635](https://github.com/scalableminds/webknossos-libs/pull/635)
@@ -37,6 +45,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 
 ### Fixed
 - Tests: The `./test.sh` script works on macOS again and doesn't throw Network Errors anymore. However the introduced fix could lead to slightly different behaviour on macOS tests vs CI tests, when UNIX socket communication is involved. [#618](https://github.com/scalableminds/webknossos-libs/pull/618)
+
 
 
 ## [0.9.9](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.9) - 2022-03-03
