@@ -169,6 +169,7 @@ jobs:
 
     - name: Check if git is dirty
       run: |
+        git status 
         git diff --no-ext-diff --quiet --exit-code
         [[ -z $(git status -s) ]]
 
