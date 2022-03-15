@@ -52,7 +52,8 @@ if [ $# -eq 1 ] && [ "$1" = "--refresh-snapshots" ]; then
     # this will ensure that the current directory is added to sys.path
     # (which is standard python behavior). This is necessary so that the imports
     # refer to the checked out (and potentially modified) code.
-    poetry run python -m pytest --record-mode once
+    poetry run python -m pytest --record-mode once $(find tests -type f -name "test_*.py" -not -name "test_remote_dataset.py")
 else
-    poetry run python -m pytest --block-network
+    poetry run python -m pytest --block-network $(find tests -type f -name "test_*.py" -not -name "test_remote_dataset.py")
 fi
+poetry run python -m pytest --disable-recording tests/test_remote_dataset.py
