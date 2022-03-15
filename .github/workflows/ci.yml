@@ -149,9 +149,9 @@ jobs:
     - name: Lint code
       run: ./lint.sh
 
-    # - name: Check typing
-    #   run: |
-    #     ./typecheck.sh
+    - name: Check typing
+      run: |
+        ./typecheck.sh
 
     - name: Install minio
       run: |
