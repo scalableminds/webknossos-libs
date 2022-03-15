@@ -453,8 +453,8 @@ class Annotation:
 
     def _get_volume_layer(
         self,
-        volume_layer_name: Optional[str],
-        volume_layer_id: Optional[int],
+        volume_layer_name: Optional[str] = None,
+        volume_layer_id: Optional[int] = None,
     ) -> _VolumeLayer:
         assert len(self._volume_layers) > 0, "No volume annotations present."
 
