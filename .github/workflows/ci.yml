@@ -155,8 +155,8 @@ jobs:
 
     - name: Install minio
       run: |
-        wget https://dl.min.io/server/minio/release/linux-amd64/minio
-        chmod +x minio
+        wget https://dl.min.io/server/minio/release/linux-amd64/minio -O /usr/local/bin/minio
+        chmod +x /usr/local/bin/minio
 
     - name: Python tests
       env:
@@ -164,12 +164,12 @@ jobs:
         MINIO_SECRET_KEY: TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur
         MINIO_ACCESS_KEY: ANTN35UAENTS5UIAEATD
       run: |
-        ./minio server /tmp/minio_data &
+        minio server /tmp/minio_data &
         ./test.sh
+        killall minio
 
     - name: Check if git is dirty
       run: |
-        git status 
         git diff --no-ext-diff --quiet --exit-code
         [[ -z $(git status -s) ]]
 
