@@ -2136,8 +2136,6 @@ def test_pickle_view(tmp_path: Path) -> None:
     assert pickled_mag1.layer is not None
 
 
-
-
 def test_warn_outdated_properties(tmp_path: Path) -> None:
 
     ds1 = Dataset(tmp_path / "ds", scale=(1, 1, 1))
