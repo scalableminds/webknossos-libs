@@ -1,9 +1,9 @@
 import logging
 import warnings
-from pathlib import Path
 from typing import Tuple
 
 import wkw
+from upath import UPath as Path
 
 from ..utils import time_start, time_stop
 

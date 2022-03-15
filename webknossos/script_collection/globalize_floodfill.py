@@ -5,11 +5,11 @@ import re
 import textwrap
 from collections import namedtuple
 from contextlib import contextmanager
-from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Iterator, List, Set, Tuple
 
 import numpy as np
+from upath import UPath as Path
 
 import webknossos as wk
 from webknossos.dataset import Layer, MagView

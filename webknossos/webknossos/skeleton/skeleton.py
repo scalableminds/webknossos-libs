@@ -1,10 +1,10 @@
 import itertools
 from os import PathLike
-from pathlib import Path
 from typing import Iterator, Optional, Set, Tuple, Union
 
 import attr
 from boltons.strutils import unit_len
+from upath import UPath as Path
 
 from webknossos.utils import warn_deprecated
 

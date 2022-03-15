@@ -1,7 +1,6 @@
 import os
 import warnings
 from functools import lru_cache
-from pathlib import Path
 from tempfile import TemporaryDirectory
 from time import gmtime, strftime
 from typing import Dict, Iterator, List, NamedTuple, Optional, Tuple
@@ -9,6 +8,7 @@ from uuid import uuid4
 
 import httpx
 from rich.progress import Progress
+from upath import UPath as Path
 
 from webknossos.client._generated.api.datastore import (
     dataset_finish_upload,

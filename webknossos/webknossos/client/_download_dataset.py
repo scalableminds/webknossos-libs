@@ -1,10 +1,10 @@
 import logging
 from os import PathLike
-from pathlib import Path
 from typing import List, Optional, Tuple, TypeVar, Union, cast
 
 import numpy as np
 from rich.progress import track
+from upath import UPath as Path
 
 from webknossos.client._generated.api.datastore import dataset_download
 from webknossos.client._generated.api.default import dataset_info

@@ -1,8 +1,8 @@
 import mimetypes
-from pathlib import Path
 from typing import Any, Dict
 
 import httpx
+from upath import UPath as Path
 
 from .file import FileChunk, ResumableFile
 from .util import Config

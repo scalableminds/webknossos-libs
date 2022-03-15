@@ -11,13 +11,14 @@ from datetime import datetime
 from multiprocessing import cpu_count
 from os import PathLike
 from os.path import relpath
+from pathlib import Path
 from typing import Any, Callable, Iterable, List, Optional, Union
 
 import rich
 from cluster_tools import WrappedProcessPoolExecutor, get_executor
 from cluster_tools.schedulers.cluster_executor import ClusterExecutor
 from rich.progress import Progress
-from upath import UPath as Path
+from upath import UPath
 
 times = {}
 
@@ -136,8 +137,8 @@ def time_since_epoch_in_ms() -> int:
 
 
 def copy_directory_with_symlinks(
-    src_path: Path,
-    dst_path: Path,
+    src_path: UPath,
+    dst_path: UPath,
     ignore: Iterable[str] = tuple(),
     make_relative: bool = False,
 ) -> None:
@@ -148,7 +149,7 @@ def copy_directory_with_symlinks(
         if item.name not in ignore:
             symlink_path = dst_path / item.name
             if make_relative:
-                rel_or_abspath = Path(relpath(item, symlink_path.parent))
+                rel_or_abspath = UPath(relpath(item, symlink_path.parent))
             else:
                 rel_or_abspath = item.resolve()
             symlink_path.symlink_to(rel_or_abspath)
@@ -187,5 +188,5 @@ def warn_deprecated(deprecated_item: str, alternative_item: str) -> None:
     )
 
 
-def make_path(maybe_path: Union[str, PathLike, Path]) -> Path:
-    return maybe_path if isinstance(maybe_path, Path) else Path(maybe_path)
+def make_path(maybe_path: Union[str, PathLike, Path, UPath]) -> UPath:
+    return maybe_path if isinstance(maybe_path, UPath) else UPath(maybe_path)

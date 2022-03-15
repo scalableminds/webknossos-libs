@@ -3,7 +3,6 @@
 import calendar
 import json
 from datetime import datetime
-from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import Any, Dict, Iterable, Tuple
 
@@ -15,6 +14,7 @@ from openapi_python_client import (
     Project,
     _get_project_for_url_or_path,
 )
+from upath import UPath as Path
 
 from webknossos.utils import snake_to_camel_case
 

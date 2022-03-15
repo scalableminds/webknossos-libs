@@ -5,7 +5,6 @@ from contextlib import contextmanager, nullcontext
 from enum import Enum, unique
 from io import BytesIO
 from os import PathLike
-from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import (
     BinaryIO,
@@ -24,6 +23,7 @@ from zlib import Z_BEST_SPEED
 
 import attr
 import httpx
+from upath import UPath as Path
 from zipp import Path as ZipPath
 
 import webknossos._nml as wknml
