@@ -453,8 +453,8 @@ class Annotation:
 
     def _get_volume_layer(
         self,
-        volume_layer_name: Optional[str],
-        volume_layer_id: Optional[int],
+        volume_layer_name: Optional[str] = None,
+        volume_layer_id: Optional[int] = None,
     ) -> _VolumeLayer:
         assert len(self._volume_layers) > 0, "No volume annotations present."
 
@@ -595,22 +595,21 @@ class Annotation:
         """
 
         with TemporaryDirectory() as tmp_annotation_dir:
-            tmp_annotation_dataset_path = (
-                Path(tmp_annotation_dir) / "tmp_annotation_dataset"
+            input_annotation_dataset = Dataset(
+                tmp_annotation_dir,
+                name="tmp_annotation_dataset",
+                scale=self.scale,
+                exist_ok=True,
             )
 
-        input_annotation_dataset = Dataset(
-            str(tmp_annotation_dataset_path), scale=(1, 1, 1), exist_ok=True
-        )
+            input_annotation_layer = self.export_volume_layer_to_dataset(
+                input_annotation_dataset,
+                "volume_layer",
+                volume_layer_name=volume_layer_name,
+                volume_layer_id=volume_layer_id,
+            )
 
-        input_annotation_layer = self.export_volume_layer_to_dataset(
-            input_annotation_dataset,
-            "volume_layer",
-            volume_layer_name=volume_layer_name,
-            volume_layer_id=volume_layer_id,
-        )
-
-        yield input_annotation_layer
+            yield input_annotation_layer
 
 
 Annotation._set_init_docstring()
