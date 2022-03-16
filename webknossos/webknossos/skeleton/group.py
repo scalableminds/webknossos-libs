@@ -23,12 +23,12 @@ class Group:
     _child_groups: Set["Group"] = attr.ib(
         factory=set,
         init=False,
-        repr=lambda children: f"<{unit_len(children, 'child groups')}>",
+        repr=lambda children: f"<{unit_len(children, 'child group')}>",
     )
     _child_graphs: Set[Graph] = attr.ib(
         factory=set,
         init=False,
-        repr=lambda children: f"<{unit_len(children, 'child graphs')}>",
+        repr=lambda children: f"<{unit_len(children, 'child graph')}>",
     )
     _skeleton: "Skeleton" = attr.ib(eq=False, repr=False)
     _enforced_id: Optional[int] = attr.ib(None, eq=False, repr=False)
