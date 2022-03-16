@@ -29,11 +29,11 @@ from zipp import Path as ZipPath
 import webknossos._nml as wknml
 from webknossos.annotation._nml_conversion import annotation_to_nml, nml_to_skeleton
 from webknossos.dataset import SEGMENTATION_CATEGORY, Dataset, Layer, SegmentationLayer
+from webknossos.geometry import BoundingBox
 from webknossos.skeleton import Skeleton
 from webknossos.utils import time_since_epoch_in_ms
 
 Vector3 = Tuple[float, float, float]
-IntVector6 = Tuple[int, int, int, int, int, int]
 
 
 MAG_RE = r"((\d+-\d+-)?\d+)"
@@ -90,8 +90,8 @@ class Annotation:
     edit_rotation: Optional[Vector3] = None
     zoom_level: Optional[float] = None
     metadata: Dict[str, str] = attr.Factory(dict)
-    task_bounding_box: Optional[IntVector6] = None
-    user_bounding_boxes: Optional[List[IntVector6]] = None
+    task_bounding_box: Optional[BoundingBox] = None
+    user_bounding_boxes: List[BoundingBox] = attr.Factory(list)
     _volume_layers: List[_VolumeLayer] = attr.field(factory=list, init=False)
 
     @classmethod
@@ -287,7 +287,7 @@ class Annotation:
                 edit_rotation=nml.parameters.editRotation,
                 zoom_level=nml.parameters.zoomLevel,
                 task_bounding_box=nml.parameters.taskBoundingBox,
-                user_bounding_boxes=nml.parameters.userBoundingBoxes,
+                user_bounding_boxes=nml.parameters.userBoundingBoxes or [],
                 metadata={
                     i.name: i.content
                     for i in nml.meta
