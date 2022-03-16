@@ -293,6 +293,7 @@ class ZarrArray(BaseArray):
                 else None
             ),
             store=path,
+            order='F'
         )
         return ZarrArray(path)
 
