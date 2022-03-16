@@ -89,13 +89,13 @@ class Group:
         yield from self.groups
 
     @property
-    def graphs(self) -> Iterator[GroupOrGraph]:
+    def graphs(self) -> Iterator[Graph]:
         """Returns all (immediate) graph children as an iterator.
         Use flattened_graphs if you need also need graphs within subgroups."""
         return (child for child in self._child_graphs)
 
     @property
-    def groups(self) -> Iterator[GroupOrGraph]:
+    def groups(self) -> Iterator[Group]:
         """Returns all (immediate) group children as an iterator.
         Use flattened_groups if you need also need groups within subgroups."""
         return (child for child in self._child_groups)
