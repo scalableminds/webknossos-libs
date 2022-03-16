@@ -16,6 +16,7 @@ from openapi_python_client import (
 )
 
 WK_URL = os.environ["WK_URL"]
+assert WK_URL == "http://localhost:9000", f"The wrong WK_URL is configured, got {WK_URL}, expected http://localhost:9000. " + "Are you running this script via ./generate_client.sh?"
 WK_TOKEN = os.environ["WK_TOKEN"]
 SCHEMA_URL = f"{WK_URL}/swagger.json"
 CONVERTER_URL = "https://converter.swagger.io/api/convert"
@@ -98,7 +99,7 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
     ), f"Failed to upload annotation: {response.status_code}: {response.text}"
     explorative_annotation_id = response.json()["annotation"]["id"]
     organization_name = "Organization_X"
-    dataset_name = "e2006_knossos"
+    dataset_name = "l4_sample"
     task_id = "581367a82faeb37a008a5352"
     user_id = "570b9f4d2a7c0e4d008da6ef"
     project_id = "58135bfd2faeb3190181c057"
