@@ -95,12 +95,18 @@ from .current_user_info_response_200_teams_item import (
 from .dataset_cancel_upload_json_body import DatasetCancelUploadJsonBody
 from .dataset_finish_upload_json_body import DatasetFinishUploadJsonBody
 from .dataset_info_response_200 import DatasetInfoResponse200
+from .dataset_info_response_200_allowed_teams_item import (
+    DatasetInfoResponse200AllowedTeamsItem,
+)
 from .dataset_info_response_200_data_source import DatasetInfoResponse200DataSource
 from .dataset_info_response_200_data_source_data_layers_item import (
     DatasetInfoResponse200DataSourceDataLayersItem,
 )
 from .dataset_info_response_200_data_source_data_layers_item_bounding_box import (
     DatasetInfoResponse200DataSourceDataLayersItemBoundingBox,
+)
+from .dataset_info_response_200_data_source_data_layers_item_default_view_configuration import (
+    DatasetInfoResponse200DataSourceDataLayersItemDefaultViewConfiguration,
 )
 from .dataset_info_response_200_data_source_id import DatasetInfoResponse200DataSourceId
 from .dataset_info_response_200_data_store import DatasetInfoResponse200DataStore

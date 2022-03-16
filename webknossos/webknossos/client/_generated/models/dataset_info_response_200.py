@@ -2,6 +2,9 @@ from typing import Any, Dict, List, Type, TypeVar
 
 import attr
 
+from ..models.dataset_info_response_200_allowed_teams_item import (
+    DatasetInfoResponse200AllowedTeamsItem,
+)
 from ..models.dataset_info_response_200_data_source import (
     DatasetInfoResponse200DataSource,
 )
@@ -20,7 +23,7 @@ class DatasetInfoResponse200:
     data_source: DatasetInfoResponse200DataSource
     data_store: DatasetInfoResponse200DataStore
     owning_organization: str
-    allowed_teams: List[Any]
+    allowed_teams: List[DatasetInfoResponse200AllowedTeamsItem]
     is_active: int
     is_public: int
     description: str
@@ -47,7 +50,7 @@ class DatasetInfoResponse200:
         owning_organization = self.owning_organization
         allowed_teams = []
         for allowed_teams_item_data in self.allowed_teams:
-            allowed_teams_item = allowed_teams_item_data
+            allowed_teams_item = allowed_teams_item_data.to_dict()
 
             allowed_teams.append(allowed_teams_item)
 
@@ -114,7 +117,9 @@ class DatasetInfoResponse200:
         allowed_teams = []
         _allowed_teams = d.pop("allowedTeams")
         for allowed_teams_item_data in _allowed_teams:
-            allowed_teams_item = allowed_teams_item_data
+            allowed_teams_item = DatasetInfoResponse200AllowedTeamsItem.from_dict(
+                allowed_teams_item_data
+            )
 
             allowed_teams.append(allowed_teams_item)
 

@@ -45,7 +45,7 @@ class AnnotationInfoResponse200:
     tracing_store: AnnotationInfoResponse200TracingStore
     visibility: str
     settings: AnnotationInfoResponse200Settings
-    tracing_time: int
+    tracing_time: str
     tags: List[str]
     user: AnnotationInfoResponse200User
     meshes: List[Any]
