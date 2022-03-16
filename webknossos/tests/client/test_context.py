@@ -12,4 +12,4 @@ def env_context() -> _WebknossosContext:
 
 
 def test_user_organization(env_context: _WebknossosContext) -> None:
-    assert env_context.organization == "Organization_X"
+    assert env_context.organization_id == "Organization_X"

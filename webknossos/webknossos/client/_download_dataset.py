@@ -34,7 +34,7 @@ def download_dataset(
     context = _get_context()
 
     if organization_id is None:
-        organization_id = context.organization
+        organization_id = context.organization_id
 
     dataset_info_response = dataset_info.sync_detailed(
         organization_id=organization_id,
