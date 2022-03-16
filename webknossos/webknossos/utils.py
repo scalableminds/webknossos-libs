@@ -3,13 +3,14 @@ import calendar
 import functools
 import json
 import logging
-import os
 import sys
 import time
+import warnings
 from concurrent.futures import as_completed
 from concurrent.futures._base import Future
 from datetime import datetime
 from multiprocessing import cpu_count
+from os.path import relpath
 from pathlib import Path
 from typing import Any, Callable, Iterable, List, Optional, Union
 
@@ -72,6 +73,12 @@ def get_executor_for_args(
             job_resources=json.loads(args.job_resources),
         )
         logging.info(f"Using {args.distribution_strategy} cluster.")
+    elif args.distribution_strategy == "debug_sequential":
+        executor = get_executor(
+            args.distribution_strategy,
+            debug=True,
+            keep_logs=True,
+        )
     else:
         logging.error(
             "Unknown distribution strategy: {}".format(args.distribution_strategy)
@@ -141,7 +148,7 @@ def copy_directory_with_symlinks(
         if item.name not in ignore:
             symlink_path = dst_path / item.name
             if make_relative:
-                rel_or_abspath = Path(os.path.relpath(item, symlink_path.parent))
+                rel_or_abspath = Path(relpath(item, symlink_path.parent))
             else:
                 rel_or_abspath = item.resolve()
             symlink_path.symlink_to(rel_or_abspath)
@@ -188,4 +195,11 @@ def get_rich_progress() -> Progress:
         rich.progress.TimeElapsedColumn(),
         "|",
         rich.progress.TimeRemainingColumn(),
+    )
+
+
+def warn_deprecated(deprecated_item: str, alternative_item: str) -> None:
+    warnings.warn(
+        f"[DEPRECATION] `{deprecated_item}` is deprecated, please use `{alternative_item}` instead.",
+        DeprecationWarning,
     )

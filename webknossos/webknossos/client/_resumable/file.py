@@ -1,6 +1,5 @@
 from __future__ import division
 
-import os
 from collections import namedtuple
 from functools import partial
 from pathlib import Path
@@ -71,7 +70,7 @@ class ResumableFile:
             self.path, self.relative_path
         )
         self.chunk_size = chunk_size
-        self.size = os.path.getsize(self.path)
+        self.size = self.path.stat().st_size
 
         self._fp = open(self.path, "rb")
         self._fp_lock = Lock()

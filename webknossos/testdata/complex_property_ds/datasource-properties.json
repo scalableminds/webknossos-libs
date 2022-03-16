@@ -1,70 +1,94 @@
 {
-  "id" : {
-    "name" : "ROI2017_wkw",
-    "team" : "Connectomics department"
+  "id": {
+    "name": "ROI2017_wkw",
+    "team": "Connectomics department"
   },
-  "dataLayers" : [ {
-    "name" : "color",
-    "category" : "color",
-    "boundingBox" : {
-      "topLeft" : [ 0, 0, 0 ],
-      "width" : 1024,
-      "height" : 1024,
-      "depth" : 1024
+  "dataLayers": [
+    {
+      "name": "color",
+      "category": "color",
+      "boundingBox": {
+        "topLeft": [0, 0, 0],
+        "width": 1024,
+        "height": 1024,
+        "depth": 1024
+      },
+      "wkwResolutions": [
+        {
+          "resolution": [1, 1, 1],
+          "cubeLength": 1024
+        },
+        {
+          "resolution": [16, 16, 16],
+          "cubeLength": 64
+        },
+        {
+          "resolution": [2, 2, 2],
+          "cubeLength": 512
+        },
+        {
+          "resolution": [32, 32, 32],
+          "cubeLength": 32
+        },
+        {
+          "resolution": [4, 4, 4],
+          "cubeLength": 256
+        },
+        {
+          "resolution": [8, 8, 8],
+          "cubeLength": 128
+        }
+      ],
+      "elementClass": "uint8",
+      "dataFormat": "wkw"
     },
-    "wkwResolutions" : [ {
-      "resolution" : [1, 1, 1],
-      "cubeLength" : 1024
-    }, {
-      "resolution" : [16, 16, 16],
-      "cubeLength" : 64
-    }, {
-      "resolution" : [2, 2, 2],
-      "cubeLength" : 512
-    }, {
-      "resolution" : [32, 32, 32],
-      "cubeLength" : 32
-    }, {
-      "resolution" : [4, 4, 4],
-      "cubeLength" : 256
-    }, {
-      "resolution" : [8, 8, 8],
-      "cubeLength" : 128
-    } ],
-    "elementClass" : "uint8",
-    "dataFormat" : "wkw"
-  }, {
-    "name" : "segmentation",
-    "boundingBox" : {
-      "topLeft" : [ 0, 0, 0 ],
-      "width" : 1024,
-      "height" : 1024,
-      "depth" : 1024
-    },
-    "wkwResolutions" : [ {
-      "resolution" : [1, 1, 1],
-      "cubeLength" : 1024
-    }, {
-      "resolution" : [16, 16, 16],
-      "cubeLength" : 64
-    }, {
-      "resolution" : [2, 2, 2],
-      "cubeLength" : 512
-    }, {
-      "resolution" : [32, 32, 32],
-      "cubeLength" : 32
-    }, {
-      "resolution" : [4, 4, 4],
-      "cubeLength" : 256
-    }, {
-      "resolution" : [8, 8, 8],
-      "cubeLength" : 128
-    } ],
-    "elementClass" : "uint32",
-    "mappings" : [ "larger5um1", "axons", "astrocyte-ge-7", "astrocyte", "mitochondria", "astrocyte-full" ],
-    "largestSegmentId" : 1000000000,
-    "category" : "segmentation",
-    "dataFormat" : "wkw"
-  } ],
-  "scale" : [ 11.239999771118164, 11.239999771118164, 28 ]
+    {
+      "name": "segmentation",
+      "boundingBox": {
+        "topLeft": [0, 0, 0],
+        "width": 1024,
+        "height": 1024,
+        "depth": 1024
+      },
+      "wkwResolutions": [
+        {
+          "resolution": [1, 1, 1],
+          "cubeLength": 1024
+        },
+        {
+          "resolution": [16, 16, 16],
+          "cubeLength": 64
+        },
+        {
+          "resolution": [2, 2, 2],
+          "cubeLength": 512
+        },
+        {
+          "resolution": [32, 32, 32],
+          "cubeLength": 32
+        },
+        {
+          "resolution": [4, 4, 4],
+          "cubeLength": 256
+        },
+        {
+          "resolution": [8, 8, 8],
+          "cubeLength": 128
+        }
+      ],
+      "elementClass": "uint32",
+      "mappings": [
+        "larger5um1",
+        "axons",
+        "astrocyte-ge-7",
+        "astrocyte",
+        "mitochondria",
+        "astrocyte-full"
+      ],
+      "largestSegmentId": 1000000000,
+      "category": "segmentation",
+      "dataFormat": "wkw"
+    }
+  ],
+  "scale": [11.239999771118164, 11.239999771118164, 28]
 }
