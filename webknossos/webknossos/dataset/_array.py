@@ -304,6 +304,7 @@ class ZarrArray(BaseArray):
                 else None
             ),
             store=_fsstore_from_path(path),
+            order="F",
         )
         return ZarrArray(path)
 

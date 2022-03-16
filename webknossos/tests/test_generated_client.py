@@ -19,6 +19,8 @@ from webknossos.client._generated.models.datastore_list_response_200_item import
 from webknossos.client.context import _get_generated_client, webknossos_context
 from webknossos.utils import time_since_epoch_in_ms
 
+pytestmark = [pytest.mark.with_vcr]
+
 DATASTORE_URL = "https://data-humerus.webknossos.org"
 
 

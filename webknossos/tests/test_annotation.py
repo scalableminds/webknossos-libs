@@ -5,6 +5,8 @@ from webknossos.geometry import Vec3Int
 
 from .constants import TESTDATA_DIR, TESTOUTPUT_DIR
 
+pytestmark = [pytest.mark.with_vcr]
+
 
 def test_annotation_from_zip_file() -> None:
 

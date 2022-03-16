@@ -11,6 +11,8 @@ from scipy.spatial import cKDTree
 
 from webknossos.geometry import Mag
 
+pytestmark = [pytest.mark.with_vcr]
+
 
 @contextmanager
 def tmp_cwd() -> Iterator[None]:
