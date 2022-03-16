@@ -3,3 +3,4 @@
 
 # Except
 !.gitignore
+!/Organization_X/e2006_knossos/*

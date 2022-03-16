@@ -16,7 +16,10 @@ from openapi_python_client import (
 )
 
 WK_URL = os.environ["WK_URL"]
-assert WK_URL == "http://localhost:9000", f"The wrong WK_URL is configured, got {WK_URL}, expected http://localhost:9000. " + "Are you running this script via ./generate_client.sh?"
+assert WK_URL == "http://localhost:9000", (
+    f"The wrong WK_URL is configured, got {WK_URL}, expected http://localhost:9000. "
+    + "Are you running this script via ./generate_client.sh?"
+)
 WK_TOKEN = os.environ["WK_TOKEN"]
 SCHEMA_URL = f"{WK_URL}/swagger.json"
 CONVERTER_URL = "https://converter.swagger.io/api/convert"
@@ -82,9 +85,25 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
     from webknossos.client.context import _get_generated_client
     from webknossos.utils import snake_to_camel_case
 
-    response = httpx.post(
-        url=f"{WK_URL}/data/triggers/checkInboxBlocking?token={WK_TOKEN}",
+    organization_name = "Organization_X"
+    dataset_name = "e2006_knossos"
+    task_id = "581367a82faeb37a008a5352"
+    user_id = "570b9f4d2a7c0e4d008da6ef"
+    project_id = "58135bfd2faeb3190181c057"
+    project_name = "Test_Project"
+
+    extract_200_response(
+        httpx.post(
+            url=f"{WK_URL}/data/triggers/checkInboxBlocking?token={WK_TOKEN}",
+        )
     )
+    response = httpx.get(
+        url=f"{WK_URL}/api/datasets/{organization_name}/{dataset_name}",
+        headers={"X-Auth-Token": f"{WK_TOKEN}"},
+    )
+    assert (
+        response.status_code == 200 and response.json()["isActive"]
+    ), f"You need to copy or link any dataset to binaryData/{organization_name}/{dataset_name}."
     with open("testdata/annotations/test_env_upload.zip", mode="rb") as f:
         response = httpx.post(
             url=f"{WK_URL}/api/annotations/upload",
@@ -98,83 +117,95 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
         response.status_code == 200
     ), f"Failed to upload annotation: {response.status_code}: {response.text}"
     explorative_annotation_id = response.json()["annotation"]["id"]
-    organization_name = "Organization_X"
-    dataset_name = "l4_sample"
-    task_id = "581367a82faeb37a008a5352"
-    user_id = "570b9f4d2a7c0e4d008da6ef"
-    project_id = "58135bfd2faeb3190181c057"
-    project_name = "Test_Project"
 
     d = datetime.utcnow()
     unixtime = calendar.timegm(d.utctimetuple())
     client = _get_generated_client(enforce_auth=True)
 
-    yield extract_200_response(
+    yield (
         "annotationInfo",
-        annotation_info.sync_detailed(
-            typ="Explorational",
-            id=explorative_annotation_id,
-            client=client,
-            timestamp=unixtime,
+        extract_200_response(
+            annotation_info.sync_detailed(
+                typ="Explorational",
+                id=explorative_annotation_id,
+                client=client,
+                timestamp=unixtime,
+            )
         ),
     )
 
-    yield extract_200_response(
+    yield (
         "datasetInfo",
-        dataset_info.sync_detailed(
-            organization_name=organization_name,
-            data_set_name=dataset_name,
-            client=client,
+        extract_200_response(
+            dataset_info.sync_detailed(
+                organization_name=organization_name,
+                data_set_name=dataset_name,
+                client=client,
+            )
         ),
     )
 
-    yield extract_200_response(
+    yield (
         "taskInfo",
-        task_info.sync_detailed(
-            id=task_id,
-            client=client,
+        extract_200_response(
+            task_info.sync_detailed(
+                id=task_id,
+                client=client,
+            ),
         ),
     )
 
-    yield extract_200_response(
+    yield (
         "userInfoById",
-        user_info_by_id.sync_detailed(
-            id=user_id,
-            client=client,
+        extract_200_response(
+            user_info_by_id.sync_detailed(
+                id=user_id,
+                client=client,
+            ),
         ),
     )
 
-    yield extract_200_response(
+    yield (
         "projectInfoById",
-        project_info_by_id.sync_detailed(
-            id=project_id,
-            client=client,
+        extract_200_response(
+            project_info_by_id.sync_detailed(
+                id=project_id,
+                client=client,
+            ),
         ),
     )
 
-    yield extract_200_response(
+    yield (
         "projectInfoByName",
-        project_info_by_name.sync_detailed(name=project_name, client=client),
-    )
-
-    yield extract_200_response(
-        "taskInfosByProjectId",
-        task_infos_by_project_id.sync_detailed(
-            id=project_id,
-            client=client,
+        extract_200_response(
+            project_info_by_name.sync_detailed(name=project_name, client=client),
         ),
     )
 
-    yield extract_200_response(
-        "annotationInfosByTaskId",
-        annotation_infos_by_task_id.sync_detailed(id=task_id, client=client),
+    yield (
+        "taskInfosByProjectId",
+        extract_200_response(
+            task_infos_by_project_id.sync_detailed(
+                id=project_id,
+                client=client,
+            ),
+        ),
     )
 
-    yield extract_200_response(
+    yield (
+        "annotationInfosByTaskId",
+        extract_200_response(
+            annotation_infos_by_task_id.sync_detailed(id=task_id, client=client),
+        ),
+    )
+
+    yield (
         "userLoggedTime",
-        user_logged_time.sync_detailed(
-            id=user_id,
-            client=client,
+        extract_200_response(
+            user_logged_time.sync_detailed(
+                id=user_id,
+                client=client,
+            ),
         ),
     )
 
@@ -188,8 +219,9 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
         api_endpoint_name = api_endpoint.__name__.split(".")[-1]
         api_endpoint_name = snake_to_camel_case(api_endpoint_name)
 
-        yield extract_200_response(
-            api_endpoint_name, api_endpoint.sync_detailed(client=client)
+        yield (
+            api_endpoint_name,
+            extract_200_response(api_endpoint.sync_detailed(client=client)),
         )
 
 
@@ -212,9 +244,9 @@ OPTIONAL_FIELDS = [
 ]
 
 
-def extract_200_response(name: str, response: Any) -> Tuple[str, bytes]:
+def extract_200_response(response: Any) -> bytes:
     assert response.status_code == 200, response.content
-    return name, response.content
+    return response.content
 
 
 def make_properties_required(x: Any) -> None:
