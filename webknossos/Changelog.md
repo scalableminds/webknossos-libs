@@ -13,8 +13,10 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.11...HEAD)
 
 ### Breaking Changes
+- The annotation class now exposes `BoundingBox` objects instead of tuples. [#646](https://github.com/scalableminds/webknossos-libs/pull/646)
 
 ### Added
+- The `BoundingBox` class now supports the following additional properties: `id`, `name`, `is_visible` and `color'. [#646](https://github.com/scalableminds/webknossos-libs/pull/646)
 
 ### Changed
 
