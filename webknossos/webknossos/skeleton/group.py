@@ -119,20 +119,17 @@ class Group:
             default=0,
         )
 
-    def flattened_graphs(self) -> Generator[Graph, None, None]:
+    def flattened_graphs(self) -> Iterator[Graph]:
         """Returns an iterator of all graphs within this group (and its subgroups)."""
-        for child in self._children:
-            if isinstance(child, Group):
-                yield from child.flattened_graphs()
-            else:
-                yield child
+        yield from self.graphs
+        for group in self.groups:
+            yield from group.flattened_graphs()
 
-    def flattened_groups(self) -> Generator["Group", None, None]:
+    def flattened_groups(self) -> Iterator["Group"]:
         """Returns an iterator of all groups within this group (and its subgroups)."""
-        for child in self._children:
-            if isinstance(child, Group):
-                yield child
-                yield from child.flattened_groups()
+        for group in self.groups:
+            yield group
+            yield from group.flattened_groups()
 
     def get_node_by_id(self, node_id: int) -> "Node":
         """Returns the node which has the specified node id."""
