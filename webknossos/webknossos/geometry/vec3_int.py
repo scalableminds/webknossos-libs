@@ -1,4 +1,3 @@
-from math import floor
 from operator import add, floordiv, mod, mul, sub
 from typing import Any, Callable, Iterable, List, Optional, Tuple, Union, cast
 

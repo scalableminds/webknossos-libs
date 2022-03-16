@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Generator, Iterator, Optional, Set, Tuple, Union, cast
+from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple, Union, cast
 
 import attr
 from boltons.strutils import unit_len
