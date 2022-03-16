@@ -95,7 +95,7 @@ class Group:
         return (child for child in self._child_graphs)
 
     @property
-    def groups(self) -> Iterator[Group]:
+    def groups(self) -> Iterator["Group"]:
         """Returns all (immediate) group children as an iterator.
         Use flattened_groups if you need also need groups within subgroups."""
         return (child for child in self._child_groups)
