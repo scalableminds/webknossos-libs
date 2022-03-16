@@ -3,6 +3,8 @@ import calendar
 import functools
 import json
 import logging
+import os
+import sys
 import time
 import warnings
 from concurrent.futures import as_completed
@@ -154,10 +156,28 @@ def copy_directory_with_symlinks(
 
 
 def setup_logging(args: argparse.Namespace) -> None:
-    logging.basicConfig(
-        level=(logging.DEBUG if args.verbose else logging.INFO),
-        format="%(asctime)s %(levelname)s %(message)s",
-    )
+    log_path = Path(f"./logs/cuber_{time.strftime('%Y-%m-%d_%H%M%S')}.txt")
+
+    console_log_level = logging.DEBUG if args.verbose else logging.INFO
+    file_log_level = logging.DEBUG
+
+    logging_formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
+
+    # Always set the global log level to the more verbose of console_log_level and
+    # file_log_level to allow to log with different log levels to console and files.
+    root_logger = logging.getLogger()
+    root_logger.setLevel(min(console_log_level, file_log_level))
+
+    console = logging.StreamHandler(sys.stdout)
+    console.setLevel(console_log_level)
+    console.setFormatter(logging_formatter)
+    root_logger.addHandler(console)
+
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    file_handler = logging.FileHandler(log_path, mode="w", encoding="UTF-8")
+    file_handler.setLevel(file_log_level)
+    file_handler.setFormatter(logging_formatter)
+    root_logger.addHandler(file_handler)
 
 
 def add_verbose_flag(parser: argparse.ArgumentParser) -> None:

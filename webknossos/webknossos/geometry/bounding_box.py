@@ -14,7 +14,11 @@ from .vec3_int import Vec3Int, Vec3IntLike
 class BoundingBox:
     topleft: Vec3Int = attr.field(converter=Vec3Int)
     size: Vec3Int = attr.field(converter=Vec3Int)
-    bottomright = attr.field(init=False)
+    bottomright: Vec3Int = attr.field(init=False)
+    name: Optional[str] = "Unnamed Bounding Box"
+    is_visible: bool = True
+    id: Optional[str] = None
+    color: Optional[Tuple[float, float, float, float]] = None
 
     def __attrs_post_init__(self) -> None:
         if not self.size.is_positive():
