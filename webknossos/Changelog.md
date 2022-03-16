@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.9...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.10...HEAD)
 
 ### Breaking Changes
 - Consistently rename `organization_name` parameters to `organization_id` (except in deprecated `webknossos.client.download_dataset`). [#639](https://github.com/scalableminds/webknossos-libs/pull/639)
@@ -18,12 +18,22 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Added
 
 ### Changed
+
+### Fixed
+
+
+## [0.9.10](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.10) - 2022-03-15
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.9...v0.9.10)
+
+### Changed
+- Annotation: `Annotation.temporary_volume_layer_copy` now uses the NML-provided `scale`. [#644](https://github.com/scalableminds/webknossos-libs/pull/644)
 - Dataset: Moved the deprecation warning from `get_color_layers()` to the actually deprecated method `get_color_layer()`.
   [#635](https://github.com/scalableminds/webknossos-libs/pull/635)
 - Inconsistent writes to datasets properties (e.g., caused due to multiprocessing) are detected automatically. The warning can be escalated to an exception with `warnings.filterwarnings("error", module="webknossos", message=r"\[WARNING\]")`. [#633](https://github.com/scalableminds/webknossos-libs/pull/633)
 
 ### Fixed
 - Tests: The `./test.sh` script works on macOS again and doesn't throw Network Errors anymore. However the introduced fix could lead to slightly different behaviour on macOS tests vs CI tests, when UNIX socket communication is involved. [#618](https://github.com/scalableminds/webknossos-libs/pull/618)
+
 
 
 ## [0.9.9](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.9) - 2022-03-03

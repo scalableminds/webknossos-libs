@@ -332,7 +332,7 @@ jobs:
         docker push scalableminds/webknossos-cuber:$GITHUB_SHA
 
     - name: Push docker images (for tag)
-      if: startsWith(github.event.ref, 'refs/tags')
+      if: github.ref_type == 'tag'
       run: |
         CI_TAG=$(git describe --tags)
         docker tag \
@@ -341,7 +341,7 @@ jobs:
         docker push scalableminds/webknossos-cuber:$CI_TAG
 
     - name: Push docker images (for branch)
-      if: startsWith(github.event.ref, 'refs/heads')
+      if: github.ref_type == 'branch'
       run: |
         CI_BRANCH=${GITHUB_REF##*/}
         NORMALIZED_CI_BRANCH=${CI_BRANCH//[\/-]/_}
@@ -386,7 +386,7 @@ jobs:
         docs/generate.sh --persist
 
     - name: Push docs (for branch)
-      if: startsWith(github.event.ref, 'refs/heads')
+      if: github.ref_type == 'branch'
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -397,7 +397,7 @@ jobs:
         aws s3 sync --acl public-read docs/out s3://static.webknossos.org/docs/${NORMALIZED_CI_BRANCH}
 
     - name: Push docs (for tag)
-      if: startsWith(github.event.ref, 'refs/tags')
+      if: github.ref_type == 'tag'
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -423,7 +423,7 @@ jobs:
       always() &&
       !contains(needs.*.result, 'failure') &&
       !contains(needs.*.result, 'cancelled') &&
-      startsWith(github.event.ref, 'refs/tags') &&
+      github.ref_type == 'tag' &&
       !github.event.pull_request.head.repo.fork
     runs-on: ubuntu-latest
 
