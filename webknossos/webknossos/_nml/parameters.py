@@ -7,7 +7,7 @@ from webknossos.geometry import BoundingBox
 
 from .utils import Vector3, enforce_not_null, filter_none_values
 
-DEFAULT_COLOR = [0.2, 0.5, 0.1, 1]
+DEFAULT_BOUNDING_BOX_COLOR = [0.2, 0.5, 0.1, 1]
 
 
 class Parameters(NamedTuple):
@@ -29,7 +29,7 @@ class Parameters(NamedTuple):
         self, xf: XmlWriter, bounding_box: BoundingBox, tag_name: Text
     ) -> None:
 
-        color = bounding_box.color or DEFAULT_COLOR
+        color = bounding_box.color or DEFAULT_BOUNDING_BOX_COLOR
 
         xf.tag(
             tag_name,
@@ -138,12 +138,14 @@ class Parameters(NamedTuple):
             int(bounding_box_element.get("height", 0)),
             int(bounding_box_element.get("depth", 0)),
         )
-        color = (
-            float(bounding_box_element.get("color.r", 0)),
-            float(bounding_box_element.get("color.g", 0)),
-            float(bounding_box_element.get("color.b", 0)),
-            float(bounding_box_element.get("color.a", 0)),
-        )
+        color = None
+        if bounding_box_element.get("color.r"):  # also checks for empty strings
+            color = (
+                float(enforce_not_null(bounding_box_element.get("color.r"))),
+                float(enforce_not_null(bounding_box_element.get("color.g"))),
+                float(enforce_not_null(bounding_box_element.get("color.b"))),
+                float(enforce_not_null(bounding_box_element.get("color.a"))),
+            )
 
         return BoundingBox(
             topleft,

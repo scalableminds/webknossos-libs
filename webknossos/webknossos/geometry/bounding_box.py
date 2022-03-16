@@ -15,10 +15,10 @@ class BoundingBox:
     topleft: Vec3Int = attr.field(converter=Vec3Int)
     size: Vec3Int = attr.field(converter=Vec3Int)
     bottomright: Vec3Int = attr.field(init=False)
-    name: Optional[str] = attr.field(default="Unnamed Bounding Box")
-    is_visible: bool = attr.field(default=True)
-    id: Optional[str] = attr.field(default=None)
-    color: Optional[Tuple[float, float, float, float]] = attr.field(default=None)
+    name: Optional[str] = "Unnamed Bounding Box"
+    is_visible: bool = True
+    id: Optional[str] = None
+    color: Optional[Tuple[float, float, float, float]] = None
 
     def __attrs_post_init__(self) -> None:
         if not self.size.is_positive():
