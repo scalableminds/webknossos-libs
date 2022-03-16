@@ -20,10 +20,15 @@ GroupOrGraph = Union["Group", Graph]
 class Group:
     _id: int = attr.ib(init=False)
     name: str
-    _children: Set[GroupOrGraph] = attr.ib(
+    _child_groups: Set["Group"] = attr.ib(
         factory=set,
         init=False,
-        repr=lambda children: f"<{unit_len(children, 'children')}>",
+        repr=lambda children: f"<{unit_len(children, 'child groups')}>",
+    )
+    _child_graphs: Set[Graph] = attr.ib(
+        factory=set,
+        init=False,
+        repr=lambda children: f"<{unit_len(children, 'child graphs')}>",
     )
     _skeleton: "Skeleton" = attr.ib(eq=False, repr=False)
     _enforced_id: Optional[int] = attr.ib(None, eq=False, repr=False)
@@ -73,26 +78,27 @@ class Group:
             skeleton=self._skeleton,
             enforced_id=_enforced_id,
         )
-        self._children.add(new_graph)
+        self._child_graphs.add(new_graph)
 
         return new_graph
 
     @property
     def children(self) -> Iterator[GroupOrGraph]:
         """Returns all (immediate) children (groups and graphs) as an iterator."""
-        return (child for child in self._children)
+        yield from self.graphs
+        yield from self.groups
 
     @property
     def graphs(self) -> Iterator[GroupOrGraph]:
         """Returns all (immediate) graph children as an iterator.
         Use flattened_graphs if you need also need graphs within subgroups."""
-        return (child for child in self._children if isinstance(child, Graph))
+        return (child for child in self._child_graphs)
 
     @property
     def groups(self) -> Iterator[GroupOrGraph]:
         """Returns all (immediate) group children as an iterator.
         Use flattened_groups if you need also need groups within subgroups."""
-        return (child for child in self._children if isinstance(child, Group))
+        return (child for child in self._child_groups)
 
     def add_group(
         self,
@@ -101,7 +107,7 @@ class Group:
     ) -> "Group":
         """Adds a (sub) group to the current group with the provided name."""
         new_group = Group(name, skeleton=self._skeleton, enforced_id=_enforced_id)
-        self._children.add(new_group)
+        self._child_groups.add(new_group)
         return new_group
 
     def get_total_node_count(self) -> int:
@@ -160,7 +166,7 @@ class Group:
         return wknml.Group(
             self.id,
             self.name,
-            children=[g.as_nml_group() for g in self._children if isinstance(g, Group)],
+            children=[g.as_nml_group() for g in self._child_groups],
         )
 
     def __hash__(self) -> int:
