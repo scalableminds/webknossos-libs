@@ -111,7 +111,7 @@ def downsample_mags(
 ) -> None:
     """
     Argument `path` expects the directory containing the dataset.
-    Argument `layer_name` expectes the name of the cubed layer (color or segmentation).
+    Argument `layer_name` expects the name of the layer (color or segmentation).
     Argument `from_mag` expects the resolution to base downsampling on.
 
     For the other parameters see the CLI help or `Layer.downsample` and `Layer.downsampling_mag`.
