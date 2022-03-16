@@ -629,6 +629,8 @@ class Layer:
          - "bilinear"
          - "bicubic"
 
+        Only "median" and "mode" currently work with anisotropic downsampling.
+
         The `args` can contain information to distribute the computation.
         If allow_overwrite is True, an existing Mag may be overwritten.
 
