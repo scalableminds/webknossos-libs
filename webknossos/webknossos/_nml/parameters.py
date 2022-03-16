@@ -3,7 +3,11 @@ from xml.etree.ElementTree import Element
 
 from loxun import XmlWriter
 
-from .utils import IntVector6, Vector3, enforce_not_null, filter_none_values
+from webknossos.geometry import BoundingBox
+
+from .utils import Vector3, enforce_not_null, filter_none_values
+
+DEFAULT_BOUNDING_BOX_COLOR = [0.2, 0.5, 0.1, 1]
 
 
 class Parameters(NamedTuple):
@@ -18,21 +22,31 @@ class Parameters(NamedTuple):
     editPosition: Optional[Vector3] = None
     editRotation: Optional[Vector3] = None
     zoomLevel: Optional[float] = None
-    taskBoundingBox: Optional[IntVector6] = None
-    userBoundingBoxes: Optional[List[IntVector6]] = None
+    taskBoundingBox: Optional[BoundingBox] = None
+    userBoundingBoxes: Optional[List[BoundingBox]] = None
 
     def _dump_bounding_box(
-        self, xf: XmlWriter, bounding_box: IntVector6, tag_name: Text
+        self, xf: XmlWriter, bounding_box: BoundingBox, tag_name: Text
     ) -> None:
+
+        color = bounding_box.color or DEFAULT_BOUNDING_BOX_COLOR
+
         xf.tag(
             tag_name,
             {
-                "topLeftX": str(bounding_box[0]),
-                "topLeftY": str(bounding_box[1]),
-                "topLeftZ": str(bounding_box[2]),
-                "width": str(bounding_box[3]),
-                "height": str(bounding_box[4]),
-                "depth": str(bounding_box[5]),
+                "id": str(bounding_box.id),
+                "name": str(bounding_box.name),
+                "isVisible": "true" if bounding_box.is_visible else "false",
+                "color.r": str(color[0]),
+                "color.g": str(color[1]),
+                "color.b": str(color[2]),
+                "color.a": str(color[3]),
+                "topLeftX": str(bounding_box.topleft.x),
+                "topLeftY": str(bounding_box.topleft.y),
+                "topLeftZ": str(bounding_box.topleft.z),
+                "width": str(bounding_box.size.x),
+                "height": str(bounding_box.size.y),
+                "depth": str(bounding_box.size.z),
             },
         )
 
@@ -112,29 +126,45 @@ class Parameters(NamedTuple):
         xf.endTag()  # parameters
 
     @classmethod
-    def _parse_bounding_box(cls, bounding_box_element: Element) -> IntVector6:
-        return (
+    def _parse_bounding_box(cls, bounding_box_element: Element) -> BoundingBox:
+
+        topleft = (
             int(bounding_box_element.get("topLeftX", 0)),
             int(bounding_box_element.get("topLeftY", 0)),
             int(bounding_box_element.get("topLeftZ", 0)),
+        )
+        size = (
             int(bounding_box_element.get("width", 0)),
             int(bounding_box_element.get("height", 0)),
             int(bounding_box_element.get("depth", 0)),
         )
+        color = None
+        if bounding_box_element.get("color.r"):  # also checks for empty strings
+            color = (
+                float(enforce_not_null(bounding_box_element.get("color.r"))),
+                float(enforce_not_null(bounding_box_element.get("color.g"))),
+                float(enforce_not_null(bounding_box_element.get("color.b"))),
+                float(enforce_not_null(bounding_box_element.get("color.a"))),
+            )
+
+        return BoundingBox(
+            topleft,
+            size,
+            name=bounding_box_element.get("name"),
+            is_visible=bounding_box_element.get("isVisible", "true") == "true",
+            id=bounding_box_element.get("id"),
+            color=color,
+        )
 
     @classmethod
-    def _parse_user_bounding_boxes(
-        cls, nml_parameters: Element
-    ) -> Optional[List[IntVector6]]:
-        # ToDo support color, id, name, isVisible attributes pylint: disable=fixme
-        # https://github.com/scalableminds/wknml/issues/46
+    def _parse_user_bounding_boxes(cls, nml_parameters: Element) -> List[BoundingBox]:
         if nml_parameters.find("userBoundingBox") is None:
-            return None
+            return []
         bb_elements = nml_parameters.findall("userBoundingBox")
         return [cls._parse_bounding_box(bb_element) for bb_element in bb_elements]
 
     @classmethod
-    def _parse_task_bounding_box(cls, nml_parameters: Element) -> Optional[IntVector6]:
+    def _parse_task_bounding_box(cls, nml_parameters: Element) -> Optional[BoundingBox]:
         bb_element = nml_parameters.find("taskBoundingBox")
         if bb_element is not None:
             return cls._parse_bounding_box(bb_element)

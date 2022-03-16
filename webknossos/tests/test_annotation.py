@@ -1,7 +1,10 @@
+import tempfile
+from pathlib import Path
+
 import pytest
 
 import webknossos as wk
-from webknossos.geometry import Vec3Int
+from webknossos.geometry import BoundingBox, Vec3Int
 
 from .constants import TESTDATA_DIR, TESTOUTPUT_DIR
 
@@ -141,3 +144,37 @@ def test_annotation_from_url() -> None:
     annotation = wk.Annotation.load(TESTOUTPUT_DIR / "test_dummy_downloaded.zip")
     assert annotation.dataset_name == "l4dense_motta_et_al_demo_v2"
     assert len(list(annotation.skeleton.flattened_graphs())) == 1
+
+
+def test_reading_bounding_boxes() -> None:
+    def check_properties(annotation: wk.Annotation) -> None:
+        assert len(annotation.user_bounding_boxes) == 2
+        assert annotation.user_bounding_boxes[0].topleft.x == 2371
+        assert annotation.user_bounding_boxes[0].name == "Bounding box 1"
+        assert annotation.user_bounding_boxes[0].is_visible
+        assert annotation.user_bounding_boxes[0].id == "1"
+
+        assert annotation.user_bounding_boxes[1] == BoundingBox(
+            (371, 4063, 1676), (891, 579, 232)
+        )
+        assert annotation.user_bounding_boxes[1].name == "Bounding box 2"
+        assert not annotation.user_bounding_boxes[1].is_visible
+        assert annotation.user_bounding_boxes[1].color == (
+            0.2705882489681244,
+            0.6470588445663452,
+            0.19607843458652496,
+            1.0,
+        )
+
+    # Check loading checked-in file
+    input_path = TESTDATA_DIR / "annotations" / "bounding-boxes-example.zip"
+    annotation = wk.Annotation.load(input_path)
+    check_properties(annotation)
+
+    # Check exporting and re-reading checked-in file (roundtrip)
+    with tempfile.TemporaryDirectory(dir=".") as tmp_dir:
+        output_path = Path(tmp_dir) / "serialized.zip"
+        annotation.save(output_path)
+
+        annotation_deserialized = wk.Annotation.load(output_path)
+        check_properties(annotation_deserialized)

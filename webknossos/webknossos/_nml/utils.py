@@ -2,7 +2,6 @@ from typing import Dict, Optional, Tuple, TypeVar
 
 Vector3 = Tuple[float, float, float]
 Vector4 = Tuple[float, float, float, float]
-IntVector6 = Tuple[int, int, int, int, int, int]
 
 
 def filter_none_values(_dict: Dict[str, Optional[str]]) -> Dict[str, str]:

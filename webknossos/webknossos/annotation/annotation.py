@@ -49,11 +49,11 @@ from zipp import Path as ZipPath
 import webknossos._nml as wknml
 from webknossos.annotation._nml_conversion import annotation_to_nml, nml_to_skeleton
 from webknossos.dataset import SEGMENTATION_CATEGORY, Dataset, Layer, SegmentationLayer
+from webknossos.geometry import BoundingBox
 from webknossos.skeleton import Skeleton
 from webknossos.utils import time_since_epoch_in_ms
 
 Vector3 = Tuple[float, float, float]
-IntVector6 = Tuple[int, int, int, int, int, int]
 
 
 MAG_RE = r"((\d+-\d+-)?\d+)"
@@ -90,8 +90,8 @@ class Annotation:
     edit_rotation: Optional[Vector3] = None
     zoom_level: Optional[float] = None
     metadata: Dict[str, str] = attr.Factory(dict)
-    task_bounding_box: Optional[IntVector6] = None
-    user_bounding_boxes: Optional[List[IntVector6]] = None
+    task_bounding_box: Optional[BoundingBox] = None
+    user_bounding_boxes: List[BoundingBox] = attr.Factory(list)
     _volume_layers: List[_VolumeLayer] = attr.field(factory=list, init=False)
 
     @classmethod
@@ -287,7 +287,7 @@ class Annotation:
                 edit_rotation=nml.parameters.editRotation,
                 zoom_level=nml.parameters.zoomLevel,
                 task_bounding_box=nml.parameters.taskBoundingBox,
-                user_bounding_boxes=nml.parameters.userBoundingBoxes,
+                user_bounding_boxes=nml.parameters.userBoundingBoxes or [],
                 metadata={
                     i.name: i.content
                     for i in nml.meta
@@ -453,8 +453,8 @@ class Annotation:
 
     def _get_volume_layer(
         self,
-        volume_layer_name: Optional[str],
-        volume_layer_id: Optional[int],
+        volume_layer_name: Optional[str] = None,
+        volume_layer_id: Optional[int] = None,
     ) -> _VolumeLayer:
         assert len(self._volume_layers) > 0, "No volume annotations present."
 
@@ -595,22 +595,21 @@ class Annotation:
         """
 
         with TemporaryDirectory() as tmp_annotation_dir:
-            tmp_annotation_dataset_path = (
-                Path(tmp_annotation_dir) / "tmp_annotation_dataset"
+            input_annotation_dataset = Dataset(
+                tmp_annotation_dir,
+                name="tmp_annotation_dataset",
+                scale=self.scale,
+                exist_ok=True,
             )
 
-        input_annotation_dataset = Dataset(
-            str(tmp_annotation_dataset_path), scale=(1, 1, 1), exist_ok=True
-        )
+            input_annotation_layer = self.export_volume_layer_to_dataset(
+                input_annotation_dataset,
+                "volume_layer",
+                volume_layer_name=volume_layer_name,
+                volume_layer_id=volume_layer_id,
+            )
 
-        input_annotation_layer = self.export_volume_layer_to_dataset(
-            input_annotation_dataset,
-            "volume_layer",
-            volume_layer_name=volume_layer_name,
-            volume_layer_id=volume_layer_id,
-        )
-
-        yield input_annotation_layer
+            yield input_annotation_layer
 
 
 Annotation._set_init_docstring()
