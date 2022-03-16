@@ -114,7 +114,7 @@ def downsample_mags(
     Argument `layer_name` expectes the name of the cubed layer (color or segmentation).
     Argument `from_mag` expects the resolution to base downsampling on.
 
-    For the other parameters see the cli help or `Layer.downsample` and `Layer.downsampling_mag`.
+    For the other parameters see the CLI help or `Layer.downsample` and `Layer.downsampling_mag`.
 
     Note: Not all `interpolation_mode`s work with anisotropic downsampling.
     """
