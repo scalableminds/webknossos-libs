@@ -98,7 +98,7 @@ def add_interpolation_flag(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--interpolation_mode",
         "-i",
-        help="Interpolation mode (median, mode, nearest, bilinear or bicubic)",
+        help="Interpolation mode (median, mode, nearest, bilinear or bicubic). At the moment only median and mode is supported for anisotropic downsampling. All of the modes are working with isotropic downsampling.",
         default="default",
     )
 
