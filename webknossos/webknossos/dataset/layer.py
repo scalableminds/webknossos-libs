@@ -190,8 +190,8 @@ class Layer:
 
         self.path.mkdir(parents=True, exist_ok=True)
 
-        for resolution in properties.mags:
-            self._setup_mag(Mag(resolution.mag))
+        for mag in properties.mags:
+            self._setup_mag(Mag(mag.mag))
         # Only keep the properties of mags that were initialized.
         # Sometimes the directory of a mag is removed from disk manually, but the properties are not updated.
         self._properties.mags = [
@@ -960,7 +960,7 @@ class Layer:
 
         try:
             cls_array = BaseArray.get_class(self._properties.data_format)
-            info = cls_array(
+            info = cls_array.open(
                 _find_mag_path_on_disk(self.dataset.path, self.name, mag_name)
             ).info
             self._mags[mag] = MagView(

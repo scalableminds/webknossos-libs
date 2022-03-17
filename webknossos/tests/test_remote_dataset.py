@@ -1,13 +1,14 @@
 import os
 import shutil
+import warnings
 from typing import Iterator, Tuple
 
 import numpy as np
 import pytest
-import s3fs
+import s3fs  # pylint: disable=unused-import
 from upath import UPath as Path
 
-from tests.constants import TESTDATA_DIR  # pylint: disable=unused-import
+from tests.constants import TESTDATA_DIR
 from webknossos.dataset import COLOR_CATEGORY, Dataset
 from webknossos.dataset._array import DataFormat
 from webknossos.dataset.layer_categories import SEGMENTATION_CATEGORY
@@ -18,11 +19,13 @@ S3_SECRET = "TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur"
 S3_ENDPOINT = "http://localhost:9000"
 
 BUCKET_PATH = Path(
-    "s3://test",
+    "s3://testoutput",
     key=S3_KEY,
     secret=S3_SECRET,
     client_kwargs={"endpoint_url": S3_ENDPOINT},
 )
+
+pytestmark = [pytest.mark.block_network(allowed_hosts=[".*"])]
 
 
 def assure_exported_properties(ds: Dataset) -> None:
@@ -64,7 +67,7 @@ def copytree(in_path: Path, out_path: Path) -> None:
 
 @pytest.fixture(scope="session", autouse=True)
 def create_bucket():
-    BUCKET_PATH.fs.mkdirs("test", exist_ok=True)
+    BUCKET_PATH.fs.mkdirs("testoutput", exist_ok=True)
 
 
 def delete_dir(relative_path: Path) -> None:
@@ -101,10 +104,9 @@ def test_create_dataset_with_layer_and_mag() -> None:
     ds.get_layer("color").add_mag("1")
     ds.get_layer("color").add_mag("2-2-1")
 
-    assert (BUCKET_PATH / "zarr_dataset" / "color" / "1").exists()
+    assert (BUCKET_PATH / "zarr_dataset" / "color" / "1-1-1").exists()
+    assert (BUCKET_PATH / "zarr_dataset" / "color" / "1-1-1" / ".zarray").exists()
     assert (BUCKET_PATH / "zarr_dataset" / "color" / "2-2-1").exists()
-
-    assert (BUCKET_PATH / "zarr_dataset" / "color" / "1" / ".zarray").exists()
     assert (BUCKET_PATH / "zarr_dataset" / "color" / "2-2-1" / ".zarray").exists()
 
     assert len(ds.layers) == 1
@@ -114,21 +116,21 @@ def test_create_dataset_with_layer_and_mag() -> None:
 
 
 def test_open_dataset() -> None:
-    delete_dir(BUCKET_PATH / f"simple_zarr_dataset")
+    delete_dir(BUCKET_PATH / "simple_zarr_dataset")
     copytree(
-        TESTDATA_DIR / f"simple_zarr_dataset",
-        BUCKET_PATH / f"simple_zarr_dataset",
+        TESTDATA_DIR / "simple_zarr_dataset",
+        BUCKET_PATH / "simple_zarr_dataset",
     )
-    ds = Dataset.open(BUCKET_PATH / f"simple_zarr_dataset")
+    ds = Dataset.open(BUCKET_PATH / "simple_zarr_dataset")
 
     assert len(ds.layers) == 1
     assert len(ds.get_layer("color").mags) == 1
-    assert ds.get_layer("color").data_format == data_format
+    assert ds.get_layer("color").data_format == DataFormat.Zarr
 
 
 def test_modify_existing_dataset() -> None:
-    delete_dir(BUCKET_PATH / f"simple_zarr_dataset")
-    ds1 = Dataset(BUCKET_PATH / f"simple_zarr_dataset", scale=(1, 1, 1))
+    delete_dir(BUCKET_PATH / "simple_zarr_dataset")
+    ds1 = Dataset(BUCKET_PATH / "simple_zarr_dataset", scale=(1, 1, 1))
     ds1.add_layer(
         "color",
         COLOR_CATEGORY,
@@ -137,7 +139,7 @@ def test_modify_existing_dataset() -> None:
         data_format=DataFormat.Zarr,
     )
 
-    ds2 = Dataset.open(BUCKET_PATH / f"simple_zarr_dataset")
+    ds2 = Dataset.open(BUCKET_PATH / "simple_zarr_dataset")
 
     ds2.add_layer(
         "segmentation",
@@ -147,21 +149,21 @@ def test_modify_existing_dataset() -> None:
         data_format=DataFormat.Zarr,
     )
 
-    assert (BUCKET_PATH / f"simple_zarr_dataset" / "segmentation").is_dir()
+    assert (BUCKET_PATH / "simple_zarr_dataset" / "segmentation").is_dir()
 
     # Note: ds1 is outdated because the same dataset was opened again and changed.
     assure_exported_properties(ds2)
 
 
 def test_view_read() -> None:
-    delete_dir(BUCKET_PATH / f"simple_zarr_dataset")
+    delete_dir(BUCKET_PATH / "simple_zarr_dataset")
     copytree(
-        TESTDATA_DIR / f"simple_zarr_dataset",
-        BUCKET_PATH / f"simple_zarr_dataset",
+        TESTDATA_DIR / "simple_zarr_dataset",
+        BUCKET_PATH / "simple_zarr_dataset",
     )
 
     wk_view = (
-        Dataset.open(BUCKET_PATH / f"simple_zarr_dataset")
+        Dataset.open(BUCKET_PATH / "simple_zarr_dataset")
         .get_layer("color")
         .get_mag("1")
         .get_view(absolute_offset=(0, 0, 0), size=(16, 16, 16))
@@ -174,14 +176,14 @@ def test_view_read() -> None:
 
 
 def test_view_write() -> None:
-    delete_dir(BUCKET_PATH / f"simple_zarr_dataset")
+    delete_dir(BUCKET_PATH / "simple_zarr_dataset")
     copytree(
-        TESTDATA_DIR / f"simple_zarr_dataset",
-        BUCKET_PATH / f"simple_zarr_dataset",
+        TESTDATA_DIR / "simple_zarr_dataset",
+        BUCKET_PATH / "simple_zarr_dataset",
     )
 
     wk_view = (
-        Dataset.open(BUCKET_PATH / f"simple_zarr_dataset")
+        Dataset.open(BUCKET_PATH / "simple_zarr_dataset")
         .get_layer("color")
         .get_mag("1")
         .get_view(absolute_offset=(0, 0, 0), size=(16, 16, 16))
@@ -199,10 +201,10 @@ def test_view_write() -> None:
 
 
 def test_view_write_out_of_bounds() -> None:
-    new_dataset_path = BUCKET_PATH / f"zarr_view_dataset_out_of_bounds"
+    new_dataset_path = BUCKET_PATH / "zarr_view_dataset_out_of_bounds"
 
     delete_dir(new_dataset_path)
-    copytree(TESTDATA_DIR / f"simple_zarr_dataset", new_dataset_path)
+    copytree(TESTDATA_DIR / "simple_zarr_dataset", new_dataset_path)
 
     view = (
         Dataset.open(new_dataset_path)
@@ -218,10 +220,10 @@ def test_view_write_out_of_bounds() -> None:
 
 
 def test_mag_view_write_out_of_bounds() -> None:
-    new_dataset_path = BUCKET_PATH / f"simple_zarr_dataset_out_of_bounds"
+    new_dataset_path = BUCKET_PATH / "simple_zarr_dataset_out_of_bounds"
 
     delete_dir(new_dataset_path)
-    copytree(TESTDATA_DIR / f"simple_zarr_dataset", new_dataset_path)
+    copytree(TESTDATA_DIR / "simple_zarr_dataset", new_dataset_path)
 
     ds = Dataset.open(new_dataset_path)
     mag_view = ds.get_layer("color").get_mag("1")
@@ -238,10 +240,10 @@ def test_mag_view_write_out_of_bounds() -> None:
 
 
 def test_mag_view_write_out_of_bounds_mag2() -> None:
-    new_dataset_path = BUCKET_PATH / f"simple_zarr_dataset_out_of_bounds"
+    new_dataset_path = BUCKET_PATH / "simple_zarr_dataset_out_of_bounds"
 
     delete_dir(new_dataset_path)
-    copytree(TESTDATA_DIR / f"simple_zarr_dataset", new_dataset_path)
+    copytree(TESTDATA_DIR / "simple_zarr_dataset", new_dataset_path)
 
     ds = Dataset.open(new_dataset_path)
     color_layer = ds.get_layer("color")
@@ -262,7 +264,7 @@ def test_update_new_bounding_box_offset() -> None:
     delete_dir(BUCKET_PATH / "zarr_dataset")
 
     ds = Dataset(BUCKET_PATH / "zarr_dataset", scale=(1, 1, 1))
-    color_layer = ds.add_layer("color", COLOR_CATEGORY)
+    color_layer = ds.add_layer("color", COLOR_CATEGORY, data_format=DataFormat.Zarr)
     mag = color_layer.add_mag("1")
 
     assert color_layer.bounding_box.topleft == Vec3Int(0, 0, 0)
@@ -285,7 +287,7 @@ def test_update_new_bounding_box_offset() -> None:
 
 
 def test_write_multi_channel_uint8() -> None:
-    dataset_path = BUCKET_PATH / f"zarr_multichannel"
+    dataset_path = BUCKET_PATH / "zarr_multichannel"
     delete_dir(dataset_path)
 
     ds = Dataset(dataset_path, scale=(1, 1, 1))
@@ -303,7 +305,7 @@ def test_write_multi_channel_uint8() -> None:
 
 
 def test_wkw_write_multi_channel_uint16() -> None:
-    dataset_path = BUCKET_PATH / f"zarr_multichannel"
+    dataset_path = BUCKET_PATH / "zarr_multichannel"
     delete_dir(dataset_path)
 
     ds = Dataset(dataset_path, scale=(1, 1, 1))
@@ -323,3 +325,61 @@ def test_wkw_write_multi_channel_uint16() -> None:
     assert np.array_equal(data, written_data)
 
     assure_exported_properties(ds)
+
+
+def test_compression() -> None:
+    new_dataset_path = BUCKET_PATH / "simple_zarr_dataset_compression"
+
+    delete_dir(new_dataset_path)
+    copytree(TESTDATA_DIR / "simple_zarr_dataset", new_dataset_path)
+
+    mag1 = Dataset.open(new_dataset_path).get_layer("color").get_mag(1)
+
+    # writing unaligned data to an uncompressed dataset
+    write_data = (np.random.rand(3, 10, 20, 30) * 255).astype(np.uint8)
+    mag1.write(write_data, absolute_offset=(60, 80, 100))
+
+    assert not mag1._is_compressed()
+    mag1.compress()
+    assert mag1._is_compressed()
+    assert mag1.info.data_format == DataFormat.Zarr
+
+    assert np.array_equal(
+        write_data, mag1.read(absolute_offset=(60, 80, 100), size=(10, 20, 30))
+    )
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore", category=RuntimeWarning, module="webknossos"
+        )  # This line is not necessary. It simply keeps the output of the tests clean.
+        # writing unaligned data to a compressed dataset works because the data gets padded, but it prints a warning
+        mag1.write(
+            (np.random.rand(3, 10, 20, 30) * 255).astype(np.uint8),
+        )
+
+    assure_exported_properties(mag1.layer.dataset)
+
+
+def test_downsampling() -> None:
+    new_dataset_path = BUCKET_PATH / "simple_zarr_dataset_downsampling"
+
+    delete_dir(new_dataset_path)
+    copytree(TESTDATA_DIR / "simple_zarr_dataset", new_dataset_path)
+
+    color_layer = Dataset.open(new_dataset_path).get_layer("color")
+    color_layer.downsample()
+
+    assert (new_dataset_path / "color" / "2-2-1" / ".zarray").exists()
+
+    assure_exported_properties(color_layer.dataset)
+
+
+def test_copy_dataset() -> None:
+    new_dataset_path = BUCKET_PATH / "simple_zarr_dataset_copied"
+
+    delete_dir(new_dataset_path)
+
+    Dataset.open(TESTDATA_DIR / "simple_zarr_dataset").copy_dataset(
+        new_dataset_path, chunks_per_shard=1, data_format=DataFormat.Zarr
+    )
+    assert (new_dataset_path / "color" / "1-1-1" / ".zarray").exists()

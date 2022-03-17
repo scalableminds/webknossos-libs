@@ -271,11 +271,9 @@ class MagView(View):
         if target_path is not None:
             target_path = make_path(target_path)
 
-        uncompressed_full_path = (
-            make_path(self.layer.dataset.path) / self.layer.name / self.name
-        )
+        uncompressed_full_path = self.layer.dataset.path / self.layer.name / self.name
         compressed_dataset_path = (
-            make_path("{}.compress-{}".format(self.layer.dataset.path, uuid4()))
+            self.layer.dataset.path / f".compress-{uuid4()}"
             if target_path is None
             else target_path
         )
@@ -319,9 +317,9 @@ class MagView(View):
             )
 
         if target_path is None:
-            shutil.rmtree(self.path)
-            shutil.move(str(compressed_mag.path), self.path)
-            shutil.rmtree(compressed_mag.layer.dataset.path)
+            self.path.rmdir(recursive=True)
+            compressed_mag.path.rename(self.path)
+            compressed_dataset.path.rmdir(recursive=True)
 
             # update the handle to the new dataset
             MagView.__init__(
