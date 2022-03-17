@@ -54,6 +54,15 @@ The tests also contain functionality for the webKnossos client. There a two mode
   This expects a local webKnossos setup with specific test data, which is shipped with webKnossos. If you're starting and running webKnossos manually, please use port 9000 (the default) and run the `tools/postgres/prepareTestDb.sh` script in the webKnossos repository (⚠️ this overwrites your local webKnossos database). Alternatively, a docker-compose setup is started automatically for the tests, see `test.sh` and `tests/docker-compose.yml` for details. The network requests & response are recorded as "cassettes" by [vcr.py](https://vcrpy.readthedocs.io), see next point:
 2. `test.sh` replays responses from previous network snapshots using [vcr.py](https://vcrpy.readthedocs.io) via [pytest-recording](https://github.com/kiwicom/pytest-recording). No additional network requests are allowed in this mode.
 
+The code under `webknossos/client/_generated` is auto-generated! Please don't adapt anything in the `generated` folder manually, but re-run the code generation.
+
+The client code is generated using [openapi-python-client](https://github.com/openapi-generators/openapi-python-client) and [InducOapi](https://github.com/TheWall89/inducoapi).
+
+To re-generate the code, run
+```bash
+./generate_client.sh
+```
+
 
 ### `wkcuber` package
 
