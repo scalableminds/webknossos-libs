@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Type, TypeVar, Union, cast
+from typing import Any, Dict, List, Optional, Type, TypeVar, Union, cast
 
 import attr
 
@@ -41,7 +41,6 @@ class AnnotationInfosByTaskIdResponse200Item:
     name: str
     description: str
     typ: str
-    task: AnnotationInfosByTaskIdResponse200ItemTask
     stats: AnnotationInfosByTaskIdResponse200ItemStats
     restrictions: AnnotationInfosByTaskIdResponse200ItemRestrictions
     formatted_hash: str
@@ -52,10 +51,11 @@ class AnnotationInfosByTaskIdResponse200Item:
     tracing_store: AnnotationInfosByTaskIdResponse200ItemTracingStore
     visibility: str
     settings: AnnotationInfosByTaskIdResponse200ItemSettings
-    tracing_time: int
     tags: List[str]
     user: AnnotationInfosByTaskIdResponse200ItemUser
     meshes: List[Any]
+    task: Optional[AnnotationInfosByTaskIdResponse200ItemTask]
+    tracing_time: Optional[int]
     view_configuration: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
@@ -66,8 +66,6 @@ class AnnotationInfosByTaskIdResponse200Item:
         name = self.name
         description = self.description
         typ = self.typ
-        task = self.task.to_dict()
-
         stats = self.stats.to_dict()
 
         restrictions = self.restrictions.to_dict()
@@ -88,7 +86,6 @@ class AnnotationInfosByTaskIdResponse200Item:
         visibility = self.visibility
         settings = self.settings.to_dict()
 
-        tracing_time = self.tracing_time
         tags = self.tags
 
         user = self.user.to_dict()
@@ -100,6 +97,9 @@ class AnnotationInfosByTaskIdResponse200Item:
             meshes.append(meshes_item)
 
         view_configuration = self.view_configuration
+        task = self.task.to_dict() if self.task else None
+
+        tracing_time = self.tracing_time
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -111,7 +111,6 @@ class AnnotationInfosByTaskIdResponse200Item:
                 "name": name,
                 "description": description,
                 "typ": typ,
-                "task": task,
                 "stats": stats,
                 "restrictions": restrictions,
                 "formattedHash": formatted_hash,
@@ -122,10 +121,11 @@ class AnnotationInfosByTaskIdResponse200Item:
                 "tracingStore": tracing_store,
                 "visibility": visibility,
                 "settings": settings,
-                "tracingTime": tracing_time,
                 "tags": tags,
                 "user": user,
                 "meshes": meshes,
+                "task": task,
+                "tracingTime": tracing_time,
             }
         )
         if view_configuration is not UNSET:
@@ -147,8 +147,6 @@ class AnnotationInfosByTaskIdResponse200Item:
         description = d.pop("description")
 
         typ = d.pop("typ")
-
-        task = AnnotationInfosByTaskIdResponse200ItemTask.from_dict(d.pop("task"))
 
         stats = AnnotationInfosByTaskIdResponse200ItemStats.from_dict(d.pop("stats"))
 
@@ -187,8 +185,6 @@ class AnnotationInfosByTaskIdResponse200Item:
             d.pop("settings")
         )
 
-        tracing_time = d.pop("tracingTime")
-
         tags = cast(List[str], d.pop("tags"))
 
         user = AnnotationInfosByTaskIdResponse200ItemUser.from_dict(d.pop("user"))
@@ -202,6 +198,15 @@ class AnnotationInfosByTaskIdResponse200Item:
 
         view_configuration = d.pop("viewConfiguration", UNSET)
 
+        _task = d.pop("task")
+        task: Optional[AnnotationInfosByTaskIdResponse200ItemTask]
+        if _task is None:
+            task = None
+        else:
+            task = AnnotationInfosByTaskIdResponse200ItemTask.from_dict(_task)
+
+        tracing_time = d.pop("tracingTime")
+
         annotation_infos_by_task_id_response_200_item = cls(
             modified=modified,
             state=state,
@@ -209,7 +214,6 @@ class AnnotationInfosByTaskIdResponse200Item:
             name=name,
             description=description,
             typ=typ,
-            task=task,
             stats=stats,
             restrictions=restrictions,
             formatted_hash=formatted_hash,
@@ -220,11 +224,12 @@ class AnnotationInfosByTaskIdResponse200Item:
             tracing_store=tracing_store,
             visibility=visibility,
             settings=settings,
-            tracing_time=tracing_time,
             tags=tags,
             user=user,
             meshes=meshes,
             view_configuration=view_configuration,
+            task=task,
+            tracing_time=tracing_time,
         )
 
         annotation_infos_by_task_id_response_200_item.additional_properties = d
