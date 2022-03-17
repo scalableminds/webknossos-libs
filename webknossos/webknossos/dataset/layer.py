@@ -998,6 +998,9 @@ class Layer:
             self.dtype_per_channel, self.num_channels
         )
 
+    def _get_largest_segment_id_maybe(self) -> Optional[int]:
+        return None
+
 
 class SegmentationLayer(Layer):
 
@@ -1021,3 +1024,6 @@ class SegmentationLayer(Layer):
     @property
     def category(self) -> LayerCategoryType:
         return SEGMENTATION_CATEGORY
+
+    def _get_largest_segment_id_maybe(self) -> Optional[int]:
+        return self.largest_segment_id
