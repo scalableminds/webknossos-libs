@@ -7,6 +7,7 @@ import networkx as nx
 import numpy as np
 
 import webknossos._nml as wknml
+from webknossos.geometry import Vec3Int
 
 if TYPE_CHECKING:
     from webknossos.annotation import Annotation
@@ -83,7 +84,7 @@ def _nml_tree_to_graph(
     for nml_node in nml_tree.nodes:
         node_id = nml_node.id
         current_node = new_graph.add_node(
-            position=nml_node.position,
+            position=Vec3Int.from_vec3_float(nml_node.position),
             _enforced_id=node_id,
             radius=nml_node.radius,
         )
