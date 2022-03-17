@@ -38,7 +38,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 - Dataset: `block_len` and `file_len` attributes are now deprecated, but still available for backwards compatibility. Use `chunk_size` and `chunks_per_shard` instead. These new attributes are `Vec3Int`, so they can be set non-uniformly. However, WKW-backed layers still require uniform `chunk_size` and `chunks_per_shard`. [#627](https://github.com/scalableminds/webknossos-libs/pull/627)
 
 ### Fixed
-
+- Fixed crash during downsampling and compression of segmentation layers. [#657](https://github.com/scalableminds/webknossos-libs/pull/657)
 
 ## [0.9.11](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.11) - 2022-03-16
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.10...v0.9.11)
