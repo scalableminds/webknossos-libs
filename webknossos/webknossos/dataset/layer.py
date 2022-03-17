@@ -168,7 +168,7 @@ class Layer:
 
     def __init__(self, dataset: "Dataset", properties: LayerProperties) -> None:
         """
-        Do not use this constructor manually. Instead use `webknossos.dataset.layer.Dataset.add_layer()` to create a `Layer`.
+        Do not use this constructor manually. Instead use `webknossos.dataset.layer.Dataset.add_layer` to create a `Layer`.
         """
         # It is possible that the properties on disk do not contain the number of channels.
         # Therefore, the parameter is optional. However at this point, 'num_channels' was already inferred.
