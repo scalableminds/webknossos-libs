@@ -66,6 +66,13 @@ class Vec3Int(tuple):
 
         return Vec3Int(int(vec[0]), int(vec[1]), int(vec[2]))
 
+    @staticmethod
+    def from_vec_or_int(vec_or_int: Union["Vec3IntLike", int]) -> "Vec3Int":
+        if isinstance(vec_or_int, int):
+            return Vec3Int.full(vec_or_int)
+        else:
+            return Vec3Int(vec_or_int)
+
     @property
     def x(self) -> int:
         return self[0]
@@ -104,6 +111,9 @@ class Vec3Int(tuple):
             return all(i > 0 for i in self)
         else:
             return all(i >= 0 for i in self)
+
+    def is_uniform(self) -> bool:
+        return self.x == self.y == self.z
 
     def _element_wise(
         self, other: Union[int, "Vec3IntLike"], fn: Callable[[int, Any], int]

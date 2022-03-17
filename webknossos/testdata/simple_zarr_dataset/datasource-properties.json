@@ -1,0 +1,33 @@
+{
+  "id": {
+    "name": "simple_wk_dataset",
+    "team": ""
+  },
+  "scale": [1, 1, 1],
+  "defaultViewConfiguration": {
+    "position": [12, 12, 12]
+  },
+  "dataLayers": [
+    {
+      "dataFormat": "zarr",
+      "name": "color",
+      "category": "color",
+      "elementClass": "uint24",
+      "numChannels": 3,
+      "boundingBox": {
+        "topLeft": [0, 0, 0],
+        "width": 24,
+        "height": 24,
+        "depth": 24
+      },
+      "mags": [
+        {
+          "mag": [1, 1, 1]
+        }
+      ],
+      "defaultViewConfiguration": {
+        "color": [255, 0, 0]
+      }
+    }
+  ]
+}

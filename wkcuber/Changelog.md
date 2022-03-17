@@ -12,6 +12,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes
 
 ### Added
+- Added logging to file in `./logs` directory. [#641](https://github.com/scalableminds/webknossos-libs/pull/641)
 
 ### Changed
 

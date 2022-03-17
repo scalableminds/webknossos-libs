@@ -4,7 +4,6 @@ import shutil
 import logging
 from argparse import ArgumentParser, Namespace
 from typing import Optional
-from os import makedirs
 
 from wkcuber.api.dataset import Dataset
 from .mag import Mag
@@ -87,7 +86,7 @@ def compress_mags(
 
     if target_path is None:
         backup_dir = source_path.with_suffix(BACKUP_EXT)
-        makedirs(backup_dir / layer_name, exist_ok=True)
+        (backup_dir / layer_name).mkdir(parents=True, exist_ok=True)
         for mag in mags:
             shutil.move(
                 str(source_path / layer_name / str(mag)),

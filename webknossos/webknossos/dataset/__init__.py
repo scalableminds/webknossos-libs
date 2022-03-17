@@ -9,6 +9,7 @@ The dataset stores the data on disk in `.wkw`-files (see [webknossos-wrap (wkw)]
 Each dataset consists of one or more layers (webknossos.dataset.layer.Layer), which themselves can comprise multiple magnifications (webknossos.dataset.mag_view.MagView).
 """
 
+from ._array import DataFormat
 from .dataset import Dataset
 from .layer import Layer, SegmentationLayer
 from .layer_categories import COLOR_CATEGORY, SEGMENTATION_CATEGORY, LayerCategoryType

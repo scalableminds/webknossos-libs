@@ -4,7 +4,6 @@ import logging
 from pathlib import Path
 
 import wkw
-import os
 from math import ceil
 import numpy as np
 from PIL import Image
@@ -177,7 +176,7 @@ def export_tiff_slice(
                     tile_tiff_path = (
                         dest_path / str(slice_name_number) / str(y_tile_index + 1)
                     )
-                    os.makedirs(tile_tiff_path, exist_ok=True)
+                    tile_tiff_path.mkdir(parents=True, exist_ok=True)
                     for x_tile_index in range(
                         ceil(tiff_bbox["size"][0] / tiling_size[0])
                     ):
@@ -196,9 +195,7 @@ def export_tiff_slice(
                             downsample,
                         )
 
-                        tile_image.save(
-                            os.path.join(tile_tiff_path, tile_tiff_filename)
-                        )
+                        tile_image.save(tile_tiff_path / tile_tiff_filename)
 
                 logging.info(f"saved tiles for slice {slice_name_number}")
 
@@ -217,7 +214,7 @@ def export_tiff_stack(
     downsample: int,
     args: Namespace,
 ) -> None:
-    os.makedirs(destination_path, exist_ok=True)
+    destination_path.mkdir(parents=True, exist_ok=True)
     dataset_path = wkw_file_path / wkw_layer / mag.to_layer_name()
 
     with get_executor_for_args(args) as executor:

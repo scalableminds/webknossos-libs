@@ -5,6 +5,7 @@ from typing import List, Tuple, cast
 
 import numpy as np
 
+from webknossos.geometry import Vec3Int
 from webknossos.utils import time_start, time_stop
 
 from .view import View
@@ -27,7 +28,7 @@ def upsample_cube(cube_buffer: np.ndarray, factors: List[int]) -> np.ndarray:
 def upsample_cube_job(
     args: Tuple[View, View, int],
     mag_factors: List[float],
-    buffer_edge_len: int,
+    buffer_shape: Vec3Int,
 ) -> None:
     (source_view, target_view, _i) = args
 
@@ -37,7 +38,7 @@ def upsample_cube_job(
 
     try:
         time_start(f"Upsampling of {target_view.global_offset}")
-        num_channels = target_view.header.num_channels
+        num_channels = target_view.info.num_channels
         shape = (num_channels,) + tuple(target_view.size)
         file_buffer = np.zeros(shape, target_view.get_dtype())
 
@@ -45,13 +46,13 @@ def upsample_cube_job(
             *list(
                 [
                     list(range(0, math.ceil(len)))
-                    for len in np.array(target_view.size) / buffer_edge_len
+                    for len in target_view.size.to_np() / buffer_shape.to_np()
                 ]
             )
         )
 
         for tile in tiles:
-            target_offset = np.array(tile) * buffer_edge_len
+            target_offset = np.array(tile) * buffer_shape.to_np()
             source_offset = (mag_factors * target_offset).astype(int)
             source_size = cast(
                 Tuple[int, int, int],
@@ -59,7 +60,7 @@ def upsample_cube_job(
                     [
                         int(min(a, b))
                         for a, b in zip(
-                            np.array(mag_factors) * buffer_edge_len,
+                            np.array(mag_factors) * buffer_shape.to_np(),
                             source_view.size - source_offset,
                         )
                     ]
@@ -87,7 +88,7 @@ def upsample_cube_job(
                     ] = data_cube
 
         # Write the upsampled buffer to target
-        if source_view.header.num_channels == 1:
+        if source_view.info.num_channels == 1:
             file_buffer = file_buffer[0]  # remove channel dimension
         target_view.write(file_buffer)
         time_stop(f"Upsampling of {target_view.global_offset}")
