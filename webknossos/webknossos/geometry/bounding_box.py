@@ -12,6 +12,22 @@ from .vec3_int import Vec3Int, Vec3IntLike
 
 @attr.frozen
 class BoundingBox:
+    """
+    This class is used to represent an axis-aligned cuboid in 3D.
+    The top-left coordinate is inclusive and the bottom-right coordinate is exclusive.
+
+    A small usage example:
+
+    ```python
+    from webknossos import BoundingBox
+
+    bbox_1 = BoundingBox((0, 0, 0), (100, 100, 100))
+    bbox_2 = BoundingBox((75, 75, 75), (100, 100, 100))
+
+    assert bbox_1.intersected_with(bbox_2).size == (25, 25, 25)
+    ```
+    """
+
     topleft: Vec3Int = attr.field(converter=Vec3Int)
     size: Vec3Int = attr.field(converter=Vec3Int)
     bottomright: Vec3Int = attr.field(init=False)
@@ -114,7 +130,7 @@ class BoundingBox:
 
     @staticmethod
     def from_checkpoint_name(checkpoint_name: str) -> "BoundingBox":
-        """This function extracts a bounding box in the format x_y_z_sx_sy_xz which is contained in a string."""
+        """This function extracts a bounding box in the format `x_y_z_sx_sy_xz` which is contained in a string."""
         regex = r"(([0-9]+_){5}([0-9]+))"
         match = re.search(regex, checkpoint_name)
         assert (
