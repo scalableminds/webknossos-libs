@@ -1,7 +1,6 @@
-#! /usr/bin/env -S poetry run python
-
 import calendar
 import json
+import os
 from datetime import datetime
 from pathlib import Path
 from tempfile import NamedTemporaryFile
@@ -16,10 +15,13 @@ from openapi_python_client import (
     _get_project_for_url_or_path,
 )
 
-from webknossos.utils import snake_to_camel_case
-
-# SCHEMA_URL = "https://master.webknossos.xyz/swagger.json"
-SCHEMA_URL = "http://localhost:9000/swagger.json"
+WK_URL = os.environ["WK_URL"]
+assert WK_URL == "http://localhost:9000", (
+    f"The wrong WK_URL is configured, got {WK_URL}, expected http://localhost:9000. "
+    + "Are you running this script via ./generate_client.sh?"
+)
+WK_TOKEN = os.environ["WK_TOKEN"]
+SCHEMA_URL = f"{WK_URL}/swagger.json"
 CONVERTER_URL = "https://converter.swagger.io/api/convert"
 
 
@@ -81,94 +83,117 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
         user_logged_time,
     )
     from webknossos.client.context import _get_generated_client
+    from webknossos.utils import snake_to_camel_case
 
-    # webKnossos.org setup:
-    # explorative_annotation_id = "6114d9410100009f0096c640"
-    # organization_name = "scalable_minds",
-    # dataset_name = "l4dense_motta_et_al_demo"
-    # task_id = "61f151c10100000a01249afe"
-    # user_id = "5b5dd2fb1c00008230ec8174"
-    # project_id = "61f1515e0100002f01249afa"
-    # project_name = "sampleProject"
-    # local setup, probably long gone by the time you read this:
-    explorative_annotation_id = "62011da6fa0100b202ec50db"
-    organization_name = "sample_organization"
-    dataset_name = "l4_sample"
-    task_id = "62011dddfa0100ad02ec50de"
-    user_id = "6200df39f70100f70157d983"
-    project_id = "6200df45f70100440257d987"
-    project_name = "sampleProject"
+    organization_name = "Organization_X"
+    dataset_name = "e2006_knossos"
+    task_id = "581367a82faeb37a008a5352"
+    user_id = "570b9f4d2a7c0e4d008da6ef"
+    project_id = "58135bfd2faeb3190181c057"
+    project_name = "Test_Project"
+    explorative_annotation_id = "58135c192faeb34c0081c05d"
+
+    extract_200_response(
+        httpx.post(
+            url=f"{WK_URL}/data/triggers/checkInboxBlocking?token={WK_TOKEN}",
+        )
+    )
+    response = httpx.get(
+        url=f"{WK_URL}/api/datasets/{organization_name}/{dataset_name}",
+        headers={"X-Auth-Token": f"{WK_TOKEN}"},
+    )
+    assert (
+        response.status_code == 200 and response.json()["isActive"]
+    ), f"You need to copy or link any dataset to binaryData/{organization_name}/{dataset_name}."
 
     d = datetime.utcnow()
     unixtime = calendar.timegm(d.utctimetuple())
     client = _get_generated_client(enforce_auth=True)
 
-    yield extract_200_response(
+    yield (
         "annotationInfo",
-        annotation_info.sync_detailed(
-            typ="Explorational",
-            id=explorative_annotation_id,
-            client=client,
-            timestamp=unixtime,
+        extract_200_response(
+            annotation_info.sync_detailed(
+                typ="Explorational",
+                id=explorative_annotation_id,
+                client=client,
+                timestamp=unixtime,
+            )
         ),
     )
 
-    yield extract_200_response(
+    yield (
         "datasetInfo",
-        dataset_info.sync_detailed(
-            organization_name=organization_name,
-            data_set_name=dataset_name,
-            client=client,
+        extract_200_response(
+            dataset_info.sync_detailed(
+                organization_name=organization_name,
+                data_set_name=dataset_name,
+                client=client,
+            )
         ),
     )
 
-    yield extract_200_response(
+    yield (
         "taskInfo",
-        task_info.sync_detailed(
-            id=task_id,
-            client=client,
+        extract_200_response(
+            task_info.sync_detailed(
+                id=task_id,
+                client=client,
+            ),
         ),
     )
 
-    yield extract_200_response(
+    yield (
         "userInfoById",
-        user_info_by_id.sync_detailed(
-            id=user_id,
-            client=client,
+        extract_200_response(
+            user_info_by_id.sync_detailed(
+                id=user_id,
+                client=client,
+            ),
         ),
     )
 
-    yield extract_200_response(
+    yield (
         "projectInfoById",
-        project_info_by_id.sync_detailed(
-            id=project_id,
-            client=client,
+        extract_200_response(
+            project_info_by_id.sync_detailed(
+                id=project_id,
+                client=client,
+            ),
         ),
     )
 
-    yield extract_200_response(
+    yield (
         "projectInfoByName",
-        project_info_by_name.sync_detailed(name=project_name, client=client),
-    )
-
-    yield extract_200_response(
-        "taskInfosByProjectId",
-        task_infos_by_project_id.sync_detailed(
-            id=project_id,
-            client=client,
+        extract_200_response(
+            project_info_by_name.sync_detailed(name=project_name, client=client),
         ),
     )
 
-    yield extract_200_response(
-        "annotationInfosByTaskId",
-        annotation_infos_by_task_id.sync_detailed(id=task_id, client=client),
+    yield (
+        "taskInfosByProjectId",
+        extract_200_response(
+            task_infos_by_project_id.sync_detailed(
+                id=project_id,
+                client=client,
+            ),
+        ),
     )
 
-    yield extract_200_response(
+    yield (
+        "annotationInfosByTaskId",
+        extract_200_response(
+            annotation_infos_by_task_id.sync_detailed(id=task_id, client=client),
+        ),
+    )
+
+    yield (
         "userLoggedTime",
-        user_logged_time.sync_detailed(
-            id=user_id,
-            client=client,
+        extract_200_response(
+            user_logged_time.sync_detailed(
+                id=user_id,
+                client=client,
+            ),
         ),
     )
 
@@ -182,8 +207,9 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
         api_endpoint_name = api_endpoint.__name__.split(".")[-1]
         api_endpoint_name = snake_to_camel_case(api_endpoint_name)
 
-        yield extract_200_response(
-            api_endpoint_name, api_endpoint.sync_detailed(client=client)
+        yield (
+            api_endpoint_name,
+            extract_200_response(api_endpoint.sync_detailed(client=client)),
         )
 
 
@@ -192,18 +218,23 @@ FIELDS_WITH_VARYING_CONTENT = [
     "adminViewConfiguration",
     "novelUserExperienceInfos",
     "viewConfiguration",
+    "defaultViewConfiguration",
 ]
 
 OPTIONAL_FIELDS = [
     "adminViewConfiguration",
     "novelUserExperienceInfos",
     "viewConfiguration",
+    "defaultViewConfiguration",
+    # isSuperUser field was added 2022-03 and only optional for backwards-compatibility with wk,
+    # it can be made non-optional when needed later:
+    "isSuperUser",
 ]
 
 
-def extract_200_response(name: str, response: Any) -> Tuple[str, bytes]:
+def extract_200_response(response: Any) -> bytes:
     assert response.status_code == 200, response.content
-    return name, response.content
+    return response.content
 
 
 def make_properties_required(x: Any) -> None:
@@ -226,6 +257,14 @@ def make_properties_required(x: Any) -> None:
                 for property in properties.keys()
                 if property not in OPTIONAL_FIELDS
             )
+
+            # Further corrections
+            if "task" in properties:
+                properties["task"]["nullable"] = True
+            if "tracingTime" in properties:
+                # is null during client-generation, but actually is Optional[int]
+                properties["tracingTime"]["type"] = "integer"
+                properties["tracingTime"]["nullable"] = True
 
 
 def set_response_schema_by_example(

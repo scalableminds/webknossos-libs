@@ -1,0 +1,54 @@
+name: nightly
+
+on:
+  schedule:
+    - cron:  '00 06 * * *'
+  workflow_dispatch: ~
+
+jobs:
+  webknossos_nightly:
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: [3.7, 3.8]
+    defaults:
+      run:
+        working-directory: webknossos
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+        architecture: 'x64'
+
+    - name: Install dependencies
+      run: |
+        pip install poetry
+        poetry install
+
+    - name: Re-generate client code
+      run: ./generate_client.sh
+
+    - name: Check if git is dirty
+      run: |
+        git diff --no-ext-diff --quiet --exit-code
+        [[ -z $(git status -s) ]]
+
+    - name: Python tests, refreshing the network snapshots
+      env:
+        WK_TOKEN: ${{ secrets.WK_TOKEN }}
+      run: ./test.sh --refresh-snapshots
+
+    - name: Python tests, using the new snapshots
+      env:
+        WK_TOKEN: ${{ secrets.WK_TOKEN }}
+      run: ./test.sh --refresh-snapshots
+
+    - name: Check if git is dirty
+      continue-on-error: true  # This is currently expected to fail, might change in the future
+      run: |
+        git diff --no-ext-diff --quiet --exit-code
+        [[ -z $(git status -s) ]]
