@@ -16,6 +16,10 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 - The annotation class now exposes `BoundingBox` objects instead of tuples. [#646](https://github.com/scalableminds/webknossos-libs/pull/646)
 
 ### Added
+- Added `groups` and `graphs` property to skeleton.Group to access immediate child groups/graphs. [#645](https://github.com/scalableminds/webknossos-libs/pull/645)
+- The `BoundingBox` class now supports the following additional properties: `id`, `name`, `is_visible` and `color`. [#646](https://github.com/scalableminds/webknossos-libs/pull/646)
+||||||| 94dfa4c
+- The `BoundingBox` class now supports the following additional properties: `id`, `name`, `is_visible` and `color'. [#646](https://github.com/scalableminds/webknossos-libs/pull/646)
 - Added support for [Zarr](https://zarr.dev/) arrays in the `Dataset` classes. Users can set the `data_format` of layers to `zarr` to use Zarr for storing data. 
   [#627](https://github.com/scalableminds/webknossos-libs/pull/627)
   
@@ -48,6 +52,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 - Dataset: Moved the deprecation warning from `get_color_layers()` to the actually deprecated method `get_color_layer()`.
   [#635](https://github.com/scalableminds/webknossos-libs/pull/635)
 - Inconsistent writes to datasets properties (e.g., caused due to multiprocessing) are detected automatically. The warning can be escalated to an exception with `warnings.filterwarnings("error", module="webknossos", message=r"\[WARNING\]")`. [#633](https://github.com/scalableminds/webknossos-libs/pull/633)
+- Changed the `position` of a `skeleton.Node` to use `Vec3Int` instead of `(Float, Float, Float)`, because webKnossos stores node positions as integers. [#645](https://github.com/scalableminds/webknossos-libs/pull/645)
 
 ### Fixed
 - Tests: The `./test.sh` script works on macOS again and doesn't throw Network Errors anymore. However the introduced fix could lead to slightly different behaviour on macOS tests vs CI tests, when UNIX socket communication is involved. [#618](https://github.com/scalableminds/webknossos-libs/pull/618)

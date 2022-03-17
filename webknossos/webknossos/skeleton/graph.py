@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional, Tuple, Union
 import networkx as nx
 import numpy as np
 
+from webknossos.geometry import Vec3Int, Vec3IntLike
+
 from .node import Node
 
 if TYPE_CHECKING:
@@ -92,7 +94,18 @@ class Graph(nx.Graph):
     This class inherits from [`networkx.Graph`](https://networkx.org/documentation/stable/reference/classes/graph.html).
     For further methods, please [check the networkx documentation](https://networkx.org/documentation/stable/reference/classes/graph.html#methods).
 
-    See Graph.__init__ for more details"""
+    See Graph.__init__ for more details.
+
+    A small usage example:
+
+    ```python
+    graph = skeleton.add_graph("a graph")
+    node_1 = graph.add_node(position=(0, 0, 0), comment="node 1")
+    node_2 = graph.add_node(position=(100, 100, 100), comment="node 2")
+
+    graph.add_edge(node_1, node_2)
+    ```
+    """
 
     def __init__(
         self,
@@ -102,6 +115,12 @@ class Graph(nx.Graph):
         color: Optional[Vector4] = None,
         enforced_id: Optional[int] = None,
     ) -> None:
+        """
+        To create a graph, it is recommended to use `Skeleton.add_graph` or
+        `Group.add_graph`. That way, the newly created graph is automatically
+        attached as a child to the object the method was called on.
+        """
+
         # To be able to reference nodes by id after adding them for the first time, we use custom dict-like classes
         # for the networkx-graph structures, that have nodes as keys:
         # * `self._node`: _NodeDict
@@ -150,17 +169,20 @@ class Graph(nx.Graph):
 
     @property
     def id(self) -> int:
+        """Read-only property."""
         return self._id
 
     def get_node_positions(self) -> np.ndarray:
+        """Returns an numpy array with the positions of all nodes of this graph."""
         return np.array([node.position for node in self.nodes])
 
     def get_node_by_id(self, node_id: int) -> Node:
+        """Returns the node in this graph with the requested id."""
         return self._node.get_node(node_id)
 
     def add_node(  # pylint: disable=arguments-differ
         self,
-        position: Vector3,
+        position: Vec3IntLike,
         comment: Optional[str] = None,
         radius: Optional[float] = None,
         rotation: Optional[Vector3] = None,
@@ -173,8 +195,14 @@ class Graph(nx.Graph):
         branchpoint_time: Optional[int] = None,
         _enforced_id: Optional[int] = None,
     ) -> Node:
+        """
+        Adds a node to the graph. Apart from the mandatory `position` parameter,
+        there are several optional parameters which can be used to encode
+        additional information. For example, the comment will be shown by the
+        webKnossos UI.
+        """
         node = Node(
-            position=position,
+            position=Vec3Int(position),
             comment=comment,
             radius=radius,
             rotation=rotation,
@@ -192,6 +220,7 @@ class Graph(nx.Graph):
         return node
 
     def get_max_node_id(self) -> int:
+        """Returns the highest node id."""
         return max((node.id for node in self.nodes), default=0)
 
     def __hash__(self) -> int:
