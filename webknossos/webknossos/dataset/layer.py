@@ -1,27 +1,26 @@
 import logging
 import operator
-import os
 import re
 import shutil
 import warnings
 from argparse import Namespace
-from os import makedirs
-from os.path import join
+from os import PathLike
+from os.path import relpath
 from pathlib import Path
 from shutil import rmtree
 from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 
 import numpy as np
-from wkw import wkw
 
-from webknossos.geometry import BoundingBox, Mag
+from webknossos.geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 
+from ._array import ArrayException, BaseArray, DataFormat
 from .downsampling_utils import (
     SamplingModes,
     calculate_default_max_mag,
     calculate_mags_to_downsample,
     calculate_mags_to_upsample,
-    determine_buffer_edge_len,
+    determine_buffer_shape,
     downsample_cube_job,
     parse_interpolation_mode,
 )
@@ -39,9 +38,13 @@ from .upsampling_utils import upsample_cube_job
 if TYPE_CHECKING:
     from .dataset import Dataset
 
-from webknossos.utils import get_executor_for_args, named_partial
+from webknossos.utils import get_executor_for_args, named_partial, warn_deprecated
 
-from .defaults import DEFAULT_WKW_FILE_LEN
+from .defaults import (
+    DEFAULT_CHUNK_SIZE,
+    DEFAULT_CHUNKS_PER_SHARD,
+    DEFAULT_CHUNKS_PER_SHARD_ZARR,
+)
 from .mag_view import MagView, _find_mag_path_on_disk
 
 
@@ -137,6 +140,27 @@ def _element_class_to_dtype_per_channel(
     return _dtype_per_layer_to_dtype_per_channel(dtype_per_layer, num_channels)
 
 
+def _get_sharding_parameters(
+    chunk_size: Optional[Union[Vec3IntLike, int]],
+    chunks_per_shard: Optional[Union[Vec3IntLike, int]],
+    block_len: Optional[int],
+    file_len: Optional[int],
+) -> Tuple[Optional[Vec3Int], Optional[Vec3Int]]:
+    if chunk_size is not None:
+        chunk_size = Vec3Int.from_vec_or_int(chunk_size)
+    elif block_len is not None:
+        warn_deprecated("block_len", "chunk_size")
+        chunk_size = Vec3Int.full(block_len)
+
+    if chunks_per_shard is not None:
+        chunks_per_shard = Vec3Int.from_vec_or_int(chunks_per_shard)
+    elif file_len is not None:
+        warn_deprecated("file_len", "chunks_per_shard")
+        chunks_per_shard = Vec3Int.full(file_len)
+
+    return (chunk_size, chunks_per_shard)
+
+
 class Layer:
     """
     A `Layer` consists of multiple `webknossos.dataset.mag_view.MagView`s, which store the same data in different magnifications.
@@ -159,21 +183,19 @@ class Layer:
         )
         self._mags: Dict[Mag, MagView] = {}
 
-        makedirs(self.path, exist_ok=True)
+        self.path.mkdir(parents=True, exist_ok=True)
 
-        for resolution in properties.wkw_resolutions:
-            self._setup_mag(Mag(resolution.resolution))
-        # Only keep the properties of resolutions that were initialized.
-        # Sometimes the directory of a resolution is removed from disk manually, but the properties are not updated.
-        self._properties.wkw_resolutions = [
-            res
-            for res in self._properties.wkw_resolutions
-            if Mag(res.resolution) in self._mags
+        for resolution in properties.mags:
+            self._setup_mag(Mag(resolution.mag))
+        # Only keep the properties of mags that were initialized.
+        # Sometimes the directory of a mag is removed from disk manually, but the properties are not updated.
+        self._properties.mags = [
+            res for res in self._properties.mags if Mag(res.mag) in self._mags
         ]
 
     @property
     def path(self) -> Path:
-        return Path(join(self.dataset.path, self.name))
+        return self.dataset.path / self.name
 
     @property
     def _properties(self) -> LayerProperties:
@@ -195,7 +217,7 @@ class Layer:
         assert (
             layer_name not in self.dataset.layers.keys()
         ), f"Failed to rename layer {self.name} to {layer_name}: The new name already exists."
-        os.rename(self.dataset.path / self.name, self.dataset.path / layer_name)
+        (self.dataset.path / self.name).rename(self.dataset.path / layer_name)
         del self.dataset.layers[self.name]
         self.dataset.layers[layer_name] = self
         self._properties.name = layer_name
@@ -206,7 +228,7 @@ class Layer:
             mag._path = _find_mag_path_on_disk(self.dataset.path, self.name, mag.name)
             # Deleting the dataset will close the file handle.
             # The new dataset will be opened automatically when needed.
-            del mag._wkw_dataset
+            del mag._array
 
         self.dataset._export_as_json()
 
@@ -222,6 +244,11 @@ class Layer:
     def num_channels(self) -> int:
         assert self._properties.num_channels is not None
         return self._properties.num_channels
+
+    @property
+    def data_format(self) -> DataFormat:
+        assert self._properties.data_format is not None
+        return self._properties.data_format
 
     @property
     def default_view_configuration(self) -> Optional[LayerViewConfiguration]:
@@ -261,13 +288,17 @@ class Layer:
     def add_mag(
         self,
         mag: Union[int, str, list, tuple, np.ndarray, Mag],
-        block_len: int = 32,
-        file_len: int = DEFAULT_WKW_FILE_LEN,
+        chunk_size: Optional[Union[Vec3IntLike, int]] = None,  # DEFAULT_CHUNK_SIZE,
+        chunks_per_shard: Optional[
+            Union[int, Vec3IntLike]
+        ] = None,  # DEFAULT_CHUNKS_PER_SHARD,
         compress: bool = False,
+        block_len: Optional[int] = None,  # deprecated
+        file_len: Optional[int] = None,  # deprecated
     ) -> MagView:
         """
         Creates a new mag called and adds it to the layer.
-        The parameter `block_len`, `file_len` and `compress` can be
+        The parameter `chunk_size`, `chunks_per_shard` and `compress` can be
         specified to adjust how the data is stored on disk.
         Note that writing compressed data which is not aligned with the blocks on disk may result in
         diminished performance, as full blocks will automatically be read to pad the write actions. Alternatively,
@@ -279,19 +310,54 @@ class Layer:
         """
         # normalize the name of the mag
         mag = Mag(mag)
-        block_type = (
-            wkw.Header.BLOCK_TYPE_LZ4HC if compress else wkw.Header.BLOCK_TYPE_RAW
+        compression_mode = compress
+
+        chunk_size, chunks_per_shard = _get_sharding_parameters(
+            chunk_size=chunk_size,
+            chunks_per_shard=chunks_per_shard,
+            block_len=block_len,
+            file_len=file_len,
         )
+        if chunk_size is None:
+            chunk_size = DEFAULT_CHUNK_SIZE
+        if chunks_per_shard is None:
+            if self.data_format == DataFormat.Zarr:
+                chunks_per_shard = DEFAULT_CHUNKS_PER_SHARD_ZARR
+            else:
+                chunks_per_shard = DEFAULT_CHUNKS_PER_SHARD
+
+        if chunk_size not in (Vec3Int.full(32), Vec3Int.full(64)):
+            warnings.warn(
+                "[INFO] `chunk_size` of `32, 32, 32` or `64, 64, 64` is recommended for optimal "
+                + f"performance in webKnossos. Got {chunk_size}."
+            )
 
         self._assert_mag_does_not_exist_yet(mag)
         self._create_dir_for_mag(mag)
 
-        mag_view = MagView(self, mag, block_len, file_len, block_type, create=True)
+        mag_view = MagView(
+            self,
+            mag,
+            chunk_size=chunk_size,
+            chunks_per_shard=chunks_per_shard,
+            compression_mode=compression_mode,
+            create=True,
+        )
+
+        mag_view._array.ensure_size(
+            self.bounding_box.align_with_mag(mag).in_mag(mag).bottomright
+        )
 
         self._mags[mag] = mag_view
-        self._properties.wkw_resolutions += [
+        mag_array_info = mag_view.info
+        self._properties.mags += [
             MagViewProperties(
-                Mag(mag_view.name), mag_view.header.block_len * mag_view.header.file_len
+                mag=Mag(mag_view.name),
+                cube_length=(
+                    mag_array_info.shard_size.x
+                    if mag_array_info.data_format == DataFormat.WKW
+                    else None
+                ),
             )
         ]
 
@@ -314,9 +380,16 @@ class Layer:
         ), f"Cannot add mag {mag} as it already exists for layer {self}"
         self._setup_mag(mag)
         mag_view = self._mags[mag]
-        cube_length = mag_view.header.file_len * mag_view.header.block_len
-        self._properties.wkw_resolutions.append(
-            MagViewProperties(resolution=mag, cube_length=cube_length)
+        mag_array_info = mag_view.info
+        self._properties.mags.append(
+            MagViewProperties(
+                mag=mag,
+                cube_length=(
+                    mag_array_info.shard_size.x
+                    if mag_array_info.data_format == DataFormat.WKW
+                    else None
+                ),
+            )
         )
         self.dataset._export_as_json()
 
@@ -325,9 +398,11 @@ class Layer:
     def get_or_add_mag(
         self,
         mag: Union[int, str, list, tuple, np.ndarray, Mag],
-        block_len: int = 32,
-        file_len: int = DEFAULT_WKW_FILE_LEN,
-        compress: bool = False,
+        chunk_size: Optional[Union[Vec3IntLike, int]] = None,
+        chunks_per_shard: Optional[Union[Vec3IntLike, int]] = None,
+        compress: Optional[bool] = None,
+        block_len: Optional[int] = None,  # deprecated
+        file_len: Optional[int] = None,  # deprecated
     ) -> MagView:
         """
         Creates a new mag called and adds it to the dataset, in case it did not exist before.
@@ -338,24 +413,34 @@ class Layer:
 
         # normalize the name of the mag
         mag = Mag(mag)
-        block_type = (
-            wkw.Header.BLOCK_TYPE_LZ4HC if compress else wkw.Header.BLOCK_TYPE_RAW
+        compression_mode = compress
+
+        chunk_size, chunks_per_shard = _get_sharding_parameters(
+            chunk_size=chunk_size,
+            chunks_per_shard=chunks_per_shard,
+            block_len=block_len,
+            file_len=file_len,
         )
 
         if mag in self._mags.keys():
             assert (
-                block_len is None or self._mags[mag].header.block_len == block_len
-            ), f"Cannot get_or_add_mag: The mag {mag} already exists, but the block lengths do not match"
+                chunk_size is None or self._mags[mag].info.chunk_size == chunk_size
+            ), f"Cannot get_or_add_mag: The mag {mag} already exists, but the chunk sizes do not match"
             assert (
-                file_len is None or self._mags[mag].header.file_len == file_len
-            ), f"Cannot get_or_add_mag: The mag {mag} already exists, but the file lengths do not match"
+                chunks_per_shard is None
+                or self._mags[mag].info.chunks_per_shard == chunks_per_shard
+            ), f"Cannot get_or_add_mag: The mag {mag} already exists, but the chunks per shard do not match"
             assert (
-                block_type is None or self._mags[mag].header.block_type == block_type
-            ), f"Cannot get_or_add_mag: The mag {mag} already exists, but the block types do not match"
+                compression_mode is None
+                or self._mags[mag].info.compression_mode == compression_mode
+            ), f"Cannot get_or_add_mag: The mag {mag} already exists, but the compression modes do not match"
             return self.get_mag(mag)
         else:
             return self.add_mag(
-                mag, block_len=block_len, file_len=file_len, compress=compress
+                mag,
+                chunk_size=chunk_size,
+                chunks_per_shard=chunks_per_shard,
+                compress=compression_mode or False,
             )
 
     def delete_mag(self, mag: Union[int, str, list, tuple, np.ndarray, Mag]) -> None:
@@ -371,10 +456,8 @@ class Layer:
             )
 
         del self._mags[mag]
-        self._properties.wkw_resolutions = [
-            res
-            for res in self._properties.wkw_resolutions
-            if Mag(res.resolution) != mag
+        self._properties.mags = [
+            res for res in self._properties.mags if Mag(res.mag) != mag
         ]
         self.dataset._export_as_json()
         # delete files on disk
@@ -385,7 +468,7 @@ class Layer:
 
     def _add_foreign_mag(
         self,
-        foreign_mag_view_or_path: Union[os.PathLike, str, MagView],
+        foreign_mag_view_or_path: Union[PathLike, str, MagView],
         symlink: bool,
         make_relative: bool,
         extend_layer_bounding_box: bool = True,
@@ -412,20 +495,19 @@ class Layer:
         self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
 
         foreign_normalized_mag_path = (
-            Path(os.path.relpath(foreign_mag_view.path, self.path))
+            Path(relpath(foreign_mag_view.path, self.path))
             if make_relative
             else foreign_mag_view.path.resolve()
         )
 
         if symlink:
-            os.symlink(
-                foreign_normalized_mag_path,
-                join(self.dataset.path, self.name, str(foreign_mag_view.mag)),
+            (self.dataset.path / self.name / str(foreign_mag_view.mag)).symlink_to(
+                foreign_normalized_mag_path
             )
         else:
             shutil.copytree(
                 foreign_normalized_mag_path,
-                join(self.dataset.path, self.name, str(foreign_mag_view.mag)),
+                self.dataset.path / self.name / str(foreign_mag_view.mag),
             )
 
         self.add_mag_for_existing_files(foreign_mag_view.mag)
@@ -439,7 +521,7 @@ class Layer:
 
     def add_symlink_mag(
         self,
-        foreign_mag_view_or_path: Union[os.PathLike, str, MagView],
+        foreign_mag_view_or_path: Union[PathLike, str, MagView],
         make_relative: bool = False,
         extend_layer_bounding_box: bool = True,
     ) -> MagView:
@@ -459,7 +541,7 @@ class Layer:
 
     def add_copy_mag(
         self,
-        foreign_mag_view_or_path: Union[os.PathLike, str, MagView],
+        foreign_mag_view_or_path: Union[PathLike, str, MagView],
         extend_layer_bounding_box: bool = True,
     ) -> MagView:
         """
@@ -477,8 +559,8 @@ class Layer:
         self, mag: Union[int, str, list, tuple, np.ndarray, Mag]
     ) -> None:
         mag = Mag(mag).to_layer_name()
-        full_path = join(self.dataset.path, self.name, mag)
-        makedirs(full_path, exist_ok=True)
+        full_path = self.dataset.path / self.name / mag
+        full_path.mkdir(parents=True, exist_ok=True)
 
     def _assert_mag_does_not_exist_yet(
         self, mag: Union[int, str, list, tuple, np.ndarray, Mag]
@@ -504,6 +586,10 @@ class Layer:
         ), f"Updating the bounding box of layer {self} to {bbox} failed, topleft must not contain negative dimensions."
         self._properties.bounding_box = bbox
         self.dataset._export_as_json()
+        for mag in self.mags.values():
+            mag._array.ensure_size(
+                bbox.align_with_mag(mag.mag).in_mag(mag.mag).bottomright
+            )
 
     def downsample(
         self,
@@ -512,7 +598,7 @@ class Layer:
         interpolation_mode: str = "default",
         compress: bool = True,
         sampling_mode: str = SamplingModes.ANISOTROPIC,
-        buffer_edge_len: Optional[int] = None,
+        buffer_shape: Optional[Vec3Int] = None,
         force_sampling_scheme: bool = False,
         args: Optional[Namespace] = None,
         allow_overwrite: bool = False,
@@ -602,7 +688,7 @@ class Layer:
                 target_mag=target_mag,
                 interpolation_mode=interpolation_mode,
                 compress=compress,
-                buffer_edge_len=buffer_edge_len,
+                buffer_shape=buffer_shape,
                 args=args,
                 allow_overwrite=allow_overwrite,
                 only_setup_mag=only_setup_mags,
@@ -614,7 +700,7 @@ class Layer:
         target_mag: Mag,
         interpolation_mode: str = "default",
         compress: bool = True,
-        buffer_edge_len: Optional[int] = None,
+        buffer_shape: Optional[Vec3Int] = None,
         args: Optional[Namespace] = None,
         allow_overwrite: bool = False,
         only_setup_mag: bool = False,
@@ -690,15 +776,13 @@ class Layer:
 
         # perform downsampling
         with get_executor_for_args(args) as executor:
-            if buffer_edge_len is None:
-                buffer_edge_len = determine_buffer_edge_len(
-                    prev_mag_view
-                )  # DEFAULT_EDGE_LEN
+            if buffer_shape is None:
+                buffer_shape = determine_buffer_shape(prev_mag_view.info)
             func = named_partial(
                 downsample_cube_job,
                 mag_factors=mag_factors,
                 interpolation_mode=parsed_interpolation_mode,
-                buffer_edge_len=buffer_edge_len,
+                buffer_shape=buffer_shape,
             )
 
             source_view.for_zipped_chunks(
@@ -713,7 +797,7 @@ class Layer:
         self,
         interpolation_mode: str = "default",
         compress: bool = True,
-        buffer_edge_len: Optional[int] = None,
+        buffer_shape: Optional[Vec3Int] = None,
         args: Optional[Namespace] = None,
     ) -> None:
         """
@@ -728,12 +812,12 @@ class Layer:
         from_mag = mags[0]
         target_mags = mags[1:]
         self.downsample_mag_list(
-            from_mag,
-            target_mags,
-            interpolation_mode,
-            compress,
-            buffer_edge_len,
-            args,
+            from_mag=from_mag,
+            target_mags=target_mags,
+            interpolation_mode=interpolation_mode,
+            compress=compress,
+            buffer_shape=buffer_shape,
+            args=args,
             allow_overwrite=True,
         )
 
@@ -743,7 +827,7 @@ class Layer:
         target_mags: List[Mag],
         interpolation_mode: str = "default",
         compress: bool = True,
-        buffer_edge_len: Optional[int] = None,
+        buffer_shape: Optional[Vec3Int] = None,
         args: Optional[Namespace] = None,
         allow_overwrite: bool = False,
         only_setup_mags: bool = False,
@@ -775,7 +859,7 @@ class Layer:
                 target_mag,
                 interpolation_mode=interpolation_mode,
                 compress=compress,
-                buffer_edge_len=buffer_edge_len,
+                buffer_shape=buffer_shape,
                 args=args,
                 allow_overwrite=allow_overwrite,
                 only_setup_mag=only_setup_mags,
@@ -788,6 +872,7 @@ class Layer:
         min_mag: Optional[Mag],
         compress: bool,
         sampling_mode: str = SamplingModes.ANISOTROPIC,
+        buffer_shape: Optional[Vec3Int] = None,
         buffer_edge_len: Optional[int] = None,
         args: Optional[Namespace] = None,
     ) -> None:
@@ -820,6 +905,9 @@ class Layer:
                 f"Upsampling failed: {sampling_mode} is not a valid UpsamplingMode ({SamplingModes.ANISOTROPIC}, {SamplingModes.ISOTROPIC}, {SamplingModes.CONSTANT_Z})"
             )
 
+        if buffer_shape is None and buffer_edge_len is not None:
+            buffer_shape = Vec3Int.full(buffer_edge_len)
+
         mags_to_upsample = calculate_mags_to_upsample(from_mag, min_mag, scale)
 
         for prev_mag, target_mag in zip(
@@ -845,14 +933,12 @@ class Layer:
             # perform upsampling
             with get_executor_for_args(args) as executor:
 
-                if buffer_edge_len is None:
-                    buffer_edge_len = determine_buffer_edge_len(
-                        prev_mag_view
-                    )  # DEFAULT_EDGE_LEN
+                if buffer_shape is None:
+                    buffer_shape = determine_buffer_shape(prev_mag_view.info)
                 func = named_partial(
                     upsample_cube_job,
                     mag_factors=mag_factors,
-                    buffer_edge_len=buffer_edge_len,
+                    buffer_shape=buffer_shape,
                 )
                 prev_mag_view.get_view().for_zipped_chunks(
                     # this view is restricted to the bounding box specified in the properties
@@ -870,19 +956,18 @@ class Layer:
         self._assert_mag_does_not_exist_yet(mag)
 
         try:
-            with wkw.Dataset.open(
-                str(_find_mag_path_on_disk(self.dataset.path, self.name, mag_name))
-            ) as wkw_dataset:
-                wk_header = wkw_dataset.header
-
+            cls_array = BaseArray.get_class(self._properties.data_format)
+            info = cls_array(
+                _find_mag_path_on_disk(self.dataset.path, self.name, mag_name)
+            ).info
             self._mags[mag] = MagView(
                 self,
                 mag,
-                wk_header.block_len,
-                wk_header.file_len,
-                wk_header.block_type,
+                info.chunk_size,
+                info.chunks_per_shard,
+                info.compression_mode,
             )
-        except wkw.WKWException as e:
+        except ArrayException as e:
             logging.error(
                 f"Failed to setup magnification {mag_name}, which is specified in the datasource-properties.json. See {e}"
             )
@@ -892,8 +977,8 @@ class Layer:
     ) -> MagView:
         return self.add_mag(
             new_mag_name,
-            block_len=other_mag.header.block_len,
-            file_len=other_mag.header.file_len,
+            chunk_size=other_mag.info.chunk_size,
+            chunks_per_shard=other_mag.info.chunks_per_shard,
             compress=compress,
         )
 

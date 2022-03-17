@@ -51,7 +51,8 @@ class BufferedSliceWriter:
         if offset is not None:
             warnings.warn(
                 "[DEPRECATION] Using offset for a buffered slice writer is deprecated. "
-                + "Please use the parameter relative_offset or absolute_offset in Mag(1) instead."
+                + "Please use the parameter relative_offset or absolute_offset in Mag(1) instead.",
+                DeprecationWarning,
             )
         self.offset = None if offset is None else Vec3Int(offset)
         self.relative_offset = (

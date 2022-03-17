@@ -1,9 +1,9 @@
-import warnings
 from os import PathLike
 from typing import List, Optional, Union
 
 from webknossos.dataset import Dataset
 from webknossos.geometry import BoundingBox, Mag
+from webknossos.utils import warn_deprecated
 
 from ._download_dataset import download_dataset as actual_download_dataset
 
@@ -17,9 +17,7 @@ def download_dataset(
     path: Optional[Union[PathLike, str]] = None,
     exist_ok: bool = False,
 ) -> Dataset:
-    warnings.warn(
-        "[DEPRECATION] download_dataset is deprecated, please use Dataset.download instead."
-    )
+    warn_deprecated("download_dataset", "Dataset.download")
     return actual_download_dataset(
         dataset_name, organization_name, bbox, layers, mags, path, exist_ok
     )

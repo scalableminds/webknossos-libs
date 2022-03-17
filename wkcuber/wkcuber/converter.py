@@ -76,9 +76,7 @@ def get_source_files(
     elif not allows_single_file_input:
         return []
 
-    source_files = list(find_files(input_path, extensions))
-
-    return source_files
+    return [str(f) for f in find_files(input_path, extensions)]
 
 
 def all_files_of_same_type(input_files: List[str]) -> bool:

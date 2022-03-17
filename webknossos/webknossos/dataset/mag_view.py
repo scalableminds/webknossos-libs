@@ -1,19 +1,17 @@
 import logging
-import os
 import shutil
 import warnings
 from argparse import Namespace
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterator, Optional, Union
+from typing import TYPE_CHECKING, Iterator, Optional, Tuple, Union
 from uuid import uuid4
 
 import numpy as np
-from wkw import wkw
 
 from webknossos.geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 from webknossos.utils import get_executor_for_args, wait_and_ensure_success
 
-from .compress_utils import compress_file_job
+from ._array import ArrayInfo, BaseArray
 from .properties import MagViewProperties
 
 if TYPE_CHECKING:
@@ -28,10 +26,15 @@ def _find_mag_path_on_disk(dataset_path: Path, layer_name: str, mag_name: str) -
     mag = Mag(mag_name)
     short_mag_file_path = dataset_path / layer_name / mag.to_layer_name()
     long_mag_file_path = dataset_path / layer_name / mag.to_long_layer_name()
-    if os.path.exists(short_mag_file_path):
+    if short_mag_file_path.exists():
         return short_mag_file_path
     else:
         return long_mag_file_path
+
+
+def _compress_cube_job(args: Tuple[View, View]) -> None:
+    source_view, target_view = args
+    target_view.write(source_view.read())
 
 
 class MagView(View):
@@ -47,33 +50,33 @@ class MagView(View):
         self,
         layer: "Layer",
         mag: Mag,
-        block_len: int,
-        file_len: int,
-        block_type: int,
+        chunk_size: Vec3Int,
+        chunks_per_shard: Vec3Int,
+        compression_mode: bool,
         create: bool = False,
     ) -> None:
         """
         Do not use this constructor manually. Instead use `webknossos.dataset.layer.Layer.add_mag()`.
         """
-        header = wkw.Header(
+        array_info = ArrayInfo(
+            data_format=layer._properties.data_format,
             voxel_type=layer.dtype_per_channel,
             num_channels=layer.num_channels,
-            version=1,
-            block_len=block_len,
-            file_len=file_len,
-            block_type=block_type,
+            chunk_size=chunk_size,
+            chunks_per_shard=chunks_per_shard,
+            compression_mode=compression_mode,
         )
 
         super().__init__(
             _find_mag_path_on_disk(layer.dataset.path, layer.name, mag.to_layer_name()),
-            header,
+            array_info,
             bounding_box=None,
             mag=mag,
         )
         self._layer = layer
 
         if create:
-            wkw.Dataset.create(str(self.path), self.header)
+            BaseArray.get_class(array_info.data_format).create(self.path, array_info)
 
     # Overwrites of View methods:
     @property
@@ -88,7 +91,8 @@ class MagView(View):
         warnings.warn(
             "[DEPRECATION] mag_view.global_offset is deprecated. "
             + "Since this is a MagView, please use "
-            + "Vec3Int.zeros() instead."
+            + "Vec3Int.zeros() instead.",
+            DeprecationWarning,
         )
         return Vec3Int.zeros()
 
@@ -98,7 +102,8 @@ class MagView(View):
         warnings.warn(
             "[DEPRECATION] mag_view.size is deprecated. "
             + "Since this is a MagView, please use "
-            + "mag_view.bounding_box.in_mag(mag_view.mag).bottomright instead."
+            + "mag_view.bounding_box.in_mag(mag_view.mag).bottomright instead.",
+            DeprecationWarning,
         )
         return self.bounding_box.in_mag(self._mag).bottomright
 
@@ -136,7 +141,8 @@ class MagView(View):
             warnings.warn(
                 "[DEPRECATION] Using mag_view.write(offset=my_vec) is deprecated. "
                 + "Please use relative_offset or absolute_offset instead. "
-                + alternative
+                + alternative,
+                DeprecationWarning,
             )
 
         if all(i is None for i in [offset, absolute_offset, relative_offset]):
@@ -234,13 +240,8 @@ class MagView(View):
         This differs from the bounding box in the properties, which is an "overall" bounding box,
         abstracting from the files on disk.
         """
-        cube_size = self._get_file_dimensions()
-        for filename in self._wkw_dataset.list_files():
-            file_path = Path(os.path.splitext(filename)[0]).relative_to(self._path)
-            cube_index = _extract_file_index(file_path)
-            cube_offset = cube_index * cube_size
-
-            yield BoundingBox(cube_offset, cube_size).from_mag_to_mag1(self._mag)
+        for bbox in self._array.list_bounding_boxes():
+            yield bbox.from_mag_to_mag1(self._mag)
 
     def get_views_on_disk(
         self,
@@ -266,71 +267,80 @@ class MagView(View):
         Otherwise it is written to target_path/layer_name/mag.
         """
 
+        from webknossos.dataset.dataset import Dataset
+
         if target_path is not None:
             target_path = Path(target_path)
 
         uncompressed_full_path = (
             Path(self.layer.dataset.path) / self.layer.name / self.name
         )
-        compressed_path = (
-            target_path
-            if target_path is not None
-            else Path("{}.compress-{}".format(self.layer.dataset.path, uuid4()))
+        compressed_dataset_path = (
+            Path("{}.compress-{}".format(self.layer.dataset.path, uuid4()))
+            if target_path is None
+            else target_path
         )
-        compressed_full_path = compressed_path / self.layer.name / self.name
-
-        if compressed_full_path.exists():
-            logging.error(
-                "Target path '{}' already exists".format(compressed_full_path)
-            )
-            exit(1)
+        compressed_dataset = Dataset(
+            compressed_dataset_path, scale=self.layer.dataset.scale, exist_ok=True
+        )
+        compressed_mag = compressed_dataset.get_or_add_layer(
+            layer_name=self.layer.name,
+            category=self.layer.category,
+            dtype_per_channel=self.layer.dtype_per_channel,
+            num_channels=self.layer.num_channels,
+            data_format=self.layer.data_format,
+        ).get_or_add_mag(
+            mag=self.mag,
+            chunk_size=self.info.chunk_size,
+            chunks_per_shard=self.info.chunks_per_shard,
+            compress=True,
+        )
+        compressed_mag.layer.bounding_box = self.layer.bounding_box
 
         logging.info(
             "Compressing mag {0} in '{1}'".format(
                 self.name, str(uncompressed_full_path)
             )
         )
-        # create empty wkw.Dataset
-        self._wkw_dataset.compress(str(compressed_full_path))
-
-        # compress all files to and move them to 'compressed_path'
         with get_executor_for_args(args) as executor:
             job_args = []
-            for file in self._wkw_dataset.list_files():
-                rel_file = Path(file).relative_to(self.layer.dataset.path)
-                job_args.append((Path(file), compressed_path / rel_file))
+            for bbox in self.get_bounding_boxes_on_disk():
+                bbox = bbox.intersected_with(self.layer.bounding_box, dont_assert=True)
+                if not bbox.is_empty():
+                    source_view = self.get_view(
+                        absolute_offset=bbox.topleft, size=bbox.size
+                    )
+                    target_view = compressed_mag.get_view(
+                        absolute_offset=bbox.topleft, size=bbox.size
+                    )
+                    job_args.append((source_view, target_view))
 
             wait_and_ensure_success(
-                executor.map_to_futures(compress_file_job, job_args), "Compressing"
+                executor.map_to_futures(_compress_cube_job, job_args), "Compressing"
             )
 
         if target_path is None:
-            shutil.rmtree(uncompressed_full_path)
-            shutil.move(str(compressed_full_path), uncompressed_full_path)
-            shutil.rmtree(compressed_path)
+            shutil.rmtree(self.path)
+            shutil.move(str(compressed_mag.path), self.path)
+            shutil.rmtree(compressed_mag.layer.dataset.path)
 
             # update the handle to the new dataset
             MagView.__init__(
                 self,
                 self.layer,
                 self._mag,
-                self.header.block_len,
-                self.header.file_len,
-                wkw.Header.BLOCK_TYPE_LZ4HC,
+                self.info.chunk_size,
+                self.info.chunks_per_shard,
+                True,
             )
 
     @property
     def _properties(self) -> MagViewProperties:
         return next(
             mag_property
-            for mag_property in self.layer._properties.wkw_resolutions
-            if mag_property.resolution == self._mag
+            for mag_property in self.layer._properties.mags
+            if mag_property.mag == self._mag
         )
 
     def __repr__(self) -> str:
         return repr(f"MagView(name={self.name}, bounding_box={self.bounding_box})")
-
-
-def _extract_file_index(file_path: Path) -> Vec3Int:
-    zyx_index = [int(el[1:]) for el in file_path.parts]
-    return Vec3Int(zyx_index[2], zyx_index[1], zyx_index[0])

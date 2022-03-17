@@ -3,22 +3,20 @@ from types import TracebackType
 from typing import Tuple, Any, Generator, Iterator, Optional, Type, Union
 
 import numpy as np
-import os
+from os.path import sep
 import re
-from os import path
-from glob import iglob, glob
 
 CUBE_EDGE_LEN = 128
 CUBE_SIZE = CUBE_EDGE_LEN ** 3
 CUBE_SHAPE = (CUBE_EDGE_LEN,) * 3
 KNOSSOS_CUBE_REGEX = re.compile(
-    fr"x(\d+){re.escape(os.path.sep)}y(\d+){re.escape(os.path.sep)}z(\d+){re.escape(os.path.sep)}(.*\.raw)$"
+    fr"x(\d+){re.escape(sep)}y(\d+){re.escape(sep)}z(\d+){re.escape(sep)}(.*\.raw)$"
 )
 
 
 class KnossosDataset:
     def __init__(self, root: Union[str, Path], dtype: np.dtype = np.uint8):
-        self.root = str(root)
+        self.root = Path(root)
         self.dtype = dtype
 
     def read(
@@ -55,37 +53,38 @@ class KnossosDataset:
     def write_cube(self, cube_xyz: Tuple[int, ...], cube_data: np.ndarray) -> None:
         filename = self.__get_only_raw_file_path(cube_xyz)
         if filename is None:
-            filename = path.join(
-                self.__get_cube_folder(cube_xyz), self.__get_cube_file_name(cube_xyz)
+            filename = self.__get_cube_folder(cube_xyz) / self.__get_cube_file_name(
+                cube_xyz
             )
-        os.makedirs(path.dirname(filename), exist_ok=True)
+
+        filename.parent.mkdir(parents=True, exist_ok=True)
         with open(filename, "wb") as cube_file:
             cube_data.ravel(order="F").tofile(cube_file)
 
-    def __get_cube_folder(self, cube_xyz: Tuple[int, ...]) -> str:
+    def __get_cube_folder(self, cube_xyz: Tuple[int, ...]) -> Path:
         x, y, z = cube_xyz
-        return path.join(
-            self.root, "x{:04d}".format(x), "y{:04d}".format(y), "z{:04d}".format(z)
+        return (
+            self.root / "x{:04d}".format(x) / "y{:04d}".format(y) / "z{:04d}".format(z)
         )
 
-    def __get_cube_file_name(self, cube_xyz: Tuple[int, ...]) -> str:
+    def __get_cube_file_name(self, cube_xyz: Tuple[int, ...]) -> Path:
         x, y, z = cube_xyz
-        return "cube_x{:04d}_y{:04d}_z{:04d}.raw".format(x, y, z)
+        return Path("cube_x{:04d}_y{:04d}_z{:04d}.raw".format(x, y, z))
 
-    def __get_only_raw_file_path(self, cube_xyz: Tuple[int, ...]) -> Optional[str]:
+    def __get_only_raw_file_path(self, cube_xyz: Tuple[int, ...]) -> Optional[Path]:
         cube_folder = self.__get_cube_folder(cube_xyz)
-        raw_files = glob(path.join(cube_folder, "*.raw"))
+        raw_files = list(cube_folder.glob("*.raw"))
         assert len(raw_files) <= 1, "Found %d .raw files in %s" % (
             len(raw_files),
             cube_folder,
         )
         return raw_files[0] if len(raw_files) > 0 else None
 
-    def list_files(self) -> Iterator[str]:
-        return iglob(path.join(self.root, "*", "*", "*", "*.raw"), recursive=True)
+    def list_files(self) -> Iterator[Path]:
+        return self.root.glob("*/*/*/*.raw")
 
-    def __parse_cube_file_name(self, filename: str) -> Optional[Tuple[int, int, int]]:
-        m = KNOSSOS_CUBE_REGEX.search(filename)
+    def __parse_cube_file_name(self, filename: Path) -> Optional[Tuple[int, int, int]]:
+        m = KNOSSOS_CUBE_REGEX.search(str(filename))
         if m is None:
             return None
         return int(m.group(1)), int(m.group(2)), int(m.group(3))
@@ -102,7 +101,7 @@ class KnossosDataset:
 
     @staticmethod
     def open(root: Union[str, Path], dtype: Optional[np.dtype]) -> "KnossosDataset":
-        return KnossosDataset(str(root), dtype)
+        return KnossosDataset(root, dtype)
 
     def __enter__(self) -> "KnossosDataset":
         return self
