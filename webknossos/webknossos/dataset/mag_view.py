@@ -1,5 +1,4 @@
 import logging
-import shutil
 import warnings
 from argparse import Namespace
 from typing import TYPE_CHECKING, Iterator, Optional, Tuple, Union
@@ -317,9 +316,9 @@ class MagView(View):
             )
 
         if target_path is None:
-            self.path.rmdir(recursive=True)
+            self.path.rmdir()
             compressed_mag.path.rename(self.path)
-            compressed_dataset.path.rmdir(recursive=True)
+            compressed_dataset.path.rmdir()
 
             # update the handle to the new dataset
             MagView.__init__(

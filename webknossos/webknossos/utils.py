@@ -13,7 +13,8 @@ from multiprocessing import cpu_count
 from os import PathLike
 from os.path import relpath
 from pathlib import Path
-from typing import Any, Callable, Iterable, List, Optional, Union
+from shutil import copyfileobj
+from typing import Any, Callable, Iterable, Iterator, List, Optional, Tuple, Union
 
 import rich
 from cluster_tools import WrappedProcessPoolExecutor, get_executor
@@ -209,3 +210,22 @@ def warn_deprecated(deprecated_item: str, alternative_item: str) -> None:
 
 def make_path(maybe_path: Union[str, PathLike, Path, UPath]) -> UPath:
     return maybe_path if isinstance(maybe_path, UPath) else UPath(maybe_path)
+
+
+def copytree(in_path: UPath, out_path: UPath) -> None:
+    def _walk(path: UPath, base_path: UPath) -> Iterator[Tuple[UPath, UPath]]:
+        yield (path, path.relative_to(base_path))
+        if path.is_dir():
+            for p in path.iterdir():
+                yield from _walk(p, base_path)
+        else:
+            yield (path, path.relative_to(base_path))
+
+    for in_sub_path, sub_path in _walk(in_path, in_path):
+        if in_sub_path.is_dir():
+            (out_path / sub_path).mkdir(parents=True, exist_ok=True)
+        else:
+            with (in_path / sub_path).open("rb") as in_file, (out_path / sub_path).open(
+                "wb"
+            ) as out_file:
+                copyfileobj(in_file, out_file)

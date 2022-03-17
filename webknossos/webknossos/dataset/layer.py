@@ -1,12 +1,10 @@
 import logging
 import operator
 import re
-import shutil
 import warnings
 from argparse import Namespace
 from os import PathLike
 from os.path import relpath
-from shutil import rmtree
 from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 
 import numpy as np
@@ -39,6 +37,7 @@ if TYPE_CHECKING:
     from .dataset import Dataset
 
 from webknossos.utils import (
+    copytree,
     get_executor_for_args,
     make_path,
     named_partial,
@@ -469,7 +468,7 @@ class Layer:
         full_path = _find_mag_path_on_disk(
             self.dataset.path, self.name, mag.to_layer_name()
         )
-        rmtree(full_path)
+        full_path.rmdir()
 
     def _add_foreign_mag(
         self,
@@ -510,7 +509,7 @@ class Layer:
                 foreign_normalized_mag_path
             )
         else:
-            shutil.copytree(
+            copytree(
                 foreign_normalized_mag_path,
                 self.dataset.path / self.name / str(foreign_mag_view.mag),
             )

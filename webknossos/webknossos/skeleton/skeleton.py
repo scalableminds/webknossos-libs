@@ -8,8 +8,6 @@ from upath import UPath as Path
 
 from webknossos.utils import warn_deprecated
 
-from webknossos.utils import warn_deprecated
-
 from .graph import Graph
 from .group import Group
 

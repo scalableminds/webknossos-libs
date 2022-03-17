@@ -1,6 +1,5 @@
 import copy
 import json
-import shutil
 import warnings
 from argparse import Namespace
 from contextlib import nullcontext
@@ -31,7 +30,12 @@ if TYPE_CHECKING:
     from ..client._upload_dataset import LayerToLink
 
 from ..geometry import BoundingBox, Mag
-from ..utils import copy_directory_with_symlinks, get_executor_for_args, make_path
+from ..utils import (
+    copy_directory_with_symlinks,
+    copytree,
+    get_executor_for_args,
+    make_path,
+)
 from ._utils.infer_bounding_box_existing_files import infer_bounding_box_existing_files
 from .layer import (
     Layer,
@@ -596,7 +600,7 @@ class Dataset:
             layer_path.unlink()
         else:
             # rmtree does not recurse into linked dirs, but removes the link
-            shutil.rmtree(layer_path)
+            layer_path.rmdir()
         self._export_as_json()
 
     def add_symlink_layer(
@@ -672,7 +676,7 @@ class Dataset:
                 f"Cannot copy {foreign_layer_path}. This dataset already has a layer called {layer_name}."
             )
 
-        shutil.copytree(foreign_layer_path, self.path / layer_name)
+        copytree(foreign_layer_path, self.path / layer_name)
         original_layer = Dataset.open(foreign_layer_path.parent).get_layer(
             foreign_layer_name
         )

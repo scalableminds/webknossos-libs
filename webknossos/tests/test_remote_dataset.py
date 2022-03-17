@@ -1,7 +1,4 @@
-import os
-import shutil
 import warnings
-from typing import Iterator, Tuple
 
 import numpy as np
 import pytest
@@ -13,6 +10,7 @@ from webknossos.dataset import COLOR_CATEGORY, Dataset
 from webknossos.dataset._array import DataFormat
 from webknossos.dataset.layer_categories import SEGMENTATION_CATEGORY
 from webknossos.geometry import Vec3Int
+from webknossos.utils import copytree
 
 S3_KEY = "ANTN35UAENTS5UIAEATD"
 S3_SECRET = "TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur"
@@ -46,33 +44,14 @@ def get_multichanneled_data(dtype: type) -> np.ndarray:
     return data
 
 
-def copytree(in_path: Path, out_path: Path) -> None:
-    def _walk(path: Path, base_path: Path) -> Iterator[Tuple[Path, Path]]:
-        yield (path, path.relative_to(base_path))
-        if path.is_dir():
-            for p in path.iterdir():
-                yield from _walk(p, base_path)
-        else:
-            yield (path, path.relative_to(base_path))
-
-    for in_sub_path, sub_path in _walk(in_path, in_path):
-        if in_sub_path.is_dir():
-            (out_path / sub_path).mkdir(parents=True, exist_ok=True)
-        else:
-            with (in_path / sub_path).open("rb") as in_file, (out_path / sub_path).open(
-                "wb"
-            ) as out_file:
-                shutil.copyfileobj(in_file, out_file)
-
-
 @pytest.fixture(scope="session", autouse=True)
-def create_bucket():
+def create_bucket() -> None:
     BUCKET_PATH.fs.mkdirs("testoutput", exist_ok=True)
 
 
 def delete_dir(relative_path: Path) -> None:
     if relative_path.exists() and relative_path.is_dir():
-        relative_path.rmdir(recursive=True)
+        relative_path.rmdir()
 
 
 def test_s3_dataset() -> None:
