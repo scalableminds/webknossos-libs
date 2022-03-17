@@ -293,7 +293,6 @@ class ZarrArray(BaseArray):
         assert array_info.chunks_per_shard == Vec3Int.full(
             1
         ), "Zarr storage doesn't support sharding yet"
-
         zarr.create(
             shape=(array_info.num_channels, 1, 1, 1),
             chunks=(array_info.num_channels,) + array_info.chunk_size.to_tuple(),

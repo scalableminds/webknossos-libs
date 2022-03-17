@@ -10,9 +10,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.10...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.11...HEAD)
 
 ### Breaking Changes
+- The annotation class now exposes `BoundingBox` objects instead of tuples. [#646](https://github.com/scalableminds/webknossos-libs/pull/646)
 
 ### Added
 - Added support for [Zarr](https://zarr.dev/) arrays in the `Dataset` classes. Users can set the `data_format` of layers to `zarr` to use Zarr for storing data. 
@@ -27,11 +28,16 @@ For upgrade instructions, please check the respective *Breaking Changes* section
   * `dataFormat` needs to be changed to `zarr`.
   * The list of mags is called `mags`, instead of `wkwResolutions`.
   * Each mag is represented by an object with a single attribute `mag`, e.g. `{ "mag": [1, 1, 1] }`.
+- The `BoundingBox` class now supports the following additional properties: `id`, `name`, `is_visible` and `color'. [#646](https://github.com/scalableminds/webknossos-libs/pull/646)
 
 ### Changed
 - Dataset: `block_len` and `file_len` attributes are now deprecated, but still available for backwards compatibility. Use `chunk_size` and `chunks_per_shard` instead. These new attributes are `Vec3Int`, so they can be set non-uniformly. However, WKW-backed layers still require uniform `chunk_size` and `chunks_per_shard`. [#627](https://github.com/scalableminds/webknossos-libs/pull/627)
 
 ### Fixed
+
+
+## [0.9.11](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.11) - 2022-03-16
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.10...v0.9.11)
 
 
 ## [0.9.10](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.10) - 2022-03-15
