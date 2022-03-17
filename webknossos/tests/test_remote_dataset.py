@@ -126,9 +126,11 @@ def test_modify_existing_dataset() -> None:
         "uint8",
         largest_segment_id=100000,
         data_format=DataFormat.Zarr,
-    )
+    ).add_mag("1")
 
-    assert (BUCKET_PATH / "simple_zarr_dataset" / "segmentation").is_dir()
+    assert (
+        BUCKET_PATH / "simple_zarr_dataset" / "segmentation" / "1-1-1" / ".zarray"
+    ).exists()
 
     # Note: ds1 is outdated because the same dataset was opened again and changed.
     assure_exported_properties(ds2)
@@ -308,6 +310,7 @@ def test_wkw_write_multi_channel_uint16() -> None:
 
 def test_compression() -> None:
     new_dataset_path = BUCKET_PATH / "simple_zarr_dataset_compression"
+    compressed_dataset_path = BUCKET_PATH / "simple_zarr_dataset_compressed"
 
     delete_dir(new_dataset_path)
     copytree(TESTDATA_DIR / "simple_zarr_dataset", new_dataset_path)
@@ -319,7 +322,9 @@ def test_compression() -> None:
     mag1.write(write_data, absolute_offset=(60, 80, 100))
 
     assert not mag1._is_compressed()
-    mag1.compress()
+    mag1.compress(target_path=compressed_dataset_path)
+
+    mag1 = Dataset.open(compressed_dataset_path).get_layer("color").get_mag(1)
     assert mag1._is_compressed()
     assert mag1.info.data_format == DataFormat.Zarr
 
@@ -348,7 +353,8 @@ def test_downsampling() -> None:
     color_layer = Dataset.open(new_dataset_path).get_layer("color")
     color_layer.downsample()
 
-    assert (new_dataset_path / "color" / "2-2-1" / ".zarray").exists()
+    assert (new_dataset_path / "color" / "2-2-2" / ".zarray").exists()
+    assert (new_dataset_path / "color" / "4-4-4" / ".zarray").exists()
 
     assure_exported_properties(color_layer.dataset)
 

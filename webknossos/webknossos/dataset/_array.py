@@ -397,7 +397,6 @@ class ZarrArray(BaseArray):
     def _zarray(self) -> zarr.Array:
         if self._cached_zarray is None:
             try:
-
                 self._cached_zarray = zarr.open_array(
                     store=_fsstore_from_path(self._path), mode="a"
                 )
