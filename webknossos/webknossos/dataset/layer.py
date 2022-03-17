@@ -1009,6 +1009,12 @@ class SegmentationLayer(Layer):
 
     @largest_segment_id.setter
     def largest_segment_id(self, largest_segment_id: int) -> None:
+        if type(largest_segment_id) != int:
+            assert largest_segment_id == int(
+                largest_segment_id
+            ), f"A non-integer value was passed for largest_segment_id ({largest_segment_id})."
+            largest_segment_id = int(largest_segment_id)
+
         self._properties.largest_segment_id = largest_segment_id
         self.dataset._export_as_json()
 
