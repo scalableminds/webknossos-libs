@@ -91,6 +91,7 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
     user_id = "570b9f4d2a7c0e4d008da6ef"
     project_id = "58135bfd2faeb3190181c057"
     project_name = "Test_Project"
+    explorative_annotation_id = "58135c192faeb34c0081c05d"
 
     extract_200_response(
         httpx.post(
@@ -104,19 +105,6 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
     assert (
         response.status_code == 200 and response.json()["isActive"]
     ), f"You need to copy or link any dataset to binaryData/{organization_name}/{dataset_name}."
-    with open("testdata/annotations/test_env_upload.zip", mode="rb") as f:
-        response = httpx.post(
-            url=f"{WK_URL}/api/annotations/upload",
-            headers={"X-Auth-Token": f"{WK_TOKEN}"},
-            data={"createGroupForEachFile": False},
-            files={
-                "test.zip": ("test.zip", f),
-            },
-        )
-    assert (
-        response.status_code == 200
-    ), f"Failed to upload annotation: {response.status_code}: {response.text}"
-    explorative_annotation_id = response.json()["annotation"]["id"]
 
     d = datetime.utcnow()
     unixtime = calendar.timegm(d.utctimetuple())
@@ -268,8 +256,15 @@ def make_properties_required(x: Any) -> None:
                 property
                 for property in properties.keys()
                 if property not in OPTIONAL_FIELDS
-                and not ("tracingId" in properties and property == "name")
             )
+
+            # Further corrections
+            if "task" in properties:
+                properties["task"]["nullable"] = True
+            if "tracingTime" in properties:
+                # is null during client-generation, but actually is Optional[int]
+                properties["tracingTime"]["type"] = "integer"
+                properties["tracingTime"]["nullable"] = True
 
 
 def set_response_schema_by_example(

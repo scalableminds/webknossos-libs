@@ -23,6 +23,20 @@ from .annotation_info_response_200_settings_resolution_restrictions import (
     AnnotationInfoResponse200SettingsResolutionRestrictions,
 )
 from .annotation_info_response_200_stats import AnnotationInfoResponse200Stats
+from .annotation_info_response_200_task import AnnotationInfoResponse200Task
+from .annotation_info_response_200_task_needed_experience import (
+    AnnotationInfoResponse200TaskNeededExperience,
+)
+from .annotation_info_response_200_task_status import (
+    AnnotationInfoResponse200TaskStatus,
+)
+from .annotation_info_response_200_task_type import AnnotationInfoResponse200TaskType
+from .annotation_info_response_200_task_type_settings import (
+    AnnotationInfoResponse200TaskTypeSettings,
+)
+from .annotation_info_response_200_task_type_settings_resolution_restrictions import (
+    AnnotationInfoResponse200TaskTypeSettingsResolutionRestrictions,
+)
 from .annotation_info_response_200_tracing_store import (
     AnnotationInfoResponse200TracingStore,
 )

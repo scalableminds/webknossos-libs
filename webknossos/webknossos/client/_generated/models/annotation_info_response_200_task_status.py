@@ -2,27 +2,30 @@ from typing import Any, Dict, List, Type, TypeVar
 
 import attr
 
-T = TypeVar("T", bound="AnnotationInfoResponse200AnnotationLayersItem")
+T = TypeVar("T", bound="AnnotationInfoResponse200TaskStatus")
 
 
 @attr.s(auto_attribs=True)
-class AnnotationInfoResponse200AnnotationLayersItem:
+class AnnotationInfoResponse200TaskStatus:
     """ """
 
-    tracing_id: str
-    typ: str
+    open_: int
+    active: int
+    finished: int
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        tracing_id = self.tracing_id
-        typ = self.typ
+        open_ = self.open_
+        active = self.active
+        finished = self.finished
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "tracingId": tracing_id,
-                "typ": typ,
+                "open": open_,
+                "active": active,
+                "finished": finished,
             }
         )
 
@@ -31,17 +34,20 @@ class AnnotationInfoResponse200AnnotationLayersItem:
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        tracing_id = d.pop("tracingId")
+        open_ = d.pop("open")
 
-        typ = d.pop("typ")
+        active = d.pop("active")
 
-        annotation_info_response_200_annotation_layers_item = cls(
-            tracing_id=tracing_id,
-            typ=typ,
+        finished = d.pop("finished")
+
+        annotation_info_response_200_task_status = cls(
+            open_=open_,
+            active=active,
+            finished=finished,
         )
 
-        annotation_info_response_200_annotation_layers_item.additional_properties = d
-        return annotation_info_response_200_annotation_layers_item
+        annotation_info_response_200_task_status.additional_properties = d
+        return annotation_info_response_200_task_status
 
     @property
     def additional_keys(self) -> List[str]:

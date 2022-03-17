@@ -2,27 +2,27 @@ from typing import Any, Dict, List, Type, TypeVar
 
 import attr
 
-T = TypeVar("T", bound="AnnotationInfoResponse200AnnotationLayersItem")
+T = TypeVar("T", bound="AnnotationInfoResponse200TaskNeededExperience")
 
 
 @attr.s(auto_attribs=True)
-class AnnotationInfoResponse200AnnotationLayersItem:
+class AnnotationInfoResponse200TaskNeededExperience:
     """ """
 
-    tracing_id: str
-    typ: str
+    domain: str
+    value: int
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        tracing_id = self.tracing_id
-        typ = self.typ
+        domain = self.domain
+        value = self.value
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "tracingId": tracing_id,
-                "typ": typ,
+                "domain": domain,
+                "value": value,
             }
         )
 
@@ -31,17 +31,17 @@ class AnnotationInfoResponse200AnnotationLayersItem:
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        tracing_id = d.pop("tracingId")
+        domain = d.pop("domain")
 
-        typ = d.pop("typ")
+        value = d.pop("value")
 
-        annotation_info_response_200_annotation_layers_item = cls(
-            tracing_id=tracing_id,
-            typ=typ,
+        annotation_info_response_200_task_needed_experience = cls(
+            domain=domain,
+            value=value,
         )
 
-        annotation_info_response_200_annotation_layers_item.additional_properties = d
-        return annotation_info_response_200_annotation_layers_item
+        annotation_info_response_200_task_needed_experience.additional_properties = d
+        return annotation_info_response_200_task_needed_experience
 
     @property
     def additional_keys(self) -> List[str]:

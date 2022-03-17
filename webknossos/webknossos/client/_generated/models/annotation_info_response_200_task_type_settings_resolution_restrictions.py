@@ -2,46 +2,34 @@ from typing import Any, Dict, List, Type, TypeVar
 
 import attr
 
-T = TypeVar("T", bound="AnnotationInfoResponse200AnnotationLayersItem")
+T = TypeVar(
+    "T", bound="AnnotationInfoResponse200TaskTypeSettingsResolutionRestrictions"
+)
 
 
 @attr.s(auto_attribs=True)
-class AnnotationInfoResponse200AnnotationLayersItem:
+class AnnotationInfoResponse200TaskTypeSettingsResolutionRestrictions:
     """ """
 
-    tracing_id: str
-    typ: str
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        tracing_id = self.tracing_id
-        typ = self.typ
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update(
-            {
-                "tracingId": tracing_id,
-                "typ": typ,
-            }
-        )
+        field_dict.update({})
 
         return field_dict
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        tracing_id = d.pop("tracingId")
+        annotation_info_response_200_task_type_settings_resolution_restrictions = cls()
 
-        typ = d.pop("typ")
-
-        annotation_info_response_200_annotation_layers_item = cls(
-            tracing_id=tracing_id,
-            typ=typ,
+        annotation_info_response_200_task_type_settings_resolution_restrictions.additional_properties = (
+            d
         )
-
-        annotation_info_response_200_annotation_layers_item.additional_properties = d
-        return annotation_info_response_200_annotation_layers_item
+        return annotation_info_response_200_task_type_settings_resolution_restrictions
 
     @property
     def additional_keys(self) -> List[str]:

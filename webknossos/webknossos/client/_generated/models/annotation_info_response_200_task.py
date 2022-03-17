@@ -2,21 +2,21 @@ from typing import Any, Dict, List, Optional, Type, TypeVar, cast
 
 import attr
 
-from ..models.task_infos_by_project_id_response_200_item_needed_experience import (
-    TaskInfosByProjectIdResponse200ItemNeededExperience,
+from ..models.annotation_info_response_200_task_needed_experience import (
+    AnnotationInfoResponse200TaskNeededExperience,
 )
-from ..models.task_infos_by_project_id_response_200_item_status import (
-    TaskInfosByProjectIdResponse200ItemStatus,
+from ..models.annotation_info_response_200_task_status import (
+    AnnotationInfoResponse200TaskStatus,
 )
-from ..models.task_infos_by_project_id_response_200_item_type import (
-    TaskInfosByProjectIdResponse200ItemType,
+from ..models.annotation_info_response_200_task_type import (
+    AnnotationInfoResponse200TaskType,
 )
 
-T = TypeVar("T", bound="TaskInfosByProjectIdResponse200Item")
+T = TypeVar("T", bound="AnnotationInfoResponse200Task")
 
 
 @attr.s(auto_attribs=True)
-class TaskInfosByProjectIdResponse200Item:
+class AnnotationInfoResponse200Task:
     """ """
 
     id: str
@@ -24,11 +24,11 @@ class TaskInfosByProjectIdResponse200Item:
     project_id: str
     project_name: str
     team: str
-    type: TaskInfosByProjectIdResponse200ItemType
+    type: AnnotationInfoResponse200TaskType
     data_set: str
-    needed_experience: TaskInfosByProjectIdResponse200ItemNeededExperience
+    needed_experience: AnnotationInfoResponse200TaskNeededExperience
     created: int
-    status: TaskInfosByProjectIdResponse200ItemStatus
+    status: AnnotationInfoResponse200TaskStatus
     script: str
     creation_info: str
     bounding_box: str
@@ -98,19 +98,17 @@ class TaskInfosByProjectIdResponse200Item:
 
         team = d.pop("team")
 
-        type = TaskInfosByProjectIdResponse200ItemType.from_dict(d.pop("type"))
+        type = AnnotationInfoResponse200TaskType.from_dict(d.pop("type"))
 
         data_set = d.pop("dataSet")
 
-        needed_experience = (
-            TaskInfosByProjectIdResponse200ItemNeededExperience.from_dict(
-                d.pop("neededExperience")
-            )
+        needed_experience = AnnotationInfoResponse200TaskNeededExperience.from_dict(
+            d.pop("neededExperience")
         )
 
         created = d.pop("created")
 
-        status = TaskInfosByProjectIdResponse200ItemStatus.from_dict(d.pop("status"))
+        status = AnnotationInfoResponse200TaskStatus.from_dict(d.pop("status"))
 
         script = d.pop("script")
 
@@ -124,7 +122,7 @@ class TaskInfosByProjectIdResponse200Item:
 
         tracing_time = d.pop("tracingTime")
 
-        task_infos_by_project_id_response_200_item = cls(
+        annotation_info_response_200_task = cls(
             id=id,
             formatted_hash=formatted_hash,
             project_id=project_id,
@@ -143,8 +141,8 @@ class TaskInfosByProjectIdResponse200Item:
             tracing_time=tracing_time,
         )
 
-        task_infos_by_project_id_response_200_item.additional_properties = d
-        return task_infos_by_project_id_response_200_item
+        annotation_info_response_200_task.additional_properties = d
+        return annotation_info_response_200_task
 
     @property
     def additional_keys(self) -> List[str]:
