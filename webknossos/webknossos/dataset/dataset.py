@@ -234,7 +234,7 @@ class Dataset:
     def download(
         cls,
         dataset_name_or_url: str,
-        organization_name: Optional[str] = None,
+        organization_id: Optional[str] = None,
         sharing_token: Optional[str] = None,
         webknossos_url: Optional[str] = None,
         bbox: Optional[BoundingBox] = None,
@@ -247,8 +247,8 @@ class Dataset:
 
         * `dataset_name_or_url` may be a dataset name or a full URL to a dataset view, e.g.
           `https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view`
-          If a URL is used, `organization_name`, `webknossos_url` and `sharing_token` must not be set.
-        * `organization_name` may be supplied if a dataset name was used in the previous argument,
+          If a URL is used, `organization_id`, `webknossos_url` and `sharing_token` must not be set.
+        * `organization_id` may be supplied if a dataset name was used in the previous argument,
           it defaults to your current organization from the `webknossos_context`.
         * `sharing_token` may be supplied if a dataset name was used and can specify a sharing token.
         * `webknossos_url` may be supplied if a dataset name was used,
@@ -257,7 +257,7 @@ class Dataset:
         * `bbox`, `layers`, and `mags` specify which parts of the dataset to download.
           If nothing is specified the whole image, all layers, and all mags are downloaded respectively.
         * `path` and `exist_ok` specify where to save the downloaded dataset and whether to overwrite
-        if the `path` exists.
+          if the `path` exists.
 
         The `webknossos_url` specifies in which webknossos instance to search for the dataset. By default the
         configured url from `webknossos_context` is used, using https://webknossos.org as a fallback.
@@ -300,7 +300,7 @@ class Dataset:
         with context:
             return download_dataset(
                 dataset_name_or_url,
-                organization_name=organization_name,
+                organization_id=organization_id,
                 sharing_token=sharing_token,
                 bbox=bbox,
                 layers=layers,

@@ -23,7 +23,7 @@ _DOWNLOAD_CHUNK_SIZE = Vec3Int(512, 512, 512)
 
 def download_dataset(
     dataset_name: str,
-    organization_name: Optional[str] = None,
+    organization_id: Optional[str] = None,
     sharing_token: Optional[str] = None,
     bbox: Optional[BoundingBox] = None,
     layers: Optional[List[str]] = None,
@@ -34,8 +34,8 @@ def download_dataset(
     client = _get_generated_client()
     context = _get_context()
 
-    if organization_name is None:
-        organization_name = context.organization
+    if organization_id is None:
+        organization_id = context.organization_id
 
     if sharing_token is None:
         dataset_name_with_sharing_token = dataset_name
@@ -43,7 +43,7 @@ def download_dataset(
         dataset_name_with_sharing_token = f"{dataset_name}?sharingToken={sharing_token}"
 
     dataset_info_response = dataset_info.sync_detailed(
-        organization_name=organization_name,
+        organization_name=organization_id,
         data_set_name=dataset_name_with_sharing_token,
         client=client,
     )
@@ -114,7 +114,7 @@ def download_dataset(
             ):
                 chunk_in_mag = chunk.in_mag(mag)
                 response = dataset_download.sync_detailed(
-                    organization_name=organization_name,
+                    organization_name=organization_id,
                     data_set_name=dataset_name,
                     data_layer_name=layer_name,
                     resolution=mag.max_dim_log2,
