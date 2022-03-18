@@ -73,9 +73,12 @@ nav:
       - Dataset Examples:
         - webknossos-py/examples/dataset_usage.md
         - webknossos-py/examples/upload_image_data.md
-      - webknossos-py/examples/apply_merger_mode.md
-      - webknossos-py/examples/learned_segmenter.md
-      - webknossos-py/examples/skeleton_synapse_candidates.md
+        - webknossos-py/examples/download_image_data.md
+      - Annotation Examples:
+        - webknossos-py/examples/apply_merger_mode.md
+        - webknossos-py/examples/learned_segmenter.md
+        - webknossos-py/examples/skeleton_synapse_candidates.md
+        - webknossos-py/examples/calculate_segment_sizes.md
       - Administration Examples:
         - webknossos-py/examples/user_times.md
         - webknossos-py/examples/annotation_project_administration.md

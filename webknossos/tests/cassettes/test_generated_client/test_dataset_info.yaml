@@ -15,7 +15,7 @@ interactions:
     method: GET
     uri: https://webknossos.org/api/datasets/scalable_minds/l4dense_motta_et_al_demo
   response:
-    content: '{"name":"l4dense_motta_et_al_demo","dataSource":{"id":{"name":"l4dense_motta_et_al_demo","team":"scalable_minds"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[128,128,128],"width":5445,"height":8380,"depth":3285},"resolutions":[[1,1,1],[2,2,1],[4,4,2],[8,8,4],[16,16,8],[32,32,16],[64,64,32],[128,128,64],[256,256,128],[512,512,256],[1024,1024,512]],"elementClass":"uint8","adminViewConfiguration":{"intensityRange":[80,180]}},{"name":"predictions","category":"color","boundingBox":{"topLeft":[0,0,0],"width":5632,"height":8704,"depth":3584},"resolutions":[[1,1,1],[2,2,1],[4,4,2],[8,8,4],[16,16,8],[32,32,16],[64,64,32],[128,128,64],[256,256,128],[512,512,256],[1024,1024,512]],"elementClass":"uint24","adminViewConfiguration":{"isDisabled":true}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[128,128,128],"width":5445,"height":8380,"depth":3285},"resolutions":[[1,1,1],[2,2,1],[4,4,2],[8,8,4],[16,16,8],[32,32,16],[64,64,32],[128,128,64],[256,256,128],[512,512,256],[1024,1024,512]],"elementClass":"uint32","largestSegmentId":2504697,"adminViewConfiguration":{}}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"webknossos.org","url":"https://data-humerus.webknossos.org","isForeign":false,"isScratch":false,"isConnector":false,"allowsUpload":true},"owningOrganization":"scalable_minds","allowedTeams":[],"isActive":true,"isPublic":true,"description":"Segmentation
+    content: '{"name":"l4dense_motta_et_al_demo","dataSource":{"id":{"name":"l4dense_motta_et_al_demo","team":"scalable_minds"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[128,128,128],"width":5445,"height":8380,"depth":3285},"resolutions":[[1,1,1],[2,2,1],[4,4,2],[8,8,4],[16,16,8],[32,32,16],[64,64,32],[128,128,64],[256,256,128],[512,512,256],[1024,1024,512]],"elementClass":"uint8","adminViewConfiguration":{"intensityRange":[80,180]}},{"name":"predictions","category":"color","boundingBox":{"topLeft":[0,0,0],"width":5632,"height":8704,"depth":3584},"resolutions":[[1,1,1],[2,2,1],[4,4,2],[8,8,4],[16,16,8],[32,32,16],[64,64,32],[128,128,64],[256,256,128],[512,512,256],[1024,1024,512]],"elementClass":"uint24","adminViewConfiguration":{"isDisabled":true}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[128,128,128],"width":5445,"height":8380,"depth":3285},"resolutions":[[1,1,1],[2,2,1],[4,4,2],[8,8,4],[16,16,8],[32,32,16],[64,64,32],[128,128,64],[256,256,128],[512,512,256],[1024,1024,512]],"elementClass":"uint32","largestSegmentId":2504697,"adminViewConfiguration":{}}],"scale":[11.24,11.24,28]},"dataStore":{"name":"webknossos.org","url":"https://data-humerus.webknossos.org","isForeign":false,"isScratch":false,"isConnector":false,"allowsUpload":true},"owningOrganization":"scalable_minds","allowedTeams":[],"isActive":true,"isPublic":true,"description":"Segmentation
       created with [Voxelytics](https://scalableminds.com/voxelytics-connect) by [scalable
       minds](https://scalableminds.com).\n\n \n\nRaw SBEM data and segmentation ground
       truth by Max Planck Institute for Brain Research. As published in *Dense connectomic
@@ -27,7 +27,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '2308'
+      - '2282'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT

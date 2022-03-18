@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.9...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.12...HEAD)
 
 ### Breaking Changes
 
@@ -16,7 +16,26 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+
+
+## [0.9.12](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.12) - 2022-03-18
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.11...v0.9.12)
+
+### Added
+- Added logging to file in `./logs` directory. [#641](https://github.com/scalableminds/webknossos-libs/pull/641)
+
+
+## [0.9.11](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.11) - 2022-03-16
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.10...v0.9.11)
+
+
+## [0.9.10](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.10) - 2022-03-15
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.9...v0.9.10)
+
+### Fixed
 - Fixed that wkcuber.downsampling didn't support an anisotropic mag for `--from`. [#638](https://github.com/scalableminds/webknossos-libs/pull/638)
+- Fixed that wkcuber.downsampling didn't provide a meaningful error message when trying to do downsampling with an unsupported interpolation mode. [#619](https://github.com/scalableminds/webknossos-libs/pull/619)
+
 
 ## [0.9.9](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.9) - 2022-03-03
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.8...v0.9.9)

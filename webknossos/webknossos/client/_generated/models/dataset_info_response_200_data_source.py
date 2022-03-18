@@ -18,7 +18,7 @@ class DatasetInfoResponse200DataSource:
 
     id: DatasetInfoResponse200DataSourceId
     data_layers: List[DatasetInfoResponse200DataSourceDataLayersItem]
-    scale: List[float]
+    scale: List[int]
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -58,7 +58,7 @@ class DatasetInfoResponse200DataSource:
 
             data_layers.append(data_layers_item)
 
-        scale = cast(List[float], d.pop("scale"))
+        scale = cast(List[int], d.pop("scale"))
 
         dataset_info_response_200_data_source = cls(
             id=id,

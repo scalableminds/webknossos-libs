@@ -15,29 +15,38 @@ from typing import (
 
 import cluster_tools
 import numpy as np
+import wkw
 from cluster_tools.schedulers.cluster_executor import ClusterExecutor
-from wkw import Dataset, wkw
 
 from webknossos.geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
-from webknossos.utils import get_rich_progress, wait_and_ensure_success
+from webknossos.utils import get_rich_progress, wait_and_ensure_success, warn_deprecated
+
+from ._array import ArrayInfo, BaseArray, WKWArray
 
 if TYPE_CHECKING:
-    from webknossos.dataset._utils.buffered_slice_reader import BufferedSliceReader
-    from webknossos.dataset._utils.buffered_slice_writer import BufferedSliceWriter
+    from ._utils.buffered_slice_reader import BufferedSliceReader
+    from ._utils.buffered_slice_writer import BufferedSliceWriter
 
 
 class View:
     """
-    A `View` is essentially a bounding box to a region of a specific `wkw.Dataset` that also provides functionality.
+    A `View` is essentially a bounding box to a region of a specific `StorageBackend` that also provides functionality.
     Write-operations are restricted to the bounding box.
     `View`s are designed to be easily passed around as parameters.
-    A `View`, in its most basic form, does not have a reference to its `Dataset`.
+    A `View`, in its most basic form, does not have a reference to its `StorageBackend`.
     """
+
+    _path: Path
+    _array_info: ArrayInfo
+    _bounding_box: Optional[BoundingBox]
+    _read_only: bool
+    _cached_array: Optional[BaseArray]
+    _mag: Mag
 
     def __init__(
         self,
         path_to_mag_view: Path,
-        header: wkw.Header,
+        array_info: ArrayInfo,
         bounding_box: Optional[
             BoundingBox
         ],  # in mag 1, absolute coordinates, optional only for mag_view since it overwrites the bounding_box property
@@ -48,15 +57,24 @@ class View:
         Do not use this constructor manually. Instead use `View.get_view()` (also available on a `MagView`) to get a `View`.
         """
         self._path = path_to_mag_view
-        self._header: wkw.Header = header
+        self._array_info = array_info
         self._bounding_box = bounding_box
         self._read_only = read_only
-        self._cached_wkw_dataset = None
+        self._cached_array = None
         self._mag = mag
 
     @property
+    def info(self) -> ArrayInfo:
+        return self._array_info
+
+    @property
     def header(self) -> wkw.Header:
-        return self._header
+        """⚠️ Deprecated, use `info` instead."""
+        warn_deprecated("header", "info")
+        assert isinstance(
+            self._array, WKWArray
+        ), "`header` only works with WKW datasets."
+        return self._array._wkw_dataset.header
 
     @property
     def bounding_box(self) -> BoundingBox:
@@ -77,7 +95,8 @@ class View:
         warnings.warn(
             "[DEPRECATION] view.global_offset is deprecated. "
             + "Since this is a View, please use "
-            + "view.bounding_box.in_mag(view.mag).topleft instead."
+            + "view.bounding_box.in_mag(view.mag).topleft instead.",
+            DeprecationWarning,
         )
         return self.bounding_box.in_mag(self._mag).topleft
 
@@ -87,7 +106,8 @@ class View:
         warnings.warn(
             "[DEPRECATION] view.size is deprecated. "
             + "Since this is a View, please use "
-            + "view.bounding_box.in_mag(view.mag).size instead."
+            + "view.bounding_box.in_mag(view.mag).size instead.",
+            DeprecationWarning,
         )
         return self.bounding_box.in_mag(self._mag).size
 
@@ -188,10 +208,11 @@ class View:
             warnings.warn(
                 "[DEPRECATION] Using view.write(offset=my_vec) is deprecated. "
                 + "Please use relative_offset or absolute_offset instead. "
-                + alternative
+                + alternative,
+                DeprecationWarning,
             )
 
-        num_channels = self._header.num_channels
+        num_channels = self._array_info.num_channels
         if len(data.shape) == 3:
             assert (
                 num_channels == 1
@@ -221,14 +242,12 @@ class View:
                 current_mag_bbox, data
             )
 
-        self._wkw_dataset.write(current_mag_bbox.topleft, data)
+        self._array.write(current_mag_bbox.topleft, data)
 
     def _handle_compressed_write(
         self, current_mag_bbox: BoundingBox, data: np.ndarray
     ) -> Tuple[BoundingBox, np.ndarray]:
-        aligned_bbox = current_mag_bbox.align_with_mag(
-            Mag(self.header.file_len * self.header.block_len), ceil=True
-        )
+        aligned_bbox = current_mag_bbox.align_with_mag(self.info.shard_size, ceil=True)
 
         if current_mag_bbox != aligned_bbox:
 
@@ -313,7 +332,8 @@ class View:
                             offset_param = "absolute_offset"
                         warnings.warn(
                             "[DEPRECATION] Using view.read(size=my_vec) only with a size is deprecated. "
-                            + f"Please use view.read({offset_param}=(0, 0, 0), size=size_vec * view.mag.to_vec3_int()) instead."
+                            + f"Please use view.read({offset_param}=(0, 0, 0), size=size_vec * view.mag.to_vec3_int()) instead.",
+                            DeprecationWarning,
                         )
                         current_mag_size = size
                         mag1_size = None
@@ -337,7 +357,8 @@ class View:
                 warnings.warn(
                     "[DEPRECATION] Using view.read(offset=my_vec) is deprecated. "
                     + "Please use relative_offset or absolute_offset instead. "
-                    + alternative
+                    + alternative,
+                    DeprecationWarning,
                 )
 
                 if size is None:
@@ -400,7 +421,8 @@ class View:
         warnings.warn(
             "[DEPRECATION] read_bbox() (with a bbox in the current mag) is deprecated. "
             + "Please use read() with relative_bounding_box or absolute_bounding_box in Mag(1) instead. "
-            + alternative
+            + alternative,
+            DeprecationWarning,
         )
         if bounding_box is None:
             return self.read()
@@ -411,7 +433,7 @@ class View:
         self,
         current_mag_bbox: BoundingBox,
     ) -> np.ndarray:
-        data = self._wkw_dataset.read(
+        data = self._array.read(
             current_mag_bbox.topleft.to_np(), current_mag_bbox.size.to_np()
         )
         return data
@@ -478,7 +500,8 @@ class View:
                         offset_param = "absolute_offset"
                     warnings.warn(
                         "[DEPRECATION] Using view.get_view(size=my_vec) only with a size is deprecated. "
-                        + f"Please use view.get_view({offset_param}=(0, 0, 0), size=size_vec * view.mag.to_vec3_int()) instead."
+                        + f"Please use view.get_view({offset_param}=(0, 0, 0), size=size_vec * view.mag.to_vec3_int()) instead.",
+                        DeprecationWarning,
                     )
                     current_mag_size = size
                     mag1_size = None
@@ -502,7 +525,8 @@ class View:
             warnings.warn(
                 "[DEPRECATION] Using view.get_view(offset=my_vec) is deprecated. "
                 + "Please use relative_offset or absolute_offset instead. "
-                + alternative
+                + alternative,
+                DeprecationWarning,
             )
 
             if size is None:
@@ -540,7 +564,7 @@ class View:
 
             current_mag_bbox = mag1_bbox.in_mag(self._mag)
             current_mag_aligned_bbox = current_mag_bbox.align_with_mag(
-                Mag(self.header.file_len * self.header.block_len), ceil=True
+                self.info.shard_size, ceil=True
             )
             # The data bbox should either be aligned or match the dataset's bounding box:
             current_mag_view_bbox = self.bounding_box.in_mag(self._mag)
@@ -555,7 +579,7 @@ class View:
 
         return View(
             self._path,
-            self.header,
+            self.info,
             bounding_box=mag1_bbox,
             mag=self._mag,
             read_only=read_only,
@@ -838,20 +862,18 @@ class View:
             )
 
     def _is_compressed(self) -> bool:
-        return (
-            self.header.block_type == wkw.Header.BLOCK_TYPE_LZ4
-            or self.header.block_type == wkw.Header.BLOCK_TYPE_LZ4HC
-        )
+        return self.info.compression_mode
 
-    def get_dtype(self) -> type:
+    def get_dtype(self) -> np.dtype:
         """
         Returns the dtype per channel of the data. For example `uint8`.
         """
-        return self.header.voxel_type
+        return self.info.voxel_type
 
     def __enter__(self) -> "View":
         warnings.warn(
-            "[DEPRECATION] Entering a View to open it is deprecated. The internal dataset will be opened automatically."
+            "[DEPRECATION] Entering a View to open it is deprecated. The internal dataset will be opened automatically.",
+            DeprecationWarning,
         )
         return self
 
@@ -871,45 +893,44 @@ class View:
             strictly_positive=True
         ), f"The passed parameter 'chunk_size' {chunk_size} contains at least one 0. This is not allowed."
 
-        divisor = self.mag.to_vec3_int() * self.header.block_len
+        divisor = self.mag.to_vec3_int() * self.info.chunk_size
         if not read_only:
-            divisor *= self.header.file_len
+            divisor *= self.info.chunks_per_shard
         assert chunk_size % divisor == Vec3Int.zeros(), (
             f"The chunk_size {chunk_size} must be a multiple of "
-            + f"mag*block_len{'*file_len' if not read_only else ''} of the view, "
+            + f"mag*chunk_size{'*chunks_per_shard' if not read_only else ''} of the view, "
             + f"which is {divisor})."
         )
 
     def _get_file_dimensions(self) -> Vec3Int:
-        return Vec3Int.full(self.header.file_len * self.header.block_len)
+        return self.info.shard_size
 
     def _get_file_dimensions_mag1(self) -> Vec3Int:
         return self._get_file_dimensions() * self.mag.to_vec3_int()
 
     @property
-    def _wkw_dataset(self) -> wkw.Dataset:
-        if self._cached_wkw_dataset is None:
-            self._cached_wkw_dataset = Dataset.open(
-                str(self._path)
-            )  # No need to pass the header to the wkw.Dataset
-        return self._cached_wkw_dataset
+    def _array(self) -> BaseArray:
+        if self._cached_array is None:
+            cls_array = BaseArray.get_class(self.info.data_format)
+            self._cached_array = cls_array(self._path)
+        return self._cached_array
 
-    @_wkw_dataset.deleter
-    def _wkw_dataset(self) -> None:
-        if self._cached_wkw_dataset is not None:
-            self._cached_wkw_dataset.close()
-            self._cached_wkw_dataset = None
+    @_array.deleter
+    def _array(self) -> None:
+        if self._cached_array is not None:
+            self._cached_array.close()
+            self._cached_array = None
 
     def __del__(self) -> None:
-        del self._cached_wkw_dataset
+        del self._cached_array
 
     def __getstate__(self) -> Dict[str, Any]:
         d = dict(self.__dict__)
-        del d["_cached_wkw_dataset"]
+        del d["_cached_array"]
         return d
 
     def __setstate__(self, d: Dict[str, Any]) -> None:
-        d["_cached_wkw_dataset"] = None
+        d["_cached_array"] = None
         self.__dict__ = d
 
 

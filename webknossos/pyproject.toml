@@ -27,6 +27,8 @@ scikit-image = "^0.18.3"
 scipy = "^1.4.0"
 typing-extensions = "^3.7"
 wkw = "1.1.11"
+zarr = "^2.11.0"
+numcodecs = "^0.9.1"
 zipp = "^3.5.0"
 
 [tool.poetry.dev-dependencies]

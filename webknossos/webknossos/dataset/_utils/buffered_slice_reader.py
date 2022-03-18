@@ -36,7 +36,8 @@ class BufferedSliceReader:
         if offset is not None and size is not None:
             warnings.warn(
                 "[DEPRECATION] Using offset and size for a buffered slice reader is deprecated. "
-                + "Please use the parameter relative_bounding_box or absolute_bounding_box in Mag(1) instead."
+                + "Please use the parameter relative_bounding_box or absolute_bounding_box in Mag(1) instead.",
+                DeprecationWarning,
             )
             assert relative_bounding_box is None and absolute_bounding_box is None
             absolute_bounding_box = BoundingBox(offset, size).from_mag_to_mag1(view.mag)

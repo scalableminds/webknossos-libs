@@ -19,9 +19,7 @@ def main() -> None:
     )
 
     # Step 1: Download the dataset and our training data annotation from webKnossos to our local computer
-    training_data_bbox = wk.BoundingBox.from_tuple6(
-        annotation.user_bounding_boxes[0]  # type: ignore[index]
-    )
+    training_data_bbox = annotation.user_bounding_boxes[0]  # type: ignore[index]
     time_str = strftime("%Y-%m-%d_%H-%M-%S", gmtime())
     new_dataset_name = annotation.dataset_name + f"_segmented_{time_str}"
     dataset = wk.Dataset.download(

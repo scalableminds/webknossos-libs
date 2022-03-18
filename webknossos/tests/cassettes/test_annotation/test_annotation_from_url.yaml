@@ -26756,7 +26756,7 @@ interactions:
               DwgADFAAA/0BAA==
         l4dense_motta_et_al_demo_v2__explorational__potto__4a6356.nml: "<things>\n
           \ <meta name=\"writer\" content=\"NmlWriter.scala\" />\n  <meta name=\"writerGitCommit\"
-          content=\"573b1a20165d9d67f47566ef9ee806cc2fccd1ad\" />\n  <meta name=\"timestamp\"
+          content=\"b661e28753d9b782b8e5a69c5e7731ac0a79d4fd\" />\n  <meta name=\"timestamp\"
           content=\"1643210000000\" />\n  <meta name=\"annotationId\" content=\"61c20205010000cc004a6356\"
           />\n  <meta name=\"username\" content=\"Philipp Otto\" />\n  <parameters>\n
           \   <experiment name=\"l4dense_motta_et_al_demo_v2\" organization=\"scalable_minds\"
@@ -26777,13 +26777,15 @@ interactions:
           interpolation=\"true\" time=\"1640104472373\" />\n    </nodes>\n    <edges>\n
           \     <edge source=\"2\" target=\"3\" />\n      <edge source=\"1\" target=\"2\"
           />\n    </edges>\n  </thing>\n  <branchpoints />\n  <comments />\n  <groups
-          />\n  <volume id=\"0\" location=\"data_Volume.zip\" fallbackLayer=\"segmentation\"
+          />\n  <volume id=\"0\" location=\"data_Volume.zip\" name=\"Volume\" fallbackLayer=\"segmentation\"
           />\n</things>"
     headers:
       connection:
       - keep-alive
       content-disposition:
       - attachment;filename="l4dense_motta_et_al_demo_v2__explorational__potto__4a6356.zip"
+      content-length:
+      - '848454'
       content-type:
       - application/zip
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -26791,8 +26793,6 @@ interactions:
       - origin-when-cross-origin, strict-origin-when-cross-origin
       strict-transport-security:
       - max-age=15724800; includeSubDomains
-      transfer-encoding:
-      - chunked
       x-permitted-cross-domain-policies:
       - master-only
       x-xss-protection:

@@ -12,9 +12,29 @@ from .vec3_int import Vec3Int, Vec3IntLike
 
 @attr.frozen
 class BoundingBox:
+    """
+    This class is used to represent an axis-aligned cuboid in 3D.
+    The top-left coordinate is inclusive and the bottom-right coordinate is exclusive.
+
+    A small usage example:
+
+    ```python
+    from webknossos import BoundingBox
+
+    bbox_1 = BoundingBox((0, 0, 0), (100, 100, 100))
+    bbox_2 = BoundingBox((75, 75, 75), (100, 100, 100))
+
+    assert bbox_1.intersected_with(bbox_2).size == (25, 25, 25)
+    ```
+    """
+
     topleft: Vec3Int = attr.field(converter=Vec3Int)
     size: Vec3Int = attr.field(converter=Vec3Int)
-    bottomright = attr.field(init=False)
+    bottomright: Vec3Int = attr.field(init=False)
+    name: Optional[str] = "Unnamed Bounding Box"
+    is_visible: bool = True
+    id: Optional[str] = None
+    color: Optional[Tuple[float, float, float, float]] = None
 
     def __attrs_post_init__(self) -> None:
         if not self.size.is_positive():
@@ -110,7 +130,7 @@ class BoundingBox:
 
     @staticmethod
     def from_checkpoint_name(checkpoint_name: str) -> "BoundingBox":
-        """This function extracts a bounding box in the format x_y_z_sx_sy_xz which is contained in a string."""
+        """This function extracts a bounding box in the format `x_y_z_sx_sy_xz` which is contained in a string."""
         regex = r"(([0-9]+_){5}([0-9]+))"
         match = re.search(regex, checkpoint_name)
         assert (
@@ -309,14 +329,16 @@ class BoundingBox:
             bottomright = align(self.bottomright, np.floor)
         return BoundingBox(topleft, bottomright - topleft)
 
-    def align_with_mag(self, mag: Mag, ceil: bool = False) -> "BoundingBox":
+    def align_with_mag(
+        self, mag: Union[Mag, Vec3Int], ceil: bool = False
+    ) -> "BoundingBox":
         """Rounds the bounding box, so that both topleft and bottomright are divisible by mag.
 
         :argument ceil: If true, the bounding box is enlarged when necessary. If false, it's shrinked when necessary.
         """
         # This does the same as _align_with_mag_slow, which is more readable.
         # Same behavior is asserted in test_align_with_mag_against_numpy_implementation
-        mag_vec = mag.to_vec3_int()
+        mag_vec = mag.to_vec3_int() if isinstance(mag, Mag) else mag
         roundup = self.topleft if ceil else self.bottomright
         rounddown = self.bottomright if ceil else self.topleft
         margin_to_roundup = roundup % mag_vec

@@ -26,11 +26,16 @@ def tmp_cwd() -> Iterator[None]:
 def exec_main_and_get_vars(module: ModuleType, *var_names: str) -> Tuple[Any, ...]:
     source = inspect.getsource(module)
     global_statements = "\n".join(f"    global {var_name}" for var_name in var_names)
+    def_main_needle = "def main() -> None:\n"
+    assert (
+        def_main_needle in source
+    ), "main() function could not be found in module. Failed to convert local to global vars."
     new_source = source.replace(
-        "def main() -> None:\n", "def main() -> None:\n" + global_statements + "\n"
+        def_main_needle, "def main() -> None:\n" + global_statements + "\n"
     )
     exec(new_source, module.__dict__)  # pylint: disable=exec-used
     module.main()  # type: ignore[attr-defined]
+
     return tuple(module.__dict__[var_name] for var_name in var_names)
 
 
@@ -72,6 +77,21 @@ def test_apply_merger_mode() -> None:
     )
 
 
+@pytest.mark.block_network(allowed_hosts=[".*"])
+@pytest.mark.vcr(ignore_hosts=["webknossos.org", "data-humerus.webknossos.org"])
+def test_calculate_segment_sizes() -> None:
+    import examples.calculate_segment_sizes as example
+
+    (stats_per_id,) = exec_main_and_get_vars(example, "stats_per_id")
+
+    assert len(stats_per_id) == 2
+    count1, volume1 = stats_per_id[1]
+    count2, volume2 = stats_per_id[2]
+
+    assert count1 == 11296 and volume1 == 39959066.8288
+    assert count2 == 12704 and volume2 == 44939800.3712
+
+
 def test_skeleton_synapse_candidates() -> None:
     import examples.skeleton_synapse_candidates as example
 
@@ -79,7 +99,7 @@ def test_skeleton_synapse_candidates() -> None:
         example, "synapse_parent_group", "nml"
     )
 
-    assert synapse_parent_group.get_total_node_count() == 57
+    assert synapse_parent_group.get_total_node_count() == 91
     ids = [g.id for g in nml.flattened_graphs()]
     id_set = set(ids)
     assert len(ids) == len(id_set), "Graph IDs are not unique."

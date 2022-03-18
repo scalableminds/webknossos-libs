@@ -1,10 +1,3 @@
 # webKnossos REST-API client
 
-:warning: Most code of this client is auto-generated! Please don't adapt anything in the `generated` folder manually, but re-run the code generation.
-
-The client code is generated using [openapi-python-client](https://github.com/openapi-generators/openapi-python-client) and [InducOapi](https://github.com/TheWall89/inducoapi).
-
-To re-generate, run
-```bash
-poetry run python __generate_client.py
-```
+:warning: Most code of this client in `_generated` is auto-generated! Please don't adapt anything in the `generated` folder manually, but re-run the code generation, please see [the docs for details](https://docs.webknossos.org/webknossos-py/development.html#webknossos-package).

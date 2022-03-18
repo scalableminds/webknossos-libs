@@ -76,9 +76,7 @@ def get_source_files(
     elif not allows_single_file_input:
         return []
 
-    source_files = list(find_files(input_path, extensions))
-
-    return source_files
+    return [str(f) for f in find_files(input_path, extensions)]
 
 
 def all_files_of_same_type(input_files: List[str]) -> bool:
@@ -543,7 +541,7 @@ def main(args: Namespace) -> None:
         exit(1)
     elif len(matching_converters) > 1:
         logger.info(
-            "Multiple converters found. Check if your source path contains multiple datasets."
+            f"Multiple converters found. Check if your source path contains multiple datasets. Converters: {matching_converters}"
         )
         exit(1)
 

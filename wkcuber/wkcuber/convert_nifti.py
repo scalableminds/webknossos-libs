@@ -145,11 +145,6 @@ def convert_nifti(
 
     cube_data = np.array(source_nifti.get_fdata())
 
-    max_cell_id_args = (
-        {"largest_segment_id": int(np.max(cube_data) + 1)}
-        if is_segmentation_layer
-        else {}
-    )
     category_type: LayerCategoryType = (
         "segmentation" if is_segmentation_layer else "color"
     )
@@ -211,11 +206,19 @@ def convert_nifti(
         scale=cast(Tuple[float, float, float], scale or (1, 1, 1)),
         exist_ok=True,
     )
-    wk_layer = wk_ds.get_or_add_layer(
-        layer_name,
-        category_type,
-        dtype_per_layer=np.dtype(dtype),
-        **max_cell_id_args,
+    wk_layer = (
+        wk_ds.get_or_add_layer(
+            layer_name,
+            category_type,
+            dtype_per_layer=np.dtype(dtype),
+            largest_segment_id=int(np.max(cube_data) + 1),
+        )
+        if is_segmentation_layer
+        else wk_ds.get_or_add_layer(
+            layer_name,
+            category_type,
+            dtype_per_layer=np.dtype(dtype),
+        )
     )
     wk_mag = wk_layer.get_or_add_mag("1", file_len=file_len)
     wk_mag.write(cube_data)
