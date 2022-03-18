@@ -10,7 +10,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.11...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.12...HEAD)
+
+### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [0.9.12](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.12) - 2022-03-18
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.11...v0.9.12)
 
 ### Breaking Changes
 - The annotation class now exposes `BoundingBox` objects instead of tuples. [#646](https://github.com/scalableminds/webknossos-libs/pull/646)
@@ -33,6 +45,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 
 ### Fixed
 - Fixed crash during downsampling and compression of segmentation layers. [#657](https://github.com/scalableminds/webknossos-libs/pull/657)
+
 
 ## [0.9.11](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.11) - 2022-03-16
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.10...v0.9.11)
