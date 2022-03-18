@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Optional
 
 from argparse import ArgumentParser, Namespace
-import os
+from webknossos.geometry import Vec3Int
 
 from wkcuber.api.dataset import Dataset
 from wkcuber.downsampling_utils import SamplingModes
@@ -103,12 +103,21 @@ def downsample_mags(
     from_mag: Optional[Mag] = None,
     max_mag: Optional[Mag] = None,
     interpolation_mode: str = "default",
-    buffer_edge_len: Optional[int] = None,
+    buffer_shape: Optional[Vec3Int] = None,
     compress: bool = True,
     args: Optional[Namespace] = None,
     sampling_mode: str = SamplingModes.ANISOTROPIC,
     force_sampling_scheme: bool = False,
 ) -> None:
+    """
+    Argument `path` expects the directory containing the dataset.
+    Argument `layer_name` expects the name of the layer (color or segmentation).
+    Argument `from_mag` expects the resolution to base downsampling on.
+
+    For the other parameters see the CLI help or `Layer.downsample` and `Layer.downsampling_mag`.
+
+    Note: Not all `interpolation_mode`s work with anisotropic downsampling.
+    """
     assert layer_name and from_mag or not layer_name and not from_mag, (
         "You provided only one of the following "
         "parameters: layer_name, from_mag but both "
@@ -118,8 +127,8 @@ def downsample_mags(
         " (e.g dataset/color/1)."
     )
     if not layer_name or not from_mag:
-        layer_name = os.path.basename(os.path.dirname(path))
-        from_mag = Mag(os.path.basename(path))
+        layer_name = path.parent.name
+        from_mag = Mag(path.name)
         path = path.parent.parent
 
     Dataset.open(path).get_layer(layer_name).downsample(
@@ -128,7 +137,7 @@ def downsample_mags(
         interpolation_mode=interpolation_mode,
         compress=compress,
         sampling_mode=sampling_mode,
-        buffer_edge_len=buffer_edge_len,
+        buffer_shape=buffer_shape,
         force_sampling_scheme=force_sampling_scheme,
         args=args,
     )
@@ -150,6 +159,11 @@ if __name__ == "__main__":
 
     from_mag = Mag(args.from_mag)
     max_mag = None if args.max is None else Mag(args.max)
+    buffer_shape = (
+        Vec3Int.full(args.buffer_cube_size)
+        if args.buffer_cube_size is not None
+        else None
+    )
 
     downsample_mags(
         path=args.path,
@@ -159,7 +173,7 @@ if __name__ == "__main__":
         interpolation_mode=args.interpolation_mode,
         compress=not args.no_compress,
         sampling_mode=args.sampling_mode,
-        buffer_edge_len=args.buffer_cube_size,
+        buffer_shape=buffer_shape,
         force_sampling_scheme=args.force_sampling_scheme,
         args=get_executor_args(args),
     )

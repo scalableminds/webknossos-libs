@@ -44,6 +44,15 @@ def _import_mag(mag_like: Any) -> Vec3Int:
 @total_ordering
 @attr.frozen(order=False)
 class Mag:
+    """
+    Represents the magnification level of a data layer. For example, the finest
+    quality is usally not downsampled and is represented by Mag(1).
+    When data is downsampled by a factor of 4 in all dimensions, this is referred
+    to as Mag(4).
+    When data is downsampled anisotropically by 2 in x and y and not downsampled in
+    z, this is referred to as Mag(2, 2, 1).
+    """
+
     _mag: Vec3Int = attr.ib(converter=_import_mag)
 
     @property

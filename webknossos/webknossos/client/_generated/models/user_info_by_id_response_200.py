@@ -39,6 +39,7 @@ class UserInfoByIdResponse200:
     novel_user_experience_infos: Union[
         Unset, UserInfoByIdResponse200NovelUserExperienceInfos
     ] = UNSET
+    is_super_user: Union[Unset, int] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -68,6 +69,8 @@ class UserInfoByIdResponse200:
         if not isinstance(self.novel_user_experience_infos, Unset):
             novel_user_experience_infos = self.novel_user_experience_infos.to_dict()
 
+        is_super_user = self.is_super_user
+
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -92,6 +95,8 @@ class UserInfoByIdResponse200:
         )
         if novel_user_experience_infos is not UNSET:
             field_dict["novelUserExperienceInfos"] = novel_user_experience_infos
+        if is_super_user is not UNSET:
+            field_dict["isSuperUser"] = is_super_user
 
         return field_dict
 
@@ -148,6 +153,8 @@ class UserInfoByIdResponse200:
                 )
             )
 
+        is_super_user = d.pop("isSuperUser", UNSET)
+
         user_info_by_id_response_200 = cls(
             id=id,
             email=email,
@@ -166,6 +173,7 @@ class UserInfoByIdResponse200:
             created=created,
             last_task_type_id=last_task_type_id,
             novel_user_experience_infos=novel_user_experience_infos,
+            is_super_user=is_super_user,
         )
 
         user_info_by_id_response_200.additional_properties = d

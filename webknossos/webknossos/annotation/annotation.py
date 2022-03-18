@@ -1,3 +1,23 @@
+"""Annotations can contain annotated data in two forms:
+  - [skeleton data](/webknossos/skeleton_annotation.html), as provided by the `Skeleton` class, and
+  - [volume annotation layers](/webknossos/volume_annotation.html) (or volume layers short),
+    which can be exported as a `SegmentationLayer`, see `export_volume_layer_to_dataset()`
+    and `temporary_volume_layer_copy()`.
+
+Usually, annotations should be created manually in the webKnossos interface and can be downloaded using
+`Annotation.download()`. The downloaded instance is not persisted to disk automatically, please use `save()`
+for this purpose. The general purpose file format is `.zip` files containing an `.nml` file with
+meta-information and the skeleton data and also containing inner `.zip` files for the volume layers.
+For skeleton-only annotations without volume layers `.nml` files can be used directly. Both formats
+are compatible with the webKnossos up- and downloads.
+
+To prepare volume annotations in the code for correction of segmentation data in the webKnossos interface,
+please use `add_volume_layer()` with the `fallback_layer` argument, referencing a segmentation layer that
+is available on webKnossos (e.g. using the `Dataset` upload before).
+Correcting segmentations using fallback layers is much more efficient, adding volume
+annotation data programmatically is discouraged therefore.
+"""
+
 import cgi
 import re
 import warnings
@@ -29,11 +49,11 @@ from zipp import Path as ZipPath
 import webknossos._nml as wknml
 from webknossos.annotation._nml_conversion import annotation_to_nml, nml_to_skeleton
 from webknossos.dataset import SEGMENTATION_CATEGORY, Dataset, Layer, SegmentationLayer
+from webknossos.geometry import BoundingBox
 from webknossos.skeleton import Skeleton
-from webknossos.utils import time_since_epoch_in_ms
+from webknossos.utils import time_since_epoch_in_ms, warn_deprecated
 
 Vector3 = Tuple[float, float, float]
-IntVector6 = Tuple[int, int, int, int, int, int]
 
 
 MAG_RE = r"((\d+-\d+-)?\d+)"
@@ -55,26 +75,6 @@ class _VolumeLayer:
 
 @attr.define
 class Annotation:
-    """Annotations can contain annotated data in two forms:
-      - [skeleton data](/webknossos/skeleton_annotation.html), as provided by the `Skeleton` class, and
-      - [volume annotation layers](/webknossos/volume_annotation.html) (or volume layers short),
-        which can be exported as a `SegmentationLayer`, see `export_volume_layer_to_dataset()`
-        and `temporary_volume_layer_copy()`.
-
-    Usually, annotations should be created manually in the webKnossos interface and can be downloaded using
-    `Annotation.download()`. The downloaded instance is not persisted to disk automatically, please use `save()`
-    for this purpose. The general purpose file format is `.zip` files containing an `.nml` file with
-    meta-information and the skeleton data and also containing inner `.zip` files for the volume layers.
-    For skeleton-only annotations without volume layers `.nml` files can be used directly. Both formats
-    are compatible with the webKnossos up- and downloads.
-
-    To prepare volume annotations in the code for correction of segmentation data in the webKnossos interface,
-    please use `add_volume_layer()` with the `fallback_layer` argument, referencing a segmentation layer that
-    is available on webKnossos (e.g. using the `Dataset` upload before).
-    Correcting segmentations using fallback layers is much more efficient, adding volume
-    annotation data programmatically is discouraged therefore.
-    """
-
     name: str
     skeleton: Skeleton = None  # type: ignore[assignment]
     # The following underscored attributes are just for initialization
@@ -90,8 +90,8 @@ class Annotation:
     edit_rotation: Optional[Vector3] = None
     zoom_level: Optional[float] = None
     metadata: Dict[str, str] = attr.Factory(dict)
-    task_bounding_box: Optional[IntVector6] = None
-    user_bounding_boxes: Optional[List[IntVector6]] = None
+    task_bounding_box: Optional[BoundingBox] = None
+    user_bounding_boxes: List[BoundingBox] = attr.Factory(list)
     _volume_layers: List[_VolumeLayer] = attr.field(factory=list, init=False)
 
     @classmethod
@@ -287,7 +287,7 @@ class Annotation:
                 edit_rotation=nml.parameters.editRotation,
                 zoom_level=nml.parameters.zoomLevel,
                 task_bounding_box=nml.parameters.taskBoundingBox,
-                user_bounding_boxes=nml.parameters.userBoundingBoxes,
+                user_bounding_boxes=nml.parameters.userBoundingBoxes or [],
                 metadata={
                     i.name: i.content
                     for i in nml.meta
@@ -453,8 +453,8 @@ class Annotation:
 
     def _get_volume_layer(
         self,
-        volume_layer_name: Optional[str],
-        volume_layer_id: Optional[int],
+        volume_layer_name: Optional[str] = None,
+        volume_layer_id: Optional[int] = None,
     ) -> _VolumeLayer:
         assert len(self._volume_layers) > 0, "No volume annotations present."
 
@@ -663,15 +663,11 @@ _ANNOTATION_URL_REGEX = re.compile(
 def open_annotation(annotation_path: Union[str, PathLike]) -> "Annotation":
     """Deprecated."""
     if Path(annotation_path).exists():
-        warnings.warn(
-            "[DEPRECATION] open_annotation is deprecated, please use Annotation.load instead."
-        )
+        warn_deprecated("open_annotation", "Annotation.load")
         return Annotation.load(annotation_path)
     else:
         assert isinstance(
             annotation_path, str
         ), f"Called open_annotation with a path-like, but {annotation_path} does not exist."
-        warnings.warn(
-            "[DEPRECATION] open_annotation is deprecated, please use Annotation.download instead."
-        )
+        warn_deprecated("open_annotation", "Annotation.download")
         return Annotation.download(annotation_path)

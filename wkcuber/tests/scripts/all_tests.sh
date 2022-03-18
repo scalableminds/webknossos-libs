@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -eEuo pipefail
+set -exEuo pipefail
 
 if [ -d "./testoutput" ]; then rm -Rf ./testoutput; fi
 

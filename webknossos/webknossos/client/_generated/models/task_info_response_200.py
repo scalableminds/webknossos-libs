@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Type, TypeVar, cast
+from typing import Any, Dict, List, Optional, Type, TypeVar, cast
 
 import attr
 
@@ -26,11 +26,11 @@ class TaskInfoResponse200:
     created: int
     status: TaskInfoResponse200Status
     script: str
-    tracing_time: int
     creation_info: str
     bounding_box: str
     edit_position: List[int]
     edit_rotation: List[int]
+    tracing_time: Optional[int]
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -48,12 +48,13 @@ class TaskInfoResponse200:
         status = self.status.to_dict()
 
         script = self.script
-        tracing_time = self.tracing_time
         creation_info = self.creation_info
         bounding_box = self.bounding_box
         edit_position = self.edit_position
 
         edit_rotation = self.edit_rotation
+
+        tracing_time = self.tracing_time
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -70,11 +71,11 @@ class TaskInfoResponse200:
                 "created": created,
                 "status": status,
                 "script": script,
-                "tracingTime": tracing_time,
                 "creationInfo": creation_info,
                 "boundingBox": bounding_box,
                 "editPosition": edit_position,
                 "editRotation": edit_rotation,
+                "tracingTime": tracing_time,
             }
         )
 
@@ -107,8 +108,6 @@ class TaskInfoResponse200:
 
         script = d.pop("script")
 
-        tracing_time = d.pop("tracingTime")
-
         creation_info = d.pop("creationInfo")
 
         bounding_box = d.pop("boundingBox")
@@ -116,6 +115,8 @@ class TaskInfoResponse200:
         edit_position = cast(List[int], d.pop("editPosition"))
 
         edit_rotation = cast(List[int], d.pop("editRotation"))
+
+        tracing_time = d.pop("tracingTime")
 
         task_info_response_200 = cls(
             id=id,
@@ -129,11 +130,11 @@ class TaskInfoResponse200:
             created=created,
             status=status,
             script=script,
-            tracing_time=tracing_time,
             creation_info=creation_info,
             bounding_box=bounding_box,
             edit_position=edit_position,
             edit_rotation=edit_rotation,
+            tracing_time=tracing_time,
         )
 
         task_info_response_200.additional_properties = d

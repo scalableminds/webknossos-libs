@@ -4,25 +4,23 @@ from typing import Tuple
 
 import numpy as np
 import pytest
-from shutil import rmtree
-from os import makedirs
-
+from webknossos.geometry import Mag, Vec3Int
 from wkcuber.api.dataset import Dataset
-from wkcuber.downsampling_utils import SamplingModes
 from wkcuber.api.layer_categories import COLOR_CATEGORY
 from wkcuber.downsampling_utils import (
     InterpolationModes,
-    downsample_cube,
-    downsample_cube_job,
+    SamplingModes,
+    _mode,
     calculate_default_max_mag,
     calculate_mags_to_downsample,
     calculate_mags_to_upsample,
+    downsample_cube,
+    downsample_cube_job,
+    non_linear_filter_3d,
 )
-from webknossos.geometry import Mag, Vec3Int
 from wkcuber.utils import WkwDatasetInfo, open_wkw
-from wkcuber.downsampling_utils import _mode, non_linear_filter_3d
 
-CUBE_EDGE_LEN = 256
+BUFFER_SHAPE = Vec3Int.full(256)
 
 TESTOUTPUT_DIR = Path("testoutput")
 TESTDATA_DIR = Path("testdata")
@@ -36,15 +34,15 @@ def read_wkw(
 
 
 def test_downsample_cube() -> None:
-    buffer = np.zeros((CUBE_EDGE_LEN,) * 3, dtype=np.uint8)
-    buffer[:, :, :] = np.arange(0, CUBE_EDGE_LEN)
+    buffer = np.zeros(BUFFER_SHAPE, dtype=np.uint8)
+    buffer[:, :, :] = np.arange(0, BUFFER_SHAPE.x)
 
     output = downsample_cube(buffer, [2, 2, 2], InterpolationModes.MODE)
 
-    assert output.shape == (CUBE_EDGE_LEN // 2,) * 3
+    assert np.all(output.shape == (BUFFER_SHAPE.to_np() // 2))
     assert buffer[0, 0, 0] == 0
     assert buffer[0, 0, 1] == 1
-    assert np.all(output[:, :, :] == np.arange(0, CUBE_EDGE_LEN, 2))
+    assert np.all(output[:, :, :] == np.arange(0, BUFFER_SHAPE.x, 2))
 
 
 def test_downsample_mode() -> None:
@@ -83,12 +81,14 @@ def test_non_linear_filter_reshape() -> None:
     assert np.all(expected_result == a_filtered)
 
 
-def downsample_test_helper(use_compress: bool) -> None:
+def downsample_test_helper(use_compress: bool, chunk_size: Vec3Int) -> None:
     source_path = TESTDATA_DIR / "WT1_wkw"
     target_path = TESTOUTPUT_DIR / "WT1_wkw"
 
     source_ds = Dataset.open(source_path)
-    target_ds = source_ds.copy_dataset(target_path, block_len=16, file_len=16)
+    target_ds = source_ds.copy_dataset(
+        target_path, chunk_size=chunk_size, chunks_per_shard=Vec3Int.full(16)
+    )
 
     target_layer = target_ds.get_layer("color")
     mag1 = target_layer.get_mag("1")
@@ -120,7 +120,7 @@ def downsample_test_helper(use_compress: bool) -> None:
         ),
         Vec3Int(2, 2, 2),
         InterpolationModes.MAX,
-        128,
+        Vec3Int.full(128),
     )
 
     assert np.any(source_buffer != 0)
@@ -135,13 +135,13 @@ def downsample_test_helper(use_compress: bool) -> None:
 
 
 def test_downsample_cube_job() -> None:
-    downsample_test_helper(False)
+    downsample_test_helper(False, Vec3Int.full(16))
 
 
 def test_compressed_downsample_cube_job() -> None:
     with warnings.catch_warnings():
         warnings.filterwarnings("error")  # This escalates the warning to an error
-        downsample_test_helper(True)
+        downsample_test_helper(True, Vec3Int.full(32))
 
 
 def test_downsample_multi_channel() -> None:
@@ -172,7 +172,7 @@ def test_downsample_multi_channel() -> None:
         (l.get_mag("1").get_view(), l.get_mag("2").get_view(), 0),
         Vec3Int(2, 2, 2),
         InterpolationModes.MAX,
-        CUBE_EDGE_LEN,
+        BUFFER_SHAPE,
     )
 
     channels = []

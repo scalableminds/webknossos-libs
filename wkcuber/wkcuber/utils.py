@@ -98,7 +98,7 @@ def add_interpolation_flag(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--interpolation_mode",
         "-i",
-        help="Interpolation mode (median, mode, nearest, bilinear or bicubic)",
+        help="Interpolation mode (median, mode, nearest, bilinear or bicubic). At the moment only median and mode is supported for anisotropic downsampling. All of the modes are working with isotropic downsampling.",
         default="default",
     )
 
@@ -134,10 +134,10 @@ def get_channel_and_sample_iters_for_wk_compatibility(
 
 def find_files(
     source_path: str, extensions: Iterable[str]
-) -> Generator[str, Any, None]:
+) -> Generator[Path, Any, None]:
     # Find all files with a matching file extension
     return (
-        f
+        Path(f)
         for f in iglob(source_path, recursive=True)
         if any([f.lower().endswith(suffix) for suffix in extensions])
     )

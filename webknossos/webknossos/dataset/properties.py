@@ -1,16 +1,16 @@
-from os.path import isfile, join
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
 
 import attr
 import cattr
 import numpy as np
-import wkw
 from cattr.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 
-from webknossos.dataset.layer_categories import LayerCategoryType
-from webknossos.geometry import BoundingBox, Mag
-from webknossos.utils import snake_to_camel_case
+from webknossos.geometry import BoundingBox, Mag, Vec3Int
+from webknossos.utils import snake_to_camel_case, warn_deprecated
+
+from ._array import ArrayException, BaseArray, DataFormat
+from .layer_categories import LayerCategoryType
 
 
 def _extract_num_channels(
@@ -32,18 +32,19 @@ def _extract_num_channels(
         )
 
     mag = Mag(mag)
-    wkw_ds_file_path = join(path, layer, mag.to_layer_name())
-    if not isfile(join(wkw_ds_file_path, "header.wkw")):
+    array_file_path = path / layer / mag.to_layer_name()
+    try:
+        array = BaseArray.open(array_file_path)
+    except ArrayException as e:
         raise Exception(
             f"The dataset you are trying to open does not have the attribute 'numChannels' for layer {layer}. "
             f"However, this attribute is necessary. To mitigate this problem, it was tried to locate "
-            f"the file {wkw_ds_file_path} to extract the num_channels from there. "
+            f"the file {array_file_path} to extract the num_channels from there. "
             f"Since this file does not exist, the attempt to open the dataset failed. "
             f"Please add the attribute manually to solve the problem. "
-            f"If the layer does not contain any data, you can also delete the layer and add it again."
-        )
-    wkw_ds = wkw.Dataset.open(wkw_ds_file_path)
-    return wkw_ds.header.num_channels
+            f"If the layer does not contain any data, you can also delete the layer and add it again.",
+        ) from e
+    return array.info.num_channels
 
 
 _properties_floating_type_to_python_type: Dict[Union[str, type], np.dtype] = {
@@ -99,8 +100,13 @@ class LayerViewConfiguration:
 
 @attr.define
 class MagViewProperties:
-    resolution: Mag
-    cube_length: int
+    mag: Mag
+    cube_length: Optional[int] = None
+
+    @property
+    def resolution(self) -> Mag:
+        warn_deprecated("resolution", "mag")
+        return self.mag
 
 
 @attr.define
@@ -109,10 +115,15 @@ class LayerProperties:
     category: LayerCategoryType
     bounding_box: BoundingBox
     element_class: str
-    wkw_resolutions: List[MagViewProperties]
-    data_format: str
+    data_format: DataFormat
+    mags: List[MagViewProperties]
     num_channels: Optional[int] = None
     default_view_configuration: Optional[LayerViewConfiguration] = None
+
+    @property
+    def resolutions(self) -> List[MagViewProperties]:
+        warn_deprecated("resolutions", "mags")
+        return self.mags
 
 
 @attr.define
@@ -125,7 +136,12 @@ class SegmentationLayerProperties(LayerProperties):
 class DatasetProperties:
     id: Dict[str, str]
     scale: Tuple[float, float, float]
-    data_layers: List[Union[SegmentationLayerProperties, LayerProperties]]
+    data_layers: List[
+        Union[
+            SegmentationLayerProperties,
+            LayerProperties,
+        ]
+    ]
     default_view_configuration: Optional[DatasetViewConfiguration] = None
 
 
@@ -140,9 +156,19 @@ dataset_converter.register_structure_hook(
     BoundingBox, lambda d, _: BoundingBox.from_wkw_dict(d)
 )
 
-mag_to_array: Callable[[Mag], List[int]] = lambda o: o.to_list()
-dataset_converter.register_unstructure_hook(Mag, mag_to_array)
+
+def mag_unstructure(mag: Mag) -> List[int]:
+    return mag.to_list()
+
+
+dataset_converter.register_unstructure_hook(Mag, mag_unstructure)
 dataset_converter.register_structure_hook(Mag, lambda d, _: Mag(d))
+
+vec3int_to_array: Callable[[Vec3Int], List[int]] = lambda o: o.to_list()
+dataset_converter.register_unstructure_hook(Vec3Int, vec3int_to_array)
+dataset_converter.register_structure_hook(
+    Vec3Int, lambda d, _: Vec3Int.full(d) if isinstance(d, int) else Vec3Int(d)
+)
 
 dataset_converter.register_structure_hook(LayerCategoryType, lambda d, _: str(d))
 
@@ -154,8 +180,6 @@ dataset_converter.register_structure_hook(LayerCategoryType, lambda d, _: str(d)
 # (e.g. Layer.default_view_configuration has many attributes which are all optionally).
 for cls in [
     DatasetProperties,
-    LayerProperties,
-    SegmentationLayerProperties,
     MagViewProperties,
     DatasetViewConfiguration,
     LayerViewConfiguration,
@@ -185,6 +209,94 @@ for cls in [
         ),
     )
 
+# The serialization of `LayerProperties` differs slightly based on whether it is a `wkw` or `zarr` layer.
+# These post-unstructure and pre-structure functions perform the conditional field renames.
+def mag_view_properties_post_structure(d: Dict[str, Any]) -> Dict[str, Any]:
+    d["resolution"] = d["mag"]
+    del d["mag"]
+    return d
+
+
+def mag_view_properties_pre_unstructure(d: Dict[str, Any]) -> Dict[str, Any]:
+    d["mag"] = d["resolution"]
+    del d["resolution"]
+    return d
+
+
+def layer_properties_post_unstructure(
+    converter_fn: Callable[
+        [Union[LayerProperties, SegmentationLayerProperties]], Dict[str, Any]
+    ]
+) -> Callable[[Union[LayerProperties, SegmentationLayerProperties]], Dict[str, Any]]:
+    def __layer_properties_post_unstructure(
+        obj: Union[LayerProperties, SegmentationLayerProperties]
+    ) -> Dict[str, Any]:
+        d = converter_fn(obj)
+        if d["dataFormat"] == "wkw":
+            d["wkwResolutions"] = [
+                mag_view_properties_post_structure(m) for m in d["mags"]
+            ]
+            del d["mags"]
+        return d
+
+    return __layer_properties_post_unstructure
+
+
+def layer_properties_pre_structure(
+    converter_fn: Callable[
+        [Dict[str, Any]], Union[LayerProperties, SegmentationLayerProperties]
+    ]
+) -> Callable[
+    [Any, Type[Union[LayerProperties, SegmentationLayerProperties]]],
+    Union[LayerProperties, SegmentationLayerProperties],
+]:
+    def __layer_properties_pre_structure(
+        d: Dict[str, Any],
+        _type: Type[Union[LayerProperties, SegmentationLayerProperties]],
+    ) -> Union[LayerProperties, SegmentationLayerProperties]:
+        if d["dataFormat"] == "wkw":
+            d["mags"] = [
+                mag_view_properties_pre_unstructure(m) for m in d["wkwResolutions"]
+            ]
+            del d["wkwResolutions"]
+        obj = converter_fn(d)
+        return obj
+
+    return __layer_properties_pre_structure
+
+
+for cls in [
+    LayerProperties,
+    SegmentationLayerProperties,
+]:
+    dataset_converter.register_unstructure_hook(
+        cls,
+        layer_properties_post_unstructure(
+            make_dict_unstructure_fn(
+                cls,
+                dataset_converter,
+                **{
+                    a.name: override(
+                        omit_if_default=True, rename=snake_to_camel_case(a.name)
+                    )
+                    for a in attr.fields(cls)  # pylint: disable=not-an-iterable
+                },
+            )
+        ),
+    )
+    dataset_converter.register_structure_hook(
+        cls,
+        layer_properties_pre_structure(
+            make_dict_structure_fn(
+                cls,
+                dataset_converter,
+                **{
+                    a.name: override(rename=snake_to_camel_case(a.name))
+                    for a in attr.fields(cls)  # pylint: disable=not-an-iterable
+                },
+            )
+        ),
+    )
 
 # Disambiguation of Unions only work automatically if the two attrs-classes have at least 1 unique attribute
 # This is not the case here because SegmentationLayerProperties inherits LayerProperties
@@ -195,10 +307,14 @@ def disambiguate_layer_properties(obj: dict, _: Any) -> LayerProperties:
         return dataset_converter.structure(obj, SegmentationLayerProperties)
     else:
         raise RuntimeError(
-            "Failed to read the properties of a layer: the category has to be 'color' or 'segmentation'."
+            "Failed to read the properties of a layer: the category has to be `color` or `segmentation`."
         )
 
 
 dataset_converter.register_structure_hook(
-    Union[SegmentationLayerProperties, LayerProperties], disambiguate_layer_properties
+    Union[
+        SegmentationLayerProperties,
+        LayerProperties,
+    ],
+    disambiguate_layer_properties,
 )

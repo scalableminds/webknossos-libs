@@ -1,12 +1,11 @@
 import copy
 import json
-import os
 import shutil
 import warnings
 from argparse import Namespace
 from contextlib import nullcontext
-from os import PathLike, makedirs
-from os.path import basename, join, normpath
+from os import PathLike
+from os.path import relpath
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
@@ -23,23 +22,25 @@ from typing import (
 
 import attr
 import numpy as np
-import wkw
 from boltons.typeutils import make_sentinel
+
+from webknossos.geometry.vec3_int import Vec3IntLike
+
+from ._array import ArrayException, ArrayInfo, BaseArray, DataFormat
 
 if TYPE_CHECKING:
     from webknossos.client._upload_dataset import LayerToLink
 
-from webknossos.dataset._utils.infer_bounding_box_existing_files import (
-    infer_bounding_box_existing_files,
-)
 from webknossos.geometry import BoundingBox, Mag
 from webknossos.utils import copy_directory_with_symlinks, get_executor_for_args
 
+from ._utils.infer_bounding_box_existing_files import infer_bounding_box_existing_files
 from .layer import (
     Layer,
     SegmentationLayer,
     _dtype_per_channel_to_element_class,
     _dtype_per_layer_to_dtype_per_channel,
+    _get_sharding_parameters,
     _normalize_dtype_per_channel,
     _normalize_dtype_per_layer,
 )
@@ -56,7 +57,7 @@ from .properties import (
 from .view import View
 
 DEFAULT_BIT_DEPTH = 8
-
+DEFAULT_DATA_FORMAT = DataFormat.WKW
 PROPERTIES_FILE_NAME = "datasource-properties.json"
 
 
@@ -64,6 +65,17 @@ def _copy_job(args: Tuple[View, View, int]) -> None:
     (source_view, target_view, _) = args
     # Copy the data form one view to the other in a buffered fashion
     target_view.write(source_view.read())
+
+
+def _find_array_info(layer_path: Path) -> Optional[ArrayInfo]:
+    for f in layer_path.iterdir():
+        if f.is_dir():
+            try:
+                array = BaseArray.open(f)
+                return array.info
+            except ArrayException:
+                pass
+    return None
 
 
 _UNSET = make_sentinel("UNSET", var_name="_UNSET")
@@ -110,7 +122,8 @@ class Dataset:
             if exist_ok == _UNSET:
                 warnings.warn(
                     f"[DEPRECATION] You are creating/opening a dataset at a non-empty folder {dataset_path} without setting exist_ok=True. "
-                    + "This will fail in future releases, please supply exist_ok=True explicitly then."
+                    + "This will fail in future releases, please supply exist_ok=True explicitly then.",
+                    DeprecationWarning,
                 )
                 exist_ok = True
             if not exist_ok:
@@ -126,7 +139,7 @@ class Dataset:
             ), f"Creation of Dataset at {dataset_path} failed, because a file already exists at this path."
             # Create directories on disk and write datasource-properties.json
             try:
-                makedirs(dataset_path, exist_ok=True)
+                dataset_path.mkdir(parents=True, exist_ok=True)
             except OSError as e:
                 raise type(e)(
                     "Creation of Dataset {} failed. ".format(dataset_path) + repr(e)
@@ -136,7 +149,7 @@ class Dataset:
             assert (
                 scale is not None
             ), "When creating a new dataset, the scale must be given, e.g. as Dataset(path, scale=(10, 10, 16.8))"
-            name = name or basename(normpath(dataset_path))
+            name = name or dataset_path.absolute().name
             dataset_properties = DatasetProperties(
                 id={"name": name, "team": ""}, scale=scale, data_layers=[]
             )
@@ -158,8 +171,8 @@ class Dataset:
                 layer_properties.num_channels,
                 Path(dataset_path),
                 layer_properties.name,
-                layer_properties.wkw_resolutions[0].resolution
-                if len(layer_properties.wkw_resolutions) > 0
+                layer_properties.mags[0].mag
+                if len(layer_properties.mags) > 0
                 else None,
             )
             layer_properties.num_channels = num_channels
@@ -171,7 +184,8 @@ class Dataset:
             if scale is None:
                 warnings.warn(
                     "[DEPRECATION] Please always supply the scale when using the constructor Dataset(your_path, scale=your_scale)."
-                    + "If you just want to open an existing dataset, please use Dataset.open(your_path)."
+                    + "If you just want to open an existing dataset, please use Dataset.open(your_path).",
+                    DeprecationWarning,
                 )
             elif scale == _UNSPECIFIED_SCALE_FROM_OPEN:
                 pass
@@ -303,6 +317,7 @@ class Dataset:
         dtype_per_layer: Optional[Union[str, np.dtype, type]] = None,
         dtype_per_channel: Optional[Union[str, np.dtype, type]] = None,
         num_channels: Optional[int] = None,
+        data_format: Union[str, DataFormat] = DEFAULT_DATA_FORMAT,
         **kwargs: Any,
     ) -> Layer:
         """
@@ -360,9 +375,9 @@ class Dataset:
             element_class=_dtype_per_channel_to_element_class(
                 dtype_per_channel, num_channels
             ),
-            wkw_resolutions=[],
+            mags=[],
             num_channels=num_channels,
-            data_format="wkw",
+            data_format=DataFormat(data_format),
         )
 
         if category == COLOR_CATEGORY:
@@ -402,6 +417,7 @@ class Dataset:
         dtype_per_layer: Optional[Union[str, np.dtype, type]] = None,
         dtype_per_channel: Optional[Union[str, np.dtype, type]] = None,
         num_channels: Optional[int] = None,
+        data_format: Union[str, DataFormat] = DEFAULT_DATA_FORMAT,
         **kwargs: Any,
     ) -> Layer:
         """
@@ -460,6 +476,7 @@ class Dataset:
                 dtype_per_layer=dtype_per_layer,
                 dtype_per_channel=dtype_per_channel,
                 num_channels=num_channels,
+                data_format=DataFormat(data_format),
                 **kwargs,
             )
 
@@ -470,7 +487,7 @@ class Dataset:
             )
 
         layer_properties = copy.copy(other_layer._properties)
-        layer_properties.wkw_resolutions = []
+        layer_properties.mags = []
         layer_properties.name = layer_name
 
         self._properties.data_layers += [layer_properties]
@@ -486,21 +503,23 @@ class Dataset:
         return self._layers[layer_name]
 
     def add_layer_for_existing_files(
-        self, layer_name: str, category: LayerCategoryType, **kwargs: Any
+        self,
+        layer_name: str,
+        category: LayerCategoryType,
+        **kwargs: Any,
     ) -> Layer:
         assert layer_name not in self.layers, f"Layer {layer_name} already exists!"
-        mag_headers = list((self.path / layer_name).glob("*/header.wkw"))
 
+        array_info = _find_array_info(self.path / layer_name)
         assert (
-            len(mag_headers) != 0
-        ), f"Could not find any header.wkw files in {self.path / layer_name}, cannot add layer."
-        with wkw.Dataset.open(str(mag_headers[0].parent)) as wkw_dataset:
-            header = wkw_dataset.header
+            array_info is not None
+        ), f"Could not find any valid mags in {self.path /layer_name}. Cannot add layer."
         layer = self.add_layer(
             layer_name,
             category=category,
-            num_channels=header.num_channels,
-            dtype_per_channel=header.voxel_type,
+            num_channels=array_info.num_channels,
+            dtype_per_channel=array_info.voxel_type,
+            data_format=array_info.data_format,
             **kwargs,
         )
         for mag_dir in layer.path.iterdir():
@@ -518,7 +537,8 @@ class Dataset:
         """
 
         warnings.warn(
-            "[DEPRECATION] get_segmentation_layer() fails if no or more than one segmentation layer exists. Prefer get_segmentation_layers()."
+            "[DEPRECATION] get_segmentation_layer() fails if no or more than one segmentation layer exists. Prefer get_segmentation_layers().",
+            DeprecationWarning,
         )
         return cast(
             SegmentationLayer,
@@ -609,11 +629,11 @@ class Dataset:
             )
 
         foreign_layer_symlink_path = (
-            Path(os.path.relpath(foreign_layer_path, self.path))
+            Path(relpath(foreign_layer_path, self.path))
             if make_relative
             else foreign_layer_path.resolve()
         )
-        os.symlink(foreign_layer_symlink_path, join(self.path, layer_name))
+        (self.path / layer_name).symlink_to(foreign_layer_symlink_path)
         original_layer = Dataset.open(foreign_layer_path.parent).get_layer(
             foreign_layer_name
         )
@@ -652,7 +672,7 @@ class Dataset:
                 f"Cannot copy {foreign_layer_path}. This dataset already has a layer called {layer_name}."
             )
 
-        shutil.copytree(foreign_layer_path, join(self.path, layer_name))
+        shutil.copytree(foreign_layer_path, self.path / layer_name)
         original_layer = Dataset.open(foreign_layer_path.parent).get_layer(
             foreign_layer_name
         )
@@ -670,15 +690,27 @@ class Dataset:
         self,
         new_dataset_path: Union[str, Path],
         scale: Optional[Tuple[float, float, float]] = None,
-        block_len: Optional[int] = None,
-        file_len: Optional[int] = None,
+        chunk_size: Optional[Union[Vec3IntLike, int]] = None,
+        chunks_per_shard: Optional[Union[Vec3IntLike, int]] = None,
+        data_format: Optional[Union[str, DataFormat]] = None,
         compress: Optional[bool] = None,
+        block_len: Optional[int] = None,  # deprecated
+        file_len: Optional[int] = None,  # deprecated
         args: Optional[Namespace] = None,
     ) -> "Dataset":
         """
         Creates a new dataset at `new_dataset_path` and copies the data from the current dataset to `empty_target_ds`.
-        If not specified otherwise, the `scale`, `block_len`, `file_len` and `block_type` of the current dataset are also used for the new dataset.
+        If not specified otherwise, the `scale`, `chunk_size`, `chunks_per_shard` and `compress` of the current dataset
+        are also used for the new dataset. The method also accepts the parameters `block_len` and `file_size`,
+        which were deprecated by `chunk_size` and `chunks_per_shard`.
         """
+
+        chunk_size, chunks_per_shard = _get_sharding_parameters(
+            chunk_size=chunk_size,
+            chunks_per_shard=chunks_per_shard,
+            block_len=block_len,
+            file_len=file_len,
+        )
 
         new_dataset_path = Path(new_dataset_path)
         if scale is None:
@@ -690,9 +722,11 @@ class Dataset:
                 new_ds_properties = copy.deepcopy(
                     self.get_layer(layer_name)._properties
                 )
-                # Initializing a layer with non-empty wkw_resolutions requires that the files on disk already exist.
+                # Initializing a layer with non-empty mags requires that the files on disk already exist.
                 # The MagViews are added manually afterwards
-                new_ds_properties.wkw_resolutions = []
+                new_ds_properties.mags = []
+                if data_format is not None:
+                    new_ds_properties.data_format = DataFormat(data_format)
                 new_ds._properties.data_layers += [new_ds_properties]
                 target_layer = new_ds._initialize_layer_from_properties(
                     new_ds_properties
@@ -702,13 +736,13 @@ class Dataset:
                 bbox = self.get_layer(layer_name).bounding_box
 
                 for mag, mag_view in layer.mags.items():
-                    block_len = block_len or mag_view.header.block_len
-                    compress = compress or (
-                        mag_view.header.block_type != wkw.Header.BLOCK_TYPE_RAW
+                    chunk_size = chunk_size or mag_view.info.chunk_size
+                    compression_mode = compress or mag_view.info.compression_mode
+                    chunks_per_shard = (
+                        chunks_per_shard or mag_view.info.chunks_per_shard
                     )
-                    file_len = file_len or mag_view.header.file_len
                     target_mag = target_layer.add_mag(
-                        mag, block_len, file_len, compress
+                        mag, chunk_size, chunks_per_shard, compression_mode
                     )
 
                     target_layer.bounding_box = bbox
@@ -810,7 +844,8 @@ class Dataset:
         **Deprecated**, please use the constructor `Dataset()` instead.
         """
         warnings.warn(
-            "[DEPRECATION] Dataset.create() is deprecated in favor of the normal constructor Dataset()."
+            "[DEPRECATION] Dataset.create() is deprecated in favor of the normal constructor Dataset().",
+            DeprecationWarning,
         )
         return cls(dataset_path, scale, name, exist_ok=False)
 
@@ -825,7 +860,8 @@ class Dataset:
         **Deprecated**, please use the constructor `Dataset()` instead.
         """
         warnings.warn(
-            "[DEPRECATION] Dataset.get_or_create() is deprecated in favor of the normal constructor Dataset(…, exist_ok=True)."
+            "[DEPRECATION] Dataset.get_or_create() is deprecated in favor of the normal constructor Dataset(…, exist_ok=True).",
+            DeprecationWarning,
         )
         return cls(dataset_path, scale, name, exist_ok=True)
 
@@ -845,7 +881,9 @@ class Dataset:
 
         if properties_on_disk != self._last_read_properties:
             warnings.warn(
-                "[WARNING] While exporting the dataset's properties, properties were found on disk which are newer than the ones that were seen last time. The properties will be overwritten. This is likely happening because multiple processes changed the metadata of this dataset."
+                "[WARNING] While exporting the dataset's properties, properties were found on disk which are "
+                + "newer than the ones that were seen last time. The properties will be overwritten. This is "
+                + "likely happening because multiple processes changed the metadata of this dataset."
             )
 
         with open(self.path / PROPERTIES_FILE_NAME, "w", encoding="utf-8") as outfile:

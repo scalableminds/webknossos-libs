@@ -6,12 +6,12 @@ from typing import Callable, List, Optional, Tuple
 
 import numpy as np
 from scipy.ndimage import zoom
-from wkw import wkw
 
 from webknossos.geometry import Mag, Vec3Int, Vec3IntLike
 from webknossos.geometry.bounding_box import BoundingBox
 from webknossos.utils import time_start, time_stop
 
+from ._array import ArrayInfo
 from .layer_categories import LayerCategoryType
 from .view import View
 
@@ -32,11 +32,11 @@ class InterpolationModes(Enum):
     MIN = 6
 
 
-DEFAULT_EDGE_LEN = 256
+DEFAULT_BUFFER_SHAPE = Vec3Int.full(256)
 
 
-def determine_buffer_edge_len(dataset: wkw.Dataset) -> int:
-    return min(DEFAULT_EDGE_LEN, dataset.header.file_len * dataset.header.block_len)
+def determine_buffer_shape(array_info: ArrayInfo) -> Vec3Int:
+    return min(DEFAULT_BUFFER_SHAPE, array_info.shard_size)
 
 
 def calculate_mags_to_downsample(
@@ -117,12 +117,9 @@ def parse_interpolation_mode(
 def linear_filter_3d(data: np.ndarray, factors: List[int], order: int) -> np.ndarray:
     factors_np = np.array(factors)
 
-    if not np.all(factors_np == factors[0]):
-        logging.debug(
-            "the selected filtering strategy does not support anisotropic downsampling. Selecting {} as uniform downsampling factor".format(
-                factors[0]
-            )
-        )
+    assert np.all(
+        factors_np == factors[0]
+    ), "The selected filtering strategy does not support anisotropic downsampling."
     factor = factors[0]
 
     ds = data.shape
@@ -282,27 +279,30 @@ def downsample_cube_job(
     args: Tuple[View, View, int],
     mag_factors: Vec3Int,
     interpolation_mode: InterpolationModes,
-    buffer_edge_len: int,
+    buffer_shape: Vec3Int,
 ) -> None:
     (source_view, target_view, _i) = args
 
     try:
         time_start(f"Downsampling of {target_view.bounding_box.topleft}")
-        num_channels = target_view.header.num_channels
+        num_channels = target_view.info.num_channels
         shape = (num_channels,) + target_view.bounding_box.in_mag(
             target_view.mag
         ).size.to_tuple()
         file_buffer = np.zeros(shape, target_view.get_dtype())
 
         tiles = product(
-            *(list(range(0, math.ceil(len / buffer_edge_len))) for len in shape[-3:])
+            *(
+                list(range(0, math.ceil(len / buffer_edge_len)))
+                for len, buffer_edge_len in zip(shape[-3:], buffer_shape)
+            )
         )
 
         for tile in tiles:
-            target_offset = Vec3Int(tile) * buffer_edge_len
+            target_offset = Vec3Int(tile) * buffer_shape
             source_offset = mag_factors * target_offset
             source_size = source_view.bounding_box.in_mag(source_view.mag).size
-            source_size = (mag_factors * buffer_edge_len).pairmin(
+            source_size = (mag_factors * buffer_shape).pairmin(
                 source_size - source_offset
             )
 
@@ -327,7 +327,7 @@ def downsample_cube_job(
                     file_buffer[(channel_index,) + buffer_bbox.to_slices()] = data_cube
 
         # Write the downsampled buffer to target
-        if source_view.header.num_channels == 1:
+        if source_view.info.num_channels == 1:
             file_buffer = file_buffer[0]  # remove channel dimension
         target_view.write(file_buffer)
         time_stop(f"Downsampling of {target_view.bounding_box.topleft}")
