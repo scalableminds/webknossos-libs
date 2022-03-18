@@ -26,7 +26,7 @@ function ensure_local_test_wk {
         while ! curl -sf localhost:9000/api/health; do
             sleep 5
         done
-        OUT=$(docker-compose exec webknossos tools/postgres/prepareTestDB.sh 2>&1) || echo "$OUT"
+        OUT=$(docker-compose exec -T webknossos tools/postgres/prepareTestDB.sh 2>&1) || echo "$OUT"
         popd > /dev/null
     else
         echo "Using the already running local webknossos setup at localhost:9000"
