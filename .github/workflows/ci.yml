@@ -215,7 +215,7 @@ jobs:
       run: ./typecheck.sh
 
     - name: Python tests
-      run: poetry run pytest tests
+      run: poetry run pytest -vv tests
 
     - name: CLI tests
       run: poetry run tests/scripts/all_tests.sh
@@ -260,7 +260,7 @@ jobs:
 
     - name: Python tests
       shell: bash
-      run: poetry run pytest tests
+      run: poetry run pytest -vv tests
 
     - name: CLI tests
       continue-on-error: true
@@ -298,7 +298,7 @@ jobs:
       run: tar -xzvf testdata/WT1_wkw.tar.gz
 
     - name: Python tests
-      run: poetry run pytest tests
+      run: poetry run pytest -vv tests
 
     - name: CLI tests
       run: poetry run tests/scripts/all_tests.sh

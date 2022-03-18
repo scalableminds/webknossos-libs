@@ -226,8 +226,7 @@ def rmtree(path: UPath) -> None:
         if path.is_dir() and not path.is_symlink():
             for p in path.iterdir():
                 yield from _walk(p)
-        else:
-            yield path
+        yield path
 
     for sub_path in _walk(path):
         if sub_path.is_file() or sub_path.is_symlink():
