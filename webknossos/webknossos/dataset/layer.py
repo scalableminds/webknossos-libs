@@ -36,14 +36,14 @@ from .upsampling_utils import upsample_cube_job
 if TYPE_CHECKING:
     from .dataset import Dataset
 
-from webknossos.utils import (
+from ..utils import (
     copytree,
     get_executor_for_args,
+    is_fs_path,
     make_path,
     named_partial,
     warn_deprecated,
 )
-
 from .defaults import (
     DEFAULT_CHUNK_SIZE,
     DEFAULT_CHUNKS_PER_SHARD,
@@ -221,7 +221,7 @@ class Layer:
         assert (
             layer_name not in self.dataset.layers.keys()
         ), f"Failed to rename layer {self.name} to {layer_name}: The new name already exists."
-        (self.dataset.path / self.name).rename(self.dataset.path / layer_name)
+        self.path.rename(self.dataset.path / layer_name)
         del self.dataset.layers[self.name]
         self.dataset.layers[layer_name] = self
         self._properties.name = layer_name
@@ -505,13 +505,20 @@ class Layer:
         )
 
         if symlink:
-            (self.dataset.path / self.name / str(foreign_mag_view.mag)).symlink_to(
+            assert is_fs_path(
+                self.path
+            ), f"Cannot create symlinks in remote layer {self.path}"
+            assert is_fs_path(
+                foreign_normalized_mag_path
+            ), f"Cannot create symlink to remote mag {foreign_normalized_mag_path}"
+
+            (self.path / str(foreign_mag_view.mag)).symlink_to(
                 foreign_normalized_mag_path
             )
         else:
             copytree(
                 foreign_normalized_mag_path,
-                self.dataset.path / self.name / str(foreign_mag_view.mag),
+                self.path / str(foreign_mag_view.mag),
             )
 
         self.add_mag_for_existing_files(foreign_mag_view.mag)
@@ -563,7 +570,7 @@ class Layer:
         self, mag: Union[int, str, list, tuple, np.ndarray, Mag]
     ) -> None:
         mag = Mag(mag).to_layer_name()
-        full_path = self.dataset.path / self.name / mag
+        full_path = self.path / mag
         full_path.mkdir(parents=True, exist_ok=True)
 
     def _assert_mag_does_not_exist_yet(

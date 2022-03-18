@@ -34,6 +34,7 @@ from ..utils import (
     copy_directory_with_symlinks,
     copytree,
     get_executor_for_args,
+    is_fs_path,
     make_path,
 )
 from ._utils.infer_bounding_box_existing_files import infer_bounding_box_existing_files
@@ -637,6 +638,14 @@ class Dataset:
             if make_relative
             else foreign_layer_path.resolve()
         )
+
+        assert is_fs_path(
+            self.path
+        ), f"Cannot create symlinks in remote dataset {self.path}"
+        assert is_fs_path(
+            foreign_layer_symlink_path
+        ), f"Cannot create symlink to remote layer {foreign_layer_symlink_path}"
+
         (self.path / layer_name).symlink_to(foreign_layer_symlink_path)
         original_layer = Dataset.open(foreign_layer_path.parent).get_layer(
             foreign_layer_name
@@ -756,8 +765,12 @@ class Dataset:
                     mag_view.for_zipped_chunks(
                         func_per_chunk=_copy_job,
                         target_view=target_mag.get_view(),
-                        source_chunk_size=(mag.mag * target_mag.info.shard_size),
-                        target_chunk_size=(mag.mag * target_mag.info.shard_size),
+                        source_chunk_size=(
+                            mag.to_vec3_int() * target_mag.info.shard_size
+                        ),
+                        target_chunk_size=(
+                            mag.to_vec3_int() * target_mag.info.shard_size
+                        ),
                         executor=executor,
                         progress_desc=f"Copying mag {mag.to_layer_name()} from layer {layer_name}",
                     )

@@ -139,6 +139,10 @@ def time_since_epoch_in_ms() -> int:
     return unixtime * 1000
 
 
+def is_fs_path(path: UPath) -> bool:
+    return not hasattr(path, "_url")
+
+
 def copy_directory_with_symlinks(
     src_path: UPath,
     dst_path: UPath,
@@ -148,6 +152,9 @@ def copy_directory_with_symlinks(
     """
     Links all directories in src_path / dir_name to dst_path / dir_name.
     """
+    assert is_fs_path(src_path), f"Cannot create symlink with remote paths {src_path}."
+    assert is_fs_path(dst_path), f"Cannot create symlink with remote paths {dst_path}."
+
     for item in src_path.iterdir():
         if item.name not in ignore:
             symlink_path = dst_path / item.name

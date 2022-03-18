@@ -1072,18 +1072,25 @@ optional = false
 python-versions = "*"
 
 [[package]]
-name = "universal-pathlib"
+name = "universal_pathlib"
 version = "0.0.12"
 description = "Pathlib API extended to use fsspec backends"
 category = "main"
 optional = false
 python-versions = ">=3.7"
+develop = false
 
 [package.dependencies]
 fsspec = "*"
 
 [package.extras]
 test = ["aiohttp", "flake8", "gcsfs", "hadoop-test-cluster", "ipython", "jupyter", "moto", "pyarrow", "pylint", "pytest", "requests", "s3fs"]
+
+[package.source]
+type = "git"
+url = "https://github.com/scalableminds/universal_pathlib.git"
+reference = "fix-pickle"
+resolved_reference = "2cfc277908e6332739efd346a6c4e39aa7744875"
 
 [[package]]
 name = "urllib3"
@@ -1125,7 +1132,7 @@ rich = "^10.9.0"
 scikit-image = "^0.18.3"
 scipy = "^1.4.0"
 typing-extensions = "^3.7"
-universal-pathlib = "^0.0.12"
+universal-pathlib = {git = "https://github.com/scalableminds/universal_pathlib.git", rev = "fix-pickle"}
 wkw = "1.1.11"
 zarr = "^2.11.0"
 zipp = "^3.5.0"
@@ -2127,10 +2134,7 @@ typing-extensions = [
     {file = "typing_extensions-3.10.0.2-py3-none-any.whl", hash = "sha256:f1d25edafde516b146ecd0613dabcc61409817af4766fbbcfb8d1ad4ec441a34"},
     {file = "typing_extensions-3.10.0.2.tar.gz", hash = "sha256:49f75d16ff11f1cd258e1b988ccff82a3ca5570217d7ad8c5f48205dd99a677e"},
 ]
-universal-pathlib = [
-    {file = "universal_pathlib-0.0.12-py3-none-any.whl", hash = "sha256:a1c8333613d27a3b3dea3e543b4ed1d2544cfb74ba812c1384d1e32569f21456"},
-    {file = "universal_pathlib-0.0.12.tar.gz", hash = "sha256:900e973e212a3a6642db80dcf3aa99d68ced00bacb83da25bbc930e393eea161"},
-]
+universal_pathlib = []
 urllib3 = [
     {file = "urllib3-1.26.7-py2.py3-none-any.whl", hash = "sha256:c4fdf4019605b6e5423637e01bc9fe4daef873709a7973e195ceba0a62bbc844"},
     {file = "urllib3-1.26.7.tar.gz", hash = "sha256:4987c65554f7a2dbf30c18fd48778ef124af6fab771a377103da0585e2336ece"},
