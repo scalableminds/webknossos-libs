@@ -36,6 +36,7 @@ from ..utils import (
     get_executor_for_args,
     is_fs_path,
     make_path,
+    rmtree,
 )
 from ._utils.infer_bounding_box_existing_files import infer_bounding_box_existing_files
 from .layer import (
@@ -601,7 +602,7 @@ class Dataset:
             layer_path.unlink()
         else:
             # rmtree does not recurse into linked dirs, but removes the link
-            layer_path.rmdir()
+            rmtree(layer_path)
         self._export_as_json()
 
     def add_symlink_layer(
@@ -634,7 +635,7 @@ class Dataset:
             )
 
         foreign_layer_symlink_path = (
-            make_path(relpath(foreign_layer_path, self.path))
+            Path(relpath(foreign_layer_path, self.path))
             if make_relative
             else foreign_layer_path.resolve()
         )

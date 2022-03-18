@@ -139,10 +139,6 @@ def time_since_epoch_in_ms() -> int:
     return unixtime * 1000
 
 
-def is_fs_path(path: UPath) -> bool:
-    return not hasattr(path, "_url")
-
-
 def copy_directory_with_symlinks(
     src_path: UPath,
     dst_path: UPath,
@@ -159,7 +155,7 @@ def copy_directory_with_symlinks(
         if item.name not in ignore:
             symlink_path = dst_path / item.name
             if make_relative:
-                rel_or_abspath = UPath(relpath(item, symlink_path.parent))
+                rel_or_abspath = Path(relpath(item, symlink_path.parent))
             else:
                 rel_or_abspath = item.resolve()
             symlink_path.symlink_to(rel_or_abspath)
@@ -221,14 +217,31 @@ def make_path(maybe_path: Union[str, PathLike, Path, UPath]) -> UPath:
     return maybe_path if isinstance(maybe_path, UPath) else UPath(maybe_path)
 
 
+def is_fs_path(path: Union[Path, UPath]) -> bool:
+    return not hasattr(path, "_url")
+
+
+def rmtree(path: UPath) -> None:
+    def _walk(path: UPath) -> Iterator[UPath]:
+        if path.is_dir() and not path.is_symlink():
+            for p in path.iterdir():
+                yield from _walk(p)
+        else:
+            yield path
+
+    for sub_path in _walk(path):
+        if sub_path.is_file() or sub_path.is_symlink():
+            sub_path.unlink()
+        elif sub_path.is_dir():
+            sub_path.rmdir()
+
+
 def copytree(in_path: UPath, out_path: UPath) -> None:
     def _walk(path: UPath, base_path: UPath) -> Iterator[Tuple[UPath, UPath]]:
         yield (path, path.relative_to(base_path))
         if path.is_dir():
             for p in path.iterdir():
                 yield from _walk(p, base_path)
-        else:
-            yield (path, path.relative_to(base_path))
 
     for in_sub_path, sub_path in _walk(in_path, in_path):
         if in_sub_path.is_dir():

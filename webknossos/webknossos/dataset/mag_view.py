@@ -8,7 +8,13 @@ import numpy as np
 from upath import UPath as Path
 
 from ..geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
-from ..utils import get_executor_for_args, make_path, wait_and_ensure_success
+from ..utils import (
+    get_executor_for_args,
+    is_fs_path,
+    make_path,
+    rmtree,
+    wait_and_ensure_success,
+)
 from ._array import ArrayInfo, BaseArray
 from .properties import MagViewProperties
 
@@ -267,10 +273,14 @@ class MagView(View):
 
         from webknossos.dataset.dataset import Dataset
 
-        if target_path is not None:
+        if target_path is None:
+            assert is_fs_path(
+                self.path
+            ), "Cannot compress a remote mag without `target_path`."
+        else:
             target_path = make_path(target_path)
 
-        uncompressed_full_path = self.layer.dataset.path / self.layer.name / self.name
+        uncompressed_full_path = self.path
         compressed_dataset_path = (
             self.layer.dataset.path / f".compress-{uuid4()}"
             if target_path is None
@@ -317,9 +327,9 @@ class MagView(View):
             )
 
         if target_path is None:
-            self.path.rmdir()
+            rmtree(self.path)
             compressed_mag.path.rename(self.path)
-            compressed_dataset.path.rmdir()
+            rmtree(compressed_dataset.path)
 
             # update the handle to the new dataset
             MagView.__init__(

@@ -42,6 +42,7 @@ from ..utils import (
     is_fs_path,
     make_path,
     named_partial,
+    rmtree,
     warn_deprecated,
 )
 from .defaults import (
@@ -468,7 +469,7 @@ class Layer:
         full_path = _find_mag_path_on_disk(
             self.dataset.path, self.name, mag.to_layer_name()
         )
-        full_path.rmdir()
+        rmtree(full_path)
 
     def _add_foreign_mag(
         self,
@@ -499,7 +500,7 @@ class Layer:
         self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
 
         foreign_normalized_mag_path = (
-            make_path(relpath(foreign_mag_view.path, self.path))
+            Path(relpath(foreign_mag_view.path, self.path))
             if make_relative
             else foreign_mag_view.path.resolve()
         )
