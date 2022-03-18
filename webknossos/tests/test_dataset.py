@@ -716,7 +716,7 @@ def test_properties_with_segmentation() -> None:
 
 
 def test_chunking_wk(tmp_path: Path) -> None:
-    ds = Dataset(Path(tmp_path), scale=(2, 2, 1))
+    ds = Dataset(tmp_path, scale=(2, 2, 1))
     layer = ds.add_layer("color", COLOR_CATEGORY)
     mag = layer.add_mag(
         "1", chunks_per_shard=Vec3Int.full(8), chunk_size=Vec3Int.full(8)

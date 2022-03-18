@@ -15,7 +15,7 @@ def main() -> None:
 
     # Download the datset
     ds = wk.Dataset.download(
-        dataset_name=name,
+        dataset_name_or_url=name,
         organization_name=organization,
         bbox=bbox,
         layers=layers,

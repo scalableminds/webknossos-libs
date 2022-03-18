@@ -1,5 +1,6 @@
 import copy
 import json
+import re
 import shutil
 import warnings
 from argparse import Namespace
@@ -59,6 +60,12 @@ from .view import View
 DEFAULT_BIT_DEPTH = 8
 DEFAULT_DATA_FORMAT = DataFormat.WKW
 PROPERTIES_FILE_NAME = "datasource-properties.json"
+
+_DATASET_URL_REGEX = re.compile(
+    r"^(?P<webknossos_url>https?://.*)/datasets/"
+    + r"(?P<organization_name>[^/]*)/(?P<dataset_name>[^/]*)(/(view)?)?"
+    + r"(\?token=(?P<sharing_token>[^#]*))?"
+)
 
 
 def _copy_job(args: Tuple[View, View, int]) -> None:
@@ -226,22 +233,30 @@ class Dataset:
     @classmethod
     def download(
         cls,
-        dataset_name: str,
+        dataset_name_or_url: str,
         organization_name: Optional[str] = None,
+        sharing_token: Optional[str] = None,
+        webknossos_url: Optional[str] = None,
         bbox: Optional[BoundingBox] = None,
-        layers: Optional[List[str]] = None,
+        layers: Union[List[str], str, None] = None,
         mags: Optional[List[Mag]] = None,
         path: Optional[Union[PathLike, str]] = None,
         exist_ok: bool = False,
-        webknossos_url: Optional[str] = None,
     ) -> "Dataset":
         """Downloads a dataset and returns the Dataset instance.
 
-        The `dataset_name` and `organization_name` specify which dataset to download.
-        The `bbox`, `layers`, and `mags` parameters specify which parts of the dataset to download.
-        If nothing is specified the whole image, all layers, and all mags are downloaded respectively.
-
-        The `path` and `exist_ok` parameter specify where to save the downloaded dataset and whether to overwrite
+        * `dataset_name_or_url` may be a dataset name or a full URL to a dataset view, e.g.
+          `https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view`
+          If a URL is used, `organization_name`, `webknossos_url` and `sharing_token` must not be set.
+        * `organization_name` may be supplied if a dataset name was used in the previous argument,
+          it defaults to your current organization from the `webknossos_context`.
+        * `sharing_token` may be supplied if a dataset name was used and can specify a sharing token.
+        * `webknossos_url` may be supplied if a dataset name was used,
+          and allows to specifiy in which webknossos instance to search for the dataset.
+          It defaults to the url from your current `webknossos_context`, using https://webknossos.org as a fallback.
+        * `bbox`, `layers`, and `mags` specify which parts of the dataset to download.
+          If nothing is specified the whole image, all layers, and all mags are downloaded respectively.
+        * `path` and `exist_ok` specify where to save the downloaded dataset and whether to overwrite
         if the `path` exists.
 
         The `webknossos_url` specifies in which webknossos instance to search for the dataset. By default the
@@ -250,6 +265,22 @@ class Dataset:
 
         from webknossos.client._download_dataset import download_dataset
         from webknossos.client.context import _get_context, webknossos_context
+
+        match = re.match(_DATASET_URL_REGEX, dataset_name_or_url)
+        if match is not None:
+            assert (
+                organization_name is None
+                and sharing_token is None
+                and webknossos_url is None
+            ), (
+                "When Dataset.download() is be called with an annotation url, "
+                + "e.g. Dataset.download('https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view'), "
+                + "organization_name, sharing_token and webknossos_url must not be set."
+            )
+            dataset_name_or_url = match.group("dataset_name")
+            organization_name = match.group("organization_name")
+            sharing_token = match.group("sharing_token")
+            webknossos_url = match.group("webknossos_url")
 
         if webknossos_url is not None and webknossos_url != _get_context().url:
             warnings.warn(
@@ -263,9 +294,19 @@ class Dataset:
         else:
             context = nullcontext()
 
+        if isinstance(layers, str):
+            layers = [layers]
+
         with context:
             return download_dataset(
-                dataset_name, organization_name, bbox, layers, mags, path, exist_ok
+                dataset_name_or_url,
+                organization_name=organization_name,
+                sharing_token=sharing_token,
+                bbox=bbox,
+                layers=layers,
+                mags=mags,
+                path=path,
+                exist_ok=exist_ok,
             )
 
     @property
