@@ -30,7 +30,7 @@ class User:
 
     user_id: str
     email: str
-    organization: str
+    organization_id: str
     first_name: str
     last_name: str
     created: int
@@ -68,7 +68,7 @@ class User:
         return cls(
             user_id=response.id,
             email=response.email,
-            organization=response.organization,
+            organization_id=response.organization,
             first_name=response.first_name,
             last_name=response.last_name,
             created=response.created,

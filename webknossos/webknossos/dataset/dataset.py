@@ -227,7 +227,7 @@ class Dataset:
     def download(
         cls,
         dataset_name: str,
-        organization_name: Optional[str] = None,
+        organization_id: Optional[str] = None,
         bbox: Optional[BoundingBox] = None,
         layers: Optional[List[str]] = None,
         mags: Optional[List[Mag]] = None,
@@ -237,7 +237,7 @@ class Dataset:
     ) -> "Dataset":
         """Downloads a dataset and returns the Dataset instance.
 
-        The `dataset_name` and `organization_name` specify which dataset to download.
+        The `dataset_name` and `organization_id` specify which dataset to download.
         The `bbox`, `layers`, and `mags` parameters specify which parts of the dataset to download.
         If nothing is specified the whole image, all layers, and all mags are downloaded respectively.
 
@@ -265,7 +265,7 @@ class Dataset:
 
         with context:
             return download_dataset(
-                dataset_name, organization_name, bbox, layers, mags, path, exist_ok
+                dataset_name, organization_id, bbox, layers, mags, path, exist_ok
             )
 
     @property

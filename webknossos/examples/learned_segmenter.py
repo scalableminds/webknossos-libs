@@ -24,7 +24,7 @@ def main() -> None:
     new_dataset_name = annotation.dataset_name + f"_segmented_{time_str}"
     dataset = wk.Dataset.download(
         annotation.dataset_name,
-        organization_name="scalable_minds",
+        organization_id="scalable_minds",
         path=new_dataset_name,
         webknossos_url="https://webknossos.org",
     )
@@ -77,7 +77,7 @@ def main() -> None:
     url = dataset.upload(
         layers_to_link=[
             wk.LayerToLink(
-                organization_name="scalable_minds",
+                organization_id="scalable_minds",
                 dataset_name=annotation.dataset_name,
                 layer_name="color",
             )

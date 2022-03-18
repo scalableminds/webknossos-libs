@@ -137,7 +137,7 @@ class _WebknossosContext:
             return self.token
 
     @property
-    def organization(self) -> str:
+    def organization_id(self) -> str:
         return _cached_get_org(self)
 
     @property
