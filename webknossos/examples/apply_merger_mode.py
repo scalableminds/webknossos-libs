@@ -93,7 +93,7 @@ def main() -> None:
                 wk.LayerToLink(
                     dataset_name="l4_sample_dev",
                     layer_name="color",
-                    organization_name="scalable_minds",
+                    organization_id="scalable_minds",
                 )
             ],
         )

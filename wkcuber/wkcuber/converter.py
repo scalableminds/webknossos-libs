@@ -541,7 +541,7 @@ def main(args: Namespace) -> None:
         exit(1)
     elif len(matching_converters) > 1:
         logger.info(
-            "Multiple converters found. Check if your source path contains multiple datasets."
+            f"Multiple converters found. Check if your source path contains multiple datasets. Converters: {matching_converters}"
         )
         exit(1)
 

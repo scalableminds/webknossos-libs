@@ -9,6 +9,7 @@ import warnings
 from concurrent.futures import as_completed
 from concurrent.futures._base import Future
 from datetime import datetime
+from inspect import getframeinfo, stack
 from multiprocessing import cpu_count
 from os import PathLike
 from os.path import relpath
@@ -202,8 +203,9 @@ def get_rich_progress() -> Progress:
 
 
 def warn_deprecated(deprecated_item: str, alternative_item: str) -> None:
+    caller = getframeinfo(stack()[2][0])
     warnings.warn(
-        f"[DEPRECATION] `{deprecated_item}` is deprecated, please use `{alternative_item}` instead.",
+        f"[DEPRECATION] `{deprecated_item}` is deprecated, please use `{alternative_item}` instead (see {caller.filename}:{caller.lineno})",
         DeprecationWarning,
     )
 

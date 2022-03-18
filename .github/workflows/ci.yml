@@ -204,15 +204,15 @@ jobs:
       run: tar -xzvf testdata/WT1_wkw.tar.gz
 
     - name: Check formatting
-      run: poetry run black --check .
+      run: ./format.sh check
       if: ${{ needs.changes.outputs.wkcuber == 'true' }}
 
     - name: Lint code
-      run: poetry run pylint -j4 wkcuber
+      run: ./lint.sh
       if: ${{ needs.changes.outputs.wkcuber == 'true' }}
 
     - name: Check typing
-      run: poetry run ./typecheck.sh
+      run: ./typecheck.sh
 
     - name: Python tests
       run: poetry run pytest tests

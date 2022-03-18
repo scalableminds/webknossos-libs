@@ -30,7 +30,7 @@ class LayerToLink(NamedTuple):
     dataset_name: str
     layer_name: str
     new_layer_name: Optional[str] = None
-    organization_name: Optional[
+    organization_id: Optional[
         str
     ] = None  # defaults to the user's organization before uploading
 
@@ -40,7 +40,7 @@ class LayerToLink(NamedTuple):
             "dataSetName": self.dataset_name,
             "layerName": self.layer_name,
             "newLayerName": self.new_layer_name,
-            "organizationName": self.organization_name or context.organization,
+            "organizationName": self.organization_id or context.organization_id,
         }
 
 
@@ -113,13 +113,13 @@ def upload_dataset(
     if "PYTEST_CURRENT_TEST" in os.environ:
         simultaneous_uploads = 1
     response = new_dataset_name_is_valid.sync_detailed(
-        organization_name=context.organization,
+        organization_name=context.organization_id,
         data_set_name=new_dataset_name,
         client=context.generated_auth_client,
     )
     assert (
         response.status_code == 200
-    ), f"Dataset name {context.organization}/{new_dataset_name} does not seem to be valid: {response}"
+    ), f"Dataset name {context.organization_id}/{new_dataset_name} does not seem to be valid: {response}"
     for _ in range(MAXIMUM_RETRY_COUNT):
         response = dataset_reserve_upload.sync_detailed(
             client=datastore_client,
@@ -127,7 +127,7 @@ def upload_dataset(
             json_body=DatasetReserveUploadJsonBody.from_dict(
                 {
                     "uploadId": upload_id,
-                    "organization": context.organization,
+                    "organization": context.organization_id,
                     "name": new_dataset_name,
                     "totalFileCount": len(file_infos),
                     "initialTeams": [],
@@ -144,7 +144,7 @@ def upload_dataset(
             f"{datastore_url}/data/datasets?token={datastore_token}",
             simultaneous_uploads=simultaneous_uploads,
             query={
-                "owningOrganization": context.organization,
+                "owningOrganization": context.organization_id,
                 "name": new_dataset_name,
                 "totalFileCount": len(file_infos),
             },
@@ -167,7 +167,7 @@ def upload_dataset(
             json_body=DatasetFinishUploadJsonBody.from_dict(
                 {
                     "uploadId": upload_id,
-                    "organization": context.organization,
+                    "organization": context.organization_id,
                     "name": new_dataset_name,
                     "needsConversion": False,
                     "layersToLink": [layer.as_json() for layer in layers_to_link],
@@ -179,4 +179,4 @@ def upload_dataset(
     else:
         assert response.status_code == 200, response
 
-    return f"{context.url}/datasets/{context.organization}/{new_dataset_name}/view"
+    return f"{context.url}/datasets/{context.organization_id}/{new_dataset_name}/view"

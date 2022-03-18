@@ -85,7 +85,7 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
     from webknossos.client.context import _get_generated_client
     from webknossos.utils import snake_to_camel_case
 
-    organization_name = "Organization_X"
+    organization_id = "Organization_X"
     dataset_name = "e2006_knossos"
     task_id = "581367a82faeb37a008a5352"
     user_id = "570b9f4d2a7c0e4d008da6ef"
@@ -99,12 +99,12 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
         )
     )
     response = httpx.get(
-        url=f"{WK_URL}/api/datasets/{organization_name}/{dataset_name}",
+        url=f"{WK_URL}/api/datasets/{organization_id}/{dataset_name}",
         headers={"X-Auth-Token": f"{WK_TOKEN}"},
     )
     assert (
         response.status_code == 200 and response.json()["isActive"]
-    ), f"You need to copy or link any dataset to binaryData/{organization_name}/{dataset_name}."
+    ), f"You need to copy or link any dataset to binaryData/{organization_id}/{dataset_name}."
 
     d = datetime.utcnow()
     unixtime = calendar.timegm(d.utctimetuple())
@@ -126,7 +126,7 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
         "datasetInfo",
         extract_200_response(
             dataset_info.sync_detailed(
-                organization_name=organization_name,
+                organization_name=organization_id,
                 data_set_name=dataset_name,
                 client=client,
             )

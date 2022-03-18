@@ -220,7 +220,7 @@ def cubing_job(
                 # Image shape will be (x, y, channel_count, z=1)
                 image = read_image_file(
                     file_name,
-                    target_view.header.voxel_type,
+                    target_view.info.voxel_type,
                     z,
                     channel_index,
                     sample_index,
@@ -378,7 +378,7 @@ def cubing(
     )
 
     target_mag_view = target_layer.get_or_add_mag(
-        target_mag, file_len=wkw_file_len, block_len=BLOCK_LEN
+        target_mag, chunks_per_shard=wkw_file_len, chunk_size=BLOCK_LEN
     )
 
     interpolation_mode = parse_interpolation_mode(
