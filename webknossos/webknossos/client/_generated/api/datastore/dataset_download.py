@@ -7,7 +7,7 @@ from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
-    organization_id: str,
+    organization_name: str,
     data_set_name: str,
     data_layer_name: str,
     *,
@@ -22,7 +22,12 @@ def _get_kwargs(
     resolution: int,
     half_byte: Union[Unset, None, bool] = False,
 ) -> Dict[str, Any]:
-    url = f"{client.base_url}/data/datasets/{organization_id}/{data_set_name}/layers/{data_layer_name}/data"
+    url = "{}/data/datasets/{organizationName}/{dataSetName}/layers/{dataLayerName}/data".format(
+        client.base_url,
+        organizationName=organization_name,
+        dataSetName=data_set_name,
+        dataLayerName=data_layer_name,
+    )
 
     headers: Dict[str, Any] = client.get_headers()
     cookies: Dict[str, Any] = client.get_cookies()
@@ -59,7 +64,7 @@ def _build_response(*, response: httpx.Response) -> Response[Any]:
 
 
 def sync_detailed(
-    organization_id: str,
+    organization_name: str,
     data_set_name: str,
     data_layer_name: str,
     *,
@@ -75,7 +80,7 @@ def sync_detailed(
     half_byte: Union[Unset, None, bool] = False,
 ) -> Response[Any]:
     kwargs = _get_kwargs(
-        organization_id=organization_id,
+        organization_name=organization_name,
         data_set_name=data_set_name,
         data_layer_name=data_layer_name,
         client=client,
@@ -98,7 +103,7 @@ def sync_detailed(
 
 
 async def asyncio_detailed(
-    organization_id: str,
+    organization_name: str,
     data_set_name: str,
     data_layer_name: str,
     *,
@@ -114,7 +119,7 @@ async def asyncio_detailed(
     half_byte: Union[Unset, None, bool] = False,
 ) -> Response[Any]:
     kwargs = _get_kwargs(
-        organization_id=organization_id,
+        organization_name=organization_name,
         data_set_name=data_set_name,
         data_layer_name=data_layer_name,
         client=client,
