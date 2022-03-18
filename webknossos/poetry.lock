@@ -1401,7 +1401,7 @@ test = ["aiohttp", "flake8", "gcsfs", "hadoop-test-cluster", "ipython", "jupyter
 type = "git"
 url = "https://github.com/scalableminds/universal_pathlib.git"
 reference = "fix-pickle"
-resolved_reference = "1ddd9cdb0f5fea4f8d90d1d7a8547339966518f9"
+resolved_reference = "2cfc277908e6332739efd346a6c4e39aa7744875"
 
 [[package]]
 name = "urllib3"
