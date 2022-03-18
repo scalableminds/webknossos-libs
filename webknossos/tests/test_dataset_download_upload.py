@@ -10,10 +10,15 @@ import webknossos as wk
 
 
 @pytest.fixture(scope="module")
-def sample_dataset() -> Iterator[wk.Dataset]:
+def sample_bbox() -> Iterator[wk.Dataset]:
+    return wk.BoundingBox((2807, 4352, 1794), (10, 10, 10))
+
+
+@pytest.fixture(scope="module")
+def sample_dataset(sample_bbox: wk.BoundingBox) -> Iterator[wk.Dataset]:
     url = "https://webknossos.org/datasets/scalable_minds/l4_sample_dev"
     with TemporaryDirectory() as dir:
-        yield wk.Dataset.download(url, path=Path(dir) / "ds")
+        yield wk.Dataset.download(url, path=Path(dir) / "ds", bbox=sample_bbox)
 
 
 @pytest.mark.parametrize(
@@ -23,17 +28,18 @@ def sample_dataset() -> Iterator[wk.Dataset]:
         "https://webknossos.org/datasets/scalable_minds/l4_sample_dev_sharing/view?token=ilDXmfQa2G8e719vb1U9YQ#%7B%22orthogonal%7D",
     ],
 )
-def test_url_download(url: str, tmp_path: Path, sample_dataset: wk.Dataset) -> None:
-    bbox = wk.BoundingBox((2807, 4352, 1794), (10, 10, 10))
-    ds = wk.Dataset.download(url, path=tmp_path / "ds", mags=[wk.Mag(1)], bbox=bbox)
+def test_url_download(
+    url: str, tmp_path: Path, sample_dataset: wk.Dataset, sample_bbox: wk.BoundingBox
+) -> None:
+    ds = wk.Dataset.download(
+        url, path=tmp_path / "ds", mags=[wk.Mag(1)], bbox=sample_bbox
+    )
     assert set(ds.layers.keys()) == {"color", "segmentation"}
     data = ds.get_color_layers()[0].get_best_mag().read()
     assert data.sum() == 122507
     assert np.array_equal(
         data,
-        sample_dataset.get_color_layers()[0]
-        .get_best_mag()
-        .read(absolute_bounding_box=bbox),
+        sample_dataset.get_color_layers()[0].get_best_mag().read(),
     )
 
 
