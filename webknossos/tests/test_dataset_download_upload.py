@@ -8,17 +8,19 @@ import pytest
 
 import webknossos as wk
 
+# pylint: disable=redefined-outer-name
+
 
 @pytest.fixture(scope="module")
-def sample_bbox() -> Iterator[wk.Dataset]:
+def sample_bbox() -> wk.BoundingBox:
     return wk.BoundingBox((2807, 4352, 1794), (10, 10, 10))
 
 
 @pytest.fixture(scope="module")
 def sample_dataset(sample_bbox: wk.BoundingBox) -> Iterator[wk.Dataset]:
     url = "https://webknossos.org/datasets/scalable_minds/l4_sample_dev"
-    with TemporaryDirectory() as dir:
-        yield wk.Dataset.download(url, path=Path(dir) / "ds", bbox=sample_bbox)
+    with TemporaryDirectory() as temp_dir:
+        yield wk.Dataset.download(url, path=Path(temp_dir) / "ds", bbox=sample_bbox)
 
 
 @pytest.mark.parametrize(
