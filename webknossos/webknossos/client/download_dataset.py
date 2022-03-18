@@ -20,7 +20,7 @@ def download_dataset(
     warn_deprecated("download_dataset", "Dataset.download")
     return actual_download_dataset(
         dataset_name,
-        organization_name=organization_name,
+        organization_id=organization_name,
         bbox=bbox,
         layers=layers,
         mags=mags,

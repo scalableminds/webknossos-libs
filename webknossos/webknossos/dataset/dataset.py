@@ -63,7 +63,7 @@ PROPERTIES_FILE_NAME = "datasource-properties.json"
 
 _DATASET_URL_REGEX = re.compile(
     r"^(?P<webknossos_url>https?://.*)/datasets/"
-    + r"(?P<organization_name>[^/]*)/(?P<dataset_name>[^/]*)(/(view)?)?"
+    + r"(?P<organization_id>[^/]*)/(?P<dataset_name>[^/]*)(/(view)?)?"
     + r"(\?token=(?P<sharing_token>[^#]*))?"
 )
 
@@ -269,16 +269,16 @@ class Dataset:
         match = re.match(_DATASET_URL_REGEX, dataset_name_or_url)
         if match is not None:
             assert (
-                organization_name is None
+                organization_id is None
                 and sharing_token is None
                 and webknossos_url is None
             ), (
                 "When Dataset.download() is be called with an annotation url, "
                 + "e.g. Dataset.download('https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view'), "
-                + "organization_name, sharing_token and webknossos_url must not be set."
+                + "organization_id, sharing_token and webknossos_url must not be set."
             )
             dataset_name_or_url = match.group("dataset_name")
-            organization_name = match.group("organization_name")
+            organization_id = match.group("organization_id")
             sharing_token = match.group("sharing_token")
             webknossos_url = match.group("webknossos_url")
 
