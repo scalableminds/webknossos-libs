@@ -115,8 +115,6 @@ def downsample_mags(
     Argument `from_mag` expects the resolution to base downsampling on.
 
     For the other parameters see the CLI help or `Layer.downsample` and `Layer.downsampling_mag`.
-
-    Note: Not all `interpolation_mode`s work with anisotropic downsampling.
     """
     assert layer_name and from_mag or not layer_name and not from_mag, (
         "You provided only one of the following "
