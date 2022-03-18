@@ -43,7 +43,7 @@ def test_main(order: str, flip_axes: Optional[Tuple[int, int]]) -> None:
     main(args)
 
     dataset = Dataset.open(output_path)
-    layer = dataset.get_color_layer()
+    layer = dataset.get_color_layers()[0]
     mag_view = layer.get_mag(1)
     view = mag_view.get_view()
     read_data = view.read()
