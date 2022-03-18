@@ -113,7 +113,7 @@ def upload_dataset(
     if "PYTEST_CURRENT_TEST" in os.environ:
         simultaneous_uploads = 1
     response = new_dataset_name_is_valid.sync_detailed(
-        organization_id=context.organization_id,
+        organization_name=context.organization_id,
         data_set_name=new_dataset_name,
         client=context.generated_auth_client,
     )

@@ -37,7 +37,7 @@ def download_dataset(
         organization_id = context.organization_id
 
     dataset_info_response = dataset_info.sync_detailed(
-        organization_id=organization_id,
+        organization_name=organization_id,
         data_set_name=dataset_name,
         client=client,
     )
@@ -108,7 +108,7 @@ def download_dataset(
             ):
                 chunk_in_mag = chunk.in_mag(mag)
                 response = dataset_download.sync_detailed(
-                    organization_id=organization_id,
+                    organization_name=organization_id,
                     data_set_name=dataset_name,
                     data_layer_name=layer_name,
                     resolution=mag.max_dim_log2,
