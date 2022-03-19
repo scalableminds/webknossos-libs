@@ -221,15 +221,22 @@ def is_fs_path(path: Union[Path, UPath]) -> bool:
     return not hasattr(path, "_url")
 
 
+def is_symlink(path: Union[Path, UPath]) -> bool:
+    try:
+        return path.is_symlink()
+    except NotImplementedError:
+        return False
+
+
 def rmtree(path: UPath) -> None:
     def _walk(path: UPath) -> Iterator[UPath]:
-        if path.is_dir() and not path.is_symlink():
+        if path.exists() and path.is_dir() and is_symlink(path):
             for p in path.iterdir():
                 yield from _walk(p)
         yield path
 
     for sub_path in _walk(path):
-        if sub_path.is_file() or sub_path.is_symlink():
+        if sub_path.is_file() or is_symlink(sub_path):
             sub_path.unlink()
         elif sub_path.is_dir():
             sub_path.rmdir()

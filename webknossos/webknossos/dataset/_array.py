@@ -6,12 +6,15 @@ from enum import Enum
 from os.path import relpath
 from typing import Any, Dict, Iterator, Optional, Type
 
+import numcodecs
 import numpy as np
 import wkw
 import zarr
-from numcodecs import Blosc
 from upath import UPath as Path
 from zarr.storage import FSStore
+
+# See https://zarr.readthedocs.io/en/stable/tutorial.html#configuring-blosc
+numcodecs.blosc.use_threads = False
 
 from webknossos.geometry import BoundingBox, Vec3Int, Vec3IntLike
 
@@ -20,13 +23,13 @@ def _is_power_of_two(num: int) -> bool:
     return num & (num - 1) == 0
 
 
-def _fsstore_from_path(path: Path) -> FSStore:
+def _fsstore_from_path(path: Path, mode: str = "a") -> FSStore:
     try:
         storage_options = path._kwargs.copy()
         del storage_options["_url"]
     except AttributeError:
         storage_options = {}
-    return FSStore(url=str(path), **storage_options)
+    return FSStore(url=str(path), mode=mode, **storage_options)
 
 
 class ArrayException(Exception):
@@ -298,7 +301,7 @@ class ZarrArray(BaseArray):
             chunks=(array_info.num_channels,) + array_info.chunk_size.to_tuple(),
             dtype=array_info.voxel_type,
             compressor=(
-                Blosc(cname="zstd", clevel=3, shuffle=Blosc.SHUFFLE)
+                numcodecs.Blosc(cname="zstd", clevel=3, shuffle=numcodecs.Blosc.SHUFFLE)
                 if array_info.compression_mode
                 else None
             ),

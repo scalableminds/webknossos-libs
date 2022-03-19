@@ -1,5 +1,5 @@
+import multiprocessing
 import warnings
-from argparse import Namespace
 
 import numpy as np
 import pytest
@@ -28,6 +28,10 @@ BUCKET_PATH = Path(
 )
 
 pytestmark = [pytest.mark.block_network(allowed_hosts=[".*"])]
+
+# `s3fs`` hangs in multiprocessing when using `fork`
+# See: https://github.com/fsspec/s3fs/issues/464
+multiprocessing.set_start_method("spawn")
 
 
 def assure_exported_properties(ds: Dataset) -> None:
@@ -346,7 +350,6 @@ def test_compression_with_target_path() -> None:
 
     mag1.compress(
         target_path=compressed_dataset_path,
-        args=Namespace(distribution_strategy="debug_sequential"),
     )
 
     mag1 = Dataset.open(compressed_dataset_path).get_layer("color").get_mag(1)
@@ -376,7 +379,7 @@ def test_downsampling() -> None:
     copytree(TESTDATA_DIR / "simple_zarr_dataset", new_dataset_path)
 
     color_layer = Dataset.open(new_dataset_path).get_layer("color")
-    color_layer.downsample(args=Namespace(distribution_strategy="debug_sequential"))
+    color_layer.downsample()
 
     assert (new_dataset_path / "color" / "2-2-2" / ".zarray").exists()
     assert (new_dataset_path / "color" / "4-4-4" / ".zarray").exists()
@@ -393,7 +396,6 @@ def test_copy_dataset() -> None:
         new_dataset_path,
         chunks_per_shard=1,
         data_format=DataFormat.Zarr,
-        args=Namespace(distribution_strategy="debug_sequential"),
     )
     assert (new_dataset_path / "color" / "1-1-1" / ".zarray").exists()
 
