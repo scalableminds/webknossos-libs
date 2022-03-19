@@ -230,10 +230,11 @@ def is_symlink(path: Union[Path, UPath]) -> bool:
 
 def rmtree(path: UPath) -> None:
     def _walk(path: UPath) -> Iterator[UPath]:
-        if path.exists() and path.is_dir() and is_symlink(path):
-            for p in path.iterdir():
-                yield from _walk(p)
-        yield path
+        if path.exists():
+            if path.is_dir() and not is_symlink(path):
+                for p in path.iterdir():
+                    yield from _walk(p)
+            yield path
 
     for sub_path in _walk(path):
         if sub_path.is_file() or is_symlink(sub_path):

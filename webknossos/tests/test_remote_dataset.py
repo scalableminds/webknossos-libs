@@ -14,7 +14,7 @@ from webknossos.dataset import (
     Dataset,
 )
 from webknossos.geometry import Vec3Int
-from webknossos.utils import copytree
+from webknossos.utils import copytree, rmtree
 
 S3_KEY = "ANTN35UAENTS5UIAEATD"
 S3_SECRET = "TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur"
@@ -57,13 +57,8 @@ def create_bucket() -> None:
     BUCKET_PATH.fs.mkdirs("testoutput", exist_ok=True)
 
 
-def delete_dir(relative_path: Path) -> None:
-    if relative_path.exists() and relative_path.is_dir():
-        relative_path.rmdir()
-
-
 def test_s3_dataset() -> None:
-    delete_dir(BUCKET_PATH / "zarr_dataset")
+    rmtree(BUCKET_PATH / "zarr_dataset")
 
     ds_path = BUCKET_PATH / "zarr_dataset"
     if ds_path.exists():
@@ -83,7 +78,7 @@ def test_s3_dataset() -> None:
 
 
 def test_create_dataset_with_layer_and_mag() -> None:
-    delete_dir(BUCKET_PATH / "zarr_dataset")
+    rmtree(BUCKET_PATH / "zarr_dataset")
 
     ds = Dataset(BUCKET_PATH / "zarr_dataset", scale=(1, 1, 1))
     ds.add_layer("color", "color", data_format=DataFormat.Zarr)
@@ -103,7 +98,7 @@ def test_create_dataset_with_layer_and_mag() -> None:
 
 
 def test_open_dataset() -> None:
-    delete_dir(BUCKET_PATH / "simple_zarr_dataset")
+    rmtree(BUCKET_PATH / "simple_zarr_dataset")
     copytree(
         TESTDATA_DIR / "simple_zarr_dataset",
         BUCKET_PATH / "simple_zarr_dataset",
@@ -116,7 +111,7 @@ def test_open_dataset() -> None:
 
 
 def test_modify_existing_dataset() -> None:
-    delete_dir(BUCKET_PATH / "simple_zarr_dataset")
+    rmtree(BUCKET_PATH / "simple_zarr_dataset")
     ds1 = Dataset(BUCKET_PATH / "simple_zarr_dataset", scale=(1, 1, 1))
     ds1.add_layer(
         "color",
@@ -145,7 +140,7 @@ def test_modify_existing_dataset() -> None:
 
 
 def test_view_read() -> None:
-    delete_dir(BUCKET_PATH / "simple_zarr_dataset")
+    rmtree(BUCKET_PATH / "simple_zarr_dataset")
     copytree(
         TESTDATA_DIR / "simple_zarr_dataset",
         BUCKET_PATH / "simple_zarr_dataset",
@@ -165,7 +160,7 @@ def test_view_read() -> None:
 
 
 def test_view_write() -> None:
-    delete_dir(BUCKET_PATH / "simple_zarr_dataset")
+    rmtree(BUCKET_PATH / "simple_zarr_dataset")
     copytree(
         TESTDATA_DIR / "simple_zarr_dataset",
         BUCKET_PATH / "simple_zarr_dataset",
@@ -192,7 +187,7 @@ def test_view_write() -> None:
 def test_view_write_out_of_bounds() -> None:
     new_dataset_path = BUCKET_PATH / "zarr_view_dataset_out_of_bounds"
 
-    delete_dir(new_dataset_path)
+    rmtree(new_dataset_path)
     copytree(TESTDATA_DIR / "simple_zarr_dataset", new_dataset_path)
 
     view = (
@@ -211,7 +206,7 @@ def test_view_write_out_of_bounds() -> None:
 def test_mag_view_write_out_of_bounds() -> None:
     new_dataset_path = BUCKET_PATH / "simple_zarr_dataset_out_of_bounds"
 
-    delete_dir(new_dataset_path)
+    rmtree(new_dataset_path)
     copytree(TESTDATA_DIR / "simple_zarr_dataset", new_dataset_path)
 
     ds = Dataset.open(new_dataset_path)
@@ -231,7 +226,7 @@ def test_mag_view_write_out_of_bounds() -> None:
 def test_mag_view_write_out_of_bounds_mag2() -> None:
     new_dataset_path = BUCKET_PATH / "simple_zarr_dataset_out_of_bounds"
 
-    delete_dir(new_dataset_path)
+    rmtree(new_dataset_path)
     copytree(TESTDATA_DIR / "simple_zarr_dataset", new_dataset_path)
 
     ds = Dataset.open(new_dataset_path)
@@ -250,7 +245,7 @@ def test_mag_view_write_out_of_bounds_mag2() -> None:
 
 
 def test_update_new_bounding_box_offset() -> None:
-    delete_dir(BUCKET_PATH / "zarr_dataset")
+    rmtree(BUCKET_PATH / "zarr_dataset")
 
     ds = Dataset(BUCKET_PATH / "zarr_dataset", scale=(1, 1, 1))
     color_layer = ds.add_layer("color", COLOR_CATEGORY, data_format=DataFormat.Zarr)
@@ -277,7 +272,7 @@ def test_update_new_bounding_box_offset() -> None:
 
 def test_write_multi_channel_uint8() -> None:
     dataset_path = BUCKET_PATH / "zarr_multichannel"
-    delete_dir(dataset_path)
+    rmtree(dataset_path)
 
     ds = Dataset(dataset_path, scale=(1, 1, 1))
     mag = ds.add_layer(
@@ -295,7 +290,7 @@ def test_write_multi_channel_uint8() -> None:
 
 def test_write_multi_channel_uint16() -> None:
     dataset_path = BUCKET_PATH / "zarr_multichannel"
-    delete_dir(dataset_path)
+    rmtree(dataset_path)
 
     ds = Dataset(dataset_path, scale=(1, 1, 1))
     mag = ds.add_layer(
@@ -320,7 +315,7 @@ def test_write_multi_channel_uint16() -> None:
 def test_compression() -> None:
     new_dataset_path = BUCKET_PATH / "simple_zarr_dataset_compression"
 
-    delete_dir(new_dataset_path)
+    rmtree(new_dataset_path)
     copytree(TESTDATA_DIR / "simple_zarr_dataset", new_dataset_path)
 
     mag1 = Dataset.open(new_dataset_path).get_layer("color").get_mag(1)
@@ -337,7 +332,7 @@ def test_compression_with_target_path() -> None:
     new_dataset_path = BUCKET_PATH / "simple_zarr_dataset_compression"
     compressed_dataset_path = BUCKET_PATH / "simple_zarr_dataset_compressed"
 
-    delete_dir(new_dataset_path)
+    rmtree(new_dataset_path)
     copytree(TESTDATA_DIR / "simple_zarr_dataset", new_dataset_path)
 
     mag1 = Dataset.open(new_dataset_path).get_layer("color").get_mag(1)
@@ -375,7 +370,7 @@ def test_compression_with_target_path() -> None:
 def test_downsampling() -> None:
     new_dataset_path = BUCKET_PATH / "simple_zarr_dataset_downsampling"
 
-    delete_dir(new_dataset_path)
+    rmtree(new_dataset_path)
     copytree(TESTDATA_DIR / "simple_zarr_dataset", new_dataset_path)
 
     color_layer = Dataset.open(new_dataset_path).get_layer("color")
@@ -390,7 +385,7 @@ def test_downsampling() -> None:
 def test_copy_dataset() -> None:
     new_dataset_path = BUCKET_PATH / "simple_zarr_dataset_copied"
 
-    delete_dir(new_dataset_path)
+    rmtree(new_dataset_path)
 
     Dataset.open(TESTDATA_DIR / "simple_zarr_dataset").copy_dataset(
         new_dataset_path,
@@ -404,8 +399,8 @@ def test_add_symlink_layer() -> None:
     src_dataset_path = BUCKET_PATH / "simple_zarr_dataset"
     dst_dataset_path = BUCKET_PATH / "simple_zarr_dataset_symlinks"
 
-    delete_dir(src_dataset_path)
-    delete_dir(dst_dataset_path)
+    rmtree(src_dataset_path)
+    rmtree(dst_dataset_path)
     copytree(TESTDATA_DIR / "simple_zarr_dataset", src_dataset_path)
 
     src_ds = Dataset.open(src_dataset_path)
@@ -419,8 +414,8 @@ def test_add_symlink_mag() -> None:
     src_dataset_path = BUCKET_PATH / "simple_zarr_dataset"
     dst_dataset_path = BUCKET_PATH / "simple_zarr_dataset_symlinks"
 
-    delete_dir(src_dataset_path)
-    delete_dir(dst_dataset_path)
+    rmtree(src_dataset_path)
+    rmtree(dst_dataset_path)
     copytree(TESTDATA_DIR / "simple_zarr_dataset", src_dataset_path)
 
     src_ds = Dataset.open(src_dataset_path)
