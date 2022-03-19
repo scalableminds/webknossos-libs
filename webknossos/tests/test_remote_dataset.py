@@ -1,4 +1,5 @@
 import warnings
+from argparse import Namespace
 
 import numpy as np
 import pytest
@@ -6,9 +7,12 @@ import s3fs  # pylint: disable=unused-import
 from upath import UPath as Path
 
 from tests.constants import TESTDATA_DIR
-from webknossos.dataset import COLOR_CATEGORY, Dataset
-from webknossos.dataset._array import DataFormat
-from webknossos.dataset.layer_categories import SEGMENTATION_CATEGORY
+from webknossos.dataset import (
+    COLOR_CATEGORY,
+    SEGMENTATION_CATEGORY,
+    DataFormat,
+    Dataset,
+)
 from webknossos.geometry import Vec3Int
 from webknossos.utils import copytree
 
@@ -308,7 +312,24 @@ def test_write_multi_channel_uint16() -> None:
     assure_exported_properties(ds)
 
 
+@pytest.mark.xfail(raises=AssertionError)
 def test_compression() -> None:
+    new_dataset_path = BUCKET_PATH / "simple_zarr_dataset_compression"
+
+    delete_dir(new_dataset_path)
+    copytree(TESTDATA_DIR / "simple_zarr_dataset", new_dataset_path)
+
+    mag1 = Dataset.open(new_dataset_path).get_layer("color").get_mag(1)
+
+    # writing unaligned data to an uncompressed dataset
+    write_data = (np.random.rand(3, 10, 20, 30) * 255).astype(np.uint8)
+    mag1.write(write_data, absolute_offset=(60, 80, 100))
+
+    assert not mag1._is_compressed()
+    mag1.compress()
+
+
+def test_compression_with_target_path() -> None:
     new_dataset_path = BUCKET_PATH / "simple_zarr_dataset_compression"
     compressed_dataset_path = BUCKET_PATH / "simple_zarr_dataset_compressed"
 
@@ -356,7 +377,7 @@ def test_downsampling() -> None:
     copytree(TESTDATA_DIR / "simple_zarr_dataset", new_dataset_path)
 
     color_layer = Dataset.open(new_dataset_path).get_layer("color")
-    color_layer.downsample()
+    color_layer.downsample(args=Namespace(distribution_strategy="debug_sequential"))
 
     assert (new_dataset_path / "color" / "2-2-2" / ".zarray").exists()
     assert (new_dataset_path / "color" / "4-4-4" / ".zarray").exists()
@@ -370,7 +391,10 @@ def test_copy_dataset() -> None:
     delete_dir(new_dataset_path)
 
     Dataset.open(TESTDATA_DIR / "simple_zarr_dataset").copy_dataset(
-        new_dataset_path, chunks_per_shard=1, data_format=DataFormat.Zarr
+        new_dataset_path,
+        chunks_per_shard=1,
+        data_format=DataFormat.Zarr,
+        args=Namespace(distribution_strategy="debug_sequential"),
     )
     assert (new_dataset_path / "color" / "1-1-1" / ".zarray").exists()
 

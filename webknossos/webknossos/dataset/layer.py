@@ -774,13 +774,14 @@ class Layer:
 
         # Get target view
         target_view = target_mag_view.get_view(
-            offset=aligned_target_bb.topleft,
-            size=aligned_target_bb.size,
+            absolute_offset=aligned_target_bb.topleft
+            * target_mag_view.mag.to_vec3_int(),
+            size=aligned_target_bb.size * target_mag_view.mag.to_vec3_int(),
         )
 
         source_view = prev_mag_view.get_view(
-            offset=aligned_source_bb.topleft,
-            size=aligned_source_bb.size,
+            absolute_offset=aligned_source_bb.topleft * prev_mag_view.mag.to_vec3_int(),
+            size=aligned_source_bb.size * prev_mag_view.mag.to_vec3_int(),
             read_only=True,
         )
 
