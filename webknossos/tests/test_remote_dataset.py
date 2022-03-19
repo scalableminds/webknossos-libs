@@ -344,10 +344,6 @@ def test_compression_with_target_path() -> None:
 
     assert not mag1._is_compressed()
 
-    # Remote datasets need a `target_path`
-    with pytest.raises(AssertionError):
-        mag1.compress()
-
     mag1.compress(target_path=compressed_dataset_path)
 
     mag1 = Dataset.open(compressed_dataset_path).get_layer("color").get_mag(1)
