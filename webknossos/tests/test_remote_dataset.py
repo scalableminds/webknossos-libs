@@ -31,7 +31,7 @@ pytestmark = [pytest.mark.block_network(allowed_hosts=[".*"])]
 
 # `s3fs`` hangs in multiprocessing when using `fork`
 # See: https://github.com/fsspec/s3fs/issues/464
-multiprocessing.set_start_method("spawn")
+multiprocessing.set_start_method("forkserver", force=True)
 
 
 def assure_exported_properties(ds: Dataset) -> None:
