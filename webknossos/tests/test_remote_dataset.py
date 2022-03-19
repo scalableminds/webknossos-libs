@@ -285,7 +285,7 @@ def test_write_multi_channel_uint8() -> None:
     assure_exported_properties(ds)
 
 
-def test_wkw_write_multi_channel_uint16() -> None:
+def test_write_multi_channel_uint16() -> None:
     dataset_path = BUCKET_PATH / "zarr_multichannel"
     delete_dir(dataset_path)
 
