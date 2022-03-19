@@ -344,7 +344,10 @@ def test_compression_with_target_path() -> None:
 
     assert not mag1._is_compressed()
 
-    mag1.compress(target_path=compressed_dataset_path)
+    mag1.compress(
+        target_path=compressed_dataset_path,
+        args=Namespace(distribution_strategy="debug_sequential"),
+    )
 
     mag1 = Dataset.open(compressed_dataset_path).get_layer("color").get_mag(1)
     assert mag1._is_compressed()
