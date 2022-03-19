@@ -322,6 +322,11 @@ def test_compression() -> None:
     mag1.write(write_data, absolute_offset=(60, 80, 100))
 
     assert not mag1._is_compressed()
+
+    # Remote datasets need a `target_path`
+    with pytest.raises(AssertionError):
+        mag1.compress()
+
     mag1.compress(target_path=compressed_dataset_path)
 
     mag1 = Dataset.open(compressed_dataset_path).get_layer("color").get_mag(1)
@@ -368,3 +373,37 @@ def test_copy_dataset() -> None:
         new_dataset_path, chunks_per_shard=1, data_format=DataFormat.Zarr
     )
     assert (new_dataset_path / "color" / "1-1-1" / ".zarray").exists()
+
+
+def test_add_symlink_layer() -> None:
+    src_dataset_path = BUCKET_PATH / "simple_zarr_dataset"
+    dst_dataset_path = BUCKET_PATH / "simple_zarr_dataset_symlinks"
+
+    delete_dir(src_dataset_path)
+    delete_dir(dst_dataset_path)
+    copytree(TESTDATA_DIR / "simple_zarr_dataset", src_dataset_path)
+
+    src_ds = Dataset.open(src_dataset_path)
+    dst_ds = Dataset(dst_dataset_path, scale=(1, 1, 1))
+
+    with pytest.raises(AssertionError):
+        dst_ds.add_symlink_layer(src_ds.get_layer("color"))
+
+
+def test_add_symlink_mag() -> None:
+    src_dataset_path = BUCKET_PATH / "simple_zarr_dataset"
+    dst_dataset_path = BUCKET_PATH / "simple_zarr_dataset_symlinks"
+
+    delete_dir(src_dataset_path)
+    delete_dir(dst_dataset_path)
+    copytree(TESTDATA_DIR / "simple_zarr_dataset", src_dataset_path)
+
+    src_ds = Dataset.open(src_dataset_path)
+    src_layer = src_ds.get_layer("color")
+    src_mag1 = src_layer.get_mag("1")
+
+    dst_ds = Dataset(dst_dataset_path, scale=(1, 1, 1))
+    dst_layer = dst_ds.add_layer("color", COLOR_CATEGORY, dtype_per_channel="uint8")
+
+    with pytest.raises(AssertionError):
+        dst_layer.add_symlink_mag(src_mag1)
