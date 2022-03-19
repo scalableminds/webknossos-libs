@@ -634,18 +634,18 @@ class Dataset:
                 f"Cannot create symlink to {foreign_layer_path}. This dataset already has a layer called {layer_name}."
             )
 
+        assert is_fs_path(
+            self.path
+        ), f"Cannot create symlinks in remote dataset {self.path}"
+        assert is_fs_path(
+            foreign_layer_path
+        ), f"Cannot create symlink to remote layer {foreign_layer_path}"
+
         foreign_layer_symlink_path = (
             Path(relpath(foreign_layer_path, self.path))
             if make_relative
             else foreign_layer_path.resolve()
         )
-
-        assert is_fs_path(
-            self.path
-        ), f"Cannot create symlinks in remote dataset {self.path}"
-        assert is_fs_path(
-            foreign_layer_symlink_path
-        ), f"Cannot create symlink to remote layer {foreign_layer_symlink_path}"
 
         (self.path / layer_name).symlink_to(foreign_layer_symlink_path)
         original_layer = Dataset.open(foreign_layer_path.parent).get_layer(

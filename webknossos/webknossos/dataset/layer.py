@@ -499,26 +499,26 @@ class Layer:
 
         self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
 
-        foreign_normalized_mag_path = (
-            Path(relpath(foreign_mag_view.path, self.path))
-            if make_relative
-            else foreign_mag_view.path.resolve()
-        )
-
         if symlink:
             assert is_fs_path(
                 self.path
             ), f"Cannot create symlinks in remote layer {self.path}"
             assert is_fs_path(
-                foreign_normalized_mag_path
-            ), f"Cannot create symlink to remote mag {foreign_normalized_mag_path}"
+                foreign_mag_view.path
+            ), f"Cannot create symlink to remote mag {foreign_mag_view.path}"
+
+            foreign_normalized_mag_path = (
+                Path(relpath(foreign_mag_view.path, self.path))
+                if make_relative
+                else foreign_mag_view.path.resolve()
+            )
 
             (self.path / str(foreign_mag_view.mag)).symlink_to(
                 foreign_normalized_mag_path
             )
         else:
             copytree(
-                foreign_normalized_mag_path,
+                foreign_mag_view.path,
                 self.path / str(foreign_mag_view.mag),
             )
 
