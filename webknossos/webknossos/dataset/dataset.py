@@ -375,6 +375,10 @@ class Dataset:
                 )
             )
 
+        assert (
+            is_fs_path(self.path) or data_format != DataFormat.WKW
+        ), "Cannot create WKW layers in remote datasets. Use `data_format='zarr'`."
+
         layer_properties = LayerProperties(
             name=layer_name,
             category=category,
@@ -728,6 +732,18 @@ class Dataset:
         )
 
         new_dataset_path = make_path(new_dataset_path)
+
+        if data_format == DataFormat.WKW:
+            assert is_fs_path(
+                new_dataset_path
+            ), "Cannot create WKW-based remote datasets. Use `data_format='zarr'` instead."
+        if data_format is None and any(
+            layer.data_format == DataFormat.WKW for layer in self.layers.values()
+        ):
+            assert is_fs_path(
+                new_dataset_path
+            ), "Cannot create WKW layers in remote datasets. Use explicit `data_format='zarr'`."
+
         if scale is None:
             scale = self.scale
         new_ds = Dataset(new_dataset_path, scale=scale, exist_ok=False)

@@ -63,11 +63,8 @@ def delete_dir(relative_path: Path) -> None:
 
 
 def test_s3_dataset() -> None:
-    delete_dir(BUCKET_PATH / "zarr_dataset")
-
     ds_path = BUCKET_PATH / "zarr_dataset"
-    if ds_path.exists():
-        ds_path.rmdir()
+    delete_dir(ds_path)
 
     ds = Dataset(ds_path, scale=(1, 1, 1))
     layer = ds.add_layer("color", COLOR_CATEGORY, data_format=DataFormat.Zarr)
@@ -316,6 +313,15 @@ def test_write_multi_channel_uint16() -> None:
     assure_exported_properties(ds)
 
 
+def test_wkw_dataset() -> None:
+    ds_path = BUCKET_PATH / "wkw_dataset"
+    delete_dir(ds_path)
+
+    ds = Dataset(ds_path, scale=(1, 1, 1))
+    with pytest.raises(AssertionError):
+        ds.add_layer("color", COLOR_CATEGORY, data_format=DataFormat.WKW)
+
+
 def test_compression() -> None:
     new_dataset_path = BUCKET_PATH / "simple_zarr_dataset_compression"
     compressed_dataset_path = BUCKET_PATH / "simple_zarr_dataset_compressed"
@@ -387,6 +393,26 @@ def test_copy_dataset() -> None:
     assert (new_dataset_path / "color" / "1-1-1" / ".zarray").exists()
 
 
+def test_wkw_copy_dataset() -> None:
+    new_dataset_path = BUCKET_PATH / "simple_wkw_dataset_copied"
+    delete_dir(new_dataset_path)
+
+    wkw_ds = Dataset.open(TESTDATA_DIR / "simple_wkw_dataset")
+
+    # Fails with explicit data_format=wkw ...
+    with pytest.raises(AssertionError):
+        wkw_ds.copy_dataset(
+            new_dataset_path, chunks_per_shard=1, data_format=DataFormat.WKW
+        )
+
+    # ... and with implicit data_format=wkw from the source layers.
+    with pytest.raises(AssertionError):
+        wkw_ds.copy_dataset(
+            new_dataset_path,
+            chunks_per_shard=1,
+        )
+
+
 def test_add_symlink_layer() -> None:
     src_dataset_path = BUCKET_PATH / "simple_zarr_dataset"
     dst_dataset_path = BUCKET_PATH / "simple_zarr_dataset_symlinks"
@@ -415,7 +441,9 @@ def test_add_symlink_mag() -> None:
     src_mag1 = src_layer.get_mag("1")
 
     dst_ds = Dataset(dst_dataset_path, scale=(1, 1, 1))
-    dst_layer = dst_ds.add_layer("color", COLOR_CATEGORY, dtype_per_channel="uint8")
+    dst_layer = dst_ds.add_layer(
+        "color", COLOR_CATEGORY, dtype_per_channel="uint8", data_format=DataFormat.Zarr
+    )
 
     with pytest.raises(AssertionError):
         dst_layer.add_symlink_mag(src_mag1)
