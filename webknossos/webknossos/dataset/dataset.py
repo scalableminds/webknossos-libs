@@ -66,7 +66,6 @@ PROPERTIES_FILE_NAME = "datasource-properties.json"
 
 
 def _copy_job(args: Tuple[View, View, int]) -> None:
-    print("ARGS", args)
     (source_view, target_view, _) = args
     # Copy the data form one view to the other in a buffered fashion
     target_view.write(source_view.read())
