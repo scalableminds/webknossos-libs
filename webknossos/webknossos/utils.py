@@ -218,6 +218,7 @@ def make_path(maybe_path: Union[str, PathLike, Path, UPath]) -> UPath:
 
 
 def is_fs_path(path: Union[Path, UPath]) -> bool:
+    # Distinguish between `pathlib.*Path` and `UPath` through a `UPath`-specific attribute
     return not hasattr(path, "_url")
 
 
@@ -225,6 +226,7 @@ def is_symlink(path: Union[Path, UPath]) -> bool:
     try:
         return path.is_symlink()
     except NotImplementedError:
+        # `UPath` raises `NotImplmentedError` for some methods, including `is_symlink`
         return False
 
 
@@ -237,10 +239,16 @@ def rmtree(path: UPath) -> None:
             yield path
 
     for sub_path in _walk(path):
-        if sub_path.is_file() or is_symlink(sub_path):
-            sub_path.unlink()
-        elif sub_path.is_dir():
-            sub_path.rmdir()
+        try:
+            if sub_path.is_file() or is_symlink(sub_path):
+                sub_path.unlink()
+            elif sub_path.is_dir():
+                sub_path.rmdir()
+        except FileNotFoundError:
+            # Some implementations `UPath` do not have explicit directory representations
+            # Therefore, directories only exist, if they have files. Consequently, when
+            # all files have been deleted, the directory does not exist anymore.
+            pass
 
 
 def copytree(in_path: UPath, out_path: UPath) -> None:
