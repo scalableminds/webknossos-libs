@@ -39,29 +39,17 @@ class WrappedProcessPoolExecutor(ProcessPoolExecutor):
     def __init__(self, **kwargs):
         new_kwargs = get_existent_kwargs_subset(PROCESS_POOL_KWARGS_WHITELIST, kwargs)
 
-        self.did_overwrite_start_method = False
+        start_method = (
+            "forkserver"
+            if "forkserver" in multiprocessing.get_all_start_methods()
+            else "spawn"
+        )
         if kwargs.get("start_method", None) is not None:
-            self.did_overwrite_start_method = True
-            self.old_start_method = multiprocessing.get_start_method()
-            start_method = kwargs["start_method"]
-            logging.info(
-                f"Overwriting start_method to {start_method}. Previous value: {self.old_start_method}"
-            )
-            multiprocessing.set_start_method(start_method, force=True)
+            start_method = kwargs.get("start_method")
 
-        ProcessPoolExecutor.__init__(self, **new_kwargs)
-
-    def shutdown(self, *args, **kwargs):
-
-        super().shutdown(*args, **kwargs)
-
-        if self.did_overwrite_start_method:
-            logging.info(
-                f"Restoring start_method to original value: {self.old_start_method}."
-            )
-            multiprocessing.set_start_method(self.old_start_method, force=True)
-            self.old_start_method = None
-            self.did_overwrite_start_method = False
+        ProcessPoolExecutor.__init__(
+            self, mp_context=multiprocessing.get_context(start_method), **new_kwargs
+        )
 
     def submit(self, *args, **kwargs):
 
@@ -88,7 +76,7 @@ class WrappedProcessPoolExecutor(ProcessPoolExecutor):
         # where wrapper_fn_1 is called, which eventually calls wrapper_fn_2, which eventually calls actual_fn.
         call_stack = []
 
-        if multiprocessing.get_start_method() != "fork":
+        if self._mp_context.get_start_method() != "fork":
             # If a start_method other than the default "fork" is used, logging needs to be re-setup,
             # because the programming context is not inherited in those cases.
             multiprocessing_logging_setup_fn = get_multiprocessing_logging_setup_fn()
