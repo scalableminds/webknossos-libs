@@ -14,6 +14,11 @@ def expect_fork():
     return True
 
 
+def expect_forkserver():
+    assert mp.get_start_method() == "forkserver"
+    return True
+
+
 def expect_spawn():
     assert mp.get_start_method() == "spawn"
     return True
@@ -22,15 +27,15 @@ def expect_spawn():
 def test_map_with_spawn():
     with cluster_tools.get_executor("multiprocessing", max_workers=5) as executor:
         assert executor.submit(
-            expect_fork
-        ).result(), "Multiprocessing should use fork by default"
+            expect_forkserver
+        ).result(), "Multiprocessing should use forkserver by default"
 
     with cluster_tools.get_executor(
         "multiprocessing", max_workers=5, start_method=None
     ) as executor:
         assert executor.submit(
-            expect_fork
-        ).result(), "Multiprocessing should use fork if start_method is None"
+            expect_forkserver
+        ).result(), "Multiprocessing should use forkserver if start_method is None"
 
     with cluster_tools.get_executor(
         "multiprocessing", max_workers=5, start_method="spawn"
@@ -38,6 +43,13 @@ def test_map_with_spawn():
         assert executor.submit(
             expect_spawn
         ).result(), "Multiprocessing should use spawn if requested"
+
+    with cluster_tools.get_executor(
+        "multiprocessing", max_workers=5, start_method="fork"
+    ) as executor:
+        assert executor.submit(
+            expect_fork
+        ).result(), "Multiprocessing should use fork if requested"
 
 
 def accept_high_mem(data):
