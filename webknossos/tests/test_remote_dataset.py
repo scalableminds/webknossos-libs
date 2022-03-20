@@ -316,24 +316,7 @@ def test_write_multi_channel_uint16() -> None:
     assure_exported_properties(ds)
 
 
-@pytest.mark.xfail(raises=AssertionError)
 def test_compression() -> None:
-    new_dataset_path = BUCKET_PATH / "simple_zarr_dataset_compression"
-
-    delete_dir(new_dataset_path)
-    copytree(TESTDATA_DIR / "simple_zarr_dataset", new_dataset_path)
-
-    mag1 = Dataset.open(new_dataset_path).get_layer("color").get_mag(1)
-
-    # writing unaligned data to an uncompressed dataset
-    write_data = (np.random.rand(3, 10, 20, 30) * 255).astype(np.uint8)
-    mag1.write(write_data, absolute_offset=(60, 80, 100))
-
-    assert not mag1._is_compressed()
-    mag1.compress()
-
-
-def test_compression_with_target_path() -> None:
     new_dataset_path = BUCKET_PATH / "simple_zarr_dataset_compression"
     compressed_dataset_path = BUCKET_PATH / "simple_zarr_dataset_compressed"
 
@@ -347,6 +330,10 @@ def test_compression_with_target_path() -> None:
     mag1.write(write_data, absolute_offset=(60, 80, 100))
 
     assert not mag1._is_compressed()
+
+    # Remote datasets require a `target_path` for compression
+    with pytest.raises(AssertionError):
+        mag1.compress()
 
     mag1.compress(
         target_path=compressed_dataset_path,
