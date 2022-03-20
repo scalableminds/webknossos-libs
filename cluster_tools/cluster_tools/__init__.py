@@ -37,7 +37,7 @@ class WrappedProcessPoolExecutor(ProcessPoolExecutor):
     """
 
     def __init__(self, **kwargs):
-        assert (not "start_method" in kwargs) or (
+        assert (not "start_method" in kwargs or kwargs["start_method"] is None) or (
             not "mp_context" in kwargs
         ), "Cannot use both `start_method` and `mp_context` kwargs."
 
@@ -47,7 +47,7 @@ class WrappedProcessPoolExecutor(ProcessPoolExecutor):
 
         if "mp_context" in kwargs:
             mp_context = kwargs["mp_context"]
-        elif "start_method" in kwargs:
+        elif "start_method" in kwargs and kwargs["start_method"] is not None:
             mp_context = multiprocessing.get_context(kwargs["start_method"])
         else:
             start_method = (
