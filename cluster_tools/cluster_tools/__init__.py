@@ -25,7 +25,7 @@ def get_existent_kwargs_subset(whitelist, kwargs):
     return new_kwargs
 
 
-PROCESS_POOL_KWARGS_WHITELIST = ["max_workers", "mp_context", "initializer", "initargs"]
+PROCESS_POOL_KWARGS_WHITELIST = ["max_workers", "initializer", "initargs"]
 
 
 class WrappedProcessPoolExecutor(ProcessPoolExecutor):
@@ -37,20 +37,24 @@ class WrappedProcessPoolExecutor(ProcessPoolExecutor):
     """
 
     def __init__(self, **kwargs):
+        assert (not "start_method" in kwargs) or (
+            not "mp_context" in kwargs
+        ), "Cannot use both `start_method` and `mp_context` kwargs."
+
         new_kwargs = get_existent_kwargs_subset(PROCESS_POOL_KWARGS_WHITELIST, kwargs)
 
-        assert ("start_method" in kwargs and not "mp_context" in kwargs) or (
-            "mp_context" in kwargs and not "start_method" in kwargs
-        ), "Cannot use both `start_method` and `mp_context` kwargs."
-        mp_context = new_kwargs.get("mp_context", None)
-        if mp_context is None:
+        mp_context = None
+
+        if "mp_context" in kwargs:
+            mp_context = kwargs["mp_context"]
+        elif "start_method" in kwargs:
+            mp_context = multiprocessing.get_context(kwargs["start_method"])
+        else:
             start_method = (
                 "forkserver"
                 if "forkserver" in multiprocessing.get_all_start_methods()
                 else "spawn"
             )
-            if kwargs.get("start_method", None) is not None:
-                start_method = kwargs.get("start_method")
             mp_context = multiprocessing.get_context(start_method)
 
         new_kwargs["mp_context"] = mp_context
