@@ -1,4 +1,5 @@
 import multiprocessing
+import os
 import warnings
 
 import numpy as np
@@ -16,8 +17,8 @@ from webknossos.dataset import (
 from webknossos.geometry import Vec3Int
 from webknossos.utils import copytree, rmtree
 
-S3_KEY = "ANTN35UAENTS5UIAEATD"
-S3_SECRET = "TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur"
+S3_KEY = os.environ["MINIO_ACCESS_KEY"]
+S3_SECRET = os.environ["MINIO_SECRET_KEY"]
 S3_ENDPOINT = "http://localhost:9000"
 
 BUCKET_PATH = Path(

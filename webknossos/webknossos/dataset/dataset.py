@@ -35,7 +35,7 @@ from ..utils import (
     copytree,
     get_executor_for_args,
     is_fs_path,
-    make_path,
+    make_upath,
     rmtree,
 )
 from ._utils.infer_bounding_box_existing_files import infer_bounding_box_existing_files
@@ -116,7 +116,7 @@ class Dataset:
         Currently exist_ok=True is the deprecated default and will change in future releases.
         Please use `Dataset.open` if you intend to open an existing dataset and don't want/need the creation behavior.
         """
-        dataset_path = make_path(dataset_path)
+        dataset_path = make_upath(dataset_path)
 
         dataset_existed_already = (
             dataset_path.exists()
@@ -175,7 +175,7 @@ class Dataset:
         for layer_properties in self._properties.data_layers:
             num_channels = _extract_num_channels(
                 layer_properties.num_channels,
-                make_path(dataset_path),
+                make_upath(dataset_path),
                 layer_properties.name,
                 layer_properties.mags[0].mag
                 if len(layer_properties.mags) > 0
@@ -214,7 +214,7 @@ class Dataset:
 
         The `dataset_path` refers to the top level directory of the dataset (excluding layer or magnification names).
         """
-        dataset_path = make_path(dataset_path)
+        dataset_path = make_upath(dataset_path)
         assert (
             dataset_path.exists()
         ), f"Cannot open Dataset: Couldn't find {dataset_path}"
@@ -627,7 +627,7 @@ class Dataset:
         if isinstance(foreign_layer, Layer):
             foreign_layer_path = foreign_layer.path
         else:
-            foreign_layer_path = make_path(foreign_layer)
+            foreign_layer_path = make_upath(foreign_layer)
 
         foreign_layer_name = foreign_layer_path.name
         layer_name = (
@@ -679,7 +679,7 @@ class Dataset:
         if isinstance(foreign_layer, Layer):
             foreign_layer_path = foreign_layer.path
         else:
-            foreign_layer_path = make_path(foreign_layer)
+            foreign_layer_path = make_upath(foreign_layer)
 
         foreign_layer_name = foreign_layer_path.name
         layer_name = (
@@ -730,7 +730,7 @@ class Dataset:
             file_len=file_len,
         )
 
-        new_dataset_path = make_path(new_dataset_path)
+        new_dataset_path = make_upath(new_dataset_path)
 
         if data_format == DataFormat.WKW:
             assert is_fs_path(

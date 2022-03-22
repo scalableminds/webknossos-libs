@@ -11,7 +11,7 @@ from ..geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 from ..utils import (
     get_executor_for_args,
     is_fs_path,
-    make_path,
+    make_upath,
     rmtree,
     wait_and_ensure_success,
 )
@@ -278,7 +278,7 @@ class MagView(View):
                 self.path
             ), "Cannot compress a remote mag without `target_path`."
         else:
-            target_path = make_path(target_path)
+            target_path = make_upath(target_path)
 
         uncompressed_full_path = self.path
         compressed_dataset_path = (

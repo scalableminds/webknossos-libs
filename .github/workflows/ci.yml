@@ -155,6 +155,7 @@ jobs:
 
     - name: Install minio
       run: |
+        # Minio is an S3 clone and is used as local test server
         wget https://dl.min.io/server/minio/release/linux-amd64/minio -O /usr/local/bin/minio
         chmod +x /usr/local/bin/minio
 

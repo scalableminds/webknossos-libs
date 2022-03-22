@@ -40,7 +40,7 @@ from ..utils import (
     copytree,
     get_executor_for_args,
     is_fs_path,
-    make_path,
+    make_upath,
     named_partial,
     rmtree,
     warn_deprecated,
@@ -490,7 +490,7 @@ class Layer:
             # local import to prevent circular dependency
             from .dataset import Dataset
 
-            foreign_mag_view_path = make_path(foreign_mag_view_or_path)
+            foreign_mag_view_path = make_upath(foreign_mag_view_or_path)
             foreign_mag_view = (
                 Dataset.open(foreign_mag_view_path.parent.parent)
                 .get_layer(foreign_mag_view_path.parent.name)

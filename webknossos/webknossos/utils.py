@@ -213,7 +213,7 @@ def warn_deprecated(deprecated_item: str, alternative_item: str) -> None:
     )
 
 
-def make_path(maybe_path: Union[str, PathLike, Path, UPath]) -> UPath:
+def make_upath(maybe_path: Union[str, PathLike, Path, UPath]) -> UPath:
     return maybe_path if isinstance(maybe_path, UPath) else UPath(maybe_path)
 
 
