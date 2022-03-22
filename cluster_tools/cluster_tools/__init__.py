@@ -49,6 +49,10 @@ class WrappedProcessPoolExecutor(ProcessPoolExecutor):
             mp_context = kwargs["mp_context"]
         elif "start_method" in kwargs and kwargs["start_method"] is not None:
             mp_context = multiprocessing.get_context(kwargs["start_method"])
+        elif "MULTIPROCESSING_DEFAULT_START_METHOD" in os.environ:
+            mp_context = multiprocessing.get_context(
+                os.environ["MULTIPROCESSING_DEFAULT_START_METHOD"]
+            )
         else:
             start_method = (
                 "forkserver"
