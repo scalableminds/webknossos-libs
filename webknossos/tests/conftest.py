@@ -89,6 +89,7 @@ def error_on_warnings() -> Generator:
 @pytest.fixture(scope="module")
 def vcr_config() -> Dict[str, Any]:
     return {
+        "ignore_localhost": True,
         "filter_query_parameters": ["timestamp", "token"],
         "filter_headers": ["x-auth-token"],
     }
