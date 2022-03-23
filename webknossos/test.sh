@@ -18,5 +18,6 @@ if [ $# -eq 1 ] && [ "$1" = "--refresh-snapshots" ]; then
     # refer to the checked out (and potentially modified) code.
     poetry run python -m pytest --record-mode once
 else
-    poetry run python -m pytest --block-network
+    poetry run printenv
+    poetry run python -m pytest --block-network -vv -s
 fi
