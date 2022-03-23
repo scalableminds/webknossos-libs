@@ -190,9 +190,6 @@ jobs:
         pip install poetry
         poetry install
 
-    - name: Decompress test data
-      run: tar -xzvf testdata/WT1_wkw.tar.gz
-
     - name: Check formatting
       run: ./format.sh check
       if: ${{ needs.changes.outputs.wkcuber == 'true' }}
@@ -204,11 +201,8 @@ jobs:
     - name: Check typing
       run: ./typecheck.sh
 
-    - name: Python tests
-      run: poetry run pytest tests
-
-    - name: CLI tests
-      run: poetry run tests/scripts/all_tests.sh
+    - name: Run tests
+      run: ./test.sh
 
     - name: Check if git is dirty
       run: |
@@ -244,18 +238,10 @@ jobs:
         pip install poetry
         poetry install
 
-    - name: Decompress test data
-      shell: bash
-      run: tar -xzvf testdata/WT1_wkw.tar.gz
-
-    - name: Python tests
-      shell: bash
-      run: poetry run pytest tests
-
-    - name: CLI tests
+    - name: Run tests
       continue-on-error: true
       shell: bash
-      run: poetry run "C:\Program Files\Git\bin\bash.EXE" --noprofile --norc tests/scripts/all_tests.sh
+      run: poetry run "C:\Program Files\Git\bin\bash.EXE" --noprofile --norc ./test.sh
 
   wkcuber_mac:
     runs-on: macos-latest
@@ -284,14 +270,8 @@ jobs:
         pip install poetry
         poetry install
 
-    - name: Decompress test data
-      run: tar -xzvf testdata/WT1_wkw.tar.gz
-
-    - name: Python tests
-      run: poetry run pytest tests
-
-    - name: CLI tests
-      run: poetry run tests/scripts/all_tests.sh
+    - name: Run tests
+      run: ./test.sh
 
   wkcuber_docker:
     needs: [cluster_tools, webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac]
