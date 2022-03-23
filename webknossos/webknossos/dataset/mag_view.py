@@ -70,6 +70,9 @@ class MagView(View):
             chunks_per_shard=chunks_per_shard,
             compression_mode=compression_mode,
         )
+        if create:
+            self_path = layer.dataset.path / layer.name / mag.to_layer_name()
+            BaseArray.get_class(array_info.data_format).create(self_path, array_info)
 
         super().__init__(
             _find_mag_path_on_disk(layer.dataset.path, layer.name, mag.to_layer_name()),
@@ -78,9 +81,6 @@ class MagView(View):
             mag=mag,
         )
         self._layer = layer
-
-        if create:
-            BaseArray.get_class(array_info.data_format).create(self.path, array_info)
 
     # Overwrites of View methods:
     @property

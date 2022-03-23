@@ -35,6 +35,7 @@ from ..utils import (
     copytree,
     get_executor_for_args,
     is_fs_path,
+    is_symlink,
     make_upath,
     rmtree,
 )
@@ -602,7 +603,7 @@ class Dataset:
             layer for layer in self._properties.data_layers if layer.name != layer_name
         ]
         # delete files on disk
-        if layer_path.is_symlink():
+        if is_symlink(layer_path):
             layer_path.unlink()
         else:
             # rmtree does not recurse into linked dirs, but removes the link
