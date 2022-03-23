@@ -10,6 +10,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.12...HEAD)
 
 ### Breaking Changes
+- The `multiprocessing` executor now uses `spawn` as default start method. `fork` and `forkserver` can be used by supplying a `start_method` argument (e.g. `cluster_tools.get_executor("multiprocessing", start_method="forkserver")`) or by setting the `MULTIPROCESSING_DEFAULT_START_METHOD` environment variable. [#662](https://github.com/scalableminds/webknossos-libs/pull/662)
 
 ### Added
 
