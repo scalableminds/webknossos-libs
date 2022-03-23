@@ -2155,3 +2155,19 @@ def test_warn_outdated_properties(tmp_path: Path) -> None:
         # Changing ds1 should raise a warning, since ds1
         # does not know about the change in ds2
         ds1.add_layer("color", COLOR_CATEGORY)
+
+
+def test_can_compress_mag8(tmp_path: Path) -> None:
+    ds = Dataset(tmp_path / "ds", scale=(1, 1, 1))
+
+    layer = ds.add_layer("color", COLOR_CATEGORY)
+    layer.bounding_box = BoundingBox((0, 0, 0), (12240, 12240, 685))
+    for mag in ["1", "2-2-1", "4-4-1", "8-8-2"]:
+        layer.add_mag(mag)
+
+    assert layer.bounding_box == BoundingBox((0, 0, 0), (12240, 12240, 685))
+
+    mag_view = layer.get_mag("8-8-2")
+    data_to_write = (np.random.rand(1, 10, 10, 10) * 255).astype(np.uint8)
+    mag_view.write(data_to_write, absolute_offset=(11264, 11264, 0))
+    mag_view.compress()
