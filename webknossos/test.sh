@@ -4,7 +4,6 @@ set -eEuo pipefail
 source local_wk_setup.sh
 
 export_vars
-export MULTIPROCESSING_DEFAULT_START_METHOD=spawn
 
 if [ $# -eq 1 ] && [ "$1" = "--refresh-snapshots" ]; then
     ensure_local_test_wk
@@ -18,5 +17,5 @@ if [ $# -eq 1 ] && [ "$1" = "--refresh-snapshots" ]; then
     # refer to the checked out (and potentially modified) code.
     poetry run python -m pytest --record-mode once
 else
-    poetry run python -m pytest --block-network -vv -s
+    poetry run python -m pytest --block-network
 fi
