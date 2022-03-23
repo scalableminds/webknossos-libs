@@ -19,8 +19,10 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 - `Dataset.download` now also accepts a URL, as well as a `sharing_token`, which can also be part of the URL. [#660](https://github.com/scalableminds/webknossos-libs/pull/660)
 
 ### Changed
+- `MagView.compress` now skips in-place compression of already compressed mags. [#667](https://github.com/scalableminds/webknossos-libs/pull/667)
 
 ### Fixed
+- Fixed compression of downsampled mags for layers with arbitrary and potentially mag-unaligned bounding boxes. [#667](https://github.com/scalableminds/webknossos-libs/pull/667)
 
 
 ## [0.9.12](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.12) - 2022-03-18
