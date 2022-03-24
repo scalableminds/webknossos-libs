@@ -101,7 +101,7 @@ class Dataset:
     def __init__(
         self,
         dataset_path: Union[str, PathLike],
-        scale: Optional[Tuple[float, float, float]] = None,
+        scale: Tuple[float, float, float],
         name: Optional[str] = None,
         exist_ok: bool = _UNSET,
     ) -> None:
@@ -120,12 +120,10 @@ class Dataset:
 
         if dataset_existed_already:
             if exist_ok == _UNSET:
-                warnings.warn(
+                raise RuntimeError(
                     f"[DEPRECATION] You are creating/opening a dataset at a non-empty folder {dataset_path} without setting exist_ok=True. "
                     + "This will fail in future releases, please supply exist_ok=True explicitly then.",
-                    DeprecationWarning,
                 )
-                exist_ok = True
             if not exist_ok:
                 raise RuntimeError(
                     f"Creation of Dataset at {dataset_path} failed, because a non-empty folder already exists at this path."
@@ -181,13 +179,7 @@ class Dataset:
             self._layers[layer_properties.name] = layer
 
         if dataset_existed_already:
-            if scale is None:
-                warnings.warn(
-                    "[DEPRECATION] Please always supply the scale when using the constructor Dataset(your_path, scale=your_scale)."
-                    + "If you just want to open an existing dataset, please use Dataset.open(your_path).",
-                    DeprecationWarning,
-                )
-            elif scale == _UNSPECIFIED_SCALE_FROM_OPEN:
+            if scale == _UNSPECIFIED_SCALE_FROM_OPEN:
                 pass
             else:
                 assert self.scale == tuple(
@@ -530,23 +522,6 @@ class Dataset:
         layer.bounding_box = infer_bounding_box_existing_files(min_mag_view)
         return layer
 
-    def get_segmentation_layer(self) -> SegmentationLayer:
-        """
-        Deprecated, please use `get_segmentation_layers()`.
-
-        Returns the only segmentation layer.
-        Fails with a IndexError if there are multiple segmentation layers or none.
-        """
-
-        warnings.warn(
-            "[DEPRECATION] get_segmentation_layer() fails if no or more than one segmentation layer exists. Prefer get_segmentation_layers().",
-            DeprecationWarning,
-        )
-        return cast(
-            SegmentationLayer,
-            self._get_layer_by_category(SEGMENTATION_CATEGORY),
-        )
-
     def get_segmentation_layers(self) -> List[SegmentationLayer]:
         """
         Returns all segmentation layers.
@@ -556,19 +531,6 @@ class Dataset:
             for layer in self.layers.values()
             if layer.category == SEGMENTATION_CATEGORY
         ]
-
-    def get_color_layer(self) -> Layer:
-        """
-        Deprecated, please use `get_color_layers()`.
-
-        Returns the only color layer.
-        Fails with a RuntimeError if there are multiple color layers or none.
-        """
-        warnings.warn(
-            "[DEPRECATION] get_color_layer() fails if no or more than one color layer exists. Prefer get_color_layers().",
-            DeprecationWarning,
-        )
-        return self._get_layer_by_category(COLOR_CATEGORY)
 
     def get_color_layers(self) -> List[Layer]:
         """
@@ -697,8 +659,6 @@ class Dataset:
         chunks_per_shard: Optional[Union[Vec3IntLike, int]] = None,
         data_format: Optional[Union[str, DataFormat]] = None,
         compress: Optional[bool] = None,
-        block_len: Optional[int] = None,  # deprecated
-        file_len: Optional[int] = None,  # deprecated
         args: Optional[Namespace] = None,
     ) -> "Dataset":
         """
@@ -711,8 +671,6 @@ class Dataset:
         chunk_size, chunks_per_shard = _get_sharding_parameters(
             chunk_size=chunk_size,
             chunks_per_shard=chunks_per_shard,
-            block_len=block_len,
-            file_len=file_len,
         )
 
         new_dataset_path = Path(new_dataset_path)
@@ -835,38 +793,6 @@ class Dataset:
     ) -> None:
         self._properties.default_view_configuration = view_configuration
         self._export_as_json()  # update properties on disk
-
-    @classmethod
-    def create(
-        cls,
-        dataset_path: Union[str, PathLike],
-        scale: Tuple[float, float, float],
-        name: Optional[str] = None,
-    ) -> "Dataset":
-        """
-        **Deprecated**, please use the constructor `Dataset()` instead.
-        """
-        warnings.warn(
-            "[DEPRECATION] Dataset.create() is deprecated in favor of the normal constructor Dataset().",
-            DeprecationWarning,
-        )
-        return cls(dataset_path, scale, name, exist_ok=False)
-
-    @classmethod
-    def get_or_create(
-        cls,
-        dataset_path: Union[str, Path],
-        scale: Tuple[float, float, float],
-        name: Optional[str] = None,
-    ) -> "Dataset":
-        """
-        **Deprecated**, please use the constructor `Dataset()` instead.
-        """
-        warnings.warn(
-            "[DEPRECATION] Dataset.get_or_create() is deprecated in favor of the normal constructor Dataset(…, exist_ok=True).",
-            DeprecationWarning,
-        )
-        return cls(dataset_path, scale, name, exist_ok=True)
 
     def __repr__(self) -> str:
         return repr("Dataset(%s)" % self.path)

@@ -5,8 +5,6 @@ from typing import Iterator, Optional, Tuple, Union
 
 import attr
 
-from webknossos.utils import warn_deprecated
-
 from .graph import Graph
 from .group import Group
 
@@ -92,17 +90,6 @@ class Skeleton(Group):
         ), f"The suffix if the file must be .nml, not {out_path.suffix}"
         annotation = Annotation(name=out_path.stem, skeleton=self, time=None)
         annotation.save(out_path)
-
-    @staticmethod
-    def from_path(file_path: Union[PathLike, str]) -> "Skeleton":
-        """Deprecated. Use Skeleton.load instead."""
-        warn_deprecated("Skeleton.from_path", "Skeleton.load")
-        return Skeleton.load(file_path)
-
-    def write(self, out_path: PathLike) -> None:
-        """Deprecated. Use Skeleton.save instead."""
-        warn_deprecated("Skeleton.write", "skeleton.save")
-        self.save(out_path)
 
     def __hash__(self) -> int:
         return id(self)

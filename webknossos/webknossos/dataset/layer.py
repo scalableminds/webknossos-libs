@@ -38,7 +38,7 @@ from .upsampling_utils import upsample_cube_job
 if TYPE_CHECKING:
     from .dataset import Dataset
 
-from webknossos.utils import get_executor_for_args, named_partial, warn_deprecated
+from webknossos.utils import get_executor_for_args, named_partial
 
 from .defaults import (
     DEFAULT_CHUNK_SIZE,
@@ -143,20 +143,12 @@ def _element_class_to_dtype_per_channel(
 def _get_sharding_parameters(
     chunk_size: Optional[Union[Vec3IntLike, int]],
     chunks_per_shard: Optional[Union[Vec3IntLike, int]],
-    block_len: Optional[int],
-    file_len: Optional[int],
 ) -> Tuple[Optional[Vec3Int], Optional[Vec3Int]]:
     if chunk_size is not None:
         chunk_size = Vec3Int.from_vec_or_int(chunk_size)
-    elif block_len is not None:
-        warn_deprecated("block_len", "chunk_size")
-        chunk_size = Vec3Int.full(block_len)
 
     if chunks_per_shard is not None:
         chunks_per_shard = Vec3Int.from_vec_or_int(chunks_per_shard)
-    elif file_len is not None:
-        warn_deprecated("file_len", "chunks_per_shard")
-        chunks_per_shard = Vec3Int.full(file_len)
 
     return (chunk_size, chunks_per_shard)
 
@@ -293,8 +285,6 @@ class Layer:
             Union[int, Vec3IntLike]
         ] = None,  # DEFAULT_CHUNKS_PER_SHARD,
         compress: bool = False,
-        block_len: Optional[int] = None,  # deprecated
-        file_len: Optional[int] = None,  # deprecated
     ) -> MagView:
         """
         Creates a new mag called and adds it to the layer.
@@ -315,8 +305,6 @@ class Layer:
         chunk_size, chunks_per_shard = _get_sharding_parameters(
             chunk_size=chunk_size,
             chunks_per_shard=chunks_per_shard,
-            block_len=block_len,
-            file_len=file_len,
         )
         if chunk_size is None:
             chunk_size = DEFAULT_CHUNK_SIZE
@@ -401,8 +389,6 @@ class Layer:
         chunk_size: Optional[Union[Vec3IntLike, int]] = None,
         chunks_per_shard: Optional[Union[Vec3IntLike, int]] = None,
         compress: Optional[bool] = None,
-        block_len: Optional[int] = None,  # deprecated
-        file_len: Optional[int] = None,  # deprecated
     ) -> MagView:
         """
         Creates a new mag called and adds it to the dataset, in case it did not exist before.
@@ -418,8 +404,6 @@ class Layer:
         chunk_size, chunks_per_shard = _get_sharding_parameters(
             chunk_size=chunk_size,
             chunks_per_shard=chunks_per_shard,
-            block_len=block_len,
-            file_len=file_len,
         )
 
         if mag in self._mags.keys():
@@ -751,24 +735,16 @@ class Layer:
         if only_setup_mag:
             return
 
-        bb_mag1 = self.bounding_box
-
-        aligned_source_bb = bb_mag1.align_with_mag(target_mag, ceil=True).in_mag(
-            from_mag
-        )
-        aligned_target_bb = bb_mag1.align_with_mag(target_mag, ceil=True).in_mag(
-            target_mag
-        )
+        aligned_bounding_box = self.bounding_box.align_with_mag(target_mag, ceil=True)
 
         # Get target view
         target_view = target_mag_view.get_view(
-            offset=aligned_target_bb.topleft,
-            size=aligned_target_bb.size,
+            absolute_offset=aligned_bounding_box.topleft, size=aligned_bounding_box.size
         )
 
         source_view = prev_mag_view.get_view(
-            offset=aligned_source_bb.topleft,
-            size=aligned_source_bb.size,
+            absolute_offset=aligned_bounding_box.topleft,
+            size=aligned_bounding_box.size,
             read_only=True,
         )
 

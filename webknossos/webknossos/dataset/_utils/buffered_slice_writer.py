@@ -1,7 +1,6 @@
 import logging
 import os
 import traceback
-import warnings
 from os import getpid
 from types import TracebackType
 from typing import TYPE_CHECKING, Generator, List, Optional, Type
@@ -33,7 +32,6 @@ class BufferedSliceWriter:
     def __init__(
         self,
         view: "View",
-        offset: Optional[Vec3IntLike] = None,
         # buffer_size specifies, how many slices should be aggregated until they are flushed.
         buffer_size: int = 32,
         dimension: int = 2,  # z
@@ -46,15 +44,8 @@ class BufferedSliceWriter:
         self.view = view
         self.buffer_size = buffer_size
         self.dtype = self.view.get_dtype()
-        if offset is None and relative_offset is None and absolute_offset is None:
+        if relative_offset is None and absolute_offset is None:
             relative_offset = Vec3Int.zeros()
-        if offset is not None:
-            warnings.warn(
-                "[DEPRECATION] Using offset for a buffered slice writer is deprecated. "
-                + "Please use the parameter relative_offset or absolute_offset in Mag(1) instead.",
-                DeprecationWarning,
-            )
-        self.offset = None if offset is None else Vec3Int(offset)
         self.relative_offset = (
             None if relative_offset is None else Vec3Int(relative_offset)
         )
@@ -123,7 +114,6 @@ class BufferedSliceWriter:
             buffer_start_mag1 = buffer_start * self.view.mag.to_vec3_int()
             self.view.write(
                 data,
-                offset=buffer_start.add_or_none(self.offset),
                 relative_offset=buffer_start_mag1.add_or_none(self.relative_offset),
                 absolute_offset=buffer_start_mag1.add_or_none(self.absolute_offset),
             )

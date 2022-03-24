@@ -6,6 +6,7 @@ from typing import List, Tuple, cast
 import numpy as np
 
 from webknossos.geometry import Vec3Int
+from webknossos.geometry.bounding_box import BoundingBox
 from webknossos.utils import time_start, time_stop
 
 from .view import View
@@ -37,16 +38,18 @@ def upsample_cube_job(
     ), f"mag_factors ({mag_factors}) for upsampling must be smaller than 1"
 
     try:
-        time_start(f"Upsampling of {target_view.global_offset}")
+        time_start(f"Upsampling of {target_view}")
         num_channels = target_view.info.num_channels
-        shape = (num_channels,) + tuple(target_view.size)
+        target_view_size_in_mag = target_view.bounding_box.in_mag(target_view.mag).size
+        source_view_size_in_mag = source_view.bounding_box.in_mag(source_view.mag).size
+        shape = (num_channels,) + target_view_size_in_mag.to_tuple()
         file_buffer = np.zeros(shape, target_view.get_dtype())
 
         tiles = product(
             *list(
                 [
                     list(range(0, math.ceil(len)))
-                    for len in target_view.size.to_np() / buffer_shape.to_np()
+                    for len in target_view_size_in_mag.to_np() / buffer_shape.to_np()
                 ]
             )
         )
@@ -61,13 +64,15 @@ def upsample_cube_job(
                         int(min(a, b))
                         for a, b in zip(
                             np.array(mag_factors) * buffer_shape.to_np(),
-                            source_view.size - source_offset,
+                            source_view_size_in_mag - source_offset,
                         )
                     ]
                 ),
             )
-
-            cube_buffer_channels = source_view.read(source_offset, source_size)
+            mag_bbox_to_read = BoundingBox(source_offset, source_size)
+            cube_buffer_channels = source_view.read(
+                relative_bounding_box=mag_bbox_to_read.from_mag_to_mag1(source_view.mag)
+            )
 
             for channel_index in range(num_channels):
                 cube_buffer = cube_buffer_channels[channel_index]
@@ -91,10 +96,8 @@ def upsample_cube_job(
         if source_view.info.num_channels == 1:
             file_buffer = file_buffer[0]  # remove channel dimension
         target_view.write(file_buffer)
-        time_stop(f"Upsampling of {target_view.global_offset}")
+        time_stop(f"Upsampling of {target_view}")
 
     except Exception as exc:
-        logging.error(
-            f"Upsampling of target BoundingBox(offset={target_view.global_offset}, size={target_view.size}) failed with {exc}"
-        )
+        logging.error(f"Upsampling of {target_view} failed with {exc}")
         raise exc

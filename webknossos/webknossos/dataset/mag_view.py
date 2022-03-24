@@ -1,6 +1,5 @@
 import logging
 import shutil
-import warnings
 from argparse import Namespace
 from pathlib import Path
 from typing import TYPE_CHECKING, Iterator, Optional, Tuple, Union
@@ -85,28 +84,6 @@ class MagView(View):
         # but the Layer's bbox is used:
         return self.layer.bounding_box.align_with_mag(self._mag, ceil=True)
 
-    @property
-    def global_offset(self) -> Vec3Int:
-        """⚠️ Deprecated, use `Vec3Int.zeros()` instead."""
-        warnings.warn(
-            "[DEPRECATION] mag_view.global_offset is deprecated. "
-            + "Since this is a MagView, please use "
-            + "Vec3Int.zeros() instead.",
-            DeprecationWarning,
-        )
-        return Vec3Int.zeros()
-
-    @property
-    def size(self) -> Vec3Int:
-        """⚠️ Deprecated, use `mag_view.bounding_box.in_mag(mag_view.mag).bottomright` instead."""
-        warnings.warn(
-            "[DEPRECATION] mag_view.size is deprecated. "
-            + "Since this is a MagView, please use "
-            + "mag_view.bounding_box.in_mag(mag_view.mag).bottomright instead.",
-            DeprecationWarning,
-        )
-        return self.bounding_box.in_mag(self._mag).bottomright
-
     # Own methods:
 
     @property
@@ -124,32 +101,15 @@ class MagView(View):
     def write(
         self,
         data: np.ndarray,
-        offset: Optional[Vec3IntLike] = None,  # deprecated, relative, in current mag
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
     ) -> None:
-        if offset is not None:
-            if self._mag == Mag(1):
-                alternative = "Since this is a MagView in Mag(1), please use mag_view.write(absolute_offset=my_vec)"
-            else:
-                alternative = (
-                    "Since this is a MagView, please use the coordinates in Mag(1) instead, e.g. "
-                    + "mag_view.write(absolute_offset=my_vec * mag_view.mag.to_vec3_int())"
-                )
 
-            warnings.warn(
-                "[DEPRECATION] Using mag_view.write(offset=my_vec) is deprecated. "
-                + "Please use relative_offset or absolute_offset instead. "
-                + alternative,
-                DeprecationWarning,
-            )
-
-        if all(i is None for i in [offset, absolute_offset, relative_offset]):
+        if relative_offset is None and absolute_offset is None:
             relative_offset = Vec3Int.zeros()
 
         mag1_bbox = self._get_mag1_bbox(
-            abs_current_mag_offset=offset,
             rel_mag1_offset=relative_offset,
             abs_mag1_offset=absolute_offset,
             current_mag_size=Vec3Int(data.shape[-3:]),
@@ -161,75 +121,6 @@ class MagView(View):
             self.layer.bounding_box = self.layer.bounding_box.extended_by(mag1_bbox)
 
         super().write(data, absolute_offset=mag1_bbox.topleft)
-
-    def read(
-        self,
-        offset: Optional[Vec3IntLike] = None,  # deprecated, relative, in current mag
-        size: Optional[
-            Vec3IntLike
-        ] = None,  # usually in mag1, in current mag if offset is given
-        *,
-        relative_offset: Optional[Vec3IntLike] = None,  # in mag1
-        absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
-        relative_bounding_box: Optional[BoundingBox] = None,  # in mag1
-        absolute_bounding_box: Optional[BoundingBox] = None,  # in mag1
-    ) -> np.ndarray:
-        # THIS METHOD CAN BE REMOVED WHEN THE DEPRECATED OFFSET IS REMOVED
-
-        if (
-            relative_offset is not None
-            or absolute_offset is not None
-            or absolute_bounding_box is not None
-            or relative_bounding_box is not None
-        ) or (
-            offset is None
-            and size is None
-            and relative_offset is None
-            and absolute_offset is None
-            and absolute_bounding_box is None
-            and relative_bounding_box is None
-        ):
-            return super().read(
-                offset,
-                size,
-                relative_offset=relative_offset,
-                absolute_offset=absolute_offset,
-                absolute_bounding_box=absolute_bounding_box,
-                relative_bounding_box=relative_bounding_box,
-            )
-        else:
-            with warnings.catch_warnings():
-                warnings.filterwarnings(
-                    "ignore", category=UserWarning, module="webknossos"
-                )
-                view = self.get_view(offset=Vec3Int.zeros(), read_only=True)
-            return view.read(offset, size)
-
-    def get_view(
-        self,
-        offset: Optional[Vec3IntLike] = None,
-        size: Optional[Vec3IntLike] = None,
-        *,
-        relative_offset: Optional[Vec3IntLike] = None,  # in mag1
-        absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
-        read_only: Optional[bool] = None,
-    ) -> View:
-        # THIS METHOD CAN BE REMOVED WHEN THE DEPRECATED OFFSET IS REMOVED
-
-        # This has other defaults than the View implementation
-        # (all deprecations are handled in the subsclass)
-        bb = self.bounding_box.in_mag(self._mag)
-        if offset is not None and size is None:
-            offset = Vec3Int(offset)
-            size = bb.bottomright - offset
-
-        return super().get_view(
-            None if offset is None else Vec3Int(offset) - bb.topleft,
-            size,
-            relative_offset=relative_offset,
-            absolute_offset=absolute_offset,
-            read_only=read_only,
-        )
 
     def get_bounding_boxes_on_disk(
         self,

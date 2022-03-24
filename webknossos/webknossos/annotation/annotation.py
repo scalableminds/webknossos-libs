@@ -51,7 +51,7 @@ from webknossos.annotation._nml_conversion import annotation_to_nml, nml_to_skel
 from webknossos.dataset import SEGMENTATION_CATEGORY, Dataset, Layer, SegmentationLayer
 from webknossos.geometry import BoundingBox
 from webknossos.skeleton import Skeleton
-from webknossos.utils import time_since_epoch_in_ms, warn_deprecated
+from webknossos.utils import time_since_epoch_in_ms
 
 Vector3 = Tuple[float, float, float]
 
@@ -658,16 +658,3 @@ _COMPOUND_ANNOTATION_TYPES = [
 _ANNOTATION_URL_REGEX = re.compile(
     fr"(https?://.*)/annotations/({'|'.join(i.value for i in AnnotationType.__members__.values())})/([0-9A-Fa-f]*)"
 )
-
-
-def open_annotation(annotation_path: Union[str, PathLike]) -> "Annotation":
-    """Deprecated."""
-    if Path(annotation_path).exists():
-        warn_deprecated("open_annotation", "Annotation.load")
-        return Annotation.load(annotation_path)
-    else:
-        assert isinstance(
-            annotation_path, str
-        ), f"Called open_annotation with a path-like, but {annotation_path} does not exist."
-        warn_deprecated("open_annotation", "Annotation.download")
-        return Annotation.download(annotation_path)

@@ -1,27 +1,15 @@
 import warnings
 from pathlib import Path
-from types import TracebackType
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    Optional,
-    Tuple,
-    Type,
-    Union,
-)
+from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, Optional, Tuple, Union
 
 import cluster_tools
 import numpy as np
-import wkw
 from cluster_tools.schedulers.cluster_executor import ClusterExecutor
 
 from webknossos.geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
-from webknossos.utils import get_rich_progress, wait_and_ensure_success, warn_deprecated
+from webknossos.utils import get_rich_progress, wait_and_ensure_success
 
-from ._array import ArrayInfo, BaseArray, WKWArray
+from ._array import ArrayInfo, BaseArray
 
 if TYPE_CHECKING:
     from ._utils.buffered_slice_reader import BufferedSliceReader
@@ -68,15 +56,6 @@ class View:
         return self._array_info
 
     @property
-    def header(self) -> wkw.Header:
-        """⚠️ Deprecated, use `info` instead."""
-        warn_deprecated("header", "info")
-        assert isinstance(
-            self._array, WKWArray
-        ), "`header` only works with WKW datasets."
-        return self._array._wkw_dataset.header
-
-    @property
     def bounding_box(self) -> BoundingBox:
         assert self._bounding_box is not None
         return self._bounding_box
@@ -88,28 +67,6 @@ class View:
     @property
     def read_only(self) -> bool:
         return self._read_only
-
-    @property
-    def global_offset(self) -> Vec3Int:
-        """⚠️ Deprecated, use `view.bounding_box.in_mag(view.mag).topleft` instead."""
-        warnings.warn(
-            "[DEPRECATION] view.global_offset is deprecated. "
-            + "Since this is a View, please use "
-            + "view.bounding_box.in_mag(view.mag).topleft instead.",
-            DeprecationWarning,
-        )
-        return self.bounding_box.in_mag(self._mag).topleft
-
-    @property
-    def size(self) -> Vec3Int:
-        """⚠️ Deprecated, use `view.bounding_box.in_mag(view.mag).size` instead."""
-        warnings.warn(
-            "[DEPRECATION] view.size is deprecated. "
-            + "Since this is a View, please use "
-            + "view.bounding_box.in_mag(view.mag).size instead.",
-            DeprecationWarning,
-        )
-        return self.bounding_box.in_mag(self._mag).size
 
     def _get_mag1_bbox(
         self,
@@ -176,7 +133,6 @@ class View:
     def write(
         self,
         data: np.ndarray,
-        offset: Optional[Vec3IntLike] = None,  # deprecated, relative, in current mag
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
@@ -193,24 +149,8 @@ class View:
         """
         assert not self.read_only, "Cannot write data to an read_only View"
 
-        if all(i is None for i in [offset, absolute_offset, relative_offset]):
+        if absolute_offset is None and relative_offset is None:
             relative_offset = Vec3Int.zeros()
-
-        if offset is not None:
-            if self._mag == Mag(1):
-                alternative = "Since this is a View in Mag(1), please use view.write(relative_offset=my_vec)"
-            else:
-                alternative = (
-                    "Since this is a View, please use the coordinates in Mag(1) instead, e.g. "
-                    + "view.write(relative_offset=my_vec * view.mag.to_vec3_int())"
-                )
-
-            warnings.warn(
-                "[DEPRECATION] Using view.write(offset=my_vec) is deprecated. "
-                + "Please use relative_offset or absolute_offset instead. "
-                + alternative,
-                DeprecationWarning,
-            )
 
         num_channels = self._array_info.num_channels
         if len(data.shape) == 3:
@@ -223,7 +163,6 @@ class View:
             ), f"The number of channels of the dataset ({num_channels}) does not match the number of channels of the passed data ({data.shape[0]})"
 
         mag1_bbox = self._get_mag1_bbox(
-            rel_current_mag_offset=offset,
             rel_mag1_offset=relative_offset,
             abs_mag1_offset=absolute_offset,
             current_mag_size=Vec3Int(data.shape[-3:]),
@@ -273,13 +212,10 @@ class View:
 
     def read(
         self,
-        offset: Optional[Vec3IntLike] = None,  # deprecated, relative, in current mag
-        size: Optional[
-            Vec3IntLike
-        ] = None,  # usually in mag1, in current mag if offset is given
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
+        size: Optional[Vec3IntLike] = None,
         relative_bounding_box: Optional[BoundingBox] = None,  # in mag1
         absolute_bounding_box: Optional[BoundingBox] = None,  # in mag1
     ) -> np.ndarray:
@@ -317,49 +253,25 @@ class View:
         current_mag_size: Optional[Vec3IntLike]
         mag1_size: Optional[Vec3IntLike]
         if absolute_bounding_box is None and relative_bounding_box is None:
-            if offset is None:
-                if size is None:
-                    assert (
-                        relative_offset is None and absolute_offset is None
-                    ), "You must supply size, when reading with an offset."
-                    current_mag_size = None
-                    mag1_size = self.bounding_box.size
-                else:
-                    if relative_offset is None and absolute_offset is None:
-                        if type(self) == View:
-                            offset_param = "relative_offset"
-                        else:
-                            offset_param = "absolute_offset"
-                        warnings.warn(
-                            "[DEPRECATION] Using view.read(size=my_vec) only with a size is deprecated. "
-                            + f"Please use view.read({offset_param}=(0, 0, 0), size=size_vec * view.mag.to_vec3_int()) instead.",
-                            DeprecationWarning,
-                        )
-                        current_mag_size = size
-                        mag1_size = None
-                    else:
-                        current_mag_size = None
-                        mag1_size = size
+            if size is None:
+                assert (
+                    relative_offset is None and absolute_offset is None
+                ), "You must supply size, when reading with an offset."
+                current_mag_size = None
+                mag1_size = self.bounding_box.size
             else:
-                view_class = type(self).__name__
-                if type(self) == View:
-                    offset_param = "relative_offset"
-                else:
-                    offset_param = "absolute_offset"
-                if self._mag == Mag(1):
-                    alternative = f"Since this is a {view_class} in Mag(1), please use view.read({offset_param}=my_vec, size=size_vec)"
-                else:
-                    alternative = (
-                        f"Since this is a {view_class}, please use the coordinates in Mag(1) instead, e.g. "
-                        + f"view.read({offset_param}=my_vec * view.mag.to_vec3_int(),  size=size_vec * view.mag.to_vec3_int())"
+                if relative_offset is None and absolute_offset is None:
+                    if type(self) == View:
+                        offset_param = "relative_offset"
+                    else:
+                        offset_param = "absolute_offset"
+                    raise RuntimeError(
+                        "[DEPRECATION] Using view.read(size=my_vec) only with a size is deprecated. "
+                        + f"Please use view.read({offset_param}=(0, 0, 0), size=size_vec * view.mag.to_vec3_int()) instead.",
                     )
-
-                warnings.warn(
-                    "[DEPRECATION] Using view.read(offset=my_vec) is deprecated. "
-                    + "Please use relative_offset or absolute_offset instead. "
-                    + alternative,
-                    DeprecationWarning,
-                )
+                else:
+                    current_mag_size = None
+                    mag1_size = size
 
                 if size is None:
                     current_mag_size = None
@@ -369,7 +281,7 @@ class View:
                     current_mag_size = size
                     mag1_size = None
 
-            if all(i is None for i in [offset, absolute_offset, relative_offset]):
+            if absolute_offset is None and relative_offset is None:
                 relative_offset = Vec3Int.zeros()
         else:
             assert (
@@ -380,7 +292,6 @@ class View:
             mag1_size = None
 
         mag1_bbox = self._get_mag1_bbox(
-            rel_current_mag_offset=offset,
             rel_mag1_offset=relative_offset,
             abs_mag1_offset=absolute_offset,
             current_mag_size=current_mag_size,
@@ -398,37 +309,6 @@ class View:
 
         return self._read_without_checks(mag1_bbox.in_mag(self._mag))
 
-    def read_bbox(self, bounding_box: Optional[BoundingBox] = None) -> np.ndarray:
-        """
-        ⚠️ Deprecated. Please use `read()` with `relative_bounding_box` or `absolute_bounding_box` in Mag(1) instead.
-        The user can specify the `bounding_box` in the current mag of the requested data.
-        See `read()` for more details.
-        """
-
-        view_class = type(self).__name__
-        if type(self) == View:
-            offset_param = "relative_bounding_box"
-        else:
-            offset_param = "absolute_bounding_box"
-        if self._mag == Mag(1):
-            alternative = f"Since this is a {view_class} in Mag(1), please use view.read({offset_param}=bbox)"
-        else:
-            alternative = (
-                f"Since this is a {view_class}, please use the bbox in Mag(1) instead, e.g. "
-                + f"view.read({offset_param}=bbox.from_mag_to_mag1(view.mag))"
-            )
-
-        warnings.warn(
-            "[DEPRECATION] read_bbox() (with a bbox in the current mag) is deprecated. "
-            + "Please use read() with relative_bounding_box or absolute_bounding_box in Mag(1) instead. "
-            + alternative,
-            DeprecationWarning,
-        )
-        if bounding_box is None:
-            return self.read()
-        else:
-            return self.read(bounding_box.topleft, bounding_box.size)
-
     def _read_without_checks(
         self,
         current_mag_bbox: BoundingBox,
@@ -440,11 +320,10 @@ class View:
 
     def get_view(
         self,
-        offset: Optional[Vec3IntLike] = None,
-        size: Optional[Vec3IntLike] = None,
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
+        size: Optional[Vec3IntLike] = None,
         read_only: Optional[bool] = None,
     ) -> "View":
         """
@@ -485,49 +364,25 @@ class View:
         current_mag_size: Optional[Vec3IntLike]
         mag1_size: Optional[Vec3IntLike]
 
-        if offset is None:
-            if size is None:
-                assert (
-                    relative_offset is None and absolute_offset is None
-                ), "You must supply a size, when using get_view with an offset."
-                current_mag_size = None
-                mag1_size = self.bounding_box.size
-            else:
-                if relative_offset is None and absolute_offset is None:
-                    if type(self) == View:
-                        offset_param = "relative_offset"
-                    else:
-                        offset_param = "absolute_offset"
-                    warnings.warn(
-                        "[DEPRECATION] Using view.get_view(size=my_vec) only with a size is deprecated. "
-                        + f"Please use view.get_view({offset_param}=(0, 0, 0), size=size_vec * view.mag.to_vec3_int()) instead.",
-                        DeprecationWarning,
-                    )
-                    current_mag_size = size
-                    mag1_size = None
-                else:
-                    current_mag_size = None
-                    mag1_size = size
+        if size is None:
+            assert (
+                relative_offset is None and absolute_offset is None
+            ), "You must supply a size, when using get_view with an offset."
+            current_mag_size = None
+            mag1_size = self.bounding_box.size
         else:
-            view_class = type(self).__name__
-            if type(self) == View:
-                offset_param = "relative_offset"
-            else:
-                offset_param = "absolute_offset"
-            if self._mag == Mag(1):
-                alternative = f"Since this is a {view_class} in Mag(1), please use view.get_view({offset_param}=my_vec, size=size_vec)"
-            else:
-                alternative = (
-                    f"Since this is a {view_class}, please use the coordinates in Mag(1) instead, e.g. "
-                    + f"view.get_view({offset_param}=my_vec * view.mag.to_vec3_int(),  size=size_vec * view.mag.to_vec3_int())"
+            if relative_offset is None and absolute_offset is None:
+                if type(self) == View:
+                    offset_param = "relative_offset"
+                else:
+                    offset_param = "absolute_offset"
+                raise RuntimeError(
+                    "[DEPRECATION] Using view.get_view(size=my_vec) only with a size is deprecated. "
+                    + f"Please use view.get_view({offset_param}=(0, 0, 0), size=size_vec * view.mag.to_vec3_int()) instead.",
                 )
-
-            warnings.warn(
-                "[DEPRECATION] Using view.get_view(offset=my_vec) is deprecated. "
-                + "Please use relative_offset or absolute_offset instead. "
-                + alternative,
-                DeprecationWarning,
-            )
+            else:
+                current_mag_size = None
+                mag1_size = size
 
             if size is None:
                 current_mag_size = None
@@ -537,11 +392,10 @@ class View:
                 current_mag_size = size
                 mag1_size = None
 
-        if offset is None and relative_offset is None and absolute_offset is None:
+        if relative_offset is None and absolute_offset is None:
             relative_offset = Vec3Int.zeros()
 
         mag1_bbox = self._get_mag1_bbox(
-            rel_current_mag_offset=offset,
             rel_mag1_offset=relative_offset,
             abs_mag1_offset=absolute_offset,
             current_mag_size=current_mag_size,
@@ -587,7 +441,6 @@ class View:
 
     def get_buffered_slice_writer(
         self,
-        offset: Optional[Vec3IntLike] = None,
         buffer_size: int = 32,
         dimension: int = 2,  # z
         *,
@@ -629,7 +482,6 @@ class View:
 
         return BufferedSliceWriter(
             view=self,
-            offset=offset,
             buffer_size=buffer_size,
             dimension=dimension,
             relative_offset=relative_offset,
@@ -638,8 +490,6 @@ class View:
 
     def get_buffered_slice_reader(
         self,
-        offset: Optional[Vec3IntLike] = None,
-        size: Optional[Vec3IntLike] = None,
         buffer_size: int = 32,
         dimension: int = 2,  # z
         *,
@@ -675,8 +525,6 @@ class View:
 
         return BufferedSliceReader(
             view=self,
-            offset=offset,
-            size=size,
             buffer_size=buffer_size,
             dimension=dimension,
             relative_bounding_box=relative_bounding_box,
@@ -869,21 +717,6 @@ class View:
         Returns the dtype per channel of the data. For example `uint8`.
         """
         return self.info.voxel_type
-
-    def __enter__(self) -> "View":
-        warnings.warn(
-            "[DEPRECATION] Entering a View to open it is deprecated. The internal dataset will be opened automatically.",
-            DeprecationWarning,
-        )
-        return self
-
-    def __exit__(
-        self,
-        _type: Optional[Type[BaseException]],
-        _value: Optional[BaseException],
-        _tb: Optional[TracebackType],
-    ) -> None:
-        pass
 
     def __repr__(self) -> str:
         return repr(f"View({self._path}, bounding_box={self.bounding_box})")
