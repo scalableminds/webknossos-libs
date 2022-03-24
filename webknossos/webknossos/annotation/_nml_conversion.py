@@ -62,7 +62,7 @@ def nml_to_skeleton(nml: wknml.Nml) -> "Skeleton":
         i == 0 for i in nml.parameters.offset
     ):
         warnings.warn(
-            f"The offset parameter not supported. The offset of {nml.parameters.offset} is ignored and will be omitted."
+            f"The offset parameter is not supported. The offset of {nml.parameters.offset} is ignored and will be omitted."
         )
 
     return skeleton
