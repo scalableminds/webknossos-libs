@@ -13,6 +13,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.13...HEAD)
 
 ### Breaking Changes
+- `Dataset.download`: The argument `dataset_name` was renamed to `dataset_name_or_url`. [#660](https://github.com/scalableminds/webknossos-libs/pull/660)
 
 ### Added
 - `Dataset.download` now also accepts a URL, as well as a `sharing_token`, which can also be part of the URL. [#660](https://github.com/scalableminds/webknossos-libs/pull/660)
