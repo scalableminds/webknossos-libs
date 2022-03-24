@@ -10,17 +10,25 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.13...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.14...HEAD)
+
+### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [0.9.14](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.14) - 2022-03-24
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.13...v0.9.14)
 
 ### Breaking Changes
 - `Dataset.download`: The argument `dataset_name` was renamed to `dataset_name_or_url`. [#660](https://github.com/scalableminds/webknossos-libs/pull/660)
 
 ### Added
 - `Dataset.download` now also accepts a URL, as well as a `sharing_token`, which can also be part of the URL. [#660](https://github.com/scalableminds/webknossos-libs/pull/660)
-
-### Changed
-
-### Fixed
 
 
 ## [0.9.13](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.13) - 2022-03-24
