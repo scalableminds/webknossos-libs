@@ -238,6 +238,8 @@ class Dataset:
         """Downloads a dataset and returns the Dataset instance.
 
         The `dataset_name` and `organization_id` specify which dataset to download.
+        You can find your `organization_id` [here](https://webknossos.org/auth/token).
+        It can be omitted if you are using a dataset from your own organization and you supplied a token.
         The `bbox`, `layers`, and `mags` parameters specify which parts of the dataset to download.
         If nothing is specified the whole image, all layers, and all mags are downloaded respectively.
 
@@ -563,7 +565,8 @@ class Dataset:
         Fails with a RuntimeError if there are multiple color layers or none.
         """
         warnings.warn(
-            "[DEPRECATION] get_color_layer() fails if no or more than one color layer exists. Prefer get_color_layers()."
+            "[DEPRECATION] get_color_layer() fails if no or more than one color layer exists. Prefer get_color_layers().",
+            DeprecationWarning,
         )
         return self._get_layer_by_category(COLOR_CATEGORY)
 
