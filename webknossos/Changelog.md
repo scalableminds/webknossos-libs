@@ -10,19 +10,30 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.12...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.13...HEAD)
 
 ### Breaking Changes
-- Consistently rename `organization_name` parameters to `organization_id` (except in deprecated `webknossos.client.download_dataset`). [#639](https://github.com/scalableminds/webknossos-libs/pull/639)
 
 ### Added
 - `Dataset.download` now also accepts a URL, as well as a `sharing_token`, which can also be part of the URL. [#660](https://github.com/scalableminds/webknossos-libs/pull/660)
+
+### Changed
+
+### Fixed
+
+
+## [0.9.13](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.13) - 2022-03-24
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.12...v0.9.13)
+
+### Breaking Changes
+- Consistently rename `organization_name` parameters to `organization_id` (except in deprecated `webknossos.client.download_dataset`). [#639](https://github.com/scalableminds/webknossos-libs/pull/639)
 
 ### Changed
 - `MagView.compress` now skips in-place compression of already compressed mags. [#667](https://github.com/scalableminds/webknossos-libs/pull/667)
 
 ### Fixed
 - Fixed compression of downsampled mags for layers with arbitrary and potentially mag-unaligned bounding boxes. [#667](https://github.com/scalableminds/webknossos-libs/pull/667)
+
 
 
 ## [0.9.12](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.12) - 2022-03-18
