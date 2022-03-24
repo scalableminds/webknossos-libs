@@ -242,6 +242,7 @@ class Dataset:
           If a URL is used, `organization_id`, `webknossos_url` and `sharing_token` must not be set.
         * `organization_id` may be supplied if a dataset name was used in the previous argument,
           it defaults to your current organization from the `webknossos_context`.
+          You can find your `organization_id` [here](https://webknossos.org/auth/token).
         * `sharing_token` may be supplied if a dataset name was used and can specify a sharing token.
         * `webknossos_url` may be supplied if a dataset name was used,
           and allows to specifiy in which webknossos instance to search for the dataset.
