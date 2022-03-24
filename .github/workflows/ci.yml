@@ -167,7 +167,6 @@ jobs:
     needs: [changes]
     if: |
       ${{ needs.changes.outputs.cluster_tools == 'true' }} ||
-      ${{ needs.changes.outputs.webknossos == 'true' }} ||
       ${{ needs.changes.outputs.wkcuber == 'true' }}
     runs-on: ubuntu-latest
     strategy:
@@ -221,7 +220,6 @@ jobs:
     needs: [changes]
     if: |
       ${{ needs.changes.outputs.cluster_tools == 'true' }} ||
-      ${{ needs.changes.outputs.webknossos == 'true' }} ||
       ${{ needs.changes.outputs.wkcuber == 'true' }}
     strategy:
       max-parallel: 4
@@ -262,7 +260,6 @@ jobs:
     needs: [changes]
     if: |
       ${{ needs.changes.outputs.cluster_tools == 'true' }} ||
-      ${{ needs.changes.outputs.webknossos == 'true' }} ||
       ${{ needs.changes.outputs.wkcuber == 'true' }}
     strategy:
       max-parallel: 4
