@@ -24,6 +24,7 @@ _DOWNLOAD_CHUNK_SIZE = Vec3Int(512, 512, 512)
 def download_dataset(
     dataset_name: str,
     organization_id: Optional[str] = None,
+    sharing_token: Optional[str] = None,
     bbox: Optional[BoundingBox] = None,
     layers: Optional[List[str]] = None,
     mags: Optional[List[Mag]] = None,
@@ -36,9 +37,14 @@ def download_dataset(
     if organization_id is None:
         organization_id = context.organization_id
 
+    if sharing_token is None:
+        dataset_name_with_sharing_token = dataset_name
+    else:
+        dataset_name_with_sharing_token = f"{dataset_name}?sharingToken={sharing_token}"
+
     dataset_info_response = dataset_info.sync_detailed(
         organization_name=organization_id,
-        data_set_name=dataset_name,
+        data_set_name=dataset_name_with_sharing_token,
         client=client,
     )
     assert dataset_info_response.status_code == 200, dataset_info_response
@@ -46,7 +52,7 @@ def download_dataset(
     assert parsed is not None
 
     datastore_client = context.get_generated_datastore_client(parsed.data_store.url)
-    optional_datastore_token = context.datastore_token
+    optional_datastore_token = sharing_token or context.datastore_token
 
     actual_path = Path(dataset_name) if path is None else Path(path)
     if actual_path.exists():
