@@ -769,21 +769,17 @@ class Layer:
         if only_setup_mag:
             return
 
-        bb_mag1 = self.bounding_box
-
-        aligned_source_bb = bb_mag1.align_with_mag(target_mag, ceil=True)
-        aligned_target_bb = bb_mag1.align_with_mag(target_mag, ceil=True)
+        bb_mag1 = self.bounding_box.align_with_mag(target_mag, ceil=True)
 
         # Get target view
         target_view = target_mag_view.get_view(
-            absolute_offset=aligned_target_bb.topleft
-            * target_mag_view.mag.to_vec3_int(),
-            size=aligned_target_bb.size * target_mag_view.mag.to_vec3_int(),
+            absolute_offset=bb_mag1.topleft,
+            size=bb_mag1.size,
         )
 
         source_view = prev_mag_view.get_view(
-            absolute_offset=aligned_source_bb.topleft * prev_mag_view.mag.to_vec3_int(),
-            size=aligned_source_bb.size * prev_mag_view.mag.to_vec3_int(),
+            absolute_offset=bb_mag1.topleft,
+            size=bb_mag1.size,
             read_only=True,
         )
 
