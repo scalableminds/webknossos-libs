@@ -238,19 +238,7 @@ jobs:
         pip install poetry
         poetry install
 
-<<<<<<< HEAD
-    - name: Decompress test data
-      shell: bash
-      run: tar -xzvf testdata/WT1_wkw.tar.gz
-
-    - name: Python tests
-      shell: bash
-      run: poetry run pytest -vv tests
-
-    - name: CLI tests
-=======
     - name: Run tests
->>>>>>> origin/master
       continue-on-error: true
       shell: bash
       run: poetry run "C:\Program Files\Git\bin\bash.EXE" --noprofile --norc ./test.sh
@@ -282,19 +270,8 @@ jobs:
         pip install poetry
         poetry install
 
-<<<<<<< HEAD
-    - name: Decompress test data
-      run: tar -xzvf testdata/WT1_wkw.tar.gz
-
-    - name: Python tests
-      run: poetry run pytest -vv tests
-
-    - name: CLI tests
-      run: poetry run tests/scripts/all_tests.sh
-=======
     - name: Run tests
       run: ./test.sh
->>>>>>> origin/master
 
   wkcuber_docker:
     needs: [cluster_tools, webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac]
