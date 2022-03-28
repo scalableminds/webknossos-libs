@@ -1,11 +1,11 @@
 import logging
 import warnings
 from argparse import Namespace
+from pathlib import Path
 from typing import TYPE_CHECKING, Iterator, Optional, Tuple, Union
 from uuid import uuid4
 
 import numpy as np
-from upath import UPath as Path
 
 from ..geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 from ..utils import (

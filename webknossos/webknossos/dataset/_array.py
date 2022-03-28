@@ -5,13 +5,14 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import Enum
 from os.path import relpath
-from typing import Any, Dict, Iterator, Optional, Type
+from pathlib import Path
+from typing import Any, Dict, Iterator, Optional, Type, cast
 
 import numcodecs
 import numpy as np
 import wkw
 import zarr
-from upath import UPath as Path
+from upath import UPath
 from zarr.storage import FSStore
 
 from ..geometry import BoundingBox, Vec3Int, Vec3IntLike
@@ -24,6 +25,7 @@ def _is_power_of_two(num: int) -> bool:
 def _fsstore_from_path(path: Path, mode: str = "a") -> FSStore:
     storage_options = {}
     if hasattr(path, "_kwargs"):
+        path = cast(UPath, path)
         storage_options = path._kwargs.copy()
         del storage_options["_url"]
 

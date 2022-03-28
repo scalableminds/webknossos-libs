@@ -5,10 +5,10 @@ import warnings
 from argparse import Namespace
 from os import PathLike
 from os.path import relpath
+from pathlib import Path
 from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 
 import numpy as np
-from upath import UPath as Path
 
 from webknossos.geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 
@@ -486,6 +486,7 @@ class Layer:
         The foreign mag is (shallow) copied and the existing mag is added to the datasource-properties.json.
         If extend_layer_bounding_box is true, the self.bounding_box will be extended
         by the bounding box of the layer the foreign mag belongs to.
+        Symlinked mags can only be added to layers on local file systems.
         """
 
         if isinstance(foreign_mag_view_or_path, MagView):
@@ -547,6 +548,7 @@ class Layer:
         Note: If the other dataset modifies its bounding box afterwards, the change does not affect this properties
         (or vice versa).
         If make_relative is True, the symlink is made relative to the current dataset path.
+        Symlinked mags can only be added to layers on local file systems.
         """
         return self._add_foreign_mag(
             foreign_mag_view_or_path,

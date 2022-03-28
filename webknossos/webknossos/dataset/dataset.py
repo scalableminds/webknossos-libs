@@ -5,6 +5,7 @@ from argparse import Namespace
 from contextlib import nullcontext
 from os import PathLike
 from os.path import relpath
+from pathlib import Path
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -21,7 +22,6 @@ from typing import (
 import attr
 import numpy as np
 from boltons.typeutils import make_sentinel
-from upath import UPath as Path
 
 from ..geometry.vec3_int import Vec3IntLike
 from ._array import ArrayException, ArrayInfo, BaseArray, DataFormat

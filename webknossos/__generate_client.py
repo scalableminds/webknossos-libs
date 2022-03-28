@@ -2,6 +2,7 @@ import calendar
 import json
 import os
 from datetime import datetime
+from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import Any, Dict, Iterable, Tuple
 
@@ -13,7 +14,6 @@ from openapi_python_client import (
     Project,
     _get_project_for_url_or_path,
 )
-from upath import UPath as Path
 
 WK_URL = os.environ["WK_URL"]
 assert WK_URL == "http://localhost:9000", (

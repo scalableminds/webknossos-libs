@@ -2,10 +2,9 @@ from __future__ import division
 
 from collections import namedtuple
 from functools import partial
+from pathlib import Path
 from threading import Lock
 from typing import Callable, List, Optional
-
-from upath import UPath as Path
 
 from .util import CallbackDispatcher
 

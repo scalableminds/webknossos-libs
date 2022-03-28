@@ -4,12 +4,12 @@ import os
 import pickle
 import warnings
 from os.path import join
+from pathlib import Path
 from shutil import copytree, rmtree
 from typing import Generator, Tuple, cast
 
 import numpy as np
 import pytest
-from upath import UPath as Path
 
 from webknossos.dataset import (
     COLOR_CATEGORY,

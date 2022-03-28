@@ -1,7 +1,7 @@
+from pathlib import Path
 from typing import Any, Callable, Dict, List, Sequence
 
 import attr
-from upath import UPath as Path
 
 
 class CallbackDispatcher:

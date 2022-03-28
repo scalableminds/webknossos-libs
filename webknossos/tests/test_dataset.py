@@ -4,11 +4,12 @@ import multiprocessing
 import os
 import pickle
 import warnings
+from pathlib import Path
 from typing import Optional, Tuple, cast
 
 import numpy as np
 import pytest
-from upath import UPath as Path
+from upath import UPath
 
 from webknossos.dataset import (
     COLOR_CATEGORY,
@@ -37,7 +38,7 @@ from webknossos.utils import (
 
 from .constants import TESTDATA_DIR, TESTOUTPUT_DIR
 
-REMOTE_TESTOUTPUT_DIR = Path(
+REMOTE_TESTOUTPUT_DIR = UPath(
     "s3://testoutput",
     key=os.environ["MINIO_ACCESS_KEY"],
     secret=os.environ["MINIO_SECRET_KEY"],

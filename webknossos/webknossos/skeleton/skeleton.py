@@ -1,9 +1,9 @@
 import itertools
 from os import PathLike
+from pathlib import Path
 from typing import Iterator, Optional, Tuple, Union
 
 import attr
-from upath import UPath as Path
 
 from webknossos.utils import warn_deprecated
 

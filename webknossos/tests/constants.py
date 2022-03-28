@@ -1,4 +1,4 @@
-from upath import UPath as Path
+from pathlib import Path
 
 TESTDATA_DIR = Path("testdata")
 TESTOUTPUT_DIR = Path("testoutput")

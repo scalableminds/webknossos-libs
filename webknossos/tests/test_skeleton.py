@@ -1,9 +1,9 @@
 import difflib
 from os import PathLike
+from pathlib import Path
 from typing import List, Optional
 
 import pytest
-from upath import UPath as Path
 
 import webknossos as wk
 

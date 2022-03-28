@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
+from pathlib import Path
 from typing import Tuple
 
-from upath import UPath as Path
 from wkcuber.utils import (  # pylint: disable=import-error
     add_distribution_flags,
     add_scale_flag,

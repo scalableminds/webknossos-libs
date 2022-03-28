@@ -2,10 +2,10 @@ import uuid
 from concurrent.futures import Future, ThreadPoolExecutor, as_completed
 from functools import partial
 from os import PathLike
+from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Sequence, Union
 
 import httpx
-from upath import UPath as Path
 
 from .chunk import resolve_chunk
 from .file import ResumableFile

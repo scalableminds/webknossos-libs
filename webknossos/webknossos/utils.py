@@ -140,8 +140,8 @@ def time_since_epoch_in_ms() -> int:
 
 
 def copy_directory_with_symlinks(
-    src_path: UPath,
-    dst_path: UPath,
+    src_path: Path,
+    dst_path: Path,
     ignore: Iterable[str] = tuple(),
     make_relative: bool = False,
 ) -> None:
@@ -213,25 +213,25 @@ def warn_deprecated(deprecated_item: str, alternative_item: str) -> None:
     )
 
 
-def make_upath(maybe_path: Union[str, PathLike, Path, UPath]) -> UPath:
+def make_upath(maybe_path: Union[str, PathLike, Path]) -> UPath:
     return maybe_path if isinstance(maybe_path, UPath) else UPath(maybe_path)
 
 
-def is_fs_path(path: Union[Path, UPath]) -> bool:
+def is_fs_path(path: Path) -> bool:
     # Distinguish between `pathlib.*Path` and `UPath` through a `UPath`-specific attribute
     return not hasattr(path, "_url")
 
 
-def is_symlink(path: Union[Path, UPath]) -> bool:
+def is_symlink(path: Path) -> bool:
     try:
         return path.is_symlink()
     except NotImplementedError:
-        # `UPath` raises `NotImplmentedError` for some methods, including `is_symlink`
+        # `Path` raises `NotImplmentedError` for some methods, including `is_symlink`
         return False
 
 
-def rmtree(path: UPath) -> None:
-    def _walk(path: UPath) -> Iterator[UPath]:
+def rmtree(path: Path) -> None:
+    def _walk(path: Path) -> Iterator[Path]:
         if path.exists():
             if path.is_dir() and not is_symlink(path):
                 for p in path.iterdir():
@@ -251,8 +251,8 @@ def rmtree(path: UPath) -> None:
             pass
 
 
-def copytree(in_path: UPath, out_path: UPath) -> None:
-    def _walk(path: UPath, base_path: UPath) -> Iterator[Tuple[UPath, UPath]]:
+def copytree(in_path: Path, out_path: Path) -> None:
+    def _walk(path: Path, base_path: Path) -> Iterator[Tuple[Path, Path]]:
         yield (path, path.relative_to(base_path))
         if path.is_dir():
             for p in path.iterdir():
