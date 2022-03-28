@@ -5,8 +5,8 @@ source local_wk_setup.sh
 
 export_vars
 
-export MINIO_SECRET_KEY="TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur"
-export MINIO_ACCESS_KEY="ANTN35UAENTS5UIAEATD"
+export MINIO_ROOT_USER="TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur"
+export MINIO_ROOT_PASSWORD="ANTN35UAENTS5UIAEATD"
 
 # Minio is an S3 clone and is used as local test server
 wget https://dl.min.io/server/minio/release/linux-amd64/minio -O ./minio
