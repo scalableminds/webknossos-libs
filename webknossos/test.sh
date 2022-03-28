@@ -9,7 +9,7 @@ export MINIO_ROOT_USER="TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur"
 export MINIO_ROOT_PASSWORD="ANTN35UAENTS5UIAEATD"
 
 # Minio is an S3 clone and is used as local test server
-wget https://dl.min.io/server/minio/release/linux-amd64/minio -O ./minio
+wget -q https://dl.min.io/server/minio/release/linux-amd64/minio -O ./minio
 chmod +x ./minio
 ./minio server /tmp/minio_data &
 MINIO_PID=$?
@@ -30,4 +30,4 @@ else
 fi
 poetry run python -m pytest -vv --disable-recording -m "not with_vcr"
 
-kill $MINIO_PID
+kill -2 $MINIO_PID
