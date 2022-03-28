@@ -153,21 +153,10 @@ jobs:
       run: |
         ./typecheck.sh
 
-    - name: Install minio
-      run: |
-        # Minio is an S3 clone and is used as local test server
-        wget https://dl.min.io/server/minio/release/linux-amd64/minio -O /usr/local/bin/minio
-        chmod +x /usr/local/bin/minio
-
     - name: Python tests
       env:
         WK_TOKEN: ${{ secrets.WK_TOKEN }}
-        MINIO_SECRET_KEY: TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur
-        MINIO_ACCESS_KEY: ANTN35UAENTS5UIAEATD
-      run: |
-        minio server /tmp/minio_data &
-        ./test.sh
-        killall minio
+      run: ./test.sh
 
     - name: Check if git is dirty
       run: |

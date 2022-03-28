@@ -783,12 +783,6 @@ class Dataset:
                     mag_view.for_zipped_chunks(
                         func_per_chunk=_copy_job,
                         target_view=target_mag.get_view(),
-                        source_chunk_size=(
-                            mag.to_vec3_int() * target_mag.info.shard_size
-                        ),
-                        target_chunk_size=(
-                            mag.to_vec3_int() * target_mag.info.shard_size
-                        ),
                         executor=executor,
                         progress_desc=f"Copying mag {mag.to_layer_name()} from layer {layer_name}",
                     )

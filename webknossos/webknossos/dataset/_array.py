@@ -1,6 +1,7 @@
 import re
 import warnings
 from abc import ABC, abstractmethod
+from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import Enum
 from os.path import relpath
@@ -13,10 +14,7 @@ import zarr
 from upath import UPath as Path
 from zarr.storage import FSStore
 
-# See https://zarr.readthedocs.io/en/stable/tutorial.html#configuring-blosc
-numcodecs.blosc.use_threads = False
-
-from webknossos.geometry import BoundingBox, Vec3Int, Vec3IntLike
+from ..geometry import BoundingBox, Vec3Int, Vec3IntLike
 
 
 def _is_power_of_two(num: int) -> bool:
@@ -30,6 +28,18 @@ def _fsstore_from_path(path: Path, mode: str = "a") -> FSStore:
         del storage_options["_url"]
 
     return FSStore(url=str(path), mode=mode, **storage_options)
+
+
+@contextmanager
+def _blosc_fix_threading() -> Iterator[None]:
+    old_value = numcodecs.blosc.use_threads
+
+    # See https://zarr.readthedocs.io/en/stable/tutorial.html#configuring-blosc
+    numcodecs.blosc.use_threads = False
+    try:
+        yield
+    finally:
+        numcodecs.blosc.use_threads = old_value
 
 
 class ArrayException(Exception):
@@ -314,12 +324,13 @@ class ZarrArray(BaseArray):
         offset = Vec3Int(offset)
         shape = Vec3Int(shape)
         zarray = self._zarray
-        data = zarray[
-            :,
-            offset.x : (offset.x + shape.x),
-            offset.y : (offset.y + shape.y),
-            offset.z : (offset.z + shape.z),
-        ]
+        with _blosc_fix_threading():
+            data = zarray[
+                :,
+                offset.x : (offset.x + shape.x),
+                offset.y : (offset.y + shape.y),
+                offset.z : (offset.z + shape.z),
+            ]
         if data.shape != shape:
             padded_data = np.zeros(
                 (self.info.num_channels,) + shape.to_tuple(), dtype=data.dtype
@@ -374,14 +385,15 @@ class ZarrArray(BaseArray):
             data = data.reshape((1,) + data.shape)
         assert data.ndim == 4
 
-        self.ensure_size(offset + Vec3Int(data.shape[1:4]), warn=True)
-        zarray = self._zarray
-        zarray[
-            :,
-            offset.x : (offset.x + data.shape[1]),
-            offset.y : (offset.y + data.shape[2]),
-            offset.z : (offset.z + data.shape[3]),
-        ] = data
+        with _blosc_fix_threading():
+            self.ensure_size(offset + Vec3Int(data.shape[1:4]), warn=True)
+            zarray = self._zarray
+            zarray[
+                :,
+                offset.x : (offset.x + data.shape[1]),
+                offset.y : (offset.y + data.shape[2]),
+                offset.z : (offset.z + data.shape[3]),
+            ] = data
 
     def list_bounding_boxes(self) -> Iterator[BoundingBox]:
         zarray = self._zarray

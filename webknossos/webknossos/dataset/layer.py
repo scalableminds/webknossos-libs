@@ -766,12 +766,8 @@ class Layer:
 
         bb_mag1 = self.bounding_box
 
-        aligned_source_bb = bb_mag1.align_with_mag(target_mag, ceil=True).in_mag(
-            from_mag
-        )
-        aligned_target_bb = bb_mag1.align_with_mag(target_mag, ceil=True).in_mag(
-            target_mag
-        )
+        aligned_source_bb = bb_mag1.align_with_mag(target_mag, ceil=True)
+        aligned_target_bb = bb_mag1.align_with_mag(target_mag, ceil=True)
 
         # Get target view
         target_view = target_mag_view.get_view(
