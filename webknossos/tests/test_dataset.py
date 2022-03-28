@@ -40,8 +40,8 @@ from .constants import TESTDATA_DIR, TESTOUTPUT_DIR
 
 REMOTE_TESTOUTPUT_DIR = UPath(
     "s3://testoutput",
-    key=os.environ["MINIO_ACCESS_KEY"],
-    secret=os.environ["MINIO_SECRET_KEY"],
+    key=os.environ["MINIO_ROOT_USER"],
+    secret=os.environ["MINIO_ROOT_PASSWORD"],
     client_kwargs={"endpoint_url": "http://localhost:9000"},
 )
 
