@@ -218,7 +218,10 @@ class Layer:
     def name(self, layer_name: str) -> None:
         """
         Renames the layer to `layer_name`. This changes the name of the directory on disk and updates the properties.
+        Only layers on local file systems can be renamed.
         """
+        if layer_name == self.name:
+            return
         assert (
             layer_name not in self.dataset.layers.keys()
         ), f"Failed to rename layer {self.name} to {layer_name}: The new name already exists."

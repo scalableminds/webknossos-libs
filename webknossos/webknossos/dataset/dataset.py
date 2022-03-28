@@ -336,6 +336,8 @@ class Dataset:
 
         Creates the folder `layer_name` in the directory of `self.path`.
 
+        WKW layers can only be added to datasets on local file systems.
+
         The return type is `webknossos.dataset.layer.Layer`.
 
         This function raises an `IndexError` if the specified `layer_name` already exists.
@@ -623,6 +625,7 @@ class Dataset:
         (or vice versa).
         If make_relative is True, the symlink is made relative to the current dataset path.
         If new_layer_name is None, the name of the foreign layer is used.
+        Symlinked layers can only be added to datasets on local file systems.
         """
 
         if isinstance(foreign_layer, Layer):
@@ -722,6 +725,7 @@ class Dataset:
         If not specified otherwise, the `scale`, `chunk_size`, `chunks_per_shard` and `compress` of the current dataset
         are also used for the new dataset. The method also accepts the parameters `block_len` and `file_size`,
         which were deprecated by `chunk_size` and `chunks_per_shard`.
+        WKW layers can only be copied to datasets on local file systems.
         """
 
         chunk_size, chunks_per_shard = _get_sharding_parameters(
@@ -801,6 +805,7 @@ class Dataset:
         In addition, link all other directories in all layer directories
         to make this method robust against additional files e.g. layer/mappings/agglomerate_view.hdf5.
         This method becomes useful when exposing a dataset to webknossos.
+        Only datasets on local filesystems can be shallow copied.
         """
         new_dataset = Dataset(
             new_dataset_path, scale=self.scale, name=name or self.name, exist_ok=False

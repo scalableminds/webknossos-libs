@@ -269,6 +269,8 @@ class MagView(View):
 
         The data gets compressed inplace, if target_path is None.
         Otherwise it is written to target_path/layer_name/mag.
+
+        Compressing mags on remote file systems requires a `target_path`.
         """
 
         from webknossos.dataset.dataset import Dataset
