@@ -1,0 +1,1555 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '0'
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.18.2
+    method: POST
+    uri: http://localhost:9000/api/userToken/generate
+  response:
+    content: '{"token":"xxxsecrettokenxxx"}'
+    headers:
+      content-length:
+      - '34'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: ''
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.18.2
+    method: GET
+    uri: http://localhost:9000/api/datastores
+  response:
+    content: '[{"name":"connect","url":"http://localhost:8000","isForeign":false,"isScratch":false,"isConnector":true,"allowsUpload":false},{"name":"localhost","url":"http://localhost:9000","isForeign":false,"isScratch":false,"isConnector":false,"allowsUpload":true}]'
+    headers:
+      content-length:
+      - '253'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: ''
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.18.2
+    method: GET
+    uri: http://localhost:9000/api/user
+  response:
+    content: '{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1460379469053,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true}'
+    headers:
+      content-length:
+      - '630'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: ''
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.18.2
+    method: GET
+    uri: http://localhost:9000/api/datasets/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/isValidNewName
+  response:
+    content: ''
+    headers:
+      content-length:
+      - '0'
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: '{"uploadId": "2000-01-01T00-00-00__0011", "organization": "Organization_X",
+      "name": "test_upload_download_roundtrip_2000-01-01_00-00-00", "totalFileCount":
+      13, "initialTeams": [], "layersToLink": []}'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '231'
+      content-type:
+      - application/json
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.18.2
+    method: POST
+    uri: http://localhost:9000/data/datasets/reserveUpload
+  response:
+    content: ''
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '0'
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: '--
+
+      Content-Disposition: form-data; name="resumableChunkSize"
+
+
+      104857600
+
+      --
+
+      Content-Disposition: form-data; name="resumableTotalSize"
+
+
+      2179219
+
+      --
+
+      Content-Disposition: form-data; name="resumableType"
+
+
+
+      --
+
+      Content-Disposition: form-data; name="resumableIdentifier"
+
+
+      2000-01-01T00-00-00__0011/segmentation/2-2-1/z3/y4/x2.wkw
+
+      --
+
+      Content-Disposition: form-data; name="resumableFilename"
+
+
+      x2.wkw
+
+      --
+
+      Content-Disposition: form-data; name="resumableRelativePath"
+
+
+      segmentation/2-2-1/z3/y4/x2.wkw
+
+      --
+
+      Content-Disposition: form-data; name="resumableTotalChunks"
+
+
+      1
+
+      --
+
+      Content-Disposition: form-data; name="resumableChunkNumber"
+
+
+      1
+
+      --
+
+      Content-Disposition: form-data; name="resumableCurrentChunkSize"
+
+
+      2179219
+
+      --
+
+      Content-Disposition: form-data; name="owningOrganization"
+
+
+      Organization_X
+
+      --
+
+      Content-Disposition: form-data; name="name"
+
+
+      test_upload_download_roundtrip_2000-01-01_00-00-00
+
+      --
+
+      Content-Disposition: form-data; name="totalFileCount"
+
+
+      13
+
+      --
+
+      Content-Disposition: form-data; name="file"; filename="upload"
+
+      Content-Type: application/octet-stream<omitted> --'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '2180797'
+      content-type:
+      - multipart/form-data; boundary=fffffff0000000
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.18.2
+    method: POST
+    uri: http://localhost:9000/data/datasets
+  response:
+    content: ''
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '0'
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: "--\nContent-Disposition: form-data; name=\"resumableChunkSize\"\n\n104857600\n--\nContent-Disposition:
+      form-data; name=\"resumableTotalSize\"\n\n16\n--\nContent-Disposition: form-data;
+      name=\"resumableType\"\n\n\n--\nContent-Disposition: form-data; name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/segmentation/2-2-1/header.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableFilename\"\n\nheader.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableRelativePath\"\n\nsegmentation/2-2-1/header.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
+      name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n16\n--\nContent-Disposition:
+      form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
+      form-data; name=\"name\"\n\ntest_upload_download_roundtrip_2000-01-01_00-00-00\n--\nContent-Disposition:
+      form-data; name=\"totalFileCount\"\n\n13\n--\nContent-Disposition: form-data;
+      name=\"file\"; filename=\"upload\"\nContent-Type: application/octet-stream\n\nWKW\x01E\x03\x03\x04\0\0\0\0\0\0\0\0\n----\n"
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '1584'
+      content-type:
+      - multipart/form-data; boundary=fffffff0000000
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.18.2
+    method: POST
+    uri: http://localhost:9000/data/datasets
+  response:
+    content: ''
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '0'
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: "--\nContent-Disposition: form-data; name=\"resumableChunkSize\"\n\n104857600\n--\nContent-Disposition:
+      form-data; name=\"resumableTotalSize\"\n\n16\n--\nContent-Disposition: form-data;
+      name=\"resumableType\"\n\n\n--\nContent-Disposition: form-data; name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/segmentation/4-4-2/header.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableFilename\"\n\nheader.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableRelativePath\"\n\nsegmentation/4-4-2/header.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
+      name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n16\n--\nContent-Disposition:
+      form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
+      form-data; name=\"name\"\n\ntest_upload_download_roundtrip_2000-01-01_00-00-00\n--\nContent-Disposition:
+      form-data; name=\"totalFileCount\"\n\n13\n--\nContent-Disposition: form-data;
+      name=\"file\"; filename=\"upload\"\nContent-Type: application/octet-stream\n\nWKW\x01E\x03\x03\x04\0\0\0\0\0\0\0\0\n----\n"
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '1584'
+      content-type:
+      - multipart/form-data; boundary=fffffff0000000
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.18.2
+    method: POST
+    uri: http://localhost:9000/data/datasets
+  response:
+    content: ''
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '0'
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: '--
+
+      Content-Disposition: form-data; name="resumableChunkSize"
+
+
+      104857600
+
+      --
+
+      Content-Disposition: form-data; name="resumableTotalSize"
+
+
+      2179159
+
+      --
+
+      Content-Disposition: form-data; name="resumableType"
+
+
+
+      --
+
+      Content-Disposition: form-data; name="resumableIdentifier"
+
+
+      2000-01-01T00-00-00__0011/segmentation/4-4-2/z1/y2/x1.wkw
+
+      --
+
+      Content-Disposition: form-data; name="resumableFilename"
+
+
+      x1.wkw
+
+      --
+
+      Content-Disposition: form-data; name="resumableRelativePath"
+
+
+      segmentation/4-4-2/z1/y2/x1.wkw
+
+      --
+
+      Content-Disposition: form-data; name="resumableTotalChunks"
+
+
+      1
+
+      --
+
+      Content-Disposition: form-data; name="resumableChunkNumber"
+
+
+      1
+
+      --
+
+      Content-Disposition: form-data; name="resumableCurrentChunkSize"
+
+
+      2179159
+
+      --
+
+      Content-Disposition: form-data; name="owningOrganization"
+
+
+      Organization_X
+
+      --
+
+      Content-Disposition: form-data; name="name"
+
+
+      test_upload_download_roundtrip_2000-01-01_00-00-00
+
+      --
+
+      Content-Disposition: form-data; name="totalFileCount"
+
+
+      13
+
+      --
+
+      Content-Disposition: form-data; name="file"; filename="upload"
+
+      Content-Type: application/octet-stream<omitted> --'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '2180737'
+      content-type:
+      - multipart/form-data; boundary=fffffff0000000
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.18.2
+    method: POST
+    uri: http://localhost:9000/data/datasets
+  response:
+    content: ''
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '0'
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: '--
+
+      Content-Disposition: form-data; name="resumableChunkSize"
+
+
+      104857600
+
+      --
+
+      Content-Disposition: form-data; name="resumableTotalSize"
+
+
+      2179295
+
+      --
+
+      Content-Disposition: form-data; name="resumableType"
+
+
+
+      --
+
+      Content-Disposition: form-data; name="resumableIdentifier"
+
+
+      2000-01-01T00-00-00__0011/segmentation/1/z3/y8/x5.wkw
+
+      --
+
+      Content-Disposition: form-data; name="resumableFilename"
+
+
+      x5.wkw
+
+      --
+
+      Content-Disposition: form-data; name="resumableRelativePath"
+
+
+      segmentation/1/z3/y8/x5.wkw
+
+      --
+
+      Content-Disposition: form-data; name="resumableTotalChunks"
+
+
+      1
+
+      --
+
+      Content-Disposition: form-data; name="resumableChunkNumber"
+
+
+      1
+
+      --
+
+      Content-Disposition: form-data; name="resumableCurrentChunkSize"
+
+
+      2179295
+
+      --
+
+      Content-Disposition: form-data; name="owningOrganization"
+
+
+      Organization_X
+
+      --
+
+      Content-Disposition: form-data; name="name"
+
+
+      test_upload_download_roundtrip_2000-01-01_00-00-00
+
+      --
+
+      Content-Disposition: form-data; name="totalFileCount"
+
+
+      13
+
+      --
+
+      Content-Disposition: form-data; name="file"; filename="upload"
+
+      Content-Type: application/octet-stream<omitted> --'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '2180865'
+      content-type:
+      - multipart/form-data; boundary=fffffff0000000
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.18.2
+    method: POST
+    uri: http://localhost:9000/data/datasets
+  response:
+    content: ''
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '0'
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: "--\nContent-Disposition: form-data; name=\"resumableChunkSize\"\n\n104857600\n--\nContent-Disposition:
+      form-data; name=\"resumableTotalSize\"\n\n16\n--\nContent-Disposition: form-data;
+      name=\"resumableType\"\n\n\n--\nContent-Disposition: form-data; name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/segmentation/1/header.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableFilename\"\n\nheader.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableRelativePath\"\n\nsegmentation/1/header.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
+      name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n16\n--\nContent-Disposition:
+      form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
+      form-data; name=\"name\"\n\ntest_upload_download_roundtrip_2000-01-01_00-00-00\n--\nContent-Disposition:
+      form-data; name=\"totalFileCount\"\n\n13\n--\nContent-Disposition: form-data;
+      name=\"file\"; filename=\"upload\"\nContent-Type: application/octet-stream\n\nWKW\x01E\x03\x03\x04\0\0\0\0\0\0\0\0\n----\n"
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '1576'
+      content-type:
+      - multipart/form-data; boundary=fffffff0000000
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.18.2
+    method: POST
+    uri: http://localhost:9000/data/datasets
+  response:
+    content: ''
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '0'
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: "--\nContent-Disposition: form-data; name=\"resumableChunkSize\"\n\n104857600\n--\nContent-Disposition:
+      form-data; name=\"resumableTotalSize\"\n\n2472\n--\nContent-Disposition: form-data;
+      name=\"resumableType\"\n\napplication/json\n--\nContent-Disposition: form-data;
+      name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/datasource-properties.json\n--\nContent-Disposition:
+      form-data; name=\"resumableFilename\"\n\ndatasource-properties.json\n--\nContent-Disposition:
+      form-data; name=\"resumableRelativePath\"\n\ndatasource-properties.json\n--\nContent-Disposition:
+      form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
+      name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n2472\n--\nContent-Disposition:
+      form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
+      form-data; name=\"name\"\n\ntest_upload_download_roundtrip_2000-01-01_00-00-00\n--\nContent-Disposition:
+      form-data; name=\"totalFileCount\"\n\n13\n--\nContent-Disposition: form-data;
+      name=\"file\"; filename=\"upload\"\nContent-Type: application/octet-stream\n\n{\n
+      \   \"id\": {\n        \"name\": \"l4_sample_dev\",\n        \"team\": \"\"\n
+      \   },\n    \"scale\": [\n        11.24,\n        11.24,\n        28.0\n    ],\n
+      \   \"dataLayers\": [\n        {\n            \"name\": \"color\",\n            \"category\":
+      \"color\",\n            \"boundingBox\": {\n                \"topLeft\": [\n
+      \                   2807,\n                    4352,\n                    1794\n
+      \               ],\n                \"width\": 10,\n                \"height\":
+      10,\n                \"depth\": 10\n            },\n            \"elementClass\":
+      \"uint8\",\n            \"dataFormat\": \"wkw\",\n            \"numChannels\":
+      1,\n            \"wkwResolutions\": [\n                {\n                    \"cubeLength\":
+      512,\n                    \"resolution\": [\n                        1,\n                        1,\n
+      \                       1\n                    ]\n                },\n                {\n
+      \                   \"cubeLength\": 512,\n                    \"resolution\":
+      [\n                        2,\n                        2,\n                        1\n
+      \                   ]\n                },\n                {\n                    \"cubeLength\":
+      512,\n                    \"resolution\": [\n                        4,\n                        4,\n
+      \                       2\n                    ]\n                }\n            ]\n
+      \       },\n        {\n            \"name\": \"segmentation\",\n            \"category\":
+      \"segmentation\",\n            \"boundingBox\": {\n                \"topLeft\":
+      [\n                    2807,\n                    4352,\n                    1794\n
+      \               ],\n                \"width\": 10,\n                \"height\":
+      10,\n                \"depth\": 10\n            },\n            \"elementClass\":
+      \"uint32\",\n            \"dataFormat\": \"wkw\",\n            \"numChannels\":
+      1,\n            \"largestSegmentId\": 5238529,\n            \"wkwResolutions\":
+      [\n                {\n                    \"cubeLength\": 512,\n                    \"resolution\":
+      [\n                        1,\n                        1,\n                        1\n
+      \                   ]\n                },\n                {\n                    \"cubeLength\":
+      512,\n                    \"resolution\": [\n                        2,\n                        2,\n
+      \                       1\n                    ]\n                },\n                {\n
+      \                   \"cubeLength\": 512,\n                    \"resolution\":
+      [\n                        4,\n                        4,\n                        2\n
+      \                   ]\n                }\n            ]\n        }\n    ]\n}\n----\n"
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '4070'
+      content-type:
+      - multipart/form-data; boundary=fffffff0000000
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.18.2
+    method: POST
+    uri: http://localhost:9000/data/datasets
+  response:
+    content: ''
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '0'
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: '--
+
+      Content-Disposition: form-data; name="resumableChunkSize"
+
+
+      104857600
+
+      --
+
+      Content-Disposition: form-data; name="resumableTotalSize"
+
+
+      602731
+
+      --
+
+      Content-Disposition: form-data; name="resumableType"
+
+
+
+      --
+
+      Content-Disposition: form-data; name="resumableIdentifier"
+
+
+      2000-01-01T00-00-00__0011/color/2-2-1/z3/y4/x2.wkw
+
+      --
+
+      Content-Disposition: form-data; name="resumableFilename"
+
+
+      x2.wkw
+
+      --
+
+      Content-Disposition: form-data; name="resumableRelativePath"
+
+
+      color/2-2-1/z3/y4/x2.wkw
+
+      --
+
+      Content-Disposition: form-data; name="resumableTotalChunks"
+
+
+      1
+
+      --
+
+      Content-Disposition: form-data; name="resumableChunkNumber"
+
+
+      1
+
+      --
+
+      Content-Disposition: form-data; name="resumableCurrentChunkSize"
+
+
+      602731
+
+      --
+
+      Content-Disposition: form-data; name="owningOrganization"
+
+
+      Organization_X
+
+      --
+
+      Content-Disposition: form-data; name="name"
+
+
+      test_upload_download_roundtrip_2000-01-01_00-00-00
+
+      --
+
+      Content-Disposition: form-data; name="totalFileCount"
+
+
+      13
+
+      --
+
+      Content-Disposition: form-data; name="file"; filename="upload"
+
+      Content-Type: application/octet-stream<omitted> --'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '604293'
+      content-type:
+      - multipart/form-data; boundary=fffffff0000000
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.18.2
+    method: POST
+    uri: http://localhost:9000/data/datasets
+  response:
+    content: ''
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '0'
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: "--\nContent-Disposition: form-data; name=\"resumableChunkSize\"\n\n104857600\n--\nContent-Disposition:
+      form-data; name=\"resumableTotalSize\"\n\n16\n--\nContent-Disposition: form-data;
+      name=\"resumableType\"\n\n\n--\nContent-Disposition: form-data; name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/color/2-2-1/header.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableFilename\"\n\nheader.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableRelativePath\"\n\ncolor/2-2-1/header.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
+      name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n16\n--\nContent-Disposition:
+      form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
+      form-data; name=\"name\"\n\ntest_upload_download_roundtrip_2000-01-01_00-00-00\n--\nContent-Disposition:
+      form-data; name=\"totalFileCount\"\n\n13\n--\nContent-Disposition: form-data;
+      name=\"file\"; filename=\"upload\"\nContent-Type: application/octet-stream\n\nWKW\x01E\x03\x01\x01\0\0\0\0\0\0\0\0\n----\n"
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '1570'
+      content-type:
+      - multipart/form-data; boundary=fffffff0000000
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.18.2
+    method: POST
+    uri: http://localhost:9000/data/datasets
+  response:
+    content: ''
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '0'
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: "--\nContent-Disposition: form-data; name=\"resumableChunkSize\"\n\n104857600\n--\nContent-Disposition:
+      form-data; name=\"resumableTotalSize\"\n\n16\n--\nContent-Disposition: form-data;
+      name=\"resumableType\"\n\n\n--\nContent-Disposition: form-data; name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/color/4-4-2/header.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableFilename\"\n\nheader.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableRelativePath\"\n\ncolor/4-4-2/header.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
+      name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n16\n--\nContent-Disposition:
+      form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
+      form-data; name=\"name\"\n\ntest_upload_download_roundtrip_2000-01-01_00-00-00\n--\nContent-Disposition:
+      form-data; name=\"totalFileCount\"\n\n13\n--\nContent-Disposition: form-data;
+      name=\"file\"; filename=\"upload\"\nContent-Type: application/octet-stream\n\nWKW\x01E\x03\x01\x01\0\0\0\0\0\0\0\0\n----\n"
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '1570'
+      content-type:
+      - multipart/form-data; boundary=fffffff0000000
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.18.2
+    method: POST
+    uri: http://localhost:9000/data/datasets
+  response:
+    content: ''
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '0'
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: '--
+
+      Content-Disposition: form-data; name="resumableChunkSize"
+
+
+      104857600
+
+      --
+
+      Content-Disposition: form-data; name="resumableTotalSize"
+
+
+      602286
+
+      --
+
+      Content-Disposition: form-data; name="resumableType"
+
+
+
+      --
+
+      Content-Disposition: form-data; name="resumableIdentifier"
+
+
+      2000-01-01T00-00-00__0011/color/4-4-2/z1/y2/x1.wkw
+
+      --
+
+      Content-Disposition: form-data; name="resumableFilename"
+
+
+      x1.wkw
+
+      --
+
+      Content-Disposition: form-data; name="resumableRelativePath"
+
+
+      color/4-4-2/z1/y2/x1.wkw
+
+      --
+
+      Content-Disposition: form-data; name="resumableTotalChunks"
+
+
+      1
+
+      --
+
+      Content-Disposition: form-data; name="resumableChunkNumber"
+
+
+      1
+
+      --
+
+      Content-Disposition: form-data; name="resumableCurrentChunkSize"
+
+
+      602286
+
+      --
+
+      Content-Disposition: form-data; name="owningOrganization"
+
+
+      Organization_X
+
+      --
+
+      Content-Disposition: form-data; name="name"
+
+
+      test_upload_download_roundtrip_2000-01-01_00-00-00
+
+      --
+
+      Content-Disposition: form-data; name="totalFileCount"
+
+
+      13
+
+      --
+
+      Content-Disposition: form-data; name="file"; filename="upload"
+
+      Content-Type: application/octet-stream<omitted> --'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '603848'
+      content-type:
+      - multipart/form-data; boundary=fffffff0000000
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.18.2
+    method: POST
+    uri: http://localhost:9000/data/datasets
+  response:
+    content: ''
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '0'
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: '--
+
+      Content-Disposition: form-data; name="resumableChunkSize"
+
+
+      104857600
+
+      --
+
+      Content-Disposition: form-data; name="resumableTotalSize"
+
+
+      603665
+
+      --
+
+      Content-Disposition: form-data; name="resumableType"
+
+
+
+      --
+
+      Content-Disposition: form-data; name="resumableIdentifier"
+
+
+      2000-01-01T00-00-00__0011/color/1/z3/y8/x5.wkw
+
+      --
+
+      Content-Disposition: form-data; name="resumableFilename"
+
+
+      x5.wkw
+
+      --
+
+      Content-Disposition: form-data; name="resumableRelativePath"
+
+
+      color/1/z3/y8/x5.wkw
+
+      --
+
+      Content-Disposition: form-data; name="resumableTotalChunks"
+
+
+      1
+
+      --
+
+      Content-Disposition: form-data; name="resumableChunkNumber"
+
+
+      1
+
+      --
+
+      Content-Disposition: form-data; name="resumableCurrentChunkSize"
+
+
+      603665
+
+      --
+
+      Content-Disposition: form-data; name="owningOrganization"
+
+
+      Organization_X
+
+      --
+
+      Content-Disposition: form-data; name="name"
+
+
+      test_upload_download_roundtrip_2000-01-01_00-00-00
+
+      --
+
+      Content-Disposition: form-data; name="totalFileCount"
+
+
+      13
+
+      --
+
+      Content-Disposition: form-data; name="file"; filename="upload"
+
+      Content-Type: application/octet-stream<omitted> --'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '605219'
+      content-type:
+      - multipart/form-data; boundary=fffffff0000000
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.18.2
+    method: POST
+    uri: http://localhost:9000/data/datasets
+  response:
+    content: ''
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '0'
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: "--\nContent-Disposition: form-data; name=\"resumableChunkSize\"\n\n104857600\n--\nContent-Disposition:
+      form-data; name=\"resumableTotalSize\"\n\n16\n--\nContent-Disposition: form-data;
+      name=\"resumableType\"\n\n\n--\nContent-Disposition: form-data; name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/color/1/header.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableFilename\"\n\nheader.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableRelativePath\"\n\ncolor/1/header.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
+      name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n16\n--\nContent-Disposition:
+      form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
+      form-data; name=\"name\"\n\ntest_upload_download_roundtrip_2000-01-01_00-00-00\n--\nContent-Disposition:
+      form-data; name=\"totalFileCount\"\n\n13\n--\nContent-Disposition: form-data;
+      name=\"file\"; filename=\"upload\"\nContent-Type: application/octet-stream\n\nWKW\x01E\x03\x01\x01\0\0\0\0\0\0\0\0\n----\n"
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '1562'
+      content-type:
+      - multipart/form-data; boundary=fffffff0000000
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.18.2
+    method: POST
+    uri: http://localhost:9000/data/datasets
+  response:
+    content: ''
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '0'
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: '{"uploadId": "2000-01-01T00-00-00__0011", "organization": "Organization_X",
+      "name": "test_upload_download_roundtrip_2000-01-01_00-00-00", "needsConversion":
+      false, "layersToLink": []}'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '215'
+      content-type:
+      - application/json
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.18.2
+    method: POST
+    uri: http://localhost:9000/data/datasets/finishUpload
+  response:
+    content: ''
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '0'
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: ''
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.18.2
+    method: GET
+    uri: http://localhost:9000/api/datasets/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00
+  response:
+    content: '{"name":"test_upload_download_roundtrip_2022-03-18_17-30-53","dataSource":{"id":{"name":"test_upload_download_roundtrip_2022-03-18_17-30-53","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8"},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.24,11.24,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isForeign":false,"isScratch":false,"isConnector":false,"allowsUpload":true},"owningOrganization":"Organization_X","allowedTeams":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1647624653804,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1647624653804,"details":null,"publication":null,"isUnreported":false,"isForeign":false,"jobsEnabled":false,"tags":[]}'
+    headers:
+      content-length:
+      - '1111'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: ''
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.18.2
+    method: GET
+    uri: http://localhost:9000/data/datasets/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/layers/segmentation/data?depth=10&halfByte=false&height=10&resolution=0&width=10&x=2807&y=4352&z=1794
+  response:
+    content: !!binary |
+      buZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu
+      5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7m
+      TwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZP
+      AG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8A
+      buZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu
+      5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7m
+      TwBu5k8AbuZPAG7mTwBu5k8AH9RPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AH9RP
+      AG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8A
+      buZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu
+      5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7m
+      TwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZP
+      AG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8A
+      buZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AH9RPAG7mTwBu5k8AbuZPAG7mTwBu
+      5k8AbuZPAG7mTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/U
+      TwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZP
+      AG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8A
+      buZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu
+      5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7m
+      TwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZP
+      AG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8A
+      H9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf
+      1E8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAHbSTwB20k8AdtJPAG7mTwBu5k8AbuZPAG7m
+      TwBu5k8AbuZPAG7mTwB20k8AdtJPAHbSTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZP
+      AHbSTwB20k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwB20k8AdtJPAG7mTwBu5k8A
+      buZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAHbSTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu
+      5k8AH9RPAB/UTwAf1E8AbuZPAG7mTwBu5k8AbuZPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/U
+      TwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RP
+      AB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8A
+      H9RPAG7mTwBu5k8AbuZPAG7mTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwBu5k8AbuZPAG7mTwBu
+      5k8AbuZPAHbSTwB20k8AdtJPAHbSTwB20k8AbuZPAG7mTwBu5k8AbuZPAG7mTwB20k8AdtJPAHbS
+      TwB20k8AdtJPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAHbSTwB20k8AdtJPAHbSTwBu5k8AbuZP
+      AG7mTwBu5k8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8A
+      H9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf
+      1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/U
+      TwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RP
+      AB/UTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8A
+      dtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAB/UTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB2
+      0k8AdtJPAHbSTwAf1E8AH9RPAB/UTwAf1E8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AH9RPAB/U
+      TwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RP
+      AB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8A
+      H9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf
+      1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/U
+      TwAf1E8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJP
+      AHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8A
+      dtJPAHbSTwB20k8AH9RPAB/UTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAB/UTwAf
+      1E8AH9RPAB/UTwAf1E8AH9RPAHbSTwB20k8AdtJPAHbSTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/U
+      TwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RP
+      AB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8A
+      H9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf
+      1E8AH9RPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbS
+      TwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AH9RPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJP
+      AHbSTwB20k8AdtJPAB/UTwAf1E8AH9RPAB/UTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwAf1E8A
+      H9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AdtJPAHbSTwB20k8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf
+      1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/U
+      TwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RP
+      AB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8A
+      H9RPAB/UTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AH9RPAHbSTwB2
+      0k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAB/UTwAf1E8AdtJPAHbSTwB20k8AdtJPAHbS
+      TwB20k8AdtJPAHbSTwAf1E8AH9RPAB/UTwAf1E8AH9RPAHbSTwB20k8AdtJPAHbSTwB20k8AH9RP
+      AB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAHbSTwB20k8AdtJPAB/UTwAf1E8AH9RPAB/UTwAf1E8A
+      H9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf
+      1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/U
+      TwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RP
+      AB/UTwAf1E8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8A
+      dtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwAf1E8AH9RPAHbSTwB20k8AdtJPAHbSTwB2
+      0k8AdtJPAHbSTwB20k8AH9RPAB/UTwAf1E8AH9RPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAB/U
+      TwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwB20k8AdtJPAHbSTwAf1E8AH9RPAB/UTwAf1E8AH9RP
+      AB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8A
+      H9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf
+      1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/U
+      TwAf1E8AH9RPAA==
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-expose-headers:
+      - MISSING-BUCKETS
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '4000'
+      content-type:
+      - application/octet-stream
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      missing-buckets:
+      - '[]'
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: ''
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.18.2
+    method: GET
+    uri: http://localhost:9000/data/datasets/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/layers/segmentation/data?depth=10&halfByte=false&height=5&resolution=1&width=6&x=2806&y=4352&z=1794
+  response:
+    content: !!binary |
+      buZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu
+      5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AH9RPAG7mTwBu5k8AbuZPAG7m
+      TwBL308AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZP
+      AG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AH9RPAB/UTwAf1E8A
+      H9RPAB/UTwAf1E8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu
+      5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwAf1E8AH9RPAB/U
+      TwAf1E8AH9RPAB/UTwAf1E8AbuZPAG7mTwBu5k8AbuZPAHbSTwB20k8AbuZPAG7mTwBu5k8AbuZP
+      AHbSTwB20k8AbuZPAG7mTwBu5k8AbuZPAB/UTwB20k8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8A
+      H9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AbuZPAG7mTwBu5k8AdtJPAHbSTwB20k8AbuZPAG7mTwBu
+      5k8AdtJPAHbSTwB20k8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/U
+      TwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AH9RP
+      AHbSTwB20k8AdtJPAHbSTwB20k8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8A
+      H9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AdtJPAHbSTwB20k8AdtJPAHbSTwB2
+      0k8AH9RPAHbSTwB20k8AdtJPAHbSTwB20k8AH9RPAB/UTwAf1E8AH9RPAHbSTwB20k8AH9RPAB/U
+      TwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AdtJPAHbSTwB20k8AdtJP
+      AHbSTwB20k8AH9RPAHbSTwB20k8AdtJPAHbSTwB20k8AH9RPAB/UTwAf1E8AH9RPAHbSTwB20k8A
+      H9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AdtJPAHbSTwB2
+      0k8AdtJPAHbSTwB20k8AH9RPAB/UTwB20k8AdtJPAHbSTwB20k8AH9RPAB/UTwAf1E8AH9RPAHbS
+      TwB20k8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AdtJP
+      AHbSTwB20k8AdtJPAHbSTwB20k8AH9RPAB/UTwB20k8AdtJPAHbSTwB20k8AH9RPAB/UTwAf1E8A
+      H9RPAHbSTwB20k8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf
+      1E8A
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-expose-headers:
+      - MISSING-BUCKETS
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '1200'
+      content-type:
+      - application/octet-stream
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      missing-buckets:
+      - '[]'
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: ''
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.18.2
+    method: GET
+    uri: http://localhost:9000/data/datasets/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/layers/segmentation/data?depth=5&halfByte=false&height=3&resolution=2&width=4&x=2804&y=4352&z=1794
+  response:
+    content: !!binary |
+      buZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwAf1E8AH9RPAB/UTwAf1E8AbuZPAG7mTwBu
+      5k8AdtJPAG7mTwBu5k8AbuZPAB/UTwAf1E8AH9RPAB/UTwAf1E8AbuZPAHbSTwB20k8AdtJPAB/U
+      TwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAHbSTwB20k8AdtJPAB/UTwAf1E8AH9RP
+      AHbSTwAf1E8AH9RPAB/UTwAf1E8AH9RPAHbSTwB20k8AdtJPAB/UTwAf1E8AH9RPAHbSTwAf1E8A
+      H9RPAB/UTwAf1E8A
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-expose-headers:
+      - MISSING-BUCKETS
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '240'
+      content-type:
+      - application/octet-stream
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      missing-buckets:
+      - '[]'
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+version: 1
