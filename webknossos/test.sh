@@ -30,4 +30,3 @@ else
 fi
 poetry run python -m pytest -vv --disable-recording -m "not with_vcr"
 
-kill -2 $MINIO_PID
