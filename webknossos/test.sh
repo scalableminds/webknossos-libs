@@ -12,6 +12,8 @@ export MINIO_ROOT_PASSWORD="ANTN35UAENTS5UIAEATD"
 docker run \
   -p 9000:9000 \
   -p 9001:9001 \
+  -e MINIO_ROOT_USER=$MINIO_ROOT_USER \
+  -e MINIO_ROOT_PASSWORD=$MINIO_ROOT_PASSWORD \
   --name minio \
   --rm \
   -d \

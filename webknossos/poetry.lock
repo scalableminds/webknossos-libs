@@ -1399,9 +1399,9 @@ test = ["aiohttp", "flake8", "gcsfs", "hadoop-test-cluster", "ipython", "jupyter
 
 [package.source]
 type = "git"
-url = "https://github.com/scalableminds/universal_pathlib.git"
-reference = "fix-pickle"
-resolved_reference = "2cfc277908e6332739efd346a6c4e39aa7744875"
+url = "https://github.com/fsspec/universal_pathlib.git"
+reference = "v0.0.13"
+resolved_reference = "df97e1ee5b71b5c4e6477bfd40ab299bf448b33d"
 
 [[package]]
 name = "urllib3"
@@ -1508,7 +1508,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7,>=3.7.1"
-content-hash = "3cc4f3966059aadef55c266ea5f8fe9f808851231f285b26e29f9c880c227a73"
+content-hash = "26877814569ff74443041ce9c5e60c300e4c1191e73be013b50a2e201d2f1df3"
 
 [metadata.files]
 aiobotocore = [
