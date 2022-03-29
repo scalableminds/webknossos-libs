@@ -12,7 +12,7 @@ export MINIO_ROOT_PASSWORD="ANTN35UAENTS5UIAEATD"
 docker run \
   -p 9000:9000 \
   -p 9001:9001 \
-  -n minio \
+  --name minio \
   --rm \
   minio/minio server /data --console-address ":9001"
 
