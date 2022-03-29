@@ -14,6 +14,7 @@ docker run \
   -p 9001:9001 \
   --name minio \
   --rm \
+  -d \
   minio/minio server /data --console-address ":9001"
 
 if [ $# -eq 1 ] && [ "$1" = "--refresh-snapshots" ]; then
