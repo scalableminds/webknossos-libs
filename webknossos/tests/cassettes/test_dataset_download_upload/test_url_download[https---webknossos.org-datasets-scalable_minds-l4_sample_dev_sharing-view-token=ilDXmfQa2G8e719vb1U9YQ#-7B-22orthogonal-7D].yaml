@@ -1,0 +1,216 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - webknossos.org
+      user-agent:
+      - python-httpx/0.18.2
+    method: GET
+    uri: https://webknossos.org/api/datasets/scalable_minds/l4_sample_dev_sharing?sharingToken=ilDXmfQa2G8e719vb1U9YQ
+  response:
+    content: '{"name":"l4_sample_dev_sharing","dataSource":{"id":{"name":"l4_sample_dev_sharing","team":"scalable_minds"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2679,4224,1719],"width":256,"height":256,"depth":150},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8"},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2679,4224,1719],"width":256,"height":256,"depth":150},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"webknossos.org","url":"https://data-humerus.webknossos.org","isForeign":false,"isScratch":false,"isConnector":false,"allowsUpload":true},"owningOrganization":"scalable_minds","allowedTeams":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1647612907522,"isEditable":false,"lastUsedByUser":1010101010101,"logoUrl":"https://static.webknossos.org/logos/scalableminds.svg","sortingKey":1647612907522,"details":null,"publication":null,"isUnreported":false,"isForeign":false,"jobsEnabled":true,"tags":[]}'
+    headers:
+      connection:
+      - keep-alive
+      content-length:
+      - '1117'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      strict-transport-security:
+      - max-age=15724800; includeSubDomains
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: ''
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - data-humerus.webknossos.org
+      user-agent:
+      - python-httpx/0.18.2
+    method: GET
+    uri: https://data-humerus.webknossos.org/data/datasets/scalable_minds/l4_sample_dev_sharing/layers/color/data?depth=10&halfByte=false&height=10&resolution=0&width=10&x=2807&y=4352&z=1794
+  response:
+    content: !!binary |
+      g5GThpWTi4l+gY6UkpCKh5h9k4qNmZGZepaTjn6Dk4qOg4qFgIyGl4OBkZqakH2ThIKPjYaUkJyC
+      c4l8fYyDaYWVjX95dXx1fqGCfox2cW5ucHhvcm5paWhXY2lrYm5dYXJpYZOalZWPipeKf4aKkIyG
+      i4+bdYZlgIiQi4+LipWJfo2Klo6PfZGUhXiPiZihipeBh4uCkX6OjIuGhXt7b3Z+hIaGcXtpaWd6
+      c3ttgWpsam9hX3BpbFloaXppWnVscm1rZGhjcW6QgY+MkISChXFvmYeQh4iKjXtxaH+NhYKTlnSA
+      W26Mk4Z/jI99gmlpi32Ei4mPkX1tdX1tiYB7hntzbGJ0eGZ9dHmBUmxbY1l1dW9xWGJtc19xYml3
+      enRZenR/cGJqcHGDeIODeYptf2pnbXRniI2DcXJ1Z1VnYmd9i4F1cmJpYGtpiIx3dnFUYGpvZnl+
+      hH9vdV5iZmtzZWlqalleaHhuYV9QYXJYWGlibVZyXWpwb3ZsX3Vxh2tlhIN6hIJ1d314f4OEgYmP
+      j2NzZGBtb313fIRxdnhiaVhtgWpzZV52Y1JhZG5ramZoZ2ZoYVtrbWhyZmlsYXJoZ2ZiV09obnly
+      cH95dmFaY2mScWyBeICIgneTf392i4eIh5KNh5KVjoeVk5yPk5OGf5SNg5JqXmV0aGyH1ZGJaGJV
+      eXNohVSJgW5oZ21hZ22KcoJaUmRecGFwSWJxZmViZkVvaHRoZXFZcmuUb4J/Znd/d252eIaAgop9
+      kJKPiZ6Sfol+hKeSi5WOkoqAhIyNlI+Vh5+Ji4ugb2qAgpCEgouNimJqcYZ8kpKKhJl0aG5ue4GL
+      hYF+YnJsY2Brg3h1b2JbamZiYWZnfXB6cW5+ZWl1YWtrrHKDhYx4h3Nva3aIkpKHeoWUg5S6nHyU
+      hZyPkoiNe3yPhoZ/koeVkGqLh49+lIeHd4d2bHx7f4uJmIyZYndzcXZojHh1gXhpdGNwWV9vc3F8
+      fnR7e2FrZ2JnioKDgHp8ZmRgd4mOhYeAgn1wd3aSnYiWhYR1f3p5mIGOlIeRgI6TiYmKj5iQlYWL
+      k5BlgIh2oYuFhZGCbWJranZ6i4GHhmlaZ3VhdICAfYJqaHN6lGVyhXyGhoOIbmhgb1x6XYuckIuX
+      g3VmX2aAhpCTh3V5d3NwiZGEknKIipJ3eIaMhZSkjXB8i5eEfYyDhJaWkpiYb2pocXWIkYuTiWhw
+      Y2d5aoGMeoVmTmNecHd7hHmCb1hsZGxoZXV0f3pxY1ZNc2d1c2R9g3NoV2toXk5wg3qRem1nbXB2
+      bX90h4Z8eW93anJ5f4+WfHqAcHV5e4mQinN/eoaBgA==
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-expose-headers:
+      - MISSING-BUCKETS
+      access-control-max-age:
+      - '600'
+      connection:
+      - keep-alive
+      content-length:
+      - '1000'
+      content-type:
+      - application/octet-stream
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      missing-buckets:
+      - '[]'
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      strict-transport-security:
+      - max-age=15724800; includeSubDomains
+      x-frame-options:
+      - DENY
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: ''
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - data-humerus.webknossos.org
+      user-agent:
+      - python-httpx/0.18.2
+    method: GET
+    uri: https://data-humerus.webknossos.org/data/datasets/scalable_minds/l4_sample_dev_sharing/layers/segmentation/data?depth=10&halfByte=false&height=10&resolution=0&width=10&x=2807&y=4352&z=1794
+  response:
+    content: !!binary |
+      buZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu
+      5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7m
+      TwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZP
+      AG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8A
+      buZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu
+      5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7m
+      TwBu5k8AbuZPAG7mTwBu5k8AH9RPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AH9RP
+      AG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8A
+      buZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu
+      5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7m
+      TwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZP
+      AG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8A
+      buZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AH9RPAG7mTwBu5k8AbuZPAG7mTwBu
+      5k8AbuZPAG7mTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/U
+      TwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZP
+      AG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8A
+      buZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu
+      5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7m
+      TwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZP
+      AG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8A
+      H9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf
+      1E8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAHbSTwB20k8AdtJPAG7mTwBu5k8AbuZPAG7m
+      TwBu5k8AbuZPAG7mTwB20k8AdtJPAHbSTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZP
+      AHbSTwB20k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwB20k8AdtJPAG7mTwBu5k8A
+      buZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAHbSTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu
+      5k8AH9RPAB/UTwAf1E8AbuZPAG7mTwBu5k8AbuZPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/U
+      TwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RP
+      AB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8A
+      H9RPAG7mTwBu5k8AbuZPAG7mTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwBu5k8AbuZPAG7mTwBu
+      5k8AbuZPAHbSTwB20k8AdtJPAHbSTwB20k8AbuZPAG7mTwBu5k8AbuZPAG7mTwB20k8AdtJPAHbS
+      TwB20k8AdtJPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAHbSTwB20k8AdtJPAHbSTwBu5k8AbuZP
+      AG7mTwBu5k8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8A
+      H9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf
+      1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/U
+      TwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RP
+      AB/UTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8A
+      dtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAB/UTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB2
+      0k8AdtJPAHbSTwAf1E8AH9RPAB/UTwAf1E8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AH9RPAB/U
+      TwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RP
+      AB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8A
+      H9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf
+      1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/U
+      TwAf1E8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJP
+      AHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8A
+      dtJPAHbSTwB20k8AH9RPAB/UTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAB/UTwAf
+      1E8AH9RPAB/UTwAf1E8AH9RPAHbSTwB20k8AdtJPAHbSTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/U
+      TwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RP
+      AB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8A
+      H9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf
+      1E8AH9RPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbS
+      TwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AH9RPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJP
+      AHbSTwB20k8AdtJPAB/UTwAf1E8AH9RPAB/UTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwAf1E8A
+      H9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AdtJPAHbSTwB20k8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf
+      1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/U
+      TwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RP
+      AB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8A
+      H9RPAB/UTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AH9RPAHbSTwB2
+      0k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAB/UTwAf1E8AdtJPAHbSTwB20k8AdtJPAHbS
+      TwB20k8AdtJPAHbSTwAf1E8AH9RPAB/UTwAf1E8AH9RPAHbSTwB20k8AdtJPAHbSTwB20k8AH9RP
+      AB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAHbSTwB20k8AdtJPAB/UTwAf1E8AH9RPAB/UTwAf1E8A
+      H9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf
+      1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/U
+      TwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RP
+      AB/UTwAf1E8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwB20k8A
+      dtJPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAHbSTwAf1E8AH9RPAHbSTwB20k8AdtJPAHbSTwB2
+      0k8AdtJPAHbSTwB20k8AH9RPAB/UTwAf1E8AH9RPAHbSTwB20k8AdtJPAHbSTwB20k8AdtJPAB/U
+      TwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwB20k8AdtJPAHbSTwAf1E8AH9RPAB/UTwAf1E8AH9RP
+      AB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8A
+      H9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf
+      1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/UTwAf1E8AH9RPAB/U
+      TwAf1E8AH9RPAA==
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-expose-headers:
+      - MISSING-BUCKETS
+      access-control-max-age:
+      - '600'
+      connection:
+      - keep-alive
+      content-length:
+      - '4000'
+      content-type:
+      - application/octet-stream
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      missing-buckets:
+      - '[]'
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      strict-transport-security:
+      - max-age=15724800; includeSubDomains
+      x-frame-options:
+      - DENY
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+version: 1

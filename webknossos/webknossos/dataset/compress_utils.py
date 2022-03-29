@@ -1,15 +1,15 @@
 import logging
-import warnings
 from pathlib import Path
 from typing import Tuple
 
 import wkw
 
-from ..utils import time_start, time_stop
+from ..utils import time_start, time_stop, warn_deprecated
 
 
 def compress_file_job(args: Tuple[Path, Path]) -> None:
-    warnings.warn("[DEPRECATION] compress_file_job is deprecated.", DeprecationWarning)
+    """Deprecated, please use `compress()` on a `MagView` instead."""
+    warn_deprecated("compress_file_job", "MagView.compress()")
     source_path, target_path = args
     try:
         time_start("Compressing '{}' to '{}'".format(source_path, target_path))

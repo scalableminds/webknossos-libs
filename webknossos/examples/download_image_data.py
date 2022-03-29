@@ -3,8 +3,9 @@ import webknossos as wk
 
 def main() -> None:
     # Set the correct dataset name and organization where the dataset is saved on webknossos
+    # You can copy your organization id from https://webknossos.org/auth/token
     name = "l4dense_motta_et_al_demo"
-    organization = "scalable_minds"
+    organization_id = "scalable_minds"
 
     # Choose layers and mags to download
     layers = ["color"]
@@ -15,8 +16,8 @@ def main() -> None:
 
     # Download the datset
     ds = wk.Dataset.download(
-        dataset_name=name,
-        organization_id=organization,
+        dataset_name_or_url=name,
+        organization_id=organization_id,
         bbox=bbox,
         layers=layers,
         mags=mags,

@@ -269,6 +269,10 @@ class MagView(View):
 
         from webknossos.dataset.dataset import Dataset
 
+        if target_path is None and self._is_compressed():
+            logging.info(f"Mag {self.name} is already compressed")
+            return
+
         if target_path is not None:
             target_path = Path(target_path)
 
@@ -308,6 +312,7 @@ class MagView(View):
             for bbox in self.get_bounding_boxes_on_disk():
                 bbox = bbox.intersected_with(self.layer.bounding_box, dont_assert=True)
                 if not bbox.is_empty():
+                    bbox = bbox.align_with_mag(self.mag, ceil=True)
                     source_view = self.get_view(
                         absolute_offset=bbox.topleft, size=bbox.size
                     )
