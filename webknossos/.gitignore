@@ -105,6 +105,3 @@ ENV/
 
 /webknossos/version.py
 testoutput
-
-minio_data
-minio

@@ -9,10 +9,12 @@ export MINIO_ROOT_USER="TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur"
 export MINIO_ROOT_PASSWORD="ANTN35UAENTS5UIAEATD"
 
 # Minio is an S3 clone and is used as local test server
-wget -q https://dl.min.io/server/minio/release/linux-amd64/minio -O ./minio
-chmod +x ./minio
-./minio server /tmp/minio_data &
-MINIO_PID=$?
+docker run \
+  -p 9000:9000 \
+  -p 9001:9001 \
+  -n minio \
+  --rm \
+  minio/minio server /data --console-address ":9001"
 
 if [ $# -eq 1 ] && [ "$1" = "--refresh-snapshots" ]; then
     ensure_local_test_wk
@@ -30,4 +32,4 @@ else
 fi
 poetry run python -m pytest -vv --disable-recording -m "not with_vcr"
 
-kill -2 $MINIO_PID
+docker stop minio
