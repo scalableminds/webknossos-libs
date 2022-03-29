@@ -11,6 +11,11 @@ from scipy.spatial import cKDTree
 
 from webknossos.geometry import Mag
 
+ALLOWED_HOSTS = [
+    ".*",  # All remote hosts
+    "/.*",  # Unix sockets required for multiprocessing communication
+]
+
 
 @contextmanager
 def tmp_cwd() -> Iterator[None]:
@@ -61,7 +66,7 @@ def test_dataset_usage() -> None:
     assert data_in_mag2_subset.shape == (3, 256, 256, 16)
 
 
-@pytest.mark.block_network(allowed_hosts=["/.*", ".*"])
+@pytest.mark.block_network(allowed_hosts=ALLOWED_HOSTS)
 @pytest.mark.vcr(ignore_hosts=["webknossos.org", "data-humerus.webknossos.org"])
 def test_apply_merger_mode() -> None:
     import examples.apply_merger_mode as example
@@ -77,7 +82,7 @@ def test_apply_merger_mode() -> None:
     )
 
 
-@pytest.mark.block_network(allowed_hosts=[".*"])
+@pytest.mark.block_network(allowed_hosts=ALLOWED_HOSTS)
 @pytest.mark.vcr(ignore_hosts=["webknossos.org", "data-humerus.webknossos.org"])
 def test_calculate_segment_sizes() -> None:
     import examples.calculate_segment_sizes as example
@@ -107,7 +112,7 @@ def test_skeleton_synapse_candidates() -> None:
 
 # Allowing requests to download the cells3d dataset via pooch,
 # which are not snapshotted
-@pytest.mark.block_network(allowed_hosts=[".*"])
+@pytest.mark.block_network(allowed_hosts=ALLOWED_HOSTS)
 @pytest.mark.vcr(ignore_hosts=["gitlab.com"])
 def test_upload_image_data() -> None:
     with tmp_cwd():
@@ -121,7 +126,7 @@ def test_upload_image_data() -> None:
         assert url.startswith("http://localhost:9000/datasets/Organization_X/cell_")
 
 
-@pytest.mark.block_network(allowed_hosts=["/.*", ".*"])
+@pytest.mark.block_network(allowed_hosts=ALLOWED_HOSTS)
 @pytest.mark.vcr(ignore_hosts=["webknossos.org", "data-humerus.webknossos.org"])
 def test_download_image_data() -> None:
     with tmp_cwd():
