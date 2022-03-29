@@ -61,7 +61,7 @@ def test_dataset_usage() -> None:
     assert data_in_mag2_subset.shape == (3, 256, 256, 16)
 
 
-@pytest.mark.block_network(allowed_hosts=[".*"])
+@pytest.mark.block_network(allowed_hosts=["/.*", ".*"])
 @pytest.mark.vcr(ignore_hosts=["webknossos.org", "data-humerus.webknossos.org"])
 def test_apply_merger_mode() -> None:
     import examples.apply_merger_mode as example
@@ -121,7 +121,7 @@ def test_upload_image_data() -> None:
         assert url.startswith("http://localhost:9000/datasets/Organization_X/cell_")
 
 
-@pytest.mark.block_network(allowed_hosts=[".*"])
+@pytest.mark.block_network(allowed_hosts=["/.*", ".*"])
 @pytest.mark.vcr(ignore_hosts=["webknossos.org", "data-humerus.webknossos.org"])
 def test_download_image_data() -> None:
     with tmp_cwd():
