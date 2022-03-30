@@ -317,8 +317,11 @@ def pytest_collection_modifyitems(items: List[pytest.Item]) -> None:
         if item.get_closest_marker("vcr") is None:
             item.add_marker("vcr")
 
-        if item.get_closest_marker("block_network") is None:
-            # To allow for UNIX socket communication necessary for spawn multiprocessing
-            # addresses starting with `/` are allowed
+        # To allow for UNIX socket communication necessary for spawn multiprocessing
+        # addresses starting with `/` are allowed
+        marker = item.get_closest_marker("block_network")
+        if marker is None:
             marker = pytest.mark.block_network(allowed_hosts=["/.*"])
             item.add_marker(marker)
+        else:
+            marker.kwargs["allowed_hosts"].append("/.*")
