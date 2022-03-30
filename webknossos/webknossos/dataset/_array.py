@@ -33,7 +33,7 @@ def _fsstore_from_path(path: Path, mode: str = "a") -> FSStore:
 
 
 @contextmanager
-def _blosc_fix_threading() -> Iterator[None]:
+def _blosc_disable_threading() -> Iterator[None]:
     old_value = numcodecs.blosc.use_threads
 
     # See https://zarr.readthedocs.io/en/stable/tutorial.html#configuring-blosc
@@ -326,7 +326,7 @@ class ZarrArray(BaseArray):
         offset = Vec3Int(offset)
         shape = Vec3Int(shape)
         zarray = self._zarray
-        with _blosc_fix_threading():
+        with _blosc_disable_threading():
             data = zarray[
                 :,
                 offset.x : (offset.x + shape.x),
@@ -387,7 +387,7 @@ class ZarrArray(BaseArray):
             data = data.reshape((1,) + data.shape)
         assert data.ndim == 4
 
-        with _blosc_fix_threading():
+        with _blosc_disable_threading():
             self.ensure_size(offset + Vec3Int(data.shape[1:4]), warn=True)
             zarray = self._zarray
             zarray[
