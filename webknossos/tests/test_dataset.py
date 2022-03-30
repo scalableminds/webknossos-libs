@@ -42,7 +42,7 @@ REMOTE_TESTOUTPUT_DIR = UPath(
     "s3://testoutput",
     key=os.environ["MINIO_ROOT_USER"],
     secret=os.environ["MINIO_ROOT_PASSWORD"],
-    client_kwargs={"endpoint_url": "http://localhost:9000"},
+    client_kwargs={"endpoint_url": "http://localhost:8000"},
 )
 
 DATA_FORMATS = [DataFormat.WKW, DataFormat.Zarr]

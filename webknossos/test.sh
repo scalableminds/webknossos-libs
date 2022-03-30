@@ -10,8 +10,8 @@ export MINIO_ROOT_PASSWORD="ANTN35UAENTS5UIAEATD"
 
 # Minio is an S3 clone and is used as local test server
 docker run \
-  -p 9000:9000 \
-  -p 9001:9001 \
+  -p 8000:9000 \
+  -p 8001:9001 \
   -e MINIO_ROOT_USER=$MINIO_ROOT_USER \
   -e MINIO_ROOT_PASSWORD=$MINIO_ROOT_PASSWORD \
   --name minio \
