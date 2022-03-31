@@ -25,7 +25,7 @@ def get_existent_kwargs_subset(whitelist, kwargs):
     return new_kwargs
 
 
-PROCESS_POOL_KWARGS_WHITELIST = ["max_workers", "mp_context", "initializer", "initargs"]
+PROCESS_POOL_KWARGS_WHITELIST = ["max_workers", "initializer", "initargs"]
 
 
 class WrappedProcessPoolExecutor(ProcessPoolExecutor):
@@ -37,31 +37,28 @@ class WrappedProcessPoolExecutor(ProcessPoolExecutor):
     """
 
     def __init__(self, **kwargs):
+        assert (not "start_method" in kwargs or kwargs["start_method"] is None) or (
+            not "mp_context" in kwargs
+        ), "Cannot use both `start_method` and `mp_context` kwargs."
+
         new_kwargs = get_existent_kwargs_subset(PROCESS_POOL_KWARGS_WHITELIST, kwargs)
 
-        self.did_overwrite_start_method = False
-        if kwargs.get("start_method", None) is not None:
-            self.did_overwrite_start_method = True
-            self.old_start_method = multiprocessing.get_start_method()
-            start_method = kwargs["start_method"]
-            logging.info(
-                f"Overwriting start_method to {start_method}. Previous value: {self.old_start_method}"
+        mp_context = None
+
+        if "mp_context" in kwargs:
+            mp_context = kwargs["mp_context"]
+        elif "start_method" in kwargs and kwargs["start_method"] is not None:
+            mp_context = multiprocessing.get_context(kwargs["start_method"])
+        elif "MULTIPROCESSING_DEFAULT_START_METHOD" in os.environ:
+            mp_context = multiprocessing.get_context(
+                os.environ["MULTIPROCESSING_DEFAULT_START_METHOD"]
             )
-            multiprocessing.set_start_method(start_method, force=True)
+        else:
+            mp_context = multiprocessing.get_context("spawn")
+
+        new_kwargs["mp_context"] = mp_context
 
         ProcessPoolExecutor.__init__(self, **new_kwargs)
-
-    def shutdown(self, *args, **kwargs):
-
-        super().shutdown(*args, **kwargs)
-
-        if self.did_overwrite_start_method:
-            logging.info(
-                f"Restoring start_method to original value: {self.old_start_method}."
-            )
-            multiprocessing.set_start_method(self.old_start_method, force=True)
-            self.old_start_method = None
-            self.did_overwrite_start_method = False
 
     def submit(self, *args, **kwargs):
 
@@ -88,7 +85,7 @@ class WrappedProcessPoolExecutor(ProcessPoolExecutor):
         # where wrapper_fn_1 is called, which eventually calls wrapper_fn_2, which eventually calls actual_fn.
         call_stack = []
 
-        if multiprocessing.get_start_method() != "fork":
+        if self._mp_context.get_start_method() != "fork":
             # If a start_method other than the default "fork" is used, logging needs to be re-setup,
             # because the programming context is not inherited in those cases.
             multiprocessing_logging_setup_fn = get_multiprocessing_logging_setup_fn()
