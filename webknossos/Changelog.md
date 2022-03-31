@@ -10,16 +10,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.14...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.15...HEAD)
 
 ### Breaking Changes
 
 ### Added
-- Added cloud storage support for the `Dataset` classes, by using `UPath` from [universal_pathlib](https://github.com/fsspec/universal_pathlib) and [fsspec](https://github.com/fsspec/fsspec). Create remote datasets like this `Dataset(UPath("s3://bucket/path/to/dataset", key="...", secret="..."), scale=(11, 11, 24))`. Datasets on cloud storage only work with [Zarr](https://zarr.dev/)-based layers. [#649](https://github.com/scalableminds/webknossos-libs/pull/649)
 
 ### Changed
 
 ### Fixed
+
+
+## [0.9.15](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.15) - 2022-03-31
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.14...v0.9.15)
+
+### Added
+- Added cloud storage support for the `Dataset` classes, by using `UPath` from [universal_pathlib](https://github.com/fsspec/universal_pathlib) and [fsspec](https://github.com/fsspec/fsspec). Create remote datasets like this `Dataset(UPath("s3://bucket/path/to/dataset", key="...", secret="..."), scale=(11, 11, 24))`. Datasets on cloud storage only work with [Zarr](https://zarr.dev/)-based layers. [#649](https://github.com/scalableminds/webknossos-libs/pull/649)
 
 
 ## [0.9.14](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.14) - 2022-03-24
