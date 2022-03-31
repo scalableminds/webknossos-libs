@@ -87,11 +87,12 @@ def download_dataset(
             ),
         )
 
-        default_view_configuration = dataset_converter.structure(response_layer.additional_properties.get(
+        default_view_configuration_dict = response_layer.additional_properties.get(
             "defaultViewConfiguration", None
-        ), LayerViewConfiguration)
-
-        layer.default_view_configuration = default_view_configuration
+        )
+        if default_view_configuration_dict is not None:
+            default_view_configuration = dataset_converter.structure(default_view_configuration_dict, LayerViewConfiguration)
+            layer.default_view_configuration = default_view_configuration
 
         if bbox is None:
             response_bbox = response_layer.bounding_box
