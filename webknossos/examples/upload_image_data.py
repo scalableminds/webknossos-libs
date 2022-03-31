@@ -5,7 +5,10 @@ from skimage import data
 
 import webknossos as wk
 from webknossos.dataset import COLOR_CATEGORY
-from webknossos.dataset.properties import LayerViewConfiguration
+from webknossos.dataset.properties import (
+    DatasetViewConfiguration,
+    LayerViewConfiguration,
+)
 
 
 def main() -> None:
@@ -23,6 +26,8 @@ def main() -> None:
     # scale is defined in nm
     ds = wk.Dataset(name, scale=(260, 260, 290))
 
+    ds.default_view_configuration = DatasetViewConfiguration(zoom=0.35)
+
     # The example microscopy data has two channels
     # Channel 0 contains cell membranes, channel 1 contains nuclei.
     layer_membranes = ds.add_layer(
@@ -34,7 +39,7 @@ def main() -> None:
     layer_membranes.add_mag(1, compress=True).write(img[0, :])
 
     layer_membranes.default_view_configuration = LayerViewConfiguration(
-        color=[17, 212, 17]
+        color=[17, 212, 17], intensity_range=[0, 16000]
     )
 
     layer_nuclei = ds.add_layer(
