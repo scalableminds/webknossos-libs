@@ -39,7 +39,7 @@ def main() -> None:
     layer_membranes.add_mag(1, compress=True).write(img[0, :])
 
     layer_membranes.default_view_configuration = LayerViewConfiguration(
-        color=[17, 212, 17], intensity_range=[0, 16000]
+        color=(17, 212, 17), intensity_range=[0, 16000]
     )
 
     layer_nuclei = ds.add_layer(
@@ -51,7 +51,7 @@ def main() -> None:
     layer_nuclei.add_mag(1, compress=True).write(img[1, :])
 
     layer_nuclei.default_view_configuration = LayerViewConfiguration(
-        color=[212, 17, 17], intensity_range=[3000, 30000]
+        color=(212, 17, 17), intensity_range=[3000, 30000]
     )
 
     url = ds.upload()
