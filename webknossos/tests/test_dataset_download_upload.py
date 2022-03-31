@@ -10,6 +10,8 @@ import webknossos as wk
 
 # pylint: disable=redefined-outer-name
 
+pytestmark = [pytest.mark.with_vcr]
+
 
 @pytest.fixture(scope="module")
 def sample_bbox() -> wk.BoundingBox:
