@@ -54,10 +54,6 @@ DATA_FORMATS_AND_OUTPUT_PATHS = [
 
 pytestmark = [pytest.mark.block_network(allowed_hosts=[".*"])]
 
-# `s3fs` hangs in multiprocessing when using `fork`
-# See: https://github.com/fsspec/s3fs/issues/464
-multiprocessing.set_start_method("forkserver", force=True)
-
 
 def delete_dir(relative_path: Path) -> None:
     if relative_path.exists() and relative_path.is_dir():
