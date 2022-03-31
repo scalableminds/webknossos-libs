@@ -168,7 +168,7 @@ reauth = ["pyu2f (>=0.1.5)"]
 
 [[package]]
 name = "icecream"
-version = "2.1.1"
+version = "2.1.2"
 description = "Never use print() to debug again; inspect variables, expressions, and program execution with a single, simple function call."
 category = "dev"
 optional = false
@@ -569,7 +569,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6.2"
-content-hash = "8df7fa2b37d8960cc5e8017908fb9d63c79465379951d6ab5724947eaae38894"
+content-hash = "0f3780c90a6745e79a7ab7eb0d18aa19fd541b702fc3302ef6ba07b2cf30905e"
 
 [metadata.files]
 astroid = [
@@ -629,8 +629,8 @@ google-auth = [
     {file = "google_auth-2.6.0-py2.py3-none-any.whl", hash = "sha256:218ca03d7744ca0c8b6697b6083334be7df49b7bf76a69d555962fd1a7657b5f"},
 ]
 icecream = [
-    {file = "icecream-2.1.1-py2.py3-none-any.whl", hash = "sha256:adc1c48f5a4f83b2171c774a35142f217d317a84fca8cdf3fc65aa1321ff26b6"},
-    {file = "icecream-2.1.1.tar.gz", hash = "sha256:47e00e3f4e8477996e7dc420b6fa8ba53f8ced17de65320fedb5b15997b76589"},
+    {file = "icecream-2.1.2-py2.py3-none-any.whl", hash = "sha256:04b9cea4d9931cf6960db0430ebf11fa34464ce7152e384ddf50f96d25b201b4"},
+    {file = "icecream-2.1.2.tar.gz", hash = "sha256:09300b2d1c678712410cbd47c95198eb1b580f66f311a554ccd6b9e758ece0ee"},
 ]
 idna = [
     {file = "idna-3.3-py3-none-any.whl", hash = "sha256:84d9dd047ffa80596e0f246e2eab0b391788b0503584e8945f2368256d2735ff"},
