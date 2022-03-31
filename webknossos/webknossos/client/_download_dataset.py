@@ -11,6 +11,10 @@ from webknossos.client._generated.api.default import dataset_info
 from webknossos.client.context import _get_context, _get_generated_client
 from webknossos.dataset import Dataset, LayerCategoryType
 from webknossos.geometry import BoundingBox, Mag, Vec3Int
+from webknossos.dataset.properties import (
+    LayerViewConfiguration,
+    dataset_converter,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -82,6 +86,13 @@ def download_dataset(
                 "largestSegmentId", None
             ),
         )
+
+        default_view_configuration = dataset_converter.structure(response_layer.additional_properties.get(
+            "defaultViewConfiguration", None
+        ), LayerViewConfiguration)
+
+        layer.default_view_configuration = default_view_configuration
+
         if bbox is None:
             response_bbox = response_layer.bounding_box
             layer.bounding_box = BoundingBox(
