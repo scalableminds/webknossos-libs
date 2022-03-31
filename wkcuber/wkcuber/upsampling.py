@@ -1,20 +1,17 @@
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
-
 from typing import Optional
-from webknossos.geometry import Vec3Int
 
-from wkcuber.api.dataset import Dataset
-from wkcuber.downsampling_utils import SamplingModes
-from .mag import Mag
+from webknossos import Dataset, Mag, Vec3Int
+from webknossos.dataset.downsampling_utils import SamplingModes
 
 from .utils import (
-    add_verbose_flag,
     add_distribution_flags,
     add_interpolation_flag,
     add_isotropic_flag,
-    setup_logging,
     add_sampling_mode_flag,
+    add_verbose_flag,
+    setup_logging,
 )
 
 

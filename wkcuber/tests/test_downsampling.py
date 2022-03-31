@@ -4,10 +4,8 @@ from typing import Tuple
 
 import numpy as np
 import pytest
-from webknossos.geometry import Mag, Vec3Int
-from wkcuber.api.dataset import Dataset
-from wkcuber.api.layer_categories import COLOR_CATEGORY
-from wkcuber.downsampling_utils import (
+from webknossos import COLOR_CATEGORY, Dataset, Mag, Vec3Int
+from webknossos.dataset.downsampling_utils import (
     InterpolationModes,
     SamplingModes,
     _mode,
@@ -18,19 +16,11 @@ from wkcuber.downsampling_utils import (
     downsample_cube_job,
     non_linear_filter_3d,
 )
-from wkcuber.utils import WkwDatasetInfo, open_wkw
 
 BUFFER_SHAPE = Vec3Int.full(256)
 
 TESTOUTPUT_DIR = Path("testoutput")
 TESTDATA_DIR = Path("testdata")
-
-
-def read_wkw(
-    wkw_info: WkwDatasetInfo, offset: Tuple[int, int, int], size: Tuple[int, int, int]
-) -> np.array:
-    with open_wkw(wkw_info) as wkw_dataset:
-        return wkw_dataset.read(offset, size)
 
 
 def test_downsample_cube() -> None:

@@ -1,30 +1,28 @@
+import logging
 from argparse import ArgumentParser, Namespace
 from os import path, sep
 from pathlib import Path
-import logging
-from typing import Iterable, List, Any, Tuple, Dict, Set, Callable, cast, Optional
+from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, cast
 
 from webknossos.dataset.properties import LayerViewConfiguration
-from .convert_knossos import (
-    main as convert_knossos,
-    create_parser as create_knossos_parser,
-)
-from .convert_nifti import main as convert_nifti, create_parser as create_nifti_parser
-from .cubing import (
-    cubing as cube_image_stack,
-    create_parser as create_image_stack_parser,
-    get_channel_and_sample_count_and_dtype,
-)
+
+from .convert_knossos import create_parser as create_knossos_parser
+from .convert_knossos import main as convert_knossos
+from .convert_nifti import create_parser as create_nifti_parser
+from .convert_nifti import main as convert_nifti
+from .cubing import create_parser as create_image_stack_parser
+from .cubing import cubing as cube_image_stack
+from .cubing import get_channel_and_sample_count_and_dtype
 from .image_readers import image_reader
 from .metadata import write_webknossos_metadata
 from .utils import (
-    find_files,
     add_scale_flag,
     add_verbose_flag,
-    setup_logging,
+    find_files,
+    get_channel_and_sample_iters_for_wk_compatibility,
     get_executor_args,
     is_wk_compatible_layer_format,
-    get_channel_and_sample_iters_for_wk_compatibility,
+    setup_logging,
 )
 
 logger = logging.getLogger(__name__)
@@ -421,7 +419,9 @@ class ImageStackConverter(Converter):
                         sample_index,
                         arg_dict.get("dtype"),
                         args.target_mag,
-                        args.wkw_file_len,
+                        args.data_format,
+                        args.chunk_size,
+                        args.chunks_per_shard,
                         args.interpolation_mode,
                         args.start_z,
                         args.skip_first_z_slices,

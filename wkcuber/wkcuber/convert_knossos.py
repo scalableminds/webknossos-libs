@@ -1,25 +1,24 @@
 import logging
+from argparse import ArgumentParser, Namespace
+from functools import partial
 from pathlib import Path
-from typing import Tuple, cast, Optional
+from typing import Optional, Tuple, cast
+
+import numpy as np
+from webknossos import COLOR_CATEGORY, BoundingBox, DataFormat, Dataset, Vec3Int, View
 from webknossos.utils import time_start, time_stop
 
-import wkw
-from argparse import ArgumentParser, Namespace
-
+from .knossos import CUBE_EDGE_LEN
 from .utils import (
-    add_verbose_flag,
-    open_wkw,
-    open_knossos,
-    WkwDatasetInfo,
     KnossosDatasetInfo,
-    ensure_wkw,
+    add_data_format_flags,
     add_distribution_flags,
+    add_scale_flag,
+    add_verbose_flag,
     get_executor_for_args,
-    wait_and_ensure_success,
+    open_knossos,
     setup_logging,
 )
-from .knossos import CUBE_EDGE_LEN
-from .metadata import convert_element_class_to_dtype
 
 
 def create_parser() -> ArgumentParser:
@@ -49,29 +48,34 @@ def create_parser() -> ArgumentParser:
         default="uint8",
     )
 
+    add_scale_flag(parser)
+
     parser.add_argument("--mag", "-m", help="Magnification level", type=int, default=1)
 
     add_verbose_flag(parser)
     add_distribution_flags(parser)
+    add_data_format_flags(parser)
 
     return parser
 
 
 def convert_cube_job(
-    args: Tuple[Tuple[int, int, int], KnossosDatasetInfo, WkwDatasetInfo]
+    args: Tuple[View, int], source_knossos_info: KnossosDatasetInfo
 ) -> None:
-    cube_xyz, source_knossos_info, target_wkw_info = args
-    offset = cast(Tuple[int, int, int], tuple(x * CUBE_EDGE_LEN for x in cube_xyz))
+    target_view, _ = args
+
+    time_start(f"Converting of {target_view.bounding_box}")
     size = cast(Tuple[int, int, int], (CUBE_EDGE_LEN,) * 3)
-    time_start(f"Converting of {offset}")
 
-    with open_knossos(source_knossos_info) as source_knossos, open_wkw(
-        target_wkw_info
-    ) as target_wkw:
-        cube_data = source_knossos.read(offset, size)
-        target_wkw.write(offset, cube_data)
+    def _convert_subcube_job(args: Tuple[View, int]) -> None:
+        view, _ = args
+        offset = view.bounding_box.in_mag(view.mag).topleft
+        with open_knossos(source_knossos_info) as source_knossos:
+            cube_data = source_knossos.read(offset.to_tuple(), size)
+            target_view.write(cube_data)
 
-    time_stop(f"Converting of {offset}")
+    target_view.for_each_chunk(_convert_subcube_job, size)
+    time_stop(f"Converting of {target_view.bounding_box}")
 
 
 def convert_knossos(
@@ -79,34 +83,48 @@ def convert_knossos(
     target_path: Path,
     layer_name: str,
     dtype: str,
+    scale: Tuple[float, float, float],
+    data_format: DataFormat,
+    chunk_size: Vec3Int,
+    chunks_per_shard: Vec3Int,
     mag: int = 1,
     args: Optional[Namespace] = None,
 ) -> None:
     source_knossos_info = KnossosDatasetInfo(source_path, dtype)
-    target_wkw_info = WkwDatasetInfo(
-        target_path, layer_name, mag, wkw.Header(convert_element_class_to_dtype(dtype))
+
+    target_dataset = Dataset(target_path, scale, exist_ok=True)
+    target_layer = target_dataset.get_or_add_layer(
+        layer_name,
+        COLOR_CATEGORY,
+        data_format=data_format,
+        dtype_per_channel=dtype,
     )
 
-    ensure_wkw(target_wkw_info)
-
     with open_knossos(source_knossos_info) as source_knossos:
-        with get_executor_for_args(args) as executor:
-            knossos_cubes = list(source_knossos.list_cubes())
-            if len(knossos_cubes) == 0:
-                logging.error(
-                    "No input KNOSSOS cubes found. Make sure to pass the path which points to a KNOSSOS magnification (e.g., testdata/knossos/color/1)."
-                )
-                exit(1)
-
-            knossos_cubes.sort()
-            job_args = []
-            for cube_xyz in knossos_cubes:
-                job_args.append((cube_xyz, source_knossos_info, target_wkw_info))
-
-            wait_and_ensure_success(
-                executor.map_to_futures(convert_cube_job, job_args),
-                f"Converting knossos layer {layer_name}",
+        knossos_cubes = np.array(list(source_knossos.list_cubes()))
+        if len(knossos_cubes) == 0:
+            logging.error(
+                "No input KNOSSOS cubes found. Make sure to pass the path which points to a KNOSSOS magnification (e.g., testdata/knossos/color/1)."
             )
+            exit(1)
+
+        min_xyz = knossos_cubes.min(axis=0) * CUBE_EDGE_LEN
+        max_xyz = (knossos_cubes.max(axis=0) + 1) * CUBE_EDGE_LEN
+        target_layer.bounding_box = BoundingBox(
+            Vec3Int(*min_xyz), Vec3Int(*(max_xyz - min_xyz))
+        )
+
+    target_mag = target_layer.get_or_add_mag(
+        mag, chunk_size=chunk_size, chunks_per_shard=chunks_per_shard
+    )
+
+    with get_executor_for_args(args) as executor:
+        target_mag.for_each_chunk(
+            partial(convert_cube_job, source_knossos_info),
+            chunk_size=chunk_size * chunks_per_shard,
+            executor=executor,
+            progress_desc=f"Converting knossos layer {layer_name}",
+        )
 
 
 def main(args: Namespace) -> None:
@@ -115,6 +133,10 @@ def main(args: Namespace) -> None:
         args.target_path,
         args.layer_name,
         args.dtype,
+        args.scale,
+        args.data_format,
+        args.chunk_size,
+        args.chunks_per_shard,
         args.mag,
         args,
     )

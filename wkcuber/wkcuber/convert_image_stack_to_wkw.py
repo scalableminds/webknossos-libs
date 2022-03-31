@@ -1,20 +1,18 @@
 import logging
-from argparse import Namespace, ArgumentParser
+from argparse import ArgumentParser, Namespace
 from typing import Sequence
 
-from .cubing import (
-    get_channel_and_sample_count_and_dtype,
-    cubing,
-    create_parser as create_cubing_parser,
-)
+from .cubing import create_parser as create_cubing_parser
+from .cubing import cubing, get_channel_and_sample_count_and_dtype
 from .mag import Mag
 from .utils import (
+    add_data_format_flags,
     add_isotropic_flag,
-    setup_logging,
     add_sampling_mode_flag,
+    get_channel_and_sample_iters_for_wk_compatibility,
     get_executor_args,
     is_wk_compatible_layer_format,
-    get_channel_and_sample_iters_for_wk_compatibility,
+    setup_logging,
 )
 
 
@@ -64,6 +62,7 @@ def create_parser() -> ArgumentParser:
     parser.add_argument("--name", "-n", help="Name of the dataset", default=None)
     add_isotropic_flag(parser)
     add_sampling_mode_flag(parser)
+    add_data_format_flags(parser)
 
     return parser
 
@@ -161,7 +160,9 @@ def main(args: Namespace) -> None:
                     sample_index,
                     arg_dict.get("dtype"),
                     args.target_mag,
-                    args.wkw_file_len,
+                    args.data_format,
+                    args.chunk_size,
+                    args.chunks_per_shard,
                     args.interpolation_mode,
                     args.start_z,
                     args.skip_first_z_slices,

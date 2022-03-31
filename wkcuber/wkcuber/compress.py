@@ -4,9 +4,8 @@ from pathlib import Path
 from shutil import rmtree
 from typing import List, Optional
 
-from wkcuber.api.dataset import Dataset
+from webknossos import Dataset, Mag
 
-from .mag import Mag
 from .utils import add_distribution_flags, add_verbose_flag, setup_logging
 
 BACKUP_EXT = ".bak"

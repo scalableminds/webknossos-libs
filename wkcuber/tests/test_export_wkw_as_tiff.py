@@ -1,13 +1,12 @@
-from wkcuber.export_wkw_as_tiff import run, wkw_name_and_bbox_to_tiff_name
-from wkcuber.api.bounding_box import BoundingBox
 import os
-from PIL import Image
-from wkcuber.mag import Mag
-import wkw
-import numpy as np
 from math import ceil
 from pathlib import Path
 
+import numpy as np
+import wkw
+from PIL import Image
+from webknossos import BoundingBox, Mag
+from wkcuber.export_wkw_as_tiff import run, wkw_name_and_bbox_to_tiff_name
 
 DS_NAME = "simple_wk_dataset"
 TESTOUTPUT_DIR = Path("testoutput")

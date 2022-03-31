@@ -3,12 +3,9 @@ from pathlib import Path
 from typing import Tuple, cast
 
 import numpy as np
-from webknossos.geometry import Vec3Int
-from wkcuber.api.dataset import Dataset
-from wkcuber.api.layer_categories import COLOR_CATEGORY
-from wkcuber.downsampling_utils import SamplingModes
-from wkcuber.mag import Mag
-from wkcuber.upsampling_utils import upsample_cube, upsample_cube_job
+from webknossos import COLOR_CATEGORY, Dataset, Mag, Vec3Int
+from webknossos.dataset.downsampling_utils import SamplingModes
+from webknossos.dataset.upsampling_utils import upsample_cube, upsample_cube_job
 
 WKW_CUBE_SIZE = 1024
 BUFFER_SHAPE = Vec3Int.full(256)

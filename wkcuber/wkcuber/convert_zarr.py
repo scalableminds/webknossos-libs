@@ -1,28 +1,33 @@
 import argparse
-from functools import partial
 import logging
-from pathlib import Path
 import time
+from functools import partial
+from pathlib import Path
 from typing import Optional, Tuple, Union, cast
+
 import numpy as np
 import zarr
-
-from webknossos.dataset import SegmentationLayer
-
-from webknossos.dataset.defaults import DEFAULT_WKW_FILE_LEN
-from webknossos import BoundingBox, Dataset, Mag, MagView
+from webknossos import (
+    BoundingBox,
+    DataFormat,
+    Dataset,
+    Mag,
+    MagView,
+    SegmentationLayer,
+    Vec3Int,
+)
 from webknossos.utils import get_executor_for_args, wait_and_ensure_success
+
 from .utils import (
+    add_data_format_flags,
     add_distribution_flags,
     add_interpolation_flag,
     add_sampling_mode_flag,
     add_scale_flag,
     add_verbose_flag,
-    DEFAULT_WKW_VOXELS_PER_BLOCK,
     get_executor_args,
     setup_logging,
 )
-
 
 logger = logging.getLogger(__name__)
 
@@ -99,6 +104,7 @@ def create_parser() -> argparse.ArgumentParser:
 
     add_sampling_mode_flag(parser)
     add_interpolation_flag(parser)
+    add_data_format_flags(parser)
 
     add_distribution_flags(parser)
 
@@ -132,11 +138,13 @@ def convert_zarr(
     source_zarr_path: Path,
     target_path: Path,
     layer_name: str,
+    data_format: DataFormat,
+    chunk_size: Vec3Int,
+    chunks_per_shard: Vec3Int,
     is_segmentation_layer: bool = False,
     scale: Optional[Tuple[float, float, float]] = (1.0, 1.0, 1.0),
     flip_axes: Optional[Union[int, Tuple[int, ...]]] = None,
     compress: bool = True,
-    file_len: int = DEFAULT_WKW_FILE_LEN,
     executor_args: Optional[argparse.Namespace] = None,
 ) -> MagView:
     ref_time = time.time()
@@ -154,9 +162,12 @@ def convert_zarr(
         dtype_per_layer=np.dtype(input_dtype),
         num_channels=1,
         largest_segment_id=0,
+        data_format=data_format,
     )
     wk_layer.bounding_box = BoundingBox((0, 0, 0), shape)
-    wk_mag = wk_layer.get_or_add_mag("1", file_len=file_len, compress=compress)
+    wk_mag = wk_layer.get_or_add_mag(
+        "1", chunk_size=chunk_size, chunks_per_shard=chunks_per_shard, compress=compress
+    )
 
     # Parallel chunk conversion
     with get_executor_for_args(executor_args) as executor:
@@ -168,9 +179,7 @@ def convert_zarr(
                     target_mag_view=wk_mag,
                     flip_axes=flip_axes,
                 ),
-                wk_layer.bounding_box.chunk(
-                    chunk_size=(DEFAULT_WKW_VOXELS_PER_BLOCK * file_len,) * 3
-                ),
+                wk_layer.bounding_box.chunk(chunk_size=chunk_size * chunks_per_shard),
             )
         )
 
@@ -197,6 +206,9 @@ def main(args: argparse.Namespace) -> None:
         source_path,
         args.target_path,
         layer_name=args.layer_name,
+        data_format=args.data_format,
+        chunk_size=args.chunk_size,
+        chunks_per_shard=args.chunks_per_shard,
         is_segmentation_layer=args.is_segmentation_layer,
         scale=args.scale,
         flip_axes=args.flip_axes,

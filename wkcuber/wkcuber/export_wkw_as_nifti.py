@@ -5,12 +5,9 @@ from typing import List, Optional, Tuple
 
 import nibabel as nib
 import numpy as np
+from webknossos import SEGMENTATION_CATEGORY, BoundingBox, Dataset, Mag
 
-from wkcuber.api.bounding_box import BoundingBox
-from wkcuber.api.dataset import Dataset
-from wkcuber.api.layer_categories import SEGMENTATION_CATEGORY
-from wkcuber.mag import Mag
-from wkcuber.utils import (
+from .utils import (
     add_distribution_flags,
     add_verbose_flag,
     parse_bounding_box,

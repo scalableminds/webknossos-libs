@@ -1,28 +1,34 @@
 import logging
+import os
+import re
+from argparse import ArgumentParser, ArgumentTypeError, Namespace
+from glob import glob
 from pathlib import Path
+from typing import Dict, List, Optional, Tuple, Union, cast
 
 import numpy as np
-from typing import Dict, Tuple, Union, List, Optional, cast
-import os
-from glob import glob
-import re
-from argparse import ArgumentTypeError, ArgumentParser, Namespace
-
-from webknossos.dataset import Dataset, View, COLOR_CATEGORY, SEGMENTATION_CATEGORY
-from webknossos.geometry import BoundingBox, Vec3Int, Mag
-
-from webknossos.dataset import SegmentationLayer
-from webknossos.utils import time_start, time_stop
-from .utils import (
-    get_chunks,
-    get_executor_for_args,
-    wait_and_ensure_success,
-    setup_logging,
-    get_regular_chunks,
+from webknossos import (
+    COLOR_CATEGORY,
+    SEGMENTATION_CATEGORY,
+    BoundingBox,
+    Dataset,
+    Mag,
+    SegmentationLayer,
+    Vec3Int,
+    View,
 )
+from webknossos.utils import time_start, time_stop
+
 from .cubing import create_parser as create_cubing_parser
 from .cubing import read_image_file
 from .image_readers import image_reader
+from .utils import (
+    get_chunks,
+    get_executor_for_args,
+    get_regular_chunks,
+    setup_logging,
+    wait_and_ensure_success,
+)
 
 BLOCK_LEN = 32
 PADDING_FILE_NAME = "/"

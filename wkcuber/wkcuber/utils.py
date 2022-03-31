@@ -1,21 +1,17 @@
-import wkw
-import numpy as np
-
-from typing import (
-    Tuple,
-    Generator,
-    Sequence,
-)
-from glob import iglob
 from collections import namedtuple
-from math import floor, ceil
+from glob import iglob
 from logging import getLogger
-from wkcuber.api.bounding_box import BoundingBox
+from math import ceil, floor
+from typing import Generator, Sequence, Tuple
+
+import numpy as np
+import wkw
+from webknossos import BoundingBox, DataFormat, Mag, Vec3Int
+from webknossos.dataset.dataset import DEFAULT_DATA_FORMAT
+from webknossos.dataset.defaults import DEFAULT_CHUNK_SIZE, DEFAULT_CHUNKS_PER_SHARD
+from webknossos.utils import *  # pylint: disable=unused-wildcard-import,wildcard-import
 
 from .knossos import KnossosDataset
-from .mag import Mag
-
-from webknossos.utils import *  # pylint: disable=unused-wildcard-import,wildcard-import
 
 WkwDatasetInfo = namedtuple(
     "WkwDatasetInfo", ("dataset_path", "layer_name", "mag", "header")
@@ -24,7 +20,6 @@ KnossosDatasetInfo = namedtuple("KnossosDatasetInfo", ("dataset_path", "dtype"))
 FallbackArgs = namedtuple("FallbackArgs", ("distribution_strategy", "jobs"))
 
 BLOCK_LEN = 32
-DEFAULT_WKW_VOXELS_PER_BLOCK = 32
 
 logger = getLogger(__name__)
 
@@ -183,6 +178,44 @@ def add_batch_size_flag(parser: argparse.ArgumentParser) -> None:
         help="Number of sections to buffer per job",
         type=int,
         default=BLOCK_LEN,
+    )
+
+
+def _parse_vec3_int(value: str) -> Vec3Int:
+    parts = [int(part.strip()) for part in value.split(",")]
+    if len(parts) == 1:
+        return Vec3Int.full(parts[0])
+    elif len(parts) == 3:
+        return Vec3Int(*parts)
+    else:
+        raise TypeError(f"Cannot convert `{value}` to Vec3Int.")
+
+
+def _parse_data_format(value: str) -> DataFormat:
+    return DataFormat(value)
+
+
+def add_data_format_flags(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--data_format",
+        default=DEFAULT_DATA_FORMAT,
+        type=_parse_data_format,
+        choices=[d.value for d in DataFormat],
+        help="Data format for results to be stored.",
+    )
+
+    parser.add_argument(
+        "--chunk_size",
+        default=DEFAULT_CHUNK_SIZE,
+        type=_parse_vec3_int,
+        help="",
+    )
+
+    parser.add_argument(
+        "--chunks_per_shard",
+        default=DEFAULT_CHUNKS_PER_SHARD,
+        type=_parse_vec3_int,
+        help="",
     )
 
 

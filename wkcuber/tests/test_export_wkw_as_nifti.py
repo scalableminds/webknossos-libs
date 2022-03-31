@@ -2,11 +2,8 @@ from pathlib import Path
 
 import nibabel as nib
 import numpy as np
-
-from wkcuber.api.bounding_box import BoundingBox
-from wkcuber.api.dataset import Dataset
+from webknossos import BoundingBox, Dataset, Mag
 from wkcuber.export_wkw_as_nifti import export_wkw_as_nifti_from_arg_list
-from wkcuber.mag import Mag
 
 ds_name = "simple_wk_dataset"
 source_path = Path("testdata").joinpath(ds_name)

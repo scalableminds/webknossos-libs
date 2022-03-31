@@ -1,41 +1,44 @@
 import logging
-from typing import List, Tuple, Optional, cast, Any
-
-import numpy as np
 from argparse import ArgumentParser, Namespace
 from os import path
 from pathlib import Path
-from natsort import natsorted
+from typing import Any, List, Optional, Tuple, cast
 
-from webknossos.dataset import (
-    Dataset,
+import numpy as np
+from natsort import natsorted
+from webknossos import (
     COLOR_CATEGORY,
     SEGMENTATION_CATEGORY,
-    View,
-    SegmentationLayer,
+    BoundingBox,
+    DataFormat,
+    Dataset,
     Layer,
+    Mag,
+    SegmentationLayer,
+    Vec3Int,
+    View,
 )
-from webknossos.geometry import BoundingBox, Vec3Int
-from webknossos.utils import time_start, time_stop
-from .mag import Mag
-from .downsampling_utils import (
-    parse_interpolation_mode,
-    downsample_unpadded_data,
+from webknossos.dataset.downsampling_utils import (
     InterpolationModes,
+    downsample_unpadded_data,
+    parse_interpolation_mode,
 )
+from webknossos.utils import time_start, time_stop
+
+from .image_readers import image_reader
 from .utils import (
-    get_chunks,
-    find_files,
     add_batch_size_flag,
-    add_verbose_flag,
+    add_data_format_flags,
     add_distribution_flags,
     add_interpolation_flag,
-    get_executor_for_args,
-    wait_and_ensure_success,
-    setup_logging,
     add_scale_flag,
+    add_verbose_flag,
+    find_files,
+    get_chunks,
+    get_executor_for_args,
+    setup_logging,
+    wait_and_ensure_success,
 )
-from .image_readers import image_reader
 
 BLOCK_LEN = 32
 
@@ -79,6 +82,7 @@ def create_parser() -> ArgumentParser:
         default=None,
     )
 
+    # TODO: Deprecate
     parser.add_argument(
         "--wkw_file_len",
         default=32,
@@ -125,6 +129,7 @@ def create_parser() -> ArgumentParser:
     add_interpolation_flag(parser)
     add_verbose_flag(parser)
     add_distribution_flags(parser)
+    add_data_format_flags(parser)
 
     return parser
 
@@ -292,7 +297,9 @@ def cubing(
     sample_index: Optional[int],
     dtype: Optional[str],
     target_mag_str: str,
-    wkw_file_len: int,
+    data_format: DataFormat,
+    chunk_size: Vec3Int,
+    chunks_per_shard: Vec3Int,
     interpolation_mode_str: str,
     start_z: int,
     skip_first_z_slices: int,
@@ -369,6 +376,7 @@ def cubing(
             COLOR_CATEGORY,
             dtype_per_channel=dtype,
             num_channels=num_output_channels,
+            data_format=data_format,
         )
     target_layer.bounding_box = target_layer.bounding_box.extended_by(
         BoundingBox(
@@ -378,7 +386,9 @@ def cubing(
     )
 
     target_mag_view = target_layer.get_or_add_mag(
-        target_mag, chunks_per_shard=wkw_file_len, chunk_size=BLOCK_LEN
+        target_mag,
+        chunks_per_shard=chunks_per_shard,
+        chunk_size=chunk_size,
     )
 
     interpolation_mode = parse_interpolation_mode(
@@ -451,7 +461,9 @@ if __name__ == "__main__":
         arg_dict.get("sample_index"),
         arg_dict.get("dtype"),
         args.target_mag,
-        args.wkw_file_len,
+        args.data_format,
+        args.chunk_size,
+        args.chunks_per_shard,
         args.interpolation_mode,
         args.start_z,
         args.skip_first_z_slices,
