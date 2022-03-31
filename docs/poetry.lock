@@ -225,6 +225,36 @@ optional = false
 python-versions = ">=3.6"
 
 [[package]]
+name = "fsspec"
+version = "2022.2.0"
+description = "File-system specification"
+category = "dev"
+optional = false
+python-versions = ">=3.7"
+
+[package.extras]
+abfs = ["adlfs"]
+adl = ["adlfs"]
+arrow = ["pyarrow (>=1)"]
+dask = ["dask", "distributed"]
+dropbox = ["dropboxdrivefs", "requests", "dropbox"]
+entrypoints = ["importlib-metadata"]
+fuse = ["fusepy"]
+gcs = ["gcsfs"]
+git = ["pygit2"]
+github = ["requests"]
+gs = ["gcsfs"]
+gui = ["panel"]
+hdfs = ["pyarrow (>=1)"]
+http = ["requests", "aiohttp"]
+libarchive = ["libarchive-c"]
+oci = ["ocifs"]
+s3 = ["s3fs"]
+sftp = ["paramiko"]
+smb = ["smbprotocol"]
+ssh = ["paramiko"]
+
+[[package]]
 name = "ghp-import"
 version = "2.0.2"
 description = "Copy your docs directly to the gh-pages branch."
@@ -1005,6 +1035,20 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "universal-pathlib"
+version = "0.0.12"
+description = "Pathlib API extended to use fsspec backends"
+category = "dev"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+fsspec = "*"
+
+[package.extras]
+test = ["aiohttp", "flake8", "gcsfs", "hadoop-test-cluster", "ipython", "jupyter", "moto", "pyarrow", "pylint", "pytest", "requests", "s3fs"]
+
+[[package]]
 name = "urllib3"
 version = "1.26.7"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
@@ -1042,9 +1086,11 @@ attrs = "^21.1.0"
 boltons = "~21.0.0"
 cattrs = "1.7.1"
 cluster_tools = {path = "../cluster_tools", develop = true}
+fsspec = "^2022.2.0"
 httpx = ">=0.15.4,<0.19.0"
 loxun = "^2.0"
 networkx = "^2.6.2"
+numcodecs = "^0.9.1"
 numpy = "^1.15.0"
 psutil = "^5.6.7"
 python-dateutil = "^2.8.0"
@@ -1053,7 +1099,9 @@ rich = "^10.9.0"
 scikit-image = "^0.18.3"
 scipy = "^1.4.0"
 typing-extensions = "^3.7"
+universal-pathlib = "^0.0.12"
 wkw = "1.1.11"
+zarr = "^2.11.0"
 zipp = "^3.5.0"
 
 [package.source]
@@ -1276,6 +1324,10 @@ dnspython = [
 fasteners = [
     {file = "fasteners-0.17.3-py3-none-any.whl", hash = "sha256:cae0772df265923e71435cc5057840138f4e8b6302f888a567d06ed8e1cbca03"},
     {file = "fasteners-0.17.3.tar.gz", hash = "sha256:a9a42a208573d4074c77d041447336cf4e3c1389a256fd3e113ef59cf29b7980"},
+]
+fsspec = [
+    {file = "fsspec-2022.2.0-py3-none-any.whl", hash = "sha256:eb9c9d9aee49d23028deefffe53e87c55d3515512c63f57e893710301001449a"},
+    {file = "fsspec-2022.2.0.tar.gz", hash = "sha256:20322c659538501f52f6caa73b08b2ff570b7e8ea30a86559721d090e473ad5c"},
 ]
 ghp-import = [
     {file = "ghp-import-2.0.2.tar.gz", hash = "sha256:947b3771f11be850c852c64b561c600fdddf794bab363060854c1ee7ad05e071"},
@@ -1940,6 +1992,10 @@ typing-extensions = [
     {file = "typing_extensions-3.10.0.2-py2-none-any.whl", hash = "sha256:d8226d10bc02a29bcc81df19a26e56a9647f8b0a6d4a83924139f4a8b01f17b7"},
     {file = "typing_extensions-3.10.0.2-py3-none-any.whl", hash = "sha256:f1d25edafde516b146ecd0613dabcc61409817af4766fbbcfb8d1ad4ec441a34"},
     {file = "typing_extensions-3.10.0.2.tar.gz", hash = "sha256:49f75d16ff11f1cd258e1b988ccff82a3ca5570217d7ad8c5f48205dd99a677e"},
+]
+universal-pathlib = [
+    {file = "universal_pathlib-0.0.12-py3-none-any.whl", hash = "sha256:a1c8333613d27a3b3dea3e543b4ed1d2544cfb74ba812c1384d1e32569f21456"},
+    {file = "universal_pathlib-0.0.12.tar.gz", hash = "sha256:900e973e212a3a6642db80dcf3aa99d68ced00bacb83da25bbc930e393eea161"},
 ]
 urllib3 = [
     {file = "urllib3-1.26.7-py2.py3-none-any.whl", hash = "sha256:c4fdf4019605b6e5423637e01bc9fe4daef873709a7973e195ceba0a62bbc844"},

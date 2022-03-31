@@ -15,6 +15,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes
 
 ### Added
+- Added cloud storage support for the `Dataset` classes, by using `UPath` from [universal_pathlib](https://github.com/fsspec/universal_pathlib) and [fsspec](https://github.com/fsspec/fsspec). Create remote datasets like this `Dataset(UPath("s3://bucket/path/to/dataset", key="...", secret="..."), scale=(11, 11, 24))`. Datasets on cloud storage only work with [Zarr](https://zarr.dev/)-based layers. [#649](https://github.com/scalableminds/webknossos-libs/pull/649)
 
 ### Changed
 
@@ -39,6 +40,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 
 ### Changed
 - `MagView.compress` now skips in-place compression of already compressed mags. [#667](https://github.com/scalableminds/webknossos-libs/pull/667)
+- Replaced uses of `pathlib.Path` with `UPath` from [universal_pathlib](https://github.com/fsspec/universal_pathlib). Since `UPath` is compatible with `pathlib.Path`, changes in user code are not necessary. [#649](https://github.com/scalableminds/webknossos-libs/pull/649)
 
 ### Fixed
 - Fixed compression of downsampled mags for layers with arbitrary and potentially mag-unaligned bounding boxes. [#667](https://github.com/scalableminds/webknossos-libs/pull/667)
