@@ -52,6 +52,9 @@ class DataFormat(Enum):
     WKW = "wkw"
     Zarr = "zarr"
 
+    def __str__(self) -> str:
+        return self.value
+
 
 @dataclass
 class ArrayInfo:

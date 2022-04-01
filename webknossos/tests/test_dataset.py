@@ -63,10 +63,10 @@ def copy_simple_dataset(
     data_format: DataFormat, output_path: Path, suffix: Optional[str] = None
 ) -> Path:
     suffix = (f"_{suffix}") if suffix is not None else ""
-    new_dataset_path = output_path / f"simple_{data_format.value}_dataset{suffix}"
+    new_dataset_path = output_path / f"simple_{data_format}_dataset{suffix}"
     delete_dir(new_dataset_path)
     copytree(
-        TESTDATA_DIR / f"simple_{data_format.value}_dataset",
+        TESTDATA_DIR / f"simple_{data_format}_dataset",
         new_dataset_path,
     )
     return new_dataset_path
@@ -76,7 +76,7 @@ def prepare_dataset_path(
     data_format: DataFormat, output_path: Path, suffix: Optional[str] = None
 ) -> Path:
     suffix = (f"_{suffix}") if suffix is not None else ""
-    new_dataset_path = output_path / f"{data_format.value}_dataset{suffix}"
+    new_dataset_path = output_path / f"{data_format}_dataset{suffix}"
     delete_dir(new_dataset_path)
     return new_dataset_path
 

@@ -200,7 +200,7 @@ def add_data_format_flags(parser: argparse.ArgumentParser) -> None:
         "--data_format",
         default=DEFAULT_DATA_FORMAT,
         type=_parse_data_format,
-        choices=[d.value for d in DataFormat],
+        choices=list(DataFormat),
         help="Data format for results to be stored.",
     )
 
