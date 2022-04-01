@@ -1,7 +1,8 @@
-import pytest
 from pathlib import Path
 from shutil import rmtree
 from typing import Generator
+
+import pytest
 
 TESTOUTPUT_DIR = Path("testoutput")
 

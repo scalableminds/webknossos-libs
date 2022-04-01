@@ -60,21 +60,30 @@ def create_parser() -> ArgumentParser:
 
 
 def convert_cube_job(
-    args: Tuple[View, int], source_knossos_info: KnossosDatasetInfo
+    source_knossos_info: KnossosDatasetInfo, args: Tuple[View, int]
 ) -> None:
     target_view, _ = args
 
     time_start(f"Converting of {target_view.bounding_box}")
-    size = cast(Tuple[int, int, int], (CUBE_EDGE_LEN,) * 3)
+    cube_size = cast(Tuple[int, int, int], (CUBE_EDGE_LEN,) * 3)
 
-    def _convert_subcube_job(args: Tuple[View, int]) -> None:
-        view, _ = args
-        offset = view.bounding_box.in_mag(view.mag).topleft
-        with open_knossos(source_knossos_info) as source_knossos:
-            cube_data = source_knossos.read(offset.to_tuple(), size)
-            target_view.write(cube_data)
+    offset = target_view.bounding_box.in_mag(target_view.mag).topleft
+    size = target_view.bounding_box.in_mag(target_view.mag).size
+    buffer = np.zeros(size.to_tuple(), dtype=target_view.get_dtype())
+    with open_knossos(source_knossos_info) as source_knossos:
+        for x in range(0, size.x, CUBE_EDGE_LEN):
+            for y in range(0, size.y, CUBE_EDGE_LEN):
+                for z in range(0, size.z, CUBE_EDGE_LEN):
+                    cube_data = source_knossos.read(
+                        (offset + Vec3Int(x, y, z)).to_tuple(), cube_size
+                    )
+                    buffer[
+                        x : (x + CUBE_EDGE_LEN),
+                        y : (y + CUBE_EDGE_LEN),
+                        y : (y + CUBE_EDGE_LEN),
+                    ] = cube_data
+    target_view.write(buffer)
 
-    target_view.for_each_chunk(_convert_subcube_job, size)
     time_stop(f"Converting of {target_view.bounding_box}")
 
 
@@ -110,8 +119,9 @@ def convert_knossos(
 
         min_xyz = knossos_cubes.min(axis=0) * CUBE_EDGE_LEN
         max_xyz = (knossos_cubes.max(axis=0) + 1) * CUBE_EDGE_LEN
+        print(min_xyz, max_xyz)
         target_layer.bounding_box = BoundingBox(
-            Vec3Int(*min_xyz), Vec3Int(*(max_xyz - min_xyz))
+            Vec3Int(min_xyz), Vec3Int(max_xyz - min_xyz)
         )
 
     target_mag = target_layer.get_or_add_mag(

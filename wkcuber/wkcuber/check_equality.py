@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Optional, Tuple
 
 import numpy as np
-from webknossos import Dataset, Vec3Int, View
+from webknossos import Dataset, View
 
 from .compress import BACKUP_EXT
 from .utils import (
@@ -13,8 +13,6 @@ from .utils import (
     get_executor_for_args,
     setup_logging,
 )
-
-CHUNK_SIZE = Vec3Int.full(1024)
 
 
 def create_parser() -> ArgumentParser:
@@ -103,8 +101,6 @@ def check_equality(
                 source_mag.for_zipped_chunks(
                     assert_equality_job,
                     target_mag,
-                    source_chunk_size=CHUNK_SIZE,
-                    target_chunk_size=CHUNK_SIZE,
                     executor=executor,
                 )
 

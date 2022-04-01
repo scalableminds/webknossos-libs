@@ -1,4 +1,3 @@
-import tempfile
 from pathlib import Path
 from typing import Tuple, cast
 
@@ -13,23 +12,22 @@ BUFFER_SHAPE = Vec3Int.full(256)
 TESTOUTPUT_DIR = Path("testoutput")
 
 
-def test_upsampling() -> None:
-    with tempfile.TemporaryDirectory() as temp_dir:
-        ds = Dataset(Path(temp_dir), scale=(1, 1, 1))
-        layer = ds.add_layer("color", COLOR_CATEGORY)
-        mag = layer.add_mag([4, 4, 2])
-        mag.write(
-            offset=(10, 20, 40),
-            data=(np.random.rand(46, 45, 27) * 255).astype(np.uint8),
-        )
-        layer.upsample(
-            from_mag=Mag([4, 4, 2]),
-            min_mag=Mag(1),
-            compress=False,
-            sampling_mode=SamplingModes.ANISOTROPIC,
-            buffer_edge_len=64,
-            args=None,
-        )
+def test_upsampling(tmp_path: Path) -> None:
+    ds = Dataset(tmp_path, scale=(1, 1, 1))
+    layer = ds.add_layer("color", COLOR_CATEGORY)
+    mag = layer.add_mag([4, 4, 2])
+    mag.write(
+        offset=(10, 20, 40),
+        data=(np.random.rand(46, 45, 27) * 255).astype(np.uint8),
+    )
+    layer.upsample(
+        from_mag=Mag([4, 4, 2]),
+        min_mag=Mag(1),
+        compress=False,
+        sampling_mode=SamplingModes.ANISOTROPIC,
+        buffer_edge_len=64,
+        args=None,
+    )
 
 
 def test_upsample_cube() -> None:
@@ -46,58 +44,55 @@ def test_upsample_cube() -> None:
     assert np.all(output[:, :, :] == np.repeat(np.arange(0, BUFFER_SHAPE.x), 2))
 
 
-def upsample_test_helper(use_compress: bool) -> None:
-    with tempfile.TemporaryDirectory() as temp_dir:
-        ds = Dataset(Path(temp_dir), scale=(10.5, 10.5, 5))
-        layer = ds.add_layer("color", COLOR_CATEGORY)
-        mag2 = layer.add_mag([2, 2, 2])
+def upsample_test_helper(tmp_path: Path, use_compress: bool) -> None:
+    ds = Dataset(tmp_path, scale=(10.5, 10.5, 5))
+    layer = ds.add_layer("color", COLOR_CATEGORY)
+    mag2 = layer.add_mag([2, 2, 2])
 
-        source_offset = (WKW_CUBE_SIZE, 2 * WKW_CUBE_SIZE, 0)
-        target_offset = cast(
-            Tuple[int, int, int], tuple([o * 2 for o in source_offset])
-        )
-        source_size = BUFFER_SHAPE
-        target_size = BUFFER_SHAPE * Vec3Int(2, 2, 1)
+    source_offset = (WKW_CUBE_SIZE, 2 * WKW_CUBE_SIZE, 0)
+    target_offset = cast(Tuple[int, int, int], tuple([o * 2 for o in source_offset]))
+    source_size = BUFFER_SHAPE
+    target_size = BUFFER_SHAPE * Vec3Int(2, 2, 1)
 
-        mag2.write(
-            offset=source_offset,
-            data=(np.random.rand(*source_size) * 255).astype(np.uint8),
-        )
-        mag1 = layer._initialize_mag_from_other_mag("1-1-2", mag2, use_compress)
+    mag2.write(
+        offset=source_offset,
+        data=(np.random.rand(*source_size) * 255).astype(np.uint8),
+    )
+    mag1 = layer._initialize_mag_from_other_mag("1-1-2", mag2, use_compress)
 
-        source_buffer = mag2.read(
-            offset=source_offset,
-            size=source_size,
-        )[0]
-        assert np.any(source_buffer != 0)
+    source_buffer = mag2.read(
+        offset=source_offset,
+        size=source_size,
+    )[0]
+    assert np.any(source_buffer != 0)
 
-        upsample_cube_job(
-            (
-                mag2.get_view(offset=source_offset, size=source_size),
-                mag1.get_view(
-                    offset=target_offset,
-                    size=target_size,
-                ),
-                0,
+    upsample_cube_job(
+        (
+            mag2.get_view(offset=source_offset, size=source_size),
+            mag1.get_view(
+                offset=target_offset,
+                size=target_size,
             ),
-            [0.5, 0.5, 1.0],
-            BUFFER_SHAPE,
-        )
+            0,
+        ),
+        [0.5, 0.5, 1.0],
+        BUFFER_SHAPE,
+    )
 
-        assert np.any(source_buffer != 0)
+    assert np.any(source_buffer != 0)
 
-        target_buffer = mag1.read(offset=target_offset, size=target_size)[0]
-        assert np.any(target_buffer != 0)
+    target_buffer = mag1.read(offset=target_offset, size=target_size)[0]
+    assert np.any(target_buffer != 0)
 
-        assert np.all(target_buffer == upsample_cube(source_buffer, [2, 2, 1]))
-
-
-def test_upsample_cube_job() -> None:
-    upsample_test_helper(False)
+    assert np.all(target_buffer == upsample_cube(source_buffer, [2, 2, 1]))
 
 
-def test_compressed_upsample_cube_job() -> None:
-    upsample_test_helper(True)
+def test_upsample_cube_job(tmp_path: Path) -> None:
+    upsample_test_helper(tmp_path, False)
+
+
+def test_compressed_upsample_cube_job(tmp_path: Path) -> None:
+    upsample_test_helper(tmp_path, True)
 
 
 def test_upsample_multi_channel() -> None:

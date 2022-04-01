@@ -894,7 +894,7 @@ class Layer:
         """
         assert (
             from_mag in self.mags.keys()
-        ), f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
+        ), f"Failed to upsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
 
         if min_mag is None:
             min_mag = Mag(1)

@@ -6,7 +6,6 @@ from .cubing import create_parser as create_cubing_parser
 from .cubing import cubing, get_channel_and_sample_count_and_dtype
 from .mag import Mag
 from .utils import (
-    add_data_format_flags,
     add_isotropic_flag,
     add_sampling_mode_flag,
     get_channel_and_sample_iters_for_wk_compatibility,
@@ -62,7 +61,6 @@ def create_parser() -> ArgumentParser:
     parser.add_argument("--name", "-n", help="Name of the dataset", default=None)
     add_isotropic_flag(parser)
     add_sampling_mode_flag(parser)
-    add_data_format_flags(parser)
 
     return parser
 

@@ -101,6 +101,7 @@ ENV/
 
 testoutput
 testdata/WT1_wkw
+testdata/tiff_wkw
 testdata/tiff_mag_2_reference
 
 # VSCode

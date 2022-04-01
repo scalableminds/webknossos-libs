@@ -16,6 +16,7 @@ from .cubing import get_channel_and_sample_count_and_dtype
 from .image_readers import image_reader
 from .metadata import write_webknossos_metadata
 from .utils import (
+    add_data_format_flags,
     add_scale_flag,
     add_verbose_flag,
     find_files,
@@ -45,6 +46,7 @@ def create_parser() -> ArgumentParser:
 
     add_scale_flag(parser)
     add_verbose_flag(parser)
+    add_data_format_flags(parser)
 
     return parser
 
