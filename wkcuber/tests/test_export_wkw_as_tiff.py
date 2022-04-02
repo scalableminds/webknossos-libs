@@ -8,20 +8,21 @@ from PIL import Image
 from webknossos import BoundingBox, Mag
 from wkcuber.export_wkw_as_tiff import run, wkw_name_and_bbox_to_tiff_name
 
-DS_NAME = "simple_wk_dataset"
-TESTOUTPUT_DIR = Path("testoutput")
-SOURCE_PATH = Path("testdata") / DS_NAME
+from .constants import TESTDATA_DIR
+
+DS_NAME = "simple_wkw_dataset"
+SOURCE_PATH = TESTDATA_DIR / DS_NAME
 
 
-def test_export_tiff_stack() -> None:
-    destination_path = os.path.join("testoutput", DS_NAME + "_tiff")
+def test_export_tiff_stack(tmp_path: Path) -> None:
+    destination_path = tmp_path / f"{DS_NAME}_tiff"
     bbox = BoundingBox((100, 100, 10), (100, 500, 50))
     bbox_dict = bbox.to_config_dict()
     args_list = [
         "--source_path",
         str(SOURCE_PATH),
         "--destination_path",
-        destination_path,
+        str(destination_path),
         "--layer_name",
         "color",
         "--name",
@@ -66,13 +67,13 @@ def test_export_tiff_stack() -> None:
             )
 
 
-def test_export_tiff_stack_tile_size() -> None:
-    destination_path = os.path.join("testoutput", DS_NAME + "_tile_size")
+def test_export_tiff_stack_tile_size(tmp_path: Path) -> None:
+    destination_path = tmp_path / f"{DS_NAME}_tile_size"
     args_list = [
         "--source_path",
         str(SOURCE_PATH),
         "--destination_path",
-        destination_path,
+        str(destination_path),
         "--layer_name",
         "color",
         "--name",
@@ -130,13 +131,13 @@ def test_export_tiff_stack_tile_size() -> None:
                     )
 
 
-def test_export_tiff_stack_tiles_per_dimension() -> None:
-    destination_path = os.path.join("testoutput", DS_NAME + "_tiles_per_dimension")
+def test_export_tiff_stack_tiles_per_dimension(tmp_path: Path) -> None:
+    destination_path = tmp_path / f"{DS_NAME}_tiles_per_dimension"
     args_list = [
         "--source_path",
         str(SOURCE_PATH),
         "--destination_path",
-        destination_path,
+        str(destination_path),
         "--layer_name",
         "color",
         "--name",
@@ -194,9 +195,3 @@ def test_export_tiff_stack_tiles_per_dimension() -> None:
                         f"The tiff file {tiff_path} that was written "
                         f"is not equal to the original wkw_file."
                     )
-
-
-if __name__ == "__main__":
-    test_export_tiff_stack()
-    test_export_tiff_stack_tile_size()
-    test_export_tiff_stack_tiles_per_dimension()

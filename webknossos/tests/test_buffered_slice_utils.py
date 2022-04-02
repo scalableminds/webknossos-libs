@@ -12,11 +12,6 @@ from webknossos.geometry import BoundingBox, Mag, Vec3Int
 from .constants import TESTOUTPUT_DIR
 
 
-def delete_dir(relative_path: Union[str, Path]) -> None:
-    if os.path.exists(relative_path) and os.path.isdir(relative_path):
-        rmtree(relative_path)
-
-
 def test_buffered_slice_writer() -> None:
     test_img = np.arange(24 * 24).reshape(24, 24).astype(np.uint16) + 1
     dtype = test_img.dtype
@@ -26,7 +21,7 @@ def test_buffered_slice_writer() -> None:
     dataset_dir = TESTOUTPUT_DIR / "buffered_slice_writer"
     dataset_path = str(dataset_dir / layer_name / mag.to_layer_name())
 
-    delete_dir(dataset_dir)
+    rmtree(dataset_dir)
     ds = Dataset(dataset_dir, scale=(1, 1, 1))
     mag_view = ds.add_layer("color", COLOR_CATEGORY, dtype_per_channel=dtype).add_mag(
         mag

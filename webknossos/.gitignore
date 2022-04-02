@@ -105,3 +105,4 @@ ENV/
 
 /webknossos/version.py
 testoutput
+testdata/WT1_wkw

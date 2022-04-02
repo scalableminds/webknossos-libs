@@ -2,14 +2,13 @@ from pathlib import Path
 from typing import Tuple, cast
 
 import numpy as np
+
 from webknossos import COLOR_CATEGORY, Dataset, Mag, Vec3Int
 from webknossos.dataset.downsampling_utils import SamplingModes
 from webknossos.dataset.upsampling_utils import upsample_cube, upsample_cube_job
 
 WKW_CUBE_SIZE = 1024
 BUFFER_SHAPE = Vec3Int.full(256)
-
-TESTOUTPUT_DIR = Path("testoutput")
 
 
 def test_upsampling(tmp_path: Path) -> None:
@@ -95,7 +94,7 @@ def test_compressed_upsample_cube_job(tmp_path: Path) -> None:
     upsample_test_helper(tmp_path, True)
 
 
-def test_upsample_multi_channel() -> None:
+def test_upsample_multi_channel(tmp_path: Path) -> None:
     num_channels = 3
     size = (32, 32, 10)
     source_data = (
@@ -103,7 +102,7 @@ def test_upsample_multi_channel() -> None:
     ).astype("uint8")
     file_len = 32
 
-    ds = Dataset(TESTOUTPUT_DIR / "multi-channel-test", (1, 1, 1))
+    ds = Dataset(tmp_path / "multi-channel-test", (1, 1, 1))
     l = ds.add_layer(
         "color",
         COLOR_CATEGORY,

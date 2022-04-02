@@ -1,9 +1,11 @@
 import warnings
 from pathlib import Path
+from shutil import unpack_archive
 from typing import Tuple
 
 import numpy as np
 import pytest
+
 from webknossos import COLOR_CATEGORY, Dataset, Mag, Vec3Int
 from webknossos.dataset.downsampling_utils import (
     InterpolationModes,
@@ -16,11 +18,23 @@ from webknossos.dataset.downsampling_utils import (
     downsample_cube_job,
     non_linear_filter_3d,
 )
+from webknossos.utils import rmtree
+
+from .constants import TESTDATA_DIR
 
 BUFFER_SHAPE = Vec3Int.full(256)
 
-TESTOUTPUT_DIR = Path("testoutput")
-TESTDATA_DIR = Path("testdata")
+
+@pytest.fixture(scope="session")
+def WT1_path() -> Path:
+    ds_path = TESTDATA_DIR / "WT1_wkw"
+    if ds_path.exists():
+        rmtree(ds_path)
+    unpack_archive(
+        TESTDATA_DIR / "WT1_wkw.tar.gz",
+        ds_path,
+    )
+    return ds_path
 
 
 def test_downsample_cube() -> None:
@@ -71,9 +85,11 @@ def test_non_linear_filter_reshape() -> None:
     assert np.all(expected_result == a_filtered)
 
 
-def downsample_test_helper(use_compress: bool, chunk_size: Vec3Int) -> None:
-    source_path = TESTDATA_DIR / "WT1_wkw"
-    target_path = TESTOUTPUT_DIR / "WT1_wkw"
+def downsample_test_helper(
+    WT1_path: Path, tmp_path: Path, use_compress: bool, chunk_size: Vec3Int
+) -> None:
+    source_path = WT1_path
+    target_path = tmp_path / "WT1_wkw"
 
     source_ds = Dataset.open(source_path)
     target_ds = source_ds.copy_dataset(
@@ -134,7 +150,7 @@ def test_compressed_downsample_cube_job() -> None:
         downsample_test_helper(True, Vec3Int.full(32))
 
 
-def test_downsample_multi_channel() -> None:
+def test_downsample_multi_channel(tmp_path: Path) -> None:
     offset = (0, 0, 0)
     num_channels = 3
     size = (32, 32, 10)
@@ -143,7 +159,7 @@ def test_downsample_multi_channel() -> None:
     ).astype("uint8")
     file_len = 32
 
-    ds = Dataset(TESTOUTPUT_DIR / "multi-channel-test", (1, 1, 1))
+    ds = Dataset(tmp_path / "multi-channel-test", (1, 1, 1))
     l = ds.add_layer(
         "color",
         COLOR_CATEGORY,
@@ -298,8 +314,8 @@ def test_default_max_mag() -> None:
     assert calculate_default_max_mag(dataset_size=(256, 256, 256)) == Mag([4, 4, 4])
 
 
-def test_default_parameter() -> None:
-    target_path = TESTOUTPUT_DIR / "downsaple_default"
+def test_default_parameter(tmp_path: Path) -> None:
+    target_path = tmp_path / "downsaple_default"
 
     ds = Dataset(target_path, scale=(1, 1, 1))
     layer = ds.add_layer(
@@ -313,8 +329,8 @@ def test_default_parameter() -> None:
     assert sorted(layer.mags.keys()) == [Mag("2"), Mag("4")]
 
 
-def test_default_anisotropic_scale() -> None:
-    ds = Dataset(TESTOUTPUT_DIR / "default_anisotropic_scale", scale=(85, 85, 346))
+def test_default_anisotropic_scale(tmp_path: Path) -> None:
+    ds = Dataset(tmp_path / "default_anisotropic_scale", scale=(85, 85, 346))
     layer = ds.add_layer("color", COLOR_CATEGORY)
     mag = layer.add_mag(1)
     mag.write(data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8))
@@ -323,8 +339,8 @@ def test_default_anisotropic_scale() -> None:
     assert sorted(layer.mags.keys()) == [Mag("1"), Mag("2-2-1"), Mag("4-4-1")]
 
 
-def test_downsample_mag_list() -> None:
-    ds = Dataset(TESTOUTPUT_DIR / "downsample_mag_list", scale=(1, 1, 2))
+def test_downsample_mag_list(tmp_path: Path) -> None:
+    ds = Dataset(tmp_path / "downsample_mag_list", scale=(1, 1, 2))
     layer = ds.add_layer("color", COLOR_CATEGORY)
     mag = layer.add_mag(1)
     mag.write(data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8))
@@ -337,8 +353,8 @@ def test_downsample_mag_list() -> None:
         assert m in layer.mags
 
 
-def test_downsample_mag_list_with_only_setup_mags() -> None:
-    ds = Dataset(TESTOUTPUT_DIR / "downsample_mag_list", scale=(1, 1, 2))
+def test_downsample_mag_list_with_only_setup_mags(tmp_path: Path) -> None:
+    ds = Dataset(tmp_path / "downsample_mag_list", scale=(1, 1, 2))
     layer = ds.add_layer("color", COLOR_CATEGORY)
     mag = layer.add_mag(1)
     mag.write(data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8))
@@ -362,8 +378,8 @@ def test_downsample_mag_list_with_only_setup_mags() -> None:
         assert m in layer.mags
 
 
-def test_downsample_with_invalid_mag_list() -> None:
-    ds = Dataset(TESTOUTPUT_DIR / "downsample_mag_list", scale=(1, 1, 2))
+def test_downsample_with_invalid_mag_list(tmp_path: Path) -> None:
+    ds = Dataset(tmp_path / "downsample_mag_list", scale=(1, 1, 2))
     layer = ds.add_layer("color", COLOR_CATEGORY)
     mag = layer.add_mag(1)
     mag.write(data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8))
@@ -375,8 +391,8 @@ def test_downsample_with_invalid_mag_list() -> None:
         )
 
 
-def test_downsample_compressed() -> None:
-    ds = Dataset(TESTOUTPUT_DIR / "downsample_compressed", scale=(1, 1, 2))
+def test_downsample_compressed(tmp_path: Path) -> None:
+    ds = Dataset(tmp_path / "downsample_compressed", scale=(1, 1, 2))
     layer = ds.add_layer("color", COLOR_CATEGORY)
     mag = layer.add_mag(1, block_len=8, file_len=8)
     mag.write(data=(np.random.rand(80, 240, 15) * 255).astype(np.uint8))
@@ -400,8 +416,8 @@ def test_downsample_compressed() -> None:
     assert Mag("4-4-2") in layer.mags.keys()
 
 
-def test_downsample_2d() -> None:
-    ds = Dataset(TESTOUTPUT_DIR / "downsample_compressed", scale=(1, 1, 2))
+def test_downsample_2d(tmp_path: Path) -> None:
+    ds = Dataset(tmp_path / "downsample_compressed", scale=(1, 1, 2))
     layer = ds.add_layer("color", COLOR_CATEGORY)
     mag = layer.add_mag(1, block_len=8, file_len=8)
     # write 2D data with all values set to "123"

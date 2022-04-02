@@ -38,40 +38,6 @@ def count_wkw_files(mag_path: Path) -> int:
     return len(list(mag_path.glob("**/x*.wkw")))
 
 
-@pytest.fixture()
-def tiff_mag_2_reference_path(tmp_path: Path) -> Path:
-    (tmp_path / "tiff_mag_2_reference").mkdir(parents=True)
-    unpack_archive(
-        TESTDATA_DIR / "tiff_mag_2_reference.tar.gz",
-        tmp_path / "tiff_mag_2_reference",
-    )
-    return tmp_path / "tiff_mag_2_reference"
-
-
-@pytest.fixture(scope="module")
-def sample_wkw_path() -> Path:
-    ds_path = TESTDATA_DIR / "tiff_wkw"
-    if ds_path.exists():
-        rmtree(ds_path)
-    check_call(
-        "python",
-        "-m",
-        "wkcuber.cubing",
-        "--jobs",
-        2,
-        "--scale",
-        "1,1,1",
-        TESTDATA_DIR / "tiff",
-        ds_path,
-    )
-    copytree(
-        TESTDATA_DIR / "tiff" / "datasource-properties.fixture.json",
-        ds_path / PROPERTIES_FILE_NAME,
-    )
-    Dataset.open(ds_path).get_layer("color").downsample_mag(Mag(1), Mag(2))
-    return ds_path
-
-
 def test_tiff_cubing(tmp_path: Path) -> None:
     in_path = TESTDATA_DIR / "tiff"
 

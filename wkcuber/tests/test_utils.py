@@ -7,14 +7,6 @@ from wkcuber.utils import get_regular_chunks
 
 BLOCK_LEN = 32
 
-TESTOUTPUT_DIR = Path("testoutput")
-
-
-def delete_dir(relative_path: Union[str, Path]) -> None:
-    relative_path = Path(relative_path)
-    if relative_path.exists() and relative_path.is_dir():
-        rmtree(relative_path)
-
 
 def test_get_chunks() -> None:
     source = list(range(0, 48))

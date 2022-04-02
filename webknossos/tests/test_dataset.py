@@ -54,10 +54,6 @@ DATA_FORMATS_AND_OUTPUT_PATHS = [
 pytestmark = [pytest.mark.block_network(allowed_hosts=[".*"])]
 
 
-def delete_dir(relative_path: Path) -> None:
-    if relative_path.exists() and relative_path.is_dir():
-        rmtree(relative_path)
-
 
 def copy_simple_dataset(
     data_format: DataFormat, output_path: Path, suffix: Optional[str] = None

@@ -1,19 +1,16 @@
 from pathlib import Path
+
 import numpy as np
 import pytest
-from wkcuber.utils import (
-    setup_logging,
-)
+from tifffile import TiffWriter
 from webknossos import Dataset
 from wkcuber.__main__ import create_parser, cube_with_args
-from tifffile import TiffWriter
-
-TESTOUTPUT_DIR = Path("testoutput")
+from wkcuber.utils import setup_logging
 
 
 @pytest.mark.parametrize("category", ["color", "segmentation"])
-def test_main(category: str) -> None:
-    input_folder = TESTOUTPUT_DIR / "raw_dataset" / category
+def test_main(tmp_path: Path, category: str) -> None:
+    input_folder = tmp_path / "raw_dataset" / category
     input_folder.mkdir(parents=True, exist_ok=True)
 
     raw_file = input_folder / "input.tif"
@@ -24,11 +21,11 @@ def test_main(category: str) -> None:
     with TiffWriter(raw_file) as tif:
         tif.write(data.transpose([2, 1, 0]))
 
-    output_path = TESTOUTPUT_DIR / "output_2"
+    output_path = tmp_path / "output_2"
     output_path.mkdir()
 
     args_list = [
-        str(TESTOUTPUT_DIR / "raw_dataset"),
+        str(tmp_path / "raw_dataset"),
         str(output_path),
         "--jobs",
         "1",
@@ -56,10 +53,3 @@ def test_main(category: str) -> None:
         read_data[0],
         data,
     )
-
-
-if __name__ == "__main__":
-    from argparse import Namespace
-
-    setup_logging(Namespace(verbose=False))
-    test_main("color")

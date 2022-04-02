@@ -1,10 +1,9 @@
 from pathlib import Path
 
-from wkcuber.image_readers import ImageReaderManager
 import numpy as np
+from wkcuber.image_readers import ImageReaderManager
 
 TESTDATA_DIR = Path("testdata")
-TESTOUTPUT_DIR = Path("testoutput")
 
 
 def test_rgb_tiff_case() -> None:

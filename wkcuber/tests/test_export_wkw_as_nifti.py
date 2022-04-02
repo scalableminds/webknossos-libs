@@ -5,19 +5,21 @@ import numpy as np
 from webknossos import BoundingBox, Dataset, Mag
 from wkcuber.export_wkw_as_nifti import export_wkw_as_nifti_from_arg_list
 
-ds_name = "simple_wk_dataset"
-source_path = Path("testdata").joinpath(ds_name)
+from .constants import TESTDATA_DIR
+
+DS_NAME = "simple_wkw_dataset"
+SOURCE_PATH = TESTDATA_DIR / DS_NAME
 
 
-def test_export_nifti_file() -> None:
-    destination_path = Path("testoutput").joinpath(ds_name + "_nifti")
+def test_export_nifti_file(tmp_path: Path) -> None:
+    destination_path = tmp_path / f"{DS_NAME}_nifti"
     destination_path.mkdir()
 
     bbox = BoundingBox((100, 100, 10), (100, 500, 50))
     bbox_dict = bbox.to_config_dict()
     args_list = [
         "--source_path",
-        str(source_path),
+        str(SOURCE_PATH),
         "--destination_path",
         str(destination_path),
         "--name",
@@ -30,7 +32,7 @@ def test_export_nifti_file() -> None:
 
     export_wkw_as_nifti_from_arg_list(args_list)
 
-    wk_ds = Dataset.open(source_path)
+    wk_ds = Dataset.open(SOURCE_PATH)
 
     for layer_name, layer in wk_ds.layers.items():
         correct_image = layer.get_mag(Mag(1)).read(
@@ -51,7 +53,3 @@ def test_export_nifti_file() -> None:
             f"The nifti file {nifti_path} that was written is not "
             f"equal to the original wkw_file."
         )
-
-
-if __name__ == "__main__":
-    test_export_nifti_file()
