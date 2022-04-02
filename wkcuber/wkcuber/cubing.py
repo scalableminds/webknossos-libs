@@ -18,6 +18,7 @@ from webknossos import (
     Vec3Int,
     View,
 )
+from webknossos.dataset.defaults import DEFAULT_CHUNK_SIZE
 from webknossos.dataset.downsampling_utils import (
     InterpolationModes,
     downsample_unpadded_data,
@@ -39,8 +40,6 @@ from .utils import (
     setup_logging,
     wait_and_ensure_success,
 )
-
-BLOCK_LEN = 32
 
 
 def create_parser() -> ArgumentParser:
@@ -80,14 +79,6 @@ def create_parser() -> ArgumentParser:
         "-d",
         help="Target datatype (e.g. uint8, uint16, uint32)",
         default=None,
-    )
-
-    # TODO: Deprecate
-    parser.add_argument(
-        "--wkw_file_len",
-        default=32,
-        type=int,
-        help="Amount of blocks which are written per dimension to a wkw cube. The default value of 32 means that 1024 slices are written to one cube (since one block has 32**3 voxels by default). For single-channel uint8 data, this results in 1 GB per cube file. If file_len is set to 1, only 32 slices are written to one cube. Must be a power of two.",
     )
 
     add_batch_size_flag(parser)
@@ -355,7 +346,7 @@ def cubing(
         dtype = image_reader.read_dtype(source_files[0])
 
     if batch_size is None:
-        batch_size = BLOCK_LEN
+        batch_size = DEFAULT_CHUNK_SIZE.z
 
     target_mag = Mag(target_mag_str)
 
@@ -404,9 +395,9 @@ def cubing(
     with get_executor_for_args(executor_args) as executor:
         job_args = []
         # We iterate over all z sections
-        for z in range(skip_first_z_slices, num_z, BLOCK_LEN):
+        for z in range(skip_first_z_slices, num_z, DEFAULT_CHUNK_SIZE.z):
             # The z is used to access the source files. However, when writing the data, the `start_z` has to be considered.
-            max_z = min(num_z, z + BLOCK_LEN)
+            max_z = min(num_z, z + DEFAULT_CHUNK_SIZE.z)
             # Prepare source files array
             if len(source_files) > 1:
                 source_files_array = source_files[z:max_z]

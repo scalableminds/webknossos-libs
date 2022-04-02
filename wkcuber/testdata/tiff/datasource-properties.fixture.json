@@ -18,9 +18,9 @@
       "numChannels": 1,
       "boundingBox": {
         "topLeft": [0, 0, 0],
-        "width": 1024,
-        "height": 1024,
-        "depth": 1024
+        "width": 265,
+        "height": 265,
+        "depth": 257
       }
     }
   ],

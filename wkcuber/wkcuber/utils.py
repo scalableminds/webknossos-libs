@@ -19,8 +19,6 @@ WkwDatasetInfo = namedtuple(
 KnossosDatasetInfo = namedtuple("KnossosDatasetInfo", ("dataset_path", "dtype"))
 FallbackArgs = namedtuple("FallbackArgs", ("distribution_strategy", "jobs"))
 
-BLOCK_LEN = 32
-
 logger = getLogger(__name__)
 
 
@@ -177,7 +175,7 @@ def add_batch_size_flag(parser: argparse.ArgumentParser) -> None:
         "-b",
         help="Number of sections to buffer per job",
         type=int,
-        default=BLOCK_LEN,
+        default=DEFAULT_CHUNK_SIZE.z,
     )
 
 
@@ -201,21 +199,21 @@ def add_data_format_flags(parser: argparse.ArgumentParser) -> None:
         default=DEFAULT_DATA_FORMAT,
         type=_parse_data_format,
         choices=list(DataFormat),
-        help="Data format for results to be stored.",
+        help="Data format for outputs to be stored.",
     )
 
     parser.add_argument(
         "--chunk_size",
         default=DEFAULT_CHUNK_SIZE,
         type=_parse_vec3_int,
-        help="",
+        help="Number of voxels to be stored as a chunk in the output format (e.g. `32` or `32,32,32`).",
     )
 
     parser.add_argument(
         "--chunks_per_shard",
         default=DEFAULT_CHUNKS_PER_SHARD,
         type=_parse_vec3_int,
-        help="",
+        help="Number of chunks to be stored as a shard in the output format (e.g. `32` or `32,32,32`).",
     )
 
 

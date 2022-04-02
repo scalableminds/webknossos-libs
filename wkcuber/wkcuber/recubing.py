@@ -22,11 +22,6 @@ def create_parser() -> ArgumentParser:
         "target_path", help="Output directory for the generated dataset.", type=Path
     )
 
-    # TODO: Deprecated
-    parser.add_argument(
-        "--wkw_file_len", help="Target file length (default 32)", type=int, default=32
-    )
-
     parser.add_argument(
         "--no_compression",
         help="Use compression, default false",

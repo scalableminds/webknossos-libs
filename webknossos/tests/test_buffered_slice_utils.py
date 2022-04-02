@@ -1,11 +1,11 @@
 from pathlib import Path
-from shutil import rmtree
 
 import numpy as np
 import wkw
 
 from webknossos.dataset import COLOR_CATEGORY, Dataset
 from webknossos.geometry import BoundingBox, Mag, Vec3Int
+from webknossos.utils import rmtree
 
 from .constants import TESTOUTPUT_DIR
 

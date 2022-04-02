@@ -415,6 +415,31 @@ def test_mag_view_write_out_of_bounds_mag2(
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_views_are_equal(data_format: DataFormat, output_path: Path) -> None:
+    path_a = prepare_dataset_path(data_format, output_path / "a")
+    path_b = prepare_dataset_path(data_format, output_path / "b")
+    mag_a = (
+        Dataset(path_a, scale=(1, 1, 1))
+        .get_or_add_layer("color", COLOR_CATEGORY, data_format=data_format)
+        .get_or_add_mag("1")
+    )
+    mag_b = (
+        Dataset(path_b, scale=(1, 1, 1))
+        .get_or_add_layer("color", COLOR_CATEGORY, data_format=data_format)
+        .get_or_add_mag("1")
+    )
+
+    data = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
+
+    mag_a.write(data)
+    mag_b.write(data)
+    assert mag_a.content_is_equal(mag_b)
+
+    mag_b.write(data + 10)
+    assert not mag_a.content_is_equal(mag_b)
+
+
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
 def test_update_new_bounding_box_offset(
     data_format: DataFormat, output_path: Path
 ) -> None:

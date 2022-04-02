@@ -7,12 +7,7 @@ import numpy as np
 from webknossos import Dataset, View
 
 from .compress import BACKUP_EXT
-from .utils import (
-    add_distribution_flags,
-    add_verbose_flag,
-    get_executor_for_args,
-    setup_logging,
-)
+from .utils import add_distribution_flags, add_verbose_flag, setup_logging
 
 
 def create_parser() -> ArgumentParser:
@@ -97,12 +92,7 @@ def check_equality(
             target_mag = target_layer.mags[mag]
 
             logging.info(f"Start verification of {layer_name} in mag {mag}")
-            with get_executor_for_args(args) as executor:
-                source_mag.for_zipped_chunks(
-                    assert_equality_job,
-                    target_mag,
-                    executor=executor,
-                )
+            assert source_mag.content_is_equal(target_mag, args)
 
     logging.info(
         f"The following datasets seem to be equal (with regard to the layers: {layer_names}):"
@@ -116,7 +106,7 @@ if __name__ == "__main__":
     setup_logging(args)
 
     if args.target_path is None:
-        target_path = args.source_path + BACKUP_EXT
+        target_path = args.source_path.with_suffix(BACKUP_EXT)
     else:
         target_path = args.target_path
     check_equality(args.source_path, target_path, args)

@@ -22,18 +22,6 @@ def check_call(*args: Union[str, int, Path]) -> None:
         raise e
 
 
-def compare_wkw(path_a: Path, path_b: Path) -> None:
-    with wkw.Dataset.open(str(path_a)) as ds_a, wkw.Dataset.open(str(path_b)) as ds_b:
-        assert ds_a.header.version == ds_b.header.version
-        assert ds_a.header.block_len == ds_b.header.block_len
-        assert ds_a.header.file_len == ds_b.header.file_len
-        assert ds_a.header.voxel_type == ds_b.header.voxel_type
-        assert ds_a.header.num_channels == ds_b.header.num_channels
-        data_a = ds_a.read((0, 0, 0), (1024, 1024, 1024))
-        data_b = ds_b.read((0, 0, 0), (1024, 1024, 1024))
-        assert np.all(data_a == data_b)
-
-
 def count_wkw_files(mag_path: Path) -> int:
     return len(list(mag_path.glob("**/x*.wkw")))
 
@@ -54,7 +42,7 @@ def test_tiff_cubing(tmp_path: Path) -> None:
         "--chunks_per_shard",
         32,
         "--scale",
-        "1,1,1",
+        "11.24,11.24,25",
         in_path,
         tmp_path,
     )
@@ -63,21 +51,15 @@ def test_tiff_cubing(tmp_path: Path) -> None:
     assert (tmp_path / "color" / "1").exists()
     assert count_wkw_files(tmp_path / "color" / "1") == 1
 
-    check_call(
-        "python",
-        "-m",
-        "wkcuber.metadata",
-        "--name",
-        "test_dataset",
-        "--scale",
-        "11.24,11.24,25",
-        tmp_path,
-    )
     assert (tmp_path / PROPERTIES_FILE_NAME).exists()
     with (tmp_path / PROPERTIES_FILE_NAME).open("r") as a, (
         in_path / "datasource-properties.fixture.json"
     ).open("r") as b:
-        assert json.load(a) == json.load(b)
+        json_a = json.load(a)
+        json_b = json.load(b)
+        del json_a["id"]
+        del json_b["id"]
+        assert json_a == json_b
 
 
 def test_downsampling(
@@ -111,7 +93,14 @@ def test_downsampling(
     assert count_wkw_files(tmp_path / "color" / "4") == 1
     assert count_wkw_files(tmp_path / "color" / "8") == 1
 
-    compare_wkw(tmp_path / "color" / "2", tiff_mag_2_reference_path / "color" / "2")
+    assert (
+        Dataset.open(tmp_path)
+        .get_layer("color")
+        .get_mag("2")
+        .content_is_equal(
+            Dataset.open(tiff_mag_2_reference_path).get_layer("color").get_mag("2")
+        )
+    )
 
 
 def test_upsampling(
@@ -119,7 +108,11 @@ def test_upsampling(
 ) -> None:
     copytree(sample_wkw_path, tmp_path)
 
-    Dataset.open(tmp_path).get_layer("color").delete_mag("1")
+    color_layer = Dataset.open(tmp_path).get_layer("color")
+    color_layer.delete_mag("1")
+    color_layer.bounding_box = color_layer.bounding_box.align_with_mag(
+        Mag("2"), ceil=True
+    )
 
     check_call(
         "python",
@@ -138,7 +131,8 @@ def test_upsampling(
         tmp_path,
     )
 
-    Dataset.open(tmp_path).get_layer("color").delete_mag("2")
+    color_layer = Dataset.open(tmp_path).get_layer("color")
+    color_layer.delete_mag("2")
 
     check_call(
         "python",
@@ -161,9 +155,20 @@ def test_upsampling(
         tmp_path,
     )
 
-    compare_wkw(
-        tmp_path / "color" / "2",
-        tiff_mag_2_reference_path / "color" / "2",
+    assert (Dataset.open(tmp_path).get_layer("color").get_mag("2").bounding_box) == (
+        Dataset.open(tiff_mag_2_reference_path)
+        .get_layer("color")
+        .get_mag("2")
+        .bounding_box
+    )
+
+    assert (
+        Dataset.open(tmp_path)
+        .get_layer("color")
+        .get_mag("2")
+        .content_is_equal(
+            Dataset.open(tiff_mag_2_reference_path).get_layer("color").get_mag("2")
+        )
     )
 
 
@@ -254,18 +259,6 @@ def test_compression_and_verification(sample_wkw_path: Path, tmp_path: Path) -> 
 
     assert (out_path / "color" / "1").is_dir()
     assert (out_path / "color" / "2").is_dir()
-
-    # Generate metadata
-    check_call(
-        "python",
-        "-m",
-        "wkcuber.metadata",
-        "--name",
-        "great_dataset",
-        "--scale",
-        "11.24,11.24,25",
-        out_path,
-    )
 
     # Check equality for uncompressed and compressed dataset
     check_call("python", "-m", "wkcuber.check_equality", sample_wkw_path, out_path)
@@ -399,7 +392,7 @@ def test_tiff_formats_cubing_I(tmp_path: Path) -> None:
         "--name",
         "awesome_data",
         "--no_compress",
-        "--wkw_file_len",
+        "--chunks_per_shard",
         8,
         TESTDATA_DIR / "various_tiff_formats" / "test_I.tif",
         tmp_path,
@@ -430,7 +423,7 @@ def test_tiff_formats_cubing_C(tmp_path: Path) -> None:
         "--name",
         "awesome_data",
         "--no_compress",
-        "--wkw_file_len",
+        "--chunks_per_shard",
         8,
         TESTDATA_DIR / "various_tiff_formats" / "test_C.tif",
         tmp_path,
@@ -464,7 +457,7 @@ def test_tiff_formats_cubing_S(tmp_path: Path) -> None:
         "--name",
         "awesome_data",
         "--no_compress",
-        "--wkw_file_len",
+        "--chunks_per_shard",
         8,
         TESTDATA_DIR / "various_tiff_formats" / "test_S.tif",
         tmp_path,
@@ -496,7 +489,7 @@ def test_tiff_formats_cubing_CS(tmp_path: Path) -> None:
         "--name",
         "awesome_data",
         "--no_compress",
-        "--wkw_file_len",
+        "--chunks_per_shard",
         8,
         TESTDATA_DIR / "various_tiff_formats" / "test_CS.tif",
         tmp_path,
@@ -532,7 +525,7 @@ def test_tiff_formats_cubing_invalid_C(tmp_path: Path) -> None:
             "--name",
             "awesome_data",
             "--no_compress",
-            "--wkw_file_len",
+            "--chunks_per_shard",
             8,
             TESTDATA_DIR / "various_tiff_formats" / "test_C.tif",
             tmp_path,
@@ -562,7 +555,7 @@ def test_tiff_formats_cubing_single_layer_CS(tmp_path: Path) -> None:
         "--name",
         "awesome_data",
         "--no_compress",
-        "--wkw_file_len",
+        "--chunks_per_shard",
         8,
         TESTDATA_DIR / "various_tiff_formats" / "test_CS.tif",
         tmp_path,

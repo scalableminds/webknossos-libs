@@ -353,7 +353,7 @@ class ImageStackConverter(Converter):
             args, image_stack_parser, "target_mag"
         )
         put_default_from_argparser_if_not_present(
-            args, image_stack_parser, "wkw_file_len"
+            args, image_stack_parser, "chunks_per_shard"
         )
         put_default_from_argparser_if_not_present(
             args, image_stack_parser, "interpolation_mode"

@@ -5,8 +5,6 @@ from typing import Union
 from webknossos.utils import get_chunks
 from wkcuber.utils import get_regular_chunks
 
-BLOCK_LEN = 32
-
 
 def test_get_chunks() -> None:
     source = list(range(0, 48))
