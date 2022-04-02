@@ -13,7 +13,7 @@ from webknossos.utils import (
     wait_and_ensure_success,
 )
 
-from .utils import (
+from ._internal.utils import (
     add_data_format_flags,
     add_distribution_flags,
     add_interpolation_flag,

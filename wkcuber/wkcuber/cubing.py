@@ -26,8 +26,8 @@ from webknossos.dataset.downsampling_utils import (
 )
 from webknossos.utils import time_start, time_stop
 
-from .image_readers import image_reader
-from .utils import (
+from ._internal.image_readers import image_reader
+from ._internal.utils import (
     add_batch_size_flag,
     add_data_format_flags,
     add_distribution_flags,

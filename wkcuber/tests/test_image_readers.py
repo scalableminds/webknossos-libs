@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import numpy as np
-from wkcuber.image_readers import ImageReaderManager
+from wkcuber._internal.image_readers import ImageReaderManager
 
 from .constants import TESTDATA_DIR
 

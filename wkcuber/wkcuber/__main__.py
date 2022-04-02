@@ -5,17 +5,17 @@ from typing import Dict, List
 from webknossos import Mag
 
 from .compress import compress_mag_inplace
-from .converter import create_parser as create_conversion_parser
-from .converter import main as auto_detect_and_run_conversion
 from .downsampling import downsample_mags
-from .metadata import refresh_metadata
-from .utils import (
+from ._internal.converter import create_parser as create_conversion_parser
+from ._internal.converter import main as auto_detect_and_run_conversion
+from ._internal.utils import (
     add_distribution_flags,
     add_isotropic_flag,
     add_sampling_mode_flag,
     setup_logging,
 )
-from .versioning import get_available_version
+from ._internal.versioning import get_available_version
+from .metadata import refresh_metadata
 
 
 def detect_present_mags(target_path: Path) -> Dict[Path, List[Mag]]:

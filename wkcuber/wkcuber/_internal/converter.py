@@ -6,15 +6,14 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, ca
 
 from webknossos.dataset.properties import LayerViewConfiguration
 
-from .convert_knossos import create_parser as create_knossos_parser
-from .convert_knossos import main as convert_knossos
-from .convert_nifti import create_parser as create_nifti_parser
-from .convert_nifti import main as convert_nifti
-from .cubing import create_parser as create_image_stack_parser
-from .cubing import cubing as cube_image_stack
-from .cubing import get_channel_and_sample_count_and_dtype
-from .image_readers import image_reader
-from .metadata import write_webknossos_metadata
+from ..convert_knossos import create_parser as create_knossos_parser
+from ..convert_knossos import main as convert_knossos
+from ..convert_nifti import create_parser as create_nifti_parser
+from ..convert_nifti import main as convert_nifti
+from ..cubing import create_parser as create_image_stack_parser
+from ..cubing import cubing as cube_image_stack
+from ..cubing import get_channel_and_sample_count_and_dtype
+from ..metadata import write_webknossos_metadata
 from .utils import (
     add_data_format_flags,
     add_scale_flag,
@@ -25,6 +24,7 @@ from .utils import (
     is_wk_compatible_layer_format,
     setup_logging,
 )
+from .image_readers import image_reader
 
 logger = logging.getLogger(__name__)
 

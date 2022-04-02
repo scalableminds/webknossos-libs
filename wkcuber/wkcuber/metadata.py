@@ -11,7 +11,7 @@ import numpy as np
 import wkw
 from webknossos import LayerCategoryType, Mag
 
-from .utils import add_scale_flag, add_verbose_flag, setup_logging
+from ._internal.utils import add_scale_flag, add_verbose_flag, setup_logging
 
 WKW_CUBE_REGEX = re.compile(
     fr"z(\d+){re.escape(sep)}y(\d+){re.escape(sep)}x(\d+)(\.wkw)$"

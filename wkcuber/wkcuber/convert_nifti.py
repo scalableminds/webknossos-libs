@@ -9,7 +9,7 @@ from sklearn.preprocessing import LabelEncoder
 from webknossos import BoundingBox, DataFormat, Dataset, LayerCategoryType, Vec3Int
 from webknossos.utils import time_start, time_stop
 
-from .utils import (
+from ._internal.utils import (
     add_data_format_flags,
     add_scale_flag,
     add_verbose_flag,

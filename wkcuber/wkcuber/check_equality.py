@@ -7,7 +7,7 @@ import numpy as np
 from webknossos import Dataset, View
 
 from .compress import BACKUP_EXT
-from .utils import add_distribution_flags, add_verbose_flag, setup_logging
+from ._internal.utils import add_distribution_flags, add_verbose_flag, setup_logging
 
 
 def create_parser() -> ArgumentParser:

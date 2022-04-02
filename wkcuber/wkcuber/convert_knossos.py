@@ -8,8 +8,8 @@ import numpy as np
 from webknossos import COLOR_CATEGORY, BoundingBox, DataFormat, Dataset, Vec3Int, View
 from webknossos.utils import time_start, time_stop
 
-from .knossos import CUBE_EDGE_LEN
-from .utils import (
+from ._internal.knossos import CUBE_EDGE_LEN
+from ._internal.utils import (
     KnossosDatasetInfo,
     add_data_format_flags,
     add_distribution_flags,

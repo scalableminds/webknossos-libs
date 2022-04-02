@@ -22,8 +22,8 @@ from webknossos.utils import time_start, time_stop
 
 from .cubing import create_parser as create_cubing_parser
 from .cubing import read_image_file
-from .image_readers import image_reader
-from .utils import (
+from ._internal.image_readers import image_reader
+from ._internal.utils import (
     get_chunks,
     get_executor_for_args,
     get_regular_chunks,

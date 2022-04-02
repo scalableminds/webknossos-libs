@@ -3,7 +3,7 @@ from shutil import rmtree
 from typing import Union
 
 from webknossos.utils import get_chunks
-from wkcuber.utils import get_regular_chunks
+from wkcuber._internal.utils import get_regular_chunks
 
 
 def test_get_chunks() -> None:

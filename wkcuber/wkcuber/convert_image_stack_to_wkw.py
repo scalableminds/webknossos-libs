@@ -6,7 +6,7 @@ from webknossos import Mag
 
 from .cubing import create_parser as create_cubing_parser
 from .cubing import cubing, get_channel_and_sample_count_and_dtype
-from .utils import (
+from ._internal.utils import (
     add_isotropic_flag,
     add_sampling_mode_flag,
     get_channel_and_sample_iters_for_wk_compatibility,

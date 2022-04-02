@@ -3,7 +3,7 @@ from pathlib import Path
 
 from webknossos import Dataset
 
-from .utils import (
+from ._internal.utils import (
     add_data_format_flags,
     add_distribution_flags,
     add_verbose_flag,

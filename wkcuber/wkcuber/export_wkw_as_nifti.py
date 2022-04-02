@@ -7,7 +7,7 @@ import nibabel as nib
 import numpy as np
 from webknossos import SEGMENTATION_CATEGORY, BoundingBox, Dataset, Mag
 
-from .utils import (
+from ._internal.utils import (
     add_distribution_flags,
     add_verbose_flag,
     parse_bounding_box,

@@ -18,7 +18,7 @@ from webknossos import (
 )
 from webknossos.utils import get_executor_for_args, wait_and_ensure_success
 
-from .utils import (
+from ._internal.utils import (
     add_data_format_flags,
     add_distribution_flags,
     add_interpolation_flag,

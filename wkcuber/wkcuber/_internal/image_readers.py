@@ -5,8 +5,8 @@ import numpy as np
 import logging
 from PIL import Image
 
-from .vendor.dm3 import DM3
-from .vendor.dm4 import DM4File, DM4TagHeader
+from ..vendor.dm3 import DM3
+from ..vendor.dm4 import DM4File, DM4TagHeader
 from tifffile import TiffFile
 from czifile import CziFile
 

@@ -6,7 +6,7 @@ from typing import List, Optional
 
 from webknossos import Dataset, Mag
 
-from .utils import add_distribution_flags, add_verbose_flag, setup_logging
+from ._internal.utils import add_distribution_flags, add_verbose_flag, setup_logging
 
 BACKUP_EXT = ".bak"
 

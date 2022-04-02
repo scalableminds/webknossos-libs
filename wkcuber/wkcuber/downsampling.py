@@ -5,7 +5,7 @@ from typing import Optional
 from webknossos import Dataset, Mag, Vec3Int
 from webknossos.dataset.downsampling_utils import SamplingModes
 
-from .utils import (
+from ._internal.utils import (
     add_distribution_flags,
     add_interpolation_flag,
     add_isotropic_flag,

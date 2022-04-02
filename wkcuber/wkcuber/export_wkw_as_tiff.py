@@ -12,7 +12,7 @@ from scipy.ndimage.interpolation import zoom
 from webknossos import Mag
 
 from .metadata import read_metadata_for_layer
-from .utils import (
+from ._internal.utils import (
     add_batch_size_flag,
     add_distribution_flags,
     add_verbose_flag,

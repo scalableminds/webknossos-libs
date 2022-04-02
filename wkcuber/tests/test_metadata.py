@@ -9,7 +9,7 @@ from wkcuber.metadata import (
     refresh_metadata,
     write_webknossos_metadata,
 )
-from wkcuber.utils import WkwDatasetInfo, ensure_wkw, open_wkw
+from wkcuber._internal.utils import WkwDatasetInfo, ensure_wkw, open_wkw
 
 from .constants import TESTDATA_DIR
 

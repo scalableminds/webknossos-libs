@@ -1,0 +1,7 @@
+- export_wkw_as_tiff: remove wkw
+- export_wkw_as_tiff -> export_as_tiff
+- export_wkw_as_nifti -> export_as_nifti
++ hide non-command modules: converter, image_readers, knossos, utils, versioning
+- rm metadata
+- what is convert_image_stack_to_wkw?
+- View.is_equal()
