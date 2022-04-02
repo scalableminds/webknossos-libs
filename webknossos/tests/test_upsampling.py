@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Tuple, cast
 
 import numpy as np
 
@@ -16,7 +15,7 @@ def test_upsampling(tmp_path: Path) -> None:
     layer = ds.add_layer("color", COLOR_CATEGORY)
     mag = layer.add_mag([4, 4, 2])
     mag.write(
-        offset=(10, 20, 40),
+        absolute_offset=(10 * 4, 20 * 4, 40 * 2),
         data=(np.random.rand(46, 45, 27) * 255).astype(np.uint8),
     )
     layer.upsample(
@@ -48,29 +47,26 @@ def upsample_test_helper(tmp_path: Path, use_compress: bool) -> None:
     layer = ds.add_layer("color", COLOR_CATEGORY)
     mag2 = layer.add_mag([2, 2, 2])
 
-    source_offset = (WKW_CUBE_SIZE, 2 * WKW_CUBE_SIZE, 0)
-    target_offset = cast(Tuple[int, int, int], tuple([o * 2 for o in source_offset]))
-    source_size = BUFFER_SHAPE
-    target_size = BUFFER_SHAPE * Vec3Int(2, 2, 1)
+    offset = Vec3Int(WKW_CUBE_SIZE, 2 * WKW_CUBE_SIZE, 0)
 
     mag2.write(
-        offset=source_offset,
-        data=(np.random.rand(*source_size) * 255).astype(np.uint8),
+        absolute_offset=offset,
+        data=(np.random.rand(*BUFFER_SHAPE) * 255).astype(np.uint8),
     )
     mag1 = layer._initialize_mag_from_other_mag("1-1-2", mag2, use_compress)
 
     source_buffer = mag2.read(
-        offset=source_offset,
-        size=source_size,
+        absolute_offset=offset,
+        size=BUFFER_SHAPE,
     )[0]
     assert np.any(source_buffer != 0)
 
     upsample_cube_job(
         (
-            mag2.get_view(offset=source_offset, size=source_size),
+            mag2.get_view(absolute_offset=offset, size=BUFFER_SHAPE),
             mag1.get_view(
-                offset=target_offset,
-                size=target_size,
+                absolute_offset=offset,
+                size=BUFFER_SHAPE,
             ),
             0,
         ),
@@ -80,7 +76,7 @@ def upsample_test_helper(tmp_path: Path, use_compress: bool) -> None:
 
     assert np.any(source_buffer != 0)
 
-    target_buffer = mag1.read(offset=target_offset, size=target_size)[0]
+    target_buffer = mag1.read(absolute_offset=offset, size=BUFFER_SHAPE)[0]
     assert np.any(target_buffer != 0)
 
     assert np.all(target_buffer == upsample_cube(source_buffer, [2, 2, 1]))
@@ -100,7 +96,6 @@ def test_upsample_multi_channel(tmp_path: Path) -> None:
     source_data = (
         128 * np.random.randn(num_channels, size[0], size[1], size[2])
     ).astype("uint8")
-    file_len = 32
 
     ds = Dataset(tmp_path / "multi-channel-test", (1, 1, 1))
     l = ds.add_layer(
@@ -109,7 +104,7 @@ def test_upsample_multi_channel(tmp_path: Path) -> None:
         dtype_per_channel="uint8",
         num_channels=num_channels,
     )
-    mag2 = l.add_mag("2", file_len=file_len)
+    mag2 = l.add_mag("2", chunks_per_shard=32)
 
     mag2.write(source_data)
     assert np.any(source_data != 0)

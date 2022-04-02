@@ -76,7 +76,7 @@ def downsample_test_helper(
 
     source_ds = Dataset.open(source_path)
     target_ds = source_ds.copy_dataset(
-        target_path, chunk_size=chunk_size, chunks_per_shard=Vec3Int.full(16)
+        target_path, chunk_size=chunk_size, chunks_per_shard=16
     )
 
     target_layer = target_ds.get_layer("color")
@@ -134,13 +134,11 @@ def test_compressed_downsample_cube_job(WT1_path: Path, tmp_path: Path) -> None:
 
 
 def test_downsample_multi_channel(tmp_path: Path) -> None:
-    offset = (0, 0, 0)
     num_channels = 3
     size = (32, 32, 10)
     source_data = (
         128 * np.random.randn(num_channels, size[0], size[1], size[2])
     ).astype("uint8")
-    file_len = 32
 
     ds = Dataset(tmp_path / "multi-channel-test", (1, 1, 1))
     l = ds.add_layer(
@@ -149,10 +147,10 @@ def test_downsample_multi_channel(tmp_path: Path) -> None:
         dtype_per_channel="uint8",
         num_channels=num_channels,
     )
-    mag1 = l.add_mag("1", file_len=file_len)
+    mag1 = l.add_mag("1", chunks_per_shard=32)
 
     print("writing source_data shape", source_data.shape)
-    mag1.write(source_data, offset=offset)
+    mag1.write(source_data)
     assert np.any(source_data != 0)
 
     mag2 = l._initialize_mag_from_other_mag("2", mag1, False)
@@ -173,7 +171,7 @@ def test_downsample_multi_channel(tmp_path: Path) -> None:
         )
     joined_buffer = np.stack(channels)
 
-    target_buffer = mag2.read(offset=offset)
+    target_buffer = mag2.read()
     assert np.any(target_buffer != 0)
     assert np.all(target_buffer == joined_buffer)
 
@@ -349,9 +347,7 @@ def test_downsample_mag_list_with_only_setup_mags(tmp_path: Path) -> None:
     )
 
     for m in target_mags:
-        assert np.all(
-            layer.get_mag(m).read((0, 0, 0), (10, 20, 30)) == 0
-        ), "The mags should be empty."
+        assert np.all(layer.get_mag(m).read() == 0), "The mags should be empty."
 
     layer.downsample_mag_list(
         from_mag=Mag(1), target_mags=target_mags, allow_overwrite=True
@@ -377,7 +373,7 @@ def test_downsample_with_invalid_mag_list(tmp_path: Path) -> None:
 def test_downsample_compressed(tmp_path: Path) -> None:
     ds = Dataset(tmp_path / "downsample_compressed", scale=(1, 1, 2))
     layer = ds.add_layer("color", COLOR_CATEGORY)
-    mag = layer.add_mag(1, block_len=8, file_len=8)
+    mag = layer.add_mag(1, chunk_size=8, chunks_per_shard=8)
     mag.write(data=(np.random.rand(80, 240, 15) * 255).astype(np.uint8))
 
     assert not mag._is_compressed()
@@ -402,7 +398,7 @@ def test_downsample_compressed(tmp_path: Path) -> None:
 def test_downsample_2d(tmp_path: Path) -> None:
     ds = Dataset(tmp_path / "downsample_compressed", scale=(1, 1, 2))
     layer = ds.add_layer("color", COLOR_CATEGORY)
-    mag = layer.add_mag(1, block_len=8, file_len=8)
+    mag = layer.add_mag(1, chunk_size=8, chunks_per_shard=8)
     # write 2D data with all values set to "123"
     mag.write(data=(np.ones((100, 100, 1)) * 123).astype(np.uint8))
     with pytest.warns(Warning):
