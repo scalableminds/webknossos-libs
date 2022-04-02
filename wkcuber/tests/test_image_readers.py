@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 from wkcuber.image_readers import ImageReaderManager
 
-TESTDATA_DIR = Path("testdata")
+from .constants import TESTDATA_DIR
 
 
 def test_rgb_tiff_case() -> None:

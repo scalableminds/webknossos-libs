@@ -54,13 +54,12 @@ DATA_FORMATS_AND_OUTPUT_PATHS = [
 pytestmark = [pytest.mark.block_network(allowed_hosts=[".*"])]
 
 
-
 def copy_simple_dataset(
     data_format: DataFormat, output_path: Path, suffix: Optional[str] = None
 ) -> Path:
     suffix = (f"_{suffix}") if suffix is not None else ""
     new_dataset_path = output_path / f"simple_{data_format}_dataset{suffix}"
-    delete_dir(new_dataset_path)
+    rmtree(new_dataset_path)
     copytree(
         TESTDATA_DIR / f"simple_{data_format}_dataset",
         new_dataset_path,
@@ -73,7 +72,7 @@ def prepare_dataset_path(
 ) -> Path:
     suffix = (f"_{suffix}") if suffix is not None else ""
     new_dataset_path = output_path / f"{data_format}_dataset{suffix}"
-    delete_dir(new_dataset_path)
+    rmtree(new_dataset_path)
     return new_dataset_path
 
 
@@ -843,7 +842,7 @@ def test_typing_of_get_mag() -> None:
 
 def test_dataset_exist_ok() -> None:
     ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR, "exist_ok")
-    delete_dir(ds_path)
+    rmtree(ds_path)
 
     # dataset does not exists yet
     ds1 = Dataset(ds_path, scale=(1, 1, 1), exist_ok=False)
@@ -1501,7 +1500,7 @@ def test_search_dataset_also_for_long_layer_name(
 
     # rename the path from "long_layer_name/color/2" to "long_layer_name/color/2-2-2"
     copytree(short_mag_file_path, long_mag_file_path)
-    delete_dir(short_mag_file_path)
+    rmtree(short_mag_file_path)
 
     # make sure that reading data still works
     mag.read(absolute_offset=(20, 20, 20), size=(20, 20, 20))

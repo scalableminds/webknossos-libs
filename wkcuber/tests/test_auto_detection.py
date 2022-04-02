@@ -8,27 +8,13 @@ from webknossos.utils import rmtree
 from wkcuber.converter import ImageStackConverter, KnossosConverter
 
 TEST_PREFIXES = ["", "/", "../"]
-TESTDATA_DIR = Path("../webknossos/testdata")
 
 
 def fix_sep(path: str) -> str:
     return path.replace("/", sep)
 
 
-@pytest.fixture(scope="session")
-def WT1_path() -> Path:
-    ds_path = TESTDATA_DIR / "WT1_wkw"
-    if ds_path.exists():
-        rmtree(ds_path)
-    unpack_archive(
-        TESTDATA_DIR / "WT1_wkw.tar.gz",
-        ds_path,
-    )
-    return ds_path
-
-
 def test_wkw_detection(tmp_path: Path, WT1_path: Path) -> None:
-
     # test wkw detection
     return_info = run(
         [

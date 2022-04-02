@@ -11,7 +11,7 @@ from webknossos import Dataset, Mag
 from webknossos.dataset.dataset import PROPERTIES_FILE_NAME
 from webknossos.utils import copytree, rmtree
 
-TESTDATA_DIR = Path("testdata")
+from .constants import TESTDATA_DIR
 
 
 def check_call(*args: Union[str, int, Path]) -> None:

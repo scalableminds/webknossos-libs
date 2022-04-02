@@ -1,7 +1,5 @@
-import os
 from pathlib import Path
 from shutil import rmtree
-from typing import Union
 
 import numpy as np
 import wkw

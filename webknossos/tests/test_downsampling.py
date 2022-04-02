@@ -1,7 +1,5 @@
 import warnings
 from pathlib import Path
-from shutil import unpack_archive
-from typing import Tuple
 
 import numpy as np
 import pytest
@@ -18,23 +16,8 @@ from webknossos.dataset.downsampling_utils import (
     downsample_cube_job,
     non_linear_filter_3d,
 )
-from webknossos.utils import rmtree
-
-from .constants import TESTDATA_DIR
 
 BUFFER_SHAPE = Vec3Int.full(256)
-
-
-@pytest.fixture(scope="session")
-def WT1_path() -> Path:
-    ds_path = TESTDATA_DIR / "WT1_wkw"
-    if ds_path.exists():
-        rmtree(ds_path)
-    unpack_archive(
-        TESTDATA_DIR / "WT1_wkw.tar.gz",
-        ds_path,
-    )
-    return ds_path
 
 
 def test_downsample_cube() -> None:
@@ -140,14 +123,14 @@ def downsample_test_helper(
     )
 
 
-def test_downsample_cube_job() -> None:
-    downsample_test_helper(False, Vec3Int.full(16))
+def test_downsample_cube_job(WT1_path: Path, tmp_path: Path) -> None:
+    downsample_test_helper(WT1_path, tmp_path, False, Vec3Int.full(16))
 
 
-def test_compressed_downsample_cube_job() -> None:
+def test_compressed_downsample_cube_job(WT1_path: Path, tmp_path: Path) -> None:
     with warnings.catch_warnings():
         warnings.filterwarnings("error")  # This escalates the warning to an error
-        downsample_test_helper(True, Vec3Int.full(32))
+        downsample_test_helper(WT1_path, tmp_path, True, Vec3Int.full(32))
 
 
 def test_downsample_multi_channel(tmp_path: Path) -> None:
