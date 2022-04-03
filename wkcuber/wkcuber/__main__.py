@@ -4,8 +4,12 @@ from typing import Dict, List
 
 from webknossos import Mag
 
-from ._internal.utils import (add_distribution_flags, add_isotropic_flag,
-                              add_sampling_mode_flag, setup_logging)
+from ._internal.utils import (
+    add_distribution_flags,
+    add_isotropic_flag,
+    add_sampling_mode_flag,
+    setup_logging,
+)
 from ._internal.versioning import get_available_version
 from .compress import compress_mag_inplace
 from .converter import create_parser as create_conversion_parser
