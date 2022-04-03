@@ -5,7 +5,7 @@ from subprocess import run
 
 import pytest
 from webknossos.utils import rmtree
-from wkcuber._internal.converter import ImageStackConverter, KnossosConverter
+from wkcuber.converter import ImageStackConverter, KnossosConverter
 
 TEST_PREFIXES = ["", "/", "../"]
 
