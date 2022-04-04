@@ -86,6 +86,7 @@ jobs:
           poetry install
 
       - name: Check typing
+        if: ${{ matrix.executors == 'multiprocessing' }}
         run: ./typecheck.sh
 
       - name: Check formatting
