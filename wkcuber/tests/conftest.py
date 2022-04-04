@@ -41,7 +41,7 @@ def sample_wkw_path() -> Path:
         ]
     )
     copytree(
-        TESTDATA_DIR / "tiff" / "datasource-properties.fixture.json",
+        TESTDATA_DIR / "tiff" / "datasource-properties.wkw-fixture.json",
         ds_path / PROPERTIES_FILE_NAME,
     )
     Dataset.open(ds_path).get_layer("color").downsample_mag(Mag(1), Mag(2))

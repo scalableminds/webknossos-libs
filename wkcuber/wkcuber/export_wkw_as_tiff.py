@@ -36,8 +36,8 @@ def create_parser() -> ArgumentParser:
     )
 
     parser.add_argument(
-        "--target_path",
-        "-t",
+        "--destination_path",
+        "-d",
         help="Output directory for the generated tiff files.",
         required=True,
         type=Path,
@@ -208,14 +208,14 @@ def export_tiff_stack(
     layer_name: str,
     bbox: Dict[str, List[int]],
     mag: Mag,
-    target_path: Path,
+    destination_path: Path,
     name: str,
     tiling_slice_size: Union[None, Tuple[int, int]],
     batch_size: int,
     downsample: int,
     args: Namespace,
 ) -> None:
-    target_path.mkdir(parents=True, exist_ok=True)
+    destination_path.mkdir(parents=True, exist_ok=True)
     dataset_path = source_path / layer_name / mag.to_layer_name()
 
     with get_executor_for_args(args) as executor:
@@ -227,7 +227,7 @@ def export_tiff_stack(
             partial(
                 export_tiff_slice,
                 bbox,
-                target_path,
+                destination_path,
                 name,
                 dataset_path,
                 tiling_slice_size,
@@ -275,7 +275,7 @@ def export_wkw_as_tiff(args: Namespace) -> None:
         layer_name=args.layer_name,
         bbox=bbox,
         mag=Mag(args.mag),
-        target_path=args.target_path,
+        destination_path=args.destination_path,
         name=args.name,
         tiling_slice_size=args.tile_size,
         batch_size=args.batch_size,

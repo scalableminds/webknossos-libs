@@ -29,8 +29,8 @@ def create_parser() -> ArgumentParser:
     )
 
     parser.add_argument(
-        "--target_path",
-        "-t",
+        "--destination_path",
+        "-d",
         help="Output directory for the generated nifti files. One file will be generated per wkw layer.",
         required=True,
         type=Path,
@@ -74,7 +74,7 @@ def export_layer_to_nifti(
     source_bbox: BoundingBox,
     mag: Mag,
     layer_name: str,
-    target_path: Path,
+    destination_path: Path,
     name: str,
     padding: Optional[Tuple[int, ...]] = None,
 ) -> None:
@@ -103,7 +103,7 @@ def export_layer_to_nifti(
 
     img = nib.Nifti1Image(data, np.eye(4))
 
-    destination_file = str(target_path.joinpath(name + ".nii"))
+    destination_file = str(destination_path.joinpath(name + ".nii"))
 
     logging.info(f"Writing to {destination_file} with shape {data.shape}")
     nib.save(img, destination_file)
@@ -113,7 +113,7 @@ def export_nifti(
     source_path: Path,
     source_bbox: Optional[BoundingBox],
     mag: Mag,
-    target_path: Path,
+    destination_path: Path,
     name: str,
     padding: Optional[Tuple[int, ...]] = None,
 ) -> None:
@@ -127,7 +127,7 @@ def export_nifti(
             layer.bounding_box if source_bbox is None else source_bbox,
             mag,
             layer_name,
-            target_path,
+            destination_path,
             name + "_" + layer_name,
             padding,
         )
@@ -140,7 +140,7 @@ def export_wkw_as_nifti(args: Namespace) -> None:
         source_path=args.source_path,
         source_bbox=args.source_bbox,
         mag=Mag(args.mag),
-        target_path=args.target_path,
+        destination_path=args.destination_path,
         name=args.name,
         padding=args.padding,
     )
