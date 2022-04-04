@@ -15,6 +15,13 @@ from .schedulers.pbs import PBSExecutor
 from .schedulers.slurm import SlurmExecutor
 from .util import enrich_future_with_uncaught_warning
 
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv()
+except ModuleNotFoundError:
+    pass
+
 
 def get_existent_kwargs_subset(whitelist, kwargs):
     new_kwargs = {}
