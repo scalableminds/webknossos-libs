@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 set -eEuo pipefail
 
-source ../_tooling/local_minio_setup.sh
+set +u
+if [[ -z $RUNNER_OS || "$RUNNER_OS" == "Linux" ]]; then
+    source ../_tooling/local_minio_setup.sh
+fi
+set -u
 
 # Note that pytest should be executed via `python -m`, since
 # this will ensure that the current directory is added to sys.path
