@@ -219,25 +219,26 @@ def add_data_format_flags(parser: argparse.ArgumentParser) -> None:
 
 
 def parse_path(value: str) -> Path:
-    if value.startswith("http://") or value.startswith("https://"):
-        if "HTTP_BASIC_USER" in environ and "HTTP_BASIC_PASSWORD" in environ:
-            import aiohttp
+    if (
+        (value.startswith("http://") or value.startswith("https://"))
+        and "HTTP_BASIC_USER" in environ
+        and "HTTP_BASIC_PASSWORD" in environ
+    ):
+        import aiohttp
 
-            return UPath(
-                value,
-                client_kwargs={
-                    "auth": aiohttp.BasicAuth(
-                        environ["HTTP_BASIC_USER"], environ["HTTP_BASIC_PASSWORD"]
-                    )
-                },
-            )
-    elif value.startswith("s3://"):
-        if "S3_ENDPOINT_URL" in environ:
-            return UPath(
-                value,
-                client_kwargs={"endpoint_url": environ["S3_ENDPOINT_URL"]},
-            )
-        return UPath(value)
+        return UPath(
+            value,
+            client_kwargs={
+                "auth": aiohttp.BasicAuth(
+                    environ["HTTP_BASIC_USER"], environ["HTTP_BASIC_PASSWORD"]
+                )
+            },
+        )
+    elif value.startswith("s3://") and "S3_ENDPOINT_URL" in environ:
+        return UPath(
+            value,
+            client_kwargs={"endpoint_url": environ["S3_ENDPOINT_URL"]},
+        )
 
     return UPath(value)
 
