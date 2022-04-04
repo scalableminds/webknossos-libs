@@ -1,19 +1,20 @@
 from argparse import ArgumentParser
 from os import environ
-from pathlib import Path
 
 from webknossos import Dataset, webknossos_context
 from webknossos.client._defaults import DEFAULT_WEBKNOSSOS_URL
 from webknossos.client._upload_dataset import DEFAULT_SIMULTANEOUS_UPLOADS
 
-from ._internal.utils import add_verbose_flag, setup_logging
+from ._internal.utils import add_verbose_flag, parse_path, setup_logging
 
 
 def create_parser() -> ArgumentParser:
     parser = ArgumentParser()
 
     parser.add_argument(
-        "source_path", help="Directory containing the source WKW dataset.", type=Path
+        "source_path",
+        help="Directory containing the source WKW dataset.",
+        type=parse_path,
     )
 
     parser.add_argument(

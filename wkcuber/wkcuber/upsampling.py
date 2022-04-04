@@ -11,6 +11,7 @@ from ._internal.utils import (
     add_isotropic_flag,
     add_sampling_mode_flag,
     add_verbose_flag,
+    parse_path,
     setup_logging,
 )
 
@@ -18,7 +19,9 @@ from ._internal.utils import (
 def create_parser() -> ArgumentParser:
     parser = ArgumentParser()
 
-    parser.add_argument("path", help="Directory containing the dataset.", type=Path)
+    parser.add_argument(
+        "path", help="Directory containing the dataset.", type=parse_path
+    )
 
     parser.add_argument(
         "--layer_name",

@@ -16,6 +16,7 @@ from webknossos import (
     SegmentationLayer,
     Vec3Int,
 )
+from webknossos.dataset._array import _fsstore_from_path
 from webknossos.utils import get_executor_for_args, wait_and_ensure_success
 
 from ._internal.utils import (
@@ -26,6 +27,7 @@ from ._internal.utils import (
     add_scale_flag,
     add_verbose_flag,
     get_executor_args,
+    parse_path,
     setup_logging,
 )
 
@@ -48,11 +50,13 @@ def create_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "source_path",
         help="Path to zarr file to convert",
-        type=Path,
+        type=parse_path,
     )
 
     parser.add_argument(
-        "target_path", help="Output directory for the generated WKW dataset.", type=Path
+        "target_path",
+        help="Output directory for the generated WKW dataset.",
+        type=parse_path,
     )
 
     add_scale_flag(parser, required=False)
@@ -122,7 +126,7 @@ def _zarr_chunk_converter(
     logging.info(f"Conversion of {bounding_box.topleft}")
 
     slices = bounding_box.to_slices()
-    zarr_file = zarr.open(source_zarr_path, "r")
+    zarr_file = zarr.open(store=_fsstore_from_path(source_zarr_path), mode="r")
     source_data = zarr_file[slices][None, ...]
 
     if flip_axes:
@@ -149,7 +153,7 @@ def convert_zarr(
 ) -> MagView:
     ref_time = time.time()
 
-    f = zarr.open(source_zarr_path, "r")
+    f = zarr.open(store=_fsstore_from_path(source_zarr_path), mode="r")
     input_dtype = f.dtype
     shape = f.shape
 

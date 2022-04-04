@@ -15,6 +15,7 @@ from ._internal.utils import (
     get_channel_and_sample_iters_for_wk_compatibility,
     get_executor_args,
     is_wk_compatible_layer_format,
+    parse_path,
     setup_logging,
 )
 from .convert_knossos import create_parser as create_knossos_parser
@@ -41,7 +42,9 @@ def create_parser() -> ArgumentParser:
     )
 
     parser.add_argument(
-        "target_path", help="Output directory for the generated dataset.", type=Path
+        "target_path",
+        help="Output directory for the generated dataset.",
+        type=parse_path,
     )
 
     add_scale_flag(parser)

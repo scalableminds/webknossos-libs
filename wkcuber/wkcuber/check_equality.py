@@ -6,19 +6,26 @@ from typing import Optional, Tuple
 import numpy as np
 from webknossos import Dataset, View
 
+from ._internal.utils import (
+    add_distribution_flags,
+    add_verbose_flag,
+    parse_path,
+    setup_logging,
+)
 from .compress import BACKUP_EXT
-from ._internal.utils import add_distribution_flags, add_verbose_flag, setup_logging
 
 
 def create_parser() -> ArgumentParser:
     parser = ArgumentParser()
 
-    parser.add_argument("source_path", help="Path to input WKW dataset", type=Path)
+    parser.add_argument(
+        "source_path", help="Path to input WKW dataset", type=parse_path
+    )
 
     parser.add_argument(
         "target_path",
         help="WKW dataset with which to compare the input dataset.",
-        type=Path,
+        type=parse_path,
     )
 
     parser.add_argument(

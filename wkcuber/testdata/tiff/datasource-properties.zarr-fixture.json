@@ -1,0 +1,27 @@
+{
+  "id": {
+    "name": "test_dataset",
+    "team": "<unknown>"
+  },
+  "dataLayers": [
+    {
+      "dataFormat": "zarr",
+      "name": "color",
+      "category": "color",
+      "elementClass": "uint8",
+      "mags": [
+        {
+          "mag": [1, 1, 1]
+        }
+      ],
+      "numChannels": 1,
+      "boundingBox": {
+        "topLeft": [0, 0, 0],
+        "width": 265,
+        "height": 265,
+        "depth": 257
+      }
+    }
+  ],
+  "scale": [11.24, 11.24, 25.0]
+}

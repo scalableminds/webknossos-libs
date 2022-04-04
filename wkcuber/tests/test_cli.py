@@ -1,17 +1,25 @@
 import json
 import subprocess
+from os import environ
 from pathlib import Path
 from shutil import unpack_archive
 from typing import Union
 
 import numpy as np
 import pytest
-import wkw
-from webknossos import Dataset, Mag
+from upath import UPath
+from webknossos import DataFormat, Dataset, Mag
 from webknossos.dataset.dataset import PROPERTIES_FILE_NAME
 from webknossos.utils import copytree, rmtree
 
 from .constants import TESTDATA_DIR
+
+REMOTE_TESTOUTPUT_DIR = UPath(
+    "s3://testoutput",
+    key=environ["MINIO_ROOT_USER"],
+    secret=environ["MINIO_ROOT_PASSWORD"],
+    client_kwargs={"endpoint_url": "http://localhost:8000"},
+)
 
 
 def check_call(*args: Union[str, int, Path]) -> None:
@@ -26,7 +34,14 @@ def count_wkw_files(mag_path: Path) -> int:
     return len(list(mag_path.glob("**/x*.wkw")))
 
 
-def test_tiff_cubing(tmp_path: Path) -> None:
+@pytest.fixture(scope="session", autouse=True)
+def create_bucket() -> None:
+    REMOTE_TESTOUTPUT_DIR.fs.mkdirs("testoutput", exist_ok=True)
+
+
+def _tiff_cubing(
+    out_path: Path, data_format: DataFormat, chunks_per_shard: int
+) -> None:
     in_path = TESTDATA_DIR / "tiff"
 
     check_call(
@@ -40,26 +55,54 @@ def test_tiff_cubing(tmp_path: Path) -> None:
         "--layer_name",
         "color",
         "--chunks_per_shard",
-        32,
+        chunks_per_shard,
         "--scale",
         "11.24,11.24,25",
+        "--data_format",
+        str(data_format),
         in_path,
-        tmp_path,
+        out_path,
     )
 
-    assert (tmp_path / "color").exists()
-    assert (tmp_path / "color" / "1").exists()
+    assert (out_path / "color").exists()
+    assert (out_path / "color" / "1").exists()
+
+
+def test_tiff_cubing(tmp_path: Path) -> None:
+    _tiff_cubing(tmp_path, DataFormat.WKW, 32)
+
     assert count_wkw_files(tmp_path / "color" / "1") == 1
 
     assert (tmp_path / PROPERTIES_FILE_NAME).exists()
     with (tmp_path / PROPERTIES_FILE_NAME).open("r") as a, (
-        in_path / "datasource-properties.fixture.json"
-    ).open("r") as b:
+        TESTDATA_DIR / "tiff" / "datasource-properties.wkw-fixture.json"
+    ).open("r") as fixture_path:
         json_a = json.load(a)
-        json_b = json.load(b)
+        json_fixture = json.load(fixture_path)
         del json_a["id"]
-        del json_b["id"]
-        assert json_a == json_b
+        del json_fixture["id"]
+        assert json_a == json_fixture
+
+
+def test_tiff_cubing_zarr_s3() -> None:
+    out_path = REMOTE_TESTOUTPUT_DIR / "tiff_cubing"
+    environ["AWS_SECRET_ACCESS_KEY"] = environ["MINIO_ROOT_PASSWORD"]
+    environ["AWS_ACCESS_KEY_ID"] = environ["MINIO_ROOT_USER"]
+    environ["S3_ENDPOINT_URL"] = "http://localhost:8000"
+
+    _tiff_cubing(out_path, DataFormat.Zarr, 1)
+
+    assert (out_path / "color" / "1" / ".zarray").exists()
+    assert (out_path / PROPERTIES_FILE_NAME).exists()
+
+    with (out_path / PROPERTIES_FILE_NAME).open("r") as a, (
+        TESTDATA_DIR / "tiff" / "datasource-properties.zarr-fixture.json"
+    ).open("r") as fixture:
+        json_a = json.load(a)
+        json_fixture = json.load(fixture)
+        del json_a["id"]
+        del json_fixture["id"]
+        assert json_a == json_fixture
 
 
 def test_downsampling(

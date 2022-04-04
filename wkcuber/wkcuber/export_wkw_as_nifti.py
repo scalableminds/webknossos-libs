@@ -12,6 +12,7 @@ from ._internal.utils import (
     add_verbose_flag,
     parse_bounding_box,
     parse_padding,
+    parse_path,
     setup_logging,
 )
 
@@ -24,13 +25,15 @@ def create_parser() -> ArgumentParser:
         "-s",
         help="Directory containing the wkw file(s).",
         required=True,
+        type=parse_path,
     )
 
     parser.add_argument(
-        "--destination_path",
-        "-d",
+        "--target_path",
+        "-t",
         help="Output directory for the generated nifti files. One file will be generated per wkw layer.",
         required=True,
+        type=Path,
     )
 
     parser.add_argument("--name", "-n", help="Name of the nifti", default="")
@@ -67,15 +70,15 @@ def create_parser() -> ArgumentParser:
 
 
 def export_layer_to_nifti(
-    wkw_file_path: Path,
+    source_path: Path,
     source_bbox: BoundingBox,
     mag: Mag,
     layer_name: str,
-    destination_path: Path,
+    target_path: Path,
     name: str,
     padding: Optional[Tuple[int, ...]] = None,
 ) -> None:
-    dataset = Dataset.open(wkw_file_path)
+    dataset = Dataset.open(source_path)
     layer = dataset.get_layer(layer_name)
     mag_layer = layer.get_mag(mag)
 
@@ -100,31 +103,31 @@ def export_layer_to_nifti(
 
     img = nib.Nifti1Image(data, np.eye(4))
 
-    destination_file = str(destination_path.joinpath(name + ".nii"))
+    destination_file = str(target_path.joinpath(name + ".nii"))
 
     logging.info(f"Writing to {destination_file} with shape {data.shape}")
     nib.save(img, destination_file)
 
 
 def export_nifti(
-    wkw_file_path: Path,
+    source_path: Path,
     source_bbox: Optional[BoundingBox],
     mag: Mag,
-    destination_path: Path,
+    target_path: Path,
     name: str,
     padding: Optional[Tuple[int, ...]] = None,
 ) -> None:
-    dataset = Dataset.open(wkw_file_path)
+    dataset = Dataset.open(source_path)
 
     for layer_name, layer in dataset.layers.items():
         logging.info(f"Starting nifti export for bounding box: {source_bbox}")
 
         export_layer_to_nifti(
-            wkw_file_path,
+            source_path,
             layer.bounding_box if source_bbox is None else source_bbox,
             mag,
             layer_name,
-            destination_path,
+            target_path,
             name + "_" + layer_name,
             padding,
         )
@@ -134,10 +137,10 @@ def export_wkw_as_nifti(args: Namespace) -> None:
     setup_logging(args)
 
     export_nifti(
-        wkw_file_path=Path(args.source_path),
+        source_path=args.source_path,
         source_bbox=args.source_bbox,
         mag=Mag(args.mag),
-        destination_path=Path(args.destination_path),
+        target_path=args.target_path,
         name=args.name,
         padding=args.padding,
     )

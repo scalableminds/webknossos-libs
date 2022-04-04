@@ -37,6 +37,7 @@ from ._internal.utils import (
     find_files,
     get_chunks,
     get_executor_for_args,
+    parse_path,
     setup_logging,
     wait_and_ensure_success,
 )
@@ -50,7 +51,9 @@ def create_parser() -> ArgumentParser:
     )
 
     parser.add_argument(
-        "target_path", help="Output directory for the generated dataset.", type=Path
+        "target_path",
+        help="Output directory for the generated dataset.",
+        type=parse_path,
     )
 
     parser.add_argument(

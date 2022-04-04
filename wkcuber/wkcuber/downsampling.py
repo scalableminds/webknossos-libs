@@ -12,6 +12,7 @@ from ._internal.utils import (
     add_sampling_mode_flag,
     add_verbose_flag,
     get_executor_args,
+    parse_path,
     setup_logging,
 )
 
@@ -19,7 +20,9 @@ from ._internal.utils import (
 def create_parser() -> ArgumentParser:
     parser = ArgumentParser()
 
-    parser.add_argument("path", help="Directory containing the dataset.", type=Path)
+    parser.add_argument(
+        "path", help="Directory containing the dataset.", type=parse_path
+    )
 
     parser.add_argument(
         "--layer_name",
@@ -124,6 +127,9 @@ def downsample_mags(
         layer_name = path.parent.name
         from_mag = Mag(path.name)
         path = path.parent.parent
+
+    assert layer_name is not None  # for mypy
+    assert from_mag is not None  # for mypy
 
     Dataset.open(path).get_layer(layer_name).downsample(
         from_mag=from_mag,

@@ -15,6 +15,7 @@ from ._internal.utils import (
     add_verbose_flag,
     pad_or_crop_to_size_and_topleft,
     parse_bounding_box,
+    parse_path,
     setup_logging,
 )
 
@@ -30,7 +31,9 @@ def create_parser() -> ArgumentParser:
     )
 
     parser.add_argument(
-        "target_path", help="Output directory for the generated WKW dataset.", type=Path
+        "target_path",
+        help="Output directory for the generated WKW dataset.",
+        type=parse_path,
     )
 
     parser.add_argument(

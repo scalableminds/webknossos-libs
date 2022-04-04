@@ -11,16 +11,17 @@ from PIL import Image
 from scipy.ndimage.interpolation import zoom
 from webknossos import Mag
 
-from .metadata import read_metadata_for_layer
 from ._internal.utils import (
     add_batch_size_flag,
     add_distribution_flags,
     add_verbose_flag,
     get_executor_for_args,
     parse_bounding_box,
+    parse_path,
     setup_logging,
     wait_and_ensure_success,
 )
+from .metadata import read_metadata_for_layer
 
 
 def create_parser() -> ArgumentParser:
@@ -31,12 +32,12 @@ def create_parser() -> ArgumentParser:
         "-s",
         help="Directory containing the wkw file.",
         required=True,
-        type=Path,
+        type=parse_path,
     )
 
     parser.add_argument(
-        "--destination_path",
-        "-d",
+        "--target_path",
+        "-t",
         help="Output directory for the generated tiff files.",
         required=True,
         type=Path,
@@ -203,19 +204,19 @@ def export_tiff_slice(
 
 
 def export_tiff_stack(
-    wkw_file_path: Path,
-    wkw_layer: str,
+    source_path: Path,
+    layer_name: str,
     bbox: Dict[str, List[int]],
     mag: Mag,
-    destination_path: Path,
+    target_path: Path,
     name: str,
     tiling_slice_size: Union[None, Tuple[int, int]],
     batch_size: int,
     downsample: int,
     args: Namespace,
 ) -> None:
-    destination_path.mkdir(parents=True, exist_ok=True)
-    dataset_path = wkw_file_path / wkw_layer / mag.to_layer_name()
+    target_path.mkdir(parents=True, exist_ok=True)
+    dataset_path = source_path / layer_name / mag.to_layer_name()
 
     with get_executor_for_args(args) as executor:
         num_slices = ceil(bbox["size"][2] / batch_size)
@@ -226,7 +227,7 @@ def export_tiff_stack(
             partial(
                 export_tiff_slice,
                 bbox,
-                destination_path,
+                target_path,
                 name,
                 dataset_path,
                 tiling_slice_size,
@@ -270,11 +271,11 @@ def export_wkw_as_tiff(args: Namespace) -> None:
     args.batch_size = int(args.batch_size)
 
     export_tiff_stack(
-        wkw_file_path=args.source_path,
-        wkw_layer=args.layer_name,
+        source_path=args.source_path,
+        layer_name=args.layer_name,
         bbox=bbox,
         mag=Mag(args.mag),
-        destination_path=args.destination_path,
+        target_path=args.target_path,
         name=args.name,
         tiling_slice_size=args.tile_size,
         batch_size=args.batch_size,

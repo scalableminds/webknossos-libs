@@ -1,5 +1,4 @@
 from argparse import ArgumentParser
-from pathlib import Path
 
 from webknossos import Dataset
 
@@ -7,6 +6,7 @@ from ._internal.utils import (
     add_data_format_flags,
     add_distribution_flags,
     add_verbose_flag,
+    parse_path,
     setup_logging,
 )
 
@@ -15,11 +15,15 @@ def create_parser() -> ArgumentParser:
     parser = ArgumentParser()
 
     parser.add_argument(
-        "source_path", help="Directory containing the datasource properties.", type=Path
+        "source_path",
+        help="Directory containing the datasource properties.",
+        type=parse_path,
     )
 
     parser.add_argument(
-        "target_path", help="Output directory for the generated dataset.", type=Path
+        "target_path",
+        help="Output directory for the generated dataset.",
+        type=parse_path,
     )
 
     parser.add_argument(

@@ -25,9 +25,10 @@ def _is_power_of_two(num: int) -> bool:
 def _fsstore_from_path(path: Path, mode: str = "a") -> FSStore:
     storage_options = {}
     if hasattr(path, "_kwargs"):
-        path = cast(UPath, path)
-        storage_options = path._kwargs.copy()
+        upath = cast(UPath, path)
+        storage_options = upath._kwargs.copy()
         del storage_options["_url"]
+        return FSStore(url=str(upath), mode=mode, **storage_options)
 
     return FSStore(url=str(path), mode=mode, **storage_options)
 

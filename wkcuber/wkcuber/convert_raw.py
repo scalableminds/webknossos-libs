@@ -21,6 +21,7 @@ from ._internal.utils import (
     add_scale_flag,
     add_verbose_flag,
     get_executor_args,
+    parse_path,
     setup_logging,
 )
 
@@ -50,11 +51,13 @@ def create_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "source_path",
         help="Path to raw file to convert",
-        type=Path,
+        type=parse_path,
     )
 
     parser.add_argument(
-        "target_path", help="Output directory for the generated WKW dataset.", type=Path
+        "target_path",
+        help="Output directory for the generated WKW dataset.",
+        type=parse_path,
     )
 
     parser.add_argument(

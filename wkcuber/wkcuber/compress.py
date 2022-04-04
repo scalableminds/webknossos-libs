@@ -1,12 +1,17 @@
 import logging
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
-from shutil import rmtree
 from typing import List, Optional
 
 from webknossos import Dataset, Mag
+from webknossos.utils import rmtree
 
-from ._internal.utils import add_distribution_flags, add_verbose_flag, setup_logging
+from ._internal.utils import (
+    add_distribution_flags,
+    add_verbose_flag,
+    parse_path,
+    setup_logging,
+)
 
 BACKUP_EXT = ".bak"
 
@@ -15,7 +20,9 @@ def create_parser() -> ArgumentParser:
     parser = ArgumentParser()
 
     parser.add_argument(
-        "source_path", help="Directory containing the source WKW dataset.", type=Path
+        "source_path",
+        help="Directory containing the source WKW dataset.",
+        type=parse_path,
     )
 
     parser.add_argument(
@@ -23,7 +30,7 @@ def create_parser() -> ArgumentParser:
         help="Output directory for the compressed WKW dataset.",
         nargs="?",
         default=None,
-        type=Path,
+        type=parse_path,
     )
 
     parser.add_argument(
@@ -51,7 +58,7 @@ def compress_mag(
     args: Optional[Namespace] = None,
 ) -> None:
     Dataset.open(source_path).get_layer(layer_name).get_mag(mag).compress(
-        target_path=Path(target_path), args=args
+        target_path=target_path, args=args
     )
 
 
@@ -79,7 +86,7 @@ def compress_mags(
 
     for mag, mag_view in Dataset.open(source_path).get_layer(layer_name).mags.items():
         if mag in mags:
-            mag_view.compress(target_path=Path(target), args=args)
+            mag_view.compress(target_path=target, args=args)
 
     if target_path is None:
         backup_dir = source_path.with_suffix(BACKUP_EXT)

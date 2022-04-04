@@ -2,6 +2,7 @@ from collections import namedtuple
 from glob import iglob
 from logging import getLogger
 from math import ceil, floor
+from os import environ
 from typing import Generator, Sequence, Tuple
 
 import numpy as np
@@ -215,6 +216,30 @@ def add_data_format_flags(parser: argparse.ArgumentParser) -> None:
         type=_parse_vec3_int,
         help="Number of chunks to be stored as a shard in the output format (e.g. `32` or `32,32,32`).",
     )
+
+
+def parse_path(value: str) -> Path:
+    if value.startswith("http://") or value.startswith("https://"):
+        if "HTTP_BASIC_USER" in environ and "HTTP_BASIC_PASSWORD" in environ:
+            import aiohttp
+
+            return UPath(
+                value,
+                client_kwargs={
+                    "auth": aiohttp.BasicAuth(
+                        environ["HTTP_BASIC_USER"], environ["HTTP_BASIC_PASSWORD"]
+                    )
+                },
+            )
+    elif value.startswith("s3://"):
+        if "S3_ENDPOINT_URL" in environ:
+            return UPath(
+                value,
+                client_kwargs={"endpoint_url": environ["S3_ENDPOINT_URL"]},
+            )
+        return UPath(value)
+
+    return UPath(value)
 
 
 def pad_or_crop_to_size_and_topleft(

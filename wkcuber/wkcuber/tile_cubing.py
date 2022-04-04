@@ -20,8 +20,6 @@ from webknossos import (
 from webknossos.dataset.defaults import DEFAULT_CHUNK_SIZE
 from webknossos.utils import time_start, time_stop
 
-from .cubing import create_parser as create_cubing_parser
-from .cubing import read_image_file
 from ._internal.image_readers import image_reader
 from ._internal.utils import (
     get_chunks,
@@ -30,6 +28,8 @@ from ._internal.utils import (
     setup_logging,
     wait_and_ensure_success,
 )
+from .cubing import create_parser as create_cubing_parser
+from .cubing import read_image_file
 
 PADDING_FILE_NAME = "/"
 
