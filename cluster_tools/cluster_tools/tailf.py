@@ -11,7 +11,9 @@ from typing import Any, Callable, Tuple
 class Tail(object):
     """Represents a tail command."""
 
-    def __init__(self, tailed_file: str, callback: Callable[[str], Any]=sys.stdout.write) -> None:
+    def __init__(
+        self, tailed_file: str, callback: Callable[[str], Any] = sys.stdout.write
+    ) -> None:
         """Initiate a Tail instance.
         Check for file validity, assigns callback function to standard out.
 
@@ -22,7 +24,7 @@ class Tail(object):
         self.callback = callback
         self.is_cancelled = False
 
-    def follow(self, seconds: int=1) -> None:
+    def follow(self, seconds: int = 1) -> None:
         """Do a tail follow. If a callback function is registered it is called with every new line.
         Else printed to standard out.
 
