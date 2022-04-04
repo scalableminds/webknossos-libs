@@ -18,6 +18,13 @@ docker run \
   -d \
   minio/minio server /data
 
+stop_minio () {
+    ARG=$?
+    docker stop minio
+    exit $ARG
+}
+trap stop_minio EXIT
+
 if [ $# -eq 1 ] && [ "$1" = "--refresh-snapshots" ]; then
     ensure_local_test_wk
 
@@ -33,5 +40,3 @@ else
     poetry run python -m pytest -vv --block-network -m "with_vcr"
 fi
 poetry run python -m pytest -vv --disable-recording -m "not with_vcr"
-
-docker stop minio
