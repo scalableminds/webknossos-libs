@@ -5,7 +5,7 @@
 import os
 import sys
 import time
-from typing import Any, Callable, Tuple
+from typing import Any, Callable
 
 
 class Tail(object):
