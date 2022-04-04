@@ -155,16 +155,16 @@ def refresh_metadata(
 
 
 def convert_element_class_to_dtype(elementClass: str) -> np.dtype:
-    default_dtype = np.uint8 if "uint" in elementClass else np.dtype(elementClass)
+    fallback_dtype = "uint8" if "uint" in elementClass else elementClass
     conversion_map = {
-        "float": np.float32,
-        "double": np.float64,
-        "uint8": np.uint8,
-        "uint16": np.uint16,
-        "uint32": np.uint32,
-        "uint64": np.uint64,
+        "float": "float32",
+        "double": "float64",
+        "uint8": "uint8",
+        "uint16": "uint16",
+        "uint32": "uint32",
+        "uint64": "uint64",
     }
-    return conversion_map.get(elementClass, default_dtype)
+    return np.dtype(conversion_map.get(elementClass, fallback_dtype))
 
 
 def read_metadata_for_layer(
@@ -188,12 +188,12 @@ def read_metadata_for_layer(
 
 
 def convert_dtype_to_element_class(dtype: np.dtype) -> str:
-    element_class_to_dtype_map = {
-        "float": np.float32,
-        "double": np.float64,
+    dtype = np.dtype(dtype)
+    dtype_to_element_class_map = {
+        np.dtype("float32"): "float",
+        np.dtype("float64"): "double",
     }
-    conversion_map = {v: k for k, v in element_class_to_dtype_map.items()}
-    return conversion_map.get(dtype, str(np.dtype(dtype)))
+    return dtype_to_element_class_map.get(dtype, str(dtype))
 
 
 def detect_mag_path(

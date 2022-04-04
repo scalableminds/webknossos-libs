@@ -4,14 +4,16 @@ import logging
 import os
 import re
 from concurrent import futures
-from typing import Union
+from typing import Dict, List, Optional, Tuple
+
+from typing_extensions import Literal
 
 from cluster_tools.util import call, chcall, random_string
 
 from .cluster_executor import ClusterExecutor
 
 # qstat vs. checkjob
-PBS_STATES = {
+PBS_STATES: Dict[str, List[str]] = {
     "Failure": [],
     "Success": [
         "C",  # Completed
@@ -71,8 +73,12 @@ class PBSExecutor(ClusterExecutor):
         return int(jobid)
 
     def inner_submit(
-        self, cmdline, job_name=None, additional_setup_lines=None, job_count=None
-    ):
+        self,
+        cmdline: str,
+        job_name: Optional[str] = None,
+        additional_setup_lines: Optional[List[str]] = None,
+        job_count: Optional[int] = None,
+    ) -> Tuple[List["futures.Future[str]"], List[Tuple[int, int]]]:
         """Starts a PBS job that runs the specified shell command line."""
         if additional_setup_lines is None:
             additional_setup_lines = []
@@ -117,14 +123,14 @@ class PBSExecutor(ClusterExecutor):
         ]
 
         job_id = self.submit_text("\n".join(script_lines))
-        job_id_future = futures.Future()
+        job_id_future: "futures.Future[str]" = futures.Future()
         job_id_future.set_result(job_id)
 
         return [job_id_future], [(0, job_count or 1)]
 
     def check_for_crashed_job(
         self, job_id_with_index
-    ) -> Union["failed", "ignore", "completed"]:
+    ) -> Literal["failed", "ignore", "completed"]:
         if len(str(job_id_with_index).split("_")) >= 2:
             a, b = job_id_with_index.split("_")
             job_id_with_index = f"{a}[{b}]"

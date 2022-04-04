@@ -150,7 +150,7 @@ def find_source_filenames(source_path: Path) -> List[Path]:
 
 def read_image_file(
     file_name: Path,
-    dtype: type,
+    dtype: np.dtype,
     z_slice: int,
     channel_index: Optional[int],
     sample_index: Optional[int],

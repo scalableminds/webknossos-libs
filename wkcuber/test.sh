@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -eEuo pipefail
 
+source ../_tooling/local_minio_setup.sh
+
 # Note that pytest should be executed via `python -m`, since
 # this will ensure that the current directory is added to sys.path
 # (which is standard python behavior). This is necessary so that the imports

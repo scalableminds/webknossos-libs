@@ -18,7 +18,7 @@ class ImageReader:
     def read_array(
         self,
         file_name: Path,
-        dtype: np.dtype,
+        dtype: Union[type, np.dtype],
         z_slice: int,
         channel_index: Optional[int],
         sample_index: Optional[int],
@@ -50,7 +50,7 @@ class PillowImageReader(ImageReader):
     def read_array(
         self,
         file_name: Path,
-        dtype: np.dtype,
+        dtype: Union[type, np.dtype],
         z_slice: int,
         channel_index: Optional[int],
         sample_index: Optional[int],
@@ -79,7 +79,9 @@ class PillowImageReader(ImageReader):
         return np.array(Image.open(file_name)).dtype.name
 
 
-def to_target_datatype(data: np.ndarray, target_dtype: np.dtype) -> np.ndarray:
+def to_target_datatype(
+    data: np.ndarray, target_dtype: Union[type, np.dtype]
+) -> np.ndarray:
     factor = (1 + np.iinfo(data.dtype).max) / (1 + np.iinfo(target_dtype).max)
     return (data / factor).astype(target_dtype)
 
@@ -88,7 +90,7 @@ class Dm3ImageReader(ImageReader):
     def read_array(
         self,
         file_name: Path,
-        dtype: np.dtype,
+        dtype: Union[type, np.dtype],
         z_slice: int,
         channel_index: Optional[int],
         sample_index: Optional[int],
@@ -137,7 +139,7 @@ class Dm4ImageReader(ImageReader):
     def read_array(
         self,
         file_name: Path,
-        dtype: np.dtype,
+        dtype: Union[type, np.dtype],
         z_slice: int,
         channel_index: Optional[int],
         sample_index: Optional[int],
@@ -306,7 +308,7 @@ class TiffImageReader(ImageReader):
     def read_array(
         self,
         file_name: Path,
-        dtype: np.dtype,
+        dtype: Union[type, np.dtype],
         z_slice: int,
         channel_index: Optional[int],
         sample_index: Optional[int],
@@ -541,7 +543,7 @@ class CziImageReader(ImageReader):
     def read_array(
         self,
         file_name: Path,
-        dtype: np.dtype,
+        dtype: Union[type, np.dtype],
         z_slice: int,
         channel_index: Optional[int],
         sample_index: Optional[int],
@@ -785,7 +787,7 @@ class ImageReaderManager:
     def read_array(
         self,
         file_name: Path,
-        dtype: np.dtype,
+        dtype: Union[type, np.dtype],
         z_slice: int,
         channel_index: Optional[int] = None,
         sample_index: Optional[int] = None,
