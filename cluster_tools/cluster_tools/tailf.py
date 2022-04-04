@@ -5,12 +5,13 @@
 import os
 import sys
 import time
+from typing import Any, Callable, Tuple
 
 
 class Tail(object):
     """Represents a tail command."""
 
-    def __init__(self, tailed_file, callback=sys.stdout.write):
+    def __init__(self, tailed_file: str, callback: Callable[[str], Any]=sys.stdout.write) -> None:
         """Initiate a Tail instance.
         Check for file validity, assigns callback function to standard out.
 
@@ -21,7 +22,7 @@ class Tail(object):
         self.callback = callback
         self.is_cancelled = False
 
-    def follow(self, seconds=1):
+    def follow(self, seconds: int=1) -> None:
         """Do a tail follow. If a callback function is registered it is called with every new line.
         Else printed to standard out.
 
@@ -44,14 +45,14 @@ class Tail(object):
                 else:
                     self.callback(line)
 
-    def cancel(self):
+    def cancel(self) -> None:
         self.is_cancelled = True
 
-    def register_callback(self, func):
+    def register_callback(self, func: Callable[[str], Any]) -> None:
         """Overrides default callback function to provided function."""
         self.callback = func
 
-    def check_file_validity(self, file_):
+    def check_file_validity(self, file_: str) -> None:
         """Check whether the a given file exists, readable and is a file"""
         if not os.access(file_, os.F_OK):
             raise TailError("File '%s' does not exist" % (file_))

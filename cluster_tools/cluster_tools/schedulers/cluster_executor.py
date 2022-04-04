@@ -7,7 +7,9 @@ import time
 from abc import abstractmethod
 from concurrent import futures
 from functools import partial
-from typing import Union
+from typing import List, Optional, Tuple
+
+from typing_extensions import Literal
 
 from cluster_tools import pickling
 from cluster_tools.pickling import file_path_to_absolute_module
@@ -111,7 +113,7 @@ class ClusterExecutor(futures.Executor):
     @abstractmethod
     def check_for_crashed_job(
         self, job_id_with_index
-    ) -> Union["failed", "ignore", "completed"]:
+    ) -> Literal["failed", "ignore", "completed"]:
         pass
 
     def _start(self, workerid, job_count=None, job_name=None):
@@ -137,7 +139,13 @@ class ClusterExecutor(futures.Executor):
         return jobids_futures, job_index_ranges
 
     @abstractmethod
-    def inner_submit(self, *args, **kwargs):
+    def inner_submit(
+        self,
+        cmdline: str,
+        job_name: Optional[str] = None,
+        additional_setup_lines: Optional[List[str]] = None,
+        job_count: Optional[int] = None,
+    ) -> Tuple[List["futures.Future[str]"], List[Tuple[int, int]]]:
         pass
 
     def _cleanup(self, jobid):

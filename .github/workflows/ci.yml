@@ -85,6 +85,9 @@ jobs:
           pip install poetry
           poetry install
 
+      - name: Check typing
+        run: ./typecheck.sh
+
       - name: Check formatting
         if: ${{ matrix.executors == 'multiprocessing' }}
         run: ./format.sh check
@@ -150,8 +153,7 @@ jobs:
       run: ./lint.sh
 
     - name: Check typing
-      run: |
-        ./typecheck.sh
+      run: ./typecheck.sh
 
     - name: Python tests
       env:
