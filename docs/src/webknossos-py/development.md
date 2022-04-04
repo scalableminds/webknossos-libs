@@ -28,11 +28,16 @@ See below for specifics of the different packages. Let's have a look at the comm
   [see here for details](https://python-poetry.org/docs/configuration/#virtualenvscreate).
   To install the preferred version for this repository, run
   [`pip install -f requirements.txt`](https://github.com/scalableminds/webknossos-libs/blob/master/requirements.txt)
-* **Tooling** we try to use across projects (still WIP, see [#581](https://github.com/scalableminds/webknossos-libs/issues/581)):
+
+  To install the dependencies for all sub-projects, run `make install`.
+* **Tooling** we use across the sub-projects:
     * `format.sh`: black and isort
     * `lint.sh`: pylint
     * `typecheck.sh`: mypy
     * `test.sh`: pytest and custom scripts
+
+  Those are also accessible via make commands from the top-level directory, running the respective scripts for each sub-project
+  , e.g. `make format`, `make lint`, …
 
 Internal workflows for scalable minds:
 

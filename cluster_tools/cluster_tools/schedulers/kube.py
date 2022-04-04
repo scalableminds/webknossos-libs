@@ -4,11 +4,12 @@ import os
 import re
 import sys
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import List, Optional, Tuple
 from uuid import uuid4
 
 import kubernetes
 import kubernetes.client.models as kubernetes_models
+from typing_extensions import Literal
 
 from .cluster_executor import ClusterExecutor
 
@@ -19,9 +20,9 @@ def volume_name_from_path(path: Path) -> str:
 
 def deduplicate_mounts(mounts: List[Path]) -> List[Path]:
     output = []
-    mounts = set(mounts)
-    for mount in mounts:
-        if not any(m in mount.parents for m in mounts):
+    unique_mounts = set(mounts)
+    for mount in unique_mounts:
+        if not any(m in mount.parents for m in unique_mounts):
             output.append(mount)
     return output
 
@@ -73,7 +74,7 @@ class KubernetesExecutor(ClusterExecutor):
         return os.environ.get("JOB_ID", None)
 
     @classmethod
-    def get_job_id_string(cls) -> str:
+    def get_job_id_string(cls) -> Optional[str]:
         job_id = cls.get_current_job_id()
         job_index = cls.get_job_array_index()
         if job_index is None:
@@ -104,21 +105,21 @@ class KubernetesExecutor(ClusterExecutor):
         self,
         cmdline: str,
         job_name: Optional[str] = None,
+        additional_setup_lines: Optional[List[str]] = None,
         job_count: Optional[int] = None,
-        **_,
-    ):
+    ) -> Tuple[List["concurrent.futures.Future[str]"], List[Tuple[int, int]]]:
         """Starts a Kubernetes pod that runs the specified shell command line."""
 
         kubernetes_client = KubernetesClient()
         self.ensure_kubernetes_namespace()
         job_id = str(uuid4())
 
-        job_id_future = concurrent.futures.Future()
+        job_id_future: "concurrent.futures.Future[str]" = concurrent.futures.Future()
         job_id_future.set_result(job_id)
         job_id_futures = [job_id_future]
 
         is_array_job = job_count is not None
-        number_of_subjobs = job_count if is_array_job else 1
+        number_of_subjobs = job_count if job_count is not None else 1
         ranges = [(0, number_of_subjobs)]
 
         requested_resources = {
@@ -232,12 +233,12 @@ class KubernetesExecutor(ClusterExecutor):
 
     def check_for_crashed_job(
         self, job_id_with_index: str
-    ) -> Union["failed", "ignore", "completed"]:
+    ) -> Literal["failed", "ignore", "completed"]:
         kubernetes_client = KubernetesClient()
         [job_id, job_index] = (
             job_id_with_index.split("_")
             if "_" in job_id_with_index
-            else [job_id_with_index, 0]
+            else [job_id_with_index, "0"]
         )
         resp = kubernetes_client.core.list_namespaced_pod(
             namespace=self.job_resources["namespace"],

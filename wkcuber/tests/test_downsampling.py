@@ -28,7 +28,7 @@ TESTDATA_DIR = Path("testdata")
 
 def read_wkw(
     wkw_info: WkwDatasetInfo, offset: Tuple[int, int, int], size: Tuple[int, int, int]
-) -> np.array:
+) -> np.ndarray:
     with open_wkw(wkw_info) as wkw_dataset:
         return wkw_dataset.read(offset, size)
 
