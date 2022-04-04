@@ -15,13 +15,6 @@ from webknossos.utils import copytree, rmtree
 
 from .constants import TESTDATA_DIR
 
-REMOTE_TESTOUTPUT_DIR = UPath(
-    "s3://testoutput",
-    key=environ["MINIO_ROOT_USER"],
-    secret=environ["MINIO_ROOT_PASSWORD"],
-    client_kwargs={"endpoint_url": "http://localhost:8000"},
-)
-
 
 def check_call(*args: Union[str, int, Path]) -> None:
     try:
@@ -35,10 +28,16 @@ def count_wkw_files(mag_path: Path) -> int:
     return len(list(mag_path.glob("**/x*.wkw")))
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def remote_testoutput_path() -> UPath:
-    REMOTE_TESTOUTPUT_DIR.fs.mkdirs("testoutput", exist_ok=True)
-    return REMOTE_TESTOUTPUT_DIR
+    remote_path = UPath(
+        "s3://testoutput",
+        key=environ["MINIO_ROOT_USER"],
+        secret=environ["MINIO_ROOT_PASSWORD"],
+        client_kwargs={"endpoint_url": "http://localhost:8000"},
+    )
+    remote_path.fs.mkdirs("testoutput", exist_ok=True)
+    return remote_path
 
 
 def _tiff_cubing(
