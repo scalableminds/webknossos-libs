@@ -15,7 +15,7 @@ KNOSSOS_CUBE_REGEX = re.compile(
 
 
 class KnossosDataset:
-    def __init__(self, root: Union[str, Path], dtype: np.dtype = np.uint8):
+    def __init__(self, root: Union[str, Path], dtype: np.dtype):
         self.root = Path(root)
         self.dtype = dtype
 
@@ -100,7 +100,7 @@ class KnossosDataset:
         pass
 
     @staticmethod
-    def open(root: Union[str, Path], dtype: Optional[np.dtype]) -> "KnossosDataset":
+    def open(root: Union[str, Path], dtype: np.dtype) -> "KnossosDataset":
         return KnossosDataset(root, dtype)
 
     def __enter__(self) -> "KnossosDataset":
