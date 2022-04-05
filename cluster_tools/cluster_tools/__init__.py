@@ -171,7 +171,11 @@ class WrappedProcessPoolExecutor(ProcessPoolExecutor):
         with open(output_pickle_path, "wb") as file:
             pickling.dump(result, file)
 
-        return result
+        if result[0]:
+            return result[1]
+        else:
+            raise result[1]
+
 
     def map_unordered(self, func, args):
 
