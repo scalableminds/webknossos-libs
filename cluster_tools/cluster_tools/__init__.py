@@ -176,7 +176,6 @@ class WrappedProcessPoolExecutor(ProcessPoolExecutor):
         else:
             raise result[1]
 
-
     def map_unordered(self, func, args):
 
         futs = self.map_to_futures(func, args)
