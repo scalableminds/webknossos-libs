@@ -1065,8 +1065,8 @@ optional = false
 python-versions = "*"
 
 [[package]]
-name = "universal-pathlib-edge"
-version = "0.0.13"
+name = "universal-pathlib"
+version = "0.0.14"
 description = "Pathlib API extended to use fsspec backends"
 category = "main"
 optional = false
@@ -1118,7 +1118,7 @@ rich = "^10.9.0"
 scikit-image = "^0.18.3"
 scipy = "^1.4.0"
 typing-extensions = "^3.7"
-universal-pathlib-edge = "^0.0.13"
+universal-pathlib = "^0.0.14"
 wkw = "1.1.11"
 zarr = "^2.11.0"
 zipp = "^3.5.0"
@@ -2117,9 +2117,9 @@ typing-extensions = [
     {file = "typing_extensions-3.10.0.2-py3-none-any.whl", hash = "sha256:f1d25edafde516b146ecd0613dabcc61409817af4766fbbcfb8d1ad4ec441a34"},
     {file = "typing_extensions-3.10.0.2.tar.gz", hash = "sha256:49f75d16ff11f1cd258e1b988ccff82a3ca5570217d7ad8c5f48205dd99a677e"},
 ]
-universal-pathlib-edge = [
-    {file = "universal_pathlib_edge-0.0.13-py3-none-any.whl", hash = "sha256:c70bdb78ff8ddd802aef8725fe0c08f5856db042d0ebdd1ea6cc365678135c1c"},
-    {file = "universal_pathlib_edge-0.0.13.tar.gz", hash = "sha256:b803c41092b6262d3b432288c12f874217505a5368a4f4ad934004c6ad5a887a"},
+universal-pathlib = [
+    {file = "universal_pathlib-0.0.14-py3-none-any.whl", hash = "sha256:927e4205fe590eef4da71ff60d2371013c44952da570b480e7e3b1fcaa98cd97"},
+    {file = "universal_pathlib-0.0.14.tar.gz", hash = "sha256:49dd2868335e9b7507fabd456abeb9680316a4f6047b025c703d58b4fb77c2e3"},
 ]
 urllib3 = [
     {file = "urllib3-1.26.7-py2.py3-none-any.whl", hash = "sha256:c4fdf4019605b6e5423637e01bc9fe4daef873709a7973e195ceba0a62bbc844"},
