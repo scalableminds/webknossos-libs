@@ -58,8 +58,12 @@ def test_upload_download_roundtrip(sample_dataset: wk.Dataset, tmp_path: Path) -
 
     original_config = ds_original.get_layer("color").default_view_configuration
     roundtrip_config = ds_roundtrip.get_layer("color").default_view_configuration
-    assert original_config is not None, "default_view_configuration should be defined for original dataset"
-    assert roundtrip_config is not None, "default_view_configuration should be defined for roundtrip dataset"
+    assert (
+        original_config is not None
+    ), "default_view_configuration should be defined for original dataset"
+    assert (
+        roundtrip_config is not None
+    ), "default_view_configuration should be defined for roundtrip dataset"
     assert original_config.color == roundtrip_config.color
     assert original_config.intensity_range == roundtrip_config.intensity_range
 
