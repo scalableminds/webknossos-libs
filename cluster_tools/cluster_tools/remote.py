@@ -78,10 +78,10 @@ def worker(executor, workerid, job_array_index, job_array_index_offset, cfut_dir
         out = pickling.dumps(result)
 
     except Exception:
-        print(traceback.format_exc())
 
         result = False, format_remote_exc()
-        logging.warning("Job computation failed.")
+        logging.warning("Job computation failed with:")
+        print(traceback.format_exc())
         out = pickling.dumps(result)
 
     # The .preliminary postfix is added since the output can
