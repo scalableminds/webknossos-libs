@@ -10,6 +10,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.15...HEAD)
 
 ### Breaking Changes
+- The cluster-tools serialize the output of a job in the format `(wasSuccessful, result_value)` to a pickle file if `output_pickle_path` is provided and multiprocessing is used. This is consistent with how it is already done when using a cluster executor (e.g., slurm). [#686](https://github.com/scalableminds/webknossos-libs/pull/686)
 
 ### Added
 
