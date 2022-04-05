@@ -119,6 +119,9 @@ from .dataset_info_response_200_data_source_data_layers_item import (
 from .dataset_info_response_200_data_source_data_layers_item_bounding_box import (
     DatasetInfoResponse200DataSourceDataLayersItemBoundingBox,
 )
+from .dataset_info_response_200_data_source_data_layers_item_default_view_configuration import (
+    DatasetInfoResponse200DataSourceDataLayersItemDefaultViewConfiguration,
+)
 from .dataset_info_response_200_data_source_id import DatasetInfoResponse200DataSourceId
 from .dataset_info_response_200_data_store import DatasetInfoResponse200DataStore
 from .dataset_reserve_upload_json_body import DatasetReserveUploadJsonBody
