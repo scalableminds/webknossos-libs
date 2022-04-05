@@ -101,7 +101,7 @@ class ClusterExecutor(futures.Executor):
     def handle_kill(self, _signum, _frame):
         self.wait_thread.stop()
         job_ids = ",".join(str(id) for id in self.jobs.keys())
-        print(
+        logging.debug(
             "A termination signal was registered. The following jobs are still running on the cluster:\n{}".format(
                 job_ids
             )
@@ -196,7 +196,7 @@ class ClusterExecutor(futures.Executor):
             if not self.jobs:
                 self.jobs_empty_cond.notify_all()
         if self.debug:
-            print("job completed: {}".format(jobid), file=sys.stderr)
+            logging.debug("Job completed: {}".format(jobid), file=sys.stderr)
 
         preliminary_outfile_name = with_preliminary_postfix(outfile_name)
         if failed_early:
@@ -290,7 +290,7 @@ class ClusterExecutor(futures.Executor):
         jobid = jobids_futures[0].result()
 
         if self.debug:
-            print(f"job submitted: {jobid}", file=sys.stderr)
+            logging.debug(f"Job submitted: {jobid}", file=sys.stderr)
 
         # Thread will wait for it to finish.
         self.wait_thread.waitFor(preliminary_output_pickle_path, jobid)
@@ -412,7 +412,7 @@ class ClusterExecutor(futures.Executor):
         jobid = jobid_future.result()
         if self.debug:
 
-            print(
+            logging.debug(
                 "Submitted array job {} with JobId {} and {} subjobs.".format(
                     batch_description, jobid, len(futs_with_output_paths)
                 ),

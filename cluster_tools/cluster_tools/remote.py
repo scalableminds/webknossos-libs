@@ -47,8 +47,7 @@ def worker(executor, workerid, job_array_index, job_array_index_offset, cfut_dir
 
     try:
         input_file_name = executor.format_infile_name(cfut_dir, workerid_with_idx)
-        print("trying to read: ", input_file_name)
-        print("working dir: ", os.getcwd())
+        logging.debug(f"Trying to read: {input_file_name} (working dir: {os.getcwd()}")
 
         custom_main_path = get_custom_main_path(workerid, executor)
         with open(input_file_name, "rb") as f:
@@ -80,8 +79,7 @@ def worker(executor, workerid, job_array_index, job_array_index_offset, cfut_dir
     except Exception:
 
         result = False, format_remote_exc()
-        logging.warning("Job computation failed with:")
-        print(traceback.format_exc())
+        logging.warning(f"Job computation failed with:\n\n{traceback.format_exc()}")
         out = pickling.dumps(result)
 
     # The .preliminary postfix is added since the output can

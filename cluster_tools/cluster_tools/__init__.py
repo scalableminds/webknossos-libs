@@ -166,8 +166,7 @@ class WrappedProcessPoolExecutor(ProcessPoolExecutor):
             result = True, func(*args, **kwargs)
         except Exception as exc:
             result = False, exc
-            logging.warning("Job computation failed with:")
-            print(exc)
+            logging.warning(f"Job computation failed with:\n{exc.__repr__()}")
 
         with open(output_pickle_path, "wb") as file:
             pickling.dump(result, file)
