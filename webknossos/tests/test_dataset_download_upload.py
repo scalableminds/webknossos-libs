@@ -51,7 +51,7 @@ def test_upload_download_roundtrip(sample_dataset: wk.Dataset, tmp_path: Path) -
     url = ds_original.upload(
         new_dataset_name=f"test_upload_download_roundtrip_{time_str}"
     )
-    ds_roundtrip = wk.Dataset.download(url, path=tmp_path / "ds", layers="segmentation")
+    ds_roundtrip = wk.Dataset.download(url, path=tmp_path / "ds", layers=["color", "segmentation"])
     assert set(ds_original.get_segmentation_layers()[0].mags.keys()) == set(
         ds_roundtrip.get_segmentation_layers()[0].mags.keys()
     )
