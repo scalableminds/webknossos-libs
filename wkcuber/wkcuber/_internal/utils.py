@@ -194,7 +194,6 @@ def _parse_vec3_int(value: str) -> Vec3Int:
 
 def _parse_deprecated_file_len(value: str) -> Vec3Int:
     warn_deprecated("--wkw_file_len", "--chunks_per_shard")
-    print("`--wkw_file_len` is deprecated. Please use `--chunks_per_shard` instead.")
     return _parse_vec3_int(value)
 
 
