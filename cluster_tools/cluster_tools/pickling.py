@@ -1,16 +1,7 @@
 import os
+import pickle
 import sys
 
-use_cloudpickle = "USE_CLOUDPICKLE" in os.environ
-
-if use_cloudpickle:
-    import cloudpickle
-
-    pickle_strategy = cloudpickle
-else:
-    import pickle
-
-    pickle_strategy = pickle
 from .util import warn_after
 
 WARNING_TIMEOUT = 10 * 60  # seconds
@@ -45,16 +36,12 @@ def get_suitable_pickle_protocol():
 
 @warn_after("pickle.dumps", WARNING_TIMEOUT)
 def dumps(*args, **kwargs):
-    return pickle_strategy.dumps(
-        *args, protocol=get_suitable_pickle_protocol(), **kwargs
-    )
+    return pickle.dumps(*args, protocol=get_suitable_pickle_protocol(), **kwargs)
 
 
 @warn_after("pickle.dump", WARNING_TIMEOUT)
 def dump(*args, **kwargs):
-    return pickle_strategy.dump(
-        *args, protocol=get_suitable_pickle_protocol(), **kwargs
-    )
+    return pickle.dump(*args, protocol=get_suitable_pickle_protocol(), **kwargs)
 
 
 @warn_after("pickle.loads", WARNING_TIMEOUT)
@@ -62,10 +49,10 @@ def loads(*args, **kwargs):
     assert (
         "custom_main_path" not in kwargs
     ), "loads does not implement support for the argument custom_main_path"
-    return pickle_strategy.loads(*args, **kwargs)
+    return pickle.loads(*args, **kwargs)
 
 
-class RenameUnpickler(pickle_strategy.Unpickler):
+class RenameUnpickler(pickle.Unpickler):
     def find_class(self, module, name):
         renamed_module = module
         if module == "__main__" and self.custom_main_path is not None:

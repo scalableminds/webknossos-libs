@@ -1,4 +1,8 @@
+import pytest
+
 from webknossos import User
+
+pytestmark = [pytest.mark.with_vcr]
 
 
 def assert_valid_user(user: User) -> None:

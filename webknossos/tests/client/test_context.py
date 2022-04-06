@@ -2,6 +2,8 @@ import pytest
 
 from webknossos.client.context import _get_context, _WebknossosContext
 
+pytestmark = [pytest.mark.with_vcr]
+
 
 @pytest.fixture
 def env_context() -> _WebknossosContext:

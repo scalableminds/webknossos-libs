@@ -7,10 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.14...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.18...HEAD)
 
 ### Breaking Changes
-- The `multiprocessing` executor now uses `spawn` as default start method. `fork` and `forkserver` can be used by supplying a `start_method` argument (e.g. `cluster_tools.get_executor("multiprocessing", start_method="forkserver")`) or by setting the `MULTIPROCESSING_DEFAULT_START_METHOD` environment variable. [#662](https://github.com/scalableminds/webknossos-libs/pull/662)
 
 ### Added
 
@@ -18,6 +17,28 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 
 ### Fixed
 - Correctly maintain default_view_configuration property when downloading a dataset. [#677](https://github.com/scalableminds/webknossos-libs/pull/677)
+
+## [0.9.18](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.18) - 2022-04-06
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.17...v0.9.18)
+
+### Breaking Changes
+- The cluster-tools serialize the output of a job in the format `(wasSuccessful, result_value)` to a pickle file if `output_pickle_path` is provided and multiprocessing is used. This is consistent with how it is already done when using a cluster executor (e.g., slurm). [#686](https://github.com/scalableminds/webknossos-libs/pull/686)
+
+
+## [0.9.17](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.17) - 2022-04-05
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.16...v0.9.17)
+
+
+## [0.9.16](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.16) - 2022-03-31
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.15...v0.9.16)
+
+
+## [0.9.15](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.15) - 2022-03-31
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.14...v0.9.15)
+
+### Breaking Changes
+- The `multiprocessing` executor now uses `spawn` as default start method. `fork` and `forkserver` can be used by supplying a `start_method` argument (e.g. `cluster_tools.get_executor("multiprocessing", start_method="forkserver")`) or by setting the `MULTIPROCESSING_DEFAULT_START_METHOD` environment variable. [#662](https://github.com/scalableminds/webknossos-libs/pull/662)
+
 
 ## [0.9.14](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.14) - 2022-03-24
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.13...v0.9.14)

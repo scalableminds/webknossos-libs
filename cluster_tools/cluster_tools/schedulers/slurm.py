@@ -7,7 +7,9 @@ import re
 import sys
 import threading
 from functools import lru_cache
-from typing import Union
+from typing import List, Optional, Tuple
+
+from typing_extensions import Literal
 
 from cluster_tools.util import call, chcall, random_string
 
@@ -190,8 +192,12 @@ class SlurmExecutor(ClusterExecutor):
         ]
 
     def inner_submit(
-        self, cmdline, job_name=None, additional_setup_lines=None, job_count=None
-    ):
+        self,
+        cmdline: str,
+        job_name: Optional[str] = None,
+        additional_setup_lines: Optional[List[str]] = None,
+        job_count: Optional[int] = None,
+    ) -> Tuple[List["concurrent.futures.Future[str]"], List[Tuple[int, int]]]:
         """Starts a Slurm job that runs the specified shell command line."""
         if additional_setup_lines is None:
             additional_setup_lines = []
@@ -213,7 +219,7 @@ class SlurmExecutor(ClusterExecutor):
         batch_size = max(min(max_array_size, max_submit_jobs), 1)
 
         scripts = []
-        job_id_futures = []
+        job_id_futures: List["concurrent.futures.Future[str]"] = []
         ranges = []
         number_of_jobs = job_count if job_count is not None else 1
         for job_index_start in range(0, number_of_jobs, batch_size):
@@ -256,7 +262,7 @@ class SlurmExecutor(ClusterExecutor):
 
     def check_for_crashed_job(
         self, job_id_with_index
-    ) -> Union["failed", "ignore", "completed"]:
+    ) -> Literal["failed", "ignore", "completed"]:
 
         job_states = []
 

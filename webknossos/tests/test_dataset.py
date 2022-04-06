@@ -3,13 +3,12 @@ import json
 import os
 import pickle
 import warnings
-from os.path import join
 from pathlib import Path
-from shutil import copytree, rmtree
-from typing import Tuple, cast
+from typing import Optional, Tuple, cast
 
 import numpy as np
 import pytest
+from upath import UPath
 
 from webknossos.dataset import (
     COLOR_CATEGORY,
@@ -28,16 +27,58 @@ from webknossos.dataset.properties import (
     dataset_converter,
 )
 from webknossos.geometry import BoundingBox, Mag, Vec3Int
-from webknossos.utils import get_executor_for_args, named_partial, snake_to_camel_case
+from webknossos.utils import (
+    copytree,
+    get_executor_for_args,
+    named_partial,
+    rmtree,
+    snake_to_camel_case,
+)
 
 from .constants import TESTDATA_DIR, TESTOUTPUT_DIR
 
+REMOTE_TESTOUTPUT_DIR = UPath(
+    "s3://testoutput",
+    key=os.environ["MINIO_ROOT_USER"],
+    secret=os.environ["MINIO_ROOT_PASSWORD"],
+    client_kwargs={"endpoint_url": "http://localhost:8000"},
+)
+
 DATA_FORMATS = [DataFormat.WKW, DataFormat.Zarr]
+DATA_FORMATS_AND_OUTPUT_PATHS = [
+    (DataFormat.WKW, TESTOUTPUT_DIR),
+    (DataFormat.Zarr, TESTOUTPUT_DIR),
+    (DataFormat.Zarr, REMOTE_TESTOUTPUT_DIR),
+]
+
+pytestmark = [pytest.mark.block_network(allowed_hosts=[".*"])]
 
 
 def delete_dir(relative_path: Path) -> None:
     if relative_path.exists() and relative_path.is_dir():
         rmtree(relative_path)
+
+
+def copy_simple_dataset(
+    data_format: DataFormat, output_path: Path, suffix: Optional[str] = None
+) -> Path:
+    suffix = (f"_{suffix}") if suffix is not None else ""
+    new_dataset_path = output_path / f"simple_{data_format.value}_dataset{suffix}"
+    delete_dir(new_dataset_path)
+    copytree(
+        TESTDATA_DIR / f"simple_{data_format.value}_dataset",
+        new_dataset_path,
+    )
+    return new_dataset_path
+
+
+def prepare_dataset_path(
+    data_format: DataFormat, output_path: Path, suffix: Optional[str] = None
+) -> Path:
+    suffix = (f"_{suffix}") if suffix is not None else ""
+    new_dataset_path = output_path / f"{data_format.value}_dataset{suffix}"
+    delete_dir(new_dataset_path)
+    return new_dataset_path
 
 
 def chunk_job(args: Tuple[View, int]) -> None:
@@ -48,6 +89,15 @@ def chunk_job(args: Tuple[View, int]) -> None:
         data = data[0, :, :, :]
     data += 50
     view.write(data)
+
+
+def default_chunk_config(
+    data_format: DataFormat, chunk_size: int = 32
+) -> Tuple[Vec3Int, Vec3Int]:
+    if data_format == DataFormat.Zarr:
+        return (Vec3Int.full(chunk_size * 8), Vec3Int.full(1))
+    else:
+        return (Vec3Int.full(chunk_size), Vec3Int.full(8))
 
 
 def advanced_chunk_job(args: Tuple[View, int], dtype: type) -> None:
@@ -147,47 +197,29 @@ def assure_exported_properties(ds: Dataset) -> None:
     ), "The properties did not match after reopening the dataset. This might indicate that the properties were not exported after they were changed in memory."
 
 
-@pytest.mark.parametrize("data_format", DATA_FORMATS)
-def test_create_dataset_with_layer_and_mag(data_format: DataFormat) -> None:
-    delete_dir(TESTOUTPUT_DIR / f"{data_format.value}_dataset")
+@pytest.fixture(scope="session", autouse=True)
+def create_bucket() -> None:
+    REMOTE_TESTOUTPUT_DIR.fs.mkdirs("testoutput", exist_ok=True)
 
-    ds = Dataset(TESTOUTPUT_DIR / f"{data_format.value}_dataset", scale=(1, 1, 1))
+
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_create_dataset_with_layer_and_mag(
+    data_format: DataFormat, output_path: Path
+) -> None:
+    ds_path = prepare_dataset_path(data_format, output_path)
+
+    ds = Dataset(ds_path, scale=(1, 1, 1))
     ds.add_layer("color", "color", data_format=data_format)
 
     ds.get_layer("color").add_mag("1")
     ds.get_layer("color").add_mag("2-2-1")
 
-    assert (TESTOUTPUT_DIR / f"{data_format.value}_dataset" / "color" / "1").exists()
-    assert (
-        TESTOUTPUT_DIR / f"{data_format.value}_dataset" / "color" / "2-2-1"
-    ).exists()
-
     if data_format == DataFormat.WKW:
-        assert (
-            TESTOUTPUT_DIR
-            / f"{data_format.value}_dataset"
-            / "color"
-            / "1"
-            / "header.wkw"
-        ).exists()
-        assert (
-            TESTOUTPUT_DIR
-            / f"{data_format.value}_dataset"
-            / "color"
-            / "2-2-1"
-            / "header.wkw"
-        ).exists()
+        assert (ds_path / "color" / "1" / "header.wkw").exists()
+        assert (ds_path / "color" / "2-2-1" / "header.wkw").exists()
     elif data_format == DataFormat.Zarr:
-        assert (
-            TESTOUTPUT_DIR / f"{data_format.value}_dataset" / "color" / "1" / ".zarray"
-        ).exists()
-        assert (
-            TESTOUTPUT_DIR
-            / f"{data_format.value}_dataset"
-            / "color"
-            / "2-2-1"
-            / ".zarray"
-        ).exists()
+        assert (ds_path / "color" / "1" / ".zarray").exists()
+        assert (ds_path / "color" / "2-2-1" / ".zarray").exists()
 
     assert len(ds.layers) == 1
     assert len(ds.get_layer("color").mags) == 2
@@ -195,21 +227,42 @@ def test_create_dataset_with_layer_and_mag(data_format: DataFormat) -> None:
     assure_exported_properties(ds)
 
 
-def test_create_dataset_with_explicit_header_fields() -> None:
-    delete_dir(TESTOUTPUT_DIR / "wkw_dataset_advanced")
+def test_create_default_layer() -> None:
+    ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR)
+    ds = Dataset(ds_path, scale=(1, 1, 1))
+    layer = ds.add_layer("color", COLOR_CATEGORY)
 
-    ds = Dataset(TESTOUTPUT_DIR / "wkw_dataset_advanced", scale=(1, 1, 1))
+    assert layer.data_format == DataFormat.WKW
+
+
+@pytest.mark.parametrize("data_format", DATA_FORMATS)
+def test_create_default_mag(data_format: DataFormat) -> None:
+    ds_path = prepare_dataset_path(data_format, TESTOUTPUT_DIR)
+    ds = Dataset(ds_path, scale=(1, 1, 1))
+    layer = ds.add_layer("color", COLOR_CATEGORY, data_format=data_format)
+    mag_view = layer.add_mag("1")
+
+    assert layer.data_format == data_format
+    assert mag_view.info.chunk_size == Vec3Int.full(32)
+    if data_format == DataFormat.WKW:
+        assert mag_view.info.chunks_per_shard == Vec3Int.full(32)
+    else:
+        assert mag_view.info.chunks_per_shard == Vec3Int.full(1)
+    assert mag_view.info.num_channels == 1
+    assert mag_view.info.compression_mode == False
+
+
+def test_create_dataset_with_explicit_header_fields() -> None:
+    ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR)
+
+    ds = Dataset(ds_path, scale=(1, 1, 1))
     ds.add_layer("color", COLOR_CATEGORY, dtype_per_layer="uint48", num_channels=3)
 
     ds.get_layer("color").add_mag("1", chunk_size=64, chunks_per_shard=64)
     ds.get_layer("color").add_mag("2-2-1")
 
-    assert (
-        TESTOUTPUT_DIR / "wkw_dataset_advanced" / "color" / "1" / "header.wkw"
-    ).exists()
-    assert (
-        TESTOUTPUT_DIR / "wkw_dataset_advanced" / "color" / "2-2-1" / "header.wkw"
-    ).exists()
+    assert (ds_path / "color" / "1" / "header.wkw").exists()
+    assert (ds_path / "color" / "2-2-1" / "header.wkw").exists()
 
     assert len(ds.layers) == 1
     assert len(ds.get_layer("color").mags) == 2
@@ -230,21 +283,20 @@ def test_create_dataset_with_explicit_header_fields() -> None:
     assure_exported_properties(ds)
 
 
-@pytest.mark.parametrize("data_format", DATA_FORMATS)
-def test_open_dataset(data_format: DataFormat) -> None:
-    ds = Dataset.open(TESTDATA_DIR / f"simple_{data_format.value}_dataset")
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_open_dataset(data_format: DataFormat, output_path: Path) -> None:
+    new_dataset_path = copy_simple_dataset(data_format, output_path)
+    ds = Dataset.open(new_dataset_path)
 
     assert len(ds.layers) == 1
     assert len(ds.get_layer("color").mags) == 1
     assert ds.get_layer("color").data_format == data_format
 
 
-@pytest.mark.parametrize("data_format", DATA_FORMATS)
-def test_modify_existing_dataset(data_format: DataFormat) -> None:
-    delete_dir(TESTOUTPUT_DIR / f"simple_{data_format.value}_dataset")
-    ds1 = Dataset(
-        TESTOUTPUT_DIR / f"simple_{data_format.value}_dataset", scale=(1, 1, 1)
-    )
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_modify_existing_dataset(data_format: DataFormat, output_path: Path) -> None:
+    ds_path = prepare_dataset_path(data_format, output_path)
+    ds1 = Dataset(ds_path, scale=(1, 1, 1))
     ds1.add_layer(
         "color",
         COLOR_CATEGORY,
@@ -253,7 +305,7 @@ def test_modify_existing_dataset(data_format: DataFormat) -> None:
         data_format=data_format,
     )
 
-    ds2 = Dataset.open(TESTOUTPUT_DIR / f"simple_{data_format.value}_dataset")
+    ds2 = Dataset.open(ds_path)
 
     ds2.add_layer(
         "segmentation",
@@ -261,20 +313,20 @@ def test_modify_existing_dataset(data_format: DataFormat) -> None:
         "uint8",
         largest_segment_id=100000,
         data_format=data_format,
-    )
+    ).add_mag("1")
 
-    assert (
-        TESTOUTPUT_DIR / f"simple_{data_format.value}_dataset" / "segmentation"
-    ).is_dir()
+    assert (ds_path / "segmentation" / "1").is_dir()
 
     # Note: ds1 is outdated because the same dataset was opened again and changed.
     assure_exported_properties(ds2)
 
 
-@pytest.mark.parametrize("data_format", DATA_FORMATS)
-def test_view_read(data_format: DataFormat) -> None:
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_view_read(data_format: DataFormat, output_path: Path) -> None:
+    ds_path = copy_simple_dataset(data_format, output_path)
+
     wk_view = (
-        Dataset.open(TESTDATA_DIR / f"simple_{data_format.value}_dataset")
+        Dataset.open(ds_path)
         .get_layer("color")
         .get_mag("1")
         .get_view(absolute_offset=(0, 0, 0), size=(16, 16, 16))
@@ -286,16 +338,11 @@ def test_view_read(data_format: DataFormat) -> None:
     assert wk_view.info.data_format == data_format
 
 
-@pytest.mark.parametrize("data_format", DATA_FORMATS)
-def test_view_write(data_format: DataFormat) -> None:
-    delete_dir(TESTOUTPUT_DIR / f"simple_{data_format.value}_dataset")
-    copytree(
-        TESTDATA_DIR / f"simple_{data_format.value}_dataset",
-        TESTOUTPUT_DIR / f"simple_{data_format.value}_dataset",
-    )
-
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_view_write(data_format: DataFormat, output_path: Path) -> None:
+    ds_path = copy_simple_dataset(data_format, output_path)
     wk_view = (
-        Dataset.open(TESTOUTPUT_DIR / f"simple_{data_format.value}_dataset")
+        Dataset.open(ds_path)
         .get_layer("color")
         .get_mag("1")
         .get_view(absolute_offset=(0, 0, 0), size=(16, 16, 16))
@@ -312,17 +359,14 @@ def test_view_write(data_format: DataFormat) -> None:
     assert np.array_equal(data, write_data)
 
 
-@pytest.mark.parametrize("data_format", DATA_FORMATS)
-def test_view_write_out_of_bounds(data_format: DataFormat) -> None:
-    new_dataset_path = (
-        TESTOUTPUT_DIR / f"{data_format.value}_view_dataset_out_of_bounds"
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_view_write_out_of_bounds(data_format: DataFormat, output_path: Path) -> None:
+    ds_path = copy_simple_dataset(
+        data_format, output_path, "view_dataset_out_of_bounds"
     )
 
-    delete_dir(new_dataset_path)
-    copytree(TESTDATA_DIR / f"simple_{data_format.value}_dataset", new_dataset_path)
-
     view = (
-        Dataset.open(new_dataset_path)
+        Dataset.open(ds_path)
         .get_layer("color")
         .get_mag("1")
         .get_view(absolute_offset=(0, 0, 0), size=(16, 16, 16))
@@ -334,16 +378,13 @@ def test_view_write_out_of_bounds(data_format: DataFormat) -> None:
         )  # this is bigger than the bounding_box
 
 
-@pytest.mark.parametrize("data_format", DATA_FORMATS)
-def test_mag_view_write_out_of_bounds(data_format: DataFormat) -> None:
-    new_dataset_path = (
-        TESTOUTPUT_DIR / f"simple_{data_format.value}_dataset_out_of_bounds"
-    )
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_mag_view_write_out_of_bounds(
+    data_format: DataFormat, output_path: Path
+) -> None:
+    ds_path = copy_simple_dataset(data_format, output_path, "dataset_out_of_bounds")
 
-    delete_dir(new_dataset_path)
-    copytree(TESTDATA_DIR / f"simple_{data_format.value}_dataset", new_dataset_path)
-
-    ds = Dataset.open(new_dataset_path)
+    ds = Dataset.open(ds_path)
     mag_view = ds.get_layer("color").get_mag("1")
 
     assert mag_view.info.data_format == data_format
@@ -357,16 +398,13 @@ def test_mag_view_write_out_of_bounds(data_format: DataFormat) -> None:
     assure_exported_properties(ds)
 
 
-@pytest.mark.parametrize("data_format", DATA_FORMATS)
-def test_mag_view_write_out_of_bounds_mag2(data_format: DataFormat) -> None:
-    new_dataset_path = (
-        TESTOUTPUT_DIR / f"simple_{data_format.value}_dataset_out_of_bounds"
-    )
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_mag_view_write_out_of_bounds_mag2(
+    data_format: DataFormat, output_path: Path
+) -> None:
+    ds_path = copy_simple_dataset(data_format, output_path, "dataset_out_of_bounds")
 
-    delete_dir(new_dataset_path)
-    copytree(TESTDATA_DIR / f"simple_{data_format.value}_dataset", new_dataset_path)
-
-    ds = Dataset.open(new_dataset_path)
+    ds = Dataset.open(ds_path)
     color_layer = ds.get_layer("color")
     mag_view = color_layer.get_or_add_mag("2-2-1")
 
@@ -381,12 +419,13 @@ def test_mag_view_write_out_of_bounds_mag2(data_format: DataFormat) -> None:
     assure_exported_properties(ds)
 
 
-@pytest.mark.parametrize("data_format", DATA_FORMATS)
-def test_update_new_bounding_box_offset(data_format: DataFormat) -> None:
-    delete_dir(TESTOUTPUT_DIR / f"{data_format.value}_dataset")
-
-    ds = Dataset(TESTOUTPUT_DIR / f"{data_format.value}_dataset", scale=(1, 1, 1))
-    color_layer = ds.add_layer("color", COLOR_CATEGORY)
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_update_new_bounding_box_offset(
+    data_format: DataFormat, output_path: Path
+) -> None:
+    ds_path = prepare_dataset_path(data_format, output_path)
+    ds = Dataset(ds_path, scale=(1, 1, 1))
+    color_layer = ds.add_layer("color", COLOR_CATEGORY, data_format=data_format)
     mag = color_layer.add_mag("1")
 
     assert color_layer.bounding_box.topleft == Vec3Int(0, 0, 0)
@@ -408,12 +447,10 @@ def test_update_new_bounding_box_offset(data_format: DataFormat) -> None:
     assure_exported_properties(ds)
 
 
-@pytest.mark.parametrize("data_format", DATA_FORMATS)
-def test_write_multi_channel_uint8(data_format: DataFormat) -> None:
-    dataset_path = TESTOUTPUT_DIR / f"{data_format.value}_multichannel"
-    delete_dir(dataset_path)
-
-    ds = Dataset(dataset_path, scale=(1, 1, 1))
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_write_multi_channel_uint8(data_format: DataFormat, output_path: Path) -> None:
+    ds_path = prepare_dataset_path(data_format, output_path, "multichannel")
+    ds = Dataset(ds_path, scale=(1, 1, 1))
     mag = ds.add_layer(
         "color", COLOR_CATEGORY, num_channels=3, data_format=data_format
     ).add_mag("1")
@@ -427,12 +464,12 @@ def test_write_multi_channel_uint8(data_format: DataFormat) -> None:
     assure_exported_properties(ds)
 
 
-@pytest.mark.parametrize("data_format", DATA_FORMATS)
-def test_wkw_write_multi_channel_uint16(data_format: DataFormat) -> None:
-    dataset_path = TESTOUTPUT_DIR / f"{data_format.value}_multichannel"
-    delete_dir(dataset_path)
-
-    ds = Dataset(dataset_path, scale=(1, 1, 1))
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_wkw_write_multi_channel_uint16(
+    data_format: DataFormat, output_path: Path
+) -> None:
+    ds_path = prepare_dataset_path(data_format, output_path, "multichannel")
+    ds = Dataset(ds_path, scale=(1, 1, 1))
     mag = ds.add_layer(
         "color",
         COLOR_CATEGORY,
@@ -451,13 +488,11 @@ def test_wkw_write_multi_channel_uint16(data_format: DataFormat) -> None:
     assure_exported_properties(ds)
 
 
-@pytest.mark.parametrize("data_format", DATA_FORMATS)
-def test_empty_read(data_format: DataFormat) -> None:
-    filename = TESTOUTPUT_DIR / f"empty_{data_format.value}_dataset"
-    delete_dir(filename)
-
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_empty_read(data_format: DataFormat, output_path: Path) -> None:
+    ds_path = prepare_dataset_path(data_format, output_path, "empty")
     mag = (
-        Dataset(filename, scale=(1, 1, 1))
+        Dataset(ds_path, scale=(1, 1, 1))
         .add_layer("color", category=COLOR_CATEGORY, data_format=data_format)
         .add_mag("1")
     )
@@ -466,13 +501,11 @@ def test_empty_read(data_format: DataFormat) -> None:
         mag.read(absolute_offset=(0, 0, 0), size=(0, 0, 0))
 
 
-@pytest.mark.parametrize("data_format", DATA_FORMATS)
-def test_read_padded_data(data_format: DataFormat) -> None:
-    filename = TESTOUTPUT_DIR / f"empty_{data_format.value}_dataset"
-    delete_dir(filename)
-
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_read_padded_data(data_format: DataFormat, output_path: Path) -> None:
+    ds_path = prepare_dataset_path(data_format, output_path, "empty")
     mag = (
-        Dataset(filename, scale=(1, 1, 1))
+        Dataset(ds_path, scale=(1, 1, 1))
         .add_layer(
             "color", category=COLOR_CATEGORY, num_channels=3, data_format=data_format
         )
@@ -485,11 +518,12 @@ def test_read_padded_data(data_format: DataFormat) -> None:
     assert np.array_equal(data, np.zeros((3, 10, 10, 10)))
 
 
-@pytest.mark.parametrize("data_format", DATA_FORMATS)
-def test_num_channel_mismatch_assertion(data_format: DataFormat) -> None:
-    delete_dir(TESTOUTPUT_DIR / f"{data_format.value}_dataset")
-
-    ds = Dataset(TESTOUTPUT_DIR / f"{data_format.value}_dataset", scale=(1, 1, 1))
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_num_channel_mismatch_assertion(
+    data_format: DataFormat, output_path: Path
+) -> None:
+    ds_path = prepare_dataset_path(data_format, output_path)
+    ds = Dataset(ds_path, scale=(1, 1, 1))
     mag = ds.add_layer(
         "color", category=COLOR_CATEGORY, num_channels=1, data_format=data_format
     ).add_mag(
@@ -505,11 +539,10 @@ def test_num_channel_mismatch_assertion(data_format: DataFormat) -> None:
     assure_exported_properties(ds)
 
 
-@pytest.mark.parametrize("data_format", DATA_FORMATS)
-def test_get_or_add_layer(data_format: DataFormat) -> None:
-    delete_dir(TESTOUTPUT_DIR / f"{data_format.value}_dataset")
-
-    ds = Dataset(TESTOUTPUT_DIR / f"{data_format.value}_dataset", scale=(1, 1, 1))
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_get_or_add_layer(data_format: DataFormat, output_path: Path) -> None:
+    ds_path = prepare_dataset_path(data_format, output_path)
+    ds = Dataset(ds_path, scale=(1, 1, 1))
 
     assert "color" not in ds.layers.keys()
 
@@ -550,10 +583,12 @@ def test_get_or_add_layer(data_format: DataFormat) -> None:
     assure_exported_properties(ds)
 
 
-@pytest.mark.parametrize("data_format", DATA_FORMATS)
-def test_get_or_add_layer_idempotence(data_format: DataFormat) -> None:
-    delete_dir(TESTOUTPUT_DIR / f"{data_format.value}_dataset")
-    ds = Dataset(TESTOUTPUT_DIR / f"{data_format.value}_dataset", scale=(1, 1, 1))
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_get_or_add_layer_idempotence(
+    data_format: DataFormat, output_path: Path
+) -> None:
+    ds_path = prepare_dataset_path(data_format, output_path)
+    ds = Dataset(ds_path, scale=(1, 1, 1))
     ds.get_or_add_layer(
         "color2", category="color", dtype_per_channel=np.uint8, data_format=data_format
     ).get_or_add_mag("1")
@@ -564,23 +599,22 @@ def test_get_or_add_layer_idempotence(data_format: DataFormat) -> None:
     assure_exported_properties(ds)
 
 
-@pytest.mark.parametrize("data_format", DATA_FORMATS)
-def test_get_or_add_mag(data_format: DataFormat) -> None:
-    delete_dir(TESTOUTPUT_DIR / f"{data_format.value}_dataset")
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_get_or_add_mag(data_format: DataFormat, output_path: Path) -> None:
+    ds_path = prepare_dataset_path(data_format, output_path)
 
-    chunks_per_shard = (
-        Vec3Int.full(1) if data_format == DataFormat.Zarr else Vec3Int.full(32)
+    layer = Dataset(ds_path, scale=(1, 1, 1)).add_layer(
+        "color", category=COLOR_CATEGORY, data_format=data_format
     )
-    layer = Dataset(
-        TESTOUTPUT_DIR / f"{data_format.value}_dataset", scale=(1, 1, 1)
-    ).add_layer("color", category=COLOR_CATEGORY, data_format=data_format)
 
     assert Mag(1) not in layer.mags.keys()
+
+    chunk_size, chunks_per_shard = default_chunk_config(data_format, 32)
 
     # The mag did not exist before
     mag = layer.get_or_add_mag(
         "1",
-        chunk_size=Vec3Int.full(32),
+        chunk_size=chunk_size,
         chunks_per_shard=chunks_per_shard,
         compress=False,
     )
@@ -591,7 +625,7 @@ def test_get_or_add_mag(data_format: DataFormat) -> None:
     # The mag did exist before
     layer.get_or_add_mag(
         "1",
-        chunk_size=Vec3Int.full(32),
+        chunk_size=chunk_size,
         chunks_per_shard=chunks_per_shard,
         compress=False,
     )
@@ -600,7 +634,7 @@ def test_get_or_add_mag(data_format: DataFormat) -> None:
     assert mag.info.data_format == data_format
 
     with pytest.raises(AssertionError):
-        # The mag "1" did exist before but with another 'chunk_size' (this would work the same for 'chunks_per_shard' and 'compression')
+        # The mag "1" did exist before but with another 'chunk_size' (this would work the same for 'chunks_per_shard' and 'compress')
         layer.get_or_add_mag(
             "1",
             chunk_size=Vec3Int.full(64),
@@ -612,22 +646,22 @@ def test_get_or_add_mag(data_format: DataFormat) -> None:
 
 
 def test_open_dataset_without_num_channels_in_properties() -> None:
-    delete_dir(TESTOUTPUT_DIR / "old_wkw_dataset")
-    copytree(TESTDATA_DIR / "old_wkw_dataset", TESTOUTPUT_DIR / "old_wkw_dataset")
+    ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR, "old_wkw")
+    copytree(TESTDATA_DIR / "old_wkw_dataset", ds_path)
 
     with open(
-        TESTOUTPUT_DIR / "old_wkw_dataset" / "datasource-properties.json",
+        ds_path / "datasource-properties.json",
         encoding="utf-8",
     ) as datasource_properties:
         data = json.load(datasource_properties)
         assert data["dataLayers"][0].get("num_channels") is None
 
-    ds = Dataset.open(TESTOUTPUT_DIR / "old_wkw_dataset")
+    ds = Dataset.open(ds_path)
     assert ds.get_layer("color").num_channels == 1
     ds._export_as_json()
 
     with open(
-        TESTOUTPUT_DIR / "old_wkw_dataset" / "datasource-properties.json",
+        ds_path / "datasource-properties.json",
         encoding="utf-8",
     ) as datasource_properties:
         data = json.load(datasource_properties)
@@ -637,9 +671,8 @@ def test_open_dataset_without_num_channels_in_properties() -> None:
 
 
 def test_largest_segment_id_requirement() -> None:
-    path = TESTOUTPUT_DIR / "largest_segment_id"
-    delete_dir(path)
-    ds = Dataset(path, scale=(10, 10, 10))
+    ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR)
+    ds = Dataset(ds_path, scale=(10, 10, 10))
 
     with pytest.raises(AssertionError):
         ds.add_layer("segmentation", SEGMENTATION_CATEGORY)
@@ -651,7 +684,7 @@ def test_largest_segment_id_requirement() -> None:
         largest_segment_id=largest_segment_id,
     ).add_mag(Mag(1))
 
-    ds = Dataset.open(path)
+    ds = Dataset.open(ds_path)
     assert (
         cast(SegmentationLayer, ds.get_layer("segmentation")).largest_segment_id
         == largest_segment_id
@@ -661,15 +694,12 @@ def test_largest_segment_id_requirement() -> None:
 
 
 def test_properties_with_segmentation() -> None:
-    delete_dir(TESTOUTPUT_DIR / "complex_property_ds")
-    copytree(
-        TESTDATA_DIR / "complex_property_ds",
-        TESTOUTPUT_DIR / "complex_property_ds",
+    ds_path = prepare_dataset_path(
+        DataFormat.WKW, TESTOUTPUT_DIR, "complex_property_ds"
     )
+    copytree(TESTDATA_DIR / "complex_property_ds", ds_path)
 
-    input_path = TESTOUTPUT_DIR / "complex_property_ds"
-
-    with open(input_path / "datasource-properties.json", "r", encoding="utf-8") as f:
+    with open(ds_path / "datasource-properties.json", "r", encoding="utf-8") as f:
         data = json.load(f)
         ds_properties = dataset_converter.structure(data, DatasetProperties)
 
@@ -688,7 +718,7 @@ def test_properties_with_segmentation() -> None:
             "astrocyte-full",
         ]
 
-    with open(input_path / "datasource-properties.json", "w", encoding="utf-8") as f:
+    with open(ds_path / "datasource-properties.json", "w", encoding="utf-8") as f:
         # Update the properties on disk (without changing the data)
         json.dump(
             dataset_converter.unstructure(ds_properties),
@@ -704,7 +734,7 @@ def test_properties_with_segmentation() -> None:
         input_data = json.load(input_properties)
 
         with open(
-            input_path / "datasource-properties.json", "r", encoding="utf-8"
+            ds_path / "datasource-properties.json", "r", encoding="utf-8"
         ) as output_properties:
             output_data = json.load(output_properties)
             for layer in output_data["dataLayers"]:
@@ -715,11 +745,17 @@ def test_properties_with_segmentation() -> None:
             assert input_data == output_data
 
 
-def test_chunking_wk(tmp_path: Path) -> None:
-    ds = Dataset(tmp_path, scale=(2, 2, 1))
-    layer = ds.add_layer("color", COLOR_CATEGORY)
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_chunking_wk(data_format: DataFormat, output_path: Path) -> None:
+    ds_path = prepare_dataset_path(data_format, output_path)
+    ds = Dataset(ds_path, scale=(2, 2, 1))
+    chunk_size, chunks_per_shard = default_chunk_config(data_format, 8)
+
+    layer = ds.add_layer("color", COLOR_CATEGORY, data_format=data_format)
     mag = layer.add_mag(
-        "1", chunks_per_shard=Vec3Int.full(8), chunk_size=Vec3Int.full(8)
+        "1",
+        chunks_per_shard=chunks_per_shard,
+        chunk_size=chunk_size,
     )
 
     original_data = (np.random.rand(50, 100, 150) * 205).astype(np.uint8)
@@ -747,16 +783,21 @@ def test_chunking_wk(tmp_path: Path) -> None:
     assure_exported_properties(ds)
 
 
+# Don't test zarr for performance reasons (lack of sharding)
 def test_chunking_wkw_advanced() -> None:
-    delete_dir(TESTOUTPUT_DIR / "chunking_dataset_wkw_advanced")
+    ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR, "chunking_advanced")
+    ds = Dataset(ds_path, scale=(1, 1, 2))
 
-    ds = Dataset(TESTOUTPUT_DIR / "chunking_dataset_wkw_advanced", scale=(1, 1, 2))
     mag = ds.add_layer(
         "color",
         category=COLOR_CATEGORY,
         dtype_per_channel="uint8",
         num_channels=3,
-    ).add_mag("1", chunk_size=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(8))
+    ).add_mag(
+        "1",
+        chunk_size=8,
+        chunks_per_shard=8,
+    )
     mag.write(data=(np.random.rand(3, 256, 256, 256) * 255).astype(np.uint8))
     view = mag.get_view(absolute_offset=(10, 10, 10), size=(150, 150, 54))
     for_each_chunking_advanced(ds, view)
@@ -764,17 +805,26 @@ def test_chunking_wkw_advanced() -> None:
     assure_exported_properties(ds)
 
 
-def test_chunking_wkw_wrong_chunk_size() -> None:
-    delete_dir(TESTOUTPUT_DIR / "chunking_dataset_wkw_with_wrong_chunk_size")
-    ds = Dataset(
-        TESTOUTPUT_DIR / "chunking_dataset_wkw_with_wrong_chunk_size", scale=(1, 1, 2)
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_chunking_wkw_wrong_chunk_size(
+    data_format: DataFormat, output_path: Path
+) -> None:
+    ds_path = prepare_dataset_path(
+        data_format, output_path, "chunking_with_wrong_chunk_size"
     )
+    ds = Dataset(ds_path, scale=(1, 1, 2))
+    chunk_size, chunks_per_shard = default_chunk_config(data_format, 8)
     mag = ds.add_layer(
         "color",
         category=COLOR_CATEGORY,
         dtype_per_channel="uint8",
         num_channels=3,
-    ).add_mag("1", chunk_size=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(8))
+        data_format=data_format,
+    ).add_mag(
+        "1",
+        chunk_size=chunk_size,
+        chunks_per_shard=chunks_per_shard,
+    )
     mag.write(data=(np.random.rand(3, 256, 256, 256) * 255).astype(np.uint8))
     view = mag.get_view()
 
@@ -796,7 +846,7 @@ def test_typing_of_get_mag() -> None:
 
 
 def test_dataset_exist_ok() -> None:
-    ds_path = TESTOUTPUT_DIR / "wkw_dataset_exist_ok"
+    ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR, "exist_ok")
     delete_dir(ds_path)
 
     # dataset does not exists yet
@@ -823,14 +873,12 @@ def test_dataset_exist_ok() -> None:
     assure_exported_properties(ds1)
 
 
-def test_changing_layer_bounding_box() -> None:
-    delete_dir(TESTOUTPUT_DIR / "test_changing_layer_bounding_box")
-    copytree(
-        TESTDATA_DIR / "simple_wkw_dataset",
-        TESTOUTPUT_DIR / "test_changing_layer_bounding_box",
-    )
-
-    ds = Dataset.open(TESTOUTPUT_DIR / "test_changing_layer_bounding_box")
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_changing_layer_bounding_box(
+    data_format: DataFormat, output_path: Path
+) -> None:
+    ds_path = copy_simple_dataset(data_format, output_path, "change_layer_bounding_box")
+    ds = Dataset.open(ds_path)
     layer = ds.get_layer("color")
     mag = layer.get_mag("1")
 
@@ -890,9 +938,8 @@ def test_changing_layer_bounding_box() -> None:
 
 
 def test_get_view() -> None:
-    delete_dir(TESTOUTPUT_DIR / "get_view_tests")
-
-    ds = Dataset(TESTOUTPUT_DIR / "get_view_tests", scale=(1, 1, 1))
+    ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR, "get_view")
+    ds = Dataset(ds_path, scale=(1, 1, 1))
     mag = ds.add_layer("color", COLOR_CATEGORY).add_mag("1")
 
     # The dataset is new -> no data has been written.
@@ -961,9 +1008,8 @@ def test_get_view() -> None:
 
 
 def test_adding_layer_with_invalid_dtype_per_layer() -> None:
-    delete_dir(TESTOUTPUT_DIR / "invalid_dtype")
-
-    ds = Dataset(TESTOUTPUT_DIR / "invalid_dtype", scale=(1, 1, 1))
+    ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR, "invalid_dtype")
+    ds = Dataset(ds_path, scale=(1, 1, 1))
     with pytest.raises(TypeError):
         # this would lead to a dtype_per_channel of "uint10", but that is not a valid dtype
         ds.add_layer(
@@ -983,9 +1029,8 @@ def test_adding_layer_with_invalid_dtype_per_layer() -> None:
 
 
 def test_adding_layer_with_valid_dtype_per_layer() -> None:
-    delete_dir(TESTOUTPUT_DIR / "valid_dtype")
-
-    ds = Dataset(TESTOUTPUT_DIR / "valid_dtype", scale=(1, 1, 1))
+    ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR, "valid_dtype")
+    ds = Dataset(ds_path, scale=(1, 1, 1))
     ds.add_layer("color1", COLOR_CATEGORY, dtype_per_layer="uint24", num_channels=3)
     ds.add_layer("color2", COLOR_CATEGORY, dtype_per_layer=np.uint8, num_channels=1)
     ds.add_layer("color3", COLOR_CATEGORY, dtype_per_channel=np.uint8, num_channels=3)
@@ -1027,7 +1072,7 @@ def test_adding_layer_with_valid_dtype_per_layer() -> None:
     )
 
     with open(
-        TESTOUTPUT_DIR / "valid_dtype" / "datasource-properties.json",
+        ds_path / "datasource-properties.json",
         "r",
         encoding="utf-8",
     ) as f:
@@ -1044,7 +1089,7 @@ def test_adding_layer_with_valid_dtype_per_layer() -> None:
         assert data["dataLayers"][8]["elementClass"] == "float96"
 
     reopened_ds = Dataset.open(
-        TESTOUTPUT_DIR / "valid_dtype"
+        ds_path
     )  # reopen the dataset to check if the data is read from the properties correctly
     assert reopened_ds.get_layer("color1").dtype_per_layer == "uint24"
     assert reopened_ds.get_layer("color2").dtype_per_layer == "uint8"
@@ -1060,23 +1105,26 @@ def test_adding_layer_with_valid_dtype_per_layer() -> None:
     assure_exported_properties(ds)
 
 
-def test_writing_subset_of_compressed_data_multi_channel() -> None:
-    delete_dir(TESTOUTPUT_DIR / "compressed_data")
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_writing_subset_of_compressed_data_multi_channel(
+    data_format: DataFormat, output_path: Path
+) -> None:
+    ds_path = prepare_dataset_path(data_format, output_path, "compressed_data")
+    chunk_size, chunks_per_shard = default_chunk_config(data_format, 8)
 
     # create uncompressed dataset
     write_data1 = (np.random.rand(3, 100, 120, 140) * 255).astype(np.uint8)
     mag_view = (
-        Dataset(TESTOUTPUT_DIR / "compressed_data", scale=(1, 1, 1))
-        .add_layer("color", COLOR_CATEGORY, num_channels=3)
-        .add_mag("1", chunk_size=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(8))
+        Dataset(ds_path, scale=(1, 1, 1))
+        .add_layer("color", COLOR_CATEGORY, num_channels=3, data_format=data_format)
+        .add_mag(
+            "1", chunk_size=chunk_size, chunks_per_shard=chunks_per_shard, compress=True
+        )
     )
     mag_view.write(write_data1)
-    mag_view.compress()
 
     # open compressed dataset
-    compressed_mag = (
-        Dataset.open(TESTOUTPUT_DIR / "compressed_data").get_layer("color").get_mag("1")
-    )
+    compressed_mag = Dataset.open(ds_path).get_layer("color").get_mag("1")
 
     with warnings.catch_warnings():
         warnings.filterwarnings(
@@ -1099,23 +1147,26 @@ def test_writing_subset_of_compressed_data_multi_channel() -> None:
     )  # the old data is still there
 
 
-def test_writing_subset_of_compressed_data_single_channel() -> None:
-    delete_dir(TESTOUTPUT_DIR / "compressed_data")
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_writing_subset_of_compressed_data_single_channel(
+    data_format: DataFormat, output_path: Path
+) -> None:
+    ds_path = prepare_dataset_path(data_format, output_path, "compressed_data")
+    chunk_size, chunks_per_shard = default_chunk_config(data_format, 8)
 
     # create uncompressed dataset
     write_data1 = (np.random.rand(100, 120, 140) * 255).astype(np.uint8)
     mag_view = (
-        Dataset(TESTOUTPUT_DIR / "compressed_data", scale=(1, 1, 1))
-        .add_layer("color", COLOR_CATEGORY)
-        .add_mag("1", chunk_size=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(8))
+        Dataset(ds_path, scale=(1, 1, 1))
+        .add_layer("color", COLOR_CATEGORY, data_format=data_format)
+        .add_mag(
+            "1", chunk_size=chunk_size, chunks_per_shard=chunks_per_shard, compress=True
+        )
     )
     mag_view.write(write_data1)
-    mag_view.compress()
 
     # open compressed dataset
-    compressed_mag = (
-        Dataset.open(TESTOUTPUT_DIR / "compressed_data").get_layer("color").get_mag("1")
-    )
+    compressed_mag = Dataset.open(ds_path).get_layer("color").get_mag("1")
 
     with warnings.catch_warnings():
         warnings.filterwarnings(
@@ -1138,22 +1189,25 @@ def test_writing_subset_of_compressed_data_single_channel() -> None:
     )  # the old data is still there
 
 
-def test_writing_subset_of_compressed_data() -> None:
-    delete_dir(TESTOUTPUT_DIR / "compressed_data")
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_writing_subset_of_compressed_data(
+    data_format: DataFormat, output_path: Path
+) -> None:
+    ds_path = prepare_dataset_path(data_format, output_path, "compressed_data")
+    chunk_size, chunks_per_shard = default_chunk_config(data_format, 8)
 
     # create uncompressed dataset
     mag_view = (
-        Dataset(TESTOUTPUT_DIR / "compressed_data", scale=(1, 1, 1))
-        .add_layer("color", COLOR_CATEGORY)
-        .add_mag("2", chunk_size=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(8))
+        Dataset(ds_path, scale=(1, 1, 1))
+        .add_layer("color", COLOR_CATEGORY, data_format=data_format)
+        .add_mag(
+            "2", chunk_size=chunk_size, chunks_per_shard=chunks_per_shard, compress=True
+        )
     )
     mag_view.write((np.random.rand(120, 140, 160) * 255).astype(np.uint8))
-    mag_view.compress()
 
     # open compressed dataset
-    compressed_mag = (
-        Dataset.open(TESTOUTPUT_DIR / "compressed_data").get_layer("color").get_mag("2")
-    )
+    compressed_mag = Dataset.open(ds_path).get_layer("color").get_mag("2")
 
     with warnings.catch_warnings():
         warnings.filterwarnings(
@@ -1197,22 +1251,27 @@ def test_writing_subset_of_compressed_data() -> None:
         compressed_mag.write(data=(np.random.rand(64, 64, 64) * 255).astype(np.uint8))
 
 
-def test_writing_subset_of_chunked_compressed_data() -> None:
-    delete_dir(TESTOUTPUT_DIR / "compressed_data")
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_writing_subset_of_chunked_compressed_data(
+    data_format: DataFormat, output_path: Path
+) -> None:
+    ds_path = prepare_dataset_path(data_format, output_path, "compressed_data")
+    chunk_size, chunks_per_shard = default_chunk_config(data_format, 8)
 
     # create uncompressed dataset
     write_data1 = (np.random.rand(100, 200, 300) * 255).astype(np.uint8)
     mag_view = (
-        Dataset(TESTOUTPUT_DIR / "compressed_data", scale=(1, 1, 1))
-        .add_layer("color", COLOR_CATEGORY)
-        .add_mag("1", chunk_size=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(8))
+        Dataset(ds_path, scale=(1, 1, 1))
+        .add_layer("color", COLOR_CATEGORY, data_format=data_format)
+        .add_mag(
+            "1", chunk_size=chunk_size, chunks_per_shard=chunks_per_shard, compress=True
+        )
     )
     mag_view.write(write_data1)
-    mag_view.compress()
 
     # open compressed dataset
     compressed_view = (
-        Dataset.open(TESTOUTPUT_DIR / "compressed_data")
+        Dataset.open(ds_path)
         .get_layer("color")
         .get_mag("1")
         .get_view(absolute_offset=(0, 0, 0), size=(100, 200, 300))
@@ -1245,36 +1304,27 @@ def test_writing_subset_of_chunked_compressed_data() -> None:
     )  # the old data is still there
 
 
-def test_add_symlink_layer() -> None:
-    delete_dir(TESTOUTPUT_DIR / "wkw_dataset_with_symlink")
-    delete_dir(TESTOUTPUT_DIR / "simple_wkw_dataset_copy")
-    copytree(
-        TESTDATA_DIR / "simple_wkw_dataset", TESTOUTPUT_DIR / "simple_wkw_dataset_copy"
-    )
+@pytest.mark.parametrize("data_format", DATA_FORMATS)
+def test_add_symlink_layer(data_format: DataFormat) -> None:
+    ds_path = copy_simple_dataset(data_format, TESTOUTPUT_DIR, "original")
+    symlink_path = prepare_dataset_path(data_format, TESTOUTPUT_DIR, "with_symlink")
+
     # Add an additional segmentation layer to the original dataset
-    Dataset.open(TESTOUTPUT_DIR / "simple_wkw_dataset_copy").add_layer(
+    Dataset.open(ds_path).add_layer(
         "segmentation", SEGMENTATION_CATEGORY, largest_segment_id=999
     )
 
-    original_mag = (
-        Dataset.open(TESTOUTPUT_DIR / "simple_wkw_dataset_copy")
-        .get_layer("color")
-        .get_mag("1")
-    )
+    original_mag = Dataset.open(ds_path).get_layer("color").get_mag("1")
 
-    ds = Dataset(TESTOUTPUT_DIR / "wkw_dataset_with_symlink", scale=(1, 1, 1))
+    ds = Dataset(symlink_path, scale=(1, 1, 1))
     # symlink color layer
-    symlink_layer = ds.add_symlink_layer(
-        TESTOUTPUT_DIR / "simple_wkw_dataset_copy" / "color"
-    )
+    symlink_layer = ds.add_symlink_layer(ds_path / "color")
     # symlink segmentation layer
-    symlink_segmentation_layer = ds.add_symlink_layer(
-        TESTOUTPUT_DIR / "simple_wkw_dataset_copy" / "segmentation"
-    )
+    symlink_segmentation_layer = ds.add_symlink_layer(ds_path / "segmentation")
     mag = symlink_layer.get_mag("1")
 
-    assert (TESTOUTPUT_DIR / "wkw_dataset_with_symlink" / "color" / "1").exists()
-    assert (TESTOUTPUT_DIR / "wkw_dataset_with_symlink" / "segmentation").exists()
+    assert (symlink_path / "color" / "1").exists()
+    assert (symlink_path / "segmentation").exists()
 
     assert len(ds.layers) == 2
     assert len(ds.get_layer("color").mags) == 1
@@ -1295,8 +1345,12 @@ def test_add_symlink_layer() -> None:
     assure_exported_properties(ds)
 
 
-def test_add_symlink_mag(tmp_path: Path) -> None:
-    original_ds = Dataset(tmp_path / "original", scale=(1, 1, 1))
+@pytest.mark.parametrize("data_format", DATA_FORMATS)
+def test_add_symlink_mag(data_format: DataFormat) -> None:
+    ds_path = prepare_dataset_path(data_format, TESTOUTPUT_DIR, "original")
+    symlink_path = prepare_dataset_path(data_format, TESTOUTPUT_DIR, "with_symlink")
+
+    original_ds = Dataset(ds_path, scale=(1, 1, 1))
     original_layer = original_ds.add_layer(
         "color", COLOR_CATEGORY, dtype_per_channel="uint8"
     )
@@ -1308,7 +1362,7 @@ def test_add_symlink_mag(tmp_path: Path) -> None:
     original_mag_4 = original_layer.add_mag(4)
     original_mag_4.write(data=(np.random.rand(2, 5, 7) * 255).astype(np.uint8))
 
-    ds = Dataset(tmp_path / "link", scale=(1, 1, 1))
+    ds = Dataset(symlink_path, scale=(1, 1, 1))
     layer = ds.add_layer("color", COLOR_CATEGORY, dtype_per_channel="uint8")
     layer.add_mag(1).write(
         absolute_offset=(6, 6, 6),
@@ -1321,7 +1375,7 @@ def test_add_symlink_mag(tmp_path: Path) -> None:
     symlink_mag_2 = layer.add_symlink_mag(original_mag_2)
     layer.add_symlink_mag(original_mag_4.path)
 
-    assert (tmp_path / "link" / "color" / "1").exists()
+    assert (symlink_path / "color" / "1").exists()
     assert len(layer._properties.mags) == 3
 
     assert tuple(layer.bounding_box.topleft) == (0, 0, 0)
@@ -1345,10 +1399,46 @@ def test_add_symlink_mag(tmp_path: Path) -> None:
     assure_exported_properties(original_ds)
 
 
-def test_add_copy_mag(tmp_path: Path) -> None:
-    original_ds = Dataset(tmp_path / "original", scale=(1, 1, 1))
+def test_remote_add_symlink_layer() -> None:
+    src_dataset_path = copy_simple_dataset(DataFormat.Zarr, REMOTE_TESTOUTPUT_DIR)
+    dst_dataset_path = prepare_dataset_path(
+        DataFormat.Zarr, REMOTE_TESTOUTPUT_DIR, "with_symlink"
+    )
+
+    src_ds = Dataset.open(src_dataset_path)
+    dst_ds = Dataset(dst_dataset_path, scale=(1, 1, 1))
+
+    with pytest.raises(AssertionError):
+        dst_ds.add_symlink_layer(src_ds.get_layer("color"))
+
+
+def test_remote_add_symlink_mag() -> None:
+    src_dataset_path = copy_simple_dataset(DataFormat.Zarr, REMOTE_TESTOUTPUT_DIR)
+    dst_dataset_path = prepare_dataset_path(
+        DataFormat.Zarr, REMOTE_TESTOUTPUT_DIR, "with_symlink"
+    )
+
+    src_ds = Dataset.open(src_dataset_path)
+    src_layer = src_ds.get_layer("color")
+    src_mag1 = src_layer.get_mag("1")
+
+    dst_ds = Dataset(dst_dataset_path, scale=(1, 1, 1))
+    dst_layer = dst_ds.add_layer(
+        "color", COLOR_CATEGORY, dtype_per_channel="uint8", data_format=DataFormat.Zarr
+    )
+
+    with pytest.raises(AssertionError):
+        dst_layer.add_symlink_mag(src_mag1)
+
+
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_add_copy_mag(data_format: DataFormat, output_path: Path) -> None:
+    ds_path = prepare_dataset_path(data_format, output_path, "original")
+    symlink_path = prepare_dataset_path(data_format, output_path, "with_symlink")
+
+    original_ds = Dataset(ds_path, scale=(1, 1, 1))
     original_layer = original_ds.add_layer(
-        "color", COLOR_CATEGORY, dtype_per_channel="uint8"
+        "color", COLOR_CATEGORY, dtype_per_channel="uint8", data_format=data_format
     )
     original_layer.add_mag(1).write(
         data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8)
@@ -1357,8 +1447,10 @@ def test_add_copy_mag(tmp_path: Path) -> None:
     original_mag_2 = original_layer.add_mag(2)
     original_mag_2.write(data=original_data)
 
-    ds = Dataset(tmp_path / "link", scale=(1, 1, 1))
-    layer = ds.add_layer("color", COLOR_CATEGORY, dtype_per_channel="uint8")
+    ds = Dataset(symlink_path, scale=(1, 1, 1))
+    layer = ds.add_layer(
+        "color", COLOR_CATEGORY, dtype_per_channel="uint8", data_format=data_format
+    )
     layer.add_mag(1).write(
         absolute_offset=(6, 6, 6),
         data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8),
@@ -1369,7 +1461,7 @@ def test_add_copy_mag(tmp_path: Path) -> None:
 
     copy_mag = layer.add_copy_mag(original_mag_2)
 
-    assert (tmp_path / "link" / "color" / "1").exists()
+    assert (symlink_path / "color" / "1").exists()
     assert len(layer._properties.mags) == 2
 
     assert tuple(layer.bounding_box.topleft) == (0, 0, 0)
@@ -1388,18 +1480,20 @@ def test_add_copy_mag(tmp_path: Path) -> None:
     assure_exported_properties(original_ds)
 
 
-def test_search_dataset_also_for_long_layer_name() -> None:
-    delete_dir(TESTOUTPUT_DIR / "long_layer_name")
-
-    ds = Dataset(TESTOUTPUT_DIR / "long_layer_name", scale=(1, 1, 1))
-    mag = ds.add_layer("color", COLOR_CATEGORY).add_mag("2")
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_search_dataset_also_for_long_layer_name(
+    data_format: DataFormat, output_path: Path
+) -> None:
+    ds_path = prepare_dataset_path(data_format, output_path, "long_layer_name")
+    ds = Dataset(ds_path, scale=(1, 1, 1))
+    mag = ds.add_layer("color", COLOR_CATEGORY, data_format=data_format).add_mag("2")
 
     assert mag.name == "2"
-    short_mag_file_path = join(ds.path, "color", Mag(mag.name).to_layer_name())
-    long_mag_file_path = join(ds.path, "color", Mag(mag.name).to_long_layer_name())
+    short_mag_file_path = ds.path / "color" / Mag(mag.name).to_layer_name()
+    long_mag_file_path = ds.path / "color" / Mag(mag.name).to_long_layer_name()
 
-    assert os.path.exists(short_mag_file_path)
-    assert not os.path.exists(long_mag_file_path)
+    assert short_mag_file_path.exists()
+    assert not long_mag_file_path.exists()
 
     write_data = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
     mag.write(write_data, absolute_offset=(20, 20, 20))
@@ -1410,13 +1504,14 @@ def test_search_dataset_also_for_long_layer_name() -> None:
     )
 
     # rename the path from "long_layer_name/color/2" to "long_layer_name/color/2-2-2"
-    os.rename(short_mag_file_path, long_mag_file_path)
+    copytree(short_mag_file_path, long_mag_file_path)
+    delete_dir(short_mag_file_path)
 
     # make sure that reading data still works
     mag.read(absolute_offset=(20, 20, 20), size=(20, 20, 20))
 
     # when opening the dataset, it searches both for the long and the short path
-    layer = Dataset.open(TESTOUTPUT_DIR / "long_layer_name").get_layer("color")
+    layer = Dataset.open(ds_path).get_layer("color")
     mag = layer.get_mag("2")
     assert np.array_equal(
         mag.read(absolute_offset=(20, 20, 20), size=(20, 20, 20)),
@@ -1429,9 +1524,8 @@ def test_search_dataset_also_for_long_layer_name() -> None:
 
 
 def test_outdated_dtype_parameter() -> None:
-    delete_dir(TESTOUTPUT_DIR / "outdated_dtype")
-
-    ds = Dataset(TESTOUTPUT_DIR / "outdated_dtype", scale=(1, 1, 1))
+    ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR, "outdated_dtype")
+    ds = Dataset(ds_path, scale=(1, 1, 1))
     with pytest.raises(ValueError):
         ds.get_or_add_layer("color", COLOR_CATEGORY, dtype=np.uint8, num_channels=1)
 
@@ -1440,12 +1534,22 @@ def test_outdated_dtype_parameter() -> None:
 
 
 @pytest.mark.parametrize("make_relative", [True, False])
-def test_dataset_shallow_copy(make_relative: bool) -> None:
-    delete_dir(TESTOUTPUT_DIR / "original_dataset")
-    delete_dir(TESTOUTPUT_DIR / "copy_dataset")
-    ds = Dataset(TESTOUTPUT_DIR / "original_dataset", (1, 1, 1))
+@pytest.mark.parametrize(
+    "data_format", DATA_FORMATS
+)  # Cannot test symlinks on remote storage
+def test_dataset_shallow_copy(make_relative: bool, data_format: DataFormat) -> None:
+    print(make_relative, data_format, TESTOUTPUT_DIR)
+
+    ds_path = prepare_dataset_path(data_format, TESTOUTPUT_DIR, "original")
+    copy_path = prepare_dataset_path(data_format, TESTOUTPUT_DIR, "copy")
+
+    ds = Dataset(ds_path, (1, 1, 1))
     original_layer_1 = ds.add_layer(
-        "color", COLOR_CATEGORY, dtype_per_layer=np.uint8, num_channels=1
+        "color",
+        COLOR_CATEGORY,
+        dtype_per_layer=np.uint8,
+        num_channels=1,
+        data_format=data_format,
     )
     original_layer_1.add_mag(1)
     original_layer_1.add_mag("2-2-1")
@@ -1454,41 +1558,39 @@ def test_dataset_shallow_copy(make_relative: bool) -> None:
         SEGMENTATION_CATEGORY,
         dtype_per_layer=np.uint32,
         largest_segment_id=0,
+        data_format=data_format,
     )
     original_layer_2.add_mag(4)
     mappings_path = original_layer_2.path / "mappings"
-    os.makedirs(mappings_path)
+    mappings_path.mkdir(parents=True)
     open(mappings_path / "agglomerate_view.hdf5", "w", encoding="utf-8").close()
 
-    shallow_copy_of_ds = ds.shallow_copy_dataset(
-        TESTOUTPUT_DIR / "copy_dataset", make_relative=make_relative
-    )
+    shallow_copy_of_ds = ds.shallow_copy_dataset(copy_path, make_relative=make_relative)
     shallow_copy_of_ds.get_layer("color").add_mag(Mag("4-4-1"))
     assert (
-        len(Dataset.open(TESTOUTPUT_DIR / "original_dataset").get_layer("color").mags)
-        == 2
+        len(Dataset.open(ds_path).get_layer("color").mags) == 2
     ), "Adding a new mag should not affect the original dataset"
     assert (
-        len(Dataset.open(TESTOUTPUT_DIR / "copy_dataset").get_layer("color").mags) == 3
+        len(Dataset.open(copy_path).get_layer("color").mags) == 3
     ), "Expecting all mags from original dataset and new downsampled mag"
-    assert os.path.exists(
-        TESTOUTPUT_DIR
-        / "copy_dataset"
-        / "segmentation"
-        / "mappings"
-        / "agglomerate_view.hdf5"
-    ), "Expecting mappings to exist in shallow copy"
+    assert (
+        copy_path / "segmentation" / "mappings" / "agglomerate_view.hdf5"
+    ).exists(), "Expecting mappings to exist in shallow copy"
+
+
+def test_remote_wkw_dataset() -> None:
+    ds_path = prepare_dataset_path(DataFormat.WKW, REMOTE_TESTOUTPUT_DIR)
+    ds = Dataset(ds_path, scale=(1, 1, 1))
+    with pytest.raises(AssertionError):
+        ds.add_layer("color", COLOR_CATEGORY, data_format=DataFormat.WKW)
 
 
 def test_dataset_conversion_wkw_only() -> None:
-    origin_ds_path = TESTOUTPUT_DIR / "conversion" / "origin_wkw"
-    converted_ds_path = TESTOUTPUT_DIR / "conversion" / "converted_wkw"
-
-    delete_dir(origin_ds_path)
-    delete_dir(converted_ds_path)
+    ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR, "original")
+    converted_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR, "converted")
 
     # create example dataset
-    origin_ds = Dataset(origin_ds_path, scale=(1, 1, 1))
+    origin_ds = Dataset(ds_path, scale=(1, 1, 1))
     seg_layer = origin_ds.add_layer(
         "layer1",
         SEGMENTATION_CATEGORY,
@@ -1520,7 +1622,7 @@ def test_dataset_conversion_wkw_only() -> None:
         absolute_offset=(10, 20, 30),
         data=(np.random.rand(3, 64, 64, 128) * 255).astype(np.uint8),
     )
-    converted_ds = origin_ds.copy_dataset(converted_ds_path)
+    converted_ds = origin_ds.copy_dataset(converted_path)
 
     assert origin_ds.layers.keys() == converted_ds.layers.keys()
     for layer_name in origin_ds.layers:
@@ -1545,16 +1647,16 @@ def test_dataset_conversion_wkw_only() -> None:
     assure_exported_properties(converted_ds)
 
 
-def test_dataset_conversion_from_wkw_to_zarr() -> None:
-    converted_ds_path = TESTOUTPUT_DIR / "conversion" / "converted_zarr"
-    delete_dir(converted_ds_path)
+@pytest.mark.parametrize("output_path", [TESTOUTPUT_DIR, REMOTE_TESTOUTPUT_DIR])
+def test_dataset_conversion_from_wkw_to_zarr(output_path: Path) -> None:
+    converted_path = prepare_dataset_path(DataFormat.Zarr, output_path, "converted")
 
     input_ds = Dataset.open(TESTDATA_DIR / "simple_wkw_dataset")
     converted_ds = input_ds.copy_dataset(
-        converted_ds_path, data_format=DataFormat.Zarr, chunks_per_shard=1
+        converted_path, data_format=DataFormat.Zarr, chunks_per_shard=1
     )
 
-    assert (converted_ds_path / "color" / "1" / ".zarray").exists()
+    assert (converted_path / "color" / "1" / ".zarray").exists()
     assert np.all(
         input_ds.get_layer("color").get_mag("1").read()
         == converted_ds.get_layer("color").get_mag("1").read()
@@ -1567,30 +1669,41 @@ def test_dataset_conversion_from_wkw_to_zarr() -> None:
     assure_exported_properties(converted_ds)
 
 
-def test_for_zipped_chunks() -> None:
-    delete_dir(TESTOUTPUT_DIR / "zipped_chunking_source")
-    delete_dir(TESTOUTPUT_DIR / "zipped_chunking_target")
+@pytest.mark.parametrize(
+    "data_format", DATA_FORMATS
+)  # Don't test remote storage for performance reasons (lack of sharding in zarr)
+def test_for_zipped_chunks(data_format: DataFormat) -> None:
+    src_dataset_path = prepare_dataset_path(
+        data_format, TESTOUTPUT_DIR, "zipped_chunking_source"
+    )
+    dst_dataset_path = prepare_dataset_path(
+        data_format, TESTOUTPUT_DIR, "zipped_chunking_target"
+    )
 
-    ds = Dataset(TESTOUTPUT_DIR / "zipped_chunking_source", scale=(1, 1, 2))
+    ds = Dataset(src_dataset_path, scale=(1, 1, 2))
     mag = ds.add_layer(
         "color",
         category=COLOR_CATEGORY,
         dtype_per_channel="uint8",
         num_channels=3,
+        data_format=data_format,
     ).add_mag("1")
     mag.write(data=(np.random.rand(3, 256, 256, 256) * 255).astype(np.uint8))
     source_view = mag.get_view(absolute_offset=(0, 0, 0), size=(256, 256, 256))
 
     target_mag = (
-        Dataset(TESTOUTPUT_DIR / "zipped_chunking_target", scale=(1, 1, 2))
+        Dataset(dst_dataset_path, scale=(1, 1, 2))
         .get_or_add_layer(
             "color",
             COLOR_CATEGORY,
             dtype_per_channel="uint8",
             num_channels=3,
+            data_format=data_format,
         )
         .get_or_add_mag(
-            "1", chunk_size=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(4)
+            "1",
+            chunk_size=Vec3Int.full(8),
+            chunks_per_shard=(4 if data_format == DataFormat.WKW else 1),
         )
     )
 
@@ -1621,9 +1734,14 @@ def _func_invalid_target_chunk_size_wk(args: Tuple[View, View, int]) -> None:
     (_s, _t, _i) = args
 
 
-def test_for_zipped_chunks_invalid_target_chunk_size_wk() -> None:
-    delete_dir(TESTOUTPUT_DIR / "zipped_chunking_source_invalid")
-
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_for_zipped_chunks_invalid_target_chunk_size_wk(
+    data_format: DataFormat, output_path: Path
+) -> None:
+    ds_path = prepare_dataset_path(
+        data_format, output_path, "zipped_chunking_source_invalid"
+    )
+    chunk_size, chunks_per_shard = default_chunk_config(data_format, 8)
     test_cases_wk = [
         (10, 20, 30),
         (64, 64, 100),
@@ -1631,15 +1749,15 @@ def test_for_zipped_chunks_invalid_target_chunk_size_wk() -> None:
         (200, 128, 128),
     ]
 
-    ds = Dataset(TESTOUTPUT_DIR / "zipped_chunking_source_invalid", scale=(1, 1, 1))
-    layer1 = ds.get_or_add_layer("color1", COLOR_CATEGORY)
+    ds = Dataset(ds_path, scale=(1, 1, 1))
+    layer1 = ds.get_or_add_layer("color1", COLOR_CATEGORY, data_format=data_format)
     source_mag_view = layer1.get_or_add_mag(
-        1, chunk_size=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(8)
+        1, chunk_size=chunk_size, chunks_per_shard=chunks_per_shard
     )
 
-    layer2 = ds.get_or_add_layer("color2", COLOR_CATEGORY)
+    layer2 = ds.get_or_add_layer("color2", COLOR_CATEGORY, data_format=data_format)
     target_mag_view = layer2.get_or_add_mag(
-        1, chunk_size=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(8)
+        1, chunk_size=chunk_size, chunks_per_shard=chunks_per_shard
     )
 
     source_view = source_mag_view.get_view(
@@ -1662,10 +1780,13 @@ def test_for_zipped_chunks_invalid_target_chunk_size_wk() -> None:
     assure_exported_properties(ds)
 
 
-def test_read_only_view() -> None:
-    delete_dir(TESTOUTPUT_DIR / "read_only_view")
-    ds = Dataset(TESTOUTPUT_DIR / "read_only_view", scale=(1, 1, 1))
-    mag = ds.get_or_add_layer("color", COLOR_CATEGORY).get_or_add_mag("1")
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_read_only_view(data_format: DataFormat, output_path: Path) -> None:
+    ds_path = prepare_dataset_path(data_format, output_path, "read_only_view")
+    ds = Dataset(ds_path, scale=(1, 1, 1))
+    mag = ds.get_or_add_layer(
+        "color", COLOR_CATEGORY, data_format=data_format
+    ).get_or_add_mag("1")
     mag.write(
         data=(np.random.rand(1, 10, 10, 10) * 255).astype(np.uint8),
         absolute_offset=(10, 20, 30),
@@ -1682,14 +1803,13 @@ def test_read_only_view() -> None:
     assure_exported_properties(ds)
 
 
-@pytest.mark.parametrize("data_format", DATA_FORMATS)
-def test_bounding_box_on_disk(tmp_path: Path, data_format: DataFormat) -> None:
-    ds = Dataset(Path(tmp_path) / "dataset", scale=(2, 2, 1))
-    chunks_per_shard = (
-        Vec3Int.full(1) if data_format == DataFormat.Zarr else Vec3Int.full(8)
-    )
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_bounding_box_on_disk(data_format: DataFormat, output_path: Path) -> None:
+    ds_path = prepare_dataset_path(data_format, output_path)
+    ds = Dataset(ds_path, scale=(2, 2, 1))
+    chunk_size, chunks_per_shard = default_chunk_config(data_format, 8)
     mag = ds.add_layer("color", category="color", data_format=data_format).add_mag(
-        "2-2-1", chunk_size=Vec3Int.full(8), chunks_per_shard=chunks_per_shard
+        "2-2-1", chunk_size=chunk_size, chunks_per_shard=chunks_per_shard
     )  # cube_size = 8*8 = 64
 
     write_positions = [
@@ -1734,20 +1854,32 @@ def test_bounding_box_on_disk(tmp_path: Path, data_format: DataFormat) -> None:
     assert set(bounding_boxes_on_disk) == expected_results
 
 
-@pytest.mark.parametrize("data_format", DATA_FORMATS)
-def test_compression(tmp_path: Path, data_format: DataFormat) -> None:
-    copytree(
-        Path(TESTDATA_DIR, f"simple_{data_format.value}_dataset"), tmp_path / "dataset"
-    )
-
-    mag1 = Dataset.open(tmp_path / "dataset").get_layer("color").get_mag(1)
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_compression(data_format: DataFormat, output_path: Path) -> None:
+    new_dataset_path = copy_simple_dataset(data_format, output_path)
+    mag1 = Dataset.open(new_dataset_path).get_layer("color").get_mag(1)
 
     # writing unaligned data to an uncompressed dataset
     write_data = (np.random.rand(3, 10, 20, 30) * 255).astype(np.uint8)
     mag1.write(write_data, absolute_offset=(60, 80, 100))
 
     assert not mag1._is_compressed()
-    mag1.compress()
+
+    if output_path == REMOTE_TESTOUTPUT_DIR:
+        # Remote datasets require a `target_path` for compression
+        with pytest.raises(AssertionError):
+            mag1.compress()
+
+        compressed_dataset_path = (
+            REMOTE_TESTOUTPUT_DIR / "simple_zarr_dataset_compressed"
+        )
+        mag1.compress(
+            target_path=compressed_dataset_path,
+        )
+        mag1 = Dataset.open(compressed_dataset_path).get_layer("color").get_mag(1)
+    else:
+        mag1.compress()
+
     assert mag1._is_compressed()
     assert mag1.info.data_format == data_format
 
@@ -1767,8 +1899,9 @@ def test_compression(tmp_path: Path, data_format: DataFormat) -> None:
     assure_exported_properties(mag1.layer.dataset)
 
 
-def test_dataset_view_configuration(tmp_path: Path) -> None:
-    ds1 = Dataset(tmp_path, scale=(2, 2, 1))
+def test_dataset_view_configuration() -> None:
+    ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR)
+    ds1 = Dataset(ds_path, scale=(2, 2, 1))
     default_view_configuration = ds1.default_view_configuration
     assert default_view_configuration is None
 
@@ -1812,7 +1945,7 @@ def test_dataset_view_configuration(tmp_path: Path) -> None:
     assert default_view_configuration.rotation == (1, 2, 3)
 
     # Test if the data is persisted to disk
-    ds2 = Dataset.open(tmp_path)
+    ds2 = Dataset.open(ds_path)
     default_view_configuration = ds2.default_view_configuration
     assert default_view_configuration is not None
     assert default_view_configuration.four_bit == True
@@ -1834,8 +1967,9 @@ def test_dataset_view_configuration(tmp_path: Path) -> None:
     assure_exported_properties(ds1)
 
 
-def test_layer_view_configuration(tmp_path: Path) -> None:
-    ds1 = Dataset(tmp_path, scale=(2, 2, 1))
+def test_layer_view_configuration() -> None:
+    ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR)
+    ds1 = Dataset(ds_path, scale=(2, 2, 1))
     layer1 = ds1.add_layer("color", COLOR_CATEGORY)
     default_view_configuration = layer1.default_view_configuration
     assert default_view_configuration is None
@@ -1870,7 +2004,7 @@ def test_layer_view_configuration(tmp_path: Path) -> None:
     assert default_view_configuration.min == 55.0
 
     # Test if the data is persisted to disk
-    ds2 = Dataset.open(tmp_path)
+    ds2 = Dataset.open(ds_path)
     default_view_configuration = ds2.get_layer("color").default_view_configuration
     assert default_view_configuration is not None
     assert default_view_configuration.color == (255, 0, 0)
@@ -1891,8 +2025,9 @@ def test_layer_view_configuration(tmp_path: Path) -> None:
     assure_exported_properties(ds1)
 
 
-def test_get_largest_segment_id(tmp_path: Path) -> None:
-    ds = Dataset(tmp_path, scale=(1, 1, 1))
+def test_get_largest_segment_id() -> None:
+    ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR)
+    ds = Dataset(ds_path, scale=(1, 1, 1))
 
     segmentation_layer = cast(
         SegmentationLayer,
@@ -1905,8 +2040,9 @@ def test_get_largest_segment_id(tmp_path: Path) -> None:
     assure_exported_properties(ds)
 
 
-def test_get_or_add_layer_by_type(tmp_path: Path) -> None:
-    ds = Dataset(tmp_path, scale=(1, 1, 1))
+def test_get_or_add_layer_by_type() -> None:
+    ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR)
+    ds = Dataset(ds_path, scale=(1, 1, 1))
     assert len(ds.get_segmentation_layers()) == 0
     _ = ds.add_layer(
         "segmentation", SEGMENTATION_CATEGORY, largest_segment_id=999
@@ -1928,22 +2064,24 @@ def test_get_or_add_layer_by_type(tmp_path: Path) -> None:
     assure_exported_properties(ds)
 
 
-def test_dataset_name(tmp_path: Path) -> None:
-    ds = Dataset(tmp_path / "some_name", scale=(1, 1, 1))
+def test_dataset_name() -> None:
+    ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR)
+    ds = Dataset(ds_path / "some_name", scale=(1, 1, 1))
     assert ds.name == "some_name"
     ds.name = "other_name"
     assert ds.name == "other_name"
 
     ds2 = Dataset(
-        tmp_path / "some_new_name", scale=(1, 1, 1), name="very important dataset"
+        ds_path / "some_new_name", scale=(1, 1, 1), name="very important dataset"
     )
     assert ds2.name == "very important dataset"
 
     assure_exported_properties(ds)
 
 
-def test_read_bbox(tmp_path: Path) -> None:
-    ds = Dataset(tmp_path, scale=(2, 2, 1))
+def test_read_bbox() -> None:
+    ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR)
+    ds = Dataset(ds_path, scale=(2, 2, 1))
     layer = ds.add_layer("color", COLOR_CATEGORY)
     mag = layer.add_mag(1)
     mag.write(
@@ -1959,21 +2097,32 @@ def test_read_bbox(tmp_path: Path) -> None:
     )
 
 
-def test_add_copy_layer(tmp_path: Path) -> None:
-    ds = Dataset(tmp_path / "ds", scale=(2, 2, 1))
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_add_copy_layer(data_format: DataFormat, output_path: Path) -> None:
+    ds_path = prepare_dataset_path(data_format, output_path, "original")
+    copy_path = prepare_dataset_path(data_format, output_path, "copy")
+
+    ds = Dataset(ds_path, scale=(2, 2, 1))
 
     # Create dataset to copy data from
-    other_ds = Dataset(tmp_path / "other_ds", scale=(2, 2, 1))
-    original_color_layer = other_ds.add_layer("color", COLOR_CATEGORY)
+    other_ds = Dataset(copy_path, scale=(2, 2, 1))
+    original_color_layer = other_ds.add_layer(
+        "color", COLOR_CATEGORY, data_format=data_format
+    )
     original_color_layer.add_mag(1).write(
         absolute_offset=(10, 20, 30),
         data=(np.random.rand(32, 64, 128) * 255).astype(np.uint8),
     )
-    other_ds.add_layer("segmentation", SEGMENTATION_CATEGORY, largest_segment_id=999)
+    other_ds.add_layer(
+        "segmentation",
+        SEGMENTATION_CATEGORY,
+        data_format=data_format,
+        largest_segment_id=999,
+    ).add_mag("1")
 
     # Copies the "color" layer from a different dataset
-    ds.add_copy_layer(tmp_path / "other_ds" / "color")
-    ds.add_copy_layer(tmp_path / "other_ds" / "segmentation")
+    ds.add_copy_layer(copy_path / "color")
+    ds.add_copy_layer(copy_path / "segmentation")
     assert len(ds.layers) == 2
     assert (
         cast(SegmentationLayer, ds.get_layer("segmentation")).largest_segment_id == 999
@@ -1993,26 +2142,33 @@ def test_add_copy_layer(tmp_path: Path) -> None:
 
     with pytest.raises(IndexError):
         # The dataset already has a layer called "color".
-        ds.add_copy_layer(tmp_path / "other_ds" / "color")
+        ds.add_copy_layer(copy_path / "color")
 
     # Test if the changes of the properties are persisted on disk by opening it again
-    assert "color" in Dataset.open(tmp_path / "ds").layers.keys()
+    assert "color" in Dataset.open(ds_path).layers.keys()
 
     assure_exported_properties(ds)
 
 
-@pytest.mark.parametrize("data_format", DATA_FORMATS)
-def test_rename_layer(tmp_path: Path, data_format: DataFormat) -> None:
-    ds = Dataset(tmp_path / "ds", scale=(1, 1, 1))
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_rename_layer(data_format: DataFormat, output_path: Path) -> None:
+    ds_path = prepare_dataset_path(data_format, output_path)
+    ds = Dataset(ds_path, scale=(1, 1, 1))
     layer = ds.add_layer("color", COLOR_CATEGORY, data_format=data_format)
     mag = layer.add_mag(1)
     write_data = (np.random.rand(10, 20, 30) * 255).astype(np.uint8)
     mag.write(data=write_data)
 
-    layer.name = "color2"
+    if output_path == REMOTE_TESTOUTPUT_DIR:
+        # Cannot rename layers on remote storage
+        with pytest.raises(AssertionError):
+            layer.name = "color2"
+        return
+    else:
+        layer.name = "color2"
 
-    assert not (tmp_path / "ds" / "color").exists()
-    assert (tmp_path / "ds" / "color2").exists()
+    assert not (ds_path / "color").exists()
+    assert (ds_path / "color2").exists()
     assert len([l for l in ds._properties.data_layers if l.name == "color"]) == 0
     assert len([l for l in ds._properties.data_layers if l.name == "color2"]) == 1
     assert "color2" in ds.layers.keys()
@@ -2025,9 +2181,10 @@ def test_rename_layer(tmp_path: Path, data_format: DataFormat) -> None:
     assure_exported_properties(ds)
 
 
-@pytest.mark.parametrize("data_format", DATA_FORMATS)
-def test_delete_layer_and_mag(tmp_path: Path, data_format: DataFormat) -> None:
-    ds = Dataset(tmp_path / "ds", scale=(1, 1, 1))
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_delete_layer_and_mag(data_format: DataFormat, output_path: Path) -> None:
+    ds_path = prepare_dataset_path(data_format, output_path)
+    ds = Dataset(ds_path, scale=(1, 1, 1))
     color_layer = ds.add_layer("color", COLOR_CATEGORY, data_format=data_format)
     color_layer.add_mag(1)
     color_layer.add_mag(2)
@@ -2056,10 +2213,16 @@ def test_delete_layer_and_mag(tmp_path: Path, data_format: DataFormat) -> None:
     assure_exported_properties(ds)
 
 
-def test_add_layer_like(tmp_path: Path) -> None:
-    ds = Dataset(tmp_path / "ds", scale=(1, 1, 1))
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_add_layer_like(data_format: DataFormat, output_path: Path) -> None:
+    ds_path = prepare_dataset_path(data_format, output_path)
+    ds = Dataset(ds_path, scale=(1, 1, 1))
     color_layer1 = ds.add_layer(
-        "color1", COLOR_CATEGORY, dtype_per_layer="uint24", num_channels=3
+        "color1",
+        COLOR_CATEGORY,
+        dtype_per_layer="uint24",
+        num_channels=3,
+        data_format=data_format,
     )
     color_layer1.add_mag(1)
     segmentation_layer1 = cast(
@@ -2069,6 +2232,7 @@ def test_add_layer_like(tmp_path: Path) -> None:
             SEGMENTATION_CATEGORY,
             dtype_per_channel="uint8",
             largest_segment_id=999,
+            data_format=data_format,
         ),
     )
     segmentation_layer1.add_mag(1)
@@ -2088,6 +2252,7 @@ def test_add_layer_like(tmp_path: Path) -> None:
         == np.dtype("uint8")
     )
     assert color_layer1.num_channels == color_layer2.num_channels == 3
+    assert color_layer1.data_format == color_layer2.data_format == data_format
 
     assert segmentation_layer1.name == "segmentation1"
     assert segmentation_layer2.name == "segmentation2"
@@ -2105,6 +2270,11 @@ def test_add_layer_like(tmp_path: Path) -> None:
     )
     assert segmentation_layer1.num_channels == segmentation_layer2.num_channels == 1
     assert (
+        segmentation_layer1.data_format
+        == segmentation_layer2.data_format
+        == data_format
+    )
+    assert (
         segmentation_layer1.largest_segment_id
         == segmentation_layer2.largest_segment_id
         == 999
@@ -2113,16 +2283,19 @@ def test_add_layer_like(tmp_path: Path) -> None:
     assure_exported_properties(ds)
 
 
-def test_pickle_view(tmp_path: Path) -> None:
-    ds = Dataset(tmp_path / "ds", scale=(1, 1, 1))
+def test_pickle_view() -> None:
+    ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR, "pickle")
+    ds = Dataset(ds_path, scale=(1, 1, 1))
     mag1 = ds.add_layer("color", COLOR_CATEGORY).add_mag(1)
 
     data_to_write = (np.random.rand(1, 10, 10, 10) * 255).astype(np.uint8)
     mag1.write(data_to_write)
     assert mag1._cached_array is not None
 
-    pickle.dump(mag1, open(str(tmp_path / "save.p"), "wb"))
-    pickled_mag1 = pickle.load(open(str(tmp_path / "save.p"), "rb"))
+    with (ds_path / "save.p").open("wb") as f_write:
+        pickle.dump(mag1, f_write)
+    with (ds_path / "save.p").open("rb") as f_read:
+        pickled_mag1 = pickle.load(f_read)
 
     # Make sure that the pickled mag can still read data
     assert pickled_mag1._cached_array is None
@@ -2136,29 +2309,34 @@ def test_pickle_view(tmp_path: Path) -> None:
     assert pickled_mag1.layer is not None
 
 
-def test_warn_outdated_properties(tmp_path: Path) -> None:
-
-    ds1 = Dataset(tmp_path / "ds", scale=(1, 1, 1))
-    ds2 = Dataset.open(tmp_path / "ds")
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_warn_outdated_properties(data_format: DataFormat, output_path: Path) -> None:
+    ds_path = prepare_dataset_path(data_format, output_path)
+    ds1 = Dataset(ds_path, scale=(1, 1, 1))
+    ds2 = Dataset.open(ds_path)
 
     # Change ds1 and undo it again
-    ds1.add_layer("color", COLOR_CATEGORY).add_mag(1)
+    ds1.add_layer("color", COLOR_CATEGORY, data_format=data_format).add_mag(1)
     ds1.delete_layer("color")
 
     # Changing ds2 should work fine, since the properties on disk
     # haven't changed.
-    ds2.add_layer("segmentation", SEGMENTATION_CATEGORY, largest_segment_id=1).add_mag(
-        1
-    )
+    ds2.add_layer(
+        "segmentation",
+        SEGMENTATION_CATEGORY,
+        data_format=data_format,
+        largest_segment_id=1,
+    ).add_mag(1)
 
     with pytest.raises(UserWarning):
         # Changing ds1 should raise a warning, since ds1
         # does not know about the change in ds2
-        ds1.add_layer("color", COLOR_CATEGORY)
+        ds1.add_layer("color", COLOR_CATEGORY, data_format=data_format)
 
 
-def test_can_compress_mag8(tmp_path: Path) -> None:
-    ds = Dataset(tmp_path / "ds", scale=(1, 1, 1))
+def test_can_compress_mag8() -> None:
+    ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR)
+    ds = Dataset(ds_path, scale=(1, 1, 1))
 
     layer = ds.add_layer("color", COLOR_CATEGORY)
     layer.bounding_box = BoundingBox((0, 0, 0), (12240, 12240, 685))
@@ -2171,3 +2349,49 @@ def test_can_compress_mag8(tmp_path: Path) -> None:
     data_to_write = (np.random.rand(1, 10, 10, 10) * 255).astype(np.uint8)
     mag_view.write(data_to_write, absolute_offset=(11264, 11264, 0))
     mag_view.compress()
+
+
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_downsampling(data_format: DataFormat, output_path: Path) -> None:
+    ds_path = copy_simple_dataset(data_format, output_path, "downsampling")
+
+    color_layer = Dataset.open(ds_path).get_layer("color")
+    color_layer.downsample()
+
+    assert (ds_path / "color" / "2").exists()
+    assert (ds_path / "color" / "4").exists()
+
+    if data_format == DataFormat.Zarr:
+        assert (ds_path / "color" / "2" / ".zarray").exists()
+        assert (ds_path / "color" / "4" / ".zarray").exists()
+    else:
+        assert (ds_path / "color" / "2" / "header.wkw").exists()
+        assert (ds_path / "color" / "4" / "header.wkw").exists()
+
+    assure_exported_properties(color_layer.dataset)
+
+
+def test_zarr_copy_to_remote_dataset() -> None:
+    ds_path = prepare_dataset_path(DataFormat.Zarr, REMOTE_TESTOUTPUT_DIR, "copied")
+    Dataset.open(TESTDATA_DIR / "simple_zarr_dataset").copy_dataset(
+        ds_path,
+        chunks_per_shard=1,
+        data_format=DataFormat.Zarr,
+    )
+    assert (ds_path / "color" / "1" / ".zarray").exists()
+
+
+def test_wkw_copy_to_remote_dataset() -> None:
+    ds_path = prepare_dataset_path(DataFormat.WKW, REMOTE_TESTOUTPUT_DIR, "copied")
+    wkw_ds = Dataset.open(TESTDATA_DIR / "simple_wkw_dataset")
+
+    # Fails with explicit data_format=wkw ...
+    with pytest.raises(AssertionError):
+        wkw_ds.copy_dataset(ds_path, chunks_per_shard=1, data_format=DataFormat.WKW)
+
+    # ... and with implicit data_format=wkw from the source layers.
+    with pytest.raises(AssertionError):
+        wkw_ds.copy_dataset(
+            ds_path,
+            chunks_per_shard=1,
+        )
