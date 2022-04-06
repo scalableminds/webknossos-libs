@@ -31,7 +31,7 @@ zarr = "^2.11.0"
 numcodecs = "^0.9.1"
 zipp = "^3.5.0"
 fsspec = "^2022.2.0"
-universal-pathlib-edge = "^0.0.13"
+universal-pathlib = "^0.0.14"
 
 
 [tool.poetry.dev-dependencies]
