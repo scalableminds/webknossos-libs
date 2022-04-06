@@ -1,3 +1,4 @@
+import logging
 import multiprocessing
 import os
 import tempfile
@@ -161,12 +162,19 @@ class WrappedProcessPoolExecutor(ProcessPoolExecutor):
         func = args[0]
         args = args[1:]
 
-        result = func(*args, **kwargs)
+        try:
+            result = True, func(*args, **kwargs)
+        except Exception as exc:
+            result = False, exc
+            logging.warning(f"Job computation failed with:\n{exc.__repr__()}")
 
         with open(output_pickle_path, "wb") as file:
             pickling.dump(result, file)
 
-        return result
+        if result[0]:
+            return result[1]
+        else:
+            raise result[1]
 
     def map_unordered(self, func, args):
 
