@@ -27,6 +27,7 @@ Vec3 = Union[Tuple[int, int, int], np.ndarray]
 
 
 def open_wkw(info: WkwDatasetInfo) -> wkw.Dataset:
+    warn_deprecated("open_wkw", "Dataset.open")
     ds = wkw.Dataset.open(
         str(info.dataset_path / info.layer_name / str(info.mag)), info.header
     )
@@ -34,6 +35,7 @@ def open_wkw(info: WkwDatasetInfo) -> wkw.Dataset:
 
 
 def ensure_wkw(target_wkw_info: WkwDatasetInfo) -> None:
+    warn_deprecated("ensure_wkw", "Dataset(..., exist_ok=True)")
     assert target_wkw_info.header is not None
     # Open will create the dataset if it doesn't exist yet
     target_wkw = open_wkw(target_wkw_info)
@@ -190,6 +192,12 @@ def _parse_vec3_int(value: str) -> Vec3Int:
         raise TypeError(f"Cannot convert `{value}` to Vec3Int.")
 
 
+def _parse_deprecated_file_len(value: str) -> Vec3Int:
+    warn_deprecated("--wkw_file_len", "--chunks_per_shard")
+    print("`--wkw_file_len` is deprecated. Please use `--chunks_per_shard` instead.")
+    return _parse_vec3_int(value)
+
+
 def _parse_data_format(value: str) -> DataFormat:
     return DataFormat(value)
 
@@ -215,6 +223,15 @@ def add_data_format_flags(parser: argparse.ArgumentParser) -> None:
         default=DEFAULT_CHUNKS_PER_SHARD,
         type=_parse_vec3_int,
         help="Number of chunks to be stored as a shard in the output format (e.g. `32` or `32,32,32`).",
+    )
+
+    # Also stores
+    parser.add_argument(
+        "--wkw_file_len",
+        default=None,
+        type=_parse_deprecated_file_len,
+        dest="chunks_per_shard",
+        help="[DEPRECATED] Please use `--chunks_per_shard` instead.",
     )
 
 
