@@ -11,14 +11,17 @@ from concurrent.futures._base import Future
 from datetime import datetime
 from inspect import getframeinfo, stack
 from multiprocessing import cpu_count
+from os import PathLike
 from os.path import relpath
 from pathlib import Path
-from typing import Any, Callable, Iterable, List, Optional, Union
+from shutil import copyfileobj
+from typing import Any, Callable, Iterable, Iterator, List, Optional, Tuple, Union
 
 import rich
 from cluster_tools import WrappedProcessPoolExecutor, get_executor
 from cluster_tools.schedulers.cluster_executor import ClusterExecutor
 from rich.progress import Progress
+from upath import UPath
 
 times = {}
 
@@ -145,6 +148,9 @@ def copy_directory_with_symlinks(
     """
     Links all directories in src_path / dir_name to dst_path / dir_name.
     """
+    assert is_fs_path(src_path), f"Cannot create symlink with remote paths {src_path}."
+    assert is_fs_path(dst_path), f"Cannot create symlink with remote paths {dst_path}."
+
     for item in src_path.iterdir():
         if item.name not in ignore:
             symlink_path = dst_path / item.name
@@ -205,3 +211,58 @@ def warn_deprecated(deprecated_item: str, alternative_item: str) -> None:
         f"[DEPRECATION] `{deprecated_item}` is deprecated, please use `{alternative_item}` instead (see {caller.filename}:{caller.lineno})",
         DeprecationWarning,
     )
+
+
+def make_upath(maybe_path: Union[str, PathLike, Path]) -> UPath:
+    return maybe_path if isinstance(maybe_path, UPath) else UPath(maybe_path)
+
+
+def is_fs_path(path: Path) -> bool:
+    # Distinguish between `pathlib.*Path` and `UPath` through a `UPath`-specific attribute
+    return not hasattr(path, "_url")
+
+
+def is_symlink(path: Path) -> bool:
+    try:
+        return path.is_symlink()
+    except NotImplementedError:
+        # `Path` raises `NotImplmentedError` for some methods, including `is_symlink`
+        return False
+
+
+def rmtree(path: Path) -> None:
+    def _walk(path: Path) -> Iterator[Path]:
+        if path.exists():
+            if path.is_dir() and not is_symlink(path):
+                for p in path.iterdir():
+                    yield from _walk(p)
+            yield path
+
+    for sub_path in _walk(path):
+        try:
+            if sub_path.is_file() or is_symlink(sub_path):
+                sub_path.unlink()
+            elif sub_path.is_dir():
+                sub_path.rmdir()
+        except FileNotFoundError:
+            # Some implementations `UPath` do not have explicit directory representations
+            # Therefore, directories only exist, if they have files. Consequently, when
+            # all files have been deleted, the directory does not exist anymore.
+            pass
+
+
+def copytree(in_path: Path, out_path: Path) -> None:
+    def _walk(path: Path, base_path: Path) -> Iterator[Tuple[Path, Path]]:
+        yield (path, path.relative_to(base_path))
+        if path.is_dir():
+            for p in path.iterdir():
+                yield from _walk(p, base_path)
+
+    for in_sub_path, sub_path in _walk(in_path, in_path):
+        if in_sub_path.is_dir():
+            (out_path / sub_path).mkdir(parents=True, exist_ok=True)
+        else:
+            with (in_path / sub_path).open("rb") as in_file, (out_path / sub_path).open(
+                "wb"
+            ) as out_file:
+                copyfileobj(in_file, out_file)

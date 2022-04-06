@@ -1,13 +1,11 @@
 import logging
 import operator
 import re
-import shutil
 import warnings
 from argparse import Namespace
 from os import PathLike
 from os.path import relpath
 from pathlib import Path
-from shutil import rmtree
 from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 
 import numpy as np
@@ -38,8 +36,15 @@ from .upsampling_utils import upsample_cube_job
 if TYPE_CHECKING:
     from .dataset import Dataset
 
-from webknossos.utils import get_executor_for_args, named_partial, warn_deprecated
-
+from ..utils import (
+    copytree,
+    get_executor_for_args,
+    is_fs_path,
+    make_upath,
+    named_partial,
+    rmtree,
+    warn_deprecated,
+)
 from .defaults import (
     DEFAULT_CHUNK_SIZE,
     DEFAULT_CHUNKS_PER_SHARD,
@@ -185,8 +190,8 @@ class Layer:
 
         self.path.mkdir(parents=True, exist_ok=True)
 
-        for resolution in properties.mags:
-            self._setup_mag(Mag(resolution.mag))
+        for mag in properties.mags:
+            self._setup_mag(Mag(mag.mag))
         # Only keep the properties of mags that were initialized.
         # Sometimes the directory of a mag is removed from disk manually, but the properties are not updated.
         self._properties.mags = [
@@ -213,11 +218,15 @@ class Layer:
     def name(self, layer_name: str) -> None:
         """
         Renames the layer to `layer_name`. This changes the name of the directory on disk and updates the properties.
+        Only layers on local file systems can be renamed.
         """
+        if layer_name == self.name:
+            return
         assert (
             layer_name not in self.dataset.layers.keys()
         ), f"Failed to rename layer {self.name} to {layer_name}: The new name already exists."
-        (self.dataset.path / self.name).rename(self.dataset.path / layer_name)
+        assert is_fs_path(self.path), f"Cannot rename remote layer {self.path}"
+        self.path.rename(self.dataset.path / layer_name)
         del self.dataset.layers[self.name]
         self.dataset.layers[layer_name] = self
         self._properties.name = layer_name
@@ -477,6 +486,7 @@ class Layer:
         The foreign mag is (shallow) copied and the existing mag is added to the datasource-properties.json.
         If extend_layer_bounding_box is true, the self.bounding_box will be extended
         by the bounding box of the layer the foreign mag belongs to.
+        Symlinked mags can only be added to layers on local file systems.
         """
 
         if isinstance(foreign_mag_view_or_path, MagView):
@@ -485,7 +495,7 @@ class Layer:
             # local import to prevent circular dependency
             from .dataset import Dataset
 
-            foreign_mag_view_path = Path(foreign_mag_view_or_path)
+            foreign_mag_view_path = make_upath(foreign_mag_view_or_path)
             foreign_mag_view = (
                 Dataset.open(foreign_mag_view_path.parent.parent)
                 .get_layer(foreign_mag_view_path.parent.name)
@@ -494,20 +504,27 @@ class Layer:
 
         self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
 
-        foreign_normalized_mag_path = (
-            Path(relpath(foreign_mag_view.path, self.path))
-            if make_relative
-            else foreign_mag_view.path.resolve()
-        )
-
         if symlink:
-            (self.dataset.path / self.name / str(foreign_mag_view.mag)).symlink_to(
+            assert is_fs_path(
+                self.path
+            ), f"Cannot create symlinks in remote layer {self.path}"
+            assert is_fs_path(
+                foreign_mag_view.path
+            ), f"Cannot create symlink to remote mag {foreign_mag_view.path}"
+
+            foreign_normalized_mag_path = (
+                Path(relpath(foreign_mag_view.path, self.path))
+                if make_relative
+                else foreign_mag_view.path.resolve()
+            )
+
+            (self.path / str(foreign_mag_view.mag)).symlink_to(
                 foreign_normalized_mag_path
             )
         else:
-            shutil.copytree(
-                foreign_normalized_mag_path,
-                self.dataset.path / self.name / str(foreign_mag_view.mag),
+            copytree(
+                foreign_mag_view.path,
+                self.path / str(foreign_mag_view.mag),
             )
 
         self.add_mag_for_existing_files(foreign_mag_view.mag)
@@ -531,6 +548,7 @@ class Layer:
         Note: If the other dataset modifies its bounding box afterwards, the change does not affect this properties
         (or vice versa).
         If make_relative is True, the symlink is made relative to the current dataset path.
+        Symlinked mags can only be added to layers on local file systems.
         """
         return self._add_foreign_mag(
             foreign_mag_view_or_path,
@@ -559,7 +577,7 @@ class Layer:
         self, mag: Union[int, str, list, tuple, np.ndarray, Mag]
     ) -> None:
         mag = Mag(mag).to_layer_name()
-        full_path = self.dataset.path / self.name / mag
+        full_path = self.path / mag
         full_path.mkdir(parents=True, exist_ok=True)
 
     def _assert_mag_does_not_exist_yet(
@@ -751,24 +769,17 @@ class Layer:
         if only_setup_mag:
             return
 
-        bb_mag1 = self.bounding_box
-
-        aligned_source_bb = bb_mag1.align_with_mag(target_mag, ceil=True).in_mag(
-            from_mag
-        )
-        aligned_target_bb = bb_mag1.align_with_mag(target_mag, ceil=True).in_mag(
-            target_mag
-        )
+        bb_mag1 = self.bounding_box.align_with_mag(target_mag, ceil=True)
 
         # Get target view
         target_view = target_mag_view.get_view(
-            offset=aligned_target_bb.topleft,
-            size=aligned_target_bb.size,
+            absolute_offset=bb_mag1.topleft,
+            size=bb_mag1.size,
         )
 
         source_view = prev_mag_view.get_view(
-            offset=aligned_source_bb.topleft,
-            size=aligned_source_bb.size,
+            absolute_offset=bb_mag1.topleft,
+            size=bb_mag1.size,
             read_only=True,
         )
 
@@ -955,7 +966,7 @@ class Layer:
 
         try:
             cls_array = BaseArray.get_class(self._properties.data_format)
-            info = cls_array(
+            info = cls_array.open(
                 _find_mag_path_on_disk(self.dataset.path, self.name, mag_name)
             ).info
             self._mags[mag] = MagView(

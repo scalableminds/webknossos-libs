@@ -1,15 +1,13 @@
-from pathlib import Path
-
-import shutil
 import logging
 from argparse import ArgumentParser, Namespace
-from typing import Optional
+from pathlib import Path
+from shutil import rmtree
+from typing import List, Optional
 
 from wkcuber.api.dataset import Dataset
-from .mag import Mag
 
-from .utils import add_verbose_flag, add_distribution_flags, setup_logging
-from typing import List
+from .mag import Mag
+from .utils import add_distribution_flags, add_verbose_flag, setup_logging
 
 BACKUP_EXT = ".bak"
 
@@ -88,15 +86,14 @@ def compress_mags(
         backup_dir = source_path.with_suffix(BACKUP_EXT)
         (backup_dir / layer_name).mkdir(parents=True, exist_ok=True)
         for mag in mags:
-            shutil.move(
-                str(source_path / layer_name / str(mag)),
-                str(backup_dir / layer_name / str(mag)),
+            (source_path / layer_name / str(mag)).rename(
+                (backup_dir / layer_name / str(mag))
             )
-            shutil.move(
-                str(target / layer_name / str(mag)),
+
+            (target / layer_name / str(mag)).rename(
                 str(source_path / layer_name / str(mag)),
             )
-        shutil.rmtree(target)
+        rmtree(target)
         logging.info(
             "Old files are still present in '{0}.bak'. Please remove them when not required anymore.".format(
                 source_path

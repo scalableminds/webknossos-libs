@@ -1,22 +1,47 @@
 import re
 import warnings
 from abc import ABC, abstractmethod
+from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import Enum
 from os.path import relpath
 from pathlib import Path
-from typing import Any, Dict, Iterator, Optional, Type
+from typing import Any, Dict, Iterator, Optional, Type, cast
 
+import numcodecs
 import numpy as np
 import wkw
 import zarr
-from numcodecs import Blosc
+from upath import UPath
+from zarr.storage import FSStore
 
-from webknossos.geometry import BoundingBox, Vec3Int, Vec3IntLike
+from ..geometry import BoundingBox, Vec3Int, Vec3IntLike
 
 
-def is_power_of_two(num: int) -> bool:
+def _is_power_of_two(num: int) -> bool:
     return num & (num - 1) == 0
+
+
+def _fsstore_from_path(path: Path, mode: str = "a") -> FSStore:
+    storage_options = {}
+    if hasattr(path, "_kwargs"):
+        path = cast(UPath, path)
+        storage_options = path._kwargs.copy()
+        del storage_options["_url"]
+
+    return FSStore(url=str(path), mode=mode, **storage_options)
+
+
+@contextmanager
+def _blosc_disable_threading() -> Iterator[None]:
+    old_value = numcodecs.blosc.use_threads
+
+    # See https://zarr.readthedocs.io/en/stable/tutorial.html#configuring-blosc
+    numcodecs.blosc.use_threads = False
+    try:
+        yield
+    finally:
+        numcodecs.blosc.use_threads = old_value
 
 
 class ArrayException(Exception):
@@ -139,7 +164,7 @@ class WKWArray(BaseArray):
         assert (
             array_info.chunk_size.is_uniform()
         ), f"`chunk_size` needs to be uniform for WKW storage. Got {array_info.chunk_size}."
-        assert is_power_of_two(
+        assert _is_power_of_two(
             array_info.chunk_size.x
         ), f"`chunk_size` needs to be a power of 2 for WKW storage. Got {array_info.chunk_size.x}."
         assert (
@@ -149,7 +174,7 @@ class WKWArray(BaseArray):
         assert (
             array_info.chunks_per_shard.is_uniform()
         ), f"`chunks_per_shard` needs to be uniform for WKW storage. Got {array_info.chunks_per_shard}."
-        assert is_power_of_two(
+        assert _is_power_of_two(
             array_info.chunks_per_shard.x
         ), f"`chunks_per_shard` needs to be a power of 2 for WKW storage. Got {array_info.chunks_per_shard.x}."
         assert (
@@ -288,11 +313,11 @@ class ZarrArray(BaseArray):
             chunks=(array_info.num_channels,) + array_info.chunk_size.to_tuple(),
             dtype=array_info.voxel_type,
             compressor=(
-                Blosc(cname="zstd", clevel=3, shuffle=Blosc.SHUFFLE)
+                numcodecs.Blosc(cname="zstd", clevel=3, shuffle=numcodecs.Blosc.SHUFFLE)
                 if array_info.compression_mode
                 else None
             ),
-            store=path,
+            store=_fsstore_from_path(path),
             order="F",
         )
         return ZarrArray(path)
@@ -301,12 +326,13 @@ class ZarrArray(BaseArray):
         offset = Vec3Int(offset)
         shape = Vec3Int(shape)
         zarray = self._zarray
-        data = zarray[
-            :,
-            offset.x : (offset.x + shape.x),
-            offset.y : (offset.y + shape.y),
-            offset.z : (offset.z + shape.z),
-        ]
+        with _blosc_disable_threading():
+            data = zarray[
+                :,
+                offset.x : (offset.x + shape.x),
+                offset.y : (offset.y + shape.y),
+                offset.z : (offset.z + shape.z),
+            ]
         if data.shape != shape:
             padded_data = np.zeros(
                 (self.info.num_channels,) + shape.to_tuple(), dtype=data.dtype
@@ -339,7 +365,9 @@ class ZarrArray(BaseArray):
                 new_shape_tuple = (zarray.shape[0],) + new_shape.to_tuple()
 
             # Check on-disk for changes to shape
-            current_zarray = zarr.open_array(store=self._path, mode="r")
+            current_zarray = zarr.open_array(
+                store=_fsstore_from_path(self._path), mode="r"
+            )
             if zarray.shape != current_zarray.shape:
                 warnings.warn(
                     f"[WARNING] While resizing the Zarr array at {self._path}, a differing shape ({zarray.shape} != {current_zarray.shape}) was found in the currently persisted metadata."
@@ -359,14 +387,15 @@ class ZarrArray(BaseArray):
             data = data.reshape((1,) + data.shape)
         assert data.ndim == 4
 
-        self.ensure_size(offset + Vec3Int(data.shape[1:4]), warn=True)
-        zarray = self._zarray
-        zarray[
-            :,
-            offset.x : (offset.x + data.shape[1]),
-            offset.y : (offset.y + data.shape[2]),
-            offset.z : (offset.z + data.shape[3]),
-        ] = data
+        with _blosc_disable_threading():
+            self.ensure_size(offset + Vec3Int(data.shape[1:4]), warn=True)
+            zarray = self._zarray
+            zarray[
+                :,
+                offset.x : (offset.x + data.shape[1]),
+                offset.y : (offset.y + data.shape[2]),
+                offset.z : (offset.z + data.shape[3]),
+            ] = data
 
     def list_bounding_boxes(self) -> Iterator[BoundingBox]:
         zarray = self._zarray
@@ -385,7 +414,9 @@ class ZarrArray(BaseArray):
     def _zarray(self) -> zarr.Array:
         if self._cached_zarray is None:
             try:
-                self._cached_zarray = zarr.open_array(store=self._path, mode="a")
+                self._cached_zarray = zarr.open_array(
+                    store=_fsstore_from_path(self._path), mode="a"
+                )
             except Exception as e:
                 raise ArrayException(
                     f"Exception while opening Zarr array for {self._path}"

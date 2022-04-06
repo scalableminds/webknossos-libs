@@ -1,7 +1,6 @@
 import copy
 import json
 import re
-import shutil
 import warnings
 from argparse import Namespace
 from contextlib import nullcontext
@@ -25,16 +24,22 @@ import attr
 import numpy as np
 from boltons.typeutils import make_sentinel
 
-from webknossos.geometry.vec3_int import Vec3IntLike
-
+from ..geometry.vec3_int import Vec3IntLike
 from ._array import ArrayException, ArrayInfo, BaseArray, DataFormat
 
 if TYPE_CHECKING:
-    from webknossos.client._upload_dataset import LayerToLink
+    from ..client._upload_dataset import LayerToLink
 
-from webknossos.geometry import BoundingBox, Mag
-from webknossos.utils import copy_directory_with_symlinks, get_executor_for_args
-
+from ..geometry import BoundingBox, Mag
+from ..utils import (
+    copy_directory_with_symlinks,
+    copytree,
+    get_executor_for_args,
+    is_fs_path,
+    is_symlink,
+    make_upath,
+    rmtree,
+)
 from ._utils.infer_bounding_box_existing_files import infer_bounding_box_existing_files
 from .layer import (
     Layer,
@@ -119,10 +124,12 @@ class Dataset:
         Currently exist_ok=True is the deprecated default and will change in future releases.
         Please use `Dataset.open` if you intend to open an existing dataset and don't want/need the creation behavior.
         """
-        dataset_path = Path(dataset_path)
+        dataset_path = make_upath(dataset_path)
 
         dataset_existed_already = (
-            dataset_path.is_dir() and next(dataset_path.iterdir(), None) is not None
+            dataset_path.exists()
+            and dataset_path.is_dir()
+            and next(dataset_path.iterdir(), None) is not None
         )
 
         if dataset_existed_already:
@@ -160,8 +167,8 @@ class Dataset:
             dataset_properties = DatasetProperties(
                 id={"name": name, "team": ""}, scale=scale, data_layers=[]
             )
-            with open(
-                dataset_path / PROPERTIES_FILE_NAME, "w", encoding="utf-8"
+            with (dataset_path / PROPERTIES_FILE_NAME).open(
+                "w", encoding="utf-8"
             ) as outfile:
                 json.dump(
                     dataset_converter.unstructure(dataset_properties), outfile, indent=4
@@ -176,7 +183,7 @@ class Dataset:
         for layer_properties in self._properties.data_layers:
             num_channels = _extract_num_channels(
                 layer_properties.num_channels,
-                Path(dataset_path),
+                make_upath(dataset_path),
                 layer_properties.name,
                 layer_properties.mags[0].mag
                 if len(layer_properties.mags) > 0
@@ -215,7 +222,7 @@ class Dataset:
 
         The `dataset_path` refers to the top level directory of the dataset (excluding layer or magnification names).
         """
-        dataset_path = Path(dataset_path)
+        dataset_path = make_upath(dataset_path)
         assert (
             dataset_path.exists()
         ), f"Cannot open Dataset: Couldn't find {dataset_path}"
@@ -371,6 +378,8 @@ class Dataset:
 
         Creates the folder `layer_name` in the directory of `self.path`.
 
+        WKW layers can only be added to datasets on local file systems.
+
         The return type is `webknossos.dataset.layer.Layer`.
 
         This function raises an `IndexError` if the specified `layer_name` already exists.
@@ -409,6 +418,10 @@ class Dataset:
                     layer_name
                 )
             )
+
+        assert (
+            is_fs_path(self.path) or data_format != DataFormat.WKW
+        ), "Cannot create WKW layers in remote datasets. Use `data_format='zarr'`."
 
         layer_properties = LayerProperties(
             name=layer_name,
@@ -635,11 +648,11 @@ class Dataset:
             layer for layer in self._properties.data_layers if layer.name != layer_name
         ]
         # delete files on disk
-        if layer_path.is_symlink():
+        if is_symlink(layer_path):
             layer_path.unlink()
         else:
             # rmtree does not recurse into linked dirs, but removes the link
-            shutil.rmtree(layer_path)
+            rmtree(layer_path)
         self._export_as_json()
 
     def add_symlink_layer(
@@ -655,12 +668,13 @@ class Dataset:
         (or vice versa).
         If make_relative is True, the symlink is made relative to the current dataset path.
         If new_layer_name is None, the name of the foreign layer is used.
+        Symlinked layers can only be added to datasets on local file systems.
         """
 
         if isinstance(foreign_layer, Layer):
             foreign_layer_path = foreign_layer.path
         else:
-            foreign_layer_path = Path(foreign_layer)
+            foreign_layer_path = make_upath(foreign_layer)
 
         foreign_layer_name = foreign_layer_path.name
         layer_name = (
@@ -671,11 +685,19 @@ class Dataset:
                 f"Cannot create symlink to {foreign_layer_path}. This dataset already has a layer called {layer_name}."
             )
 
+        assert is_fs_path(
+            self.path
+        ), f"Cannot create symlinks in remote dataset {self.path}"
+        assert is_fs_path(
+            foreign_layer_path
+        ), f"Cannot create symlink to remote layer {foreign_layer_path}"
+
         foreign_layer_symlink_path = (
             Path(relpath(foreign_layer_path, self.path))
             if make_relative
             else foreign_layer_path.resolve()
         )
+
         (self.path / layer_name).symlink_to(foreign_layer_symlink_path)
         original_layer = Dataset.open(foreign_layer_path.parent).get_layer(
             foreign_layer_name
@@ -704,7 +726,7 @@ class Dataset:
         if isinstance(foreign_layer, Layer):
             foreign_layer_path = foreign_layer.path
         else:
-            foreign_layer_path = Path(foreign_layer)
+            foreign_layer_path = make_upath(foreign_layer)
 
         foreign_layer_name = foreign_layer_path.name
         layer_name = (
@@ -715,7 +737,7 @@ class Dataset:
                 f"Cannot copy {foreign_layer_path}. This dataset already has a layer called {layer_name}."
             )
 
-        shutil.copytree(foreign_layer_path, self.path / layer_name)
+        copytree(foreign_layer_path, self.path / layer_name)
         original_layer = Dataset.open(foreign_layer_path.parent).get_layer(
             foreign_layer_name
         )
@@ -746,6 +768,7 @@ class Dataset:
         If not specified otherwise, the `scale`, `chunk_size`, `chunks_per_shard` and `compress` of the current dataset
         are also used for the new dataset. The method also accepts the parameters `block_len` and `file_size`,
         which were deprecated by `chunk_size` and `chunks_per_shard`.
+        WKW layers can only be copied to datasets on local file systems.
         """
 
         chunk_size, chunks_per_shard = _get_sharding_parameters(
@@ -755,7 +778,19 @@ class Dataset:
             file_len=file_len,
         )
 
-        new_dataset_path = Path(new_dataset_path)
+        new_dataset_path = make_upath(new_dataset_path)
+
+        if data_format == DataFormat.WKW:
+            assert is_fs_path(
+                new_dataset_path
+            ), "Cannot create WKW-based remote datasets. Use `data_format='zarr'` instead."
+        if data_format is None and any(
+            layer.data_format == DataFormat.WKW for layer in self.layers.values()
+        ):
+            assert is_fs_path(
+                new_dataset_path
+            ), "Cannot create WKW layers in remote datasets. Use explicit `data_format='zarr'`."
+
         if scale is None:
             scale = self.scale
         new_ds = Dataset(new_dataset_path, scale=scale, exist_ok=False)
@@ -813,6 +848,7 @@ class Dataset:
         In addition, link all other directories in all layer directories
         to make this method robust against additional files e.g. layer/mappings/agglomerate_view.hdf5.
         This method becomes useful when exposing a dataset to webknossos.
+        Only datasets on local filesystems can be shallow copied.
         """
         new_dataset = Dataset(
             new_dataset_path, scale=self.scale, name=name or self.name, exist_ok=False
@@ -912,8 +948,8 @@ class Dataset:
         return repr("Dataset(%s)" % self.path)
 
     def _load_properties(self) -> DatasetProperties:
-        with open(
-            self.path / PROPERTIES_FILE_NAME, encoding="utf-8"
+        with (self.path / PROPERTIES_FILE_NAME).open(
+            encoding="utf-8"
         ) as datasource_properties:
             data = json.load(datasource_properties)
         return dataset_converter.structure(data, DatasetProperties)
@@ -929,7 +965,7 @@ class Dataset:
                 + "likely happening because multiple processes changed the metadata of this dataset."
             )
 
-        with open(self.path / PROPERTIES_FILE_NAME, "w", encoding="utf-8") as outfile:
+        with (self.path / PROPERTIES_FILE_NAME).open("w", encoding="utf-8") as outfile:
             json.dump(
                 dataset_converter.unstructure(self._properties),
                 outfile,

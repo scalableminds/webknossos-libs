@@ -1,5 +1,4 @@
 import logging
-import shutil
 import warnings
 from argparse import Namespace
 from pathlib import Path
@@ -8,9 +7,14 @@ from uuid import uuid4
 
 import numpy as np
 
-from webknossos.geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
-from webknossos.utils import get_executor_for_args, wait_and_ensure_success
-
+from ..geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
+from ..utils import (
+    get_executor_for_args,
+    is_fs_path,
+    make_upath,
+    rmtree,
+    wait_and_ensure_success,
+)
 from ._array import ArrayInfo, BaseArray
 from .properties import MagViewProperties
 
@@ -66,6 +70,9 @@ class MagView(View):
             chunks_per_shard=chunks_per_shard,
             compression_mode=compression_mode,
         )
+        if create:
+            self_path = layer.dataset.path / layer.name / mag.to_layer_name()
+            BaseArray.get_class(array_info.data_format).create(self_path, array_info)
 
         super().__init__(
             _find_mag_path_on_disk(layer.dataset.path, layer.name, mag.to_layer_name()),
@@ -74,9 +81,6 @@ class MagView(View):
             mag=mag,
         )
         self._layer = layer
-
-        if create:
-            BaseArray.get_class(array_info.data_format).create(self.path, array_info)
 
     # Overwrites of View methods:
     @property
@@ -265,22 +269,26 @@ class MagView(View):
 
         The data gets compressed inplace, if target_path is None.
         Otherwise it is written to target_path/layer_name/mag.
+
+        Compressing mags on remote file systems requires a `target_path`.
         """
 
         from webknossos.dataset.dataset import Dataset
 
-        if target_path is None and self._is_compressed():
-            logging.info(f"Mag {self.name} is already compressed")
-            return
+        if target_path is None:
+            if self._is_compressed():
+                logging.info(f"Mag {self.name} is already compressed")
+                return
+            else:
+                assert is_fs_path(
+                    self.path
+                ), "Cannot compress a remote mag without `target_path`."
+        else:
+            target_path = make_upath(target_path)
 
-        if target_path is not None:
-            target_path = Path(target_path)
-
-        uncompressed_full_path = (
-            Path(self.layer.dataset.path) / self.layer.name / self.name
-        )
+        uncompressed_full_path = self.path
         compressed_dataset_path = (
-            Path("{}.compress-{}".format(self.layer.dataset.path, uuid4()))
+            self.layer.dataset.path / f".compress-{uuid4()}"
             if target_path is None
             else target_path
         )
@@ -326,9 +334,9 @@ class MagView(View):
             )
 
         if target_path is None:
-            shutil.rmtree(self.path)
-            shutil.move(str(compressed_mag.path), self.path)
-            shutil.rmtree(compressed_mag.layer.dataset.path)
+            rmtree(self.path)
+            compressed_mag.path.rename(self.path)
+            rmtree(compressed_dataset.path)
 
             # update the handle to the new dataset
             MagView.__init__(

@@ -2,7 +2,7 @@ import logging
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from sklearn.preprocessing import LabelEncoder
-from typing import Tuple, Optional, Union, cast
+from typing import Any, Tuple, Optional, Union, cast
 
 import nibabel as nib
 import numpy as np
@@ -95,7 +95,9 @@ def create_parser() -> ArgumentParser:
 
 
 def to_target_datatype(
-    data: np.ndarray, target_dtype: str, is_segmentation_layer: bool
+    data: np.ndarray,
+    target_dtype: Union[type, str, np.dtype],
+    is_segmentation_layer: bool,
 ) -> np.ndarray:
     if is_segmentation_layer:
         original_shape = data.shape
@@ -106,6 +108,7 @@ def to_target_datatype(
             .astype(np.dtype(target_dtype))
         )
 
+    factor: Any
     if data.dtype == np.dtype("float32"):
         factor = data.max()
     elif data.dtype == np.dtype("float64"):

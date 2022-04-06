@@ -7,7 +7,9 @@ import time
 from abc import abstractmethod
 from concurrent import futures
 from functools import partial
-from typing import Union
+from typing import List, Optional, Tuple
+
+from typing_extensions import Literal
 
 from cluster_tools import pickling
 from cluster_tools.pickling import file_path_to_absolute_module
@@ -101,7 +103,7 @@ class ClusterExecutor(futures.Executor):
     def handle_kill(self, _signum, _frame):
         self.wait_thread.stop()
         job_ids = ",".join(str(id) for id in self.jobs.keys())
-        print(
+        logging.debug(
             "A termination signal was registered. The following jobs are still running on the cluster:\n{}".format(
                 job_ids
             )
@@ -111,7 +113,7 @@ class ClusterExecutor(futures.Executor):
     @abstractmethod
     def check_for_crashed_job(
         self, job_id_with_index
-    ) -> Union["failed", "ignore", "completed"]:
+    ) -> Literal["failed", "ignore", "completed"]:
         pass
 
     def _start(self, workerid, job_count=None, job_name=None):
@@ -137,7 +139,13 @@ class ClusterExecutor(futures.Executor):
         return jobids_futures, job_index_ranges
 
     @abstractmethod
-    def inner_submit(self, *args, **kwargs):
+    def inner_submit(
+        self,
+        cmdline: str,
+        job_name: Optional[str] = None,
+        additional_setup_lines: Optional[List[str]] = None,
+        job_count: Optional[int] = None,
+    ) -> Tuple[List["futures.Future[str]"], List[Tuple[int, int]]]:
         pass
 
     def _cleanup(self, jobid):
@@ -196,7 +204,7 @@ class ClusterExecutor(futures.Executor):
             if not self.jobs:
                 self.jobs_empty_cond.notify_all()
         if self.debug:
-            print("job completed: {}".format(jobid), file=sys.stderr)
+            logging.debug("Job completed: {}".format(jobid), file=sys.stderr)
 
         preliminary_outfile_name = with_preliminary_postfix(outfile_name)
         if failed_early:
@@ -290,7 +298,7 @@ class ClusterExecutor(futures.Executor):
         jobid = jobids_futures[0].result()
 
         if self.debug:
-            print(f"job submitted: {jobid}", file=sys.stderr)
+            logging.debug(f"Job submitted: {jobid}", file=sys.stderr)
 
         # Thread will wait for it to finish.
         self.wait_thread.waitFor(preliminary_output_pickle_path, jobid)
@@ -412,7 +420,7 @@ class ClusterExecutor(futures.Executor):
         jobid = jobid_future.result()
         if self.debug:
 
-            print(
+            logging.debug(
                 "Submitted array job {} with JobId {} and {} subjobs.".format(
                     batch_description, jobid, len(futs_with_output_paths)
                 ),

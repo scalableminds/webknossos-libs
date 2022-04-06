@@ -1,12 +1,12 @@
 import logging
 import multiprocessing
 import os
-import shutil
 import tempfile
 from concurrent import futures
 from concurrent.futures import ProcessPoolExecutor
 from functools import partial
 from pathlib import Path
+from shutil import rmtree
 
 from . import pickling
 from .multiprocessing_logging_handler import get_multiprocessing_logging_setup_fn
@@ -137,8 +137,7 @@ class WrappedProcessPoolExecutor(ProcessPoolExecutor):
 
     @staticmethod
     def _remove_tmp_file(path, _future):
-
-        shutil.rmtree(path)
+        rmtree(path)
 
     @staticmethod
     def _setup_logging_and_execute(multiprocessing_logging_setup_fn, *args, **kwargs):
@@ -163,12 +162,19 @@ class WrappedProcessPoolExecutor(ProcessPoolExecutor):
         func = args[0]
         args = args[1:]
 
-        result = func(*args, **kwargs)
+        try:
+            result = True, func(*args, **kwargs)
+        except Exception as exc:
+            result = False, exc
+            logging.warning(f"Job computation failed with:\n{exc.__repr__()}")
 
         with open(output_pickle_path, "wb") as file:
             pickling.dump(result, file)
 
-        return result
+        if result[0]:
+            return result[1]
+        else:
+            raise result[1]
 
     def map_unordered(self, func, args):
 

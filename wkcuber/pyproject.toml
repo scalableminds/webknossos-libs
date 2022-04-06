@@ -32,7 +32,7 @@ zarr = "^2.11.0"
 
 [tool.poetry.dev-dependencies]
 black = "^20.8b1"
-mypy = "^0.800"
+mypy = "0.910"
 pylint = "^2.6.0"
 pytest = "^6.2.1"
 

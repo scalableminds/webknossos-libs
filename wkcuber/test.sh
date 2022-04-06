@@ -31,7 +31,7 @@ fi
 # this will ensure that the current directory is added to sys.path
 # (which is standard python behavior). This is necessary so that the imports
 # refer to the checked out (and potentially modified) code.
-poetry run python -m pytest tests
+poetry run python -m pytest -vv tests
 
 poetry run sh ${SCRIPTS_BASEDIR}/tiff_cubing.sh
 poetry run sh ${SCRIPTS_BASEDIR}/meta_generation.sh
