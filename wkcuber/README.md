@@ -39,7 +39,7 @@ The tools are modular components to allow easy integration into existing pipelin
 ### Python 3 with pip from PyPi
 - `wkcuber` requires at least Python 3.7+
 
-```
+```bash
 # Make sure to have lz4 installed:
 # Mac: brew install lz4
 # Ubuntu/Debian: apt-get install liblz4-1
@@ -54,7 +54,7 @@ Use the CI-built image: [scalableminds/webknossos-cuber](https://hub.docker.com/
 
 ## Usage
 
-```
+```bash
 # Convert arbitrary, supported input files into wkw datasets. This sets reasonable defaults, but see other commands for customization.
 python -m wkcuber \
   --scale 11.24,11.24,25 \
@@ -113,22 +113,38 @@ python -m wkcuber.check_equality /data/source /data/target
 
 Most tasks can be configured to be executed in a parallelized manner. Via `--distribution_strategy` you can pass `multiprocessing`, `slurm` or `kubernetes`. The first can be further configured with `--jobs` and the latter via `--job_resources='{"mem": "10M"}'`. Use `--help` to get more information.
 
+### Zarr support
+
+Most conversion commands can be configured with `--data_format zarr`. This will produce a Zarr-based dataset instead of WKW. Zarr-based datasets can also be stored on remote storage (e.g. S3, GCS, HTTP). For that, storage-specific credentials and configurations need to be passed in as environment variables.
+
+```bash
+export AWS_SECRET_ACCESS_KEY="..."
+export AWS_ACCESS_KEY_ID="..."
+export AWS_REGION="..."
+
+python -m wkcuber \
+  --scale 11.24,11.24,25 \
+  --data_format zarr \
+  data/source s3://bucket/data/target
+```
+
+
 ## Development
 Make sure to install all the required dependencies using Poetry:
-```
+```bash
 pip install poetry
 poetry install
 ```
 
 Please, format, lint, and unit test your code changes before merging them.
-```
+```bash
 poetry run black .
 poetry run pylint -j4 wkcuber
 poetry run pytest tests
 ```
 
 Please, run the extended test suite:
-```
+```bash
 tests/scripts/all_tests.sh
 ```
 
