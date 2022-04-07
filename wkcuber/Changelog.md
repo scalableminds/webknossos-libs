@@ -12,6 +12,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes
 
 ### Added
+- Added support for converting `.bmp` image files. [#689](https://github.com/scalableminds/webknossos-libs/pull/689)
 
 ### Changed
 
