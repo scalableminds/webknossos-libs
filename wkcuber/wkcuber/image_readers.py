@@ -1,14 +1,14 @@
+import logging
 from pathlib import Path
-from typing import Tuple, Dict, Union, Optional
+from typing import Dict, Optional, Tuple, Union
 
 import numpy as np
-import logging
+from czifile import CziFile
 from PIL import Image
+from tifffile import TiffFile
 
 from .vendor.dm3 import DM3
 from .vendor.dm4 import DM4File, DM4TagHeader
-from tifffile import TiffFile
-from czifile import CziFile
 
 # Disable PIL's maximum image limit.
 Image.MAX_IMAGE_PIXELS = None
@@ -779,6 +779,7 @@ class ImageReaderManager:
             ".mj2": PillowImageReader(),
             # Other image file endings
             ".png": PillowImageReader(),
+            ".bmp": PillowImageReader(),
             ".dm3": Dm3ImageReader(),
             ".dm4": Dm4ImageReader(),
             ".czi": CziImageReader(),
