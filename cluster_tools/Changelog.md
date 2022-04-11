@@ -16,7 +16,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
-
+- Fixed that the ProcessPoolExecutor by the cluster tools would also create a checkpoint if the job failed. This was a regression introduced by #686. [#692](https://github.com/scalableminds/webknossos-libs/pull/692)
 
 ## [0.9.18](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.18) - 2022-04-06
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.17...v0.9.18)
