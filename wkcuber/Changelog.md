@@ -7,16 +7,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.18...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.19...HEAD)
 
 ### Breaking Changes
 
 ### Added
-- Added support for converting `.bmp` image files. [#689](https://github.com/scalableminds/webknossos-libs/pull/689)
 
 ### Changed
 
 ### Fixed
+
+
+## [0.9.19](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.19) - 2022-04-11
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.18...v0.9.19)
+
+### Added
+- Added support for converting `.bmp` image files. [#689](https://github.com/scalableminds/webknossos-libs/pull/689)
 
 
 ## [0.9.18](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.18) - 2022-04-06
