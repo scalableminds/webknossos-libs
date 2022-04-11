@@ -168,10 +168,16 @@ class WrappedProcessPoolExecutor(ProcessPoolExecutor):
             result = False, exc
             logging.warning(f"Job computation failed with:\n{exc.__repr__()}")
 
-        with open(output_pickle_path, "wb") as file:
-            pickling.dump(result, file)
-
         if result[0]:
+            # Only pickle the result in the success case, since the output
+            # is used as a checkpoint.
+            # Note that this behavior differs a bit from the cluster executor
+            # which will always serialize the output (even exceptions) to
+            # disk. However, the output will have a .preliminary prefix at first
+            # which is only removed in the success case so that a checkpoint at
+            # the desired target only exists if the job was successful.
+            with open(output_pickle_path, "wb") as file:
+                pickling.dump(result, file)
             return result[1]
         else:
             raise result[1]
