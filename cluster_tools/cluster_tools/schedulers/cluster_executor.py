@@ -224,13 +224,14 @@ class ClusterExecutor(futures.Executor):
 
         if success:
             # Remove the .preliminary postfix since the job was finished
-            # successfully. # Therefore, the result can be used as a checkpoint
+            # successfully. Therefore, the result can be used as a checkpoint
             # by users of the clustertools.
             os.rename(preliminary_outfile_name, outfile_name)
             logging.debug("Pickle file renamed to {}.".format(outfile_name))
 
             fut.set_result(result)
         else:
+            # Don't remove the .preliminary postfix since the job failed.
             fut.set_exception(RemoteException(result, jobid))
 
         # Clean up communication files.

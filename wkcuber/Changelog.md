@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.18...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.19...HEAD)
 
 ### Breaking Changes
 - Deprecated `--wkw_file_len` flags in favor of `--chunks_per_shard`. [#679](https://github.com/scalableminds/webknossos-libs/pull/679)
@@ -16,12 +16,18 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 - Remove the deprecated modules `wkcuber.downsampling_utils` and `wkcuber.upsampling_utils`. Use the high-level `Layer.downsample` and `Layer.upsample` methods in the `webknossos` package instead. [#679](https://github.com/scalableminds/webknossos-libs/pull/679)
 
 ### Added
-- Added support for converting `.bmp` image files. [#689](https://github.com/scalableminds/webknossos-libs/pull/689)
 - Added Zarr support for `wkcuber`, `wkcuber.cubing`, `wkcuber.converter`, `wkcuber.convert_knossos`, `wkcuber.convert_image_stack_to_wkw`, `wkcuber.convert_nifti`, `wkcuber.convert_raw`, `wkcuber.convert_zarr`, and `wkcuber.recubing`. These commands now take a `--data_format` flag that can either be `wkw` or `zarr`. Additionally, `--chunk_size` and `--chunks_per_shard` flag are available and take either a single number or a 3-tuple (e.g. `32,32,32`). [#689](https://github.com/scalableminds/webknossos-libs/pull/679)
 
 ### Changed
 
 ### Fixed
+
+
+## [0.9.19](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.19) - 2022-04-11
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.18...v0.9.19)
+
+### Added
+- Added support for converting `.bmp` image files. [#689](https://github.com/scalableminds/webknossos-libs/pull/689)
 
 
 ## [0.9.18](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.18) - 2022-04-06
