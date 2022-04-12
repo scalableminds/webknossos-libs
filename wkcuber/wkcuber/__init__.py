@@ -15,4 +15,4 @@ from .cubing import cubing
 from .downsampling import downsample_mags
 from .metadata import write_webknossos_metadata
 
-warnings.filterwarnings("always", category=DeprecationWarning)
+warnings.filterwarnings("once", category=DeprecationWarning)

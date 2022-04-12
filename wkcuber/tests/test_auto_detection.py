@@ -27,8 +27,8 @@ def test_wkw_detection(tmp_path: Path, WT1_path: Path) -> None:
             str(tmp_path / "autodetection" / "wkw"),
         ],
         capture_output=True,
+        check=True,
     )
-    assert return_info.returncode == 0
     assert "Already a WKW dataset." in return_info.stdout.decode("utf-8")
 
     superfolder_path = tmp_path / "superfolder" / "superfolder"
@@ -49,8 +49,8 @@ def test_wkw_detection(tmp_path: Path, WT1_path: Path) -> None:
                 str(tmp_path / "autodetection" / "wkw"),
             ],
             capture_output=True,
+            check=True,
         )
-        assert return_info.returncode == 0, return_info.stdout.decode("utf-8")
         assert "Already a WKW dataset." in return_info.stdout.decode("utf-8")
     finally:
         (superfolder_path / "WT1_wkw").rename(WT1_path)
