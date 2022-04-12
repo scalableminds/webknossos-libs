@@ -141,7 +141,9 @@ class WKWArray(BaseArray):
 
     @classmethod
     def open(cls, path: Path) -> "WKWArray":
-        if (path / "header.wkw").is_file():
+        header_path = path / "header.wkw"
+
+        if header_path.exists() and header_path.is_file():
             return cls(path)
         raise ArrayException(
             f"Could not open WKW array at {path}. `header.wkw` not found."
@@ -288,7 +290,9 @@ class ZarrArray(BaseArray):
 
     @classmethod
     def open(cls, path: Path) -> "ZarrArray":
-        if (path / ".zarray").is_file():
+        zarray_path = path / ".zarray"
+
+        if zarray_path.exists() and zarray_path.is_file():
             return cls(path)
         raise ArrayException(
             f"Could not open Zarr array at {path}. `.zarray` not found."
