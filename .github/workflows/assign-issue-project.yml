@@ -4,7 +4,7 @@ on:
   issues:
     types: [opened]
 env:
-  MY_GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+  MY_GITHUB_TOKEN: ${{ secrets.PROJECT_GITHUB_TOKEN }}
 
 jobs:
   assign_issue_to_project:
