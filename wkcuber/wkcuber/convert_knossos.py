@@ -122,7 +122,6 @@ def convert_knossos(
 
         min_xyz = knossos_cubes.min(axis=0) * CUBE_EDGE_LEN
         max_xyz = (knossos_cubes.max(axis=0) + 1) * CUBE_EDGE_LEN
-        print(min_xyz, max_xyz)
         target_layer.bounding_box = BoundingBox(
             Vec3Int(min_xyz), Vec3Int(max_xyz - min_xyz)
         )
