@@ -1,6 +1,6 @@
 {
   "id": {
-    "name": "simple_wk_dataset",
+    "name": "simple_zarr_dataset",
     "team": ""
   },
   "scale": [1, 1, 1],

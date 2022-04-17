@@ -1,29 +1,28 @@
+from argparse import ArgumentParser, Namespace
 from pathlib import Path
-
 from typing import Optional
 
-from argparse import ArgumentParser, Namespace
-from webknossos.geometry import Vec3Int
+from webknossos import Dataset, Mag, Vec3Int
+from webknossos.dataset.downsampling_utils import SamplingModes
 
-from wkcuber.api.dataset import Dataset
-from wkcuber.downsampling_utils import SamplingModes
-from .mag import Mag
-
-from .utils import (
-    add_verbose_flag,
+from ._internal.utils import (
     add_distribution_flags,
     add_interpolation_flag,
     add_isotropic_flag,
-    setup_logging,
     add_sampling_mode_flag,
+    add_verbose_flag,
     get_executor_args,
+    parse_path,
+    setup_logging,
 )
 
 
 def create_parser() -> ArgumentParser:
     parser = ArgumentParser()
 
-    parser.add_argument("path", help="Directory containing the dataset.", type=Path)
+    parser.add_argument(
+        "path", help="Directory containing the dataset.", type=parse_path
+    )
 
     parser.add_argument(
         "--layer_name",
@@ -128,6 +127,9 @@ def downsample_mags(
         layer_name = path.parent.name
         from_mag = Mag(path.name)
         path = path.parent.parent
+
+    assert layer_name is not None  # for mypy
+    assert from_mag is not None  # for mypy
 
     Dataset.open(path).get_layer(layer_name).downsample(
         from_mag=from_mag,

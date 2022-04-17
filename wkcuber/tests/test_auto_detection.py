@@ -1,11 +1,59 @@
-from wkcuber.converter import ImageStackConverter, KnossosConverter
 from os.path import sep
+from pathlib import Path
+from shutil import unpack_archive
+from subprocess import run
+
+import pytest
+from webknossos.utils import rmtree
+from wkcuber.converter import ImageStackConverter, KnossosConverter
 
 TEST_PREFIXES = ["", "/", "../"]
 
 
 def fix_sep(path: str) -> str:
     return path.replace("/", sep)
+
+
+def test_wkw_detection(tmp_path: Path, WT1_path: Path) -> None:
+    # test wkw detection
+    return_info = run(
+        [
+            "python",
+            "-m",
+            "wkcuber.converter",
+            "--scale",
+            "11.24,11.24,25",
+            str(WT1_path),
+            str(tmp_path / "autodetection" / "wkw"),
+        ],
+        capture_output=True,
+        check=True,
+    )
+    assert "Already a WKW dataset." in return_info.stdout.decode("utf-8")
+
+    superfolder_path = tmp_path / "superfolder" / "superfolder"
+    superfolder_path.mkdir(parents=True)
+
+    # test wkw detection in subfolder
+    try:
+        WT1_path.rename(superfolder_path / "WT1_wkw")
+
+        return_info = run(
+            [
+                "python",
+                "-m",
+                "wkcuber.converter",
+                "--scale",
+                "11.24,11.24,25",
+                str(superfolder_path.parent),
+                str(tmp_path / "autodetection" / "wkw"),
+            ],
+            capture_output=True,
+            check=True,
+        )
+        assert "Already a WKW dataset." in return_info.stdout.decode("utf-8")
+    finally:
+        (superfolder_path / "WT1_wkw").rename(WT1_path)
 
 
 def test_tiff_dataset_name_and_layer_name_detection() -> None:

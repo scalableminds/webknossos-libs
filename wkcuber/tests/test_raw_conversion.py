@@ -1,19 +1,16 @@
 from pathlib import Path
 from typing import Optional, Tuple
+
 import numpy as np
 import pytest
-
 from webknossos import Dataset
 from wkcuber.convert_raw import create_parser, main
 
 
-TESTOUTPUT_DIR = Path("testoutput")
-
-
 @pytest.mark.parametrize("order", ["F", "C"])
 @pytest.mark.parametrize("flip_axes", [None, (1, 2)])
-def test_main(order: str, flip_axes: Optional[Tuple[int, int]]) -> None:
-    raw_file = TESTOUTPUT_DIR / "input.raw"
+def test_main(tmp_path: Path, order: str, flip_axes: Optional[Tuple[int, int]]) -> None:
+    raw_file = tmp_path / "input.raw"
 
     input_dtype = "float32"
     shape = 64, 128, 256
@@ -21,7 +18,7 @@ def test_main(order: str, flip_axes: Optional[Tuple[int, int]]) -> None:
     with raw_file.open("wb") as f:
         f.write(data.tobytes(order=order))
 
-    output_path = TESTOUTPUT_DIR / "output"
+    output_path = tmp_path / "output"
     output_path.mkdir()
 
     args_list = [

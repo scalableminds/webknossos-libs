@@ -1,27 +1,27 @@
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
-
 from typing import Optional
-from webknossos.geometry import Vec3Int
 
-from wkcuber.api.dataset import Dataset
-from wkcuber.downsampling_utils import SamplingModes
-from .mag import Mag
+from webknossos import Dataset, Mag, Vec3Int
+from webknossos.dataset.downsampling_utils import SamplingModes
 
-from .utils import (
-    add_verbose_flag,
+from ._internal.utils import (
     add_distribution_flags,
     add_interpolation_flag,
     add_isotropic_flag,
-    setup_logging,
     add_sampling_mode_flag,
+    add_verbose_flag,
+    parse_path,
+    setup_logging,
 )
 
 
 def create_parser() -> ArgumentParser:
     parser = ArgumentParser()
 
-    parser.add_argument("path", help="Directory containing the dataset.", type=Path)
+    parser.add_argument(
+        "path", help="Directory containing the dataset.", type=parse_path
+    )
 
     parser.add_argument(
         "--layer_name",

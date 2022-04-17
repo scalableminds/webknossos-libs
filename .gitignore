@@ -124,3 +124,6 @@ webknossos/testoutput/*
 */*/output.nml
 */cell_*/*
 cell_*/*
+
+# minio
+minio_data

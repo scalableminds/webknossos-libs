@@ -1,30 +1,36 @@
 import logging
+import os
+import re
+from argparse import ArgumentParser, ArgumentTypeError, Namespace
+from glob import glob
 from pathlib import Path
+from typing import Dict, List, Optional, Tuple, Union, cast
 
 import numpy as np
-from typing import Dict, Tuple, Union, List, Optional, cast
-import os
-from glob import glob
-import re
-from argparse import ArgumentTypeError, ArgumentParser, Namespace
-
-from webknossos.dataset import Dataset, View, COLOR_CATEGORY, SEGMENTATION_CATEGORY
-from webknossos.geometry import BoundingBox, Vec3Int, Mag
-
-from webknossos.dataset import SegmentationLayer
+from webknossos import (
+    COLOR_CATEGORY,
+    SEGMENTATION_CATEGORY,
+    BoundingBox,
+    Dataset,
+    Mag,
+    SegmentationLayer,
+    Vec3Int,
+    View,
+)
+from webknossos.dataset.defaults import DEFAULT_CHUNK_SIZE
 from webknossos.utils import time_start, time_stop
-from .utils import (
+
+from ._internal.image_readers import image_reader
+from ._internal.utils import (
     get_chunks,
     get_executor_for_args,
-    wait_and_ensure_success,
-    setup_logging,
     get_regular_chunks,
+    setup_logging,
+    wait_and_ensure_success,
 )
 from .cubing import create_parser as create_cubing_parser
 from .cubing import read_image_file
-from .image_readers import image_reader
 
-BLOCK_LEN = 32
 PADDING_FILE_NAME = "/"
 
 
@@ -340,15 +346,17 @@ def tile_cubing(
     else:
         target_layer.bounding_box = target_layer.bounding_box.extended_by(bbox)
 
-    target_mag_view = target_layer.get_or_add_mag(Mag(1), block_len=BLOCK_LEN)
+    target_mag_view = target_layer.get_or_add_mag(
+        Mag(1), block_len=DEFAULT_CHUNK_SIZE.z
+    )
 
     with get_executor_for_args(args) as executor:
         job_args = []
         # Iterate over all z batches
         for z_batch in get_regular_chunks(
-            min_dimensions["z"], max_dimensions["z"], BLOCK_LEN
+            min_dimensions["z"], max_dimensions["z"], DEFAULT_CHUNK_SIZE.z
         ):
-            # The z_batch always starts and ends at a multiple of BLOCK_LEN.
+            # The z_batch always starts and ends at a multiple of DEFAULT_CHUNK_SIZE.z.
             # However, we only want the part that is inside the bounding box
             z_batch = range(
                 max(list(z_batch)[0], target_layer.bounding_box.topleft.z),
