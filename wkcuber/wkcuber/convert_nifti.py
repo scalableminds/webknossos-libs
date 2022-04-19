@@ -1,23 +1,21 @@
 import logging
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
-from sklearn.preprocessing import LabelEncoder
-from typing import Any, Tuple, Optional, Union, cast
+from typing import Any, Optional, Tuple, Union, cast
 
 import nibabel as nib
 import numpy as np
-
-from webknossos.dataset import LayerCategoryType
-from webknossos.dataset.defaults import DEFAULT_WKW_FILE_LEN
+from sklearn.preprocessing import LabelEncoder
+from webknossos import BoundingBox, DataFormat, Dataset, LayerCategoryType, Vec3Int
 from webknossos.utils import time_start, time_stop
-from wkcuber.api.dataset import Dataset
-from wkcuber.api.bounding_box import BoundingBox
-from wkcuber.utils import (
-    DEFAULT_WKW_VOXELS_PER_BLOCK,
-    add_verbose_flag,
+
+from ._internal.utils import (
+    add_data_format_flags,
     add_scale_flag,
+    add_verbose_flag,
     pad_or_crop_to_size_and_topleft,
     parse_bounding_box,
+    parse_path,
     setup_logging,
 )
 
@@ -33,7 +31,9 @@ def create_parser() -> ArgumentParser:
     )
 
     parser.add_argument(
-        "target_path", help="Output directory for the generated WKW dataset.", type=Path
+        "target_path",
+        help="Output directory for the generated WKW dataset.",
+        type=parse_path,
     )
 
     parser.add_argument(
@@ -90,6 +90,7 @@ def create_parser() -> ArgumentParser:
 
     add_scale_flag(parser, required=False)
     add_verbose_flag(parser)
+    add_data_format_flags(parser)
 
     return parser
 
@@ -129,13 +130,15 @@ def convert_nifti(
     layer_name: str,
     dtype: str,
     scale: Tuple[float, ...],
+    data_format: DataFormat,
+    chunk_size: Vec3Int,
+    chunks_per_shard: Vec3Int,
     is_segmentation_layer: bool = False,
-    file_len: int = DEFAULT_WKW_FILE_LEN,
     bbox_to_enforce: Optional[BoundingBox] = None,
     use_orientation_header: bool = False,
     flip_axes: Optional[Union[int, Tuple[int, ...]]] = None,
 ) -> None:
-    voxels_per_cube = file_len * DEFAULT_WKW_VOXELS_PER_BLOCK
+    shard_size = chunk_size * chunks_per_shard
     time_start(f"Converting of {source_nifti_path}")
 
     source_nifti = nib.load(str(source_nifti_path.resolve()))
@@ -190,9 +193,9 @@ def convert_nifti(
             cube_data, target_size, target_topleft
         )
 
-    # Writing wkw compressed requires files of shape (voxels_per_cube, voxels_per_cube, voxels_per_cube)
+    # Writing wkw compressed requires files of shape (shard_size, shard_size, shard_size)
     # Pad data accordingly
-    padding_offset = voxels_per_cube - np.array(cube_data.shape[1:4]) % voxels_per_cube
+    padding_offset = shard_size - np.array(cube_data.shape[1:4]) % shard_size
     cube_data = np.pad(
         cube_data,
         (
@@ -213,16 +216,20 @@ def convert_nifti(
             layer_name,
             category_type,
             dtype_per_layer=np.dtype(dtype),
+            data_format=data_format,
             largest_segment_id=int(np.max(cube_data) + 1),
         )
         if is_segmentation_layer
         else wk_ds.get_or_add_layer(
             layer_name,
             category_type,
+            data_format=data_format,
             dtype_per_layer=np.dtype(dtype),
         )
     )
-    wk_mag = wk_layer.get_or_add_mag("1", file_len=file_len)
+    wk_mag = wk_layer.get_or_add_mag(
+        "1", chunk_size=chunk_size, chunks_per_shard=chunks_per_shard
+    )
     wk_mag.write(cube_data)
 
     time_stop(f"Converting of {source_nifti_path}")
@@ -234,6 +241,9 @@ def convert_folder_nifti(
     color_subpath: str,
     segmentation_subpath: str,
     scale: Tuple[float, ...],
+    data_format: DataFormat,
+    chunk_size: Vec3Int,
+    chunks_per_shard: Vec3Int,
     use_orientation_header: bool = False,
     bbox_to_enforce: Optional[BoundingBox] = None,
     flip_axes: Optional[Union[int, Tuple[int, ...]]] = None,
@@ -270,6 +280,9 @@ def convert_folder_nifti(
                 "color",
                 "uint8",
                 scale,
+                data_format,
+                chunk_size,
+                chunks_per_shard,
                 is_segmentation_layer=False,
                 bbox_to_enforce=bbox_to_enforce,
                 use_orientation_header=use_orientation_header,
@@ -282,6 +295,9 @@ def convert_folder_nifti(
                 "segmentation",
                 "uint8",
                 scale,
+                data_format,
+                chunk_size,
+                chunks_per_shard,
                 is_segmentation_layer=True,
                 bbox_to_enforce=bbox_to_enforce,
                 use_orientation_header=use_orientation_header,
@@ -294,6 +310,9 @@ def convert_folder_nifti(
                 path.stem,
                 "uint8",
                 scale,
+                data_format,
+                chunk_size,
+                chunks_per_shard,
                 is_segmentation_layer=False,
                 bbox_to_enforce=bbox_to_enforce,
                 use_orientation_header=use_orientation_header,
@@ -312,20 +331,19 @@ def main(args: Namespace) -> None:
                 0 <= index <= 3
             ), "flip_axes parameter must only contain indices between 0 and 3."
 
-    conversion_args = {
-        "scale": args.scale,
-        "bbox_to_enforce": args.enforce_bounding_box,
-        "use_orientation_header": args.use_orientation_header,
-        "flip_axes": flip_axes,
-    }
-
     if source_path.is_dir():
         convert_folder_nifti(
             source_path,
             args.target_path,
             args.color_file,
             args.segmentation_file,
-            **conversion_args,
+            scale=args.scale,
+            data_format=args.data_format,
+            chunk_size=args.chunk_size,
+            chunks_per_shard=args.chunks_per_shard,
+            bbox_to_enforce=args.enforce_bounding_box,
+            use_orientation_header=args.use_orientation_header,
+            flip_axes=flip_axes,
         )
     else:
         convert_nifti(
@@ -333,8 +351,14 @@ def main(args: Namespace) -> None:
             args.target_path,
             args.layer_name,
             args.dtype,
+            scale=args.scale,
+            data_format=args.data_format,
+            chunk_size=args.chunk_size,
+            chunks_per_shard=args.chunks_per_shard,
             is_segmentation_layer=args.is_segmentation_layer,
-            **conversion_args,
+            bbox_to_enforce=args.enforce_bounding_box,
+            use_orientation_header=args.use_orientation_header,
+            flip_axes=flip_axes,
         )
 
 

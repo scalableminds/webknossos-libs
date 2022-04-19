@@ -54,19 +54,14 @@ DATA_FORMATS_AND_OUTPUT_PATHS = [
 pytestmark = [pytest.mark.block_network(allowed_hosts=[".*"])]
 
 
-def delete_dir(relative_path: Path) -> None:
-    if relative_path.exists() and relative_path.is_dir():
-        rmtree(relative_path)
-
-
 def copy_simple_dataset(
     data_format: DataFormat, output_path: Path, suffix: Optional[str] = None
 ) -> Path:
     suffix = (f"_{suffix}") if suffix is not None else ""
-    new_dataset_path = output_path / f"simple_{data_format.value}_dataset{suffix}"
-    delete_dir(new_dataset_path)
+    new_dataset_path = output_path / f"simple_{data_format}_dataset{suffix}"
+    rmtree(new_dataset_path)
     copytree(
-        TESTDATA_DIR / f"simple_{data_format.value}_dataset",
+        TESTDATA_DIR / f"simple_{data_format}_dataset",
         new_dataset_path,
     )
     return new_dataset_path
@@ -76,8 +71,8 @@ def prepare_dataset_path(
     data_format: DataFormat, output_path: Path, suffix: Optional[str] = None
 ) -> Path:
     suffix = (f"_{suffix}") if suffix is not None else ""
-    new_dataset_path = output_path / f"{data_format.value}_dataset{suffix}"
-    delete_dir(new_dataset_path)
+    new_dataset_path = output_path / f"{data_format}_dataset{suffix}"
+    rmtree(new_dataset_path)
     return new_dataset_path
 
 
@@ -417,6 +412,31 @@ def test_mag_view_write_out_of_bounds_mag2(
     assert color_layer.bounding_box.size == Vec3Int(120, 24, 58)
 
     assure_exported_properties(ds)
+
+
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_views_are_equal(data_format: DataFormat, output_path: Path) -> None:
+    path_a = prepare_dataset_path(data_format, output_path / "a")
+    path_b = prepare_dataset_path(data_format, output_path / "b")
+    mag_a = (
+        Dataset(path_a, scale=(1, 1, 1))
+        .get_or_add_layer("color", COLOR_CATEGORY, data_format=data_format)
+        .get_or_add_mag("1")
+    )
+    mag_b = (
+        Dataset(path_b, scale=(1, 1, 1))
+        .get_or_add_layer("color", COLOR_CATEGORY, data_format=data_format)
+        .get_or_add_mag("1")
+    )
+
+    data = (np.random.rand(10, 10, 10) * 255).astype(np.uint8)
+
+    mag_a.write(data)
+    mag_b.write(data)
+    assert mag_a.content_is_equal(mag_b)
+
+    mag_b.write(data + 10)
+    assert not mag_a.content_is_equal(mag_b)
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
@@ -847,7 +867,7 @@ def test_typing_of_get_mag() -> None:
 
 def test_dataset_exist_ok() -> None:
     ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR, "exist_ok")
-    delete_dir(ds_path)
+    rmtree(ds_path)
 
     # dataset does not exists yet
     ds1 = Dataset(ds_path, scale=(1, 1, 1), exist_ok=False)
@@ -1505,7 +1525,7 @@ def test_search_dataset_also_for_long_layer_name(
 
     # rename the path from "long_layer_name/color/2" to "long_layer_name/color/2-2-2"
     copytree(short_mag_file_path, long_mag_file_path)
-    delete_dir(short_mag_file_path)
+    rmtree(short_mag_file_path)
 
     # make sure that reading data still works
     mag.read(absolute_offset=(20, 20, 20), size=(20, 20, 20))

@@ -3,7 +3,8 @@ import re
 import warnings
 from io import BytesIO
 from os import makedirs
-from shutil import rmtree
+from pathlib import Path
+from shutil import rmtree, unpack_archive
 from typing import Any, Dict, Generator, List
 from unittest.mock import MagicMock, patch
 from zipfile import ZipFile
@@ -18,7 +19,7 @@ from vcr.stubs import httpx_stubs
 import webknossos as wk
 from webknossos.client.context import _clear_all_context_caches
 
-from .constants import TESTOUTPUT_DIR
+from .constants import TESTDATA_DIR, TESTOUTPUT_DIR
 
 ### HYPOTHESIS STRATEGIES (library to test many combinations for data class input)
 
@@ -80,6 +81,21 @@ def error_on_warnings() -> Generator:
     with warnings.catch_warnings():
         warnings.filterwarnings("error", module="webknossos", message=r"\[WARNING\]")
         yield
+
+
+### Misc fixtures
+
+
+@pytest.fixture(scope="session")
+def WT1_path() -> Path:
+    ds_path = TESTDATA_DIR / "WT1_wkw"
+    if ds_path.exists():
+        rmtree(ds_path)
+    unpack_archive(
+        TESTDATA_DIR / "WT1_wkw.tar.gz",
+        ds_path,
+    )
+    return ds_path
 
 
 ### VCR.py / pytest-recording CONFIG

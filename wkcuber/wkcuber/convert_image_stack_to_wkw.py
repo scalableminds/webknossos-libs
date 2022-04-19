@@ -1,20 +1,18 @@
 import logging
-from argparse import Namespace, ArgumentParser
+from argparse import ArgumentParser, Namespace
 from typing import Sequence
 
-from .cubing import (
-    get_channel_and_sample_count_and_dtype,
-    cubing,
-    create_parser as create_cubing_parser,
-)
-from .mag import Mag
-from .utils import (
+from webknossos import Mag
+
+from .cubing import create_parser as create_cubing_parser
+from .cubing import cubing, get_channel_and_sample_count_and_dtype
+from ._internal.utils import (
     add_isotropic_flag,
-    setup_logging,
     add_sampling_mode_flag,
+    get_channel_and_sample_iters_for_wk_compatibility,
     get_executor_args,
     is_wk_compatible_layer_format,
-    get_channel_and_sample_iters_for_wk_compatibility,
+    setup_logging,
 )
 
 
@@ -161,7 +159,9 @@ def main(args: Namespace) -> None:
                     sample_index,
                     arg_dict.get("dtype"),
                     args.target_mag,
-                    args.wkw_file_len,
+                    args.data_format,
+                    args.chunk_size,
+                    args.chunks_per_shard,
                     args.interpolation_mode,
                     args.start_z,
                     args.skip_first_z_slices,

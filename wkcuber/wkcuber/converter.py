@@ -1,31 +1,31 @@
+import logging
 from argparse import ArgumentParser, Namespace
 from os import path, sep
 from pathlib import Path
-import logging
-from typing import Iterable, List, Any, Tuple, Dict, Set, Callable, cast, Optional
+from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, cast
 
 from webknossos.dataset.properties import LayerViewConfiguration
-from .convert_knossos import (
-    main as convert_knossos,
-    create_parser as create_knossos_parser,
-)
-from .convert_nifti import main as convert_nifti, create_parser as create_nifti_parser
-from .cubing import (
-    cubing as cube_image_stack,
-    create_parser as create_image_stack_parser,
-    get_channel_and_sample_count_and_dtype,
-)
-from .image_readers import image_reader
-from .metadata import write_webknossos_metadata
-from .utils import (
-    find_files,
+
+from ._internal.image_readers import image_reader
+from ._internal.utils import (
+    add_data_format_flags,
     add_scale_flag,
     add_verbose_flag,
-    setup_logging,
+    find_files,
+    get_channel_and_sample_iters_for_wk_compatibility,
     get_executor_args,
     is_wk_compatible_layer_format,
-    get_channel_and_sample_iters_for_wk_compatibility,
+    parse_path,
+    setup_logging,
 )
+from .convert_knossos import create_parser as create_knossos_parser
+from .convert_knossos import main as convert_knossos
+from .convert_nifti import create_parser as create_nifti_parser
+from .convert_nifti import main as convert_nifti
+from .cubing import create_parser as create_image_stack_parser
+from .cubing import cubing as cube_image_stack
+from .cubing import get_channel_and_sample_count_and_dtype
+from .metadata import write_webknossos_metadata
 
 logger = logging.getLogger(__name__)
 
@@ -42,11 +42,14 @@ def create_parser() -> ArgumentParser:
     )
 
     parser.add_argument(
-        "target_path", help="Output directory for the generated dataset.", type=Path
+        "target_path",
+        help="Output directory for the generated dataset.",
+        type=parse_path,
     )
 
     add_scale_flag(parser)
     add_verbose_flag(parser)
+    add_data_format_flags(parser)
 
     return parser
 
@@ -353,7 +356,7 @@ class ImageStackConverter(Converter):
             args, image_stack_parser, "target_mag"
         )
         put_default_from_argparser_if_not_present(
-            args, image_stack_parser, "wkw_file_len"
+            args, image_stack_parser, "chunks_per_shard"
         )
         put_default_from_argparser_if_not_present(
             args, image_stack_parser, "interpolation_mode"
@@ -421,7 +424,9 @@ class ImageStackConverter(Converter):
                         sample_index,
                         arg_dict.get("dtype"),
                         args.target_mag,
-                        args.wkw_file_len,
+                        args.data_format,
+                        args.chunk_size,
+                        args.chunks_per_shard,
                         args.interpolation_mode,
                         args.start_z,
                         args.skip_first_z_slices,

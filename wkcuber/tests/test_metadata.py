@@ -1,22 +1,22 @@
 from pathlib import Path
+
 import numpy as np
 import numpy.typing as npt
 import wkw
-
-from wkcuber.utils import WkwDatasetInfo, open_wkw, ensure_wkw
 from wkcuber.metadata import (
-    write_webknossos_metadata,
-    refresh_metadata,
+    detect_mappings,
     read_datasource_properties,
     read_metadata_for_layer,
-    detect_mappings,
+    refresh_metadata,
+    write_webknossos_metadata,
 )
+from wkcuber._internal.utils import WkwDatasetInfo, ensure_wkw, open_wkw
 
-TESTOUTPUT_DIR = Path("testoutput")
+from .constants import TESTDATA_DIR
 
 
-def test_element_class_conversion() -> None:
-    test_wkw_path = TESTOUTPUT_DIR / "test_metadata"
+def test_element_class_conversion(tmp_path: Path) -> None:
+    test_wkw_path = tmp_path / "test_metadata"
     prediction_layer_name = "prediction"
     prediction_wkw_info = WkwDatasetInfo(
         test_wkw_path,
@@ -80,7 +80,7 @@ def write_custom_layer(
         dataset.write(off=(0, 0, 0), data=data)
 
 
-def test_mapping_detection() -> None:
+def test_mapping_detection(WT1_path: Path) -> None:
     # NOTE: the mappings do not match do the actual wkw data. Therefore do not use them
     expected_mappings = [
         "test_mapping_1.json",
@@ -89,7 +89,7 @@ def test_mapping_detection() -> None:
         "test_mapping_4.json",
         "test_mapping_5.json",
     ]
-    datapath_with_mappings = Path("testdata", "test_metadata")
+    datapath_with_mappings = TESTDATA_DIR / "test_metadata"
     layer_name_with_mapping = "segmentation"
     detected_mappings = detect_mappings(datapath_with_mappings, layer_name_with_mapping)
 
@@ -102,7 +102,7 @@ def test_mapping_detection() -> None:
         detected_mappings
     ), "Did not find all mappings."
 
-    datapath_without_mappings = Path("testdata", "WT1_wkw")
+    datapath_without_mappings = WT1_path
     layer_name_without_mapping = "color"
     detected_mappings = detect_mappings(
         datapath_without_mappings, layer_name_without_mapping
@@ -110,8 +110,3 @@ def test_mapping_detection() -> None:
     assert (
         len(detected_mappings) == 0
     ), "Found mapping(s) even though there should not be any mapping."
-
-
-if __name__ == "__main__":
-    test_element_class_conversion()
-    test_mapping_detection()

@@ -5,16 +5,14 @@ from typing import List, Optional, Tuple
 
 import nibabel as nib
 import numpy as np
+from webknossos import SEGMENTATION_CATEGORY, BoundingBox, Dataset, Mag
 
-from wkcuber.api.bounding_box import BoundingBox
-from wkcuber.api.dataset import Dataset
-from wkcuber.api.layer_categories import SEGMENTATION_CATEGORY
-from wkcuber.mag import Mag
-from wkcuber.utils import (
+from ._internal.utils import (
     add_distribution_flags,
     add_verbose_flag,
     parse_bounding_box,
     parse_padding,
+    parse_path,
     setup_logging,
 )
 
@@ -27,6 +25,7 @@ def create_parser() -> ArgumentParser:
         "-s",
         help="Directory containing the wkw file(s).",
         required=True,
+        type=parse_path,
     )
 
     parser.add_argument(
@@ -34,6 +33,7 @@ def create_parser() -> ArgumentParser:
         "-d",
         help="Output directory for the generated nifti files. One file will be generated per wkw layer.",
         required=True,
+        type=Path,
     )
 
     parser.add_argument("--name", "-n", help="Name of the nifti", default="")
@@ -70,7 +70,7 @@ def create_parser() -> ArgumentParser:
 
 
 def export_layer_to_nifti(
-    wkw_file_path: Path,
+    source_path: Path,
     source_bbox: BoundingBox,
     mag: Mag,
     layer_name: str,
@@ -78,7 +78,7 @@ def export_layer_to_nifti(
     name: str,
     padding: Optional[Tuple[int, ...]] = None,
 ) -> None:
-    dataset = Dataset.open(wkw_file_path)
+    dataset = Dataset.open(source_path)
     layer = dataset.get_layer(layer_name)
     mag_layer = layer.get_mag(mag)
 
@@ -110,20 +110,20 @@ def export_layer_to_nifti(
 
 
 def export_nifti(
-    wkw_file_path: Path,
+    source_path: Path,
     source_bbox: Optional[BoundingBox],
     mag: Mag,
     destination_path: Path,
     name: str,
     padding: Optional[Tuple[int, ...]] = None,
 ) -> None:
-    dataset = Dataset.open(wkw_file_path)
+    dataset = Dataset.open(source_path)
 
     for layer_name, layer in dataset.layers.items():
         logging.info(f"Starting nifti export for bounding box: {source_bbox}")
 
         export_layer_to_nifti(
-            wkw_file_path,
+            source_path,
             layer.bounding_box if source_bbox is None else source_bbox,
             mag,
             layer_name,
@@ -137,10 +137,10 @@ def export_wkw_as_nifti(args: Namespace) -> None:
     setup_logging(args)
 
     export_nifti(
-        wkw_file_path=Path(args.source_path),
+        source_path=args.source_path,
         source_bbox=args.source_bbox,
         mag=Mag(args.mag),
-        destination_path=Path(args.destination_path),
+        destination_path=args.destination_path,
         name=args.name,
         padding=args.padding,
     )
