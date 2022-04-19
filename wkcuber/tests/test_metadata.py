@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import numpy as np
-import numpy.typing as npt
 import wkw
 from wkcuber.metadata import (
     detect_mappings,
@@ -39,16 +38,20 @@ def test_element_class_conversion(tmp_path: Path) -> None:
 
     refresh_metadata(test_wkw_path)
 
-    check_element_class_of_layer(test_wkw_path, "prediction", "float", np.float32)
-    check_element_class_of_layer(test_wkw_path, "segmentation", "double", np.float64)
-    check_element_class_of_layer(test_wkw_path, "color", "uint24", np.uint8)
+    check_element_class_of_layer(
+        test_wkw_path, "prediction", "float", np.dtype(np.float32)
+    )
+    check_element_class_of_layer(
+        test_wkw_path, "segmentation", "double", np.dtype(np.float64)
+    )
+    check_element_class_of_layer(test_wkw_path, "color", "uint24", np.dtype(np.uint8))
 
 
 def check_element_class_of_layer(
     test_wkw_path: Path,
     layer_name: str,
     expected_element_class: str,
-    expected_dtype: npt.DTypeLike,
+    expected_dtype: np.dtype,
 ) -> None:
     datasource_properties = read_datasource_properties(test_wkw_path)
     layer_to_check = None
