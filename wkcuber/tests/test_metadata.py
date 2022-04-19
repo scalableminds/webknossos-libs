@@ -1,5 +1,6 @@
 from pathlib import Path
 import numpy as np
+import numpy.typing as npt
 import wkw
 
 from wkcuber.utils import WkwDatasetInfo, open_wkw, ensure_wkw
@@ -47,7 +48,7 @@ def check_element_class_of_layer(
     test_wkw_path: Path,
     layer_name: str,
     expected_element_class: str,
-    expected_dtype: type,
+    expected_dtype: npt.DTypeLike,
 ) -> None:
     datasource_properties = read_datasource_properties(test_wkw_path)
     layer_to_check = None

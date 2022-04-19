@@ -193,7 +193,6 @@ def convert_nifti(
     # Writing wkw compressed requires files of shape (voxels_per_cube, voxels_per_cube, voxels_per_cube)
     # Pad data accordingly
     padding_offset = voxels_per_cube - np.array(cube_data.shape[1:4]) % voxels_per_cube
-    padding_offset = (0, 0, 0)
     cube_data = np.pad(
         cube_data,
         (
