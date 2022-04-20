@@ -1,3 +1,5 @@
+source "$(dirname "${BASH_SOURCE[0]}")/trap_add.sh"
+
 export MINIO_ROOT_USER="TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur"
 export MINIO_ROOT_PASSWORD="ANTN35UAENTS5UIAEATD"
 
@@ -12,8 +14,6 @@ docker run \
   minio/minio server /data
 
 stop_minio () {
-    ARG=$?
     docker stop minio
-    exit $ARG
 }
-trap stop_minio EXIT
+trap_add stop_minio EXIT
