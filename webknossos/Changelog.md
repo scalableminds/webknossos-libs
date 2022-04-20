@@ -20,6 +20,8 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 
 ### Fixed
 
+- Fixed a bug where the server’s error message during dataset upload was not displayed to the user. [#702](https://github.com/scalableminds/webknossos-libs/pull/702)
+
 
 ## [0.9.19](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.19) - 2022-04-11
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.18...v0.9.19)
