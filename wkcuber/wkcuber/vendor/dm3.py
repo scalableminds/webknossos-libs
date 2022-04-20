@@ -831,7 +831,7 @@ class DM3(object):
             rawdata = self._f.read(tn_size)
             # - read as 32-bit LE unsigned integer
             tn = Image.frombytes("F", (tn_width, tn_height), rawdata, "raw", "F;32")
-            # - rescale and convert px data
+            # - revoxel_size and convert px data
             tn = tn.point(lambda x: x * (1.0 / 65536) + 0)
             tn = tn.convert("L")
         # - return image
@@ -865,7 +865,7 @@ class DM3(object):
             tndata = numpy.fromstring(rawtndata, dtype=np_dt_tn)
             print("## tndata:", len(tndata))
             tndata = tndata.reshape(tn_height, tn_width)
-            # - rescale and convert to integer
+            # - revoxel_size and convert to integer
             tndata = tndata / 65536.0 + 0.0
             tndata = tndata.astype(int)
             # - return thumbnail data

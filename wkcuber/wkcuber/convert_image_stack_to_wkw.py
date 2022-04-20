@@ -166,7 +166,7 @@ def main(args: Namespace) -> None:
                     args.start_z,
                     args.skip_first_z_slices,
                     args.pad,
-                    args.scale,
+                    args.voxel_size,
                     args,
                 )
             )

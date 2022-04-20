@@ -11,7 +11,7 @@ BUFFER_SHAPE = Vec3Int.full(256)
 
 
 def test_upsampling(tmp_path: Path) -> None:
-    ds = Dataset(tmp_path, scale=(1, 1, 1))
+    ds = Dataset(tmp_path, voxel_size=(1, 1, 1))
     layer = ds.add_layer("color", COLOR_CATEGORY)
     mag = layer.add_mag([4, 4, 2])
     mag.write(
@@ -43,7 +43,7 @@ def test_upsample_cube() -> None:
 
 
 def upsample_test_helper(tmp_path: Path, use_compress: bool) -> None:
-    ds = Dataset(tmp_path, scale=(10.5, 10.5, 5))
+    ds = Dataset(tmp_path, voxel_size=(10.5, 10.5, 5))
     layer = ds.add_layer("color", COLOR_CATEGORY)
     mag2 = layer.add_mag([2, 2, 2])
 

@@ -291,7 +291,6 @@ class Layer:
         return self.mags[mag]
 
     def get_best_mag(self) -> MagView:
-
         return self.get_mag(min(self.mags.keys()))
 
     def add_mag(
@@ -625,7 +624,7 @@ class Layer:
         """
         Downsamples the data starting from `from_mag` until a magnification is `>= max(max_mag)`.
         There are three different `sampling_modes`:
-        - 'anisotropic' - The next magnification is chosen so that the width, height and depth of a downsampled voxel assimilate. For example, if the z resolution is worse than the x/y resolution, z won't be downsampled in the first downsampling step(s). As a basis for this method, the scale from the datasource-properties.json is used.
+        - 'anisotropic' - The next magnification is chosen so that the width, height and depth of a downsampled voxel assimilate. For example, if the z resolution is worse than the x/y resolution, z won't be downsampled in the first downsampling step(s). As a basis for this method, the voxel_size from the datasource-properties.json is used.
         - 'isotropic' - Each dimension is downsampled equally.
         - 'constant_z' - The x and y dimensions are downsampled equally, but the z dimension remains the same.
 
@@ -668,22 +667,22 @@ class Layer:
                 )
                 sampling_mode = SamplingModes.CONSTANT_Z
 
-        scale: Optional[Tuple[float, float, float]] = None
+        voxel_size: Optional[Tuple[float, float, float]] = None
         if sampling_mode == SamplingModes.ANISOTROPIC or sampling_mode == "auto":
-            scale = self.dataset.scale
+            voxel_size = self.dataset.voxel_size
         elif sampling_mode == SamplingModes.ISOTROPIC:
-            scale = None
+            voxel_size = None
         elif sampling_mode == SamplingModes.CONSTANT_Z:
             max_mag_with_fixed_z = max_mag.to_list()
             max_mag_with_fixed_z[2] = from_mag.to_list()[2]
             max_mag = Mag(max_mag_with_fixed_z)
-            scale = None
+            voxel_size = None
         else:
             raise AttributeError(
                 f"Downsampling failed: {sampling_mode} is not a valid SamplingMode ({SamplingModes.ANISOTROPIC}, {SamplingModes.ISOTROPIC}, {SamplingModes.CONSTANT_Z})"
             )
 
-        mags_to_downsample = calculate_mags_to_downsample(from_mag, max_mag, scale)
+        mags_to_downsample = calculate_mags_to_downsample(from_mag, max_mag, voxel_size)
 
         if len(set([max(m.to_list()) for m in mags_to_downsample])) != len(
             mags_to_downsample
@@ -888,7 +887,7 @@ class Layer:
         """
         Upsamples the data starting from `from_mag` as long as the magnification is `>= min_mag`.
         There are three different `sampling_modes`:
-        - 'anisotropic' - The next magnification is chosen so that the width, height and depth of a downsampled voxel assimilate. For example, if the z resolution is worse than the x/y resolution, z won't be downsampled in the first downsampling step(s). As a basis for this method, the scale from the datasource-properties.json is used.
+        - 'anisotropic' - The next magnification is chosen so that the width, height and depth of a downsampled voxel assimilate. For example, if the z resolution is worse than the x/y resolution, z won't be downsampled in the first downsampling step(s). As a basis for this method, the voxel_size from the datasource-properties.json is used.
         - 'isotropic' - Each dimension is downsampled equally.
         - 'constant_z' - The x and y dimensions are downsampled equally, but the z dimension remains the same.
         """
@@ -899,16 +898,16 @@ class Layer:
         if min_mag is None:
             min_mag = Mag(1)
 
-        scale: Optional[Tuple[float, float, float]] = None
+        voxel_size: Optional[Tuple[float, float, float]] = None
         if sampling_mode == SamplingModes.ANISOTROPIC or sampling_mode == "auto":
-            scale = self.dataset.scale
+            voxel_size = self.dataset.voxel_size
         elif sampling_mode == SamplingModes.ISOTROPIC:
-            scale = None
+            voxel_size = None
         elif sampling_mode == SamplingModes.CONSTANT_Z:
             min_mag_with_fixed_z = min_mag.to_list()
             min_mag_with_fixed_z[2] = from_mag.to_list()[2]
             min_mag = Mag(min_mag_with_fixed_z)
-            scale = self.dataset.scale
+            voxel_size = self.dataset.voxel_size
         else:
             raise AttributeError(
                 f"Upsampling failed: {sampling_mode} is not a valid UpsamplingMode ({SamplingModes.ANISOTROPIC}, {SamplingModes.ISOTROPIC}, {SamplingModes.CONSTANT_Z})"
@@ -917,7 +916,7 @@ class Layer:
         if buffer_shape is None and buffer_edge_len is not None:
             buffer_shape = Vec3Int.full(buffer_edge_len)
 
-        mags_to_upsample = calculate_mags_to_upsample(from_mag, min_mag, scale)
+        mags_to_upsample = calculate_mags_to_upsample(from_mag, min_mag, voxel_size)
 
         for prev_mag, target_mag in zip(
             [from_mag] + mags_to_upsample[:-1], mags_to_upsample

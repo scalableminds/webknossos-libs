@@ -201,7 +201,7 @@ def temporary_annotation_view(volume_annotation_path: Path) -> Iterator[Layer]:
         )
 
         input_annotation_dataset = wk.Dataset(
-            str(tmp_annotation_dataset_path), scale=(1, 1, 1), exist_ok=True
+            str(tmp_annotation_dataset_path), voxel_size=(1, 1, 1), exist_ok=True
         )
 
         # Ideally, the following code would be used, but there are two problems:

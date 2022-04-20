@@ -23,7 +23,7 @@ class Skeleton(Group):
     A small usage example:
 
     ```python
-    annotation = Annotation("my_annotation", scale=(11, 11, 24))
+    annotation = Annotation("my_annotation", voxel_size=(11, 11, 24))
     group = annotation.skeleton.add_group("a group")
     tree = group.add_tree("a tree")
     node_1 = tree.add_node(position=(0, 0, 0), comment="node 1")
@@ -36,7 +36,7 @@ class Skeleton(Group):
     complex interaction.
     """
 
-    scale: Vector3
+    voxel_size: Vector3
     dataset_name: str
     organization_id: Optional[str] = None
     description: Optional[str] = None
@@ -55,7 +55,7 @@ class Skeleton(Group):
     def _set_init_docstring(cls) -> None:
         Skeleton.__init__.__doc__ = """
         To initialize a skeleton, setting the following parameters is required (or recommended):
-        - scale
+        - voxel_size
         - dataset_name
         - organization_id
         - description

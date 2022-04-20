@@ -34,7 +34,7 @@ def sample_wkw_path() -> Path:
             "wkcuber.cubing",
             "--jobs",
             "2",
-            "--scale",
+            "--voxel_size",
             "1,1,1",
             str(TESTDATA_DIR / "tiff"),
             str(ds_path),

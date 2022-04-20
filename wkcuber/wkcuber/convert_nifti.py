@@ -11,7 +11,7 @@ from webknossos.utils import time_start, time_stop
 
 from ._internal.utils import (
     add_data_format_flags,
-    add_scale_flag,
+    add_voxel_size_flag,
     add_verbose_flag,
     pad_or_crop_to_size_and_topleft,
     parse_bounding_box,
@@ -88,7 +88,7 @@ def create_parser() -> ArgumentParser:
         default=None,
     )
 
-    add_scale_flag(parser, required=False)
+    add_voxel_size_flag(parser, required=False)
     add_verbose_flag(parser)
     add_data_format_flags(parser)
 
@@ -129,7 +129,7 @@ def convert_nifti(
     target_path: Path,
     layer_name: str,
     dtype: str,
-    scale: Tuple[float, ...],
+    voxel_size: Tuple[float, ...],
     data_format: DataFormat,
     chunk_size: Vec3Int,
     chunks_per_shard: Vec3Int,
@@ -178,10 +178,10 @@ def convert_nifti(
     if flip_axes:
         cube_data = np.flip(cube_data, flip_axes)
 
-    if scale is None:
-        scale = tuple(map(float, source_nifti.header["pixdim"][:3]))
+    if voxel_size is None:
+        voxel_size = tuple(map(float, source_nifti.header["pixdim"][:3]))
 
-    logging.info(f"Using scale: {scale}")
+    logging.info(f"Using voxel_size: {voxel_size}")
     cube_data = to_target_datatype(cube_data, dtype, is_segmentation_layer)
 
     # everything needs to be padded to
@@ -208,7 +208,7 @@ def convert_nifti(
 
     wk_ds = Dataset(
         target_path,
-        scale=cast(Tuple[float, float, float], scale or (1, 1, 1)),
+        voxel_size=cast(Tuple[float, float, float], voxel_size or (1, 1, 1)),
         exist_ok=True,
     )
     wk_layer = (
@@ -240,7 +240,7 @@ def convert_folder_nifti(
     target_path: Path,
     color_subpath: str,
     segmentation_subpath: str,
-    scale: Tuple[float, ...],
+    voxel_size: Tuple[float, ...],
     data_format: DataFormat,
     chunk_size: Vec3Int,
     chunks_per_shard: Vec3Int,
@@ -279,7 +279,7 @@ def convert_folder_nifti(
                 target_path,
                 "color",
                 "uint8",
-                scale,
+                voxel_size,
                 data_format,
                 chunk_size,
                 chunks_per_shard,
@@ -294,7 +294,7 @@ def convert_folder_nifti(
                 target_path,
                 "segmentation",
                 "uint8",
-                scale,
+                voxel_size,
                 data_format,
                 chunk_size,
                 chunks_per_shard,
@@ -309,7 +309,7 @@ def convert_folder_nifti(
                 target_path,
                 path.stem,
                 "uint8",
-                scale,
+                voxel_size,
                 data_format,
                 chunk_size,
                 chunks_per_shard,
@@ -337,7 +337,7 @@ def main(args: Namespace) -> None:
             args.target_path,
             args.color_file,
             args.segmentation_file,
-            scale=args.scale,
+            voxel_size=args.voxel_size,
             data_format=args.data_format,
             chunk_size=args.chunk_size,
             chunks_per_shard=args.chunks_per_shard,
@@ -351,7 +351,7 @@ def main(args: Namespace) -> None:
             args.target_path,
             args.layer_name,
             args.dtype,
-            scale=args.scale,
+            voxel_size=args.voxel_size,
             data_format=args.data_format,
             chunk_size=args.chunk_size,
             chunks_per_shard=args.chunks_per_shard,

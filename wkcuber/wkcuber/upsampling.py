@@ -57,7 +57,7 @@ def create_parser() -> ArgumentParser:
         help="Specify an explicit anisotropic target magnification (e.g., --anisotropic_target_mag 2-2-1)."
         "All magnifications until this target magnification will be created. Consider using --anisotropic "
         "instead which automatically creates multiple anisotropic magnifications depending "
-        "on the dataset's scale",
+        "on the dataset's voxel_size",
         type=str,
     )
 

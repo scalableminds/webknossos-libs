@@ -29,7 +29,7 @@ def test_main(tmp_path: Path, category: str) -> None:
         str(output_path),
         "--jobs",
         "1",
-        "--scale",
+        "--voxel_size",
         "11,11,11",
         "--max_mag",
         "4",

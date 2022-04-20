@@ -19,7 +19,7 @@ def nml_to_skeleton(nml: wknml.Nml) -> "Skeleton":
 
     skeleton = Skeleton(
         dataset_name=nml.parameters.name,
-        scale=nml.parameters.scale,
+        voxel_size=nml.parameters.scale,
         organization_id=nml.parameters.organization,
         description=nml.parameters.description,
     )
@@ -122,7 +122,7 @@ def annotation_to_nml(  # pylint: disable=dangerous-default-value
 
     nmlParameters = wknml.Parameters(
         name=annotation.dataset_name,
-        scale=annotation.scale,
+        scale=annotation.voxel_size,
         description=annotation.description,
         organization=annotation.organization_id,
         time=annotation.time,

@@ -19,8 +19,8 @@ def main() -> None:
     time_str = strftime("%Y-%m-%d_%H-%M-%S", gmtime())
     name = f"cell_{time_str}"
 
-    # scale is defined in nm
-    ds = wk.Dataset(name, scale=(260, 260, 290))
+    # voxel_size is defined in nm
+    ds = wk.Dataset(name, voxel_size=(260, 260, 290))
 
     # The example microscopy data has two channels
     # Channel 0 contains cell membranes, channel 1 contains nuclei.

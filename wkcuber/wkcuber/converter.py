@@ -9,7 +9,7 @@ from webknossos.dataset.properties import LayerViewConfiguration
 from ._internal.image_readers import image_reader
 from ._internal.utils import (
     add_data_format_flags,
-    add_scale_flag,
+    add_voxel_size_flag,
     add_verbose_flag,
     find_files,
     get_channel_and_sample_iters_for_wk_compatibility,
@@ -47,7 +47,7 @@ def create_parser() -> ArgumentParser:
         type=parse_path,
     )
 
-    add_scale_flag(parser)
+    add_voxel_size_flag(parser)
     add_verbose_flag(parser)
     add_data_format_flags(parser)
 
@@ -431,7 +431,7 @@ class ImageStackConverter(Converter):
                         args.start_z,
                         args.skip_first_z_slices,
                         args.pad,
-                        args.scale,
+                        args.voxel_size,
                         executor_args,
                     )
 
@@ -552,7 +552,7 @@ def main(args: Namespace) -> None:
 
     should_write_metadata = matching_converters[0].convert_input(args)
     if should_write_metadata:
-        write_webknossos_metadata(args.target_path, args.name, args.scale)
+        write_webknossos_metadata(args.target_path, args.name, args.voxel_size)
 
 
 if __name__ == "__main__":
