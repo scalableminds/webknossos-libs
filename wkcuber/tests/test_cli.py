@@ -3,7 +3,6 @@ import subprocess
 import sys
 from os import environ
 from pathlib import Path
-from shutil import unpack_archive
 from typing import Union
 
 import numpy as np
@@ -114,9 +113,9 @@ def test_tiff_cubing(tmp_path: Path) -> None:
 )
 def test_tiff_cubing_zarr_s3(remote_testoutput_path: UPath) -> None:
     out_path = remote_testoutput_path / "tiff_cubing"
-    environ["AWS_SECRET_ACCESS_KEY"] = environ["MINIO_ROOT_PASSWORD"]
-    environ["AWS_ACCESS_KEY_ID"] = environ["MINIO_ROOT_USER"]
-    environ["S3_ENDPOINT_URL"] = "http://localhost:8000"
+    environ["AWS_SECRET_ACCESS_KEY"] = MINIO_ROOT_PASSWORD
+    environ["AWS_ACCESS_KEY_ID"] = MINIO_ROOT_USER
+    environ["S3_ENDPOINT_URL"] = f"http://localhost:{MINIO_PORT}"
 
     _tiff_cubing(out_path, DataFormat.Zarr, 1)
 
