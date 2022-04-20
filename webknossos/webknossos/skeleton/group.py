@@ -5,7 +5,7 @@ from boltons.strutils import unit_len
 
 import webknossos._nml as wknml
 
-from .graph import Graph
+from .graph import Tree
 
 if TYPE_CHECKING:
     from webknossos.skeleton import Node, Skeleton
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 Vector3 = Tuple[float, float, float]
 Vector4 = Tuple[float, float, float, float]
-GroupOrGraph = Union["Group", Graph]
+GroupOrTree = Union["Group", Tree]
 
 
 @attr.define()
@@ -25,7 +25,7 @@ class Group:
         init=False,
         repr=lambda children: f"<{unit_len(children, 'child group')}>",
     )
-    _child_graphs: Set[Graph] = attr.ib(
+    _child_graphs: Set[Tree] = attr.ib(
         factory=set,
         init=False,
         repr=lambda children: f"<{unit_len(children, 'child graph')}>",
@@ -65,13 +65,13 @@ class Group:
         name: str,
         color: Optional[Union[Vector4, Vector3]] = None,
         _enforced_id: Optional[int] = None,
-    ) -> Graph:
+    ) -> Tree:
         """Adds a graph to the current group with the provided name (and color if specified)."""
 
         if color is not None and len(color) == 3:
             color = cast(Optional[Vector4], color + (1.0,))
         color = cast(Optional[Vector4], color)
-        new_graph = Graph(
+        new_graph = Tree(
             name=name,
             color=color,
             group=self,
@@ -83,13 +83,13 @@ class Group:
         return new_graph
 
     @property
-    def children(self) -> Iterator[GroupOrGraph]:
+    def children(self) -> Iterator[GroupOrTree]:
         """Returns all (immediate) children (groups and graphs) as an iterator."""
         yield from self.graphs
         yield from self.groups
 
     @property
-    def graphs(self) -> Iterator[Graph]:
+    def graphs(self) -> Iterator[Tree]:
         """Returns all (immediate) graph children as an iterator.
         Use flattened_graphs if you need also need graphs within subgroups."""
         return (child for child in self._child_graphs)
@@ -125,7 +125,7 @@ class Group:
             default=0,
         )
 
-    def flattened_graphs(self) -> Iterator[Graph]:
+    def flattened_graphs(self) -> Iterator[Tree]:
         """Returns an iterator of all graphs within this group (and its subgroups)."""
         yield from self.graphs
         for group in self.groups:
@@ -145,7 +145,7 @@ class Group:
 
         raise ValueError("Node id not found")
 
-    def get_graph_by_id(self, graph_id: int) -> Graph:
+    def get_graph_by_id(self, graph_id: int) -> Tree:
         """Returns the graph which has the specified graph id."""
         # Todo: Use hashed access if it turns out to be worth it? pylint: disable=fixme
         for graph in self.flattened_graphs():

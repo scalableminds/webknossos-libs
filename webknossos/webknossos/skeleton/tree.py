@@ -5,6 +5,7 @@ import networkx as nx
 import numpy as np
 
 from webknossos.geometry import Vec3Int, Vec3IntLike
+from webknossos.utils import warn_deprecated
 
 from .node import Node
 
@@ -23,7 +24,7 @@ def _get_id(node_or_id: Union[Node, int]) -> int:
 
 
 class _NodeDict(MutableMapping):
-    """Dict-like container for the `Graph` class below to handle both nodes and ids as keys.
+    """Dict-like container for the `Tree` class below to handle both nodes and ids as keys.
     Only when setting the value of a node for the first time the actual node must be passed.
     This allows to keep a reference from all ids to the nodes, which can be looked up
     using `get_node()`. Iterating over the keys yields the `Node` objects."""
@@ -62,11 +63,11 @@ class _NodeDict(MutableMapping):
 
 
 class _AdjDict(MutableMapping):
-    """Dict-like container for the `Graph` class below to handle both nodes and ids as keys.
+    """Dict-like container for the `Tree` class below to handle both nodes and ids as keys.
     Needs a reference to the _node attribute (of class `_NodeDict`) of the graph object
     to get a reference from ids to nodes. Iterating over the keys yields the `Node` objects.
 
-    See Graph.__init__ for more details"""
+    See Tree.__init__ for more details"""
 
     def __init__(self, *, node_dict: _NodeDict) -> None:
         self._id_to_attrs: Dict[int, Any] = {}
@@ -88,13 +89,13 @@ class _AdjDict(MutableMapping):
         return len(self._id_to_attrs)
 
 
-class Graph(nx.Graph):
+class Tree(nx.Graph):
     """
-    Contains a collection of nodes and edges.
+    Contains a collection of nodes and edges. Despite the name, trees may contain cycles.
     This class inherits from [`networkx.Graph`](https://networkx.org/documentation/stable/reference/classes/graph.html).
     For further methods, please [check the networkx documentation](https://networkx.org/documentation/stable/reference/classes/graph.html#methods).
 
-    See Graph.__init__ for more details.
+    See Tree.__init__ for more details.
 
     A small usage example:
 
@@ -163,7 +164,7 @@ class Graph(nx.Graph):
         )
 
     def __eq__(self, o: object) -> bool:
-        return isinstance(o, Graph) and (
+        return isinstance(o, Tree) and (
             self.__to_tuple_for_comparison() == o.__to_tuple_for_comparison()
         )
 
@@ -225,3 +226,22 @@ class Graph(nx.Graph):
 
     def __hash__(self) -> int:
         return self._id
+
+
+class Graph(Tree):
+    def __init__(
+        self,
+        name: str,
+        group: "Group",
+        skeleton: "Skeleton",
+        color: Optional[Vector4] = None,
+        enforced_id: Optional[int] = None,
+    ) -> None:
+        warn_deprecated("Graph", "Tree")
+        super.__init__(
+            name=name,
+            group=group,
+            skeleton=skeleton,
+            color=color,
+            enforced_id=enforced_id,
+        )

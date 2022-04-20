@@ -11,7 +11,7 @@ from webknossos.geometry import Vec3Int
 
 if TYPE_CHECKING:
     from webknossos.annotation import Annotation
-    from webknossos.skeleton import Graph, Group, Skeleton
+    from webknossos.skeleton import Group, Skeleton, Tree
 
 
 def nml_to_skeleton(nml: wknml.Nml) -> "Skeleton":
@@ -69,7 +69,7 @@ def nml_to_skeleton(nml: wknml.Nml) -> "Skeleton":
 
 
 def _nml_tree_to_graph(
-    new_graph: "Graph",
+    new_graph: "Tree",
     nml_tree: wknml.Tree,
 ) -> None:
     optional_attribute_list = [

@@ -17,7 +17,7 @@ def create_dummy_skeleton() -> wk.Skeleton:
     )
 
     g = nml.add_graph(
-        "A WkGraph",
+        "A WkTree",
         color=(0.9988844805996959, 0.09300433970039235, 0.13373766240135082, 1.0),
     )
 
@@ -40,11 +40,11 @@ def create_dummy_skeleton() -> wk.Skeleton:
 
     group = nml.add_group("Example Group")
     group.add_graph(
-        "Graph in Group",
+        "Tree in Group",
         color=(0.9340851110768926, 0.0037728487955197565, 0.6720369436532944, 1.0),
     ).add_node(position=(10, 3, 4))
     group.add_group("Nested Group").add_graph(
-        "Graph in nested group",
+        "Tree in nested group",
         color=(0.45167026054501613, 0.20806732150346996, 0.7224589094338263, 1.0),
     )
 
@@ -88,7 +88,7 @@ def test_skeleton_creation() -> None:
     grand_children = [
         grand_child
         for grand_child in groups[0].children
-        if isinstance(grand_child, wk.Graph)
+        if isinstance(grand_child, wk.Tree)
     ]
     assert len(grand_children) == 1
     assert grand_children[0].group == groups[0]
@@ -211,7 +211,7 @@ def test_simple_initialization_and_representations(tmp_path: Path) -> None:
         == "Group(_id=1, name='my_group', _child_groups=<No child groups>, _child_graphs=<2 child graphs>)"
     )
     assert (
-        str(nml.get_graph_by_id(9)) == "Graph named 'my_tree' with 1 nodes and 0 edges"
+        str(nml.get_graph_by_id(9)) == "Tree named 'my_tree' with 1 nodes and 0 edges"
     )
 
 
@@ -221,7 +221,7 @@ def test_import_export_round_trip(tmp_path: Path) -> None:
     nml = wk.Skeleton.load(snapshot_path)
 
     g6 = nml.get_graph_by_id(6)
-    assert g6.name == "Graph in Group"
+    assert g6.name == "Tree in Group"
     assert g6.get_node_by_id(7).position == (10.0, 3.0, 4.0)
 
     nml.save(export_path)

@@ -7,18 +7,15 @@ import attr
 
 from webknossos.utils import warn_deprecated
 
-from .graph import Graph
 from .group import Group
 
 Vector3 = Tuple[float, float, float]
-
-GroupOrGraph = Union[Group, Graph]
 
 
 @attr.define()
 class Skeleton(Group):
     """
-    Representation of the [skeleton tracing](/webknossos/skeleton_annotation.html) of an `Annotation`.
+    Representation of the [skeleton](/webknossos/skeleton_annotation.html) of an `Annotation`.
     It contains metadata to identify the related dataset and is the root-group of sub-groups and graphs.
     See the parent class `Group` for methods about group and graph handling.
     To upload a skeleton to webknossos, please create an `Annotation()` with it.

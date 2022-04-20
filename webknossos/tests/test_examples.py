@@ -104,7 +104,7 @@ def test_skeleton_synapse_candidates() -> None:
     assert synapse_parent_group.get_total_node_count() == 91
     ids = [g.id for g in nml.flattened_graphs()]
     id_set = set(ids)
-    assert len(ids) == len(id_set), "Graph IDs are not unique."
+    assert len(ids) == len(id_set), "Tree IDs are not unique."
 
 
 # Allowing requests to download the cells3d dataset via pooch,
