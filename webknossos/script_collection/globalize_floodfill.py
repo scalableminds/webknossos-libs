@@ -58,7 +58,7 @@ def create_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--volume_path",
         "-v",
-        help="Directory containing the volume tracing.",
+        help="Directory containing the volume annotation layer.",
         type=Path,
         required=True,
     )
