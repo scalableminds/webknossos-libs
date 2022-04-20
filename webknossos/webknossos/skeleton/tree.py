@@ -43,7 +43,7 @@ class _NodeDict(MutableMapping):
                 self._id_to_node[key_id] = key
             else:
                 raise ValueError(
-                    f"Tried to add node {key}, which does not exist yet, to a graph."
+                    f"Tried to add node {key}, which does not exist yet, to a tree."
                     + "For insertion, the node must be an instance of the Node class."
                 )
         self._id_to_attrs[key_id] = value
@@ -100,11 +100,11 @@ class Tree(nx.Graph):
     A small usage example:
 
     ```python
-    graph = skeleton.add_graph("a graph")
-    node_1 = graph.add_node(position=(0, 0, 0), comment="node 1")
-    node_2 = graph.add_node(position=(100, 100, 100), comment="node 2")
+    tree = skeleton.add_tree("a tree")
+    node_1 = tree.add_node(position=(0, 0, 0), comment="node 1")
+    node_2 = tree.add_node(position=(100, 100, 100), comment="node 2")
 
-    graph.add_edge(node_1, node_2)
+    tree.add_edge(node_1, node_2)
     ```
     """
 
@@ -117,8 +117,8 @@ class Tree(nx.Graph):
         enforced_id: Optional[int] = None,
     ) -> None:
         """
-        To create a graph, it is recommended to use `Skeleton.add_graph` or
-        `Group.add_graph`. That way, the newly created graph is automatically
+        To create a tree, it is recommended to use `Skeleton.add_tree` or
+        `Group.add_tree`. That way, the newly created tree is automatically
         attached as a child to the object the method was called on.
         """
 
@@ -174,11 +174,11 @@ class Tree(nx.Graph):
         return self._id
 
     def get_node_positions(self) -> np.ndarray:
-        """Returns an numpy array with the positions of all nodes of this graph."""
+        """Returns an numpy array with the positions of all nodes of this tree."""
         return np.array([node.position for node in self.nodes])
 
     def get_node_by_id(self, node_id: int) -> Node:
-        """Returns the node in this graph with the requested id."""
+        """Returns the node in this tree with the requested id."""
         return self._node.get_node(node_id)
 
     def add_node(  # pylint: disable=arguments-differ
@@ -197,7 +197,7 @@ class Tree(nx.Graph):
         _enforced_id: Optional[int] = None,
     ) -> Node:
         """
-        Adds a node to the graph. Apart from the mandatory `position` parameter,
+        Adds a node to the tree. Apart from the mandatory `position` parameter,
         there are several optional parameters which can be used to encode
         additional information. For example, the comment will be shown by the
         webKnossos UI.

@@ -16,8 +16,8 @@ Vector3 = Tuple[float, float, float]
 class Skeleton(Group):
     """
     Representation of the [skeleton](/webknossos/skeleton_annotation.html) of an `Annotation`.
-    It contains metadata to identify the related dataset and is the root-group of sub-groups and graphs.
-    See the parent class `Group` for methods about group and graph handling.
+    It contains metadata to identify the related dataset and is the root-group of sub-groups and trees.
+    See the parent class `Group` for methods about group and tree handling.
     To upload a skeleton to webknossos, please create an `Annotation()` with it.
 
     A small usage example:
@@ -25,11 +25,11 @@ class Skeleton(Group):
     ```python
     annotation = Annotation("my_annotation", scale=(11, 11, 24))
     group = annotation.skeleton.add_group("a group")
-    graph = group.add_graph("a graph")
-    node_1 = graph.add_node(position=(0, 0, 0), comment="node 1")
-    node_2 = graph.add_node(position=(100, 100, 100), comment="node 2")
+    tree = group.add_tree("a tree")
+    node_1 = tree.add_node(position=(0, 0, 0), comment="node 1")
+    node_2 = tree.add_node(position=(100, 100, 100), comment="node 2")
 
-    graph.add_edge(node_1, node_2)
+    tree.add_edge(node_1, node_2)
     ```
 
     Also see [this example](/webknossos-py/examples/skeleton_synapse_candidates.html) for a more

@@ -28,7 +28,7 @@ def test_annotation_from_zip_file() -> None:
         in annotation.metadata  # pylint: disable=unsupported-membership-test
     )
     assert len(list(annotation.get_volume_layer_names())) == 1
-    assert len(list(annotation.skeleton.flattened_graphs())) == 1
+    assert len(list(annotation.skeleton.flattened_trees())) == 1
 
     annotation.save(TESTOUTPUT_DIR / "test_dummy.zip")
     copied_annotation = wk.Annotation.load(TESTOUTPUT_DIR / "test_dummy.zip")
@@ -42,7 +42,7 @@ def test_annotation_from_zip_file() -> None:
         in copied_annotation.metadata  # pylint: disable=unsupported-membership-test
     )
     assert len(list(copied_annotation.get_volume_layer_names())) == 1
-    assert len(list(copied_annotation.skeleton.flattened_graphs())) == 1
+    assert len(list(copied_annotation.skeleton.flattened_trees())) == 1
 
     copied_annotation.add_volume_layer(name="new_volume_layer")
     assert len(list(copied_annotation.get_volume_layer_names())) == 2
@@ -65,13 +65,13 @@ def test_annotation_from_nml_file() -> None:
 
     assert annotation.dataset_name == "My Dataset"
     assert annotation.organization_id is None
-    assert len(list(annotation.skeleton.flattened_graphs())) == 3
+    assert len(list(annotation.skeleton.flattened_trees())) == 3
 
     annotation.save(TESTOUTPUT_DIR / "test_dummy.zip")
     copied_annotation = wk.Annotation.load(TESTOUTPUT_DIR / "test_dummy.zip")
     assert copied_annotation.dataset_name == "My Dataset"
     assert copied_annotation.organization_id is None
-    assert len(list(copied_annotation.skeleton.flattened_graphs())) == 3
+    assert len(list(copied_annotation.skeleton.flattened_trees())) == 3
 
 
 def test_annotation_from_file_with_multi_volume() -> None:
@@ -140,12 +140,12 @@ def test_annotation_from_url() -> None:
         "https://webknossos.org/annotations/Explorational/61c20205010000cc004a6356"
     )
     assert annotation.dataset_name == "l4dense_motta_et_al_demo_v2"
-    assert len(list(annotation.skeleton.flattened_graphs())) == 1
+    assert len(list(annotation.skeleton.flattened_trees())) == 1
 
     annotation.save(TESTOUTPUT_DIR / "test_dummy_downloaded.zip")
     annotation = wk.Annotation.load(TESTOUTPUT_DIR / "test_dummy_downloaded.zip")
     assert annotation.dataset_name == "l4dense_motta_et_al_demo_v2"
-    assert len(list(annotation.skeleton.flattened_graphs())) == 1
+    assert len(list(annotation.skeleton.flattened_trees())) == 1
 
 
 def test_reading_bounding_boxes() -> None:
