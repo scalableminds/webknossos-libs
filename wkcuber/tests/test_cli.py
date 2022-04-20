@@ -3,7 +3,6 @@ import subprocess
 import sys
 from os import environ
 from pathlib import Path
-from shutil import unpack_archive
 from typing import Union
 
 import numpy as np
@@ -14,6 +13,8 @@ from webknossos.dataset.dataset import PROPERTIES_FILE_NAME
 from webknossos.utils import copytree, rmtree
 
 from .constants import TESTDATA_DIR
+import subprocess
+import shlex
 
 
 def check_call(*args: Union[str, int, Path]) -> None:
@@ -28,16 +29,37 @@ def count_wkw_files(mag_path: Path) -> int:
     return len(list(mag_path.glob("**/x*.wkw")))
 
 
-@pytest.fixture(scope="session")
+MINIO_ROOT_USER = "TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur"
+MINIO_ROOT_PASSWORD = "ANTN35UAENTS5UIAEATD"
+MINIO_PORT = "8000"
+
+
+@pytest.fixture(scope="module")
 def remote_testoutput_path() -> UPath:
+    """Minio is an S3 clone and is used as local test server"""
+    container_name = "minio"
+    cmd = (
+        "docker run"
+        f" -p {MINIO_PORT}:9000"
+        f" -e MINIO_ROOT_USER={MINIO_ROOT_USER}"
+        f" -e MINIO_ROOT_PASSWORD={MINIO_ROOT_PASSWORD}"
+        f" --name {container_name}"
+        " --rm"
+        " -d"
+        " minio/minio server /data"
+    )
+    subprocess.check_output(shlex.split(cmd))
     remote_path = UPath(
         "s3://testoutput",
-        key=environ["MINIO_ROOT_USER"],
-        secret=environ["MINIO_ROOT_PASSWORD"],
-        client_kwargs={"endpoint_url": "http://localhost:8000"},
+        key=MINIO_ROOT_USER,
+        secret=MINIO_ROOT_PASSWORD,
+        client_kwargs={"endpoint_url": f"http://localhost:{MINIO_PORT}"},
     )
     remote_path.fs.mkdirs("testoutput", exist_ok=True)
-    return remote_path
+    try:
+        yield remote_path
+    finally:
+        subprocess.check_output(["docker", "stop", container_name])
 
 
 def _tiff_cubing(
@@ -91,9 +113,9 @@ def test_tiff_cubing(tmp_path: Path) -> None:
 )
 def test_tiff_cubing_zarr_s3(remote_testoutput_path: UPath) -> None:
     out_path = remote_testoutput_path / "tiff_cubing"
-    environ["AWS_SECRET_ACCESS_KEY"] = environ["MINIO_ROOT_PASSWORD"]
-    environ["AWS_ACCESS_KEY_ID"] = environ["MINIO_ROOT_USER"]
-    environ["S3_ENDPOINT_URL"] = "http://localhost:8000"
+    environ["AWS_SECRET_ACCESS_KEY"] = MINIO_ROOT_PASSWORD
+    environ["AWS_ACCESS_KEY_ID"] = MINIO_ROOT_USER
+    environ["S3_ENDPOINT_URL"] = f"http://localhost:{MINIO_PORT}"
 
     _tiff_cubing(out_path, DataFormat.Zarr, 1)
 
