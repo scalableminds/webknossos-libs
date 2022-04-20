@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 
 import numpy as np
+from upath import UPath
 
 from webknossos.geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 
@@ -40,7 +41,6 @@ from ..utils import (
     copytree,
     get_executor_for_args,
     is_fs_path,
-    make_upath,
     named_partial,
     rmtree,
     warn_deprecated,
@@ -495,7 +495,7 @@ class Layer:
             # local import to prevent circular dependency
             from .dataset import Dataset
 
-            foreign_mag_view_path = make_upath(foreign_mag_view_or_path)
+            foreign_mag_view_path = UPath(foreign_mag_view_or_path)
             foreign_mag_view = (
                 Dataset.open(foreign_mag_view_path.parent.parent)
                 .get_layer(foreign_mag_view_path.parent.name)
@@ -894,7 +894,7 @@ class Layer:
         """
         assert (
             from_mag in self.mags.keys()
-        ), f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
+        ), f"Failed to upsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
 
         if min_mag is None:
             min_mag = Mag(1)

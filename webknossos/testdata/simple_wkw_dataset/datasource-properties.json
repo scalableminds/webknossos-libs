@@ -1,52 +1,34 @@
 {
-    "id": {
-        "name": "simple_wk_dataset",
-        "team": ""
-    },
-    "scale": [
-        1, 1, 1
-    ],
-    "defaultViewConfiguration": {
-        "position": [
-            12,
-            12,
-            12
-        ]
-    },
-    "dataLayers": [
+  "id": {
+    "name": "simple_wkw_dataset",
+    "team": ""
+  },
+  "scale": [1, 1, 1],
+  "defaultViewConfiguration": {
+    "position": [12, 12, 12]
+  },
+  "dataLayers": [
+    {
+      "dataFormat": "wkw",
+      "name": "color",
+      "category": "color",
+      "elementClass": "uint24",
+      "numChannels": 3,
+      "boundingBox": {
+        "topLeft": [0, 0, 0],
+        "width": 24,
+        "height": 24,
+        "depth": 24
+      },
+      "wkwResolutions": [
         {
-            "dataFormat": "wkw",
-            "name": "color",
-            "category": "color",
-            "elementClass": "uint24",
-            "numChannels": 3,
-            "boundingBox": {
-                "topLeft": [
-                    0,
-                    0,
-                    0
-                ],
-                "width": 24,
-                "height": 24,
-                "depth": 24
-            },
-            "wkwResolutions": [
-                {
-                    "resolution": [
-                        1,
-                        1,
-                        1
-                    ],
-                    "cubeLength": 32
-                }
-            ],
-            "defaultViewConfiguration": {
-                "color": [
-                    255,
-                    0,
-                    0
-                ]
-            }
+          "resolution": [1, 1, 1],
+          "cubeLength": 32
         }
-    ]
+      ],
+      "defaultViewConfiguration": {
+        "color": [255, 0, 0]
+      }
+    }
+  ]
 }

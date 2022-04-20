@@ -1,14 +1,20 @@
 import logging
 import math
 from itertools import product
-from typing import List, Tuple, cast
+from typing import List, Tuple
 
 import numpy as np
 
-from webknossos.geometry import Vec3Int
+from webknossos.geometry import BoundingBox, Vec3Int
 from webknossos.utils import time_start, time_stop
 
 from .view import View
+
+
+def _vec3int_mulf(vec: Vec3Int, factors: List[float]) -> Vec3Int:
+    return Vec3Int(
+        int(vec.x * factors[0]), int(vec.y * factors[1]), int(vec.z * factors[2])
+    )
 
 
 def upsample_cube(cube_buffer: np.ndarray, factors: List[int]) -> np.ndarray:
@@ -37,37 +43,33 @@ def upsample_cube_job(
     ), f"mag_factors ({mag_factors}) for upsampling must be smaller than 1"
 
     try:
-        time_start(f"Upsampling of {target_view.global_offset}")
+        time_start(f"Upsampling of {target_view.bounding_box}")
         num_channels = target_view.info.num_channels
-        shape = (num_channels,) + tuple(target_view.size)
+        target_size = target_view.bounding_box.in_mag(target_view.mag).size
+        shape = (num_channels,) + target_size.to_tuple()
         file_buffer = np.zeros(shape, target_view.get_dtype())
 
         tiles = product(
             *list(
                 [
                     list(range(0, math.ceil(len)))
-                    for len in target_view.size.to_np() / buffer_shape.to_np()
+                    for len in target_size.to_np() / buffer_shape.to_np()
                 ]
             )
         )
 
         for tile in tiles:
-            target_offset = np.array(tile) * buffer_shape.to_np()
-            source_offset = (mag_factors * target_offset).astype(int)
-            source_size = cast(
-                Tuple[int, int, int],
-                tuple(
-                    [
-                        int(min(a, b))
-                        for a, b in zip(
-                            np.array(mag_factors) * buffer_shape.to_np(),
-                            source_view.size - source_offset,
-                        )
-                    ]
-                ),
+            target_offset = Vec3Int(tile) * buffer_shape
+            source_offset = _vec3int_mulf(target_offset, mag_factors)
+            source_size = source_view.bounding_box.in_mag(source_view.mag).size
+            source_size = _vec3int_mulf(buffer_shape, mag_factors).pairmin(
+                source_size - source_offset
             )
 
-            cube_buffer_channels = source_view.read(source_offset, source_size)
+            bbox = BoundingBox(source_offset, source_size)
+            cube_buffer_channels = source_view.read(
+                relative_bounding_box=bbox.from_mag_to_mag1(source_view.mag),
+            )
 
             for channel_index in range(num_channels):
                 cube_buffer = cube_buffer_channels[channel_index]
@@ -91,10 +93,10 @@ def upsample_cube_job(
         if source_view.info.num_channels == 1:
             file_buffer = file_buffer[0]  # remove channel dimension
         target_view.write(file_buffer)
-        time_stop(f"Upsampling of {target_view.global_offset}")
+        time_stop(f"Upsampling of {target_view.bounding_box}")
 
     except Exception as exc:
         logging.error(
-            f"Upsampling of target BoundingBox(offset={target_view.global_offset}, size={target_view.size}) failed with {exc}"
+            f"Upsampling of target {target_view.bounding_box} failed with {exc}"
         )
         raise exc

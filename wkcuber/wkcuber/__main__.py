@@ -1,22 +1,21 @@
-from typing import List, Dict
+from argparse import ArgumentParser, Namespace
+from pathlib import Path
+from typing import Dict, List
 
-from wkcuber import downsample_mags
-from .compress import compress_mag_inplace
-from .metadata import refresh_metadata
-from .utils import (
+from webknossos import Mag
+
+from ._internal.utils import (
     add_distribution_flags,
     add_isotropic_flag,
-    setup_logging,
     add_sampling_mode_flag,
+    setup_logging,
 )
-from .mag import Mag
-from .converter import (
-    create_parser as create_conversion_parser,
-    main as auto_detect_and_run_conversion,
-)
-from .versioning import get_available_version
-from argparse import Namespace, ArgumentParser
-from pathlib import Path
+from ._internal.versioning import get_available_version
+from .compress import compress_mag_inplace
+from .converter import create_parser as create_conversion_parser
+from .converter import main as auto_detect_and_run_conversion
+from .downsampling import downsample_mags
+from .metadata import refresh_metadata
 
 
 def detect_present_mags(target_path: Path) -> Dict[Path, List[Mag]]:

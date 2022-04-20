@@ -1,29 +1,29 @@
 import argparse
-from functools import partial
 import logging
+from functools import partial
 from pathlib import Path
 from typing import Optional, Tuple, Union
-import numpy as np
 
-from webknossos.dataset.defaults import DEFAULT_WKW_FILE_LEN
-from webknossos import BoundingBox, Dataset, Mag, MagView
+import numpy as np
+from webknossos import BoundingBox, DataFormat, Dataset, Mag, MagView, Vec3Int
 from webknossos.utils import (
     get_executor_for_args,
     time_start,
     time_stop,
     wait_and_ensure_success,
 )
-from .utils import (
+
+from ._internal.utils import (
+    add_data_format_flags,
     add_distribution_flags,
     add_interpolation_flag,
     add_sampling_mode_flag,
     add_scale_flag,
     add_verbose_flag,
-    DEFAULT_WKW_VOXELS_PER_BLOCK,
     get_executor_args,
+    parse_path,
     setup_logging,
 )
-
 
 logger = logging.getLogger(__name__)
 
@@ -51,11 +51,13 @@ def create_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "source_path",
         help="Path to raw file to convert",
-        type=Path,
+        type=parse_path,
     )
 
     parser.add_argument(
-        "target_path", help="Output directory for the generated WKW dataset.", type=Path
+        "target_path",
+        help="Output directory for the generated WKW dataset.",
+        type=parse_path,
     )
 
     parser.add_argument(
@@ -122,6 +124,7 @@ def create_parser() -> argparse.ArgumentParser:
 
     add_sampling_mode_flag(parser)
     add_interpolation_flag(parser)
+    add_data_format_flags(parser)
 
     add_distribution_flags(parser)
 
@@ -159,11 +162,13 @@ def convert_raw(
     layer_name: str,
     input_dtype: str,
     shape: Tuple[int, int, int],
+    data_format: DataFormat,
+    chunk_size: Vec3Int,
+    chunks_per_shard: Vec3Int,
     order: str = "F",
     scale: Optional[Tuple[float, float, float]] = (1.0, 1.0, 1.0),
     flip_axes: Optional[Union[int, Tuple[int, ...]]] = None,
     compress: bool = True,
-    file_len: int = DEFAULT_WKW_FILE_LEN,
     executor_args: Optional[argparse.Namespace] = None,
 ) -> MagView:
     assert order in ("C", "F")
@@ -177,9 +182,12 @@ def convert_raw(
         "color",
         dtype_per_layer=np.dtype(input_dtype),
         num_channels=1,
+        data_format=data_format,
     )
     wk_layer.bounding_box = BoundingBox((0, 0, 0), shape)
-    wk_mag = wk_layer.get_or_add_mag("1", file_len=file_len, compress=compress)
+    wk_mag = wk_layer.get_or_add_mag(
+        "1", chunk_size=chunk_size, chunks_per_shard=chunks_per_shard, compress=compress
+    )
 
     # Parallel chunk conversion
     with get_executor_for_args(executor_args) as executor:
@@ -194,9 +202,7 @@ def convert_raw(
                     order=order,
                     flip_axes=flip_axes,
                 ),
-                wk_layer.bounding_box.chunk(
-                    chunk_size=(DEFAULT_WKW_VOXELS_PER_BLOCK * file_len,) * 3
-                ),
+                wk_layer.bounding_box.chunk(chunk_size=chunk_size * chunks_per_shard),
             )
         )
 
@@ -219,6 +225,9 @@ def main(args: argparse.Namespace) -> None:
         args.layer_name,
         args.input_dtype,
         args.shape,
+        args.data_format,
+        args.chunk_size,
+        args.chunks_per_shard,
         args.order,
         args.scale,
         args.flip_axes,

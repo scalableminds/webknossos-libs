@@ -5,7 +5,6 @@ import pickle
 import warnings
 from os.path import join
 from pathlib import Path
-from shutil import copytree, rmtree
 from typing import Generator, Tuple, cast
 
 import numpy as np
@@ -28,7 +27,13 @@ from webknossos.dataset.properties import (
     dataset_converter,
 )
 from webknossos.geometry import BoundingBox, Mag, Vec3Int
-from webknossos.utils import get_executor_for_args, named_partial, snake_to_camel_case
+from webknossos.utils import (
+    copytree,
+    get_executor_for_args,
+    named_partial,
+    rmtree,
+    snake_to_camel_case,
+)
 
 from .constants import TESTDATA_DIR, TESTOUTPUT_DIR
 
@@ -40,11 +45,6 @@ def allow_deprecations() -> Generator:
             "ignore", module="webknossos", message=r"\[DEPRECATION\]"
         )
         yield
-
-
-def delete_dir(relative_path: Path) -> None:
-    if relative_path.exists() and relative_path.is_dir():
-        rmtree(relative_path)
 
 
 def chunk_job(args: Tuple[View, int]) -> None:
@@ -151,7 +151,7 @@ def assure_exported_properties(ds: Dataset) -> None:
 
 
 def test_create_dataset_with_layer_and_mag() -> None:
-    delete_dir(TESTOUTPUT_DIR / "wkw_dataset")
+    rmtree(TESTOUTPUT_DIR / "wkw_dataset")
 
     ds = Dataset(TESTOUTPUT_DIR / "wkw_dataset", scale=(1, 1, 1))
     ds.add_layer("color", "color")
@@ -169,7 +169,7 @@ def test_create_dataset_with_layer_and_mag() -> None:
 
 
 def test_create_dataset_with_explicit_header_fields() -> None:
-    delete_dir(TESTOUTPUT_DIR / "wkw_dataset_advanced")
+    rmtree(TESTOUTPUT_DIR / "wkw_dataset_advanced")
 
     ds = Dataset(TESTOUTPUT_DIR / "wkw_dataset_advanced", scale=(1, 1, 1))
     ds.add_layer("color", COLOR_CATEGORY, dtype_per_layer="uint48", num_channels=3)
@@ -207,7 +207,7 @@ def test_open_dataset() -> None:
 
 
 def test_modify_existing_dataset() -> None:
-    delete_dir(TESTOUTPUT_DIR / "simple_wkw_dataset")
+    rmtree(TESTOUTPUT_DIR / "simple_wkw_dataset")
     ds1 = Dataset(TESTOUTPUT_DIR / "simple_wkw_dataset", scale=(1, 1, 1))
     ds1.add_layer("color", COLOR_CATEGORY, dtype_per_layer="float", num_channels=1)
 
@@ -240,7 +240,7 @@ def test_view_read() -> None:
 
 
 def test_view_write() -> None:
-    delete_dir(TESTOUTPUT_DIR / "simple_wkw_dataset")
+    rmtree(TESTOUTPUT_DIR / "simple_wkw_dataset")
     copytree(TESTDATA_DIR / "simple_wkw_dataset", TESTOUTPUT_DIR / "simple_wkw_dataset")
 
     wk_view = (
@@ -262,7 +262,7 @@ def test_view_write() -> None:
 def test_view_write_out_of_bounds() -> None:
     new_dataset_path = TESTOUTPUT_DIR / "wkw_view_dataset_out_of_bounds"
 
-    delete_dir(new_dataset_path)
+    rmtree(new_dataset_path)
     copytree(TESTDATA_DIR / "simple_wkw_dataset", new_dataset_path)
 
     view = (
@@ -281,7 +281,7 @@ def test_view_write_out_of_bounds() -> None:
 def test_mag_view_write_out_of_bounds() -> None:
     new_dataset_path = TESTOUTPUT_DIR / "simple_wkw_dataset_out_of_bounds"
 
-    delete_dir(new_dataset_path)
+    rmtree(new_dataset_path)
     copytree(TESTDATA_DIR / "simple_wkw_dataset", new_dataset_path)
 
     ds = Dataset.open(new_dataset_path)
@@ -299,7 +299,7 @@ def test_mag_view_write_out_of_bounds() -> None:
 def test_mag_view_write_out_of_bounds_mag2() -> None:
     new_dataset_path = TESTOUTPUT_DIR / "simple_wkw_dataset_out_of_bounds"
 
-    delete_dir(new_dataset_path)
+    rmtree(new_dataset_path)
     copytree(TESTDATA_DIR / "simple_wkw_dataset", new_dataset_path)
 
     ds = Dataset.open(new_dataset_path)
@@ -317,7 +317,7 @@ def test_mag_view_write_out_of_bounds_mag2() -> None:
 
 
 def test_update_new_bounding_box_offset() -> None:
-    delete_dir(TESTOUTPUT_DIR / "wkw_dataset")
+    rmtree(TESTOUTPUT_DIR / "wkw_dataset")
 
     ds = Dataset(TESTOUTPUT_DIR / "wkw_dataset", scale=(1, 1, 1))
     mag = ds.add_layer("color", COLOR_CATEGORY).add_mag("1")
@@ -343,7 +343,7 @@ def test_update_new_bounding_box_offset() -> None:
 
 def test_write_multi_channel_uint8() -> None:
     dataset_path = TESTOUTPUT_DIR / "multichannel"
-    delete_dir(dataset_path)
+    rmtree(dataset_path)
 
     ds = Dataset(dataset_path, scale=(1, 1, 1))
     mag = ds.add_layer("color", COLOR_CATEGORY, num_channels=3).add_mag("1")
@@ -359,7 +359,7 @@ def test_write_multi_channel_uint8() -> None:
 
 def test_wk_write_multi_channel_uint16() -> None:
     dataset_path = TESTOUTPUT_DIR / "multichannel"
-    delete_dir(dataset_path)
+    rmtree(dataset_path)
 
     ds = Dataset(dataset_path, scale=(1, 1, 1))
     mag = ds.add_layer(
@@ -378,7 +378,7 @@ def test_wk_write_multi_channel_uint16() -> None:
 
 def test_empty_read() -> None:
     filename = TESTOUTPUT_DIR / "empty_wkw_dataset"
-    delete_dir(filename)
+    rmtree(filename)
 
     mag = (
         Dataset(filename, scale=(1, 1, 1))
@@ -392,7 +392,7 @@ def test_empty_read() -> None:
 
 def test_read_padded_data() -> None:
     filename = TESTOUTPUT_DIR / "empty_wkw_dataset"
-    delete_dir(filename)
+    rmtree(filename)
 
     mag = (
         Dataset(filename, scale=(1, 1, 1))
@@ -407,7 +407,7 @@ def test_read_padded_data() -> None:
 
 
 def test_num_channel_mismatch_assertion() -> None:
-    delete_dir(TESTOUTPUT_DIR / "wkw_dataset")
+    rmtree(TESTOUTPUT_DIR / "wkw_dataset")
 
     ds = Dataset(TESTOUTPUT_DIR / "wkw_dataset", scale=(1, 1, 1))
     mag = ds.add_layer("color", COLOR_CATEGORY, num_channels=1).add_mag(
@@ -424,7 +424,7 @@ def test_num_channel_mismatch_assertion() -> None:
 
 
 def test_get_or_add_layer() -> None:
-    delete_dir(TESTOUTPUT_DIR / "wkw_dataset")
+    rmtree(TESTOUTPUT_DIR / "wkw_dataset")
 
     ds = Dataset(TESTOUTPUT_DIR / "wkw_dataset", scale=(1, 1, 1))
 
@@ -457,7 +457,7 @@ def test_get_or_add_layer() -> None:
 
 
 def test_get_or_add_layer_idempotence() -> None:
-    delete_dir(TESTOUTPUT_DIR / "wkw_dataset")
+    rmtree(TESTOUTPUT_DIR / "wkw_dataset")
     ds = Dataset(TESTOUTPUT_DIR / "wkw_dataset", scale=(1, 1, 1))
     ds.get_or_add_layer("color2", "color", np.uint8).get_or_add_mag("1")
     ds.get_or_add_layer("color2", "color", np.uint8).get_or_add_mag("1")
@@ -466,7 +466,7 @@ def test_get_or_add_layer_idempotence() -> None:
 
 
 def test_get_or_add_mag() -> None:
-    delete_dir(TESTOUTPUT_DIR / "wkw_dataset")
+    rmtree(TESTOUTPUT_DIR / "wkw_dataset")
 
     layer = Dataset(TESTOUTPUT_DIR / "wkw_dataset", scale=(1, 1, 1)).add_layer(
         "color", COLOR_CATEGORY
@@ -492,7 +492,7 @@ def test_get_or_add_mag() -> None:
 
 
 def test_open_dataset_without_num_channels_in_properties() -> None:
-    delete_dir(TESTOUTPUT_DIR / "old_wkw_dataset")
+    rmtree(TESTOUTPUT_DIR / "old_wkw_dataset")
     copytree(TESTDATA_DIR / "old_wkw_dataset", TESTOUTPUT_DIR / "old_wkw_dataset")
 
     with open(
@@ -518,7 +518,7 @@ def test_open_dataset_without_num_channels_in_properties() -> None:
 
 def test_largest_segment_id_requirement() -> None:
     path = TESTOUTPUT_DIR / "largest_segment_id"
-    delete_dir(path)
+    rmtree(path)
     ds = Dataset(path, scale=(10, 10, 10))
 
     with pytest.raises(AssertionError):
@@ -541,7 +541,7 @@ def test_largest_segment_id_requirement() -> None:
 
 
 def test_properties_with_segmentation() -> None:
-    delete_dir(TESTOUTPUT_DIR / "complex_property_ds")
+    rmtree(TESTOUTPUT_DIR / "complex_property_ds")
     copytree(
         TESTDATA_DIR / "complex_property_ds",
         TESTOUTPUT_DIR / "complex_property_ds",
@@ -626,7 +626,7 @@ def test_chunking_wk(tmp_path: Path) -> None:
 
 
 def test_chunking_wk_advanced() -> None:
-    delete_dir(TESTOUTPUT_DIR / "chunking_dataset_wkw_advanced")
+    rmtree(TESTOUTPUT_DIR / "chunking_dataset_wkw_advanced")
 
     ds = Dataset(TESTOUTPUT_DIR / "chunking_dataset_wkw_advanced", scale=(1, 1, 2))
     mag = ds.add_layer(
@@ -644,7 +644,7 @@ def test_chunking_wk_advanced() -> None:
 
 
 def test_chunking_wk_wrong_chunk_size() -> None:
-    delete_dir(TESTOUTPUT_DIR / "chunking_dataset_wkw_with_wrong_chunk_size")
+    rmtree(TESTOUTPUT_DIR / "chunking_dataset_wkw_with_wrong_chunk_size")
     ds = Dataset(
         TESTOUTPUT_DIR / "chunking_dataset_wkw_with_wrong_chunk_size", scale=(1, 1, 2)
     )
@@ -676,7 +676,7 @@ def test_typing_of_get_mag() -> None:
 
 def test_dataset_exist_ok() -> None:
     ds_path = TESTOUTPUT_DIR / "wkw_dataset_exist_ok"
-    delete_dir(ds_path)
+    rmtree(ds_path)
 
     # dataset does not exists yet
     ds1 = Dataset(ds_path, scale=(1, 1, 1), exist_ok=False)
@@ -703,7 +703,7 @@ def test_dataset_exist_ok() -> None:
 
 
 def test_changing_layer_bounding_box() -> None:
-    delete_dir(TESTOUTPUT_DIR / "test_changing_layer_bounding_box")
+    rmtree(TESTOUTPUT_DIR / "test_changing_layer_bounding_box")
     copytree(
         TESTDATA_DIR / "simple_wkw_dataset",
         TESTOUTPUT_DIR / "test_changing_layer_bounding_box",
@@ -765,7 +765,7 @@ def test_changing_layer_bounding_box() -> None:
 
 
 def test_get_view() -> None:
-    delete_dir(TESTOUTPUT_DIR / "get_view_tests")
+    rmtree(TESTOUTPUT_DIR / "get_view_tests")
 
     ds = Dataset(TESTOUTPUT_DIR / "get_view_tests", scale=(1, 1, 1))
     mag = ds.add_layer("color", COLOR_CATEGORY).add_mag("1")
@@ -847,7 +847,7 @@ def test_get_view() -> None:
 
 
 def test_adding_layer_with_invalid_dtype_per_layer() -> None:
-    delete_dir(TESTOUTPUT_DIR / "invalid_dtype")
+    rmtree(TESTOUTPUT_DIR / "invalid_dtype")
 
     ds = Dataset(TESTOUTPUT_DIR / "invalid_dtype", scale=(1, 1, 1))
     with pytest.raises(TypeError):
@@ -869,7 +869,7 @@ def test_adding_layer_with_invalid_dtype_per_layer() -> None:
 
 
 def test_adding_layer_with_valid_dtype_per_layer() -> None:
-    delete_dir(TESTOUTPUT_DIR / "valid_dtype")
+    rmtree(TESTOUTPUT_DIR / "valid_dtype")
 
     ds = Dataset(TESTOUTPUT_DIR / "valid_dtype", scale=(1, 1, 1))
     ds.add_layer("color1", COLOR_CATEGORY, dtype_per_layer="uint24", num_channels=3)
@@ -947,7 +947,7 @@ def test_adding_layer_with_valid_dtype_per_layer() -> None:
 
 
 def test_writing_subset_of_compressed_data_multi_channel() -> None:
-    delete_dir(TESTOUTPUT_DIR / "compressed_data")
+    rmtree(TESTOUTPUT_DIR / "compressed_data")
 
     # create uncompressed dataset
     write_data1 = (np.random.rand(3, 100, 120, 140) * 255).astype(np.uint8)
@@ -985,7 +985,7 @@ def test_writing_subset_of_compressed_data_multi_channel() -> None:
 
 
 def test_writing_subset_of_compressed_data_single_channel() -> None:
-    delete_dir(TESTOUTPUT_DIR / "compressed_data")
+    rmtree(TESTOUTPUT_DIR / "compressed_data")
 
     # create uncompressed dataset
     write_data1 = (np.random.rand(100, 120, 140) * 255).astype(np.uint8)
@@ -1023,7 +1023,7 @@ def test_writing_subset_of_compressed_data_single_channel() -> None:
 
 
 def test_writing_subset_of_compressed_data() -> None:
-    delete_dir(TESTOUTPUT_DIR / "compressed_data")
+    rmtree(TESTOUTPUT_DIR / "compressed_data")
 
     # create uncompressed dataset
     mag_view = (
@@ -1082,7 +1082,7 @@ def test_writing_subset_of_compressed_data() -> None:
 
 
 def test_writing_subset_of_chunked_compressed_data() -> None:
-    delete_dir(TESTOUTPUT_DIR / "compressed_data")
+    rmtree(TESTOUTPUT_DIR / "compressed_data")
 
     # create uncompressed dataset
     write_data1 = (np.random.rand(100, 200, 300) * 255).astype(np.uint8)
@@ -1129,8 +1129,8 @@ def test_writing_subset_of_chunked_compressed_data() -> None:
 
 
 def test_add_symlink_layer() -> None:
-    delete_dir(TESTOUTPUT_DIR / "wkw_dataset_with_symlink")
-    delete_dir(TESTOUTPUT_DIR / "simple_wkw_dataset_copy")
+    rmtree(TESTOUTPUT_DIR / "wkw_dataset_with_symlink")
+    rmtree(TESTOUTPUT_DIR / "simple_wkw_dataset_copy")
     copytree(
         TESTDATA_DIR / "simple_wkw_dataset", TESTOUTPUT_DIR / "simple_wkw_dataset_copy"
     )
@@ -1259,7 +1259,7 @@ def test_add_copy_mag(tmp_path: Path) -> None:
 
 
 def test_search_dataset_also_for_long_layer_name() -> None:
-    delete_dir(TESTOUTPUT_DIR / "long_layer_name")
+    rmtree(TESTOUTPUT_DIR / "long_layer_name")
 
     ds = Dataset(TESTOUTPUT_DIR / "long_layer_name", scale=(1, 1, 1))
     mag = ds.add_layer("color", COLOR_CATEGORY).add_mag("2")
@@ -1297,7 +1297,7 @@ def test_search_dataset_also_for_long_layer_name() -> None:
 
 
 def test_outdated_dtype_parameter() -> None:
-    delete_dir(TESTOUTPUT_DIR / "outdated_dtype")
+    rmtree(TESTOUTPUT_DIR / "outdated_dtype")
 
     ds = Dataset(TESTOUTPUT_DIR / "outdated_dtype", scale=(1, 1, 1))
     with pytest.raises(ValueError):
@@ -1309,8 +1309,8 @@ def test_outdated_dtype_parameter() -> None:
 
 @pytest.mark.parametrize("make_relative", [True, False])
 def test_dataset_shallow_copy(make_relative: bool) -> None:
-    delete_dir(TESTOUTPUT_DIR / "original_dataset")
-    delete_dir(TESTOUTPUT_DIR / "copy_dataset")
+    rmtree(TESTOUTPUT_DIR / "original_dataset")
+    rmtree(TESTOUTPUT_DIR / "copy_dataset")
     ds = Dataset(TESTOUTPUT_DIR / "original_dataset", (1, 1, 1))
     original_layer_1 = ds.add_layer(
         "color", COLOR_CATEGORY, dtype_per_layer=np.uint8, num_channels=1
@@ -1352,8 +1352,8 @@ def test_dataset_conversion() -> None:
     origin_ds_path = TESTOUTPUT_DIR / "conversion" / "origin_wk"
     converted_ds_path = TESTOUTPUT_DIR / "conversion" / "converted_wk"
 
-    delete_dir(origin_ds_path)
-    delete_dir(converted_ds_path)
+    rmtree(origin_ds_path)
+    rmtree(converted_ds_path)
 
     # create example dataset
     origin_ds = Dataset(origin_ds_path, scale=(1, 1, 1))
@@ -1402,8 +1402,8 @@ def test_dataset_conversion() -> None:
 
 
 def test_for_zipped_chunks() -> None:
-    delete_dir(TESTOUTPUT_DIR / "zipped_chunking_source")
-    delete_dir(TESTOUTPUT_DIR / "zipped_chunking_target")
+    rmtree(TESTOUTPUT_DIR / "zipped_chunking_source")
+    rmtree(TESTOUTPUT_DIR / "zipped_chunking_target")
 
     ds = Dataset(TESTOUTPUT_DIR / "zipped_chunking_source", scale=(1, 1, 2))
     mag = ds.add_layer(
@@ -1454,7 +1454,7 @@ def _func_invalid_target_chunk_size_wk(args: Tuple[View, View, int]) -> None:
 
 
 def test_for_zipped_chunks_invalid_target_chunk_size_wk() -> None:
-    delete_dir(TESTOUTPUT_DIR / "zipped_chunking_source_invalid")
+    rmtree(TESTOUTPUT_DIR / "zipped_chunking_source_invalid")
 
     test_cases_wk = [
         (10, 20, 30),
@@ -1489,7 +1489,7 @@ def test_for_zipped_chunks_invalid_target_chunk_size_wk() -> None:
 
 
 def test_read_only_view() -> None:
-    delete_dir(TESTOUTPUT_DIR / "read_only_view")
+    rmtree(TESTOUTPUT_DIR / "read_only_view")
     ds = Dataset(TESTOUTPUT_DIR / "read_only_view", scale=(1, 1, 1))
     mag = ds.get_or_add_layer("color", COLOR_CATEGORY).get_or_add_mag("1")
     mag.write(

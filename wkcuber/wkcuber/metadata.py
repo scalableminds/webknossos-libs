@@ -1,19 +1,17 @@
 import json
-import wkw
-import re
 import logging
-import numpy as np
+import re
+from argparse import ArgumentParser
 from os import PathLike
 from os.path import sep
-
-from argparse import ArgumentParser
-from typing import Optional, Tuple, Iterable, Generator, Union
-
-from webknossos.dataset.layer import LayerCategoryType
-from .mag import Mag
-from typing import List
-from .utils import add_verbose_flag, setup_logging, add_scale_flag
 from pathlib import Path
+from typing import Generator, Iterable, List, Optional, Tuple, Union
+
+import numpy as np
+import wkw
+from webknossos import LayerCategoryType, Mag
+
+from ._internal.utils import add_scale_flag, add_verbose_flag, setup_logging
 
 WKW_CUBE_REGEX = re.compile(
     fr"z(\d+){re.escape(sep)}y(\d+){re.escape(sep)}x(\d+)(\.wkw)$"
@@ -225,6 +223,16 @@ def detect_dtype(dataset_path: Path, layer: str, mag: Mag = Mag(1)) -> str:
     )
 
 
+def detect_num_channels(dataset_path: Path, layer: str, mag: Mag = Mag(1)) -> int:
+    layer_path = detect_mag_path(dataset_path, layer, mag)
+    if layer_path is not None:
+        with wkw.Dataset.open(str(layer_path)) as dataset:
+            return dataset.header.num_channels
+    raise RuntimeError(
+        f"Failed to detect numChannels (for {dataset_path}, {layer}, {mag}) because the layer_path is None"
+    )
+
+
 def detect_cubeLength(dataset_path: Path, layer: str, mag: Mag = Mag(1)) -> int:
     layer_path = detect_mag_path(dataset_path, layer, mag)
     if layer_path is not None:
@@ -316,11 +324,17 @@ def detect_standard_layer(
         dtype is not None
     ), f"Data type could not be detected for {dataset_path}/{layer_name}"
 
+    num_channels = detect_num_channels(dataset_path, layer_name, mags[0])
+    assert (
+        num_channels is not None
+    ), f"Number of channels could not be detected for {dataset_path}/{layer_name}"
+
     layer_info = {
         "dataFormat": "wkw",
         "name": layer_name,
         "category": category,
         "elementClass": dtype,
+        "numChannels": num_channels,
         "boundingBox": bbox,
         "wkwResolutions": list(resolutions),
     }

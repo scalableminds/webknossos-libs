@@ -25,9 +25,10 @@ def _is_power_of_two(num: int) -> bool:
 def _fsstore_from_path(path: Path, mode: str = "a") -> FSStore:
     storage_options = {}
     if hasattr(path, "_kwargs"):
-        path = cast(UPath, path)
-        storage_options = path._kwargs.copy()
+        upath = cast(UPath, path)
+        storage_options = upath._kwargs.copy()
         del storage_options["_url"]
+        return FSStore(url=str(upath), mode=mode, **storage_options)
 
     return FSStore(url=str(path), mode=mode, **storage_options)
 
@@ -51,6 +52,9 @@ class ArrayException(Exception):
 class DataFormat(Enum):
     WKW = "wkw"
     Zarr = "zarr"
+
+    def __str__(self) -> str:
+        return self.value
 
 
 @dataclass
@@ -137,7 +141,9 @@ class WKWArray(BaseArray):
 
     @classmethod
     def open(cls, path: Path) -> "WKWArray":
-        if (path / "header.wkw").is_file():
+        header_path = path / "header.wkw"
+
+        if header_path.exists() and header_path.is_file():
             return cls(path)
         raise ArrayException(
             f"Could not open WKW array at {path}. `header.wkw` not found."
@@ -284,7 +290,9 @@ class ZarrArray(BaseArray):
 
     @classmethod
     def open(cls, path: Path) -> "ZarrArray":
-        if (path / ".zarray").is_file():
+        zarray_path = path / ".zarray"
+
+        if zarray_path.exists() and zarray_path.is_file():
             return cls(path)
         raise ArrayException(
             f"Could not open Zarr array at {path}. `.zarray` not found."

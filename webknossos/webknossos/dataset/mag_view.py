@@ -6,15 +6,10 @@ from typing import TYPE_CHECKING, Iterator, Optional, Tuple, Union
 from uuid import uuid4
 
 import numpy as np
+from upath import UPath
 
 from ..geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
-from ..utils import (
-    get_executor_for_args,
-    is_fs_path,
-    make_upath,
-    rmtree,
-    wait_and_ensure_success,
-)
+from ..utils import get_executor_for_args, is_fs_path, rmtree, wait_and_ensure_success
 from ._array import ArrayInfo, BaseArray
 from .properties import MagViewProperties
 
@@ -284,7 +279,7 @@ class MagView(View):
                     self.path
                 ), "Cannot compress a remote mag without `target_path`."
         else:
-            target_path = make_upath(target_path)
+            target_path = UPath(target_path)
 
         uncompressed_full_path = self.path
         compressed_dataset_path = (

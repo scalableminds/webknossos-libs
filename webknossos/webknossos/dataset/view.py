@@ -1,4 +1,5 @@
 import warnings
+from argparse import Namespace
 from pathlib import Path
 from types import TracebackType
 from typing import (
@@ -18,14 +19,23 @@ import numpy as np
 import wkw
 from cluster_tools.schedulers.cluster_executor import ClusterExecutor
 
-from webknossos.geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
-from webknossos.utils import get_rich_progress, wait_and_ensure_success, warn_deprecated
-
+from ..geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
+from ..utils import (
+    get_executor_for_args,
+    get_rich_progress,
+    wait_and_ensure_success,
+    warn_deprecated,
+)
 from ._array import ArrayInfo, BaseArray, WKWArray
 
 if TYPE_CHECKING:
     from ._utils.buffered_slice_reader import BufferedSliceReader
     from ._utils.buffered_slice_writer import BufferedSliceWriter
+
+
+def _assert_check_equality(args: Tuple["View", "View", int]) -> None:
+    view_a, view_b, _ = args
+    assert np.all(view_a.read() == view_b.read())
 
 
 class View:
@@ -860,6 +870,25 @@ class View:
             wait_and_ensure_success(
                 executor.map_to_futures(func_per_chunk, job_args), progress_desc
             )
+
+    def content_is_equal(
+        self,
+        other: "View",
+        args: Optional[Namespace] = None,
+    ) -> bool:
+        if self.bounding_box.size != other.bounding_box.size:
+            return False
+        with get_executor_for_args(args) as executor:
+            try:
+                self.for_zipped_chunks(
+                    _assert_check_equality,
+                    other,
+                    executor=executor,
+                    progress_desc="Comparing contents",
+                )
+            except AssertionError:
+                return False
+        return True
 
     def _is_compressed(self) -> bool:
         return self.info.compression_mode

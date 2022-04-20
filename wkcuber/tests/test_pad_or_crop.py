@@ -1,5 +1,5 @@
 import numpy as np
-from wkcuber.utils import pad_or_crop_to_size_and_topleft
+from wkcuber._internal.utils import pad_or_crop_to_size_and_topleft
 
 
 def test_pad_or_crop_to_size_and_topleft() -> None:

@@ -86,13 +86,32 @@ class LayerViewConfiguration:
     """
 
     color: Optional[Tuple[int, int, int]] = None
+    """Color in RGB from 0 to 255. The webKnossos default is [255, 255, 255]."""
+
     alpha: Optional[float] = None
+    """Alpha value from 0 to 100. The webKnossos default is 100 except for segmentation
+    layers where it is 20."""
+
     intensity_range: Optional[Tuple[float, float]] = None
+    """Min and max data value range (dependent on the layer's data type). Can be used to threshold the value range.
+    The webKnossos default is the full value range."""
+
     min: Optional[float] = None  # pylint: disable=redefined-builtin
+    """Minimum data value that might be encountered. This will restrict the histogram in webKnossos and possibly overwrite
+    the min value of the `intensityRange` (if that is lower)."""
+
     max: Optional[float] = None  # pylint: disable=redefined-builtin
+    """Maximum data value that might be encountered. This will restrict the histogram in webKnossos and possibly overwrite
+    the max value of the `intensityRange` (if that is higher)."""
+
     is_disabled: Optional[bool] = None
+    """Disable a layer. The webKnossos default is False."""
+
     is_inverted: Optional[bool] = None
+    """Invert a layer. The webKnossos default is False."""
+
     is_in_edit_mode: Optional[bool] = None
+    """Enable the histogram edit mode. The webKnossos default is False."""
 
 
 # --- Property --------------------
