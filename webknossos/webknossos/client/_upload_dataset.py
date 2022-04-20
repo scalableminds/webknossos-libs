@@ -174,9 +174,8 @@ def upload_dataset(
                 }
             ),
         )
-        if response.status_code == 200:
+        if response.status_code == 200 or response.status_code == 400:
             break
-    else:
-        assert response.status_code == 200, response
+    assert response.status_code == 200, response
 
     return f"{context.url}/datasets/{context.organization_id}/{new_dataset_name}/view"
