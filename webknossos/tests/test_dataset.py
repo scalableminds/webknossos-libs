@@ -2,9 +2,11 @@ import itertools
 import json
 import os
 import pickle
+import shlex
+import subprocess
 import warnings
 from pathlib import Path
-from typing import Optional, Tuple, cast
+from typing import Iterator, Optional, Tuple, cast
 
 import numpy as np
 import pytest
@@ -34,18 +36,16 @@ from webknossos.utils import (
     rmtree,
     snake_to_camel_case,
 )
-import subprocess
-import shlex
 
 from .constants import TESTDATA_DIR, TESTOUTPUT_DIR
 
-MINIO_ROOT_USER="TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur"
-MINIO_ROOT_PASSWORD="ANTN35UAENTS5UIAEATD"
-MINIO_PORT="8000"
+MINIO_ROOT_USER = "TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur"
+MINIO_ROOT_PASSWORD = "ANTN35UAENTS5UIAEATD"
+MINIO_PORT = "8000"
 
 
 @pytest.fixture(autouse=True, scope="module")
-def docker_minio():
+def docker_minio() -> Iterator[None]:
     """Minio is an S3 clone and is used as local test server"""
     container_name = "minio"
     cmd = (
@@ -61,8 +61,10 @@ def docker_minio():
     print("BEFORE", flush=True)
     subprocess.check_output(shlex.split(cmd))
     REMOTE_TESTOUTPUT_DIR.fs.mkdirs("testoutput", exist_ok=True)
-    yield
-    subprocess.check_output(["docker", "stop", container_name])
+    try:
+        yield
+    finally:
+        subprocess.check_output(["docker", "stop", container_name])
 
 
 REMOTE_TESTOUTPUT_DIR = UPath(

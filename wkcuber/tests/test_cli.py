@@ -30,9 +30,9 @@ def count_wkw_files(mag_path: Path) -> int:
     return len(list(mag_path.glob("**/x*.wkw")))
 
 
-MINIO_ROOT_USER="TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur"
-MINIO_ROOT_PASSWORD="ANTN35UAENTS5UIAEATD"
-MINIO_PORT="8000"
+MINIO_ROOT_USER = "TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur"
+MINIO_ROOT_PASSWORD = "ANTN35UAENTS5UIAEATD"
+MINIO_PORT = "8000"
 
 
 @pytest.fixture(scope="module")
@@ -57,8 +57,10 @@ def remote_testoutput_path() -> UPath:
         client_kwargs={"endpoint_url": f"http://localhost:{MINIO_PORT}"},
     )
     remote_path.fs.mkdirs("testoutput", exist_ok=True)
-    yield remote_path
-    subprocess.check_output(["docker", "stop", container_name])
+    try:
+        yield remote_path
+    finally:
+        subprocess.check_output(["docker", "stop", container_name])
 
 
 def _tiff_cubing(
