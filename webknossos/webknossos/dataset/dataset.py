@@ -903,6 +903,11 @@ class Dataset:
         return self._properties.scale
 
     @property
+    def scale(self) -> Tuple[float, float, float]:
+        warn_deprecated("scale", "voxel_size")
+        return self._properties.scale
+
+    @property
     def name(self) -> str:
         return self._properties.id["name"]
 
