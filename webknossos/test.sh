@@ -2,7 +2,6 @@
 set -eEuo pipefail
 
 source local_wk_setup.sh
-source ../_tooling/local_minio_setup.sh
 
 export_vars
 
