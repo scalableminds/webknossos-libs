@@ -238,7 +238,7 @@ class Graph(Tree):
         enforced_id: Optional[int] = None,
     ) -> None:
         warn_deprecated("Graph", "Tree")
-        super.__init__(
+        super().__init__(
             name=name,
             group=group,
             skeleton=skeleton,
