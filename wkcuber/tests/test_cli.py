@@ -14,6 +14,8 @@ from webknossos.dataset.dataset import PROPERTIES_FILE_NAME
 from webknossos.utils import copytree, rmtree
 
 from .constants import TESTDATA_DIR
+import subprocess
+import shlex
 
 
 def check_call(*args: Union[str, int, Path]) -> None:
@@ -28,16 +30,35 @@ def count_wkw_files(mag_path: Path) -> int:
     return len(list(mag_path.glob("**/x*.wkw")))
 
 
-@pytest.fixture(scope="session")
+MINIO_ROOT_USER="TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur"
+MINIO_ROOT_PASSWORD="ANTN35UAENTS5UIAEATD"
+MINIO_PORT="8000"
+
+
+@pytest.fixture(scope="module")
 def remote_testoutput_path() -> UPath:
+    """Minio is an S3 clone and is used as local test server"""
+    container_name = "minio"
+    cmd = (
+        "docker run"
+        f" -p {MINIO_PORT}:9000"
+        f" -e MINIO_ROOT_USER={MINIO_ROOT_USER}"
+        f" -e MINIO_ROOT_PASSWORD={MINIO_ROOT_PASSWORD}"
+        f" --name {container_name}"
+        " --rm"
+        " -d"
+        " minio/minio server /data"
+    )
+    subprocess.check_output(shlex.split(cmd))
     remote_path = UPath(
         "s3://testoutput",
-        key=environ["MINIO_ROOT_USER"],
-        secret=environ["MINIO_ROOT_PASSWORD"],
-        client_kwargs={"endpoint_url": "http://localhost:8000"},
+        key=MINIO_ROOT_USER,
+        secret=MINIO_ROOT_PASSWORD,
+        client_kwargs={"endpoint_url": f"http://localhost:{MINIO_PORT}"},
     )
     remote_path.fs.mkdirs("testoutput", exist_ok=True)
-    return remote_path
+    yield remote_path
+    subprocess.check_output(["docker", "stop", container_name])
 
 
 def _tiff_cubing(
