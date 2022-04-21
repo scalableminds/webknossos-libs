@@ -79,7 +79,7 @@ class DeprecatedSizeAction(argparse.Action):
     ) -> None:
         if option_string == "--scale":
             warnings.warn(
-                f"[DEPRECATION] `--size` is deprecated, please use `--voxel_size` instead.",
+                f"[DEPRECATION] `--scale` is deprecated, please use `--voxel_size` instead.",
                 DeprecationWarning,
             )
         setattr(namespace, self.dest, values)
@@ -90,7 +90,7 @@ def add_voxel_size_flag(parser: argparse.ArgumentParser, required: bool = True) 
         "--voxel_size",
         "--scale",
         "-s",
-        help="Voxel size of the dataset in nm (e.g. 11.2,11.2,25). --size is deprecated",
+        help="Voxel size of the dataset in nm (e.g. 11.2,11.2,25). --scale is deprecated",
         required=required,
         type=parse_voxel_size,
         action=DeprecatedSizeAction,
