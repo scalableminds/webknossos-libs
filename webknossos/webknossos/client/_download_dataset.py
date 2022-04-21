@@ -8,8 +8,10 @@ from rich.progress import track
 
 from webknossos.client._generated.api.datastore import dataset_download
 from webknossos.client._generated.api.default import dataset_info
+from webknossos.client._generated.types import Unset
 from webknossos.client.context import _get_context, _get_generated_client
 from webknossos.dataset import Dataset, LayerCategoryType
+from webknossos.dataset.properties import LayerViewConfiguration, dataset_converter
 from webknossos.geometry import BoundingBox, Mag, Vec3Int
 
 logger = logging.getLogger(__name__)
@@ -82,6 +84,19 @@ def download_dataset(
                 "largestSegmentId", None
             ),
         )
+
+        default_view_configuration_dict = None
+        if not isinstance(response_layer.default_view_configuration, Unset):
+            default_view_configuration_dict = (
+                response_layer.default_view_configuration.to_dict()
+            )
+
+        if default_view_configuration_dict is not None:
+            default_view_configuration = dataset_converter.structure(
+                default_view_configuration_dict, LayerViewConfiguration
+            )
+            layer.default_view_configuration = default_view_configuration
+
         if bbox is None:
             response_bbox = response_layer.bounding_box
             layer.bounding_box = BoundingBox(

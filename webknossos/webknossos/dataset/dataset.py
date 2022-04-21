@@ -173,7 +173,7 @@ class Dataset:
                     dataset_converter.unstructure(dataset_properties), outfile, indent=4
                 )
 
-        self.path = dataset_path
+        self.path: Path = dataset_path
         self._properties: DatasetProperties = self._load_properties()
         self._last_read_properties = copy.deepcopy(self._properties)
 

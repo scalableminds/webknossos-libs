@@ -26756,7 +26756,7 @@ interactions:
               DwgADFAAA/0BAA==
         l4dense_motta_et_al_demo_v2__explorational__potto__4a6356.nml: "<things>\n
           \ <meta name=\"writer\" content=\"NmlWriter.scala\" />\n  <meta name=\"writerGitCommit\"
-          content=\"b661e28753d9b782b8e5a69c5e7731ac0a79d4fd\" />\n  <meta name=\"timestamp\"
+          content=\"41ac7d41ffde4ac0ec97978ae95b867925e6c9a8\" />\n  <meta name=\"timestamp\"
           content=\"1643210000000\" />\n  <meta name=\"annotationId\" content=\"61c20205010000cc004a6356\"
           />\n  <meta name=\"username\" content=\"Philipp Otto\" />\n  <parameters>\n
           \   <experiment name=\"l4dense_motta_et_al_demo_v2\" organization=\"scalable_minds\"
@@ -26785,7 +26785,7 @@ interactions:
       content-disposition:
       - attachment;filename="l4dense_motta_et_al_demo_v2__explorational__potto__4a6356.zip"
       content-length:
-      - '848454'
+      - '848452'
       content-type:
       - application/zip
       date: Mon, 01 Jan 2000 00:00:00 GMT
