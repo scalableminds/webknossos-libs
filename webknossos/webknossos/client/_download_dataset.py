@@ -87,7 +87,9 @@ def download_dataset(
 
         default_view_configuration_dict = None
         if not isinstance(response_layer.default_view_configuration, Unset):
-            default_view_configuration_dict = response_layer.default_view_configuration.to_dict()
+            default_view_configuration_dict = (
+                response_layer.default_view_configuration.to_dict()
+            )
 
         if default_view_configuration_dict is not None:
             default_view_configuration = dataset_converter.structure(
