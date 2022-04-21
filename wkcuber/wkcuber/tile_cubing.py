@@ -26,6 +26,7 @@ from ._internal.utils import (
     get_executor_for_args,
     get_regular_chunks,
     setup_logging,
+    setup_warnings,
     wait_and_ensure_success,
 )
 from .cubing import create_parser as create_cubing_parser
@@ -408,6 +409,7 @@ def create_parser() -> ArgumentParser:
 
 
 if __name__ == "__main__":
+    setup_warnings()
     args = create_parser().parse_args()
     setup_logging(args)
     input_path_pattern = os.path.join(args.source_path, args.input_path_pattern)

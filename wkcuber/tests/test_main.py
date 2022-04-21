@@ -5,7 +5,6 @@ import pytest
 from tifffile import TiffWriter
 from webknossos import Dataset
 from wkcuber.__main__ import create_parser, cube_with_args
-from wkcuber._internal.utils import setup_logging
 
 
 @pytest.mark.parametrize("category", ["color", "segmentation"])

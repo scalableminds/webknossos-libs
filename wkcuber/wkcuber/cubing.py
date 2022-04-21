@@ -39,6 +39,7 @@ from ._internal.utils import (
     get_executor_for_args,
     parse_path,
     setup_logging,
+    setup_warnings,
     wait_and_ensure_success,
 )
 
@@ -443,6 +444,7 @@ def cubing(
 if __name__ == "__main__":
     args = create_parser().parse_args()
     setup_logging(args)
+    setup_warnings()
 
     arg_dict = vars(args)
 

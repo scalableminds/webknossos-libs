@@ -17,6 +17,7 @@ from ._internal.utils import (
     is_wk_compatible_layer_format,
     parse_path,
     setup_logging,
+    setup_warnings,
 )
 from .convert_knossos import create_parser as create_knossos_parser
 from .convert_knossos import main as convert_knossos
@@ -556,6 +557,7 @@ def main(args: Namespace) -> None:
 
 
 if __name__ == "__main__":
+    setup_warnings()
     parsed_args = create_parser().parse_args()
     setup_logging(parsed_args)
 

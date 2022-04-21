@@ -14,7 +14,13 @@ import numpy as np
 import webknossos as wk
 from webknossos.dataset import Layer, MagView
 from webknossos.geometry import BoundingBox, Mag, Vec3Int
-from webknossos.utils import add_verbose_flag, setup_logging, time_start, time_stop
+from webknossos.utils import (
+    add_verbose_flag,
+    setup_logging,
+    setup_warnings,
+    time_start,
+    time_stop,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -350,6 +356,7 @@ def main(args: argparse.Namespace) -> None:
 
 
 if __name__ == "__main__":
+    setup_warnings()
     parsed_args = create_parser().parse_args()
     setup_logging(parsed_args)
 

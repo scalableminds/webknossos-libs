@@ -11,7 +11,12 @@ import numpy as np
 import wkw
 from webknossos import LayerCategoryType, Mag
 
-from ._internal.utils import add_voxel_size_flag, add_verbose_flag, setup_logging
+from ._internal.utils import (
+    add_voxel_size_flag,
+    add_verbose_flag,
+    setup_logging,
+    setup_warnings,
+)
 
 WKW_CUBE_REGEX = re.compile(
     fr"z(\d+){re.escape(sep)}y(\d+){re.escape(sep)}x(\d+)(\.wkw)$"
@@ -434,6 +439,7 @@ def detect_layers(
 
 
 if __name__ == "__main__":
+    setup_warnings()
     args = create_parser().parse_args()
     setup_logging(args)
 

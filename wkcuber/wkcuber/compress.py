@@ -11,6 +11,7 @@ from ._internal.utils import (
     add_verbose_flag,
     parse_path,
     setup_logging,
+    setup_warnings,
 )
 
 BACKUP_EXT = ".bak"
@@ -108,6 +109,7 @@ def compress_mags(
 
 
 if __name__ == "__main__":
+    setup_warnings()
     args = create_parser().parse_args()
     setup_logging(args)
     compress_mags(args.source_path, args.layer_name, args.target_path, args.mag, args)

@@ -13,6 +13,7 @@ from ._internal.utils import (
     get_executor_args,
     is_wk_compatible_layer_format,
     setup_logging,
+    setup_warnings,
 )
 
 
@@ -79,8 +80,6 @@ def _handle_hierarchical_data(args: Namespace, dtype: str, sample_count: int) ->
 
 
 def main(args: Namespace) -> None:
-    setup_logging(args)
-
     if args.isotropic is not None:
         raise DeprecationWarning(
             "The flag 'isotropic' is deprecated. Consider using '--sampling_mode isotropic' instead."
@@ -186,6 +185,7 @@ def main(args: Namespace) -> None:
 
 
 if __name__ == "__main__":
+    setup_warnings()
     args = create_parser().parse_args()
     setup_logging(args)
     main(args)

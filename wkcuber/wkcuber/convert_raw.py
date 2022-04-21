@@ -23,6 +23,7 @@ from ._internal.utils import (
     get_executor_args,
     parse_path,
     setup_logging,
+    setup_warnings,
 )
 
 logger = logging.getLogger(__name__)
@@ -246,6 +247,7 @@ def main(args: argparse.Namespace) -> None:
 
 
 if __name__ == "__main__":
+    setup_warnings()
     args = create_parser().parse_args()
     setup_logging(args)
 

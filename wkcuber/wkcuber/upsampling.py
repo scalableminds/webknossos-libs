@@ -12,6 +12,7 @@ from ._internal.utils import (
     add_verbose_flag,
     parse_path,
     setup_logging,
+    setup_warnings,
 )
 
 
@@ -118,6 +119,7 @@ def upsample_mags(
 
 
 if __name__ == "__main__":
+    setup_warnings()
     args = create_parser().parse_args()
     setup_logging(args)
 

@@ -9,6 +9,7 @@ from ._internal.utils import (
     add_isotropic_flag,
     add_sampling_mode_flag,
     setup_logging,
+    setup_warnings,
 )
 from ._internal.versioning import get_available_version
 from .compress import compress_mag_inplace
@@ -104,6 +105,7 @@ def cube_with_args(args: Namespace) -> None:
 
 
 def main() -> None:
+    setup_warnings()
     args = create_parser().parse_args()
     setup_logging(args)
     cube_with_args(args)

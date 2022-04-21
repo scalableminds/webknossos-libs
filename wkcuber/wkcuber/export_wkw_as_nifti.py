@@ -14,6 +14,7 @@ from ._internal.utils import (
     parse_padding,
     parse_path,
     setup_logging,
+    setup_warnings,
 )
 
 
@@ -152,4 +153,5 @@ def export_wkw_as_nifti_from_arg_list(arg_list: Optional[List] = None) -> None:
 
 
 if __name__ == "__main__":
+    setup_warnings()
     export_wkw_as_nifti_from_arg_list()

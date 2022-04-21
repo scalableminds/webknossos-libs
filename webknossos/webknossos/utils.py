@@ -3,6 +3,7 @@ import calendar
 import functools
 import json
 import logging
+import re
 import sys
 import time
 import warnings
@@ -160,6 +161,11 @@ def copy_directory_with_symlinks(
             symlink_path.symlink_to(rel_or_abspath)
 
 
+def setup_warnings() -> None:
+    warnings.filterwarnings("default", category=DeprecationWarning, module="wkcuber")
+    warnings.filterwarnings("default", category=DeprecationWarning, module="webknossos")
+
+
 def setup_logging(args: argparse.Namespace) -> None:
     log_path = Path(f"./logs/cuber_{time.strftime('%Y-%m-%d_%H%M%S')}.txt")
 
@@ -209,6 +215,7 @@ def warn_deprecated(deprecated_item: str, alternative_item: str) -> None:
     warnings.warn(
         f"[DEPRECATION] `{deprecated_item}` is deprecated, please use `{alternative_item}` instead (see {caller.filename}:{caller.lineno})",
         DeprecationWarning,
+        stacklevel=2,
     )
 
 
