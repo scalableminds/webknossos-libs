@@ -196,7 +196,6 @@ def convert_nifti(
     # Writing wkw compressed requires files of shape (shard_size, shard_size, shard_size)
     # Pad data accordingly
     padding_offset = shard_size - np.array(cube_data.shape[1:4]) % shard_size
-    padding_offset = (0, 0, 0)
     cube_data = np.pad(
         cube_data,
         (

@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.20...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.21...HEAD)
 
 ### Breaking Changes
 
@@ -20,6 +20,10 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 
 ### Fixed
 - Correctly maintain default_view_configuration property when downloading a dataset. [#677](https://github.com/scalableminds/webknossos-libs/pull/677)
+
+## [0.9.21](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.21) - 2022-04-20
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.20...v0.9.21)
+
 
 ## [0.9.20](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.20) - 2022-04-20
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.19...v0.9.20)
