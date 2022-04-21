@@ -54,6 +54,7 @@ nav:
     - webknossos/tooling.md
   - Reference:
     - webknossos/publications.md
+    - webknossos/terminology.md
     - webknossos/data_formats.md
     - Keyboard Shortcuts: webknossos/keyboard_shortcuts.md
     - Backend REST API: webknossos/rest_api.md
