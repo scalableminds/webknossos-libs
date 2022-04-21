@@ -3,7 +3,6 @@ import calendar
 import functools
 import json
 import logging
-import re
 import sys
 import time
 import warnings

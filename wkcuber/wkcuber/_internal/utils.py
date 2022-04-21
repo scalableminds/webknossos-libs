@@ -79,7 +79,7 @@ class DeprecatedSizeAction(argparse.Action):
     ) -> None:
         if option_string == "--scale":
             warnings.warn(
-                f"[DEPRECATION] `--scale` is deprecated, please use `--voxel_size` instead.",
+                "[DEPRECATION] `--scale` is deprecated, please use `--voxel_size` instead.",
                 DeprecationWarning,
             )
         setattr(namespace, self.dest, values)

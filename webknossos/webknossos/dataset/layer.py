@@ -619,7 +619,7 @@ class Layer:
         max_mag: Optional[Mag] = None,
         interpolation_mode: str = "default",
         compress: bool = True,
-        sampling_mode: str = SamplingModes.ANISOTROPIC,
+        sampling_mode: Union[str, SamplingModes] = SamplingModes.ANISOTROPIC,
         buffer_shape: Optional[Vec3Int] = None,
         force_sampling_scheme: bool = False,
         args: Optional[Namespace] = None,
@@ -665,6 +665,8 @@ class Layer:
         if max_mag is None:
             max_mag = calculate_default_max_mag(self.bounding_box.size)
 
+        sampling_mode = SamplingModes.parse(sampling_mode)
+
         if self._properties.bounding_box.size.z == 1:
             if sampling_mode != SamplingModes.CONSTANT_Z:
                 warnings.warn(
@@ -673,7 +675,7 @@ class Layer:
                 sampling_mode = SamplingModes.CONSTANT_Z
 
         voxel_size: Optional[Tuple[float, float, float]] = None
-        if sampling_mode == SamplingModes.ANISOTROPIC or sampling_mode == "auto":
+        if sampling_mode == SamplingModes.ANISOTROPIC:
             voxel_size = self.dataset.voxel_size
         elif sampling_mode == SamplingModes.ISOTROPIC:
             voxel_size = None
@@ -884,7 +886,7 @@ class Layer:
         from_mag: Mag,
         finest_mag: Mag = Mag(1),
         compress: bool = False,
-        sampling_mode: str = SamplingModes.ANISOTROPIC,
+        sampling_mode: Union[str, SamplingModes] = SamplingModes.ANISOTROPIC,
         buffer_shape: Optional[Vec3Int] = None,
         buffer_edge_len: Optional[int] = None,
         args: Optional[Namespace] = None,
@@ -911,8 +913,10 @@ class Layer:
             ), "Cannot set both min_mag and finest_mag, please only use finest_mag."
             finest_mag = min_mag
 
+        sampling_mode = SamplingModes.parse(sampling_mode)
+
         voxel_size: Optional[Tuple[float, float, float]] = None
-        if sampling_mode == SamplingModes.ANISOTROPIC or sampling_mode == "auto":
+        if sampling_mode == SamplingModes.ANISOTROPIC:
             voxel_size = self.dataset.voxel_size
         elif sampling_mode == SamplingModes.ISOTROPIC:
             voxel_size = None

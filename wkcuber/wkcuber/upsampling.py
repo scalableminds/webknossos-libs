@@ -1,6 +1,6 @@
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 from webknossos import Dataset, Mag, Vec3Int, SamplingModes
 
@@ -93,7 +93,7 @@ def upsample_mags(
     buffer_shape: Optional[Vec3Int] = None,
     compress: bool = True,
     args: Optional[Namespace] = None,
-    sampling_mode: str = SamplingModes.ANISOTROPIC,
+    sampling_mode: Union[str, SamplingModes] = SamplingModes.ANISOTROPIC,
 ) -> None:
     assert layer_name and from_mag or not layer_name and not from_mag, (
         "You provided only one of the following "

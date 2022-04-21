@@ -1,6 +1,6 @@
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 from webknossos import Dataset, Mag, Vec3Int, SamplingModes
 
@@ -105,7 +105,7 @@ def downsample_mags(
     buffer_shape: Optional[Vec3Int] = None,
     compress: bool = True,
     args: Optional[Namespace] = None,
-    sampling_mode: str = SamplingModes.ANISOTROPIC,
+    sampling_mode: Union[str, SamplingModes] = SamplingModes.ANISOTROPIC,
     force_sampling_scheme: bool = False,
 ) -> None:
     """
