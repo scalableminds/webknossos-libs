@@ -13,6 +13,8 @@ from webknossos.dataset import Dataset, LayerCategoryType
 from webknossos.dataset.properties import LayerViewConfiguration, dataset_converter
 from webknossos.geometry import BoundingBox, Mag, Vec3Int
 
+from webknossos.client._generated.types import Unset
+
 logger = logging.getLogger(__name__)
 
 
@@ -84,9 +86,10 @@ def download_dataset(
             ),
         )
 
-        default_view_configuration_dict = response_layer.additional_properties.get(
-            "defaultViewConfiguration", None
-        )
+        default_view_configuration_dict = None
+        if not isinstance(response_layer.default_view_configuration, Unset):
+            default_view_configuration_dict = response_layer.default_view_configuration.to_dict()
+
         if default_view_configuration_dict is not None:
             default_view_configuration = dataset_converter.structure(
                 default_view_configuration_dict, LayerViewConfiguration

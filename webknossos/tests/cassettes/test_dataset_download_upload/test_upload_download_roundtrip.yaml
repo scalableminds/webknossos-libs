@@ -11,14 +11,16 @@ interactions:
       content-length:
       - '0'
       host:
-      - localhost:9000
+      - webknossos.org
       user-agent:
       - python-httpx/0.18.2
     method: POST
-    uri: http://localhost:9000/api/userToken/generate
+    uri: https://webknossos.org/api/userToken/generate
   response:
     content: '{"token":"xxxsecrettokenxxx"}'
     headers:
+      connection:
+      - keep-alive
       content-length:
       - '34'
       content-type:
@@ -26,6 +28,8 @@ interactions:
       date: Mon, 01 Jan 2000 00:00:00 GMT
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
+      strict-transport-security:
+      - max-age=15724800; includeSubDomains
       x-permitted-cross-domain-policies:
       - master-only
       x-xss-protection:
@@ -42,21 +46,25 @@ interactions:
       connection:
       - keep-alive
       host:
-      - localhost:9000
+      - webknossos.org
       user-agent:
       - python-httpx/0.18.2
     method: GET
-    uri: http://localhost:9000/api/datastores
+    uri: https://webknossos.org/api/datastores
   response:
-    content: '[{"name":"connect","url":"http://localhost:8000","isForeign":false,"isScratch":false,"isConnector":true,"allowsUpload":false},{"name":"localhost","url":"http://localhost:9000","isForeign":false,"isScratch":false,"isConnector":false,"allowsUpload":true}]'
+    content: '[{"name":"data5.connect","url":"https://data5.connect.demo.webknossos.org","isForeign":false,"isScratch":false,"isConnector":true,"allowsUpload":false},{"name":"demo-mhlab","url":"https://demo.data1-brain.esc.rzg.mpg.de","isForeign":false,"isScratch":false,"isConnector":false,"allowsUpload":false},{"name":"webknossos.org","url":"https://data-humerus.webknossos.org","isForeign":false,"isScratch":false,"isConnector":false,"allowsUpload":true}]'
     headers:
+      connection:
+      - keep-alive
       content-length:
-      - '253'
+      - '445'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
+      strict-transport-security:
+      - max-age=15724800; includeSubDomains
       x-permitted-cross-domain-policies:
       - master-only
       x-xss-protection:
@@ -73,21 +81,26 @@ interactions:
       connection:
       - keep-alive
       host:
-      - localhost:9000
+      - webknossos.org
       user-agent:
       - python-httpx/0.18.2
     method: GET
-    uri: http://localhost:9000/api/user
+    uri: https://webknossos.org/api/user
   response:
-    content: '{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1460379469053,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true}'
+    content: '{"id":"5caf02710100006907d4caad","email":"philipp+demo@scm.io","firstName":"Philipp","lastName":"Otto","isAdmin":true,"isDatasetManager":false,"isActive":true,"teams":[{"id":"5b3ce78557b7414e59269427","name":"scalable
+      minds","isTeamManager":false}],"experiences":{},"lastActivity":1554973297885,"isAnonymous":false,"isEditable":true,"organization":"scalable_minds","novelUserExperienceInfos":{"lastViewedWhatsNewTimestamp":1650455584826,"shouldSeeModernControlsModal":false,"hasSeenDashboardWelcomeBanner":false},"selectedTheme":"light","created":1554973297885,"lastTaskTypeId":null,"isSuperUser":true}'
     headers:
+      connection:
+      - keep-alive
       content-length:
-      - '630'
+      - '602'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
+      strict-transport-security:
+      - max-age=15724800; includeSubDomains
       x-permitted-cross-domain-policies:
       - master-only
       x-xss-protection:
@@ -104,19 +117,23 @@ interactions:
       connection:
       - keep-alive
       host:
-      - localhost:9000
+      - webknossos.org
       user-agent:
       - python-httpx/0.18.2
     method: GET
-    uri: http://localhost:9000/api/datasets/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/isValidNewName
+    uri: https://webknossos.org/api/datasets/scalable_minds/test_upload_download_roundtrip_2000-01-01_00-00-00/isValidNewName
   response:
     content: ''
     headers:
+      connection:
+      - keep-alive
       content-length:
       - '0'
       date: Mon, 01 Jan 2000 00:00:00 GMT
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
+      strict-transport-security:
+      - max-age=15724800; includeSubDomains
       x-permitted-cross-domain-policies:
       - master-only
       x-xss-protection:
@@ -124,7 +141,7 @@ interactions:
     http_version: HTTP/1.1
     status_code: 200
 - request:
-    body: '{"uploadId": "2000-01-01T00-00-00__0011", "organization": "Organization_X",
+    body: '{"uploadId": "2000-01-01T00-00-00__0011", "organization": "scalable_minds",
       "name": "test_upload_download_roundtrip_2000-01-01_00-00-00", "totalFileCount":
       13, "initialTeams": [], "layersToLink": []}'
     headers:
@@ -139,11 +156,11 @@ interactions:
       content-type:
       - application/json
       host:
-      - localhost:9000
+      - data-humerus.webknossos.org
       user-agent:
       - python-httpx/0.18.2
     method: POST
-    uri: http://localhost:9000/data/datasets/reserveUpload
+    uri: https://data-humerus.webknossos.org/data/datasets/reserveUpload
   response:
     content: ''
     headers:
@@ -151,11 +168,17 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      connection:
+      - keep-alive
       content-length:
       - '0'
       date: Mon, 01 Jan 2000 00:00:00 GMT
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
+      strict-transport-security:
+      - max-age=15724800; includeSubDomains
+      x-frame-options:
+      - DENY
       x-permitted-cross-domain-policies:
       - master-only
       x-xss-protection:
@@ -171,7 +194,7 @@ interactions:
       form-data; name=\"resumableRelativePath\"\n\ndatasource-properties.json\n--\nContent-Disposition:
       form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
       name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n2781\n--\nContent-Disposition:
-      form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
+      form-data; name=\"owningOrganization\"\n\nscalable_minds\n--\nContent-Disposition:
       form-data; name=\"name\"\n\ntest_upload_download_roundtrip_2000-01-01_00-00-00\n--\nContent-Disposition:
       form-data; name=\"totalFileCount\"\n\n13\n--\nContent-Disposition: form-data;
       name=\"file\"; filename=\"upload\"\nContent-Type: application/octet-stream\n\n{\n
@@ -222,11 +245,11 @@ interactions:
       content-type:
       - multipart/form-data; boundary=fffffff0000000
       host:
-      - localhost:9000
+      - data-humerus.webknossos.org
       user-agent:
       - python-httpx/0.18.2
     method: POST
-    uri: http://localhost:9000/data/datasets
+    uri: https://data-humerus.webknossos.org/data/datasets
   response:
     content: ''
     headers:
@@ -234,11 +257,17 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      connection:
+      - keep-alive
       content-length:
       - '0'
       date: Mon, 01 Jan 2000 00:00:00 GMT
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
+      strict-transport-security:
+      - max-age=15724800; includeSubDomains
+      x-frame-options:
+      - DENY
       x-permitted-cross-domain-policies:
       - master-only
       x-xss-protection:
@@ -253,7 +282,7 @@ interactions:
       form-data; name=\"resumableRelativePath\"\n\nsegmentation/1/header.wkw\n--\nContent-Disposition:
       form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
       name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n16\n--\nContent-Disposition:
-      form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
+      form-data; name=\"owningOrganization\"\n\nscalable_minds\n--\nContent-Disposition:
       form-data; name=\"name\"\n\ntest_upload_download_roundtrip_2000-01-01_00-00-00\n--\nContent-Disposition:
       form-data; name=\"totalFileCount\"\n\n13\n--\nContent-Disposition: form-data;
       name=\"file\"; filename=\"upload\"\nContent-Type: application/octet-stream\n\nWKW\x01E\x03\x03\x04\0\0\0\0\0\0\0\0\n----\n"
@@ -269,11 +298,11 @@ interactions:
       content-type:
       - multipart/form-data; boundary=fffffff0000000
       host:
-      - localhost:9000
+      - data-humerus.webknossos.org
       user-agent:
       - python-httpx/0.18.2
     method: POST
-    uri: http://localhost:9000/data/datasets
+    uri: https://data-humerus.webknossos.org/data/datasets
   response:
     content: ''
     headers:
@@ -281,11 +310,17 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      connection:
+      - keep-alive
       content-length:
       - '0'
       date: Mon, 01 Jan 2000 00:00:00 GMT
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
+      strict-transport-security:
+      - max-age=15724800; includeSubDomains
+      x-frame-options:
+      - DENY
       x-permitted-cross-domain-policies:
       - master-only
       x-xss-protection:
@@ -360,7 +395,7 @@ interactions:
       Content-Disposition: form-data; name="owningOrganization"
 
 
-      Organization_X
+      scalable_minds
 
       --
 
@@ -393,11 +428,11 @@ interactions:
       content-type:
       - multipart/form-data; boundary=fffffff0000000
       host:
-      - localhost:9000
+      - data-humerus.webknossos.org
       user-agent:
       - python-httpx/0.18.2
     method: POST
-    uri: http://localhost:9000/data/datasets
+    uri: https://data-humerus.webknossos.org/data/datasets
   response:
     content: ''
     headers:
@@ -405,11 +440,17 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      connection:
+      - keep-alive
       content-length:
       - '0'
       date: Mon, 01 Jan 2000 00:00:00 GMT
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
+      strict-transport-security:
+      - max-age=15724800; includeSubDomains
+      x-frame-options:
+      - DENY
       x-permitted-cross-domain-policies:
       - master-only
       x-xss-protection:
@@ -424,7 +465,7 @@ interactions:
       form-data; name=\"resumableRelativePath\"\n\nsegmentation/2-2-1/header.wkw\n--\nContent-Disposition:
       form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
       name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n16\n--\nContent-Disposition:
-      form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
+      form-data; name=\"owningOrganization\"\n\nscalable_minds\n--\nContent-Disposition:
       form-data; name=\"name\"\n\ntest_upload_download_roundtrip_2000-01-01_00-00-00\n--\nContent-Disposition:
       form-data; name=\"totalFileCount\"\n\n13\n--\nContent-Disposition: form-data;
       name=\"file\"; filename=\"upload\"\nContent-Type: application/octet-stream\n\nWKW\x01E\x03\x03\x04\0\0\0\0\0\0\0\0\n----\n"
@@ -440,11 +481,11 @@ interactions:
       content-type:
       - multipart/form-data; boundary=fffffff0000000
       host:
-      - localhost:9000
+      - data-humerus.webknossos.org
       user-agent:
       - python-httpx/0.18.2
     method: POST
-    uri: http://localhost:9000/data/datasets
+    uri: https://data-humerus.webknossos.org/data/datasets
   response:
     content: ''
     headers:
@@ -452,11 +493,17 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      connection:
+      - keep-alive
       content-length:
       - '0'
       date: Mon, 01 Jan 2000 00:00:00 GMT
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
+      strict-transport-security:
+      - max-age=15724800; includeSubDomains
+      x-frame-options:
+      - DENY
       x-permitted-cross-domain-policies:
       - master-only
       x-xss-protection:
@@ -531,7 +578,7 @@ interactions:
       Content-Disposition: form-data; name="owningOrganization"
 
 
-      Organization_X
+      scalable_minds
 
       --
 
@@ -564,11 +611,11 @@ interactions:
       content-type:
       - multipart/form-data; boundary=fffffff0000000
       host:
-      - localhost:9000
+      - data-humerus.webknossos.org
       user-agent:
       - python-httpx/0.18.2
     method: POST
-    uri: http://localhost:9000/data/datasets
+    uri: https://data-humerus.webknossos.org/data/datasets
   response:
     content: ''
     headers:
@@ -576,11 +623,17 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      connection:
+      - keep-alive
       content-length:
       - '0'
       date: Mon, 01 Jan 2000 00:00:00 GMT
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
+      strict-transport-security:
+      - max-age=15724800; includeSubDomains
+      x-frame-options:
+      - DENY
       x-permitted-cross-domain-policies:
       - master-only
       x-xss-protection:
@@ -595,7 +648,7 @@ interactions:
       form-data; name=\"resumableRelativePath\"\n\nsegmentation/4-4-2/header.wkw\n--\nContent-Disposition:
       form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
       name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n16\n--\nContent-Disposition:
-      form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
+      form-data; name=\"owningOrganization\"\n\nscalable_minds\n--\nContent-Disposition:
       form-data; name=\"name\"\n\ntest_upload_download_roundtrip_2000-01-01_00-00-00\n--\nContent-Disposition:
       form-data; name=\"totalFileCount\"\n\n13\n--\nContent-Disposition: form-data;
       name=\"file\"; filename=\"upload\"\nContent-Type: application/octet-stream\n\nWKW\x01E\x03\x03\x04\0\0\0\0\0\0\0\0\n----\n"
@@ -611,11 +664,11 @@ interactions:
       content-type:
       - multipart/form-data; boundary=fffffff0000000
       host:
-      - localhost:9000
+      - data-humerus.webknossos.org
       user-agent:
       - python-httpx/0.18.2
     method: POST
-    uri: http://localhost:9000/data/datasets
+    uri: https://data-humerus.webknossos.org/data/datasets
   response:
     content: ''
     headers:
@@ -623,11 +676,17 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      connection:
+      - keep-alive
       content-length:
       - '0'
       date: Mon, 01 Jan 2000 00:00:00 GMT
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
+      strict-transport-security:
+      - max-age=15724800; includeSubDomains
+      x-frame-options:
+      - DENY
       x-permitted-cross-domain-policies:
       - master-only
       x-xss-protection:
@@ -702,7 +761,7 @@ interactions:
       Content-Disposition: form-data; name="owningOrganization"
 
 
-      Organization_X
+      scalable_minds
 
       --
 
@@ -735,11 +794,11 @@ interactions:
       content-type:
       - multipart/form-data; boundary=fffffff0000000
       host:
-      - localhost:9000
+      - data-humerus.webknossos.org
       user-agent:
       - python-httpx/0.18.2
     method: POST
-    uri: http://localhost:9000/data/datasets
+    uri: https://data-humerus.webknossos.org/data/datasets
   response:
     content: ''
     headers:
@@ -747,11 +806,17 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      connection:
+      - keep-alive
       content-length:
       - '0'
       date: Mon, 01 Jan 2000 00:00:00 GMT
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
+      strict-transport-security:
+      - max-age=15724800; includeSubDomains
+      x-frame-options:
+      - DENY
       x-permitted-cross-domain-policies:
       - master-only
       x-xss-protection:
@@ -766,7 +831,7 @@ interactions:
       form-data; name=\"resumableRelativePath\"\n\ncolor/1/header.wkw\n--\nContent-Disposition:
       form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
       name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n16\n--\nContent-Disposition:
-      form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
+      form-data; name=\"owningOrganization\"\n\nscalable_minds\n--\nContent-Disposition:
       form-data; name=\"name\"\n\ntest_upload_download_roundtrip_2000-01-01_00-00-00\n--\nContent-Disposition:
       form-data; name=\"totalFileCount\"\n\n13\n--\nContent-Disposition: form-data;
       name=\"file\"; filename=\"upload\"\nContent-Type: application/octet-stream\n\nWKW\x01E\x03\x01\x01\0\0\0\0\0\0\0\0\n----\n"
@@ -782,11 +847,11 @@ interactions:
       content-type:
       - multipart/form-data; boundary=fffffff0000000
       host:
-      - localhost:9000
+      - data-humerus.webknossos.org
       user-agent:
       - python-httpx/0.18.2
     method: POST
-    uri: http://localhost:9000/data/datasets
+    uri: https://data-humerus.webknossos.org/data/datasets
   response:
     content: ''
     headers:
@@ -794,11 +859,17 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      connection:
+      - keep-alive
       content-length:
       - '0'
       date: Mon, 01 Jan 2000 00:00:00 GMT
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
+      strict-transport-security:
+      - max-age=15724800; includeSubDomains
+      x-frame-options:
+      - DENY
       x-permitted-cross-domain-policies:
       - master-only
       x-xss-protection:
@@ -873,7 +944,7 @@ interactions:
       Content-Disposition: form-data; name="owningOrganization"
 
 
-      Organization_X
+      scalable_minds
 
       --
 
@@ -906,11 +977,11 @@ interactions:
       content-type:
       - multipart/form-data; boundary=fffffff0000000
       host:
-      - localhost:9000
+      - data-humerus.webknossos.org
       user-agent:
       - python-httpx/0.18.2
     method: POST
-    uri: http://localhost:9000/data/datasets
+    uri: https://data-humerus.webknossos.org/data/datasets
   response:
     content: ''
     headers:
@@ -918,11 +989,17 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      connection:
+      - keep-alive
       content-length:
       - '0'
       date: Mon, 01 Jan 2000 00:00:00 GMT
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
+      strict-transport-security:
+      - max-age=15724800; includeSubDomains
+      x-frame-options:
+      - DENY
       x-permitted-cross-domain-policies:
       - master-only
       x-xss-protection:
@@ -937,7 +1014,7 @@ interactions:
       form-data; name=\"resumableRelativePath\"\n\ncolor/2-2-1/header.wkw\n--\nContent-Disposition:
       form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
       name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n16\n--\nContent-Disposition:
-      form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
+      form-data; name=\"owningOrganization\"\n\nscalable_minds\n--\nContent-Disposition:
       form-data; name=\"name\"\n\ntest_upload_download_roundtrip_2000-01-01_00-00-00\n--\nContent-Disposition:
       form-data; name=\"totalFileCount\"\n\n13\n--\nContent-Disposition: form-data;
       name=\"file\"; filename=\"upload\"\nContent-Type: application/octet-stream\n\nWKW\x01E\x03\x01\x01\0\0\0\0\0\0\0\0\n----\n"
@@ -953,11 +1030,11 @@ interactions:
       content-type:
       - multipart/form-data; boundary=fffffff0000000
       host:
-      - localhost:9000
+      - data-humerus.webknossos.org
       user-agent:
       - python-httpx/0.18.2
     method: POST
-    uri: http://localhost:9000/data/datasets
+    uri: https://data-humerus.webknossos.org/data/datasets
   response:
     content: ''
     headers:
@@ -965,11 +1042,17 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      connection:
+      - keep-alive
       content-length:
       - '0'
       date: Mon, 01 Jan 2000 00:00:00 GMT
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
+      strict-transport-security:
+      - max-age=15724800; includeSubDomains
+      x-frame-options:
+      - DENY
       x-permitted-cross-domain-policies:
       - master-only
       x-xss-protection:
@@ -1044,7 +1127,7 @@ interactions:
       Content-Disposition: form-data; name="owningOrganization"
 
 
-      Organization_X
+      scalable_minds
 
       --
 
@@ -1077,11 +1160,11 @@ interactions:
       content-type:
       - multipart/form-data; boundary=fffffff0000000
       host:
-      - localhost:9000
+      - data-humerus.webknossos.org
       user-agent:
       - python-httpx/0.18.2
     method: POST
-    uri: http://localhost:9000/data/datasets
+    uri: https://data-humerus.webknossos.org/data/datasets
   response:
     content: ''
     headers:
@@ -1089,11 +1172,17 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      connection:
+      - keep-alive
       content-length:
       - '0'
       date: Mon, 01 Jan 2000 00:00:00 GMT
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
+      strict-transport-security:
+      - max-age=15724800; includeSubDomains
+      x-frame-options:
+      - DENY
       x-permitted-cross-domain-policies:
       - master-only
       x-xss-protection:
@@ -1108,7 +1197,7 @@ interactions:
       form-data; name=\"resumableRelativePath\"\n\ncolor/4-4-2/header.wkw\n--\nContent-Disposition:
       form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
       name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n16\n--\nContent-Disposition:
-      form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
+      form-data; name=\"owningOrganization\"\n\nscalable_minds\n--\nContent-Disposition:
       form-data; name=\"name\"\n\ntest_upload_download_roundtrip_2000-01-01_00-00-00\n--\nContent-Disposition:
       form-data; name=\"totalFileCount\"\n\n13\n--\nContent-Disposition: form-data;
       name=\"file\"; filename=\"upload\"\nContent-Type: application/octet-stream\n\nWKW\x01E\x03\x01\x01\0\0\0\0\0\0\0\0\n----\n"
@@ -1124,11 +1213,11 @@ interactions:
       content-type:
       - multipart/form-data; boundary=fffffff0000000
       host:
-      - localhost:9000
+      - data-humerus.webknossos.org
       user-agent:
       - python-httpx/0.18.2
     method: POST
-    uri: http://localhost:9000/data/datasets
+    uri: https://data-humerus.webknossos.org/data/datasets
   response:
     content: ''
     headers:
@@ -1136,11 +1225,17 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      connection:
+      - keep-alive
       content-length:
       - '0'
       date: Mon, 01 Jan 2000 00:00:00 GMT
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
+      strict-transport-security:
+      - max-age=15724800; includeSubDomains
+      x-frame-options:
+      - DENY
       x-permitted-cross-domain-policies:
       - master-only
       x-xss-protection:
@@ -1215,7 +1310,7 @@ interactions:
       Content-Disposition: form-data; name="owningOrganization"
 
 
-      Organization_X
+      scalable_minds
 
       --
 
@@ -1248,11 +1343,11 @@ interactions:
       content-type:
       - multipart/form-data; boundary=fffffff0000000
       host:
-      - localhost:9000
+      - data-humerus.webknossos.org
       user-agent:
       - python-httpx/0.18.2
     method: POST
-    uri: http://localhost:9000/data/datasets
+    uri: https://data-humerus.webknossos.org/data/datasets
   response:
     content: ''
     headers:
@@ -1260,11 +1355,17 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      connection:
+      - keep-alive
       content-length:
       - '0'
       date: Mon, 01 Jan 2000 00:00:00 GMT
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
+      strict-transport-security:
+      - max-age=15724800; includeSubDomains
+      x-frame-options:
+      - DENY
       x-permitted-cross-domain-policies:
       - master-only
       x-xss-protection:
@@ -1272,7 +1373,7 @@ interactions:
     http_version: HTTP/1.1
     status_code: 200
 - request:
-    body: '{"uploadId": "2000-01-01T00-00-00__0011", "organization": "Organization_X",
+    body: '{"uploadId": "2000-01-01T00-00-00__0011", "organization": "scalable_minds",
       "name": "test_upload_download_roundtrip_2000-01-01_00-00-00", "needsConversion":
       false, "layersToLink": []}'
     headers:
@@ -1287,11 +1388,11 @@ interactions:
       content-type:
       - application/json
       host:
-      - localhost:9000
+      - data-humerus.webknossos.org
       user-agent:
       - python-httpx/0.18.2
     method: POST
-    uri: http://localhost:9000/data/datasets/finishUpload
+    uri: https://data-humerus.webknossos.org/data/datasets/finishUpload
   response:
     content: ''
     headers:
@@ -1299,11 +1400,17 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      connection:
+      - keep-alive
       content-length:
       - '0'
       date: Mon, 01 Jan 2000 00:00:00 GMT
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
+      strict-transport-security:
+      - max-age=15724800; includeSubDomains
+      x-frame-options:
+      - DENY
       x-permitted-cross-domain-policies:
       - master-only
       x-xss-protection:
@@ -1320,21 +1427,25 @@ interactions:
       connection:
       - keep-alive
       host:
-      - localhost:9000
+      - webknossos.org
       user-agent:
       - python-httpx/0.18.2
     method: GET
-    uri: http://localhost:9000/api/datasets/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00
+    uri: https://webknossos.org/api/datasets/scalable_minds/test_upload_download_roundtrip_2000-01-01_00-00-00
   response:
-    content: '{"name":"test_upload_download_roundtrip_2022-04-06_16-09-36","dataSource":{"id":{"name":"test_upload_download_roundtrip_2022-04-06_16-09-36","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isForeign":false,"isScratch":false,"isConnector":false,"allowsUpload":true},"owningOrganization":"Organization_X","allowedTeams":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1649261376509,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1649261376509,"details":null,"publication":null,"isUnreported":false,"isForeign":false,"jobsEnabled":false,"tags":[]}'
+    content: '{"name":"test_upload_download_roundtrip_2022-04-21_07-48-54","dataSource":{"id":{"name":"test_upload_download_roundtrip_2022-04-21_07-48-54","team":"scalable_minds"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"webknossos.org","url":"https://data-humerus.webknossos.org","isForeign":false,"isScratch":false,"isConnector":false,"allowsUpload":true},"owningOrganization":"scalable_minds","allowedTeams":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1650527335114,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"https://static.webknossos.org/logos/scalableminds.svg","sortingKey":1650527335114,"details":null,"publication":null,"isUnreported":false,"isForeign":false,"jobsEnabled":true,"tags":[]}'
     headers:
+      connection:
+      - keep-alive
       content-length:
-      - '1214'
+      - '1257'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
+      strict-transport-security:
+      - max-age=15724800; includeSubDomains
       x-permitted-cross-domain-policies:
       - master-only
       x-xss-protection:
@@ -1351,11 +1462,11 @@ interactions:
       connection:
       - keep-alive
       host:
-      - localhost:9000
+      - data-humerus.webknossos.org
       user-agent:
       - python-httpx/0.18.2
     method: GET
-    uri: http://localhost:9000/data/datasets/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/layers/color/data?depth=10&halfByte=false&height=10&resolution=0&width=10&x=2807&y=4352&z=1794
+    uri: https://data-humerus.webknossos.org/data/datasets/scalable_minds/test_upload_download_roundtrip_2000-01-01_00-00-00/layers/color/data?depth=10&halfByte=false&height=10&resolution=0&width=10&x=2807&y=4352&z=1794
   response:
     content: !!binary |
       g5GThpWTi4l+gY6UkpCKh5h9k4qNmZGZepaTjn6Dk4qOg4qFgIyGl4OBkZqakH2ThIKPjYaUkJyC
@@ -1383,6 +1494,8 @@ interactions:
       - MISSING-BUCKETS
       access-control-max-age:
       - '600'
+      connection:
+      - keep-alive
       content-length:
       - '1000'
       content-type:
@@ -1392,6 +1505,10 @@ interactions:
       - '[]'
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
+      strict-transport-security:
+      - max-age=15724800; includeSubDomains
+      x-frame-options:
+      - DENY
       x-permitted-cross-domain-policies:
       - master-only
       x-xss-protection:
@@ -1408,11 +1525,11 @@ interactions:
       connection:
       - keep-alive
       host:
-      - localhost:9000
+      - data-humerus.webknossos.org
       user-agent:
       - python-httpx/0.18.2
     method: GET
-    uri: http://localhost:9000/data/datasets/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/layers/color/data?depth=10&halfByte=false&height=5&resolution=1&width=6&x=2806&y=4352&z=1794
+    uri: https://data-humerus.webknossos.org/data/datasets/scalable_minds/test_upload_download_roundtrip_2000-01-01_00-00-00/layers/color/data?depth=10&halfByte=false&height=5&resolution=1&width=6&x=2806&y=4352&z=1794
   response:
     content: !!binary |
       iJKNj4OGkY+GjImGg4mXiYZ2doCDjHduaW1uZWlojpKNk4J6hY2Oio57iouLhYFrd3yDbmlkcG5r
@@ -1428,6 +1545,8 @@ interactions:
       - MISSING-BUCKETS
       access-control-max-age:
       - '600'
+      connection:
+      - keep-alive
       content-length:
       - '300'
       content-type:
@@ -1437,6 +1556,10 @@ interactions:
       - '[]'
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
+      strict-transport-security:
+      - max-age=15724800; includeSubDomains
+      x-frame-options:
+      - DENY
       x-permitted-cross-domain-policies:
       - master-only
       x-xss-protection:
@@ -1453,11 +1576,11 @@ interactions:
       connection:
       - keep-alive
       host:
-      - localhost:9000
+      - data-humerus.webknossos.org
       user-agent:
       - python-httpx/0.18.2
     method: GET
-    uri: http://localhost:9000/data/datasets/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/layers/color/data?depth=5&halfByte=false&height=3&resolution=2&width=4&x=2804&y=4352&z=1794
+    uri: https://data-humerus.webknossos.org/data/datasets/scalable_minds/test_upload_download_roundtrip_2000-01-01_00-00-00/layers/color/data?depth=5&halfByte=false&height=3&resolution=2&width=4&x=2804&y=4352&z=1794
   response:
     content: !!binary |
       iI2Ld3SGg2pzb2pogYZva3JwZ2qIgoh6ZWZteHptcnmSkI+Qa3GFgYaCcHKSj46Lb26BhYZ+cGqF
@@ -1469,6 +1592,8 @@ interactions:
       - MISSING-BUCKETS
       access-control-max-age:
       - '600'
+      connection:
+      - keep-alive
       content-length:
       - '60'
       content-type:
@@ -1478,6 +1603,10 @@ interactions:
       - '[]'
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
+      strict-transport-security:
+      - max-age=15724800; includeSubDomains
+      x-frame-options:
+      - DENY
       x-permitted-cross-domain-policies:
       - master-only
       x-xss-protection:
@@ -1494,11 +1623,11 @@ interactions:
       connection:
       - keep-alive
       host:
-      - localhost:9000
+      - data-humerus.webknossos.org
       user-agent:
       - python-httpx/0.18.2
     method: GET
-    uri: http://localhost:9000/data/datasets/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/layers/segmentation/data?depth=10&halfByte=false&height=10&resolution=0&width=10&x=2807&y=4352&z=1794
+    uri: https://data-humerus.webknossos.org/data/datasets/scalable_minds/test_upload_download_roundtrip_2000-01-01_00-00-00/layers/segmentation/data?depth=10&halfByte=false&height=10&resolution=0&width=10&x=2807&y=4352&z=1794
   response:
     content: !!binary |
       buZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu
@@ -1579,6 +1708,8 @@ interactions:
       - MISSING-BUCKETS
       access-control-max-age:
       - '600'
+      connection:
+      - keep-alive
       content-length:
       - '4000'
       content-type:
@@ -1588,6 +1719,10 @@ interactions:
       - '[]'
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
+      strict-transport-security:
+      - max-age=15724800; includeSubDomains
+      x-frame-options:
+      - DENY
       x-permitted-cross-domain-policies:
       - master-only
       x-xss-protection:
@@ -1604,11 +1739,11 @@ interactions:
       connection:
       - keep-alive
       host:
-      - localhost:9000
+      - data-humerus.webknossos.org
       user-agent:
       - python-httpx/0.18.2
     method: GET
-    uri: http://localhost:9000/data/datasets/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/layers/segmentation/data?depth=10&halfByte=false&height=5&resolution=1&width=6&x=2806&y=4352&z=1794
+    uri: https://data-humerus.webknossos.org/data/datasets/scalable_minds/test_upload_download_roundtrip_2000-01-01_00-00-00/layers/segmentation/data?depth=10&halfByte=false&height=5&resolution=1&width=6&x=2806&y=4352&z=1794
   response:
     content: !!binary |
       buZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu
@@ -1640,6 +1775,8 @@ interactions:
       - MISSING-BUCKETS
       access-control-max-age:
       - '600'
+      connection:
+      - keep-alive
       content-length:
       - '1200'
       content-type:
@@ -1649,6 +1786,10 @@ interactions:
       - '[]'
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
+      strict-transport-security:
+      - max-age=15724800; includeSubDomains
+      x-frame-options:
+      - DENY
       x-permitted-cross-domain-policies:
       - master-only
       x-xss-protection:
@@ -1665,11 +1806,11 @@ interactions:
       connection:
       - keep-alive
       host:
-      - localhost:9000
+      - data-humerus.webknossos.org
       user-agent:
       - python-httpx/0.18.2
     method: GET
-    uri: http://localhost:9000/data/datasets/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/layers/segmentation/data?depth=5&halfByte=false&height=3&resolution=2&width=4&x=2804&y=4352&z=1794
+    uri: https://data-humerus.webknossos.org/data/datasets/scalable_minds/test_upload_download_roundtrip_2000-01-01_00-00-00/layers/segmentation/data?depth=5&halfByte=false&height=3&resolution=2&width=4&x=2804&y=4352&z=1794
   response:
     content: !!binary |
       buZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwAf1E8AH9RPAB/UTwAf1E8AbuZPAG7mTwBu
@@ -1684,6 +1825,8 @@ interactions:
       - MISSING-BUCKETS
       access-control-max-age:
       - '600'
+      connection:
+      - keep-alive
       content-length:
       - '240'
       content-type:
@@ -1693,6 +1836,10 @@ interactions:
       - '[]'
       referrer-policy:
       - origin-when-cross-origin, strict-origin-when-cross-origin
+      strict-transport-security:
+      - max-age=15724800; includeSubDomains
+      x-frame-options:
+      - DENY
       x-permitted-cross-domain-policies:
       - master-only
       x-xss-protection:
