@@ -290,8 +290,13 @@ class Layer:
             )
         return self.mags[mag]
 
-    def get_best_mag(self) -> MagView:
+    def get_finest_mag(self) -> MagView:
         return self.get_mag(min(self.mags.keys()))
+
+    def get_best_mag(self) -> MagView:
+        """Deprecated, please use `get_finest_mag`."""
+        warn_deprecated("get_best_mag()", "get_finest_mag()")
+        return self.get_finest_mag()
 
     def add_mag(
         self,
@@ -877,26 +882,34 @@ class Layer:
     def upsample(
         self,
         from_mag: Mag,
-        min_mag: Optional[Mag],
-        compress: bool,
+        finest_mag: Mag = Mag(1),
+        compress: bool = False,
         sampling_mode: str = SamplingModes.ANISOTROPIC,
         buffer_shape: Optional[Vec3Int] = None,
         buffer_edge_len: Optional[int] = None,
         args: Optional[Namespace] = None,
+        *,
+        min_mag: Optional[Mag] = None,
     ) -> None:
         """
-        Upsamples the data starting from `from_mag` as long as the magnification is `>= min_mag`.
+        Upsamples the data starting from `from_mag` as long as the magnification is `>= finest_mag`.
         There are three different `sampling_modes`:
         - 'anisotropic' - The next magnification is chosen so that the width, height and depth of a downsampled voxel assimilate. For example, if the z resolution is worse than the x/y resolution, z won't be downsampled in the first downsampling step(s). As a basis for this method, the voxel_size from the datasource-properties.json is used.
         - 'isotropic' - Each dimension is downsampled equally.
         - 'constant_z' - The x and y dimensions are downsampled equally, but the z dimension remains the same.
+
+        `min_mag` is deprecated, please use `finest_mag` instead.
         """
         assert (
             from_mag in self.mags.keys()
         ), f"Failed to upsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
 
-        if min_mag is None:
-            min_mag = Mag(1)
+        if min_mag is not None:
+            warn_deprecated("upsample(min_mag=…)", "upsample(finest_mag=…)")
+            assert finest_mag == Mag(
+                1
+            ), "Cannot set both min_mag and finest_mag, please only use finest_mag."
+            finest_mag = min_mag
 
         voxel_size: Optional[Tuple[float, float, float]] = None
         if sampling_mode == SamplingModes.ANISOTROPIC or sampling_mode == "auto":
@@ -904,9 +917,9 @@ class Layer:
         elif sampling_mode == SamplingModes.ISOTROPIC:
             voxel_size = None
         elif sampling_mode == SamplingModes.CONSTANT_Z:
-            min_mag_with_fixed_z = min_mag.to_list()
-            min_mag_with_fixed_z[2] = from_mag.to_list()[2]
-            min_mag = Mag(min_mag_with_fixed_z)
+            finest_mag_with_fixed_z = finest_mag.to_list()
+            finest_mag_with_fixed_z[2] = from_mag.to_list()[2]
+            finest_mag = Mag(finest_mag_with_fixed_z)
             voxel_size = self.dataset.voxel_size
         else:
             raise AttributeError(
@@ -916,7 +929,7 @@ class Layer:
         if buffer_shape is None and buffer_edge_len is not None:
             buffer_shape = Vec3Int.full(buffer_edge_len)
 
-        mags_to_upsample = calculate_mags_to_upsample(from_mag, min_mag, voxel_size)
+        mags_to_upsample = calculate_mags_to_upsample(from_mag, finest_mag, voxel_size)
 
         for prev_mag, target_mag in zip(
             [from_mag] + mags_to_upsample[:-1], mags_to_upsample

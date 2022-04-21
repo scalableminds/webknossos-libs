@@ -589,8 +589,8 @@ class Dataset:
         )
         for mag_dir in layer.path.iterdir():
             layer.add_mag_for_existing_files(mag_dir.name)
-        min_mag_view = layer.mags[min(layer.mags)]
-        layer.bounding_box = infer_bounding_box_existing_files(min_mag_view)
+        finest_mag_view = layer.mags[min(layer.mags)]
+        layer.bounding_box = infer_bounding_box_existing_files(finest_mag_view)
         return layer
 
     def get_segmentation_layer(self) -> SegmentationLayer:

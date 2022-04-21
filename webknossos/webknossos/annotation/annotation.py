@@ -572,7 +572,7 @@ class Annotation:
                 layer_name, category="segmentation", largest_segment_id=0
             ),
         )
-        best_mag_view = layer.get_best_mag()
+        best_mag_view = layer.get_finest_mag()
 
         if largest_segment_id is None:
             max_value = max(

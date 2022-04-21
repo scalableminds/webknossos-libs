@@ -251,9 +251,9 @@ def merge_with_fallback_layer(
 
     input_segmentation_mag = input_segmentation_dataset.get_layer(
         segmentation_layer_path.name
-    ).get_best_mag()
+    ).get_finest_mag()
     with temporary_annotation_view(volume_annotation_path) as input_annotation_layer:
-        input_annotation_mag = input_annotation_layer.get_best_mag()
+        input_annotation_mag = input_annotation_layer.get_finest_mag()
         bboxes = [
             bbox.in_mag(input_annotation_mag._mag)
             for bbox in input_annotation_mag.get_bounding_boxes_on_disk()

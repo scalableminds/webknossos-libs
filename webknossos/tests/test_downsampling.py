@@ -275,13 +275,13 @@ def test_anisotropic_mag_calculation() -> None:
         ), f"The calculated downsampling scheme of the {i+1}-th test case is wrong."
 
     for i in range(len(mag_tests)):
-        voxel_size, min_mag_name, from_mag_name, scheme = mag_tests[i]
+        voxel_size, finest_mag_name, from_mag_name, scheme = mag_tests[i]
         sampling_scheme = [Mag(m) for m in scheme]
         from_mag = Mag(from_mag_name)
-        min_mag = Mag(min_mag_name)
+        finest_mag = Mag(finest_mag_name)
 
         assert list(reversed(sampling_scheme[:-1])) == calculate_mags_to_upsample(
-            from_mag, min_mag, voxel_size
+            from_mag, finest_mag, voxel_size
         ), f"The calculated upsampling scheme of the {i+1}-th test case is wrong."
 
 

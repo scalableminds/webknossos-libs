@@ -110,7 +110,7 @@ def upsample_mags(
 
     Dataset.open(path).get_layer(layer_name).upsample(
         from_mag=from_mag,
-        min_mag=target_mag,
+        finest_mag=target_mag,
         compress=compress,
         sampling_mode=sampling_mode,
         buffer_shape=buffer_shape,

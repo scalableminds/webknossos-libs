@@ -50,7 +50,7 @@ def test_annotation_from_zip_file() -> None:
     assert len(list(copied_annotation.get_volume_layer_names())) == 1
 
     with annotation.temporary_volume_layer_copy() as volume_layer:
-        input_annotation_mag = volume_layer.get_best_mag()
+        input_annotation_mag = volume_layer.get_finest_mag()
         voxel_id = input_annotation_mag.read(
             absolute_offset=Vec3Int(2830, 4356, 1792), size=Vec3Int.full(1)
         )
@@ -87,7 +87,7 @@ def test_annotation_from_file_with_multi_volume() -> None:
     with annotation.temporary_volume_layer_copy(
         volume_layer_name=volume_names[0]
     ) as layer:
-        read_voxel = layer.get_best_mag().read(
+        read_voxel = layer.get_finest_mag().read(
             absolute_offset=(590, 512, 16),
             size=(1, 1, 1),
         )
@@ -95,7 +95,7 @@ def test_annotation_from_file_with_multi_volume() -> None:
             read_voxel == 7718
         ), f"Expected to see voxel id 7718, but saw {read_voxel} instead."
 
-        read_voxel = layer.get_best_mag().read(
+        read_voxel = layer.get_finest_mag().read(
             absolute_offset=(490, 512, 16),
             size=(1, 1, 1),
         )
@@ -110,7 +110,7 @@ def test_annotation_from_file_with_multi_volume() -> None:
     with annotation.temporary_volume_layer_copy(
         volume_layer_name=volume_names[1]
     ) as layer:
-        read_voxel = layer.get_best_mag().read(
+        read_voxel = layer.get_finest_mag().read(
             absolute_offset=(590, 512, 16),
             size=(1, 1, 1),
         )
@@ -118,7 +118,7 @@ def test_annotation_from_file_with_multi_volume() -> None:
             read_voxel == 1
         ), f"Expected to see voxel id 1, but saw {read_voxel} instead."
 
-        read_voxel = layer.get_best_mag().read(
+        read_voxel = layer.get_finest_mag().read(
             absolute_offset=(490, 512, 16),
             size=(1, 1, 1),
         )

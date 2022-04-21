@@ -13,10 +13,10 @@ def main() -> None:
     stats_per_id = {}
     with annotation.temporary_volume_layer_copy() as seg_layer:
         voxel_size = (
-            np.array(annotation.voxel_size) * seg_layer.get_best_mag().mag.to_np()
+            np.array(annotation.voxel_size) * seg_layer.get_finest_mag().mag.to_np()
         )
         seg_data = np.stack(
-            [view.read() for view in seg_layer.get_best_mag().get_views_on_disk()]
+            [view.read() for view in seg_layer.get_finest_mag().get_views_on_disk()]
         )
         uniques, counts = np.unique(seg_data, return_counts=True)
         for _id, count in zip(uniques, counts):

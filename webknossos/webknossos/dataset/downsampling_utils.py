@@ -85,11 +85,11 @@ def calculate_mags_to_downsample(
 
 
 def calculate_mags_to_upsample(
-    from_mag: Mag, min_mag: Mag, voxel_size: Optional[Tuple[float, float, float]]
+    from_mag: Mag, finest_mag: Mag, voxel_size: Optional[Tuple[float, float, float]]
 ) -> List[Mag]:
-    return list(reversed(calculate_mags_to_downsample(min_mag, from_mag, voxel_size)))[
-        1:
-    ] + [min_mag]
+    return list(
+        reversed(calculate_mags_to_downsample(finest_mag, from_mag, voxel_size))
+    )[1:] + [finest_mag]
 
 
 def calculate_default_max_mag(dataset_size: Vec3IntLike) -> Mag:
