@@ -8,12 +8,11 @@ from rich.progress import track
 
 from webknossos.client._generated.api.datastore import dataset_download
 from webknossos.client._generated.api.default import dataset_info
+from webknossos.client._generated.types import Unset
 from webknossos.client.context import _get_context, _get_generated_client
 from webknossos.dataset import Dataset, LayerCategoryType
 from webknossos.dataset.properties import LayerViewConfiguration, dataset_converter
 from webknossos.geometry import BoundingBox, Mag, Vec3Int
-
-from webknossos.client._generated.types import Unset
 
 logger = logging.getLogger(__name__)
 
