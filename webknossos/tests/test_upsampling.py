@@ -3,8 +3,8 @@ from pathlib import Path
 import numpy as np
 
 from webknossos import COLOR_CATEGORY, Dataset, Mag, Vec3Int
-from webknossos.dataset.downsampling_utils import SamplingModes
-from webknossos.dataset.upsampling_utils import upsample_cube, upsample_cube_job
+from webknossos.dataset._upsampling_utils import upsample_cube, upsample_cube_job
+from webknossos.dataset.sampling_modes import SamplingModes
 
 WKW_CUBE_SIZE = 1024
 BUFFER_SHAPE = Vec3Int.full(256)

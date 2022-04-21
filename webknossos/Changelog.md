@@ -18,7 +18,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
     All previous entities are still available, but deprecated.
   * `scale` has changed to `voxel_size` for datasets, skeletons and annotations.
     Changes in `Dataset` are backwards-compatible, but `scale` is deprecated.
-    For `Annotation` and `Skeletons` the changes are breaking, `scale` is not supported anymore.
+    For `Annotation` and `Skeletons` the initializer only supports `voxel_size`, the `scale` attribute is deprecated
   * `get_best_mag` is deprecated, please use `get_finest_mag` instead
   * In `layer.upscale`, `min_mag` is deprecated in favor of `finest_mag`
 

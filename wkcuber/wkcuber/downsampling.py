@@ -2,8 +2,7 @@ from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from typing import Optional
 
-from webknossos import Dataset, Mag, Vec3Int
-from webknossos.dataset.downsampling_utils import SamplingModes
+from webknossos import Dataset, Mag, Vec3Int, SamplingModes
 
 from ._internal.utils import (
     add_distribution_flags,

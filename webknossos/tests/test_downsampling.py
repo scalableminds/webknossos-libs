@@ -5,9 +5,8 @@ import numpy as np
 import pytest
 
 from webknossos import COLOR_CATEGORY, Dataset, Mag, Vec3Int
-from webknossos.dataset.downsampling_utils import (
+from webknossos.dataset._downsampling_utils import (
     InterpolationModes,
-    SamplingModes,
     _mode,
     calculate_default_max_mag,
     calculate_mags_to_downsample,
@@ -16,6 +15,7 @@ from webknossos.dataset.downsampling_utils import (
     downsample_cube_job,
     non_linear_filter_3d,
 )
+from webknossos.dataset.sampling_modes import SamplingModes
 
 BUFFER_SHAPE = Vec3Int.full(256)
 

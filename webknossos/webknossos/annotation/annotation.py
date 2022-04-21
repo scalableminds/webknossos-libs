@@ -154,6 +154,18 @@ class Annotation:
         self.skeleton.voxel_size = voxel_size
 
     @property
+    def scale(self) -> Tuple[float, float, float]:
+        """Deprecated, please use `voxel_size`."""
+        warn_deprecated("scale", "voxel_size")
+        return self.voxel_size
+
+    @scale.setter
+    def scale(self, scale: Tuple[float, float, float]) -> None:
+        """Deprecated, please use `voxel_size`."""
+        warn_deprecated("scale", "voxel_size")
+        self.voxel_size = scale
+
+    @property
     def organization_id(self) -> Optional[str]:
         """This attribute is a proxy for `skeleton.organization_id`."""
         return self.skeleton.organization_id

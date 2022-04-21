@@ -19,7 +19,7 @@ from webknossos import (
     View,
 )
 from webknossos.dataset.defaults import DEFAULT_CHUNK_SIZE
-from webknossos.dataset.downsampling_utils import (
+from webknossos.dataset._downsampling_utils import (
     InterpolationModes,
     downsample_unpadded_data,
     parse_interpolation_mode,

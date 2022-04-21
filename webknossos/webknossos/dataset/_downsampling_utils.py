@@ -16,12 +16,6 @@ from .layer_categories import LayerCategoryType
 from .view import View
 
 
-class SamplingModes:
-    ANISOTROPIC = "anisotropic"
-    ISOTROPIC = "isotropic"
-    CONSTANT_Z = "constant_z"
-
-
 class InterpolationModes(Enum):
     MEDIAN = 0
     MODE = 1

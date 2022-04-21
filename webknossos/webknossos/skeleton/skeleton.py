@@ -66,6 +66,18 @@ class Skeleton(Group):
         self._skeleton = self
         super().__attrs_post_init__()  # sets self._id
 
+    @property
+    def scale(self) -> Tuple[float, float, float]:
+        """Deprecated, please use `voxel_size`."""
+        warn_deprecated("scale", "voxel_size")
+        return self.voxel_size
+
+    @scale.setter
+    def scale(self, scale: Tuple[float, float, float]) -> None:
+        """Deprecated, please use `voxel_size`."""
+        warn_deprecated("scale", "voxel_size")
+        self.voxel_size = scale
+
     @staticmethod
     def load(file_path: Union[PathLike, str]) -> "Skeleton":
         """Loads a `.nml` file or a `.zip` file containing an NML (and possibly also volume
