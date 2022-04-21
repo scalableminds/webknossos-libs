@@ -125,6 +125,7 @@ class Dataset:
         it is opened (the provided voxel_size and name are asserted to match the existing dataset).
         Currently exist_ok=True is the deprecated default and will change in future releases.
         Please use `Dataset.open` if you intend to open an existing dataset and don't want/need the creation behavior.
+        `scale` is deprecated, please use `voxel_size` instead.
         """
         if scale is not None:
             assert (
@@ -904,6 +905,7 @@ class Dataset:
 
     @property
     def scale(self) -> Tuple[float, float, float]:
+        """Deprecated, use `voxel_size` instead."""
         warn_deprecated("scale", "voxel_size")
         return self._properties.scale
 
