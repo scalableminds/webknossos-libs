@@ -103,7 +103,7 @@ def _make_tiff_name(name: str, slice_index: int) -> str:
 
 def _slice_to_image(data_slice: np.ndarray, downsample: int = 1) -> Image:
     if data_slice.shape[0] == 1:
-        # discard greyvoxel_size dimension
+        # discard greyscale dimension
         data_slice = data_slice.squeeze(axis=0)
         # swap the axis
         data_slice = data_slice.transpose((1, 0))
