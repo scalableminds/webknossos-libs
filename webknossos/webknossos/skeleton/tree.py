@@ -229,6 +229,8 @@ class Tree(nx.Graph):
 
 
 class Graph(Tree):
+    """Deprecated, please use `Tree` instead."""
+
     def __init__(
         self,
         name: str,
