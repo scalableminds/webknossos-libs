@@ -98,7 +98,7 @@ nav:
     - Skeleton:
       - Skeleton: api/webknossos/skeleton/skeleton.md
       - Group: api/webknossos/skeleton/group.md
-      - Graph: api/webknossos/skeleton/graph.md
+      - Tree: api/webknossos/skeleton/tree.md
       - Node: api/webknossos/skeleton/node.md
     - Authentication & Server Context: api/webknossos/client/context.md
     - Administration:
