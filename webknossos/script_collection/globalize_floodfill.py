@@ -266,7 +266,7 @@ def merge_with_fallback_layer(
         ]
         output_mag = output_layer.get_mag(input_segmentation_mag.mag)
 
-        cube_size = output_mag.info.chunk_size[0] * output_mag.info.chunks_per_shard[0]
+        cube_size = output_mag.info.chunk_shape[0] * output_mag.info.chunks_per_shard[0]
         chunks_with_bboxes = BoundingBox.group_boxes_with_aligned_mag(
             bboxes, Mag(cube_size)
         )
