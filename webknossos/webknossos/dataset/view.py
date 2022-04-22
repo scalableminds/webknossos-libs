@@ -257,7 +257,7 @@ class View:
     def _handle_compressed_write(
         self, current_mag_bbox: BoundingBox, data: np.ndarray
     ) -> Tuple[BoundingBox, np.ndarray]:
-        aligned_bbox = current_mag_bbox.align_with_mag(self.info.shard_size, ceil=True)
+        aligned_bbox = current_mag_bbox.align_with_mag(self.info.shard_shape, ceil=True)
 
         if current_mag_bbox != aligned_bbox:
 
@@ -574,7 +574,7 @@ class View:
 
             current_mag_bbox = mag1_bbox.in_mag(self._mag)
             current_mag_aligned_bbox = current_mag_bbox.align_with_mag(
-                self.info.shard_size, ceil=True
+                self.info.shard_shape, ceil=True
             )
             # The data bbox should either be aligned or match the dataset's bounding box:
             current_mag_view_bbox = self.bounding_box.in_mag(self._mag)
@@ -696,14 +696,15 @@ class View:
     def for_each_chunk(
         self,
         func_per_chunk: Callable[[Tuple["View", int]], None],
-        chunk_size: Optional[Vec3IntLike] = None,  # in Mag(1)
+        chunk_shape: Optional[Vec3IntLike] = None,  # in Mag(1)
+        chunk_size: Optional[Vec3IntLike] = None,  # deprecated
         executor: Optional[
             Union[ClusterExecutor, cluster_tools.WrappedProcessPoolExecutor]
         ] = None,
         progress_desc: Optional[str] = None,
     ) -> None:
         """
-        The view is chunked into multiple sub-views of size `chunk_size` (in Mag(1)),
+        The view is chunked into multiple sub-views of size `chunk_shape` (in Mag(1)),
         by default one chunk per file.
         Then, `func_per_chunk` is performed on each sub-view.
         Besides the view, the counter `i` is passed to the `func_per_chunk`,
@@ -732,14 +733,19 @@ class View:
         ```
         """
 
-        if chunk_size is None:
-            chunk_size = self._get_file_dimensions_mag1()
+        if chunk_shape is None:
+            if chunk_size is not None:
+                warn_deprecated("chunk_size", "chunk_shape")
+                chunk_shape = Vec3Int(chunk_size)
+                self._check_chunk_shape(chunk_shape, read_only=self.read_only)
+            else:
+                chunk_shape = self._get_file_dimensions_mag1()
         else:
-            chunk_size = Vec3Int(chunk_size)
-            self._check_chunk_size(chunk_size, read_only=self.read_only)
+            chunk_shape = Vec3Int(chunk_shape)
+            self._check_chunk_shape(chunk_shape, read_only=self.read_only)
 
         job_args = []
-        for i, chunk in enumerate(self.bounding_box.chunk(chunk_size, chunk_size)):
+        for i, chunk in enumerate(self.bounding_box.chunk(chunk_shape, chunk_shape)):
             chunk_view = self.get_view(
                 absolute_offset=chunk.topleft,
                 size=chunk.size,
@@ -771,8 +777,10 @@ class View:
         self,
         func_per_chunk: Callable[[Tuple["View", "View", int]], None],
         target_view: "View",
-        source_chunk_size: Optional[Vec3IntLike] = None,  # in Mag(1)
-        target_chunk_size: Optional[Vec3IntLike] = None,  # in Mag(1)
+        source_chunk_shape: Optional[Vec3IntLike] = None,  # in Mag(1)
+        target_chunk_shape: Optional[Vec3IntLike] = None,  # in Mag(1)
+        source_chunk_size: Optional[Vec3IntLike] = None,  # deprecated
+        target_chunk_size: Optional[Vec3IntLike] = None,  # deprecated
         executor: Optional[
             Union[ClusterExecutor, cluster_tools.WrappedProcessPoolExecutor]
         ] = None,
@@ -780,7 +788,7 @@ class View:
     ) -> None:
         """
         This method is similar to `for_each_chunk` in the sense that it delegates work to smaller chunks,
-        given by `source_chunk_size` and `target_chunk_size` (both in Mag(1),
+        given by `source_chunk_shape` and `target_chunk_shape` (both in Mag(1),
         by default using the larger of the source_views and the target_views file-sizes).
         However, this method also takes another view as a parameter. Both views are chunked simultaneously
         and a matching pair of chunks is then passed to the function that shall be executed.
@@ -789,10 +797,10 @@ class View:
         Additionally to the two views, the counter `i` is passed to the `func_per_chunk`, which can be used for logging.
 
         The mapping of chunks from the source view to the target is bijective.
-        The ratio between the size of the `source_view` (`self`) and the `source_chunk_size` must be equal to
-        the ratio between the `target_view` and the `target_chunk_size`. This guarantees that the number of chunks
+        The ratio between the size of the `source_view` (`self`) and the `source_chunk_shape` must be equal to
+        the ratio between the `target_view` and the `target_chunk_shape`. This guarantees that the number of chunks
         in the `source_view` is equal to the number of chunks in the `target_view`.
-        The `target_chunk_size` must be a multiple of the file size on disk to avoid concurrent writes.
+        The `target_chunk_shape` must be a multiple of the file size on disk to avoid concurrent writes.
 
         Example use case: *downsampling from Mag(1) to Mag(2)*
         - size of the views: `16384³` (`8192³` in Mag(2) for `target_view`)
@@ -800,20 +808,28 @@ class View:
           (`1024³` in Mag(2), which fits the default file-length of 32*32)
         """
 
-        if source_chunk_size is None or target_chunk_size is None:
+        if source_chunk_shape is None and source_chunk_size is not None:
+            warn_deprecated("source_chunk_size", "source_chunk_shape")
+            source_chunk_shape = source_chunk_size
+
+        if target_chunk_shape is None and target_chunk_size is not None:
+            warn_deprecated("target_chunk_size", "target_chunk_shape")
+            target_chunk_shape = target_chunk_size
+
+        if source_chunk_shape is None or target_chunk_shape is None:
             assert (
-                source_chunk_size is None and target_chunk_size is None
-            ), "Either both source_chunk_size and target_chunk_size must be given or none."
-            source_chunk_size = self._get_file_dimensions_mag1().pairmax(
+                source_chunk_shape is None and target_chunk_shape is None
+            ), "Either both source_chunk_shape and target_chunk_shape must be given or none."
+            source_chunk_shape = self._get_file_dimensions_mag1().pairmax(
                 target_view._get_file_dimensions_mag1()
             )
-            target_chunk_size = source_chunk_size
+            target_chunk_shape = source_chunk_shape
         else:
-            source_chunk_size = Vec3Int(source_chunk_size)
-            target_chunk_size = Vec3Int(target_chunk_size)
-            self._check_chunk_size(source_chunk_size, read_only=True)
-            target_view._check_chunk_size(
-                target_chunk_size, read_only=target_view.read_only
+            source_chunk_shape = Vec3Int(source_chunk_shape)
+            target_chunk_shape = Vec3Int(target_chunk_shape)
+            self._check_chunk_shape(source_chunk_shape, read_only=True)
+            target_view._check_chunk_shape(
+                target_chunk_shape, read_only=target_view.read_only
             )
 
         assert (
@@ -824,18 +840,18 @@ class View:
         ), "Calling 'for_zipped_chunks' failed because the size of the target view contains a 0."
         assert np.array_equal(
             self.bounding_box.size.to_np() / target_view.bounding_box.size.to_np(),
-            source_chunk_size.to_np() / target_chunk_size.to_np(),
+            source_chunk_shape.to_np() / target_chunk_shape.to_np(),
         ), (
             "Calling 'for_zipped_chunks' failed because the ratio of the view sizes "
             + f"(source size = {self.bounding_box.size}, target size = {target_view.bounding_box.size}) "
             + "must be equal to the ratio of the chunk sizes "
-            + f"(source_chunk_size in Mag(1) = {source_chunk_size}, target_chunk_size in Mag(1) = {target_chunk_size})"
+            + f"(source_chunk_shape in Mag(1) = {source_chunk_shape}, target_chunk_shape in Mag(1) = {target_chunk_shape})"
         )
 
         job_args = []
-        source_chunks = self.bounding_box.chunk(source_chunk_size, source_chunk_size)
+        source_chunks = self.bounding_box.chunk(source_chunk_shape, source_chunk_shape)
         target_chunks = target_view.bounding_box.chunk(
-            target_chunk_size, target_chunk_size
+            target_chunk_shape, target_chunk_shape
         )
 
         for i, (source_chunk, target_chunk) in enumerate(
@@ -917,22 +933,22 @@ class View:
     def __repr__(self) -> str:
         return repr(f"View({self._path}, bounding_box={self.bounding_box})")
 
-    def _check_chunk_size(self, chunk_size: Vec3Int, read_only: bool) -> None:
-        assert chunk_size.is_positive(
+    def _check_chunk_shape(self, chunk_shape: Vec3Int, read_only: bool) -> None:
+        assert chunk_shape.is_positive(
             strictly_positive=True
-        ), f"The passed parameter 'chunk_size' {chunk_size} contains at least one 0. This is not allowed."
+        ), f"The passed parameter 'chunk_shape' {chunk_shape} contains at least one 0. This is not allowed."
 
-        divisor = self.mag.to_vec3_int() * self.info.chunk_size
+        divisor = self.mag.to_vec3_int() * self.info.chunk_shape
         if not read_only:
             divisor *= self.info.chunks_per_shard
-        assert chunk_size % divisor == Vec3Int.zeros(), (
-            f"The chunk_size {chunk_size} must be a multiple of "
-            + f"mag*chunk_size{'*chunks_per_shard' if not read_only else ''} of the view, "
+        assert chunk_shape % divisor == Vec3Int.zeros(), (
+            f"The chunk_shape {chunk_shape} must be a multiple of "
+            + f"mag*chunk_shape{'*chunks_per_shard' if not read_only else ''} of the view, "
             + f"which is {divisor})."
         )
 
     def _get_file_dimensions(self) -> Vec3Int:
-        return self.info.shard_size
+        return self.info.shard_shape
 
     def _get_file_dimensions_mag1(self) -> Vec3Int:
         return self._get_file_dimensions() * self.mag.to_vec3_int()

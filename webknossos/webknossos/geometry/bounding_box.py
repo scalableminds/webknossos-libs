@@ -378,25 +378,25 @@ class BoundingBox:
 
     def chunk(
         self,
-        chunk_size: Vec3IntLike,
+        chunk_shape: Vec3IntLike,
         chunk_border_alignments: Optional[Vec3IntLike] = None,
     ) -> Generator["BoundingBox", None, None]:
-        """Decompose the bounding box into smaller chunks of size `chunk_size`.
+        """Decompose the bounding box into smaller chunks of size `chunk_shape`.
 
-        Chunks at the border of the bounding box might be smaller than chunk_size.
+        Chunks at the border of the bounding box might be smaller than chunk_shape.
         If `chunk_border_alignment` is set, all border coordinates
         *between two chunks* will be divisible by that value.
         """
 
         start = self.topleft.to_np()
-        chunk_size = Vec3Int(chunk_size).to_np()
+        chunk_shape = Vec3Int(chunk_shape).to_np()
 
         start_adjust = np.array([0, 0, 0])
         if chunk_border_alignments is not None:
             chunk_border_alignments_array = Vec3Int(chunk_border_alignments).to_np()
             assert np.all(
-                chunk_size % chunk_border_alignments_array == 0
-            ), f"{chunk_size} not divisible by {chunk_border_alignments_array}"
+                chunk_shape % chunk_border_alignments_array == 0
+            ), f"{chunk_shape} not divisible by {chunk_border_alignments_array}"
 
             # Move the start to be aligned correctly. This doesn't actually change
             # the start of the first chunk, because we'll intersect with `self`,
@@ -404,15 +404,15 @@ class BoundingBox:
             start_adjust = start % chunk_border_alignments_array
 
         for x in range(
-            start[0] - start_adjust[0], start[0] + self.size[0], chunk_size[0]
+            start[0] - start_adjust[0], start[0] + self.size[0], chunk_shape[0]
         ):
             for y in range(
-                start[1] - start_adjust[1], start[1] + self.size[1], chunk_size[1]
+                start[1] - start_adjust[1], start[1] + self.size[1], chunk_shape[1]
             ):
                 for z in range(
-                    start[2] - start_adjust[2], start[2] + self.size[2], chunk_size[2]
+                    start[2] - start_adjust[2], start[2] + self.size[2], chunk_shape[2]
                 ):
-                    yield BoundingBox([x, y, z], chunk_size).intersected_with(self)
+                    yield BoundingBox([x, y, z], chunk_shape).intersected_with(self)
 
     def volume(self) -> int:
 

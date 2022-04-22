@@ -69,14 +69,14 @@ def test_non_linear_filter_reshape() -> None:
 
 
 def downsample_test_helper(
-    WT1_path: Path, tmp_path: Path, use_compress: bool, chunk_size: Vec3Int
+    WT1_path: Path, tmp_path: Path, use_compress: bool, chunk_shape: Vec3Int
 ) -> None:
     source_path = WT1_path
     target_path = tmp_path / "WT1_wkw"
 
     source_ds = Dataset.open(source_path)
     target_ds = source_ds.copy_dataset(
-        target_path, chunk_size=chunk_size, chunks_per_shard=16
+        target_path, chunk_shape=chunk_shape, chunks_per_shard=16
     )
 
     target_layer = target_ds.get_layer("color")
@@ -373,7 +373,7 @@ def test_downsample_with_invalid_mag_list(tmp_path: Path) -> None:
 def test_downsample_compressed(tmp_path: Path) -> None:
     ds = Dataset(tmp_path / "downsample_compressed", voxel_size=(1, 1, 2))
     layer = ds.add_layer("color", COLOR_CATEGORY)
-    mag = layer.add_mag(1, chunk_size=8, chunks_per_shard=8)
+    mag = layer.add_mag(1, chunk_shape=8, chunks_per_shard=8)
     mag.write(data=(np.random.rand(80, 240, 15) * 255).astype(np.uint8))
 
     assert not mag._is_compressed()
@@ -398,7 +398,7 @@ def test_downsample_compressed(tmp_path: Path) -> None:
 def test_downsample_2d(tmp_path: Path) -> None:
     ds = Dataset(tmp_path / "downsample_compressed", voxel_size=(1, 1, 2))
     layer = ds.add_layer("color", COLOR_CATEGORY)
-    mag = layer.add_mag(1, chunk_size=8, chunks_per_shard=8)
+    mag = layer.add_mag(1, chunk_shape=8, chunks_per_shard=8)
     # write 2D data with all values set to "123"
     mag.write(data=(np.ones((100, 100, 1)) * 123).astype(np.uint8))
     with pytest.warns(Warning):

@@ -2,23 +2,16 @@ import logging
 from argparse import ArgumentParser, Namespace
 from os import path, sep
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, cast
+from typing import (Any, Callable, Dict, Iterable, List, Optional, Set, Tuple,
+                    cast)
 
 from webknossos.dataset.properties import LayerViewConfiguration
 
 from ._internal.image_readers import image_reader
 from ._internal.utils import (
-    add_data_format_flags,
-    add_voxel_size_flag,
-    add_verbose_flag,
-    find_files,
-    get_channel_and_sample_iters_for_wk_compatibility,
-    get_executor_args,
-    is_wk_compatible_layer_format,
-    parse_path,
-    setup_logging,
-    setup_warnings,
-)
+    add_data_format_flags, add_verbose_flag, add_voxel_size_flag, find_files,
+    get_channel_and_sample_iters_for_wk_compatibility, get_executor_args,
+    is_wk_compatible_layer_format, parse_path, setup_logging, setup_warnings)
 from .convert_knossos import create_parser as create_knossos_parser
 from .convert_knossos import main as convert_knossos
 from .convert_nifti import create_parser as create_nifti_parser
@@ -426,7 +419,7 @@ class ImageStackConverter(Converter):
                         arg_dict.get("dtype"),
                         args.target_mag,
                         args.data_format,
-                        args.chunk_size,
+                        args.chunk_shape,
                         args.chunks_per_shard,
                         args.interpolation_mode,
                         args.start_z,

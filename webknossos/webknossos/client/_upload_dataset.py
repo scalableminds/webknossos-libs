@@ -148,7 +148,7 @@ def upload_dataset(
                 "name": new_dataset_name,
                 "totalFileCount": len(file_infos),
             },
-            chunk_size=100 * 1024 * 1024,  # 100 MiB
+            chunk_shape=100 * 1024 * 1024,  # 100 MiB
             generate_unique_identifier=lambda _, relative_path: f"{upload_id}/{relative_path}",
             test_chunks=False,
             permanent_errors=[400, 403, 404, 409, 415, 500, 501],

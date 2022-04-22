@@ -9,7 +9,7 @@ import numpy as np
 import wkw
 from webknossos import BoundingBox, DataFormat, Mag, Vec3Int
 from webknossos.dataset.dataset import DEFAULT_DATA_FORMAT
-from webknossos.dataset.defaults import DEFAULT_CHUNK_SIZE, DEFAULT_CHUNKS_PER_SHARD
+from webknossos.dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_CHUNKS_PER_SHARD
 from webknossos.utils import *  # pylint: disable=unused-wildcard-import,wildcard-import
 
 from .knossos import KnossosDataset
@@ -196,7 +196,7 @@ def add_batch_size_flag(parser: argparse.ArgumentParser) -> None:
         "-b",
         help="Number of sections to buffer per job",
         type=int,
-        default=DEFAULT_CHUNK_SIZE.z,
+        default=DEFAULT_CHUNK_SHAPE.z,
     )
 
 
@@ -229,8 +229,9 @@ def add_data_format_flags(parser: argparse.ArgumentParser) -> None:
     )
 
     parser.add_argument(
+        "--chunk_shape",
         "--chunk_size",
-        default=DEFAULT_CHUNK_SIZE,
+        default=DEFAULT_CHUNK_SHAPE,
         type=_parse_vec3_int,
         help="Number of voxels to be stored as a chunk in the output format (e.g. `32` or `32,32,32`).",
     )
@@ -267,6 +268,15 @@ def parse_path(value: str) -> Path:
                     environ["HTTP_BASIC_USER"], environ["HTTP_BASIC_PASSWORD"]
                 )
             },
+        )
+    elif (
+        (value.startswith("webdav::http://") or value.startswith("webdav::https://"))
+        and "HTTP_BASIC_USER" in environ
+        and "HTTP_BASIC_PASSWORD" in environ
+    ):
+        return UPath(
+            value.replace("webdav::http", "webdav+http"),
+            auth=(environ["HTTP_BASIC_USER"], environ["HTTP_BASIC_PASSWORD"]),
         )
     elif value.startswith("s3://") and "S3_ENDPOINT_URL" in environ:
         return UPath(

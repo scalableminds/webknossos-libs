@@ -46,7 +46,7 @@ from ..utils import (
     warn_deprecated,
 )
 from .defaults import (
-    DEFAULT_CHUNK_SIZE,
+    DEFAULT_CHUNK_SHAPE,
     DEFAULT_CHUNKS_PER_SHARD,
     DEFAULT_CHUNKS_PER_SHARD_ZARR,
 )
@@ -146,16 +146,20 @@ def _element_class_to_dtype_per_channel(
 
 
 def _get_sharding_parameters(
-    chunk_size: Optional[Union[Vec3IntLike, int]],
+    chunk_shape: Optional[Union[Vec3IntLike, int]],
     chunks_per_shard: Optional[Union[Vec3IntLike, int]],
+    chunk_size: Optional[Union[Vec3IntLike, int]],  # deprecated
     block_len: Optional[int],
     file_len: Optional[int],
 ) -> Tuple[Optional[Vec3Int], Optional[Vec3Int]]:
-    if chunk_size is not None:
-        chunk_size = Vec3Int.from_vec_or_int(chunk_size)
+    if chunk_shape is not None:
+        chunk_shape = Vec3Int.from_vec_or_int(chunk_shape)
+    elif chunk_size is not None:
+        warn_deprecated("chunk_size", "chunk_shape")
+        chunk_shape = Vec3Int.from_vec_or_int(chunk_size)
     elif block_len is not None:
-        warn_deprecated("block_len", "chunk_size")
-        chunk_size = Vec3Int.full(block_len)
+        warn_deprecated("block_len", "chunk_shape")
+        chunk_shape = Vec3Int.full(block_len)
 
     if chunks_per_shard is not None:
         chunks_per_shard = Vec3Int.from_vec_or_int(chunks_per_shard)
@@ -163,7 +167,7 @@ def _get_sharding_parameters(
         warn_deprecated("file_len", "chunks_per_shard")
         chunks_per_shard = Vec3Int.full(file_len)
 
-    return (chunk_size, chunks_per_shard)
+    return (chunk_shape, chunks_per_shard)
 
 
 class Layer:
@@ -301,17 +305,18 @@ class Layer:
     def add_mag(
         self,
         mag: Union[int, str, list, tuple, np.ndarray, Mag],
-        chunk_size: Optional[Union[Vec3IntLike, int]] = None,  # DEFAULT_CHUNK_SIZE,
+        chunk_shape: Optional[Union[Vec3IntLike, int]] = None,  # DEFAULT_CHUNK_SHAPE,
         chunks_per_shard: Optional[
             Union[int, Vec3IntLike]
         ] = None,  # DEFAULT_CHUNKS_PER_SHARD,
         compress: bool = False,
+        chunk_size: Optional[Union[Vec3IntLike, int]] = None,
         block_len: Optional[int] = None,  # deprecated
         file_len: Optional[int] = None,  # deprecated
     ) -> MagView:
         """
         Creates a new mag called and adds it to the layer.
-        The parameter `chunk_size`, `chunks_per_shard` and `compress` can be
+        The parameter `chunk_shaoe`, `chunks_per_shard` and `compress` can be
         specified to adjust how the data is stored on disk.
         Note that writing compressed data which is not aligned with the blocks on disk may result in
         diminished performance, as full blocks will automatically be read to pad the write actions. Alternatively,
@@ -325,24 +330,25 @@ class Layer:
         mag = Mag(mag)
         compression_mode = compress
 
-        chunk_size, chunks_per_shard = _get_sharding_parameters(
-            chunk_size=chunk_size,
+        chunk_shape, chunks_per_shard = _get_sharding_parameters(
+            chunk_shape=chunk_shape,
             chunks_per_shard=chunks_per_shard,
+            chunk_size=chunk_size,
             block_len=block_len,
             file_len=file_len,
         )
-        if chunk_size is None:
-            chunk_size = DEFAULT_CHUNK_SIZE
+        if chunk_shape is None:
+            chunk_shape = DEFAULT_CHUNK_SHAPE
         if chunks_per_shard is None:
             if self.data_format == DataFormat.Zarr:
                 chunks_per_shard = DEFAULT_CHUNKS_PER_SHARD_ZARR
             else:
                 chunks_per_shard = DEFAULT_CHUNKS_PER_SHARD
 
-        if chunk_size not in (Vec3Int.full(32), Vec3Int.full(64)):
+        if chunk_shape not in (Vec3Int.full(32), Vec3Int.full(64)):
             warnings.warn(
-                "[INFO] `chunk_size` of `32, 32, 32` or `64, 64, 64` is recommended for optimal "
-                + f"performance in webKnossos. Got {chunk_size}."
+                "[INFO] `chunk_shape` of `32, 32, 32` or `64, 64, 64` is recommended for optimal "
+                + f"performance in webKnossos. Got {chunk_shape}."
             )
 
         self._assert_mag_does_not_exist_yet(mag)
@@ -351,7 +357,7 @@ class Layer:
         mag_view = MagView(
             self,
             mag,
-            chunk_size=chunk_size,
+            chunk_shape=chunk_shape,
             chunks_per_shard=chunks_per_shard,
             compression_mode=compression_mode,
             create=True,
@@ -367,7 +373,7 @@ class Layer:
             MagViewProperties(
                 mag=Mag(mag_view.name),
                 cube_length=(
-                    mag_array_info.shard_size.x
+                    mag_array_info.shard_shape.x
                     if mag_array_info.data_format == DataFormat.WKW
                     else None
                 ),
@@ -398,7 +404,7 @@ class Layer:
             MagViewProperties(
                 mag=mag,
                 cube_length=(
-                    mag_array_info.shard_size.x
+                    mag_array_info.shard_shape.x
                     if mag_array_info.data_format == DataFormat.WKW
                     else None
                 ),
@@ -411,9 +417,10 @@ class Layer:
     def get_or_add_mag(
         self,
         mag: Union[int, str, list, tuple, np.ndarray, Mag],
-        chunk_size: Optional[Union[Vec3IntLike, int]] = None,
+        chunk_shape: Optional[Union[Vec3IntLike, int]] = None,
         chunks_per_shard: Optional[Union[Vec3IntLike, int]] = None,
         compress: Optional[bool] = None,
+        chunk_size: Optional[Union[Vec3IntLike, int]] = None,  # deprecated
         block_len: Optional[int] = None,  # deprecated
         file_len: Optional[int] = None,  # deprecated
     ) -> MagView:
@@ -428,16 +435,17 @@ class Layer:
         mag = Mag(mag)
         compression_mode = compress
 
-        chunk_size, chunks_per_shard = _get_sharding_parameters(
-            chunk_size=chunk_size,
+        chunk_shape, chunks_per_shard = _get_sharding_parameters(
+            chunk_shape=chunk_shape,
             chunks_per_shard=chunks_per_shard,
+            chunk_size=chunk_size,
             block_len=block_len,
             file_len=file_len,
         )
 
         if mag in self._mags.keys():
             assert (
-                chunk_size is None or self._mags[mag].info.chunk_size == chunk_size
+                chunk_shape is None or self._mags[mag].info.chunk_shape == chunk_shape
             ), f"Cannot get_or_add_mag: The mag {mag} already exists, but the chunk sizes do not match"
             assert (
                 chunks_per_shard is None
@@ -451,7 +459,7 @@ class Layer:
         else:
             return self.add_mag(
                 mag,
-                chunk_size=chunk_size,
+                chunk_shape=chunk_shape,
                 chunks_per_shard=chunks_per_shard,
                 compress=compression_mode or False,
             )
@@ -988,7 +996,7 @@ class Layer:
             self._mags[mag] = MagView(
                 self,
                 mag,
-                info.chunk_size,
+                info.chunk_shape,
                 info.chunks_per_shard,
                 info.compression_mode,
             )
@@ -1002,7 +1010,7 @@ class Layer:
     ) -> MagView:
         return self.add_mag(
             new_mag_name,
-            chunk_size=other_mag.info.chunk_size,
+            chunk_shape=other_mag.info.chunk_shape,
             chunks_per_shard=other_mag.info.chunks_per_shard,
             compress=compress,
         )

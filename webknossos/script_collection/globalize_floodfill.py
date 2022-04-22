@@ -111,7 +111,7 @@ def execute_floodfill(
     source_id: int,
     target_id: int,
 ) -> None:
-    cube_size = data_mag.info.shard_size
+    cube_size = data_mag.info.shard_shape
     cube_bbox = BoundingBox(Vec3Int(0, 0, 0), cube_size)
     chunk_with_relative_seed: List[Tuple[Vec3Int, Vec3Int]] = [
         get_chunk_pos_and_offset(seed_position, cube_size)

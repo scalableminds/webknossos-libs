@@ -2,14 +2,9 @@ from argparse import ArgumentParser
 
 from webknossos import Dataset
 
-from ._internal.utils import (
-    add_data_format_flags,
-    add_distribution_flags,
-    add_verbose_flag,
-    parse_path,
-    setup_logging,
-    setup_warnings,
-)
+from ._internal.utils import (add_data_format_flags, add_distribution_flags,
+                              add_verbose_flag, parse_path, setup_logging,
+                              setup_warnings)
 
 
 def create_parser() -> ArgumentParser:
@@ -49,7 +44,7 @@ if __name__ == "__main__":
     Dataset.open(args.source_path).copy_dataset(
         args.target_path,
         data_format=args.data_format,
-        chunk_size=args.chunk_size,
+        chunk_shape=args.chunk_shape,
         chunks_per_shard=args.chunks_per_shard,
         compress=not args.no_compression,
         args=args,

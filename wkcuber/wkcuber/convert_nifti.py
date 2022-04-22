@@ -11,8 +11,8 @@ from webknossos.utils import time_start, time_stop
 
 from ._internal.utils import (
     add_data_format_flags,
-    add_voxel_size_flag,
     add_verbose_flag,
+    add_voxel_size_flag,
     pad_or_crop_to_size_and_topleft,
     parse_bounding_box,
     parse_path,
@@ -132,14 +132,14 @@ def convert_nifti(
     dtype: str,
     voxel_size: Tuple[float, ...],
     data_format: DataFormat,
-    chunk_size: Vec3Int,
+    chunk_shape: Vec3Int,
     chunks_per_shard: Vec3Int,
     is_segmentation_layer: bool = False,
     bbox_to_enforce: Optional[BoundingBox] = None,
     use_orientation_header: bool = False,
     flip_axes: Optional[Union[int, Tuple[int, ...]]] = None,
 ) -> None:
-    shard_size = chunk_size * chunks_per_shard
+    shard_shape = chunk_shape * chunks_per_shard
     time_start(f"Converting of {source_nifti_path}")
 
     source_nifti = nib.load(str(source_nifti_path.resolve()))
@@ -194,9 +194,9 @@ def convert_nifti(
             cube_data, target_size, target_topleft
         )
 
-    # Writing wkw compressed requires files of shape (shard_size, shard_size, shard_size)
+    # Writing wkw compressed requires files of shape (shard_shape, shard_shape, shard_shape)
     # Pad data accordingly
-    padding_offset = shard_size - np.array(cube_data.shape[1:4]) % shard_size
+    padding_offset = shard_shape - np.array(cube_data.shape[1:4]) % shard_shape
     cube_data = np.pad(
         cube_data,
         (
@@ -229,7 +229,7 @@ def convert_nifti(
         )
     )
     wk_mag = wk_layer.get_or_add_mag(
-        "1", chunk_size=chunk_size, chunks_per_shard=chunks_per_shard
+        "1", chunk_shape=chunk_shape, chunks_per_shard=chunks_per_shard
     )
     wk_mag.write(cube_data)
 
@@ -243,7 +243,7 @@ def convert_folder_nifti(
     segmentation_subpath: str,
     voxel_size: Tuple[float, ...],
     data_format: DataFormat,
-    chunk_size: Vec3Int,
+    chunk_shape: Vec3Int,
     chunks_per_shard: Vec3Int,
     use_orientation_header: bool = False,
     bbox_to_enforce: Optional[BoundingBox] = None,
@@ -282,7 +282,7 @@ def convert_folder_nifti(
                 "uint8",
                 voxel_size,
                 data_format,
-                chunk_size,
+                chunk_shape,
                 chunks_per_shard,
                 is_segmentation_layer=False,
                 bbox_to_enforce=bbox_to_enforce,
@@ -297,7 +297,7 @@ def convert_folder_nifti(
                 "uint8",
                 voxel_size,
                 data_format,
-                chunk_size,
+                chunk_shape,
                 chunks_per_shard,
                 is_segmentation_layer=True,
                 bbox_to_enforce=bbox_to_enforce,
@@ -312,7 +312,7 @@ def convert_folder_nifti(
                 "uint8",
                 voxel_size,
                 data_format,
-                chunk_size,
+                chunk_shape,
                 chunks_per_shard,
                 is_segmentation_layer=False,
                 bbox_to_enforce=bbox_to_enforce,
@@ -340,7 +340,7 @@ def main(args: Namespace) -> None:
             args.segmentation_file,
             voxel_size=args.voxel_size,
             data_format=args.data_format,
-            chunk_size=args.chunk_size,
+            chunk_shape=args.chunk_shape,
             chunks_per_shard=args.chunks_per_shard,
             bbox_to_enforce=args.enforce_bounding_box,
             use_orientation_header=args.use_orientation_header,
@@ -354,7 +354,7 @@ def main(args: Namespace) -> None:
             args.dtype,
             voxel_size=args.voxel_size,
             data_format=args.data_format,
-            chunk_size=args.chunk_size,
+            chunk_shape=args.chunk_shape,
             chunks_per_shard=args.chunks_per_shard,
             is_segmentation_layer=args.is_segmentation_layer,
             bbox_to_enforce=args.enforce_bounding_box,

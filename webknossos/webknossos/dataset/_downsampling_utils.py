@@ -30,7 +30,7 @@ DEFAULT_BUFFER_SHAPE = Vec3Int.full(256)
 
 
 def determine_buffer_shape(array_info: ArrayInfo) -> Vec3Int:
-    return min(DEFAULT_BUFFER_SHAPE, array_info.shard_size)
+    return min(DEFAULT_BUFFER_SHAPE, array_info.shard_shape)
 
 
 def calculate_mags_to_downsample(

@@ -765,25 +765,27 @@ class Dataset:
         self,
         new_dataset_path: Union[str, Path],
         voxel_size: Optional[Tuple[float, float, float]] = None,
-        chunk_size: Optional[Union[Vec3IntLike, int]] = None,
+        chunk_shape: Optional[Union[Vec3IntLike, int]] = None,
         chunks_per_shard: Optional[Union[Vec3IntLike, int]] = None,
         data_format: Optional[Union[str, DataFormat]] = None,
         compress: Optional[bool] = None,
+        chunk_size: Optional[Union[Vec3IntLike, int]] = None,
         block_len: Optional[int] = None,  # deprecated
         file_len: Optional[int] = None,  # deprecated
         args: Optional[Namespace] = None,
     ) -> "Dataset":
         """
         Creates a new dataset at `new_dataset_path` and copies the data from the current dataset to `empty_target_ds`.
-        If not specified otherwise, the `voxel_size`, `chunk_size`, `chunks_per_shard` and `compress` of the current dataset
+        If not specified otherwise, the `voxel_size`, `chunk_sshape`, `chunks_per_shard` and `compress` of the current dataset
         are also used for the new dataset. The method also accepts the parameters `block_len` and `file_size`,
-        which were deprecated by `chunk_size` and `chunks_per_shard`.
+        which were deprecated by `chunk_sshape` and `chunks_per_shard`.
         WKW layers can only be copied to datasets on local file systems.
         """
 
-        chunk_size, chunks_per_shard = _get_sharding_parameters(
-            chunk_size=chunk_size,
+        chunk_shape, chunks_per_shard = _get_sharding_parameters(
+            chunk_shape=chunk_shape,
             chunks_per_shard=chunks_per_shard,
+            chunk_size=chunk_size,
             block_len=block_len,
             file_len=file_len,
         )
@@ -824,13 +826,13 @@ class Dataset:
                 bbox = self.get_layer(layer_name).bounding_box
 
                 for mag, mag_view in layer.mags.items():
-                    chunk_size = chunk_size or mag_view.info.chunk_size
+                    chunk_shape = chunk_shape or mag_view.info.chunk_shape
                     compression_mode = compress or mag_view.info.compression_mode
                     chunks_per_shard = (
                         chunks_per_shard or mag_view.info.chunks_per_shard
                     )
                     target_mag = target_layer.add_mag(
-                        mag, chunk_size, chunks_per_shard, compression_mode
+                        mag, chunk_shape, chunks_per_shard, compression_mode
                     )
 
                     target_layer.bounding_box = bbox
