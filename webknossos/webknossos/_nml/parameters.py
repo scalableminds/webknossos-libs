@@ -12,7 +12,7 @@ DEFAULT_BOUNDING_BOX_COLOR = [0.2, 0.5, 0.1, 1]
 
 class Parameters(NamedTuple):
     name: str  # dataset name
-    scale: Vector3  # dataset scale
+    scale: Vector3  # dataset voxel_size
     description: Optional[str] = None
     organization: Optional[str] = None
     offset: Optional[Vector3] = None  # deprecated. Kept for backward compatibility.

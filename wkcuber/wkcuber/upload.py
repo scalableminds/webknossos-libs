@@ -5,7 +5,7 @@ from webknossos import Dataset, webknossos_context
 from webknossos.client._defaults import DEFAULT_WEBKNOSSOS_URL
 from webknossos.client._upload_dataset import DEFAULT_SIMULTANEOUS_UPLOADS
 
-from ._internal.utils import add_verbose_flag, parse_path, setup_logging
+from ._internal.utils import add_verbose_flag, parse_path, setup_logging, setup_warnings
 
 
 def create_parser() -> ArgumentParser:
@@ -47,6 +47,7 @@ def create_parser() -> ArgumentParser:
 
 
 if __name__ == "__main__":
+    setup_warnings()
     args = create_parser().parse_args()
     setup_logging(args)
     url = (

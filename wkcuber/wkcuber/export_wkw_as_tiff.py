@@ -21,6 +21,7 @@ from ._internal.utils import (
     parse_bounding_box,
     parse_path,
     setup_logging,
+    setup_warnings,
 )
 
 
@@ -279,5 +280,6 @@ def run(args_list: List) -> None:
 
 
 if __name__ == "__main__":
+    setup_warnings()
     arguments = create_parser().parse_args()
     export_wkw_as_tiff(arguments)

@@ -42,11 +42,11 @@ def ensure_wkw(target_wkw_info: WkwDatasetInfo) -> None:
     target_wkw.close()
 
 
-def parse_scale(scale: str) -> Tuple[float, ...]:
+def parse_voxel_size(voxel_size: str) -> Tuple[float, ...]:
     try:
-        return tuple(float(x) for x in scale.split(","))
+        return tuple(float(x) for x in voxel_size.split(","))
     except Exception as e:
-        raise argparse.ArgumentTypeError("The scale could not be parsed") from e
+        raise argparse.ArgumentTypeError("The voxel_size could not be parsed") from e
 
 
 def parse_bounding_box(bbox_str: str) -> BoundingBox:
@@ -69,13 +69,31 @@ def open_knossos(info: KnossosDatasetInfo) -> KnossosDataset:
     return KnossosDataset.open(info.dataset_path, np.dtype(info.dtype))
 
 
-def add_scale_flag(parser: argparse.ArgumentParser, required: bool = True) -> None:
+class DeprecatedSizeAction(argparse.Action):
+    def __call__(
+        self,
+        parser: argparse.ArgumentParser,
+        namespace: argparse.Namespace,
+        values: Any,
+        option_string: Optional[str] = None,
+    ) -> None:
+        if option_string == "--scale":
+            warnings.warn(
+                "[DEPRECATION] `--scale` is deprecated, please use `--voxel_size` instead.",
+                DeprecationWarning,
+            )
+        setattr(namespace, self.dest, values)
+
+
+def add_voxel_size_flag(parser: argparse.ArgumentParser, required: bool = True) -> None:
     parser.add_argument(
+        "--voxel_size",
         "--scale",
         "-s",
-        help="Scale of the dataset (e.g. 11.2,11.2,25). This is the size of one voxel in nm.",
+        help="Voxel size of the dataset in nm (e.g. 11.2,11.2,25). --scale is deprecated",
         required=required,
-        type=parse_scale,
+        type=parse_voxel_size,
+        action=DeprecatedSizeAction,
     )
 
 
@@ -103,7 +121,7 @@ def add_sampling_mode_flag(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--sampling_mode",
         help="There are three different types: "
-        "'anisotropic' - The next magnification is chosen so that the width, height and depth of a downsampled voxel assimilate. For example, if the z resolution is worse than the x/y resolution, z won't be downsampled in the first downsampling step(s). As a basis for this method, the scale from the datasource-properties.json is used. "
+        "'anisotropic' - The next magnification is chosen so that the width, height and depth of a downsampled voxel assimilate. For example, if the z resolution is worse than the x/y resolution, z won't be downsampled in the first downsampling step(s). As a basis for this method, the voxel_size from the datasource-properties.json is used. "
         "'isotropic' - Each dimension is downsampled equally. "
         "'constant_z' - The x and y dimensions are downsampled equally, but the z dimension remains the same.",
         default="anisotropic",

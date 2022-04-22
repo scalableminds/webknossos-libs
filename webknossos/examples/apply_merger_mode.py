@@ -34,9 +34,9 @@ def main() -> None:
     ##############################
 
     segment_id_mapping = {}
-    for graph in nml.flattened_graphs():
+    for tree in nml.flattened_trees():
         base = None
-        for node in graph.nodes:
+        for node in tree.nodes:
             segment_id = in_mag1.read(
                 absolute_offset=node.position, size=(1, 1, 1)
             ).item()
@@ -45,7 +45,7 @@ def main() -> None:
             segment_id_mapping[segment_id] = base
 
     print(
-        f"Found {len(list(nml.flattened_graphs()))} segment id groups with {len(segment_id_mapping)} nodes"
+        f"Found {len(list(nml.flattened_trees()))} segment id groups with {len(segment_id_mapping)} nodes"
     )
     print(segment_id_mapping)
 

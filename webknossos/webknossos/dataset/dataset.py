@@ -38,6 +38,7 @@ from ..utils import (
     get_executor_for_args,
     is_fs_path,
     rmtree,
+    warn_deprecated,
 )
 from ._utils.infer_bounding_box_existing_files import infer_bounding_box_existing_files
 from .layer import (
@@ -112,17 +113,27 @@ class Dataset:
     def __init__(
         self,
         dataset_path: Union[str, PathLike],
-        scale: Optional[Tuple[float, float, float]] = None,
+        voxel_size: Optional[Tuple[float, float, float]] = None,
         name: Optional[str] = None,
         exist_ok: bool = _UNSET,
+        *,
+        scale: Optional[Tuple[float, float, float]] = None,
     ) -> None:
         """
         Creates a new dataset and the associated `datasource-properties.json`.
         If the dataset already exists and exist_ok is set to True,
-        it is opened (the provided scale and name are asserted to match the existing dataset).
+        it is opened (the provided voxel_size and name are asserted to match the existing dataset).
         Currently exist_ok=True is the deprecated default and will change in future releases.
         Please use `Dataset.open` if you intend to open an existing dataset and don't want/need the creation behavior.
+        `scale` is deprecated, please use `voxel_size` instead.
         """
+        if scale is not None:
+            assert (
+                voxel_size is None
+            ), "Cannot use scale and voxel_size, please use only voxel_size."
+            warn_deprecated("scale", "voxel_size")
+            voxel_size = scale
+
         dataset_path = UPath(dataset_path)
 
         dataset_existed_already = (
@@ -160,11 +171,11 @@ class Dataset:
 
             # Write empty properties to disk
             assert (
-                scale is not None
-            ), "When creating a new dataset, the scale must be given, e.g. as Dataset(path, scale=(10, 10, 16.8))"
+                voxel_size is not None
+            ), "When creating a new dataset, the voxel_size must be given, e.g. as Dataset(path, voxel_size=(10, 10, 16.8))"
             name = name or dataset_path.absolute().name
             dataset_properties = DatasetProperties(
-                id={"name": name, "team": ""}, scale=scale, data_layers=[]
+                id={"name": name, "team": ""}, scale=voxel_size, data_layers=[]
             )
             with (dataset_path / PROPERTIES_FILE_NAME).open(
                 "w", encoding="utf-8"
@@ -194,18 +205,18 @@ class Dataset:
             self._layers[layer_properties.name] = layer
 
         if dataset_existed_already:
-            if scale is None:
+            if voxel_size is None:
                 warnings.warn(
-                    "[DEPRECATION] Please always supply the scale when using the constructor Dataset(your_path, scale=your_scale)."
+                    "[DEPRECATION] Please always supply the voxel_size when using the constructor Dataset(your_path, voxel_size=your_voxel_size)."
                     + "If you just want to open an existing dataset, please use Dataset.open(your_path).",
                     DeprecationWarning,
                 )
-            elif scale == _UNSPECIFIED_SCALE_FROM_OPEN:
+            elif voxel_size == _UNSPECIFIED_SCALE_FROM_OPEN:
                 pass
             else:
-                assert self.scale == tuple(
-                    scale
-                ), f"Cannot open Dataset: The dataset {dataset_path} already exists, but the scales do not match ({self.scale} != {scale})"
+                assert self.voxel_size == tuple(
+                    voxel_size
+                ), f"Cannot open Dataset: The dataset {dataset_path} already exists, but the voxel_sizes do not match ({self.voxel_size} != {voxel_size})"
             if name is not None:
                 assert (
                     self.name == name
@@ -234,7 +245,7 @@ class Dataset:
             f"Cannot open Dataset: Could not find {dataset_path / PROPERTIES_FILE_NAME}"
         )
 
-        return cls(dataset_path, scale=_UNSPECIFIED_SCALE_FROM_OPEN, exist_ok=True)
+        return cls(dataset_path, voxel_size=_UNSPECIFIED_SCALE_FROM_OPEN, exist_ok=True)
 
     @classmethod
     def download(
@@ -578,8 +589,8 @@ class Dataset:
         )
         for mag_dir in layer.path.iterdir():
             layer.add_mag_for_existing_files(mag_dir.name)
-        min_mag_view = layer.mags[min(layer.mags)]
-        layer.bounding_box = infer_bounding_box_existing_files(min_mag_view)
+        finest_mag_view = layer.mags[min(layer.mags)]
+        layer.bounding_box = infer_bounding_box_existing_files(finest_mag_view)
         return layer
 
     def get_segmentation_layer(self) -> SegmentationLayer:
@@ -753,7 +764,7 @@ class Dataset:
     def copy_dataset(
         self,
         new_dataset_path: Union[str, Path],
-        scale: Optional[Tuple[float, float, float]] = None,
+        voxel_size: Optional[Tuple[float, float, float]] = None,
         chunk_size: Optional[Union[Vec3IntLike, int]] = None,
         chunks_per_shard: Optional[Union[Vec3IntLike, int]] = None,
         data_format: Optional[Union[str, DataFormat]] = None,
@@ -764,7 +775,7 @@ class Dataset:
     ) -> "Dataset":
         """
         Creates a new dataset at `new_dataset_path` and copies the data from the current dataset to `empty_target_ds`.
-        If not specified otherwise, the `scale`, `chunk_size`, `chunks_per_shard` and `compress` of the current dataset
+        If not specified otherwise, the `voxel_size`, `chunk_size`, `chunks_per_shard` and `compress` of the current dataset
         are also used for the new dataset. The method also accepts the parameters `block_len` and `file_size`,
         which were deprecated by `chunk_size` and `chunks_per_shard`.
         WKW layers can only be copied to datasets on local file systems.
@@ -790,9 +801,9 @@ class Dataset:
                 new_dataset_path
             ), "Cannot create WKW layers in remote datasets. Use explicit `data_format='zarr'`."
 
-        if scale is None:
-            scale = self.scale
-        new_ds = Dataset(new_dataset_path, scale=scale, exist_ok=False)
+        if voxel_size is None:
+            voxel_size = self.voxel_size
+        new_ds = Dataset(new_dataset_path, voxel_size=voxel_size, exist_ok=False)
 
         with get_executor_for_args(args) as executor:
             for layer_name, layer in self.layers.items():
@@ -850,7 +861,10 @@ class Dataset:
         Only datasets on local filesystems can be shallow copied.
         """
         new_dataset = Dataset(
-            new_dataset_path, scale=self.scale, name=name or self.name, exist_ok=False
+            new_dataset_path,
+            voxel_size=self.voxel_size,
+            name=name or self.name,
+            exist_ok=False,
         )
         for layer_name, layer in self.layers.items():
             if layers_to_ignore is not None and layer_name in layers_to_ignore:
@@ -886,7 +900,13 @@ class Dataset:
             )
 
     @property
+    def voxel_size(self) -> Tuple[float, float, float]:
+        return self._properties.scale
+
+    @property
     def scale(self) -> Tuple[float, float, float]:
+        """Deprecated, use `voxel_size` instead."""
+        warn_deprecated("scale", "voxel_size")
         return self._properties.scale
 
     @property
@@ -915,7 +935,7 @@ class Dataset:
     def create(
         cls,
         dataset_path: Union[str, PathLike],
-        scale: Tuple[float, float, float],
+        voxel_size: Tuple[float, float, float],
         name: Optional[str] = None,
     ) -> "Dataset":
         """
@@ -925,13 +945,13 @@ class Dataset:
             "[DEPRECATION] Dataset.create() is deprecated in favor of the normal constructor Dataset().",
             DeprecationWarning,
         )
-        return cls(dataset_path, scale, name, exist_ok=False)
+        return cls(dataset_path, voxel_size, name, exist_ok=False)
 
     @classmethod
     def get_or_create(
         cls,
         dataset_path: Union[str, Path],
-        scale: Tuple[float, float, float],
+        voxel_size: Tuple[float, float, float],
         name: Optional[str] = None,
     ) -> "Dataset":
         """
@@ -941,7 +961,7 @@ class Dataset:
             "[DEPRECATION] Dataset.get_or_create() is deprecated in favor of the normal constructor Dataset(…, exist_ok=True).",
             DeprecationWarning,
         )
-        return cls(dataset_path, scale, name, exist_ok=True)
+        return cls(dataset_path, voxel_size, name, exist_ok=True)
 
     def __repr__(self) -> str:
         return repr("Dataset(%s)" % self.path)

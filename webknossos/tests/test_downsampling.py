@@ -5,9 +5,8 @@ import numpy as np
 import pytest
 
 from webknossos import COLOR_CATEGORY, Dataset, Mag, Vec3Int
-from webknossos.dataset.downsampling_utils import (
+from webknossos.dataset._downsampling_utils import (
     InterpolationModes,
-    SamplingModes,
     _mode,
     calculate_default_max_mag,
     calculate_mags_to_downsample,
@@ -16,6 +15,7 @@ from webknossos.dataset.downsampling_utils import (
     downsample_cube_job,
     non_linear_filter_3d,
 )
+from webknossos.dataset.sampling_modes import SamplingModes
 
 BUFFER_SHAPE = Vec3Int.full(256)
 
@@ -180,13 +180,13 @@ def test_anisotropic_mag_calculation() -> None:
     # This test does not test the exact input of the user:
     # If a user does not specify a max_mag, then a default is calculated.
     # Therefore, max_mag=None is not covered in this test case.
-    # The same applies for `scale`:
+    # The same applies for `voxel_size`:
     # This is either extracted from the properties or set to comply with a specific sampling mode.
 
     mag_tests = [
         # Anisotropic
         (
-            (10.5, 10.5, 24),  # scale
+            (10.5, 10.5, 24),  # voxel_size
             (1, 1, 1),  # from_mag
             16,  # max_mag
             [
@@ -265,23 +265,23 @@ def test_anisotropic_mag_calculation() -> None:
     ]
 
     for i in range(len(mag_tests)):
-        scale, from_max_name, max_mag_name, scheme = mag_tests[i]
+        voxel_size, from_max_name, max_mag_name, scheme = mag_tests[i]
         sampling_scheme = [Mag(m) for m in scheme]
         from_mag = Mag(from_max_name)
         max_mag = Mag(max_mag_name)
 
         assert sampling_scheme[1:] == calculate_mags_to_downsample(
-            from_mag, max_mag, scale
+            from_mag, max_mag, voxel_size
         ), f"The calculated downsampling scheme of the {i+1}-th test case is wrong."
 
     for i in range(len(mag_tests)):
-        scale, min_mag_name, from_mag_name, scheme = mag_tests[i]
+        voxel_size, finest_mag_name, from_mag_name, scheme = mag_tests[i]
         sampling_scheme = [Mag(m) for m in scheme]
         from_mag = Mag(from_mag_name)
-        min_mag = Mag(min_mag_name)
+        finest_mag = Mag(finest_mag_name)
 
         assert list(reversed(sampling_scheme[:-1])) == calculate_mags_to_upsample(
-            from_mag, min_mag, scale
+            from_mag, finest_mag, voxel_size
         ), f"The calculated upsampling scheme of the {i+1}-th test case is wrong."
 
 
@@ -298,7 +298,7 @@ def test_default_max_mag() -> None:
 def test_default_parameter(tmp_path: Path) -> None:
     target_path = tmp_path / "downsaple_default"
 
-    ds = Dataset(target_path, scale=(1, 1, 1))
+    ds = Dataset(target_path, voxel_size=(1, 1, 1))
     layer = ds.add_layer(
         "color", COLOR_CATEGORY, dtype_per_channel="uint8", num_channels=3
     )
@@ -310,8 +310,8 @@ def test_default_parameter(tmp_path: Path) -> None:
     assert sorted(layer.mags.keys()) == [Mag("2"), Mag("4")]
 
 
-def test_default_anisotropic_scale(tmp_path: Path) -> None:
-    ds = Dataset(tmp_path / "default_anisotropic_scale", scale=(85, 85, 346))
+def test_default_anisotropic_voxel_size(tmp_path: Path) -> None:
+    ds = Dataset(tmp_path / "default_anisotropic_voxel_size", voxel_size=(85, 85, 346))
     layer = ds.add_layer("color", COLOR_CATEGORY)
     mag = layer.add_mag(1)
     mag.write(data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8))
@@ -321,7 +321,7 @@ def test_default_anisotropic_scale(tmp_path: Path) -> None:
 
 
 def test_downsample_mag_list(tmp_path: Path) -> None:
-    ds = Dataset(tmp_path / "downsample_mag_list", scale=(1, 1, 2))
+    ds = Dataset(tmp_path / "downsample_mag_list", voxel_size=(1, 1, 2))
     layer = ds.add_layer("color", COLOR_CATEGORY)
     mag = layer.add_mag(1)
     mag.write(data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8))
@@ -335,7 +335,7 @@ def test_downsample_mag_list(tmp_path: Path) -> None:
 
 
 def test_downsample_mag_list_with_only_setup_mags(tmp_path: Path) -> None:
-    ds = Dataset(tmp_path / "downsample_mag_list", scale=(1, 1, 2))
+    ds = Dataset(tmp_path / "downsample_mag_list", voxel_size=(1, 1, 2))
     layer = ds.add_layer("color", COLOR_CATEGORY)
     mag = layer.add_mag(1)
     mag.write(data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8))
@@ -358,7 +358,7 @@ def test_downsample_mag_list_with_only_setup_mags(tmp_path: Path) -> None:
 
 
 def test_downsample_with_invalid_mag_list(tmp_path: Path) -> None:
-    ds = Dataset(tmp_path / "downsample_mag_list", scale=(1, 1, 2))
+    ds = Dataset(tmp_path / "downsample_mag_list", voxel_size=(1, 1, 2))
     layer = ds.add_layer("color", COLOR_CATEGORY)
     mag = layer.add_mag(1)
     mag.write(data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8))
@@ -371,7 +371,7 @@ def test_downsample_with_invalid_mag_list(tmp_path: Path) -> None:
 
 
 def test_downsample_compressed(tmp_path: Path) -> None:
-    ds = Dataset(tmp_path / "downsample_compressed", scale=(1, 1, 2))
+    ds = Dataset(tmp_path / "downsample_compressed", voxel_size=(1, 1, 2))
     layer = ds.add_layer("color", COLOR_CATEGORY)
     mag = layer.add_mag(1, chunk_size=8, chunks_per_shard=8)
     mag.write(data=(np.random.rand(80, 240, 15) * 255).astype(np.uint8))
@@ -396,7 +396,7 @@ def test_downsample_compressed(tmp_path: Path) -> None:
 
 
 def test_downsample_2d(tmp_path: Path) -> None:
-    ds = Dataset(tmp_path / "downsample_compressed", scale=(1, 1, 2))
+    ds = Dataset(tmp_path / "downsample_compressed", voxel_size=(1, 1, 2))
     layer = ds.add_layer("color", COLOR_CATEGORY)
     mag = layer.add_mag(1, chunk_size=8, chunks_per_shard=8)
     # write 2D data with all values set to "123"

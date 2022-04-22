@@ -5,7 +5,7 @@ from webknossos.geometry import BoundingBox
 
 
 def infer_bounding_box_existing_files(mag_view: MagView) -> BoundingBox:
-    """Since volume tracings are only a single layer, they do not contain a datasource-properties.json.
+    """Since volume annotation layers are only a single layer, they do not contain a datasource-properties.json.
     Therefore, the bounding box needs to be inferred when working with those."""
 
     return reduce(

@@ -11,7 +11,12 @@ import numpy as np
 import wkw
 from webknossos import LayerCategoryType, Mag
 
-from ._internal.utils import add_scale_flag, add_verbose_flag, setup_logging
+from ._internal.utils import (
+    add_voxel_size_flag,
+    add_verbose_flag,
+    setup_logging,
+    setup_warnings,
+)
 
 WKW_CUBE_REGEX = re.compile(
     fr"z(\d+){re.escape(sep)}y(\d+){re.escape(sep)}x(\d+)(\.wkw)$"
@@ -48,7 +53,7 @@ def create_parser() -> ArgumentParser:
     )
     group.add_argument("--max_id", help="set max id of segmentation.", default=0)
 
-    add_scale_flag(parser, required=False)
+    add_voxel_size_flag(parser, required=False)
     add_verbose_flag(parser)
 
     return parser
@@ -74,7 +79,7 @@ def read_datasource_properties(dataset_path: Path) -> dict:
 def write_webknossos_metadata(
     dataset_path: Path,
     name: str,
-    scale: Tuple[float, float, float],
+    voxel_size: Tuple[float, float, float],
     max_id: int = 0,
     compute_max_id: bool = False,
     exact_bounding_box: Optional[dict] = None,
@@ -99,7 +104,7 @@ def write_webknossos_metadata(
         {
             "id": {"name": name, "team": "<unknown>"},
             "dataLayers": layers,
-            "scale": scale,
+            "scale": voxel_size,
         },
     )
 
@@ -434,18 +439,19 @@ def detect_layers(
 
 
 if __name__ == "__main__":
+    setup_warnings()
     args = create_parser().parse_args()
     setup_logging(args)
 
     if not args.refresh:
         assert (
-            args.scale is not None
-        ), "The scale has to be specified when creating metadata for a dataset."
+            args.voxel_size is not None
+        ), "The voxel_size has to be specified when creating metadata for a dataset."
         assert (
             args.name is not None
         ), "Please provide a name via --name to create meta data."
         write_webknossos_metadata(
-            args.path, args.name, args.scale, args.max_id, args.compute_max_id
+            args.path, args.name, args.voxel_size, args.max_id, args.compute_max_id
         )
     else:
         if args.name is not None:

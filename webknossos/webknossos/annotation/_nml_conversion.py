@@ -11,7 +11,7 @@ from webknossos.geometry import Vec3Int
 
 if TYPE_CHECKING:
     from webknossos.annotation import Annotation
-    from webknossos.skeleton import Graph, Group, Skeleton
+    from webknossos.skeleton import Group, Skeleton, Tree
 
 
 def nml_to_skeleton(nml: wknml.Nml) -> "Skeleton":
@@ -19,7 +19,7 @@ def nml_to_skeleton(nml: wknml.Nml) -> "Skeleton":
 
     skeleton = Skeleton(
         dataset_name=nml.parameters.name,
-        scale=nml.parameters.scale,
+        voxel_size=nml.parameters.scale,
         organization_id=nml.parameters.organization,
         description=nml.parameters.description,
     )
@@ -37,14 +37,14 @@ def nml_to_skeleton(nml: wknml.Nml) -> "Skeleton":
     visit_groups(nml.groups, skeleton)
     for nml_tree in nml.trees:
         if nml_tree.groupId is None:
-            new_graph = skeleton.add_graph(
+            new_tree = skeleton.add_tree(
                 nml_tree.name, _enforced_id=nml_tree.id, color=nml_tree.color
             )
         else:
-            new_graph = groups_by_id[nml_tree.groupId].add_graph(
+            new_tree = groups_by_id[nml_tree.groupId].add_tree(
                 nml_tree.name, _enforced_id=nml_tree.id, color=nml_tree.color
             )
-        _nml_tree_to_graph(new_graph, nml_tree)
+        _nml_tree_to_wk_tree(new_tree, nml_tree)
 
     for comment in nml.comments:
         skeleton.get_node_by_id(comment.node).comment = comment.content
@@ -55,7 +55,7 @@ def nml_to_skeleton(nml: wknml.Nml) -> "Skeleton":
         if branchpoint.time != 0:
             node.branchpoint_time = branchpoint.time
 
-    max_id = max(skeleton.get_max_graph_id(), skeleton.get_max_node_id())
+    max_id = max(skeleton.get_max_tree_id(), skeleton.get_max_node_id())
     skeleton._element_id_generator = itertools.count(max_id + 1)
 
     if nml.parameters.offset is not None and not all(
@@ -68,8 +68,8 @@ def nml_to_skeleton(nml: wknml.Nml) -> "Skeleton":
     return skeleton
 
 
-def _nml_tree_to_graph(
-    new_graph: "Graph",
+def _nml_tree_to_wk_tree(
+    new_tree: "Tree",
     nml_tree: wknml.Tree,
 ) -> None:
     optional_attribute_list = [
@@ -83,7 +83,7 @@ def _nml_tree_to_graph(
 
     for nml_node in nml_tree.nodes:
         node_id = nml_node.id
-        current_node = new_graph.add_node(
+        current_node = new_tree.add_node(
             position=Vec3Int.from_vec3_float(nml_node.position),
             _enforced_id=node_id,
             radius=nml_node.radius,
@@ -98,7 +98,7 @@ def _nml_tree_to_graph(
                 )
 
     for edge in nml_tree.edges:
-        new_graph.add_edge(edge.source, edge.target)
+        new_tree.add_edge(edge.source, edge.target)
 
 
 def _random_color_rgba() -> Tuple[float, float, float, float]:
@@ -122,7 +122,7 @@ def annotation_to_nml(  # pylint: disable=dangerous-default-value
 
     nmlParameters = wknml.Parameters(
         name=annotation.dataset_name,
-        scale=annotation.scale,
+        scale=annotation.voxel_size,
         description=annotation.description,
         organization=annotation.organization_id,
         time=annotation.time,
@@ -135,32 +135,32 @@ def annotation_to_nml(  # pylint: disable=dangerous-default-value
 
     comments = [
         wknml.Comment(node.id, node.comment)
-        for graph in annotation.skeleton.flattened_graphs()
-        for node in graph.nodes
+        for tree in annotation.skeleton.flattened_trees()
+        for node in tree.nodes
         if node.comment is not None
     ]
 
     branchpoints = [
         wknml.Branchpoint(node.id, node.time)
-        for graph in annotation.skeleton.flattened_graphs()
-        for node in graph.nodes
+        for tree in annotation.skeleton.flattened_trees()
+        for node in tree.nodes
         if node.is_branchpoint
     ]
 
-    graphs = []
+    trees = []
 
-    for graph in sorted(annotation.skeleton.flattened_graphs(), key=lambda g: g.id):
-        nodes, edges = _extract_nodes_and_edges_from_graph(graph)
-        color = graph.color or _random_color_rgba()
-        name = graph.name or f"tree{graph.id}"
+    for tree in sorted(annotation.skeleton.flattened_trees(), key=lambda g: g.id):
+        nodes, edges = _extract_nodes_and_edges_from_tree(tree)
+        color = tree.color or _random_color_rgba()
+        name = tree.name or f"tree{tree.id}"
 
-        graphs.append(
+        trees.append(
             wknml.Tree(
                 nodes=nodes,
                 edges=edges,
-                id=graph.id,
+                id=tree.id,
                 name=name,
-                groupId=graph.group.id if graph.group != annotation.skeleton else None,
+                groupId=tree.group.id if tree.group != annotation.skeleton else None,
                 color=color,
             )
         )
@@ -190,7 +190,7 @@ def annotation_to_nml(  # pylint: disable=dangerous-default-value
     nml = wknml.Nml(
         meta=meta,
         parameters=nmlParameters,
-        trees=graphs,
+        trees=trees,
         branchpoints=branchpoints,
         comments=comments,
         groups=groups,
@@ -200,7 +200,7 @@ def annotation_to_nml(  # pylint: disable=dangerous-default-value
     return nml
 
 
-def _extract_nodes_and_edges_from_graph(
+def _extract_nodes_and_edges_from_tree(
     graph: nx.Graph,
 ) -> Tuple[List[wknml.Node], List[wknml.Edge]]:
     """

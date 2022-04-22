@@ -16,12 +16,6 @@ from .layer_categories import LayerCategoryType
 from .view import View
 
 
-class SamplingModes:
-    ANISOTROPIC = "anisotropic"
-    ISOTROPIC = "isotropic"
-    CONSTANT_Z = "constant_z"
-
-
 class InterpolationModes(Enum):
     MEDIAN = 0
     MODE = 1
@@ -40,32 +34,34 @@ def determine_buffer_shape(array_info: ArrayInfo) -> Vec3Int:
 
 
 def calculate_mags_to_downsample(
-    from_mag: Mag, max_mag: Mag, scale: Optional[Tuple[float, float, float]]
+    from_mag: Mag, max_mag: Mag, voxel_size: Optional[Tuple[float, float, float]]
 ) -> List[Mag]:
     assert np.all(from_mag.to_np() <= max_mag.to_np())
     mags = []
     current_mag = from_mag
     while current_mag < max_mag:
-        if scale is None:
+        if voxel_size is None:
             # In case the sampling mode is CONSTANT_Z or ISOTROPIC:
             current_mag = Mag(np.minimum(current_mag.to_np() * 2, max_mag.to_np()))
         else:
             # In case the sampling mode is ANISOTROPIC:
-            current_size = current_mag.to_np() * np.array(scale)
+            current_size = current_mag.to_np() * np.array(voxel_size)
             min_value = np.min(current_size)
             min_value_bitmask = np.array(current_size == min_value)
             factor = min_value_bitmask + 1
 
             # Calculate the two potential magnifications.
             # Either, double all components or only double the smallest component.
-            all_scaled = current_size * 2
-            min_scaled = current_size * factor  # only multiply the smallest dimension
+            all_voxel_sized = current_size * 2
+            min_voxel_sized = (
+                current_size * factor
+            )  # only multiply the smallest dimension
 
-            all_scaled_ratio = np.max(all_scaled) / np.min(all_scaled)
-            min_scaled_ratio = np.max(min_scaled) / np.min(min_scaled)
+            all_voxel_sized_ratio = np.max(all_voxel_sized) / np.min(all_voxel_sized)
+            min_voxel_sized_ratio = np.max(min_voxel_sized) / np.min(min_voxel_sized)
 
             # The smaller the ratio between the smallest dimension and the largest dimension, the better.
-            if all_scaled_ratio < min_scaled_ratio:
+            if all_voxel_sized_ratio < min_voxel_sized_ratio:
                 # Multiply all dimensions with "2"
                 new_mag = Mag(np.minimum(current_mag.to_np() * 2, max_mag.to_np()))
             else:
@@ -73,7 +69,7 @@ def calculate_mags_to_downsample(
                 new_mag = Mag(np.minimum(current_mag.to_np() * factor, max_mag.to_np()))
             if new_mag == current_mag:
                 raise RuntimeError(
-                    f"The maximum mag {max_mag} can not be reached from {current_mag} with scale {scale}!"
+                    f"The maximum mag {max_mag} can not be reached from {current_mag} with voxel_size {voxel_size}!"
                 )
             current_mag = new_mag
 
@@ -83,11 +79,11 @@ def calculate_mags_to_downsample(
 
 
 def calculate_mags_to_upsample(
-    from_mag: Mag, min_mag: Mag, scale: Optional[Tuple[float, float, float]]
+    from_mag: Mag, finest_mag: Mag, voxel_size: Optional[Tuple[float, float, float]]
 ) -> List[Mag]:
-    return list(reversed(calculate_mags_to_downsample(min_mag, from_mag, scale)))[
-        1:
-    ] + [min_mag]
+    return list(
+        reversed(calculate_mags_to_downsample(finest_mag, from_mag, voxel_size))
+    )[1:] + [finest_mag]
 
 
 def calculate_default_max_mag(dataset_size: Vec3IntLike) -> Mag:
@@ -96,7 +92,7 @@ def calculate_default_max_mag(dataset_size: Vec3IntLike) -> Mag:
     max_x_y = max(dataset_size[0], dataset_size[1])
     # highest power of 2 larger (or equal) than max_x_y divided by 100
     # The calculated factor will be used for x, y and z here. If anisotropic downsampling takes place,
-    # the dimensions can still be downsampled independently according to the scale.
+    # the dimensions can still be downsampled independently according to the voxel_size.
     return Mag(max(2 ** math.ceil(math.log(max_x_y / 100, 2)), 4))  # at least 4
 
 

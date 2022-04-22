@@ -4,8 +4,9 @@ import attr
 from boltons.strutils import unit_len
 
 import webknossos._nml as wknml
+from webknossos.utils import warn_deprecated
 
-from .graph import Graph
+from .tree import Tree
 
 if TYPE_CHECKING:
     from webknossos.skeleton import Node, Skeleton
@@ -13,7 +14,7 @@ if TYPE_CHECKING:
 
 Vector3 = Tuple[float, float, float]
 Vector4 = Tuple[float, float, float, float]
-GroupOrGraph = Union["Group", Graph]
+GroupOrTree = Union["Group", Tree]
 
 
 @attr.define()
@@ -25,10 +26,10 @@ class Group:
         init=False,
         repr=lambda children: f"<{unit_len(children, 'child group')}>",
     )
-    _child_graphs: Set[Graph] = attr.ib(
+    _child_trees: Set[Tree] = attr.ib(
         factory=set,
         init=False,
-        repr=lambda children: f"<{unit_len(children, 'child graph')}>",
+        repr=lambda children: f"<{unit_len(children, 'child tree')}>",
     )
     _skeleton: "Skeleton" = attr.ib(eq=False, repr=False)
     _enforced_id: Optional[int] = attr.ib(None, eq=False, repr=False)
@@ -45,7 +46,7 @@ class Group:
 
         ```python
         subgroup = group.add_group("a subgroup")
-        graph = subgroup.add_graph("a graph")
+        tree = subgroup.add_tree("a tree")
         ```
         """
 
@@ -60,39 +61,55 @@ class Group:
         """Read-only property."""
         return self._id
 
-    def add_graph(
+    def add_tree(
         self,
         name: str,
         color: Optional[Union[Vector4, Vector3]] = None,
         _enforced_id: Optional[int] = None,
-    ) -> Graph:
-        """Adds a graph to the current group with the provided name (and color if specified)."""
+    ) -> Tree:
+        """Adds a tree to the current group with the provided name (and color if specified)."""
 
         if color is not None and len(color) == 3:
             color = cast(Optional[Vector4], color + (1.0,))
         color = cast(Optional[Vector4], color)
-        new_graph = Graph(
+        new_tree = Tree(
             name=name,
             color=color,
             group=self,
             skeleton=self._skeleton,
             enforced_id=_enforced_id,
         )
-        self._child_graphs.add(new_graph)
+        self._child_trees.add(new_tree)
 
-        return new_graph
+        return new_tree
+
+    def add_graph(
+        self,
+        name: str,
+        color: Optional[Union[Vector4, Vector3]] = None,
+        _enforced_id: Optional[int] = None,
+    ) -> Tree:
+        """Deprecated, please use `add_tree`."""
+        warn_deprecated("add_graph()", "add_tree()")
+        return self.add_tree(name=name, color=color, _enforced_id=_enforced_id)
 
     @property
-    def children(self) -> Iterator[GroupOrGraph]:
-        """Returns all (immediate) children (groups and graphs) as an iterator."""
-        yield from self.graphs
+    def children(self) -> Iterator[GroupOrTree]:
+        """Returns all (immediate) children (groups and trees) as an iterator."""
+        yield from self.trees
         yield from self.groups
 
     @property
-    def graphs(self) -> Iterator[Graph]:
-        """Returns all (immediate) graph children as an iterator.
-        Use flattened_graphs if you need also need graphs within subgroups."""
-        return (child for child in self._child_graphs)
+    def trees(self) -> Iterator[Tree]:
+        """Returns all (immediate) tree children as an iterator.
+        Use flattened_trees if you need also need trees within subgroups."""
+        return (child for child in self._child_trees)
+
+    @property
+    def graphs(self) -> Iterator[Tree]:
+        """Deprecated, please use `trees`."""
+        warn_deprecated("graphs", "trees")
+        return self.trees
 
     @property
     def groups(self) -> Iterator["Group"]:
@@ -111,25 +128,35 @@ class Group:
         return new_group
 
     def get_total_node_count(self) -> int:
-        """Returns the total number of nodes of all graphs within this group (and its subgroups)."""
-        return sum(graph.number_of_nodes() for graph in self.flattened_graphs())
+        """Returns the total number of nodes of all trees within this group (and its subgroups)."""
+        return sum(tree.number_of_nodes() for tree in self.flattened_trees())
+
+    def get_max_tree_id(self) -> int:
+        """Returns the highest tree id of all trees within this group (and its subgroups)."""
+        return max((tree.id for tree in self.flattened_trees()), default=0)
 
     def get_max_graph_id(self) -> int:
-        """Returns the highest graph id of all graphs within this group (and its subgroups)."""
-        return max((graph.id for graph in self.flattened_graphs()), default=0)
+        """Deprecated, please use `get_max_tree_id`."""
+        warn_deprecated("get_max_graph_id()", "get_max_tree_id()")
+        return self.get_max_tree_id()
 
     def get_max_node_id(self) -> int:
-        """Returns the highest node id of all nodes of all graphs within this group (and its subgroups)."""
+        """Returns the highest node id of all nodes of all trees within this group (and its subgroups)."""
         return max(
-            (graph.get_max_node_id() for graph in self.flattened_graphs()),
+            (tree.get_max_node_id() for tree in self.flattened_trees()),
             default=0,
         )
 
-    def flattened_graphs(self) -> Iterator[Graph]:
-        """Returns an iterator of all graphs within this group (and its subgroups)."""
-        yield from self.graphs
+    def flattened_trees(self) -> Iterator[Tree]:
+        """Returns an iterator of all trees within this group (and its subgroups)."""
+        yield from self.trees
         for group in self.groups:
-            yield from group.flattened_graphs()
+            yield from group.flattened_trees()
+
+    def flattened_graphs(self) -> Iterator[Tree]:
+        """Deprecated, please use `flattened_trees`."""
+        warn_deprecated("flattened_graphs()", "flattened_trees()")
+        return self.flattened_trees()
 
     def flattened_groups(self) -> Iterator["Group"]:
         """Returns an iterator of all groups within this group (and its subgroups)."""
@@ -139,19 +166,24 @@ class Group:
 
     def get_node_by_id(self, node_id: int) -> "Node":
         """Returns the node which has the specified node id."""
-        for graph in self.flattened_graphs():
-            if graph.has_node(node_id):
-                return graph.get_node_by_id(node_id)
+        for tree in self.flattened_trees():
+            if tree.has_node(node_id):
+                return tree.get_node_by_id(node_id)
 
         raise ValueError("Node id not found")
 
-    def get_graph_by_id(self, graph_id: int) -> Graph:
-        """Returns the graph which has the specified graph id."""
+    def get_tree_by_id(self, tree_id: int) -> Tree:
+        """Returns the tree which has the specified tree id."""
         # Todo: Use hashed access if it turns out to be worth it? pylint: disable=fixme
-        for graph in self.flattened_graphs():
-            if graph.id == graph_id:
-                return graph
-        raise ValueError(f"No graph with id {graph_id} was found")
+        for tree in self.flattened_trees():
+            if tree.id == tree_id:
+                return tree
+        raise ValueError(f"No tree with id {tree_id} was found")
+
+    def get_graph_by_id(self, graph_id: int) -> Tree:
+        """Deprecated, please use `get_tree_by_id`."""
+        warn_deprecated("get_graph_by_id()", "get_tree_by_id()")
+        return self.get_tree_by_id(graph_id)
 
     def get_group_by_id(self, group_id: int) -> "Group":
         """Returns the group which has the specified group id."""

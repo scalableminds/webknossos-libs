@@ -19,7 +19,7 @@ from webknossos import (
     View,
 )
 from webknossos.dataset.defaults import DEFAULT_CHUNK_SIZE
-from webknossos.dataset.downsampling_utils import (
+from webknossos.dataset._downsampling_utils import (
     InterpolationModes,
     downsample_unpadded_data,
     parse_interpolation_mode,
@@ -32,13 +32,14 @@ from ._internal.utils import (
     add_data_format_flags,
     add_distribution_flags,
     add_interpolation_flag,
-    add_scale_flag,
+    add_voxel_size_flag,
     add_verbose_flag,
     find_files,
     get_chunks,
     get_executor_for_args,
     parse_path,
     setup_logging,
+    setup_warnings,
     wait_and_ensure_success,
 )
 
@@ -119,7 +120,7 @@ def create_parser() -> ArgumentParser:
         help="Select a single sample of a specific channel to be cubed into a layer. This option is only valid if channel_index is set. Since webKnossos only supports multiple uint8 channels, it may be necessary to cube a multi-sample dataset to different layers.",
     )
 
-    add_scale_flag(parser)
+    add_voxel_size_flag(parser)
     add_interpolation_flag(parser)
     add_verbose_flag(parser)
     add_distribution_flags(parser)
@@ -298,7 +299,7 @@ def cubing(
     start_z: int,
     skip_first_z_slices: int,
     pad: bool,
-    scale: Tuple[float, float, float],
+    voxel_size: Tuple[float, float, float],
     executor_args: Namespace,
 ) -> Layer:
     source_files = find_source_filenames(source_path)
@@ -353,7 +354,7 @@ def cubing(
 
     target_mag = Mag(target_mag_str)
 
-    target_ds = Dataset(target_path, scale=scale, exist_ok=True)
+    target_ds = Dataset(target_path, voxel_size=voxel_size, exist_ok=True)
     is_segmentation_layer = layer_name == "segmentation"
 
     if is_segmentation_layer:
@@ -443,6 +444,7 @@ def cubing(
 if __name__ == "__main__":
     args = create_parser().parse_args()
     setup_logging(args)
+    setup_warnings()
 
     arg_dict = vars(args)
 
@@ -462,6 +464,6 @@ if __name__ == "__main__":
         args.start_z,
         args.skip_first_z_slices,
         args.pad,
-        args.scale,
+        args.voxel_size,
         args,
     )

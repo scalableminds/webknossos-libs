@@ -7,39 +7,36 @@ import attr
 
 from webknossos.utils import warn_deprecated
 
-from .graph import Graph
 from .group import Group
 
 Vector3 = Tuple[float, float, float]
-
-GroupOrGraph = Union[Group, Graph]
 
 
 @attr.define()
 class Skeleton(Group):
     """
-    Representation of the [skeleton tracing](/webknossos/skeleton_annotation.html) of an `Annotation`.
-    It contains metadata to identify the related dataset and is the root-group of sub-groups and graphs.
-    See the parent class `Group` for methods about group and graph handling.
+    Representation of the [skeleton](/webknossos/skeleton_annotation.html) of an `Annotation`.
+    It contains metadata to identify the related dataset and is the root-group of sub-groups and trees.
+    See the parent class `Group` for methods about group and tree handling.
     To upload a skeleton to webknossos, please create an `Annotation()` with it.
 
     A small usage example:
 
     ```python
-    annotation = Annotation("my_annotation", scale=(11, 11, 24))
+    annotation = Annotation("my_annotation", voxel_size=(11, 11, 24))
     group = annotation.skeleton.add_group("a group")
-    graph = group.add_graph("a graph")
-    node_1 = graph.add_node(position=(0, 0, 0), comment="node 1")
-    node_2 = graph.add_node(position=(100, 100, 100), comment="node 2")
+    tree = group.add_tree("a tree")
+    node_1 = tree.add_node(position=(0, 0, 0), comment="node 1")
+    node_2 = tree.add_node(position=(100, 100, 100), comment="node 2")
 
-    graph.add_edge(node_1, node_2)
+    tree.add_edge(node_1, node_2)
     ```
 
     Also see [this example](/webknossos-py/examples/skeleton_synapse_candidates.html) for a more
     complex interaction.
     """
 
-    scale: Vector3
+    voxel_size: Vector3
     dataset_name: str
     organization_id: Optional[str] = None
     description: Optional[str] = None
@@ -58,7 +55,7 @@ class Skeleton(Group):
     def _set_init_docstring(cls) -> None:
         Skeleton.__init__.__doc__ = """
         To initialize a skeleton, setting the following parameters is required (or recommended):
-        - scale
+        - voxel_size
         - dataset_name
         - organization_id
         - description
@@ -68,6 +65,18 @@ class Skeleton(Group):
         self._element_id_generator = itertools.count()
         self._skeleton = self
         super().__attrs_post_init__()  # sets self._id
+
+    @property
+    def scale(self) -> Tuple[float, float, float]:
+        """Deprecated, please use `voxel_size`."""
+        warn_deprecated("scale", "voxel_size")
+        return self.voxel_size
+
+    @scale.setter
+    def scale(self, scale: Tuple[float, float, float]) -> None:
+        """Deprecated, please use `voxel_size`."""
+        warn_deprecated("scale", "voxel_size")
+        self.voxel_size = scale
 
     @staticmethod
     def load(file_path: Union[PathLike, str]) -> "Skeleton":

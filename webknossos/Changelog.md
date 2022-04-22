@@ -13,6 +13,14 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.21...HEAD)
 
 ### Breaking Changes
+- Renamed some entities to comply with the [webKnossos terminology](https://docs.webknossos.org/webknossos/terminology.html). [#704](https://github.com/scalableminds/webknossos-libs/pull/704):
+  * The `Graph` class changed to `Tree`, also related methods and attributes are renamed now, e.g. `add_graph` is now `add_tree`.
+    All previous entities are still available, but deprecated.
+  * `scale` has changed to `voxel_size` for datasets, skeletons and annotations.
+    Changes in `Dataset` are backwards-compatible, but `scale` is deprecated.
+    For `Annotation` and `Skeletons` the initializer only supports `voxel_size`, the `scale` attribute is deprecated
+  * `get_best_mag` is deprecated, please use `get_finest_mag` instead
+  * In `layer.upscale`, `min_mag` is deprecated in favor of `finest_mag`
 
 ### Added
 

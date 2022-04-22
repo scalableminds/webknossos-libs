@@ -20,7 +20,7 @@ def test_buffered_slice_writer() -> None:
     dataset_path = str(dataset_dir / layer_name / mag.to_layer_name())
 
     rmtree(dataset_dir)
-    ds = Dataset(dataset_dir, scale=(1, 1, 1))
+    ds = Dataset(dataset_dir, voxel_size=(1, 1, 1))
     mag_view = ds.add_layer("color", COLOR_CATEGORY, dtype_per_channel=dtype).add_mag(
         mag
     )
@@ -81,7 +81,7 @@ def test_buffered_slice_writer_along_different_axis(tmp_path: Path) -> None:
     offset = Vec3Int(5, 10, 20)
 
     for dim in [0, 1, 2]:
-        ds = Dataset(tmp_path / f"buffered_slice_writer_{dim}", scale=(1, 1, 1))
+        ds = Dataset(tmp_path / f"buffered_slice_writer_{dim}", voxel_size=(1, 1, 1))
         mag_view = ds.add_layer("color", COLOR_CATEGORY, num_channels=3).add_mag(1)
 
         with mag_view.get_buffered_slice_writer(
@@ -107,7 +107,7 @@ def test_buffered_slice_reader_along_different_axis(tmp_path: Path) -> None:
     offset = Vec3Int(5, 10, 20)
 
     for dim in [0, 1, 2]:
-        ds = Dataset(tmp_path / f"buffered_slice_reader_{dim}", scale=(1, 1, 1))
+        ds = Dataset(tmp_path / f"buffered_slice_reader_{dim}", voxel_size=(1, 1, 1))
         mag_view = ds.add_layer("color", COLOR_CATEGORY, num_channels=3).add_mag(1)
         mag_view.write(test_cube, absolute_offset=offset)
 

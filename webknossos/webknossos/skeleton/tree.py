@@ -5,6 +5,7 @@ import networkx as nx
 import numpy as np
 
 from webknossos.geometry import Vec3Int, Vec3IntLike
+from webknossos.utils import warn_deprecated
 
 from .node import Node
 
@@ -23,7 +24,7 @@ def _get_id(node_or_id: Union[Node, int]) -> int:
 
 
 class _NodeDict(MutableMapping):
-    """Dict-like container for the `Graph` class below to handle both nodes and ids as keys.
+    """Dict-like container for the `Tree` class below to handle both nodes and ids as keys.
     Only when setting the value of a node for the first time the actual node must be passed.
     This allows to keep a reference from all ids to the nodes, which can be looked up
     using `get_node()`. Iterating over the keys yields the `Node` objects."""
@@ -42,7 +43,7 @@ class _NodeDict(MutableMapping):
                 self._id_to_node[key_id] = key
             else:
                 raise ValueError(
-                    f"Tried to add node {key}, which does not exist yet, to a graph."
+                    f"Tried to add node {key}, which does not exist yet, to a tree."
                     + "For insertion, the node must be an instance of the Node class."
                 )
         self._id_to_attrs[key_id] = value
@@ -62,11 +63,11 @@ class _NodeDict(MutableMapping):
 
 
 class _AdjDict(MutableMapping):
-    """Dict-like container for the `Graph` class below to handle both nodes and ids as keys.
+    """Dict-like container for the `Tree` class below to handle both nodes and ids as keys.
     Needs a reference to the _node attribute (of class `_NodeDict`) of the graph object
     to get a reference from ids to nodes. Iterating over the keys yields the `Node` objects.
 
-    See Graph.__init__ for more details"""
+    See Tree.__init__ for more details"""
 
     def __init__(self, *, node_dict: _NodeDict) -> None:
         self._id_to_attrs: Dict[int, Any] = {}
@@ -88,22 +89,22 @@ class _AdjDict(MutableMapping):
         return len(self._id_to_attrs)
 
 
-class Graph(nx.Graph):
+class Tree(nx.Graph):
     """
-    Contains a collection of nodes and edges.
+    Contains a collection of nodes and edges. Despite the name, trees may contain cycles.
     This class inherits from [`networkx.Graph`](https://networkx.org/documentation/stable/reference/classes/graph.html).
     For further methods, please [check the networkx documentation](https://networkx.org/documentation/stable/reference/classes/graph.html#methods).
 
-    See Graph.__init__ for more details.
+    See Tree.__init__ for more details.
 
     A small usage example:
 
     ```python
-    graph = skeleton.add_graph("a graph")
-    node_1 = graph.add_node(position=(0, 0, 0), comment="node 1")
-    node_2 = graph.add_node(position=(100, 100, 100), comment="node 2")
+    tree = skeleton.add_tree("a tree")
+    node_1 = tree.add_node(position=(0, 0, 0), comment="node 1")
+    node_2 = tree.add_node(position=(100, 100, 100), comment="node 2")
 
-    graph.add_edge(node_1, node_2)
+    tree.add_edge(node_1, node_2)
     ```
     """
 
@@ -116,8 +117,8 @@ class Graph(nx.Graph):
         enforced_id: Optional[int] = None,
     ) -> None:
         """
-        To create a graph, it is recommended to use `Skeleton.add_graph` or
-        `Group.add_graph`. That way, the newly created graph is automatically
+        To create a tree, it is recommended to use `Skeleton.add_tree` or
+        `Group.add_tree`. That way, the newly created tree is automatically
         attached as a child to the object the method was called on.
         """
 
@@ -163,7 +164,7 @@ class Graph(nx.Graph):
         )
 
     def __eq__(self, o: object) -> bool:
-        return isinstance(o, Graph) and (
+        return isinstance(o, Tree) and (
             self.__to_tuple_for_comparison() == o.__to_tuple_for_comparison()
         )
 
@@ -173,11 +174,11 @@ class Graph(nx.Graph):
         return self._id
 
     def get_node_positions(self) -> np.ndarray:
-        """Returns an numpy array with the positions of all nodes of this graph."""
+        """Returns an numpy array with the positions of all nodes of this tree."""
         return np.array([node.position for node in self.nodes])
 
     def get_node_by_id(self, node_id: int) -> Node:
-        """Returns the node in this graph with the requested id."""
+        """Returns the node in this tree with the requested id."""
         return self._node.get_node(node_id)
 
     def add_node(  # pylint: disable=arguments-differ
@@ -196,7 +197,7 @@ class Graph(nx.Graph):
         _enforced_id: Optional[int] = None,
     ) -> Node:
         """
-        Adds a node to the graph. Apart from the mandatory `position` parameter,
+        Adds a node to the tree. Apart from the mandatory `position` parameter,
         there are several optional parameters which can be used to encode
         additional information. For example, the comment will be shown by the
         webKnossos UI.
@@ -225,3 +226,22 @@ class Graph(nx.Graph):
 
     def __hash__(self) -> int:
         return self._id
+
+
+class Graph(Tree):
+    def __init__(
+        self,
+        name: str,
+        group: "Group",
+        skeleton: "Skeleton",
+        color: Optional[Vector4] = None,
+        enforced_id: Optional[int] = None,
+    ) -> None:
+        warn_deprecated("Graph", "Tree")
+        super().__init__(
+            name=name,
+            group=group,
+            skeleton=skeleton,
+            color=color,
+            enforced_id=enforced_id,
+        )

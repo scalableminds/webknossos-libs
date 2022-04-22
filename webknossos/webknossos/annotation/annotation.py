@@ -80,7 +80,7 @@ class Annotation:
     # The following underscored attributes are just for initialization
     # in case the skeleton is not given. They are always None as attributes.
     _dataset_name: Optional[str] = None
-    _scale: Optional[Vector3] = None
+    _voxel_size: Optional[Vector3] = None
     _organization_id: Optional[str] = None
     _description: Optional[str] = None
     username: Optional[str] = None
@@ -98,8 +98,8 @@ class Annotation:
     def _set_init_docstring(cls) -> None:
         Annotation.__init__.__doc__ = """
         To initialize a local annotation, please provide the `name` argument, and either
-        the `skeleton` argument, or a `dataset_name` and `scale`.
-        When supplying `skeleton` passing `dataset_name`, `scale`, `organization_id` or
+        the `skeleton` argument, or a `dataset_name` and `voxel_size`.
+        When supplying `skeleton` passing `dataset_name`, `voxel_size`, `organization_id` or
         `description` is not allowed as the attributes of the skeleton are used in this case.
         """
 
@@ -108,15 +108,17 @@ class Annotation:
             assert (
                 self._dataset_name is not None
             ), "Please either supply a skeleton or dataset_name for Annotation()."
-            assert self._scale is not None, "Please supply a scale for Annotation()."
+            assert (
+                self._voxel_size is not None
+            ), "Please supply a voxel_size for Annotation()."
             self.skeleton = Skeleton(
                 dataset_name=self._dataset_name,
-                scale=self._scale,
+                voxel_size=self._voxel_size,
                 organization_id=self._organization_id,
                 description=self._description,
             )
             self._dataset_name = None
-            self._scale = None
+            self._voxel_size = None
             self._organization_id = None
             self._description = None
         else:
@@ -124,12 +126,12 @@ class Annotation:
                 i is None
                 for i in [
                     self._dataset_name,
-                    self._scale,
+                    self._voxel_size,
                     self._organization_id,
                     self._description,
                 ]
             ), (
-                "When supplying a skeleton for Annotation(), passing dataset_name, scale, organization_id or description is not allowed. "
+                "When supplying a skeleton for Annotation(), passing dataset_name, voxel_size, organization_id or description is not allowed. "
                 + "The attributes of the skeleton are used in this case."
             )
 
@@ -143,13 +145,25 @@ class Annotation:
         self.skeleton.dataset_name = dataset_name
 
     @property
+    def voxel_size(self) -> Tuple[float, float, float]:
+        """This attribute is a proxy for `skeleton.voxel_size`."""
+        return self.skeleton.voxel_size
+
+    @voxel_size.setter
+    def voxel_size(self, voxel_size: Tuple[float, float, float]) -> None:
+        self.skeleton.voxel_size = voxel_size
+
+    @property
     def scale(self) -> Tuple[float, float, float]:
-        """This attribute is a proxy for `skeleton.scale`."""
-        return self.skeleton.scale
+        """Deprecated, please use `voxel_size`."""
+        warn_deprecated("scale", "voxel_size")
+        return self.voxel_size
 
     @scale.setter
     def scale(self, scale: Tuple[float, float, float]) -> None:
-        self.skeleton.scale = scale
+        """Deprecated, please use `voxel_size`."""
+        warn_deprecated("scale", "voxel_size")
+        self.voxel_size = scale
 
     @property
     def organization_id(self) -> Optional[str]:
@@ -570,7 +584,7 @@ class Annotation:
                 layer_name, category="segmentation", largest_segment_id=0
             ),
         )
-        best_mag_view = layer.get_best_mag()
+        best_mag_view = layer.get_finest_mag()
 
         if largest_segment_id is None:
             max_value = max(
@@ -601,7 +615,7 @@ class Annotation:
             input_annotation_dataset = Dataset(
                 tmp_annotation_dir,
                 name="tmp_annotation_dataset",
-                scale=self.scale,
+                voxel_size=self.voxel_size,
                 exist_ok=True,
             )
 

@@ -1,10 +1,10 @@
 from os import PathLike
 from typing import Union
 
-from webknossos.skeleton.graph import Graph
 from webknossos.skeleton.group import Group
 from webknossos.skeleton.node import Node
 from webknossos.skeleton.skeleton import Skeleton
+from webknossos.skeleton.tree import Graph, Tree
 from webknossos.utils import warn_deprecated
 
 

@@ -1,9 +1,8 @@
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
-from webknossos import Dataset, Mag, Vec3Int
-from webknossos.dataset.downsampling_utils import SamplingModes
+from webknossos import Dataset, Mag, Vec3Int, SamplingModes
 
 from ._internal.utils import (
     add_distribution_flags,
@@ -14,6 +13,7 @@ from ._internal.utils import (
     get_executor_args,
     parse_path,
     setup_logging,
+    setup_warnings,
 )
 
 
@@ -61,7 +61,7 @@ def create_parser() -> ArgumentParser:
         help="Specify an explicit anisotropic target magnification (e.g., --anisotropic_target_mag 2-2-1)."
         "All magnifications until this target magnification will be created. Consider using --anisotropic "
         "instead which automatically creates multiple anisotropic magnifications depending "
-        "on the dataset's scale",
+        "on the dataset's voxel_size",
         type=str,
     )
 
@@ -105,7 +105,7 @@ def downsample_mags(
     buffer_shape: Optional[Vec3Int] = None,
     compress: bool = True,
     args: Optional[Namespace] = None,
-    sampling_mode: str = SamplingModes.ANISOTROPIC,
+    sampling_mode: Union[str, SamplingModes] = SamplingModes.ANISOTROPIC,
     force_sampling_scheme: bool = False,
 ) -> None:
     """
@@ -144,6 +144,7 @@ def downsample_mags(
 
 
 if __name__ == "__main__":
+    setup_warnings()
     args = create_parser().parse_args()
     setup_logging(args)
 

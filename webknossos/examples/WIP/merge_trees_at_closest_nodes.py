@@ -16,9 +16,9 @@ for group in nml.groups.values():  # groups is a dict with the name as keys
         enumerate(group.flattened_trees()), 2
     ):
         pos_a = (
-            tree_a.get_node_positions() * nml.scale
+            tree_a.get_node_positions() * nml.voxel_size
         )  # or tree_a.get_node_positions_nm?
-        pos_b = tree_b.get_node_positions() * nml.scale
+        pos_b = tree_b.get_node_positions() * nml.voxel_size
         node_idx_a, node_idx_b, distance = wk.geometry.closest_pair(pos_a, pos_b)
         G.add_edge((tree_idx_a, node_idx_a), (tree_idx_b, node_idx_b), weight=distance)
     new_edges = nx.algorithms.tree.mst.minimum_spanning_edges()

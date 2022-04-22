@@ -24,11 +24,12 @@ from ._internal.utils import (
     add_distribution_flags,
     add_interpolation_flag,
     add_sampling_mode_flag,
-    add_scale_flag,
+    add_voxel_size_flag,
     add_verbose_flag,
     get_executor_args,
     parse_path,
     setup_logging,
+    setup_warnings,
 )
 
 logger = logging.getLogger(__name__)
@@ -59,7 +60,7 @@ def create_parser() -> argparse.ArgumentParser:
         type=parse_path,
     )
 
-    add_scale_flag(parser, required=False)
+    add_voxel_size_flag(parser, required=False)
 
     parser.add_argument(
         "--layer_name",
@@ -146,7 +147,7 @@ def convert_zarr(
     chunk_size: Vec3Int,
     chunks_per_shard: Vec3Int,
     is_segmentation_layer: bool = False,
-    scale: Optional[Tuple[float, float, float]] = (1.0, 1.0, 1.0),
+    voxel_size: Optional[Tuple[float, float, float]] = (1.0, 1.0, 1.0),
     flip_axes: Optional[Union[int, Tuple[int, ...]]] = None,
     compress: bool = True,
     executor_args: Optional[argparse.Namespace] = None,
@@ -157,9 +158,9 @@ def convert_zarr(
     input_dtype = f.dtype
     shape = f.shape
 
-    if scale is None:
-        scale = 1.0, 1.0, 1.0
-    wk_ds = Dataset(target_path, scale=scale, exist_ok=True)
+    if voxel_size is None:
+        voxel_size = 1.0, 1.0, 1.0
+    wk_ds = Dataset(target_path, voxel_size=voxel_size, exist_ok=True)
     wk_layer = wk_ds.get_or_add_layer(
         layer_name,
         "segmentation" if is_segmentation_layer else "color",
@@ -214,7 +215,7 @@ def main(args: argparse.Namespace) -> None:
         chunk_size=args.chunk_size,
         chunks_per_shard=args.chunks_per_shard,
         is_segmentation_layer=args.is_segmentation_layer,
-        scale=args.scale,
+        voxel_size=args.voxel_size,
         flip_axes=args.flip_axes,
         compress=not args.no_compress,
         executor_args=executor_args,
@@ -231,6 +232,7 @@ def main(args: argparse.Namespace) -> None:
 
 
 if __name__ == "__main__":
+    setup_warnings()
     args = create_parser().parse_args()
     setup_logging(args)
 

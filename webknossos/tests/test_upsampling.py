@@ -3,15 +3,15 @@ from pathlib import Path
 import numpy as np
 
 from webknossos import COLOR_CATEGORY, Dataset, Mag, Vec3Int
-from webknossos.dataset.downsampling_utils import SamplingModes
-from webknossos.dataset.upsampling_utils import upsample_cube, upsample_cube_job
+from webknossos.dataset._upsampling_utils import upsample_cube, upsample_cube_job
+from webknossos.dataset.sampling_modes import SamplingModes
 
 WKW_CUBE_SIZE = 1024
 BUFFER_SHAPE = Vec3Int.full(256)
 
 
 def test_upsampling(tmp_path: Path) -> None:
-    ds = Dataset(tmp_path, scale=(1, 1, 1))
+    ds = Dataset(tmp_path, voxel_size=(1, 1, 1))
     layer = ds.add_layer("color", COLOR_CATEGORY)
     mag = layer.add_mag([4, 4, 2])
     mag.write(
@@ -20,7 +20,7 @@ def test_upsampling(tmp_path: Path) -> None:
     )
     layer.upsample(
         from_mag=Mag([4, 4, 2]),
-        min_mag=Mag(1),
+        finest_mag=Mag(1),
         compress=False,
         sampling_mode=SamplingModes.ANISOTROPIC,
         buffer_edge_len=64,
@@ -43,7 +43,7 @@ def test_upsample_cube() -> None:
 
 
 def upsample_test_helper(tmp_path: Path, use_compress: bool) -> None:
-    ds = Dataset(tmp_path, scale=(10.5, 10.5, 5))
+    ds = Dataset(tmp_path, voxel_size=(10.5, 10.5, 5))
     layer = ds.add_layer("color", COLOR_CATEGORY)
     mag2 = layer.add_mag([2, 2, 2])
 

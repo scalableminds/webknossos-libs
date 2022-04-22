@@ -11,6 +11,7 @@ from ._internal.utils import (
     add_verbose_flag,
     parse_path,
     setup_logging,
+    setup_warnings,
 )
 from .compress import BACKUP_EXT
 
@@ -109,6 +110,7 @@ def check_equality(
 
 
 if __name__ == "__main__":
+    setup_warnings()
     args = create_parser().parse_args()
     setup_logging(args)
 

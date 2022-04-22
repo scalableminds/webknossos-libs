@@ -13,11 +13,11 @@ from .constants import TESTDATA_DIR
 def create_dummy_skeleton() -> wk.Skeleton:
     nml = wk.Skeleton(
         dataset_name="My Dataset",
-        scale=(11, 11, 25),
+        voxel_size=(11, 11, 25),
     )
 
-    g = nml.add_graph(
-        "A WkGraph",
+    g = nml.add_tree(
+        "A WkTree",
         color=(0.9988844805996959, 0.09300433970039235, 0.13373766240135082, 1.0),
     )
 
@@ -39,12 +39,12 @@ def create_dummy_skeleton() -> wk.Skeleton:
     g.add_edge(n1, n3)
 
     group = nml.add_group("Example Group")
-    group.add_graph(
-        "Graph in Group",
+    group.add_tree(
+        "Tree in Group",
         color=(0.9340851110768926, 0.0037728487955197565, 0.6720369436532944, 1.0),
     ).add_node(position=(10, 3, 4))
-    group.add_group("Nested Group").add_graph(
-        "Graph in nested group",
+    group.add_group("Nested Group").add_tree(
+        "Tree in nested group",
         color=(0.45167026054501613, 0.20806732150346996, 0.7224589094338263, 1.0),
     )
 
@@ -52,43 +52,43 @@ def create_dummy_skeleton() -> wk.Skeleton:
 
 
 def test_immutability() -> None:
-    nml = create_dummy_skeleton()
+    skeleton = create_dummy_skeleton()
 
     with pytest.raises(AttributeError):
-        nml.get_node_by_id(2).id = 999  # type: ignore
+        skeleton.get_node_by_id(2).id = 999  # type: ignore
 
     with pytest.raises(AttributeError):
-        nml.get_graph_by_id(1).id = 999  # type: ignore
+        skeleton.get_tree_by_id(1).id = 999  # type: ignore
 
     with pytest.raises(AttributeError):
-        nml.get_group_by_id(5).id = 999  # type: ignore
+        skeleton.get_group_by_id(5).id = 999  # type: ignore
 
     with pytest.raises(AttributeError):
-        nml.get_group_by_id(5).children = []  # type: ignore
+        skeleton.get_group_by_id(5).children = []  # type: ignore
 
     with pytest.raises(AttributeError):
-        nml.get_group_by_id(5).children.append(nml.get_group_by_id(5))  # type: ignore
+        skeleton.get_group_by_id(5).children.append(skeleton.get_group_by_id(5))  # type: ignore
 
 
 def test_skeleton_creation() -> None:
-    nml = create_dummy_skeleton()
+    skeleton = create_dummy_skeleton()
 
-    graphs = list(nml.flattened_graphs())
-    assert len(graphs) == 3
+    trees = list(skeleton.flattened_trees())
+    assert len(trees) == 3
 
-    g1 = nml.get_graph_by_id(1)
+    g1 = skeleton.get_tree_by_id(1)
     assert g1.number_of_nodes() == 3
 
     assert g1.get_node_by_id(2).comment == "A comment 1"
     assert g1.get_node_by_id(2).is_branchpoint
     assert g1.get_node_by_id(3).position == (3, 1, 2)
 
-    groups = list(nml.flattened_groups())
+    groups = list(skeleton.flattened_groups())
     assert len(groups) == 2
     grand_children = [
         grand_child
         for grand_child in groups[0].children
-        if isinstance(grand_child, wk.Graph)
+        if isinstance(grand_child, wk.Tree)
     ]
     assert len(grand_children) == 1
     assert grand_children[0].group == groups[0]
@@ -136,7 +136,7 @@ def test_import_from_nml() -> None:
 
 
 def test_simple_initialization_and_representations(tmp_path: Path) -> None:
-    nml = wk.Skeleton(dataset_name="ds_name", scale=(0.5, 0.5, 0.5))
+    nml = wk.Skeleton(dataset_name="ds_name", voxel_size=(0.5, 0.5, 0.5))
     nml_path = tmp_path / "my_skeleton.nml"
     EXPECTED_NML = """<?xml version="1.0" encoding="utf-8"?>
 <things>
@@ -157,15 +157,15 @@ def test_simple_initialization_and_representations(tmp_path: Path) -> None:
         ), f"Written nml does not look as expected:\n{''.join(diff)}"
     assert nml == wk.Skeleton.load(nml_path)
     assert str(nml) == (
-        "Skeleton(_child_groups=<No child groups>, _child_graphs=<No child graphs>, scale=(0.5, 0.5, 0.5), dataset_name='ds_name', organization_id=None, description=None)"
+        "Skeleton(_child_groups=<No child groups>, _child_trees=<No child trees>, voxel_size=(0.5, 0.5, 0.5), dataset_name='ds_name', organization_id=None, description=None)"
     )
 
     my_group = nml.add_group("my_group")
-    my_group.add_graph("my_tree", color=(0.1, 0.2, 0.3), _enforced_id=9).add_node(
+    my_group.add_tree("my_tree", color=(0.1, 0.2, 0.3), _enforced_id=9).add_node(
         (2, 4, 6)
     )
-    my_group.add_graph("my_other_tree", color=(0.1, 0.2, 0.3))
-    nml.add_graph("top_level_tree", color=(0.1, 0.2, 0.3))
+    my_group.add_tree("my_other_tree", color=(0.1, 0.2, 0.3))
+    nml.add_tree("top_level_tree", color=(0.1, 0.2, 0.3))
 
     EXPECTED_EXTENDED_NML = """<?xml version="1.0" encoding="utf-8"?>
 <things>
@@ -204,15 +204,13 @@ def test_simple_initialization_and_representations(tmp_path: Path) -> None:
         ), f"Written nml does not look as expected:\n{''.join(diff)}"
     assert nml == wk.Skeleton.load(nml_path)
     assert str(nml) == (
-        "Skeleton(_child_groups=<1 child group>, _child_graphs=<1 child graph>, scale=(0.5, 0.5, 0.5), dataset_name='ds_name', organization_id=None, description=None)"
+        "Skeleton(_child_groups=<1 child group>, _child_trees=<1 child tree>, voxel_size=(0.5, 0.5, 0.5), dataset_name='ds_name', organization_id=None, description=None)"
     )
     assert (
         str(my_group)
-        == "Group(_id=1, name='my_group', _child_groups=<No child groups>, _child_graphs=<2 child graphs>)"
+        == "Group(_id=1, name='my_group', _child_groups=<No child groups>, _child_trees=<2 child trees>)"
     )
-    assert (
-        str(nml.get_graph_by_id(9)) == "Graph named 'my_tree' with 1 nodes and 0 edges"
-    )
+    assert str(nml.get_tree_by_id(9)) == "Tree named 'my_tree' with 1 nodes and 0 edges"
 
 
 def test_import_export_round_trip(tmp_path: Path) -> None:
@@ -220,8 +218,8 @@ def test_import_export_round_trip(tmp_path: Path) -> None:
     export_path = tmp_path / "exported_in.nml"
     nml = wk.Skeleton.load(snapshot_path)
 
-    g6 = nml.get_graph_by_id(6)
-    assert g6.name == "Graph in Group"
+    g6 = nml.get_tree_by_id(6)
+    assert g6.name == "Tree in Group"
     assert g6.get_node_by_id(7).position == (10.0, 3.0, 4.0)
 
     nml.save(export_path)

@@ -13,12 +13,13 @@ from ._internal.utils import (
     KnossosDatasetInfo,
     add_data_format_flags,
     add_distribution_flags,
-    add_scale_flag,
+    add_voxel_size_flag,
     add_verbose_flag,
     get_executor_for_args,
     open_knossos,
     parse_path,
     setup_logging,
+    setup_warnings,
 )
 
 
@@ -51,7 +52,7 @@ def create_parser() -> ArgumentParser:
         default="uint8",
     )
 
-    add_scale_flag(parser)
+    add_voxel_size_flag(parser)
 
     parser.add_argument("--mag", "-m", help="Magnification level", type=int, default=1)
 
@@ -95,7 +96,7 @@ def convert_knossos(
     target_path: Path,
     layer_name: str,
     dtype: str,
-    scale: Tuple[float, float, float],
+    voxel_size: Tuple[float, float, float],
     data_format: DataFormat,
     chunk_size: Vec3Int,
     chunks_per_shard: Vec3Int,
@@ -104,7 +105,7 @@ def convert_knossos(
 ) -> None:
     source_knossos_info = KnossosDatasetInfo(source_path, dtype)
 
-    target_dataset = Dataset(target_path, scale, exist_ok=True)
+    target_dataset = Dataset(target_path, voxel_size, exist_ok=True)
     target_layer = target_dataset.get_or_add_layer(
         layer_name,
         COLOR_CATEGORY,
@@ -145,7 +146,7 @@ def main(args: Namespace) -> None:
         args.target_path,
         args.layer_name,
         args.dtype,
-        args.scale,
+        args.voxel_size,
         args.data_format,
         args.chunk_size,
         args.chunks_per_shard,
@@ -155,6 +156,7 @@ def main(args: Namespace) -> None:
 
 
 if __name__ == "__main__":
+    setup_warnings()
     args = create_parser().parse_args()
     setup_logging(args)
 

@@ -26,6 +26,7 @@ from ._internal.utils import (
     get_executor_for_args,
     get_regular_chunks,
     setup_logging,
+    setup_warnings,
     wait_and_ensure_success,
 )
 from .cubing import create_parser as create_cubing_parser
@@ -283,7 +284,7 @@ def tile_cubing(
     layer_name: str,
     batch_size: int,
     input_path_pattern: str,
-    scale: Tuple[int, int, int],
+    voxel_size: Tuple[int, int, int],
     args: Optional[Namespace] = None,
 ) -> None:
     decimal_lengths = get_digit_counts_for_dimensions(input_path_pattern)
@@ -317,7 +318,7 @@ def tile_cubing(
     else:
         dtype = args.dtype
 
-    target_ds = Dataset(target_path, scale=scale, exist_ok=True)
+    target_ds = Dataset(target_path, voxel_size=voxel_size, exist_ok=True)
     is_segmentation_layer = layer_name == "segmentation"
     if is_segmentation_layer:
         target_layer = target_ds.get_or_add_layer(
@@ -408,6 +409,7 @@ def create_parser() -> ArgumentParser:
 
 
 if __name__ == "__main__":
+    setup_warnings()
     args = create_parser().parse_args()
     setup_logging(args)
     input_path_pattern = os.path.join(args.source_path, args.input_path_pattern)
@@ -417,6 +419,6 @@ if __name__ == "__main__":
         args.layer_name,
         int(args.batch_size),
         input_path_pattern,
-        args.scale,
+        args.voxel_size,
         args,
     )

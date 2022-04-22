@@ -4,7 +4,7 @@ from typing import Tuple
 
 from wkcuber._internal.utils import (  # pylint: disable=import-error
     add_distribution_flags,
-    add_scale_flag,
+    add_voxel_size_flag,
     get_executor_for_args,
     named_partial,
 )
@@ -33,7 +33,7 @@ def create_parser() -> ArgumentParser:
     )
 
     add_distribution_flags(parser)
-    add_scale_flag(parser)
+    add_voxel_size_flag(parser)
 
     return parser
 
@@ -65,7 +65,7 @@ def main() -> None:
     src_layer = src_dataset.get_layer(args.layer_name)
     src_mag = src_layer.get_mag("1")
 
-    dst_dataset = Dataset(args.target_path, args.scale, exist_ok=True)
+    dst_dataset = Dataset(args.target_path, args.voxel_size, exist_ok=True)
     dst_layer = dst_dataset.add_layer(args.layer_name, "color")
     dst_layer.bounding_box = src_layer.bounding_box
 

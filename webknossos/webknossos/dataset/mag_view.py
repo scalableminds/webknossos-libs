@@ -288,7 +288,9 @@ class MagView(View):
             else target_path
         )
         compressed_dataset = Dataset(
-            compressed_dataset_path, scale=self.layer.dataset.scale, exist_ok=True
+            compressed_dataset_path,
+            voxel_size=self.layer.dataset.voxel_size,
+            exist_ok=True,
         )
         compressed_mag = compressed_dataset.get_or_add_layer(
             layer_name=self.layer.name,

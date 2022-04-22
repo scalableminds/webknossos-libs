@@ -36,31 +36,31 @@ def pairs_within_distance(
 
 
 def main() -> None:
-    nml = wk.Skeleton.load("testdata/nmls/nml_with_small_distance_nodes.nml")
+    skeleton = wk.Skeleton.load("testdata/nmls/nml_with_small_distance_nodes.nml")
 
     synapse_candidate_max_distance = 150  # in nm
 
-    input_graphs = list(nml.flattened_graphs())
-    synapse_parent_group = nml.add_group("all synapse candidates")
+    input_trees = list(skeleton.flattened_trees())
+    synapse_parent_group = skeleton.add_group("all synapse candidates")
 
-    for tree_a, tree_b in combinations(input_graphs, 2):
-        positions_a = tree_a.get_node_positions() * nml.scale
-        positions_b = tree_b.get_node_positions() * nml.scale
+    for tree_a, tree_b in combinations(input_trees, 2):
+        positions_a = tree_a.get_node_positions() * skeleton.voxel_size
+        positions_b = tree_b.get_node_positions() * skeleton.voxel_size
 
-        synapse_graph = synapse_parent_group.add_graph(
+        synapse_tree = synapse_parent_group.add_tree(
             f"synapse candidates ({tree_a.name}-{tree_b.name})"
         )
 
         for partner_a, partner_b in pairs_within_distance(
             positions_a, positions_b, synapse_candidate_max_distance
         ):
-            synapse_graph.add_node(
-                position=np.round((partner_a + partner_b) / nml.scale / 2),
+            synapse_tree.add_node(
+                position=np.round((partner_a + partner_b) / skeleton.voxel_size / 2),
                 comment=f"{tree_a.name} ({tree_a.id}) <-> {tree_b.name} ({tree_b.id})",
             )
 
-    # nml can be used for further processing or written to a file:
-    # nml.save("output_path.nml")
+    # skeleton can be used for further processing or written to a file:
+    # skeleton.save("output_path.nml")
 
 
 if __name__ == "__main__":

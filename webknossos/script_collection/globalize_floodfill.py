@@ -14,7 +14,13 @@ import numpy as np
 import webknossos as wk
 from webknossos.dataset import Layer, MagView
 from webknossos.geometry import BoundingBox, Mag, Vec3Int
-from webknossos.utils import add_verbose_flag, setup_logging, time_start, time_stop
+from webknossos.utils import (
+    add_verbose_flag,
+    setup_logging,
+    setup_warnings,
+    time_start,
+    time_stop,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +64,7 @@ def create_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--volume_path",
         "-v",
-        help="Directory containing the volume tracing.",
+        help="Directory containing the volume annotation layer.",
         type=Path,
         required=True,
     )
@@ -201,7 +207,7 @@ def temporary_annotation_view(volume_annotation_path: Path) -> Iterator[Layer]:
         )
 
         input_annotation_dataset = wk.Dataset(
-            str(tmp_annotation_dataset_path), scale=(1, 1, 1), exist_ok=True
+            str(tmp_annotation_dataset_path), voxel_size=(1, 1, 1), exist_ok=True
         )
 
         # Ideally, the following code would be used, but there are two problems:
@@ -251,9 +257,9 @@ def merge_with_fallback_layer(
 
     input_segmentation_mag = input_segmentation_dataset.get_layer(
         segmentation_layer_path.name
-    ).get_best_mag()
+    ).get_finest_mag()
     with temporary_annotation_view(volume_annotation_path) as input_annotation_layer:
-        input_annotation_mag = input_annotation_layer.get_best_mag()
+        input_annotation_mag = input_annotation_layer.get_finest_mag()
         bboxes = [
             bbox.in_mag(input_annotation_mag._mag)
             for bbox in input_annotation_mag.get_bounding_boxes_on_disk()
@@ -350,6 +356,7 @@ def main(args: argparse.Namespace) -> None:
 
 
 if __name__ == "__main__":
+    setup_warnings()
     parsed_args = create_parser().parse_args()
     setup_logging(parsed_args)
 

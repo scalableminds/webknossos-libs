@@ -10,6 +10,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.21...HEAD)
 
 ### Breaking Changes
+- Deprecated `--scale` in favor of `--voxel_size`. [#704](https://github.com/scalableminds/webknossos-libs/pull/704)
 
 ### Added
 

@@ -11,7 +11,7 @@ Vec3Float = Tuple[float, float, float]
 
 
 # Defining an order on nodes is necessary to allow to sort them,
-# which is used in the graph's equality check, see Graph.__eq__().
+# which is used in the tree's equality check, see Tree.__eq__().
 @attr.define(order=True)
 class Node:
     position: Vec3Int
@@ -33,18 +33,18 @@ class Node:
     @classmethod
     def _set_init_docstring(cls) -> None:
         Node.__init__.__doc__ = """
-        To create a node, it is recommended to use `Graph.add_node`. That way,
+        To create a node, it is recommended to use `Tree.add_node`. That way,
         the newly created group is automatically attached as a child to the
-        graph.
+        tree.
 
         A small usage example:
 
         ```python
-        graph = skeleton.add_graph("a graph")
-        node_1 = graph.add_node(position=(0, 0, 0), comment="node 1")
-        node_2 = graph.add_node(position=(100, 100, 100), comment="node 2")
+        tree = skeleton.add_tree("a tree")
+        node_1 = tree.add_node(position=(0, 0, 0), comment="node 1")
+        node_2 = tree.add_node(position=(100, 100, 100), comment="node 2")
 
-        graph.add_edge(node_1, node_2)
+        tree.add_edge(node_1, node_2)
         ```
         """
 

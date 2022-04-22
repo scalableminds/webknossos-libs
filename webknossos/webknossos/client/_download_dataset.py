@@ -61,9 +61,11 @@ def download_dataset(
         logger.warning(f"{actual_path} already exists, skipping download.")
         return Dataset.open(actual_path)
 
-    scale = cast(Tuple[float, float, float], tuple(parsed.data_source.scale))
+    voxel_size = cast(Tuple[float, float, float], tuple(parsed.data_source.scale))
     data_layers = parsed.data_source.data_layers
-    dataset = Dataset(actual_path, name=parsed.name, scale=scale, exist_ok=exist_ok)
+    dataset = Dataset(
+        actual_path, name=parsed.name, voxel_size=voxel_size, exist_ok=exist_ok
+    )
     for layer_name in layers or [i.name for i in data_layers]:
 
         response_layers = [i for i in data_layers if i.name == layer_name]

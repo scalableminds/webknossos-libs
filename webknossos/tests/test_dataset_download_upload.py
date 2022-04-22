@@ -39,11 +39,11 @@ def test_url_download(
         url, path=tmp_path / "ds", mags=[wk.Mag(1)], bbox=sample_bbox
     )
     assert set(ds.layers.keys()) == {"color", "segmentation"}
-    data = ds.get_color_layers()[0].get_best_mag().read()
+    data = ds.get_color_layers()[0].get_finest_mag().read()
     assert data.sum() == 122507
     assert np.array_equal(
         data,
-        sample_dataset.get_color_layers()[0].get_best_mag().read(),
+        sample_dataset.get_color_layers()[0].get_finest_mag().read(),
     )
 
 
@@ -71,6 +71,6 @@ def test_upload_download_roundtrip(sample_dataset: wk.Dataset, tmp_path: Path) -
     assert original_config.color == roundtrip_config.color
     assert original_config.intensity_range == roundtrip_config.intensity_range
 
-    data_original = ds_original.get_segmentation_layers()[0].get_best_mag().read()
-    data_roundtrip = ds_roundtrip.get_segmentation_layers()[0].get_best_mag().read()
+    data_original = ds_original.get_segmentation_layers()[0].get_finest_mag().read()
+    data_roundtrip = ds_roundtrip.get_segmentation_layers()[0].get_finest_mag().read()
     assert np.array_equal(data_original, data_roundtrip)

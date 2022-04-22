@@ -8,6 +8,7 @@ from ._internal.utils import (
     add_verbose_flag,
     parse_path,
     setup_logging,
+    setup_warnings,
 )
 
 
@@ -41,6 +42,7 @@ def create_parser() -> ArgumentParser:
 
 
 if __name__ == "__main__":
+    setup_warnings()
     args = create_parser().parse_args()
     setup_logging(args)
 

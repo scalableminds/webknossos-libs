@@ -5,7 +5,6 @@ import pytest
 from tifffile import TiffWriter
 from webknossos import Dataset
 from wkcuber.__main__ import create_parser, cube_with_args
-from wkcuber._internal.utils import setup_logging
 
 
 @pytest.mark.parametrize("category", ["color", "segmentation"])
@@ -29,7 +28,7 @@ def test_main(tmp_path: Path, category: str) -> None:
         str(output_path),
         "--jobs",
         "1",
-        "--scale",
+        "--voxel_size",
         "11,11,11",
         "--max_mag",
         "4",

@@ -97,14 +97,14 @@ def test_calculate_segment_sizes() -> None:
 def test_skeleton_synapse_candidates() -> None:
     import examples.skeleton_synapse_candidates as example
 
-    synapse_parent_group, nml = exec_main_and_get_vars(
-        example, "synapse_parent_group", "nml"
+    synapse_parent_group, skeleton = exec_main_and_get_vars(
+        example, "synapse_parent_group", "skeleton"
     )
 
     assert synapse_parent_group.get_total_node_count() == 91
-    ids = [g.id for g in nml.flattened_graphs()]
+    ids = [g.id for g in skeleton.flattened_trees()]
     id_set = set(ids)
-    assert len(ids) == len(id_set), "Graph IDs are not unique."
+    assert len(ids) == len(id_set), "Tree IDs are not unique."
 
 
 # Allowing requests to download the cells3d dataset via pooch,

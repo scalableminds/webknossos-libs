@@ -20,7 +20,7 @@ def main() -> None:
     # Creating a dataset #
     ######################
 
-    dataset = wk.Dataset("testoutput/my_new_dataset", scale=(1, 1, 1))
+    dataset = wk.Dataset("testoutput/my_new_dataset", voxel_size=(1, 1, 1))
     layer = dataset.add_layer(
         layer_name="color", category="color", dtype_per_channel="uint8", num_channels=3
     )
