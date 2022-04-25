@@ -793,7 +793,7 @@ class ImageReaderManager:
         channel_index: Optional[int] = None,
         sample_index: Optional[int] = None,
     ) -> np.ndarray:
-        ext = file_name.suffix
+        ext = file_name.suffix.lower()
 
         # Image shape will be (x, y, channel_count, z=1) or (x, y, z=1)
         image = self.readers[ext].read_array(
@@ -806,23 +806,23 @@ class ImageReaderManager:
         return image
 
     def read_dimensions(self, file_name: Path) -> Tuple[int, int]:
-        ext = file_name.suffix
+        ext = file_name.suffix.lower()
         return self.readers[ext].read_dimensions(file_name)
 
     def read_channel_count(self, file_name: Path) -> int:
-        ext = file_name.suffix
+        ext = file_name.suffix.lower()
         return self.readers[ext].read_channel_count(file_name)
 
     def read_sample_count(self, file_name: Path) -> int:
-        ext = file_name.suffix
+        ext = file_name.suffix.lower()
         return self.readers[ext].read_sample_count(file_name)
 
     def read_z_slices_per_file(self, file_name: Path) -> int:
-        ext = file_name.suffix
+        ext = file_name.suffix.lower()
         return self.readers[ext].read_z_slices_per_file(file_name)
 
     def read_dtype(self, file_name: Path) -> str:
-        ext = file_name.suffix
+        ext = file_name.suffix.lower()
         return self.readers[ext].read_dtype(file_name)
 
 

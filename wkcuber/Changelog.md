@@ -17,6 +17,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+ - Fixed a bug where upper-case file extensions would lead to errors during channel count detection. [#709](https://github.com/scalableminds/webknossos-libs/pull/709)
 
 
 ## [0.9.21](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.21) - 2022-04-20
