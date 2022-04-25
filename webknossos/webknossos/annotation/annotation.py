@@ -250,7 +250,7 @@ class Annotation:
         annotation_type = AnnotationType(annotation_type)
         assert (
             annotation_type not in _COMPOUND_ANNOTATION_TYPES
-        ), f"Currently compund annotation types are not supported, got {annotation_type}"
+        ), f"Currently compound annotation types are not supported, got {annotation_type}"
 
         if webknossos_url is not None and webknossos_url != _get_context().url:
             warnings.warn(
