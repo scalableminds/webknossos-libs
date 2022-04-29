@@ -39,15 +39,11 @@ def download_dataset(
     if organization_id is None:
         organization_id = context.organization_id
 
-    if sharing_token is None:
-        dataset_name_with_sharing_token = dataset_name
-    else:
-        dataset_name_with_sharing_token = f"{dataset_name}?sharingToken={sharing_token}"
-
     dataset_info_response = dataset_info.sync_detailed(
         organization_name=organization_id,
-        data_set_name=dataset_name_with_sharing_token,
+        data_set_name=dataset_name,
         client=client,
+        sharing_token=sharing_token
     )
     assert dataset_info_response.status_code == 200, dataset_info_response
     parsed = dataset_info_response.parsed
