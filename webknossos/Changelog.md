@@ -10,7 +10,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.21...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.22...HEAD)
+
+### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [0.9.22](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.22) - 2022-05-02
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.21...v0.9.22)
 
 ### Breaking Changes
 - Renamed some entities to comply with the [webKnossos terminology](https://docs.webknossos.org/webknossos/terminology.html). [#704](https://github.com/scalableminds/webknossos-libs/pull/704):
@@ -22,12 +34,9 @@ For upgrade instructions, please check the respective *Breaking Changes* section
   * `get_best_mag` is deprecated, please use `get_finest_mag` instead
   * In `layer.upscale`, `min_mag` is deprecated in favor of `finest_mag`
 
-### Added
-
-### Changed
-
 ### Fixed
 - Correctly maintain default_view_configuration property when downloading a dataset. [#677](https://github.com/scalableminds/webknossos-libs/pull/677)
+
 
 ## [0.9.21](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.21) - 2022-04-20
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.20...v0.9.21)
