@@ -265,7 +265,8 @@ def layer_properties_post_unstructure(
 
 def layer_properties_pre_structure(
     converter_fn: Callable[
-        [Dict[str, Any]], Union[LayerProperties, SegmentationLayerProperties]
+        [Dict[str, Any], Type[Union[LayerProperties, SegmentationLayerProperties]]],
+        Union[LayerProperties, SegmentationLayerProperties],
     ]
 ) -> Callable[
     [Any, Type[Union[LayerProperties, SegmentationLayerProperties]]],
