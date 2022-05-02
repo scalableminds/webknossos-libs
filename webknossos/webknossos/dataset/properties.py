@@ -189,7 +189,7 @@ dataset_converter.register_structure_hook(
     Vec3Int, lambda d, _: Vec3Int.full(d) if isinstance(d, int) else Vec3Int(d)
 )
 
-dataset_converter.register_structure_hook(LayerCategoryType, lambda d, _: str(d))
+dataset_converter.register_structure_hook_func(lambda d: d == LayerCategoryType, lambda d, _: str(d))
 
 # Register (un-)structure hooks for attr-classes to bring the data into the expected format.
 # The properties on disk (in datasource-properties.json) use camel case for the names of the attributes.
@@ -278,7 +278,7 @@ def layer_properties_pre_structure(
                 mag_view_properties_pre_unstructure(m) for m in d["wkwResolutions"]
             ]
             del d["wkwResolutions"]
-        obj = converter_fn(d)
+        obj = converter_fn(d, _type)
         return obj
 
     return __layer_properties_pre_structure
