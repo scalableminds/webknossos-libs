@@ -89,8 +89,9 @@ def main(args: Namespace) -> None:
     channel_count, sample_count, dtype = get_channel_and_sample_count_and_dtype(
         args.source_path
     )
+
     if arg_dict.get("dtype") is not None:
-        dtype = args.get("dtype")
+        dtype = arg_dict.get("dtype", dtype)
 
     assert not (
         args.prefer_layers and args.prefer_channels

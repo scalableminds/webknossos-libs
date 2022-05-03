@@ -12,6 +12,7 @@ include = ["wkcuber/version.py"]  # included explicitly since it's in .gitignore
 [tool.poetry.dependencies]
 python = "^3.7,>=3.7.1"
 attrs = "^21.1.0"
+cairosvg = "^2.5.2"
 cattrs = "1.7.1"
 cluster_tools = { path = "../cluster_tools/", develop = true }
 czifile = "^2019.7.2"
@@ -25,6 +26,7 @@ requests = "^2.22.0"
 scikit-image = "^0.18.3"
 scikit-learn = "^0.24.0"
 scipy = "^1.6.0"
+svgpathtools = "^1.4.4"
 tifffile = "^2020.11.26"
 webknossos = { path = "../webknossos/", develop = true }
 wkw = "1.1.11"
