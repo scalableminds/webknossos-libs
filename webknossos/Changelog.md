@@ -19,6 +19,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+- Fixed upsampling with constant z in certain anisotropic cases. [#720](https://github.com/scalableminds/webknossos-libs/pull/720)
 
 
 ## [0.9.23](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.23) - 2022-05-03
