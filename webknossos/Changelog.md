@@ -15,6 +15,10 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes
 
 ### Added
+- Added `Dataset.open_remote`, which returns an object of the new `RemoteDataset`. [#723](https://github.com/scalableminds/webknossos-libs/pull/723)
+  This can
+  * read image data via the webknossos zarr interface, using the inherited `Dataset` methods, and
+  * read and change the following dataset metadata as properties: `display_name`, `description`, `tags`, `is_public`, `sharing_token`, `allowed_teams`.
 
 ### Changed
 
