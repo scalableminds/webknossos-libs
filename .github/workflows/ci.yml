@@ -375,8 +375,7 @@ jobs:
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_DEFAULT_REGION: "eu-west-1"
       run: |
-        CI_BRANCH=${GITHUB_REF##*/}
-        NORMALIZED_CI_BRANCH=${CI_BRANCH//[\/-]/_}
+        NORMALIZED_CI_BRANCH=${GITHUB_REF_NAME//[\/-]/_}
         aws s3 sync --acl public-read docs/out s3://static.webknossos.org/docs/${NORMALIZED_CI_BRANCH}
 
     - name: Push docs (for tag)
