@@ -171,7 +171,9 @@ class Dataset:
             ).is_file(), f"Cannot open Dataset: Could not find {PROPERTIES_FILE_NAME} in non-empty directory {dataset_path}"
         else:
             if read_only:
-                raise FileNotFoundError(f"Cannot create read-only dataset, could not find data at {dataset_path}.")
+                raise FileNotFoundError(
+                    f"Cannot create read-only dataset, could not find data at {dataset_path}."
+                )
             assert (
                 not dataset_path.exists() or dataset_path.is_dir()
             ), f"Creation of Dataset at {dataset_path} failed, because a file already exists at this path."
@@ -374,7 +376,7 @@ class Dataset:
 
         zarr_path = UPath(
             f"{datastore_url}/data/zarr/{organization_id}/{dataset_name}/",
-            **{"headers": {"X-Auth-Token": token}},
+            headers={} if token is None else {"X-Auth-Token": token},
         )
         return RemoteDataset(
             zarr_path, dataset_name, organization_id, sharing_token, context_manager
@@ -1117,7 +1119,10 @@ class Dataset:
 
 
 class RemoteDataset(Dataset):
-    """TODO"""
+    """Representation of a dataset on the webknossos server, returned from `Dataset.remote_open()`.
+    Read-only image data is streamed from the webknossos server using the same interface as `Dataset`.
+    Additionally, metadata can be set via the additional properties below."""
+
     def __init__(
         self,
         dataset_path: UPath,
@@ -1126,16 +1131,21 @@ class RemoteDataset(Dataset):
         sharing_token: Optional[str],
         context: ContextManager,
     ) -> None:
-        """TODO"""
+        """Do not call manually, please use `Dataset.remote_open()` instead."""
         try:
-            super().__init__(dataset_path, voxel_size=_UNSPECIFIED_SCALE_FROM_OPEN, read_only=True)
+            super().__init__(
+                dataset_path,
+                voxel_size=_UNSPECIFIED_SCALE_FROM_OPEN,
+                exist_ok=True,
+                read_only=True,
+            )
         except FileNotFoundError:
             warnings.warn(
                 f"Cannot open remote webknossos dataset {dataset_path} as zarr. "
                 + "Returning a stub dataset instead, accessing metadata properties might still work.",
                 RuntimeWarning,
             )
-            self.path = None
+            self.path = None  # type: ignore[assignment]
         self._dataset_name = dataset_name
         self._organization_id = organization_id
         self._sharing_token = sharing_token
@@ -1143,7 +1153,7 @@ class RemoteDataset(Dataset):
 
     @classmethod
     def open(cls, dataset_path: Union[str, PathLike]) -> "Dataset":
-        """"""
+        """Do not call manually, please use `Dataset.remote_open()` instead."""
         raise RuntimeError("Please use Dataset.open() instead.")
 
     def _get_dataset_info(self) -> "DatasetInfoResponse200":
@@ -1277,11 +1287,11 @@ class RemoteDataset(Dataset):
         @attr.define
         class _TeamIdsBody:
             """Helper class which is deserialized by the generated client via to_dict."""
+
             teams: List[str]
 
             def to_dict(self) -> List[str]:
                 return self.teams
-
 
         team_ids = [i.id if isinstance(i, Team) else i for i in allowed_teams]
 

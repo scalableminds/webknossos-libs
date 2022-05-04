@@ -47,6 +47,77 @@ def test_url_download(
     )
 
 
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view",
+        "https://webknossos.org/datasets/scalable_minds/l4_sample_dev_sharing/view?token=ilDXmfQa2G8e719vb1U9YQ#%7B%22orthogonal%7D",
+    ],
+)
+def test_url_open_remote(
+    url: str, sample_dataset: wk.Dataset, sample_bbox: wk.BoundingBox
+) -> None:
+    ds = wk.Dataset.open_remote(
+        url,
+    )
+    assert set(ds.layers.keys()) == {"color", "segmentation"}
+    data = (
+        ds.get_color_layers()[0]
+        .get_finest_mag()
+        .read(absolute_bounding_box=sample_bbox)
+    )
+    assert data.sum() == 122507
+    assert np.array_equal(
+        data,
+        sample_dataset.get_color_layers()[0].get_finest_mag().read(),
+    )
+
+
+def test_remote_dataset(sample_dataset: wk.Dataset) -> None:
+    time_str = strftime("%Y-%m-%d_%H-%M-%S", gmtime())
+    url = sample_dataset.upload(new_dataset_name=f"test_remote_metadata_{time_str}")
+    remote_ds = wk.Dataset.open_remote(url)
+    assert np.array_equal(
+        remote_ds.get_color_layers()[0].get_finest_mag().read(),
+        sample_dataset.get_color_layers()[0].get_finest_mag().read(),
+    )
+    assert remote_ds.display_name is None
+    remote_ds.display_name = "Test Remote Dataset"
+    assert remote_ds.display_name == "Test Remote Dataset"
+    del remote_ds.display_name
+    assert remote_ds.display_name is None
+
+    assert remote_ds.description is None
+    remote_ds.description = "My awesome test description"
+    assert remote_ds.description == "My awesome test description"
+    del remote_ds.description
+    assert remote_ds.description is None
+
+    assert not remote_ds.is_public
+    remote_ds.is_public = True
+    assert remote_ds.is_public
+
+    assert len(remote_ds.tags) == 0
+    for i in range(3):
+        remote_ds.tags += (f"category {i}",)
+    assert remote_ds.tags == ("category 0", "category 1", "category 2")
+
+    assert len(remote_ds.sharing_token) > 0
+
+    assert len(remote_ds.allowed_teams) == 0
+    test_teams = (
+        wk.Team(
+            id="570b9f4b2a7c0e3b008da6ec",
+            name="team_X1",
+            organization_id="Organization_X",
+        ),
+    )
+    remote_ds.allowed_teams = test_teams
+    assert remote_ds.allowed_teams == test_teams
+    remote_ds.allowed_teams = ["570b9f4b2a7c0e3b008da6ec"]
+    assert remote_ds.allowed_teams == test_teams
+
+
 def test_upload_download_roundtrip(sample_dataset: wk.Dataset, tmp_path: Path) -> None:
     ds_original = sample_dataset
     time_str = strftime("%Y-%m-%d_%H-%M-%S", gmtime())
