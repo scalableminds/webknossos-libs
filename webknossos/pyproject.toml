@@ -31,7 +31,7 @@ zarr = "^2.11.0"
 numcodecs = "^0.9.1"
 zipp = "^3.5.0"
 fsspec = "^2022.2.0"
-universal-pathlib = "0.0.16"
+universal-pathlib = { git = "https://github.com/fsspec/universal_pathlib.git", rev = "56da892aeda3ae23c47b19a8639e3d4ac7ee84e2" }
 
 
 [tool.poetry.dev-dependencies]

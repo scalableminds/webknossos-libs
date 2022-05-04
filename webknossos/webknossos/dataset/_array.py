@@ -27,7 +27,7 @@ def _fsstore_from_path(path: Path, mode: str = "a") -> FSStore:
     if hasattr(path, "_kwargs"):
         upath = cast(UPath, path)
         storage_options = upath._kwargs.copy()
-        del storage_options["_url"]
+        storage_options.pop("_url", None)
         return FSStore(url=str(upath), mode=mode, **storage_options)
 
     return FSStore(url=str(path), mode=mode, **storage_options)

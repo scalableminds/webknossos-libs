@@ -168,12 +168,12 @@ def _get_sharding_parameters(
 
 class Layer:
     """
-    A `Layer` consists of multiple `webknossos.dataset.mag_view.MagView`s, which store the same data in different magnifications.
+    A `Layer` consists of multiple `MagView`s, which store the same data in different magnifications.
     """
 
     def __init__(self, dataset: "Dataset", properties: LayerProperties) -> None:
         """
-        Do not use this constructor manually. Instead use `webknossos.dataset.layer.Dataset.add_layer` to create a `Layer`.
+        Do not use this constructor manually. Instead use `Dataset``.add_layer()` to create a `Layer`.
         """
         # It is possible that the properties on disk do not contain the number of channels.
         # Therefore, the parameter is optional. However at this point, 'num_channels' was already inferred.
@@ -992,6 +992,7 @@ class Layer:
                 info.chunks_per_shard,
                 info.compression_mode,
             )
+            self._mags[mag]._read_only = self._dataset._read_only
         except ArrayException as e:
             logging.error(
                 f"Failed to setup magnification {mag_name}, which is specified in the datasource-properties.json. See {e}"

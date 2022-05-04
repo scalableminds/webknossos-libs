@@ -9,7 +9,7 @@ from rich.progress import track
 from webknossos.client._generated.api.datastore import dataset_download
 from webknossos.client._generated.api.default import dataset_info
 from webknossos.client._generated.types import Unset
-from webknossos.client.context import _get_context, _get_generated_client
+from webknossos.client.context import _get_context
 from webknossos.dataset import Dataset, LayerCategoryType
 from webknossos.dataset.properties import LayerViewConfiguration, dataset_converter
 from webknossos.geometry import BoundingBox, Mag, Vec3Int
@@ -25,7 +25,7 @@ _DOWNLOAD_CHUNK_SIZE = Vec3Int(512, 512, 512)
 
 def download_dataset(
     dataset_name: str,
-    organization_id: Optional[str] = None,
+    organization_id: str,
     sharing_token: Optional[str] = None,
     bbox: Optional[BoundingBox] = None,
     layers: Optional[List[str]] = None,
@@ -33,17 +33,14 @@ def download_dataset(
     path: Optional[Union[PathLike, str]] = None,
     exist_ok: bool = False,
 ) -> Dataset:
-    client = _get_generated_client()
     context = _get_context()
-
-    if organization_id is None:
-        organization_id = context.organization_id
+    client = context.generated_client
 
     dataset_info_response = dataset_info.sync_detailed(
         organization_name=organization_id,
         data_set_name=dataset_name,
         client=client,
-        sharing_token=sharing_token
+        sharing_token=sharing_token,
     )
     assert dataset_info_response.status_code == 200, dataset_info_response
     parsed = dataset_info_response.parsed
