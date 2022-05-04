@@ -7,6 +7,25 @@ readme = "README.md"
 license = "AGPL-3.0"
 repository = "https://github.com/scalableminds/webknossos-libs"
 homepage = "https://docs.webknossos.org/webknossos-py"
+classifiers = [
+    "Intended Audience :: Developers",
+    "Intended Audience :: Education",
+    "Intended Audience :: Healthcare Industry",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.7",
+    "Topic :: Education",
+    "Topic :: Multimedia :: Graphics",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Topic :: Scientific/Engineering :: Image Processing",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+    "Topic :: Scientific/Engineering :: Visualization",
+    "Topic :: Software Development :: Libraries",
+    "Typing :: Typed"
+]
 include = ["webknossos/version.py"]  # included explicitly since it's in .gitignore
 
 [tool.poetry.dependencies]
