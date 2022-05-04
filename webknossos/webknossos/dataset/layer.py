@@ -924,7 +924,7 @@ class Layer:
             finest_mag_with_fixed_z = finest_mag.to_list()
             finest_mag_with_fixed_z[2] = from_mag.to_list()[2]
             finest_mag = Mag(finest_mag_with_fixed_z)
-            voxel_size = self.dataset.voxel_size
+            voxel_size = None
         else:
             raise AttributeError(
                 f"Upsampling failed: {sampling_mode} is not a valid UpsamplingMode ({SamplingModes.ANISOTROPIC}, {SamplingModes.ISOTROPIC}, {SamplingModes.CONSTANT_Z})"
