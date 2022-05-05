@@ -451,7 +451,7 @@ class Dataset:
         new_dataset_name: Optional[str] = None,
         layers_to_link: Optional[List["LayerToLink"]] = None,
         jobs: Optional[int] = None,
-    ) -> str:
+    ) -> "RemoteDataset":
         """
         Uploads this dataset to webKnossos.
 
@@ -462,12 +462,14 @@ class Dataset:
 
         If supplied, the `jobs` parameter will determine the number of simultaneous chunk uploads. Defaults to 5.
 
-        Returns URL to view the dataset in webKnossos, upon successful upload.
+        Returns the `RemoteDataset` upon successful upload.
         """
 
         from webknossos.client._upload_dataset import upload_dataset
 
-        return upload_dataset(self, new_dataset_name, layers_to_link, jobs)
+        return self.open_remote(
+            upload_dataset(self, new_dataset_name, layers_to_link, jobs)
+        )
 
     def get_layer(self, layer_name: str) -> Layer:
         """
@@ -1076,7 +1078,7 @@ class Dataset:
         return cls(dataset_path, voxel_size, name, exist_ok=True)
 
     def __repr__(self) -> str:
-        return repr("Dataset(%s)" % self.path)
+        return f"Dataset({repr(self.path)})"
 
     def _load_properties(self) -> DatasetProperties:
         with (self.path / PROPERTIES_FILE_NAME).open(
@@ -1155,6 +1157,17 @@ class RemoteDataset(Dataset):
     def open(cls, dataset_path: Union[str, PathLike]) -> "Dataset":
         """Do not call manually, please use `Dataset.remote_open()` instead."""
         raise RuntimeError("Please use Dataset.open() instead.")
+
+    def __repr__(self) -> str:
+        return f"RemoteDataset({repr(self.url)})"
+
+    @property
+    def url(self) -> str:
+        from webknossos.client.context import _get_context
+
+        with self._context:
+            wk_url = _get_context().url
+        return f"{wk_url}/datasets/{self._organization_id}/{self._dataset_name}"
 
     def _get_dataset_info(self) -> "DatasetInfoResponse200":
         from webknossos.client._generated.api.default import dataset_info

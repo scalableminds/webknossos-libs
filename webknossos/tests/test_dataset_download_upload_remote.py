@@ -28,6 +28,7 @@ def sample_dataset(sample_bbox: wk.BoundingBox) -> Iterator[wk.Dataset]:
 @pytest.mark.parametrize(
     "url",
     [
+        "https://webknossos.org/datasets/scalable_minds/l4_sample_dev",
         "https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view",
         "https://webknossos.org/datasets/scalable_minds/l4_sample_dev_sharing/view?token=ilDXmfQa2G8e719vb1U9YQ#%7B%22orthogonal%7D",
     ],
@@ -50,6 +51,7 @@ def test_url_download(
 @pytest.mark.parametrize(
     "url",
     [
+        "https://webknossos.org/datasets/scalable_minds/l4_sample_dev",
         "https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view",
         "https://webknossos.org/datasets/scalable_minds/l4_sample_dev_sharing/view?token=ilDXmfQa2G8e719vb1U9YQ#%7B%22orthogonal%7D",
     ],
@@ -75,12 +77,19 @@ def test_url_open_remote(
 
 def test_remote_dataset(sample_dataset: wk.Dataset) -> None:
     time_str = strftime("%Y-%m-%d_%H-%M-%S", gmtime())
-    url = sample_dataset.upload(new_dataset_name=f"test_remote_metadata_{time_str}")
-    remote_ds = wk.Dataset.open_remote(url)
+    remote_ds = sample_dataset.upload(
+        new_dataset_name=f"test_remote_metadata_{time_str}"
+    )
     assert np.array_equal(
         remote_ds.get_color_layers()[0].get_finest_mag().read(),
         sample_dataset.get_color_layers()[0].get_finest_mag().read(),
     )
+
+    assert (
+        remote_ds.url
+        == f"http://localhost:9000/datasets/Organization_X/test_remote_metadata_{time_str}"
+    )
+
     assert remote_ds.display_name is None
     remote_ds.display_name = "Test Remote Dataset"
     assert remote_ds.display_name == "Test Remote Dataset"
@@ -123,7 +132,7 @@ def test_upload_download_roundtrip(sample_dataset: wk.Dataset, tmp_path: Path) -
     time_str = strftime("%Y-%m-%d_%H-%M-%S", gmtime())
     url = ds_original.upload(
         new_dataset_name=f"test_upload_download_roundtrip_{time_str}"
-    )
+    ).url
     ds_roundtrip = wk.Dataset.download(
         url, path=tmp_path / "ds", layers=["color", "segmentation"]
     )
