@@ -1121,7 +1121,7 @@ class Dataset:
 
 
 class RemoteDataset(Dataset):
-    """Representation of a dataset on the webknossos server, returned from `Dataset.remote_open()`.
+    """Representation of a dataset on the webknossos server, returned from `Dataset.open_remote()`.
     Read-only image data is streamed from the webknossos server using the same interface as `Dataset`.
     Additionally, metadata can be set via the additional properties below."""
 
