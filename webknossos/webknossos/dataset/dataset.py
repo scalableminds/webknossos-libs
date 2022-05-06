@@ -288,7 +288,7 @@ class Dataset:
                 and sharing_token is None
                 and webknossos_url is None
             ), (
-                f"When Dataset.{caller}() is be called with an annotation url, "
+                f"When Dataset.{caller}() is called with an annotation url, "
                 + f"e.g. Dataset.{caller}('https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view'), "
                 + "organization_id, sharing_token and webknossos_url must not be set."
             )
@@ -1156,7 +1156,7 @@ class RemoteDataset(Dataset):
     @classmethod
     def open(cls, dataset_path: Union[str, PathLike]) -> "Dataset":
         """Do not call manually, please use `Dataset.remote_open()` instead."""
-        raise RuntimeError("Please use Dataset.open() instead.")
+        raise RuntimeError("Please use Dataset.open_remote() instead.")
 
     def __repr__(self) -> str:
         return f"RemoteDataset({repr(self.url)})"
