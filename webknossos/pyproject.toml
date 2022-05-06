@@ -34,9 +34,11 @@ attrs = "^21.1.0"
 boltons = "~21.0.0"
 cattrs = "1.7.1"
 cluster_tools = { path = "../cluster_tools/", develop = true }
+fsspec = "^2022.2.0"
 httpx = ">=0.15.4,<0.19.0"
 loxun = "^2.0"
 networkx = "^2.6.2"
+numcodecs = "^0.9.1"
 numpy = "^1.15.0"  # see https://numpy.org/neps/nep-0029-deprecation_policy.html#support-table
 psutil = "^5.6.7"
 python-dateutil = "^2.8.0"
@@ -45,12 +47,10 @@ rich = "^10.9.0"
 scikit-image = "^0.18.3"
 scipy = "^1.4.0"
 typing-extensions = "^4.0"
+universal-pathlib = "0.0.18"
 wkw = "1.1.11"
 zarr = "^2.11.0"
-numcodecs = "^0.9.1"
 zipp = "^3.5.0"
-fsspec = "^2022.2.0"
-universal-pathlib = "0.0.16"
 
 
 [tool.poetry.dev-dependencies]

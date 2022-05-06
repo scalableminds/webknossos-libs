@@ -47,10 +47,10 @@ There are the following four options to specify which server context to use:
 
 
 import os
-from contextlib import contextmanager
-from contextvars import ContextVar
+from contextlib import ContextDecorator
+from contextvars import ContextVar, Token
 from functools import lru_cache
-from typing import Iterator, Optional
+from typing import Any, List, Optional
 
 import attr
 from dotenv import load_dotenv
@@ -170,42 +170,53 @@ _webknossos_context_var: ContextVar[_WebknossosContext] = ContextVar(
 )
 
 
-@contextmanager
-def webknossos_context(
-    url: Optional[str] = None,
-    token: Optional[str] = None,
-    timeout: Optional[int] = None,
-) -> Iterator[None]:
-    """Returns a new webKnossos server contextmanager. Use with the `with` statement:
-    ```python
-    with webknossos_context(token="my_webknossos_token"):
-       # code that interacts with webknossos
-    ```
-
-    You can specify the following arguments:
-    * `url`, by default [https://webknossos.org](https://www.webknossos.org),
-    * `token`, as displayed on [https://webknossos.org/auth/token](https://webknossos.org/auth/token),
-    * `timeout` to specify a custom network request timeout in seconds, `1800` (30min) by default.
-
-    `url` and `timeout` are taken from the previous context (e.g. environment variables) if not specified.
-    `token` must be set explicitly, it is not available when not specified.
-    """
-
-    if url is None:
-        url = _get_context().url
-    if timeout is None:
-        timeout = _get_context().timeout
-    context_var_token = _webknossos_context_var.set(
-        _WebknossosContext(url, token, timeout)
-    )
-    try:
-        yield
-    finally:
-        _webknossos_context_var.reset(context_var_token)
-
-
 def _get_context() -> _WebknossosContext:
     return _webknossos_context_var.get()
+
+
+class webknossos_context(ContextDecorator):
+    """"""
+
+    def __init__(
+        self,
+        url: Optional[str] = None,
+        token: Optional[str] = None,
+        timeout: Optional[int] = None,
+    ) -> None:
+        """Returns a new webKnossos server contextmanager. Use with the `with` statement:
+        ```python
+        with webknossos_context(token="my_webknossos_token"):
+            # code that interacts with webknossos
+        ```
+
+        Or as a decorator:
+        ```python
+        @webknossos_context(token="my_webknossos_token")
+        def my_func():
+            # code that interacts with webknossos
+        ```
+
+        You can specify the following arguments:
+        * `url`, by default [https://webknossos.org](https://www.webknossos.org),
+        * `token`, as displayed on [https://webknossos.org/auth/token](https://webknossos.org/auth/token),
+        * `timeout` to specify a custom network request timeout in seconds, `1800` (30min) by default.
+
+        `url` and `timeout` are taken from the previous context (e.g. environment variables) if not specified.
+        `token` must be set explicitly, it is not available when not specified.
+        """
+        self._url = _get_context().url if url is None else url
+        self._token = token
+        self._timeout = _get_context().timeout if timeout is None else timeout
+        self._context_var_token_stack: List[Token[_WebknossosContext]] = []
+
+    def __enter__(self) -> None:
+        context_var_token = _webknossos_context_var.set(
+            _WebknossosContext(self._url, self._token, self._timeout)
+        )
+        self._context_var_token_stack.append(context_var_token)
+
+    def __exit__(self, *exc: Any) -> None:
+        _webknossos_context_var.reset(self._context_var_token_stack.pop())
 
 
 def _get_generated_client(enforce_auth: bool = False) -> GeneratedClient:

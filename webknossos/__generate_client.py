@@ -72,6 +72,7 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
         build_info,
         current_user_info,
         dataset_info,
+        dataset_sharing_token,
         datastore_list,
         generate_token_for_data_store,
         project_info_by_id,
@@ -126,6 +127,17 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
         "datasetInfo",
         extract_200_response(
             dataset_info.sync_detailed(
+                organization_name=organization_id,
+                data_set_name=dataset_name,
+                client=client,
+            )
+        ),
+    )
+
+    yield (
+        "datasetSharingToken",
+        extract_200_response(
+            dataset_sharing_token.sync_detailed(
                 organization_name=organization_id,
                 data_set_name=dataset_name,
                 client=client,
@@ -300,9 +312,16 @@ def fix_request_body(openapi_schema: Dict) -> None:
     for path_val in openapi_schema["paths"].values():
         for method_val in path_val.values():
             if "requestBody" in method_val:
-                method_val["requestBody"]["content"] = {
-                    "application/json": {"schema": {"type": "object"}}
-                }
+                if method_val.get("operationId") == "datasetUpdateTeams":
+                    method_val["requestBody"]["content"] = {
+                        "application/json": {
+                            "schema": {"type": "array", "items": {"type": "string"}}
+                        }
+                    }
+                else:
+                    method_val["requestBody"]["content"] = {
+                        "application/json": {"schema": {"type": "object"}}
+                    }
 
 
 def bootstrap_response_schemas(openapi_schema: Dict) -> None:

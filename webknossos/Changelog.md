@@ -13,8 +13,17 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.24...HEAD)
 
 ### Breaking Changes
+- `Dataset.upload()` now returns a `RemoteDataset` instead instead of the URL string. You can get the URL via `remote_ds.url`. [#723](https://github.com/scalableminds/webknossos-libs/pull/723)
+- `User.teams` now is a tuple instead of a list. [#723](https://github.com/scalableminds/webknossos-libs/pull/723)
+- The deprecated `download_dataset` function now requires the `organization_id` argument. [#723](https://github.com/scalableminds/webknossos-libs/pull/723)
 
 ### Added
+- Added `Dataset.open_remote()`, which returns an object of the new `RemoteDataset`. [#723](https://github.com/scalableminds/webknossos-libs/pull/723)
+  This can
+  * give the webknossos URL for the dataset as `remote_ds.url`,
+  * read image data via the webknossos zarr interface, using the inherited `Dataset` methods, and
+  * read and change the following dataset metadata as properties: `display_name`, `description`, `tags`, `is_public`, `sharing_token`, `allowed_teams`.
+- `Team` instances also contain the `organization_id`. [#723](https://github.com/scalableminds/webknossos-libs/pull/723)
 
 ### Changed
 

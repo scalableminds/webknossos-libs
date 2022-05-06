@@ -50,6 +50,36 @@ pdoc-toc:
 {% endif %}
 ---
 <div>
-    {% block body %}{% endblock %}
-    {% block style %}{% endblock %}
+    {% block body %}
+        {% block content %}{% endblock %}
+        {% if module and module.submodules %}
+            <h2 id="submodules">Submodules</h2>
+            <ul>
+                {% for submodule in module.submodules %}
+                    <li>{{ submodule.taken_from | link }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endblock %}
+    {% filter minify_css | indent %}
+        {% block style %}
+            {#
+            Customizations:
+            * removed include of resources/bootstrap-reboot.min.css
+            * removed block style_layout with include of layout.css
+            #}
+            <style>/*! syntax-highlighting.css */{% include "syntax-highlighting.css" %}</style>
+            {#
+            The style_pdoc, style_theme, style_layout, and style_content Jinja2 blocks are deprecated and will be
+            removed in a future release. Custom templates should either provide alternatives for the specific CSS files,
+            or append their own styles by providing `custom.css` (see examples/custom-template/).
+            #}
+            {% block style_pdoc %}
+                {% block style_theme %}<style>/*! theme.css */{% include "theme.css" %}</style>{% endblock %}
+                {% block style_content %}<style>/*! content.css */{% include "content.css" %}</style>{% endblock %}
+                {# Use this file in your custom template directory to add additional CSS styling: #}
+                <style>/*! custom.css */{% include "custom.css" %}</style>
+            {% endblock %}
+        {% endblock %}
+    {% endfilter %}
 </div>
