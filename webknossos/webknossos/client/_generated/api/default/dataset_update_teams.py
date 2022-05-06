@@ -1,9 +1,8 @@
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 import httpx
 
 from ...client import Client
-from ...models.dataset_update_teams_json_body import DatasetUpdateTeamsJsonBody
 from ...types import Response
 
 
@@ -12,7 +11,7 @@ def _get_kwargs(
     data_set_name: str,
     *,
     client: Client,
-    json_body: DatasetUpdateTeamsJsonBody,
+    json_body: List[str],
 ) -> Dict[str, Any]:
     url = "{}/api/datasets/{organizationName}/{dataSetName}/teams".format(
         client.base_url, organizationName=organization_name, dataSetName=data_set_name
@@ -21,7 +20,7 @@ def _get_kwargs(
     headers: Dict[str, Any] = client.get_headers()
     cookies: Dict[str, Any] = client.get_cookies()
 
-    json_json_body = json_body.to_dict()
+    json_json_body = json_body
 
     return {
         "url": url,
@@ -46,7 +45,7 @@ def sync_detailed(
     data_set_name: str,
     *,
     client: Client,
-    json_body: DatasetUpdateTeamsJsonBody,
+    json_body: List[str],
 ) -> Response[Any]:
     kwargs = _get_kwargs(
         organization_name=organization_name,
@@ -67,7 +66,7 @@ async def asyncio_detailed(
     data_set_name: str,
     *,
     client: Client,
-    json_body: DatasetUpdateTeamsJsonBody,
+    json_body: List[str],
 ) -> Response[Any]:
     kwargs = _get_kwargs(
         organization_name=organization_name,

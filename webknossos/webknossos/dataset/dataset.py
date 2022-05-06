@@ -1297,15 +1297,6 @@ class RemoteDataset(Dataset):
         from webknossos.client._generated.api.default import dataset_update_teams
         from webknossos.client.context import _get_generated_client
 
-        @attr.define
-        class _TeamIdsBody:
-            """Helper class which is deserialized by the generated client via to_dict."""
-
-            teams: List[str]
-
-            def to_dict(self) -> List[str]:
-                return self.teams
-
         team_ids = [i.id if isinstance(i, Team) else i for i in allowed_teams]
 
         with self._context:
@@ -1313,7 +1304,7 @@ class RemoteDataset(Dataset):
                 organization_name=self._organization_id,
                 data_set_name=self._dataset_name,
                 client=_get_generated_client(),
-                json_body=_TeamIdsBody(team_ids),  # type: ignore[arg-type]
+                json_body=team_ids,
             )
             assert (
                 dataset_update_teams_response.status_code == 200

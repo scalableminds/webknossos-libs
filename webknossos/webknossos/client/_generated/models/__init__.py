@@ -127,7 +127,6 @@ from .dataset_info_response_200_data_store import DatasetInfoResponse200DataStor
 from .dataset_reserve_upload_json_body import DatasetReserveUploadJsonBody
 from .dataset_sharing_token_response_200 import DatasetSharingTokenResponse200
 from .dataset_update_json_body import DatasetUpdateJsonBody
-from .dataset_update_teams_json_body import DatasetUpdateTeamsJsonBody
 from .datastore_list_response_200_item import DatastoreListResponse200Item
 from .generate_token_for_data_store_response_200 import (
     GenerateTokenForDataStoreResponse200,

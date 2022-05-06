@@ -312,9 +312,16 @@ def fix_request_body(openapi_schema: Dict) -> None:
     for path_val in openapi_schema["paths"].values():
         for method_val in path_val.values():
             if "requestBody" in method_val:
-                method_val["requestBody"]["content"] = {
-                    "application/json": {"schema": {"type": "object"}}
-                }
+                if method_val.get("operationId") == "datasetUpdateTeams":
+                    method_val["requestBody"]["content"] = {
+                        "application/json": {
+                            "schema": {"type": "array", "items": {"type": "string"}}
+                        }
+                    }
+                else:
+                    method_val["requestBody"]["content"] = {
+                        "application/json": {"schema": {"type": "object"}}
+                    }
 
 
 def bootstrap_response_schemas(openapi_schema: Dict) -> None:
