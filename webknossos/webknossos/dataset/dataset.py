@@ -446,6 +446,40 @@ class Dataset:
         """
         return self._layers
 
+    @property
+    def voxel_size(self) -> Tuple[float, float, float]:
+        return self._properties.scale
+
+    @property
+    def scale(self) -> Tuple[float, float, float]:
+        """Deprecated, use `voxel_size` instead."""
+        warn_deprecated("scale", "voxel_size")
+        return self._properties.scale
+
+    @property
+    def name(self) -> str:
+        return self._properties.id["name"]
+
+    @name.setter
+    def name(self, name: str) -> None:
+        self._ensure_writable()
+        current_id = self._properties.id
+        current_id["name"] = name
+        self._properties.id = current_id
+        self._export_as_json()
+
+    @property
+    def default_view_configuration(self) -> Optional[DatasetViewConfiguration]:
+        return self._properties.default_view_configuration
+
+    @default_view_configuration.setter
+    def default_view_configuration(
+        self, view_configuration: DatasetViewConfiguration
+    ) -> None:
+        self._ensure_writable()
+        self._properties.default_view_configuration = view_configuration
+        self._export_as_json()  # update properties on disk
+
     def upload(
         self,
         new_dataset_name: Optional[str] = None,
@@ -508,6 +542,8 @@ class Dataset:
 
         This function raises an `IndexError` if the specified `layer_name` already exists.
         """
+
+        self._ensure_writable()
 
         if "dtype" in kwargs:
             raise ValueError(
@@ -660,6 +696,8 @@ class Dataset:
             )
 
     def add_layer_like(self, other_layer: Layer, layer_name: str) -> Layer:
+        self._ensure_writable()
+
         if layer_name in self.layers.keys():
             raise IndexError(
                 f"Adding layer {layer_name} failed. There is already a layer with this name"
@@ -687,6 +725,7 @@ class Dataset:
         category: LayerCategoryType,
         **kwargs: Any,
     ) -> Layer:
+        self._ensure_writable()
         assert layer_name not in self.layers, f"Layer {layer_name} already exists!"
 
         array_info = _find_array_info(self.path / layer_name)
@@ -761,6 +800,7 @@ class Dataset:
         """
         Deletes the layer from the `datasource-properties.json` and the data from disk.
         """
+        self._ensure_writable()
 
         if layer_name not in self.layers.keys():
             raise IndexError(
@@ -794,6 +834,7 @@ class Dataset:
         If new_layer_name is None, the name of the foreign layer is used.
         Symlinked layers can only be added to datasets on local file systems.
         """
+        self._ensure_writable()
 
         if isinstance(foreign_layer, Layer):
             foreign_layer_path = foreign_layer.path
@@ -846,6 +887,7 @@ class Dataset:
         Additionally, the relevant information from the `datasource-properties.json` of the other dataset are copied too.
         If new_layer_name is None, the name of the foreign layer is used.
         """
+        self._ensure_writable()
 
         if isinstance(foreign_layer, Layer):
             foreign_layer_path = foreign_layer.path
@@ -1013,38 +1055,6 @@ class Dataset:
                 f"Failed to get segmentation layer: There are multiple {category} layer."
             )
 
-    @property
-    def voxel_size(self) -> Tuple[float, float, float]:
-        return self._properties.scale
-
-    @property
-    def scale(self) -> Tuple[float, float, float]:
-        """Deprecated, use `voxel_size` instead."""
-        warn_deprecated("scale", "voxel_size")
-        return self._properties.scale
-
-    @property
-    def name(self) -> str:
-        return self._properties.id["name"]
-
-    @name.setter
-    def name(self, name: str) -> None:
-        current_id = self._properties.id
-        current_id["name"] = name
-        self._properties.id = current_id
-        self._export_as_json()
-
-    @property
-    def default_view_configuration(self) -> Optional[DatasetViewConfiguration]:
-        return self._properties.default_view_configuration
-
-    @default_view_configuration.setter
-    def default_view_configuration(
-        self, view_configuration: DatasetViewConfiguration
-    ) -> None:
-        self._properties.default_view_configuration = view_configuration
-        self._export_as_json()  # update properties on disk
-
     @classmethod
     def create(
         cls,
@@ -1080,6 +1090,10 @@ class Dataset:
     def __repr__(self) -> str:
         return f"Dataset({repr(self.path)})"
 
+    def _ensure_writable(self) -> None:
+        if self._read_only:
+            raise RuntimeError(f"{self} is read-only, the changes will not be saved!")
+
     def _load_properties(self) -> DatasetProperties:
         with (self.path / PROPERTIES_FILE_NAME).open(
             encoding="utf-8"
@@ -1088,8 +1102,7 @@ class Dataset:
         return dataset_converter.structure(data, DatasetProperties)
 
     def _export_as_json(self) -> None:
-        if self._read_only:
-            raise RuntimeError(f"{self} is read-only, the changes will not be saved!")
+        self._ensure_writable()
 
         properties_on_disk = self._load_properties()
 
