@@ -480,6 +480,10 @@ class Dataset:
         self._properties.default_view_configuration = view_configuration
         self._export_as_json()  # update properties on disk
 
+    @property
+    def read_only(self) -> bool:
+        return self._read_only
+
     def upload(
         self,
         new_dataset_name: Optional[str] = None,

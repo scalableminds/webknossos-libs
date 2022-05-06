@@ -303,6 +303,10 @@ class Layer:
         self.dataset._export_as_json()  # update properties on disk
 
     @property
+    def read_only(self) -> bool:
+        return self.dataset.read_only
+
+    @property
     def mags(self) -> Dict[Mag, MagView]:
         """
         Getter for dictionary containing all mags.
@@ -1009,7 +1013,7 @@ class Layer:
                 info.chunks_per_shard,
                 info.compression_mode,
             )
-            self._mags[mag]._read_only = self._dataset._read_only
+            self._mags[mag]._read_only = self._dataset.read_only
         except ArrayException as e:
             logging.error(
                 f"Failed to setup magnification {mag_name}, which is specified in the datasource-properties.json. See {e}"
