@@ -337,8 +337,8 @@ def pytest_collection_modifyitems(items: List[pytest.Item]) -> None:
         # addresses starting with `/` are allowed
         marker = item.get_closest_marker("block_network")
         if marker is None:
-            new_marker = pytest.mark.block_network(allowed_hosts=["/.*", "listener-.*"])
+            new_marker = pytest.mark.block_network(allowed_hosts=["/.*", b'\x00listener-.*'])
             item.add_marker(new_marker)
         else:
             marker.kwargs["allowed_hosts"].append("/.*")
-            marker.kwargs["allowed_hosts"].append("listener-.*")
+            marker.kwargs["allowed_hosts"].append(b'\x00listener-.*')
