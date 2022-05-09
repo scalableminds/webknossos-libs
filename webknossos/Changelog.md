@@ -10,7 +10,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.24...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.0...HEAD)
+
+### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [0.10.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.0) - 2022-05-09
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.24...v0.10.0)
 
 ### Breaking Changes
 - `Dataset.upload()` now returns a `RemoteDataset` instead instead of the URL string. You can get the URL via `remote_ds.url`. [#723](https://github.com/scalableminds/webknossos-libs/pull/723)
@@ -24,10 +36,6 @@ For upgrade instructions, please check the respective *Breaking Changes* section
   * read image data via the webknossos zarr interface, using the inherited `Dataset` methods, and
   * read and change the following dataset metadata as properties: `display_name`, `description`, `tags`, `is_public`, `sharing_token`, `allowed_teams`.
 - `Team` instances also contain the `organization_id`. [#723](https://github.com/scalableminds/webknossos-libs/pull/723)
-
-### Changed
-
-### Fixed
 
 
 ## [0.9.24](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.24) - 2022-05-03
