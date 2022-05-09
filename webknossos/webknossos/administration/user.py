@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Dict, List, Union
+from typing import TYPE_CHECKING, Dict, List, Tuple, Union
 
 import attr
 
@@ -35,7 +35,7 @@ class User:
     last_name: str
     created: int
     last_activity: int
-    teams: List["Team"]
+    teams: Tuple["Team", ...]
     experiences: Dict[str, int]
     is_active: bool
     is_admin: bool
@@ -73,7 +73,10 @@ class User:
             last_name=response.last_name,
             created=response.created,
             last_activity=response.last_activity,
-            teams=[Team(id=team.id, name=team.name) for team in response.teams],
+            teams=tuple(
+                Team(id=team.id, name=team.name, organization_id=response.organization)
+                for team in response.teams
+            ),
             experiences=response.experiences.additional_properties,
             is_active=bool(response.is_active),
             is_admin=bool(response.is_admin),
@@ -109,6 +112,7 @@ class User:
 class Team:
     id: str
     name: str
+    organization_id: str
 
 
 @attr.frozen

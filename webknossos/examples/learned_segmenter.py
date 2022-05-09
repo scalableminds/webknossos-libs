@@ -74,7 +74,7 @@ def main() -> None:
     segmentation_layer.bounding_box = dataset.layers["color"].bounding_box
     segmentation_layer.add_mag(mag, compress=True).write(segmentation)
 
-    url = dataset.upload(
+    remote_ds = dataset.upload(
         layers_to_link=[
             wk.LayerToLink(
                 organization_id="scalable_minds",
@@ -86,6 +86,7 @@ def main() -> None:
         else None
     )
 
+    url = remote_ds.url
     print(f"Successfully uploaded {url}")
 
 

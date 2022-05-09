@@ -178,4 +178,4 @@ def upload_dataset(
             break
     assert response.status_code == 200, response
 
-    return f"{context.url}/datasets/{context.organization_id}/{new_dataset_name}/view"
+    return new_dataset_name

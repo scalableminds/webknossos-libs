@@ -168,12 +168,12 @@ def _get_sharding_parameters(
 
 class Layer:
     """
-    A `Layer` consists of multiple `webknossos.dataset.mag_view.MagView`s, which store the same data in different magnifications.
+    A `Layer` consists of multiple `MagView`s, which store the same data in different magnifications.
     """
 
     def __init__(self, dataset: "Dataset", properties: LayerProperties) -> None:
         """
-        Do not use this constructor manually. Instead use `webknossos.dataset.layer.Dataset.add_layer` to create a `Layer`.
+        Do not use this constructor manually. Instead use `Dataset``.add_layer()` to create a `Layer`.
         """
         # It is possible that the properties on disk do not contain the number of channels.
         # Therefore, the parameter is optional. However at this point, 'num_channels' was already inferred.
@@ -222,6 +222,7 @@ class Layer:
         """
         if layer_name == self.name:
             return
+        self.dataset._ensure_writable()
         assert (
             layer_name not in self.dataset.layers.keys()
         ), f"Failed to rename layer {self.name} to {layer_name}: The new name already exists."
@@ -246,6 +247,36 @@ class Layer:
         return self._dataset
 
     @property
+    def bounding_box(self) -> BoundingBox:
+        return self._properties.bounding_box
+
+    @bounding_box.setter
+    def bounding_box(self, bbox: BoundingBox) -> None:
+        """
+        Updates the offset and size of the bounding box of this layer in the properties.
+        """
+        self.dataset._ensure_writable()
+        assert (
+            bbox.topleft.is_positive()
+        ), f"Updating the bounding box of layer {self} to {bbox} failed, topleft must not contain negative dimensions."
+        self._properties.bounding_box = bbox
+        self.dataset._export_as_json()
+        for mag in self.mags.values():
+            mag._array.ensure_size(
+                bbox.align_with_mag(mag.mag).in_mag(mag.mag).bottomright
+            )
+
+    @property
+    def category(self) -> LayerCategoryType:
+        return COLOR_CATEGORY
+
+    @property
+    def dtype_per_layer(self) -> str:
+        return _dtype_per_channel_to_dtype_per_layer(
+            self.dtype_per_channel, self.num_channels
+        )
+
+    @property
     def dtype_per_channel(self) -> np.dtype:
         return self._dtype_per_channel
 
@@ -267,8 +298,13 @@ class Layer:
     def default_view_configuration(
         self, view_configuration: LayerViewConfiguration
     ) -> None:
+        self.dataset._ensure_writable()
         self._properties.default_view_configuration = view_configuration
         self.dataset._export_as_json()  # update properties on disk
+
+    @property
+    def read_only(self) -> bool:
+        return self.dataset.read_only
 
     @property
     def mags(self) -> Dict[Mag, MagView]:
@@ -321,6 +357,7 @@ class Layer:
 
         Raises an IndexError if the specified `mag` already exists.
         """
+        self.dataset._ensure_writable()
         # normalize the name of the mag
         mag = Mag(mag)
         compression_mode = compress
@@ -387,6 +424,7 @@ class Layer:
 
         Raises an IndexError if the specified `mag` does not exists.
         """
+        self.dataset._ensure_writable()
         mag = Mag(mag)
         assert (
             mag not in self.mags
@@ -462,6 +500,7 @@ class Layer:
 
         This function raises an `IndexError` if the specified `mag` does not exist.
         """
+        self.dataset._ensure_writable()
         mag = Mag(mag)
         if mag not in self.mags.keys():
             raise IndexError(
@@ -492,6 +531,7 @@ class Layer:
         by the bounding box of the layer the foreign mag belongs to.
         Symlinked mags can only be added to layers on local file systems.
         """
+        self.dataset._ensure_writable()
 
         if isinstance(foreign_mag_view_or_path, MagView):
             foreign_mag_view = foreign_mag_view_or_path
@@ -592,25 +632,6 @@ class Layer:
                 "Adding mag {} failed. There is already a mag with this name".format(
                     mag
                 )
-            )
-
-    @property
-    def bounding_box(self) -> BoundingBox:
-        return self._properties.bounding_box
-
-    @bounding_box.setter
-    def bounding_box(self, bbox: BoundingBox) -> None:
-        """
-        Updates the offset and size of the bounding box of this layer in the properties.
-        """
-        assert (
-            bbox.topleft.is_positive()
-        ), f"Updating the bounding box of layer {self} to {bbox} failed, topleft must not contain negative dimensions."
-        self._properties.bounding_box = bbox
-        self.dataset._export_as_json()
-        for mag in self.mags.values():
-            mag._array.ensure_size(
-                bbox.align_with_mag(mag.mag).in_mag(mag.mag).bottomright
             )
 
     def downsample(
@@ -924,7 +945,7 @@ class Layer:
             finest_mag_with_fixed_z = finest_mag.to_list()
             finest_mag_with_fixed_z[2] = from_mag.to_list()[2]
             finest_mag = Mag(finest_mag_with_fixed_z)
-            voxel_size = self.dataset.voxel_size
+            voxel_size = None
         else:
             raise AttributeError(
                 f"Upsampling failed: {sampling_mode} is not a valid UpsamplingMode ({SamplingModes.ANISOTROPIC}, {SamplingModes.ISOTROPIC}, {SamplingModes.CONSTANT_Z})"
@@ -992,6 +1013,7 @@ class Layer:
                 info.chunks_per_shard,
                 info.compression_mode,
             )
+            self._mags[mag]._read_only = self._dataset.read_only
         except ArrayException as e:
             logging.error(
                 f"Failed to setup magnification {mag_name}, which is specified in the datasource-properties.json. See {e}"
@@ -1013,16 +1035,6 @@ class Layer:
             % (self.name, self.dtype_per_channel, self.num_channels)
         )
 
-    @property
-    def category(self) -> LayerCategoryType:
-        return COLOR_CATEGORY
-
-    @property
-    def dtype_per_layer(self) -> str:
-        return _dtype_per_channel_to_dtype_per_layer(
-            self.dtype_per_channel, self.num_channels
-        )
-
     def _get_largest_segment_id_maybe(self) -> Optional[int]:
         return None
 
@@ -1037,6 +1049,7 @@ class SegmentationLayer(Layer):
 
     @largest_segment_id.setter
     def largest_segment_id(self, largest_segment_id: int) -> None:
+        self.dataset._ensure_writable()
         if type(largest_segment_id) != int:
             assert largest_segment_id == int(
                 largest_segment_id

@@ -54,7 +54,8 @@ def main() -> None:
         color=(212, 17, 17), intensity_range=(3000, 30000)
     )
 
-    url = ds.upload()
+    remote_dataset = ds.upload()
+    url = remote_dataset.url
     print(f"Successfully uploaded {url}")
 
 
