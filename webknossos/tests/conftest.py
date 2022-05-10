@@ -338,9 +338,9 @@ def pytest_collection_modifyitems(items: List[pytest.Item]) -> None:
         marker = item.get_closest_marker("block_network")
         if marker is None:
             new_marker = pytest.mark.block_network(
-                allowed_hosts=["/.*", b"\x00listener-.*"]
+                allowed_hosts=["/.*", "\x00listener-.*"]
             )
             item.add_marker(new_marker)
         else:
             marker.kwargs["allowed_hosts"].append("/.*")
-            marker.kwargs["allowed_hosts"].append(b"\x00listener-.*")
+            marker.kwargs["allowed_hosts"].append("\x00listener-.*")
