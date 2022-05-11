@@ -274,14 +274,14 @@ def layer_properties_pre_structure(
 ]:
     def __layer_properties_pre_structure(
         d: Dict[str, Any],
-        type: Type[Union[LayerProperties, SegmentationLayerProperties]],
+        type_value: Type[Union[LayerProperties, SegmentationLayerProperties]],
     ) -> Union[LayerProperties, SegmentationLayerProperties]:
         if d["dataFormat"] == "wkw":
             d["mags"] = [
                 mag_view_properties_pre_unstructure(m) for m in d["wkwResolutions"]
             ]
             del d["wkwResolutions"]
-        obj = converter_fn(d, type)
+        obj = converter_fn(d, type_value)
         return obj
 
     return __layer_properties_pre_structure
