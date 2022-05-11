@@ -14,7 +14,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Added
 
 ### Changed
-- added Python 3.9 support to wkCuber [#716](https://github.com/scalableminds/webknossos-libs/pull/716)
+- Added Python 3.9 support to wkcuber [#716](https://github.com/scalableminds/webknossos-libs/pull/716)
 
 ### Fixed
 
