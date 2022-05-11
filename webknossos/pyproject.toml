@@ -48,7 +48,7 @@ scikit-image = "^0.18.3"
 scipy = "^1.4.0"
 typing-extensions = "^4.0"
 universal-pathlib = "0.0.18"
-wkw = "1.1.11"
+wkw = "1.1.15"
 zarr = "^2.11.0"
 zipp = "^3.5.0"
 
