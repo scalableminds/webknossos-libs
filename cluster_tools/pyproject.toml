@@ -15,7 +15,7 @@ kubernetes = "^23.3.0"
 black = "21.12b0"
 icecream = "^2.1.1"
 isort = "^5.9.3"
-mypy = "0.910"
+mypy = "0.950"
 pylint = "^2.12.2"
 pytest = "^6.2.4"
 
