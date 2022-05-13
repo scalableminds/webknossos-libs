@@ -16,6 +16,7 @@ from webknossos.geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 
 from ._array import ArrayException, BaseArray, DataFormat
 from ._downsampling_utils import (
+    build_mag_list_template,
     calculate_default_max_mag,
     calculate_mags_to_downsample,
     calculate_mags_to_upsample,
@@ -641,6 +642,7 @@ class Layer:
         interpolation_mode: str = "default",
         compress: bool = True,
         sampling_mode: Union[str, SamplingModes] = SamplingModes.ANISOTROPIC,
+        dataset_with_reference_resolutions: Optional[Dataset] = None,
         buffer_shape: Optional[Vec3Int] = None,
         force_sampling_scheme: bool = False,
         args: Optional[Namespace] = None,
@@ -710,7 +712,21 @@ class Layer:
                 f"Downsampling failed: {sampling_mode} is not a valid SamplingMode ({SamplingModes.ANISOTROPIC}, {SamplingModes.ISOTROPIC}, {SamplingModes.CONSTANT_Z})"
             )
 
-        mags_to_downsample = calculate_mags_to_downsample(from_mag, max_mag, voxel_size)
+        mags_to_downsample = None
+        if dataset_with_reference_resolutions is not None:
+            mags_to_downsample = build_mag_list_template(
+                dataset_with_reference_resolutions, max_mag
+            )
+            if mags_to_downsample is None:
+                warnings.warn(
+                    f"The dataset {dataset_with_reference_resolutions.name} does not seem to contain "
+                    + f"mags that are not already present in dataset {self.dataset.name} in layer {self.name}."
+                )
+
+        if mags_to_downsample is None:
+            mags_to_downsample = calculate_mags_to_downsample(
+                from_mag, max_mag, voxel_size
+            )
 
         if len(set([max(m.to_list()) for m in mags_to_downsample])) != len(
             mags_to_downsample
