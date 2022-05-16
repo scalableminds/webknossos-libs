@@ -16,7 +16,7 @@ from webknossos.geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 
 from ._array import ArrayException, BaseArray, DataFormat
 from ._downsampling_utils import (
-    build_mag_list_template,
+    build_mag_list_template_for_layer,
     calculate_default_max_mag,
     calculate_mags_to_downsample,
     calculate_mags_to_upsample,
@@ -330,6 +330,9 @@ class Layer:
     def get_finest_mag(self) -> MagView:
         return self.get_mag(min(self.mags.keys()))
 
+    def get_most_coarse_mag(self) -> MagView:
+        return self.get_mag(max(self.mags.keys()))
+
     def get_best_mag(self) -> MagView:
         """Deprecated, please use `get_finest_mag`."""
         warn_deprecated("get_best_mag()", "get_finest_mag()")
@@ -642,7 +645,7 @@ class Layer:
         interpolation_mode: str = "default",
         compress: bool = True,
         sampling_mode: Union[str, SamplingModes] = SamplingModes.ANISOTROPIC,
-        dataset_with_reference_resolutions: Optional[Dataset] = None,
+        dataset_with_reference_resolutions: Optional["Dataset"] = None,
         buffer_shape: Optional[Vec3Int] = None,
         force_sampling_scheme: bool = False,
         args: Optional[Namespace] = None,
@@ -714,8 +717,8 @@ class Layer:
 
         mags_to_downsample = None
         if dataset_with_reference_resolutions is not None:
-            mags_to_downsample = build_mag_list_template(
-                dataset_with_reference_resolutions, max_mag
+            mags_to_downsample = build_mag_list_template_for_layer(
+                dataset_with_reference_resolutions, self, max_mag
             )
             if mags_to_downsample is None:
                 warnings.warn(

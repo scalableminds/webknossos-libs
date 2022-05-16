@@ -2,12 +2,13 @@ import logging
 import math
 from enum import Enum
 from itertools import product
-from typing import Callable, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Tuple
 
 import numpy as np
 from scipy.ndimage import zoom
 
-from webknossos.dataset.dataset import Dataset
+if TYPE_CHECKING:
+    from .dataset import Dataset, Layer
 from webknossos.geometry import Mag, Vec3Int, Vec3IntLike
 from webknossos.geometry.bounding_box import BoundingBox
 from webknossos.utils import time_start, time_stop
@@ -329,13 +330,15 @@ def downsample_cube_job(
         raise exc
 
 
-def find_smallest_mag_of_dataset(input_dataset: Dataset, layer_names: List[str]) -> Mag:
+def find_smallest_mag_of_dataset(
+    input_dataset: "Dataset", layer_names: List[str]
+) -> Mag:
     layers = [input_dataset.get_layer(layer_name) for layer_name in layer_names]
     return min(min(layer.mags.keys()) for layer in layers)
 
 
 def build_mag_dictionary_for_layers(
-    input_dataset: Dataset, layer_names: List[str]
+    input_dataset: "Dataset", layer_names: List[str]
 ) -> Dict[int, Mag]:
     mags_by_max: Dict[int, Mag] = {}
     for layer_name in layer_names:
@@ -362,22 +365,22 @@ def build_mag_dictionary(
     return mags_by_max
 
 
-def build_mag_list_template(
-    input_dataset: Dataset, max_mag: Mag
+def build_mag_list_template_for_layer(
+    reference_dataset: "Dataset", layer: "Layer", max_mag: Mag
 ) -> Optional[List[Mag]]:
     """
     Infer a list of magnifications which should be used for downsampling by
     examining all existing layers.
     """
 
-    layer_names = list(input_dataset.layers.keys())
-    smallest_mag = find_smallest_mag_of_dataset(input_dataset, layer_names)
-    mags_by_max = build_mag_dictionary_for_layers(input_dataset, layer_names)
+    layer_names = list(reference_dataset.layers.keys())
+    smallest_mag = find_smallest_mag_of_dataset(reference_dataset, layer_names)
+    mags_by_max = build_mag_dictionary_for_layers(reference_dataset, layer_names)
 
     # This list of magnifications is used as a fallback, each time
     # no existing mag was found.
     anisotropic_template_mags = build_mag_dictionary(
-        calculate_mags_to_downsample(smallest_mag, max_mag, input_dataset.scale)
+        calculate_mags_to_downsample(smallest_mag, max_mag, reference_dataset.scale)
     )
 
     current_mag = Mag(smallest_mag)
@@ -394,7 +397,10 @@ def build_mag_list_template(
         mag_list_template.append(current_mag)
 
     if templated_count > 0:
-        return mag_list_template
+        starting_mag = layer.get_most_coarse_mag().mag
+        starting_index = mag_list_template.index(starting_mag)
+        missing_mags = mag_list_template[starting_index + 1 :]
+        return missing_mags
     else:
         # Since the generated mag list does not contain any entries
         # which are derived from existing mags, we return an empty list
