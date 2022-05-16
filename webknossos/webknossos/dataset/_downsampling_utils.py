@@ -334,7 +334,7 @@ def find_smallest_mag_of_dataset(
     input_dataset: "Dataset", layer_names: List[str]
 ) -> Mag:
     layers = [input_dataset.get_layer(layer_name) for layer_name in layer_names]
-    return min(min(layer.mags.keys()) for layer in layers)
+    return min(layer.get_finest_mag().mag for layer in layers)
 
 
 def build_mag_dictionary_for_layers(
@@ -343,9 +343,7 @@ def build_mag_dictionary_for_layers(
     mags_by_max: Dict[int, Mag] = {}
     for layer_name in layer_names:
         layer = input_dataset.get_layer(layer_name)
-
         build_mag_dictionary(list(layer.mags.keys()), mags_by_max)
-
     return mags_by_max
 
 
