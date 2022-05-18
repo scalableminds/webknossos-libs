@@ -16,7 +16,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
-
+- Fix `_log() got unexpected keyword argument: 'file'` error for newer Python versions. [#735](https://github.com/scalableminds/webknossos-libs/pull/735)
 
 ## [0.10.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.1) - 2022-05-10
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.0...v0.10.1)

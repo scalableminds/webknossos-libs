@@ -204,7 +204,7 @@ class ClusterExecutor(futures.Executor):
             if not self.jobs:
                 self.jobs_empty_cond.notify_all()
         if self.debug:
-            logging.debug("Job completed: {}".format(jobid), file=sys.stderr)
+            logging.debug("Job completed: {}".format(jobid))
 
         preliminary_outfile_name = with_preliminary_postfix(outfile_name)
         if failed_early:
@@ -299,7 +299,7 @@ class ClusterExecutor(futures.Executor):
         jobid = jobids_futures[0].result()
 
         if self.debug:
-            logging.debug(f"Job submitted: {jobid}", file=sys.stderr)
+            logging.debug(f"Job submitted: {jobid}")
 
         # Thread will wait for it to finish.
         self.wait_thread.waitFor(preliminary_output_pickle_path, jobid)
@@ -425,7 +425,6 @@ class ClusterExecutor(futures.Executor):
                 "Submitted array job {} with JobId {} and {} subjobs.".format(
                     batch_description, jobid, len(futs_with_output_paths)
                 ),
-                file=sys.stderr,
             )
 
         for array_index, (fut, output_path) in enumerate(futs_with_output_paths):
