@@ -66,6 +66,15 @@ Then, please [add an issue using the feature suggestion template](https://github
 
 ## Pull Requests: Docs and Code Contributions
 
+This project welcomes contributions and suggestions. Most contributions require you to
+agree to a Contributor License Agreement (CLA) declaring that you have the right to,
+and actually do, grant us the rights to use your contribution. For details, visit
+https://cla-assistant.io/scalableminds/webknossos-libs.
+
+When you submit a pull request, a CLA-bot will automatically determine whether you need
+to provide a CLA and decorate the PR appropriately (e.g., label, comment). Simply follow the
+instructions provided by the bot. You will only need to do this once using our CLA.
+
 If you want to fix a minor problem in the documentation, examples or other code, feel free to
 [open a pull requests for it on GitHub](https://github.com/scalableminds/webknossos-libs/compare)
 (read more about [pull requests here](https://docs.github.com/en/pull-requests).
