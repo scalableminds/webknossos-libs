@@ -58,8 +58,8 @@ Vector3 = Tuple[float, float, float]
 
 MAG_RE = r"((\d+-\d+-)?\d+)"
 SEP_RE = r"(\/|\\)"
-CUBE_RE = fr"z\d+{SEP_RE}y\d+{SEP_RE}x\d+\.wkw"
-ANNOTATION_WKW_PATH_RE = re.compile(fr"{MAG_RE}{SEP_RE}(header\.wkw|{CUBE_RE})")
+CUBE_RE = rf"z\d+{SEP_RE}y\d+{SEP_RE}x\d+\.wkw"
+ANNOTATION_WKW_PATH_RE = re.compile(rf"{MAG_RE}{SEP_RE}(header\.wkw|{CUBE_RE})")
 
 
 @attr.define
@@ -674,7 +674,7 @@ _COMPOUND_ANNOTATION_TYPES = [
 
 _ANNOTATION_URL_REGEX = re.compile(
     r"^(?P<webknossos_url>https?://.*)/annotations/"
-    + fr"(?P<annotation_type>{'|'.join(i.value for i in AnnotationType.__members__.values())})/"
+    + rf"(?P<annotation_type>{'|'.join(i.value for i in AnnotationType.__members__.values())})/"
     + r"(?P<annotation_id>[0-9A-Fa-f]*)"
 )
 
