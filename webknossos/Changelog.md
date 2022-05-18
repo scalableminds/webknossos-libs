@@ -20,7 +20,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 - added Python 3.9 support to wk-libs [#716](https://github.com/scalableminds/webknossos-libs/pull/716)
 
 ### Fixed
-
+- URLs for the webknossos-context (e.g. in the `WK_URL` env var or via `webknossos_context(url=…)`) may now contain `/` in the end and are sanitized. Before, requests would fail if the URL contained a final `/`. [#733](https://github.com/scalableminds/webknossos-libs/pull/733)
 
 ## [0.10.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.1) - 2022-05-10
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.0...v0.10.1)

@@ -123,7 +123,7 @@ def _clear_all_context_caches() -> None:
 
 @attr.frozen
 class _WebknossosContext:
-    url: str = os.environ.get("WK_URL", default=DEFAULT_WEBKNOSSOS_URL)
+    url: str = os.environ.get("WK_URL", default=DEFAULT_WEBKNOSSOS_URL).rstrip("/")
     token: Optional[str] = os.environ.get("WK_TOKEN", default=None)
     timeout: int = int(os.environ.get("WK_TIMEOUT", default=DEFAULT_HTTP_TIMEOUT))
 
@@ -204,7 +204,7 @@ class webknossos_context(ContextDecorator):
         `url` and `timeout` are taken from the previous context (e.g. environment variables) if not specified.
         `token` must be set explicitly, it is not available when not specified.
         """
-        self._url = _get_context().url if url is None else url
+        self._url = _get_context().url if url is None else url.rstrip("/")
         self._token = token
         self._timeout = _get_context().timeout if timeout is None else timeout
         self._context_var_token_stack: List[Token[_WebknossosContext]] = []
