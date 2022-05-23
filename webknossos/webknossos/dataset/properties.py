@@ -189,7 +189,9 @@ dataset_converter.register_structure_hook(
     Vec3Int, lambda d, _: Vec3Int.full(d) if isinstance(d, int) else Vec3Int(d)
 )
 
-dataset_converter.register_structure_hook(LayerCategoryType, lambda d, _: str(d))
+dataset_converter.register_structure_hook_func(
+    lambda d: d == LayerCategoryType, lambda d, _: str(d)
+)
 
 # Register (un-)structure hooks for attr-classes to bring the data into the expected format.
 # The properties on disk (in datasource-properties.json) use camel case for the names of the attributes.
@@ -263,7 +265,8 @@ def layer_properties_post_unstructure(
 
 def layer_properties_pre_structure(
     converter_fn: Callable[
-        [Dict[str, Any]], Union[LayerProperties, SegmentationLayerProperties]
+        [Dict[str, Any], Type[Union[LayerProperties, SegmentationLayerProperties]]],
+        Union[LayerProperties, SegmentationLayerProperties],
     ]
 ) -> Callable[
     [Any, Type[Union[LayerProperties, SegmentationLayerProperties]]],
@@ -271,14 +274,14 @@ def layer_properties_pre_structure(
 ]:
     def __layer_properties_pre_structure(
         d: Dict[str, Any],
-        _type: Type[Union[LayerProperties, SegmentationLayerProperties]],
+        type_value: Type[Union[LayerProperties, SegmentationLayerProperties]],
     ) -> Union[LayerProperties, SegmentationLayerProperties]:
         if d["dataFormat"] == "wkw":
             d["mags"] = [
                 mag_view_properties_pre_unstructure(m) for m in d["wkwResolutions"]
             ]
             del d["wkwResolutions"]
-        obj = converter_fn(d)
+        obj = converter_fn(d, type_value)
         return obj
 
     return __layer_properties_pre_structure

@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.24...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.2...HEAD)
 
 ### Breaking Changes
 
@@ -16,6 +16,21 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+
+
+## [0.10.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.2) - 2022-05-20
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.1...v0.10.2)
+
+### Fixed
+- Fix `_log() got unexpected keyword argument: 'file'` error for newer Python versions. [#735](https://github.com/scalableminds/webknossos-libs/pull/735)
+
+
+## [0.10.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.1) - 2022-05-10
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.0...v0.10.1)
+
+
+## [0.10.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.0) - 2022-05-09
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.24...v0.10.0)
 
 
 ## [0.9.24](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.24) - 2022-05-03

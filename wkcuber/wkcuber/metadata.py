@@ -19,7 +19,7 @@ from ._internal.utils import (
 )
 
 WKW_CUBE_REGEX = re.compile(
-    fr"z(\d+){re.escape(sep)}y(\d+){re.escape(sep)}x(\d+)(\.wkw)$"
+    rf"z(\d+){re.escape(sep)}y(\d+){re.escape(sep)}x(\d+)(\.wkw)$"
 )
 
 

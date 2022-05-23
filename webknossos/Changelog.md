@@ -10,7 +10,33 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.24...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.2...HEAD)
+
+### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [0.10.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.2) - 2022-05-20
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.1...v0.10.2)
+
+### Changed
+- added Python 3.9 support to wk-libs [#716](https://github.com/scalableminds/webknossos-libs/pull/716)
+
+### Fixed
+- URLs for the webknossos-context (e.g. in the `WK_URL` env var or via `webknossos_context(url=…)`) may now contain `/` in the end and are sanitized. Before, requests would fail if the URL contained a final `/`. [#733](https://github.com/scalableminds/webknossos-libs/pull/733)
+
+
+## [0.10.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.1) - 2022-05-10
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.0...v0.10.1)
+
+
+## [0.10.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.0) - 2022-05-09
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.24...v0.10.0)
 
 ### Breaking Changes
 - `Dataset.upload()` now returns a `RemoteDataset` instead instead of the URL string. You can get the URL via `remote_ds.url`. [#723](https://github.com/scalableminds/webknossos-libs/pull/723)
@@ -24,10 +50,6 @@ For upgrade instructions, please check the respective *Breaking Changes* section
   * read image data via the webknossos zarr interface, using the inherited `Dataset` methods, and
   * read and change the following dataset metadata as properties: `display_name`, `description`, `tags`, `is_public`, `sharing_token`, `allowed_teams`.
 - `Team` instances also contain the `organization_id`. [#723](https://github.com/scalableminds/webknossos-libs/pull/723)
-
-### Changed
-
-### Fixed
 
 
 ## [0.9.24](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.24) - 2022-05-03
