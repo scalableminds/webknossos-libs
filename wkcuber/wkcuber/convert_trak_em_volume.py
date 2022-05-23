@@ -300,6 +300,9 @@ def parse_segments_from_trakem_xml(file):
             elif elem.tag == "t2_node":
                 current_slice = int(elem.get("lid"))
             elif elem.tag == "t2_path":
+                if current_segment is None:
+                    continue
+
                 assert (
                     current_segment is not None
                 ), "<t2_path ...> tag needs to be child of a <t2_areatree ...> tag."
