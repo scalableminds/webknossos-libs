@@ -16,7 +16,6 @@ from webknossos.geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 
 from ._array import ArrayException, BaseArray, DataFormat
 from ._downsampling_utils import (
-    build_mag_list_template_for_layer,
     calculate_default_max_mag,
     calculate_mags_to_downsample,
     calculate_mags_to_upsample,
@@ -330,9 +329,6 @@ class Layer:
     def get_finest_mag(self) -> MagView:
         return self.get_mag(min(self.mags.keys()))
 
-    def get_most_coarse_mag(self) -> MagView:
-        return self.get_mag(max(self.mags.keys()))
-
     def get_best_mag(self) -> MagView:
         """Deprecated, please use `get_finest_mag`."""
         warn_deprecated("get_best_mag()", "get_finest_mag()")
@@ -638,6 +634,14 @@ class Layer:
                 )
             )
 
+    def _get_dataset_from_align_with_other_layers(
+        self, align_with_other_layers: Union[bool, "Dataset"]
+    ) -> Optional["Dataset"]:
+        if type(align_with_other_layers) is bool:
+            return self.dataset if align_with_other_layers else None
+        else:
+            return align_with_other_layers
+
     def downsample(
         self,
         from_mag: Optional[Mag] = None,
@@ -645,7 +649,7 @@ class Layer:
         interpolation_mode: str = "default",
         compress: bool = True,
         sampling_mode: Union[str, SamplingModes] = SamplingModes.ANISOTROPIC,
-        dataset_with_reference_resolutions: Optional["Dataset"] = None,
+        align_with_other_layers: Union[bool, "Dataset"] = True,
         buffer_shape: Optional[Vec3Int] = None,
         force_sampling_scheme: bool = False,
         args: Optional[Namespace] = None,
@@ -715,21 +719,12 @@ class Layer:
                 f"Downsampling failed: {sampling_mode} is not a valid SamplingMode ({SamplingModes.ANISOTROPIC}, {SamplingModes.ISOTROPIC}, {SamplingModes.CONSTANT_Z})"
             )
 
-        mags_to_downsample = None
-        if dataset_with_reference_resolutions is not None:
-            mags_to_downsample = build_mag_list_template_for_layer(
-                dataset_with_reference_resolutions, self, max_mag
-            )
-            if mags_to_downsample is None:
-                warnings.warn(
-                    f"The dataset {dataset_with_reference_resolutions.name} does not seem to contain "
-                    + f"mags that are not already present in dataset {self.dataset.name} in layer {self.name}."
-                )
-
-        if mags_to_downsample is None:
-            mags_to_downsample = calculate_mags_to_downsample(
-                from_mag, max_mag, voxel_size
-            )
+        dataset_to_align_with = self._get_dataset_from_align_with_other_layers(
+            align_with_other_layers
+        )
+        mags_to_downsample = calculate_mags_to_downsample(
+            from_mag, max_mag, dataset_to_align_with, voxel_size
+        )
 
         if len(set([max(m.to_list()) for m in mags_to_downsample])) != len(
             mags_to_downsample
@@ -927,6 +922,7 @@ class Layer:
         finest_mag: Mag = Mag(1),
         compress: bool = False,
         sampling_mode: Union[str, SamplingModes] = SamplingModes.ANISOTROPIC,
+        align_with_other_layers: Union[bool, "Dataset"] = True,
         buffer_shape: Optional[Vec3Int] = None,
         buffer_edge_len: Optional[int] = None,
         args: Optional[Namespace] = None,
@@ -973,7 +969,12 @@ class Layer:
         if buffer_shape is None and buffer_edge_len is not None:
             buffer_shape = Vec3Int.full(buffer_edge_len)
 
-        mags_to_upsample = calculate_mags_to_upsample(from_mag, finest_mag, voxel_size)
+        dataset_to_align_with = self._get_dataset_from_align_with_other_layers(
+            align_with_other_layers
+        )
+        mags_to_upsample = calculate_mags_to_upsample(
+            from_mag, finest_mag, dataset_to_align_with, voxel_size
+        )
 
         for prev_mag, target_mag in zip(
             [from_mag] + mags_to_upsample[:-1], mags_to_upsample

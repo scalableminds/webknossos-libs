@@ -1,14 +1,16 @@
 import logging
 import math
+import warnings
 from enum import Enum
 from itertools import product
-from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Callable, List, Optional, Tuple
 
 import numpy as np
 from scipy.ndimage import zoom
 
 if TYPE_CHECKING:
     from .dataset import Dataset, Layer
+
 from webknossos.geometry import Mag, Vec3Int, Vec3IntLike
 from webknossos.geometry.bounding_box import BoundingBox
 from webknossos.utils import time_start, time_stop
@@ -36,13 +38,34 @@ def determine_buffer_shape(array_info: ArrayInfo) -> Vec3Int:
 
 
 def calculate_mags_to_downsample(
-    from_mag: Mag, max_mag: Mag, voxel_size: Optional[Tuple[float, float, float]]
+    from_mag: Mag,
+    max_mag: Mag,
+    dataset_to_align_with: Optional["Dataset"],
+    voxel_size: Optional[Tuple[float, float, float]],
 ) -> List[Mag]:
     assert np.all(from_mag.to_np() <= max_mag.to_np())
     mags = []
     current_mag = from_mag
+    if dataset_to_align_with is None:
+        mags_to_align_with = set()
+    else:
+        mags_to_align_with = set(
+            mag
+            for layer in dataset_to_align_with.layers.values()
+            for mag in layer.mags.keys()
+        )
+    mags_to_align_with_by_max_dim = {mag.max_dim: mag for mag in mags_to_align_with}
+    assert len(mags_to_align_with) == len(
+        mags_to_align_with_by_max_dim
+    ), "Some layers contain different values for the same mag, this is not allowed."
     while current_mag < max_mag:
-        if voxel_size is None:
+        if current_mag.max_dim * 2 in mags_to_align_with_by_max_dim:
+            current_mag = mags_to_align_with_by_max_dim[current_mag.max_dim * 2]
+            if current_mag > max_mag:
+                warnings.warn(
+                    "The mag taken from another layer is larger in some dimensions than max_mag."
+                )
+        elif voxel_size is None:
             # In case the sampling mode is CONSTANT_Z or ISOTROPIC:
             current_mag = Mag(np.minimum(current_mag.to_np() * 2, max_mag.to_np()))
         else:
@@ -81,10 +104,17 @@ def calculate_mags_to_downsample(
 
 
 def calculate_mags_to_upsample(
-    from_mag: Mag, finest_mag: Mag, voxel_size: Optional[Tuple[float, float, float]]
+    from_mag: Mag,
+    finest_mag: Mag,
+    dataset_to_align_with: Optional["Dataset"],
+    voxel_size: Optional[Tuple[float, float, float]],
 ) -> List[Mag]:
     return list(
-        reversed(calculate_mags_to_downsample(finest_mag, from_mag, voxel_size))
+        reversed(
+            calculate_mags_to_downsample(
+                finest_mag, from_mag, dataset_to_align_with, voxel_size
+            )
+        )
     )[1:] + [finest_mag]
 
 
@@ -328,80 +358,3 @@ def downsample_cube_job(
             f"Downsampling of target {target_view.bounding_box} failed with {exc}"
         )
         raise exc
-
-
-def find_smallest_mag_of_dataset(
-    input_dataset: "Dataset", layer_names: List[str]
-) -> Mag:
-    layers = [input_dataset.get_layer(layer_name) for layer_name in layer_names]
-    return min(layer.get_finest_mag().mag for layer in layers)
-
-
-def build_mag_dictionary_for_layers(
-    input_dataset: "Dataset", layer_names: List[str]
-) -> Dict[int, Mag]:
-    mags_by_max: Dict[int, Mag] = {}
-    for layer_name in layer_names:
-        layer = input_dataset.get_layer(layer_name)
-        build_mag_dictionary(list(layer.mags.keys()), mags_by_max)
-    return mags_by_max
-
-
-def build_mag_dictionary(
-    mag_list: List[Mag], mags_by_max: Optional[Dict[int, Mag]] = None
-) -> Dict[int, Mag]:
-
-    if mags_by_max is None:
-        mags_by_max = {}
-    for mag in mag_list:
-        key = mag.max_dim
-        assert (
-            key not in mags_by_max or mags_by_max[key] == mag
-        ), "The mags of different layers don't match with regard to their downsampling strategies. Cannot determine unified downsampling structure."
-        mags_by_max[key] = mag
-
-    return mags_by_max
-
-
-def build_mag_list_template_for_layer(
-    reference_dataset: "Dataset", layer: "Layer", max_mag: Mag
-) -> Optional[List[Mag]]:
-    """
-    Infer a list of magnifications which should be used for downsampling by
-    examining all existing layers.
-    """
-
-    layer_names = list(reference_dataset.layers.keys())
-    smallest_mag = find_smallest_mag_of_dataset(reference_dataset, layer_names)
-    mags_by_max = build_mag_dictionary_for_layers(reference_dataset, layer_names)
-
-    # This list of magnifications is used as a fallback, each time
-    # no existing mag was found.
-    anisotropic_template_mags = build_mag_dictionary(
-        calculate_mags_to_downsample(smallest_mag, max_mag, reference_dataset.scale)
-    )
-
-    current_mag = Mag(smallest_mag)
-    templated_count = 0
-    mag_list_template = [current_mag]
-    while current_mag < max_mag:
-
-        next_mag_power = 2 * current_mag.max_dim
-        if next_mag_power in mags_by_max:
-            current_mag = mags_by_max[next_mag_power]
-            templated_count += 1
-        else:
-            current_mag = anisotropic_template_mags[next_mag_power]
-        mag_list_template.append(current_mag)
-
-    if templated_count > 0:
-        starting_mag = layer.get_most_coarse_mag().mag
-        starting_index = mag_list_template.index(starting_mag)
-        missing_mags = mag_list_template[starting_index + 1 :]
-        return missing_mags
-    else:
-        # Since the generated mag list does not contain any entries
-        # which are derived from existing mags, we return an empty list
-        # to signal that the cuber's anisotropic downsampling feature
-        # should be used to derive the output mags.
-        return None
