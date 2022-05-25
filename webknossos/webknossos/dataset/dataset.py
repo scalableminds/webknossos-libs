@@ -1126,6 +1126,69 @@ class Dataset:
 
             self._last_read_properties = copy.deepcopy(self._properties)
 
+        # Write out Zarr and OME-Ngff metadata if there is a Zarr layer
+        if any(layer.data_format == DataFormat.Zarr for layer in self.layers.values()):
+            with (self.path / ".zgroup").open("w", encoding="utf-8") as outfile:
+                json.dump({"zarr_format": "2"}, outfile, indent=4)
+            for layer in self.layers.values():
+                if layer.data_format == DataFormat.Zarr:
+                    with (layer.path / ".zgroup").open(
+                        "w", encoding="utf-8"
+                    ) as outfile:
+                        json.dump({"zarr_format": "2"}, outfile, indent=4)
+                    with (layer.path / ".zattrs").open(
+                        "w", encoding="utf-8"
+                    ) as outfile:
+                        json.dump(
+                            {
+                                "multiscales": [
+                                    {
+                                        "version": "0.4",
+                                        "axes": [
+                                            {"name": "c", "type": "channel"},
+                                            {
+                                                "name": "x",
+                                                "type": "space",
+                                                "unit": "nanometer",
+                                            },
+                                            {
+                                                "name": "y",
+                                                "type": "space",
+                                                "unit": "nanometer",
+                                            },
+                                            {
+                                                "name": "z",
+                                                "type": "space",
+                                                "unit": "nanometer",
+                                            },
+                                        ],
+                                        "datasets": [
+                                            {
+                                                "path": mag.path.name,
+                                                "coordinateTransformations": [
+                                                    {
+                                                        "type": "scale",
+                                                        "scale": [
+                                                            1.0,
+                                                            (
+                                                                np.array(
+                                                                    self.voxel_size
+                                                                )
+                                                                * mag.to_np()
+                                                            ).tolist(),
+                                                        ],
+                                                    }
+                                                ],
+                                            }
+                                            for mag in layer.mags.values()
+                                        ],
+                                    }
+                                ]
+                            },
+                            outfile,
+                            indent=4,
+                        )
+
     def _initialize_layer_from_properties(self, properties: LayerProperties) -> Layer:
         if properties.category == COLOR_CATEGORY:
             return Layer(self, properties)
