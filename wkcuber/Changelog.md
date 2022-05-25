@@ -16,6 +16,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+- Fixed a bug where nifti datasets would not be converted if called from the CLI. [#733](https://github.com/scalableminds/webknossos-libs/pull/733)
 
 
 ## [0.10.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.2) - 2022-05-20
