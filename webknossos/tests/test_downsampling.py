@@ -8,7 +8,7 @@ from webknossos import COLOR_CATEGORY, Dataset, Mag, Vec3Int
 from webknossos.dataset._downsampling_utils import (
     InterpolationModes,
     _mode,
-    calculate_default_max_mag,
+    calculate_default_coarsest_mag,
     calculate_mags_to_downsample,
     calculate_mags_to_upsample,
     downsample_cube,
@@ -286,13 +286,25 @@ def test_anisotropic_mag_calculation() -> None:
 
 
 def test_default_max_mag() -> None:
-    assert calculate_default_max_mag(dataset_size=(65536, 65536, 65536)) == Mag(1024)
-    assert calculate_default_max_mag(dataset_size=(4096, 4096, 4096)) == Mag(64)
-    assert calculate_default_max_mag(dataset_size=(131072, 262144, 262144)) == Mag(4096)
-    assert calculate_default_max_mag(dataset_size=(32768, 32768, 32768)) == Mag(512)
-    assert calculate_default_max_mag(dataset_size=(16384, 65536, 65536)) == Mag(1024)
-    assert calculate_default_max_mag(dataset_size=(16384, 65536, 16384)) == Mag(1024)
-    assert calculate_default_max_mag(dataset_size=(256, 256, 256)) == Mag([4, 4, 4])
+    assert calculate_default_coarsest_mag(dataset_size=(65536, 65536, 65536)) == Mag(
+        1024
+    )
+    assert calculate_default_coarsest_mag(dataset_size=(4096, 4096, 4096)) == Mag(64)
+    assert calculate_default_coarsest_mag(dataset_size=(131072, 262144, 262144)) == Mag(
+        4096
+    )
+    assert calculate_default_coarsest_mag(dataset_size=(32768, 32768, 32768)) == Mag(
+        512
+    )
+    assert calculate_default_coarsest_mag(dataset_size=(16384, 65536, 65536)) == Mag(
+        1024
+    )
+    assert calculate_default_coarsest_mag(dataset_size=(16384, 65536, 16384)) == Mag(
+        1024
+    )
+    assert calculate_default_coarsest_mag(dataset_size=(256, 256, 256)) == Mag(
+        [4, 4, 4]
+    )
 
 
 def test_default_parameter(tmp_path: Path) -> None:
@@ -382,7 +394,7 @@ def test_downsample_compressed(tmp_path: Path) -> None:
 
     layer.downsample(
         from_mag=Mag(1),
-        max_mag=Mag(
+        coarsest_mag=Mag(
             4
         ),  # Setting max_mag to "4" covers an edge case because the z-dimension (15) has to be rounded
     )
@@ -405,7 +417,7 @@ def test_downsample_2d(tmp_path: Path) -> None:
         # This call produces a warning because only the mode "CONSTANT_Z" makes sense for 2D data.
         layer.downsample(
             from_mag=Mag(1),
-            max_mag=Mag(2),
+            coarsest_mag=Mag(2),
             sampling_mode=SamplingModes.ISOTROPIC,  # this mode is intentionally not "CONSTANT_Z" for this test
         )
     assert Mag("2-2-1") in layer.mags
