@@ -2415,8 +2415,102 @@ def test_downsampling(data_format: DataFormat, output_path: Path) -> None:
     else:
         assert (ds_path / "color" / "2" / "header.wkw").exists()
         assert (ds_path / "color" / "4" / "header.wkw").exists()
-
+    assert False
     assure_exported_properties(color_layer.dataset)
+
+
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_aligned_downsampling(data_format: DataFormat, output_path: Path) -> None:
+    # if data_format == DataFormat.Zarr:
+    #     return
+    ds_path = copy_simple_dataset(data_format, output_path, "aligned_downsampling")
+    print("got ds_path", ds_path)
+    dataset = Dataset.open(ds_path)
+    print("mags", dataset.get_layer("color").mags.keys())
+    dataset.get_layer("color").downsample()
+    test_layer = dataset.add_layer(
+        layer_name="color_2",
+        category="color",
+        dtype_per_channel="uint8",
+        num_channels=3,
+    )
+    test_mag = test_layer.add_mag("1")
+    test_mag.write(
+        absolute_offset=(10, 20, 30),
+        # assuming the layer has 3 channels:
+        data=(np.random.rand(3, 512, 512, 32) * 255).astype(np.uint8),
+    )
+    test_layer.downsample()
+
+    assert (ds_path / "color_2" / "1").exists()
+    assert (ds_path / "color_2" / "2").exists()
+    assert (ds_path / "color_2" / "4").exists()
+
+    if data_format == DataFormat.Zarr:
+        assert (ds_path / "color_2" / "1" / ".zarray").exists()
+        assert (ds_path / "color_2" / "2" / ".zarray").exists()
+        assert (ds_path / "color_2" / "4" / ".zarray").exists()
+    else:
+        assert (ds_path / "color_2" / "1" / "header.wkw").exists()
+        assert (ds_path / "color_2" / "2" / "header.wkw").exists()
+        assert (ds_path / "color_2" / "4" / "header.wkw").exists()
+
+    assure_exported_properties(dataset)
+
+
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_guided_downsampling(data_format: DataFormat, output_path: Path) -> None:
+    ds_path = copy_simple_dataset(data_format, output_path, "guided_downsampling")
+
+    input_dataset = Dataset.open(ds_path)
+    input_layer = input_dataset.get_layer("color")
+    # Adding additional mags to the input dataset for testing
+    input_layer.get_or_add_mag("2-2-1")
+    input_layer.get_or_add_mag("4-4-2")
+    input_layer.redownsample()
+    assert len(input_layer.mags) == 3
+    # Use the mag with the best resolution
+    finest_input_mag = input_layer.get_finest_mag()
+
+    # Creating a dataset
+    ouput_ds_path = ds_path.parent / (ds_path.name + "_output")
+    output_dataset = Dataset(ouput_ds_path, voxel_size=input_dataset.voxel_size)
+    output_layer = output_dataset.add_layer(
+        layer_name="color",
+        category="color",
+        dtype_per_channel=input_layer.dtype_per_channel,
+        num_channels=input_layer.num_channels,
+    )
+    # Create the same mag in the new output dataset
+    output_mag = output_layer.add_mag(finest_input_mag.mag)
+    # Copying some data into the output dataset
+    input_data = finest_input_mag.read(
+        absolute_offset=(10, 20, 30), size=(512, 512, 32)
+    )
+    output_mag.write(absolute_offset=(10, 20, 30), data=input_data)
+    # Downsampling the layer to the magnification used in the input dataset
+    output_layer.downsample(
+        from_mag=output_mag.mag,
+        max_mag=Mag("8-8-4"),
+        align_with_other_layers=input_dataset,
+    )
+    for mag in input_layer.mags:
+        assert output_layer.get_mag(mag)
+
+    assert (ouput_ds_path / "color" / "2-2-1").exists()
+    assert (ouput_ds_path / "color" / "4-4-2").exists()
+    assert (ouput_ds_path / "color" / "8-8-4").exists()
+
+    if data_format == DataFormat.Zarr:
+        assert (ouput_ds_path / "color" / "2-2-1" / ".zarray").exists()
+        assert (ouput_ds_path / "color" / "4-4-2" / ".zarray").exists()
+        assert (ouput_ds_path / "color" / "8-8-4" / ".zarray").exists()
+    else:
+        assert (ouput_ds_path / "color" / "2-2-1" / "header.wkw").exists()
+        assert (ouput_ds_path / "color" / "4-4-2" / "header.wkw").exists()
+        assert (ouput_ds_path / "color" / "8-8-4" / "header.wkw").exists()
+
+    assure_exported_properties(input_dataset)
 
 
 def test_zarr_copy_to_remote_dataset() -> None:
