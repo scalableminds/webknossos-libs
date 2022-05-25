@@ -7,16 +7,23 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.1...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.2...HEAD)
 
 ### Breaking Changes
 
 ### Added
 
 ### Changed
-- Added Python 3.9 support to wkcuber [#716](https://github.com/scalableminds/webknossos-libs/pull/716)
 
 ### Fixed
+- Fixed a bug where nifti datasets would not be converted if called from the CLI. [#733](https://github.com/scalableminds/webknossos-libs/pull/733)
+
+
+## [0.10.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.2) - 2022-05-20
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.1...v0.10.2)
+
+### Changed
+- Added Python 3.9 support to wkcuber [#716](https://github.com/scalableminds/webknossos-libs/pull/716)
 
 
 ## [0.10.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.1) - 2022-05-10
