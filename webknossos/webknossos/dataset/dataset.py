@@ -1168,15 +1168,11 @@ class Dataset:
                                                 "coordinateTransformations": [
                                                     {
                                                         "type": "scale",
-                                                        "scale": [
-                                                            1.0,
-                                                            (
-                                                                np.array(
-                                                                    self.voxel_size
-                                                                )
-                                                                * mag.to_np()
-                                                            ).tolist(),
-                                                        ],
+                                                        "scale": [1.0]
+                                                        + (
+                                                            np.array(self.voxel_size)
+                                                            * mag.mag.to_np()
+                                                        ).tolist(),
                                                     }
                                                 ],
                                             }
