@@ -10,16 +10,25 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.1...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.2...HEAD)
 
 ### Breaking Changes
 
 ### Added
 
 ### Changed
+
+### Fixed
+
+
+## [0.10.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.2) - 2022-05-20
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.1...v0.10.2)
+
+### Changed
 - added Python 3.9 support to wk-libs [#716](https://github.com/scalableminds/webknossos-libs/pull/716)
 
 ### Fixed
+- URLs for the webknossos-context (e.g. in the `WK_URL` env var or via `webknossos_context(url=…)`) may now contain `/` in the end and are sanitized. Before, requests would fail if the URL contained a final `/`. [#733](https://github.com/scalableminds/webknossos-libs/pull/733)
 
 
 ## [0.10.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.1) - 2022-05-10
