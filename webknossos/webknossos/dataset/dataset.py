@@ -1037,7 +1037,8 @@ class Dataset:
             copy_directory_with_symlinks(
                 layer.path,
                 new_layer.path,
-                ignore=[str(mag) for mag in layer.mags] + [PROPERTIES_FILE_NAME],
+                ignore=[str(mag) for mag in layer.mags]
+                + [PROPERTIES_FILE_NAME, ".zgroup", ".zattrs"],
                 make_relative=make_relative,
             )
 
