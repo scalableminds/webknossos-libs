@@ -72,6 +72,8 @@ logger = logging.getLogger(__name__)
 DEFAULT_BIT_DEPTH = 8
 DEFAULT_DATA_FORMAT = DataFormat.WKW
 PROPERTIES_FILE_NAME = "datasource-properties.json"
+ZGROUP_FILE_NAME = ".zgroup"
+ZATTRS_FILE_NAME = ".zattrs"
 
 _DATASET_URL_REGEX = re.compile(
     r"^(?P<webknossos_url>https?://.*)/datasets/"
@@ -1038,7 +1040,7 @@ class Dataset:
                 layer.path,
                 new_layer.path,
                 ignore=[str(mag) for mag in layer.mags]
-                + [PROPERTIES_FILE_NAME, ".zgroup", ".zattrs"],
+                + [PROPERTIES_FILE_NAME, ZGROUP_FILE_NAME, ZATTRS_FILE_NAME],
                 make_relative=make_relative,
             )
 
@@ -1129,15 +1131,16 @@ class Dataset:
 
         # Write out Zarr and OME-Ngff metadata if there is a Zarr layer
         if any(layer.data_format == DataFormat.Zarr for layer in self.layers.values()):
-            with (self.path / ".zgroup").open("w", encoding="utf-8") as outfile:
-                json.dump({"zarr_format": "2"}, outfile, indent=4)
+            zgroup_content = {"zarr_format": "2"}
+            with (self.path / ZGROUP_FILE_NAME).open("w", encoding="utf-8") as outfile:
+                json.dump(zgroup_content, outfile, indent=4)
             for layer in self.layers.values():
                 if layer.data_format == DataFormat.Zarr:
-                    with (layer.path / ".zgroup").open(
+                    with (layer.path / ZGROUP_FILE_NAME).open(
                         "w", encoding="utf-8"
                     ) as outfile:
-                        json.dump({"zarr_format": "2"}, outfile, indent=4)
-                    with (layer.path / ".zattrs").open(
+                        json.dump(zgroup_content, outfile, indent=4)
+                    with (layer.path / ZATTRS_FILE_NAME).open(
                         "w", encoding="utf-8"
                     ) as outfile:
                         json.dump(
