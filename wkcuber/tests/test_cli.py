@@ -244,6 +244,9 @@ def test_upsampling(
 
 def test_anisotropic_downsampling(sample_wkw_path: Path, tmp_path: Path) -> None:
     copytree(sample_wkw_path, tmp_path)
+    # We need to delete mag two as it already exists. Then it is replaced by an anisotropic mag.
+    color_layer = Dataset.open(tmp_path).get_layer("color")
+    color_layer.delete_mag("2")
 
     check_call(
         "python",
