@@ -350,7 +350,7 @@ class SlurmExecutor(ClusterExecutor):
         if percentage < 100:
             return None
 
-        return f"The job likely was killed because it consumed too much memory ({efficiency_note})."
+        return f"The job was probably terminated because it consumed too much memory ({efficiency_note})."
 
     def get_pending_tasks(self):
         try:
