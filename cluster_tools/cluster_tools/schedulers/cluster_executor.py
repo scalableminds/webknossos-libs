@@ -29,7 +29,10 @@ class RemoteException(Exception):
         self.job_id = job_id
 
     def __str__(self):
-        return str(self.job_id) + "\n" + self.error.strip()
+        return self.error.strip() + f" (job_id={self.job_id})"
+
+def join_messages(strings: List[str]) -> str:
+    return ' '.join(x.strip() for x in strings if x.strip())
 
 class RemoteOutOfMemoryException(RemoteException):
     def __str__(self):
@@ -235,7 +238,11 @@ class ClusterExecutor(futures.Executor):
                 reason = ""
             else:
                 use_oom_exception = True
-            result = f"Job submission/execution failed.{reason} Please look into the log file at {self.format_log_file_path(self.cfut_dir, jobid)}."
+            result = join_messages([
+                f"Job submission/execution failed.",
+                reason or "",
+                f"Please look into the log file at {self.format_log_file_path(self.cfut_dir, jobid)}."
+            ])
         else:
             with open(preliminary_outfile_name, "rb") as f:
                 outdata = f.read()
