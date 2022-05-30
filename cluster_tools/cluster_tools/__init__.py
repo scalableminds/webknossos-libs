@@ -13,6 +13,7 @@ from .multiprocessing_logging_handler import get_multiprocessing_logging_setup_f
 from .schedulers.kube import KubernetesExecutor
 from .schedulers.pbs import PBSExecutor
 from .schedulers.slurm import SlurmExecutor
+from .schedulers.cluster_executor import RemoteOutOfMemoryException
 from .util import enrich_future_with_uncaught_warning
 
 

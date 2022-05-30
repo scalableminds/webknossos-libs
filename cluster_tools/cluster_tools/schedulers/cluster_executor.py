@@ -31,6 +31,9 @@ class RemoteException(Exception):
     def __str__(self):
         return str(self.job_id) + "\n" + self.error.strip()
 
+class RemoteOutOfMemoryException(RemoteException):
+    def __str__(self):
+        return str(self.job_id) + "\n" + self.error.strip()
 
 class ClusterExecutor(futures.Executor):
     """Futures executor for executing jobs on a cluster."""
@@ -216,6 +219,7 @@ class ClusterExecutor(futures.Executor):
             logging.debug("Job completed: {}".format(jobid))
 
         preliminary_outfile_name = with_preliminary_postfix(outfile_name)
+        use_oom_exception = False
         if failed_early:
             # If the code which should be executed on a node failed for a reason
             # that is unrelated to the application logic (otherwise, such errors would
@@ -229,7 +233,9 @@ class ClusterExecutor(futures.Executor):
             reason = self.investigate_failed_job(jobid)
             if reason == None:
                 reason = ""
-            result = f"Job submission/execution failed.{reason} Please look into the log file at {self.format_log_file_path(self.cfut_dir, jobid)}. Doublecheck that the provided resources (such as time and mem) were not exceeded."
+            else:
+                use_oom_exception = True
+            result = f"Job submission/execution failed.{reason} Please look into the log file at {self.format_log_file_path(self.cfut_dir, jobid)}."
         else:
             with open(preliminary_outfile_name, "rb") as f:
                 outdata = f.read()
@@ -245,7 +251,11 @@ class ClusterExecutor(futures.Executor):
             fut.set_result(result)
         else:
             # Don't remove the .preliminary postfix since the job failed.
-            fut.set_exception(RemoteException(result, jobid))
+            if use_oom_exception:
+                remote_exc = OutOfMemoryException(result, jobid)
+            else:
+                remote_exc = RemoteException(result, jobid)
+            fut.set_exception(remote_exc)
 
         # Clean up communication files.
 
