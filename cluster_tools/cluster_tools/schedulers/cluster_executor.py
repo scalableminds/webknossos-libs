@@ -252,7 +252,7 @@ class ClusterExecutor(futures.Executor):
         else:
             # Don't remove the .preliminary postfix since the job failed.
             if use_oom_exception:
-                remote_exc = OutOfMemoryException(result, jobid)
+                remote_exc = RemoteOutOfMemoryException(result, jobid)
             else:
                 remote_exc = RemoteException(result, jobid)
             fut.set_exception(remote_exc)
