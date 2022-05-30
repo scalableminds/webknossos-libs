@@ -128,7 +128,7 @@ class PBSExecutor(ClusterExecutor):
 
         return [job_id_future], [(0, job_count or 1)]
 
-    def check_for_crashed_job(
+    def check_job_state(
         self, job_id_with_index
     ) -> Literal["failed", "ignore", "completed"]:
         if len(str(job_id_with_index).split("_")) >= 2:

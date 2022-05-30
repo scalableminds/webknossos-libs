@@ -260,7 +260,7 @@ class SlurmExecutor(ClusterExecutor):
 
         return job_id_futures, ranges
 
-    def check_for_crashed_job(
+    def check_job_state(
         self, job_id_with_index
     ) -> Literal["failed", "ignore", "completed"]:
 
@@ -317,6 +317,40 @@ class SlurmExecutor(ClusterExecutor):
                 )
             )
             return "ignore"
+
+    def investigate_failed_job(self, job_id_with_index) -> Optional[str]:
+
+        stdout, _, exit_code = call(
+            "seff {}".format(job_id_with_index)
+        )
+        if exit_code != 0:
+            return None
+        
+        stdout = stdout.decode("utf8")
+        efficiency_needle = "Memory Efficiency: "
+        efficiency_lines = [line for line in stdout.split("\n") if efficiency_needle in line]
+
+        if len(efficiency_lines) == 0:
+            return None
+        
+        # e.g., "102.99%"
+        efficiency_note = efficiency_lines[0].split(efficiency_needle)[1]
+        PERCENTAGE_REGEX = r"([0-9]+(\.[0-9]+)?)%"
+
+        match = re.search(PERCENTAGE_REGEX, efficiency_note)
+        percentage = None
+        if match is None:
+            return None
+
+        try:
+            percentage = float(match.group(1))
+        except ValueError as exc:
+            return None
+        
+        if percentage < 100:
+            return None
+
+        return f"The job likely was killed because it consumed too much memory ({efficiency_note})."
 
     def get_pending_tasks(self):
         try:

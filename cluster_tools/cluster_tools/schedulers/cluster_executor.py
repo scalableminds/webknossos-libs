@@ -111,10 +111,19 @@ class ClusterExecutor(futures.Executor):
         sys.exit(130)
 
     @abstractmethod
-    def check_for_crashed_job(
+    def check_job_state(
         self, job_id_with_index
     ) -> Literal["failed", "ignore", "completed"]:
         pass
+
+    def investigate_failed_job(self, job_id_with_index) -> Optional[str]:
+        """
+        When a job fails, this method is called to investigate why. If a string is returned,
+        that message is attached to the thrown exception.
+        For example, this method could be used to check for common problems, such as violated
+        RAM constraints.
+        """
+        return None
 
     def _start(self, workerid, job_count=None, job_name=None):
         """Start job(s) with the given worker ID and return IDs
@@ -208,15 +217,19 @@ class ClusterExecutor(futures.Executor):
 
         preliminary_outfile_name = with_preliminary_postfix(outfile_name)
         if failed_early:
-            # If the code which should be executed on a node wasn't even
-            # started (e.g., because python isn't installed or the cluster_tools
-            # couldn't be found), no output was written to disk. We only noticed
-            # this circumstance because the whole job was marked as failed.
-            # Therefore, we don't try to deserialize pickling output.
+            # If the code which should be executed on a node failed for a reason
+            # that is unrelated to the application logic (otherwise, such errors would
+            # be written to a pickle file and passed along), we handle this case separately.
+            # Typical reasons could be:
+            # - because python isn't installed or the cluster_tools couldn't be found
+            # - because the job was killed (e.g., by slurm due to RAM limit violations)
+            # We don't try to deserialize pickling output, because it won't exist.
             success = False
-            result = "Job submission/execution failed. Please look into the log file at {}".format(
-                self.format_log_file_path(self.cfut_dir, jobid)
-            )
+
+            reason = self.investigate_failed_job(jobid)
+            if reason == None:
+                reason = ""
+            result = f"Job submission/execution failed.{reason} Please look into the log file at {self.format_log_file_path(self.cfut_dir, jobid)}. Doublecheck that the provided resources (such as time and mem) were not exceeded."
         else:
             with open(preliminary_outfile_name, "rb") as f:
                 outdata = f.read()
