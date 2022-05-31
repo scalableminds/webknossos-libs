@@ -125,7 +125,9 @@ class ClusterExecutor(futures.Executor):
     ) -> Literal["failed", "ignore", "completed"]:
         pass
 
-    def investigate_failed_job(self, job_id_with_index) -> Optional[str]:
+    def investigate_failed_job(
+        self, job_id_with_index  # pylint: disable=unused-argument
+    ) -> Optional[str]:
         """
         When a job fails, this method is called to investigate why. If a string is returned,
         that message is attached to the thrown exception.
@@ -235,7 +237,9 @@ class ClusterExecutor(futures.Executor):
             # We don't try to deserialize pickling output, because it won't exist.
             success = False
 
-            reason = self.investigate_failed_job(jobid)
+            reason = (  # pylint: disable=assignment-from-none
+                self.investigate_failed_job(jobid)
+            )
             if reason == None:
                 reason = ""
             else:

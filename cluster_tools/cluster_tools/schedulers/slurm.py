@@ -348,7 +348,7 @@ class SlurmExecutor(ClusterExecutor):
 
         try:
             percentage = float(match.group(1))
-        except ValueError as exc:
+        except ValueError:
             return None
 
         if percentage < 100:
