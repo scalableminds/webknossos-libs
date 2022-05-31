@@ -22,8 +22,10 @@ from cluster_tools.util import (
     with_preliminary_postfix,
 )
 
+
 def join_messages(strings: List[str]) -> str:
-    return ' '.join(x.strip() for x in strings if x.strip())
+    return " ".join(x.strip() for x in strings if x.strip())
+
 
 class RemoteException(Exception):
     def __init__(self, error, job_id):  # pylint: disable=super-init-not-called
@@ -33,9 +35,11 @@ class RemoteException(Exception):
     def __str__(self):
         return self.error.strip() + f" (job_id={self.job_id})"
 
+
 class RemoteOutOfMemoryException(RemoteException):
     def __str__(self):
         return str(self.job_id) + "\n" + self.error.strip()
+
 
 class ClusterExecutor(futures.Executor):
     """Futures executor for executing jobs on a cluster."""
@@ -236,11 +240,13 @@ class ClusterExecutor(futures.Executor):
                 reason = ""
             else:
                 use_oom_exception = True
-            result = join_messages([
-                f"Job submission/execution failed.",
-                reason or "",
-                f"Please look into the log file at {self.format_log_file_path(self.cfut_dir, jobid)}."
-            ])
+            result = join_messages(
+                [
+                    f"Job submission/execution failed.",
+                    reason or "",
+                    f"Please look into the log file at {self.format_log_file_path(self.cfut_dir, jobid)}.",
+                ]
+            )
         else:
             with open(preliminary_outfile_name, "rb") as f:
                 outdata = f.read()

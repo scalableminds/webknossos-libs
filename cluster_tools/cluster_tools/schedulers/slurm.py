@@ -322,20 +322,20 @@ class SlurmExecutor(ClusterExecutor):
         # We call `seff job_id` which should return some output including a line,
         # such as: "Memory Efficiency: 25019.18% of 1.00 GB"
 
-        stdout, _, exit_code = call(
-            "seff {}".format(job_id_with_index)
-        )
+        stdout, _, exit_code = call("seff {}".format(job_id_with_index))
         if exit_code != 0:
             return None
-        
+
         # Look for the relevant line.
         stdout = stdout.decode("utf8")
         efficiency_needle = "Memory Efficiency: "
-        efficiency_lines = [line for line in stdout.split("\n") if efficiency_needle in line]
+        efficiency_lines = [
+            line for line in stdout.split("\n") if efficiency_needle in line
+        ]
 
         if len(efficiency_lines) == 0:
             return None
-        
+
         # Extract the "25019.18% of 1.00 GB" part of the line
         efficiency_note = efficiency_lines[0].split(efficiency_needle)[1]
         PERCENTAGE_REGEX = r"([0-9]+(\.[0-9]+)?)%"
@@ -350,7 +350,7 @@ class SlurmExecutor(ClusterExecutor):
             percentage = float(match.group(1))
         except ValueError as exc:
             return None
-        
+
         if percentage < 100:
             return None
 
