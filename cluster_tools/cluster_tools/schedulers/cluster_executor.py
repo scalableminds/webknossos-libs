@@ -22,6 +22,8 @@ from cluster_tools.util import (
     with_preliminary_postfix,
 )
 
+def join_messages(strings: List[str]) -> str:
+    return ' '.join(x.strip() for x in strings if x.strip())
 
 class RemoteException(Exception):
     def __init__(self, error, job_id):  # pylint: disable=super-init-not-called
@@ -30,9 +32,6 @@ class RemoteException(Exception):
 
     def __str__(self):
         return self.error.strip() + f" (job_id={self.job_id})"
-
-def join_messages(strings: List[str]) -> str:
-    return ' '.join(x.strip() for x in strings if x.strip())
 
 class RemoteOutOfMemoryException(RemoteException):
     def __str__(self):
@@ -224,10 +223,9 @@ class ClusterExecutor(futures.Executor):
         preliminary_outfile_name = with_preliminary_postfix(outfile_name)
         use_oom_exception = False
         if failed_early:
-            # If the code which should be executed on a node failed for a reason
-            # that is unrelated to the application logic (otherwise, such errors would
-            # be written to a pickle file and passed along), we handle this case separately.
-            # Typical reasons could be:
+            # If the job failed, but didn't write the error to an output file,
+            # we handle this case separately.
+            # Typical reasons could be for this:
             # - because python isn't installed or the cluster_tools couldn't be found
             # - because the job was killed (e.g., by slurm due to RAM limit violations)
             # We don't try to deserialize pickling output, because it won't exist.
