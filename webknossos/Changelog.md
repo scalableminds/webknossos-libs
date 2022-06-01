@@ -15,7 +15,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes
 
 ### Added
-- Added a new parameter to `Layer.downsample` which takes an existing dataset and uses the magnifications of this dataset as guidance for the downsampling. [#730](https://github.com/scalableminds/webknossos-libs/pull/730)
+- Added a new parameter to `Layer.downsample` & `layer.upsample` which takes an existing dataset and uses the magnifications of this dataset as guidance for the downsampling. [#730](https://github.com/scalableminds/webknossos-libs/pull/730)
 
 ### Changed
 - Changed the name of `max_mag` in `Layer.downsample` to `coarsest_mag`. [#730](https://github.com/scalableminds/webknossos-libs/pull/730)

@@ -637,7 +637,7 @@ class Layer:
     def _get_dataset_from_align_with_other_layers(
         self, align_with_other_layers: Union[bool, "Dataset"]
     ) -> Optional["Dataset"]:
-        if type(align_with_other_layers) is bool:
+        if isinstance(align_with_other_layers, bool):
             return self.dataset if align_with_other_layers else None
         else:
             return align_with_other_layers
