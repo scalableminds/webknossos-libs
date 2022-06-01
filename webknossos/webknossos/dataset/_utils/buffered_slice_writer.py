@@ -1,7 +1,7 @@
-import logging
 import os
 import traceback
 import warnings
+from logging import error, info
 from os import getpid
 from types import TracebackType
 from typing import TYPE_CHECKING, Generator, List, Optional, Type
@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 def log_memory_consumption(additional_output: str = "") -> None:
     pid = os.getpid()
     process = psutil.Process(pid)
-    logging.info(
+    info(
         "Currently consuming {:.2f} GB of memory ({:.2f} GB still available) "
         "in process {}. {}".format(
             process.memory_info().rss / 1024 ** 3,
@@ -40,12 +40,14 @@ class BufferedSliceWriter:
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
+        logging: bool = False,
     ) -> None:
         """see `View.get_buffered_slice_writer()`"""
 
         self.view = view
         self.buffer_size = buffer_size
         self.dtype = self.view.get_dtype()
+        self.logging = logging
         if offset is None and relative_offset is None and absolute_offset is None:
             relative_offset = Vec3Int.zeros()
         if offset is not None:
@@ -86,12 +88,13 @@ class BufferedSliceWriter:
             "which differs from the dtype with which the BufferedSliceWriter was instantiated."
         )
 
-        logging.debug(
-            "({}) Writing {} slices at position {}.".format(
-                getpid(), len(self.buffer), self.buffer_start_slice
+        if self.logging:
+            info(
+                "({}) Writing {} slices at position {}.".format(
+                    getpid(), len(self.buffer), self.buffer_start_slice
+                )
             )
-        )
-        log_memory_consumption()
+            log_memory_consumption()
 
         try:
             assert (
@@ -129,7 +132,7 @@ class BufferedSliceWriter:
             )
 
         except Exception as exc:
-            logging.error(
+            error(
                 "({}) An exception occurred in BufferedSliceWriter._write_buffer with {} "
                 "slices at position {}. Original error is:\n{}:{}\n\nTraceback:".format(
                     getpid(),
@@ -140,7 +143,7 @@ class BufferedSliceWriter:
                 )
             )
             traceback.print_tb(exc.__traceback__)
-            logging.error("\n")
+            error("\n")
 
             raise exc
         finally:

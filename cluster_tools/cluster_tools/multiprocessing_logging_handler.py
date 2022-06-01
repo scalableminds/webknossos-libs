@@ -9,6 +9,7 @@ from logging.handlers import QueueHandler
 from queue import Empty as QueueEmpty
 from queue import Queue
 from typing import Any, List
+import warnings
 
 # Inspired by https://stackoverflow.com/a/894284
 
@@ -74,11 +75,12 @@ class MultiProcessingHandler(logging.Handler):
             super().close()
 
 
-def _setup_logging_multiprocessing(queues: List[Queue], levels: List[int]) -> None:
+def _setup_logging_multiprocessing(queues: List[Queue], levels: List[int], filters: List[Any]) -> None:
     """Re-setup logging in a multiprocessing context (only needed if a start_method other than
     fork is used) by setting up QueueHandler loggers for each queue and level
     so that log messages are piped to the original loggers in the main process.
     """
+    warnings.filters = filters
 
     root_logger = getLogger()
     for handler in root_logger.handlers:
@@ -115,4 +117,4 @@ def get_multiprocessing_logging_setup_fn() -> Any:
     # Return a logging setup function that when called will setup QueueHandler loggers
     # reusing the queues of each wrapped MultiProcessingHandler. This way all log messages
     # are forwarded to the main process.
-    return functools.partial(_setup_logging_multiprocessing, queues, levels)
+    return functools.partial(_setup_logging_multiprocessing, queues, levels, filters=warnings.filters)

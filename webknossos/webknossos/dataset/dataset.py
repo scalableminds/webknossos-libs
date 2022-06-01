@@ -6,6 +6,7 @@ import re
 import warnings
 from argparse import Namespace
 from contextlib import nullcontext
+from functools import partial
 from os import PathLike
 from os.path import relpath
 from pathlib import Path
@@ -26,12 +27,15 @@ from typing import (
 import attr
 import numpy as np
 from boltons.typeutils import make_sentinel
+from cluster_tools import WrappedProcessPoolExecutor
+from cluster_tools.schedulers.cluster_executor import ClusterExecutor
 from upath import UPath
 
-from ..geometry.vec3_int import Vec3IntLike
+from ..geometry.vec3_int import Vec3Int, Vec3IntLike
 from ._array import ArrayException, ArrayInfo, BaseArray, DataFormat
 
 if TYPE_CHECKING:
+    import pims
     from ..client._generated.models import DatasetInfoResponse200
     from ..client._upload_dataset import LayerToLink
     from ..administration.user import Team
@@ -43,6 +47,7 @@ from ..utils import (
     get_executor_for_args,
     is_fs_path,
     rmtree,
+    wait_and_ensure_success,
     warn_deprecated,
 )
 from ._utils.infer_bounding_box_existing_files import infer_bounding_box_existing_files
@@ -133,7 +138,7 @@ class Dataset:
         Creates a new dataset and the associated `datasource-properties.json`.
         If the dataset already exists and exist_ok is set to True,
         it is opened (the provided voxel_size and name are asserted to match the existing dataset).
-        Currently exist_ok=True is the deprecated default and will change in future releases.
+        Currently, `exist_ok=True` is the deprecated default and will change in future releases.
         Please use `Dataset.open` if you intend to open an existing dataset and don't want/need the creation behavior.
         `scale` is deprecated, please use `voxel_size` instead.
         """
@@ -748,6 +753,118 @@ class Dataset:
             layer.add_mag_for_existing_files(mag_dir.name)
         finest_mag_view = layer.mags[min(layer.mags)]
         layer.bounding_box = infer_bounding_box_existing_files(finest_mag_view)
+        return layer
+
+    def add_layer_from_images(
+        self,
+        images: Union[str, "pims.FramesSequence", List[Union[str, PathLike]]],
+        ## add_layer arguments
+        layer_name: str,
+        category: LayerCategoryType = "color",
+        data_format: Union[str, DataFormat] = DEFAULT_DATA_FORMAT,
+        ## add_mag arguments
+        mag: Union[int, str, list, tuple, np.ndarray, Mag] = Mag(1),
+        chunk_size: Optional[Union[Vec3IntLike, int]] = None,
+        chunks_per_shard: Optional[Union[int, Vec3IntLike]] = None,
+        compress: bool = False,
+        ## other arguments
+        swap_xy: bool = False,
+        flip_x: bool = False,
+        flip_y: bool = False,
+        flip_z: bool = False,
+        use_bioformats: bool = False,
+        timepoint: Optional[int] = None,
+        batch_size: Optional[int] = None,  # defaults to shard-size z
+        executor: Optional[Union[ClusterExecutor, WrappedProcessPoolExecutor]] = None,
+    ) -> Layer:
+        try:
+            from ._utils.pims_images import PimsImages, dimwise_max
+        except ImportError as e:
+            raise RuntimeError(
+                "Cannot import pims, please install e.g. using 'webknossos[all]'"
+            ) from e
+
+        pims_images = PimsImages(
+            images,
+            timepoint=timepoint,
+            swap_xy=swap_xy,
+            flip_x=flip_x,
+            flip_y=flip_y,
+            flip_z=flip_z,
+            use_bioformats=use_bioformats,
+        )
+
+        layer = self.add_layer(
+            layer_name=layer_name,
+            category=category,
+            data_format=data_format,
+            dtype_per_channel=pims_images.dtype,
+            num_channels=pims_images.num_channels,
+        )
+        mag_view = layer.add_mag(
+            mag=mag,
+            chunk_size=chunk_size,
+            chunks_per_shard=chunks_per_shard,
+            compress=compress,
+        )
+        mag = mag_view.mag
+        layer.bounding_box = BoundingBox(
+            (0, 0, 0), pims_images.expected_shape
+        ).from_mag_to_mag1(mag)
+
+        if batch_size is None:
+            batch_size = mag_view.info.shard_size.z
+        else:
+            assert (
+                batch_size % mag_view.info.shard_size.z == 0
+            ), f"batch_size {batch_size} must be divisible by z shard-size {mag_view.info.shard_size.z}"
+
+        func_per_chunk = partial(
+            pims_images.copy_to_view,
+            mag_view=mag_view,
+        )
+
+        args = []
+        for z_start in range(0, pims_images.expected_shape.z, batch_size):
+            z_end = min(z_start + batch_size, pims_images.expected_shape.z)
+            # return shapes and set to union when using --pad
+            args.append((z_start, z_end))
+        with warnings.catch_warnings():
+            # if a slice is larger than the others it might happen that
+            # a new chunk is partially written, leading to a warning,
+            # which is ignored in this context
+            warnings.filterwarnings(
+                "ignore",
+                message=".*called on a compressed mag without block alignment.*",
+                category=RuntimeWarning,
+                module="webknossos",
+            )
+            if executor is None:
+                shapes = [func_per_chunk(i) for i in args]
+                actual_size = Vec3Int(
+                    dimwise_max(shapes) + (pims_images.expected_shape.z,)
+                )
+            else:
+                warnings.filterwarnings(
+                    "ignore",
+                    message=".*properties were found on disk which are newer than the ones that were seen last time.*",
+                    category=UserWarning,
+                    module="webknossos",
+                )
+                shapes = wait_and_ensure_success(
+                    executor.map_to_futures(func_per_chunk, args),
+                )
+                actual_size = Vec3Int(
+                    dimwise_max(shapes) + (pims_images.expected_shape.z,)
+                )
+                layer.bounding_box = BoundingBox(
+                    (0, 0, 0), actual_size
+                ).from_mag_to_mag1(mag)
+        if pims_images.expected_shape != actual_size:
+            warnings.warn(
+                f"Some images are larger than expected, expected {pims_images.expected_shape}, got {actual_size}.",
+                RuntimeWarning,
+            )
         return layer
 
     def get_segmentation_layer(self) -> SegmentationLayer:

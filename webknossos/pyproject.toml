@@ -52,6 +52,19 @@ wkw = "1.1.11"
 zarr = "^2.11.0"
 zipp = "^3.5.0"
 
+# A list of all of the optional dependencies, some of which are included in the
+# below `extras`. They can be opted into by apps.
+pims = { version = "^0.6.0", optional = true }
+JPype1 = { version = "^1.3.0", optional = true }
+imagecodecs = { version = "2021.11.20", optional = true }
+tifffile = { version = "2021.11.2", optional = true }
+
+[tool.poetry.extras]
+pims = ["pims"]
+tifffile = ["pims", "tifffile"]
+imagecodecs = ["pims", "imagecodecs"]
+bioformats = ["pims","JPype1"]
+all = ["pims","tifffile","imagecodecs","JPype1",]
 
 [tool.poetry.dev-dependencies]
 # autoflake
@@ -70,8 +83,9 @@ types-python-dateutil = "^0.1.6"
 fastremap = "^1.12.2"
 pandas = "^1.3.4"
 pooch = "^1.5.2"
-tabulate = "^0.8.9"
 s3fs = "^2022.2.0"
+tabulate = "^0.8.9"
+pytest-custom-exit-code = "^0.3.0"
 
 [tool.black]
 target_version = ['py37', 'py38']
