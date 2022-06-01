@@ -294,6 +294,7 @@ jobs:
       run: |
         docker run --rm \
           -v$(pwd)/wkcuber/testdata:/app/testdata \
+          -v$(pwd)/webknossos/testdata:/webknossos/testdata \
           scalableminds/webknossos-cuber:$GITHUB_SHA \
           wkcuber.cubing \
             --jobs 2 \
