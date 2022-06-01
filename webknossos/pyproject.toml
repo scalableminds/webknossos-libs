@@ -51,6 +51,7 @@ universal-pathlib = "0.0.18"
 wkw = "1.1.11"
 zarr = "^2.11.0"
 zipp = "^3.5.0"
+aiohttp = "^3.8.1"
 
 # A list of all of the optional dependencies, some of which are included in the
 # below `extras`. They can be opted into by apps.
