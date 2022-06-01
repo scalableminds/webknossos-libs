@@ -15,8 +15,14 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes
 
 ### Added
+- Added `Dataset.add_layer_from_images()` to convert image stacks to wkw or zarr Dataset.
+  This needs pims and possibly more packages, which can be installed using extras, e.g. "webknossos[all]".
+  [#741](https://github.com/scalableminds/webknossos-libs/pull/741)
 
 ### Changed
+- `View.get_buffered_slice_reader()` and `View.get_buffered_slice_writer()` don't log anything by default now.
+  To get the previous logging, please invoke them with `logging=True`.
+  [#741](https://github.com/scalableminds/webknossos-libs/pull/741)
 
 ### Fixed
 
