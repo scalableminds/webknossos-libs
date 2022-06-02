@@ -9,6 +9,7 @@ from typing import Iterator, Optional, Tuple, cast
 
 import numpy as np
 import pytest
+from jsonschema import validate
 from upath import UPath
 
 from webknossos.dataset import (
@@ -277,6 +278,15 @@ def test_ome_ngff_metadata(output_path: Path) -> None:
         22,
         28,
     ]
+
+    validate(
+        instance=zattrs,
+        schema=json.loads(
+            UPath(
+                "https://ngff.openmicroscopy.org/0.4/schemas/image.schema"
+            ).read_bytes()
+        ),
+    )
 
 
 def test_create_default_layer() -> None:
