@@ -72,6 +72,8 @@ logger = logging.getLogger(__name__)
 DEFAULT_BIT_DEPTH = 8
 DEFAULT_DATA_FORMAT = DataFormat.WKW
 PROPERTIES_FILE_NAME = "datasource-properties.json"
+ZGROUP_FILE_NAME = ".zgroup"
+ZATTRS_FILE_NAME = ".zattrs"
 
 _DATASET_URL_REGEX = re.compile(
     r"^(?P<webknossos_url>https?://.*)/datasets/"
@@ -1037,7 +1039,8 @@ class Dataset:
             copy_directory_with_symlinks(
                 layer.path,
                 new_layer.path,
-                ignore=[str(mag) for mag in layer.mags] + [PROPERTIES_FILE_NAME],
+                ignore=[str(mag) for mag in layer.mags]
+                + [PROPERTIES_FILE_NAME, ZGROUP_FILE_NAME, ZATTRS_FILE_NAME],
                 make_relative=make_relative,
             )
 
@@ -1125,6 +1128,66 @@ class Dataset:
             )
 
             self._last_read_properties = copy.deepcopy(self._properties)
+
+        # Write out Zarr and OME-Ngff metadata if there is a Zarr layer
+        if any(layer.data_format == DataFormat.Zarr for layer in self.layers.values()):
+            zgroup_content = {"zarr_format": "2"}
+            with (self.path / ZGROUP_FILE_NAME).open("w", encoding="utf-8") as outfile:
+                json.dump(zgroup_content, outfile, indent=4)
+            for layer in self.layers.values():
+                if layer.data_format == DataFormat.Zarr:
+                    with (layer.path / ZGROUP_FILE_NAME).open(
+                        "w", encoding="utf-8"
+                    ) as outfile:
+                        json.dump(zgroup_content, outfile, indent=4)
+                    with (layer.path / ZATTRS_FILE_NAME).open(
+                        "w", encoding="utf-8"
+                    ) as outfile:
+                        json.dump(
+                            {
+                                "multiscales": [
+                                    {
+                                        "version": "0.4",
+                                        "axes": [
+                                            {"name": "c", "type": "channel"},
+                                            {
+                                                "name": "x",
+                                                "type": "space",
+                                                "unit": "nanometer",
+                                            },
+                                            {
+                                                "name": "y",
+                                                "type": "space",
+                                                "unit": "nanometer",
+                                            },
+                                            {
+                                                "name": "z",
+                                                "type": "space",
+                                                "unit": "nanometer",
+                                            },
+                                        ],
+                                        "datasets": [
+                                            {
+                                                "path": mag.path.name,
+                                                "coordinateTransformations": [
+                                                    {
+                                                        "type": "scale",
+                                                        "scale": [1.0]
+                                                        + (
+                                                            np.array(self.voxel_size)
+                                                            * mag.mag.to_np()
+                                                        ).tolist(),
+                                                    }
+                                                ],
+                                            }
+                                            for mag in layer.mags.values()
+                                        ],
+                                    }
+                                ]
+                            },
+                            outfile,
+                            indent=4,
+                        )
 
     def _initialize_layer_from_properties(self, properties: LayerProperties) -> Layer:
         if properties.category == COLOR_CATEGORY:
