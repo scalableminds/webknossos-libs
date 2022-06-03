@@ -231,7 +231,7 @@ class KubernetesExecutor(ClusterExecutor):
 
         return job_id_futures, ranges
 
-    def check_for_crashed_job(
+    def check_job_state(
         self, job_id_with_index: str
     ) -> Literal["failed", "ignore", "completed"]:
         kubernetes_client = KubernetesClient()

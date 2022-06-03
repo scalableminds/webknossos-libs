@@ -12,6 +12,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes
 
 ### Added
+- Detect when slurm jobs crash due to being out-of-memory. [#739](https://github.com/scalableminds/webknossos-libs/pull/739)
 
 ### Changed
 
