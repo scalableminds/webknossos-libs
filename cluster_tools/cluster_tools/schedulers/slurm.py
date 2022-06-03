@@ -7,13 +7,17 @@ import re
 import sys
 import threading
 from functools import lru_cache
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Type
 
 from typing_extensions import Literal
 
 from cluster_tools.util import call, chcall, random_string
 
-from .cluster_executor import ClusterExecutor
+from .cluster_executor import (
+    ClusterExecutor,
+    RemoteException,
+    RemoteOutOfMemoryException,
+)
 
 SLURM_STATES = {
     "Failure": [
@@ -318,7 +322,9 @@ class SlurmExecutor(ClusterExecutor):
             )
             return "ignore"
 
-    def investigate_failed_job(self, job_id_with_index) -> Optional[str]:
+    def investigate_failed_job(
+        self, job_id_with_index
+    ) -> Optional[Tuple[str, Type[RemoteException]]]:
         # We call `seff job_id` which should return some output including a line,
         # such as: "Memory Efficiency: 25019.18% of 1.00 GB"
 
@@ -354,7 +360,8 @@ class SlurmExecutor(ClusterExecutor):
         if percentage < 100:
             return None
 
-        return f"The job was probably terminated because it consumed too much memory ({efficiency_note})."
+        reason = f"The job was probably terminated because it consumed too much memory ({efficiency_note})."
+        return (reason, RemoteOutOfMemoryException)
 
     def get_pending_tasks(self):
         try:

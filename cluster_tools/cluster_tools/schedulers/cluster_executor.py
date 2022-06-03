@@ -7,7 +7,7 @@ import time
 from abc import abstractmethod
 from concurrent import futures
 from functools import partial
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Type
 
 from typing_extensions import Literal
 
@@ -127,10 +127,11 @@ class ClusterExecutor(futures.Executor):
 
     def investigate_failed_job(
         self, job_id_with_index  # pylint: disable=unused-argument
-    ) -> Optional[str]:
+    ) -> Optional[Tuple[str, Type[RemoteException]]]:
         """
-        When a job fails, this method is called to investigate why. If a string is returned,
-        that message is attached to the thrown exception.
+        When a job fails, this method is called to investigate why. If a tuple is returned,
+        the containing message (1st element) will be attached to the thrown exception (which will use
+        the returned exception type from the 2nd element).
         For example, this method could be used to check for common problems, such as violated
         RAM constraints.
         """
@@ -227,7 +228,11 @@ class ClusterExecutor(futures.Executor):
             logging.debug("Job completed: {}".format(jobid))
 
         preliminary_outfile_name = with_preliminary_postfix(outfile_name)
-        use_oom_exception = False
+
+        # By default, exceptions are wrapped by the RemoteException class.
+        # However, this can be customized by investigating the actual error
+        # using `investigate_failed_job`.
+        wrapping_exception_cls = RemoteException
         if failed_early:
             # If the job failed, but didn't write the error to an output file,
             # we handle this case separately.
@@ -237,13 +242,13 @@ class ClusterExecutor(futures.Executor):
             # We don't try to deserialize pickling output, because it won't exist.
             success = False
 
-            reason = (  # pylint: disable=assignment-from-none
+            opt_reason_and_exception_cls = (  # pylint: disable=assignment-from-none
                 self.investigate_failed_job(jobid)
             )
-            if reason == None:
-                reason = ""
-            else:
-                use_oom_exception = True
+            reason = None
+            if opt_reason_and_exception_cls is not None:
+                reason, wrapping_exception_cls = opt_reason_and_exception_cls
+
             result = join_messages(
                 [
                     f"Job submission/execution failed.",
@@ -266,10 +271,7 @@ class ClusterExecutor(futures.Executor):
             fut.set_result(result)
         else:
             # Don't remove the .preliminary postfix since the job failed.
-            if use_oom_exception:
-                remote_exc = RemoteOutOfMemoryException(result, jobid)
-            else:
-                remote_exc = RemoteException(result, jobid)
+            remote_exc = wrapping_exception_cls(result, jobid)
             fut.set_exception(remote_exc)
 
         # Clean up communication files.
