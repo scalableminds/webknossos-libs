@@ -21,8 +21,8 @@ def log_memory_consumption(additional_output: str = "") -> None:
     logging.info(
         "Currently consuming {:.2f} GB of memory ({:.2f} GB still available) "
         "in process {}. {}".format(
-            process.memory_info().rss / 1024 ** 3,
-            psutil.virtual_memory().available / 1024 ** 3,
+            process.memory_info().rss / 1024**3,
+            psutil.virtual_memory().available / 1024**3,
             pid,
             additional_output,
         )
