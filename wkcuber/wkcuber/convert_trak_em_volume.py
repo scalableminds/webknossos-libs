@@ -19,6 +19,14 @@ from ._internal.utils import (
 from webknossos.skeleton import Skeleton
 
 
+def parse_vec2_int(value: str) -> [int, int]:
+    parts = [int(part.strip()) for part in value.split(",")]
+    if len(parts) == 2:
+        return parts
+    else:
+        raise TypeError(f"Cannot convert `{value}` to a list of two ints.")
+
+
 def create_parser() -> ArgumentParser:
     parser = ArgumentParser()
 
@@ -44,6 +52,14 @@ def create_parser() -> ArgumentParser:
         help="Do not conver included skeletons",
         dest="no_skeletons",
         action="store_true",
+    )
+
+    parser.add_argument(
+        "--offset",
+        "-o",
+        default=[0, 0],
+        type=parse_vec2_int,
+        help="Offset that should be added to all skeletons.",
     )
 
     add_verbose_flag(parser)
@@ -104,7 +120,9 @@ def main(args: Namespace) -> None:
     if not args.no_segments:
 
         with open(args.source_path) as file:
-            path_dict, max_width, max_height = parse_segments_from_trakem_xml(file)
+            path_dict, max_width, max_height = parse_segments_from_trakem_xml(
+                file, args.offset
+            )
 
         max_z_slice = max(path_dict.keys())
 
@@ -139,7 +157,7 @@ def main(args: Namespace) -> None:
     if not args.no_skeletons:
 
         with open(args.source_path) as file:
-            annotation = parse_skeletons_from_trakem_xml(file)
+            annotation = parse_skeletons_from_trakem_xml(file, args.offset)
 
         print(
             f"Found {len(list(annotation.flattened_trees()))} skeletons with {annotation.get_total_node_count()} nodes in {len(list(annotation.flattened_groups()))} groups."
@@ -149,7 +167,7 @@ def main(args: Namespace) -> None:
         annotation.save(args.target_path / f"{source_file_name}.nml")
 
 
-def parse_skeletons_from_trakem_xml(file):
+def parse_skeletons_from_trakem_xml(file, global_offset):
     current_offset = (0, 0)
     current_node_stack = []
     current_tree = None
@@ -214,7 +232,10 @@ def parse_skeletons_from_trakem_xml(file):
                 assert (
                     len(transform_tuple) == 6
                 ), f"Transform has {len(transform_tuple)} instead of 6 entries"
-                current_offset = (transform_tuple[-2], transform_tuple[-1])
+                current_offset = (
+                    transform_tuple[-2] + global_offset[0],
+                    transform_tuple[-1] + global_offset[1],
+                )
 
                 current_tree = current_group.add_tree(name)
             elif elem.tag == "t2_node":
@@ -265,7 +286,7 @@ def parse_skeletons_from_trakem_xml(file):
     return skeleton
 
 
-def parse_segments_from_trakem_xml(file):
+def parse_segments_from_trakem_xml(file, global_offset):
     max_width = 0
     max_height = 0
     current_segment = None
@@ -292,7 +313,10 @@ def parse_segments_from_trakem_xml(file):
                 assert (
                     len(transform_tuple) == 6
                 ), f"Transform has {len(transform_tuple)} instead of 6 entries"
-                current_offset = (transform_tuple[-2], transform_tuple[-1])
+                current_offset = (
+                    transform_tuple[-2] + global_offset[0],
+                    transform_tuple[-1] + global_offset[1],
+                )
 
                 max_width = max(max_width, width + current_offset[0])
                 max_height = max(max_height, height + current_offset[1])
