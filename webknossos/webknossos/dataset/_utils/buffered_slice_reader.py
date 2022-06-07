@@ -25,7 +25,7 @@ class BufferedSliceReader:
         *,
         relative_bounding_box: Optional[BoundingBox] = None,  # in mag1
         absolute_bounding_box: Optional[BoundingBox] = None,  # in mag1
-        logging: bool = False,
+        use_logging: bool = False,
     ) -> None:
         """see `View.get_buffered_slice_reader()`"""
 
@@ -34,7 +34,7 @@ class BufferedSliceReader:
         self.dtype = self.view.get_dtype()
         assert 0 <= dimension <= 2
         self.dimension = dimension
-        self.logging = logging
+        self.use_logging = use_logging
         if offset is not None and size is not None:
             warnings.warn(
                 "[DEPRECATION] Using offset and size for a buffered slice reader is deprecated. "
@@ -91,7 +91,7 @@ class BufferedSliceReader:
                 )
             )
 
-            if self.logging:
+            if self.use_logging:
                 info(
                     f"({getpid()}) Reading {n_slices} slices at position {batch_start_idx}."
                 )

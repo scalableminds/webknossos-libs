@@ -6,7 +6,6 @@ import re
 import warnings
 from argparse import Namespace
 from contextlib import nullcontext
-from functools import partial
 from os import PathLike
 from os.path import relpath
 from pathlib import Path
@@ -46,6 +45,7 @@ from ..utils import (
     copytree,
     get_executor_for_args,
     is_fs_path,
+    named_partial,
     rmtree,
     wait_and_ensure_success,
     warn_deprecated,
@@ -819,7 +819,7 @@ class Dataset:
                 batch_size % mag_view.info.shard_size.z == 0
             ), f"batch_size {batch_size} must be divisible by z shard-size {mag_view.info.shard_size.z}"
 
-        func_per_chunk = partial(
+        func_per_chunk = named_partial(
             pims_images.copy_to_view,
             mag_view=mag_view,
         )

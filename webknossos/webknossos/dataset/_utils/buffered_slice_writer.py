@@ -40,14 +40,14 @@ class BufferedSliceWriter:
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
-        logging: bool = False,
+        use_logging: bool = False,
     ) -> None:
         """see `View.get_buffered_slice_writer()`"""
 
         self.view = view
         self.buffer_size = buffer_size
         self.dtype = self.view.get_dtype()
-        self.logging = logging
+        self.use_logging = use_logging
         if offset is None and relative_offset is None and absolute_offset is None:
             relative_offset = Vec3Int.zeros()
         if offset is not None:
@@ -88,7 +88,7 @@ class BufferedSliceWriter:
             "which differs from the dtype with which the BufferedSliceWriter was instantiated."
         )
 
-        if self.logging:
+        if self.use_logging:
             info(
                 "({}) Writing {} slices at position {}.".format(
                     getpid(), len(self.buffer), self.buffer_start_slice

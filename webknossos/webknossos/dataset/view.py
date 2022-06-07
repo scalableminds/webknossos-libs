@@ -603,7 +603,7 @@ class View:
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
-        logging: bool = False,
+        use_logging: bool = False,
     ) -> "BufferedSliceWriter":
         """
         The returned writer buffers multiple slices before they are written to disk.
@@ -645,7 +645,7 @@ class View:
             dimension=dimension,
             relative_offset=relative_offset,
             absolute_offset=absolute_offset,
-            logging=logging,
+            use_logging=use_logging,
         )
 
     def get_buffered_slice_reader(
@@ -657,7 +657,7 @@ class View:
         *,
         relative_bounding_box: Optional[BoundingBox] = None,  # in mag1
         absolute_bounding_box: Optional[BoundingBox] = None,  # in mag1
-        logging: bool = False,
+        use_logging: bool = False,
     ) -> "BufferedSliceReader":
         """
         The returned reader yields slices of data along a specified axis.
@@ -694,7 +694,7 @@ class View:
             dimension=dimension,
             relative_bounding_box=relative_bounding_box,
             absolute_bounding_box=absolute_bounding_box,
-            logging=logging,
+            use_logging=use_logging,
         )
 
     def for_each_chunk(

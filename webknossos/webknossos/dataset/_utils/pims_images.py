@@ -22,17 +22,53 @@ class PimsImages:
         flip_z: bool,
         use_bioformats: bool,
     ) -> None:
+        """
+        During initialization the pims objects are examined and configured to produce
+        ndarrays that follow the following form:
+        (self._iter_dim, *self._img_dims)
+        self._iter_dim can be either "z", "t" or "" if the image is 2D.
+        In the latter case, the inner 2D image is still wrapped in a single-element list
+        by _open_images() to be consistent with 3D images.
+        self._img_dims can consist of "x" "y" and "c", where "c" is optional and must be
+        at the start or the end, so one of"xy", "yx", "xyc", "yxc", "cxy", "cyx".
+
+        The part "IDENTIFY AXIS ORDER" figures out (self._iter_dim, *self._img_dims)
+        from out-of-the-box pims images. Afterwards self._open_images() produces
+        images consistend with those variables.
+
+        The part "IDENTIFY SHAPE & CHANNELS" uses this information and the well-defined
+        images to figure out the shape & num_channels.
+        """
+        ## we use images as the name for the entered contextmanager,
+        ## the `del` prevents any confusion with the passed argument.
         self._original_images = images
         del images
+
+        ## arguments as inner attributes
         self._timepoint = timepoint
-        self._default_coords = {}
-        self._bundle_axes = None
-        self._iter_dim = None
         self._swap_xy = swap_xy
         self._flip_x = flip_x
         self._flip_y = flip_y
         self._flip_z = flip_z
         self._use_bioformats = use_bioformats
+
+        ## attributes that will be set in __init__()
+        self._iter_dim = None
+        # _img_dims
+
+        ## attributes only for pims.FramesSequenceND instances:
+        # _default_coords
+        # _init_c_axis
+
+        ## attributes that will also be set in __init__()
+        # dtype
+        # expected_shape
+        # num_channels
+        # _first_n_channels
+
+        #######################
+        # IDENTIFY AXIS ORDER #
+        #######################
 
         with self._open_images() as images:
             assert isinstance(
@@ -45,6 +81,7 @@ class PimsImages:
                     axis in "xyzct" for axis in images.axes
                 ), f"Found unknown axes {set(images.axes) - set('xyzct')}"
 
+                self._default_coords = {}
                 self._init_c_axis = False
                 if isinstance(images, pims.imageio_reader.ImageIOReader):
                     # bugfix for ImageIOReader which misses channel axis sometimes,
@@ -58,8 +95,8 @@ class PimsImages:
                 if images.sizes.get("c", 1) > 1:
                     self._img_dims = "cyx"
                 else:
-                    if "z" in images.axes:
-                        self._default_coords["z"] = 0
+                    if "c" in images.axes:
+                        self._default_coords["c"] = 0
                     self._img_dims = "yx"
 
                 self._iter_dim = ""
@@ -71,7 +108,7 @@ class PimsImages:
 
                 if timepoint is None:
                     if images.sizes.get("t", 1) > 1:
-                        assert self._iter_dim is None or self._iter_dim == "", (
+                        assert self._iter_dim != "z", (
                             f"Found both axes t {images.sizes.get('t', 1) } "
                             + f"and z {images.sizes.get('z', 1) > 1}, "
                             + "cannot use both without setting timepoint"
@@ -114,23 +151,32 @@ class PimsImages:
                         + "cannot map to 3D+channels, consider setting timepoint."
                     )
 
+        #############################
+        # IDENTIFY SHAPE & CHANNELS #
+        #############################
+
         with self._open_images() as images:
             if isinstance(images, list):
-                images_shape = (1,) + cast(pims.FramesSequence, images[0]).shape
+                images_shape = (len(images),) + cast(
+                    pims.FramesSequence, images[0]
+                ).shape
             else:
                 images_shape = images.shape
             c_index = self._img_dims.find("c")
             if c_index == -1:
                 self.num_channels = 1
             else:
+                # Since images_shape contains the first dimension iter_dim,
+                # we need to offset the index by one before accessing the images_shape.
+                # images_shape corresponds to (z, *_img_dims)
                 self.num_channels = images_shape[c_index + 1]
 
-            width = self._img_dims.find("x") + 1
-            height = self._img_dims.find("y") + 1
+            x_index = self._img_dims.find("x") + 1
+            y_index = self._img_dims.find("y") + 1
             if swap_xy:
-                width, height = height, width
+                x_index, y_index = y_index, x_index
             self.expected_shape = Vec3Int(
-                images_shape[width], images_shape[height], images_shape[0]
+                images_shape[x_index], images_shape[y_index], images_shape[0]
             )
 
         self._first_n_channels = None
@@ -145,12 +191,19 @@ class PimsImages:
     def _open_images(
         self,
     ) -> Iterator[Union[pims.FramesSequence, List[pims.FramesSequence]]]:
+        """
+        This yields well-defined images of the form (self._iter_dim, *self._img_dims),
+        after IDENTIFY AXIS ORDER of __init__() has run.
+        For a 2D image this is achieved by wrapping it in a list.
+        """
         with warnings.catch_warnings():
 
             if isinstance(self._original_images, pims.FramesSequence):
                 images_context_manager = nullcontext(enter_result=self._original_images)
             else:
                 if self._use_bioformats:
+                    # There is a wrong warning about jpype, supressing it here.
+                    # See issue https://github.com/soft-matter/pims/issues/384
                     warnings.filterwarnings(
                         "ignore",
                         "Due to an issue with JPype 0.6.0, reading is slower.*",
@@ -160,6 +213,10 @@ class PimsImages:
                     try:
                         pims.bioformats._find_jar()
                     except HTTPError:
+                        # We cannot use the newest bioformats version,
+                        # since it does not include the necessary loci_tools.jar.
+                        # Updates to support newer bioformats jars with pims are in PR
+                        # https://github.com/soft-matter/pims/pull/403
                         pims.bioformats.download_jar(version="6.7.0")
                     if "*" in str(self._original_images) or isinstance(
                         self._original_images, list
@@ -176,9 +233,12 @@ class PimsImages:
 
             with images_context_manager as images:
                 if isinstance(images, pims.FramesSequenceND):
-                    images.default_coords.update(self._default_coords)
                     if hasattr(self, "_img_dims"):
+                        # first part of __init__() has happened
+                        images.default_coords.update(self._default_coords)
                         if self._init_c_axis and "c" not in images.sizes:
+                            # Bugfix for ImageIOReader which misses channel axis sometimes,
+                            # assuming channels come last. _init_c_axis is set in __init__().
                             images._init_axis("c", images.shape[-1])
                             for key in list(images._get_frame_dict.keys()):
                                 images._get_frame_dict[
@@ -190,11 +250,13 @@ class PimsImages:
                     if self._timepoint is not None:
                         images = images[self._timepoint]
                     if self._iter_dim == "":
-                        # add outer list
+                        # add outer list to wrap 2D images as 3D-like structure
                         images = [images]
                 yield images
 
     def copy_to_view(self, args: Tuple[int, int], mag_view: MagView) -> Tuple[int, int]:
+        """Copies the images according to the passed arguments to the given mag_view.
+        args is expected to be the start and end of the z-range, meant for usage with an executor."""
         z_start, z_end = args
         shapes = []
 
