@@ -7,7 +7,7 @@ import time
 from abc import abstractmethod
 from concurrent import futures
 from functools import partial
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Type
 
 from typing_extensions import Literal
 
@@ -23,11 +23,20 @@ from cluster_tools.util import (
 )
 
 
+def join_messages(strings: List[str]) -> str:
+    return " ".join(x.strip() for x in strings if x.strip())
+
+
 class RemoteException(Exception):
     def __init__(self, error, job_id):  # pylint: disable=super-init-not-called
         self.error = error
         self.job_id = job_id
 
+    def __str__(self):
+        return self.error.strip() + f" (job_id={self.job_id})"
+
+
+class RemoteOutOfMemoryException(RemoteException):
     def __str__(self):
         return str(self.job_id) + "\n" + self.error.strip()
 
@@ -111,10 +120,22 @@ class ClusterExecutor(futures.Executor):
         sys.exit(130)
 
     @abstractmethod
-    def check_for_crashed_job(
+    def check_job_state(
         self, job_id_with_index
     ) -> Literal["failed", "ignore", "completed"]:
         pass
+
+    def investigate_failed_job(
+        self, job_id_with_index  # pylint: disable=unused-argument
+    ) -> Optional[Tuple[str, Type[RemoteException]]]:
+        """
+        When a job fails, this method is called to investigate why. If a tuple is returned,
+        the containing message (1st element) will be attached to the thrown exception (which will use
+        the returned exception type from the 2nd element).
+        For example, this method could be used to check for common problems, such as violated
+        RAM constraints.
+        """
+        return None
 
     def _start(self, workerid, job_count=None, job_name=None):
         """Start job(s) with the given worker ID and return IDs
@@ -207,15 +228,33 @@ class ClusterExecutor(futures.Executor):
             logging.debug("Job completed: {}".format(jobid))
 
         preliminary_outfile_name = with_preliminary_postfix(outfile_name)
+
+        # By default, exceptions are wrapped by the RemoteException class.
+        # However, this can be customized by investigating the actual error
+        # using `investigate_failed_job`.
+        wrapping_exception_cls = RemoteException
         if failed_early:
-            # If the code which should be executed on a node wasn't even
-            # started (e.g., because python isn't installed or the cluster_tools
-            # couldn't be found), no output was written to disk. We only noticed
-            # this circumstance because the whole job was marked as failed.
-            # Therefore, we don't try to deserialize pickling output.
+            # If the job failed, but didn't write the error to an output file,
+            # we handle this case separately.
+            # Typical reasons could be for this:
+            # - because python isn't installed or the cluster_tools couldn't be found
+            # - because the job was killed (e.g., by slurm due to RAM limit violations)
+            # We don't try to deserialize pickling output, because it won't exist.
             success = False
-            result = "Job submission/execution failed. Please look into the log file at {}".format(
-                self.format_log_file_path(self.cfut_dir, jobid)
+
+            opt_reason_and_exception_cls = (  # pylint: disable=assignment-from-none
+                self.investigate_failed_job(jobid)
+            )
+            reason = None
+            if opt_reason_and_exception_cls is not None:
+                reason, wrapping_exception_cls = opt_reason_and_exception_cls
+
+            result = join_messages(
+                [
+                    f"Job submission/execution failed.",
+                    reason or "",
+                    f"Please look into the log file at {self.format_log_file_path(self.cfut_dir, jobid)}.",
+                ]
             )
         else:
             with open(preliminary_outfile_name, "rb") as f:
@@ -232,7 +271,8 @@ class ClusterExecutor(futures.Executor):
             fut.set_result(result)
         else:
             # Don't remove the .preliminary postfix since the job failed.
-            fut.set_exception(RemoteException(result, jobid))
+            remote_exc = wrapping_exception_cls(result, jobid)
+            fut.set_exception(remote_exc)
 
         # Clean up communication files.
 
