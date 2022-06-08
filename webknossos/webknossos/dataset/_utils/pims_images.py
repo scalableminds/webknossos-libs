@@ -254,11 +254,18 @@ class PimsImages:
                         images = [images]
                 yield images
 
-    def copy_to_view(self, args: Tuple[int, int], mag_view: MagView) -> Tuple[int, int]:
+    def copy_to_view(
+        self, args: Tuple[int, int], mag_view: MagView, is_segmentation: bool
+    ) -> Tuple[Tuple[int, int], Optional[int]]:
         """Copies the images according to the passed arguments to the given mag_view.
         args is expected to be the start and end of the z-range, meant for usage with an executor."""
         z_start, z_end = args
         shapes = []
+        max_id: Optional[int]
+        if is_segmentation:
+            max_id = 0
+        else:
+            max_id = None
 
         with self._open_images() as images:
             if self._flip_z:
@@ -290,9 +297,13 @@ class PimsImages:
                         image_slice = np.flip(image_slice, -2)
                     if self._flip_y:
                         image_slice = np.flip(image_slice, -1)
+
+                    if max_id is not None:
+                        max_id = max(max_id, image_slice.max())
                     shapes.append(image_slice.shape[-2:])
                     writer.send(image_slice)
-            return dimwise_max(shapes)
+
+            return dimwise_max(shapes), None if max_id is None else int(max_id)
 
 
 T = TypeVar("T", bound=Tuple[int, ...])

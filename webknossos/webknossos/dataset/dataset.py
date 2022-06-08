@@ -822,14 +822,13 @@ class Dataset:
         add_layer_kwargs = {}
         if category == "segmentation":
             add_layer_kwargs["largest_segment_id"] = 0
-        # TODO set id later to max
         layer = self.add_layer(
             layer_name=layer_name,
             category=category,
             data_format=data_format,
             dtype_per_channel=pims_images.dtype,
             num_channels=pims_images.num_channels,
-            **add_layer_kwargs,
+            **add_layer_kwargs,  # type: ignore[arg-type]
         )
         mag_view = layer.add_mag(
             mag=mag,
@@ -852,6 +851,7 @@ class Dataset:
         func_per_chunk = named_partial(
             pims_images.copy_to_view,
             mag_view=mag_view,
+            is_segmentation=category == "segmentation",
         )
 
         args = []
@@ -870,7 +870,7 @@ class Dataset:
                 module="webknossos",
             )
             if executor is None:
-                shapes = [func_per_chunk(i) for i in args]
+                shapes_and_max_ids = [func_per_chunk(i) for i in args]
             else:
                 warnings.filterwarnings(
                     "ignore",
@@ -878,9 +878,13 @@ class Dataset:
                     category=UserWarning,
                     module="webknossos",
                 )
-                shapes = wait_and_ensure_success(
+                shapes_and_max_ids = wait_and_ensure_success(
                     executor.map_to_futures(func_per_chunk, args),
                 )
+            shapes, max_ids = zip(*shapes_and_max_ids)
+            if category == "segmentation":
+                max_id = max(max_ids)
+                cast(SegmentationLayer, layer).largest_segment_id = max_id
             actual_size = Vec3Int(dimwise_max(shapes) + (pims_images.expected_shape.z,))
             layer.bounding_box = BoundingBox((0, 0, 0), actual_size).from_mag_to_mag1(
                 mag

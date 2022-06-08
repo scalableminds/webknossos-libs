@@ -16,7 +16,7 @@ pytestmark = [pytest.mark.block_network(allowed_hosts=[".*"])]
 REPO_IMAGES_ARGS = [
     (
         "testdata/tiff/test.*.tiff",
-        {},
+        {"category": "segmentation"},
         "uint8",
         1,
         (265, 265, 257),
@@ -70,6 +70,8 @@ def test_repo_images(
         assert l.dtype_per_channel == np.dtype(dtype)
         assert l.num_channels == num_channels
         assert l.bounding_box == wk.BoundingBox(topleft=(0, 0, 0), size=size)
+        if isinstance(l, wk.SegmentationLayer):
+            assert l.largest_segment_id > 0
     return ds
 
 
