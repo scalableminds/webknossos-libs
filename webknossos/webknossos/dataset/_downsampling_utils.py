@@ -1,11 +1,15 @@
 import logging
 import math
+import warnings
 from enum import Enum
 from itertools import product
-from typing import Callable, List, Optional, Tuple
+from typing import TYPE_CHECKING, Callable, List, Optional, Tuple
 
 import numpy as np
 from scipy.ndimage import zoom
+
+if TYPE_CHECKING:
+    from .dataset import Dataset, Layer
 
 from webknossos.geometry import Mag, Vec3Int, Vec3IntLike
 from webknossos.geometry.bounding_box import BoundingBox
@@ -34,15 +38,36 @@ def determine_buffer_shape(array_info: ArrayInfo) -> Vec3Int:
 
 
 def calculate_mags_to_downsample(
-    from_mag: Mag, max_mag: Mag, voxel_size: Optional[Tuple[float, float, float]]
+    from_mag: Mag,
+    coarsest_mag: Mag,
+    dataset_to_align_with: Optional["Dataset"],
+    voxel_size: Optional[Tuple[float, float, float]],
 ) -> List[Mag]:
-    assert np.all(from_mag.to_np() <= max_mag.to_np())
+    assert np.all(from_mag.to_np() <= coarsest_mag.to_np())
     mags = []
     current_mag = from_mag
-    while current_mag < max_mag:
-        if voxel_size is None:
+    if dataset_to_align_with is None:
+        mags_to_align_with = set()
+    else:
+        mags_to_align_with = set(
+            mag
+            for layer in dataset_to_align_with.layers.values()
+            for mag in layer.mags.keys()
+        )
+    mags_to_align_with_by_max_dim = {mag.max_dim: mag for mag in mags_to_align_with}
+    assert len(mags_to_align_with) == len(
+        mags_to_align_with_by_max_dim
+    ), "Some layers contain different values for the same mag, this is not allowed."
+    while current_mag < coarsest_mag:
+        if current_mag.max_dim * 2 in mags_to_align_with_by_max_dim:
+            current_mag = mags_to_align_with_by_max_dim[current_mag.max_dim * 2]
+            if current_mag > coarsest_mag:
+                warnings.warn(
+                    "The mag taken from another layer is larger in some dimensions than coarsest_mag."
+                )
+        elif voxel_size is None:
             # In case the sampling mode is CONSTANT_Z or ISOTROPIC:
-            current_mag = Mag(np.minimum(current_mag.to_np() * 2, max_mag.to_np()))
+            current_mag = Mag(np.minimum(current_mag.to_np() * 2, coarsest_mag.to_np()))
         else:
             # In case the sampling mode is ANISOTROPIC:
             current_size = current_mag.to_np() * np.array(voxel_size)
@@ -63,13 +88,20 @@ def calculate_mags_to_downsample(
             # The smaller the ratio between the smallest dimension and the largest dimension, the better.
             if all_voxel_sized_ratio < min_voxel_sized_ratio:
                 # Multiply all dimensions with "2"
-                new_mag = Mag(np.minimum(current_mag.to_np() * 2, max_mag.to_np()))
+                new_mag = Mag(np.minimum(current_mag.to_np() * 2, coarsest_mag.to_np()))
             else:
                 # Multiply only the minimal dimension by "2".
-                new_mag = Mag(np.minimum(current_mag.to_np() * factor, max_mag.to_np()))
+                new_mag = Mag(
+                    np.minimum(current_mag.to_np() * factor, coarsest_mag.to_np())
+                )
+                # In case of isotropic resolution but anisotropic mag we need to ensure unique max dims.
+                # current mag: 4-4-2, voxel_size: 1,1,1 -> new_mag: 4-4-4, therefore we skip this entry.
+                if new_mag.max_dim == current_mag.max_dim:
+                    current_mag = new_mag
+                    continue
             if new_mag == current_mag:
                 raise RuntimeError(
-                    f"The maximum mag {max_mag} can not be reached from {current_mag} with voxel_size {voxel_size}!"
+                    f"The coarsest mag {coarsest_mag} can not be reached from {current_mag} with voxel_size {voxel_size}!"
                 )
             current_mag = new_mag
 
@@ -79,21 +111,28 @@ def calculate_mags_to_downsample(
 
 
 def calculate_mags_to_upsample(
-    from_mag: Mag, finest_mag: Mag, voxel_size: Optional[Tuple[float, float, float]]
+    from_mag: Mag,
+    finest_mag: Mag,
+    dataset_to_align_with: Optional["Dataset"],
+    voxel_size: Optional[Tuple[float, float, float]],
 ) -> List[Mag]:
     return list(
-        reversed(calculate_mags_to_downsample(finest_mag, from_mag, voxel_size))
+        reversed(
+            calculate_mags_to_downsample(
+                finest_mag, from_mag, dataset_to_align_with, voxel_size
+            )
+        )
     )[1:] + [finest_mag]
 
 
-def calculate_default_max_mag(dataset_size: Vec3IntLike) -> Mag:
+def calculate_default_coarsest_mag(dataset_size: Vec3IntLike) -> Mag:
     dataset_size = Vec3Int(dataset_size)
-    # The lowest mag should have a size of ~ 100vx**2 per slice
-    max_x_y = max(dataset_size[0], dataset_size[1])
-    # highest power of 2 larger (or equal) than max_x_y divided by 100
+    # The coarsest mag should have a size of ~ 100vx**2 per slice
+    coarsest_x_y = max(dataset_size[0], dataset_size[1])
+    # highest power of 2 larger (or equal) than coarsest_x_y divided by 100
     # The calculated factor will be used for x, y and z here. If anisotropic downsampling takes place,
     # the dimensions can still be downsampled independently according to the voxel_size.
-    return Mag(max(2 ** math.ceil(math.log(max_x_y / 100, 2)), 4))  # at least 4
+    return Mag(max(2 ** math.ceil(math.log(coarsest_x_y / 100, 2)), 4))  # at least 4
 
 
 def parse_interpolation_mode(
