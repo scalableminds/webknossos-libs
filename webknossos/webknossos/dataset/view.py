@@ -320,7 +320,7 @@ class View:
 
         # ...
         # let mag1 be a MagView
-        view = mag1.get_view(absolute_offset(10, 20, 30), size=(100, 200, 300))
+        view = mag1.get_view(absolute_offset=(10, 20, 30), size=(100, 200, 300))
 
         assert np.array_equal(
             view.read(absolute_offset=(0, 0, 0), size=(100, 200, 300)),

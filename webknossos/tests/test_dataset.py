@@ -9,6 +9,7 @@ from typing import Iterator, Optional, Tuple, cast
 
 import numpy as np
 import pytest
+from jsonschema import validate
 from upath import UPath
 
 from webknossos.dataset import (
@@ -38,8 +39,8 @@ from webknossos.utils import (
 
 from .constants import TESTDATA_DIR, TESTOUTPUT_DIR
 
-MINIO_ROOT_USER = "TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur"
-MINIO_ROOT_PASSWORD = "ANTN35UAENTS5UIAEATD"
+MINIO_ROOT_USER = "ANTN35UAENTS5UIAEATD"
+MINIO_ROOT_PASSWORD = "TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur"
 MINIO_PORT = "8000"
 
 
@@ -57,7 +58,6 @@ def docker_minio() -> Iterator[None]:
         " -d"
         " minio/minio server /data"
     )
-    print("BEFORE", flush=True)
     subprocess.check_output(shlex.split(cmd))
     REMOTE_TESTOUTPUT_DIR.fs.mkdirs("testoutput", exist_ok=True)
     try:
@@ -244,6 +244,49 @@ def test_create_dataset_with_layer_and_mag(
     assert len(ds.get_layer("color").mags) == 2
 
     assure_exported_properties(ds)
+
+
+@pytest.mark.parametrize("output_path", [TESTOUTPUT_DIR, REMOTE_TESTOUTPUT_DIR])
+def test_ome_ngff_metadata(output_path: Path) -> None:
+    ds_path = prepare_dataset_path(DataFormat.Zarr, output_path)
+    ds = Dataset(ds_path, voxel_size=(11, 11, 28))
+    layer = ds.add_layer("color", COLOR_CATEGORY, data_format=DataFormat.Zarr)
+    layer.add_mag("1")
+    layer.add_mag("2-2-1")
+
+    assert (ds_path / ".zgroup").exists()
+    assert (ds_path / "color" / ".zgroup").exists()
+    assert (ds_path / "color" / ".zattrs").exists()
+    assert (ds_path / "color" / "1" / ".zarray").exists()
+    assert (ds_path / "color" / "2-2-1" / ".zarray").exists()
+
+    zattrs = json.loads((ds_path / "color" / ".zattrs").read_bytes())
+    assert len(zattrs["multiscales"][0]["datasets"]) == 2
+    assert zattrs["multiscales"][0]["datasets"][0]["coordinateTransformations"][0][
+        "scale"
+    ] == [
+        1,
+        11,
+        11,
+        28,
+    ]
+    assert zattrs["multiscales"][0]["datasets"][1]["coordinateTransformations"][0][
+        "scale"
+    ] == [
+        1,
+        22,
+        22,
+        28,
+    ]
+
+    validate(
+        instance=zattrs,
+        schema=json.loads(
+            UPath(
+                "https://ngff.openmicroscopy.org/0.4/schemas/image.schema"
+            ).read_bytes()
+        ),
+    )
 
 
 def test_create_default_layer() -> None:

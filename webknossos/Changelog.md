@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.2...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.3...HEAD)
 
 ### Breaking Changes
 
@@ -27,11 +27,18 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Fixed
 
 
+## [0.10.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.3) - 2022-06-03
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.2...v0.10.3)
+
+### Added
+- Added export of [OME-NGFF v0.4 metadata](https://ngff.openmicroscopy.org/0.4/) for all `Dataset`s that have a Zarr layer [#737](https://github.com/scalableminds/webknossos-libs/pull/737)
+
+
 ## [0.10.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.2) - 2022-05-20
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.1...v0.10.2)
 
 ### Changed
-- added Python 3.9 support to wk-libs [#716](https://github.com/scalableminds/webknossos-libs/pull/716)
+- Added Python 3.9 support to wk-libs [#716](https://github.com/scalableminds/webknossos-libs/pull/716)
 
 ### Fixed
 - URLs for the webknossos-context (e.g. in the `WK_URL` env var or via `webknossos_context(url=…)`) may now contain `/` in the end and are sanitized. Before, requests would fail if the URL contained a final `/`. [#733](https://github.com/scalableminds/webknossos-libs/pull/733)
