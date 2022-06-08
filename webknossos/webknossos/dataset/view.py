@@ -38,6 +38,12 @@ def _assert_check_equality(args: Tuple["View", "View", int]) -> None:
     assert np.all(view_a.read() == view_b.read())
 
 
+_BLOCK_ALIGNMENT_WARNING = (
+    "Warning: write() was called on a compressed mag without block alignment. "
+    + "Performance will be degraded as the data has to be padded first."
+)
+
+
 class View:
     """
     A `View` is essentially a bounding box to a region of a specific `StorageBackend` that also provides functionality.
@@ -265,8 +271,7 @@ class View:
             current_mag_view_bbox = self.bounding_box.in_mag(self._mag)
             if current_mag_bbox != current_mag_view_bbox.intersected_with(aligned_bbox):
                 warnings.warn(
-                    "Warning: write() was called on a compressed mag without block alignment. "
-                    + "Performance will be degraded as the data has to be padded first.",
+                    _BLOCK_ALIGNMENT_WARNING,
                     RuntimeWarning,
                 )
 

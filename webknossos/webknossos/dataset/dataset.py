@@ -70,7 +70,7 @@ from .properties import (
     _properties_floating_type_to_python_type,
     dataset_converter,
 )
-from .view import View
+from .view import _BLOCK_ALIGNMENT_WARNING, View
 
 logger = logging.getLogger(__name__)
 
@@ -777,6 +777,30 @@ class Dataset:
         batch_size: Optional[int] = None,  # defaults to shard-size z
         executor: Optional[Union[ClusterExecutor, WrappedProcessPoolExecutor]] = None,
     ) -> Layer:
+        """
+        Creates a new layer called `layer_name` with mag `mag` from `images`.
+        `images` can be one of the following:
+        * glob-string
+        * list of paths
+        * `pims.FramesSequence` instance
+
+        Please see the [pims docs](http://soft-matter.github.io/pims/v0.6.1/opening_files.html) for more information.
+
+        This method needs extra packages such as pims. Please install the respective extras,
+        e.g. using `python -m pip install "webknossos[all]"`.
+
+        Further Arguments:
+        * `category`: `color` by default, may be set to "segmentation"
+        * `data_format`: by default wkw files are written, may be set to "zarr"
+        * `mag`: magnification to use for the written data
+        * `chunk_size`, `chunks_per_shard`, `compress`: adjust how the data is stored on disk
+        * `swap_xy`: set to `True` to interchange x and y axis before writing to disk
+        * `flip_x`, `flip_y`, `flip_z`: set to `True` to flip the respective axis before writing to disk
+        * `use_bioformats`: set to `True` to use the [pims bioformats adapter](https://soft-matter.github.io/pims/v0.6.1/bioformats.html), needs a JVM
+        * `timepoint`: for timeseries, select a timepoint to use by specifying it as an int, starting from 0
+        * `batch_size`: size to process the images, must be a multiple of the shard-size z-axis, default is the shard-size
+        * `executor`: pass a `ClusterExecutor` instance to parallelize the conversion jobs across the batches
+        """
         try:
             from ._utils.pims_images import PimsImages, dimwise_max
         except ImportError as e:
@@ -793,13 +817,17 @@ class Dataset:
             flip_z=flip_z,
             use_bioformats=use_bioformats,
         )
-
+        add_layer_kwargs = {}
+        if category == "segmentation":
+            add_layer_kwargs["largest_segment_id"] = 0
+        # TODO set id later to max
         layer = self.add_layer(
             layer_name=layer_name,
             category=category,
             data_format=data_format,
             dtype_per_channel=pims_images.dtype,
             num_channels=pims_images.num_channels,
+            **add_layer_kwargs,
         )
         mag_view = layer.add_mag(
             mag=mag,
@@ -835,15 +863,12 @@ class Dataset:
             # which is ignored in this context
             warnings.filterwarnings(
                 "ignore",
-                message=".*called on a compressed mag without block alignment.*",
+                message=_BLOCK_ALIGNMENT_WARNING,
                 category=RuntimeWarning,
                 module="webknossos",
             )
             if executor is None:
                 shapes = [func_per_chunk(i) for i in args]
-                actual_size = Vec3Int(
-                    dimwise_max(shapes) + (pims_images.expected_shape.z,)
-                )
             else:
                 warnings.filterwarnings(
                     "ignore",
@@ -854,12 +879,10 @@ class Dataset:
                 shapes = wait_and_ensure_success(
                     executor.map_to_futures(func_per_chunk, args),
                 )
-                actual_size = Vec3Int(
-                    dimwise_max(shapes) + (pims_images.expected_shape.z,)
-                )
-                layer.bounding_box = BoundingBox(
-                    (0, 0, 0), actual_size
-                ).from_mag_to_mag1(mag)
+            actual_size = Vec3Int(dimwise_max(shapes) + (pims_images.expected_shape.z,))
+            layer.bounding_box = BoundingBox((0, 0, 0), actual_size).from_mag_to_mag1(
+                mag
+            )
         if pims_images.expected_shape != actual_size:
             warnings.warn(
                 f"Some images are larger than expected, expected {pims_images.expected_shape}, got {actual_size}.",
