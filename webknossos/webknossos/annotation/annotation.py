@@ -626,6 +626,8 @@ class Annotation:
                 volume_layer_id=volume_layer_id,
             )
 
+            input_annotation_dataset._read_only = True
+
             yield input_annotation_layer
 
 
