@@ -177,7 +177,7 @@ def main(args: Namespace) -> None:
 
         layer.downsample(
             from_mag=args.target_mag,
-            max_mag=None if args.max_mag is None else Mag(args.max_mag),
+            coarsest_mag=None if args.max_mag is None else Mag(args.max_mag),
             compress=not args.no_compress,
             sampling_mode=args.sampling_mode,
             args=get_executor_args(args),
