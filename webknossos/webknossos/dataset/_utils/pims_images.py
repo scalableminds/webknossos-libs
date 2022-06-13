@@ -34,7 +34,7 @@ class PimsImages:
 
         The part "IDENTIFY AXIS ORDER" figures out (self._iter_dim, *self._img_dims)
         from out-of-the-box pims images. Afterwards self._open_images() produces
-        images consistend with those variables.
+        images consistent with those variables.
 
         The part "IDENTIFY SHAPE & CHANNELS" uses this information and the well-defined
         images to figure out the shape & num_channels.
