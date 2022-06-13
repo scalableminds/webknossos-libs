@@ -29,8 +29,8 @@ class PimsImages:
         self._iter_dim can be either "z", "t" or "" if the image is 2D.
         In the latter case, the inner 2D image is still wrapped in a single-element list
         by _open_images() to be consistent with 3D images.
-        self._img_dims can consist of "x" "y" and "c", where "c" is optional and must be
-        at the start or the end, so one of"xy", "yx", "xyc", "yxc", "cxy", "cyx".
+        self._img_dims can consist of "x", "y" and "c", where "c" is optional and must be
+        at the start or the end, so one of "xy", "yx", "xyc", "yxc", "cxy", "cyx".
 
         The part "IDENTIFY AXIS ORDER" figures out (self._iter_dim, *self._img_dims)
         from out-of-the-box pims images. Afterwards self._open_images() produces
