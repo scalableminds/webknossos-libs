@@ -1357,7 +1357,7 @@ class RemoteDataset(Dataset):
         sharing_token: Optional[str],
         context: ContextManager,
     ) -> None:
-        """Do not call manually, please use `Dataset.remote_open()` instead."""
+        """Do not call manually, please use `Dataset.open_remote()` instead."""
         try:
             super().__init__(
                 dataset_path,
@@ -1379,7 +1379,7 @@ class RemoteDataset(Dataset):
 
     @classmethod
     def open(cls, dataset_path: Union[str, PathLike]) -> "Dataset":
-        """Do not call manually, please use `Dataset.remote_open()` instead."""
+        """Do not call manually, please use `Dataset.open_remote()` instead."""
         raise RuntimeError("Please use Dataset.open_remote() instead.")
 
     def __repr__(self) -> str:
