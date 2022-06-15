@@ -10,9 +10,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.3...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.4...HEAD)
 
 ### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [0.10.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.4) - 2022-06-15
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.3...v0.10.4)
 
 ### Added
 - Added a new parameter to `Layer.downsample` & `layer.upsample` which takes an existing dataset and uses the magnifications of this dataset as guidance for the downsampling. [#730](https://github.com/scalableminds/webknossos-libs/pull/730)
@@ -20,8 +30,6 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 - Changed the name of `max_mag` in `Layer.downsample` to `coarsest_mag`. [#730](https://github.com/scalableminds/webknossos-libs/pull/730)
 - The `Layer.downsample` and `Layer.upsample`function now automatically downsample according to magnifications already existing in the dataset. This behaviour can be turned off by setting the new parameter `align_with_other_layers` to `False`. [#730](https://github.com/scalableminds/webknossos-libs/pull/730)
-
-### Fixed
 
 
 ## [0.10.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.3) - 2022-06-03
