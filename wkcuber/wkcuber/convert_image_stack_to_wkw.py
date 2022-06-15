@@ -90,7 +90,7 @@ def main(args: Namespace) -> None:
         args.source_path
     )
     if arg_dict.get("dtype") is not None:
-        dtype = args.get("dtype")
+        dtype = arg_dict.get("dtype")
 
     assert not (
         args.prefer_layers and args.prefer_channels
