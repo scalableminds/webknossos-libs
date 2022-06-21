@@ -10,9 +10,23 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.3...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.5...HEAD)
 
 ### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [0.10.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.5) - 2022-06-15
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.4...v0.10.5)
+
+
+## [0.10.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.4) - 2022-06-15
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.3...v0.10.4)
 
 ### Added
 - Added a new parameter to `Layer.downsample` & `layer.upsample` which takes an existing dataset and uses the magnifications of this dataset as guidance for the downsampling. [#730](https://github.com/scalableminds/webknossos-libs/pull/730)
@@ -26,8 +40,6 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 - `View.get_buffered_slice_reader()` and `View.get_buffered_slice_writer()` don't log anything by default now.
   To get the previous logging, please invoke them with `logging=True`.
   [#741](https://github.com/scalableminds/webknossos-libs/pull/741)
-
-### Fixed
 
 
 ## [0.10.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.3) - 2022-06-03
