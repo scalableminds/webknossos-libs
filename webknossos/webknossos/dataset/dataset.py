@@ -860,9 +860,9 @@ class Dataset:
             # return shapes and set to union when using --pad
             args.append((z_start, z_end))
         with warnings.catch_warnings():
-            # if a slice is larger than the others it might happen that
-            # a new chunk is partially written, leading to a warning,
-            # which is ignored in this context
+            # Block alignmnent within the dataset should not be a problem, since shard-wise chunking is enforced.
+            # However, dataset borders might change between different parallelized writes, when sizes differ.
+            # For differing sizes, a separate warning is thrown, so block alignment warnings can be ignored:
             warnings.filterwarnings(
                 "ignore",
                 message=_BLOCK_ALIGNMENT_WARNING,
@@ -872,6 +872,8 @@ class Dataset:
             if executor is None:
                 shapes_and_max_ids = [func_per_chunk(i) for i in args]
             else:
+                # There are race-conditions about setting the bbox of the layer.
+                # The bbox is set correctly afterwards, ignore errors here:
                 warnings.filterwarnings(
                     "ignore",
                     message=".*properties were found on disk which are newer than the ones that were seen last time.*",
@@ -891,7 +893,8 @@ class Dataset:
             )
         if pims_images.expected_shape != actual_size:
             warnings.warn(
-                f"Some images are larger than expected, expected {pims_images.expected_shape}, got {actual_size}.",
+                "Some images are larger than expected, smaller slices are padded with zeros now. "
+                + f"New size is {actual_size}, expected {pims_images.expected_shape}.",
                 RuntimeWarning,
             )
         return layer

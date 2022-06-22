@@ -7,10 +7,26 @@ from zipfile import ZipFile
 import httpx
 import numpy as np
 import pytest
+from tifffile import TiffFile
 
 import webknossos as wk
 
 pytestmark = [pytest.mark.block_network(allowed_hosts=[".*"])]
+
+
+def test_compare_tifffile(tmp_path: Path) -> None:
+    ds = wk.Dataset(tmp_path, (1, 1, 1))
+    l = ds.add_layer_from_images(
+        "testdata/tiff/test.*.tiff",
+        layer_name="compare_tifffile",
+        compress=True,
+        category="segmentation",
+    )
+    data = l.get_finest_mag().read()[0, :, :]
+    for z_index in range(0, data.shape[-1]):
+        with TiffFile("testdata/tiff/test.0000.tiff") as tif_file:
+            comparison_slice = tif_file.asarray().T
+        assert np.array_equal(data[:, :, z_index], comparison_slice)
 
 
 REPO_IMAGES_ARGS = [
