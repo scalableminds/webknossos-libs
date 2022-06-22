@@ -17,7 +17,8 @@ if [ $# -eq 1 ] && [ "$1" = "--refresh-snapshots" ]; then
     # (which is standard python behavior). This is necessary so that the imports
     # refer to the checked out (and potentially modified) code.
     poetry run python -m pytest -vv --record-mode once -m "with_vcr"
+    shift
 else
-    poetry run python -m pytest -vv --block-network -m "with_vcr"
+    poetry run python -m pytest -vv --suppress-no-test-exit-code --block-network -m "with_vcr" "$@"
 fi
-poetry run python -m pytest -vv --disable-recording -m "not with_vcr"
+poetry run python -m pytest -vv --disable-recording -m "not with_vcr" "$@"

@@ -30,6 +30,7 @@ include = ["webknossos/version.py"]  # included explicitly since it's in .gitign
 
 [tool.poetry.dependencies]
 python = ">=3.7.1,<3.10"
+aiohttp = "^3.8.1"
 attrs = "^21.1.0"
 boltons = "~21.0.0"
 cattrs = "1.7.1"
@@ -51,8 +52,20 @@ universal-pathlib = "0.0.18"
 wkw = "1.1.11"
 zarr = "^2.11.0"
 zipp = "^3.5.0"
-aiohttp = "^3.8.1"
 
+# A list of all of the optional dependencies, some of which are included in the
+# below `extras`. They can be opted into by apps.
+imagecodecs = { version = "2021.11.20", optional = true }
+JPype1 = { version = "^1.3.0", optional = true }
+pims = { version = "^0.6.0", optional = true }
+tifffile = { version = "2021.11.2", optional = true }
+
+[tool.poetry.extras]
+pims = ["pims"]
+tifffile = ["pims", "tifffile"]
+imagecodecs = ["pims", "imagecodecs"]
+bioformats = ["pims","JPype1"]
+all = ["pims","tifffile","imagecodecs","JPype1",]
 
 [tool.poetry.dev-dependencies]
 # autoflake
@@ -61,19 +74,20 @@ hypothesis = "^6.35.0"
 icecream = "^2.1.1"
 inducoapi = "2.0.0"
 isort = "^5.9.3"
+jsonschema = "^4.6.0"
 mypy = "0.910"
 openapi-python-client = "0.10.3"
 pylint = "^2.10.2"
 pytest = "^6.2.4"
+pytest-custom-exit-code = "^0.3.0"
 pytest-recording = "^0.12.0"
 types-python-dateutil = "^0.1.6"
 # packages for examples:
 fastremap = "^1.12.2"
 pandas = "^1.3.4"
 pooch = "^1.5.2"
-tabulate = "^0.8.9"
 s3fs = "^2022.2.0"
-jsonschema = "^4.6.0"
+tabulate = "^0.8.9"
 
 [tool.black]
 target_version = ['py37', 'py38']

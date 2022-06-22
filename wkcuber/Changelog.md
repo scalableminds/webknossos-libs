@@ -14,6 +14,8 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Added
 
 ### Changed
+- When using multiprocessing, warning filters are set up to behave as in the
+  spawning context. [#741](https://github.com/scalableminds/webknossos-libs/pull/741)
 
 ### Fixed
 
