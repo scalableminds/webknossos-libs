@@ -241,6 +241,8 @@ OPTIONAL_FIELDS = [
     # isSuperUser field was added 2022-03 and only optional for backwards-compatibility with wk,
     # it can be made non-optional when needed later:
     "isSuperUser",
+    "user",
+    "owner"
 ]
 
 

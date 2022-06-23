@@ -1,8 +1,9 @@
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Union, Optional
 
 import attr
 
 from webknossos.annotation.annotation import Annotation, AnnotationState, AnnotationType
+from webknossos.utils import warn_deprecated
 
 if TYPE_CHECKING:
     from webknossos.client._generated.models.annotation_info_response_200 import (
@@ -17,8 +18,8 @@ if TYPE_CHECKING:
 class AnnotationInfo:
     """Data class containing information about a webKnossos annotation"""
 
-    id: str
-    user_id: str
+    id: Optional[str]
+    owner_id: str
     name: str
     description: str
     type: AnnotationType
@@ -35,11 +36,21 @@ class AnnotationInfo:
             "AnnotationInfoResponse200", "AnnotationInfosByTaskIdResponse200Item"
         ],
     ) -> "AnnotationInfo":
+        maybe_owner = response.get("owner") or response.get("user")
+        owner_id = None
+        if maybe_owner is not None:
+            owner_id = maybe_owner.id
         return AnnotationInfo(
             id=response.id,
-            user_id=response.user.id,
+            owner_id=owner_id,
             name=response.name,
             description=response.description,
             type=AnnotationType(response.typ),
             state=AnnotationState(response.state),
         )
+
+    @property
+    def user_id(self) -> Optional[str]:
+        warn_deprecated("user_id", "owner_id")
+        return self.owner_id
+

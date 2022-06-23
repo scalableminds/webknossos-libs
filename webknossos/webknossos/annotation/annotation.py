@@ -83,7 +83,7 @@ class Annotation:
     _voxel_size: Optional[Vector3] = None
     _organization_id: Optional[str] = None
     _description: Optional[str] = None
-    username: Optional[str] = None
+    owner_name: Optional[str] = None
     annotation_id: Optional[str] = None
     time: Optional[int] = attr.ib(factory=time_since_epoch_in_ms)
     edit_position: Optional[Vector3] = None
@@ -134,6 +134,14 @@ class Annotation:
                 "When supplying a skeleton for Annotation(), passing dataset_name, voxel_size, organization_id or description is not allowed. "
                 + "The attributes of the skeleton are used in this case."
             )
+
+    @property
+    def username(self) -> Optional[str]:
+        return self.owner_name
+
+    @username.setter
+    def username(self, username: str) -> None:
+        self.owner_name = username
 
     @property
     def dataset_name(self) -> str:
@@ -297,7 +305,7 @@ class Annotation:
             cls(
                 name=name,
                 skeleton=nml_to_skeleton(nml),
-                username=nml.get_meta("username"),
+                owner_name=nml.get_meta("username"),
                 annotation_id=nml.get_meta("annotationId"),
                 time=nml.parameters.time,
                 edit_position=nml.parameters.editPosition,
