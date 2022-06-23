@@ -8,6 +8,9 @@ from ..models.annotation_infos_by_task_id_response_200_item_annotation_layers_it
 from ..models.annotation_infos_by_task_id_response_200_item_data_store import (
     AnnotationInfosByTaskIdResponse200ItemDataStore,
 )
+from ..models.annotation_infos_by_task_id_response_200_item_owner import (
+    AnnotationInfosByTaskIdResponse200ItemOwner,
+)
 from ..models.annotation_infos_by_task_id_response_200_item_restrictions import (
     AnnotationInfosByTaskIdResponse200ItemRestrictions,
 )
@@ -52,11 +55,12 @@ class AnnotationInfosByTaskIdResponse200Item:
     visibility: str
     settings: AnnotationInfosByTaskIdResponse200ItemSettings
     tags: List[str]
-    user: AnnotationInfosByTaskIdResponse200ItemUser
     meshes: List[Any]
     task: Optional[AnnotationInfosByTaskIdResponse200ItemTask]
     tracing_time: Optional[int]
     view_configuration: Union[Unset, str] = UNSET
+    user: Union[Unset, AnnotationInfosByTaskIdResponse200ItemUser] = UNSET
+    owner: Union[Unset, AnnotationInfosByTaskIdResponse200ItemOwner] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -88,8 +92,6 @@ class AnnotationInfosByTaskIdResponse200Item:
 
         tags = self.tags
 
-        user = self.user.to_dict()
-
         meshes = []
         for meshes_item_data in self.meshes:
             meshes_item = meshes_item_data
@@ -100,6 +102,13 @@ class AnnotationInfosByTaskIdResponse200Item:
         task = self.task.to_dict() if self.task else None
 
         tracing_time = self.tracing_time
+        user: Union[Unset, Dict[str, Any]] = UNSET
+        if not isinstance(self.user, Unset):
+            user = self.user.to_dict()
+
+        owner: Union[Unset, Dict[str, Any]] = UNSET
+        if not isinstance(self.owner, Unset):
+            owner = self.owner.to_dict()
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -122,7 +131,6 @@ class AnnotationInfosByTaskIdResponse200Item:
                 "visibility": visibility,
                 "settings": settings,
                 "tags": tags,
-                "user": user,
                 "meshes": meshes,
                 "task": task,
                 "tracingTime": tracing_time,
@@ -130,6 +138,10 @@ class AnnotationInfosByTaskIdResponse200Item:
         )
         if view_configuration is not UNSET:
             field_dict["viewConfiguration"] = view_configuration
+        if user is not UNSET:
+            field_dict["user"] = user
+        if owner is not UNSET:
+            field_dict["owner"] = owner
 
         return field_dict
 
@@ -187,8 +199,6 @@ class AnnotationInfosByTaskIdResponse200Item:
 
         tags = cast(List[str], d.pop("tags"))
 
-        user = AnnotationInfosByTaskIdResponse200ItemUser.from_dict(d.pop("user"))
-
         meshes = []
         _meshes = d.pop("meshes")
         for meshes_item_data in _meshes:
@@ -206,6 +216,20 @@ class AnnotationInfosByTaskIdResponse200Item:
             task = AnnotationInfosByTaskIdResponse200ItemTask.from_dict(_task)
 
         tracing_time = d.pop("tracingTime")
+
+        _user = d.pop("user", UNSET)
+        user: Union[Unset, AnnotationInfosByTaskIdResponse200ItemUser]
+        if isinstance(_user, Unset):
+            user = UNSET
+        else:
+            user = AnnotationInfosByTaskIdResponse200ItemUser.from_dict(_user)
+
+        _owner = d.pop("owner", UNSET)
+        owner: Union[Unset, AnnotationInfosByTaskIdResponse200ItemOwner]
+        if isinstance(_owner, Unset):
+            owner = UNSET
+        else:
+            owner = AnnotationInfosByTaskIdResponse200ItemOwner.from_dict(_owner)
 
         annotation_infos_by_task_id_response_200_item = cls(
             modified=modified,
@@ -225,11 +249,12 @@ class AnnotationInfosByTaskIdResponse200Item:
             visibility=visibility,
             settings=settings,
             tags=tags,
-            user=user,
             meshes=meshes,
             view_configuration=view_configuration,
             task=task,
             tracing_time=tracing_time,
+            user=user,
+            owner=owner,
         )
 
         annotation_infos_by_task_id_response_200_item.additional_properties = d

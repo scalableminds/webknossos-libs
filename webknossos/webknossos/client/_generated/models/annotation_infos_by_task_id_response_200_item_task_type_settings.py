@@ -16,6 +16,7 @@ class AnnotationInfosByTaskIdResponse200ItemTaskTypeSettings:
     allowed_modes: List[str]
     branch_points_allowed: int
     soma_clicking_allowed: int
+    volume_interpolation_allowed: int
     merger_mode: int
     resolution_restrictions: AnnotationInfosByTaskIdResponse200ItemTaskTypeSettingsResolutionRestrictions
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
@@ -25,6 +26,7 @@ class AnnotationInfosByTaskIdResponse200ItemTaskTypeSettings:
 
         branch_points_allowed = self.branch_points_allowed
         soma_clicking_allowed = self.soma_clicking_allowed
+        volume_interpolation_allowed = self.volume_interpolation_allowed
         merger_mode = self.merger_mode
         resolution_restrictions = self.resolution_restrictions.to_dict()
 
@@ -35,6 +37,7 @@ class AnnotationInfosByTaskIdResponse200ItemTaskTypeSettings:
                 "allowedModes": allowed_modes,
                 "branchPointsAllowed": branch_points_allowed,
                 "somaClickingAllowed": soma_clicking_allowed,
+                "volumeInterpolationAllowed": volume_interpolation_allowed,
                 "mergerMode": merger_mode,
                 "resolutionRestrictions": resolution_restrictions,
             }
@@ -51,6 +54,8 @@ class AnnotationInfosByTaskIdResponse200ItemTaskTypeSettings:
 
         soma_clicking_allowed = d.pop("somaClickingAllowed")
 
+        volume_interpolation_allowed = d.pop("volumeInterpolationAllowed")
+
         merger_mode = d.pop("mergerMode")
 
         resolution_restrictions = AnnotationInfosByTaskIdResponse200ItemTaskTypeSettingsResolutionRestrictions.from_dict(
@@ -61,6 +66,7 @@ class AnnotationInfosByTaskIdResponse200ItemTaskTypeSettings:
             allowed_modes=allowed_modes,
             branch_points_allowed=branch_points_allowed,
             soma_clicking_allowed=soma_clicking_allowed,
+            volume_interpolation_allowed=volume_interpolation_allowed,
             merger_mode=merger_mode,
             resolution_restrictions=resolution_restrictions,
         )

@@ -15,6 +15,10 @@ from .annotation_info_response_200_annotation_layers_item import (
     AnnotationInfoResponse200AnnotationLayersItem,
 )
 from .annotation_info_response_200_data_store import AnnotationInfoResponse200DataStore
+from .annotation_info_response_200_owner import AnnotationInfoResponse200Owner
+from .annotation_info_response_200_owner_teams_item import (
+    AnnotationInfoResponse200OwnerTeamsItem,
+)
 from .annotation_info_response_200_restrictions import (
     AnnotationInfoResponse200Restrictions,
 )
@@ -52,6 +56,12 @@ from .annotation_infos_by_task_id_response_200_item_annotation_layers_item impor
 )
 from .annotation_infos_by_task_id_response_200_item_data_store import (
     AnnotationInfosByTaskIdResponse200ItemDataStore,
+)
+from .annotation_infos_by_task_id_response_200_item_owner import (
+    AnnotationInfosByTaskIdResponse200ItemOwner,
+)
+from .annotation_infos_by_task_id_response_200_item_owner_teams_item import (
+    AnnotationInfosByTaskIdResponse200ItemOwnerTeamsItem,
 )
 from .annotation_infos_by_task_id_response_200_item_restrictions import (
     AnnotationInfosByTaskIdResponse200ItemRestrictions,
@@ -118,9 +128,6 @@ from .dataset_info_response_200_data_source_data_layers_item import (
 )
 from .dataset_info_response_200_data_source_data_layers_item_bounding_box import (
     DatasetInfoResponse200DataSourceDataLayersItemBoundingBox,
-)
-from .dataset_info_response_200_data_source_data_layers_item_default_view_configuration import (
-    DatasetInfoResponse200DataSourceDataLayersItemDefaultViewConfiguration,
 )
 from .dataset_info_response_200_data_source_id import DatasetInfoResponse200DataSourceId
 from .dataset_info_response_200_data_store import DatasetInfoResponse200DataStore
