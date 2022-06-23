@@ -242,7 +242,7 @@ OPTIONAL_FIELDS = [
     # it can be made non-optional when needed later:
     "isSuperUser",
     "user",
-    "owner"
+    "owner",
 ]
 
 

@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Union, Optional
+from typing import TYPE_CHECKING, Optional, Union
 
 import attr
 
@@ -53,4 +53,3 @@ class AnnotationInfo:
     def user_id(self) -> Optional[str]:
         warn_deprecated("user_id", "owner_id")
         return self.owner_id
-
