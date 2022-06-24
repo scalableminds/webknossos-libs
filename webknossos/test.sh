@@ -6,7 +6,7 @@ source local_wk_setup.sh
 export_vars
 
 
-PYTEST="poetry run python -m pytest -vv --suppress-no-test-exit-code"
+PYTEST="poetry run python -m pytest --suppress-no-test-exit-code"
 
 
 if [ $# -gt 0 ] && [ "$1" = "--refresh-snapshots" ]; then
