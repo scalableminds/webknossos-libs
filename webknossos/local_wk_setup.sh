@@ -47,3 +47,10 @@ function ensure_local_test_wk {
         echo "The local webknossos version is $LOCAL_VERSION, differing from the webknossos.org version $WK_ORG_VERSION"
     fi
 }
+
+
+function stop_local_test_wk {
+    pushd $WK_DOCKER_DIR > /dev/null
+    docker-compose down || true
+    popd > /dev/null
+}
