@@ -5,7 +5,7 @@ PROJECT_DIR="$(dirname "$(dirname "$0")")"
 
 
 cd "$PROJECT_DIR/docs"
-# poetry install
+poetry install
 
 if [ ! -d "wk-repo" ]; then
     echo
