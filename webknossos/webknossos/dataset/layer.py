@@ -1050,10 +1050,7 @@ class Layer:
         )
 
     def __repr__(self) -> str:
-        return repr(
-            "Layer(%s, dtype_per_channel=%s, num_channels=%s)"
-            % (self.name, self.dtype_per_channel, self.num_channels)
-        )
+        return f"Layer({self.name}, dtype_per_channel={self.dtype_per_channel}, num_channels={self.num_channels})"
 
     def _get_largest_segment_id_maybe(self) -> Optional[int]:
         return None

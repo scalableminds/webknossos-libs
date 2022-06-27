@@ -200,7 +200,7 @@ def add_verbose_flag(parser: argparse.ArgumentParser) -> None:
 
 def get_rich_progress() -> Progress:
     return Progress(
-        "[progress.description]{task.description}",
+        "[progress.description]{task.description:<20}",
         rich.progress.BarColumn(),
         "[progress.percentage]{task.percentage:>3.0f}%",
         rich.progress.TimeElapsedColumn(),

@@ -8,7 +8,6 @@ from typing import Dict, Iterator, List, NamedTuple, Optional, Tuple
 from uuid import uuid4
 
 import httpx
-from rich.progress import Progress
 
 from webknossos.client._generated.api.datastore import (
     dataset_finish_upload,
@@ -21,6 +20,7 @@ from webknossos.client._generated.api.default import (
 from webknossos.client._resumable import Resumable
 from webknossos.client.context import _get_context, _WebknossosContext
 from webknossos.dataset import Dataset
+from webknossos.utils import get_rich_progress
 
 DEFAULT_SIMULTANEOUS_UPLOADS = 5
 MAXIMUM_RETRY_COUNT = 5
@@ -139,7 +139,7 @@ def upload_dataset(
             break
     else:
         assert response.status_code == 200, response
-    with Progress() as progress:
+    with get_rich_progress() as progress:
         with Resumable(
             f"{datastore_url}/data/datasets?token={datastore_token}",
             simultaneous_uploads=simultaneous_uploads,
