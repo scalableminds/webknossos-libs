@@ -1,14 +1,15 @@
 import mimetypes
+import time
 from pathlib import Path
 from typing import Any, Dict
-import time
 
 import httpx
 
 from .file import FileChunk, ResumableFile
 from .util import Config
 
-RETRY_DELAY = 5 # seconds
+RETRY_DELAY = 5  # seconds
+
 
 class ResumableError(Exception):
     pass
