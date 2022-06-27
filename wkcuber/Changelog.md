@@ -14,6 +14,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Added
 
 ### Changed
+- Made the dataset upload more robust against network errors. [#757](https://github.com/scalableminds/webknossos-libs/pull/757)
 
 ### Fixed
 
