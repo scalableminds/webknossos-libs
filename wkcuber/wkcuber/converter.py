@@ -233,7 +233,9 @@ class KnossosConverter(Converter):
                         mag_int_str = mag.replace("mag_", "").replace("mag", "")
                         mag_int = int(mag_int_str)
                     except ValueError:
-                        logger.warning(f"Ignoring mag '{mag}' in '{layer_path}', because it could not be parsed")
+                        logger.warning(
+                            f"Ignoring mag '{mag}' in '{layer_path}', because it could not be parsed"
+                        )
                         continue
                 else:
                     mag_int = 1
