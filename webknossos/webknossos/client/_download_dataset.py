@@ -127,7 +127,7 @@ def download_dataset(
                     organization_name=organization_id,
                     data_set_name=dataset_name,
                     data_layer_name=layer_name,
-                    resolution=mag.max_dim_log2,
+                    mag=mag.max_dim_log2,
                     client=datastore_client,
                     token=optional_datastore_token,
                     x=chunk.topleft.x,
