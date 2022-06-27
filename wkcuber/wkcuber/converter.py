@@ -229,8 +229,11 @@ class KnossosConverter(Converter):
                 # if the mag path is empty, we are already inside the mag folder, so there is only mag. We guess that this is mag 1.
                 if mag != "":
                     try:
-                        mag_int = int(mag)
+                        # Remove any potential mag prefixes
+                        mag_int_str = mag.replace("mag_", "").replace("mag", "")
+                        mag_int = int(mag_int_str)
                     except ValueError:
+                        logger.warning(f"Ignoring mag '{mag}' in '{layer_path}', because it could not be parsed")
                         continue
                 else:
                     mag_int = 1
