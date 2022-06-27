@@ -1,12 +1,14 @@
 import mimetypes
 from pathlib import Path
 from typing import Any, Dict
+import time
 
 import httpx
 
 from .file import FileChunk, ResumableFile
 from .util import Config
 
+RETRY_DELAY = 5 # seconds
 
 class ResumableError(Exception):
     pass
@@ -36,6 +38,7 @@ def resolve_chunk(
     if not exists_on_server:
         tries = 0
         while not _send_chunk(client, config, file, chunk):
+            time.sleep(RETRY_DELAY)
             tries += 1
             if tries >= config.max_chunk_retries:
                 raise ResumableError("max retries exceeded")
@@ -80,7 +83,7 @@ def _send_chunk(
             data=_build_query(file, chunk, config.additional_query_params),
             files={"file": chunk.read()},
         )
-    except:
+    except httpx.TransportError:
         # The request itself failed. The calling function will retry.
         return False
     if response.status_code in config.permanent_errors:
