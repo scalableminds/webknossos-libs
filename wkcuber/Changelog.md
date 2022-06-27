@@ -7,11 +7,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.5...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.6...HEAD)
 
 ### Breaking Changes
 
 ### Added
+
+### Changed
+
+### Fixed
+
+
+## [0.10.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.6) - 2022-06-27
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.5...v0.10.6)
 
 ### Changed
 - Make KNOSSOS conversion compatible with mag-prefixed mag folders. [#756](https://github.com/scalableminds/webknossos-libs/pull/756)
@@ -20,6 +28,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 
 ### Fixed
 - Fixed broken KNOSSOS to wkw conversion. [#756](https://github.com/scalableminds/webknossos-libs/pull/756)
+
 
 ## [0.10.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.5) - 2022-06-15
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.4...v0.10.5)
