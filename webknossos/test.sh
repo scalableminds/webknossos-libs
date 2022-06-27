@@ -6,7 +6,10 @@ source local_wk_setup.sh
 export_vars
 
 
-if [ $# -eq 1 ] && [ "$1" = "--refresh-snapshots" ]; then
+PYTEST="poetry run python -m pytest --suppress-no-test-exit-code"
+
+
+if [ $# -gt 0 ] && [ "$1" = "--refresh-snapshots" ]; then
     ensure_local_test_wk
 
     rm -rf tests/cassettes
@@ -16,8 +19,10 @@ if [ $# -eq 1 ] && [ "$1" = "--refresh-snapshots" ]; then
     # this will ensure that the current directory is added to sys.path
     # (which is standard python behavior). This is necessary so that the imports
     # refer to the checked out (and potentially modified) code.
-    poetry run python -m pytest -vv --record-mode once -m "with_vcr"
+    shift
+    $PYTEST --record-mode once -m "with_vcr" "$@"
+    stop_local_test_wk
 else
-    poetry run python -m pytest -vv --block-network -m "with_vcr"
+    $PYTEST --block-network -m "with_vcr" "$@"
 fi
-poetry run python -m pytest -vv --disable-recording -m "not with_vcr"
+$PYTEST --disable-recording -m "not with_vcr" "$@"
