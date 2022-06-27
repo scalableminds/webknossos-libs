@@ -1,5 +1,5 @@
-import logging
 import warnings
+from logging import info
 from os import getpid
 from types import TracebackType
 from typing import TYPE_CHECKING, Generator, Optional, Type
@@ -25,6 +25,7 @@ class BufferedSliceReader:
         *,
         relative_bounding_box: Optional[BoundingBox] = None,  # in mag1
         absolute_bounding_box: Optional[BoundingBox] = None,  # in mag1
+        use_logging: bool = False,
     ) -> None:
         """see `View.get_buffered_slice_reader()`"""
 
@@ -33,6 +34,7 @@ class BufferedSliceReader:
         self.dtype = self.view.get_dtype()
         assert 0 <= dimension <= 2
         self.dimension = dimension
+        self.use_logging = use_logging
         if offset is not None and size is not None:
             warnings.warn(
                 "[DEPRECATION] Using offset and size for a buffered slice reader is deprecated. "
@@ -89,9 +91,10 @@ class BufferedSliceReader:
                 )
             )
 
-            logging.debug(
-                f"({getpid()}) Reading {n_slices} slices at position {batch_start_idx}."
-            )
+            if self.use_logging:
+                info(
+                    f"({getpid()}) Reading {n_slices} slices at position {batch_start_idx}."
+                )
             data = self.view.read(
                 absolute_bounding_box=buffer_bounding_box.from_mag_to_mag1(
                     self.view.mag

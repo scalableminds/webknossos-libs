@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.5...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.6...HEAD)
 
 ### Breaking Changes
 
@@ -19,6 +19,10 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+
+
+## [0.10.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.6) - 2022-06-27
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.5...v0.10.6)
 
 
 ## [0.10.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.5) - 2022-06-15
@@ -30,10 +34,16 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 
 ### Added
 - Added a new parameter to `Layer.downsample` & `layer.upsample` which takes an existing dataset and uses the magnifications of this dataset as guidance for the downsampling. [#730](https://github.com/scalableminds/webknossos-libs/pull/730)
+- Added `Dataset.add_layer_from_images()` to convert image stacks to wkw or zarr Dataset.
+  This needs pims and possibly more packages, which can be installed using extras, e.g. "webknossos[all]".
+  [#741](https://github.com/scalableminds/webknossos-libs/pull/741)
 
 ### Changed
 - Changed the name of `max_mag` in `Layer.downsample` to `coarsest_mag`. [#730](https://github.com/scalableminds/webknossos-libs/pull/730)
 - The `Layer.downsample` and `Layer.upsample`function now automatically downsample according to magnifications already existing in the dataset. This behaviour can be turned off by setting the new parameter `align_with_other_layers` to `False`. [#730](https://github.com/scalableminds/webknossos-libs/pull/730)
+- `View.get_buffered_slice_reader()` and `View.get_buffered_slice_writer()` don't log anything by default now.
+  To get the previous logging, please invoke them with `logging=True`.
+  [#741](https://github.com/scalableminds/webknossos-libs/pull/741)
 
 
 ## [0.10.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.3) - 2022-06-03
