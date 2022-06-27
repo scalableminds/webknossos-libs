@@ -74,11 +74,15 @@ def _send_chunk(
     ResumableError
         If the server responded with an error code indicating permanent failure
     """
-    response = client.post(
-        config.target,
-        data=_build_query(file, chunk, config.additional_query_params),
-        files={"file": chunk.read()},
-    )
+    try:
+        response = client.post(
+            config.target,
+            data=_build_query(file, chunk, config.additional_query_params),
+            files={"file": chunk.read()},
+        )
+    except:
+        # The request itself failed. The calling function will retry.
+        return False
     if response.status_code in config.permanent_errors:
         raise ResumableError(f"{response.status_code} Error: {response.text}")
     return response.status_code in [200, 201]
