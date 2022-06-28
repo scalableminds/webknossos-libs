@@ -36,7 +36,9 @@ class AnnotationInfo:
             "AnnotationInfoResponse200", "AnnotationInfosByTaskIdResponse200Item"
         ],
     ) -> "AnnotationInfo":
-        maybe_owner = getattr(response, "owner", None) or getattr(response, "user", None)
+        maybe_owner = getattr(response, "owner", None) or getattr(
+            response, "user", None
+        )
         owner_id = None
         if maybe_owner is not None:
             owner_id = maybe_owner.id
