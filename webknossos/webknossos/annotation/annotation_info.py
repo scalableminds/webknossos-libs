@@ -18,8 +18,8 @@ if TYPE_CHECKING:
 class AnnotationInfo:
     """Data class containing information about a webKnossos annotation"""
 
-    id: Optional[str]
-    owner_id: str
+    id: str
+    owner_id: Optional[str]
     name: str
     description: str
     type: AnnotationType
@@ -36,7 +36,7 @@ class AnnotationInfo:
             "AnnotationInfoResponse200", "AnnotationInfosByTaskIdResponse200Item"
         ],
     ) -> "AnnotationInfo":
-        maybe_owner = response.get("owner") or response.get("user")
+        maybe_owner = getattr(response, "owner", None) or getattr(response, "user", None)
         owner_id = None
         if maybe_owner is not None:
             owner_id = maybe_owner.id
