@@ -34,6 +34,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 
 ### Breaking Changes
 - Added an `align_with_other_layers` parameter to `Layer.downsample` & `layer.upsample`. When set to true (default), the magnifications of the existing dataset are used as guidance for downsampling/upsampling. Instead of passing a boolean, one can also pass another dataset that should be used as guidance. [#730](https://github.com/scalableminds/webknossos-libs/pull/730)
+- Changed the name of `max_mag` in `Layer.downsample` to `coarsest_mag`. [#730](https://github.com/scalableminds/webknossos-libs/pull/730)
 
 ### Added
 - Added `Dataset.add_layer_from_images()` to convert image stacks to wkw or zarr Dataset.
@@ -41,7 +42,6 @@ For upgrade instructions, please check the respective *Breaking Changes* section
   [#741](https://github.com/scalableminds/webknossos-libs/pull/741)
 
 ### Changed
-- Changed the name of `max_mag` in `Layer.downsample` to `coarsest_mag`. [#730](https://github.com/scalableminds/webknossos-libs/pull/730)
 - The `Layer.downsample` and `Layer.upsample` function now automatically downsample according to magnifications already existing in the dataset. This behaviour can be turned off by setting the new parameter `align_with_other_layers` to `False`. [#730](https://github.com/scalableminds/webknossos-libs/pull/730)
 - `View.get_buffered_slice_reader()` and `View.get_buffered_slice_writer()` don't log anything by default now.
   To get the previous logging, please invoke them with `logging=True`.
