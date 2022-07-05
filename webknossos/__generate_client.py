@@ -238,6 +238,10 @@ OPTIONAL_FIELDS = [
     "novelUserExperienceInfos",
     "viewConfiguration",
     "defaultViewConfiguration",
+    # user and owner are optional in annotations
+    "user",
+    "owner",
+    "volumeInterpolationAllowed",  # added 2022-06, optional for backwards-compatibility
     # isSuperUser field was added 2022-03 and only optional for backwards-compatibility with wk,
     # it can be made non-optional when needed later:
     "isSuperUser",

@@ -19,7 +19,8 @@ def _get_kwargs(
     width: int,
     height: int,
     depth: int,
-    resolution: int,
+    mag: str,
+    resolution: Union[Unset, None, int] = UNSET,
     half_byte: Union[Unset, None, bool] = False,
 ) -> Dict[str, Any]:
     url = "{}/data/datasets/{organizationName}/{dataSetName}/layers/{dataLayerName}/data".format(
@@ -40,6 +41,7 @@ def _get_kwargs(
         "width": width,
         "height": height,
         "depth": depth,
+        "mag": mag,
         "resolution": resolution,
         "halfByte": half_byte,
     }
@@ -76,7 +78,8 @@ def sync_detailed(
     width: int,
     height: int,
     depth: int,
-    resolution: int,
+    mag: str,
+    resolution: Union[Unset, None, int] = UNSET,
     half_byte: Union[Unset, None, bool] = False,
 ) -> Response[Any]:
     kwargs = _get_kwargs(
@@ -91,6 +94,7 @@ def sync_detailed(
         width=width,
         height=height,
         depth=depth,
+        mag=mag,
         resolution=resolution,
         half_byte=half_byte,
     )
@@ -115,7 +119,8 @@ async def asyncio_detailed(
     width: int,
     height: int,
     depth: int,
-    resolution: int,
+    mag: str,
+    resolution: Union[Unset, None, int] = UNSET,
     half_byte: Union[Unset, None, bool] = False,
 ) -> Response[Any]:
     kwargs = _get_kwargs(
@@ -130,6 +135,7 @@ async def asyncio_detailed(
         width=width,
         height=height,
         depth=depth,
+        mag=mag,
         resolution=resolution,
         half_byte=half_byte,
     )
