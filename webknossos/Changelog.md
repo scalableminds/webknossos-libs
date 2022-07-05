@@ -13,7 +13,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.6...HEAD)
 
 ### Breaking Changes
-- The `Annotation` constructor takes the `owner_name` argument instead of `username`. This is only important when using keyword arguments. The `username` attributes are still available as a proxy for the `owner_name` attribute. [#760](https://github.com/scalableminds/webknossos-libs/pull/760)
+- The `Annotation` constructor takes the `owner_name` argument instead of `username`. This is only important when using keyword arguments. The `username` attributes are still available as a proxy for the `owner_name` attribute, but deprecated. [#760](https://github.com/scalableminds/webknossos-libs/pull/760)
 - `user_id` on `AnnotationInfo` objects is deprecated, please use `owner_id` instead. [#760](https://github.com/scalableminds/webknossos-libs/pull/760)
 - When self-hosting a webKnossos server, please note that a webknossos version >= `22.06.0` is required. [#760](https://github.com/scalableminds/webknossos-libs/pull/760)
 

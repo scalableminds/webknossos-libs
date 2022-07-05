@@ -137,11 +137,13 @@ class Annotation:
 
     @property
     def username(self) -> Optional[str]:
-        """Same as `owner_name`."""
+        """Deprecated, use `owner_name` instead."""
+        warn_deprecated("username", "owner_name")
         return self.owner_name
 
     @username.setter
     def username(self, username: str) -> None:
+        warn_deprecated("username", "owner_name")
         self.owner_name = username
 
     @property
