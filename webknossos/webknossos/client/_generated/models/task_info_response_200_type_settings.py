@@ -1,10 +1,11 @@
-from typing import Any, Dict, List, Type, TypeVar, cast
+from typing import Any, Dict, List, Type, TypeVar, Union, cast
 
 import attr
 
 from ..models.task_info_response_200_type_settings_resolution_restrictions import (
     TaskInfoResponse200TypeSettingsResolutionRestrictions,
 )
+from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="TaskInfoResponse200TypeSettings")
 
@@ -18,6 +19,7 @@ class TaskInfoResponse200TypeSettings:
     soma_clicking_allowed: int
     merger_mode: int
     resolution_restrictions: TaskInfoResponse200TypeSettingsResolutionRestrictions
+    volume_interpolation_allowed: Union[Unset, int] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -27,6 +29,8 @@ class TaskInfoResponse200TypeSettings:
         soma_clicking_allowed = self.soma_clicking_allowed
         merger_mode = self.merger_mode
         resolution_restrictions = self.resolution_restrictions.to_dict()
+
+        volume_interpolation_allowed = self.volume_interpolation_allowed
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -39,6 +43,8 @@ class TaskInfoResponse200TypeSettings:
                 "resolutionRestrictions": resolution_restrictions,
             }
         )
+        if volume_interpolation_allowed is not UNSET:
+            field_dict["volumeInterpolationAllowed"] = volume_interpolation_allowed
 
         return field_dict
 
@@ -59,12 +65,15 @@ class TaskInfoResponse200TypeSettings:
             )
         )
 
+        volume_interpolation_allowed = d.pop("volumeInterpolationAllowed", UNSET)
+
         task_info_response_200_type_settings = cls(
             allowed_modes=allowed_modes,
             branch_points_allowed=branch_points_allowed,
             soma_clicking_allowed=soma_clicking_allowed,
             merger_mode=merger_mode,
             resolution_restrictions=resolution_restrictions,
+            volume_interpolation_allowed=volume_interpolation_allowed,
         )
 
         task_info_response_200_type_settings.additional_properties = d

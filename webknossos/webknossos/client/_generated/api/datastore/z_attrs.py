@@ -13,21 +13,14 @@ def _get_kwargs(
     *,
     client: Client,
     token: Union[Unset, None, str] = UNSET,
-    x: int,
-    y: int,
-    z: int,
-    width: int,
-    height: int,
-    depth: int,
-    mag: str,
-    resolution: Union[Unset, None, int] = UNSET,
-    half_byte: Union[Unset, None, bool] = False,
 ) -> Dict[str, Any]:
-    url = "{}/data/datasets/{organizationName}/{dataSetName}/layers/{dataLayerName}/data".format(
-        client.base_url,
-        organizationName=organization_name,
-        dataSetName=data_set_name,
-        dataLayerName=data_layer_name,
+    url = (
+        "{}/data/zarr/{organizationName}/{dataSetName}/{dataLayerName}/.zattrs".format(
+            client.base_url,
+            organizationName=organization_name,
+            dataSetName=data_set_name,
+            dataLayerName=data_layer_name,
+        )
     )
 
     headers: Dict[str, Any] = client.get_headers()
@@ -35,15 +28,6 @@ def _get_kwargs(
 
     params: Dict[str, Any] = {
         "token": token,
-        "x": x,
-        "y": y,
-        "z": z,
-        "width": width,
-        "height": height,
-        "depth": depth,
-        "mag": mag,
-        "resolution": resolution,
-        "halfByte": half_byte,
     }
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -72,15 +56,6 @@ def sync_detailed(
     *,
     client: Client,
     token: Union[Unset, None, str] = UNSET,
-    x: int,
-    y: int,
-    z: int,
-    width: int,
-    height: int,
-    depth: int,
-    mag: str,
-    resolution: Union[Unset, None, int] = UNSET,
-    half_byte: Union[Unset, None, bool] = False,
 ) -> Response[Any]:
     kwargs = _get_kwargs(
         organization_name=organization_name,
@@ -88,15 +63,6 @@ def sync_detailed(
         data_layer_name=data_layer_name,
         client=client,
         token=token,
-        x=x,
-        y=y,
-        z=z,
-        width=width,
-        height=height,
-        depth=depth,
-        mag=mag,
-        resolution=resolution,
-        half_byte=half_byte,
     )
 
     response = httpx.get(
@@ -113,15 +79,6 @@ async def asyncio_detailed(
     *,
     client: Client,
     token: Union[Unset, None, str] = UNSET,
-    x: int,
-    y: int,
-    z: int,
-    width: int,
-    height: int,
-    depth: int,
-    mag: str,
-    resolution: Union[Unset, None, int] = UNSET,
-    half_byte: Union[Unset, None, bool] = False,
 ) -> Response[Any]:
     kwargs = _get_kwargs(
         organization_name=organization_name,
@@ -129,15 +86,6 @@ async def asyncio_detailed(
         data_layer_name=data_layer_name,
         client=client,
         token=token,
-        x=x,
-        y=y,
-        z=z,
-        width=width,
-        height=height,
-        depth=depth,
-        mag=mag,
-        resolution=resolution,
-        half_byte=half_byte,
     )
 
     async with httpx.AsyncClient() as _client:
