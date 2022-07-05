@@ -21,7 +21,7 @@ def test_annotation_from_zip_file() -> None:
 
     assert annotation.dataset_name == "l4dense_motta_et_al_demo_v2"
     assert annotation.organization_id == "scalable_minds"
-    assert annotation.username == "Philipp Otto"
+    assert annotation.owner_name == "Philipp Otto"
     assert annotation.annotation_id == "61c20205010000cc004a6356"
     assert (
         "timestamp"
@@ -35,7 +35,7 @@ def test_annotation_from_zip_file() -> None:
 
     assert copied_annotation.dataset_name == "l4dense_motta_et_al_demo_v2"
     assert copied_annotation.organization_id == "scalable_minds"
-    assert copied_annotation.username == "Philipp Otto"
+    assert copied_annotation.owner_name == "Philipp Otto"
     assert copied_annotation.annotation_id == "61c20205010000cc004a6356"
     assert (
         "timestamp"
