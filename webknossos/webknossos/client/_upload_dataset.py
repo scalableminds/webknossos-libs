@@ -19,7 +19,8 @@ from webknossos.client._generated.api.default import (
 )
 from webknossos.client._resumable import Resumable
 from webknossos.client.context import _get_context, _WebknossosContext
-from webknossos.dataset import Dataset
+from webknossos.dataset import Dataset, Layer
+from webknossos.dataset.dataset import RemoteDataset
 from webknossos.utils import get_rich_progress
 
 DEFAULT_SIMULTANEOUS_UPLOADS = 5
@@ -33,6 +34,19 @@ class LayerToLink(NamedTuple):
     organization_id: Optional[
         str
     ] = None  # defaults to the user's organization before uploading
+
+    @classmethod
+    def from_remote_layer(
+        cls,
+        layer: Layer,
+        new_layer_name: Optional[str] = None,
+        organization_id: Optional[str] = None,
+    ) -> "LayerToLink":
+        ds = layer.dataset
+        assert isinstance(
+            ds, RemoteDataset
+        ), f"The passed layer must belong to a RemoteDataset, but belongs to {ds}"
+        return cls(ds._dataset_name, layer.name, new_layer_name, organization_id)
 
     def as_json(self) -> Dict[str, Optional[str]]:
         context = _get_context()

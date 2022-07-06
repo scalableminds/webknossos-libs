@@ -494,7 +494,7 @@ class Dataset:
     def upload(
         self,
         new_dataset_name: Optional[str] = None,
-        layers_to_link: Optional[List["LayerToLink"]] = None,
+        layers_to_link: Optional[List[Union["LayerToLink", Layer]]] = None,
         jobs: Optional[int] = None,
     ) -> "RemoteDataset":
         """
@@ -510,10 +510,19 @@ class Dataset:
         Returns the `RemoteDataset` upon successful upload.
         """
 
-        from webknossos.client._upload_dataset import upload_dataset
+        from webknossos.client._upload_dataset import LayerToLink, upload_dataset
+
+        converted_layers_to_link = (
+            None
+            if layers_to_link is None
+            else [
+                i if isinstance(i, LayerToLink) else LayerToLink.from_remote_layer(i)
+                for i in layers_to_link
+            ]
+        )
 
         return self.open_remote(
-            upload_dataset(self, new_dataset_name, layers_to_link, jobs)
+            upload_dataset(self, new_dataset_name, converted_layers_to_link, jobs)
         )
 
     def get_layer(self, layer_name: str) -> Layer:
