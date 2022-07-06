@@ -75,13 +75,7 @@ def main() -> None:
     segmentation_layer.add_mag(mag, compress=True).write(segmentation)
 
     remote_ds = dataset.upload(
-        layers_to_link=[
-            wk.LayerToLink(
-                organization_id="scalable_minds",
-                dataset_name=annotation.dataset_name,
-                layer_name="color",
-            )
-        ]
+        layers_to_link=[annotation.get_remote_base_dataset().get_layer("color")]
         if "PYTEST_CURRENT_TEST" not in os.environ
         else None
     )

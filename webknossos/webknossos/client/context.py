@@ -132,7 +132,14 @@ class _WebknossosContext:
     @property
     def required_token(self) -> str:
         if self.token is None:
-            return _cached_ask_for_token(self.url)
+            token = _cached_ask_for_token(self.url)
+            # We replace the current context, but leave all previous ones as-is.
+            # Any opened contextmanagers will still close correctly, as the stored
+            # tokens still point to the correct predecessors.
+            _webknossos_context_var.set(
+                _WebknossosContext(self.url, token, self.timeout)
+            )
+            return token
         else:
             return self.token
 

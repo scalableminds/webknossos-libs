@@ -49,6 +49,7 @@ from zipp import Path as ZipPath
 import webknossos._nml as wknml
 from webknossos.annotation._nml_conversion import annotation_to_nml, nml_to_skeleton
 from webknossos.dataset import SEGMENTATION_CATEGORY, Dataset, Layer, SegmentationLayer
+from webknossos.dataset.dataset import RemoteDataset
 from webknossos.geometry import BoundingBox
 from webknossos.skeleton import Skeleton
 from webknossos.utils import time_since_epoch_in_ms, warn_deprecated
@@ -436,6 +437,9 @@ class Annotation:
                 volume_layer._default_zip_name(),
                 layer_content,
             )
+
+    def get_remote_base_dataset(self) -> RemoteDataset:
+        return Dataset.open_remote(self.dataset_name, self.organization_id)
 
     def get_volume_layer_names(self) -> Iterable[str]:
         return (i.name for i in self._volume_layers)
