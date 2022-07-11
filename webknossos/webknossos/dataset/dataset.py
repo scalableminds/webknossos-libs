@@ -32,6 +32,7 @@ from upath import UPath
 
 from ..geometry.vec3_int import Vec3Int, Vec3IntLike
 from ._array import ArrayException, ArrayInfo, BaseArray, DataFormat
+from .remote_dataset_registry import RemoteDatasetRegistry
 
 if TYPE_CHECKING:
     import pims
@@ -1354,6 +1355,10 @@ class Dataset:
             raise RuntimeError(
                 f"Failed to initialize layer: the specified category ({properties.category}) does not exist."
             )
+
+    @staticmethod
+    def get_remote_dataset_registry() -> RemoteDatasetRegistry:
+        return RemoteDatasetRegistry()
 
 
 class RemoteDataset(Dataset):
