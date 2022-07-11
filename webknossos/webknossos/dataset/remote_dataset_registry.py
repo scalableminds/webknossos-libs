@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import TYPE_CHECKING, DefaultDict, Dict, Iterator, List, Mapping, TypeVar
+from typing import TYPE_CHECKING, DefaultDict, Dict, List, Mapping, TypeVar
 
 from boltons.dictutils import FrozenDict
 
