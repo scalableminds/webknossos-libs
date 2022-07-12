@@ -230,7 +230,7 @@ class Annotation:
         """
         * `annotation_id_or_url` may be an annotation id or a full URL to an annotation, e.g.
           `https://webknossos.org/annotations/6114d9410100009f0096c640`
-        * `annotation_type` is not used anymore
+        * `annotation_type` is ignored
         * `webknossos_url` may be supplied if an annotation id was used
           and allows to specifiy in which webknossos instance to search for the annotation.
           It defaults to the url from your current `webknossos_context`, using https://webknossos.org as a fallback.
