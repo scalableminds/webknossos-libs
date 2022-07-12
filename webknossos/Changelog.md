@@ -22,7 +22,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 - `Task.create()` accepts a `RemoteDataset` for the `dataset_name` argument. [#761](https://github.com/scalableminds/webknossos-libs/pull/761)
 - Added `annotation.get_remote_base_dataset()` returning a `RemoteDataset`. [#761](https://github.com/scalableminds/webknossos-libs/pull/761)
 - Added `Team.get_by_name()`. [#763](https://github.com/scalableminds/webknossos-libs/pull/763)
-- Added `Dataset.get_remote_dataset_registry()`. [#763](https://github.com/scalableminds/webknossos-libs/pull/763)
+- Added `Dataset.get_remote_datasets()`. [#763](https://github.com/scalableminds/webknossos-libs/pull/763)
 
 ### Changed
 - If a token is requested from the user on the commandline, it is now stored in the current context. Before, it was discarded. [#761](https://github.com/scalableminds/webknossos-libs/pull/761)

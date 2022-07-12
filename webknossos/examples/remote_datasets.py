@@ -15,25 +15,21 @@ def main() -> None:
     print("Layers:", ", ".join(l4_sample_dataset.layers))
     print("Tags:", ", ".join(l4_sample_dataset.tags))
 
-    # List all accessible remote datasets via get_remote_dataset_registry():
-    dataset_registry = wk.Dataset.get_remote_dataset_registry()
-    current_organization = wk.User.get_current_user().organization_id
+    # List all accessible remote datasets via get_remote_datasets():
+    own_remote_datasets = wk.Dataset.get_remote_datasets()
 
     # Print the first 10 dataset names from your organization:
     print()
     print("First 10 datasets for own organization:")
-    for dataset_name in sorted(dataset_registry[current_organization])[:10]:
+    for dataset_name in sorted(own_remote_datasets)[:10]:
         print("*", dataset_name)
 
-    assert (
-        l4_sample_dataset
-        == dataset_registry["scalable_minds"]["l4dense_motta_et_al_demo"]
+    # List all accessible demo datasets of the scalable minds organization:
+    remote_demo_datasets = wk.Dataset.get_remote_datasets(
+        organization_id="scalable_minds", tags="demo"
     )
-    assert l4_sample_dataset in dataset_registry["scalable_minds"].by_tag["demo"]
-    assert (
-        l4_sample_dataset
-        == dataset_registry["scalable_minds"].by_display_name["L4 Mouse Cortex Demo"]
-    )
+    print("Remote demo datasets:", list(remote_demo_datasets))
+    assert l4_sample_dataset in remote_demo_datasets.values()
 
 
 if __name__ == "__main__":

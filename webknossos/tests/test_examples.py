@@ -215,14 +215,11 @@ def test_user_times() -> None:
 def test_remote_datasets() -> None:
     import examples.remote_datasets as example
 
-    (dataset_registry,) = exec_main_and_get_vars(
-        example, "dataset_registry", raises=KeyError
+    (own_remote_datasets,) = exec_main_and_get_vars(
+        example, "own_remote_datasets", raises=AssertionError
     )
 
-    ds = dataset_registry["Organization_X"]["e2006_knossos"]
+    ds = own_remote_datasets["e2006_knossos"]
     assert ds.url == "http://localhost:9000/datasets/Organization_X/e2006_knossos"
     ds.tags = ["test"]
-    ds.display_name = "Test DS"
-    dataset_registry = wk.Dataset.get_remote_dataset_registry()
-    assert ds in dataset_registry["Organization_X"].by_tag["test"]
-    assert ds == dataset_registry["Organization_X"].by_display_name["Test DS"]
+    assert ds in wk.Dataset.get_remote_datasets(tags=["test"]).values()
