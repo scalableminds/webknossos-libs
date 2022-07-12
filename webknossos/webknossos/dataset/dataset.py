@@ -16,6 +16,7 @@ from typing import (
     Dict,
     Iterable,
     List,
+    Mapping,
     Optional,
     Sequence,
     Tuple,
@@ -32,7 +33,10 @@ from upath import UPath
 
 from ..geometry.vec3_int import Vec3Int, Vec3IntLike
 from ._array import ArrayException, ArrayInfo, BaseArray, DataFormat
-from .remote_dataset_registry import RemoteDatasetRegistry
+from .remote_dataset_registry import (
+    RemoteDatasetRegistry,
+    RemoteOrganizationDatasetRegistry,
+)
 
 if TYPE_CHECKING:
     import pims
@@ -491,6 +495,12 @@ class Dataset:
     @property
     def read_only(self) -> bool:
         return self._read_only
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, self.__class__):
+            return self.path == other.path and self.read_only == other.read_only
+        else:
+            return False
 
     def upload(
         self,
@@ -1357,7 +1367,28 @@ class Dataset:
             )
 
     @staticmethod
-    def get_remote_dataset_registry() -> RemoteDatasetRegistry:
+    def get_remote_dataset_registry() -> Mapping[
+        str, RemoteOrganizationDatasetRegistry
+    ]:
+        """
+        Returns a registry of all remote datasets visible for the current user. The registry is built as a dict of dicts.
+        The outer dict-keys are the organization ids of the datasets, the inner keys are the dataset names:
+        ```python
+        import webknossos as wk
+
+        dataset_registry = wk.Dataset.get_remote_dataset_registry()
+        dataset_registry["scalable_minds"]["l4dense_motta_et_al_demo"]
+
+        current_organization = wk.User.get_current_user().organization_id
+        sorted(dataset_registry[current_organization])
+        ```
+
+        After selecting an organization, datasets can also be accessed by tag or by their display name:
+        ```python
+        dataset_registry["scalable_minds"].by_tag["demo"]
+        dataset_registry["scalable_minds"].by_display_name["L4 Mouse Cortex Demo"]
+        ```
+        """
         return RemoteDatasetRegistry()
 
 
