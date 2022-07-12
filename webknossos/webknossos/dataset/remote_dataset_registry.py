@@ -15,7 +15,7 @@ C = TypeVar("C")  # cache
 
 
 class RemoteOrganizationDatasetRegistry(LazyReadOnlyDict[str, "RemoteDataset"]):
-    """Data class containing information about a webKnossos annotation"""
+    """Dict-like class mapping dataset names to `RemoteDataset` instances."""
 
     by_display_name: Mapping[str, "RemoteDataset"]
     by_tag: Mapping[str, List["RemoteDataset"]]
@@ -48,7 +48,7 @@ class RemoteOrganizationDatasetRegistry(LazyReadOnlyDict[str, "RemoteDataset"]):
 class RemoteDatasetRegistry(
     FrozenDict, Mapping[str, RemoteOrganizationDatasetRegistry]
 ):
-    """Data class containing information about a webKnossos annotation"""
+    """Dict-like class mapping organization ids to `RemoteOrganizationDatasetRegistry` instances."""
 
     def __init__(
         self,
