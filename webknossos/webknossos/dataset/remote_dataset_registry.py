@@ -39,7 +39,7 @@ class RemoteDatasetRegistry(LazyReadOnlyDict[str, "RemoteDataset"]):
 
         for ds_info in response:
             tags_match = tags is None or any(tag in tags for tag in ds_info.tags)
-            if tags_match:
+            if ds_info.owning_organization == organization_id and tags_match:
                 ds_names.append(ds_info.name)
 
         super().__init__(
