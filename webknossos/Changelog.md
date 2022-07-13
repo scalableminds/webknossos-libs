@@ -15,7 +15,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes
 - The `Annotation` constructor takes the `owner_name` argument instead of `username`. This is only important when using keyword arguments. The `username` attributes are still available as a proxy for the `owner_name` attribute, but deprecated. [#760](https://github.com/scalableminds/webknossos-libs/pull/760)
 - `user_id` on `AnnotationInfo` objects is deprecated, please use `owner_id` instead. [#760](https://github.com/scalableminds/webknossos-libs/pull/760)
-- When self-hosting a webKnossos server, please note that a webknossos version >= `22.06.0` is required. [#760](https://github.com/scalableminds/webknossos-libs/pull/760)
+- When self-hosting a webKnossos server, please note that a webknossos version >= `22.06.0` is required. [#760](https://github.com/scalableminds/webknossos-libs/pull/760) & [#764](https://github.com/scalableminds/webknossos-libs/pull/764)
 
 ### Added
 - `Dataset.upload()` accepts `Layer` objects from a `RemoteDataset` in the `layers_to_link` argument list. Also, `LayerToLink` can consume those via `LayerToLink.from_remote_layer()`. [#761](https://github.com/scalableminds/webknossos-libs/pull/761)

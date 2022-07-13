@@ -230,7 +230,7 @@ class Annotation:
         """
         * `annotation_id_or_url` may be an annotation id or a full URL to an annotation, e.g.
           `https://webknossos.org/annotations/6114d9410100009f0096c640`
-        * `annotation_type` is ignored
+        * `annotation_type` is no longer required and therefore deprecated and ignored
         * `webknossos_url` may be supplied if an annotation id was used
           and allows to specifiy in which webknossos instance to search for the annotation.
           It defaults to the url from your current `webknossos_context`, using https://webknossos.org as a fallback.
@@ -250,16 +250,15 @@ class Annotation:
                 + "annotation_type and webknossos_url must not be set."
             )
             annotation_id = match.group("annotation_id")
-            annotation_type = match.group("annotation_type")
             webknossos_url = match.group("webknossos_url")
         else:
             annotation_id = annotation_id_or_url
-        annotation_type = (
-            None if annotation_type is None else AnnotationType(annotation_type)
-        )
-        assert (
-            annotation_type not in _COMPOUND_ANNOTATION_TYPES
-        ), f"Currently compound annotation types are not supported, got {annotation_type}"
+
+        if annotation_type is not None:
+            warnings.warn(
+                f"[DEPRECATION] `annotation_type` is deprecated for Annotation.download(), it should be omitted.",
+                DeprecationWarning,
+            )
 
         if webknossos_url is not None and webknossos_url != _get_context().url:
             warnings.warn(
