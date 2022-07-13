@@ -256,7 +256,7 @@ class Annotation:
 
         if annotation_type is not None:
             warnings.warn(
-                f"[DEPRECATION] `annotation_type` is deprecated for Annotation.download(), it should be omitted.",
+                "[DEPRECATION] `annotation_type` is deprecated for Annotation.download(), it should be omitted.",
                 DeprecationWarning,
             )
 
