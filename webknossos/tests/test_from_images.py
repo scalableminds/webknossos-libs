@@ -91,6 +91,23 @@ def test_repo_images(
     return ds
 
 
+def test_import_from_paths(
+    tmp_path: Path,
+) -> None:
+    ds = wk.Dataset(tmp_path, (1, 1, 1))
+    folder = Path("testdata") / "tiff"
+    ds.add_layer_from_images(
+        [
+            folder / "test.0000.tiff",
+            folder / "test.0001.tiff",
+            folder / "test.0002.tiff",
+        ],
+        layer_name="compare_tifffile",
+        compress=True,
+        category="segmentation",
+    )
+
+
 def download_and_unpack(url: str, out_path: Path) -> None:
     with NamedTemporaryFile() as download_file:
         with httpx.stream("GET", url) as response:

@@ -905,7 +905,7 @@ class Dataset:
             )
             shapes_and_max_ids = wait_and_ensure_success(
                 executor.map_to_futures(func_per_chunk, args),
-                progress_desc=f"Creating layer from images",
+                progress_desc="Creating layer from images",
             )
             shapes, max_ids = zip(*shapes_and_max_ids)
             if category == "segmentation":
