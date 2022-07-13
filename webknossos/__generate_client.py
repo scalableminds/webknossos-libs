@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from typing import Any, Dict, Iterable, Tuple
+from typing import Any, Dict, Iterable, Optional, Tuple
 
 import httpx
 from inducoapi import build_openapi
@@ -260,7 +260,8 @@ OPTIONAL_FIELDS = [
     # user and owner are optional in annotations
     "user",
     "owner",
-    "status",  # sometimes part of the dataSource dict
+    ("annotationLayers", "name"),  # added 2022-07, optional for backwards-compatibility
+    ("dataSource", "status"),  # sometimes part of the dataSource dict
     "volumeInterpolationAllowed",  # added 2022-06, optional for backwards-compatibility
     "teams",  # added 2022-07, optional for backwards-compatibility
     # isSuperUser field was added 2022-03 and only optional for backwards-compatibility with wk,
@@ -274,16 +275,22 @@ def extract_200_response(response: Any) -> bytes:
     return response.content
 
 
-def make_properties_required(x: Any) -> None:
+def make_properties_required(x: Any, parent_name: Optional[str] = None) -> None:
     if isinstance(x, dict):
         for key, value in x.items():
             # do not recurse into objects where the contents might be varying
             if key in FIELDS_WITH_VARYING_CONTENT:
                 continue
-            make_properties_required(value)
+            if key == "properties" and isinstance(value, dict):
+                for property_key, property_value in x["properties"].items():
+                    if property_key in FIELDS_WITH_VARYING_CONTENT:
+                        continue
+                    make_properties_required(property_value, parent_name=property_key)
+            else:
+                make_properties_required(value, parent_name=parent_name)
     elif isinstance(x, list):
         for i in x:
-            make_properties_required(i)
+            make_properties_required(i, parent_name=parent_name)
 
     if isinstance(x, dict) and "properties" in x:
         properties = x["properties"]
@@ -293,6 +300,7 @@ def make_properties_required(x: Any) -> None:
                 property
                 for property in properties.keys()
                 if property not in OPTIONAL_FIELDS
+                and (parent_name, property) not in OPTIONAL_FIELDS
             )
 
             # Further corrections
