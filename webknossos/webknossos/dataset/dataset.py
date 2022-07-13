@@ -866,7 +866,7 @@ class Dataset:
         elif compress:
             assert (
                 batch_size % mag_view.info.shard_size.z == 0
-            ), f"batch_size {batch_size} must be divisible by z shard-size {mag_view.info.shard_size.z} when creating compresses layers"
+            ), f"batch_size {batch_size} must be divisible by z shard-size {mag_view.info.shard_size.z} when creating compressed layers"
         else:
             assert (
                 batch_size % mag_view.info.chunk_size.z == 0
