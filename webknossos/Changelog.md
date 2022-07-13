@@ -29,6 +29,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 - `Annotation.download()` does not need the `annotation_type` anymore, and the type can also be omitted from passed URLs. [#764](https://github.com/scalableminds/webknossos-libs/pull/764)
 
 ### Fixed
+- Fixed the bounding box inferral for volume annotation layers that were not saved in Mag(1). [#765](https://github.com/scalableminds/webknossos-libs/pull/765)
 
 
 ## [0.10.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.6) - 2022-06-27
