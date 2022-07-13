@@ -860,9 +860,9 @@ class Dataset:
 
         if batch_size is None:
             if compress:
-                batch_size = mag_view.info.chunk_size.z
-            else:
                 batch_size = mag_view.info.shard_size.z
+            else:
+                batch_size = mag_view.info.chunk_size.z
         elif compress:
             assert (
                 batch_size % mag_view.info.shard_size.z == 0
