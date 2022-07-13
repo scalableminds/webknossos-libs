@@ -183,7 +183,9 @@ class PimsImages:
 
         self._first_n_channels = None
         if self._channel is not None:
-            assert self._channel < self.num_channels, f"Selected channel {self._channel} (0-indexed), but only {self.num_channels} channels are available."
+            assert (
+                self._channel < self.num_channels
+            ), f"Selected channel {self._channel} (0-indexed), but only {self.num_channels} channels are available."
             self.num_channels = 1
         elif self.num_channels > 3:
             warnings.warn(
@@ -297,7 +299,7 @@ class PimsImages:
 
                     if "c" in self._img_dims:
                         if self._channel is not None:
-                            image_slice = image_slice[self._channel : self._channel+1]
+                            image_slice = image_slice[self._channel : self._channel + 1]
                         elif self._first_n_channels is not None:
                             image_slice = image_slice[: self._first_n_channels]
                         assert image_slice.shape[0] == self.num_channels, (

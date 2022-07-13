@@ -1,16 +1,17 @@
 from pathlib import Path
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from time import gmtime, strftime
-from typing import Dict, Tuple
+from typing import Any, Dict, List, Tuple, Union
 from zipfile import ZipFile
 
 import httpx
 import numpy as np
 import pytest
 from tifffile import TiffFile
-from tests.constants import TESTDATA_DIR
 
 import webknossos as wk
+
+from .constants import TESTDATA_DIR
 
 pytestmark = [pytest.mark.block_network(allowed_hosts=[".*"])]
 
@@ -30,7 +31,9 @@ def test_compare_tifffile(tmp_path: Path) -> None:
         assert np.array_equal(data[:, :, z_index], comparison_slice)
 
 
-REPO_IMAGES_ARGS = [
+REPO_IMAGES_ARGS: List[
+    Tuple[Union[str, List[Path]], Dict[str, Any], str, int, Tuple[int, int, int]]
+] = [
     (
         "testdata/tiff/test.*.tiff",
         {"category": "segmentation"},
@@ -58,7 +61,7 @@ REPO_IMAGES_ARGS = [
     ),
     (
         "testdata/rgb_tiff/test_rgb.tif",
-        {"mag": 2, "channel":1},
+        {"mag": 2, "channel": 1},
         "uint8",
         1,
         (64, 64, 2),
@@ -284,7 +287,10 @@ if __name__ == "__main__":
 
     for repo_images_args in REPO_IMAGES_ARGS:
         with TemporaryDirectory() as tempdir:
-            name = "".join(filter(str.isalnum, repo_images_args[0]))
+            image_path = repo_images_args[0]
+            if isinstance(image_path, list):
+                image_path = str(image_path[0])
+            name = "".join(filter(str.isalnum, image_path))
             print(*repo_images_args)
             print(
                 test_repo_images(Path(tempdir), *repo_images_args)
