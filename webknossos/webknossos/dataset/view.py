@@ -924,7 +924,7 @@ class View:
         pass
 
     def __repr__(self) -> str:
-        return f"View({self._path}, bounding_box={self.bounding_box})"
+        return f"View({repr(str(self._path))}, bounding_box={self.bounding_box})"
 
     def _check_chunk_size(self, chunk_size: Vec3Int, read_only: bool) -> None:
         assert chunk_size.is_positive(

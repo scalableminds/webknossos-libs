@@ -118,13 +118,8 @@ def test_remote_dataset(sample_dataset: wk.Dataset) -> None:
     assert len(remote_ds.sharing_token) > 0
 
     assert len(remote_ds.allowed_teams) == 0
-    test_teams = (
-        wk.Team(
-            id="570b9f4b2a7c0e3b008da6ec",
-            name="team_X1",
-            organization_id="Organization_X",
-        ),
-    )
+    test_teams = (wk.Team.get_by_name("team_X1"),)
+    assert test_teams[0].id == "570b9f4b2a7c0e3b008da6ec"
     remote_ds.allowed_teams = test_teams
     assert remote_ds.allowed_teams == test_teams
     remote_ds.allowed_teams = ["570b9f4b2a7c0e3b008da6ec"]

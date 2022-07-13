@@ -16,6 +16,7 @@ from typing import (
     Dict,
     Iterable,
     List,
+    Mapping,
     Optional,
     Sequence,
     Tuple,
@@ -32,6 +33,7 @@ from upath import UPath
 
 from ..geometry.vec3_int import Vec3Int, Vec3IntLike
 from ._array import ArrayException, ArrayInfo, BaseArray, DataFormat
+from .remote_dataset_registry import RemoteDatasetRegistry
 
 if TYPE_CHECKING:
     import pims
@@ -490,6 +492,12 @@ class Dataset:
     @property
     def read_only(self) -> bool:
         return self._read_only
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, self.__class__):
+            return self.path == other.path and self.read_only == other.read_only
+        else:
+            return False
 
     def upload(
         self,
@@ -1354,6 +1362,27 @@ class Dataset:
             raise RuntimeError(
                 f"Failed to initialize layer: the specified category ({properties.category}) does not exist."
             )
+
+    @staticmethod
+    def get_remote_datasets(
+        organization_id: Optional[str] = None,
+        tags: Optional[Union[str, Sequence[str]]] = None,
+    ) -> Mapping[str, "RemoteDataset"]:
+        """
+        Returns a dict of all remote datasets visible for selected organization, or the organization of the logged in user by default.
+        The dict contains lazy-initialized `RemoteDataset` values for keys indicating the dataset name.
+
+        ```python
+        import webknossos as wk
+
+        print(sorted(wk.Dataset.get_remote_datasets()))
+
+        ds = wk.Dataset.get_remote_datasets(
+            organization_id="scalable_minds"
+        )["l4dense_motta_et_al_demo"]
+        ```
+        """
+        return RemoteDatasetRegistry(organization_id=organization_id, tags=tags)
 
 
 class RemoteDataset(Dataset):

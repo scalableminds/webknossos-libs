@@ -16,6 +16,7 @@ from webknossos.client._generated.client import Client
 from webknossos.client._generated.models.datastore_list_response_200_item import (
     DatastoreListResponse200Item,
 )
+from webknossos.client._generated.types import Unset
 from webknossos.client.context import _get_generated_client, webknossos_context
 from webknossos.utils import time_since_epoch_in_ms
 
@@ -46,7 +47,7 @@ def test_annotation_info(auth_client: Client) -> None:
     id = "570ba0092a7c0e980056fe9b"  # pylint: disable=redefined-builtin
     typ = "Explorational"
     info_object = annotation_info.sync(
-        typ=typ, id=id, client=auth_client, timestamp=time_since_epoch_in_ms()
+        id=id, client=auth_client, timestamp=time_since_epoch_in_ms()
     )
     assert info_object is not None
     assert info_object.id == id
@@ -80,6 +81,7 @@ def test_current_user_info_and_user_logged_time(auth_client: Client) -> None:
     current_user_info_response = current_user_info.sync(client=auth_client)
     assert current_user_info_response is not None
     assert len(current_user_info_response.email) > 0
+    assert not isinstance(current_user_info_response.teams, Unset)
     assert len(current_user_info_response.teams) > 0
     assert current_user_info_response.is_active
     user_logged_time_response = user_logged_time.sync(

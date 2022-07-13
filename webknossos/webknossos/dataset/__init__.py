@@ -10,7 +10,7 @@ Each dataset consists of one or more layers (webknossos.dataset.layer.Layer), wh
 """
 
 from ._array import DataFormat
-from .dataset import Dataset
+from .dataset import Dataset, RemoteDataset
 from .layer import Layer, SegmentationLayer
 from .layer_categories import COLOR_CATEGORY, SEGMENTATION_CATEGORY, LayerCategoryType
 from .mag_view import MagView
