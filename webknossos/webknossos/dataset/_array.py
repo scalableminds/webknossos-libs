@@ -117,7 +117,6 @@ class BaseArray(ABC):
     @abstractmethod
     def list_bounding_boxes(self) -> Iterator[BoundingBox]:
         "The bounding boxes are measured in voxels of the current mag."
-        pass
 
     @abstractmethod
     def close(self) -> None:
