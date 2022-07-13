@@ -15,6 +15,7 @@ class PimsImages:
     def __init__(
         self,
         images: Union[str, "pims.FramesSequence", List[Union[str, PathLike]]],
+        channel: Optional[int],
         timepoint: Optional[int],
         swap_xy: bool,
         flip_x: bool,
@@ -45,6 +46,7 @@ class PimsImages:
         del images
 
         ## arguments as inner attributes
+        self._channel = channel
         self._timepoint = timepoint
         self._swap_xy = swap_xy
         self._flip_x = flip_x
@@ -180,7 +182,10 @@ class PimsImages:
             )
 
         self._first_n_channels = None
-        if self.num_channels > 3:
+        if self._channel is not None:
+            assert self._channel < self.num_channels, f"Selected channel {self._channel} (0-indexed), but only {self.num_channels} channels are available."
+            self.num_channels = 1
+        elif self.num_channels > 3:
             warnings.warn(
                 f"Found more than 3 channels ({self.num_channels}), clamping to the first 3."
             )
@@ -229,7 +234,12 @@ class PimsImages:
                             self._original_images
                         )
                 else:
-                    images_context_manager = pims.open(self._original_images)
+                    try:
+                        images_context_manager = pims.open(self._original_images)
+                    except TypeError:
+                        images_context_manager = pims.ImageSequence(
+                            self._original_images
+                        )
 
             with images_context_manager as images:
                 if isinstance(images, pims.FramesSequenceND):
@@ -286,7 +296,9 @@ class PimsImages:
                         image_slice = image_slice.swapaxes(-1, -2)
 
                     if "c" in self._img_dims:
-                        if self._first_n_channels is not None:
+                        if self._channel is not None:
+                            image_slice = image_slice[self._channel : self._channel+1]
+                        elif self._first_n_channels is not None:
                             image_slice = image_slice[: self._first_n_channels]
                         assert image_slice.shape[0] == self.num_channels, (
                             f"Image shape {image_slice.shape} does not fit to the number of channels "

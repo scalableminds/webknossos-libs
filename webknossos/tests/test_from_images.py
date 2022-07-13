@@ -8,6 +8,7 @@ import httpx
 import numpy as np
 import pytest
 from tifffile import TiffFile
+from tests.constants import TESTDATA_DIR
 
 import webknossos as wk
 
@@ -38,10 +39,28 @@ REPO_IMAGES_ARGS = [
         (265, 265, 257),
     ),
     (
+        [
+            TESTDATA_DIR / "tiff" / "test.0000.tiff",
+            TESTDATA_DIR / "tiff" / "test.0001.tiff",
+            TESTDATA_DIR / "tiff" / "test.0002.tiff",
+        ],
+        {"category": "segmentation"},
+        "uint8",
+        1,
+        (265, 265, 3),
+    ),
+    (
         "testdata/rgb_tiff/test_rgb.tif",
         {"mag": 2},
         "uint8",
         3,
+        (64, 64, 2),
+    ),
+    (
+        "testdata/rgb_tiff/test_rgb.tif",
+        {"mag": 2, "channel":1},
+        "uint8",
+        1,
         (64, 64, 2),
     ),
     (
@@ -89,23 +108,6 @@ def test_repo_images(
         if isinstance(l, wk.SegmentationLayer):
             assert l.largest_segment_id > 0
     return ds
-
-
-def test_import_from_paths(
-    tmp_path: Path,
-) -> None:
-    ds = wk.Dataset(tmp_path, (1, 1, 1))
-    folder = Path("testdata") / "tiff"
-    ds.add_layer_from_images(
-        [
-            folder / "test.0000.tiff",
-            folder / "test.0001.tiff",
-            folder / "test.0002.tiff",
-        ],
-        layer_name="compare_tifffile",
-        compress=True,
-        category="segmentation",
-    )
 
 
 def download_and_unpack(url: str, out_path: Path) -> None:
