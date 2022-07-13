@@ -1,25 +1,24 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import httpx
 
 from ...client import Client
-from ...models.annotation_info_response_200 import AnnotationInfoResponse200
-from ...types import UNSET, Response
+from ...models.team_list_response_200_item import TeamListResponse200Item
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
-    id: str,
     *,
     client: Client,
-    timestamp: int,
+    is_editable: Union[Unset, None, bool] = UNSET,
 ) -> Dict[str, Any]:
-    url = "{}/api/annotations/{id}/info".format(client.base_url, id=id)
+    url = "{}/api/teams".format(client.base_url)
 
     headers: Dict[str, Any] = client.get_headers()
     cookies: Dict[str, Any] = client.get_cookies()
 
     params: Dict[str, Any] = {
-        "timestamp": timestamp,
+        "isEditable": is_editable,
     }
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -32,15 +31,26 @@ def _get_kwargs(
     }
 
 
-def _parse_response(*, response: httpx.Response) -> Optional[AnnotationInfoResponse200]:
+def _parse_response(
+    *, response: httpx.Response
+) -> Optional[List[TeamListResponse200Item]]:
     if response.status_code == 200:
-        response_200 = AnnotationInfoResponse200.from_dict(response.json())
+        response_200 = []
+        _response_200 = response.json()
+        for response_200_item_data in _response_200:
+            response_200_item = TeamListResponse200Item.from_dict(
+                response_200_item_data
+            )
+
+            response_200.append(response_200_item)
 
         return response_200
     return None
 
 
-def _build_response(*, response: httpx.Response) -> Response[AnnotationInfoResponse200]:
+def _build_response(
+    *, response: httpx.Response
+) -> Response[List[TeamListResponse200Item]]:
     return Response(
         status_code=response.status_code,
         content=response.content,
@@ -50,15 +60,13 @@ def _build_response(*, response: httpx.Response) -> Response[AnnotationInfoRespo
 
 
 def sync_detailed(
-    id: str,
     *,
     client: Client,
-    timestamp: int,
-) -> Response[AnnotationInfoResponse200]:
+    is_editable: Union[Unset, None, bool] = UNSET,
+) -> Response[List[TeamListResponse200Item]]:
     kwargs = _get_kwargs(
-        id=id,
         client=client,
-        timestamp=timestamp,
+        is_editable=is_editable,
     )
 
     response = httpx.get(
@@ -69,30 +77,26 @@ def sync_detailed(
 
 
 def sync(
-    id: str,
     *,
     client: Client,
-    timestamp: int,
-) -> Optional[AnnotationInfoResponse200]:
+    is_editable: Union[Unset, None, bool] = UNSET,
+) -> Optional[List[TeamListResponse200Item]]:
     """ """
 
     return sync_detailed(
-        id=id,
         client=client,
-        timestamp=timestamp,
+        is_editable=is_editable,
     ).parsed
 
 
 async def asyncio_detailed(
-    id: str,
     *,
     client: Client,
-    timestamp: int,
-) -> Response[AnnotationInfoResponse200]:
+    is_editable: Union[Unset, None, bool] = UNSET,
+) -> Response[List[TeamListResponse200Item]]:
     kwargs = _get_kwargs(
-        id=id,
         client=client,
-        timestamp=timestamp,
+        is_editable=is_editable,
     )
 
     async with httpx.AsyncClient() as _client:
@@ -102,17 +106,15 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    id: str,
     *,
     client: Client,
-    timestamp: int,
-) -> Optional[AnnotationInfoResponse200]:
+    is_editable: Union[Unset, None, bool] = UNSET,
+) -> Optional[List[TeamListResponse200Item]]:
     """ """
 
     return (
         await asyncio_detailed(
-            id=id,
             client=client,
-            timestamp=timestamp,
+            is_editable=is_editable,
         )
     ).parsed

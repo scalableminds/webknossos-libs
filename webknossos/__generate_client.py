@@ -72,6 +72,7 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
         build_info,
         current_user_info,
         dataset_info,
+        dataset_list,
         dataset_sharing_token,
         datastore_list,
         generate_token_for_data_store,
@@ -79,6 +80,7 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
         project_info_by_name,
         task_info,
         task_infos_by_project_id,
+        team_list,
         user_info_by_id,
         user_list,
         user_logged_time,
@@ -115,7 +117,6 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
         "annotationInfo",
         extract_200_response(
             annotation_info.sync_detailed(
-                typ="Explorational",
                 id=explorative_annotation_id,
                 client=client,
                 timestamp=unixtime,
@@ -129,6 +130,15 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
             dataset_info.sync_detailed(
                 organization_name=organization_id,
                 data_set_name=dataset_name,
+                client=client,
+            )
+        ),
+    )
+
+    yield (
+        "datasetList",
+        extract_200_response(
+            dataset_list.sync_detailed(
                 client=client,
             )
         ),
@@ -160,6 +170,15 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
         extract_200_response(
             user_info_by_id.sync_detailed(
                 id=user_id,
+                client=client,
+            ),
+        ),
+    )
+
+    yield (
+        "teamList",
+        extract_200_response(
+            team_list.sync_detailed(
                 client=client,
             ),
         ),
@@ -241,7 +260,9 @@ OPTIONAL_FIELDS = [
     # user and owner are optional in annotations
     "user",
     "owner",
+    "status",  # sometimes part of the dataSource dict
     "volumeInterpolationAllowed",  # added 2022-06, optional for backwards-compatibility
+    "teams",  # added 2022-07, optional for backwards-compatibility
     # isSuperUser field was added 2022-03 and only optional for backwards-compatibility with wk,
     # it can be made non-optional when needed later:
     "isSuperUser",

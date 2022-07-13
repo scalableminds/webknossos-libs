@@ -1,15 +1,15 @@
 import inspect
 import os
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from tempfile import TemporaryDirectory
 from types import ModuleType
-from typing import Any, Iterator, Tuple
+from typing import Any, ContextManager, Iterator, Optional, Tuple, Type
 
 import numpy as np
 import pytest
 from scipy.spatial import cKDTree
 
-from webknossos.geometry import Mag
+import webknossos as wk
 
 pytestmark = [pytest.mark.with_vcr]
 
@@ -25,7 +25,9 @@ def tmp_cwd() -> Iterator[None]:
             os.chdir(prev_cwd)
 
 
-def exec_main_and_get_vars(module: ModuleType, *var_names: str) -> Tuple[Any, ...]:
+def exec_main_and_get_vars(
+    module: ModuleType, *var_names: str, raises: Optional[Type[Exception]] = None
+) -> Tuple[Any, ...]:
     source = inspect.getsource(module)
     global_statements = "\n".join(f"    global {var_name}" for var_name in var_names)
     def_main_needle = "def main() -> None:\n"
@@ -36,7 +38,13 @@ def exec_main_and_get_vars(module: ModuleType, *var_names: str) -> Tuple[Any, ..
         def_main_needle, "def main() -> None:\n" + global_statements + "\n"
     )
     exec(new_source, module.__dict__)  # pylint: disable=exec-used
-    module.main()  # type: ignore[attr-defined]
+    cm: ContextManager[Any]
+    if raises is None:
+        cm = nullcontext()
+    else:
+        cm = pytest.raises(raises)
+    with cm:
+        module.main()  # type: ignore[attr-defined]
 
     return tuple(module.__dict__[var_name] for var_name in var_names)
 
@@ -180,7 +188,7 @@ def test_learned_segmenter() -> None:
             example, "segmentation_layer", "url"
         )
 
-        segmentation_data = segmentation_layer.mags[Mag(1)].read()
+        segmentation_data = segmentation_layer.mags[wk.Mag(1)].read()
         counts = dict(zip(*np.unique(segmentation_data, return_counts=True)))
         assert counts == {1: 209066, 2: 37803, 3: 164553, 4: 817378}
         assert url.startswith(
@@ -202,3 +210,16 @@ def test_user_times() -> None:
     assert len(df) > 0
     assert sum(df.loc[:, (2021, 5)]) > 11
     assert "user_A@scalableminds.com" in df.index
+
+
+def test_remote_datasets() -> None:
+    import examples.remote_datasets as example
+
+    (own_remote_datasets,) = exec_main_and_get_vars(
+        example, "own_remote_datasets", raises=AssertionError
+    )
+
+    ds = own_remote_datasets["e2006_knossos"]
+    assert ds.url == "http://localhost:9000/datasets/Organization_X/e2006_knossos"
+    ds.tags = ["test"]
+    assert ds in wk.Dataset.get_remote_datasets(tags=["test"]).values()

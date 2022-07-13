@@ -21,11 +21,14 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 - `Dataset.upload()` accepts `Layer` objects from a `RemoteDataset` in the `layers_to_link` argument list. Also, `LayerToLink` can consume those via `LayerToLink.from_remote_layer()`. [#761](https://github.com/scalableminds/webknossos-libs/pull/761)
 - `Task.create()` accepts a `RemoteDataset` for the `dataset_name` argument. [#761](https://github.com/scalableminds/webknossos-libs/pull/761)
 - Added `annotation.get_remote_base_dataset()` returning a `RemoteDataset`. [#761](https://github.com/scalableminds/webknossos-libs/pull/761)
+- Added `Team.get_by_name()`. [#763](https://github.com/scalableminds/webknossos-libs/pull/763)
+- Added `Dataset.get_remote_datasets()`. [#763](https://github.com/scalableminds/webknossos-libs/pull/763)
 
 ### Changed
 - If a token is requested from the user on the commandline, it is now stored in the current context. Before, it was discarded. [#761](https://github.com/scalableminds/webknossos-libs/pull/761)
 
 ### Fixed
+- Fixed the bounding box inferral for volume annotation layers that were not saved in Mag(1). [#765](https://github.com/scalableminds/webknossos-libs/pull/765)
 
 
 ## [0.10.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.6) - 2022-06-27

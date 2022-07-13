@@ -354,4 +354,4 @@ class MagView(View):
         )
 
     def __repr__(self) -> str:
-        return f"MagView(name={self.name}, bounding_box={self.bounding_box})"
+        return f"MagView(name={repr(self.name)}, bounding_box={self.bounding_box})"
