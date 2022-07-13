@@ -59,6 +59,7 @@ class AnnotationInfosByTaskIdResponse200Item:
     task: Optional[AnnotationInfosByTaskIdResponse200ItemTask]
     tracing_time: Optional[int]
     view_configuration: Union[Unset, str] = UNSET
+    teams: Union[Unset, List[Any]] = UNSET
     user: Union[Unset, AnnotationInfosByTaskIdResponse200ItemUser] = UNSET
     owner: Union[Unset, AnnotationInfosByTaskIdResponse200ItemOwner] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
@@ -102,6 +103,14 @@ class AnnotationInfosByTaskIdResponse200Item:
         task = self.task.to_dict() if self.task else None
 
         tracing_time = self.tracing_time
+        teams: Union[Unset, List[Any]] = UNSET
+        if not isinstance(self.teams, Unset):
+            teams = []
+            for teams_item_data in self.teams:
+                teams_item = teams_item_data
+
+                teams.append(teams_item)
+
         user: Union[Unset, Dict[str, Any]] = UNSET
         if not isinstance(self.user, Unset):
             user = self.user.to_dict()
@@ -138,6 +147,8 @@ class AnnotationInfosByTaskIdResponse200Item:
         )
         if view_configuration is not UNSET:
             field_dict["viewConfiguration"] = view_configuration
+        if teams is not UNSET:
+            field_dict["teams"] = teams
         if user is not UNSET:
             field_dict["user"] = user
         if owner is not UNSET:
@@ -217,6 +228,13 @@ class AnnotationInfosByTaskIdResponse200Item:
 
         tracing_time = d.pop("tracingTime")
 
+        teams = []
+        _teams = d.pop("teams", UNSET)
+        for teams_item_data in _teams or []:
+            teams_item = teams_item_data
+
+            teams.append(teams_item)
+
         _user = d.pop("user", UNSET)
         user: Union[Unset, AnnotationInfosByTaskIdResponse200ItemUser]
         if isinstance(_user, Unset):
@@ -253,6 +271,7 @@ class AnnotationInfosByTaskIdResponse200Item:
             view_configuration=view_configuration,
             task=task,
             tracing_time=tracing_time,
+            teams=teams,
             user=user,
             owner=owner,
         )

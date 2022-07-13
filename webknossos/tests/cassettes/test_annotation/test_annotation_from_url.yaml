@@ -13,7 +13,7 @@ interactions:
       user-agent:
       - python-httpx/0.18.2
     method: GET
-    uri: https://webknossos.org/api/annotations/Explorational/61c20205010000cc004a6356/download
+    uri: https://webknossos.org/api/annotations/61c20205010000cc004a6356/download
   response:
     content:
       zip:
@@ -26756,7 +26756,7 @@ interactions:
               DwgADFAAA/0BAA==
         l4dense_motta_et_al_demo_v2__explorational__potto__4a6356.nml: "<things>\n
           \ <meta name=\"writer\" content=\"NmlWriter.scala\" />\n  <meta name=\"writerGitCommit\"
-          content=\"ed9031614bd34db65bbd473852081fdd397e0759\" />\n  <meta name=\"timestamp\"
+          content=\"2198e87ee0c05495d4dfa2a3d5d3fbc3c753ae60\" />\n  <meta name=\"timestamp\"
           content=\"1643210000000\" />\n  <meta name=\"annotationId\" content=\"61c20205010000cc004a6356\"
           />\n  <meta name=\"username\" content=\"Philipp Otto\" />\n  <parameters>\n
           \   <experiment name=\"l4dense_motta_et_al_demo_v2\" organization=\"scalable_minds\"

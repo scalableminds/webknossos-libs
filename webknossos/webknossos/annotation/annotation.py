@@ -229,8 +229,8 @@ class Annotation:
     ) -> "Annotation":
         """
         * `annotation_id_or_url` may be an annotation id or a full URL to an annotation, e.g.
-          `https://webknossos.org/annotations/Explorational/6114d9410100009f0096c640`
-        * `annotation_type` must be supplied if and only if an annotation id was used in the previous argument
+          `https://webknossos.org/annotations/6114d9410100009f0096c640`
+        * `annotation_type` is no longer required and therefore deprecated and ignored
         * `webknossos_url` may be supplied if an annotation id was used
           and allows to specifiy in which webknossos instance to search for the annotation.
           It defaults to the url from your current `webknossos_context`, using https://webknossos.org as a fallback.
@@ -246,23 +246,19 @@ class Annotation:
         if match is not None:
             assert webknossos_url is None and annotation_type is None, (
                 "When Annotation.download() is be called with an annotation url, "
-                + "e.g. Annotation.download('https://webknossos.org/annotations/Explorational/6114d9410100009f0096c640'), "
+                + "e.g. Annotation.download('https://webknossos.org/annotations/6114d9410100009f0096c640'), "
                 + "annotation_type and webknossos_url must not be set."
             )
             annotation_id = match.group("annotation_id")
-            annotation_type = match.group("annotation_type")
             webknossos_url = match.group("webknossos_url")
         else:
-            assert annotation_type is not None, (
-                "When calling Annotation.download() with an id you must supply the argument annotation_type, "
-                + "e.g. 'Task' or 'Explorational'. Alternatively, you can use the full annotation url, "
-                + "e.g. Annotation.download('https://webknossos.org/annotations/Explorational/6114d9410100009f0096c640')."
-            )
             annotation_id = annotation_id_or_url
-        annotation_type = AnnotationType(annotation_type)
-        assert (
-            annotation_type not in _COMPOUND_ANNOTATION_TYPES
-        ), f"Currently compound annotation types are not supported, got {annotation_type}"
+
+        if annotation_type is not None:
+            warnings.warn(
+                "[DEPRECATION] `annotation_type` is deprecated for Annotation.download(), it should be omitted.",
+                DeprecationWarning,
+            )
 
         if webknossos_url is not None and webknossos_url != _get_context().url:
             warnings.warn(
@@ -279,7 +275,7 @@ class Annotation:
         with context:
             client = _get_generated_client()
             response = annotation_download.sync_detailed(
-                typ=annotation_type.value, id=annotation_id, client=client
+                id=annotation_id, client=client
             )
         assert response.status_code == 200, response
         content_disposition_header = response.headers.get("content-disposition", "")
@@ -691,7 +687,7 @@ _COMPOUND_ANNOTATION_TYPES = [
 
 _ANNOTATION_URL_REGEX = re.compile(
     r"^(?P<webknossos_url>https?://.*)/annotations/"
-    + rf"(?P<annotation_type>{'|'.join(i.value for i in AnnotationType.__members__.values())})/"
+    + rf"((?P<annotation_type>{'|'.join(i.value for i in AnnotationType.__members__.values())})/)?"
     + r"(?P<annotation_id>[0-9A-Fa-f]*)"
 )
 

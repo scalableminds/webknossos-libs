@@ -137,7 +137,7 @@ def test_annotation_from_file_with_multi_volume() -> None:
 def test_annotation_from_url() -> None:
 
     annotation = wk.Annotation.download(
-        "https://webknossos.org/annotations/Explorational/61c20205010000cc004a6356"
+        "https://webknossos.org/annotations/61c20205010000cc004a6356"
     )
     assert annotation.dataset_name == "l4dense_motta_et_al_demo_v2"
     assert len(list(annotation.skeleton.flattened_trees())) == 1
