@@ -838,6 +838,7 @@ class Dataset:
             flip_y=flip_y,
             flip_z=flip_z,
             use_bioformats=use_bioformats,
+            is_segmentation=category == "segmentation",
         )
         add_layer_kwargs = {}
         if category == "segmentation":

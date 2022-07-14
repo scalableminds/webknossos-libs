@@ -47,7 +47,7 @@ REPO_IMAGES_ARGS: List[
             TESTDATA_DIR / "tiff" / "test.0001.tiff",
             TESTDATA_DIR / "tiff" / "test.0002.tiff",
         ],
-        {"category": "segmentation"},
+        {},
         "uint8",
         1,
         (265, 265, 3),

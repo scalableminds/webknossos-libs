@@ -22,6 +22,7 @@ class PimsImages:
         flip_y: bool,
         flip_z: bool,
         use_bioformats: bool,
+        is_segmentation: bool,
     ) -> None:
         """
         During initialization the pims objects are examined and configured to produce
@@ -122,6 +123,9 @@ class PimsImages:
                     assert "t" in images.axes
                     self._default_coords["t"] = timepoint
             else:
+                _allow_channels_first = not is_segmentation
+                if isinstance(images, (pims.ImageSequence, pims.ReaderSequence)):
+                    _allow_channels_first = False
                 if len(images.shape) == 2:
                     self._img_dims = "yx"
                     self._iter_dim = ""
@@ -132,7 +136,9 @@ class PimsImages:
                         self._img_dims = "yxc"
                         self._iter_dim = ""
                     elif images.shape[0] == 1 or (
-                        images.shape[0] == 3 and images.dtype == np.dtype("uint8")
+                        _allow_channels_first
+                        and images.shape[0] == 3
+                        and images.dtype == np.dtype("uint8")
                     ):
                         self._img_dims = "cyx"
                         self._iter_dim = ""
