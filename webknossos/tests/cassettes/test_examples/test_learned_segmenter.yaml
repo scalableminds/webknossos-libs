@@ -79,7 +79,7 @@ interactions:
     method: GET
     uri: http://localhost:9000/api/user
   response:
-    content: '{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1657801335183,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true}'
+    content: '{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1657803143920,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true}'
     headers:
       content-length:
       - '630'
@@ -125,7 +125,7 @@ interactions:
     status_code: 200
 - request:
     body: '{"uploadId": "2000-01-01T00-00-00__0011", "organization": "Organization_X",
-      "name": "skin_segmented_2000-01-01_00-00-00", "totalFileCount": 4, "initialTeams":
+      "name": "skin_segmented_2000-01-01_00-00-00", "totalFileCount": 12, "initialTeams":
       [], "layersToLink": []}'
     headers:
       accept:
@@ -135,7 +135,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '214'
+      - '215'
       content-type:
       - application/json
       host:
@@ -144,6 +144,690 @@ interactions:
       - python-httpx/0.18.2
     method: POST
     uri: http://localhost:9000/data/datasets/reserveUpload
+  response:
+    content: ''
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '0'
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: '--
+
+      Content-Disposition: form-data; name="resumableChunkSize"
+
+
+      104857600
+
+      --
+
+      Content-Disposition: form-data; name="resumableTotalSize"
+
+
+      4839665
+
+      --
+
+      Content-Disposition: form-data; name="resumableType"
+
+
+
+      --
+
+      Content-Disposition: form-data; name="resumableIdentifier"
+
+
+      2000-01-01T00-00-00__0011/segmentation/2-2-1/z0/y0/x0.wkw
+
+      --
+
+      Content-Disposition: form-data; name="resumableFilename"
+
+
+      x0.wkw
+
+      --
+
+      Content-Disposition: form-data; name="resumableRelativePath"
+
+
+      segmentation/2-2-1/z0/y0/x0.wkw
+
+      --
+
+      Content-Disposition: form-data; name="resumableTotalChunks"
+
+
+      1
+
+      --
+
+      Content-Disposition: form-data; name="resumableChunkNumber"
+
+
+      1
+
+      --
+
+      Content-Disposition: form-data; name="resumableCurrentChunkSize"
+
+
+      4839665
+
+      --
+
+      Content-Disposition: form-data; name="owningOrganization"
+
+
+      Organization_X
+
+      --
+
+      Content-Disposition: form-data; name="name"
+
+
+      skin_segmented_2000-01-01_00-00-00
+
+      --
+
+      Content-Disposition: form-data; name="totalFileCount"
+
+
+      12
+
+      --
+
+      Content-Disposition: form-data; name="file"; filename="upload"
+
+      Content-Type: application/octet-stream<omitted> --'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '4841227'
+      content-type:
+      - multipart/form-data; boundary=fffffff0000000
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.18.2
+    method: POST
+    uri: http://localhost:9000/data/datasets
+  response:
+    content: ''
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '0'
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: "--\nContent-Disposition: form-data; name=\"resumableChunkSize\"\n\n104857600\n--\nContent-Disposition:
+      form-data; name=\"resumableTotalSize\"\n\n16\n--\nContent-Disposition: form-data;
+      name=\"resumableType\"\n\n\n--\nContent-Disposition: form-data; name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/segmentation/2-2-1/header.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableFilename\"\n\nheader.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableRelativePath\"\n\nsegmentation/2-2-1/header.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
+      name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n16\n--\nContent-Disposition:
+      form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
+      form-data; name=\"name\"\n\nskin_segmented_2000-01-01_00-00-00\n--\nContent-Disposition:
+      form-data; name=\"totalFileCount\"\n\n12\n--\nContent-Disposition: form-data;
+      name=\"file\"; filename=\"upload\"\nContent-Type: application/octet-stream\n\nWKW\x01U\x03\x01\x01\0\0\0\0\0\0\0\0\n----\n"
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '1568'
+      content-type:
+      - multipart/form-data; boundary=fffffff0000000
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.18.2
+    method: POST
+    uri: http://localhost:9000/data/datasets
+  response:
+    content: ''
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '0'
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: '--
+
+      Content-Disposition: form-data; name="resumableChunkSize"
+
+
+      104857600
+
+      --
+
+      Content-Disposition: form-data; name="resumableTotalSize"
+
+
+      4823525
+
+      --
+
+      Content-Disposition: form-data; name="resumableType"
+
+
+
+      --
+
+      Content-Disposition: form-data; name="resumableIdentifier"
+
+
+      2000-01-01T00-00-00__0011/segmentation/4-4-1/z0/y0/x0.wkw
+
+      --
+
+      Content-Disposition: form-data; name="resumableFilename"
+
+
+      x0.wkw
+
+      --
+
+      Content-Disposition: form-data; name="resumableRelativePath"
+
+
+      segmentation/4-4-1/z0/y0/x0.wkw
+
+      --
+
+      Content-Disposition: form-data; name="resumableTotalChunks"
+
+
+      1
+
+      --
+
+      Content-Disposition: form-data; name="resumableChunkNumber"
+
+
+      1
+
+      --
+
+      Content-Disposition: form-data; name="resumableCurrentChunkSize"
+
+
+      4823525
+
+      --
+
+      Content-Disposition: form-data; name="owningOrganization"
+
+
+      Organization_X
+
+      --
+
+      Content-Disposition: form-data; name="name"
+
+
+      skin_segmented_2000-01-01_00-00-00
+
+      --
+
+      Content-Disposition: form-data; name="totalFileCount"
+
+
+      12
+
+      --
+
+      Content-Disposition: form-data; name="file"; filename="upload"
+
+      Content-Type: application/octet-stream<omitted> --'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '4825087'
+      content-type:
+      - multipart/form-data; boundary=fffffff0000000
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.18.2
+    method: POST
+    uri: http://localhost:9000/data/datasets
+  response:
+    content: ''
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '0'
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: "--\nContent-Disposition: form-data; name=\"resumableChunkSize\"\n\n104857600\n--\nContent-Disposition:
+      form-data; name=\"resumableTotalSize\"\n\n16\n--\nContent-Disposition: form-data;
+      name=\"resumableType\"\n\n\n--\nContent-Disposition: form-data; name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/segmentation/4-4-1/header.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableFilename\"\n\nheader.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableRelativePath\"\n\nsegmentation/4-4-1/header.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
+      name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n16\n--\nContent-Disposition:
+      form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
+      form-data; name=\"name\"\n\nskin_segmented_2000-01-01_00-00-00\n--\nContent-Disposition:
+      form-data; name=\"totalFileCount\"\n\n12\n--\nContent-Disposition: form-data;
+      name=\"file\"; filename=\"upload\"\nContent-Type: application/octet-stream\n\nWKW\x01U\x03\x01\x01\0\0\0\0\0\0\0\0\n----\n"
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '1568'
+      content-type:
+      - multipart/form-data; boundary=fffffff0000000
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.18.2
+    method: POST
+    uri: http://localhost:9000/data/datasets
+  response:
+    content: ''
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '0'
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: '--
+
+      Content-Disposition: form-data; name="resumableChunkSize"
+
+
+      104857600
+
+      --
+
+      Content-Disposition: form-data; name="resumableTotalSize"
+
+
+      4818859
+
+      --
+
+      Content-Disposition: form-data; name="resumableType"
+
+
+
+      --
+
+      Content-Disposition: form-data; name="resumableIdentifier"
+
+
+      2000-01-01T00-00-00__0011/segmentation/8-8-1/z0/y0/x0.wkw
+
+      --
+
+      Content-Disposition: form-data; name="resumableFilename"
+
+
+      x0.wkw
+
+      --
+
+      Content-Disposition: form-data; name="resumableRelativePath"
+
+
+      segmentation/8-8-1/z0/y0/x0.wkw
+
+      --
+
+      Content-Disposition: form-data; name="resumableTotalChunks"
+
+
+      1
+
+      --
+
+      Content-Disposition: form-data; name="resumableChunkNumber"
+
+
+      1
+
+      --
+
+      Content-Disposition: form-data; name="resumableCurrentChunkSize"
+
+
+      4818859
+
+      --
+
+      Content-Disposition: form-data; name="owningOrganization"
+
+
+      Organization_X
+
+      --
+
+      Content-Disposition: form-data; name="name"
+
+
+      skin_segmented_2000-01-01_00-00-00
+
+      --
+
+      Content-Disposition: form-data; name="totalFileCount"
+
+
+      12
+
+      --
+
+      Content-Disposition: form-data; name="file"; filename="upload"
+
+      Content-Type: application/octet-stream<omitted> --'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '4820421'
+      content-type:
+      - multipart/form-data; boundary=fffffff0000000
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.18.2
+    method: POST
+    uri: http://localhost:9000/data/datasets
+  response:
+    content: ''
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '0'
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: "--\nContent-Disposition: form-data; name=\"resumableChunkSize\"\n\n104857600\n--\nContent-Disposition:
+      form-data; name=\"resumableTotalSize\"\n\n16\n--\nContent-Disposition: form-data;
+      name=\"resumableType\"\n\n\n--\nContent-Disposition: form-data; name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/segmentation/8-8-1/header.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableFilename\"\n\nheader.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableRelativePath\"\n\nsegmentation/8-8-1/header.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
+      name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n16\n--\nContent-Disposition:
+      form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
+      form-data; name=\"name\"\n\nskin_segmented_2000-01-01_00-00-00\n--\nContent-Disposition:
+      form-data; name=\"totalFileCount\"\n\n12\n--\nContent-Disposition: form-data;
+      name=\"file\"; filename=\"upload\"\nContent-Type: application/octet-stream\n\nWKW\x01U\x03\x01\x01\0\0\0\0\0\0\0\0\n----\n"
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '1568'
+      content-type:
+      - multipart/form-data; boundary=fffffff0000000
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.18.2
+    method: POST
+    uri: http://localhost:9000/data/datasets
+  response:
+    content: ''
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '0'
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: '--
+
+      Content-Disposition: form-data; name="resumableChunkSize"
+
+
+      104857600
+
+      --
+
+      Content-Disposition: form-data; name="resumableTotalSize"
+
+
+      4817568
+
+      --
+
+      Content-Disposition: form-data; name="resumableType"
+
+
+
+      --
+
+      Content-Disposition: form-data; name="resumableIdentifier"
+
+
+      2000-01-01T00-00-00__0011/segmentation/16-16-1/z0/y0/x0.wkw
+
+      --
+
+      Content-Disposition: form-data; name="resumableFilename"
+
+
+      x0.wkw
+
+      --
+
+      Content-Disposition: form-data; name="resumableRelativePath"
+
+
+      segmentation/16-16-1/z0/y0/x0.wkw
+
+      --
+
+      Content-Disposition: form-data; name="resumableTotalChunks"
+
+
+      1
+
+      --
+
+      Content-Disposition: form-data; name="resumableChunkNumber"
+
+
+      1
+
+      --
+
+      Content-Disposition: form-data; name="resumableCurrentChunkSize"
+
+
+      4817568
+
+      --
+
+      Content-Disposition: form-data; name="owningOrganization"
+
+
+      Organization_X
+
+      --
+
+      Content-Disposition: form-data; name="name"
+
+
+      skin_segmented_2000-01-01_00-00-00
+
+      --
+
+      Content-Disposition: form-data; name="totalFileCount"
+
+
+      12
+
+      --
+
+      Content-Disposition: form-data; name="file"; filename="upload"
+
+      Content-Type: application/octet-stream<omitted> --'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '4819134'
+      content-type:
+      - multipart/form-data; boundary=fffffff0000000
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.18.2
+    method: POST
+    uri: http://localhost:9000/data/datasets
+  response:
+    content: ''
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '0'
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: "--\nContent-Disposition: form-data; name=\"resumableChunkSize\"\n\n104857600\n--\nContent-Disposition:
+      form-data; name=\"resumableTotalSize\"\n\n16\n--\nContent-Disposition: form-data;
+      name=\"resumableType\"\n\n\n--\nContent-Disposition: form-data; name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/segmentation/16-16-1/header.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableFilename\"\n\nheader.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableRelativePath\"\n\nsegmentation/16-16-1/header.wkw\n--\nContent-Disposition:
+      form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
+      name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n16\n--\nContent-Disposition:
+      form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
+      form-data; name=\"name\"\n\nskin_segmented_2000-01-01_00-00-00\n--\nContent-Disposition:
+      form-data; name=\"totalFileCount\"\n\n12\n--\nContent-Disposition: form-data;
+      name=\"file\"; filename=\"upload\"\nContent-Type: application/octet-stream\n\nWKW\x01U\x03\x01\x01\0\0\0\0\0\0\0\0\n----\n"
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '1572'
+      content-type:
+      - multipart/form-data; boundary=fffffff0000000
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.18.2
+    method: POST
+    uri: http://localhost:9000/data/datasets
   response:
     content: ''
     headers:
@@ -244,7 +928,7 @@ interactions:
       Content-Disposition: form-data; name="totalFileCount"
 
 
-      4
+      12
 
       --
 
@@ -259,7 +943,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '4834627'
+      - '4834628'
       content-type:
       - multipart/form-data; boundary=fffffff0000000
       host:
@@ -368,7 +1052,7 @@ interactions:
       Content-Disposition: form-data; name="totalFileCount"
 
 
-      4
+      12
 
       --
 
@@ -383,7 +1067,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '4874118'
+      - '4874119'
       content-type:
       - multipart/form-data; boundary=fffffff0000000
       host:
@@ -420,7 +1104,7 @@ interactions:
       name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n16\n--\nContent-Disposition:
       form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
       form-data; name=\"name\"\n\nskin_segmented_2000-01-01_00-00-00\n--\nContent-Disposition:
-      form-data; name=\"totalFileCount\"\n\n4\n--\nContent-Disposition: form-data;
+      form-data; name=\"totalFileCount\"\n\n12\n--\nContent-Disposition: form-data;
       name=\"file\"; filename=\"upload\"\nContent-Type: application/octet-stream\n\nWKW\x01U\x03\x01\x01\0\0\0\0\0\0\0\0\n----\n"
     headers:
       accept:
@@ -430,7 +1114,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1559'
+      - '1560'
       content-type:
       - multipart/form-data; boundary=fffffff0000000
       host:
@@ -459,16 +1143,16 @@ interactions:
     status_code: 200
 - request:
     body: "--\nContent-Disposition: form-data; name=\"resumableChunkSize\"\n\n104857600\n--\nContent-Disposition:
-      form-data; name=\"resumableTotalSize\"\n\n927\n--\nContent-Disposition: form-data;
+      form-data; name=\"resumableTotalSize\"\n\n1789\n--\nContent-Disposition: form-data;
       name=\"resumableType\"\n\napplication/json\n--\nContent-Disposition: form-data;
       name=\"resumableIdentifier\"\n\n2000-01-01T00-00-00__0011/datasource-properties.json\n--\nContent-Disposition:
       form-data; name=\"resumableFilename\"\n\ndatasource-properties.json\n--\nContent-Disposition:
       form-data; name=\"resumableRelativePath\"\n\ndatasource-properties.json\n--\nContent-Disposition:
       form-data; name=\"resumableTotalChunks\"\n\n1\n--\nContent-Disposition: form-data;
-      name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n927\n--\nContent-Disposition:
+      name=\"resumableChunkNumber\"\n\n1\n--\nContent-Disposition: form-data; name=\"resumableCurrentChunkSize\"\n\n1789\n--\nContent-Disposition:
       form-data; name=\"owningOrganization\"\n\nOrganization_X\n--\nContent-Disposition:
       form-data; name=\"name\"\n\nskin_segmented_2000-01-01_00-00-00\n--\nContent-Disposition:
-      form-data; name=\"totalFileCount\"\n\n4\n--\nContent-Disposition: form-data;
+      form-data; name=\"totalFileCount\"\n\n12\n--\nContent-Disposition: form-data;
       name=\"file\"; filename=\"upload\"\nContent-Type: application/octet-stream\n\n{\n
       \   \"id\": {\n        \"name\": \"skin_segmented_2000-01-01_00-00-00\",\n        \"team\":
       \"\"\n    },\n    \"scale\": [\n        550.0,\n        550.0,\n        550.0\n
@@ -481,6 +1165,16 @@ interactions:
       \           \"numChannels\": 1,\n            \"largestSegmentId\": 4,\n            \"wkwResolutions\":
       [\n                {\n                    \"cubeLength\": 1024,\n                    \"resolution\":
       [\n                        1,\n                        1,\n                        1\n
+      \                   ]\n                },\n                {\n                    \"cubeLength\":
+      1024,\n                    \"resolution\": [\n                        2,\n                        2,\n
+      \                       1\n                    ]\n                },\n                {\n
+      \                   \"cubeLength\": 1024,\n                    \"resolution\":
+      [\n                        4,\n                        4,\n                        1\n
+      \                   ]\n                },\n                {\n                    \"cubeLength\":
+      1024,\n                    \"resolution\": [\n                        8,\n                        8,\n
+      \                       1\n                    ]\n                },\n                {\n
+      \                   \"cubeLength\": 1024,\n                    \"resolution\":
+      [\n                        16,\n                        16,\n                        1\n
       \                   ]\n                }\n            ]\n        }\n    ]\n}\n----\n"
     headers:
       accept:
@@ -490,7 +1184,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '2506'
+      - '3371'
       content-type:
       - multipart/form-data; boundary=fffffff0000000
       host:
@@ -572,10 +1266,10 @@ interactions:
     method: GET
     uri: http://localhost:9000/api/datasets/Organization_X/skin_segmented_2000-01-01_00-00-00
   response:
-    content: '{"name":"skin_segmented_2022-07-14_12-22-22","dataSource":{"id":{"name":"skin_segmented_2022-07-14_12-22-22","team":"Organization_X"},"dataLayers":[{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[0,0,0],"width":1280,"height":960,"depth":1},"resolutions":[[1,1,1]],"elementClass":"uint8","largestSegmentId":4}],"scale":[550,550,550]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isForeign":false,"isScratch":false,"isConnector":false,"allowsUpload":true},"owningOrganization":"Organization_X","allowedTeams":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1657801367757,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1657801367757,"details":null,"publication":null,"isUnreported":false,"isForeign":false,"jobsEnabled":false,"tags":[]}'
+    content: '{"name":"skin_segmented_2022-07-14_12-52-31","dataSource":{"id":{"name":"skin_segmented_2022-07-14_12-52-31","team":"Organization_X"},"dataLayers":[{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[0,0,0],"width":1280,"height":960,"depth":1},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,1],[16,16,1]],"elementClass":"uint8","largestSegmentId":4}],"scale":[550,550,550]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isForeign":false,"isScratch":false,"isConnector":false,"allowsUpload":true},"owningOrganization":"Organization_X","allowedTeams":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1657803199190,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1657803199190,"details":null,"publication":null,"isUnreported":false,"isForeign":false,"jobsEnabled":false,"tags":[]}'
     headers:
       content-length:
-      - '870'
+      - '904'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -607,11 +1301,11 @@ interactions:
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
         \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
         alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/skin_segmented_2022-07-14_12-22-22\u201D
+        is the webKnossos Datastore \u201COrganization_X/skin_segmented_2022-07-14_12-52-31\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>skin_segmented_2022-07-14_12-22-22</a>: .</li>\n
-        \     \n        <li><a href=skin_segmented_2022-07-14_12-22-22/segmentation>segmentation</a>:
-        skin_segmented_2022-07-14_12-22-22/segmentation</li>\n      \n    </ul>\n
+        \     \n        <li><a href=.>skin_segmented_2022-07-14_12-52-31</a>: .</li>\n
+        \     \n        <li><a href=skin_segmented_2022-07-14_12-52-31/segmentation>segmentation</a>:
+        skin_segmented_2022-07-14_12-52-31/segmentation</li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
@@ -632,7 +1326,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-22-22
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31
 - request:
     body: null
     headers:
@@ -662,7 +1356,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-22-22
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31
 - request:
     body: null
     headers: {}
@@ -683,11 +1377,11 @@ interactions:
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
         \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
         alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/skin_segmented_2022-07-14_12-22-22\u201D
+        is the webKnossos Datastore \u201COrganization_X/skin_segmented_2022-07-14_12-52-31\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>skin_segmented_2022-07-14_12-22-22</a>: .</li>\n
-        \     \n        <li><a href=skin_segmented_2022-07-14_12-22-22/segmentation>segmentation</a>:
-        skin_segmented_2022-07-14_12-22-22/segmentation</li>\n      \n    </ul>\n
+        \     \n        <li><a href=.>skin_segmented_2022-07-14_12-52-31</a>: .</li>\n
+        \     \n        <li><a href=skin_segmented_2022-07-14_12-52-31/segmentation>segmentation</a>:
+        skin_segmented_2022-07-14_12-52-31/segmentation</li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
@@ -708,7 +1402,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-22-22
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31
 - request:
     body: null
     headers: {}
@@ -729,11 +1423,11 @@ interactions:
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
         \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
         alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/skin_segmented_2022-07-14_12-22-22\u201D
+        is the webKnossos Datastore \u201COrganization_X/skin_segmented_2022-07-14_12-52-31\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>skin_segmented_2022-07-14_12-22-22</a>: .</li>\n
-        \     \n        <li><a href=skin_segmented_2022-07-14_12-22-22/segmentation>segmentation</a>:
-        skin_segmented_2022-07-14_12-22-22/segmentation</li>\n      \n    </ul>\n
+        \     \n        <li><a href=.>skin_segmented_2022-07-14_12-52-31</a>: .</li>\n
+        \     \n        <li><a href=skin_segmented_2022-07-14_12-52-31/segmentation>segmentation</a>:
+        skin_segmented_2022-07-14_12-52-31/segmentation</li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
@@ -754,7 +1448,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-22-22
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31
 - request:
     body: null
     headers:
@@ -771,7 +1465,7 @@ interactions:
       access-control-max-age:
       - '600'
       content-length:
-      - '338'
+      - '404'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -784,7 +1478,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-22-22/datasource-properties.json
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/datasource-properties.json
 - request:
     body: null
     headers: {}
@@ -792,14 +1486,14 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/datasource-properties.json
   response:
     body:
-      string: '{"id":{"name":"skin_segmented_2022-07-14_12-22-22","team":"Organization_X"},"dataLayers":[{"name":"segmentation","boundingBox":{"topLeft":[0,0,0],"width":1280,"height":960,"depth":1},"elementClass":"uint8","mags":[{"mag":[1,1,1]}],"largestSegmentId":4,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[550,550,550]}'
+      string: '{"id":{"name":"skin_segmented_2022-07-14_12-52-31","team":"Organization_X"},"dataLayers":[{"name":"segmentation","boundingBox":{"topLeft":[0,0,0],"width":1280,"height":960,"depth":1},"elementClass":"uint8","mags":[{"mag":[1,1,1]},{"mag":[2,2,1]},{"mag":[4,4,1]},{"mag":[8,8,1]},{"mag":[16,16,1]}],"largestSegmentId":4,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[550,550,550]}'
     headers:
       access-control-allow-origin:
       - '*'
       access-control-max-age:
       - '600'
       content-length:
-      - '338'
+      - '404'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -812,7 +1506,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-22-22/datasource-properties.json
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/datasource-properties.json
 - request:
     body: null
     headers:
@@ -829,7 +1523,7 @@ interactions:
       access-control-max-age:
       - '600'
       content-length:
-      - '338'
+      - '404'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -842,24 +1536,24 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-22-22/datasource-properties.json
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/datasource-properties.json
 - request:
     body: null
     headers:
       Range:
-      - bytes=0-337
+      - bytes=0-403
     method: GET
     uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/datasource-properties.json
   response:
     body:
-      string: '{"id":{"name":"skin_segmented_2022-07-14_12-22-22","team":"Organization_X"},"dataLayers":[{"name":"segmentation","boundingBox":{"topLeft":[0,0,0],"width":1280,"height":960,"depth":1},"elementClass":"uint8","mags":[{"mag":[1,1,1]}],"largestSegmentId":4,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[550,550,550]}'
+      string: '{"id":{"name":"skin_segmented_2022-07-14_12-52-31","team":"Organization_X"},"dataLayers":[{"name":"segmentation","boundingBox":{"topLeft":[0,0,0],"width":1280,"height":960,"depth":1},"elementClass":"uint8","mags":[{"mag":[1,1,1]},{"mag":[2,2,1]},{"mag":[4,4,1]},{"mag":[8,8,1]},{"mag":[16,16,1]}],"largestSegmentId":4,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[550,550,550]}'
     headers:
       access-control-allow-origin:
       - '*'
       access-control-max-age:
       - '600'
       content-length:
-      - '338'
+      - '404'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -872,7 +1566,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-22-22/datasource-properties.json
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/datasource-properties.json
 - request:
     body: null
     headers: {}
@@ -893,7 +1587,7 @@ interactions:
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
         \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
         alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/skin_segmented_2022-07-14_12-22-22/segmentation/1\u201D
+        is the webKnossos Datastore \u201COrganization_X/skin_segmented_2022-07-14_12-52-31/segmentation/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=.>1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
     headers:
@@ -915,7 +1609,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-22-22/segmentation/1
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/1
 - request:
     body: null
     headers: {}
@@ -943,7 +1637,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-22-22/segmentation/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/1/.zarray
 - request:
     body: null
     headers:
@@ -973,7 +1667,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-22-22/segmentation/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/1/.zarray
 - request:
     body: null
     headers: {}
@@ -1001,7 +1695,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-22-22/segmentation/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/1/.zarray
 - request:
     body: null
     headers: {}
@@ -1022,7 +1716,7 @@ interactions:
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
         \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
         alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/skin_segmented_2022-07-14_12-22-22/segmentation/1\u201D
+        is the webKnossos Datastore \u201COrganization_X/skin_segmented_2022-07-14_12-52-31/segmentation/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=.>1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
     headers:
@@ -1044,7 +1738,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-22-22/segmentation/1
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/1
 - request:
     body: null
     headers: {}
@@ -1065,7 +1759,7 @@ interactions:
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
         \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
         alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/skin_segmented_2022-07-14_12-22-22/segmentation/1\u201D
+        is the webKnossos Datastore \u201COrganization_X/skin_segmented_2022-07-14_12-52-31/segmentation/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=.>1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
     headers:
@@ -1087,7 +1781,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-22-22/segmentation/1
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/1
 - request:
     body: null
     headers: {}
@@ -1115,7 +1809,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-22-22/segmentation/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/1/.zarray
 - request:
     body: null
     headers: {}
@@ -1143,7 +1837,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-22-22/segmentation/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/1/.zarray
 - request:
     body: null
     headers: {}
@@ -1171,7 +1865,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-22-22/segmentation/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/1/.zarray
 - request:
     body: null
     headers: {}
@@ -1192,7 +1886,7 @@ interactions:
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
         \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
         alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/skin_segmented_2022-07-14_12-22-22/segmentation/1\u201D
+        is the webKnossos Datastore \u201COrganization_X/skin_segmented_2022-07-14_12-52-31/segmentation/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=.>1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
     headers:
@@ -1214,5 +1908,1373 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-22-22/segmentation/1
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/1
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/2-2-1
+  response:
+    body:
+      string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
+        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
+        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
+        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
+        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
+        \       text-align: center\n      }\n\n      img {\n        display: block;\n
+        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
+        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
+        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
+        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
+        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
+        is the webKnossos Datastore \u201COrganization_X/skin_segmented_2022-07-14_12-52-31/segmentation/2-2-1\u201D
+        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
+        \     \n        <li><a href=.>2-2-1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '1278'
+      content-type:
+      - text/html; charset=UTF-8
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/2-2-1
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/2-2-1/.zarray
+  response:
+    body:
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,640,480,1],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '161'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/2-2-1/.zarray
+- request:
+    body: null
+    headers:
+      Accept-Encoding:
+      - identity
+    method: HEAD
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/2-2-1/.zarray
+  response:
+    body:
+      string: ''
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '161'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/2-2-1/.zarray
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/2-2-1/.zarray
+  response:
+    body:
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,640,480,1],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '161'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/2-2-1/.zarray
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/2-2-1
+  response:
+    body:
+      string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
+        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
+        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
+        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
+        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
+        \       text-align: center\n      }\n\n      img {\n        display: block;\n
+        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
+        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
+        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
+        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
+        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
+        is the webKnossos Datastore \u201COrganization_X/skin_segmented_2022-07-14_12-52-31/segmentation/2-2-1\u201D
+        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
+        \     \n        <li><a href=.>2-2-1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '1278'
+      content-type:
+      - text/html; charset=UTF-8
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/2-2-1
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/2-2-1
+  response:
+    body:
+      string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
+        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
+        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
+        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
+        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
+        \       text-align: center\n      }\n\n      img {\n        display: block;\n
+        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
+        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
+        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
+        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
+        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
+        is the webKnossos Datastore \u201COrganization_X/skin_segmented_2022-07-14_12-52-31/segmentation/2-2-1\u201D
+        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
+        \     \n        <li><a href=.>2-2-1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '1278'
+      content-type:
+      - text/html; charset=UTF-8
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/2-2-1
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/2-2-1/.zarray
+  response:
+    body:
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,640,480,1],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '161'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/2-2-1/.zarray
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/2-2-1/.zarray
+  response:
+    body:
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,640,480,1],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '161'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/2-2-1/.zarray
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/2-2-1/.zarray
+  response:
+    body:
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,640,480,1],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '161'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/2-2-1/.zarray
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/2-2-1
+  response:
+    body:
+      string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
+        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
+        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
+        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
+        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
+        \       text-align: center\n      }\n\n      img {\n        display: block;\n
+        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
+        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
+        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
+        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
+        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
+        is the webKnossos Datastore \u201COrganization_X/skin_segmented_2022-07-14_12-52-31/segmentation/2-2-1\u201D
+        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
+        \     \n        <li><a href=.>2-2-1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '1278'
+      content-type:
+      - text/html; charset=UTF-8
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/2-2-1
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/4-4-1
+  response:
+    body:
+      string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
+        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
+        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
+        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
+        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
+        \       text-align: center\n      }\n\n      img {\n        display: block;\n
+        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
+        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
+        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
+        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
+        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
+        is the webKnossos Datastore \u201COrganization_X/skin_segmented_2022-07-14_12-52-31/segmentation/4-4-1\u201D
+        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
+        \     \n        <li><a href=.>4-4-1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '1278'
+      content-type:
+      - text/html; charset=UTF-8
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/4-4-1
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/4-4-1/.zarray
+  response:
+    body:
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,320,240,1],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '161'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/4-4-1/.zarray
+- request:
+    body: null
+    headers:
+      Accept-Encoding:
+      - identity
+    method: HEAD
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/4-4-1/.zarray
+  response:
+    body:
+      string: ''
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '161'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/4-4-1/.zarray
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/4-4-1/.zarray
+  response:
+    body:
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,320,240,1],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '161'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/4-4-1/.zarray
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/4-4-1
+  response:
+    body:
+      string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
+        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
+        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
+        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
+        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
+        \       text-align: center\n      }\n\n      img {\n        display: block;\n
+        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
+        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
+        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
+        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
+        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
+        is the webKnossos Datastore \u201COrganization_X/skin_segmented_2022-07-14_12-52-31/segmentation/4-4-1\u201D
+        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
+        \     \n        <li><a href=.>4-4-1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '1278'
+      content-type:
+      - text/html; charset=UTF-8
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/4-4-1
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/4-4-1
+  response:
+    body:
+      string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
+        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
+        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
+        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
+        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
+        \       text-align: center\n      }\n\n      img {\n        display: block;\n
+        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
+        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
+        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
+        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
+        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
+        is the webKnossos Datastore \u201COrganization_X/skin_segmented_2022-07-14_12-52-31/segmentation/4-4-1\u201D
+        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
+        \     \n        <li><a href=.>4-4-1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '1278'
+      content-type:
+      - text/html; charset=UTF-8
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/4-4-1
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/4-4-1/.zarray
+  response:
+    body:
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,320,240,1],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '161'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/4-4-1/.zarray
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/4-4-1/.zarray
+  response:
+    body:
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,320,240,1],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '161'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/4-4-1/.zarray
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/4-4-1/.zarray
+  response:
+    body:
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,320,240,1],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '161'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/4-4-1/.zarray
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/4-4-1
+  response:
+    body:
+      string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
+        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
+        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
+        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
+        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
+        \       text-align: center\n      }\n\n      img {\n        display: block;\n
+        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
+        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
+        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
+        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
+        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
+        is the webKnossos Datastore \u201COrganization_X/skin_segmented_2022-07-14_12-52-31/segmentation/4-4-1\u201D
+        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
+        \     \n        <li><a href=.>4-4-1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '1278'
+      content-type:
+      - text/html; charset=UTF-8
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/4-4-1
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/8-8-1
+  response:
+    body:
+      string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
+        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
+        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
+        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
+        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
+        \       text-align: center\n      }\n\n      img {\n        display: block;\n
+        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
+        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
+        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
+        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
+        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
+        is the webKnossos Datastore \u201COrganization_X/skin_segmented_2022-07-14_12-52-31/segmentation/8-8-1\u201D
+        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
+        \     \n        <li><a href=.>8-8-1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '1278'
+      content-type:
+      - text/html; charset=UTF-8
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/8-8-1
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/8-8-1/.zarray
+  response:
+    body:
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,160,120,1],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '161'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/8-8-1/.zarray
+- request:
+    body: null
+    headers:
+      Accept-Encoding:
+      - identity
+    method: HEAD
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/8-8-1/.zarray
+  response:
+    body:
+      string: ''
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '161'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/8-8-1/.zarray
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/8-8-1/.zarray
+  response:
+    body:
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,160,120,1],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '161'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/8-8-1/.zarray
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/8-8-1
+  response:
+    body:
+      string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
+        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
+        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
+        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
+        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
+        \       text-align: center\n      }\n\n      img {\n        display: block;\n
+        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
+        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
+        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
+        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
+        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
+        is the webKnossos Datastore \u201COrganization_X/skin_segmented_2022-07-14_12-52-31/segmentation/8-8-1\u201D
+        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
+        \     \n        <li><a href=.>8-8-1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '1278'
+      content-type:
+      - text/html; charset=UTF-8
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/8-8-1
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/8-8-1
+  response:
+    body:
+      string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
+        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
+        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
+        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
+        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
+        \       text-align: center\n      }\n\n      img {\n        display: block;\n
+        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
+        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
+        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
+        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
+        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
+        is the webKnossos Datastore \u201COrganization_X/skin_segmented_2022-07-14_12-52-31/segmentation/8-8-1\u201D
+        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
+        \     \n        <li><a href=.>8-8-1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '1278'
+      content-type:
+      - text/html; charset=UTF-8
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/8-8-1
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/8-8-1/.zarray
+  response:
+    body:
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,160,120,1],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '161'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/8-8-1/.zarray
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/8-8-1/.zarray
+  response:
+    body:
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,160,120,1],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '161'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/8-8-1/.zarray
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/8-8-1/.zarray
+  response:
+    body:
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,160,120,1],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '161'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/8-8-1/.zarray
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/8-8-1
+  response:
+    body:
+      string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
+        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
+        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
+        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
+        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
+        \       text-align: center\n      }\n\n      img {\n        display: block;\n
+        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
+        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
+        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
+        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
+        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
+        is the webKnossos Datastore \u201COrganization_X/skin_segmented_2022-07-14_12-52-31/segmentation/8-8-1\u201D
+        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
+        \     \n        <li><a href=.>8-8-1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '1278'
+      content-type:
+      - text/html; charset=UTF-8
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/8-8-1
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/16-16-1
+  response:
+    body:
+      string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
+        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
+        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
+        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
+        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
+        \       text-align: center\n      }\n\n      img {\n        display: block;\n
+        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
+        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
+        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
+        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
+        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
+        is the webKnossos Datastore \u201COrganization_X/skin_segmented_2022-07-14_12-52-31/segmentation/16-16-1\u201D
+        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
+        \     \n        <li><a href=.>16-16-1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '1282'
+      content-type:
+      - text/html; charset=UTF-8
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/16-16-1
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/16-16-1/.zarray
+  response:
+    body:
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,80,60,1],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '159'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/16-16-1/.zarray
+- request:
+    body: null
+    headers:
+      Accept-Encoding:
+      - identity
+    method: HEAD
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/16-16-1/.zarray
+  response:
+    body:
+      string: ''
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '159'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/16-16-1/.zarray
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/16-16-1/.zarray
+  response:
+    body:
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,80,60,1],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '159'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/16-16-1/.zarray
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/16-16-1
+  response:
+    body:
+      string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
+        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
+        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
+        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
+        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
+        \       text-align: center\n      }\n\n      img {\n        display: block;\n
+        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
+        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
+        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
+        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
+        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
+        is the webKnossos Datastore \u201COrganization_X/skin_segmented_2022-07-14_12-52-31/segmentation/16-16-1\u201D
+        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
+        \     \n        <li><a href=.>16-16-1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '1282'
+      content-type:
+      - text/html; charset=UTF-8
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/16-16-1
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/16-16-1
+  response:
+    body:
+      string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
+        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
+        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
+        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
+        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
+        \       text-align: center\n      }\n\n      img {\n        display: block;\n
+        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
+        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
+        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
+        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
+        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
+        is the webKnossos Datastore \u201COrganization_X/skin_segmented_2022-07-14_12-52-31/segmentation/16-16-1\u201D
+        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
+        \     \n        <li><a href=.>16-16-1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '1282'
+      content-type:
+      - text/html; charset=UTF-8
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/16-16-1
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/16-16-1/.zarray
+  response:
+    body:
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,80,60,1],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '159'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/16-16-1/.zarray
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/16-16-1/.zarray
+  response:
+    body:
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,80,60,1],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '159'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/16-16-1/.zarray
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/16-16-1/.zarray
+  response:
+    body:
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,80,60,1],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '159'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/16-16-1/.zarray
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2000-01-01_00-00-00/segmentation/16-16-1
+  response:
+    body:
+      string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
+        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
+        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
+        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
+        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
+        \       text-align: center\n      }\n\n      img {\n        display: block;\n
+        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
+        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
+        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
+        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
+        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
+        is the webKnossos Datastore \u201COrganization_X/skin_segmented_2022-07-14_12-52-31/segmentation/16-16-1\u201D
+        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
+        \     \n        <li><a href=.>16-16-1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '1282'
+      content-type:
+      - text/html; charset=UTF-8
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/skin_segmented_2022-07-14_12-52-31/segmentation/16-16-1
 version: 1

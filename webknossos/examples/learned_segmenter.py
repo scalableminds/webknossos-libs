@@ -76,6 +76,7 @@ def main() -> None:
         )
         segmentation_layer.bounding_box = dataset.layers["color"].bounding_box
         segmentation_layer.add_mag(mag, compress=True).write(segmentation)
+        segmentation_layer.downsample(sampling_mode="constant_z")
 
         remote_ds = new_dataset.upload(
             layers_to_link=[dataset.layers["color"]]
