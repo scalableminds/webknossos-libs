@@ -6,7 +6,6 @@ from typing import List, Tuple
 import numpy as np
 
 from webknossos.geometry import BoundingBox, Vec3Int
-from webknossos.utils import time_start, time_stop
 
 from .view import View
 
@@ -43,7 +42,6 @@ def upsample_cube_job(
     ), f"mag_factors ({mag_factors}) for upsampling must be smaller than 1"
 
     try:
-        time_start(f"Upsampling of {target_view.bounding_box}")
         num_channels = target_view.info.num_channels
         target_size = target_view.bounding_box.in_mag(target_view.mag).size
         shape = (num_channels,) + target_size.to_tuple()
@@ -93,7 +91,6 @@ def upsample_cube_job(
         if source_view.info.num_channels == 1:
             file_buffer = file_buffer[0]  # remove channel dimension
         target_view.write(file_buffer)
-        time_stop(f"Upsampling of {target_view.bounding_box}")
 
     except Exception as exc:
         logging.error(

@@ -792,6 +792,7 @@ class Dataset:
         flip_y: bool = False,
         flip_z: bool = False,
         use_bioformats: bool = False,
+        channel: Optional[int] = None,
         timepoint: Optional[int] = None,
         batch_size: Optional[int] = None,  # defaults to shard-size z
         executor: Optional[Union[ClusterExecutor, WrappedProcessPoolExecutor]] = None,
@@ -816,8 +817,9 @@ class Dataset:
         * `swap_xy`: set to `True` to interchange x and y axis before writing to disk
         * `flip_x`, `flip_y`, `flip_z`: set to `True` to flip the respective axis before writing to disk
         * `use_bioformats`: set to `True` to use the [pims bioformats adapter](https://soft-matter.github.io/pims/v0.6.1/bioformats.html), needs a JVM
+        * `channel`: may be used to select a single channel, if multiple are available,
         * `timepoint`: for timeseries, select a timepoint to use by specifying it as an int, starting from 0
-        * `batch_size`: size to process the images, must be a multiple of the shard-size z-axis, default is the shard-size
+        * `batch_size`: size to process the images, must be a multiple of the chunk-size z-axis for uncompressed and the shard-size z-axis for compressed layers, default is the chunk-size or shard-size respectively
         * `executor`: pass a `ClusterExecutor` instance to parallelize the conversion jobs across the batches
         """
         try:
@@ -829,12 +831,14 @@ class Dataset:
 
         pims_images = PimsImages(
             images,
+            channel=channel,
             timepoint=timepoint,
             swap_xy=swap_xy,
             flip_x=flip_x,
             flip_y=flip_y,
             flip_z=flip_z,
             use_bioformats=use_bioformats,
+            is_segmentation=category == "segmentation",
         )
         add_layer_kwargs = {}
         if category == "segmentation":
@@ -859,11 +863,18 @@ class Dataset:
         ).from_mag_to_mag1(mag)
 
         if batch_size is None:
-            batch_size = mag_view.info.shard_size.z
-        else:
+            if compress:
+                batch_size = mag_view.info.shard_size.z
+            else:
+                batch_size = mag_view.info.chunk_size.z
+        elif compress:
             assert (
                 batch_size % mag_view.info.shard_size.z == 0
-            ), f"batch_size {batch_size} must be divisible by z shard-size {mag_view.info.shard_size.z}"
+            ), f"batch_size {batch_size} must be divisible by z shard-size {mag_view.info.shard_size.z} when creating compressed layers"
+        else:
+            assert (
+                batch_size % mag_view.info.chunk_size.z == 0
+            ), f"batch_size {batch_size} must be divisible by z chunk-size {mag_view.info.chunk_size.z}"
 
         func_per_chunk = named_partial(
             pims_images.copy_to_view,
@@ -887,19 +898,19 @@ class Dataset:
                 module="webknossos",
             )
             if executor is None:
-                shapes_and_max_ids = [func_per_chunk(i) for i in args]
-            else:
-                # There are race-conditions about setting the bbox of the layer.
-                # The bbox is set correctly afterwards, ignore errors here:
-                warnings.filterwarnings(
-                    "ignore",
-                    message=".*properties were found on disk which are newer than the ones that were seen last time.*",
-                    category=UserWarning,
-                    module="webknossos",
-                )
-                shapes_and_max_ids = wait_and_ensure_success(
-                    executor.map_to_futures(func_per_chunk, args),
-                )
+                executor = get_executor_for_args(None)
+            # There are race-conditions about setting the bbox of the layer.
+            # The bbox is set correctly afterwards, ignore errors here:
+            warnings.filterwarnings(
+                "ignore",
+                message=".*properties were found on disk which are newer than the ones that were seen last time.*",
+                category=UserWarning,
+                module="webknossos",
+            )
+            shapes_and_max_ids = wait_and_ensure_success(
+                executor.map_to_futures(func_per_chunk, args),
+                progress_desc="Creating layer from images",
+            )
             shapes, max_ids = zip(*shapes_and_max_ids)
             if category == "segmentation":
                 max_id = max(max_ids)
