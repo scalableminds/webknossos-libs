@@ -98,9 +98,12 @@ def test_repo_images(
 ) -> wk.Dataset:
     with wk.utils.get_executor_for_args(None) as executor:
         ds = wk.Dataset(tmp_path, (1, 1, 1))
+        layer_name = "__".join(
+            (path if isinstance(path, str) else str(path[0])).split("/")[1:]
+        )
         l = ds.add_layer_from_images(
             path,
-            layer_name="__".join(path.split("/")[1:]),
+            layer_name=layer_name,
             compress=True,
             executor=executor,
             **kwargs,
