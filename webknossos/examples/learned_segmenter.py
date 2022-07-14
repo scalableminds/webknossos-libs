@@ -23,10 +23,8 @@ def main() -> None:
     training_data_bbox = annotation.user_bounding_boxes[0]  # type: ignore[index]
     time_str = strftime("%Y-%m-%d_%H-%M-%S", gmtime())
     new_dataset_name = annotation.dataset_name + f"_segmented_{time_str}"
-    dataset = wk.Dataset.open_remote(
-        annotation.dataset_name,
-        organization_id="scalable_minds",
-        webknossos_url="https://webknossos.org",
+    dataset = annotation.get_remote_base_dataset(
+        webknossos_url="https://webknossos.org"
     )
 
     with annotation.temporary_volume_layer_copy() as volume_annotation_layer:
@@ -79,8 +77,8 @@ def main() -> None:
         segmentation_layer.bounding_box = dataset.layers["color"].bounding_box
         segmentation_layer.add_mag(mag, compress=True).write(segmentation)
 
-        remote_ds = dataset.upload(
-            layers_to_link=[annotation.get_remote_base_dataset().get_layer("color")]
+        remote_ds = new_dataset.upload(
+            layers_to_link=[dataset.layers["color"]]
             if "PYTEST_CURRENT_TEST" not in os.environ
             else None
         )

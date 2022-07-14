@@ -173,6 +173,8 @@ class _DummyNearestNeighborClassifier:
         return self.labels[nearest_neighbors]
 
 
+@pytest.mark.block_network(allowed_hosts=[".*"])
+@pytest.mark.vcr(ignore_hosts=["webknossos.org", "data-humerus.webknossos.org"])
 def test_learned_segmenter() -> None:
     with tmp_cwd():
         from skimage.future import trainable_segmentation
@@ -184,12 +186,9 @@ def test_learned_segmenter() -> None:
         trainable_segmentation.has_sklearn = True
         import examples.learned_segmenter as example
 
-        segmentation_layer, url = exec_main_and_get_vars(
-            example, "segmentation_layer", "url"
-        )
+        segmentation, url = exec_main_and_get_vars(example, "segmentation", "url")
 
-        segmentation_data = segmentation_layer.mags[wk.Mag(1)].read()
-        counts = dict(zip(*np.unique(segmentation_data, return_counts=True)))
+        counts = dict(zip(*np.unique(segmentation, return_counts=True)))
         assert counts == {1: 209066, 2: 37803, 3: 164553, 4: 817378}
         assert url.startswith(
             "http://localhost:9000/datasets/Organization_X/skin_segmented_"

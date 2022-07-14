@@ -434,8 +434,17 @@ class Annotation:
                 layer_content,
             )
 
-    def get_remote_base_dataset(self) -> RemoteDataset:
-        return Dataset.open_remote(self.dataset_name, self.organization_id)
+    def get_remote_base_dataset(
+        self,
+        sharing_token: Optional[str] = None,
+        webknossos_url: Optional[str] = None,
+    ) -> RemoteDataset:
+        return Dataset.open_remote(
+            self.dataset_name,
+            self.organization_id,
+            sharing_token=sharing_token,
+            webknossos_url=webknossos_url,
+        )
 
     def get_volume_layer_names(self) -> Iterable[str]:
         return (i.name for i in self._volume_layers)
