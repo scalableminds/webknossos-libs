@@ -1,7 +1,7 @@
 from pathlib import Path
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from time import gmtime, strftime
-from typing import Dict, Tuple
+from typing import Any, Dict, List, Tuple, Union
 from zipfile import ZipFile
 
 import httpx
@@ -10,6 +10,8 @@ import pytest
 from tifffile import TiffFile
 
 import webknossos as wk
+
+from .constants import TESTDATA_DIR
 
 pytestmark = [pytest.mark.block_network(allowed_hosts=[".*"])]
 
@@ -29,7 +31,9 @@ def test_compare_tifffile(tmp_path: Path) -> None:
         assert np.array_equal(data[:, :, z_index], comparison_slice)
 
 
-REPO_IMAGES_ARGS = [
+REPO_IMAGES_ARGS: List[
+    Tuple[Union[str, List[Path]], Dict[str, Any], str, int, Tuple[int, int, int]]
+] = [
     (
         "testdata/tiff/test.*.tiff",
         {"category": "segmentation"},
@@ -38,10 +42,28 @@ REPO_IMAGES_ARGS = [
         (265, 265, 257),
     ),
     (
+        [
+            TESTDATA_DIR / "tiff" / "test.0000.tiff",
+            TESTDATA_DIR / "tiff" / "test.0001.tiff",
+            TESTDATA_DIR / "tiff" / "test.0002.tiff",
+        ],
+        {},
+        "uint8",
+        1,
+        (265, 265, 3),
+    ),
+    (
         "testdata/rgb_tiff/test_rgb.tif",
         {"mag": 2},
         "uint8",
         3,
+        (64, 64, 2),
+    ),
+    (
+        "testdata/rgb_tiff/test_rgb.tif",
+        {"mag": 2, "channel": 1},
+        "uint8",
+        1,
         (64, 64, 2),
     ),
     (
@@ -76,9 +98,12 @@ def test_repo_images(
 ) -> wk.Dataset:
     with wk.utils.get_executor_for_args(None) as executor:
         ds = wk.Dataset(tmp_path, (1, 1, 1))
+        layer_name = "__".join(
+            (path if isinstance(path, str) else str(path[0])).split("/")[1:]
+        )
         l = ds.add_layer_from_images(
             path,
-            layer_name="__".join(path.split("/")[1:]),
+            layer_name=layer_name,
             compress=True,
             executor=executor,
             **kwargs,
@@ -265,7 +290,10 @@ if __name__ == "__main__":
 
     for repo_images_args in REPO_IMAGES_ARGS:
         with TemporaryDirectory() as tempdir:
-            name = "".join(filter(str.isalnum, repo_images_args[0]))
+            image_path = repo_images_args[0]
+            if isinstance(image_path, list):
+                image_path = str(image_path[0])
+            name = "".join(filter(str.isalnum, image_path))
             print(*repo_images_args)
             print(
                 test_repo_images(Path(tempdir), *repo_images_args)
