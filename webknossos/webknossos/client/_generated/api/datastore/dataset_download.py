@@ -19,8 +19,10 @@ def _get_kwargs(
     width: int,
     height: int,
     depth: int,
-    resolution: int,
+    mag: str,
+    resolution: Union[Unset, None, int] = UNSET,
     half_byte: Union[Unset, None, bool] = False,
+    mapping_name: Union[Unset, None, str] = UNSET,
 ) -> Dict[str, Any]:
     url = "{}/data/datasets/{organizationName}/{dataSetName}/layers/{dataLayerName}/data".format(
         client.base_url,
@@ -40,8 +42,10 @@ def _get_kwargs(
         "width": width,
         "height": height,
         "depth": depth,
+        "mag": mag,
         "resolution": resolution,
         "halfByte": half_byte,
+        "mappingName": mapping_name,
     }
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -76,8 +80,10 @@ def sync_detailed(
     width: int,
     height: int,
     depth: int,
-    resolution: int,
+    mag: str,
+    resolution: Union[Unset, None, int] = UNSET,
     half_byte: Union[Unset, None, bool] = False,
+    mapping_name: Union[Unset, None, str] = UNSET,
 ) -> Response[Any]:
     kwargs = _get_kwargs(
         organization_name=organization_name,
@@ -91,8 +97,10 @@ def sync_detailed(
         width=width,
         height=height,
         depth=depth,
+        mag=mag,
         resolution=resolution,
         half_byte=half_byte,
+        mapping_name=mapping_name,
     )
 
     response = httpx.get(
@@ -115,8 +123,10 @@ async def asyncio_detailed(
     width: int,
     height: int,
     depth: int,
-    resolution: int,
+    mag: str,
+    resolution: Union[Unset, None, int] = UNSET,
     half_byte: Union[Unset, None, bool] = False,
+    mapping_name: Union[Unset, None, str] = UNSET,
 ) -> Response[Any]:
     kwargs = _get_kwargs(
         organization_name=organization_name,
@@ -130,8 +140,10 @@ async def asyncio_detailed(
         width=width,
         height=height,
         depth=depth,
+        mag=mag,
         resolution=resolution,
         half_byte=half_byte,
+        mapping_name=mapping_name,
     )
 
     async with httpx.AsyncClient() as _client:

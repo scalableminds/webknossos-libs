@@ -1,13 +1,15 @@
-from typing import TYPE_CHECKING, Dict, List, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Union, cast
 
 import attr
 
 from webknossos.client._generated.api.default import (
     current_user_info,
+    team_list,
     user_info_by_id,
     user_list,
     user_logged_time,
 )
+from webknossos.client._generated.types import Unset
 
 if TYPE_CHECKING:
     from webknossos.client._generated.models.current_user_info_response_200 import (
@@ -65,6 +67,8 @@ class User:
             "UserInfoByIdResponse200",
         ],
     ) -> "User":
+        if isinstance(response.teams, Unset):
+            response.teams = cast(List[Any], [])
         return cls(
             user_id=response.id,
             email=response.email,
@@ -113,6 +117,17 @@ class Team:
     id: str
     name: str
     organization_id: str
+
+    @classmethod
+    def get_by_name(cls, name: str) -> "Team":
+        """Returns the Team specified by the passed name if your token authorizes you to see it."""
+        client = _get_generated_client(enforce_auth=True)
+        response = team_list.sync(client=client)
+        assert response is not None, "Could not fetch teams."
+        for team in response:
+            if team.name == name:
+                return cls(team.id, team.name, team.organization)
+        raise KeyError(f"Could not find team {name}.")
 
 
 @attr.frozen

@@ -54,11 +54,11 @@ interactions:
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
         \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
         alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201Cscalable_minds/dataSetName\u201D folder.</p>\n
+        is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev\u201D folder.</p>\n
         \   <p>The following are the contents of the folder:</p>\n    <ul>\n      \n
-        \       <li><a href=.>datasource</a>: .</li>\n      \n        <li><a href=color>color</a>:
-        color</li>\n      \n        <li><a href=segmentation>segmentation</a>: segmentation</li>\n
-        \     \n    </ul>\n  </body>\n</html>\n"
+        \       <li><a href=.>l4_sample_dev</a>: .</li>\n      \n        <li><a href=l4_sample_dev/color>color</a>:
+        l4_sample_dev/color</li>\n      \n        <li><a href=l4_sample_dev/segmentation>segmentation</a>:
+        l4_sample_dev/segmentation</li>\n      \n    </ul>\n  </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
@@ -67,7 +67,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1372'
+      - '1433'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -103,7 +103,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1372'
+      - '1433'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -141,11 +141,11 @@ interactions:
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
         \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
         alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201Cscalable_minds/dataSetName\u201D folder.</p>\n
+        is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev\u201D folder.</p>\n
         \   <p>The following are the contents of the folder:</p>\n    <ul>\n      \n
-        \       <li><a href=.>datasource</a>: .</li>\n      \n        <li><a href=color>color</a>:
-        color</li>\n      \n        <li><a href=segmentation>segmentation</a>: segmentation</li>\n
-        \     \n    </ul>\n  </body>\n</html>\n"
+        \       <li><a href=.>l4_sample_dev</a>: .</li>\n      \n        <li><a href=l4_sample_dev/color>color</a>:
+        l4_sample_dev/color</li>\n      \n        <li><a href=l4_sample_dev/segmentation>segmentation</a>:
+        l4_sample_dev/segmentation</li>\n      \n    </ul>\n  </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
@@ -154,7 +154,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1372'
+      - '1433'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -192,11 +192,11 @@ interactions:
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
         \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
         alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201Cscalable_minds/dataSetName\u201D folder.</p>\n
+        is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev\u201D folder.</p>\n
         \   <p>The following are the contents of the folder:</p>\n    <ul>\n      \n
-        \       <li><a href=.>datasource</a>: .</li>\n      \n        <li><a href=color>color</a>:
-        color</li>\n      \n        <li><a href=segmentation>segmentation</a>: segmentation</li>\n
-        \     \n    </ul>\n  </body>\n</html>\n"
+        \       <li><a href=.>l4_sample_dev</a>: .</li>\n      \n        <li><a href=l4_sample_dev/color>color</a>:
+        l4_sample_dev/color</li>\n      \n        <li><a href=l4_sample_dev/segmentation>segmentation</a>:
+        l4_sample_dev/segmentation</li>\n      \n    </ul>\n  </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
@@ -205,7 +205,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1372'
+      - '1433'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -421,7 +421,7 @@ interactions:
     uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/1/.zarray
   response:
     body:
-      string: '{"dtype":"<u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2935,4480,1869],"dimension_seperator":"."}'
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2935,4480,1869],"dimension_seperator":"."}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -491,7 +491,7 @@ interactions:
     uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/1/.zarray
   response:
     body:
-      string: '{"dtype":"<u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2935,4480,1869],"dimension_seperator":"."}'
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2935,4480,1869],"dimension_seperator":"."}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -623,7 +623,7 @@ interactions:
     uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/1/.zarray
   response:
     body:
-      string: '{"dtype":"<u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2935,4480,1869],"dimension_seperator":"."}'
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2935,4480,1869],"dimension_seperator":"."}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -657,7 +657,7 @@ interactions:
     uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/1/.zarray
   response:
     body:
-      string: '{"dtype":"<u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2935,4480,1869],"dimension_seperator":"."}'
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2935,4480,1869],"dimension_seperator":"."}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -691,7 +691,7 @@ interactions:
     uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/1/.zarray
   response:
     body:
-      string: '{"dtype":"<u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2935,4480,1869],"dimension_seperator":"."}'
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2935,4480,1869],"dimension_seperator":"."}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -823,7 +823,7 @@ interactions:
     uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/2-2-1/.zarray
   response:
     body:
-      string: '{"dtype":"<u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,1467,2240,1869],"dimension_seperator":"."}'
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,1467,2240,1869],"dimension_seperator":"."}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -893,7 +893,7 @@ interactions:
     uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/2-2-1/.zarray
   response:
     body:
-      string: '{"dtype":"<u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,1467,2240,1869],"dimension_seperator":"."}'
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,1467,2240,1869],"dimension_seperator":"."}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -1025,7 +1025,7 @@ interactions:
     uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/2-2-1/.zarray
   response:
     body:
-      string: '{"dtype":"<u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,1467,2240,1869],"dimension_seperator":"."}'
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,1467,2240,1869],"dimension_seperator":"."}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -1059,7 +1059,7 @@ interactions:
     uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/2-2-1/.zarray
   response:
     body:
-      string: '{"dtype":"<u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,1467,2240,1869],"dimension_seperator":"."}'
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,1467,2240,1869],"dimension_seperator":"."}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -1093,7 +1093,7 @@ interactions:
     uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/2-2-1/.zarray
   response:
     body:
-      string: '{"dtype":"<u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,1467,2240,1869],"dimension_seperator":"."}'
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,1467,2240,1869],"dimension_seperator":"."}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -1225,7 +1225,7 @@ interactions:
     uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/4-4-2/.zarray
   response:
     body:
-      string: '{"dtype":"<u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,733,1120,934],"dimension_seperator":"."}'
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,733,1120,934],"dimension_seperator":"."}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -1295,7 +1295,7 @@ interactions:
     uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/4-4-2/.zarray
   response:
     body:
-      string: '{"dtype":"<u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,733,1120,934],"dimension_seperator":"."}'
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,733,1120,934],"dimension_seperator":"."}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -1427,7 +1427,7 @@ interactions:
     uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/4-4-2/.zarray
   response:
     body:
-      string: '{"dtype":"<u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,733,1120,934],"dimension_seperator":"."}'
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,733,1120,934],"dimension_seperator":"."}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -1461,7 +1461,7 @@ interactions:
     uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/4-4-2/.zarray
   response:
     body:
-      string: '{"dtype":"<u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,733,1120,934],"dimension_seperator":"."}'
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,733,1120,934],"dimension_seperator":"."}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -1495,7 +1495,7 @@ interactions:
     uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/4-4-2/.zarray
   response:
     body:
-      string: '{"dtype":"<u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,733,1120,934],"dimension_seperator":"."}'
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,733,1120,934],"dimension_seperator":"."}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -2882,7 +2882,7 @@ interactions:
     uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/1/.zarray
   response:
     body:
-      string: '{"dtype":"<u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2935,4480,1869],"dimension_seperator":"."}'
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2935,4480,1869],"dimension_seperator":"."}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -2916,7 +2916,7 @@ interactions:
     uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/1/.zarray
   response:
     body:
-      string: '{"dtype":"<u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2935,4480,1869],"dimension_seperator":"."}'
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2935,4480,1869],"dimension_seperator":"."}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -2950,7 +2950,7 @@ interactions:
     uri: https://data-humerus.webknossos.org/data/zarr/scalable_minds/l4_sample_dev/color/1/.zarray
   response:
     body:
-      string: '{"dtype":"<u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2935,4480,1869],"dimension_seperator":"."}'
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2935,4480,1869],"dimension_seperator":"."}'
     headers:
       access-control-allow-origin:
       - '*'

@@ -181,7 +181,7 @@ class Tree(nx.Graph):
         """Returns the node in this tree with the requested id."""
         return self._node.get_node(node_id)
 
-    def add_node(  # pylint: disable=arguments-differ
+    def add_node(  # pylint: disable=arguments-differ arguments-renamed
         self,
         position: Vec3IntLike,
         comment: Optional[str] = None,

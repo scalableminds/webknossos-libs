@@ -7,7 +7,6 @@ from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
-    typ: str,
     id: str,
     *,
     client: Client,
@@ -15,9 +14,7 @@ def _get_kwargs(
     volume_version: Union[Unset, None, int] = UNSET,
     skip_volume_data: Union[Unset, None, bool] = UNSET,
 ) -> Dict[str, Any]:
-    url = "{}/api/annotations/{typ}/{id}/download".format(
-        client.base_url, typ=typ, id=id
-    )
+    url = "{}/api/annotations/{id}/download".format(client.base_url, id=id)
 
     headers: Dict[str, Any] = client.get_headers()
     cookies: Dict[str, Any] = client.get_cookies()
@@ -48,7 +45,6 @@ def _build_response(*, response: httpx.Response) -> Response[Any]:
 
 
 def sync_detailed(
-    typ: str,
     id: str,
     *,
     client: Client,
@@ -57,7 +53,6 @@ def sync_detailed(
     skip_volume_data: Union[Unset, None, bool] = UNSET,
 ) -> Response[Any]:
     kwargs = _get_kwargs(
-        typ=typ,
         id=id,
         client=client,
         skeleton_version=skeleton_version,
@@ -73,7 +68,6 @@ def sync_detailed(
 
 
 async def asyncio_detailed(
-    typ: str,
     id: str,
     *,
     client: Client,
@@ -82,7 +76,6 @@ async def asyncio_detailed(
     skip_volume_data: Union[Unset, None, bool] = UNSET,
 ) -> Response[Any]:
     kwargs = _get_kwargs(
-        typ=typ,
         id=id,
         client=client,
         skeleton_version=skeleton_version,

@@ -48,7 +48,7 @@ interactions:
     method: GET
     uri: http://localhost:9000/api/user
   response:
-    content: '{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1460379469053,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true}'
+    content: '{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1657009585478,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true}'
     headers:
       content-length:
       - '630'
@@ -1295,7 +1295,7 @@ interactions:
     method: GET
     uri: http://localhost:9000/api/datasets/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00
   response:
-    content: '{"name":"test_upload_download_roundtrip_2022-05-05_07-18-22","dataSource":{"id":{"name":"test_upload_download_roundtrip_2022-05-05_07-18-22","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isForeign":false,"isScratch":false,"isConnector":false,"allowsUpload":true},"owningOrganization":"Organization_X","allowedTeams":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1651735102624,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1651735102624,"details":null,"publication":null,"isUnreported":false,"isForeign":false,"jobsEnabled":false,"tags":[]}'
+    content: '{"name":"test_upload_download_roundtrip_2022-07-05_08-26-25","dataSource":{"id":{"name":"test_upload_download_roundtrip_2022-07-05_08-26-25","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isForeign":false,"isScratch":false,"isConnector":false,"allowsUpload":true},"owningOrganization":"Organization_X","allowedTeams":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1657009585733,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1657009585733,"details":null,"publication":null,"isUnreported":false,"isForeign":false,"jobsEnabled":false,"tags":[]}'
     headers:
       content-length:
       - '1214'
@@ -1330,18 +1330,21 @@ interactions:
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
         \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
         alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/dataSetName\u201D folder.</p>\n
-        \   <p>The following are the contents of the folder:</p>\n    <ul>\n      \n
-        \       <li><a href=.>datasource</a>: .</li>\n      \n        <li><a href=color>color</a>:
-        color</li>\n      \n        <li><a href=segmentation>segmentation</a>: segmentation</li>\n
-        \     \n    </ul>\n  </body>\n</html>\n"
+        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25\u201D
+        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
+        \     \n        <li><a href=.>test_upload_download_roundtrip_2022-07-05_08-26-25</a>:
+        .</li>\n      \n        <li><a href=test_upload_download_roundtrip_2022-07-05_08-26-25/color>color</a>:
+        test_upload_download_roundtrip_2022-07-05_08-26-25/color</li>\n      \n        <li><a
+        href=test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation>segmentation</a>:
+        test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation</li>\n      \n
+        \   </ul>\n  </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
       access-control-max-age:
       - '600'
       content-length:
-      - '1372'
+      - '1655'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -1354,7 +1357,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25
 - request:
     body: null
     headers:
@@ -1371,7 +1374,7 @@ interactions:
       access-control-max-age:
       - '600'
       content-length:
-      - '1372'
+      - '1655'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -1384,7 +1387,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25
 - request:
     body: null
     headers: {}
@@ -1405,18 +1408,21 @@ interactions:
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
         \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
         alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/dataSetName\u201D folder.</p>\n
-        \   <p>The following are the contents of the folder:</p>\n    <ul>\n      \n
-        \       <li><a href=.>datasource</a>: .</li>\n      \n        <li><a href=color>color</a>:
-        color</li>\n      \n        <li><a href=segmentation>segmentation</a>: segmentation</li>\n
-        \     \n    </ul>\n  </body>\n</html>\n"
+        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25\u201D
+        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
+        \     \n        <li><a href=.>test_upload_download_roundtrip_2022-07-05_08-26-25</a>:
+        .</li>\n      \n        <li><a href=test_upload_download_roundtrip_2022-07-05_08-26-25/color>color</a>:
+        test_upload_download_roundtrip_2022-07-05_08-26-25/color</li>\n      \n        <li><a
+        href=test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation>segmentation</a>:
+        test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation</li>\n      \n
+        \   </ul>\n  </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
       access-control-max-age:
       - '600'
       content-length:
-      - '1372'
+      - '1655'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -1429,7 +1435,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25
 - request:
     body: null
     headers: {}
@@ -1450,18 +1456,21 @@ interactions:
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
         \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
         alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/dataSetName\u201D folder.</p>\n
-        \   <p>The following are the contents of the folder:</p>\n    <ul>\n      \n
-        \       <li><a href=.>datasource</a>: .</li>\n      \n        <li><a href=color>color</a>:
-        color</li>\n      \n        <li><a href=segmentation>segmentation</a>: segmentation</li>\n
-        \     \n    </ul>\n  </body>\n</html>\n"
+        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25\u201D
+        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
+        \     \n        <li><a href=.>test_upload_download_roundtrip_2022-07-05_08-26-25</a>:
+        .</li>\n      \n        <li><a href=test_upload_download_roundtrip_2022-07-05_08-26-25/color>color</a>:
+        test_upload_download_roundtrip_2022-07-05_08-26-25/color</li>\n      \n        <li><a
+        href=test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation>segmentation</a>:
+        test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation</li>\n      \n
+        \   </ul>\n  </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
       access-control-max-age:
       - '600'
       content-length:
-      - '1372'
+      - '1655'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -1474,7 +1483,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25
 - request:
     body: null
     headers:
@@ -1504,7 +1513,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/datasource-properties.json
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/datasource-properties.json
 - request:
     body: null
     headers: {}
@@ -1512,7 +1521,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/datasource-properties.json
   response:
     body:
-      string: '{"id":{"name":"test_upload_download_roundtrip_2022-05-05_07-18-22","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"elementClass":"uint8","mags":[{"mag":[1,1,1]},{"mag":[2,2,1]},{"mag":[4,4,2]}],"numChannels":1,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"elementClass":"uint32","mags":[{"mag":[1,1,1]},{"mag":[2,2,1]},{"mag":[4,4,2]}],"largestSegmentId":5238529,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[11.239999771118164,11.239999771118164,28]}'
+      string: '{"id":{"name":"test_upload_download_roundtrip_2022-07-05_08-26-25","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"elementClass":"uint8","mags":[{"mag":[1,1,1]},{"mag":[2,2,1]},{"mag":[4,4,2]}],"numChannels":1,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"elementClass":"uint32","mags":[{"mag":[1,1,1]},{"mag":[2,2,1]},{"mag":[4,4,2]}],"largestSegmentId":5238529,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[11.239999771118164,11.239999771118164,28]}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -1532,7 +1541,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/datasource-properties.json
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/datasource-properties.json
 - request:
     body: null
     headers:
@@ -1562,7 +1571,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/datasource-properties.json
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/datasource-properties.json
 - request:
     body: null
     headers:
@@ -1572,7 +1581,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/datasource-properties.json
   response:
     body:
-      string: '{"id":{"name":"test_upload_download_roundtrip_2022-05-05_07-18-22","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"elementClass":"uint8","mags":[{"mag":[1,1,1]},{"mag":[2,2,1]},{"mag":[4,4,2]}],"numChannels":1,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"elementClass":"uint32","mags":[{"mag":[1,1,1]},{"mag":[2,2,1]},{"mag":[4,4,2]}],"largestSegmentId":5238529,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[11.239999771118164,11.239999771118164,28]}'
+      string: '{"id":{"name":"test_upload_download_roundtrip_2022-07-05_08-26-25","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"elementClass":"uint8","mags":[{"mag":[1,1,1]},{"mag":[2,2,1]},{"mag":[4,4,2]}],"numChannels":1,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"elementClass":"uint32","mags":[{"mag":[1,1,1]},{"mag":[2,2,1]},{"mag":[4,4,2]}],"largestSegmentId":5238529,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[11.239999771118164,11.239999771118164,28]}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -1592,7 +1601,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/datasource-properties.json
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/datasource-properties.json
 - request:
     body: null
     headers: {}
@@ -1613,7 +1622,7 @@ interactions:
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
         \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
         alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/color/1\u201D
+        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=.>1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
     headers:
@@ -1635,7 +1644,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/color/1
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/1
 - request:
     body: null
     headers: {}
@@ -1643,7 +1652,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/color/1/.zarray
   response:
     body:
-      string: '{"dtype":"<u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2817,4362,1804],"dimension_seperator":"."}'
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2817,4362,1804],"dimension_seperator":"."}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -1663,7 +1672,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/color/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/1/.zarray
 - request:
     body: null
     headers:
@@ -1693,7 +1702,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/color/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/1/.zarray
 - request:
     body: null
     headers: {}
@@ -1701,7 +1710,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/color/1/.zarray
   response:
     body:
-      string: '{"dtype":"<u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2817,4362,1804],"dimension_seperator":"."}'
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2817,4362,1804],"dimension_seperator":"."}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -1721,7 +1730,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/color/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/1/.zarray
 - request:
     body: null
     headers: {}
@@ -1742,7 +1751,7 @@ interactions:
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
         \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
         alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/color/1\u201D
+        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=.>1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
     headers:
@@ -1764,7 +1773,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/color/1
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/1
 - request:
     body: null
     headers: {}
@@ -1785,7 +1794,7 @@ interactions:
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
         \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
         alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/color/1\u201D
+        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=.>1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
     headers:
@@ -1807,7 +1816,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/color/1
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/1
 - request:
     body: null
     headers: {}
@@ -1815,7 +1824,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/color/1/.zarray
   response:
     body:
-      string: '{"dtype":"<u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2817,4362,1804],"dimension_seperator":"."}'
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2817,4362,1804],"dimension_seperator":"."}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -1835,7 +1844,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/color/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/1/.zarray
 - request:
     body: null
     headers: {}
@@ -1843,7 +1852,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/color/1/.zarray
   response:
     body:
-      string: '{"dtype":"<u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2817,4362,1804],"dimension_seperator":"."}'
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2817,4362,1804],"dimension_seperator":"."}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -1863,7 +1872,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/color/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/1/.zarray
 - request:
     body: null
     headers: {}
@@ -1871,7 +1880,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/color/1/.zarray
   response:
     body:
-      string: '{"dtype":"<u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2817,4362,1804],"dimension_seperator":"."}'
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,2817,4362,1804],"dimension_seperator":"."}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -1891,7 +1900,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/color/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/1/.zarray
 - request:
     body: null
     headers: {}
@@ -1912,7 +1921,7 @@ interactions:
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
         \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
         alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/color/1\u201D
+        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=.>1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
     headers:
@@ -1934,7 +1943,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/color/1
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/1
 - request:
     body: null
     headers: {}
@@ -1955,7 +1964,7 @@ interactions:
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
         \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
         alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/color/2-2-1\u201D
+        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/2-2-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=.>2-2-1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
     headers:
@@ -1977,7 +1986,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/color/2-2-1
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/2-2-1
 - request:
     body: null
     headers: {}
@@ -1985,7 +1994,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/color/2-2-1/.zarray
   response:
     body:
-      string: '{"dtype":"<u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,1408,2181,1804],"dimension_seperator":"."}'
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,1408,2181,1804],"dimension_seperator":"."}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -2005,7 +2014,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/color/2-2-1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/2-2-1/.zarray
 - request:
     body: null
     headers:
@@ -2035,7 +2044,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/color/2-2-1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/2-2-1/.zarray
 - request:
     body: null
     headers: {}
@@ -2043,7 +2052,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/color/2-2-1/.zarray
   response:
     body:
-      string: '{"dtype":"<u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,1408,2181,1804],"dimension_seperator":"."}'
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,1408,2181,1804],"dimension_seperator":"."}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -2063,7 +2072,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/color/2-2-1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/2-2-1/.zarray
 - request:
     body: null
     headers: {}
@@ -2084,7 +2093,7 @@ interactions:
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
         \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
         alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/color/2-2-1\u201D
+        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/2-2-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=.>2-2-1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
     headers:
@@ -2106,7 +2115,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/color/2-2-1
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/2-2-1
 - request:
     body: null
     headers: {}
@@ -2127,7 +2136,7 @@ interactions:
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
         \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
         alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/color/2-2-1\u201D
+        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/2-2-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=.>2-2-1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
     headers:
@@ -2149,7 +2158,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/color/2-2-1
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/2-2-1
 - request:
     body: null
     headers: {}
@@ -2157,7 +2166,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/color/2-2-1/.zarray
   response:
     body:
-      string: '{"dtype":"<u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,1408,2181,1804],"dimension_seperator":"."}'
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,1408,2181,1804],"dimension_seperator":"."}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -2177,7 +2186,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/color/2-2-1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/2-2-1/.zarray
 - request:
     body: null
     headers: {}
@@ -2185,7 +2194,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/color/2-2-1/.zarray
   response:
     body:
-      string: '{"dtype":"<u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,1408,2181,1804],"dimension_seperator":"."}'
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,1408,2181,1804],"dimension_seperator":"."}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -2205,7 +2214,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/color/2-2-1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/2-2-1/.zarray
 - request:
     body: null
     headers: {}
@@ -2213,7 +2222,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/color/2-2-1/.zarray
   response:
     body:
-      string: '{"dtype":"<u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,1408,2181,1804],"dimension_seperator":"."}'
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,1408,2181,1804],"dimension_seperator":"."}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -2233,7 +2242,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/color/2-2-1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/2-2-1/.zarray
 - request:
     body: null
     headers: {}
@@ -2254,7 +2263,7 @@ interactions:
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
         \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
         alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/color/2-2-1\u201D
+        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/2-2-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=.>2-2-1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
     headers:
@@ -2276,7 +2285,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/color/2-2-1
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/2-2-1
 - request:
     body: null
     headers: {}
@@ -2297,7 +2306,7 @@ interactions:
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
         \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
         alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/color/4-4-2\u201D
+        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/4-4-2\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=.>4-4-2</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
     headers:
@@ -2319,7 +2328,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/color/4-4-2
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/4-4-2
 - request:
     body: null
     headers: {}
@@ -2327,7 +2336,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/color/4-4-2/.zarray
   response:
     body:
-      string: '{"dtype":"<u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,704,1090,902],"dimension_seperator":"."}'
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,704,1090,902],"dimension_seperator":"."}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -2347,7 +2356,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/color/4-4-2/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/4-4-2/.zarray
 - request:
     body: null
     headers:
@@ -2377,7 +2386,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/color/4-4-2/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/4-4-2/.zarray
 - request:
     body: null
     headers: {}
@@ -2385,7 +2394,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/color/4-4-2/.zarray
   response:
     body:
-      string: '{"dtype":"<u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,704,1090,902],"dimension_seperator":"."}'
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,704,1090,902],"dimension_seperator":"."}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -2405,7 +2414,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/color/4-4-2/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/4-4-2/.zarray
 - request:
     body: null
     headers: {}
@@ -2426,7 +2435,7 @@ interactions:
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
         \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
         alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/color/4-4-2\u201D
+        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/4-4-2\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=.>4-4-2</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
     headers:
@@ -2448,7 +2457,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/color/4-4-2
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/4-4-2
 - request:
     body: null
     headers: {}
@@ -2469,7 +2478,7 @@ interactions:
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
         \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
         alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/color/4-4-2\u201D
+        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/4-4-2\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=.>4-4-2</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
     headers:
@@ -2491,7 +2500,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/color/4-4-2
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/4-4-2
 - request:
     body: null
     headers: {}
@@ -2499,7 +2508,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/color/4-4-2/.zarray
   response:
     body:
-      string: '{"dtype":"<u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,704,1090,902],"dimension_seperator":"."}'
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,704,1090,902],"dimension_seperator":"."}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -2519,7 +2528,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/color/4-4-2/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/4-4-2/.zarray
 - request:
     body: null
     headers: {}
@@ -2527,7 +2536,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/color/4-4-2/.zarray
   response:
     body:
-      string: '{"dtype":"<u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,704,1090,902],"dimension_seperator":"."}'
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,704,1090,902],"dimension_seperator":"."}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -2547,7 +2556,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/color/4-4-2/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/4-4-2/.zarray
 - request:
     body: null
     headers: {}
@@ -2555,7 +2564,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/color/4-4-2/.zarray
   response:
     body:
-      string: '{"dtype":"<u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,704,1090,902],"dimension_seperator":"."}'
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,704,1090,902],"dimension_seperator":"."}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -2575,7 +2584,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/color/4-4-2/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/4-4-2/.zarray
 - request:
     body: null
     headers: {}
@@ -2596,7 +2605,7 @@ interactions:
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
         \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
         alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/color/4-4-2\u201D
+        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/4-4-2\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=.>4-4-2</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
     headers:
@@ -2618,7 +2627,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/color/4-4-2
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/4-4-2
 - request:
     body: null
     headers: {}
@@ -2639,7 +2648,7 @@ interactions:
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
         \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
         alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/segmentation/1\u201D
+        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=.>1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
     headers:
@@ -2661,7 +2670,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/segmentation/1
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/1
 - request:
     body: null
     headers: {}
@@ -2689,7 +2698,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/segmentation/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/1/.zarray
 - request:
     body: null
     headers:
@@ -2719,7 +2728,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/segmentation/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/1/.zarray
 - request:
     body: null
     headers: {}
@@ -2747,7 +2756,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/segmentation/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/1/.zarray
 - request:
     body: null
     headers: {}
@@ -2768,7 +2777,7 @@ interactions:
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
         \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
         alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/segmentation/1\u201D
+        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=.>1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
     headers:
@@ -2790,7 +2799,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/segmentation/1
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/1
 - request:
     body: null
     headers: {}
@@ -2811,7 +2820,7 @@ interactions:
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
         \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
         alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/segmentation/1\u201D
+        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=.>1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
     headers:
@@ -2833,7 +2842,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/segmentation/1
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/1
 - request:
     body: null
     headers: {}
@@ -2861,7 +2870,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/segmentation/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/1/.zarray
 - request:
     body: null
     headers: {}
@@ -2889,7 +2898,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/segmentation/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/1/.zarray
 - request:
     body: null
     headers: {}
@@ -2917,7 +2926,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/segmentation/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/1/.zarray
 - request:
     body: null
     headers: {}
@@ -2938,7 +2947,7 @@ interactions:
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
         \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
         alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/segmentation/1\u201D
+        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=.>1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
     headers:
@@ -2960,7 +2969,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/segmentation/1
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/1
 - request:
     body: null
     headers: {}
@@ -2981,7 +2990,7 @@ interactions:
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
         \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
         alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/segmentation/2-2-1\u201D
+        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/2-2-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=.>2-2-1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
     headers:
@@ -3003,7 +3012,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/segmentation/2-2-1
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/2-2-1
 - request:
     body: null
     headers: {}
@@ -3031,7 +3040,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/segmentation/2-2-1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/2-2-1/.zarray
 - request:
     body: null
     headers:
@@ -3061,7 +3070,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/segmentation/2-2-1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/2-2-1/.zarray
 - request:
     body: null
     headers: {}
@@ -3089,7 +3098,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/segmentation/2-2-1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/2-2-1/.zarray
 - request:
     body: null
     headers: {}
@@ -3110,7 +3119,7 @@ interactions:
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
         \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
         alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/segmentation/2-2-1\u201D
+        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/2-2-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=.>2-2-1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
     headers:
@@ -3132,7 +3141,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/segmentation/2-2-1
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/2-2-1
 - request:
     body: null
     headers: {}
@@ -3153,7 +3162,7 @@ interactions:
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
         \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
         alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/segmentation/2-2-1\u201D
+        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/2-2-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=.>2-2-1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
     headers:
@@ -3175,7 +3184,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/segmentation/2-2-1
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/2-2-1
 - request:
     body: null
     headers: {}
@@ -3203,7 +3212,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/segmentation/2-2-1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/2-2-1/.zarray
 - request:
     body: null
     headers: {}
@@ -3231,7 +3240,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/segmentation/2-2-1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/2-2-1/.zarray
 - request:
     body: null
     headers: {}
@@ -3259,7 +3268,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/segmentation/2-2-1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/2-2-1/.zarray
 - request:
     body: null
     headers: {}
@@ -3280,7 +3289,7 @@ interactions:
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
         \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
         alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/segmentation/2-2-1\u201D
+        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/2-2-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=.>2-2-1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
     headers:
@@ -3302,7 +3311,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/segmentation/2-2-1
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/2-2-1
 - request:
     body: null
     headers: {}
@@ -3323,7 +3332,7 @@ interactions:
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
         \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
         alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/segmentation/4-4-2\u201D
+        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/4-4-2\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=.>4-4-2</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
     headers:
@@ -3345,7 +3354,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/segmentation/4-4-2
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/4-4-2
 - request:
     body: null
     headers: {}
@@ -3373,7 +3382,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/segmentation/4-4-2/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/4-4-2/.zarray
 - request:
     body: null
     headers:
@@ -3403,7 +3412,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/segmentation/4-4-2/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/4-4-2/.zarray
 - request:
     body: null
     headers: {}
@@ -3431,7 +3440,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/segmentation/4-4-2/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/4-4-2/.zarray
 - request:
     body: null
     headers: {}
@@ -3452,7 +3461,7 @@ interactions:
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
         \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
         alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/segmentation/4-4-2\u201D
+        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/4-4-2\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=.>4-4-2</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
     headers:
@@ -3474,7 +3483,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/segmentation/4-4-2
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/4-4-2
 - request:
     body: null
     headers: {}
@@ -3495,7 +3504,7 @@ interactions:
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
         \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
         alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/segmentation/4-4-2\u201D
+        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/4-4-2\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=.>4-4-2</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
     headers:
@@ -3517,7 +3526,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/segmentation/4-4-2
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/4-4-2
 - request:
     body: null
     headers: {}
@@ -3545,7 +3554,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/segmentation/4-4-2/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/4-4-2/.zarray
 - request:
     body: null
     headers: {}
@@ -3573,7 +3582,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/segmentation/4-4-2/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/4-4-2/.zarray
 - request:
     body: null
     headers: {}
@@ -3601,7 +3610,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/segmentation/4-4-2/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/4-4-2/.zarray
 - request:
     body: null
     headers: {}
@@ -3622,7 +3631,7 @@ interactions:
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
         \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
         alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/segmentation/4-4-2\u201D
+        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/4-4-2\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=.>4-4-2</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
     headers:
@@ -3644,7 +3653,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-05-05_07-18-22/segmentation/4-4-2
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/4-4-2
 - request:
     body: ''
     headers:
@@ -3661,7 +3670,7 @@ interactions:
     method: GET
     uri: http://localhost:9000/api/datasets/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00
   response:
-    content: '{"name":"test_upload_download_roundtrip_2022-05-05_07-18-22","dataSource":{"id":{"name":"test_upload_download_roundtrip_2022-05-05_07-18-22","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isForeign":false,"isScratch":false,"isConnector":false,"allowsUpload":true},"owningOrganization":"Organization_X","allowedTeams":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1651735102624,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1651735102624,"details":null,"publication":null,"isUnreported":false,"isForeign":false,"jobsEnabled":false,"tags":[]}'
+    content: '{"name":"test_upload_download_roundtrip_2022-07-05_08-26-25","dataSource":{"id":{"name":"test_upload_download_roundtrip_2022-07-05_08-26-25","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isForeign":false,"isScratch":false,"isConnector":false,"allowsUpload":true},"owningOrganization":"Organization_X","allowedTeams":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1657009585733,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1657009585733,"details":null,"publication":null,"isUnreported":false,"isForeign":false,"jobsEnabled":false,"tags":[]}'
     headers:
       content-length:
       - '1214'
@@ -3690,7 +3699,7 @@ interactions:
       user-agent:
       - python-httpx/0.18.2
     method: GET
-    uri: http://localhost:9000/data/datasets/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/layers/color/data?depth=10&halfByte=false&height=10&resolution=0&width=10&x=2807&y=4352&z=1794
+    uri: http://localhost:9000/data/datasets/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/layers/color/data?depth=10&halfByte=false&height=10&mag=1-1-1&width=10&x=2807&y=4352&z=1794
   response:
     content: !!binary |
       g5GThpWTi4l+gY6UkpCKh5h9k4qNmZGZepaTjn6Dk4qOg4qFgIyGl4OBkZqakH2ThIKPjYaUkJyC
@@ -3747,7 +3756,7 @@ interactions:
       user-agent:
       - python-httpx/0.18.2
     method: GET
-    uri: http://localhost:9000/data/datasets/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/layers/color/data?depth=10&halfByte=false&height=5&resolution=1&width=6&x=2806&y=4352&z=1794
+    uri: http://localhost:9000/data/datasets/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/layers/color/data?depth=10&halfByte=false&height=5&mag=2-2-1&width=6&x=2806&y=4352&z=1794
   response:
     content: !!binary |
       iJKNj4OGkY+GjImGg4mXiYZ2doCDjHduaW1uZWlojpKNk4J6hY2Oio57iouLhYFrd3yDbmlkcG5r
@@ -3792,7 +3801,7 @@ interactions:
       user-agent:
       - python-httpx/0.18.2
     method: GET
-    uri: http://localhost:9000/data/datasets/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/layers/color/data?depth=5&halfByte=false&height=3&resolution=2&width=4&x=2804&y=4352&z=1794
+    uri: http://localhost:9000/data/datasets/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/layers/color/data?depth=5&halfByte=false&height=3&mag=4-4-2&width=4&x=2804&y=4352&z=1794
   response:
     content: !!binary |
       iI2Ld3SGg2pzb2pogYZva3JwZ2qIgoh6ZWZteHptcnmSkI+Qa3GFgYaCcHKSj46Lb26BhYZ+cGqF
@@ -3833,7 +3842,7 @@ interactions:
       user-agent:
       - python-httpx/0.18.2
     method: GET
-    uri: http://localhost:9000/data/datasets/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/layers/segmentation/data?depth=10&halfByte=false&height=10&resolution=0&width=10&x=2807&y=4352&z=1794
+    uri: http://localhost:9000/data/datasets/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/layers/segmentation/data?depth=10&halfByte=false&height=10&mag=1-1-1&width=10&x=2807&y=4352&z=1794
   response:
     content: !!binary |
       buZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu
@@ -3943,7 +3952,7 @@ interactions:
       user-agent:
       - python-httpx/0.18.2
     method: GET
-    uri: http://localhost:9000/data/datasets/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/layers/segmentation/data?depth=10&halfByte=false&height=5&resolution=1&width=6&x=2806&y=4352&z=1794
+    uri: http://localhost:9000/data/datasets/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/layers/segmentation/data?depth=10&halfByte=false&height=5&mag=2-2-1&width=6&x=2806&y=4352&z=1794
   response:
     content: !!binary |
       buZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu
@@ -4004,7 +4013,7 @@ interactions:
       user-agent:
       - python-httpx/0.18.2
     method: GET
-    uri: http://localhost:9000/data/datasets/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/layers/segmentation/data?depth=5&halfByte=false&height=3&resolution=2&width=4&x=2804&y=4352&z=1794
+    uri: http://localhost:9000/data/datasets/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/layers/segmentation/data?depth=5&halfByte=false&height=3&mag=4-4-2&width=4&x=2804&y=4352&z=1794
   response:
     content: !!binary |
       buZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwAf1E8AH9RPAB/UTwAf1E8AbuZPAG7mTwBu

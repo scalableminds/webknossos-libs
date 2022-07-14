@@ -75,6 +75,7 @@ nav:
         - webknossos-py/examples/dataset_usage.md
         - webknossos-py/examples/upload_image_data.md
         - webknossos-py/examples/download_image_data.md
+        - webknossos-py/examples/remote_datasets.md
       - Annotation Examples:
         - webknossos-py/examples/apply_merger_mode.md
         - webknossos-py/examples/learned_segmenter.md
@@ -105,11 +106,13 @@ nav:
       - User: api/webknossos/administration/user.md
       - Project: api/webknossos/administration/project.md
       - Task: api/webknossos/administration/task.md
-  - Other:
-    - webknossos-py/changelog.md
+  - Version Changelog:
     - webknossos-py/stability_policy.md
+    - webknossos-py/changelog.md
+  - Community:
+    - webknossos-py/CONTRIBUTING.md
+    - webknossos-py/CODE_OF_CONDUCT.md
     - Getting Help:
-      - webknossos-py/development.md
       - Community Support: https://forum.image.sc/tag/webknossos" target="_blank
       - Email Support: mailto:hello@webknossos.org
       - Commercial Support: https://scalableminds.com" target="_blank

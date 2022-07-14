@@ -1,10 +1,11 @@
-from typing import Any, Dict, List, Type, TypeVar, cast
+from typing import Any, Dict, List, Type, TypeVar, Union, cast
 
 import attr
 
 from ..models.annotation_infos_by_task_id_response_200_item_settings_resolution_restrictions import (
     AnnotationInfosByTaskIdResponse200ItemSettingsResolutionRestrictions,
 )
+from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="AnnotationInfosByTaskIdResponse200ItemSettings")
 
@@ -18,6 +19,7 @@ class AnnotationInfosByTaskIdResponse200ItemSettings:
     soma_clicking_allowed: int
     merger_mode: int
     resolution_restrictions: AnnotationInfosByTaskIdResponse200ItemSettingsResolutionRestrictions
+    volume_interpolation_allowed: Union[Unset, int] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -27,6 +29,8 @@ class AnnotationInfosByTaskIdResponse200ItemSettings:
         soma_clicking_allowed = self.soma_clicking_allowed
         merger_mode = self.merger_mode
         resolution_restrictions = self.resolution_restrictions.to_dict()
+
+        volume_interpolation_allowed = self.volume_interpolation_allowed
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -39,6 +43,8 @@ class AnnotationInfosByTaskIdResponse200ItemSettings:
                 "resolutionRestrictions": resolution_restrictions,
             }
         )
+        if volume_interpolation_allowed is not UNSET:
+            field_dict["volumeInterpolationAllowed"] = volume_interpolation_allowed
 
         return field_dict
 
@@ -57,12 +63,15 @@ class AnnotationInfosByTaskIdResponse200ItemSettings:
             d.pop("resolutionRestrictions")
         )
 
+        volume_interpolation_allowed = d.pop("volumeInterpolationAllowed", UNSET)
+
         annotation_infos_by_task_id_response_200_item_settings = cls(
             allowed_modes=allowed_modes,
             branch_points_allowed=branch_points_allowed,
             soma_clicking_allowed=soma_clicking_allowed,
             merger_mode=merger_mode,
             resolution_restrictions=resolution_restrictions,
+            volume_interpolation_allowed=volume_interpolation_allowed,
         )
 
         annotation_infos_by_task_id_response_200_item_settings.additional_properties = d

@@ -9,6 +9,7 @@ from webknossos.client._generated.api.default import (
     project_info_by_name,
     task_infos_by_project_id,
 )
+from webknossos.client._generated.types import Unset
 from webknossos.client.context import _get_generated_client
 
 if TYPE_CHECKING:
@@ -109,6 +110,7 @@ class Project:
         cls,
         response: Union["ProjectInfoByIdResponse200", "ProjectInfoByNameResponse200"],
     ) -> "Project":
+        assert not isinstance(response.owner, Unset)
         return cls(
             response.id,
             response.name,
