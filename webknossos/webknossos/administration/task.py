@@ -11,7 +11,6 @@ from webknossos.client._generated.api.default import (
     annotation_infos_by_task_id,
     task_info,
 )
-from webknossos.client._generated.types import Unset
 from webknossos.client.context import _get_generated_client
 from webknossos.dataset.dataset import RemoteDataset
 from webknossos.geometry import BoundingBox, Vec3Int
@@ -171,7 +170,6 @@ class Task:
         cls,
         response: Union["TaskInfoResponse200", "TaskInfosByProjectIdResponse200Item"],
     ) -> "Task":
-        assert not isinstance(response.status, Unset)
         return cls(
             response.id,
             response.project_name,
