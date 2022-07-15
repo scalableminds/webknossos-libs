@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Type, TypeVar, Union, cast
+from typing import Any, Dict, List, Optional, Type, TypeVar, cast
 
 import attr
 
@@ -11,7 +11,6 @@ from ..models.annotation_info_response_200_task_status import (
 from ..models.annotation_info_response_200_task_type import (
     AnnotationInfoResponse200TaskType,
 )
-from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="AnnotationInfoResponse200Task")
 
@@ -29,13 +28,13 @@ class AnnotationInfoResponse200Task:
     data_set: str
     needed_experience: AnnotationInfoResponse200TaskNeededExperience
     created: int
+    status: AnnotationInfoResponse200TaskStatus
     script: str
     creation_info: str
     bounding_box: str
     edit_position: List[int]
     edit_rotation: List[int]
     tracing_time: Optional[int]
-    status: Union[Unset, AnnotationInfoResponse200TaskStatus] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -50,16 +49,14 @@ class AnnotationInfoResponse200Task:
         needed_experience = self.needed_experience.to_dict()
 
         created = self.created
+        status = self.status.to_dict()
+
         script = self.script
         creation_info = self.creation_info
         bounding_box = self.bounding_box
         edit_position = self.edit_position
 
         edit_rotation = self.edit_rotation
-
-        status: Union[Unset, Dict[str, Any]] = UNSET
-        if not isinstance(self.status, Unset):
-            status = self.status.to_dict()
 
         tracing_time = self.tracing_time
 
@@ -76,6 +73,7 @@ class AnnotationInfoResponse200Task:
                 "dataSet": data_set,
                 "neededExperience": needed_experience,
                 "created": created,
+                "status": status,
                 "script": script,
                 "creationInfo": creation_info,
                 "boundingBox": bounding_box,
@@ -84,8 +82,6 @@ class AnnotationInfoResponse200Task:
                 "tracingTime": tracing_time,
             }
         )
-        if status is not UNSET:
-            field_dict["status"] = status
 
         return field_dict
 
@@ -112,6 +108,8 @@ class AnnotationInfoResponse200Task:
 
         created = d.pop("created")
 
+        status = AnnotationInfoResponse200TaskStatus.from_dict(d.pop("status"))
+
         script = d.pop("script")
 
         creation_info = d.pop("creationInfo")
@@ -121,13 +119,6 @@ class AnnotationInfoResponse200Task:
         edit_position = cast(List[int], d.pop("editPosition"))
 
         edit_rotation = cast(List[int], d.pop("editRotation"))
-
-        _status = d.pop("status", UNSET)
-        status: Union[Unset, AnnotationInfoResponse200TaskStatus]
-        if isinstance(_status, Unset):
-            status = UNSET
-        else:
-            status = AnnotationInfoResponse200TaskStatus.from_dict(_status)
 
         tracing_time = d.pop("tracingTime")
 
@@ -141,12 +132,12 @@ class AnnotationInfoResponse200Task:
             data_set=data_set,
             needed_experience=needed_experience,
             created=created,
+            status=status,
             script=script,
             creation_info=creation_info,
             bounding_box=bounding_box,
             edit_position=edit_position,
             edit_rotation=edit_rotation,
-            status=status,
             tracing_time=tracing_time,
         )
 
