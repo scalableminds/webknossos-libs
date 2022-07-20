@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.2...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.8...HEAD)
 
 ### Breaking Changes
 
@@ -16,6 +16,33 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+
+
+## [0.10.8](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.8) - 2022-07-15
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.7...v0.10.8)
+
+
+## [0.10.7](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.7) - 2022-07-14
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.6...v0.10.7)
+
+
+## [0.10.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.6) - 2022-06-27
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.5...v0.10.6)
+
+
+## [0.10.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.5) - 2022-06-15
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.4...v0.10.5)
+
+
+## [0.10.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.4) - 2022-06-15
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.3...v0.10.4)
+
+
+## [0.10.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.3) - 2022-06-03
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.2...v0.10.3)
+
+### Added
+- Detect when slurm jobs crash due to being out-of-memory. [#739](https://github.com/scalableminds/webknossos-libs/pull/739)
 
 
 ## [0.10.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.2) - 2022-05-20

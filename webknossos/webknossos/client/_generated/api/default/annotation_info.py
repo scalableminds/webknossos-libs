@@ -8,13 +8,12 @@ from ...types import UNSET, Response
 
 
 def _get_kwargs(
-    typ: str,
     id: str,
     *,
     client: Client,
     timestamp: int,
 ) -> Dict[str, Any]:
-    url = "{}/api/annotations/{typ}/{id}/info".format(client.base_url, typ=typ, id=id)
+    url = "{}/api/annotations/{id}/info".format(client.base_url, id=id)
 
     headers: Dict[str, Any] = client.get_headers()
     cookies: Dict[str, Any] = client.get_cookies()
@@ -51,14 +50,12 @@ def _build_response(*, response: httpx.Response) -> Response[AnnotationInfoRespo
 
 
 def sync_detailed(
-    typ: str,
     id: str,
     *,
     client: Client,
     timestamp: int,
 ) -> Response[AnnotationInfoResponse200]:
     kwargs = _get_kwargs(
-        typ=typ,
         id=id,
         client=client,
         timestamp=timestamp,
@@ -72,7 +69,6 @@ def sync_detailed(
 
 
 def sync(
-    typ: str,
     id: str,
     *,
     client: Client,
@@ -81,7 +77,6 @@ def sync(
     """ """
 
     return sync_detailed(
-        typ=typ,
         id=id,
         client=client,
         timestamp=timestamp,
@@ -89,14 +84,12 @@ def sync(
 
 
 async def asyncio_detailed(
-    typ: str,
     id: str,
     *,
     client: Client,
     timestamp: int,
 ) -> Response[AnnotationInfoResponse200]:
     kwargs = _get_kwargs(
-        typ=typ,
         id=id,
         client=client,
         timestamp=timestamp,
@@ -109,7 +102,6 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    typ: str,
     id: str,
     *,
     client: Client,
@@ -119,7 +111,6 @@ async def asyncio(
 
     return (
         await asyncio_detailed(
-            typ=typ,
             id=id,
             client=client,
             timestamp=timestamp,

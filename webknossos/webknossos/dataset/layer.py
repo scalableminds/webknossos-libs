@@ -16,7 +16,7 @@ from webknossos.geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 
 from ._array import ArrayException, BaseArray, DataFormat
 from ._downsampling_utils import (
-    calculate_default_max_mag,
+    calculate_default_coarsest_mag,
     calculate_mags_to_downsample,
     calculate_mags_to_upsample,
     determine_buffer_shape,
@@ -634,13 +634,22 @@ class Layer:
                 )
             )
 
+    def _get_dataset_from_align_with_other_layers(
+        self, align_with_other_layers: Union[bool, "Dataset"]
+    ) -> Optional["Dataset"]:
+        if isinstance(align_with_other_layers, bool):
+            return self.dataset if align_with_other_layers else None
+        else:
+            return align_with_other_layers
+
     def downsample(
         self,
         from_mag: Optional[Mag] = None,
-        max_mag: Optional[Mag] = None,
+        coarsest_mag: Optional[Mag] = None,
         interpolation_mode: str = "default",
         compress: bool = True,
         sampling_mode: Union[str, SamplingModes] = SamplingModes.ANISOTROPIC,
+        align_with_other_layers: Union[bool, "Dataset"] = True,
         buffer_shape: Optional[Vec3Int] = None,
         force_sampling_scheme: bool = False,
         args: Optional[Namespace] = None,
@@ -648,7 +657,7 @@ class Layer:
         only_setup_mags: bool = False,
     ) -> None:
         """
-        Downsamples the data starting from `from_mag` until a magnification is `>= max(max_mag)`.
+        Downsamples the data starting from `from_mag` until a magnification is `>= max(coarsest_mag)`.
         There are three different `sampling_modes`:
         - 'anisotropic' - The next magnification is chosen so that the width, height and depth of a downsampled voxel assimilate. For example, if the z resolution is worse than the x/y resolution, z won't be downsampled in the first downsampling step(s). As a basis for this method, the voxel_size from the datasource-properties.json is used.
         - 'isotropic' - Each dimension is downsampled equally.
@@ -665,7 +674,7 @@ class Layer:
         assert "1" in self.mags.keys()
 
         layer.downsample(
-            max_mag=Mag(4),
+            coarsest_mag=Mag(4),
             sampling_mode=SamplingModes.ISOTROPIC
         )
 
@@ -683,8 +692,8 @@ class Layer:
             from_mag in self.mags.keys()
         ), f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
 
-        if max_mag is None:
-            max_mag = calculate_default_max_mag(self.bounding_box.size)
+        if coarsest_mag is None:
+            coarsest_mag = calculate_default_coarsest_mag(self.bounding_box.size)
 
         sampling_mode = SamplingModes.parse(sampling_mode)
 
@@ -701,16 +710,21 @@ class Layer:
         elif sampling_mode == SamplingModes.ISOTROPIC:
             voxel_size = None
         elif sampling_mode == SamplingModes.CONSTANT_Z:
-            max_mag_with_fixed_z = max_mag.to_list()
-            max_mag_with_fixed_z[2] = from_mag.to_list()[2]
-            max_mag = Mag(max_mag_with_fixed_z)
+            coarsest_mag_with_fixed_z = coarsest_mag.to_list()
+            coarsest_mag_with_fixed_z[2] = from_mag.to_list()[2]
+            coarsest_mag = Mag(coarsest_mag_with_fixed_z)
             voxel_size = None
         else:
             raise AttributeError(
                 f"Downsampling failed: {sampling_mode} is not a valid SamplingMode ({SamplingModes.ANISOTROPIC}, {SamplingModes.ISOTROPIC}, {SamplingModes.CONSTANT_Z})"
             )
 
-        mags_to_downsample = calculate_mags_to_downsample(from_mag, max_mag, voxel_size)
+        dataset_to_align_with = self._get_dataset_from_align_with_other_layers(
+            align_with_other_layers
+        )
+        mags_to_downsample = calculate_mags_to_downsample(
+            from_mag, coarsest_mag, dataset_to_align_with, voxel_size
+        )
 
         if len(set([max(m.to_list()) for m in mags_to_downsample])) != len(
             mags_to_downsample
@@ -908,6 +922,7 @@ class Layer:
         finest_mag: Mag = Mag(1),
         compress: bool = False,
         sampling_mode: Union[str, SamplingModes] = SamplingModes.ANISOTROPIC,
+        align_with_other_layers: Union[bool, "Dataset"] = True,
         buffer_shape: Optional[Vec3Int] = None,
         buffer_edge_len: Optional[int] = None,
         args: Optional[Namespace] = None,
@@ -954,7 +969,12 @@ class Layer:
         if buffer_shape is None and buffer_edge_len is not None:
             buffer_shape = Vec3Int.full(buffer_edge_len)
 
-        mags_to_upsample = calculate_mags_to_upsample(from_mag, finest_mag, voxel_size)
+        dataset_to_align_with = self._get_dataset_from_align_with_other_layers(
+            align_with_other_layers
+        )
+        mags_to_upsample = calculate_mags_to_upsample(
+            from_mag, finest_mag, dataset_to_align_with, voxel_size
+        )
 
         for prev_mag, target_mag in zip(
             [from_mag] + mags_to_upsample[:-1], mags_to_upsample
@@ -1030,10 +1050,7 @@ class Layer:
         )
 
     def __repr__(self) -> str:
-        return repr(
-            "Layer(%s, dtype_per_channel=%s, num_channels=%s)"
-            % (self.name, self.dtype_per_channel, self.num_channels)
-        )
+        return f"Layer({repr(self.name)}, dtype_per_channel={self.dtype_per_channel}, num_channels={self.num_channels})"
 
     def _get_largest_segment_id_maybe(self) -> Optional[int]:
         return None

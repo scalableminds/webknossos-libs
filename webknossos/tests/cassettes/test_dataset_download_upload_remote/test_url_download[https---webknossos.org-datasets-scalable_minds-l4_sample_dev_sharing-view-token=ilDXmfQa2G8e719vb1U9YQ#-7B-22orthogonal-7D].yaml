@@ -48,7 +48,7 @@ interactions:
       user-agent:
       - python-httpx/0.18.2
     method: GET
-    uri: https://data-humerus.webknossos.org/data/datasets/scalable_minds/l4_sample_dev_sharing/layers/color/data?depth=10&halfByte=false&height=10&resolution=0&width=10&x=2807&y=4352&z=1794
+    uri: https://data-humerus.webknossos.org/data/datasets/scalable_minds/l4_sample_dev_sharing/layers/color/data?depth=10&halfByte=false&height=10&mag=1-1-1&width=10&x=2807&y=4352&z=1794
   response:
     content: !!binary |
       g5GThpWTi4l+gY6UkpCKh5h9k4qNmZGZepaTjn6Dk4qOg4qFgIyGl4OBkZqakH2ThIKPjYaUkJyC
@@ -111,7 +111,7 @@ interactions:
       user-agent:
       - python-httpx/0.18.2
     method: GET
-    uri: https://data-humerus.webknossos.org/data/datasets/scalable_minds/l4_sample_dev_sharing/layers/segmentation/data?depth=10&halfByte=false&height=10&resolution=0&width=10&x=2807&y=4352&z=1794
+    uri: https://data-humerus.webknossos.org/data/datasets/scalable_minds/l4_sample_dev_sharing/layers/segmentation/data?depth=10&halfByte=false&height=10&mag=1-1-1&width=10&x=2807&y=4352&z=1794
   response:
     content: !!binary |
       buZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu5k8AbuZPAG7mTwBu

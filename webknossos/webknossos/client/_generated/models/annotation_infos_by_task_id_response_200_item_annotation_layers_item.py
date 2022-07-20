@@ -1,6 +1,8 @@
-from typing import Any, Dict, List, Type, TypeVar
+from typing import Any, Dict, List, Type, TypeVar, Union
 
 import attr
+
+from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="AnnotationInfosByTaskIdResponse200ItemAnnotationLayersItem")
 
@@ -11,11 +13,13 @@ class AnnotationInfosByTaskIdResponse200ItemAnnotationLayersItem:
 
     tracing_id: str
     typ: str
+    name: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         tracing_id = self.tracing_id
         typ = self.typ
+        name = self.name
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -25,6 +29,8 @@ class AnnotationInfosByTaskIdResponse200ItemAnnotationLayersItem:
                 "typ": typ,
             }
         )
+        if name is not UNSET:
+            field_dict["name"] = name
 
         return field_dict
 
@@ -35,9 +41,12 @@ class AnnotationInfosByTaskIdResponse200ItemAnnotationLayersItem:
 
         typ = d.pop("typ")
 
+        name = d.pop("name", UNSET)
+
         annotation_infos_by_task_id_response_200_item_annotation_layers_item = cls(
             tracing_id=tracing_id,
             typ=typ,
+            name=name,
         )
 
         annotation_infos_by_task_id_response_200_item_annotation_layers_item.additional_properties = (

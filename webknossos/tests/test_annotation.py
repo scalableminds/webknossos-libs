@@ -21,7 +21,7 @@ def test_annotation_from_zip_file() -> None:
 
     assert annotation.dataset_name == "l4dense_motta_et_al_demo_v2"
     assert annotation.organization_id == "scalable_minds"
-    assert annotation.username == "Philipp Otto"
+    assert annotation.owner_name == "Philipp Otto"
     assert annotation.annotation_id == "61c20205010000cc004a6356"
     assert (
         "timestamp"
@@ -35,7 +35,7 @@ def test_annotation_from_zip_file() -> None:
 
     assert copied_annotation.dataset_name == "l4dense_motta_et_al_demo_v2"
     assert copied_annotation.organization_id == "scalable_minds"
-    assert copied_annotation.username == "Philipp Otto"
+    assert copied_annotation.owner_name == "Philipp Otto"
     assert copied_annotation.annotation_id == "61c20205010000cc004a6356"
     assert (
         "timestamp"
@@ -137,7 +137,7 @@ def test_annotation_from_file_with_multi_volume() -> None:
 def test_annotation_from_url() -> None:
 
     annotation = wk.Annotation.download(
-        "https://webknossos.org/annotations/Explorational/61c20205010000cc004a6356"
+        "https://webknossos.org/annotations/61c20205010000cc004a6356"
     )
     assert annotation.dataset_name == "l4dense_motta_et_al_demo_v2"
     assert len(list(annotation.skeleton.flattened_trees())) == 1

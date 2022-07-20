@@ -1,11 +1,9 @@
 import logging
 from argparse import ArgumentParser, Namespace
-from typing import Sequence
+from typing import Sequence, cast
 
 from webknossos import Mag
 
-from .cubing import create_parser as create_cubing_parser
-from .cubing import cubing, get_channel_and_sample_count_and_dtype
 from ._internal.utils import (
     add_isotropic_flag,
     add_sampling_mode_flag,
@@ -15,6 +13,8 @@ from ._internal.utils import (
     setup_logging,
     setup_warnings,
 )
+from .cubing import create_parser as create_cubing_parser
+from .cubing import cubing, get_channel_and_sample_count_and_dtype
 
 
 def create_parser() -> ArgumentParser:
@@ -90,7 +90,7 @@ def main(args: Namespace) -> None:
         args.source_path
     )
     if arg_dict.get("dtype") is not None:
-        dtype = args.get("dtype")
+        dtype = cast(str, arg_dict.get("dtype"))
 
     assert not (
         args.prefer_layers and args.prefer_channels
@@ -177,7 +177,7 @@ def main(args: Namespace) -> None:
 
         layer.downsample(
             from_mag=args.target_mag,
-            max_mag=None if args.max_mag is None else Mag(args.max_mag),
+            coarsest_mag=None if args.max_mag is None else Mag(args.max_mag),
             compress=not args.no_compress,
             sampling_mode=args.sampling_mode,
             args=get_executor_args(args),

@@ -14,7 +14,19 @@ from multiprocessing import cpu_count
 from os.path import relpath
 from pathlib import Path
 from shutil import copyfileobj
-from typing import Any, Callable, Iterable, Iterator, List, Optional, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Mapping,
+    Optional,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
 import rich
 from cluster_tools import WrappedProcessPoolExecutor, get_executor
@@ -200,7 +212,7 @@ def add_verbose_flag(parser: argparse.ArgumentParser) -> None:
 
 def get_rich_progress() -> Progress:
     return Progress(
-        "[progress.description]{task.description}",
+        "[progress.description]{task.description:<20}",
         rich.progress.BarColumn(),
         "[progress.percentage]{task.percentage:>3.0f}%",
         rich.progress.TimeElapsedColumn(),
@@ -258,3 +270,24 @@ def copytree(in_path: Path, out_path: Path) -> None:
                 "wb"
             ) as out_file:
                 copyfileobj(in_file, out_file)
+
+
+K = TypeVar("K")  # key
+V = TypeVar("V")  # value
+C = TypeVar("C")  # cache
+
+
+class LazyReadOnlyDict(Mapping[K, V]):
+    def __init__(self, entries: Dict[K, C], func: Callable[[C], V]) -> None:
+        self.entries = entries
+        self.func = func
+
+    def __getitem__(self, key: K) -> V:
+        return self.func(self.entries[key])
+
+    def __iter__(self) -> Iterator[K]:
+        for key in self.entries:
+            yield key
+
+    def __len__(self) -> int:
+        return len(self.entries)

@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.2...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.8...HEAD)
 
 ### Breaking Changes
 
@@ -16,7 +16,45 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+
+
+## [0.10.8](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.8) - 2022-07-15
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.7...v0.10.8)
+
+
+## [0.10.7](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.7) - 2022-07-14
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.6...v0.10.7)
+
+### Changed
+- Made the dataset upload more robust against network errors. [#757](https://github.com/scalableminds/webknossos-libs/pull/757)
+
+
+## [0.10.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.6) - 2022-06-27
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.5...v0.10.6)
+
+### Changed
+- Make KNOSSOS conversion compatible with mag-prefixed mag folders. [#756](https://github.com/scalableminds/webknossos-libs/pull/756)
+- When using multiprocessing, warning filters are set up to behave as in the
+  spawning context. [#741](https://github.com/scalableminds/webknossos-libs/pull/741)
+
+### Fixed
+- Fixed broken KNOSSOS to wkw conversion. [#756](https://github.com/scalableminds/webknossos-libs/pull/756)
+
+
+## [0.10.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.5) - 2022-06-15
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.4...v0.10.5)
+
+
+## [0.10.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.4) - 2022-06-15
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.3...v0.10.4)
+
+
+## [0.10.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.3) - 2022-06-03
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.2...v0.10.3)
+
+### Fixed
 - Fixed a bug where nifti datasets would not be converted if called from the CLI. [#733](https://github.com/scalableminds/webknossos-libs/pull/733)
+
 
 
 ## [0.10.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.2) - 2022-05-20

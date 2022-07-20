@@ -182,8 +182,8 @@ def annotation_to_nml(  # pylint: disable=dangerous-default-value
         wknml.Meta(name=key, content=value)
         for key, value in annotation.metadata.items()
     ]
-    if annotation.username is not None:
-        meta.append(wknml.Meta(name="username", content=annotation.username))
+    if annotation.owner_name is not None:
+        meta.append(wknml.Meta(name="username", content=annotation.owner_name))
     if annotation.annotation_id is not None:
         meta.append(wknml.Meta(name="annotationId", content=annotation.annotation_id))
 

@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.2...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.8...HEAD)
 
 ### Breaking Changes
 
@@ -21,11 +21,75 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Fixed
 
 
+## [0.10.8](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.8) - 2022-07-15
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.7...v0.10.8)
+
+
+## [0.10.7](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.7) - 2022-07-14
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.6...v0.10.7)
+
+### Breaking Changes
+- The `Annotation` constructor takes the `owner_name` argument instead of `username`. This is only important when using keyword arguments. The `username` attributes are still available as a proxy for the `owner_name` attribute, but deprecated. [#760](https://github.com/scalableminds/webknossos-libs/pull/760)
+- `user_id` on `AnnotationInfo` objects is deprecated, please use `owner_id` instead. [#760](https://github.com/scalableminds/webknossos-libs/pull/760)
+- When self-hosting a webKnossos server, please note that a webknossos version >= `22.06.0` is required. [#760](https://github.com/scalableminds/webknossos-libs/pull/760) & [#764](https://github.com/scalableminds/webknossos-libs/pull/764)
+
+### Added
+- `Dataset.upload()` accepts `Layer` objects from a `RemoteDataset` in the `layers_to_link` argument list. Also, `LayerToLink` can consume those via `LayerToLink.from_remote_layer()`. [#761](https://github.com/scalableminds/webknossos-libs/pull/761)
+- `Task.create()` accepts a `RemoteDataset` for the `dataset_name` argument. [#761](https://github.com/scalableminds/webknossos-libs/pull/761)
+- Added `annotation.get_remote_base_dataset()` returning a `RemoteDataset`. [#761](https://github.com/scalableminds/webknossos-libs/pull/761)
+- Added `Team.get_by_name()`. [#763](https://github.com/scalableminds/webknossos-libs/pull/763)
+- Added `Dataset.get_remote_datasets()`. [#763](https://github.com/scalableminds/webknossos-libs/pull/763)
+
+### Changed
+- If a token is requested from the user on the commandline, it is now stored in the current context. Before, it was discarded. [#761](https://github.com/scalableminds/webknossos-libs/pull/761)
+- `Annotation.download()` does not need the `annotation_type` anymore, and the type can also be omitted from passed URLs. [#764](https://github.com/scalableminds/webknossos-libs/pull/764)
+- `Dataset.add_layer_from_images` allows smaller batch sizes for uncompressed writes. [#766](https://github.com/scalableminds/webknossos-libs/pull/766)
+- `Dataset.add_layer_from_images` uses multiprocessing by default. [#766](https://github.com/scalableminds/webknossos-libs/pull/766)
+
+### Fixed
+- Fixed the bounding box inferral for volume annotation layers that were not saved in Mag(1). [#765](https://github.com/scalableminds/webknossos-libs/pull/765)
+
+
+
+## [0.10.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.6) - 2022-06-27
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.5...v0.10.6)
+
+
+## [0.10.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.5) - 2022-06-15
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.4...v0.10.5)
+
+
+## [0.10.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.4) - 2022-06-15
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.3...v0.10.4)
+
+### Breaking Changes
+- Added an `align_with_other_layers` parameter to `Layer.downsample` & `layer.upsample`. When set to true (default), the magnifications of the existing dataset are used as guidance for downsampling/upsampling. Instead of passing a boolean, one can also pass another dataset that should be used as guidance. [#730](https://github.com/scalableminds/webknossos-libs/pull/730)
+- Changed the name of `max_mag` in `Layer.downsample` to `coarsest_mag`. [#730](https://github.com/scalableminds/webknossos-libs/pull/730)
+
+### Added
+- Added `Dataset.add_layer_from_images()` to convert image stacks to wkw or zarr Dataset.
+  This needs pims and possibly more packages, which can be installed using extras, e.g. "webknossos[all]".
+  [#741](https://github.com/scalableminds/webknossos-libs/pull/741)
+
+### Changed
+- The `Layer.downsample` and `Layer.upsample` function now automatically downsample according to magnifications already existing in the dataset. This behaviour can be turned off by setting the new parameter `align_with_other_layers` to `False`. [#730](https://github.com/scalableminds/webknossos-libs/pull/730)
+- `View.get_buffered_slice_reader()` and `View.get_buffered_slice_writer()` don't log anything by default now.
+  To get the previous logging, please invoke them with `logging=True`.
+  [#741](https://github.com/scalableminds/webknossos-libs/pull/741)
+
+
+## [0.10.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.3) - 2022-06-03
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.2...v0.10.3)
+
+### Added
+- Added export of [OME-NGFF v0.4 metadata](https://ngff.openmicroscopy.org/0.4/) for all `Dataset`s that have a Zarr layer [#737](https://github.com/scalableminds/webknossos-libs/pull/737)
+
+
 ## [0.10.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.2) - 2022-05-20
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.1...v0.10.2)
 
 ### Changed
-- added Python 3.9 support to wk-libs [#716](https://github.com/scalableminds/webknossos-libs/pull/716)
+- Added Python 3.9 support to wk-libs [#716](https://github.com/scalableminds/webknossos-libs/pull/716)
 
 ### Fixed
 - URLs for the webknossos-context (e.g. in the `WK_URL` env var or via `webknossos_context(url=…)`) may now contain `/` in the end and are sanitized. Before, requests would fail if the URL contained a final `/`. [#733](https://github.com/scalableminds/webknossos-libs/pull/733)

@@ -10,6 +10,7 @@ from shutil import rmtree
 
 from . import pickling
 from .multiprocessing_logging_handler import get_multiprocessing_logging_setup_fn
+from .schedulers.cluster_executor import RemoteOutOfMemoryException
 from .schedulers.kube import KubernetesExecutor
 from .schedulers.pbs import PBSExecutor
 from .schedulers.slurm import SlurmExecutor

@@ -2,9 +2,7 @@ import numpy as np
 
 import webknossos as wk
 
-ANNOTATION_URL = (
-    "https://webknossos.org/annotations/Explorational/622b130a010000220122ebd1"
-)
+ANNOTATION_URL = "https://webknossos.org/annotations/622b130a010000220122ebd1"
 
 
 def main() -> None:
