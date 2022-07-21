@@ -1644,7 +1644,7 @@ test = ["websockets"]
 
 [[package]]
 name = "wkw"
-version = "1.1.11"
+version = "1.1.16"
 description = ""
 category = "main"
 optional = false
@@ -1652,7 +1652,7 @@ python-versions = "*"
 
 [package.dependencies]
 cffi = "*"
-numpy = "*"
+numpy = ">=1.15,<1.22"
 
 [[package]]
 name = "wrapt"
@@ -1714,7 +1714,7 @@ tifffile = ["pims", "tifffile"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7.1,<3.10"
-content-hash = "30ea982971e5e3ecb78a0d4d90d7a85bff0ddf1341839c6b6692c4cd4840f075"
+content-hash = "b0edfbd355f9cad1c33e537b05fb42929b51590f8f83e31897893993a0b9f9da"
 
 [metadata.files]
 aiobotocore = [
@@ -3078,17 +3078,7 @@ websocket-client = [
     {file = "websocket-client-1.3.2.tar.gz", hash = "sha256:50b21db0058f7a953d67cc0445be4b948d7fc196ecbeb8083d68d94628e4abf6"},
     {file = "websocket_client-1.3.2-py3-none-any.whl", hash = "sha256:722b171be00f2b90e1d4fb2f2b53146a536ca38db1da8ff49c972a4e1365d0ef"},
 ]
-wkw = [
-    {file = "wkw-1.1.11-py3-none-manylinux1_x86_64.whl", hash = "sha256:302a37bbfa4d531a715d2ca9b8f5ac4e8ea21b09ceb7708af386070ec8474b31"},
-    {file = "wkw-1.1.11-py3-none-manylinux2014_x86_64.whl", hash = "sha256:880e0a031a0c35867a92e6ed6704d70e72c7280443da607851e7893e3d5ba3e8"},
-    {file = "wkw-1.1.11-py3.7-none-macosx_10_14_x86_64.whl", hash = "sha256:f0ed8061d79f401e6b0dd1f36bece0f980292731f5c0c7666cd1a0d27d9f588d"},
-    {file = "wkw-1.1.11-py3.7-none-win_amd64.whl", hash = "sha256:3cf4b48d960b8f3d0e5088fd740fe870a7b4dd5c5976b1afce348a152b9ef5ff"},
-    {file = "wkw-1.1.11-py3.8-none-macosx_10_14_x86_64.whl", hash = "sha256:68648e2d702442c6b06e2c4fa3883d45d9d5f7d2c4edec26f73efdf13670a36e"},
-    {file = "wkw-1.1.11-py3.8-none-win_amd64.whl", hash = "sha256:2ebd7f240c0215658b6c7b15daaf2a25739d28110cec81bb7d23c777dd1e8c7e"},
-    {file = "wkw-1.1.11-py3.9-none-macosx_10_14_x86_64.whl", hash = "sha256:1a7c7d6bf58929590f09c56ea6ad42b59448395ea788290bbf3e332f27ea81d2"},
-    {file = "wkw-1.1.11-py3.9-none-win_amd64.whl", hash = "sha256:545874ac1965c54b83f9e33bd8bb03de2a523d432f55f7f47d94e5c228cea532"},
-    {file = "wkw-1.1.11.tar.gz", hash = "sha256:61280e7ebd81459f9380ff183fed05010f2b9b139a5d1f303a403f4ace15bcd0"},
-]
+wkw = []
 wrapt = [
     {file = "wrapt-1.14.1-cp27-cp27m-macosx_10_9_x86_64.whl", hash = "sha256:1b376b3f4896e7930f1f772ac4b064ac12598d1c38d04907e696cc4d794b43d3"},
     {file = "wrapt-1.14.1-cp27-cp27m-manylinux1_i686.whl", hash = "sha256:903500616422a40a98a5a3c4ff4ed9d0066f3b4c951fa286018ecdf0750194ef"},
