@@ -16,6 +16,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+- Suppress spurios ConnectionResetErrors when using multiprocessing, probably only relevant for Python 3.9.13 and higher. [#770](https://github.com/scalableminds/webknossos-libs/pull/770)
 
 
 ## [0.10.9](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.9) - 2022-07-21
