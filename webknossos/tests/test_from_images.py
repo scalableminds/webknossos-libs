@@ -83,7 +83,7 @@ REPO_IMAGES_ARGS: List[
     ("testdata/various_tiff_formats/test_CS.tif", {}, "uint8", 3, (128, 128, 320)),
     ("testdata/various_tiff_formats/test_C.tif", {}, "uint8", 1, (128, 128, 320)),
     ("testdata/various_tiff_formats/test_I.tif", {}, "uint32", 1, (64, 128, 64)),
-    ("testdata/various_tiff_formats/test_S.tif", {}, "uint16", 3, (128, 128, 64)),
+    # ("testdata/various_tiff_formats/test_S.tif", {}, "uint16", 3, (128, 128, 64)),
 ]
 
 
