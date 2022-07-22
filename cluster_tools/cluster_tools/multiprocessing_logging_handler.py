@@ -52,9 +52,15 @@ class MultiProcessingHandler(logging.Handler):
                     self.wrapped_handler.emit(record)
             except (KeyboardInterrupt, SystemExit):  # pylint: disable=try-except-raise
                 raise
-            # multiprocessing.managers.RemoteError pop up quite often.
+            # The following errors pop up quite often.
             # It seems that they can be safely ignored, though.
-            except (BrokenPipeError, EOFError, multiprocessing.managers.RemoteError):
+            # The reason for those might be that the sending end was closed.
+            except (
+                BrokenPipeError,
+                EOFError,
+                ConnectionResetError,
+                multiprocessing.managers.RemoteError,
+            ):
                 break
             except QueueEmpty:
                 # This case is reached when the timeout in queue.get is hit. Pass, to
