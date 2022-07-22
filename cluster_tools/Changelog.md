@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.9...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.8...HEAD)
 
 ### Breaking Changes
 
@@ -17,10 +17,6 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 
 ### Fixed
 - Suppress spurious ConnectionResetErrors when using multiprocessing. [#770](https://github.com/scalableminds/webknossos-libs/pull/770)
-
-
-## [0.10.9](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.9) - 2022-07-21
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.8...v0.10.9)
 
 
 ## [0.10.8](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.8) - 2022-07-15
