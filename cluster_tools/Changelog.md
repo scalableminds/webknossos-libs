@@ -16,6 +16,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+- Suppress spurious ConnectionResetErrors when using multiprocessing. [#770](https://github.com/scalableminds/webknossos-libs/pull/770)
 
 
 ## [0.10.8](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.8) - 2022-07-15
