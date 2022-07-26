@@ -218,7 +218,7 @@ optional = false
 python-versions = "*"
 
 [package.extras]
-test = ["flake8 (==3.7.8)", "hypothesis (==3.55.3)"]
+test = ["hypothesis (==3.55.3)", "flake8 (==3.7.8)"]
 
 [[package]]
 name = "cycler"
@@ -253,11 +253,11 @@ optional = false
 python-versions = ">=3.6"
 
 [package.extras]
-dnssec = ["cryptography (>=2.6)"]
-doh = ["requests", "requests-toolbelt"]
+trio = ["sniffio (>=1.1)", "trio (>=0.14.0)"]
+curio = ["sniffio (>=1.1)", "curio (>=1.2)"]
 idna = ["idna (>=2.1)"]
-curio = ["curio (>=1.2)", "sniffio (>=1.1)"]
-trio = ["trio (>=0.14.0)", "sniffio (>=1.1)"]
+doh = ["requests-toolbelt", "requests"]
+dnssec = ["cryptography (>=2.6)"]
 
 [[package]]
 name = "fasteners"
@@ -317,7 +317,7 @@ python-versions = "*"
 python-dateutil = ">=2.8.1"
 
 [package.extras]
-dev = ["twine", "markdown", "flake8", "wheel"]
+dev = ["wheel", "flake8", "markdown", "twine"]
 
 [[package]]
 name = "gitdb"
@@ -1152,7 +1152,7 @@ scikit-image = "^0.18.3"
 scipy = "^1.4.0"
 typing-extensions = "^4.0"
 universal-pathlib = "0.0.18"
-wkw = "1.1.16"
+wkw = "1.1.17"
 zarr = "^2.11.0"
 zipp = "^3.5.0"
 
@@ -1176,9 +1176,9 @@ optional = false
 python-versions = ">=3.6"
 
 [package.extras]
-docs = ["Sphinx (>=3.4)", "sphinx-rtd-theme (>=0.5)"]
-optional = ["python-socks", "wsaccel"]
 test = ["websockets"]
+optional = ["wsaccel", "python-socks"]
+docs = ["sphinx-rtd-theme (>=0.5)", "Sphinx (>=3.4)"]
 
 [[package]]
 name = "wkcuber"
@@ -1207,7 +1207,7 @@ scipy = "^1.6.0"
 tifffile = "^2020.11.26"
 universal-pathlib = "0.0.18"
 webknossos = {path = "../webknossos", develop = true}
-wkw = "1.1.16"
+wkw = "1.1.17"
 zarr = "^2.11.0"
 
 [package.source]
@@ -1216,7 +1216,7 @@ url = "../wkcuber"
 
 [[package]]
 name = "wkw"
-version = "1.1.16"
+version = "1.1.17"
 description = ""
 category = "dev"
 optional = false
@@ -1224,7 +1224,10 @@ python-versions = "*"
 
 [package.dependencies]
 cffi = "*"
-numpy = ">=1.15,<1.22"
+numpy = [
+    {version = ">=1.15,<2.0.0", markers = "python_version >= \"3.8\""},
+    {version = "<1.22", markers = "python_version < \"3.8\""},
+]
 
 [[package]]
 name = "yarl"
@@ -2312,16 +2315,15 @@ websocket-client = [
 ]
 wkcuber = []
 wkw = [
-    {file = "wkw-1.1.16-py3-none-manylinux1_x86_64.whl", hash = "sha256:8d94fa64062e30caf37e313e4882c11c78edc56e0d23ca4e27d8d92a85c6dc0f"},
-    {file = "wkw-1.1.16-py3-none-manylinux2014_x86_64.whl", hash = "sha256:9be213f55ba2c1801e7fafdf4297bc4b26b06253c86f718db6fdbd03dd858aa7"},
-    {file = "wkw-1.1.16-py3.7-none-macosx_10_15_universal2.whl", hash = "sha256:584a127b33ad13b0ab3ed9a4ee5fd32ebcbf5747dd6afc45d25aac8190c2b961"},
-    {file = "wkw-1.1.16-py3.7-none-win_amd64.whl", hash = "sha256:09bbef30871da676e9b860f00add49c8a65d7bf699d0d12174d421678b7e4c2b"},
-    {file = "wkw-1.1.16-py3.8-none-macosx_10_14_universal2.whl", hash = "sha256:0fdb89b8db3c1bf465fbfebf34c3961d84f18772f0a69da1c68e9df336b6f6fa"},
-    {file = "wkw-1.1.16-py3.8-none-macosx_10_15_universal2.whl", hash = "sha256:136c17f5c346d98663f1ff1f35762644f2b2bddbc0f0aae8e79857067fe536fd"},
-    {file = "wkw-1.1.16-py3.8-none-win_amd64.whl", hash = "sha256:d086190eb679de51604b71f35247e201df140ce35f79d9a926b900c5af4b2354"},
-    {file = "wkw-1.1.16-py3.9-none-macosx_10_15_universal2.whl", hash = "sha256:8246efde60139cd4fb9cb548a1c302090f173d4ae0907a9566625e6d2bbe1f07"},
-    {file = "wkw-1.1.16-py3.9-none-win_amd64.whl", hash = "sha256:5c0dc81856b548d1232daa59af4056a2a0dae116725a0d6c40789301655f4668"},
-    {file = "wkw-1.1.16.tar.gz", hash = "sha256:562c0bc9e631ff73e344a60d907493385f7f870a261c995098aba70ecb72925e"},
+    {file = "wkw-1.1.17-py3-none-manylinux1_x86_64.whl", hash = "sha256:60bec9431fd1b42a5ae21841dddd3bbbc4faef361d5c4ac856a591a853186de6"},
+    {file = "wkw-1.1.17-py3-none-manylinux2014_x86_64.whl", hash = "sha256:38de1c517322b0b127b2638b4d12ec1b6648909419bbb7c6b3043cdbc1a0c3c5"},
+    {file = "wkw-1.1.17-py3.7-none-macosx_10_15_universal2.whl", hash = "sha256:8e5afbbaa375bf0067d3a2123b4b8674fa16a9f8caa37beb8bb73236251bd65a"},
+    {file = "wkw-1.1.17-py3.7-none-win_amd64.whl", hash = "sha256:9aa1fa9879b7cff92248c3276c93191c061ca3c8c18b8f29a07a284cb36155d5"},
+    {file = "wkw-1.1.17-py3.8-none-macosx_10_15_universal2.whl", hash = "sha256:12a284054c30a97152681a06c0d75fd3f4fcacccc3f626eb1451e1d503d159a3"},
+    {file = "wkw-1.1.17-py3.8-none-win_amd64.whl", hash = "sha256:c7800ce413a9c9a4c92e0bc4bbde6be3bf30167ce3dbd53958354a0c1fe6f59e"},
+    {file = "wkw-1.1.17-py3.9-none-macosx_10_15_universal2.whl", hash = "sha256:adc62aba5ad35d6a247e5888ea54892370df4c3053ae96db026943ef6fe5e0ec"},
+    {file = "wkw-1.1.17-py3.9-none-win_amd64.whl", hash = "sha256:29fa1964b2f7a216f8b055d9995c9571526d33490acb0af9c1b37701aa62183d"},
+    {file = "wkw-1.1.17.tar.gz", hash = "sha256:1e5f2d7b63b2280bdffd979179dad70d4a3d98001fb80ff7c277a27ce689f169"},
 ]
 yarl = [
     {file = "yarl-1.7.2-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:f2a8508f7350512434e41065684076f640ecce176d262a7d54f0da41d99c5a95"},
