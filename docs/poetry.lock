@@ -1087,7 +1087,7 @@ python-versions = ">=3.7"
 
 [[package]]
 name = "universal-pathlib"
-version = "0.0.18"
+version = "0.0.19"
 description = "Pathlib API extended to use fsspec backends"
 category = "dev"
 optional = false
@@ -1097,7 +1097,7 @@ python-versions = ">=3.7"
 fsspec = "*"
 
 [package.extras]
-test = ["aiohttp", "flake8", "gcsfs", "hadoop-test-cluster", "ipython", "jupyter", "moto", "pyarrow", "pylint", "pytest", "requests", "s3fs"]
+test = ["aiohttp", "adlfs", "flake8", "gcsfs", "hadoop-test-cluster", "ipython", "jupyter", "moto", "pyarrow", "pylint", "pytest", "requests", "s3fs", "webdav4"]
 
 [[package]]
 name = "urllib3"
@@ -1151,7 +1151,7 @@ rich = "^10.9.0"
 scikit-image = "^0.18.3"
 scipy = "^1.4.0"
 typing-extensions = "^4.0"
-universal-pathlib = "0.0.18"
+universal-pathlib = "0.0.19"
 wkw = "1.1.17"
 zarr = "^2.11.0"
 zipp = "^3.5.0"
@@ -1205,7 +1205,7 @@ scikit-image = "^0.18.3"
 scikit-learn = "^0.24.0"
 scipy = "^1.6.0"
 tifffile = "^2020.11.26"
-universal-pathlib = "0.0.18"
+universal-pathlib = "0.0.19"
 webknossos = {path = "../webknossos", develop = true}
 wkw = "1.1.17"
 zarr = "^2.11.0"
@@ -2276,8 +2276,8 @@ typing-extensions = [
     {file = "typing_extensions-4.3.0.tar.gz", hash = "sha256:e6d2677a32f47fc7eb2795db1dd15c1f34eff616bcaf2cfb5e997f854fa1c4a6"},
 ]
 universal-pathlib = [
-    {file = "universal_pathlib-0.0.18-py3-none-any.whl", hash = "sha256:ddaa3cbfd98d0aef0d018915d1787149b8a77da473ede4245ab0103d85b6784a"},
-    {file = "universal_pathlib-0.0.18.tar.gz", hash = "sha256:b011f68611c1e9f839d86a76a154f3cd4fc17f4a9952cc43ddcd23e2080d74e0"},
+    {file = "universal_pathlib-0.0.19-py3-none-any.whl", hash = "sha256:72df949935a12b7e6614481bb406df82383db52c58acba1bb44246762c76b127"},
+    {file = "universal_pathlib-0.0.19.tar.gz", hash = "sha256:382a6de60565faf33c39d9791d8a5c453e39b88ed19e8982de9bbffd5930800c"},
 ]
 urllib3 = [
     {file = "urllib3-1.26.7-py2.py3-none-any.whl", hash = "sha256:c4fdf4019605b6e5423637e01bc9fe4daef873709a7973e195ceba0a62bbc844"},
