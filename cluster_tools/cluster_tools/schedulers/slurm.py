@@ -371,11 +371,13 @@ class SlurmExecutor(ClusterExecutor):
                 return None
             if "exit code 137" not in properties["State"]:
                 return None
-            reason = "The job was probably terminated because it consumed too " \
-                "much memory (at least, the exit code 137 suggests this). Please " \
-                "use the `seff` utility to inspect the failed job and its potential " \
-                "job siblings (in case of an array job) to doublecheck the memory " \
+            reason = (
+                "The job was probably terminated because it consumed too "
+                "much memory (at least, the exit code 137 suggests this). Please "
+                "use the `seff` utility to inspect the failed job and its potential "
+                "job siblings (in case of an array job) to doublecheck the memory "
                 "consumption."
+            )
             return (reason, RemoteOutOfMemoryException)
 
         investigation = investigate_memory_consumption()
@@ -383,7 +385,6 @@ class SlurmExecutor(ClusterExecutor):
             return investigation
 
         return investigate_exit_code()
-
 
     def get_pending_tasks(self):
         try:
