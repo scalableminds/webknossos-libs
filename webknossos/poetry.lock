@@ -312,7 +312,7 @@ optional = false
 python-versions = "*"
 
 [package.extras]
-test = ["flake8 (==3.7.8)", "hypothesis (==3.55.3)"]
+test = ["hypothesis (==3.55.3)", "flake8 (==3.7.8)"]
 
 [[package]]
 name = "cycler"
@@ -692,8 +692,8 @@ python-versions = "*"
 typing-extensions = {version = "*", markers = "python_version < \"3.8\""}
 
 [package.extras]
-docs = ["readthedocs-sphinx-ext", "sphinx", "sphinx-rtd-theme"]
 tests = ["pytest"]
+docs = ["sphinx-rtd-theme", "sphinx", "readthedocs-sphinx-ext"]
 
 [[package]]
 name = "jsonschema"
@@ -920,9 +920,9 @@ jsonschema = ">=3.0.0"
 six = "*"
 
 [package.extras]
-isodate = ["isodate"]
-rfc3339_validator = ["rfc3339-validator"]
 strict_rfc3339 = ["strict-rfc3339"]
+rfc3339_validator = ["rfc3339-validator"]
+isodate = ["isodate"]
 
 [[package]]
 name = "openapi-spec-validator"
@@ -939,8 +939,8 @@ PyYAML = ">=5.1"
 six = "*"
 
 [package.extras]
-dev = ["pre-commit"]
 requests = ["requests"]
+dev = ["pre-commit"]
 
 [[package]]
 name = "packaging"
@@ -1030,8 +1030,8 @@ python-versions = ">=3.6"
 importlib-metadata = {version = ">=0.12", markers = "python_version < \"3.8\""}
 
 [package.extras]
-dev = ["pre-commit", "tox"]
-testing = ["pytest", "pytest-benchmark"]
+testing = ["pytest-benchmark", "pytest"]
+dev = ["tox", "pre-commit"]
 
 [[package]]
 name = "pooch"
@@ -1047,9 +1047,9 @@ packaging = ">=20.0"
 requests = ">=2.19.0"
 
 [package.extras]
-progress = ["tqdm (>=4.41.0,<5.0.0)"]
-sftp = ["paramiko (>=2.7.0)"]
 xxhash = ["xxhash (>=1.4.3)"]
+sftp = ["paramiko (>=2.7.0)"]
+progress = ["tqdm (>=4.41.0,<5.0.0)"]
 
 [[package]]
 name = "psutil"
@@ -1418,10 +1418,10 @@ scipy = ">=1.1.0"
 threadpoolctl = ">=2.0.0"
 
 [package.extras]
-benchmark = ["matplotlib (>=2.2.3)", "pandas (>=0.25.0)", "memory-profiler (>=0.57.0)"]
-docs = ["matplotlib (>=2.2.3)", "scikit-image (>=0.14.5)", "pandas (>=0.25.0)", "seaborn (>=0.9.0)", "memory-profiler (>=0.57.0)", "sphinx (>=4.0.1)", "sphinx-gallery (>=0.7.0)", "numpydoc (>=1.0.0)", "Pillow (>=7.1.2)", "sphinx-prompt (>=1.3.0)", "sphinxext-opengraph (>=0.4.2)"]
-examples = ["matplotlib (>=2.2.3)", "scikit-image (>=0.14.5)", "pandas (>=0.25.0)", "seaborn (>=0.9.0)"]
-tests = ["matplotlib (>=2.2.3)", "scikit-image (>=0.14.5)", "pandas (>=0.25.0)", "pytest (>=5.0.1)", "pytest-cov (>=2.9.0)", "flake8 (>=3.8.2)", "black (>=21.6b0)", "mypy (>=0.770)", "pyamg (>=4.0.0)"]
+tests = ["pyamg (>=4.0.0)", "mypy (>=0.770)", "black (>=21.6b0)", "flake8 (>=3.8.2)", "pytest-cov (>=2.9.0)", "pytest (>=5.0.1)", "pandas (>=0.25.0)", "scikit-image (>=0.14.5)", "matplotlib (>=2.2.3)"]
+examples = ["seaborn (>=0.9.0)", "pandas (>=0.25.0)", "scikit-image (>=0.14.5)", "matplotlib (>=2.2.3)"]
+docs = ["sphinxext-opengraph (>=0.4.2)", "sphinx-prompt (>=1.3.0)", "Pillow (>=7.1.2)", "numpydoc (>=1.0.0)", "sphinx-gallery (>=0.7.0)", "sphinx (>=4.0.1)", "memory-profiler (>=0.57.0)", "seaborn (>=0.9.0)", "pandas (>=0.25.0)", "scikit-image (>=0.14.5)", "matplotlib (>=2.2.3)"]
+benchmark = ["memory-profiler (>=0.57.0)", "pandas (>=0.25.0)", "matplotlib (>=2.2.3)"]
 
 [[package]]
 name = "scipy"
@@ -1567,10 +1567,10 @@ python-versions = ">=3.6"
 click = ">=7.1.1,<7.2.0"
 
 [package.extras]
-test = ["pytest-xdist (>=1.32.0,<2.0.0)", "pytest-sugar (>=0.9.4,<0.10.0)", "mypy (==0.782)", "black (>=19.10b0,<20.0b0)", "isort (>=5.0.6,<6.0.0)", "shellingham (>=1.3.0,<2.0.0)", "pytest (>=4.4.0,<5.4.0)", "pytest-cov (>=2.10.0,<3.0.0)", "coverage (>=5.2,<6.0)"]
-all = ["colorama (>=0.4.3,<0.5.0)", "shellingham (>=1.3.0,<2.0.0)"]
-dev = ["autoflake (>=1.3.1,<2.0.0)", "flake8 (>=3.8.3,<4.0.0)"]
-doc = ["mkdocs (>=1.1.2,<2.0.0)", "mkdocs-material (>=5.4.0,<6.0.0)", "markdown-include (>=0.5.1,<0.6.0)"]
+test = ["isort (>=5.0.6,<6.0.0)", "black (>=19.10b0,<20.0b0)", "mypy (==0.782)", "pytest-sugar (>=0.9.4,<0.10.0)", "pytest-xdist (>=1.32.0,<2.0.0)", "coverage (>=5.2,<6.0)", "pytest-cov (>=2.10.0,<3.0.0)", "pytest (>=4.4.0,<5.4.0)", "shellingham (>=1.3.0,<2.0.0)"]
+doc = ["markdown-include (>=0.5.1,<0.6.0)", "mkdocs-material (>=5.4.0,<6.0.0)", "mkdocs (>=1.1.2,<2.0.0)"]
+dev = ["flake8 (>=3.8.3,<4.0.0)", "autoflake (>=1.3.1,<2.0.0)"]
+all = ["shellingham (>=1.3.0,<2.0.0)", "colorama (>=0.4.3,<0.5.0)"]
 
 [[package]]
 name = "types-python-dateutil"
@@ -1590,7 +1590,7 @@ python-versions = ">=3.7"
 
 [[package]]
 name = "universal-pathlib"
-version = "0.0.18"
+version = "0.0.19"
 description = "Pathlib API extended to use fsspec backends"
 category = "main"
 optional = false
@@ -1600,7 +1600,7 @@ python-versions = ">=3.7"
 fsspec = "*"
 
 [package.extras]
-test = ["aiohttp", "flake8", "gcsfs", "hadoop-test-cluster", "ipython", "jupyter", "moto", "pyarrow", "pylint", "pytest", "requests", "s3fs"]
+test = ["aiohttp", "adlfs", "flake8", "gcsfs", "hadoop-test-cluster", "ipython", "jupyter", "moto", "pyarrow", "pylint", "pytest", "requests", "s3fs", "webdav4"]
 
 [[package]]
 name = "urllib3"
@@ -1644,7 +1644,7 @@ test = ["websockets"]
 
 [[package]]
 name = "wkw"
-version = "1.1.16"
+version = "1.1.17"
 description = ""
 category = "main"
 optional = false
@@ -1652,7 +1652,10 @@ python-versions = "*"
 
 [package.dependencies]
 cffi = "*"
-numpy = ">=1.15,<1.22"
+numpy = [
+    {version = ">=1.15,<2.0.0", markers = "python_version >= \"3.8\""},
+    {version = "<1.22", markers = "python_version < \"3.8\""},
+]
 
 [[package]]
 name = "wrapt"
@@ -1714,7 +1717,7 @@ tifffile = ["pims", "tifffile"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7.1,<3.10"
-content-hash = "b0edfbd355f9cad1c33e537b05fb42929b51590f8f83e31897893993a0b9f9da"
+content-hash = "5dbc2dff7195d5b1dd20dc5450ba3abf4f429646a3b24adee90d350c251a972d"
 
 [metadata.files]
 aiobotocore = [
@@ -3099,8 +3102,8 @@ typing-extensions = [
     {file = "typing_extensions-4.2.0.tar.gz", hash = "sha256:f1c24655a0da0d1b67f07e17a5e6b2a105894e6824b92096378bb3668ef02376"},
 ]
 universal-pathlib = [
-    {file = "universal_pathlib-0.0.18-py3-none-any.whl", hash = "sha256:ddaa3cbfd98d0aef0d018915d1787149b8a77da473ede4245ab0103d85b6784a"},
-    {file = "universal_pathlib-0.0.18.tar.gz", hash = "sha256:b011f68611c1e9f839d86a76a154f3cd4fc17f4a9952cc43ddcd23e2080d74e0"},
+    {file = "universal_pathlib-0.0.19-py3-none-any.whl", hash = "sha256:72df949935a12b7e6614481bb406df82383db52c58acba1bb44246762c76b127"},
+    {file = "universal_pathlib-0.0.19.tar.gz", hash = "sha256:382a6de60565faf33c39d9791d8a5c453e39b88ed19e8982de9bbffd5930800c"},
 ]
 urllib3 = [
     {file = "urllib3-1.26.9-py2.py3-none-any.whl", hash = "sha256:44ece4d53fb1706f667c9bd1c648f5469a2ec925fcf3a776667042d645472c14"},
@@ -3115,16 +3118,15 @@ websocket-client = [
     {file = "websocket_client-1.3.2-py3-none-any.whl", hash = "sha256:722b171be00f2b90e1d4fb2f2b53146a536ca38db1da8ff49c972a4e1365d0ef"},
 ]
 wkw = [
-    {file = "wkw-1.1.16-py3-none-manylinux1_x86_64.whl", hash = "sha256:8d94fa64062e30caf37e313e4882c11c78edc56e0d23ca4e27d8d92a85c6dc0f"},
-    {file = "wkw-1.1.16-py3-none-manylinux2014_x86_64.whl", hash = "sha256:9be213f55ba2c1801e7fafdf4297bc4b26b06253c86f718db6fdbd03dd858aa7"},
-    {file = "wkw-1.1.16-py3.7-none-macosx_10_15_universal2.whl", hash = "sha256:584a127b33ad13b0ab3ed9a4ee5fd32ebcbf5747dd6afc45d25aac8190c2b961"},
-    {file = "wkw-1.1.16-py3.7-none-win_amd64.whl", hash = "sha256:09bbef30871da676e9b860f00add49c8a65d7bf699d0d12174d421678b7e4c2b"},
-    {file = "wkw-1.1.16-py3.8-none-macosx_10_14_universal2.whl", hash = "sha256:0fdb89b8db3c1bf465fbfebf34c3961d84f18772f0a69da1c68e9df336b6f6fa"},
-    {file = "wkw-1.1.16-py3.8-none-macosx_10_15_universal2.whl", hash = "sha256:136c17f5c346d98663f1ff1f35762644f2b2bddbc0f0aae8e79857067fe536fd"},
-    {file = "wkw-1.1.16-py3.8-none-win_amd64.whl", hash = "sha256:d086190eb679de51604b71f35247e201df140ce35f79d9a926b900c5af4b2354"},
-    {file = "wkw-1.1.16-py3.9-none-macosx_10_15_universal2.whl", hash = "sha256:8246efde60139cd4fb9cb548a1c302090f173d4ae0907a9566625e6d2bbe1f07"},
-    {file = "wkw-1.1.16-py3.9-none-win_amd64.whl", hash = "sha256:5c0dc81856b548d1232daa59af4056a2a0dae116725a0d6c40789301655f4668"},
-    {file = "wkw-1.1.16.tar.gz", hash = "sha256:562c0bc9e631ff73e344a60d907493385f7f870a261c995098aba70ecb72925e"},
+    {file = "wkw-1.1.17-py3-none-manylinux1_x86_64.whl", hash = "sha256:60bec9431fd1b42a5ae21841dddd3bbbc4faef361d5c4ac856a591a853186de6"},
+    {file = "wkw-1.1.17-py3-none-manylinux2014_x86_64.whl", hash = "sha256:38de1c517322b0b127b2638b4d12ec1b6648909419bbb7c6b3043cdbc1a0c3c5"},
+    {file = "wkw-1.1.17-py3.7-none-macosx_10_15_universal2.whl", hash = "sha256:8e5afbbaa375bf0067d3a2123b4b8674fa16a9f8caa37beb8bb73236251bd65a"},
+    {file = "wkw-1.1.17-py3.7-none-win_amd64.whl", hash = "sha256:9aa1fa9879b7cff92248c3276c93191c061ca3c8c18b8f29a07a284cb36155d5"},
+    {file = "wkw-1.1.17-py3.8-none-macosx_10_15_universal2.whl", hash = "sha256:12a284054c30a97152681a06c0d75fd3f4fcacccc3f626eb1451e1d503d159a3"},
+    {file = "wkw-1.1.17-py3.8-none-win_amd64.whl", hash = "sha256:c7800ce413a9c9a4c92e0bc4bbde6be3bf30167ce3dbd53958354a0c1fe6f59e"},
+    {file = "wkw-1.1.17-py3.9-none-macosx_10_15_universal2.whl", hash = "sha256:adc62aba5ad35d6a247e5888ea54892370df4c3053ae96db026943ef6fe5e0ec"},
+    {file = "wkw-1.1.17-py3.9-none-win_amd64.whl", hash = "sha256:29fa1964b2f7a216f8b055d9995c9571526d33490acb0af9c1b37701aa62183d"},
+    {file = "wkw-1.1.17.tar.gz", hash = "sha256:1e5f2d7b63b2280bdffd979179dad70d4a3d98001fb80ff7c277a27ce689f169"},
 ]
 wrapt = [
     {file = "wrapt-1.14.1-cp27-cp27m-macosx_10_9_x86_64.whl", hash = "sha256:1b376b3f4896e7930f1f772ac4b064ac12598d1c38d04907e696cc4d794b43d3"},

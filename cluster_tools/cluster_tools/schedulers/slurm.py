@@ -332,36 +332,59 @@ class SlurmExecutor(ClusterExecutor):
         if exit_code != 0:
             return None
 
-        # Look for the relevant line.
+        # Parse stdout into a key-value object
+        properties = {}
         stdout = stdout.decode("utf8")
-        efficiency_needle = "Memory Efficiency: "
-        efficiency_lines = [
-            line for line in stdout.split("\n") if efficiency_needle in line
-        ]
+        for line in stdout.split("\n"):
+            if ":" not in line:
+                continue
+            key, value = line.split(":", 1)
+            properties[key.strip()] = value.strip()
 
-        if len(efficiency_lines) == 0:
-            return None
+        def investigate_memory_consumption():
+            if not properties.get("Memory Efficiency", None):
+                return None
 
-        # Extract the "25019.18% of 1.00 GB" part of the line
-        efficiency_note = efficiency_lines[0].split(efficiency_needle)[1]
-        PERCENTAGE_REGEX = r"([0-9]+(\.[0-9]+)?)%"
+            # Extract the "25019.18% of 1.00 GB" part of the line
+            efficiency_note = properties["Memory Efficiency"]
+            PERCENTAGE_REGEX = r"([0-9]+(\.[0-9]+)?)%"
 
-        # Extract the percentage to see whether it exceeds 100%.
-        match = re.search(PERCENTAGE_REGEX, efficiency_note)
-        percentage = None
-        if match is None:
-            return None
+            # Extract the percentage to see whether it exceeds 100%.
+            match = re.search(PERCENTAGE_REGEX, efficiency_note)
+            percentage = None
+            if match is None:
+                return None
 
-        try:
-            percentage = float(match.group(1))
-        except ValueError:
-            return None
+            try:
+                percentage = float(match.group(1))
+            except ValueError:
+                return None
 
-        if percentage < 100:
-            return None
+            if percentage < 100:
+                return None
 
-        reason = f"The job was probably terminated because it consumed too much memory ({efficiency_note})."
-        return (reason, RemoteOutOfMemoryException)
+            reason = f"The job was probably terminated because it consumed too much memory ({efficiency_note})."
+            return (reason, RemoteOutOfMemoryException)
+
+        def investigate_exit_code():
+            if not properties.get("State", None):
+                return None
+            if "exit code 137" not in properties["State"]:
+                return None
+            reason = (
+                "The job was probably terminated because it consumed too "
+                "much memory (at least, the exit code 137 suggests this). Please "
+                "use the `seff` utility to inspect the failed job and its potential "
+                "job siblings (in case of an array job) to doublecheck the memory "
+                "consumption."
+            )
+            return (reason, RemoteOutOfMemoryException)
+
+        investigation = investigate_memory_consumption()
+        if investigation:
+            return investigation
+
+        return investigate_exit_code()
 
     def get_pending_tasks(self):
         try:
