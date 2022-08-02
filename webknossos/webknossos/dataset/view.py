@@ -960,7 +960,8 @@ class View:
             self._cached_array = None
 
     def __del__(self) -> None:
-        del self._cached_array
+        if hasattr(self, "_cached_array"):
+            del self._cached_array
 
     def __getstate__(self) -> Dict[str, Any]:
         d = dict(self.__dict__)
