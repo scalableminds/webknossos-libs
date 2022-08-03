@@ -1644,7 +1644,7 @@ test = ["websockets"]
 
 [[package]]
 name = "wkw"
-version = "1.1.17"
+version = "1.1.18"
 description = ""
 category = "main"
 optional = false
@@ -1717,7 +1717,7 @@ tifffile = ["pims", "tifffile"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7.1,<3.10"
-content-hash = "5dbc2dff7195d5b1dd20dc5450ba3abf4f429646a3b24adee90d350c251a972d"
+content-hash = "e9cc9829c50ce0c7b3350511f426c25030440b1b25d94d2e0d39c8c3ef3e3004"
 
 [metadata.files]
 aiobotocore = [
@@ -3118,15 +3118,15 @@ websocket-client = [
     {file = "websocket_client-1.3.2-py3-none-any.whl", hash = "sha256:722b171be00f2b90e1d4fb2f2b53146a536ca38db1da8ff49c972a4e1365d0ef"},
 ]
 wkw = [
-    {file = "wkw-1.1.17-py3-none-manylinux1_x86_64.whl", hash = "sha256:60bec9431fd1b42a5ae21841dddd3bbbc4faef361d5c4ac856a591a853186de6"},
-    {file = "wkw-1.1.17-py3-none-manylinux2014_x86_64.whl", hash = "sha256:38de1c517322b0b127b2638b4d12ec1b6648909419bbb7c6b3043cdbc1a0c3c5"},
-    {file = "wkw-1.1.17-py3.7-none-macosx_10_15_universal2.whl", hash = "sha256:8e5afbbaa375bf0067d3a2123b4b8674fa16a9f8caa37beb8bb73236251bd65a"},
-    {file = "wkw-1.1.17-py3.7-none-win_amd64.whl", hash = "sha256:9aa1fa9879b7cff92248c3276c93191c061ca3c8c18b8f29a07a284cb36155d5"},
-    {file = "wkw-1.1.17-py3.8-none-macosx_10_15_universal2.whl", hash = "sha256:12a284054c30a97152681a06c0d75fd3f4fcacccc3f626eb1451e1d503d159a3"},
-    {file = "wkw-1.1.17-py3.8-none-win_amd64.whl", hash = "sha256:c7800ce413a9c9a4c92e0bc4bbde6be3bf30167ce3dbd53958354a0c1fe6f59e"},
-    {file = "wkw-1.1.17-py3.9-none-macosx_10_15_universal2.whl", hash = "sha256:adc62aba5ad35d6a247e5888ea54892370df4c3053ae96db026943ef6fe5e0ec"},
-    {file = "wkw-1.1.17-py3.9-none-win_amd64.whl", hash = "sha256:29fa1964b2f7a216f8b055d9995c9571526d33490acb0af9c1b37701aa62183d"},
-    {file = "wkw-1.1.17.tar.gz", hash = "sha256:1e5f2d7b63b2280bdffd979179dad70d4a3d98001fb80ff7c277a27ce689f169"},
+    {file = "wkw-1.1.18-py3-none-manylinux1_x86_64.whl", hash = "sha256:a7d8022b4f98dc0dee4c3ddc1521f5a7484c805a4341c323817d50ff8b04ea3f"},
+    {file = "wkw-1.1.18-py3-none-manylinux2014_x86_64.whl", hash = "sha256:9f6b9736f060fd74c0dce5cb716fa706c1382d6aa2265c21527e1757d66b2cd9"},
+    {file = "wkw-1.1.18-py3.7-none-macosx_10_15_universal2.whl", hash = "sha256:7d42217cebf1e95e3abf1a312d2b8c7041d40e4e1f0aaeada964b87e2407bc06"},
+    {file = "wkw-1.1.18-py3.7-none-win_amd64.whl", hash = "sha256:1fbabd6d5ded113934a11c427c4f323804c9695d68039f6663aede6cd35ed08b"},
+    {file = "wkw-1.1.18-py3.8-none-macosx_10_15_universal2.whl", hash = "sha256:2dda461dfd94cffc5f7a6fb3b06f2edfdd2a35bdde212b07b87f5184e93c9431"},
+    {file = "wkw-1.1.18-py3.8-none-win_amd64.whl", hash = "sha256:0fa3558357dbf4c715b1f9fca7492d7a57c822fa9d7b45e03c55533e5d119d2e"},
+    {file = "wkw-1.1.18-py3.9-none-macosx_10_15_universal2.whl", hash = "sha256:b8ad6b48e53e98bf2dbcd25beaa9a256baadcefea7c0a5892a39f02127acd5ec"},
+    {file = "wkw-1.1.18-py3.9-none-win_amd64.whl", hash = "sha256:0fef2a0b4817b6fff38555cc9b255bcac50099d6ac97886bdd148061375db667"},
+    {file = "wkw-1.1.18.tar.gz", hash = "sha256:9de9c7947deca175b57014748af4dfc67013242acec8b1528ab69e675d87b6b9"},
 ]
 wrapt = [
     {file = "wrapt-1.14.1-cp27-cp27m-macosx_10_9_x86_64.whl", hash = "sha256:1b376b3f4896e7930f1f772ac4b064ac12598d1c38d04907e696cc4d794b43d3"},
