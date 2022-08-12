@@ -65,10 +65,7 @@ def add_api_prefix_for_non_data_paths(openapi_schema: Dict) -> None:
 
 
 def remove_zarr_tagged_endpoints(openapi_schema: Dict) -> None:
-    """The current webKnossos backend does not include the
-    /api prefix into the different backend paths.
-    Howevery, the /data prefix for datastore paths is included.
-    This adds the missing /api prefixes in the openapi_schema (in-place)."""
+    """This removes all endpoints tagged with zarr-streaming, in-place."""
     assert_valid_schema(openapi_schema)
     paths = openapi_schema["paths"]
     for path, path_value in list(paths.items()):
@@ -255,10 +252,14 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
 
         yield (
             api_endpoint_name,
-            extract_200_response(api_endpoint.sync_detailed(client=client)),
+            extract_200_response(api_endpoint.sync_detailed(client=client)),  # type: ignore[attr-defined]
         )
 
 
+# By default, any keys are optional and can have the type "Unset".
+# Any keys with the following names are marked as required,
+# and are therefore expected to be returned by the backend in
+# related requests. Exceptions are specified in OPTIONAL_KEYS below.
 REQUIRED_KEYS = {
     "id",
     "name",
@@ -323,17 +324,22 @@ REQUIRED_KEYS = {
     "allowedTeams",
 }
 
+# Those key-pairs of (parent-key, child-key) mark exceptions
+# for keys that are usually required, just not under the
+# parent keys listed here:
+OPTIONAL_KEYS = {
+    ("annotationLayers", "name"),  # added 2022-07, optional for backwards-compatibility
+    ("dataSource", "status"),  # sometimes part of the dataSource dict
+}
+
+# Anything in the following keys will not be marked as required,
+# as those keys usually vary:
 KEYS_WITH_VARYING_VALUES = {
     "experiences",
     "adminViewConfiguration",
     "novelUserExperienceInfos",
     "viewConfiguration",
     "defaultViewConfiguration",
-}
-
-OPTIONAL_KEYS = {
-    ("annotationLayers", "name"),  # added 2022-07, optional for backwards-compatibility
-    ("dataSource", "status"),  # sometimes part of the dataSource dict
 }
 
 
@@ -345,8 +351,8 @@ def extract_200_response(response: Any) -> bytes:
 def make_properties_required(  # pylint: disable=dangerous-default-value
     x: Any,
     parent_name: Optional[str] = None,
-    did_require: List[str] = [],
-) -> None:
+    handled_required_keys: List[str] = [],
+) -> List[str]:
     if isinstance(x, dict):
         for key, value in x.items():
             # do not recurse into objects where the contents might be varying
@@ -359,16 +365,18 @@ def make_properties_required(  # pylint: disable=dangerous-default-value
                     make_properties_required(
                         property_value,
                         parent_name=property_key,
-                        did_require=did_require,
+                        handled_required_keys=handled_required_keys,
                     )
             else:
                 make_properties_required(
-                    value, parent_name=parent_name, did_require=did_require
+                    value,
+                    parent_name=parent_name,
+                    handled_required_keys=handled_required_keys,
                 )
     elif isinstance(x, list):
         for i in x:
             make_properties_required(
-                i, parent_name=parent_name, did_require=did_require
+                i, parent_name=parent_name, handled_required_keys=handled_required_keys
             )
 
     if isinstance(x, dict) and "properties" in x:
@@ -382,7 +390,7 @@ def make_properties_required(  # pylint: disable=dangerous-default-value
                         required_properties.append(property_key)
 
             if len(required_properties) > 0:
-                did_require += required_properties
+                handled_required_keys += required_properties
                 x["required"] = required_properties
 
             # Further corrections
@@ -393,7 +401,7 @@ def make_properties_required(  # pylint: disable=dangerous-default-value
                 properties["tracingTime"]["type"] = "integer"
                 properties["tracingTime"]["nullable"] = True
 
-    return did_require
+    return handled_required_keys
 
 
 def set_response_schema_by_example(
@@ -401,7 +409,7 @@ def set_response_schema_by_example(
     example_response: bytes,
     operation_id: str,
     method: str = "get",
-) -> None:
+) -> List[str]:
     recorded_schema = build_openapi(
         method=method,
         path="/placeholder",
@@ -420,12 +428,13 @@ def set_response_schema_by_example(
         for path_method in path.values()
         if path_method["operationId"] == operation_id
     ][0]
-    did_require = make_properties_required(recorded_response_schema)
+    handled_required_keys = make_properties_required(recorded_response_schema)
     request_schema["responses"]["200"]["content"] = recorded_response_schema
-    return did_require
+    return handled_required_keys
 
 
 def fix_request_body(openapi_schema: Dict) -> None:
+    """Applies fixes for request bodies in-place."""
     assert_valid_schema(openapi_schema)
     for path_val in openapi_schema["paths"].values():
         for method_val in path_val.values():
@@ -446,12 +455,12 @@ def bootstrap_response_schemas(openapi_schema: Dict) -> None:
     """Inserts the response schemas into openapi_schema (in-place),
     as recorded by example requests."""
     assert_valid_schema(openapi_schema)
-    did_require = []
+    handled_required_keys = []
     for operation_id, example_response in iterate_request_ids_with_responses():
-        did_require += set_response_schema_by_example(
+        handled_required_keys += set_response_schema_by_example(
             openapi_schema, example_response=example_response, operation_id=operation_id
         )
-    left_over = REQUIRED_KEYS - set(did_require)
+    left_over = REQUIRED_KEYS - set(handled_required_keys)
     assert (
         len(left_over) == 0
     ), f"Did not find all required keys, left over are {left_over}"
