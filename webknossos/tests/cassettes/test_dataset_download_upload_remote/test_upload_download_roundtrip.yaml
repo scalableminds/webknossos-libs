@@ -48,7 +48,7 @@ interactions:
     method: GET
     uri: http://localhost:9000/api/user
   response:
-    content: '{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1657009585478,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true}'
+    content: '{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1660298897800,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true}'
     headers:
       content-length:
       - '630'
@@ -1295,7 +1295,7 @@ interactions:
     method: GET
     uri: http://localhost:9000/api/datasets/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00
   response:
-    content: '{"name":"test_upload_download_roundtrip_2022-07-05_08-26-25","dataSource":{"id":{"name":"test_upload_download_roundtrip_2022-07-05_08-26-25","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isForeign":false,"isScratch":false,"isConnector":false,"allowsUpload":true},"owningOrganization":"Organization_X","allowedTeams":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1657009585733,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1657009585733,"details":null,"publication":null,"isUnreported":false,"isForeign":false,"jobsEnabled":false,"tags":[]}'
+    content: '{"name":"test_upload_download_roundtrip_2022-08-12_10-08-17","dataSource":{"id":{"name":"test_upload_download_roundtrip_2022-08-12_10-08-17","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isForeign":false,"isScratch":false,"isConnector":false,"allowsUpload":true},"owningOrganization":"Organization_X","allowedTeams":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1660298898126,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1660298898126,"details":null,"isUnreported":false,"isForeign":false,"jobsEnabled":false,"tags":[],"publication":null}'
     headers:
       content-length:
       - '1214'
@@ -1319,32 +1319,30 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-08-12_10-08-17\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>test_upload_download_roundtrip_2022-07-05_08-26-25</a>:
-        .</li>\n      \n        <li><a href=test_upload_download_roundtrip_2022-07-05_08-26-25/color>color</a>:
-        test_upload_download_roundtrip_2022-07-05_08-26-25/color</li>\n      \n        <li><a
-        href=test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation>segmentation</a>:
-        test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation</li>\n      \n
-        \   </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\"datasource-properties.json/\">datasource-properties.json</a></li>\n
+        \     \n        <li><a href=\".zgroup/\">.zgroup</a></li>\n      \n        <li><a
+        href=\"color/\">color</a></li>\n      \n        <li><a href=\"segmentation/\">segmentation</a></li>\n
+        \     \n    </ul>\n  </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
       access-control-max-age:
       - '600'
       content-length:
-      - '1655'
+      - '1531'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -1357,7 +1355,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17
 - request:
     body: null
     headers:
@@ -1374,7 +1372,7 @@ interactions:
       access-control-max-age:
       - '600'
       content-length:
-      - '1655'
+      - '1531'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -1387,7 +1385,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17
 - request:
     body: null
     headers: {}
@@ -1397,32 +1395,30 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-08-12_10-08-17\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>test_upload_download_roundtrip_2022-07-05_08-26-25</a>:
-        .</li>\n      \n        <li><a href=test_upload_download_roundtrip_2022-07-05_08-26-25/color>color</a>:
-        test_upload_download_roundtrip_2022-07-05_08-26-25/color</li>\n      \n        <li><a
-        href=test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation>segmentation</a>:
-        test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation</li>\n      \n
-        \   </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\"datasource-properties.json/\">datasource-properties.json</a></li>\n
+        \     \n        <li><a href=\".zgroup/\">.zgroup</a></li>\n      \n        <li><a
+        href=\"color/\">color</a></li>\n      \n        <li><a href=\"segmentation/\">segmentation</a></li>\n
+        \     \n    </ul>\n  </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
       access-control-max-age:
       - '600'
       content-length:
-      - '1655'
+      - '1531'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -1435,7 +1431,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17
 - request:
     body: null
     headers: {}
@@ -1445,32 +1441,30 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-08-12_10-08-17\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>test_upload_download_roundtrip_2022-07-05_08-26-25</a>:
-        .</li>\n      \n        <li><a href=test_upload_download_roundtrip_2022-07-05_08-26-25/color>color</a>:
-        test_upload_download_roundtrip_2022-07-05_08-26-25/color</li>\n      \n        <li><a
-        href=test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation>segmentation</a>:
-        test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation</li>\n      \n
-        \   </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\"datasource-properties.json/\">datasource-properties.json</a></li>\n
+        \     \n        <li><a href=\".zgroup/\">.zgroup</a></li>\n      \n        <li><a
+        href=\"color/\">color</a></li>\n      \n        <li><a href=\"segmentation/\">segmentation</a></li>\n
+        \     \n    </ul>\n  </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
       access-control-max-age:
       - '600'
       content-length:
-      - '1655'
+      - '1531'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -1483,7 +1477,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17
 - request:
     body: null
     headers:
@@ -1513,7 +1507,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/datasource-properties.json
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/datasource-properties.json
 - request:
     body: null
     headers: {}
@@ -1521,7 +1515,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/datasource-properties.json
   response:
     body:
-      string: '{"id":{"name":"test_upload_download_roundtrip_2022-07-05_08-26-25","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"elementClass":"uint8","mags":[{"mag":[1,1,1]},{"mag":[2,2,1]},{"mag":[4,4,2]}],"numChannels":1,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"elementClass":"uint32","mags":[{"mag":[1,1,1]},{"mag":[2,2,1]},{"mag":[4,4,2]}],"largestSegmentId":5238529,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[11.239999771118164,11.239999771118164,28]}'
+      string: '{"id":{"name":"test_upload_download_roundtrip_2022-08-12_10-08-17","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"elementClass":"uint8","mags":[{"mag":[1,1,1]},{"mag":[2,2,1]},{"mag":[4,4,2]}],"numChannels":1,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"elementClass":"uint32","mags":[{"mag":[1,1,1]},{"mag":[2,2,1]},{"mag":[4,4,2]}],"largestSegmentId":5238529,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[11.239999771118164,11.239999771118164,28]}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -1541,7 +1535,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/datasource-properties.json
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/datasource-properties.json
 - request:
     body: null
     headers:
@@ -1571,7 +1565,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/datasource-properties.json
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/datasource-properties.json
 - request:
     body: null
     headers:
@@ -1581,7 +1575,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00/datasource-properties.json
   response:
     body:
-      string: '{"id":{"name":"test_upload_download_roundtrip_2022-07-05_08-26-25","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"elementClass":"uint8","mags":[{"mag":[1,1,1]},{"mag":[2,2,1]},{"mag":[4,4,2]}],"numChannels":1,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"elementClass":"uint32","mags":[{"mag":[1,1,1]},{"mag":[2,2,1]},{"mag":[4,4,2]}],"largestSegmentId":5238529,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[11.239999771118164,11.239999771118164,28]}'
+      string: '{"id":{"name":"test_upload_download_roundtrip_2022-08-12_10-08-17","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"elementClass":"uint8","mags":[{"mag":[1,1,1]},{"mag":[2,2,1]},{"mag":[4,4,2]}],"numChannels":1,"dataFormat":"zarr"},{"name":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"elementClass":"uint32","mags":[{"mag":[1,1,1]},{"mag":[2,2,1]},{"mag":[4,4,2]}],"largestSegmentId":5238529,"numChannels":1,"category":"segmentation","dataFormat":"zarr"}],"scale":[11.239999771118164,11.239999771118164,28]}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -1601,7 +1595,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/datasource-properties.json
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/datasource-properties.json
 - request:
     body: null
     headers: {}
@@ -1611,27 +1605,28 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/color/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray/\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
       access-control-max-age:
       - '600'
       content-length:
-      - '1279'
+      - '1330'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -1644,7 +1639,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/1
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/color/1
 - request:
     body: null
     headers: {}
@@ -1672,7 +1667,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/color/1/.zarray
 - request:
     body: null
     headers:
@@ -1702,7 +1697,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/color/1/.zarray
 - request:
     body: null
     headers: {}
@@ -1730,7 +1725,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/color/1/.zarray
 - request:
     body: null
     headers: {}
@@ -1740,27 +1735,28 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/color/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray/\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
       access-control-max-age:
       - '600'
       content-length:
-      - '1279'
+      - '1330'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -1773,7 +1769,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/1
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/color/1
 - request:
     body: null
     headers: {}
@@ -1783,27 +1779,28 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/color/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray/\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
       access-control-max-age:
       - '600'
       content-length:
-      - '1279'
+      - '1330'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -1816,7 +1813,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/1
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/color/1
 - request:
     body: null
     headers: {}
@@ -1844,7 +1841,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/color/1/.zarray
 - request:
     body: null
     headers: {}
@@ -1872,7 +1869,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/color/1/.zarray
 - request:
     body: null
     headers: {}
@@ -1900,7 +1897,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/color/1/.zarray
 - request:
     body: null
     headers: {}
@@ -1910,27 +1907,28 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/color/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray/\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
       access-control-max-age:
       - '600'
       content-length:
-      - '1279'
+      - '1330'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -1943,7 +1941,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/1
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/color/1
 - request:
     body: null
     headers: {}
@@ -1953,27 +1951,28 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/2-2-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/color/2-2-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>2-2-1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray/\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
       access-control-max-age:
       - '600'
       content-length:
-      - '1287'
+      - '1334'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -1986,7 +1985,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/2-2-1
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/color/2-2-1
 - request:
     body: null
     headers: {}
@@ -2014,7 +2013,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/2-2-1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/color/2-2-1/.zarray
 - request:
     body: null
     headers:
@@ -2044,7 +2043,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/2-2-1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/color/2-2-1/.zarray
 - request:
     body: null
     headers: {}
@@ -2072,7 +2071,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/2-2-1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/color/2-2-1/.zarray
 - request:
     body: null
     headers: {}
@@ -2082,27 +2081,28 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/2-2-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/color/2-2-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>2-2-1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray/\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
       access-control-max-age:
       - '600'
       content-length:
-      - '1287'
+      - '1334'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -2115,7 +2115,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/2-2-1
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/color/2-2-1
 - request:
     body: null
     headers: {}
@@ -2125,27 +2125,28 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/2-2-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/color/2-2-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>2-2-1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray/\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
       access-control-max-age:
       - '600'
       content-length:
-      - '1287'
+      - '1334'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -2158,7 +2159,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/2-2-1
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/color/2-2-1
 - request:
     body: null
     headers: {}
@@ -2186,7 +2187,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/2-2-1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/color/2-2-1/.zarray
 - request:
     body: null
     headers: {}
@@ -2214,7 +2215,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/2-2-1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/color/2-2-1/.zarray
 - request:
     body: null
     headers: {}
@@ -2242,7 +2243,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/2-2-1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/color/2-2-1/.zarray
 - request:
     body: null
     headers: {}
@@ -2252,27 +2253,28 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/2-2-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/color/2-2-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>2-2-1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray/\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
       access-control-max-age:
       - '600'
       content-length:
-      - '1287'
+      - '1334'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -2285,7 +2287,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/2-2-1
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/color/2-2-1
 - request:
     body: null
     headers: {}
@@ -2295,27 +2297,28 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/4-4-2\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/color/4-4-2\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>4-4-2</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray/\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
       access-control-max-age:
       - '600'
       content-length:
-      - '1287'
+      - '1334'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -2328,7 +2331,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/4-4-2
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/color/4-4-2
 - request:
     body: null
     headers: {}
@@ -2356,7 +2359,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/4-4-2/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/color/4-4-2/.zarray
 - request:
     body: null
     headers:
@@ -2386,7 +2389,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/4-4-2/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/color/4-4-2/.zarray
 - request:
     body: null
     headers: {}
@@ -2414,7 +2417,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/4-4-2/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/color/4-4-2/.zarray
 - request:
     body: null
     headers: {}
@@ -2424,27 +2427,28 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/4-4-2\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/color/4-4-2\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>4-4-2</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray/\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
       access-control-max-age:
       - '600'
       content-length:
-      - '1287'
+      - '1334'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -2457,7 +2461,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/4-4-2
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/color/4-4-2
 - request:
     body: null
     headers: {}
@@ -2467,27 +2471,28 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/4-4-2\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/color/4-4-2\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>4-4-2</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray/\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
       access-control-max-age:
       - '600'
       content-length:
-      - '1287'
+      - '1334'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -2500,7 +2505,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/4-4-2
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/color/4-4-2
 - request:
     body: null
     headers: {}
@@ -2528,7 +2533,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/4-4-2/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/color/4-4-2/.zarray
 - request:
     body: null
     headers: {}
@@ -2556,7 +2561,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/4-4-2/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/color/4-4-2/.zarray
 - request:
     body: null
     headers: {}
@@ -2584,7 +2589,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/4-4-2/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/color/4-4-2/.zarray
 - request:
     body: null
     headers: {}
@@ -2594,27 +2599,28 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/4-4-2\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/color/4-4-2\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>4-4-2</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray/\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
       access-control-max-age:
       - '600'
       content-length:
-      - '1287'
+      - '1334'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -2627,7 +2633,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/color/4-4-2
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/color/4-4-2
 - request:
     body: null
     headers: {}
@@ -2637,27 +2643,28 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/segmentation/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray/\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
       access-control-max-age:
       - '600'
       content-length:
-      - '1286'
+      - '1337'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -2670,7 +2677,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/1
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/segmentation/1
 - request:
     body: null
     headers: {}
@@ -2698,7 +2705,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/segmentation/1/.zarray
 - request:
     body: null
     headers:
@@ -2728,7 +2735,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/segmentation/1/.zarray
 - request:
     body: null
     headers: {}
@@ -2756,7 +2763,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/segmentation/1/.zarray
 - request:
     body: null
     headers: {}
@@ -2766,27 +2773,28 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/segmentation/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray/\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
       access-control-max-age:
       - '600'
       content-length:
-      - '1286'
+      - '1337'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -2799,7 +2807,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/1
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/segmentation/1
 - request:
     body: null
     headers: {}
@@ -2809,27 +2817,28 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/segmentation/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray/\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
       access-control-max-age:
       - '600'
       content-length:
-      - '1286'
+      - '1337'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -2842,7 +2851,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/1
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/segmentation/1
 - request:
     body: null
     headers: {}
@@ -2870,7 +2879,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/segmentation/1/.zarray
 - request:
     body: null
     headers: {}
@@ -2898,7 +2907,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/segmentation/1/.zarray
 - request:
     body: null
     headers: {}
@@ -2926,7 +2935,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/segmentation/1/.zarray
 - request:
     body: null
     headers: {}
@@ -2936,27 +2945,28 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/segmentation/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray/\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
       access-control-max-age:
       - '600'
       content-length:
-      - '1286'
+      - '1337'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -2969,7 +2979,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/1
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/segmentation/1
 - request:
     body: null
     headers: {}
@@ -2979,27 +2989,28 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/2-2-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/segmentation/2-2-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>2-2-1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray/\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
       access-control-max-age:
       - '600'
       content-length:
-      - '1294'
+      - '1341'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -3012,7 +3023,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/2-2-1
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/segmentation/2-2-1
 - request:
     body: null
     headers: {}
@@ -3040,7 +3051,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/2-2-1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/segmentation/2-2-1/.zarray
 - request:
     body: null
     headers:
@@ -3070,7 +3081,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/2-2-1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/segmentation/2-2-1/.zarray
 - request:
     body: null
     headers: {}
@@ -3098,7 +3109,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/2-2-1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/segmentation/2-2-1/.zarray
 - request:
     body: null
     headers: {}
@@ -3108,27 +3119,28 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/2-2-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/segmentation/2-2-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>2-2-1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray/\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
       access-control-max-age:
       - '600'
       content-length:
-      - '1294'
+      - '1341'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -3141,7 +3153,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/2-2-1
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/segmentation/2-2-1
 - request:
     body: null
     headers: {}
@@ -3151,27 +3163,28 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/2-2-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/segmentation/2-2-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>2-2-1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray/\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
       access-control-max-age:
       - '600'
       content-length:
-      - '1294'
+      - '1341'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -3184,7 +3197,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/2-2-1
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/segmentation/2-2-1
 - request:
     body: null
     headers: {}
@@ -3212,7 +3225,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/2-2-1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/segmentation/2-2-1/.zarray
 - request:
     body: null
     headers: {}
@@ -3240,7 +3253,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/2-2-1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/segmentation/2-2-1/.zarray
 - request:
     body: null
     headers: {}
@@ -3268,7 +3281,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/2-2-1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/segmentation/2-2-1/.zarray
 - request:
     body: null
     headers: {}
@@ -3278,27 +3291,28 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/2-2-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/segmentation/2-2-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>2-2-1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray/\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
       access-control-max-age:
       - '600'
       content-length:
-      - '1294'
+      - '1341'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -3311,7 +3325,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/2-2-1
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/segmentation/2-2-1
 - request:
     body: null
     headers: {}
@@ -3321,27 +3335,28 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/4-4-2\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/segmentation/4-4-2\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>4-4-2</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray/\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
       access-control-max-age:
       - '600'
       content-length:
-      - '1294'
+      - '1341'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -3354,7 +3369,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/4-4-2
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/segmentation/4-4-2
 - request:
     body: null
     headers: {}
@@ -3382,7 +3397,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/4-4-2/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/segmentation/4-4-2/.zarray
 - request:
     body: null
     headers:
@@ -3412,7 +3427,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/4-4-2/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/segmentation/4-4-2/.zarray
 - request:
     body: null
     headers: {}
@@ -3440,7 +3455,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/4-4-2/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/segmentation/4-4-2/.zarray
 - request:
     body: null
     headers: {}
@@ -3450,27 +3465,28 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/4-4-2\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/segmentation/4-4-2\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>4-4-2</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray/\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
       access-control-max-age:
       - '600'
       content-length:
-      - '1294'
+      - '1341'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -3483,7 +3499,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/4-4-2
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/segmentation/4-4-2
 - request:
     body: null
     headers: {}
@@ -3493,27 +3509,28 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/4-4-2\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/segmentation/4-4-2\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>4-4-2</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray/\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
       access-control-max-age:
       - '600'
       content-length:
-      - '1294'
+      - '1341'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -3526,7 +3543,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/4-4-2
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/segmentation/4-4-2
 - request:
     body: null
     headers: {}
@@ -3554,7 +3571,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/4-4-2/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/segmentation/4-4-2/.zarray
 - request:
     body: null
     headers: {}
@@ -3582,7 +3599,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/4-4-2/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/segmentation/4-4-2/.zarray
 - request:
     body: null
     headers: {}
@@ -3610,7 +3627,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/4-4-2/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/segmentation/4-4-2/.zarray
 - request:
     body: null
     headers: {}
@@ -3620,27 +3637,28 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/4-4-2\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/segmentation/4-4-2\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>4-4-2</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray/\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
       access-control-max-age:
       - '600'
       content-length:
-      - '1294'
+      - '1341'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -3653,7 +3671,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-07-05_08-26-25/segmentation/4-4-2
+    url: http://localhost:9000/data/zarr/Organization_X/test_upload_download_roundtrip_2022-08-12_10-08-17/segmentation/4-4-2
 - request:
     body: ''
     headers:
@@ -3670,7 +3688,7 @@ interactions:
     method: GET
     uri: http://localhost:9000/api/datasets/Organization_X/test_upload_download_roundtrip_2000-01-01_00-00-00
   response:
-    content: '{"name":"test_upload_download_roundtrip_2022-07-05_08-26-25","dataSource":{"id":{"name":"test_upload_download_roundtrip_2022-07-05_08-26-25","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isForeign":false,"isScratch":false,"isConnector":false,"allowsUpload":true},"owningOrganization":"Organization_X","allowedTeams":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1657009585733,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1657009585733,"details":null,"publication":null,"isUnreported":false,"isForeign":false,"jobsEnabled":false,"tags":[]}'
+    content: '{"name":"test_upload_download_roundtrip_2022-08-12_10-08-17","dataSource":{"id":{"name":"test_upload_download_roundtrip_2022-08-12_10-08-17","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2807,4352,1794],"width":10,"height":10,"depth":10},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isForeign":false,"isScratch":false,"isConnector":false,"allowsUpload":true},"owningOrganization":"Organization_X","allowedTeams":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1660298898126,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1660298898126,"details":null,"isUnreported":false,"isForeign":false,"jobsEnabled":false,"tags":[],"publication":null}'
     headers:
       content-length:
       - '1214'
