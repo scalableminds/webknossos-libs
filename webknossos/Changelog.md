@@ -19,6 +19,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+- Fixed `task.get_project()`. [#785](https://github.com/scalableminds/webknossos-libs/pull/785)
 
 
 ## [0.10.11](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.11) - 2022-08-03
