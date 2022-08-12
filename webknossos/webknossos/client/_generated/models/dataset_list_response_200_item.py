@@ -39,6 +39,7 @@ class DatasetListResponse200Item:
     is_unreported: Union[Unset, int] = UNSET
     is_foreign: Union[Unset, int] = UNSET
     jobs_enabled: Union[Unset, int] = UNSET
+    publication: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -73,6 +74,7 @@ class DatasetListResponse200Item:
         is_unreported = self.is_unreported
         is_foreign = self.is_foreign
         jobs_enabled = self.jobs_enabled
+        publication = self.publication
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -108,6 +110,8 @@ class DatasetListResponse200Item:
             field_dict["isForeign"] = is_foreign
         if jobs_enabled is not UNSET:
             field_dict["jobsEnabled"] = jobs_enabled
+        if publication is not UNSET:
+            field_dict["publication"] = publication
 
         return field_dict
 
@@ -166,6 +170,8 @@ class DatasetListResponse200Item:
 
         jobs_enabled = d.pop("jobsEnabled", UNSET)
 
+        publication = d.pop("publication", UNSET)
+
         dataset_list_response_200_item = cls(
             name=name,
             data_source=data_source,
@@ -186,6 +192,7 @@ class DatasetListResponse200Item:
             is_unreported=is_unreported,
             is_foreign=is_foreign,
             jobs_enabled=jobs_enabled,
+            publication=publication,
         )
 
         dataset_list_response_200_item.additional_properties = d

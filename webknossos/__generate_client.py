@@ -305,8 +305,8 @@ REQUIRED_KEYS = {
     "dataStore",
     "url",
     "dataSource",
-    "scale",
-    "dataLayers",
+    # "scale", not available for errors
+    # "dataLayers", not available for errors
     "category",
     "elementClass",
     "boundingBox",

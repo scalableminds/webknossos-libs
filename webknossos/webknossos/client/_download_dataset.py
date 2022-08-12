@@ -54,8 +54,11 @@ def download_dataset(
         logger.warning(f"{actual_path} already exists, skipping download.")
         return Dataset.open(actual_path)
 
-    voxel_size = cast(Tuple[float, float, float], tuple(parsed.data_source.scale))
     data_layers = parsed.data_source.data_layers
+    scale = parsed.data_source.scale
+    if isinstance(data_layers, Unset) or isinstance(scale, Unset):
+        raise RuntimeError(f"Could not download {data_layers}: {parsed.data_source.additional_properties.get('status', 'Unknown error.')}")
+    voxel_size = cast(Tuple[float, float, float], tuple(scale))
     dataset = Dataset(
         actual_path, name=parsed.name, voxel_size=voxel_size, exist_ok=exist_ok
     )
