@@ -172,7 +172,7 @@ class Task:
     ) -> "Task":
         return cls(
             response.id,
-            response.project_name,
+            response.project_id,
             response.data_set,
             TaskStatus(
                 response.status.open_, response.status.active, response.status.finished

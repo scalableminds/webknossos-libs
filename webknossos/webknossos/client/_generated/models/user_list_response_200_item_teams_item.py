@@ -1,6 +1,8 @@
-from typing import Any, Dict, List, Type, TypeVar
+from typing import Any, Dict, List, Type, TypeVar, Union
 
 import attr
+
+from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="UserListResponse200ItemTeamsItem")
 
@@ -11,7 +13,7 @@ class UserListResponse200ItemTeamsItem:
 
     id: str
     name: str
-    is_team_manager: int
+    is_team_manager: Union[Unset, int] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -25,9 +27,10 @@ class UserListResponse200ItemTeamsItem:
             {
                 "id": id,
                 "name": name,
-                "isTeamManager": is_team_manager,
             }
         )
+        if is_team_manager is not UNSET:
+            field_dict["isTeamManager"] = is_team_manager
 
         return field_dict
 
@@ -38,7 +41,7 @@ class UserListResponse200ItemTeamsItem:
 
         name = d.pop("name")
 
-        is_team_manager = d.pop("isTeamManager")
+        is_team_manager = d.pop("isTeamManager", UNSET)
 
         user_list_response_200_item_teams_item = cls(
             id=id,

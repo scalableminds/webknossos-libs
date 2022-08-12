@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Type, TypeVar, Union, cast
+from typing import Any, Dict, List, Type, TypeVar, Union, cast
 
 import attr
 
@@ -38,69 +38,83 @@ T = TypeVar("T", bound="AnnotationInfosByTaskIdResponse200Item")
 class AnnotationInfosByTaskIdResponse200Item:
     """ """
 
-    modified: int
     state: str
     id: str
     name: str
     description: str
     typ: str
-    stats: AnnotationInfosByTaskIdResponse200ItemStats
-    restrictions: AnnotationInfosByTaskIdResponse200ItemRestrictions
-    formatted_hash: str
-    annotation_layers: List[AnnotationInfosByTaskIdResponse200ItemAnnotationLayersItem]
-    data_set_name: str
     organization: str
     data_store: AnnotationInfosByTaskIdResponse200ItemDataStore
-    tracing_store: AnnotationInfosByTaskIdResponse200ItemTracingStore
-    visibility: str
-    settings: AnnotationInfosByTaskIdResponse200ItemSettings
     tags: List[str]
-    meshes: List[Any]
-    task: Optional[AnnotationInfosByTaskIdResponse200ItemTask]
-    tracing_time: Optional[int]
+    modified: Union[Unset, int] = UNSET
     view_configuration: Union[Unset, str] = UNSET
+    task: Union[Unset, None, AnnotationInfosByTaskIdResponse200ItemTask] = UNSET
+    stats: Union[Unset, AnnotationInfosByTaskIdResponse200ItemStats] = UNSET
+    restrictions: Union[
+        Unset, AnnotationInfosByTaskIdResponse200ItemRestrictions
+    ] = UNSET
+    formatted_hash: Union[Unset, str] = UNSET
+    annotation_layers: Union[
+        Unset, List[AnnotationInfosByTaskIdResponse200ItemAnnotationLayersItem]
+    ] = UNSET
+    data_set_name: Union[Unset, str] = UNSET
+    tracing_store: Union[
+        Unset, AnnotationInfosByTaskIdResponse200ItemTracingStore
+    ] = UNSET
+    visibility: Union[Unset, str] = UNSET
+    settings: Union[Unset, AnnotationInfosByTaskIdResponse200ItemSettings] = UNSET
+    tracing_time: Union[Unset, None, int] = UNSET
     teams: Union[Unset, List[Any]] = UNSET
     user: Union[Unset, AnnotationInfosByTaskIdResponse200ItemUser] = UNSET
     owner: Union[Unset, AnnotationInfosByTaskIdResponse200ItemOwner] = UNSET
+    meshes: Union[Unset, List[Any]] = UNSET
+    contributors: Union[Unset, List[Any]] = UNSET
+    others_may_edit: Union[Unset, int] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        modified = self.modified
         state = self.state
         id = self.id
         name = self.name
         description = self.description
         typ = self.typ
-        stats = self.stats.to_dict()
-
-        restrictions = self.restrictions.to_dict()
-
-        formatted_hash = self.formatted_hash
-        annotation_layers = []
-        for annotation_layers_item_data in self.annotation_layers:
-            annotation_layers_item = annotation_layers_item_data.to_dict()
-
-            annotation_layers.append(annotation_layers_item)
-
-        data_set_name = self.data_set_name
         organization = self.organization
         data_store = self.data_store.to_dict()
 
-        tracing_store = self.tracing_store.to_dict()
-
-        visibility = self.visibility
-        settings = self.settings.to_dict()
-
         tags = self.tags
 
-        meshes = []
-        for meshes_item_data in self.meshes:
-            meshes_item = meshes_item_data
-
-            meshes.append(meshes_item)
-
+        modified = self.modified
         view_configuration = self.view_configuration
-        task = self.task.to_dict() if self.task else None
+        task: Union[Unset, None, Dict[str, Any]] = UNSET
+        if not isinstance(self.task, Unset):
+            task = self.task.to_dict() if self.task else None
+
+        stats: Union[Unset, Dict[str, Any]] = UNSET
+        if not isinstance(self.stats, Unset):
+            stats = self.stats.to_dict()
+
+        restrictions: Union[Unset, Dict[str, Any]] = UNSET
+        if not isinstance(self.restrictions, Unset):
+            restrictions = self.restrictions.to_dict()
+
+        formatted_hash = self.formatted_hash
+        annotation_layers: Union[Unset, List[Dict[str, Any]]] = UNSET
+        if not isinstance(self.annotation_layers, Unset):
+            annotation_layers = []
+            for annotation_layers_item_data in self.annotation_layers:
+                annotation_layers_item = annotation_layers_item_data.to_dict()
+
+                annotation_layers.append(annotation_layers_item)
+
+        data_set_name = self.data_set_name
+        tracing_store: Union[Unset, Dict[str, Any]] = UNSET
+        if not isinstance(self.tracing_store, Unset):
+            tracing_store = self.tracing_store.to_dict()
+
+        visibility = self.visibility
+        settings: Union[Unset, Dict[str, Any]] = UNSET
+        if not isinstance(self.settings, Unset):
+            settings = self.settings.to_dict()
 
         tracing_time = self.tracing_time
         teams: Union[Unset, List[Any]] = UNSET
@@ -119,48 +133,80 @@ class AnnotationInfosByTaskIdResponse200Item:
         if not isinstance(self.owner, Unset):
             owner = self.owner.to_dict()
 
+        meshes: Union[Unset, List[Any]] = UNSET
+        if not isinstance(self.meshes, Unset):
+            meshes = []
+            for meshes_item_data in self.meshes:
+                meshes_item = meshes_item_data
+
+                meshes.append(meshes_item)
+
+        contributors: Union[Unset, List[Any]] = UNSET
+        if not isinstance(self.contributors, Unset):
+            contributors = []
+            for contributors_item_data in self.contributors:
+                contributors_item = contributors_item_data
+
+                contributors.append(contributors_item)
+
+        others_may_edit = self.others_may_edit
+
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "modified": modified,
                 "state": state,
                 "id": id,
                 "name": name,
                 "description": description,
                 "typ": typ,
-                "stats": stats,
-                "restrictions": restrictions,
-                "formattedHash": formatted_hash,
-                "annotationLayers": annotation_layers,
-                "dataSetName": data_set_name,
                 "organization": organization,
                 "dataStore": data_store,
-                "tracingStore": tracing_store,
-                "visibility": visibility,
-                "settings": settings,
                 "tags": tags,
-                "meshes": meshes,
-                "task": task,
-                "tracingTime": tracing_time,
             }
         )
+        if modified is not UNSET:
+            field_dict["modified"] = modified
         if view_configuration is not UNSET:
             field_dict["viewConfiguration"] = view_configuration
+        if task is not UNSET:
+            field_dict["task"] = task
+        if stats is not UNSET:
+            field_dict["stats"] = stats
+        if restrictions is not UNSET:
+            field_dict["restrictions"] = restrictions
+        if formatted_hash is not UNSET:
+            field_dict["formattedHash"] = formatted_hash
+        if annotation_layers is not UNSET:
+            field_dict["annotationLayers"] = annotation_layers
+        if data_set_name is not UNSET:
+            field_dict["dataSetName"] = data_set_name
+        if tracing_store is not UNSET:
+            field_dict["tracingStore"] = tracing_store
+        if visibility is not UNSET:
+            field_dict["visibility"] = visibility
+        if settings is not UNSET:
+            field_dict["settings"] = settings
+        if tracing_time is not UNSET:
+            field_dict["tracingTime"] = tracing_time
         if teams is not UNSET:
             field_dict["teams"] = teams
         if user is not UNSET:
             field_dict["user"] = user
         if owner is not UNSET:
             field_dict["owner"] = owner
+        if meshes is not UNSET:
+            field_dict["meshes"] = meshes
+        if contributors is not UNSET:
+            field_dict["contributors"] = contributors
+        if others_may_edit is not UNSET:
+            field_dict["othersMayEdit"] = others_may_edit
 
         return field_dict
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        modified = d.pop("modified")
-
         state = d.pop("state")
 
         id = d.pop("id")
@@ -171,17 +217,48 @@ class AnnotationInfosByTaskIdResponse200Item:
 
         typ = d.pop("typ")
 
-        stats = AnnotationInfosByTaskIdResponse200ItemStats.from_dict(d.pop("stats"))
+        organization = d.pop("organization")
 
-        restrictions = AnnotationInfosByTaskIdResponse200ItemRestrictions.from_dict(
-            d.pop("restrictions")
+        data_store = AnnotationInfosByTaskIdResponse200ItemDataStore.from_dict(
+            d.pop("dataStore")
         )
 
-        formatted_hash = d.pop("formattedHash")
+        tags = cast(List[str], d.pop("tags"))
+
+        modified = d.pop("modified", UNSET)
+
+        view_configuration = d.pop("viewConfiguration", UNSET)
+
+        _task = d.pop("task", UNSET)
+        task: Union[Unset, None, AnnotationInfosByTaskIdResponse200ItemTask]
+        if _task is None:
+            task = None
+        elif isinstance(_task, Unset):
+            task = UNSET
+        else:
+            task = AnnotationInfosByTaskIdResponse200ItemTask.from_dict(_task)
+
+        _stats = d.pop("stats", UNSET)
+        stats: Union[Unset, AnnotationInfosByTaskIdResponse200ItemStats]
+        if isinstance(_stats, Unset):
+            stats = UNSET
+        else:
+            stats = AnnotationInfosByTaskIdResponse200ItemStats.from_dict(_stats)
+
+        _restrictions = d.pop("restrictions", UNSET)
+        restrictions: Union[Unset, AnnotationInfosByTaskIdResponse200ItemRestrictions]
+        if isinstance(_restrictions, Unset):
+            restrictions = UNSET
+        else:
+            restrictions = AnnotationInfosByTaskIdResponse200ItemRestrictions.from_dict(
+                _restrictions
+            )
+
+        formatted_hash = d.pop("formattedHash", UNSET)
 
         annotation_layers = []
-        _annotation_layers = d.pop("annotationLayers")
-        for annotation_layers_item_data in _annotation_layers:
+        _annotation_layers = d.pop("annotationLayers", UNSET)
+        for annotation_layers_item_data in _annotation_layers or []:
             annotation_layers_item = (
                 AnnotationInfosByTaskIdResponse200ItemAnnotationLayersItem.from_dict(
                     annotation_layers_item_data
@@ -190,43 +267,31 @@ class AnnotationInfosByTaskIdResponse200Item:
 
             annotation_layers.append(annotation_layers_item)
 
-        data_set_name = d.pop("dataSetName")
+        data_set_name = d.pop("dataSetName", UNSET)
 
-        organization = d.pop("organization")
-
-        data_store = AnnotationInfosByTaskIdResponse200ItemDataStore.from_dict(
-            d.pop("dataStore")
-        )
-
-        tracing_store = AnnotationInfosByTaskIdResponse200ItemTracingStore.from_dict(
-            d.pop("tracingStore")
-        )
-
-        visibility = d.pop("visibility")
-
-        settings = AnnotationInfosByTaskIdResponse200ItemSettings.from_dict(
-            d.pop("settings")
-        )
-
-        tags = cast(List[str], d.pop("tags"))
-
-        meshes = []
-        _meshes = d.pop("meshes")
-        for meshes_item_data in _meshes:
-            meshes_item = meshes_item_data
-
-            meshes.append(meshes_item)
-
-        view_configuration = d.pop("viewConfiguration", UNSET)
-
-        _task = d.pop("task")
-        task: Optional[AnnotationInfosByTaskIdResponse200ItemTask]
-        if _task is None:
-            task = None
+        _tracing_store = d.pop("tracingStore", UNSET)
+        tracing_store: Union[Unset, AnnotationInfosByTaskIdResponse200ItemTracingStore]
+        if isinstance(_tracing_store, Unset):
+            tracing_store = UNSET
         else:
-            task = AnnotationInfosByTaskIdResponse200ItemTask.from_dict(_task)
+            tracing_store = (
+                AnnotationInfosByTaskIdResponse200ItemTracingStore.from_dict(
+                    _tracing_store
+                )
+            )
 
-        tracing_time = d.pop("tracingTime")
+        visibility = d.pop("visibility", UNSET)
+
+        _settings = d.pop("settings", UNSET)
+        settings: Union[Unset, AnnotationInfosByTaskIdResponse200ItemSettings]
+        if isinstance(_settings, Unset):
+            settings = UNSET
+        else:
+            settings = AnnotationInfosByTaskIdResponse200ItemSettings.from_dict(
+                _settings
+            )
+
+        tracing_time = d.pop("tracingTime", UNSET)
 
         teams = []
         _teams = d.pop("teams", UNSET)
@@ -249,31 +314,49 @@ class AnnotationInfosByTaskIdResponse200Item:
         else:
             owner = AnnotationInfosByTaskIdResponse200ItemOwner.from_dict(_owner)
 
+        meshes = []
+        _meshes = d.pop("meshes", UNSET)
+        for meshes_item_data in _meshes or []:
+            meshes_item = meshes_item_data
+
+            meshes.append(meshes_item)
+
+        contributors = []
+        _contributors = d.pop("contributors", UNSET)
+        for contributors_item_data in _contributors or []:
+            contributors_item = contributors_item_data
+
+            contributors.append(contributors_item)
+
+        others_may_edit = d.pop("othersMayEdit", UNSET)
+
         annotation_infos_by_task_id_response_200_item = cls(
-            modified=modified,
             state=state,
             id=id,
             name=name,
             description=description,
             typ=typ,
+            organization=organization,
+            data_store=data_store,
+            tags=tags,
+            modified=modified,
+            view_configuration=view_configuration,
+            task=task,
             stats=stats,
             restrictions=restrictions,
             formatted_hash=formatted_hash,
             annotation_layers=annotation_layers,
             data_set_name=data_set_name,
-            organization=organization,
-            data_store=data_store,
             tracing_store=tracing_store,
             visibility=visibility,
             settings=settings,
-            tags=tags,
-            meshes=meshes,
-            view_configuration=view_configuration,
-            task=task,
             tracing_time=tracing_time,
             teams=teams,
             user=user,
             owner=owner,
+            meshes=meshes,
+            contributors=contributors,
+            others_may_edit=others_may_edit,
         )
 
         annotation_infos_by_task_id_response_200_item.additional_properties = d

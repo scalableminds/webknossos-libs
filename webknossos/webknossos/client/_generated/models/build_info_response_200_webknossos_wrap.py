@@ -1,6 +1,8 @@
-from typing import Any, Dict, List, Type, TypeVar
+from typing import Any, Dict, List, Type, TypeVar, Union
 
 import attr
+
+from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="BuildInfoResponse200WebknossosWrap")
 
@@ -9,18 +11,18 @@ T = TypeVar("T", bound="BuildInfoResponse200WebknossosWrap")
 class BuildInfoResponse200WebknossosWrap:
     """ """
 
-    built_at_millis: str
     name: str
-    commit_hash: str
-    scala_version: str
-    version: str
-    sbt_version: str
-    built_at_string: str
+    built_at_millis: Union[Unset, str] = UNSET
+    commit_hash: Union[Unset, str] = UNSET
+    scala_version: Union[Unset, str] = UNSET
+    version: Union[Unset, str] = UNSET
+    sbt_version: Union[Unset, str] = UNSET
+    built_at_string: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        built_at_millis = self.built_at_millis
         name = self.name
+        built_at_millis = self.built_at_millis
         commit_hash = self.commit_hash
         scala_version = self.scala_version
         version = self.version
@@ -31,38 +33,44 @@ class BuildInfoResponse200WebknossosWrap:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "builtAtMillis": built_at_millis,
                 "name": name,
-                "commitHash": commit_hash,
-                "scalaVersion": scala_version,
-                "version": version,
-                "sbtVersion": sbt_version,
-                "builtAtString": built_at_string,
             }
         )
+        if built_at_millis is not UNSET:
+            field_dict["builtAtMillis"] = built_at_millis
+        if commit_hash is not UNSET:
+            field_dict["commitHash"] = commit_hash
+        if scala_version is not UNSET:
+            field_dict["scalaVersion"] = scala_version
+        if version is not UNSET:
+            field_dict["version"] = version
+        if sbt_version is not UNSET:
+            field_dict["sbtVersion"] = sbt_version
+        if built_at_string is not UNSET:
+            field_dict["builtAtString"] = built_at_string
 
         return field_dict
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        built_at_millis = d.pop("builtAtMillis")
-
         name = d.pop("name")
 
-        commit_hash = d.pop("commitHash")
+        built_at_millis = d.pop("builtAtMillis", UNSET)
 
-        scala_version = d.pop("scalaVersion")
+        commit_hash = d.pop("commitHash", UNSET)
 
-        version = d.pop("version")
+        scala_version = d.pop("scalaVersion", UNSET)
 
-        sbt_version = d.pop("sbtVersion")
+        version = d.pop("version", UNSET)
 
-        built_at_string = d.pop("builtAtString")
+        sbt_version = d.pop("sbtVersion", UNSET)
+
+        built_at_string = d.pop("builtAtString", UNSET)
 
         build_info_response_200_webknossos_wrap = cls(
-            built_at_millis=built_at_millis,
             name=name,
+            built_at_millis=built_at_millis,
             commit_hash=commit_hash,
             scala_version=scala_version,
             version=version,

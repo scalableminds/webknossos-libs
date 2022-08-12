@@ -1,6 +1,8 @@
-from typing import Any, Dict, List, Type, TypeVar
+from typing import Any, Dict, List, Type, TypeVar, Union
 
 import attr
+
+from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="DatasetInfoResponse200DataStore")
 
@@ -11,19 +13,19 @@ class DatasetInfoResponse200DataStore:
 
     name: str
     url: str
-    is_foreign: int
-    is_scratch: int
-    is_connector: int
     allows_upload: int
+    is_foreign: Union[Unset, int] = UNSET
+    is_scratch: Union[Unset, int] = UNSET
+    is_connector: Union[Unset, int] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         name = self.name
         url = self.url
+        allows_upload = self.allows_upload
         is_foreign = self.is_foreign
         is_scratch = self.is_scratch
         is_connector = self.is_connector
-        allows_upload = self.allows_upload
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -31,12 +33,15 @@ class DatasetInfoResponse200DataStore:
             {
                 "name": name,
                 "url": url,
-                "isForeign": is_foreign,
-                "isScratch": is_scratch,
-                "isConnector": is_connector,
                 "allowsUpload": allows_upload,
             }
         )
+        if is_foreign is not UNSET:
+            field_dict["isForeign"] = is_foreign
+        if is_scratch is not UNSET:
+            field_dict["isScratch"] = is_scratch
+        if is_connector is not UNSET:
+            field_dict["isConnector"] = is_connector
 
         return field_dict
 
@@ -47,21 +52,21 @@ class DatasetInfoResponse200DataStore:
 
         url = d.pop("url")
 
-        is_foreign = d.pop("isForeign")
-
-        is_scratch = d.pop("isScratch")
-
-        is_connector = d.pop("isConnector")
-
         allows_upload = d.pop("allowsUpload")
+
+        is_foreign = d.pop("isForeign", UNSET)
+
+        is_scratch = d.pop("isScratch", UNSET)
+
+        is_connector = d.pop("isConnector", UNSET)
 
         dataset_info_response_200_data_store = cls(
             name=name,
             url=url,
+            allows_upload=allows_upload,
             is_foreign=is_foreign,
             is_scratch=is_scratch,
             is_connector=is_connector,
-            allows_upload=allows_upload,
         )
 
         dataset_info_response_200_data_store.additional_properties = d
