@@ -107,9 +107,10 @@ def test_dataset_info() -> None:
     assert response is not None
     assert response.data_store.url == DATASTORE_URL
     assert response.display_name == "L4 Mouse Cortex Demo"
+    data_layers = response.data_source.data_layers
+    assert not isinstance(data_layers, Unset)
     assert sorted(
-        (layer.name, layer.category, layer.element_class)
-        for layer in response.data_source.data_layers
+        (layer.name, layer.category, layer.element_class) for layer in data_layers
     ) == [
         ("color", "color", "uint8"),
         ("predictions", "color", "uint24"),
@@ -122,7 +123,11 @@ def test_build_info(client: Client) -> None:
         client=client,
     )
     assert response is not None
-    assert response.webknossos.name == "webknossos"
-    assert response.webknossos_wrap.name == "webknossos-wrap"
+    wk_info = response.webknossos
+    wk_wrap_info = response.webknossos_wrap
+    assert not isinstance(wk_info, Unset)
+    assert not isinstance(wk_wrap_info, Unset)
+    assert wk_info.name == "webknossos"
+    assert wk_wrap_info.name == "webknossos-wrap"
     assert response.local_data_store_enabled
     assert response.local_tracing_store_enabled

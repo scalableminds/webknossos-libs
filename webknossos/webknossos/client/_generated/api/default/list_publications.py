@@ -1,36 +1,25 @@
-from typing import Any, Dict, Union
+from typing import Any, Dict
 
 import httpx
 
 from ...client import Client
-from ...types import UNSET, Response, Unset
+from ...types import Response
 
 
 def _get_kwargs(
-    organization_name: str,
-    data_set_name: str,
     *,
     client: Client,
-    token: Union[Unset, None, str] = UNSET,
 ) -> Dict[str, Any]:
-    url = "{}/data/zarr/{organizationName}/{dataSetName}/datasource-properties.json".format(
-        client.base_url, organizationName=organization_name, dataSetName=data_set_name
-    )
+    url = "{}/api/publications".format(client.base_url)
 
     headers: Dict[str, Any] = client.get_headers()
     cookies: Dict[str, Any] = client.get_cookies()
-
-    params: Dict[str, Any] = {
-        "token": token,
-    }
-    params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
     return {
         "url": url,
         "headers": headers,
         "cookies": cookies,
         "timeout": client.get_timeout(),
-        "params": params,
     }
 
 
@@ -44,17 +33,11 @@ def _build_response(*, response: httpx.Response) -> Response[Any]:
 
 
 def sync_detailed(
-    organization_name: str,
-    data_set_name: str,
     *,
     client: Client,
-    token: Union[Unset, None, str] = UNSET,
 ) -> Response[Any]:
     kwargs = _get_kwargs(
-        organization_name=organization_name,
-        data_set_name=data_set_name,
         client=client,
-        token=token,
     )
 
     response = httpx.get(
@@ -65,17 +48,11 @@ def sync_detailed(
 
 
 async def asyncio_detailed(
-    organization_name: str,
-    data_set_name: str,
     *,
     client: Client,
-    token: Union[Unset, None, str] = UNSET,
 ) -> Response[Any]:
     kwargs = _get_kwargs(
-        organization_name=organization_name,
-        data_set_name=data_set_name,
         client=client,
-        token=token,
     )
 
     async with httpx.AsyncClient() as _client:

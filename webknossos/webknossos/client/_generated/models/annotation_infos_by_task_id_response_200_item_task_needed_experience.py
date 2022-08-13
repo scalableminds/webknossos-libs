@@ -1,6 +1,8 @@
-from typing import Any, Dict, List, Type, TypeVar
+from typing import Any, Dict, List, Type, TypeVar, Union
 
 import attr
+
+from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="AnnotationInfosByTaskIdResponse200ItemTaskNeededExperience")
 
@@ -9,8 +11,8 @@ T = TypeVar("T", bound="AnnotationInfosByTaskIdResponse200ItemTaskNeededExperien
 class AnnotationInfosByTaskIdResponse200ItemTaskNeededExperience:
     """ """
 
-    domain: str
-    value: int
+    domain: Union[Unset, str] = UNSET
+    value: Union[Unset, int] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -19,21 +21,20 @@ class AnnotationInfosByTaskIdResponse200ItemTaskNeededExperience:
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update(
-            {
-                "domain": domain,
-                "value": value,
-            }
-        )
+        field_dict.update({})
+        if domain is not UNSET:
+            field_dict["domain"] = domain
+        if value is not UNSET:
+            field_dict["value"] = value
 
         return field_dict
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        domain = d.pop("domain")
+        domain = d.pop("domain", UNSET)
 
-        value = d.pop("value")
+        value = d.pop("value", UNSET)
 
         annotation_infos_by_task_id_response_200_item_task_needed_experience = cls(
             domain=domain,

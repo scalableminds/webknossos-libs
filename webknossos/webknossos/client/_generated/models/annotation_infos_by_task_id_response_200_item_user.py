@@ -20,7 +20,7 @@ class AnnotationInfosByTaskIdResponse200ItemUser:
     last_name: str
     is_admin: int
     is_dataset_manager: int
-    is_anonymous: int
+    is_anonymous: Union[Unset, int] = UNSET
     teams: Union[
         Unset, List[AnnotationInfosByTaskIdResponse200ItemUserTeamsItem]
     ] = UNSET
@@ -52,9 +52,10 @@ class AnnotationInfosByTaskIdResponse200ItemUser:
                 "lastName": last_name,
                 "isAdmin": is_admin,
                 "isDatasetManager": is_dataset_manager,
-                "isAnonymous": is_anonymous,
             }
         )
+        if is_anonymous is not UNSET:
+            field_dict["isAnonymous"] = is_anonymous
         if teams is not UNSET:
             field_dict["teams"] = teams
 
@@ -75,7 +76,7 @@ class AnnotationInfosByTaskIdResponse200ItemUser:
 
         is_dataset_manager = d.pop("isDatasetManager")
 
-        is_anonymous = d.pop("isAnonymous")
+        is_anonymous = d.pop("isAnonymous", UNSET)
 
         teams = []
         _teams = d.pop("teams", UNSET)

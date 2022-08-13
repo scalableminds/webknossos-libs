@@ -1,10 +1,11 @@
-from typing import Any, Dict, List, Type, TypeVar
+from typing import Any, Dict, List, Type, TypeVar, Union
 
 import attr
 
 from ..models.task_infos_by_project_id_response_200_item_type_settings import (
     TaskInfosByProjectIdResponse200ItemTypeSettings,
 )
+from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="TaskInfosByProjectIdResponse200ItemType")
 
@@ -14,22 +15,24 @@ class TaskInfosByProjectIdResponse200ItemType:
     """ """
 
     id: str
-    summary: str
     description: str
-    team_id: str
     team_name: str
-    settings: TaskInfosByProjectIdResponse200ItemTypeSettings
-    recommended_configuration: str
-    tracing_type: str
+    summary: Union[Unset, str] = UNSET
+    team_id: Union[Unset, str] = UNSET
+    settings: Union[Unset, TaskInfosByProjectIdResponse200ItemTypeSettings] = UNSET
+    recommended_configuration: Union[Unset, str] = UNSET
+    tracing_type: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         id = self.id
-        summary = self.summary
         description = self.description
-        team_id = self.team_id
         team_name = self.team_name
-        settings = self.settings.to_dict()
+        summary = self.summary
+        team_id = self.team_id
+        settings: Union[Unset, Dict[str, Any]] = UNSET
+        if not isinstance(self.settings, Unset):
+            settings = self.settings.to_dict()
 
         recommended_configuration = self.recommended_configuration
         tracing_type = self.tracing_type
@@ -39,15 +42,20 @@ class TaskInfosByProjectIdResponse200ItemType:
         field_dict.update(
             {
                 "id": id,
-                "summary": summary,
                 "description": description,
-                "teamId": team_id,
                 "teamName": team_name,
-                "settings": settings,
-                "recommendedConfiguration": recommended_configuration,
-                "tracingType": tracing_type,
             }
         )
+        if summary is not UNSET:
+            field_dict["summary"] = summary
+        if team_id is not UNSET:
+            field_dict["teamId"] = team_id
+        if settings is not UNSET:
+            field_dict["settings"] = settings
+        if recommended_configuration is not UNSET:
+            field_dict["recommendedConfiguration"] = recommended_configuration
+        if tracing_type is not UNSET:
+            field_dict["tracingType"] = tracing_type
 
         return field_dict
 
@@ -56,28 +64,33 @@ class TaskInfosByProjectIdResponse200ItemType:
         d = src_dict.copy()
         id = d.pop("id")
 
-        summary = d.pop("summary")
-
         description = d.pop("description")
-
-        team_id = d.pop("teamId")
 
         team_name = d.pop("teamName")
 
-        settings = TaskInfosByProjectIdResponse200ItemTypeSettings.from_dict(
-            d.pop("settings")
-        )
+        summary = d.pop("summary", UNSET)
 
-        recommended_configuration = d.pop("recommendedConfiguration")
+        team_id = d.pop("teamId", UNSET)
 
-        tracing_type = d.pop("tracingType")
+        _settings = d.pop("settings", UNSET)
+        settings: Union[Unset, TaskInfosByProjectIdResponse200ItemTypeSettings]
+        if isinstance(_settings, Unset):
+            settings = UNSET
+        else:
+            settings = TaskInfosByProjectIdResponse200ItemTypeSettings.from_dict(
+                _settings
+            )
+
+        recommended_configuration = d.pop("recommendedConfiguration", UNSET)
+
+        tracing_type = d.pop("tracingType", UNSET)
 
         task_infos_by_project_id_response_200_item_type = cls(
             id=id,
-            summary=summary,
             description=description,
-            team_id=team_id,
             team_name=team_name,
+            summary=summary,
+            team_id=team_id,
             settings=settings,
             recommended_configuration=recommended_configuration,
             tracing_type=tracing_type,

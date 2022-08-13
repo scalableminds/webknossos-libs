@@ -20,7 +20,7 @@ class AnnotationInfoResponse200Owner:
     last_name: str
     is_admin: int
     is_dataset_manager: int
-    is_anonymous: int
+    is_anonymous: Union[Unset, int] = UNSET
     teams: Union[Unset, List[AnnotationInfoResponse200OwnerTeamsItem]] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
@@ -50,9 +50,10 @@ class AnnotationInfoResponse200Owner:
                 "lastName": last_name,
                 "isAdmin": is_admin,
                 "isDatasetManager": is_dataset_manager,
-                "isAnonymous": is_anonymous,
             }
         )
+        if is_anonymous is not UNSET:
+            field_dict["isAnonymous"] = is_anonymous
         if teams is not UNSET:
             field_dict["teams"] = teams
 
@@ -73,7 +74,7 @@ class AnnotationInfoResponse200Owner:
 
         is_dataset_manager = d.pop("isDatasetManager")
 
-        is_anonymous = d.pop("isAnonymous")
+        is_anonymous = d.pop("isAnonymous", UNSET)
 
         teams = []
         _teams = d.pop("teams", UNSET)

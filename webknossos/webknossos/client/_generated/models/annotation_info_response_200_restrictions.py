@@ -1,6 +1,8 @@
-from typing import Any, Dict, List, Type, TypeVar
+from typing import Any, Dict, List, Type, TypeVar, Union
 
 import attr
+
+from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="AnnotationInfoResponse200Restrictions")
 
@@ -9,10 +11,10 @@ T = TypeVar("T", bound="AnnotationInfoResponse200Restrictions")
 class AnnotationInfoResponse200Restrictions:
     """ """
 
-    allow_access: int
-    allow_update: int
-    allow_finish: int
-    allow_download: int
+    allow_access: Union[Unset, int] = UNSET
+    allow_update: Union[Unset, int] = UNSET
+    allow_finish: Union[Unset, int] = UNSET
+    allow_download: Union[Unset, int] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -23,27 +25,28 @@ class AnnotationInfoResponse200Restrictions:
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update(
-            {
-                "allowAccess": allow_access,
-                "allowUpdate": allow_update,
-                "allowFinish": allow_finish,
-                "allowDownload": allow_download,
-            }
-        )
+        field_dict.update({})
+        if allow_access is not UNSET:
+            field_dict["allowAccess"] = allow_access
+        if allow_update is not UNSET:
+            field_dict["allowUpdate"] = allow_update
+        if allow_finish is not UNSET:
+            field_dict["allowFinish"] = allow_finish
+        if allow_download is not UNSET:
+            field_dict["allowDownload"] = allow_download
 
         return field_dict
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        allow_access = d.pop("allowAccess")
+        allow_access = d.pop("allowAccess", UNSET)
 
-        allow_update = d.pop("allowUpdate")
+        allow_update = d.pop("allowUpdate", UNSET)
 
-        allow_finish = d.pop("allowFinish")
+        allow_finish = d.pop("allowFinish", UNSET)
 
-        allow_download = d.pop("allowDownload")
+        allow_download = d.pop("allowDownload", UNSET)
 
         annotation_info_response_200_restrictions = cls(
             allow_access=allow_access,

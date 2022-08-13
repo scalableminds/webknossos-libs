@@ -20,9 +20,9 @@ class ProjectInfoByNameResponse200:
     priority: int
     paused: int
     expected_time: int
-    is_blacklisted_from_report: int
     id: str
     owner: Union[Unset, ProjectInfoByNameResponse200Owner] = UNSET
+    is_blacklisted_from_report: Union[Unset, int] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -32,11 +32,12 @@ class ProjectInfoByNameResponse200:
         priority = self.priority
         paused = self.paused
         expected_time = self.expected_time
-        is_blacklisted_from_report = self.is_blacklisted_from_report
         id = self.id
         owner: Union[Unset, Dict[str, Any]] = UNSET
         if not isinstance(self.owner, Unset):
             owner = self.owner.to_dict()
+
+        is_blacklisted_from_report = self.is_blacklisted_from_report
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -48,12 +49,13 @@ class ProjectInfoByNameResponse200:
                 "priority": priority,
                 "paused": paused,
                 "expectedTime": expected_time,
-                "isBlacklistedFromReport": is_blacklisted_from_report,
                 "id": id,
             }
         )
         if owner is not UNSET:
             field_dict["owner"] = owner
+        if is_blacklisted_from_report is not UNSET:
+            field_dict["isBlacklistedFromReport"] = is_blacklisted_from_report
 
         return field_dict
 
@@ -72,8 +74,6 @@ class ProjectInfoByNameResponse200:
 
         expected_time = d.pop("expectedTime")
 
-        is_blacklisted_from_report = d.pop("isBlacklistedFromReport")
-
         id = d.pop("id")
 
         _owner = d.pop("owner", UNSET)
@@ -83,6 +83,8 @@ class ProjectInfoByNameResponse200:
         else:
             owner = ProjectInfoByNameResponse200Owner.from_dict(_owner)
 
+        is_blacklisted_from_report = d.pop("isBlacklistedFromReport", UNSET)
+
         project_info_by_name_response_200 = cls(
             name=name,
             team=team,
@@ -90,9 +92,9 @@ class ProjectInfoByNameResponse200:
             priority=priority,
             paused=paused,
             expected_time=expected_time,
-            is_blacklisted_from_report=is_blacklisted_from_report,
             id=id,
             owner=owner,
+            is_blacklisted_from_report=is_blacklisted_from_report,
         )
 
         project_info_by_name_response_200.additional_properties = d

@@ -15,7 +15,7 @@ interactions:
     method: GET
     uri: https://webknossos.org/api/datasets/scalable_minds/l4_sample_dev
   response:
-    content: '{"name":"l4_sample_dev","dataSource":{"id":{"name":"l4_sample_dev","team":"scalable_minds"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2679,4224,1719],"width":256,"height":256,"depth":150},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]},"adminViewConfiguration":{}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2679,4224,1719],"width":256,"height":256,"depth":150},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529,"adminViewConfiguration":{}}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"webknossos.org","url":"https://data-humerus.webknossos.org","isForeign":false,"isScratch":false,"isConnector":false,"allowsUpload":true},"owningOrganization":"scalable_minds","allowedTeams":[],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1644483272270,"isEditable":false,"lastUsedByUser":1010101010101,"logoUrl":"https://static.webknossos.org/logos/scalableminds.svg","sortingKey":1644483272270,"details":null,"publication":null,"isUnreported":false,"isForeign":false,"jobsEnabled":true,"tags":[]}'
+    content: '{"name":"l4_sample_dev","dataSource":{"id":{"name":"l4_sample_dev","team":"scalable_minds"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[2679,4224,1719],"width":256,"height":256,"depth":150},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint8","defaultViewConfiguration":{"color":[255,219,219],"intensityRange":[70,180]},"adminViewConfiguration":{}},{"name":"segmentation","category":"segmentation","boundingBox":{"topLeft":[2679,4224,1719],"width":256,"height":256,"depth":150},"resolutions":[[1,1,1],[2,2,1],[4,4,2]],"elementClass":"uint32","largestSegmentId":5238529,"adminViewConfiguration":{}}],"scale":[11.239999771118164,11.239999771118164,28]},"dataStore":{"name":"webknossos.org","url":"https://data-humerus.webknossos.org","isForeign":false,"isScratch":false,"isConnector":false,"allowsUpload":true},"owningOrganization":"scalable_minds","allowedTeams":[],"isActive":true,"isPublic":true,"description":null,"displayName":null,"created":1644483272270,"isEditable":false,"lastUsedByUser":1010101010101,"logoUrl":"https://static.webknossos.org/logos/scalableminds.svg","sortingKey":1644483272270,"details":null,"isUnreported":false,"isForeign":false,"jobsEnabled":true,"tags":[],"publication":null}'
     headers:
       connection:
       - keep-alive
@@ -43,22 +43,23 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev\u201D folder.</p>\n
-        \   <p>The following are the contents of the folder:</p>\n    <ul>\n      \n
-        \       <li><a href=.>l4_sample_dev</a>: .</li>\n      \n        <li><a href=l4_sample_dev/color>color</a>:
-        l4_sample_dev/color</li>\n      \n        <li><a href=l4_sample_dev/segmentation>segmentation</a>:
-        l4_sample_dev/segmentation</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev\u201D
+        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
+        \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
+        \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
+        href=\"color\">color</a></li>\n      \n        <li><a href=\"segmentation\">segmentation</a></li>\n
+        \     \n    </ul>\n  </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
@@ -67,7 +68,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1433'
+      - '1490'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -103,7 +104,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1433'
+      - '1490'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -130,22 +131,23 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev\u201D folder.</p>\n
-        \   <p>The following are the contents of the folder:</p>\n    <ul>\n      \n
-        \       <li><a href=.>l4_sample_dev</a>: .</li>\n      \n        <li><a href=l4_sample_dev/color>color</a>:
-        l4_sample_dev/color</li>\n      \n        <li><a href=l4_sample_dev/segmentation>segmentation</a>:
-        l4_sample_dev/segmentation</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev\u201D
+        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
+        \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
+        \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
+        href=\"color\">color</a></li>\n      \n        <li><a href=\"segmentation\">segmentation</a></li>\n
+        \     \n    </ul>\n  </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
@@ -154,7 +156,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1433'
+      - '1490'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -181,22 +183,23 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev\u201D folder.</p>\n
-        \   <p>The following are the contents of the folder:</p>\n    <ul>\n      \n
-        \       <li><a href=.>l4_sample_dev</a>: .</li>\n      \n        <li><a href=l4_sample_dev/color>color</a>:
-        l4_sample_dev/color</li>\n      \n        <li><a href=l4_sample_dev/segmentation>segmentation</a>:
-        l4_sample_dev/segmentation</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev\u201D
+        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
+        \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
+        \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
+        href=\"color\">color</a></li>\n      \n        <li><a href=\"segmentation\">segmentation</a></li>\n
+        \     \n    </ul>\n  </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
@@ -205,7 +208,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1433'
+      - '1490'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -374,20 +377,21 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/color/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/color/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
@@ -396,7 +400,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1242'
+      - '1292'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -527,20 +531,21 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/color/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/color/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
@@ -549,7 +554,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1242'
+      - '1292'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -576,20 +581,21 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/color/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/color/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
@@ -598,7 +604,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1242'
+      - '1292'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -727,20 +733,21 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/color/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/color/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
@@ -749,7 +756,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1242'
+      - '1292'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -776,20 +783,21 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/color/2-2-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/color/2-2-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>2-2-1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
@@ -798,7 +806,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1250'
+      - '1296'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -929,20 +937,21 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/color/2-2-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/color/2-2-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>2-2-1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
@@ -951,7 +960,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1250'
+      - '1296'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -978,20 +987,21 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/color/2-2-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/color/2-2-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>2-2-1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
@@ -1000,7 +1010,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1250'
+      - '1296'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -1129,20 +1139,21 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/color/2-2-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/color/2-2-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>2-2-1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
@@ -1151,7 +1162,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1250'
+      - '1296'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -1178,20 +1189,21 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/color/4-4-2\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/color/4-4-2\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>4-4-2</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
@@ -1200,7 +1212,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1250'
+      - '1296'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -1331,20 +1343,21 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/color/4-4-2\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/color/4-4-2\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>4-4-2</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
@@ -1353,7 +1366,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1250'
+      - '1296'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -1380,20 +1393,21 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/color/4-4-2\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/color/4-4-2\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>4-4-2</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
@@ -1402,7 +1416,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1250'
+      - '1296'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -1531,20 +1545,21 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/color/4-4-2\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/color/4-4-2\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>4-4-2</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
@@ -1553,7 +1568,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1250'
+      - '1296'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -1580,20 +1595,21 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/segmentation/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/segmentation/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
@@ -1602,7 +1618,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1249'
+      - '1299'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -1733,20 +1749,21 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/segmentation/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/segmentation/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
@@ -1755,7 +1772,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1249'
+      - '1299'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -1782,20 +1799,21 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/segmentation/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/segmentation/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
@@ -1804,7 +1822,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1249'
+      - '1299'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -1933,20 +1951,21 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/segmentation/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/segmentation/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
@@ -1955,7 +1974,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1249'
+      - '1299'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -1982,20 +2001,21 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/segmentation/2-2-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/segmentation/2-2-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>2-2-1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
@@ -2004,7 +2024,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1257'
+      - '1303'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -2135,20 +2155,21 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/segmentation/2-2-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/segmentation/2-2-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>2-2-1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
@@ -2157,7 +2178,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1257'
+      - '1303'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -2184,20 +2205,21 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/segmentation/2-2-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/segmentation/2-2-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>2-2-1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
@@ -2206,7 +2228,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1257'
+      - '1303'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -2335,20 +2357,21 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/segmentation/2-2-1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/segmentation/2-2-1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>2-2-1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
@@ -2357,7 +2380,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1257'
+      - '1303'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -2384,20 +2407,21 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/segmentation/4-4-2\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/segmentation/4-4-2\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>4-4-2</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
@@ -2406,7 +2430,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1257'
+      - '1303'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -2537,20 +2561,21 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/segmentation/4-4-2\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/segmentation/4-4-2\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>4-4-2</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
@@ -2559,7 +2584,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1257'
+      - '1303'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -2586,20 +2611,21 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/segmentation/4-4-2\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/segmentation/4-4-2\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>4-4-2</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
@@ -2608,7 +2634,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1257'
+      - '1303'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -2737,20 +2763,21 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/segmentation/4-4-2\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/segmentation/4-4-2\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>4-4-2</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
@@ -2759,7 +2786,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1257'
+      - '1303'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -2786,20 +2813,21 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/color/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/color/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
@@ -2808,7 +2836,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1242'
+      - '1292'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -2835,20 +2863,21 @@ interactions:
     body:
       string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
         content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    \n
-        \   <style>\n      * {\n        font-family: \"Monospaced Number\", -apple-system,
-        BlinkMacSystemFont, \"Segoe UI\", Roboto,\n        \"PingFang SC\", \"Hiragino
-        Sans GB\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial,\n        sans-serif;\n
-        \       text-align: center\n      }\n\n      img {\n        display: block;\n
-        \       margin: auto;\n        padding: 3em 2em 0.5em 2em\n      }\n\n      a
-        {\n        color: inherit;\n        text-decoration: none\n      }\n\n      a#wkLink
-        {\n        color: black;\n        font-size: 2em\n      }\n\n      p#hint
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <a href=\".\" id=\"wkLink\">\n      <img src=\"https://static.webknossos.org/images/oxalis.svg\"
-        alt=\"\" />\n      <span>Go to webKnossos</span>\n    </a>\n    <p id=\"hint\">This
-        is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/color/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201Cscalable_minds/l4_sample_dev/color/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=.>1</a>: .</li>\n      \n    </ul>\n  </body>\n</html>\n"
+        \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
       - '*'
@@ -2857,7 +2886,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '1242'
+      - '1292'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT

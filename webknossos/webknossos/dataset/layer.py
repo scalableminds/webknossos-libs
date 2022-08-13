@@ -1034,9 +1034,9 @@ class Layer:
                 info.compression_mode,
             )
             self._mags[mag]._read_only = self._dataset.read_only
-        except ArrayException as e:
-            logging.error(
-                f"Failed to setup magnification {mag_name}, which is specified in the datasource-properties.json. See {e}"
+        except ArrayException:
+            logging.exception(
+                f"Failed to setup magnification {mag_name}, which is specified in the datasource-properties.json:"
             )
 
     def _initialize_mag_from_other_mag(

@@ -1,10 +1,11 @@
-from typing import Any, Dict, List, Type, TypeVar
+from typing import Any, Dict, List, Type, TypeVar, Union
 
 import attr
 
 from ..models.annotation_info_response_200_task_type_settings import (
     AnnotationInfoResponse200TaskTypeSettings,
 )
+from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="AnnotationInfoResponse200TaskType")
 
@@ -14,22 +15,24 @@ class AnnotationInfoResponse200TaskType:
     """ """
 
     id: str
-    summary: str
     description: str
-    team_id: str
     team_name: str
-    settings: AnnotationInfoResponse200TaskTypeSettings
-    recommended_configuration: str
-    tracing_type: str
+    summary: Union[Unset, str] = UNSET
+    team_id: Union[Unset, str] = UNSET
+    settings: Union[Unset, AnnotationInfoResponse200TaskTypeSettings] = UNSET
+    recommended_configuration: Union[Unset, str] = UNSET
+    tracing_type: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         id = self.id
-        summary = self.summary
         description = self.description
-        team_id = self.team_id
         team_name = self.team_name
-        settings = self.settings.to_dict()
+        summary = self.summary
+        team_id = self.team_id
+        settings: Union[Unset, Dict[str, Any]] = UNSET
+        if not isinstance(self.settings, Unset):
+            settings = self.settings.to_dict()
 
         recommended_configuration = self.recommended_configuration
         tracing_type = self.tracing_type
@@ -39,15 +42,20 @@ class AnnotationInfoResponse200TaskType:
         field_dict.update(
             {
                 "id": id,
-                "summary": summary,
                 "description": description,
-                "teamId": team_id,
                 "teamName": team_name,
-                "settings": settings,
-                "recommendedConfiguration": recommended_configuration,
-                "tracingType": tracing_type,
             }
         )
+        if summary is not UNSET:
+            field_dict["summary"] = summary
+        if team_id is not UNSET:
+            field_dict["teamId"] = team_id
+        if settings is not UNSET:
+            field_dict["settings"] = settings
+        if recommended_configuration is not UNSET:
+            field_dict["recommendedConfiguration"] = recommended_configuration
+        if tracing_type is not UNSET:
+            field_dict["tracingType"] = tracing_type
 
         return field_dict
 
@@ -56,28 +64,31 @@ class AnnotationInfoResponse200TaskType:
         d = src_dict.copy()
         id = d.pop("id")
 
-        summary = d.pop("summary")
-
         description = d.pop("description")
-
-        team_id = d.pop("teamId")
 
         team_name = d.pop("teamName")
 
-        settings = AnnotationInfoResponse200TaskTypeSettings.from_dict(
-            d.pop("settings")
-        )
+        summary = d.pop("summary", UNSET)
 
-        recommended_configuration = d.pop("recommendedConfiguration")
+        team_id = d.pop("teamId", UNSET)
 
-        tracing_type = d.pop("tracingType")
+        _settings = d.pop("settings", UNSET)
+        settings: Union[Unset, AnnotationInfoResponse200TaskTypeSettings]
+        if isinstance(_settings, Unset):
+            settings = UNSET
+        else:
+            settings = AnnotationInfoResponse200TaskTypeSettings.from_dict(_settings)
+
+        recommended_configuration = d.pop("recommendedConfiguration", UNSET)
+
+        tracing_type = d.pop("tracingType", UNSET)
 
         annotation_info_response_200_task_type = cls(
             id=id,
-            summary=summary,
             description=description,
-            team_id=team_id,
             team_name=team_name,
+            summary=summary,
+            team_id=team_id,
             settings=settings,
             recommended_configuration=recommended_configuration,
             tracing_type=tracing_type,

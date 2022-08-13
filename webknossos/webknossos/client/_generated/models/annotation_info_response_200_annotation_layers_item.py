@@ -11,24 +11,25 @@ T = TypeVar("T", bound="AnnotationInfoResponse200AnnotationLayersItem")
 class AnnotationInfoResponse200AnnotationLayersItem:
     """ """
 
-    tracing_id: str
     typ: str
+    tracing_id: Union[Unset, str] = UNSET
     name: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        tracing_id = self.tracing_id
         typ = self.typ
+        tracing_id = self.tracing_id
         name = self.name
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "tracingId": tracing_id,
                 "typ": typ,
             }
         )
+        if tracing_id is not UNSET:
+            field_dict["tracingId"] = tracing_id
         if name is not UNSET:
             field_dict["name"] = name
 
@@ -37,15 +38,15 @@ class AnnotationInfoResponse200AnnotationLayersItem:
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        tracing_id = d.pop("tracingId")
-
         typ = d.pop("typ")
+
+        tracing_id = d.pop("tracingId", UNSET)
 
         name = d.pop("name", UNSET)
 
         annotation_info_response_200_annotation_layers_item = cls(
-            tracing_id=tracing_id,
             typ=typ,
+            tracing_id=tracing_id,
             name=name,
         )
 
