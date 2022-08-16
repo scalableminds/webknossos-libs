@@ -2,9 +2,14 @@ from argparse import ArgumentParser
 
 from webknossos import Dataset
 
-from ._internal.utils import (add_data_format_flags, add_distribution_flags,
-                              add_verbose_flag, parse_path, setup_logging,
-                              setup_warnings)
+from ._internal.utils import (
+    add_data_format_flags,
+    add_distribution_flags,
+    add_verbose_flag,
+    parse_path,
+    setup_logging,
+    setup_warnings,
+)
 
 
 def create_parser() -> ArgumentParser:

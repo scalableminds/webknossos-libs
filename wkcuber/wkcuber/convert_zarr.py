@@ -7,16 +7,30 @@ from typing import Optional, Tuple, Union, cast
 
 import numpy as np
 import zarr
-from webknossos import (BoundingBox, DataFormat, Dataset, Mag, MagView,
-                        SegmentationLayer, Vec3Int)
+from webknossos import (
+    BoundingBox,
+    DataFormat,
+    Dataset,
+    Mag,
+    MagView,
+    SegmentationLayer,
+    Vec3Int,
+)
 from webknossos.dataset._array import _fsstore_from_path
 from webknossos.utils import get_executor_for_args, wait_and_ensure_success
 
-from ._internal.utils import (add_data_format_flags, add_distribution_flags,
-                              add_interpolation_flag, add_sampling_mode_flag,
-                              add_verbose_flag, add_voxel_size_flag,
-                              get_executor_args, parse_path, setup_logging,
-                              setup_warnings)
+from ._internal.utils import (
+    add_data_format_flags,
+    add_distribution_flags,
+    add_interpolation_flag,
+    add_sampling_mode_flag,
+    add_verbose_flag,
+    add_voxel_size_flag,
+    get_executor_args,
+    parse_path,
+    setup_logging,
+    setup_warnings,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -157,7 +171,10 @@ def convert_zarr(
     )
     wk_layer.bounding_box = BoundingBox((0, 0, 0), shape)
     wk_mag = wk_layer.get_or_add_mag(
-        "1", chunk_shape=chunk_shape, chunks_per_shard=chunks_per_shard, compress=compress
+        "1",
+        chunk_shape=chunk_shape,
+        chunks_per_shard=chunks_per_shard,
+        compress=compress,
     )
 
     # Parallel chunk conversion

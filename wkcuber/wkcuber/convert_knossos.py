@@ -5,16 +5,22 @@ from pathlib import Path
 from typing import Optional, Tuple, cast
 
 import numpy as np
-from webknossos import (COLOR_CATEGORY, BoundingBox, DataFormat, Dataset,
-                        Vec3Int, View)
+from webknossos import COLOR_CATEGORY, BoundingBox, DataFormat, Dataset, Vec3Int, View
 from webknossos.utils import time_start, time_stop
 
 from ._internal.knossos import CUBE_EDGE_LEN
-from ._internal.utils import (KnossosDatasetInfo, add_data_format_flags,
-                              add_distribution_flags, add_verbose_flag,
-                              add_voxel_size_flag, get_executor_for_args,
-                              open_knossos, parse_path, setup_logging,
-                              setup_warnings)
+from ._internal.utils import (
+    KnossosDatasetInfo,
+    add_data_format_flags,
+    add_distribution_flags,
+    add_verbose_flag,
+    add_voxel_size_flag,
+    get_executor_for_args,
+    open_knossos,
+    parse_path,
+    setup_logging,
+    setup_warnings,
+)
 
 
 def create_parser() -> ArgumentParser:

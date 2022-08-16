@@ -873,13 +873,13 @@ class Dataset:
 
         if batch_size is None:
             if compress:
-                batch_size = mag_view.info.shard_size.z
+                batch_size = mag_view.info.shard_shape.z
             else:
                 batch_size = mag_view.info.chunk_shape.z
         elif compress:
             assert (
-                batch_size % mag_view.info.shard_size.z == 0
-            ), f"batch_size {batch_size} must be divisible by z shard-size {mag_view.info.shard_size.z} when creating compressed layers"
+                batch_size % mag_view.info.shard_shape.z == 0
+            ), f"batch_size {batch_size} must be divisible by z shard-size {mag_view.info.shard_shape.z} when creating compressed layers"
         else:
             assert (
                 batch_size % mag_view.info.chunk_shape.z == 0

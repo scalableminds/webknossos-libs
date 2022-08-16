@@ -7,15 +7,28 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union, cast
 
 import numpy as np
-from webknossos import (COLOR_CATEGORY, SEGMENTATION_CATEGORY, BoundingBox,
-                        Dataset, Mag, SegmentationLayer, Vec3Int, View)
+from webknossos import (
+    COLOR_CATEGORY,
+    SEGMENTATION_CATEGORY,
+    BoundingBox,
+    Dataset,
+    Mag,
+    SegmentationLayer,
+    Vec3Int,
+    View,
+)
 from webknossos.dataset.defaults import DEFAULT_CHUNK_SHAPE
 from webknossos.utils import time_start, time_stop
 
 from ._internal.image_readers import image_reader
-from ._internal.utils import (get_chunks, get_executor_for_args,
-                              get_regular_chunks, setup_logging,
-                              setup_warnings, wait_and_ensure_success)
+from ._internal.utils import (
+    get_chunks,
+    get_executor_for_args,
+    get_regular_chunks,
+    setup_logging,
+    setup_warnings,
+    wait_and_ensure_success,
+)
 from .cubing import create_parser as create_cubing_parser
 from .cubing import read_image_file
 

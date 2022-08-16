@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from enum import Enum
 from os.path import relpath
 from pathlib import Path
-from typing import Any, Dict, Iterator, Optional, Type, cast
+from typing import Any, Dict, Iterator, Optional, Type
 
 import numcodecs
 import numpy as np
