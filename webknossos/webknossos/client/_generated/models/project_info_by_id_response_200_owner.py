@@ -1,10 +1,11 @@
-from typing import Any, Dict, List, Type, TypeVar
+from typing import Any, Dict, List, Type, TypeVar, Union
 
 import attr
 
 from ..models.project_info_by_id_response_200_owner_teams_item import (
     ProjectInfoByIdResponse200OwnerTeamsItem,
 )
+from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="ProjectInfoByIdResponse200Owner")
 
@@ -19,8 +20,8 @@ class ProjectInfoByIdResponse200Owner:
     last_name: str
     is_admin: int
     is_dataset_manager: int
-    is_anonymous: int
-    teams: List[ProjectInfoByIdResponse200OwnerTeamsItem]
+    is_anonymous: Union[Unset, int] = UNSET
+    teams: Union[Unset, List[ProjectInfoByIdResponse200OwnerTeamsItem]] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -31,11 +32,13 @@ class ProjectInfoByIdResponse200Owner:
         is_admin = self.is_admin
         is_dataset_manager = self.is_dataset_manager
         is_anonymous = self.is_anonymous
-        teams = []
-        for teams_item_data in self.teams:
-            teams_item = teams_item_data.to_dict()
+        teams: Union[Unset, List[Dict[str, Any]]] = UNSET
+        if not isinstance(self.teams, Unset):
+            teams = []
+            for teams_item_data in self.teams:
+                teams_item = teams_item_data.to_dict()
 
-            teams.append(teams_item)
+                teams.append(teams_item)
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -47,10 +50,12 @@ class ProjectInfoByIdResponse200Owner:
                 "lastName": last_name,
                 "isAdmin": is_admin,
                 "isDatasetManager": is_dataset_manager,
-                "isAnonymous": is_anonymous,
-                "teams": teams,
             }
         )
+        if is_anonymous is not UNSET:
+            field_dict["isAnonymous"] = is_anonymous
+        if teams is not UNSET:
+            field_dict["teams"] = teams
 
         return field_dict
 
@@ -69,11 +74,11 @@ class ProjectInfoByIdResponse200Owner:
 
         is_dataset_manager = d.pop("isDatasetManager")
 
-        is_anonymous = d.pop("isAnonymous")
+        is_anonymous = d.pop("isAnonymous", UNSET)
 
         teams = []
-        _teams = d.pop("teams")
-        for teams_item_data in _teams:
+        _teams = d.pop("teams", UNSET)
+        for teams_item_data in _teams or []:
             teams_item = ProjectInfoByIdResponse200OwnerTeamsItem.from_dict(
                 teams_item_data
             )

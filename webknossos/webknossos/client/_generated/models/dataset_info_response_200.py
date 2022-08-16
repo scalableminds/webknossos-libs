@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Type, TypeVar
+from typing import Any, Dict, List, Type, TypeVar, Union
 
 import attr
 
@@ -11,6 +11,7 @@ from ..models.dataset_info_response_200_data_source import (
 from ..models.dataset_info_response_200_data_store import (
     DatasetInfoResponse200DataStore,
 )
+from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="DatasetInfoResponse200")
 
@@ -22,23 +23,23 @@ class DatasetInfoResponse200:
     name: str
     data_source: DatasetInfoResponse200DataSource
     data_store: DatasetInfoResponse200DataStore
-    owning_organization: str
     allowed_teams: List[DatasetInfoResponse200AllowedTeamsItem]
     is_active: int
     is_public: int
     description: str
     display_name: str
     created: int
-    is_editable: int
-    last_used_by_user: int
-    logo_url: str
-    sorting_key: int
-    details: str
-    publication: str
-    is_unreported: int
-    is_foreign: int
-    jobs_enabled: int
     tags: List[Any]
+    owning_organization: Union[Unset, str] = UNSET
+    is_editable: Union[Unset, int] = UNSET
+    last_used_by_user: Union[Unset, int] = UNSET
+    logo_url: Union[Unset, str] = UNSET
+    sorting_key: Union[Unset, int] = UNSET
+    details: Union[Unset, str] = UNSET
+    is_unreported: Union[Unset, int] = UNSET
+    is_foreign: Union[Unset, int] = UNSET
+    jobs_enabled: Union[Unset, int] = UNSET
+    publication: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -47,7 +48,6 @@ class DatasetInfoResponse200:
 
         data_store = self.data_store.to_dict()
 
-        owning_organization = self.owning_organization
         allowed_teams = []
         for allowed_teams_item_data in self.allowed_teams:
             allowed_teams_item = allowed_teams_item_data.to_dict()
@@ -59,20 +59,22 @@ class DatasetInfoResponse200:
         description = self.description
         display_name = self.display_name
         created = self.created
-        is_editable = self.is_editable
-        last_used_by_user = self.last_used_by_user
-        logo_url = self.logo_url
-        sorting_key = self.sorting_key
-        details = self.details
-        publication = self.publication
-        is_unreported = self.is_unreported
-        is_foreign = self.is_foreign
-        jobs_enabled = self.jobs_enabled
         tags = []
         for tags_item_data in self.tags:
             tags_item = tags_item_data
 
             tags.append(tags_item)
+
+        owning_organization = self.owning_organization
+        is_editable = self.is_editable
+        last_used_by_user = self.last_used_by_user
+        logo_url = self.logo_url
+        sorting_key = self.sorting_key
+        details = self.details
+        is_unreported = self.is_unreported
+        is_foreign = self.is_foreign
+        jobs_enabled = self.jobs_enabled
+        publication = self.publication
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -81,25 +83,35 @@ class DatasetInfoResponse200:
                 "name": name,
                 "dataSource": data_source,
                 "dataStore": data_store,
-                "owningOrganization": owning_organization,
                 "allowedTeams": allowed_teams,
                 "isActive": is_active,
                 "isPublic": is_public,
                 "description": description,
                 "displayName": display_name,
                 "created": created,
-                "isEditable": is_editable,
-                "lastUsedByUser": last_used_by_user,
-                "logoUrl": logo_url,
-                "sortingKey": sorting_key,
-                "details": details,
-                "publication": publication,
-                "isUnreported": is_unreported,
-                "isForeign": is_foreign,
-                "jobsEnabled": jobs_enabled,
                 "tags": tags,
             }
         )
+        if owning_organization is not UNSET:
+            field_dict["owningOrganization"] = owning_organization
+        if is_editable is not UNSET:
+            field_dict["isEditable"] = is_editable
+        if last_used_by_user is not UNSET:
+            field_dict["lastUsedByUser"] = last_used_by_user
+        if logo_url is not UNSET:
+            field_dict["logoUrl"] = logo_url
+        if sorting_key is not UNSET:
+            field_dict["sortingKey"] = sorting_key
+        if details is not UNSET:
+            field_dict["details"] = details
+        if is_unreported is not UNSET:
+            field_dict["isUnreported"] = is_unreported
+        if is_foreign is not UNSET:
+            field_dict["isForeign"] = is_foreign
+        if jobs_enabled is not UNSET:
+            field_dict["jobsEnabled"] = jobs_enabled
+        if publication is not UNSET:
+            field_dict["publication"] = publication
 
         return field_dict
 
@@ -111,8 +123,6 @@ class DatasetInfoResponse200:
         data_source = DatasetInfoResponse200DataSource.from_dict(d.pop("dataSource"))
 
         data_store = DatasetInfoResponse200DataStore.from_dict(d.pop("dataStore"))
-
-        owning_organization = d.pop("owningOrganization")
 
         allowed_teams = []
         _allowed_teams = d.pop("allowedTeams")
@@ -133,24 +143,6 @@ class DatasetInfoResponse200:
 
         created = d.pop("created")
 
-        is_editable = d.pop("isEditable")
-
-        last_used_by_user = d.pop("lastUsedByUser")
-
-        logo_url = d.pop("logoUrl")
-
-        sorting_key = d.pop("sortingKey")
-
-        details = d.pop("details")
-
-        publication = d.pop("publication")
-
-        is_unreported = d.pop("isUnreported")
-
-        is_foreign = d.pop("isForeign")
-
-        jobs_enabled = d.pop("jobsEnabled")
-
         tags = []
         _tags = d.pop("tags")
         for tags_item_data in _tags:
@@ -158,27 +150,47 @@ class DatasetInfoResponse200:
 
             tags.append(tags_item)
 
+        owning_organization = d.pop("owningOrganization", UNSET)
+
+        is_editable = d.pop("isEditable", UNSET)
+
+        last_used_by_user = d.pop("lastUsedByUser", UNSET)
+
+        logo_url = d.pop("logoUrl", UNSET)
+
+        sorting_key = d.pop("sortingKey", UNSET)
+
+        details = d.pop("details", UNSET)
+
+        is_unreported = d.pop("isUnreported", UNSET)
+
+        is_foreign = d.pop("isForeign", UNSET)
+
+        jobs_enabled = d.pop("jobsEnabled", UNSET)
+
+        publication = d.pop("publication", UNSET)
+
         dataset_info_response_200 = cls(
             name=name,
             data_source=data_source,
             data_store=data_store,
-            owning_organization=owning_organization,
             allowed_teams=allowed_teams,
             is_active=is_active,
             is_public=is_public,
             description=description,
             display_name=display_name,
             created=created,
+            tags=tags,
+            owning_organization=owning_organization,
             is_editable=is_editable,
             last_used_by_user=last_used_by_user,
             logo_url=logo_url,
             sorting_key=sorting_key,
             details=details,
-            publication=publication,
             is_unreported=is_unreported,
             is_foreign=is_foreign,
             jobs_enabled=jobs_enabled,
-            tags=tags,
+            publication=publication,
         )
 
         dataset_info_response_200.additional_properties = d

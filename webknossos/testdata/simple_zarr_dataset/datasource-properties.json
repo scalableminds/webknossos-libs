@@ -1,33 +1,53 @@
 {
-  "id": {
-    "name": "simple_zarr_dataset",
-    "team": ""
-  },
-  "scale": [1, 1, 1],
-  "defaultViewConfiguration": {
-    "position": [12, 12, 12]
-  },
-  "dataLayers": [
-    {
-      "dataFormat": "zarr",
-      "name": "color",
-      "category": "color",
-      "elementClass": "uint24",
-      "numChannels": 3,
-      "boundingBox": {
-        "topLeft": [0, 0, 0],
-        "width": 24,
-        "height": 24,
-        "depth": 24
-      },
-      "mags": [
+    "id": {
+        "name": "simple_zarr_dataset",
+        "team": ""
+    },
+    "scale": [
+        1.0,
+        1.0,
+        1.0
+    ],
+    "dataLayers": [
         {
-          "mag": [1, 1, 1]
+            "name": "color",
+            "category": "color",
+            "boundingBox": {
+                "topLeft": [
+                    0,
+                    0,
+                    0
+                ],
+                "width": 24,
+                "height": 24,
+                "depth": 24
+            },
+            "elementClass": "uint24",
+            "dataFormat": "zarr",
+            "mags": [
+                {
+                    "mag": [
+                        1,
+                        1,
+                        1
+                    ]
+                }
+            ],
+            "numChannels": 3,
+            "defaultViewConfiguration": {
+                "color": [
+                    255,
+                    0,
+                    0
+                ]
+            }
         }
-      ],
-      "defaultViewConfiguration": {
-        "color": [255, 0, 0]
-      }
+    ],
+    "defaultViewConfiguration": {
+        "position": [
+            12,
+            12,
+            12
+        ]
     }
-  ]
 }

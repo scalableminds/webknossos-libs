@@ -38,6 +38,12 @@ def _assert_check_equality(args: Tuple["View", "View", int]) -> None:
     assert np.all(view_a.read() == view_b.read())
 
 
+_BLOCK_ALIGNMENT_WARNING = (
+    "Warning: write() was called on a compressed mag without block alignment. "
+    + "Performance will be degraded as the data has to be padded first."
+)
+
+
 class View:
     """
     A `View` is essentially a bounding box to a region of a specific `StorageBackend` that also provides functionality.
@@ -265,8 +271,7 @@ class View:
             current_mag_view_bbox = self.bounding_box.in_mag(self._mag)
             if current_mag_bbox != current_mag_view_bbox.intersected_with(aligned_bbox):
                 warnings.warn(
-                    "Warning: write() was called on a compressed mag without block alignment. "
-                    + "Performance will be degraded as the data has to be padded first.",
+                    _BLOCK_ALIGNMENT_WARNING,
                     RuntimeWarning,
                 )
 
@@ -315,7 +320,7 @@ class View:
 
         # ...
         # let mag1 be a MagView
-        view = mag1.get_view(absolute_offset(10, 20, 30), size=(100, 200, 300))
+        view = mag1.get_view(absolute_offset=(10, 20, 30), size=(100, 200, 300))
 
         assert np.array_equal(
             view.read(absolute_offset=(0, 0, 0), size=(100, 200, 300)),
@@ -603,6 +608,7 @@ class View:
         *,
         relative_offset: Optional[Vec3IntLike] = None,  # in mag1
         absolute_offset: Optional[Vec3IntLike] = None,  # in mag1
+        use_logging: bool = False,
     ) -> "BufferedSliceWriter":
         """
         The returned writer buffers multiple slices before they are written to disk.
@@ -644,6 +650,7 @@ class View:
             dimension=dimension,
             relative_offset=relative_offset,
             absolute_offset=absolute_offset,
+            use_logging=use_logging,
         )
 
     def get_buffered_slice_reader(
@@ -655,6 +662,7 @@ class View:
         *,
         relative_bounding_box: Optional[BoundingBox] = None,  # in mag1
         absolute_bounding_box: Optional[BoundingBox] = None,  # in mag1
+        use_logging: bool = False,
     ) -> "BufferedSliceReader":
         """
         The returned reader yields slices of data along a specified axis.
@@ -691,6 +699,7 @@ class View:
             dimension=dimension,
             relative_bounding_box=relative_bounding_box,
             absolute_bounding_box=absolute_bounding_box,
+            use_logging=use_logging,
         )
 
     def for_each_chunk(
@@ -931,7 +940,7 @@ class View:
         pass
 
     def __repr__(self) -> str:
-        return repr(f"View({self._path}, bounding_box={self.bounding_box})")
+        return f"View({repr(str(self._path))}, bounding_box={self.bounding_box})"
 
     def _check_chunk_shape(self, chunk_shape: Vec3Int, read_only: bool) -> None:
         assert chunk_shape.is_positive(
@@ -967,7 +976,8 @@ class View:
             self._cached_array = None
 
     def __del__(self) -> None:
-        del self._cached_array
+        if hasattr(self, "_cached_array"):
+            del self._cached_array
 
     def __getstate__(self) -> Dict[str, Any]:
         d = dict(self.__dict__)

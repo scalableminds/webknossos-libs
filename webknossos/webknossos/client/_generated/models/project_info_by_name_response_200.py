@@ -1,10 +1,11 @@
-from typing import Any, Dict, List, Type, TypeVar
+from typing import Any, Dict, List, Type, TypeVar, Union
 
 import attr
 
 from ..models.project_info_by_name_response_200_owner import (
     ProjectInfoByNameResponse200Owner,
 )
+from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="ProjectInfoByNameResponse200")
 
@@ -16,25 +17,27 @@ class ProjectInfoByNameResponse200:
     name: str
     team: str
     team_name: str
-    owner: ProjectInfoByNameResponse200Owner
     priority: int
     paused: int
     expected_time: int
-    is_blacklisted_from_report: int
     id: str
+    owner: Union[Unset, ProjectInfoByNameResponse200Owner] = UNSET
+    is_blacklisted_from_report: Union[Unset, int] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         name = self.name
         team = self.team
         team_name = self.team_name
-        owner = self.owner.to_dict()
-
         priority = self.priority
         paused = self.paused
         expected_time = self.expected_time
-        is_blacklisted_from_report = self.is_blacklisted_from_report
         id = self.id
+        owner: Union[Unset, Dict[str, Any]] = UNSET
+        if not isinstance(self.owner, Unset):
+            owner = self.owner.to_dict()
+
+        is_blacklisted_from_report = self.is_blacklisted_from_report
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -43,14 +46,16 @@ class ProjectInfoByNameResponse200:
                 "name": name,
                 "team": team,
                 "teamName": team_name,
-                "owner": owner,
                 "priority": priority,
                 "paused": paused,
                 "expectedTime": expected_time,
-                "isBlacklistedFromReport": is_blacklisted_from_report,
                 "id": id,
             }
         )
+        if owner is not UNSET:
+            field_dict["owner"] = owner
+        if is_blacklisted_from_report is not UNSET:
+            field_dict["isBlacklistedFromReport"] = is_blacklisted_from_report
 
         return field_dict
 
@@ -63,28 +68,33 @@ class ProjectInfoByNameResponse200:
 
         team_name = d.pop("teamName")
 
-        owner = ProjectInfoByNameResponse200Owner.from_dict(d.pop("owner"))
-
         priority = d.pop("priority")
 
         paused = d.pop("paused")
 
         expected_time = d.pop("expectedTime")
 
-        is_blacklisted_from_report = d.pop("isBlacklistedFromReport")
-
         id = d.pop("id")
+
+        _owner = d.pop("owner", UNSET)
+        owner: Union[Unset, ProjectInfoByNameResponse200Owner]
+        if isinstance(_owner, Unset):
+            owner = UNSET
+        else:
+            owner = ProjectInfoByNameResponse200Owner.from_dict(_owner)
+
+        is_blacklisted_from_report = d.pop("isBlacklistedFromReport", UNSET)
 
         project_info_by_name_response_200 = cls(
             name=name,
             team=team,
             team_name=team_name,
-            owner=owner,
             priority=priority,
             paused=paused,
             expected_time=expected_time,
-            is_blacklisted_from_report=is_blacklisted_from_report,
             id=id,
+            owner=owner,
+            is_blacklisted_from_report=is_blacklisted_from_report,
         )
 
         project_info_by_name_response_200.additional_properties = d

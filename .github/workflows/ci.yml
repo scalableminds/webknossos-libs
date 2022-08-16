@@ -129,7 +129,7 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: [3.7, 3.8]
+        python-version: [3.7, 3.8, 3.9]
     defaults:
       run:
         working-directory: webknossos
@@ -145,7 +145,7 @@ jobs:
     - name: Install dependencies
       run: |
         pip install poetry
-        poetry install
+        poetry install --extras all
 
     - name: Check formatting
       run: ./format.sh check
@@ -176,7 +176,7 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: [3.7, 3.8]
+        python-version: [3.7, 3.8, 3.9]
     defaults:
       run:
         working-directory: wkcuber
@@ -294,6 +294,7 @@ jobs:
       run: |
         docker run --rm \
           -v$(pwd)/wkcuber/testdata:/app/testdata \
+          -v$(pwd)/webknossos/testdata:/webknossos/testdata \
           scalableminds/webknossos-cuber:$GITHUB_SHA \
           wkcuber.cubing \
             --jobs 2 \
@@ -326,7 +327,7 @@ jobs:
     - name: Push docker images (for branch)
       if: github.ref_type == 'branch'
       run: |
-        CI_BRANCH=${GITHUB_REF##*/}
+        CI_BRANCH=${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}
         NORMALIZED_CI_BRANCH=${CI_BRANCH//[\/-]/_}
         docker tag \
           scalableminds/webknossos-cuber:$GITHUB_SHA \
@@ -375,7 +376,7 @@ jobs:
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_DEFAULT_REGION: "eu-west-1"
       run: |
-        CI_BRANCH=${GITHUB_REF##*/}
+        CI_BRANCH=${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}
         NORMALIZED_CI_BRANCH=${CI_BRANCH//[\/-]/_}
         aws s3 sync --acl public-read docs/out s3://static.webknossos.org/docs/${NORMALIZED_CI_BRANCH}
 

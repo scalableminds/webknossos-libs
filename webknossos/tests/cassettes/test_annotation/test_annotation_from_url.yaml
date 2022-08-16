@@ -13,7 +13,7 @@ interactions:
       user-agent:
       - python-httpx/0.18.2
     method: GET
-    uri: https://webknossos.org/api/annotations/Explorational/61c20205010000cc004a6356/download
+    uri: https://webknossos.org/api/annotations/61c20205010000cc004a6356/download
   response:
     content:
       zip:
@@ -26756,7 +26756,7 @@ interactions:
               DwgADFAAA/0BAA==
         l4dense_motta_et_al_demo_v2__explorational__potto__4a6356.nml: "<things>\n
           \ <meta name=\"writer\" content=\"NmlWriter.scala\" />\n  <meta name=\"writerGitCommit\"
-          content=\"41ac7d41ffde4ac0ec97978ae95b867925e6c9a8\" />\n  <meta name=\"timestamp\"
+          content=\"0cbc78d06669d15da003032afb73f3920134dc75\" />\n  <meta name=\"timestamp\"
           content=\"1643210000000\" />\n  <meta name=\"annotationId\" content=\"61c20205010000cc004a6356\"
           />\n  <meta name=\"username\" content=\"Philipp Otto\" />\n  <parameters>\n
           \   <experiment name=\"l4dense_motta_et_al_demo_v2\" organization=\"scalable_minds\"
@@ -26777,15 +26777,17 @@ interactions:
           interpolation=\"true\" time=\"1640104472373\" />\n    </nodes>\n    <edges>\n
           \     <edge source=\"2\" target=\"3\" />\n      <edge source=\"1\" target=\"2\"
           />\n    </edges>\n  </thing>\n  <branchpoints />\n  <comments />\n  <groups
-          />\n  <volume id=\"0\" location=\"data_Volume.zip\" name=\"Volume\" fallbackLayer=\"segmentation\"
-          />\n</things>"
+          />\n  <volume id=\"0\" location=\"data_Volume.zip\" name=\"Volume\" fallbackLayer=\"segmentation\">\n
+          \   <segments>\n      <segment id=\"2504698\" created=\"1640104460458\"
+          anchorPositionX=\"2785\" anchorPositionY=\"4423\" anchorPositionZ=\"1792\"
+          />\n    </segments>\n  </volume>\n</things>"
     headers:
       connection:
       - keep-alive
       content-disposition:
       - attachment;filename="l4dense_motta_et_al_demo_v2__explorational__potto__4a6356.zip"
       content-length:
-      - '848452'
+      - '848508'
       content-type:
       - application/zip
       date: Mon, 01 Jan 2000 00:00:00 GMT

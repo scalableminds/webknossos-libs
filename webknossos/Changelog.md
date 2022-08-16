@@ -10,7 +10,146 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.21...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.12...HEAD)
+
+### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [0.10.12](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.12) - 2022-08-15
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.11...v0.10.12)
+
+### Fixed
+- Fixed `task.get_project()`. [#785](https://github.com/scalableminds/webknossos-libs/pull/785)
+
+
+
+## [0.10.11](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.11) - 2022-08-03
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.10...v0.10.11)
+
+
+## [0.10.10](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.10) - 2022-07-26
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.9...v0.10.10)
+
+
+## [0.10.9](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.9) - 2022-07-22
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.8...v0.10.9)
+
+
+## [0.10.8](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.8) - 2022-07-15
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.7...v0.10.8)
+
+
+## [0.10.7](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.7) - 2022-07-14
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.6...v0.10.7)
+
+### Breaking Changes
+- The `Annotation` constructor takes the `owner_name` argument instead of `username`. This is only important when using keyword arguments. The `username` attributes are still available as a proxy for the `owner_name` attribute, but deprecated. [#760](https://github.com/scalableminds/webknossos-libs/pull/760)
+- `user_id` on `AnnotationInfo` objects is deprecated, please use `owner_id` instead. [#760](https://github.com/scalableminds/webknossos-libs/pull/760)
+- When self-hosting a webKnossos server, please note that a webknossos version >= `22.06.0` is required. [#760](https://github.com/scalableminds/webknossos-libs/pull/760) & [#764](https://github.com/scalableminds/webknossos-libs/pull/764)
+
+### Added
+- `Dataset.upload()` accepts `Layer` objects from a `RemoteDataset` in the `layers_to_link` argument list. Also, `LayerToLink` can consume those via `LayerToLink.from_remote_layer()`. [#761](https://github.com/scalableminds/webknossos-libs/pull/761)
+- `Task.create()` accepts a `RemoteDataset` for the `dataset_name` argument. [#761](https://github.com/scalableminds/webknossos-libs/pull/761)
+- Added `annotation.get_remote_base_dataset()` returning a `RemoteDataset`. [#761](https://github.com/scalableminds/webknossos-libs/pull/761)
+- Added `Team.get_by_name()`. [#763](https://github.com/scalableminds/webknossos-libs/pull/763)
+- Added `Dataset.get_remote_datasets()`. [#763](https://github.com/scalableminds/webknossos-libs/pull/763)
+
+### Changed
+- If a token is requested from the user on the commandline, it is now stored in the current context. Before, it was discarded. [#761](https://github.com/scalableminds/webknossos-libs/pull/761)
+- `Annotation.download()` does not need the `annotation_type` anymore, and the type can also be omitted from passed URLs. [#764](https://github.com/scalableminds/webknossos-libs/pull/764)
+- `Dataset.add_layer_from_images` allows smaller batch sizes for uncompressed writes. [#766](https://github.com/scalableminds/webknossos-libs/pull/766)
+- `Dataset.add_layer_from_images` uses multiprocessing by default. [#766](https://github.com/scalableminds/webknossos-libs/pull/766)
+
+### Fixed
+- Fixed the bounding box inferral for volume annotation layers that were not saved in Mag(1). [#765](https://github.com/scalableminds/webknossos-libs/pull/765)
+
+
+
+## [0.10.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.6) - 2022-06-27
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.5...v0.10.6)
+
+
+## [0.10.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.5) - 2022-06-15
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.4...v0.10.5)
+
+
+## [0.10.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.4) - 2022-06-15
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.3...v0.10.4)
+
+### Breaking Changes
+- Added an `align_with_other_layers` parameter to `Layer.downsample` & `layer.upsample`. When set to true (default), the magnifications of the existing dataset are used as guidance for downsampling/upsampling. Instead of passing a boolean, one can also pass another dataset that should be used as guidance. [#730](https://github.com/scalableminds/webknossos-libs/pull/730)
+- Changed the name of `max_mag` in `Layer.downsample` to `coarsest_mag`. [#730](https://github.com/scalableminds/webknossos-libs/pull/730)
+
+### Added
+- Added `Dataset.add_layer_from_images()` to convert image stacks to wkw or zarr Dataset.
+  This needs pims and possibly more packages, which can be installed using extras, e.g. "webknossos[all]".
+  [#741](https://github.com/scalableminds/webknossos-libs/pull/741)
+
+### Changed
+- The `Layer.downsample` and `Layer.upsample` function now automatically downsample according to magnifications already existing in the dataset. This behaviour can be turned off by setting the new parameter `align_with_other_layers` to `False`. [#730](https://github.com/scalableminds/webknossos-libs/pull/730)
+- `View.get_buffered_slice_reader()` and `View.get_buffered_slice_writer()` don't log anything by default now.
+  To get the previous logging, please invoke them with `logging=True`.
+  [#741](https://github.com/scalableminds/webknossos-libs/pull/741)
+
+
+## [0.10.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.3) - 2022-06-03
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.2...v0.10.3)
+
+### Added
+- Added export of [OME-NGFF v0.4 metadata](https://ngff.openmicroscopy.org/0.4/) for all `Dataset`s that have a Zarr layer [#737](https://github.com/scalableminds/webknossos-libs/pull/737)
+
+
+## [0.10.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.2) - 2022-05-20
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.1...v0.10.2)
+
+### Changed
+- Added Python 3.9 support to wk-libs [#716](https://github.com/scalableminds/webknossos-libs/pull/716)
+
+### Fixed
+- URLs for the webknossos-context (e.g. in the `WK_URL` env var or via `webknossos_context(url=…)`) may now contain `/` in the end and are sanitized. Before, requests would fail if the URL contained a final `/`. [#733](https://github.com/scalableminds/webknossos-libs/pull/733)
+
+
+## [0.10.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.1) - 2022-05-10
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.0...v0.10.1)
+
+
+## [0.10.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.0) - 2022-05-09
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.24...v0.10.0)
+
+### Breaking Changes
+- `Dataset.upload()` now returns a `RemoteDataset` instead instead of the URL string. You can get the URL via `remote_ds.url`. [#723](https://github.com/scalableminds/webknossos-libs/pull/723)
+- `User.teams` now is a tuple instead of a list. [#723](https://github.com/scalableminds/webknossos-libs/pull/723)
+- The deprecated `download_dataset` function now requires the `organization_id` argument. [#723](https://github.com/scalableminds/webknossos-libs/pull/723)
+
+### Added
+- Added `Dataset.open_remote()`, which returns an object of the new `RemoteDataset`. [#723](https://github.com/scalableminds/webknossos-libs/pull/723)
+  This can
+  * give the webknossos URL for the dataset as `remote_ds.url`,
+  * read image data via the webknossos zarr interface, using the inherited `Dataset` methods, and
+  * read and change the following dataset metadata as properties: `display_name`, `description`, `tags`, `is_public`, `sharing_token`, `allowed_teams`.
+- `Team` instances also contain the `organization_id`. [#723](https://github.com/scalableminds/webknossos-libs/pull/723)
+
+
+## [0.9.24](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.24) - 2022-05-03
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.23...v0.9.24)
+
+### Fixed
+- Fixed upsampling with constant z in certain anisotropic cases. [#720](https://github.com/scalableminds/webknossos-libs/pull/720)
+
+
+
+## [0.9.23](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.23) - 2022-05-03
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.22...v0.9.23)
+
+
+## [0.9.22](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.22) - 2022-05-02
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.21...v0.9.22)
 
 ### Breaking Changes
 - Renamed some entities to comply with the [webKnossos terminology](https://docs.webknossos.org/webknossos/terminology.html). [#704](https://github.com/scalableminds/webknossos-libs/pull/704):
@@ -22,12 +161,9 @@ For upgrade instructions, please check the respective *Breaking Changes* section
   * `get_best_mag` is deprecated, please use `get_finest_mag` instead
   * In `layer.upscale`, `min_mag` is deprecated in favor of `finest_mag`
 
-### Added
-
-### Changed
-
 ### Fixed
 - Correctly maintain default_view_configuration property when downloading a dataset. [#677](https://github.com/scalableminds/webknossos-libs/pull/677)
+
 
 ## [0.9.21](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.9.21) - 2022-04-20
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.9.20...v0.9.21)

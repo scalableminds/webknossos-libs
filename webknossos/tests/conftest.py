@@ -178,7 +178,7 @@ def _before_record_response(response: Dict[str, Any]) -> Dict[str, Any]:
     if "date" in response["headers"]:
         response["headers"]["date"] = "Mon, 01 Jan 2000 00:00:00 GMT"
 
-    if isinstance(response["content"], str):
+    if "content" in response and isinstance(response["content"], str):
         for regex_to_replace, replace_with in _REPLACE_IN_RESPONSE_CONTENT.items():
             response["content"] = re.sub(
                 regex_to_replace, replace_with, response["content"]
@@ -337,7 +337,10 @@ def pytest_collection_modifyitems(items: List[pytest.Item]) -> None:
         # addresses starting with `/` are allowed
         marker = item.get_closest_marker("block_network")
         if marker is None:
-            new_marker = pytest.mark.block_network(allowed_hosts=["/.*"])
+            new_marker = pytest.mark.block_network(
+                allowed_hosts=["/.*", "\x00listener-.*"]
+            )
             item.add_marker(new_marker)
         else:
             marker.kwargs["allowed_hosts"].append("/.*")
+            marker.kwargs["allowed_hosts"].append("\x00listener-.*")

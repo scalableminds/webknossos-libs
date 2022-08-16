@@ -4,6 +4,7 @@ import multiprocessing
 import sys
 import threading
 import traceback
+import warnings
 from logging import getLogger
 from logging.handlers import QueueHandler
 from queue import Empty as QueueEmpty
@@ -51,9 +52,15 @@ class MultiProcessingHandler(logging.Handler):
                     self.wrapped_handler.emit(record)
             except (KeyboardInterrupt, SystemExit):  # pylint: disable=try-except-raise
                 raise
-            # multiprocessing.managers.RemoteError pop up quite often.
+            # The following errors pop up quite often.
             # It seems that they can be safely ignored, though.
-            except (BrokenPipeError, EOFError, multiprocessing.managers.RemoteError):
+            # The reason for those might be that the sending end was closed.
+            except (
+                BrokenPipeError,
+                EOFError,
+                ConnectionResetError,
+                multiprocessing.managers.RemoteError,
+            ):
                 break
             except QueueEmpty:
                 # This case is reached when the timeout in queue.get is hit. Pass, to
@@ -74,11 +81,14 @@ class MultiProcessingHandler(logging.Handler):
             super().close()
 
 
-def _setup_logging_multiprocessing(queues: List[Queue], levels: List[int]) -> None:
+def _setup_logging_multiprocessing(
+    queues: List[Queue], levels: List[int], filters: List[Any]
+) -> None:
     """Re-setup logging in a multiprocessing context (only needed if a start_method other than
     fork is used) by setting up QueueHandler loggers for each queue and level
     so that log messages are piped to the original loggers in the main process.
     """
+    warnings.filters = filters  # type: ignore[attr-defined]
 
     root_logger = getLogger()
     for handler in root_logger.handlers:
@@ -115,4 +125,9 @@ def get_multiprocessing_logging_setup_fn() -> Any:
     # Return a logging setup function that when called will setup QueueHandler loggers
     # reusing the queues of each wrapped MultiProcessingHandler. This way all log messages
     # are forwarded to the main process.
-    return functools.partial(_setup_logging_multiprocessing, queues, levels)
+    return functools.partial(
+        _setup_logging_multiprocessing,
+        queues,
+        levels,
+        filters=warnings.filters,  # type: ignore[attr-defined]
+    )

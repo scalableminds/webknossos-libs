@@ -16,7 +16,7 @@ from webknossos.geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 
 from ._array import ArrayException, BaseArray, DataFormat
 from ._downsampling_utils import (
-    calculate_default_max_mag,
+    calculate_default_coarsest_mag,
     calculate_mags_to_downsample,
     calculate_mags_to_upsample,
     determine_buffer_shape,
@@ -172,12 +172,12 @@ def _get_sharding_parameters(
 
 class Layer:
     """
-    A `Layer` consists of multiple `webknossos.dataset.mag_view.MagView`s, which store the same data in different magnifications.
+    A `Layer` consists of multiple `MagView`s, which store the same data in different magnifications.
     """
 
     def __init__(self, dataset: "Dataset", properties: LayerProperties) -> None:
         """
-        Do not use this constructor manually. Instead use `webknossos.dataset.layer.Dataset.add_layer` to create a `Layer`.
+        Do not use this constructor manually. Instead use `Dataset``.add_layer()` to create a `Layer`.
         """
         # It is possible that the properties on disk do not contain the number of channels.
         # Therefore, the parameter is optional. However at this point, 'num_channels' was already inferred.
@@ -226,6 +226,7 @@ class Layer:
         """
         if layer_name == self.name:
             return
+        self.dataset._ensure_writable()
         assert (
             layer_name not in self.dataset.layers.keys()
         ), f"Failed to rename layer {self.name} to {layer_name}: The new name already exists."
@@ -250,6 +251,36 @@ class Layer:
         return self._dataset
 
     @property
+    def bounding_box(self) -> BoundingBox:
+        return self._properties.bounding_box
+
+    @bounding_box.setter
+    def bounding_box(self, bbox: BoundingBox) -> None:
+        """
+        Updates the offset and size of the bounding box of this layer in the properties.
+        """
+        self.dataset._ensure_writable()
+        assert (
+            bbox.topleft.is_positive()
+        ), f"Updating the bounding box of layer {self} to {bbox} failed, topleft must not contain negative dimensions."
+        self._properties.bounding_box = bbox
+        self.dataset._export_as_json()
+        for mag in self.mags.values():
+            mag._array.ensure_size(
+                bbox.align_with_mag(mag.mag).in_mag(mag.mag).bottomright
+            )
+
+    @property
+    def category(self) -> LayerCategoryType:
+        return COLOR_CATEGORY
+
+    @property
+    def dtype_per_layer(self) -> str:
+        return _dtype_per_channel_to_dtype_per_layer(
+            self.dtype_per_channel, self.num_channels
+        )
+
+    @property
     def dtype_per_channel(self) -> np.dtype:
         return self._dtype_per_channel
 
@@ -271,8 +302,13 @@ class Layer:
     def default_view_configuration(
         self, view_configuration: LayerViewConfiguration
     ) -> None:
+        self.dataset._ensure_writable()
         self._properties.default_view_configuration = view_configuration
         self.dataset._export_as_json()  # update properties on disk
+
+    @property
+    def read_only(self) -> bool:
+        return self.dataset.read_only
 
     @property
     def mags(self) -> Dict[Mag, MagView]:
@@ -310,7 +346,7 @@ class Layer:
             Union[int, Vec3IntLike]
         ] = None,  # DEFAULT_CHUNKS_PER_SHARD,
         compress: bool = False,
-        chunk_size: Optional[Union[Vec3IntLike, int]] = None,
+        chunk_size: Optional[Union[Vec3IntLike, int]] = None,  # deprecated
         block_len: Optional[int] = None,  # deprecated
         file_len: Optional[int] = None,  # deprecated
     ) -> MagView:
@@ -326,6 +362,7 @@ class Layer:
 
         Raises an IndexError if the specified `mag` already exists.
         """
+        self.dataset._ensure_writable()
         # normalize the name of the mag
         mag = Mag(mag)
         compression_mode = compress
@@ -393,6 +430,7 @@ class Layer:
 
         Raises an IndexError if the specified `mag` does not exists.
         """
+        self.dataset._ensure_writable()
         mag = Mag(mag)
         assert (
             mag not in self.mags
@@ -470,6 +508,7 @@ class Layer:
 
         This function raises an `IndexError` if the specified `mag` does not exist.
         """
+        self.dataset._ensure_writable()
         mag = Mag(mag)
         if mag not in self.mags.keys():
             raise IndexError(
@@ -500,6 +539,7 @@ class Layer:
         by the bounding box of the layer the foreign mag belongs to.
         Symlinked mags can only be added to layers on local file systems.
         """
+        self.dataset._ensure_writable()
 
         if isinstance(foreign_mag_view_or_path, MagView):
             foreign_mag_view = foreign_mag_view_or_path
@@ -602,32 +642,22 @@ class Layer:
                 )
             )
 
-    @property
-    def bounding_box(self) -> BoundingBox:
-        return self._properties.bounding_box
-
-    @bounding_box.setter
-    def bounding_box(self, bbox: BoundingBox) -> None:
-        """
-        Updates the offset and size of the bounding box of this layer in the properties.
-        """
-        assert (
-            bbox.topleft.is_positive()
-        ), f"Updating the bounding box of layer {self} to {bbox} failed, topleft must not contain negative dimensions."
-        self._properties.bounding_box = bbox
-        self.dataset._export_as_json()
-        for mag in self.mags.values():
-            mag._array.ensure_size(
-                bbox.align_with_mag(mag.mag).in_mag(mag.mag).bottomright
-            )
+    def _get_dataset_from_align_with_other_layers(
+        self, align_with_other_layers: Union[bool, "Dataset"]
+    ) -> Optional["Dataset"]:
+        if isinstance(align_with_other_layers, bool):
+            return self.dataset if align_with_other_layers else None
+        else:
+            return align_with_other_layers
 
     def downsample(
         self,
         from_mag: Optional[Mag] = None,
-        max_mag: Optional[Mag] = None,
+        coarsest_mag: Optional[Mag] = None,
         interpolation_mode: str = "default",
         compress: bool = True,
         sampling_mode: Union[str, SamplingModes] = SamplingModes.ANISOTROPIC,
+        align_with_other_layers: Union[bool, "Dataset"] = True,
         buffer_shape: Optional[Vec3Int] = None,
         force_sampling_scheme: bool = False,
         args: Optional[Namespace] = None,
@@ -635,7 +665,7 @@ class Layer:
         only_setup_mags: bool = False,
     ) -> None:
         """
-        Downsamples the data starting from `from_mag` until a magnification is `>= max(max_mag)`.
+        Downsamples the data starting from `from_mag` until a magnification is `>= max(coarsest_mag)`.
         There are three different `sampling_modes`:
         - 'anisotropic' - The next magnification is chosen so that the width, height and depth of a downsampled voxel assimilate. For example, if the z resolution is worse than the x/y resolution, z won't be downsampled in the first downsampling step(s). As a basis for this method, the voxel_size from the datasource-properties.json is used.
         - 'isotropic' - Each dimension is downsampled equally.
@@ -652,7 +682,7 @@ class Layer:
         assert "1" in self.mags.keys()
 
         layer.downsample(
-            max_mag=Mag(4),
+            coarsest_mag=Mag(4),
             sampling_mode=SamplingModes.ISOTROPIC
         )
 
@@ -670,8 +700,8 @@ class Layer:
             from_mag in self.mags.keys()
         ), f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
 
-        if max_mag is None:
-            max_mag = calculate_default_max_mag(self.bounding_box.size)
+        if coarsest_mag is None:
+            coarsest_mag = calculate_default_coarsest_mag(self.bounding_box.size)
 
         sampling_mode = SamplingModes.parse(sampling_mode)
 
@@ -688,16 +718,21 @@ class Layer:
         elif sampling_mode == SamplingModes.ISOTROPIC:
             voxel_size = None
         elif sampling_mode == SamplingModes.CONSTANT_Z:
-            max_mag_with_fixed_z = max_mag.to_list()
-            max_mag_with_fixed_z[2] = from_mag.to_list()[2]
-            max_mag = Mag(max_mag_with_fixed_z)
+            coarsest_mag_with_fixed_z = coarsest_mag.to_list()
+            coarsest_mag_with_fixed_z[2] = from_mag.to_list()[2]
+            coarsest_mag = Mag(coarsest_mag_with_fixed_z)
             voxel_size = None
         else:
             raise AttributeError(
                 f"Downsampling failed: {sampling_mode} is not a valid SamplingMode ({SamplingModes.ANISOTROPIC}, {SamplingModes.ISOTROPIC}, {SamplingModes.CONSTANT_Z})"
             )
 
-        mags_to_downsample = calculate_mags_to_downsample(from_mag, max_mag, voxel_size)
+        dataset_to_align_with = self._get_dataset_from_align_with_other_layers(
+            align_with_other_layers
+        )
+        mags_to_downsample = calculate_mags_to_downsample(
+            from_mag, coarsest_mag, dataset_to_align_with, voxel_size
+        )
 
         if len(set([max(m.to_list()) for m in mags_to_downsample])) != len(
             mags_to_downsample
@@ -895,6 +930,7 @@ class Layer:
         finest_mag: Mag = Mag(1),
         compress: bool = False,
         sampling_mode: Union[str, SamplingModes] = SamplingModes.ANISOTROPIC,
+        align_with_other_layers: Union[bool, "Dataset"] = True,
         buffer_shape: Optional[Vec3Int] = None,
         buffer_edge_len: Optional[int] = None,
         args: Optional[Namespace] = None,
@@ -932,7 +968,7 @@ class Layer:
             finest_mag_with_fixed_z = finest_mag.to_list()
             finest_mag_with_fixed_z[2] = from_mag.to_list()[2]
             finest_mag = Mag(finest_mag_with_fixed_z)
-            voxel_size = self.dataset.voxel_size
+            voxel_size = None
         else:
             raise AttributeError(
                 f"Upsampling failed: {sampling_mode} is not a valid UpsamplingMode ({SamplingModes.ANISOTROPIC}, {SamplingModes.ISOTROPIC}, {SamplingModes.CONSTANT_Z})"
@@ -941,7 +977,12 @@ class Layer:
         if buffer_shape is None and buffer_edge_len is not None:
             buffer_shape = Vec3Int.full(buffer_edge_len)
 
-        mags_to_upsample = calculate_mags_to_upsample(from_mag, finest_mag, voxel_size)
+        dataset_to_align_with = self._get_dataset_from_align_with_other_layers(
+            align_with_other_layers
+        )
+        mags_to_upsample = calculate_mags_to_upsample(
+            from_mag, finest_mag, dataset_to_align_with, voxel_size
+        )
 
         for prev_mag, target_mag in zip(
             [from_mag] + mags_to_upsample[:-1], mags_to_upsample
@@ -1000,9 +1041,10 @@ class Layer:
                 info.chunks_per_shard,
                 info.compression_mode,
             )
-        except ArrayException as e:
-            logging.error(
-                f"Failed to setup magnification {mag_name}, which is specified in the datasource-properties.json. See {e}"
+            self._mags[mag]._read_only = self._dataset.read_only
+        except ArrayException:
+            logging.exception(
+                f"Failed to setup magnification {mag_name}, which is specified in the datasource-properties.json:"
             )
 
     def _initialize_mag_from_other_mag(
@@ -1016,20 +1058,7 @@ class Layer:
         )
 
     def __repr__(self) -> str:
-        return repr(
-            "Layer(%s, dtype_per_channel=%s, num_channels=%s)"
-            % (self.name, self.dtype_per_channel, self.num_channels)
-        )
-
-    @property
-    def category(self) -> LayerCategoryType:
-        return COLOR_CATEGORY
-
-    @property
-    def dtype_per_layer(self) -> str:
-        return _dtype_per_channel_to_dtype_per_layer(
-            self.dtype_per_channel, self.num_channels
-        )
+        return f"Layer({repr(self.name)}, dtype_per_channel={self.dtype_per_channel}, num_channels={self.num_channels})"
 
     def _get_largest_segment_id_maybe(self) -> Optional[int]:
         return None
@@ -1045,6 +1074,7 @@ class SegmentationLayer(Layer):
 
     @largest_segment_id.setter
     def largest_segment_id(self, largest_segment_id: int) -> None:
+        self.dataset._ensure_writable()
         if type(largest_segment_id) != int:
             assert largest_segment_id == int(
                 largest_segment_id

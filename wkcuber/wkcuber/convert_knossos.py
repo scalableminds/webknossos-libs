@@ -78,7 +78,7 @@ def convert_cube_job(
                     buffer[
                         x : (x + CUBE_EDGE_LEN),
                         y : (y + CUBE_EDGE_LEN),
-                        y : (y + CUBE_EDGE_LEN),
+                        z : (z + CUBE_EDGE_LEN),
                     ] = cube_data
     target_view.write(buffer)
 

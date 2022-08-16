@@ -133,7 +133,7 @@ def downsample_mags(
 
     Dataset.open(path).get_layer(layer_name).downsample(
         from_mag=from_mag,
-        max_mag=max_mag,
+        coarsest_mag=max_mag,
         interpolation_mode=interpolation_mode,
         compress=compress,
         sampling_mode=sampling_mode,

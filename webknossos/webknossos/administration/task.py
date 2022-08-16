@@ -12,6 +12,7 @@ from webknossos.client._generated.api.default import (
     task_info,
 )
 from webknossos.client.context import _get_generated_client
+from webknossos.dataset.dataset import RemoteDataset
 from webknossos.geometry import BoundingBox, Vec3Int
 
 logger = logging.getLogger(__name__)
@@ -109,7 +110,7 @@ class Task:
         cls,
         task_type_id: str,
         project_name: str,
-        dataset_name: str,
+        dataset_name: Union[str, RemoteDataset],
         needed_experience_domain: str,
         needed_experience_value: int,
         starting_position: Vec3Int,
@@ -122,6 +123,8 @@ class Task:
 
         client = _get_generated_client(enforce_auth=True)
         url = f"{client.base_url}/api/tasks"
+        if isinstance(dataset_name, RemoteDataset):
+            dataset_name = dataset_name._dataset_name
         task_parameters = {
             "taskTypeId": task_type_id,
             "neededExperience": {
@@ -169,7 +172,7 @@ class Task:
     ) -> "Task":
         return cls(
             response.id,
-            response.project_name,
+            response.project_id,
             response.data_set,
             TaskStatus(
                 response.status.open_, response.status.active, response.status.finished

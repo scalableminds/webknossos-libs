@@ -227,7 +227,7 @@ def main(args: argparse.Namespace) -> None:
 
     mag_view.layer.downsample(
         from_mag=mag_view.mag,
-        max_mag=None if args.max_mag is None else Mag(args.max_mag),
+        coarsest_mag=None if args.max_mag is None else Mag(args.max_mag),
         interpolation_mode=args.interpolation_mode,
         compress=not args.no_compress,
         sampling_mode=args.sampling_mode,

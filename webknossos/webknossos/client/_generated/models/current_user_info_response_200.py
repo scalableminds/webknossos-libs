@@ -27,18 +27,18 @@ class CurrentUserInfoResponse200:
     is_admin: int
     is_dataset_manager: int
     is_active: int
-    teams: List[CurrentUserInfoResponse200TeamsItem]
     experiences: CurrentUserInfoResponse200Experiences
     last_activity: int
-    is_anonymous: int
-    is_editable: int
     organization: str
-    selected_theme: str
     created: int
-    last_task_type_id: str
+    teams: Union[Unset, List[CurrentUserInfoResponse200TeamsItem]] = UNSET
+    is_anonymous: Union[Unset, int] = UNSET
+    is_editable: Union[Unset, int] = UNSET
     novel_user_experience_infos: Union[
         Unset, CurrentUserInfoResponse200NovelUserExperienceInfos
     ] = UNSET
+    selected_theme: Union[Unset, str] = UNSET
+    last_task_type_id: Union[Unset, str] = UNSET
     is_super_user: Union[Unset, int] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
@@ -50,25 +50,27 @@ class CurrentUserInfoResponse200:
         is_admin = self.is_admin
         is_dataset_manager = self.is_dataset_manager
         is_active = self.is_active
-        teams = []
-        for teams_item_data in self.teams:
-            teams_item = teams_item_data.to_dict()
-
-            teams.append(teams_item)
-
         experiences = self.experiences.to_dict()
 
         last_activity = self.last_activity
+        organization = self.organization
+        created = self.created
+        teams: Union[Unset, List[Dict[str, Any]]] = UNSET
+        if not isinstance(self.teams, Unset):
+            teams = []
+            for teams_item_data in self.teams:
+                teams_item = teams_item_data.to_dict()
+
+                teams.append(teams_item)
+
         is_anonymous = self.is_anonymous
         is_editable = self.is_editable
-        organization = self.organization
-        selected_theme = self.selected_theme
-        created = self.created
-        last_task_type_id = self.last_task_type_id
         novel_user_experience_infos: Union[Unset, Dict[str, Any]] = UNSET
         if not isinstance(self.novel_user_experience_infos, Unset):
             novel_user_experience_infos = self.novel_user_experience_infos.to_dict()
 
+        selected_theme = self.selected_theme
+        last_task_type_id = self.last_task_type_id
         is_super_user = self.is_super_user
 
         field_dict: Dict[str, Any] = {}
@@ -82,19 +84,24 @@ class CurrentUserInfoResponse200:
                 "isAdmin": is_admin,
                 "isDatasetManager": is_dataset_manager,
                 "isActive": is_active,
-                "teams": teams,
                 "experiences": experiences,
                 "lastActivity": last_activity,
-                "isAnonymous": is_anonymous,
-                "isEditable": is_editable,
                 "organization": organization,
-                "selectedTheme": selected_theme,
                 "created": created,
-                "lastTaskTypeId": last_task_type_id,
             }
         )
+        if teams is not UNSET:
+            field_dict["teams"] = teams
+        if is_anonymous is not UNSET:
+            field_dict["isAnonymous"] = is_anonymous
+        if is_editable is not UNSET:
+            field_dict["isEditable"] = is_editable
         if novel_user_experience_infos is not UNSET:
             field_dict["novelUserExperienceInfos"] = novel_user_experience_infos
+        if selected_theme is not UNSET:
+            field_dict["selectedTheme"] = selected_theme
+        if last_task_type_id is not UNSET:
+            field_dict["lastTaskTypeId"] = last_task_type_id
         if is_super_user is not UNSET:
             field_dict["isSuperUser"] = is_super_user
 
@@ -117,30 +124,26 @@ class CurrentUserInfoResponse200:
 
         is_active = d.pop("isActive")
 
-        teams = []
-        _teams = d.pop("teams")
-        for teams_item_data in _teams:
-            teams_item = CurrentUserInfoResponse200TeamsItem.from_dict(teams_item_data)
-
-            teams.append(teams_item)
-
         experiences = CurrentUserInfoResponse200Experiences.from_dict(
             d.pop("experiences")
         )
 
         last_activity = d.pop("lastActivity")
 
-        is_anonymous = d.pop("isAnonymous")
-
-        is_editable = d.pop("isEditable")
-
         organization = d.pop("organization")
-
-        selected_theme = d.pop("selectedTheme")
 
         created = d.pop("created")
 
-        last_task_type_id = d.pop("lastTaskTypeId")
+        teams = []
+        _teams = d.pop("teams", UNSET)
+        for teams_item_data in _teams or []:
+            teams_item = CurrentUserInfoResponse200TeamsItem.from_dict(teams_item_data)
+
+            teams.append(teams_item)
+
+        is_anonymous = d.pop("isAnonymous", UNSET)
+
+        is_editable = d.pop("isEditable", UNSET)
 
         _novel_user_experience_infos = d.pop("novelUserExperienceInfos", UNSET)
         novel_user_experience_infos: Union[
@@ -155,6 +158,10 @@ class CurrentUserInfoResponse200:
                 )
             )
 
+        selected_theme = d.pop("selectedTheme", UNSET)
+
+        last_task_type_id = d.pop("lastTaskTypeId", UNSET)
+
         is_super_user = d.pop("isSuperUser", UNSET)
 
         current_user_info_response_200 = cls(
@@ -165,16 +172,16 @@ class CurrentUserInfoResponse200:
             is_admin=is_admin,
             is_dataset_manager=is_dataset_manager,
             is_active=is_active,
-            teams=teams,
             experiences=experiences,
             last_activity=last_activity,
+            organization=organization,
+            created=created,
+            teams=teams,
             is_anonymous=is_anonymous,
             is_editable=is_editable,
-            organization=organization,
-            selected_theme=selected_theme,
-            created=created,
-            last_task_type_id=last_task_type_id,
             novel_user_experience_infos=novel_user_experience_infos,
+            selected_theme=selected_theme,
+            last_task_type_id=last_task_type_id,
             is_super_user=is_super_user,
         )
 

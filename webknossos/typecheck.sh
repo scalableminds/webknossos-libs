@@ -14,3 +14,6 @@ poetry run python -m mypy -p examples
 
 echo "Typecheck script_collection..."
 poetry run python -m mypy -p script_collection
+
+echo "Typecheck high-level scripts..."
+poetry run python -m mypy *.py

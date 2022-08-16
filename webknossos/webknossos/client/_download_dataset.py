@@ -9,7 +9,7 @@ from rich.progress import track
 from webknossos.client._generated.api.datastore import dataset_download
 from webknossos.client._generated.api.default import dataset_info
 from webknossos.client._generated.types import Unset
-from webknossos.client.context import _get_context, _get_generated_client
+from webknossos.client.context import _get_context
 from webknossos.dataset import Dataset, LayerCategoryType
 from webknossos.dataset.properties import LayerViewConfiguration, dataset_converter
 from webknossos.geometry import BoundingBox, Mag, Vec3Int
@@ -25,7 +25,7 @@ _DOWNLOAD_CHUNK_SHAPE = Vec3Int(512, 512, 512)
 
 def download_dataset(
     dataset_name: str,
-    organization_id: Optional[str] = None,
+    organization_id: str,
     sharing_token: Optional[str] = None,
     bbox: Optional[BoundingBox] = None,
     layers: Optional[List[str]] = None,
@@ -33,21 +33,14 @@ def download_dataset(
     path: Optional[Union[PathLike, str]] = None,
     exist_ok: bool = False,
 ) -> Dataset:
-    client = _get_generated_client()
     context = _get_context()
-
-    if organization_id is None:
-        organization_id = context.organization_id
-
-    if sharing_token is None:
-        dataset_name_with_sharing_token = dataset_name
-    else:
-        dataset_name_with_sharing_token = f"{dataset_name}?sharingToken={sharing_token}"
+    client = context.generated_client
 
     dataset_info_response = dataset_info.sync_detailed(
         organization_name=organization_id,
-        data_set_name=dataset_name_with_sharing_token,
+        data_set_name=dataset_name,
         client=client,
+        sharing_token=sharing_token,
     )
     assert dataset_info_response.status_code == 200, dataset_info_response
     parsed = dataset_info_response.parsed
@@ -61,8 +54,13 @@ def download_dataset(
         logger.warning(f"{actual_path} already exists, skipping download.")
         return Dataset.open(actual_path)
 
-    voxel_size = cast(Tuple[float, float, float], tuple(parsed.data_source.scale))
     data_layers = parsed.data_source.data_layers
+    scale = parsed.data_source.scale
+    if isinstance(data_layers, Unset) or isinstance(scale, Unset):
+        raise RuntimeError(
+            f"Could not download dataset {dataset_name}: {parsed.data_source.additional_properties.get('status', 'Unknown error.')}"
+        )
+    voxel_size = cast(Tuple[float, float, float], tuple(scale))
     dataset = Dataset(
         actual_path, name=parsed.name, voxel_size=voxel_size, exist_ok=exist_ok
     )
@@ -134,7 +132,7 @@ def download_dataset(
                     organization_name=organization_id,
                     data_set_name=dataset_name,
                     data_layer_name=layer_name,
-                    resolution=mag.max_dim_log2,
+                    mag=mag.to_long_layer_name(),
                     client=datastore_client,
                     token=optional_datastore_token,
                     x=chunk.topleft.x,

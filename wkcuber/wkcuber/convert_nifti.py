@@ -322,7 +322,7 @@ def convert_folder_nifti(
 
 
 def main(args: Namespace) -> None:
-    source_path = args.source_path
+    source_path = Path(args.source_path)
 
     flip_axes = None
     if args.flip_axes is not None:

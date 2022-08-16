@@ -1,26 +1,37 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import httpx
 
 from ...client import Client
 from ...models.user_list_response_200_item import UserListResponse200Item
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
     client: Client,
+    is_editable: Union[Unset, None, bool] = UNSET,
+    is_team_manager_or_admin: Union[Unset, None, bool] = UNSET,
+    is_admin: Union[Unset, None, bool] = UNSET,
 ) -> Dict[str, Any]:
     url = "{}/api/users".format(client.base_url)
 
     headers: Dict[str, Any] = client.get_headers()
     cookies: Dict[str, Any] = client.get_cookies()
 
+    params: Dict[str, Any] = {
+        "isEditable": is_editable,
+        "isTeamManagerOrAdmin": is_team_manager_or_admin,
+        "isAdmin": is_admin,
+    }
+    params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
+
     return {
         "url": url,
         "headers": headers,
         "cookies": cookies,
         "timeout": client.get_timeout(),
+        "params": params,
     }
 
 
@@ -55,9 +66,15 @@ def _build_response(
 def sync_detailed(
     *,
     client: Client,
+    is_editable: Union[Unset, None, bool] = UNSET,
+    is_team_manager_or_admin: Union[Unset, None, bool] = UNSET,
+    is_admin: Union[Unset, None, bool] = UNSET,
 ) -> Response[List[UserListResponse200Item]]:
     kwargs = _get_kwargs(
         client=client,
+        is_editable=is_editable,
+        is_team_manager_or_admin=is_team_manager_or_admin,
+        is_admin=is_admin,
     )
 
     response = httpx.get(
@@ -70,20 +87,32 @@ def sync_detailed(
 def sync(
     *,
     client: Client,
+    is_editable: Union[Unset, None, bool] = UNSET,
+    is_team_manager_or_admin: Union[Unset, None, bool] = UNSET,
+    is_admin: Union[Unset, None, bool] = UNSET,
 ) -> Optional[List[UserListResponse200Item]]:
     """ """
 
     return sync_detailed(
         client=client,
+        is_editable=is_editable,
+        is_team_manager_or_admin=is_team_manager_or_admin,
+        is_admin=is_admin,
     ).parsed
 
 
 async def asyncio_detailed(
     *,
     client: Client,
+    is_editable: Union[Unset, None, bool] = UNSET,
+    is_team_manager_or_admin: Union[Unset, None, bool] = UNSET,
+    is_admin: Union[Unset, None, bool] = UNSET,
 ) -> Response[List[UserListResponse200Item]]:
     kwargs = _get_kwargs(
         client=client,
+        is_editable=is_editable,
+        is_team_manager_or_admin=is_team_manager_or_admin,
+        is_admin=is_admin,
     )
 
     async with httpx.AsyncClient() as _client:
@@ -95,11 +124,17 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: Client,
+    is_editable: Union[Unset, None, bool] = UNSET,
+    is_team_manager_or_admin: Union[Unset, None, bool] = UNSET,
+    is_admin: Union[Unset, None, bool] = UNSET,
 ) -> Optional[List[UserListResponse200Item]]:
     """ """
 
     return (
         await asyncio_detailed(
             client=client,
+            is_editable=is_editable,
+            is_team_manager_or_admin=is_team_manager_or_admin,
+            is_admin=is_admin,
         )
     ).parsed

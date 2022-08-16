@@ -9,6 +9,7 @@ from typing import Iterator, Optional, Tuple, cast
 
 import numpy as np
 import pytest
+from jsonschema import validate
 from upath import UPath
 
 from webknossos.dataset import (
@@ -43,27 +44,26 @@ MINIO_ROOT_PASSWORD = "TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur"
 MINIO_PORT = "8000"
 
 
-# @pytest.fixture(autouse=True, scope="module")
-# def docker_minio() -> Iterator[None]:
-#     """Minio is an S3 clone and is used as local test server"""
-#     container_name = "minio"
-#     cmd = (
-#         "docker run"
-#         f" -p {MINIO_PORT}:9000"
-#         f" -e MINIO_ROOT_USER={MINIO_ROOT_USER}"
-#         f" -e MINIO_ROOT_PASSWORD={MINIO_ROOT_PASSWORD}"
-#         f" --name {container_name}"
-#         " --rm"
-#         " -d"
-#         " minio/minio server /data"
-#     )
-#     print("BEFORE", flush=True)
-#     subprocess.check_output(shlex.split(cmd))
-#     REMOTE_TESTOUTPUT_DIR.fs.mkdirs("testoutput", exist_ok=True)
-#     try:
-#         yield
-#     finally:
-#         subprocess.check_output(["docker", "stop", container_name])
+@pytest.fixture(autouse=True, scope="module")
+def docker_minio() -> Iterator[None]:
+    """Minio is an S3 clone and is used as local test server"""
+    container_name = "minio"
+    cmd = (
+        "docker run"
+        f" -p {MINIO_PORT}:9000"
+        f" -e MINIO_ROOT_USER={MINIO_ROOT_USER}"
+        f" -e MINIO_ROOT_PASSWORD={MINIO_ROOT_PASSWORD}"
+        f" --name {container_name}"
+        " --rm"
+        " -d"
+        " minio/minio server /data"
+    )
+    subprocess.check_output(shlex.split(cmd))
+    REMOTE_TESTOUTPUT_DIR.fs.mkdirs("testoutput", exist_ok=True)
+    try:
+        yield
+    finally:
+        subprocess.check_output(["docker", "stop", container_name])
 
 
 REMOTE_TESTOUTPUT_DIR = UPath(
@@ -244,6 +244,49 @@ def test_create_dataset_with_layer_and_mag(
     assert len(ds.get_layer("color").mags) == 2
 
     assure_exported_properties(ds)
+
+
+@pytest.mark.parametrize("output_path", [TESTOUTPUT_DIR, REMOTE_TESTOUTPUT_DIR])
+def test_ome_ngff_metadata(output_path: Path) -> None:
+    ds_path = prepare_dataset_path(DataFormat.Zarr, output_path)
+    ds = Dataset(ds_path, voxel_size=(11, 11, 28))
+    layer = ds.add_layer("color", COLOR_CATEGORY, data_format=DataFormat.Zarr)
+    layer.add_mag("1")
+    layer.add_mag("2-2-1")
+
+    assert (ds_path / ".zgroup").exists()
+    assert (ds_path / "color" / ".zgroup").exists()
+    assert (ds_path / "color" / ".zattrs").exists()
+    assert (ds_path / "color" / "1" / ".zarray").exists()
+    assert (ds_path / "color" / "2-2-1" / ".zarray").exists()
+
+    zattrs = json.loads((ds_path / "color" / ".zattrs").read_bytes())
+    assert len(zattrs["multiscales"][0]["datasets"]) == 2
+    assert zattrs["multiscales"][0]["datasets"][0]["coordinateTransformations"][0][
+        "scale"
+    ] == [
+        1,
+        11,
+        11,
+        28,
+    ]
+    assert zattrs["multiscales"][0]["datasets"][1]["coordinateTransformations"][0][
+        "scale"
+    ] == [
+        1,
+        22,
+        22,
+        28,
+    ]
+
+    validate(
+        instance=zattrs,
+        schema=json.loads(
+            UPath(
+                "https://ngff.openmicroscopy.org/0.4/schemas/image.schema"
+            ).read_bytes()
+        ),
+    )
 
 
 def test_create_default_layer() -> None:
@@ -2429,6 +2472,100 @@ def test_downsampling(data_format: DataFormat, output_path: Path) -> None:
         assert (ds_path / "color" / "4" / "header.wkw").exists()
 
     assure_exported_properties(color_layer.dataset)
+
+
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_aligned_downsampling(data_format: DataFormat, output_path: Path) -> None:
+    ds_path = copy_simple_dataset(data_format, output_path, "aligned_downsampling")
+    dataset = Dataset.open(ds_path)
+    input_layer = dataset.get_layer("color")
+    input_layer.downsample()
+    test_layer = dataset.add_layer(
+        layer_name="color_2",
+        category="color",
+        dtype_per_channel="uint8",
+        num_channels=3,
+        data_format=input_layer.data_format,
+    )
+    test_mag = test_layer.add_mag("1")
+    test_mag.write(
+        absolute_offset=(0, 0, 0),
+        # assuming the layer has 3 channels:
+        data=(np.random.rand(3, 24, 24, 24) * 255).astype(np.uint8),
+    )
+    test_layer.downsample()
+
+    assert (ds_path / "color_2" / "1").exists()
+    assert (ds_path / "color_2" / "2").exists()
+    assert (ds_path / "color_2" / "4").exists()
+
+    if data_format == DataFormat.Zarr:
+        assert (ds_path / "color_2" / "1" / ".zarray").exists()
+        assert (ds_path / "color_2" / "2" / ".zarray").exists()
+        assert (ds_path / "color_2" / "4" / ".zarray").exists()
+    else:
+        assert (ds_path / "color_2" / "1" / "header.wkw").exists()
+        assert (ds_path / "color_2" / "2" / "header.wkw").exists()
+        assert (ds_path / "color_2" / "4" / "header.wkw").exists()
+
+    assure_exported_properties(dataset)
+
+
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_guided_downsampling(data_format: DataFormat, output_path: Path) -> None:
+    ds_path = copy_simple_dataset(data_format, output_path, "guided_downsampling")
+
+    input_dataset = Dataset.open(ds_path)
+    input_layer = input_dataset.get_layer("color")
+    # Adding additional mags to the input dataset for testing
+    input_layer.get_or_add_mag("2-2-1")
+    input_layer.get_or_add_mag("4-4-2")
+    input_layer.redownsample()
+    assert len(input_layer.mags) == 3
+    # Use the mag with the best resolution
+    finest_input_mag = input_layer.get_finest_mag()
+
+    # Creating an empty dataset for testing
+    output_ds_path = ds_path.parent / (ds_path.name + "_output")
+    output_dataset = Dataset(output_ds_path, voxel_size=input_dataset.voxel_size)
+    output_layer = output_dataset.add_layer(
+        layer_name="color",
+        category="color",
+        dtype_per_channel=input_layer.dtype_per_channel,
+        num_channels=input_layer.num_channels,
+        data_format=input_layer.data_format,
+    )
+    # Create the same mag in the new output dataset
+    output_mag = output_layer.add_mag(finest_input_mag.mag)
+    # Copying some data into the output dataset
+    input_data = finest_input_mag.read(absolute_offset=(0, 0, 0), size=(24, 24, 24))
+    output_mag.write(absolute_offset=(0, 0, 0), data=input_data)
+    # Downsampling the layer to the magnification used in the input dataset
+    output_layer.downsample(
+        from_mag=output_mag.mag,
+        coarsest_mag=Mag("8-8-4"),
+        align_with_other_layers=input_dataset,
+    )
+    for mag in input_layer.mags:
+        assert output_layer.get_mag(mag)
+
+    assert (output_ds_path / "color" / "1").exists()
+    assert (output_ds_path / "color" / "2-2-1").exists()
+    assert (output_ds_path / "color" / "4-4-2").exists()
+    assert (output_ds_path / "color" / "8-8-4").exists()
+
+    if data_format == DataFormat.Zarr:
+        assert (output_ds_path / "color" / "1" / ".zarray").exists()
+        assert (output_ds_path / "color" / "2-2-1" / ".zarray").exists()
+        assert (output_ds_path / "color" / "4-4-2" / ".zarray").exists()
+        assert (output_ds_path / "color" / "8-8-4" / ".zarray").exists()
+    else:
+        assert (output_ds_path / "color" / "1" / "header.wkw").exists()
+        assert (output_ds_path / "color" / "2-2-1" / "header.wkw").exists()
+        assert (output_ds_path / "color" / "4-4-2" / "header.wkw").exists()
+        assert (output_ds_path / "color" / "8-8-4" / "header.wkw").exists()
+
+    assure_exported_properties(input_dataset)
 
 
 def test_zarr_copy_to_remote_dataset() -> None:

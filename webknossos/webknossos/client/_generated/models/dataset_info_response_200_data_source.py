@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Type, TypeVar, cast
+from typing import Any, Dict, List, Type, TypeVar, Union, cast
 
 import attr
 
@@ -8,6 +8,7 @@ from ..models.dataset_info_response_200_data_source_data_layers_item import (
 from ..models.dataset_info_response_200_data_source_id import (
     DatasetInfoResponse200DataSourceId,
 )
+from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="DatasetInfoResponse200DataSource")
 
@@ -17,30 +18,38 @@ class DatasetInfoResponse200DataSource:
     """ """
 
     id: DatasetInfoResponse200DataSourceId
-    data_layers: List[DatasetInfoResponse200DataSourceDataLayersItem]
-    scale: List[int]
+    data_layers: Union[
+        Unset, List[DatasetInfoResponse200DataSourceDataLayersItem]
+    ] = UNSET
+    scale: Union[Unset, List[float]] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         id = self.id.to_dict()
 
-        data_layers = []
-        for data_layers_item_data in self.data_layers:
-            data_layers_item = data_layers_item_data.to_dict()
+        data_layers: Union[Unset, List[Dict[str, Any]]] = UNSET
+        if not isinstance(self.data_layers, Unset):
+            data_layers = []
+            for data_layers_item_data in self.data_layers:
+                data_layers_item = data_layers_item_data.to_dict()
 
-            data_layers.append(data_layers_item)
+                data_layers.append(data_layers_item)
 
-        scale = self.scale
+        scale: Union[Unset, List[float]] = UNSET
+        if not isinstance(self.scale, Unset):
+            scale = self.scale
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
                 "id": id,
-                "dataLayers": data_layers,
-                "scale": scale,
             }
         )
+        if data_layers is not UNSET:
+            field_dict["dataLayers"] = data_layers
+        if scale is not UNSET:
+            field_dict["scale"] = scale
 
         return field_dict
 
@@ -50,15 +59,15 @@ class DatasetInfoResponse200DataSource:
         id = DatasetInfoResponse200DataSourceId.from_dict(d.pop("id"))
 
         data_layers = []
-        _data_layers = d.pop("dataLayers")
-        for data_layers_item_data in _data_layers:
+        _data_layers = d.pop("dataLayers", UNSET)
+        for data_layers_item_data in _data_layers or []:
             data_layers_item = DatasetInfoResponse200DataSourceDataLayersItem.from_dict(
                 data_layers_item_data
             )
 
             data_layers.append(data_layers_item)
 
-        scale = cast(List[int], d.pop("scale"))
+        scale = cast(List[float], d.pop("scale", UNSET))
 
         dataset_info_response_200_data_source = cls(
             id=id,
