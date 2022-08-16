@@ -668,7 +668,7 @@ def test_convert_raw(tmp_path: Path, dtype: str) -> None:
     in_path = tmp_path / f"data_{dtype}.raw"
     out_path = tmp_path / "raw"
 
-    np.arange(128 ** 3, dtype=dtype).reshape(128, 128, 128).tofile(in_path)
+    np.arange(128**3, dtype=dtype).reshape(128, 128, 128).tofile(in_path)
 
     check_call(
         "python",

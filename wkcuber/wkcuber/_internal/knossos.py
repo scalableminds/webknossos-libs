@@ -7,7 +7,7 @@ from os.path import sep
 import re
 
 CUBE_EDGE_LEN = 128
-CUBE_SIZE = CUBE_EDGE_LEN ** 3
+CUBE_SIZE = CUBE_EDGE_LEN**3
 CUBE_SHAPE = (CUBE_EDGE_LEN,) * 3
 KNOSSOS_CUBE_REGEX = re.compile(
     rf"x(\d+){re.escape(sep)}y(\d+){re.escape(sep)}z(\d+){re.escape(sep)}(.*\.raw)$"
