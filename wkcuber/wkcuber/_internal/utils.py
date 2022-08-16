@@ -270,12 +270,12 @@ def parse_path(value: str) -> Path:
             },
         )
     elif (
-        (value.startswith("webdav::http://") or value.startswith("webdav::https://"))
+        (value.startswith("webdav+http://") or value.startswith("webdav+https://"))
         and "HTTP_BASIC_USER" in environ
         and "HTTP_BASIC_PASSWORD" in environ
     ):
         return UPath(
-            value.replace("webdav::http", "webdav+http"),
+            value,
             auth=(environ["HTTP_BASIC_USER"], environ["HTTP_BASIC_PASSWORD"]),
         )
     elif value.startswith("s3://") and "S3_ENDPOINT_URL" in environ:
