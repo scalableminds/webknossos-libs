@@ -85,6 +85,22 @@ class DeprecatedSizeAction(argparse.Action):
         setattr(namespace, self.dest, values)
 
 
+class DeprecatedChunkSizeAction(argparse.Action):
+    def __call__(
+        self,
+        parser: argparse.ArgumentParser,
+        namespace: argparse.Namespace,
+        values: Any,
+        option_string: Optional[str] = None,
+    ) -> None:
+        if option_string == "--chunk_size":
+            warnings.warn(
+                "[DEPRECATION] `--chunk_size` is deprecated, please use `--chunk_shape` instead.",
+                DeprecationWarning,
+            )
+        setattr(namespace, self.dest, values)
+
+
 def add_voxel_size_flag(parser: argparse.ArgumentParser, required: bool = True) -> None:
     parser.add_argument(
         "--voxel_size",
@@ -234,6 +250,7 @@ def add_data_format_flags(parser: argparse.ArgumentParser) -> None:
         default=DEFAULT_CHUNK_SHAPE,
         type=_parse_vec3_int,
         help="Number of voxels to be stored as a chunk in the output format (e.g. `32` or `32,32,32`).",
+        action=DeprecatedChunkSizeAction,
     )
 
     parser.add_argument(

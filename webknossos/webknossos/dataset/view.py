@@ -706,11 +706,12 @@ class View:
         self,
         func_per_chunk: Callable[[Tuple["View", int]], None],
         chunk_shape: Optional[Vec3IntLike] = None,  # in Mag(1)
-        chunk_size: Optional[Vec3IntLike] = None,  # deprecated
         executor: Optional[
             Union[ClusterExecutor, cluster_tools.WrappedProcessPoolExecutor]
         ] = None,
         progress_desc: Optional[str] = None,
+        *,
+        chunk_size: Optional[Vec3IntLike] = None,  # deprecated
     ) -> None:
         """
         The view is chunked into multiple sub-views of size `chunk_shape` (in Mag(1)),
@@ -788,12 +789,13 @@ class View:
         target_view: "View",
         source_chunk_shape: Optional[Vec3IntLike] = None,  # in Mag(1)
         target_chunk_shape: Optional[Vec3IntLike] = None,  # in Mag(1)
-        source_chunk_size: Optional[Vec3IntLike] = None,  # deprecated
-        target_chunk_size: Optional[Vec3IntLike] = None,  # deprecated
         executor: Optional[
             Union[ClusterExecutor, cluster_tools.WrappedProcessPoolExecutor]
         ] = None,
         progress_desc: Optional[str] = None,
+        *,
+        source_chunk_size: Optional[Vec3IntLike] = None,  # deprecated
+        target_chunk_size: Optional[Vec3IntLike] = None,  # deprecated
     ) -> None:
         """
         This method is similar to `for_each_chunk` in the sense that it delegates work to smaller chunks,

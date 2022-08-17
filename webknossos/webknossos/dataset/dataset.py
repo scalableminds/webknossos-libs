@@ -795,8 +795,9 @@ class Dataset:
         channel: Optional[int] = None,
         timepoint: Optional[int] = None,
         batch_size: Optional[int] = None,  # defaults to shard-size z
-        chunk_size: Optional[Union[Vec3IntLike, int]] = None,  # deprecated
         executor: Optional[Union[ClusterExecutor, WrappedProcessPoolExecutor]] = None,
+        *,
+        chunk_size: Optional[Union[Vec3IntLike, int]] = None,  # deprecated
     ) -> Layer:
         """
         Creates a new layer called `layer_name` with mag `mag` from `images`.
@@ -1115,10 +1116,11 @@ class Dataset:
         chunks_per_shard: Optional[Union[Vec3IntLike, int]] = None,
         data_format: Optional[Union[str, DataFormat]] = None,
         compress: Optional[bool] = None,
+        args: Optional[Namespace] = None,
+        *,
         chunk_size: Optional[Union[Vec3IntLike, int]] = None,  # deprecated
         block_len: Optional[int] = None,  # deprecated
         file_len: Optional[int] = None,  # deprecated
-        args: Optional[Namespace] = None,
     ) -> "Dataset":
         """
         Creates a new dataset at `new_dataset_path` and copies the data from the current dataset to `empty_target_ds`.

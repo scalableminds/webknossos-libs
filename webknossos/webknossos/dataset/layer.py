@@ -146,11 +146,12 @@ def _element_class_to_dtype_per_channel(
 
 
 def _get_sharding_parameters(
+    *,
     chunk_shape: Optional[Union[Vec3IntLike, int]],
     chunks_per_shard: Optional[Union[Vec3IntLike, int]],
     chunk_size: Optional[Union[Vec3IntLike, int]],  # deprecated
-    block_len: Optional[int],
-    file_len: Optional[int],
+    block_len: Optional[int],  # deprecated
+    file_len: Optional[int],  # deprecated
 ) -> Tuple[Optional[Vec3Int], Optional[Vec3Int]]:
     if chunk_shape is not None:
         chunk_shape = Vec3Int.from_vec_or_int(chunk_shape)
@@ -346,13 +347,14 @@ class Layer:
             Union[int, Vec3IntLike]
         ] = None,  # DEFAULT_CHUNKS_PER_SHARD,
         compress: bool = False,
+        *,
         chunk_size: Optional[Union[Vec3IntLike, int]] = None,  # deprecated
         block_len: Optional[int] = None,  # deprecated
         file_len: Optional[int] = None,  # deprecated
     ) -> MagView:
         """
         Creates a new mag called and adds it to the layer.
-        The parameter `chunk_shaoe`, `chunks_per_shard` and `compress` can be
+        The parameter `chunk_shape`, `chunks_per_shard` and `compress` can be
         specified to adjust how the data is stored on disk.
         Note that writing compressed data which is not aligned with the blocks on disk may result in
         diminished performance, as full blocks will automatically be read to pad the write actions. Alternatively,
@@ -458,6 +460,7 @@ class Layer:
         chunk_shape: Optional[Union[Vec3IntLike, int]] = None,
         chunks_per_shard: Optional[Union[Vec3IntLike, int]] = None,
         compress: Optional[bool] = None,
+        *,
         chunk_size: Optional[Union[Vec3IntLike, int]] = None,  # deprecated
         block_len: Optional[int] = None,  # deprecated
         file_len: Optional[int] = None,  # deprecated

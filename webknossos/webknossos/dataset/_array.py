@@ -16,6 +16,7 @@ from upath import UPath
 from zarr.storage import FSStore
 
 from ..geometry import BoundingBox, Vec3Int, Vec3IntLike
+from ..utils import warn_deprecated
 
 
 def _is_power_of_two(num: int) -> bool:
@@ -64,6 +65,11 @@ class ArrayInfo:
     chunk_shape: Vec3Int
     chunks_per_shard: Vec3Int
     compression_mode: bool = False
+
+    @property
+    def shard_size(self) -> Vec3Int:
+        warn_deprecated("shard_size", "shard_shape")
+        return self.shard_shape
 
     @property
     def shard_shape(self) -> Vec3Int:
