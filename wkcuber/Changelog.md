@@ -10,8 +10,10 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.12...HEAD)
 
 ### Breaking Changes
+- Deprecated `--chunk_size` in favor of `--chunk_shape`. [#706](https://github.com/scalableminds/webknossos-libs/pull/706)
 
 ### Added
+- Added support for WebDAV storage for remote Zarr-based datasets. [#706](https://github.com/scalableminds/webknossos-libs/pull/706)
 
 ### Changed
 

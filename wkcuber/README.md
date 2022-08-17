@@ -117,6 +117,8 @@ Most tasks can be configured to be executed in a parallelized manner. Via `--dis
 
 Most conversion commands can be configured with `--data_format zarr`. This will produce a Zarr-based dataset instead of WKW. Zarr-based datasets can also be stored on remote storage (e.g. S3, GCS, HTTP). For that, storage-specific credentials and configurations need to be passed in as environment variables.
 
+#### Example S3
+
 ```bash
 export AWS_SECRET_ACCESS_KEY="..."
 export AWS_ACCESS_KEY_ID="..."
@@ -127,6 +129,20 @@ python -m wkcuber \
   --data_format zarr \
   data/source s3://bucket/data/target
 ```
+
+#### Example HTTPS
+
+```bash
+export HTTP_BASIC_USER="..."
+export HTTP_BASIC_PASSWORD="..."
+
+python -m wkcuber \
+  --scale 11.24,11.24,25 \
+  --data_format zarr \
+  data/source https://example.org/data/target
+```
+
+Exchange `https://` with `webdav+https://` for WebDAV.
 
 
 ## Development

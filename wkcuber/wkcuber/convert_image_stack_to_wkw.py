@@ -159,7 +159,7 @@ def main(args: Namespace) -> None:
                     arg_dict.get("dtype"),
                     args.target_mag,
                     args.data_format,
-                    args.chunk_size,
+                    args.chunk_shape,
                     args.chunks_per_shard,
                     args.interpolation_mode,
                     args.start_z,

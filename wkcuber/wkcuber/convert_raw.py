@@ -18,8 +18,8 @@ from ._internal.utils import (
     add_distribution_flags,
     add_interpolation_flag,
     add_sampling_mode_flag,
-    add_voxel_size_flag,
     add_verbose_flag,
+    add_voxel_size_flag,
     get_executor_args,
     parse_path,
     setup_logging,
@@ -164,7 +164,7 @@ def convert_raw(
     input_dtype: str,
     shape: Tuple[int, int, int],
     data_format: DataFormat,
-    chunk_size: Vec3Int,
+    chunk_shape: Vec3Int,
     chunks_per_shard: Vec3Int,
     order: str = "F",
     voxel_size: Optional[Tuple[float, float, float]] = (1.0, 1.0, 1.0),
@@ -187,7 +187,10 @@ def convert_raw(
     )
     wk_layer.bounding_box = BoundingBox((0, 0, 0), shape)
     wk_mag = wk_layer.get_or_add_mag(
-        "1", chunk_size=chunk_size, chunks_per_shard=chunks_per_shard, compress=compress
+        "1",
+        chunk_shape=chunk_shape,
+        chunks_per_shard=chunks_per_shard,
+        compress=compress,
     )
 
     # Parallel chunk conversion
@@ -203,7 +206,7 @@ def convert_raw(
                     order=order,
                     flip_axes=flip_axes,
                 ),
-                wk_layer.bounding_box.chunk(chunk_size=chunk_size * chunks_per_shard),
+                wk_layer.bounding_box.chunk(chunk_shape=chunk_shape * chunks_per_shard),
             )
         )
 
@@ -227,7 +230,7 @@ def main(args: argparse.Namespace) -> None:
         args.input_dtype,
         args.shape,
         args.data_format,
-        args.chunk_size,
+        args.chunk_shape,
         args.chunks_per_shard,
         args.order,
         args.voxel_size,

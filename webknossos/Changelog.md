@@ -13,6 +13,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.12...HEAD)
 
 ### Breaking Changes
+- Renamed `chunk_size` arguments to `chunk_shape`. `chunk_size` is still available as keyword-only argument, but deprecated. [#706](https://github.com/scalableminds/webknossos-libs/pull/706)
 
 ### Added
 

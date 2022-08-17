@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from enum import Enum
 from os.path import relpath
 from pathlib import Path
-from typing import Any, Dict, Iterator, Optional, Type, cast
+from typing import Any, Dict, Iterator, Optional, Type
 
 import numcodecs
 import numpy as np
@@ -16,6 +16,7 @@ from upath import UPath
 from zarr.storage import FSStore
 
 from ..geometry import BoundingBox, Vec3Int, Vec3IntLike
+from ..utils import warn_deprecated
 
 
 def _is_power_of_two(num: int) -> bool:
@@ -24,11 +25,10 @@ def _is_power_of_two(num: int) -> bool:
 
 def _fsstore_from_path(path: Path, mode: str = "a") -> FSStore:
     storage_options = {}
-    if hasattr(path, "_kwargs"):
-        upath = cast(UPath, path)
-        storage_options = upath._kwargs.copy()
+    if isinstance(path, UPath):
+        storage_options = path._kwargs.copy()
         storage_options.pop("_url", None)
-        return FSStore(url=str(upath), mode=mode, **storage_options)
+        return FSStore(url=str(path), mode=mode, **storage_options)
 
     return FSStore(url=str(path), mode=mode, **storage_options)
 
@@ -62,13 +62,18 @@ class ArrayInfo:
     data_format: DataFormat
     num_channels: int
     voxel_type: np.dtype
-    chunk_size: Vec3Int
+    chunk_shape: Vec3Int
     chunks_per_shard: Vec3Int
     compression_mode: bool = False
 
     @property
     def shard_size(self) -> Vec3Int:
-        return self.chunk_size * self.chunks_per_shard
+        warn_deprecated("shard_size", "shard_shape")
+        return self.shard_shape
+
+    @property
+    def shard_shape(self) -> Vec3Int:
+        return self.chunk_shape * self.chunks_per_shard
 
 
 class BaseArray(ABC):
@@ -157,7 +162,7 @@ class WKWArray(BaseArray):
             num_channels=header.num_channels,
             voxel_type=header.voxel_type,
             compression_mode=header.block_type != wkw.Header.BLOCK_TYPE_RAW,
-            chunk_size=Vec3Int.full(header.block_len),
+            chunk_shape=Vec3Int.full(header.block_len),
             chunks_per_shard=Vec3Int.full(
                 header.file_len,
             ),
@@ -168,14 +173,14 @@ class WKWArray(BaseArray):
         assert array_info.data_format == cls.data_format
 
         assert (
-            array_info.chunk_size.is_uniform()
-        ), f"`chunk_size` needs to be uniform for WKW storage. Got {array_info.chunk_size}."
+            array_info.chunk_shape.is_uniform()
+        ), f"`chunk_shape` needs to be uniform for WKW storage. Got {array_info.chunk_shape}."
         assert _is_power_of_two(
-            array_info.chunk_size.x
-        ), f"`chunk_size` needs to be a power of 2 for WKW storage. Got {array_info.chunk_size.x}."
+            array_info.chunk_shape.x
+        ), f"`chunk_shape` needs to be a power of 2 for WKW storage. Got {array_info.chunk_shape.x}."
         assert (
-            1 <= array_info.chunk_size.x and array_info.chunk_size.x <= 32768
-        ), f"`chunk_size` needs to be a value between 1 and 32768 for WKW storage. Got {array_info.chunk_size.x}."
+            1 <= array_info.chunk_shape.x and array_info.chunk_shape.x <= 32768
+        ), f"`chunk_shape` needs to be a value between 1 and 32768 for WKW storage. Got {array_info.chunk_shape.x}."
 
         assert (
             array_info.chunks_per_shard.is_uniform()
@@ -194,7 +199,7 @@ class WKWArray(BaseArray):
                 wkw.Header(
                     voxel_type=array_info.voxel_type,
                     num_channels=array_info.num_channels,
-                    block_len=array_info.chunk_size.x,
+                    block_len=array_info.chunk_shape.x,
                     file_len=array_info.chunks_per_shard.x,
                     block_type=(
                         wkw.Header.BLOCK_TYPE_LZ4HC
@@ -237,12 +242,12 @@ class WKWArray(BaseArray):
             z, y, x = [_extract_num(el) for el in file_path.parts]
             return Vec3Int(x, y, z)
 
-        shard_size = self.info.shard_size
+        shard_shape = self.info.shard_shape
         for file_path in self._list_files():
             cube_index = _extract_file_index(file_path)
-            cube_offset = cube_index * shard_size
+            cube_offset = cube_index * shard_shape
 
-            yield BoundingBox(cube_offset, shard_size)
+            yield BoundingBox(cube_offset, shard_shape)
 
     def close(self) -> None:
         if self._cached_wkw_dataset is not None:
@@ -306,7 +311,7 @@ class ZarrArray(BaseArray):
             num_channels=zarray.shape[0],
             voxel_type=zarray.dtype,
             compression_mode=zarray.compressor is not None,
-            chunk_size=Vec3Int(*zarray.chunks[1:4]) or Vec3Int.full(1),
+            chunk_shape=Vec3Int(*zarray.chunks[1:4]) or Vec3Int.full(1),
             chunks_per_shard=Vec3Int.full(1),
         )
 
@@ -318,7 +323,7 @@ class ZarrArray(BaseArray):
         ), "Zarr storage doesn't support sharding yet"
         zarr.create(
             shape=(array_info.num_channels, 1, 1, 1),
-            chunks=(array_info.num_channels,) + array_info.chunk_size.to_tuple(),
+            chunks=(array_info.num_channels,) + array_info.chunk_shape.to_tuple(),
             dtype=array_info.voxel_type,
             compressor=(
                 numcodecs.Blosc(cname="zstd", clevel=3, shuffle=numcodecs.Blosc.SHUFFLE)
@@ -368,8 +373,8 @@ class ZarrArray(BaseArray):
         )
         if new_shape_tuple != zarray.shape:
             if align_with_shards:
-                shard_size = self.info.shard_size
-                new_shape = new_shape.ceildiv(shard_size) * shard_size
+                shard_shape = self.info.shard_shape
+                new_shape = new_shape.ceildiv(shard_shape) * shard_shape
                 new_shape_tuple = (zarray.shape[0],) + new_shape.to_tuple()
 
             # Check on-disk for changes to shape
@@ -407,12 +412,12 @@ class ZarrArray(BaseArray):
 
     def list_bounding_boxes(self) -> Iterator[BoundingBox]:
         zarray = self._zarray
-        chunk_size = Vec3Int(*zarray.chunks[1:4])
+        chunk_shape = Vec3Int(*zarray.chunks[1:4])
         for key in zarray.store.keys():
             if not key.startswith("."):
                 key_parts = [int(p) for p in key.split(zarray._dimension_separator)]
                 chunk_idx = Vec3Int(key_parts[1:4])
-                yield BoundingBox(topleft=chunk_idx * chunk_size, size=chunk_size)
+                yield BoundingBox(topleft=chunk_idx * chunk_shape, size=chunk_shape)
 
     def close(self) -> None:
         if self._cached_zarray is not None:

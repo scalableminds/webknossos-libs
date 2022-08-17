@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 T = TypeVar("T")
 
 
-_DOWNLOAD_CHUNK_SIZE = Vec3Int(512, 512, 512)
+_DOWNLOAD_CHUNK_SHAPE = Vec3Int(512, 512, 512)
 
 
 def download_dataset(
@@ -114,15 +114,15 @@ def download_dataset(
             mag_view = layer.get_or_add_mag(
                 mag,
                 compress=True,
-                chunk_size=Vec3Int.full(32),
-                chunks_per_shard=_DOWNLOAD_CHUNK_SIZE // 32,
+                chunk_shape=Vec3Int.full(32),
+                chunks_per_shard=_DOWNLOAD_CHUNK_SHAPE // 32,
             )
             aligned_bbox = layer.bounding_box.align_with_mag(mag, ceil=True)
-            download_chunk_size_in_mag = _DOWNLOAD_CHUNK_SIZE * mag.to_vec3_int()
+            download_chunk_shape_in_mag = _DOWNLOAD_CHUNK_SHAPE * mag.to_vec3_int()
             for chunk in track(
                 list(
                     aligned_bbox.chunk(
-                        download_chunk_size_in_mag, download_chunk_size_in_mag
+                        download_chunk_shape_in_mag, download_chunk_shape_in_mag
                     )
                 ),
                 description=f"Downloading layer={layer.name} mag={mag}",

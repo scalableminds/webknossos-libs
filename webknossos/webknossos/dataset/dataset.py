@@ -783,7 +783,7 @@ class Dataset:
         data_format: Union[str, DataFormat] = DEFAULT_DATA_FORMAT,
         ## add_mag arguments
         mag: Union[int, str, list, tuple, np.ndarray, Mag] = Mag(1),
-        chunk_size: Optional[Union[Vec3IntLike, int]] = None,
+        chunk_shape: Optional[Union[Vec3IntLike, int]] = None,
         chunks_per_shard: Optional[Union[int, Vec3IntLike]] = None,
         compress: bool = False,
         ## other arguments
@@ -796,6 +796,8 @@ class Dataset:
         timepoint: Optional[int] = None,
         batch_size: Optional[int] = None,  # defaults to shard-size z
         executor: Optional[Union[ClusterExecutor, WrappedProcessPoolExecutor]] = None,
+        *,
+        chunk_size: Optional[Union[Vec3IntLike, int]] = None,  # deprecated
     ) -> Layer:
         """
         Creates a new layer called `layer_name` with mag `mag` from `images`.
@@ -813,7 +815,7 @@ class Dataset:
         * `category`: `color` by default, may be set to "segmentation"
         * `data_format`: by default wkw files are written, may be set to "zarr"
         * `mag`: magnification to use for the written data
-        * `chunk_size`, `chunks_per_shard`, `compress`: adjust how the data is stored on disk
+        * `chunk_shape`, `chunks_per_shard`, `compress`: adjust how the data is stored on disk
         * `swap_xy`: set to `True` to interchange x and y axis before writing to disk
         * `flip_x`, `flip_y`, `flip_z`: set to `True` to flip the respective axis before writing to disk
         * `use_bioformats`: set to `True` to use the [pims bioformats adapter](https://soft-matter.github.io/pims/v0.6.1/bioformats.html), needs a JVM
@@ -828,6 +830,14 @@ class Dataset:
             raise RuntimeError(
                 "Cannot import pims, please install e.g. using 'webknossos[all]'"
             ) from e
+
+        chunk_shape, chunks_per_shard = _get_sharding_parameters(
+            chunk_shape=chunk_shape,
+            chunks_per_shard=chunks_per_shard,
+            chunk_size=chunk_size,
+            block_len=None,
+            file_len=None,
+        )
 
         pims_images = PimsImages(
             images,
@@ -853,7 +863,7 @@ class Dataset:
         )
         mag_view = layer.add_mag(
             mag=mag,
-            chunk_size=chunk_size,
+            chunk_shape=chunk_shape,
             chunks_per_shard=chunks_per_shard,
             compress=compress,
         )
@@ -864,17 +874,17 @@ class Dataset:
 
         if batch_size is None:
             if compress:
-                batch_size = mag_view.info.shard_size.z
+                batch_size = mag_view.info.shard_shape.z
             else:
-                batch_size = mag_view.info.chunk_size.z
+                batch_size = mag_view.info.chunk_shape.z
         elif compress:
             assert (
-                batch_size % mag_view.info.shard_size.z == 0
-            ), f"batch_size {batch_size} must be divisible by z shard-size {mag_view.info.shard_size.z} when creating compressed layers"
+                batch_size % mag_view.info.shard_shape.z == 0
+            ), f"batch_size {batch_size} must be divisible by z shard-size {mag_view.info.shard_shape.z} when creating compressed layers"
         else:
             assert (
-                batch_size % mag_view.info.chunk_size.z == 0
-            ), f"batch_size {batch_size} must be divisible by z chunk-size {mag_view.info.chunk_size.z}"
+                batch_size % mag_view.info.chunk_shape.z == 0
+            ), f"batch_size {batch_size} must be divisible by z chunk-size {mag_view.info.chunk_shape.z}"
 
         func_per_chunk = named_partial(
             pims_images.copy_to_view,
@@ -1102,25 +1112,27 @@ class Dataset:
         self,
         new_dataset_path: Union[str, Path],
         voxel_size: Optional[Tuple[float, float, float]] = None,
-        chunk_size: Optional[Union[Vec3IntLike, int]] = None,
+        chunk_shape: Optional[Union[Vec3IntLike, int]] = None,
         chunks_per_shard: Optional[Union[Vec3IntLike, int]] = None,
         data_format: Optional[Union[str, DataFormat]] = None,
         compress: Optional[bool] = None,
+        args: Optional[Namespace] = None,
+        *,
+        chunk_size: Optional[Union[Vec3IntLike, int]] = None,  # deprecated
         block_len: Optional[int] = None,  # deprecated
         file_len: Optional[int] = None,  # deprecated
-        args: Optional[Namespace] = None,
     ) -> "Dataset":
         """
         Creates a new dataset at `new_dataset_path` and copies the data from the current dataset to `empty_target_ds`.
-        If not specified otherwise, the `voxel_size`, `chunk_size`, `chunks_per_shard` and `compress` of the current dataset
-        are also used for the new dataset. The method also accepts the parameters `block_len` and `file_size`,
-        which were deprecated by `chunk_size` and `chunks_per_shard`.
+        If not specified otherwise, the `voxel_size`, `chunk_shape`, `chunks_per_shard` and `compress` of the current dataset
+        are also used for the new dataset.
         WKW layers can only be copied to datasets on local file systems.
         """
 
-        chunk_size, chunks_per_shard = _get_sharding_parameters(
-            chunk_size=chunk_size,
+        chunk_shape, chunks_per_shard = _get_sharding_parameters(
+            chunk_shape=chunk_shape,
             chunks_per_shard=chunks_per_shard,
+            chunk_size=chunk_size,
             block_len=block_len,
             file_len=file_len,
         )
@@ -1161,13 +1173,13 @@ class Dataset:
                 bbox = self.get_layer(layer_name).bounding_box
 
                 for mag, mag_view in layer.mags.items():
-                    chunk_size = chunk_size or mag_view.info.chunk_size
+                    chunk_shape = chunk_shape or mag_view.info.chunk_shape
                     compression_mode = compress or mag_view.info.compression_mode
                     chunks_per_shard = (
                         chunks_per_shard or mag_view.info.chunks_per_shard
                     )
                     target_mag = target_layer.add_mag(
-                        mag, chunk_size, chunks_per_shard, compression_mode
+                        mag, chunk_shape, chunks_per_shard, compression_mode
                     )
 
                     target_layer.bounding_box = bbox

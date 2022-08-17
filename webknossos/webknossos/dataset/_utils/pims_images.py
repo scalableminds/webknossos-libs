@@ -290,7 +290,7 @@ class PimsImages:
                 images = images[::-1]  # pylint: disable=unsubscriptable-object
             with mag_view.get_buffered_slice_writer(
                 absolute_offset=(0, 0, z_start * mag_view.mag.z),
-                buffer_size=mag_view.info.chunk_size.z,
+                buffer_size=mag_view.info.chunk_shape.z,
             ) as writer:
                 for image_slice in images[z_start:z_end]:
                     image_slice = np.array(image_slice)

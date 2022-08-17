@@ -49,7 +49,7 @@ class MagView(View):
         self,
         layer: "Layer",
         mag: Mag,
-        chunk_size: Vec3Int,
+        chunk_shape: Vec3Int,
         chunks_per_shard: Vec3Int,
         compression_mode: bool,
         create: bool = False,
@@ -61,7 +61,7 @@ class MagView(View):
             data_format=layer._properties.data_format,
             voxel_type=layer.dtype_per_channel,
             num_channels=layer.num_channels,
-            chunk_size=chunk_size,
+            chunk_shape=chunk_shape,
             chunks_per_shard=chunks_per_shard,
             compression_mode=compression_mode,
         )
@@ -301,7 +301,7 @@ class MagView(View):
             largest_segment_id=self.layer._get_largest_segment_id_maybe(),
         ).get_or_add_mag(
             mag=self.mag,
-            chunk_size=self.info.chunk_size,
+            chunk_shape=self.info.chunk_shape,
             chunks_per_shard=self.info.chunks_per_shard,
             compress=True,
         )
@@ -340,7 +340,7 @@ class MagView(View):
                 self,
                 self.layer,
                 self._mag,
-                self.info.chunk_size,
+                self.info.chunk_shape,
                 self.info.chunks_per_shard,
                 True,
             )

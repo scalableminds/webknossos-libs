@@ -61,7 +61,7 @@ def main() -> None:
 
     copy_of_dataset = dataset.copy_dataset(
         "testoutput/copy_of_dataset",
-        chunk_size=8,
+        chunk_shape=8,
         chunks_per_shard=8,
         compress=True,
     )
