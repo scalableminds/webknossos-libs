@@ -18,6 +18,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Added
 
 ### Changed
+- The largest_segment_id is optional now. [#786](https://github.com/scalableminds/webknossos-libs/pull/786)
 
 ### Fixed
 
