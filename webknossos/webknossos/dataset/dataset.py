@@ -636,7 +636,7 @@ class Dataset:
                     **(
                         attr.asdict(layer_properties, recurse=False)
                     ),  # use all attributes from LayerProperties
-                    largest_segment_id=kwargs["largest_segment_id"],
+                    largest_segment_id=kwargs.get("largest_segment_id"),
                 )
             )
             if "mappings" in kwargs:

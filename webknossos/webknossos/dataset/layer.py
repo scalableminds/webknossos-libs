@@ -1072,13 +1072,13 @@ class SegmentationLayer(Layer):
     _properties: SegmentationLayerProperties
 
     @property
-    def largest_segment_id(self) -> int:
+    def largest_segment_id(self) -> Optional[int]:
         return self._properties.largest_segment_id
 
     @largest_segment_id.setter
-    def largest_segment_id(self, largest_segment_id: int) -> None:
+    def largest_segment_id(self, largest_segment_id: Optional[int]) -> None:
         self.dataset._ensure_writable()
-        if type(largest_segment_id) != int:
+        if largest_segment_id is not None and type(largest_segment_id) != int:
             assert largest_segment_id == int(
                 largest_segment_id
             ), f"A non-integer value was passed for largest_segment_id ({largest_segment_id})."
