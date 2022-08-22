@@ -20,7 +20,7 @@ def main() -> None:
 
     # Print the first 10 dataset names from your organization:
     print()
-    print("First 10 datasets for own organization:")
+    print(f"First 10 datasets (of {len(own_remote_datasets)}) for own organization:")
     for dataset_name in sorted(own_remote_datasets)[:10]:
         print("*", dataset_name)
 
