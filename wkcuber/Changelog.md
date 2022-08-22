@@ -7,17 +7,25 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.12...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.13...HEAD)
+
+### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [0.10.13](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.13) - 2022-08-22
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.12...v0.10.13)
 
 ### Breaking Changes
 - Deprecated `--chunk_size` in favor of `--chunk_shape`. [#706](https://github.com/scalableminds/webknossos-libs/pull/706)
 
 ### Added
 - Added support for WebDAV storage for remote Zarr-based datasets. [#706](https://github.com/scalableminds/webknossos-libs/pull/706)
-
-### Changed
-
-### Fixed
 
 
 ## [0.10.12](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.12) - 2022-08-15

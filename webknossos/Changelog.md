@@ -10,17 +10,25 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.12...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.13...HEAD)
 
 ### Breaking Changes
-- Renamed `chunk_size` arguments to `chunk_shape`. `chunk_size` is still available as keyword-only argument, but deprecated. [#706](https://github.com/scalableminds/webknossos-libs/pull/706)
 
 ### Added
 
 ### Changed
-- The largest_segment_id is optional now. [#786](https://github.com/scalableminds/webknossos-libs/pull/786)
 
 ### Fixed
+
+
+## [0.10.13](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.13) - 2022-08-22
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.12...v0.10.13)
+
+### Breaking Changes
+- Renamed `chunk_size` arguments to `chunk_shape`. `chunk_size` is still available as keyword-only argument, but deprecated. [#706](https://github.com/scalableminds/webknossos-libs/pull/706)
+
+### Changed
+- The largest_segment_id is optional now. [#786](https://github.com/scalableminds/webknossos-libs/pull/786)
 
 
 ## [0.10.12](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.12) - 2022-08-15
