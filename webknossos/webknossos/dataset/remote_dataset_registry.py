@@ -32,14 +32,19 @@ class RemoteDatasetRegistry(LazyReadOnlyDict[str, "RemoteDataset"]):
         if isinstance(tags, str):
             tags = [tags]
 
-        response = dataset_list.sync(client=client)
+        response = dataset_list.sync(
+            is_active=True,
+            # is_unreported=False,  # this is included in is_active=True
+            organization_name=organization_id,
+            client=client,
+        )
         assert response is not None
 
         ds_names = []
 
         for ds_info in response:
             tags_match = tags is None or any(tag in tags for tag in ds_info.tags)
-            if ds_info.owning_organization == organization_id and tags_match:
+            if tags_match:
                 ds_names.append(ds_info.name)
 
         super().__init__(
