@@ -5,7 +5,7 @@ on:
     branches: [ "master", "codeql" ]
   pull_request:
     # The branches below must be a subset of the branches above
-    branches: [ "master" ]
+    branches: [ "master", "codeql" ]
   schedule:
     - cron: '27 19 * * *'
 
