@@ -104,7 +104,7 @@ class SlurmExecutor(ClusterExecutor):
             )
             return int(max_array_size_env)
 
-        max_array_size = 2 ** 32
+        max_array_size = 2**32
         # See https://unix.stackexchange.com/a/364615
         stdout, stderr, exit_code = call(
             "scontrol show config | sed -n '/^MaxArraySize/s/.*= *//p'"
@@ -140,7 +140,7 @@ class SlurmExecutor(ClusterExecutor):
             )
             return int(max_submit_jobs_env)
 
-        max_submit_jobs = 2 ** 32
+        max_submit_jobs = 2**32
         # Check whether there is a limit per user
         stdout_user, stderr_user, _ = call(
             "sacctmgr list -n user $USER withassoc format=maxsubmitjobsperuser"
@@ -232,7 +232,9 @@ class SlurmExecutor(ClusterExecutor):
         max_array_size = self.get_max_array_size()
         max_submit_jobs = self.get_max_submit_jobs()
         max_running_size = self.get_max_running_size()
-        slurm_max_running_size_str = '%{}'.format(max_running_size) if max_running_size > 0 else ''
+        slurm_max_running_size_str = (
+            "%{}".format(max_running_size) if max_running_size > 0 else ""
+        )
         # Only ever submit at most max_submit_jobs and max_array_size jobs at once (but at least one).
         batch_size = max(min(max_array_size, max_submit_jobs), 1)
 
@@ -247,7 +249,9 @@ class SlurmExecutor(ClusterExecutor):
 
             job_array_line = ""
             if job_count is not None:
-                job_array_line = "#SBATCH --array=0-{}{}".format(array_index_end, slurm_max_running_size_str)
+                job_array_line = "#SBATCH --array=0-{}{}".format(
+                    array_index_end, slurm_max_running_size_str
+                )
             script_lines = (
                 [
                     "#!/bin/sh",
