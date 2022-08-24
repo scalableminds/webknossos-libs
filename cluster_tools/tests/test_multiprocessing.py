@@ -60,7 +60,7 @@ def accept_high_mem(data):
     reason="This test does not pass on the CI. Probably because the machine does not have enough RAM."
 )
 def test_high_ram_usage():
-    very_long_string = " " * 10**6 * 2500
+    very_long_string = " " * 10 ** 6 * 2500
 
     os.environ["MULTIPROCESSING_VIA_IO"] = "True"
 

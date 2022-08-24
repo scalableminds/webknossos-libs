@@ -104,7 +104,7 @@ class SlurmExecutor(ClusterExecutor):
             )
             return int(max_array_size_env)
 
-        max_array_size = 2**32
+        max_array_size = 2 ** 32
         # See https://unix.stackexchange.com/a/364615
         stdout, stderr, exit_code = call(
             "scontrol show config | sed -n '/^MaxArraySize/s/.*= *//p'"
@@ -140,7 +140,7 @@ class SlurmExecutor(ClusterExecutor):
             )
             return int(max_submit_jobs_env)
 
-        max_submit_jobs = 2**32
+        max_submit_jobs = 2 ** 32
         # Check whether there is a limit per user
         stdout_user, stderr_user, _ = call(
             "sacctmgr list -n user $USER withassoc format=maxsubmitjobsperuser"

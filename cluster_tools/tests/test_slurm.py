@@ -88,7 +88,7 @@ def test_slurm_max_submit_user():
                 futures = executor.map_to_futures(square, range(10))
 
                 result = [fut.result() for fut in futures]
-                assert result == [i**2 for i in range(10)]
+                assert result == [i ** 2 for i in range(10)]
 
                 job_ids = {fut.cluster_jobid for fut in futures}
                 # The 10 work packages should have been scheduled as 2 separate jobs.
@@ -118,7 +118,7 @@ def test_slurm_max_submit_user_env():
             futures = executor.map_to_futures(square, range(10))
 
             result = [fut.result() for fut in futures]
-            assert result == [i**2 for i in range(10)]
+            assert result == [i ** 2 for i in range(10)]
 
             job_ids = {fut.cluster_jobid for fut in futures}
             # The 10 work packages should have been scheduled as 3 separate jobs.
