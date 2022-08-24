@@ -120,6 +120,18 @@ class SlurmExecutor(ClusterExecutor):
 
     @staticmethod
     @cache_in_production
+    def get_max_running_size():
+        max_running_size_env = os.environ.get("SLURM_MAX_RUNNING_SIZE", None)
+        if max_running_size_env is not None:
+            logging.debug(
+                f"SLURM_MAX_RUNNING_SIZE env variable specified which is {max_running_size_env}."
+            )
+            return int(max_running_size_env)
+
+        return 0
+
+    @staticmethod
+    @cache_in_production
     def get_max_submit_jobs():
         max_submit_jobs_env = os.environ.get("SLURM_MAX_SUBMIT_JOBS", None)
         if max_submit_jobs_env is not None:
@@ -219,6 +231,10 @@ class SlurmExecutor(ClusterExecutor):
 
         max_array_size = self.get_max_array_size()
         max_submit_jobs = self.get_max_submit_jobs()
+        max_running_size = self.get_max_running_size()
+        slurm_max_running_size_str = (
+            "%{}".format(max_running_size) if max_running_size > 0 else ""
+        )
         # Only ever submit at most max_submit_jobs and max_array_size jobs at once (but at least one).
         batch_size = max(min(max_array_size, max_submit_jobs), 1)
 
@@ -233,7 +249,9 @@ class SlurmExecutor(ClusterExecutor):
 
             job_array_line = ""
             if job_count is not None:
-                job_array_line = "#SBATCH --array=0-{}".format(array_index_end)
+                job_array_line = "#SBATCH --array=0-{}{}".format(
+                    array_index_end, slurm_max_running_size_str
+                )
             script_lines = (
                 [
                     "#!/bin/sh",
