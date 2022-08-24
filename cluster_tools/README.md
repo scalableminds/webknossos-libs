@@ -26,7 +26,7 @@ if __name__ == '__main__':
 The `cluster_tools` automatically determine the slurm limit for maximum array job size and split up larger job batches into multiple smaller batches.
 Also, the slurm limit for the maximum number of jobs which are allowed to be submitted by a user at the same time is honored by looking up the number of currently submitted jobs and only submitting new batches if they fit within the limit.
 
-If you would like to configure these limits independently, you can do so by setting the `SLURM_MAX_ARRAY_SIZE` and `SLURM_MAX_SUBMIT_JOBS` environment variables.
+If you would like to configure these limits independently, you can do so by setting the `SLURM_MAX_ARRAY_SIZE` and `SLURM_MAX_SUBMIT_JOBS` environment variables. You can also limit the maximum number of simultaneously running tasks within the slurm array job(s) by using the `SLURM_MAX_RUNNING_SIZE` environment variable.
 
 ### Kubernetes
 
