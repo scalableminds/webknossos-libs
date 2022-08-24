@@ -9,8 +9,8 @@ from webknossos.dataset.properties import LayerViewConfiguration
 from ._internal.image_readers import image_reader
 from ._internal.utils import (
     add_data_format_flags,
-    add_voxel_size_flag,
     add_verbose_flag,
+    add_voxel_size_flag,
     find_files,
     get_channel_and_sample_iters_for_wk_compatibility,
     get_executor_args,
@@ -431,7 +431,7 @@ class ImageStackConverter(Converter):
                         arg_dict.get("dtype"),
                         args.target_mag,
                         args.data_format,
-                        args.chunk_size,
+                        args.chunk_shape,
                         args.chunks_per_shard,
                         args.interpolation_mode,
                         args.start_z,

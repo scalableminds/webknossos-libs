@@ -18,12 +18,12 @@ from webknossos import (
     Vec3Int,
     View,
 )
-from webknossos.dataset.defaults import DEFAULT_CHUNK_SIZE
 from webknossos.dataset._downsampling_utils import (
     InterpolationModes,
     downsample_unpadded_data,
     parse_interpolation_mode,
 )
+from webknossos.dataset.defaults import DEFAULT_CHUNK_SHAPE
 from webknossos.utils import time_start, time_stop
 
 from ._internal.image_readers import image_reader
@@ -32,8 +32,8 @@ from ._internal.utils import (
     add_data_format_flags,
     add_distribution_flags,
     add_interpolation_flag,
-    add_voxel_size_flag,
     add_verbose_flag,
+    add_voxel_size_flag,
     find_files,
     get_chunks,
     get_executor_for_args,
@@ -293,7 +293,7 @@ def cubing(
     dtype: Optional[str],
     target_mag_str: str,
     data_format: DataFormat,
-    chunk_size: Vec3Int,
+    chunk_shape: Vec3Int,
     chunks_per_shard: Vec3Int,
     interpolation_mode_str: str,
     start_z: int,
@@ -350,7 +350,7 @@ def cubing(
         dtype = image_reader.read_dtype(source_files[0])
 
     if batch_size is None:
-        batch_size = DEFAULT_CHUNK_SIZE.z
+        batch_size = DEFAULT_CHUNK_SHAPE.z
 
     target_mag = Mag(target_mag_str)
 
@@ -383,7 +383,7 @@ def cubing(
     target_mag_view = target_layer.get_or_add_mag(
         target_mag,
         chunks_per_shard=chunks_per_shard,
-        chunk_size=chunk_size,
+        chunk_shape=chunk_shape,
     )
 
     interpolation_mode = parse_interpolation_mode(
@@ -399,9 +399,9 @@ def cubing(
     with get_executor_for_args(executor_args) as executor:
         job_args = []
         # We iterate over all z sections
-        for z in range(skip_first_z_slices, num_z, DEFAULT_CHUNK_SIZE.z):
+        for z in range(skip_first_z_slices, num_z, DEFAULT_CHUNK_SHAPE.z):
             # The z is used to access the source files. However, when writing the data, the `start_z` has to be considered.
-            max_z = min(num_z, z + DEFAULT_CHUNK_SIZE.z)
+            max_z = min(num_z, z + DEFAULT_CHUNK_SHAPE.z)
             # Prepare source files array
             if len(source_files) > 1:
                 source_files_array = source_files[z:max_z]
@@ -458,7 +458,7 @@ if __name__ == "__main__":
         arg_dict.get("dtype"),
         args.target_mag,
         args.data_format,
-        args.chunk_size,
+        args.chunk_shape,
         args.chunks_per_shard,
         args.interpolation_mode,
         args.start_z,

@@ -147,7 +147,7 @@ class LayerProperties:
 
 @attr.define
 class SegmentationLayerProperties(LayerProperties):
-    largest_segment_id: int = -1
+    largest_segment_id: Optional[int] = None
     mappings: List[str] = []
 
 

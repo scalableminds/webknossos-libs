@@ -116,12 +116,12 @@ def chunk_job(args: Tuple[View, int]) -> None:
 
 
 def default_chunk_config(
-    data_format: DataFormat, chunk_size: int = 32
+    data_format: DataFormat, chunk_shape: int = 32
 ) -> Tuple[Vec3Int, Vec3Int]:
     if data_format == DataFormat.Zarr:
-        return (Vec3Int.full(chunk_size * 8), Vec3Int.full(1))
+        return (Vec3Int.full(chunk_shape * 8), Vec3Int.full(1))
     else:
-        return (Vec3Int.full(chunk_size), Vec3Int.full(8))
+        return (Vec3Int.full(chunk_shape), Vec3Int.full(8))
 
 
 def advanced_chunk_job(args: Tuple[View, int], dtype: type) -> None:
@@ -133,24 +133,24 @@ def advanced_chunk_job(args: Tuple[View, int], dtype: type) -> None:
     view.write(data)
 
 
-def for_each_chunking_with_wrong_chunk_size(view: View) -> None:
+def for_each_chunking_with_wrong_chunk_shape(view: View) -> None:
     with get_executor_for_args(None) as executor:
         with pytest.raises(AssertionError):
             view.for_each_chunk(
                 chunk_job,
-                chunk_size=(0, 64, 64),
+                chunk_shape=(0, 64, 64),
                 executor=executor,
             )
         with pytest.raises(AssertionError):
             view.for_each_chunk(
                 chunk_job,
-                chunk_size=(16, 64, 64),
+                chunk_shape=(16, 64, 64),
                 executor=executor,
             )
         with pytest.raises(AssertionError):
             view.for_each_chunk(
                 chunk_job,
-                chunk_size=(100, 64, 64),
+                chunk_shape=(100, 64, 64),
                 executor=executor,
             )
 
@@ -305,7 +305,7 @@ def test_create_default_mag(data_format: DataFormat) -> None:
     mag_view = layer.add_mag("1")
 
     assert layer.data_format == data_format
-    assert mag_view.info.chunk_size == Vec3Int.full(32)
+    assert mag_view.info.chunk_shape == Vec3Int.full(32)
     if data_format == DataFormat.WKW:
         assert mag_view.info.chunks_per_shard == Vec3Int.full(32)
     else:
@@ -320,7 +320,7 @@ def test_create_dataset_with_explicit_header_fields() -> None:
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
     ds.add_layer("color", COLOR_CATEGORY, dtype_per_layer="uint48", num_channels=3)
 
-    ds.get_layer("color").add_mag("1", chunk_size=64, chunks_per_shard=64)
+    ds.get_layer("color").add_mag("1", chunk_shape=64, chunks_per_shard=64)
     ds.get_layer("color").add_mag("2-2-1")
 
     assert (ds_path / "color" / "1" / "header.wkw").exists()
@@ -331,10 +331,10 @@ def test_create_dataset_with_explicit_header_fields() -> None:
 
     assert ds.get_layer("color").dtype_per_channel == np.dtype("uint16")
     assert ds.get_layer("color")._properties.element_class == "uint48"
-    assert ds.get_layer("color").get_mag(1).info.chunk_size == Vec3Int.full(64)
+    assert ds.get_layer("color").get_mag(1).info.chunk_shape == Vec3Int.full(64)
     assert ds.get_layer("color").get_mag(1).info.chunks_per_shard == Vec3Int.full(64)
     assert ds.get_layer("color").get_mag(1)._properties.cube_length == 64 * 64
-    assert ds.get_layer("color").get_mag("2-2-1").info.chunk_size == Vec3Int.full(
+    assert ds.get_layer("color").get_mag("2-2-1").info.chunk_shape == Vec3Int.full(
         32
     )  # defaults are used
     assert ds.get_layer("color").get_mag("2-2-1").info.chunks_per_shard == Vec3Int.full(
@@ -696,12 +696,12 @@ def test_get_or_add_mag(data_format: DataFormat, output_path: Path) -> None:
 
     assert Mag(1) not in layer.mags.keys()
 
-    chunk_size, chunks_per_shard = default_chunk_config(data_format, 32)
+    chunk_shape, chunks_per_shard = default_chunk_config(data_format, 32)
 
     # The mag did not exist before
     mag = layer.get_or_add_mag(
         "1",
-        chunk_size=chunk_size,
+        chunk_shape=chunk_shape,
         chunks_per_shard=chunks_per_shard,
         compress=False,
     )
@@ -712,7 +712,7 @@ def test_get_or_add_mag(data_format: DataFormat, output_path: Path) -> None:
     # The mag did exist before
     layer.get_or_add_mag(
         "1",
-        chunk_size=chunk_size,
+        chunk_shape=chunk_shape,
         chunks_per_shard=chunks_per_shard,
         compress=False,
     )
@@ -721,10 +721,10 @@ def test_get_or_add_mag(data_format: DataFormat, output_path: Path) -> None:
     assert mag.info.data_format == data_format
 
     with pytest.raises(AssertionError):
-        # The mag "1" did exist before but with another 'chunk_size' (this would work the same for 'chunks_per_shard' and 'compress')
+        # The mag "1" did exist before but with another 'chunk_shape' (this would work the same for 'chunks_per_shard' and 'compress')
         layer.get_or_add_mag(
             "1",
-            chunk_size=Vec3Int.full(64),
+            chunk_shape=Vec3Int.full(64),
             chunks_per_shard=chunks_per_shard,
             compress=False,
         )
@@ -836,13 +836,13 @@ def test_properties_with_segmentation() -> None:
 def test_chunking_wk(data_format: DataFormat, output_path: Path) -> None:
     ds_path = prepare_dataset_path(data_format, output_path)
     ds = Dataset(ds_path, voxel_size=(2, 2, 1))
-    chunk_size, chunks_per_shard = default_chunk_config(data_format, 8)
+    chunk_shape, chunks_per_shard = default_chunk_config(data_format, 8)
 
     layer = ds.add_layer("color", COLOR_CATEGORY, data_format=data_format)
     mag = layer.add_mag(
         "1",
         chunks_per_shard=chunks_per_shard,
-        chunk_size=chunk_size,
+        chunk_shape=chunk_shape,
     )
 
     original_data = (np.random.rand(50, 100, 150) * 205).astype(np.uint8)
@@ -852,7 +852,7 @@ def test_chunking_wk(data_format: DataFormat, output_path: Path) -> None:
     with get_executor_for_args(None) as executor:
         mag.for_each_chunk(
             chunk_job,
-            chunk_size=(64, 64, 64),
+            chunk_shape=(64, 64, 64),
             executor=executor,
         )
     assert np.array_equal(original_data + 50, mag.get_view().read()[0])
@@ -863,7 +863,7 @@ def test_chunking_wk(data_format: DataFormat, output_path: Path) -> None:
     # Test without executor
     mag.for_each_chunk(
         chunk_job,
-        chunk_size=(64, 64, 64),
+        chunk_shape=(64, 64, 64),
     )
     assert np.array_equal(original_data + 50, mag.get_view().read()[0])
 
@@ -882,7 +882,7 @@ def test_chunking_wkw_advanced() -> None:
         num_channels=3,
     ).add_mag(
         "1",
-        chunk_size=8,
+        chunk_shape=8,
         chunks_per_shard=8,
     )
     mag.write(data=(np.random.rand(3, 256, 256, 256) * 255).astype(np.uint8))
@@ -893,14 +893,14 @@ def test_chunking_wkw_advanced() -> None:
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
-def test_chunking_wkw_wrong_chunk_size(
+def test_chunking_wkw_wrong_chunk_shape(
     data_format: DataFormat, output_path: Path
 ) -> None:
     ds_path = prepare_dataset_path(
-        data_format, output_path, "chunking_with_wrong_chunk_size"
+        data_format, output_path, "chunking_with_wrong_chunk_shape"
     )
     ds = Dataset(ds_path, voxel_size=(1, 1, 2))
-    chunk_size, chunks_per_shard = default_chunk_config(data_format, 8)
+    chunk_shape, chunks_per_shard = default_chunk_config(data_format, 8)
     mag = ds.add_layer(
         "color",
         category=COLOR_CATEGORY,
@@ -909,13 +909,13 @@ def test_chunking_wkw_wrong_chunk_size(
         data_format=data_format,
     ).add_mag(
         "1",
-        chunk_size=chunk_size,
+        chunk_shape=chunk_shape,
         chunks_per_shard=chunks_per_shard,
     )
     mag.write(data=(np.random.rand(3, 256, 256, 256) * 255).astype(np.uint8))
     view = mag.get_view()
 
-    for_each_chunking_with_wrong_chunk_size(view)
+    for_each_chunking_with_wrong_chunk_shape(view)
 
     assure_exported_properties(ds)
 
@@ -1201,7 +1201,7 @@ def test_writing_subset_of_compressed_data_multi_channel(
     data_format: DataFormat, output_path: Path
 ) -> None:
     ds_path = prepare_dataset_path(data_format, output_path, "compressed_data")
-    chunk_size, chunks_per_shard = default_chunk_config(data_format, 8)
+    chunk_shape, chunks_per_shard = default_chunk_config(data_format, 8)
 
     # create uncompressed dataset
     write_data1 = (np.random.rand(3, 100, 120, 140) * 255).astype(np.uint8)
@@ -1209,7 +1209,10 @@ def test_writing_subset_of_compressed_data_multi_channel(
         Dataset(ds_path, voxel_size=(1, 1, 1))
         .add_layer("color", COLOR_CATEGORY, num_channels=3, data_format=data_format)
         .add_mag(
-            "1", chunk_size=chunk_size, chunks_per_shard=chunks_per_shard, compress=True
+            "1",
+            chunk_shape=chunk_shape,
+            chunks_per_shard=chunks_per_shard,
+            compress=True,
         )
     )
     mag_view.write(write_data1)
@@ -1243,7 +1246,7 @@ def test_writing_subset_of_compressed_data_single_channel(
     data_format: DataFormat, output_path: Path
 ) -> None:
     ds_path = prepare_dataset_path(data_format, output_path, "compressed_data")
-    chunk_size, chunks_per_shard = default_chunk_config(data_format, 8)
+    chunk_shape, chunks_per_shard = default_chunk_config(data_format, 8)
 
     # create uncompressed dataset
     write_data1 = (np.random.rand(100, 120, 140) * 255).astype(np.uint8)
@@ -1251,7 +1254,10 @@ def test_writing_subset_of_compressed_data_single_channel(
         Dataset(ds_path, voxel_size=(1, 1, 1))
         .add_layer("color", COLOR_CATEGORY, data_format=data_format)
         .add_mag(
-            "1", chunk_size=chunk_size, chunks_per_shard=chunks_per_shard, compress=True
+            "1",
+            chunk_shape=chunk_shape,
+            chunks_per_shard=chunks_per_shard,
+            compress=True,
         )
     )
     mag_view.write(write_data1)
@@ -1285,14 +1291,17 @@ def test_writing_subset_of_compressed_data(
     data_format: DataFormat, output_path: Path
 ) -> None:
     ds_path = prepare_dataset_path(data_format, output_path, "compressed_data")
-    chunk_size, chunks_per_shard = default_chunk_config(data_format, 8)
+    chunk_shape, chunks_per_shard = default_chunk_config(data_format, 8)
 
     # create uncompressed dataset
     mag_view = (
         Dataset(ds_path, voxel_size=(1, 1, 1))
         .add_layer("color", COLOR_CATEGORY, data_format=data_format)
         .add_mag(
-            "2", chunk_size=chunk_size, chunks_per_shard=chunks_per_shard, compress=True
+            "2",
+            chunk_shape=chunk_shape,
+            chunks_per_shard=chunks_per_shard,
+            compress=True,
         )
     )
     mag_view.write((np.random.rand(120, 140, 160) * 255).astype(np.uint8))
@@ -1347,7 +1356,7 @@ def test_writing_subset_of_chunked_compressed_data(
     data_format: DataFormat, output_path: Path
 ) -> None:
     ds_path = prepare_dataset_path(data_format, output_path, "compressed_data")
-    chunk_size, chunks_per_shard = default_chunk_config(data_format, 8)
+    chunk_shape, chunks_per_shard = default_chunk_config(data_format, 8)
 
     # create uncompressed dataset
     write_data1 = (np.random.rand(100, 200, 300) * 255).astype(np.uint8)
@@ -1355,7 +1364,10 @@ def test_writing_subset_of_chunked_compressed_data(
         Dataset(ds_path, voxel_size=(1, 1, 1))
         .add_layer("color", COLOR_CATEGORY, data_format=data_format)
         .add_mag(
-            "1", chunk_size=chunk_size, chunks_per_shard=chunks_per_shard, compress=True
+            "1",
+            chunk_shape=chunk_shape,
+            chunks_per_shard=chunks_per_shard,
+            compress=True,
         )
     )
     mag_view.write(write_data1)
@@ -1689,26 +1701,26 @@ def test_dataset_conversion_wkw_only() -> None:
         largest_segment_id=1000000000,
     )
     seg_layer.add_mag(
-        "1", chunk_size=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(16)
+        "1", chunk_shape=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(16)
     ).write(
         absolute_offset=(10, 20, 30),
         data=(np.random.rand(128, 128, 256) * 255).astype(np.uint8),
     )
     seg_layer.add_mag(
-        "2", chunk_size=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(16)
+        "2", chunk_shape=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(16)
     ).write(
         absolute_offset=(10, 20, 30),
         data=(np.random.rand(64, 64, 128) * 255).astype(np.uint8),
     )
     wk_color_layer = origin_ds.add_layer("layer2", COLOR_CATEGORY, num_channels=3)
     wk_color_layer.add_mag(
-        "1", chunk_size=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(16)
+        "1", chunk_shape=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(16)
     ).write(
         absolute_offset=(10, 20, 30),
         data=(np.random.rand(3, 128, 128, 256) * 255).astype(np.uint8),
     )
     wk_color_layer.add_mag(
-        "2", chunk_size=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(16)
+        "2", chunk_shape=Vec3Int.full(8), chunks_per_shard=Vec3Int.full(16)
     ).write(
         absolute_offset=(10, 20, 30),
         data=(np.random.rand(3, 64, 64, 128) * 255).astype(np.uint8),
@@ -1727,7 +1739,7 @@ def test_dataset_conversion_wkw_only() -> None:
             assert origin_info.voxel_type == converted_info.voxel_type
             assert origin_info.num_channels == converted_info.num_channels
             assert origin_info.compression_mode == converted_info.compression_mode
-            assert origin_info.chunk_size == converted_info.chunk_size
+            assert origin_info.chunk_shape == converted_info.chunk_shape
             assert origin_info.data_format == converted_info.data_format
             assert np.array_equal(
                 origin_ds.layers[layer_name].mags[mag].read(),
@@ -1793,7 +1805,7 @@ def test_for_zipped_chunks(data_format: DataFormat) -> None:
         )
         .get_or_add_mag(
             "1",
-            chunk_size=Vec3Int.full(8),
+            chunk_shape=Vec3Int.full(8),
             chunks_per_shard=(4 if data_format == DataFormat.WKW else 1),
         )
     )
@@ -1808,8 +1820,8 @@ def test_for_zipped_chunks(data_format: DataFormat) -> None:
         source_view.for_zipped_chunks(
             func,
             target_view=target_view,
-            source_chunk_size=(64, 64, 64),  # multiple of (wkw_file_len,) * 3
-            target_chunk_size=(64, 64, 64),  # multiple of (wkw_file_len,) * 3
+            source_chunk_shape=(64, 64, 64),  # multiple of (wkw_file_len,) * 3
+            target_chunk_shape=(64, 64, 64),  # multiple of (wkw_file_len,) * 3
             executor=executor,
         )
 
@@ -1821,18 +1833,18 @@ def test_for_zipped_chunks(data_format: DataFormat) -> None:
     assure_exported_properties(ds)
 
 
-def _func_invalid_target_chunk_size_wk(args: Tuple[View, View, int]) -> None:
+def _func_invalid_target_chunk_shape_wk(args: Tuple[View, View, int]) -> None:
     (_s, _t, _i) = args
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
-def test_for_zipped_chunks_invalid_target_chunk_size_wk(
+def test_for_zipped_chunks_invalid_target_chunk_shape_wk(
     data_format: DataFormat, output_path: Path
 ) -> None:
     ds_path = prepare_dataset_path(
         data_format, output_path, "zipped_chunking_source_invalid"
     )
-    chunk_size, chunks_per_shard = default_chunk_config(data_format, 8)
+    chunk_shape, chunks_per_shard = default_chunk_config(data_format, 8)
     test_cases_wk = [
         (10, 20, 30),
         (64, 64, 100),
@@ -1843,12 +1855,12 @@ def test_for_zipped_chunks_invalid_target_chunk_size_wk(
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
     layer1 = ds.get_or_add_layer("color1", COLOR_CATEGORY, data_format=data_format)
     source_mag_view = layer1.get_or_add_mag(
-        1, chunk_size=chunk_size, chunks_per_shard=chunks_per_shard
+        1, chunk_shape=chunk_shape, chunks_per_shard=chunks_per_shard
     )
 
     layer2 = ds.get_or_add_layer("color2", COLOR_CATEGORY, data_format=data_format)
     target_mag_view = layer2.get_or_add_mag(
-        1, chunk_size=chunk_size, chunks_per_shard=chunks_per_shard
+        1, chunk_shape=chunk_shape, chunks_per_shard=chunks_per_shard
     )
 
     source_view = source_mag_view.get_view(
@@ -1861,10 +1873,10 @@ def test_for_zipped_chunks_invalid_target_chunk_size_wk(
         for test_case in test_cases_wk:
             with pytest.raises(AssertionError):
                 source_view.for_zipped_chunks(
-                    func_per_chunk=_func_invalid_target_chunk_size_wk,
+                    func_per_chunk=_func_invalid_target_chunk_shape_wk,
                     target_view=target_view,
-                    source_chunk_size=test_case,
-                    target_chunk_size=test_case,
+                    source_chunk_shape=test_case,
+                    target_chunk_shape=test_case,
                     executor=executor,
                 )
 
@@ -1898,9 +1910,9 @@ def test_read_only_view(data_format: DataFormat, output_path: Path) -> None:
 def test_bounding_box_on_disk(data_format: DataFormat, output_path: Path) -> None:
     ds_path = prepare_dataset_path(data_format, output_path)
     ds = Dataset(ds_path, voxel_size=(2, 2, 1))
-    chunk_size, chunks_per_shard = default_chunk_config(data_format, 8)
+    chunk_shape, chunks_per_shard = default_chunk_config(data_format, 8)
     mag = ds.add_layer("color", category="color", data_format=data_format).add_mag(
-        "2-2-1", chunk_size=chunk_size, chunks_per_shard=chunks_per_shard
+        "2-2-1", chunk_shape=chunk_shape, chunks_per_shard=chunks_per_shard
     )  # cube_size = 8*8 = 64
 
     write_positions = [

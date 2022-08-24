@@ -112,6 +112,7 @@ def test_repo_images(
         assert l.num_channels == num_channels
         assert l.bounding_box == wk.BoundingBox(topleft=(0, 0, 0), size=size)
         if isinstance(l, wk.SegmentationLayer):
+            assert l.largest_segment_id is not None
             assert l.largest_segment_id > 0
     return ds
 

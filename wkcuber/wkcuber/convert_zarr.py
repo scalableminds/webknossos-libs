@@ -24,8 +24,8 @@ from ._internal.utils import (
     add_distribution_flags,
     add_interpolation_flag,
     add_sampling_mode_flag,
-    add_voxel_size_flag,
     add_verbose_flag,
+    add_voxel_size_flag,
     get_executor_args,
     parse_path,
     setup_logging,
@@ -144,7 +144,7 @@ def convert_zarr(
     target_path: Path,
     layer_name: str,
     data_format: DataFormat,
-    chunk_size: Vec3Int,
+    chunk_shape: Vec3Int,
     chunks_per_shard: Vec3Int,
     is_segmentation_layer: bool = False,
     voxel_size: Optional[Tuple[float, float, float]] = (1.0, 1.0, 1.0),
@@ -171,7 +171,10 @@ def convert_zarr(
     )
     wk_layer.bounding_box = BoundingBox((0, 0, 0), shape)
     wk_mag = wk_layer.get_or_add_mag(
-        "1", chunk_size=chunk_size, chunks_per_shard=chunks_per_shard, compress=compress
+        "1",
+        chunk_shape=chunk_shape,
+        chunks_per_shard=chunks_per_shard,
+        compress=compress,
     )
 
     # Parallel chunk conversion
@@ -184,7 +187,7 @@ def convert_zarr(
                     target_mag_view=wk_mag,
                     flip_axes=flip_axes,
                 ),
-                wk_layer.bounding_box.chunk(chunk_size=chunk_size * chunks_per_shard),
+                wk_layer.bounding_box.chunk(chunk_shape=chunk_shape * chunks_per_shard),
             )
         )
 
@@ -212,7 +215,7 @@ def main(args: argparse.Namespace) -> None:
         args.target_path,
         layer_name=args.layer_name,
         data_format=args.data_format,
-        chunk_size=args.chunk_size,
+        chunk_shape=args.chunk_shape,
         chunks_per_shard=args.chunks_per_shard,
         is_segmentation_layer=args.is_segmentation_layer,
         voxel_size=args.voxel_size,

@@ -13,8 +13,8 @@ from ._internal.utils import (
     KnossosDatasetInfo,
     add_data_format_flags,
     add_distribution_flags,
-    add_voxel_size_flag,
     add_verbose_flag,
+    add_voxel_size_flag,
     get_executor_for_args,
     open_knossos,
     parse_path,
@@ -98,7 +98,7 @@ def convert_knossos(
     dtype: str,
     voxel_size: Tuple[float, float, float],
     data_format: DataFormat,
-    chunk_size: Vec3Int,
+    chunk_shape: Vec3Int,
     chunks_per_shard: Vec3Int,
     mag: int = 1,
     args: Optional[Namespace] = None,
@@ -128,13 +128,13 @@ def convert_knossos(
         )
 
     target_mag = target_layer.get_or_add_mag(
-        mag, chunk_size=chunk_size, chunks_per_shard=chunks_per_shard
+        mag, chunk_shape=chunk_shape, chunks_per_shard=chunks_per_shard
     )
 
     with get_executor_for_args(args) as executor:
         target_mag.for_each_chunk(
             partial(convert_cube_job, source_knossos_info),
-            chunk_size=chunk_size * chunks_per_shard,
+            chunk_shape=chunk_shape * chunks_per_shard,
             executor=executor,
             progress_desc=f"Converting knossos layer {layer_name}",
         )
@@ -148,7 +148,7 @@ def main(args: Namespace) -> None:
         args.dtype,
         args.voxel_size,
         args.data_format,
-        args.chunk_size,
+        args.chunk_shape,
         args.chunks_per_shard,
         args.mag,
         args,
