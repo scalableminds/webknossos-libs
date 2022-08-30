@@ -17,6 +17,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Added
 
 ### Changed
+* `dataset.add_copy_layer()` and `layer.add_copy_mag()` now read and write the image data, not copying files. This allows to stream data from remote datasets. To continue using the filesystem copy mechanism, please use `dataset.add_fs_copy_layer()` or `layer.add_fs_copy_mag()`. [#790](https://github.com/scalableminds/webknossos-libs/pull/790)
 
 ### Fixed
 

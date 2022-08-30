@@ -72,7 +72,7 @@ from .properties import (
     _properties_floating_type_to_python_type,
     dataset_converter,
 )
-from .view import _BLOCK_ALIGNMENT_WARNING, _copy_job
+from .view import _BLOCK_ALIGNMENT_WARNING
 
 logger = logging.getLogger(__name__)
 
@@ -1205,6 +1205,12 @@ class Dataset:
         This method becomes useful when exposing a dataset to webknossos.
         Only datasets on local filesystems can be shallow copied.
         """
+        assert is_fs_path(
+            self.path
+        ), f"Cannot create symlinks to remote dataset {self.path}"
+        assert is_fs_path(
+            new_dataset_path
+        ), f"Cannot create symlink in remote path {new_dataset_path}"
         new_dataset = Dataset(
             new_dataset_path,
             voxel_size=self.voxel_size,
