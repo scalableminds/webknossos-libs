@@ -1,6 +1,7 @@
 import logging
 import warnings
 from argparse import Namespace
+from os import PathLike
 from pathlib import Path
 from typing import TYPE_CHECKING, Iterator, Optional, Tuple, Union
 from uuid import uuid4
@@ -355,3 +356,18 @@ class MagView(View):
 
     def __repr__(self) -> str:
         return f"MagView(name={repr(self.name)}, bounding_box={self.bounding_box})"
+
+    @classmethod
+    def _ensure_mag_view(cls, mag_view: Union[str, PathLike, "MagView"]) -> "MagView":
+        if isinstance(mag_view, MagView):
+            return mag_view
+        else:
+            # local import to prevent circular dependency
+            from .dataset import Dataset
+
+            mag_view_path = UPath(mag_view)
+            return (
+                Dataset.open(mag_view_path.parent.parent)
+                .get_layer(mag_view_path.parent.name)
+                .get_mag(mag_view_path.name)
+            )

@@ -1218,7 +1218,7 @@ def test_add_symlink_mag(tmp_path: Path) -> None:
     assure_exported_properties(original_ds)
 
 
-def test_add_copy_mag(tmp_path: Path) -> None:
+def test_add_fs_copy_mag(tmp_path: Path) -> None:
     original_ds = Dataset(tmp_path / "original", scale=(1, 1, 1))
     original_layer = original_ds.add_layer(
         "color", COLOR_CATEGORY, dtype_per_channel="uint8"
@@ -1239,7 +1239,7 @@ def test_add_copy_mag(tmp_path: Path) -> None:
     assert tuple(layer.bounding_box.topleft) == (6, 6, 6)
     assert tuple(layer.bounding_box.size) == (10, 20, 30)
 
-    copy_mag = layer.add_copy_mag(original_mag_2)
+    copy_mag = layer.add_fs_copy_mag(original_mag_2)
 
     assert (tmp_path / "link" / "color" / "1").exists()
     assert len(layer._properties.resolutions) == 2

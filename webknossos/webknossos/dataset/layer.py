@@ -9,9 +9,12 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 
 import numpy as np
+from cluster_tools import WrappedProcessPoolExecutor
+from cluster_tools.schedulers.cluster_executor import ClusterExecutor
 from upath import UPath
 
 from webknossos.dataset.sampling_modes import SamplingModes
+from webknossos.dataset.view import _copy_job
 from webknossos.geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 
 from ._array import ArrayException, BaseArray, DataFormat
@@ -529,67 +532,47 @@ class Layer:
         )
         rmtree(full_path)
 
-    def _add_foreign_mag(
+    def add_copy_mag(
         self,
         foreign_mag_view_or_path: Union[PathLike, str, MagView],
-        symlink: bool,
-        make_relative: bool,
         extend_layer_bounding_box: bool = True,
+        chunk_shape: Optional[Union[Vec3IntLike, int]] = None,
+        chunks_per_shard: Optional[Union[Vec3IntLike, int]] = None,
+        compress: Optional[bool] = None,
+        executor: Optional[Union[ClusterExecutor, WrappedProcessPoolExecutor]] = None,
     ) -> MagView:
         """
-        The foreign mag is (shallow) copied and the existing mag is added to the datasource-properties.json.
-        If extend_layer_bounding_box is true, the self.bounding_box will be extended
-        by the bounding box of the layer the foreign mag belongs to.
-        Symlinked mags can only be added to layers on local file systems.
+        Copies the data at `foreign_mag_view_or_path` which can belong to another dataset
+        to the current dataset. Additionally, the relevant information from the
+        `datasource-properties.json` of the other dataset are copied, too.
         """
         self.dataset._ensure_writable()
-
-        if isinstance(foreign_mag_view_or_path, MagView):
-            foreign_mag_view = foreign_mag_view_or_path
-        else:
-            # local import to prevent circular dependency
-            from .dataset import Dataset
-
-            foreign_mag_view_path = UPath(foreign_mag_view_or_path)
-            foreign_mag_view = (
-                Dataset.open(foreign_mag_view_path.parent.parent)
-                .get_layer(foreign_mag_view_path.parent.name)
-                .get_mag(foreign_mag_view_path.name)
-            )
-
+        foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
         self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
 
-        if symlink:
-            assert is_fs_path(
-                self.path
-            ), f"Cannot create symlinks in remote layer {self.path}"
-            assert is_fs_path(
-                foreign_mag_view.path
-            ), f"Cannot create symlink to remote mag {foreign_mag_view.path}"
+        mag_view = self.add_mag(
+            mag=foreign_mag_view.mag,
+            chunk_shape=chunk_shape or foreign_mag_view._array_info.chunk_shape,
+            chunks_per_shard=chunks_per_shard
+            or foreign_mag_view._array_info.chunks_per_shard,
+            compress=compress
+            if compress is not None
+            else foreign_mag_view._array_info.compression_mode,
+        )
 
-            foreign_normalized_mag_path = (
-                Path(relpath(foreign_mag_view.path, self.path))
-                if make_relative
-                else foreign_mag_view.path.resolve()
-            )
-
-            (self.path / str(foreign_mag_view.mag)).symlink_to(
-                foreign_normalized_mag_path
-            )
-        else:
-            copytree(
-                foreign_mag_view.path,
-                self.path / str(foreign_mag_view.mag),
-            )
-
-        self.add_mag_for_existing_files(foreign_mag_view.mag)
         if extend_layer_bounding_box:
             self.bounding_box = self.bounding_box.extended_by(
                 foreign_mag_view.layer.bounding_box
             )
-        self.dataset._export_as_json()
 
-        return self._mags[foreign_mag_view.mag]
+        foreign_mag_view.for_zipped_chunks(
+            func_per_chunk=_copy_job,
+            target_view=mag_view,
+            executor=executor,
+            progress_desc=f"Copying mag {mag_view.mag.to_layer_name()} from {foreign_mag_view.layer} to {mag_view.layer}",
+        )
+
+        return mag_view
 
     def add_symlink_mag(
         self,
@@ -605,28 +588,59 @@ class Layer:
         If make_relative is True, the symlink is made relative to the current dataset path.
         Symlinked mags can only be added to layers on local file systems.
         """
-        return self._add_foreign_mag(
-            foreign_mag_view_or_path,
-            symlink=True,
-            make_relative=make_relative,
-            extend_layer_bounding_box=extend_layer_bounding_box,
+        self.dataset._ensure_writable()
+        foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
+        self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
+
+        assert is_fs_path(
+            self.path
+        ), f"Cannot create symlinks in remote layer {self.path}"
+        assert is_fs_path(
+            foreign_mag_view.path
+        ), f"Cannot create symlink to remote mag {foreign_mag_view.path}"
+
+        foreign_normalized_mag_path = (
+            Path(relpath(foreign_mag_view.path, self.path))
+            if make_relative
+            else foreign_mag_view.path.resolve()
         )
 
-    def add_copy_mag(
+        (self.path / str(foreign_mag_view.mag)).symlink_to(foreign_normalized_mag_path)
+
+        mag = self.add_mag_for_existing_files(foreign_mag_view.mag)
+
+        if extend_layer_bounding_box:
+            self.bounding_box = self.bounding_box.extended_by(
+                foreign_mag_view.layer.bounding_box
+            )
+        return mag
+
+    def add_fs_copy_mag(
         self,
         foreign_mag_view_or_path: Union[PathLike, str, MagView],
         extend_layer_bounding_box: bool = True,
     ) -> MagView:
         """
-        Copies the data at `foreign_mag_view_or_path` which belongs to another dataset to the current dataset.
-        Additionally, the relevant information from the `datasource-properties.json` of the other dataset are copied too.
+        Copies the data at `foreign_mag_view_or_path` which belongs to another dataset to the current dataset via the filesystem.
+        Additionally, the relevant information from the `datasource-properties.json` of the other dataset are copied, too.
         """
-        return self._add_foreign_mag(
-            foreign_mag_view_or_path,
-            symlink=False,
-            make_relative=False,
-            extend_layer_bounding_box=extend_layer_bounding_box,
+        self.dataset._ensure_writable()
+        foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
+        self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
+
+        copytree(
+            foreign_mag_view.path,
+            self.path / str(foreign_mag_view.mag),
         )
+
+        mag = self.add_mag_for_existing_files(foreign_mag_view.mag)
+
+        if extend_layer_bounding_box:
+            self.bounding_box = self.bounding_box.extended_by(
+                foreign_mag_view.layer.bounding_box
+            )
+
+        return mag
 
     def _create_dir_for_mag(
         self, mag: Union[int, str, list, tuple, np.ndarray, Mag]
@@ -1065,6 +1079,17 @@ class Layer:
 
     def _get_largest_segment_id_maybe(self) -> Optional[int]:
         return None
+
+    @classmethod
+    def _ensure_layer(cls, layer: Union[str, PathLike, "Layer"]) -> "Layer":
+        if isinstance(layer, Layer):
+            return layer
+        else:
+            # local import to prevent circular dependency
+            from .dataset import Dataset
+
+            layer_path = UPath(layer)
+            return Dataset.open(layer_path.parent).get_layer(layer_path.name)
 
 
 class SegmentationLayer(Layer):
