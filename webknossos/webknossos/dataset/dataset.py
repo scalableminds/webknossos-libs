@@ -1208,6 +1208,7 @@ class Dataset:
         assert is_fs_path(
             self.path
         ), f"Cannot create symlinks to remote dataset {self.path}"
+        new_dataset_path = UPath(new_dataset_path)
         assert is_fs_path(
             new_dataset_path
         ), f"Cannot create symlink in remote path {new_dataset_path}"
