@@ -1536,100 +1536,78 @@ def test_remote_add_symlink_mag() -> None:
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
 def test_add_copy_mag(data_format: DataFormat, output_path: Path) -> None:
-    ds_path = prepare_dataset_path(data_format, output_path, "original")
-    symlink_path = prepare_dataset_path(data_format, output_path, "with_symlink")
+    original_ds_path = prepare_dataset_path(data_format, output_path, "original")
+    copy_ds_path = prepare_dataset_path(data_format, output_path, "copy")
 
-    original_ds = Dataset(ds_path, voxel_size=(1, 1, 1))
+    original_ds = Dataset(original_ds_path, voxel_size=(1, 1, 1))
     original_layer = original_ds.add_layer(
         "color", COLOR_CATEGORY, dtype_per_channel="uint8", data_format=data_format
     )
-    original_layer.add_mag(1).write(
-        data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8)
-    )
-    original_data = (np.random.rand(5, 10, 15) * 255).astype(np.uint8)
-    original_mag_2 = original_layer.add_mag(2)
-    original_mag_2.write(data=original_data)
+    original_data = (np.random.rand(10, 20, 30) * 255).astype(np.uint8)
+    original_mag = original_layer.add_mag(1)
+    original_mag.write(data=original_data, absolute_offset=(6, 6, 6))
 
-    ds = Dataset(symlink_path, voxel_size=(1, 1, 1))
-    layer = ds.add_layer(
+    copy_ds = Dataset(copy_ds_path, voxel_size=(1, 1, 1))
+    copy_layer = copy_ds.add_layer(
         "color", COLOR_CATEGORY, dtype_per_channel="uint8", data_format=data_format
     )
-    layer.add_mag(1).write(
-        absolute_offset=(6, 6, 6),
-        data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8),
-    )
+    copy_mag = copy_layer.add_copy_mag(original_mag, extend_layer_bounding_box=True)
 
-    assert tuple(layer.bounding_box.topleft) == (6, 6, 6)
-    assert tuple(layer.bounding_box.size) == (10, 20, 30)
+    assert (copy_ds_path / "color" / "1").exists()
+    assert len(copy_layer._properties.mags) == 1
 
-    copy_mag = layer.add_copy_mag(original_mag_2, extend_layer_bounding_box=False)
+    assert tuple(copy_layer.bounding_box.topleft) == (6, 6, 6)
+    assert tuple(copy_layer.bounding_box.size) == (10, 20, 30)
 
-    assert (symlink_path / "color" / "1").exists()
-    assert len(layer._properties.mags) == 2
-
-    assert tuple(layer.bounding_box.topleft) == (6, 6, 6)
-    assert tuple(layer.bounding_box.size) == (10, 20, 30)
-
-    # Write data in copied layer
-    write_data = (np.random.rand(5, 5, 5) * 255).astype(np.uint8)
-    copy_mag.write(absolute_offset=(0, 0, 0), data=write_data)
+    # Write new data in copied layer
+    new_data = (np.random.rand(5, 5, 5) * 255).astype(np.uint8)
+    copy_mag.write(absolute_offset=(0, 0, 0), data=new_data)
 
     assert np.array_equal(
-        copy_mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))[0], write_data
+        copy_mag.read(absolute_offset=(0, 0, 0), size=(5, 5, 5))[0], new_data
     )
-    assert np.array_equal(original_layer.get_mag(2).read()[0], original_data)
+    assert np.array_equal(original_mag.read()[0], original_data)
 
-    assure_exported_properties(ds)
     assure_exported_properties(original_ds)
+    assure_exported_properties(copy_ds)
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
 def test_add_fs_copy_mag(data_format: DataFormat, output_path: Path) -> None:
-    ds_path = prepare_dataset_path(data_format, output_path, "original")
-    symlink_path = prepare_dataset_path(data_format, output_path, "with_symlink")
+    original_ds_path = prepare_dataset_path(data_format, output_path, "original")
+    copy_ds_path = prepare_dataset_path(data_format, output_path, "copy")
 
-    original_ds = Dataset(ds_path, voxel_size=(1, 1, 1))
+    original_ds = Dataset(original_ds_path, voxel_size=(1, 1, 1))
     original_layer = original_ds.add_layer(
         "color", COLOR_CATEGORY, dtype_per_channel="uint8", data_format=data_format
     )
-    original_layer.add_mag(1).write(
-        data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8)
-    )
-    original_data = (np.random.rand(5, 10, 15) * 255).astype(np.uint8)
-    original_mag_2 = original_layer.add_mag(2)
-    original_mag_2.write(data=original_data)
+    original_data = (np.random.rand(10, 20, 30) * 255).astype(np.uint8)
+    original_mag = original_layer.add_mag(1)
+    original_mag.write(data=original_data, absolute_offset=(6, 6, 6))
 
-    ds = Dataset(symlink_path, voxel_size=(1, 1, 1))
-    layer = ds.add_layer(
+    copy_ds = Dataset(copy_ds_path, voxel_size=(1, 1, 1))
+    copy_layer = copy_ds.add_layer(
         "color", COLOR_CATEGORY, dtype_per_channel="uint8", data_format=data_format
     )
-    layer.add_mag(1).write(
-        absolute_offset=(6, 6, 6),
-        data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8),
-    )
+    copy_mag = copy_layer.add_fs_copy_mag(original_mag, extend_layer_bounding_box=True)
 
-    assert tuple(layer.bounding_box.topleft) == (6, 6, 6)
-    assert tuple(layer.bounding_box.size) == (10, 20, 30)
+    assert (copy_ds_path / "color" / "1").exists()
+    assert len(copy_layer._properties.mags) == 1
 
-    copy_mag = layer.add_fs_copy_mag(original_mag_2)
+    assert tuple(copy_layer.bounding_box.topleft) == (6, 6, 6)
+    assert tuple(copy_layer.bounding_box.size) == (10, 20, 30)
 
-    assert (symlink_path / "color" / "1").exists()
-    assert len(layer._properties.mags) == 2
-
-    assert tuple(layer.bounding_box.topleft) == (0, 0, 0)
-    assert tuple(layer.bounding_box.size) == (16, 26, 36)
-
-    # Write data in copied layer
-    write_data = (np.random.rand(5, 5, 5) * 255).astype(np.uint8)
-    copy_mag.write(absolute_offset=(0, 0, 0), data=write_data)
+    # Write new data in copied layer
+    new_data = (np.random.rand(5, 5, 5) * 255).astype(np.uint8)
+    copy_mag.write(absolute_offset=(0, 0, 0), data=new_data)
 
     assert np.array_equal(
-        copy_mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))[0], write_data
+        copy_mag.read(absolute_offset=(0, 0, 0), size=(5, 5, 5))[0], new_data
     )
-    assert np.array_equal(original_layer.get_mag(2).read()[0], original_data)
+    assert np.array_equal(original_mag.read()[0], original_data)
 
-    assure_exported_properties(ds)
     assure_exported_properties(original_ds)
+    assure_exported_properties(copy_ds)
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)

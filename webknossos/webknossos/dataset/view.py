@@ -843,12 +843,9 @@ class View:
                 target_chunk_shape, read_only=target_view.read_only
             )
 
-        assert (
-            not self.bounding_box.is_empty()
-        ), "Calling 'for_zipped_chunks' failed because the size of the source view contains a 0."
-        assert (
-            not target_view.bounding_box.is_empty()
-        ), "Calling 'for_zipped_chunks' failed because the size of the target view contains a 0."
+        if self.bounding_box.is_empty() or target_view.bounding_box.is_empty():
+            return
+
         assert np.array_equal(
             self.bounding_box.size.to_np() / target_view.bounding_box.size.to_np(),
             source_chunk_shape.to_np() / target_chunk_shape.to_np(),

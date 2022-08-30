@@ -542,8 +542,9 @@ class Layer:
         executor: Optional[Union[ClusterExecutor, WrappedProcessPoolExecutor]] = None,
     ) -> MagView:
         """
-        Copies the data at `foreign_mag_view_or_path` which belongs to another dataset to the current dataset.
-        Additionally, the relevant information from the `datasource-properties.json` of the other dataset are copied, too.
+        Copies the data at `foreign_mag_view_or_path` which can belong to another dataset
+        to the current dataset. Additionally, the relevant information from the
+        `datasource-properties.json` of the other dataset are copied, too.
         """
         self.dataset._ensure_writable()
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
@@ -564,13 +565,12 @@ class Layer:
                 foreign_mag_view.layer.bounding_box
             )
 
-        if not foreign_mag_view.bounding_box.is_empty():
-            foreign_mag_view.for_zipped_chunks(
-                func_per_chunk=_copy_job,
-                target_view=mag_view,
-                executor=executor,
-                progress_desc=f"Copying mag {mag_view.mag.to_layer_name()} from {foreign_mag_view.layer} to {mag_view.layer}",
-            )
+        foreign_mag_view.for_zipped_chunks(
+            func_per_chunk=_copy_job,
+            target_view=mag_view,
+            executor=executor,
+            progress_desc=f"Copying mag {mag_view.mag.to_layer_name()} from {foreign_mag_view.layer} to {mag_view.layer}",
+        )
 
         return mag_view
 

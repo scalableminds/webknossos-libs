@@ -1106,9 +1106,11 @@ class Dataset:
         new_layer_name: Optional[str] = None,
     ) -> Layer:
         """
-        Copies the files at `foreign_layer` which belongs to another dataset to the current dataset.
-        Additionally, the relevant information from the `datasource-properties.json` of the other dataset are copied too.
-        If new_layer_name is None, the name of the foreign layer is used.
+        Copies the files at `foreign_layer` which belongs to another dataset
+        to the current dataset via the filesystem. Additionally, the relevant
+        information from the `datasource-properties.json` of the other dataset
+        are copied too. If new_layer_name is None, the name of the foreign
+        layer is used.
         """
         self._ensure_writable()
         foreign_layer = Layer._ensure_layer(foreign_layer)
