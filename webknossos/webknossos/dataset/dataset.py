@@ -72,7 +72,7 @@ from .properties import (
     _properties_floating_type_to_python_type,
     dataset_converter,
 )
-from .view import _BLOCK_ALIGNMENT_WARNING, View
+from .view import _BLOCK_ALIGNMENT_WARNING, _copy_job
 
 logger = logging.getLogger(__name__)
 
@@ -87,12 +87,6 @@ _DATASET_URL_REGEX = re.compile(
     + r"(?P<organization_id>[^/]*)/(?P<dataset_name>[^/]*)(/(view)?)?"
     + r"(\?token=(?P<sharing_token>[^#]*))?"
 )
-
-
-def _copy_job(args: Tuple[View, View, int]) -> None:
-    (source_view, target_view, _) = args
-    # Copy the data form one view to the other in a buffered fashion
-    target_view.write(source_view.read())
 
 
 def _find_array_info(layer_path: Path) -> Optional[ArrayInfo]:
@@ -1003,12 +997,57 @@ class Dataset:
             layer for layer in self._properties.data_layers if layer.name != layer_name
         ]
         # delete files on disk
-        if layer_path.is_symlink():
-            layer_path.unlink()
-        else:
-            # rmtree does not recurse into linked dirs, but removes the link
-            rmtree(layer_path)
+        # rmtree does not recurse into linked dirs, but removes the link
+        rmtree(layer_path)
         self._export_as_json()
+
+    def add_copy_layer(
+        self,
+        foreign_layer: Union[str, Path, Layer],
+        new_layer_name: Optional[str] = None,
+        chunk_shape: Optional[Union[Vec3IntLike, int]] = None,
+        chunks_per_shard: Optional[Union[Vec3IntLike, int]] = None,
+        data_format: Optional[Union[str, DataFormat]] = None,
+        compress: Optional[bool] = None,
+        executor: Optional[Union[ClusterExecutor, WrappedProcessPoolExecutor]] = None,
+    ) -> Layer:
+        """
+        Copies the data at `foreign_layer` which belongs to another dataset to the current dataset.
+        Additionally, the relevant information from the `datasource-properties.json` of the other dataset are copied too.
+        If new_layer_name is None, the name of the foreign layer is used.
+        """
+        self._ensure_writable()
+        foreign_layer = Layer._ensure_layer(foreign_layer)
+
+        if new_layer_name is None:
+            new_layer_name = foreign_layer.name
+
+        if new_layer_name in self.layers.keys():
+            raise IndexError(
+                f"Cannot copy {foreign_layer}. This dataset already has a layer called {new_layer_name}."
+            )
+
+        layer = self.add_layer(
+            new_layer_name,
+            category=foreign_layer.category,
+            dtype_per_channel=foreign_layer.dtype_per_channel,
+            num_channels=foreign_layer.num_channels,
+            data_format=data_format or foreign_layer.data_format,
+            largest_segment_id=foreign_layer._get_largest_segment_id_maybe(),
+        )
+        layer.bounding_box = foreign_layer.bounding_box
+
+        for mag_view in foreign_layer.mags.values():
+            layer.add_copy_mag(
+                mag_view,
+                extend_layer_bounding_box=False,
+                chunk_shape=chunk_shape,
+                chunks_per_shard=chunks_per_shard,
+                compress=compress,
+                executor=executor,
+            )
+
+        return layer
 
     def add_symlink_layer(
         self,
@@ -1026,20 +1065,16 @@ class Dataset:
         Symlinked layers can only be added to datasets on local file systems.
         """
         self._ensure_writable()
+        foreign_layer = Layer._ensure_layer(foreign_layer)
 
-        if isinstance(foreign_layer, Layer):
-            foreign_layer_path = foreign_layer.path
-        else:
-            foreign_layer_path = UPath(foreign_layer)
+        if new_layer_name is None:
+            new_layer_name = foreign_layer.name
 
-        foreign_layer_name = foreign_layer_path.name
-        layer_name = (
-            new_layer_name if new_layer_name is not None else foreign_layer_name
-        )
-        if layer_name in self.layers.keys():
+        if new_layer_name in self.layers.keys():
             raise IndexError(
-                f"Cannot create symlink to {foreign_layer_path}. This dataset already has a layer called {layer_name}."
+                f"Cannot create symlink to {foreign_layer}. This dataset already has a layer called {new_layer_name}."
             )
+        foreign_layer_path = foreign_layer.path
 
         assert is_fs_path(
             self.path
@@ -1054,59 +1089,48 @@ class Dataset:
             else foreign_layer_path.resolve()
         )
 
-        (self.path / layer_name).symlink_to(foreign_layer_symlink_path)
-        original_layer = Dataset.open(foreign_layer_path.parent).get_layer(
-            foreign_layer_name
-        )
-        layer_properties = copy.deepcopy(original_layer._properties)
-        layer_properties.name = layer_name
+        (self.path / new_layer_name).symlink_to(foreign_layer_symlink_path)
+        layer_properties = copy.deepcopy(foreign_layer._properties)
+        layer_properties.name = new_layer_name
         self._properties.data_layers += [layer_properties]
-        self._layers[layer_name] = self._initialize_layer_from_properties(
+        self._layers[new_layer_name] = self._initialize_layer_from_properties(
             layer_properties
         )
 
         self._export_as_json()
-        return self.layers[layer_name]
+        return self.layers[new_layer_name]
 
-    def add_copy_layer(
+    def add_fs_copy_layer(
         self,
         foreign_layer: Union[str, Path, Layer],
         new_layer_name: Optional[str] = None,
     ) -> Layer:
         """
-        Copies the data at `foreign_layer` which belongs to another dataset to the current dataset.
+        Copies the files at `foreign_layer` which belongs to another dataset to the current dataset.
         Additionally, the relevant information from the `datasource-properties.json` of the other dataset are copied too.
         If new_layer_name is None, the name of the foreign layer is used.
         """
         self._ensure_writable()
+        foreign_layer = Layer._ensure_layer(foreign_layer)
 
-        if isinstance(foreign_layer, Layer):
-            foreign_layer_path = foreign_layer.path
-        else:
-            foreign_layer_path = UPath(foreign_layer)
+        if new_layer_name is None:
+            new_layer_name = foreign_layer.name
 
-        foreign_layer_name = foreign_layer_path.name
-        layer_name = (
-            new_layer_name if new_layer_name is not None else foreign_layer_name
-        )
-        if layer_name in self.layers.keys():
+        if new_layer_name in self.layers.keys():
             raise IndexError(
-                f"Cannot copy {foreign_layer_path}. This dataset already has a layer called {layer_name}."
+                f"Cannot copy {foreign_layer}. This dataset already has a layer called {new_layer_name}."
             )
 
-        copytree(foreign_layer_path, self.path / layer_name)
-        original_layer = Dataset.open(foreign_layer_path.parent).get_layer(
-            foreign_layer_name
-        )
-        layer_properties = copy.deepcopy(original_layer._properties)
-        layer_properties.name = layer_name
+        copytree(foreign_layer.path, self.path / new_layer_name)
+        layer_properties = copy.deepcopy(foreign_layer._properties)
+        layer_properties.name = new_layer_name
         self._properties.data_layers += [layer_properties]
-        self._layers[layer_name] = self._initialize_layer_from_properties(
+        self._layers[new_layer_name] = self._initialize_layer_from_properties(
             layer_properties
         )
 
         self._export_as_json()
-        return self.layers[layer_name]
+        return self.layers[new_layer_name]
 
     def copy_dataset(
         self,
@@ -1155,43 +1179,15 @@ class Dataset:
         new_ds = Dataset(new_dataset_path, voxel_size=voxel_size, exist_ok=False)
 
         with get_executor_for_args(args) as executor:
-            for layer_name, layer in self.layers.items():
-                new_ds_properties = copy.deepcopy(
-                    self.get_layer(layer_name)._properties
+            for layer in self.layers.values():
+                new_ds.add_copy_layer(
+                    layer,
+                    chunk_shape=chunk_shape,
+                    chunks_per_shard=chunks_per_shard,
+                    data_format=data_format,
+                    compress=compress,
+                    executor=executor,
                 )
-                # Initializing a layer with non-empty mags requires that the files on disk already exist.
-                # The MagViews are added manually afterwards
-                new_ds_properties.mags = []
-                if data_format is not None:
-                    new_ds_properties.data_format = DataFormat(data_format)
-                new_ds._properties.data_layers += [new_ds_properties]
-                target_layer = new_ds._initialize_layer_from_properties(
-                    new_ds_properties
-                )
-                new_ds._layers[layer_name] = target_layer
-
-                bbox = self.get_layer(layer_name).bounding_box
-
-                for mag, mag_view in layer.mags.items():
-                    chunk_shape = chunk_shape or mag_view.info.chunk_shape
-                    compression_mode = compress or mag_view.info.compression_mode
-                    chunks_per_shard = (
-                        chunks_per_shard or mag_view.info.chunks_per_shard
-                    )
-                    target_mag = target_layer.add_mag(
-                        mag, chunk_shape, chunks_per_shard, compression_mode
-                    )
-
-                    target_layer.bounding_box = bbox
-
-                    # The data gets written to the target_mag.
-                    # Therefore, the chunk size is determined by the target_mag to prevent concurrent writes
-                    mag_view.for_zipped_chunks(
-                        func_per_chunk=_copy_job,
-                        target_view=target_mag.get_view(),
-                        executor=executor,
-                        progress_desc=f"Copying mag {mag.to_layer_name()} from layer {layer_name}",
-                    )
         new_ds._export_as_json()
         return new_ds
 

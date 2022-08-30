@@ -993,3 +993,9 @@ class View:
 
 def _count_defined_values(values: Iterable[Optional[Any]]) -> int:
     return sum(i is not None for i in values)
+
+
+def _copy_job(args: Tuple[View, View, int]) -> None:
+    (source_view, target_view, _) = args
+    # Copy the data form one view to the other in a buffered fashion
+    target_view.write(source_view.read())
