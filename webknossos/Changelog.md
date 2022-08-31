@@ -15,6 +15,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes
 
 ### Added
+- Added direct access to an underlying Zarr array with the `MagView.get_zarr_array()` method. [#792](https://github.com/scalableminds/webknossos-libs/pull/792)
 
 ### Changed
 

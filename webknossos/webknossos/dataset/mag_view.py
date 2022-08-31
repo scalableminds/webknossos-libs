@@ -128,7 +128,7 @@ class MagView(View):
         """
         array_wrapper = self._array
         assert isinstance(array_wrapper, ZarrArray)
-        array_wrapper._zarray()
+        return array_wrapper._zarray
 
     def write(
         self,

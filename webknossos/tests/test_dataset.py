@@ -44,26 +44,26 @@ MINIO_ROOT_PASSWORD = "TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur"
 MINIO_PORT = "8000"
 
 
-@pytest.fixture(autouse=True, scope="module")
-def docker_minio() -> Iterator[None]:
-    """Minio is an S3 clone and is used as local test server"""
-    container_name = "minio"
-    cmd = (
-        "docker run"
-        f" -p {MINIO_PORT}:9000"
-        f" -e MINIO_ROOT_USER={MINIO_ROOT_USER}"
-        f" -e MINIO_ROOT_PASSWORD={MINIO_ROOT_PASSWORD}"
-        f" --name {container_name}"
-        " --rm"
-        " -d"
-        " minio/minio server /data"
-    )
-    subprocess.check_output(shlex.split(cmd))
-    REMOTE_TESTOUTPUT_DIR.fs.mkdirs("testoutput", exist_ok=True)
-    try:
-        yield
-    finally:
-        subprocess.check_output(["docker", "stop", container_name])
+# @pytest.fixture(autouse=True, scope="module")
+# def docker_minio() -> Iterator[None]:
+#     """Minio is an S3 clone and is used as local test server"""
+#     container_name = "minio"
+#     cmd = (
+#         "docker run"
+#         f" -p {MINIO_PORT}:9000"
+#         f" -e MINIO_ROOT_USER={MINIO_ROOT_USER}"
+#         f" -e MINIO_ROOT_PASSWORD={MINIO_ROOT_PASSWORD}"
+#         f" --name {container_name}"
+#         " --rm"
+#         " -d"
+#         " minio/minio server /data"
+#     )
+#     subprocess.check_output(shlex.split(cmd))
+#     REMOTE_TESTOUTPUT_DIR.fs.mkdirs("testoutput", exist_ok=True)
+#     try:
+#         yield
+#     finally:
+#         subprocess.check_output(["docker", "stop", container_name])
 
 
 REMOTE_TESTOUTPUT_DIR = UPath(
@@ -418,6 +418,26 @@ def test_view_write(data_format: DataFormat, output_path: Path) -> None:
     wk_view.write(write_data)
 
     data = wk_view.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))
+    assert np.array_equal(data, write_data)
+
+
+@pytest.mark.parametrize("output_path", [TESTOUTPUT_DIR, REMOTE_TESTOUTPUT_DIR])
+def test_direct_zarr_access(output_path: Path) -> None:
+    ds_path = copy_simple_dataset(DataFormat.Zarr, output_path)
+    mag = Dataset.open(ds_path).get_layer("color").get_mag("1")
+
+    np.random.seed(1234)
+
+    # write: zarr, read: wk
+    write_data = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
+    mag.get_zarr_array()[:, 0:10, 0:10, 0:10] = write_data
+    data = mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))
+    assert np.array_equal(data, write_data)
+
+    # write: wk, read: zarr
+    write_data = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
+    mag.write(write_data, absolute_offset=(0, 0, 0))
+    data = mag.get_zarr_array()[:, 0:10, 0:10, 0:10]
     assert np.array_equal(data, write_data)
 
 
