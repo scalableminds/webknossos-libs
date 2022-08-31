@@ -7,11 +7,12 @@ from typing import TYPE_CHECKING, Iterator, Optional, Tuple, Union
 from uuid import uuid4
 
 import numpy as np
+import zarr
 from upath import UPath
 
 from ..geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 from ..utils import get_executor_for_args, is_fs_path, rmtree, wait_and_ensure_success
-from ._array import ArrayInfo, BaseArray
+from ._array import ArrayInfo, BaseArray, ZarrArray
 from .properties import MagViewProperties
 
 if TYPE_CHECKING:
@@ -120,6 +121,14 @@ class MagView(View):
     @property
     def name(self) -> str:
         return self._mag.to_layer_name()
+
+    def get_zarr_array(self) -> zarr.Array:
+        """
+        Directly access the underlying Zarr array. Only available for Zarr-based datasets.
+        """
+        array_wrapper = self._array
+        assert isinstance(array_wrapper, ZarrArray)
+        array_wrapper._zarray()
 
     def write(
         self,
