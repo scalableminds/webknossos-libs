@@ -44,26 +44,26 @@ MINIO_ROOT_PASSWORD = "TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur"
 MINIO_PORT = "8000"
 
 
-# @pytest.fixture(autouse=True, scope="module")
-# def docker_minio() -> Iterator[None]:
-#     """Minio is an S3 clone and is used as local test server"""
-#     container_name = "minio"
-#     cmd = (
-#         "docker run"
-#         f" -p {MINIO_PORT}:9000"
-#         f" -e MINIO_ROOT_USER={MINIO_ROOT_USER}"
-#         f" -e MINIO_ROOT_PASSWORD={MINIO_ROOT_PASSWORD}"
-#         f" --name {container_name}"
-#         " --rm"
-#         " -d"
-#         " minio/minio server /data"
-#     )
-#     subprocess.check_output(shlex.split(cmd))
-#     REMOTE_TESTOUTPUT_DIR.fs.mkdirs("testoutput", exist_ok=True)
-#     try:
-#         yield
-#     finally:
-#         subprocess.check_output(["docker", "stop", container_name])
+@pytest.fixture(autouse=True, scope="module")
+def docker_minio() -> Iterator[None]:
+    """Minio is an S3 clone and is used as local test server"""
+    container_name = "minio"
+    cmd = (
+        "docker run"
+        f" -p {MINIO_PORT}:9000"
+        f" -e MINIO_ROOT_USER={MINIO_ROOT_USER}"
+        f" -e MINIO_ROOT_PASSWORD={MINIO_ROOT_PASSWORD}"
+        f" --name {container_name}"
+        " --rm"
+        " -d"
+        " minio/minio server /data"
+    )
+    subprocess.check_output(shlex.split(cmd))
+    REMOTE_TESTOUTPUT_DIR.fs.mkdirs("testoutput", exist_ok=True)
+    try:
+        yield
+    finally:
+        subprocess.check_output(["docker", "stop", container_name])
 
 
 REMOTE_TESTOUTPUT_DIR = UPath(
