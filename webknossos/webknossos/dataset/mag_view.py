@@ -127,7 +127,8 @@ class MagView(View):
         Directly access the underlying Zarr array. Only available for Zarr-based datasets.
         """
         array_wrapper = self._array
-        assert isinstance(array_wrapper, ZarrArray)
+        if not isinstance(array_wrapper, ZarrArray):
+            raise ValueError("Cannot get the zarr array for wkw datasets.")
         return array_wrapper._zarray
 
     def write(
