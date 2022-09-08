@@ -421,6 +421,26 @@ def test_view_write(data_format: DataFormat, output_path: Path) -> None:
     assert np.array_equal(data, write_data)
 
 
+@pytest.mark.parametrize("output_path", [TESTOUTPUT_DIR, REMOTE_TESTOUTPUT_DIR])
+def test_direct_zarr_access(output_path: Path) -> None:
+    ds_path = copy_simple_dataset(DataFormat.Zarr, output_path)
+    mag = Dataset.open(ds_path).get_layer("color").get_mag("1")
+
+    np.random.seed(1234)
+
+    # write: zarr, read: wk
+    write_data = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
+    mag.get_zarr_array()[:, 0:10, 0:10, 0:10] = write_data
+    data = mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))
+    assert np.array_equal(data, write_data)
+
+    # write: wk, read: zarr
+    write_data = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
+    mag.write(write_data, absolute_offset=(0, 0, 0))
+    data = mag.get_zarr_array()[:, 0:10, 0:10, 0:10]
+    assert np.array_equal(data, write_data)
+
+
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
 def test_view_write_out_of_bounds(data_format: DataFormat, output_path: Path) -> None:
     ds_path = copy_simple_dataset(
