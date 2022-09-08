@@ -14,10 +14,7 @@ def main() -> None:
 
     zarr_array = mag.get_zarr_array()
     dask_array = da.from_array(zarr_array, chunks=(1, 256, 256, 256))[
-        0,
-        layer.bounding_box.topleft.x : layer.bounding_box.bottomright.x,
-        layer.bounding_box.topleft.y : layer.bounding_box.bottomright.y,
-        layer.bounding_box.topleft.z : layer.bounding_box.bottomright.z,
+        (0,) + layer.bounding_box.to_slices()
     ]
 
     print("Mean:", dask_array.mean().compute())
