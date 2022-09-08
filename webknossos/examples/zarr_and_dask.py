@@ -1,38 +1,6 @@
-import chunk
-
 import dask.array as da
-import numpy as np
 
 import webknossos as wk
-
-
-def map_func(chunk, **_) -> np.ndarray:
-    return np.array([chunk.min(), chunk.max(), chunk.sum(), chunk.size], dtype="uint64")
-
-
-def combine_func(chunk_stats, **_) -> np.ndarray:
-    chunk_stats = np.array(chunk_stats).reshape(-1, 4)
-    return np.array(
-        [
-            chunk_stats[:, 0].min(),
-            chunk_stats[:, 1].max(),
-            chunk_stats[:, 2].sum(),
-            chunk_stats[:, 3].sum(),
-        ],
-        dtype="uint64",
-    )
-
-
-def agg_func(chunk_stats, **_) -> np.ndarray:
-    chunk_stats = np.array(chunk_stats).reshape(-1, 4)
-    return np.array(
-        [
-            chunk_stats[:, 0].min(),
-            chunk_stats[:, 1].max(),
-            chunk_stats[:, 2].sum() / chunk_stats[:, 3].sum(),
-        ],
-        dtype="uint64",
-    )
 
 
 def main() -> None:
@@ -49,18 +17,7 @@ def main() -> None:
         0, 3072:, 3072:, 512:
     ]
 
-    min, max, mean = da.reduction(
-        dask_array,
-        chunk=map_func,
-        combine=combine_func,
-        aggregate=agg_func,
-        dtype="uint64",
-        concatenate=False,
-    ).compute()
-
-    print("Min:", min)
-    print("Max:", max)
-    print("Mean:", mean)
+    print("Mean:", dask_array.mean().compute())
 
 
 if __name__ == "__main__":
