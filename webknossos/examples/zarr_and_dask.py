@@ -17,7 +17,8 @@ def main() -> None:
         (0,) + layer.bounding_box.to_slices()
     ]
 
-    print("Mean:", dask_array.mean().compute())
+    mean_value = dask_array.mean().compute()
+    print("Mean:", mean_value)
 
 
 if __name__ == "__main__":

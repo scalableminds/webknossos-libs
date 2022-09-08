@@ -222,3 +222,11 @@ def test_remote_datasets() -> None:
     assert ds.url == "http://localhost:9000/datasets/Organization_X/e2006_knossos"
     ds.tags = ["test"]
     assert ds in wk.Dataset.get_remote_datasets(tags=["test"]).values()
+
+
+def test_zarr_and_dask() -> None:
+    import examples.zarr_and_dask as example
+
+    (mean_value,) = exec_main_and_get_vars(example, "mean_value")
+
+    assert 124 < mean_value < 125
