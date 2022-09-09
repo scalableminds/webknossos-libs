@@ -437,6 +437,7 @@ class Annotation:
             )
 
     def get_annotation_dataset(self) -> Dataset:
+        """Returns a streamed dataset, incorporating fallback layers and mappings."""
         from webknossos.client.context import _get_context
 
         if self.annotation_id is None:
