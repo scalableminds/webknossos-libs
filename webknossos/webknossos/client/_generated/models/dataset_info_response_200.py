@@ -37,7 +37,6 @@ class DatasetInfoResponse200:
     sorting_key: Union[Unset, int] = UNSET
     details: Union[Unset, str] = UNSET
     is_unreported: Union[Unset, int] = UNSET
-    is_foreign: Union[Unset, int] = UNSET
     jobs_enabled: Union[Unset, int] = UNSET
     publication: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
@@ -72,7 +71,6 @@ class DatasetInfoResponse200:
         sorting_key = self.sorting_key
         details = self.details
         is_unreported = self.is_unreported
-        is_foreign = self.is_foreign
         jobs_enabled = self.jobs_enabled
         publication = self.publication
 
@@ -106,8 +104,6 @@ class DatasetInfoResponse200:
             field_dict["details"] = details
         if is_unreported is not UNSET:
             field_dict["isUnreported"] = is_unreported
-        if is_foreign is not UNSET:
-            field_dict["isForeign"] = is_foreign
         if jobs_enabled is not UNSET:
             field_dict["jobsEnabled"] = jobs_enabled
         if publication is not UNSET:
@@ -164,8 +160,6 @@ class DatasetInfoResponse200:
 
         is_unreported = d.pop("isUnreported", UNSET)
 
-        is_foreign = d.pop("isForeign", UNSET)
-
         jobs_enabled = d.pop("jobsEnabled", UNSET)
 
         publication = d.pop("publication", UNSET)
@@ -188,7 +182,6 @@ class DatasetInfoResponse200:
             sorting_key=sorting_key,
             details=details,
             is_unreported=is_unreported,
-            is_foreign=is_foreign,
             jobs_enabled=jobs_enabled,
             publication=publication,
         )
