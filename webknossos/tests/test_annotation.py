@@ -142,6 +142,22 @@ def test_annotation_from_url() -> None:
     assert annotation.dataset_name == "l4dense_motta_et_al_demo_v2"
     assert len(list(annotation.skeleton.flattened_trees())) == 1
 
+    node_bbox = wk.BoundingBox.from_points(
+        next(annotation.skeleton.flattened_trees()).get_node_positions()
+    )
+    with wk.webknossos_context(url="https://webknossos.org"):
+        ds = annotation.get_annotation_dataset()
+
+    mag = ds.layers["Volume"].get_finest_mag()
+    annotated_data = mag.read(absolute_bounding_box=node_bbox)
+    assert annotated_data.size > 1000
+    assert (annotated_data == 2504698).all()
+    assert mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))[0, 0, 0, 0] == 0
+    assert (
+        mag.read(absolute_offset=(128, 128, 128), size=(10, 10, 10))[0, 0, 0, 0]
+        == 286021
+    )
+
     annotation.save(TESTOUTPUT_DIR / "test_dummy_downloaded.zip")
     annotation = wk.Annotation.load(TESTOUTPUT_DIR / "test_dummy_downloaded.zip")
     assert annotation.dataset_name == "l4dense_motta_et_al_demo_v2"
