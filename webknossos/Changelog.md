@@ -15,6 +15,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes
 
 ### Added
+* Added `annotation.get_annotation_dataset()` to get a streamed annotation dataset, which also reflects fallback layers or applied mappings. [#794](https://github.com/scalableminds/webknossos-libs/pull/794)
 
 ### Changed
 
