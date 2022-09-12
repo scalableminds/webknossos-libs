@@ -10,15 +10,23 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.13...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.14...HEAD)
 
 ### Breaking Changes
 
 ### Added
+- Added direct access to an underlying Zarr array with the `MagView.get_zarr_array()` method. [#792](https://github.com/scalableminds/webknossos-libs/pull/792)
 
 ### Changed
 
 ### Fixed
+
+
+## [0.10.14](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.14) - 2022-08-30
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.13...v0.10.14)
+
+### Changed
+* `dataset.add_copy_layer()` and `layer.add_copy_mag()` now read and write the image data, not copying files. This allows to stream data from remote datasets. To continue using the filesystem copy mechanism, please use `dataset.add_fs_copy_layer()` or `layer.add_fs_copy_mag()`. [#790](https://github.com/scalableminds/webknossos-libs/pull/790)
 
 
 ## [0.10.13](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.13) - 2022-08-22

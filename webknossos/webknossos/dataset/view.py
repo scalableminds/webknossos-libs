@@ -843,12 +843,9 @@ class View:
                 target_chunk_shape, read_only=target_view.read_only
             )
 
-        assert (
-            not self.bounding_box.is_empty()
-        ), "Calling 'for_zipped_chunks' failed because the size of the source view contains a 0."
-        assert (
-            not target_view.bounding_box.is_empty()
-        ), "Calling 'for_zipped_chunks' failed because the size of the target view contains a 0."
+        if self.bounding_box.is_empty() or target_view.bounding_box.is_empty():
+            return
+
         assert np.array_equal(
             self.bounding_box.size.to_np() / target_view.bounding_box.size.to_np(),
             source_chunk_shape.to_np() / target_chunk_shape.to_np(),
@@ -993,3 +990,9 @@ class View:
 
 def _count_defined_values(values: Iterable[Optional[Any]]) -> int:
     return sum(i is not None for i in values)
+
+
+def _copy_job(args: Tuple[View, View, int]) -> None:
+    (source_view, target_view, _) = args
+    # Copy the data form one view to the other in a buffered fashion
+    target_view.write(source_view.read())

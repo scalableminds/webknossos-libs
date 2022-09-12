@@ -1,16 +1,18 @@
 import logging
 import warnings
 from argparse import Namespace
+from os import PathLike
 from pathlib import Path
 from typing import TYPE_CHECKING, Iterator, Optional, Tuple, Union
 from uuid import uuid4
 
 import numpy as np
+import zarr
 from upath import UPath
 
 from ..geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 from ..utils import get_executor_for_args, is_fs_path, rmtree, wait_and_ensure_success
-from ._array import ArrayInfo, BaseArray
+from ._array import ArrayInfo, BaseArray, ZarrArray
 from .properties import MagViewProperties
 
 if TYPE_CHECKING:
@@ -119,6 +121,15 @@ class MagView(View):
     @property
     def name(self) -> str:
         return self._mag.to_layer_name()
+
+    def get_zarr_array(self) -> zarr.Array:
+        """
+        Directly access the underlying Zarr array. Only available for Zarr-based datasets.
+        """
+        array_wrapper = self._array
+        if not isinstance(array_wrapper, ZarrArray):
+            raise ValueError("Cannot get the zarr array for wkw datasets.")
+        return array_wrapper._zarray
 
     def write(
         self,
@@ -355,3 +366,18 @@ class MagView(View):
 
     def __repr__(self) -> str:
         return f"MagView(name={repr(self.name)}, bounding_box={self.bounding_box})"
+
+    @classmethod
+    def _ensure_mag_view(cls, mag_view: Union[str, PathLike, "MagView"]) -> "MagView":
+        if isinstance(mag_view, MagView):
+            return mag_view
+        else:
+            # local import to prevent circular dependency
+            from .dataset import Dataset
+
+            mag_view_path = UPath(mag_view)
+            return (
+                Dataset.open(mag_view_path.parent.parent)
+                .get_layer(mag_view_path.parent.name)
+                .get_mag(mag_view_path.name)
+            )

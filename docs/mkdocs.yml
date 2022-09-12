@@ -76,6 +76,7 @@ nav:
         - webknossos-py/examples/upload_image_data.md
         - webknossos-py/examples/download_image_data.md
         - webknossos-py/examples/remote_datasets.md
+        - webknossos-py/examples/zarr_and_dask.md
       - Annotation Examples:
         - webknossos-py/examples/apply_merger_mode.md
         - webknossos-py/examples/learned_segmenter.md
