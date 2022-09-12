@@ -12,6 +12,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes
 
 ### Added
+- The modules `wkcuber` and `wkcuber.converter' also accept `--pad` as a CLI argument to allow converting image data with differing image extents. [#796](https://github.com/scalableminds/webknossos-libs/pull/796)
 
 ### Changed
 
