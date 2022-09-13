@@ -10,17 +10,25 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.14...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.16...HEAD)
 
 ### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [0.10.16](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.16) - 2022-09-13
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.14...v0.10.16)
 
 ### Added
 - Added direct access to an underlying Zarr array with the `MagView.get_zarr_array()` method. [#792](https://github.com/scalableminds/webknossos-libs/pull/792)
 
 ### Changed
 - Upgraded `zarr` and `numcodecs`. [#798](https://github.com/scalableminds/webknossos-libs/pull/798)
-
-### Fixed
 
 
 ## [0.10.14](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.14) - 2022-08-30
