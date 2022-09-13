@@ -48,6 +48,15 @@ def create_parser() -> ArgumentParser:
         type=parse_path,
     )
 
+    parser.add_argument(
+        "--pad",
+        help="Automatically pad image files at the bottom and right borders. "
+        "Use this, when the input images don't have a common size, but have "
+        "their origin at (0, 0).",
+        default=False,
+        action="store_true",
+    )
+
     add_voxel_size_flag(parser)
     add_verbose_flag(parser)
     add_data_format_flags(parser)
