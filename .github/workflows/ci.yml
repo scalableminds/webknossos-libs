@@ -16,9 +16,9 @@ jobs:
   changes:
     runs-on: ubuntu-latest
     outputs:
-      webknossos: ${{ steps.filter.outputs.webknossos }} || github.ref == 'refs/heads/master'
-      wkcuber: ${{ steps.filter.outputs.wkcuber }} || github.ref == 'refs/heads/master'
-      cluster_tools: ${{ steps.filter.outputs.cluster_tools }} || github.ref == 'refs/heads/master'
+      webknossos: ${{ steps.filter.outputs.webknossos || github.ref == 'refs/heads/master' }}
+      wkcuber: ${{ steps.filter.outputs.wkcuber || github.ref == 'refs/heads/master' }}
+      cluster_tools: ${{ steps.filter.outputs.cluster_tools || github.ref == 'refs/heads/master' }}
     steps:
     - uses: actions/checkout@v2
     - uses: dorny/paths-filter@v2
@@ -34,7 +34,7 @@ jobs:
 
   cluster_tools:
     needs: changes
-    # if: ${{ needs.changes.outputs.cluster_tools == 'true' }}
+    if: ${{ needs.changes.outputs.cluster_tools == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
