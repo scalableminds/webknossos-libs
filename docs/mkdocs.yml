@@ -62,7 +62,7 @@ nav:
     - Frontend Scripting API: https://webknossos.org/assets/docs/frontend-api/index.html" target="_blank
     - Changelog: webknossos/CHANGELOG.released.md
     - Migration Guide: webknossos/MIGRATIONS.released.md
-  - Community 
+  - Community:
     - Publications: webknossos/publications.md
     - GitHub: https://github.com/scalableminds/webknossos" target="_blank
     - Blog: https://medium.com/scalableminds" target="_blank
