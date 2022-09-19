@@ -52,6 +52,8 @@ nav:
     - webknossos/automated_analysis.md
     - webknossos/jobs.md
     - webknossos/tooling.md
+    - webknossos/export.md
+    - webknossos/proof_reading.md
   - Reference: 
     - webknossos/terminology.md
     - webknossos/data_formats.md
