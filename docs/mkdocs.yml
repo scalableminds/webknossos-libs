@@ -52,8 +52,9 @@ nav:
     - webknossos/automated_analysis.md
     - webknossos/jobs.md
     - webknossos/tooling.md
-  - Reference:
-    - webknossos/publications.md
+    - webknossos/export.md
+    - webknossos/proof_reading.md
+  - Reference: 
     - webknossos/terminology.md
     - webknossos/data_formats.md
     - Keyboard Shortcuts: webknossos/keyboard_shortcuts.md
@@ -61,7 +62,10 @@ nav:
     - Frontend Scripting API: https://webknossos.org/assets/docs/frontend-api/index.html" target="_blank
     - Changelog: webknossos/CHANGELOG.released.md
     - Migration Guide: webknossos/MIGRATIONS.released.md
+  - Community:
+    - Publications: webknossos/publications.md
     - GitHub: https://github.com/scalableminds/webknossos" target="_blank
+    - Blog: https://medium.com/scalableminds" target="_blank
   - Getting Help:
     - webknossos/faq.md
     - Community Support: https://forum.image.sc/tag/webknossos" target="_blank
@@ -118,6 +122,7 @@ nav:
       - Email Support: mailto:hello@webknossos.org
       - Commercial Support: https://scalableminds.com" target="_blank
     - GitHub: https://github.com/scalableminds/webknossos-libs/tree/master/webknossos" target="_blank
+    - Blog: https://medium.com/scalableminds" target="_blank
 - webKnossos Cuber:
   - wkcuber CLI: wkcuber/index.md
   - wkcuber/changelog.md
