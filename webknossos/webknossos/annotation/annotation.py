@@ -478,8 +478,6 @@ class Annotation:
         parsed = dataset_info_response.parsed
         assert parsed is not None
 
-        # token = sharing_token or wk_context.datastore_token
-
         datastore_url = parsed.data_store.url
 
         zarr_path = UPath(
