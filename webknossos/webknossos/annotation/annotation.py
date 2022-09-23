@@ -437,7 +437,13 @@ class Annotation:
             )
 
     def get_annotation_dataset(self) -> Dataset:
-        """Returns a streamed dataset, incorporating fallback layers and mappings."""
+        """
+        Returns a streamed dataset, incorporating fallback layers and potentially mappings.
+        A mapping is currently only incorporated if it is a pinned agglomerate mapping.
+        After an agglomerate mapping was activated in webKnossos, it is pinned as soon
+        as the first volume editing action is done. Note that this behavior might change
+        in the future.
+        """
         from webknossos.client.context import _get_context
 
         if self.annotation_id is None:
