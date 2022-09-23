@@ -457,7 +457,7 @@ class Annotation:
             if token is not None:
                 if organization_id != context.organization_id:
                     warnings.warn(
-                        "The annotation used in with get_annotation_dataset "
+                        "The annotation used with get_annotation_dataset "
                         + "specifies a different organization id than the current context. "
                         + f"The annotation uses {organization_id}, the context {context.organization_id}.",
                         RuntimeWarning,
