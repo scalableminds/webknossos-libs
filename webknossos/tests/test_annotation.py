@@ -146,7 +146,7 @@ def test_annotation_from_url() -> None:
         next(annotation.skeleton.flattened_trees()).get_node_positions()
     )
     with wk.webknossos_context(url="https://webknossos.org"):
-        ds = annotation.get_annotation_dataset()
+        ds = annotation.get_remote_annotation_dataset()
 
     mag = ds.layers["Volume"].get_finest_mag()
     annotated_data = mag.read(absolute_bounding_box=node_bbox)
