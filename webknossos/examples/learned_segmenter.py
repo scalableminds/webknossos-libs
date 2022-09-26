@@ -25,7 +25,7 @@ def main() -> None:
     time_str = strftime("%Y-%m-%d_%H-%M-%S", gmtime())
     new_dataset_name = annotation.dataset_name + f"_segmented_{time_str}"
     with wk.webknossos_context("https://webknossos.org"):
-        dataset = annotation.get_annotation_dataset()
+        dataset = annotation.get_remote_annotation_dataset()
 
     volume_mag_view = dataset.layers["Volume"].get_finest_mag()
     mag = volume_mag_view.mag

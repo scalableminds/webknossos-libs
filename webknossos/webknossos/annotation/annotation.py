@@ -436,9 +436,10 @@ class Annotation:
                 layer_content,
             )
 
-    def get_annotation_dataset(self) -> Dataset:
+    def get_remote_annotation_dataset(self) -> Dataset:
         """
-        Returns a streamed dataset, incorporating fallback layers and potentially mappings.
+        Returns a streamed dataset of the annotation as shown in webknossos,
+        incorporating fallback layers and potentially mappings.
         A mapping is currently only incorporated if it is a pinned agglomerate mapping.
         After an agglomerate mapping was activated in webKnossos, it is pinned as soon
         as the first volume editing action is done. Note that this behavior might change
@@ -463,7 +464,7 @@ class Annotation:
             if token is not None:
                 if organization_id != context.organization_id:
                     warnings.warn(
-                        "The annotation used with get_annotation_dataset "
+                        "The annotation used with get_remote_annotation_dataset "
                         + "specifies a different organization id than the current context. "
                         + f"The annotation uses {organization_id}, the context {context.organization_id}.",
                         RuntimeWarning,
