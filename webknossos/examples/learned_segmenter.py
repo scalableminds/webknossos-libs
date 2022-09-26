@@ -24,7 +24,8 @@ def main() -> None:
     training_data_bbox = annotation.user_bounding_boxes[0]  # type: ignore[index]
     time_str = strftime("%Y-%m-%d_%H-%M-%S", gmtime())
     new_dataset_name = annotation.dataset_name + f"_segmented_{time_str}"
-    dataset = annotation.get_annotation_dataset()
+    with wk.webknossos_context("https://webknossos.org"):
+        dataset = annotation.get_annotation_dataset()
 
     volume_mag_view = dataset.layers["Volume"].get_finest_mag()
     mag = volume_mag_view.mag
@@ -78,7 +79,7 @@ def main() -> None:
         segmentation_layer.downsample(sampling_mode="constant_z")
 
         remote_ds = new_dataset.upload(
-            layers_to_link=[dataset.layers["color"]]
+            layers_to_link=[annotation.get_remote_base_dataset().layers["color"]]
             if "PYTEST_CURRENT_TEST" not in os.environ
             else None
         )
