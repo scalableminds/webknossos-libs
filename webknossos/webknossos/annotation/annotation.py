@@ -44,10 +44,12 @@ from zlib import Z_BEST_SPEED
 
 import attr
 import httpx
+from upath import UPath
 from zipp import Path as ZipPath
 
 import webknossos._nml as wknml
 from webknossos.annotation._nml_conversion import annotation_to_nml, nml_to_skeleton
+from webknossos.client._generated.api.default import dataset_info
 from webknossos.dataset import SEGMENTATION_CATEGORY, Dataset, Layer, SegmentationLayer
 from webknossos.dataset.dataset import RemoteDataset
 from webknossos.geometry import BoundingBox
@@ -433,6 +435,57 @@ class Annotation:
                 volume_layer._default_zip_name(),
                 layer_content,
             )
+
+    def get_remote_annotation_dataset(self) -> Dataset:
+        """
+        Returns a streamed dataset of the annotation as shown in webknossos,
+        incorporating fallback layers and potentially mappings.
+        A mapping is currently only incorporated if it is a pinned agglomerate mapping.
+        After an agglomerate mapping was activated in webKnossos, it is pinned as soon
+        as the first volume editing action is done. Note that this behavior might change
+        in the future.
+        """
+        from webknossos.client.context import _get_context
+
+        if self.annotation_id is None:
+            raise ValueError(
+                "The annotation_id is not set, cannot get the corresponding dataset."
+            )
+
+        context = _get_context()
+        token: Optional[str]
+        if self.organization_id is None:
+            token = context.required_token
+            organization_id = context.organization_id
+        else:
+            token = context.token
+            organization_id = self.organization_id
+            # avoid requiring authentication
+            if token is not None:
+                if organization_id != context.organization_id:
+                    warnings.warn(
+                        "The annotation used with get_remote_annotation_dataset "
+                        + "specifies a different organization id than the current context. "
+                        + f"The annotation uses {organization_id}, the context {context.organization_id}.",
+                        RuntimeWarning,
+                    )
+
+        dataset_info_response = dataset_info.sync_detailed(
+            organization_name=organization_id,
+            data_set_name=self.dataset_name,
+            client=context.generated_client,
+        )
+        assert dataset_info_response.status_code == 200, dataset_info_response
+        parsed = dataset_info_response.parsed
+        assert parsed is not None
+
+        datastore_url = parsed.data_store.url
+
+        zarr_path = UPath(
+            f"{datastore_url}/data/annotations/zarr/{self.annotation_id}/",
+            headers={} if token is None else {"X-Auth-Token": token},
+        )
+        return Dataset.open(zarr_path)
 
     def get_remote_base_dataset(
         self,

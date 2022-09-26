@@ -14,7 +14,6 @@ class DatasetInfoResponse200DataStore:
     name: str
     url: str
     allows_upload: int
-    is_foreign: Union[Unset, int] = UNSET
     is_scratch: Union[Unset, int] = UNSET
     is_connector: Union[Unset, int] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
@@ -23,7 +22,6 @@ class DatasetInfoResponse200DataStore:
         name = self.name
         url = self.url
         allows_upload = self.allows_upload
-        is_foreign = self.is_foreign
         is_scratch = self.is_scratch
         is_connector = self.is_connector
 
@@ -36,8 +34,6 @@ class DatasetInfoResponse200DataStore:
                 "allowsUpload": allows_upload,
             }
         )
-        if is_foreign is not UNSET:
-            field_dict["isForeign"] = is_foreign
         if is_scratch is not UNSET:
             field_dict["isScratch"] = is_scratch
         if is_connector is not UNSET:
@@ -54,8 +50,6 @@ class DatasetInfoResponse200DataStore:
 
         allows_upload = d.pop("allowsUpload")
 
-        is_foreign = d.pop("isForeign", UNSET)
-
         is_scratch = d.pop("isScratch", UNSET)
 
         is_connector = d.pop("isConnector", UNSET)
@@ -64,7 +58,6 @@ class DatasetInfoResponse200DataStore:
             name=name,
             url=url,
             allows_upload=allows_upload,
-            is_foreign=is_foreign,
             is_scratch=is_scratch,
             is_connector=is_connector,
         )

@@ -15,6 +15,8 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes
 
 ### Added
+- Added `annotation.get_remote_annotation_dataset()` to get a streamed annotation dataset, which also reflects fallback layers or applied mappings. [#794](https://github.com/scalableminds/webknossos-libs/pull/794)
+- Added direct access to an underlying Zarr array with the `MagView.get_zarr_array()` method. [#792](https://github.com/scalableminds/webknossos-libs/pull/792)
 
 ### Changed
 

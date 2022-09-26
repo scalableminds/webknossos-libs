@@ -15,10 +15,10 @@ interactions:
     method: GET
     uri: http://localhost:9000/api/datastores
   response:
-    content: '[{"name":"connect","url":"http://localhost:8000","isForeign":false,"isScratch":false,"isConnector":true,"allowsUpload":false},{"name":"localhost","url":"http://localhost:9000","isForeign":false,"isScratch":false,"isConnector":false,"allowsUpload":true}]'
+    content: '[{"name":"connect","url":"http://localhost:8000","isScratch":false,"isConnector":true,"allowsUpload":false},{"name":"localhost","url":"http://localhost:9000","isScratch":false,"isConnector":false,"allowsUpload":true}]'
     headers:
       content-length:
-      - '253'
+      - '217'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT

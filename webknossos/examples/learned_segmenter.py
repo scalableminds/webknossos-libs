@@ -19,19 +19,19 @@ def main() -> None:
         "https://webknossos.org/annotations/616457c2010000870032ced4"
     )
 
-    # Step 1: Download the training data annotation from webKnossos to our local computer
+    # Step 1: Read the training data from the annotation and the dataset's color
+    # layer (the data will be streamed from webKnossos to our local computer)
     training_data_bbox = annotation.user_bounding_boxes[0]  # type: ignore[index]
     time_str = strftime("%Y-%m-%d_%H-%M-%S", gmtime())
     new_dataset_name = annotation.dataset_name + f"_segmented_{time_str}"
-    dataset = annotation.get_remote_base_dataset(
-        webknossos_url="https://webknossos.org"
-    )
+    with wk.webknossos_context("https://webknossos.org"):
+        dataset = annotation.get_remote_annotation_dataset()
 
-    with annotation.temporary_volume_layer_copy() as volume_annotation_layer:
-        mag = volume_annotation_layer.get_finest_mag().mag
-        volume_annotation_data = volume_annotation_layer.mags[mag].read(
-            absolute_bounding_box=training_data_bbox
-        )
+    volume_mag_view = dataset.layers["Volume"].get_finest_mag()
+    mag = volume_mag_view.mag
+    volume_annotation_data = volume_mag_view.read(
+        absolute_bounding_box=training_data_bbox
+    )
 
     color_mag_view = dataset.layers["color"].mags[mag]
 
@@ -62,7 +62,7 @@ def main() -> None:
     assert segmentation.max() < 256
     segmentation = segmentation.astype("uint8")
 
-    # Step 5: Bundle everying a webKnossos layer and upload to wK for viewing and further work
+    # Step 5: Bundle everything as a webKnossos layer and upload to wK for viewing and further work
     with TemporaryDirectory() as tempdir:
         new_dataset = wk.Dataset(
             tempdir, voxel_size=dataset.voxel_size, name=new_dataset_name
@@ -79,7 +79,7 @@ def main() -> None:
         segmentation_layer.downsample(sampling_mode="constant_z")
 
         remote_ds = new_dataset.upload(
-            layers_to_link=[dataset.layers["color"]]
+            layers_to_link=[annotation.get_remote_base_dataset().layers["color"]]
             if "PYTEST_CURRENT_TEST" not in os.environ
             else None
         )
