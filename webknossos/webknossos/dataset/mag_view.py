@@ -8,6 +8,7 @@ from uuid import uuid4
 
 import numpy as np
 import zarr
+from cluster_tools import Executor
 from upath import UPath
 
 from ..geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
@@ -268,7 +269,8 @@ class MagView(View):
     def compress(
         self,
         target_path: Optional[Union[str, Path]] = None,
-        args: Optional[Namespace] = None,
+        args: Optional[Namespace] = None,  # deprecated
+        executor: Optional[Executor] = None,
     ) -> None:
         """
         Compresses the files on disk. This has consequences for writing data (see `write`).
@@ -323,7 +325,7 @@ class MagView(View):
                 self.name, str(uncompressed_full_path)
             )
         )
-        with get_executor_for_args(args) as executor:
+        with get_executor_for_args(args, executor) as executor:
             job_args = []
             for bbox in self.get_bounding_boxes_on_disk():
                 bbox = bbox.intersected_with(self.layer.bounding_box, dont_assert=True)

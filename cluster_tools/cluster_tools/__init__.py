@@ -7,10 +7,11 @@ from concurrent.futures import ProcessPoolExecutor
 from functools import partial
 from pathlib import Path
 from shutil import rmtree
+from typing import Union
 
 from . import pickling
 from .multiprocessing_logging_handler import get_multiprocessing_logging_setup_fn
-from .schedulers.cluster_executor import RemoteOutOfMemoryException
+from .schedulers.cluster_executor import ClusterExecutor, RemoteOutOfMemoryException
 from .schedulers.kube import KubernetesExecutor
 from .schedulers.pbs import PBSExecutor
 from .schedulers.slurm import SlurmExecutor
@@ -353,3 +354,6 @@ def get_executor(environment, **kwargs):
     elif environment == "test_pickling":
         return PickleExecutor(**kwargs)
     raise Exception("Unknown executor: {}".format(environment))
+
+
+Executor = Union[ClusterExecutor, WrappedProcessPoolExecutor]

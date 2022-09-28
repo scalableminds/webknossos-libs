@@ -1,11 +1,13 @@
 from argparse import ArgumentParser
 
 from webknossos import Dataset
+from webknossos.utils import get_executor_for_args
 
 from ._internal.utils import (
     add_data_format_flags,
     add_distribution_flags,
     add_verbose_flag,
+    get_executor_args,
     parse_path,
     setup_logging,
     setup_warnings,
@@ -45,12 +47,12 @@ if __name__ == "__main__":
     setup_warnings()
     args = create_parser().parse_args()
     setup_logging(args)
-
-    Dataset.open(args.source_path).copy_dataset(
-        args.target_path,
-        data_format=args.data_format,
-        chunk_shape=args.chunk_shape,
-        chunks_per_shard=args.chunks_per_shard,
-        compress=not args.no_compression,
-        args=args,
-    )
+    with get_executor_for_args(args) as executor:
+        Dataset.open(args.source_path).copy_dataset(
+            args.target_path,
+            data_format=args.data_format,
+            chunk_shape=args.chunk_shape,
+            chunks_per_shard=args.chunks_per_shard,
+            compress=not args.no_compression,
+            executor=executor,
+        )
