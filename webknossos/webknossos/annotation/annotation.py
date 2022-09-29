@@ -238,6 +238,8 @@ class Annotation:
         * `webknossos_url` may be supplied if an annotation id was used
           and allows to specifiy in which webknossos instance to search for the annotation.
           It defaults to the url from your current `webknossos_context`, using https://webknossos.org as a fallback.
+        * `skip_volume_data` can be set to `True` to omit downloading annotated volume data.
+          They can still be streamed from webKnossos using `annotation.get_remote_annotation_dataset()`.
         """
         from webknossos.client._generated.api.default import annotation_download
         from webknossos.client.context import (
