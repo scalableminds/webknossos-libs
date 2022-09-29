@@ -228,6 +228,8 @@ class Annotation:
         annotation_id_or_url: str,
         annotation_type: Union[str, "AnnotationType", None] = None,
         webknossos_url: Optional[str] = None,
+        *,
+        skip_volume_data: bool = False,
     ) -> "Annotation":
         """
         * `annotation_id_or_url` may be an annotation id or a full URL to an annotation, e.g.
@@ -277,7 +279,9 @@ class Annotation:
         with context:
             client = _get_generated_client()
             response = annotation_download.sync_detailed(
-                id=annotation_id, client=client
+                id=annotation_id,
+                client=client,
+                skip_volume_data=skip_volume_data,
             )
         assert response.status_code == 200, response
         content_disposition_header = response.headers.get("content-disposition", "")

@@ -15,6 +15,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes
 
 ### Added
+- `Annotation.download()` now accepts the keyword-only argument `skip_volume_data`, which can be set to true to omit downloading volume data.  [#TODO](https://github.com/scalableminds/webknossos-libs/pull/TODO)
 
 ### Changed
 
