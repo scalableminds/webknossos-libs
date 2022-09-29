@@ -1029,7 +1029,7 @@ class Layer:
             target_view = target_mag_view.get_view()
 
             # perform upsampling
-            with get_executor_for_args(args, executor) as executor:
+            with get_executor_for_args(args, executor) as actual_executor:
 
                 if buffer_shape is None:
                     buffer_shape = determine_buffer_shape(prev_mag_view.info)
@@ -1042,7 +1042,7 @@ class Layer:
                     # this view is restricted to the bounding box specified in the properties
                     func,
                     target_view=target_view,
-                    executor=executor,
+                    executor=actual_executor,
                     progress_desc=f"Upsampling from Mag {prev_mag} to Mag {target_mag}",
                 )
 

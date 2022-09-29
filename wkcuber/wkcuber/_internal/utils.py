@@ -3,7 +3,7 @@ from glob import iglob
 from logging import getLogger
 from math import ceil, floor
 from os import environ
-from typing import Generator, Sequence, Tuple
+from typing import Generator, Sequence, Tuple, Union
 
 import numpy as np
 import wkw
