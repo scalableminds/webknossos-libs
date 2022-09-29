@@ -4,6 +4,8 @@ from functools import partial
 from pathlib import Path
 from typing import Optional, Tuple, Union
 
+from cluster_tools import Executor
+
 import numpy as np
 from webknossos import BoundingBox, DataFormat, Dataset, Mag, MagView, Vec3Int
 from webknossos.utils import (
@@ -20,7 +22,6 @@ from ._internal.utils import (
     add_sampling_mode_flag,
     add_verbose_flag,
     add_voxel_size_flag,
-    get_executor_args,
     parse_path,
     setup_logging,
     setup_warnings,
@@ -170,7 +171,7 @@ def convert_raw(
     voxel_size: Optional[Tuple[float, float, float]] = (1.0, 1.0, 1.0),
     flip_axes: Optional[Union[int, Tuple[int, ...]]] = None,
     compress: bool = True,
-    executor_args: Optional[argparse.Namespace] = None,
+    executor: Optional[Executor] = None,
 ) -> MagView:
     assert order in ("C", "F")
     time_start(f"Conversion of {source_raw_path}")
@@ -194,7 +195,7 @@ def convert_raw(
     )
 
     # Parallel chunk conversion
-    with get_executor_for_args(executor_args) as executor:
+    with get_executor_for_args(args=None, executor=executor) as executor:
         wait_and_ensure_success(
             executor.map_to_futures(
                 partial(
@@ -221,32 +222,31 @@ def main(args: argparse.Namespace) -> None:
         logger.error("source_path is not a file")
         return
 
-    executor_args = get_executor_args(args)
+    with get_executor_for_args(args) as executor:
+        mag_view = convert_raw(
+            source_path,
+            args.target_path,
+            args.layer_name,
+            args.input_dtype,
+            args.shape,
+            args.data_format,
+            args.chunk_shape,
+            args.chunks_per_shard,
+            args.order,
+            args.voxel_size,
+            args.flip_axes,
+            not args.no_compress,
+            executor=executor,
+        )
 
-    mag_view = convert_raw(
-        source_path,
-        args.target_path,
-        args.layer_name,
-        args.input_dtype,
-        args.shape,
-        args.data_format,
-        args.chunk_shape,
-        args.chunks_per_shard,
-        args.order,
-        args.voxel_size,
-        args.flip_axes,
-        not args.no_compress,
-        executor_args=executor_args,
-    )
-
-    mag_view.layer.downsample(
-        from_mag=mag_view.mag,
-        coarsest_mag=None if args.max_mag is None else Mag(args.max_mag),
-        interpolation_mode=args.interpolation_mode,
-        compress=not args.no_compress,
-        sampling_mode=args.sampling_mode,
-        args=executor_args,
-    )
+        mag_view.layer.downsample(
+            from_mag=mag_view.mag,
+            coarsest_mag=None if args.max_mag is None else Mag(args.max_mag),
+            interpolation_mode=args.interpolation_mode,
+            compress=not args.no_compress,
+            sampling_mode=args.sampling_mode,
+            executor=executor,
+        )
 
 
 if __name__ == "__main__":

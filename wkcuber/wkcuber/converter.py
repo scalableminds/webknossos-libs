@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, cast
 
 from webknossos.dataset.properties import LayerViewConfiguration
+from webknossos.utils import get_executor_for_args
 
 from ._internal.image_readers import image_reader
 from ._internal.utils import (
@@ -13,7 +14,6 @@ from ._internal.utils import (
     add_voxel_size_flag,
     find_files,
     get_channel_and_sample_iters_for_wk_compatibility,
-    get_executor_args,
     is_wk_compatible_layer_format,
     parse_path,
     setup_logging,
@@ -390,8 +390,6 @@ class ImageStackConverter(Converter):
         put_default_from_argparser_if_not_present(args, image_stack_parser, "pad")
         put_default_from_argparser_if_not_present(args, image_stack_parser, "verbose")
 
-        executor_args = get_executor_args(args)
-
         # detect layer and ds name
         (
             dataset_name,
@@ -422,44 +420,45 @@ class ImageStackConverter(Converter):
             )
 
             layer_count = 0
-            for channel_index in channel_iter:
-                for sample_index in sample_iter:
-                    if len(channel_iter) * len(sample_iter) > 1:
-                        curr_layer_name = f"{layer_name}_{layer_count}"
-                    else:
-                        curr_layer_name = layer_name
+            with get_executor_for_args(args) as executor:
+                for channel_index in channel_iter:
+                    for sample_index in sample_iter:
+                        if len(channel_iter) * len(sample_iter) > 1:
+                            curr_layer_name = f"{layer_name}_{layer_count}"
+                        else:
+                            curr_layer_name = layer_name
 
-                    arg_dict = vars(args)
-                    layer = cube_image_stack(
-                        Path(layer_path),
-                        args.target_path,
-                        curr_layer_name,
-                        arg_dict.get("batch_size"),
-                        channel_index,
-                        sample_index,
-                        arg_dict.get("dtype"),
-                        args.target_mag,
-                        args.data_format,
-                        args.chunk_shape,
-                        args.chunks_per_shard,
-                        args.interpolation_mode,
-                        args.start_z,
-                        args.skip_first_z_slices,
-                        args.pad,
-                        args.voxel_size,
-                        executor_args,
-                    )
-
-                    if not is_wk_compatible_layer_format(sample_count, dtype):
-                        # This means that every sample has to be converted into its own layer, so we want to set a view configuration since first three layers are probably RGB
-                        color = ImageStackConverter.get_color_of_view_configuration(
-                            layer_count
+                        arg_dict = vars(args)
+                        layer = cube_image_stack(
+                            Path(layer_path),
+                            args.target_path,
+                            curr_layer_name,
+                            arg_dict.get("batch_size"),
+                            channel_index,
+                            sample_index,
+                            arg_dict.get("dtype"),
+                            args.target_mag,
+                            args.data_format,
+                            args.chunk_shape,
+                            args.chunks_per_shard,
+                            args.interpolation_mode,
+                            args.start_z,
+                            args.skip_first_z_slices,
+                            args.pad,
+                            args.voxel_size,
+                            executor=executor,
                         )
-                        if color is not None:
-                            layer.default_view_configuration = LayerViewConfiguration(
-                                color=color
+
+                        if not is_wk_compatible_layer_format(sample_count, dtype):
+                            # This means that every sample has to be converted into its own layer, so we want to set a view configuration since first three layers are probably RGB
+                            color = ImageStackConverter.get_color_of_view_configuration(
+                                layer_count
                             )
-                    layer_count += 1
+                            if color is not None:
+                                layer.default_view_configuration = (
+                                    LayerViewConfiguration(color=color)
+                                )
+                        layer_count += 1
 
         assert converted_layers > 0, "No layer could be converted!"
 

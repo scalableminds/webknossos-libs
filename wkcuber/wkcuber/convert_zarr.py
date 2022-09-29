@@ -5,6 +5,7 @@ from functools import partial
 from pathlib import Path
 from typing import Optional, Tuple, Union, cast
 
+from cluster_tools import Executor
 import numpy as np
 import zarr
 from webknossos import (
@@ -26,7 +27,6 @@ from ._internal.utils import (
     add_sampling_mode_flag,
     add_verbose_flag,
     add_voxel_size_flag,
-    get_executor_args,
     parse_path,
     setup_logging,
     setup_warnings,
@@ -150,7 +150,7 @@ def convert_zarr(
     voxel_size: Optional[Tuple[float, float, float]] = (1.0, 1.0, 1.0),
     flip_axes: Optional[Union[int, Tuple[int, ...]]] = None,
     compress: bool = True,
-    executor_args: Optional[argparse.Namespace] = None,
+    executor: Optional[Executor] = None,
 ) -> MagView:
     ref_time = time.time()
 
@@ -178,7 +178,7 @@ def convert_zarr(
     )
 
     # Parallel chunk conversion
-    with get_executor_for_args(executor_args) as executor:
+    with get_executor_for_args(None, executor) as executor:
         largest_segment_id_per_chunk = wait_and_ensure_success(
             executor.map_to_futures(
                 partial(
@@ -208,30 +208,29 @@ def main(args: argparse.Namespace) -> None:
         logger.error("source_path is not a directory")
         return
 
-    executor_args = get_executor_args(args)
+    with get_executor_for_args(args) as executor:
+        mag_view = convert_zarr(
+            source_path,
+            args.target_path,
+            layer_name=args.layer_name,
+            data_format=args.data_format,
+            chunk_shape=args.chunk_shape,
+            chunks_per_shard=args.chunks_per_shard,
+            is_segmentation_layer=args.is_segmentation_layer,
+            voxel_size=args.voxel_size,
+            flip_axes=args.flip_axes,
+            compress=not args.no_compress,
+            executor=executor,
+        )
 
-    mag_view = convert_zarr(
-        source_path,
-        args.target_path,
-        layer_name=args.layer_name,
-        data_format=args.data_format,
-        chunk_shape=args.chunk_shape,
-        chunks_per_shard=args.chunks_per_shard,
-        is_segmentation_layer=args.is_segmentation_layer,
-        voxel_size=args.voxel_size,
-        flip_axes=args.flip_axes,
-        compress=not args.no_compress,
-        executor_args=executor_args,
-    )
-
-    mag_view.layer.downsample(
-        from_mag=mag_view.mag,
-        coarsest_mag=None if args.max_mag is None else Mag(args.max_mag),
-        interpolation_mode=args.interpolation_mode,
-        compress=not args.no_compress,
-        sampling_mode=args.sampling_mode,
-        args=executor_args,
-    )
+        mag_view.layer.downsample(
+            from_mag=mag_view.mag,
+            coarsest_mag=None if args.max_mag is None else Mag(args.max_mag),
+            interpolation_mode=args.interpolation_mode,
+            compress=not args.no_compress,
+            sampling_mode=args.sampling_mode,
+            executor=executor,
+        )
 
 
 if __name__ == "__main__":

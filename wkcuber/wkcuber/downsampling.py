@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Optional, Union
 
 from webknossos import Dataset, Mag, Vec3Int, SamplingModes
+from webknossos.utils import get_executor_for_args
 
 from ._internal.utils import (
     add_distribution_flags,
@@ -10,7 +11,6 @@ from ._internal.utils import (
     add_isotropic_flag,
     add_sampling_mode_flag,
     add_verbose_flag,
-    get_executor_args,
     parse_path,
     setup_logging,
     setup_warnings,
@@ -104,7 +104,7 @@ def downsample_mags(
     interpolation_mode: str = "default",
     buffer_shape: Optional[Vec3Int] = None,
     compress: bool = True,
-    args: Optional[Namespace] = None,
+    executor: Optional[Namespace] = None,
     sampling_mode: Union[str, SamplingModes] = SamplingModes.ANISOTROPIC,
     force_sampling_scheme: bool = False,
 ) -> None:
@@ -139,7 +139,7 @@ def downsample_mags(
         sampling_mode=sampling_mode,
         buffer_shape=buffer_shape,
         force_sampling_scheme=force_sampling_scheme,
-        args=args,
+        executor=executor,
     )
 
 
@@ -166,15 +166,16 @@ if __name__ == "__main__":
         else None
     )
 
-    downsample_mags(
-        path=args.path,
-        layer_name=args.layer_name,
-        from_mag=from_mag,
-        max_mag=max_mag,
-        interpolation_mode=args.interpolation_mode,
-        compress=not args.no_compress,
-        sampling_mode=args.sampling_mode,
-        buffer_shape=buffer_shape,
-        force_sampling_scheme=args.force_sampling_scheme,
-        args=get_executor_args(args),
-    )
+    with get_executor_for_args(args) as executor:
+        downsample_mags(
+            path=args.path,
+            layer_name=args.layer_name,
+            from_mag=from_mag,
+            max_mag=max_mag,
+            interpolation_mode=args.interpolation_mode,
+            compress=not args.no_compress,
+            sampling_mode=args.sampling_mode,
+            buffer_shape=buffer_shape,
+            force_sampling_scheme=args.force_sampling_scheme,
+            executor=executor,
+        )

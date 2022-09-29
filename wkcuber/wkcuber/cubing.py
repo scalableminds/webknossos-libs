@@ -1,10 +1,11 @@
 import logging
-from argparse import ArgumentParser, Namespace
+from argparse import ArgumentParser
 from os import path
 from pathlib import Path
 from typing import Any, List, Optional, Tuple, cast
 
 import numpy as np
+from cluster_tools import Executor
 from natsort import natsorted
 from webknossos import (
     COLOR_CATEGORY,
@@ -300,7 +301,7 @@ def cubing(
     skip_first_z_slices: int,
     pad: bool,
     voxel_size: Tuple[float, float, float],
-    executor_args: Namespace,
+    executor: Executor,
 ) -> Layer:
     source_files = find_source_filenames(source_path)
 
@@ -396,36 +397,35 @@ def cubing(
 
     logging.info("Found source files: count={} size={}x{}".format(num_z, num_x, num_y))
 
-    with get_executor_for_args(executor_args) as executor:
-        job_args = []
-        # We iterate over all z sections
-        for z in range(skip_first_z_slices, num_z, DEFAULT_CHUNK_SHAPE.z):
-            # The z is used to access the source files. However, when writing the data, the `start_z` has to be considered.
-            max_z = min(num_z, z + DEFAULT_CHUNK_SHAPE.z)
-            # Prepare source files array
-            if len(source_files) > 1:
-                source_files_array = source_files[z:max_z]
-            else:
-                source_files_array = source_files * (max_z - z)
+    job_args = []
+    # We iterate over all z sections
+    for z in range(skip_first_z_slices, num_z, DEFAULT_CHUNK_SHAPE.z):
+        # The z is used to access the source files. However, when writing the data, the `start_z` has to be considered.
+        max_z = min(num_z, z + DEFAULT_CHUNK_SHAPE.z)
+        # Prepare source files array
+        if len(source_files) > 1:
+            source_files_array = source_files[z:max_z]
+        else:
+            source_files_array = source_files * (max_z - z)
 
-            # Prepare job
-            job_args.append(
-                (
-                    target_mag_view.get_view(
-                        (0, 0, z + start_z),
-                        (num_x, num_y, max_z - z),
-                    ),
-                    target_mag,
-                    interpolation_mode,
-                    source_files_array,
-                    batch_size,
-                    pad,
-                    channel_index,
-                    sample_index,
-                    dtype,
-                    target_layer.num_channels,
-                )
+        # Prepare job
+        job_args.append(
+            (
+                target_mag_view.get_view(
+                    (0, 0, z + start_z),
+                    (num_x, num_y, max_z - z),
+                ),
+                target_mag,
+                interpolation_mode,
+                source_files_array,
+                batch_size,
+                pad,
+                channel_index,
+                sample_index,
+                dtype,
+                target_layer.num_channels,
             )
+        )
 
         largest_segment_id_per_chunk = wait_and_ensure_success(
             executor.map_to_futures(cubing_job, job_args),
@@ -448,22 +448,23 @@ if __name__ == "__main__":
 
     arg_dict = vars(args)
 
-    cubing(
-        args.source_path,
-        args.target_path,
-        args.layer_name,
-        arg_dict.get("batch_size"),
-        arg_dict.get("channel_index"),
-        arg_dict.get("sample_index"),
-        arg_dict.get("dtype"),
-        args.target_mag,
-        args.data_format,
-        args.chunk_shape,
-        args.chunks_per_shard,
-        args.interpolation_mode,
-        args.start_z,
-        args.skip_first_z_slices,
-        args.pad,
-        args.voxel_size,
-        args,
-    )
+    with get_executor_for_args(args) as executor:
+        cubing(
+            args.source_path,
+            args.target_path,
+            args.layer_name,
+            arg_dict.get("batch_size"),
+            arg_dict.get("channel_index"),
+            arg_dict.get("sample_index"),
+            arg_dict.get("dtype"),
+            args.target_mag,
+            args.data_format,
+            args.chunk_shape,
+            args.chunks_per_shard,
+            args.interpolation_mode,
+            args.start_z,
+            args.skip_first_z_slices,
+            args.pad,
+            args.voxel_size,
+            executor=executor,
+        )
