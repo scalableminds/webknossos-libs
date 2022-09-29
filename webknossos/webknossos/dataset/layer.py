@@ -801,13 +801,15 @@ class Layer:
          - "bilinear"
          - "bicubic"
 
-        The `args` can contain information to distribute the computation.
         If allow_overwrite is True, an existing Mag may be overwritten.
 
         If only_setup_mag is True, the magnification is created, but left
         empty. This parameter can be used to prepare for parallel downsampling
         of multiple layers while avoiding parallel writes with outdated updates
         to the datasource-properties.json file.
+
+        `executor` can be passed to allow distrubuted computation, parallelizing
+        across chunks. `args` is deprecated.
         """
 
         if args is not None:
