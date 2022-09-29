@@ -809,6 +809,13 @@ class Layer:
         of multiple layers while avoiding parallel writes with outdated updates
         to the datasource-properties.json file.
         """
+
+        if args is not None:
+            warn_deprecated(
+                "args argument",
+                "executor (e.g. via wk.utils.get_executor_for_args(args))",
+            )
+
         assert (
             from_mag in self.mags.keys()
         ), f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
@@ -970,6 +977,13 @@ class Layer:
 
         `min_mag` is deprecated, please use `finest_mag` instead.
         """
+
+        if args is not None:
+            warn_deprecated(
+                "args argument",
+                "executor (e.g. via wk.utils.get_executor_for_args(args))",
+            )
+
         assert (
             from_mag in self.mags.keys()
         ), f"Failed to upsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."

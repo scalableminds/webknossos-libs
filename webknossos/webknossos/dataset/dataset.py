@@ -1154,6 +1154,12 @@ class Dataset:
         WKW layers can only be copied to datasets on local file systems.
         """
 
+        if args is not None:
+            warn_deprecated(
+                "args argument",
+                "executor (e.g. via wk.utils.get_executor_for_args(args))",
+            )
+
         chunk_shape, chunks_per_shard = _get_sharding_parameters(
             chunk_shape=chunk_shape,
             chunks_per_shard=chunks_per_shard,

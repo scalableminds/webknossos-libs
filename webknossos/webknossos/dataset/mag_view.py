@@ -12,7 +12,13 @@ from cluster_tools import Executor
 from upath import UPath
 
 from ..geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
-from ..utils import get_executor_for_args, is_fs_path, rmtree, wait_and_ensure_success
+from ..utils import (
+    get_executor_for_args,
+    is_fs_path,
+    rmtree,
+    wait_and_ensure_success,
+    warn_deprecated,
+)
 from ._array import ArrayInfo, BaseArray, ZarrArray
 from .properties import MagViewProperties
 
@@ -282,6 +288,12 @@ class MagView(View):
         """
 
         from webknossos.dataset.dataset import Dataset
+
+        if args is not None:
+            warn_deprecated(
+                "args argument",
+                "executor (e.g. via wk.utils.get_executor_for_args(args))",
+            )
 
         if target_path is None:
             if self._is_compressed():
