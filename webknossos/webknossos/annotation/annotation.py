@@ -228,6 +228,8 @@ class Annotation:
         annotation_id_or_url: str,
         annotation_type: Union[str, "AnnotationType", None] = None,
         webknossos_url: Optional[str] = None,
+        *,
+        skip_volume_data: bool = False,
     ) -> "Annotation":
         """
         * `annotation_id_or_url` may be an annotation id or a full URL to an annotation, e.g.
@@ -236,6 +238,8 @@ class Annotation:
         * `webknossos_url` may be supplied if an annotation id was used
           and allows to specifiy in which webknossos instance to search for the annotation.
           It defaults to the url from your current `webknossos_context`, using https://webknossos.org as a fallback.
+        * `skip_volume_data` can be set to `True` to omit downloading annotated volume data.
+          They can still be streamed from webKnossos using `annotation.get_remote_annotation_dataset()`.
         """
         from webknossos.client._generated.api.default import annotation_download
         from webknossos.client.context import (
@@ -277,7 +281,9 @@ class Annotation:
         with context:
             client = _get_generated_client()
             response = annotation_download.sync_detailed(
-                id=annotation_id, client=client
+                id=annotation_id,
+                client=client,
+                skip_volume_data=skip_volume_data,
             )
         assert response.status_code == 200, response
         content_disposition_header = response.headers.get("content-disposition", "")
