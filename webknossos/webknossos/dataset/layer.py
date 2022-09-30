@@ -815,7 +815,7 @@ class Layer:
         if args is not None:
             warn_deprecated(
                 "args argument",
-                "executor (e.g. via wk.utils.get_executor_for_args(args))",
+                "executor (e.g. via webknossos.utils.get_executor_for_args(args))",
             )
 
         assert (
@@ -983,7 +983,7 @@ class Layer:
         if args is not None:
             warn_deprecated(
                 "args argument",
-                "executor (e.g. via wk.utils.get_executor_for_args(args))",
+                "executor (e.g. via webknossos.utils.get_executor_for_args(args))",
             )
 
         assert (
