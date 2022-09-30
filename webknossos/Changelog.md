@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.17...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.18...HEAD)
 
 ### Breaking Changes
 - The `executor` argument can now be passed to the following methods,
@@ -29,6 +29,13 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+
+
+## [0.10.18](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.18) - 2022-09-29
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.17...v0.10.18)
+
+### Added
+- `Annotation.download()` now accepts the keyword-only argument `skip_volume_data`, which can be set to `True` to omit downloading volume data.  [#806](https://github.com/scalableminds/webknossos-libs/pull/806)
 
 
 ## [0.10.17](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.17) - 2022-09-26
