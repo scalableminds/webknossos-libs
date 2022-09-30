@@ -2,22 +2,11 @@ import warnings
 from argparse import Namespace
 from pathlib import Path
 from types import TracebackType
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    Optional,
-    Tuple,
-    Type,
-    Union,
-)
+from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, Optional, Tuple, Type
 
-import cluster_tools
 import numpy as np
 import wkw
-from cluster_tools.schedulers.cluster_executor import ClusterExecutor
+from cluster_tools import Executor
 
 from ..geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
 from ..utils import (
@@ -706,9 +695,7 @@ class View:
         self,
         func_per_chunk: Callable[[Tuple["View", int]], None],
         chunk_shape: Optional[Vec3IntLike] = None,  # in Mag(1)
-        executor: Optional[
-            Union[ClusterExecutor, cluster_tools.WrappedProcessPoolExecutor]
-        ] = None,
+        executor: Optional[Executor] = None,
         progress_desc: Optional[str] = None,
         *,
         chunk_size: Optional[Vec3IntLike] = None,  # deprecated
@@ -727,7 +714,7 @@ class View:
 
         Example:
         ```python
-        from webknossos.utils import get_executor_for_args, named_partial
+        from webknossos.utils import named_partial
 
         def some_work(args: Tuple[View, int], some_parameter: int) -> None:
             view_of_single_chunk, i = args
@@ -789,9 +776,7 @@ class View:
         target_view: "View",
         source_chunk_shape: Optional[Vec3IntLike] = None,  # in Mag(1)
         target_chunk_shape: Optional[Vec3IntLike] = None,  # in Mag(1)
-        executor: Optional[
-            Union[ClusterExecutor, cluster_tools.WrappedProcessPoolExecutor]
-        ] = None,
+        executor: Optional[Executor] = None,
         progress_desc: Optional[str] = None,
         *,
         source_chunk_size: Optional[Vec3IntLike] = None,  # deprecated
@@ -898,11 +883,18 @@ class View:
     def content_is_equal(
         self,
         other: "View",
-        args: Optional[Namespace] = None,
+        args: Optional[Namespace] = None,  # deprecated
+        executor: Optional[Executor] = None,
     ) -> bool:
+        if args is not None:
+            warn_deprecated(
+                "args argument",
+                "executor (e.g. via webknossos.utils.get_executor_for_args(args))",
+            )
+
         if self.bounding_box.size != other.bounding_box.size:
             return False
-        with get_executor_for_args(args) as executor:
+        with get_executor_for_args(args, executor) as executor:
             try:
                 self.for_zipped_chunks(
                     _assert_check_equality,

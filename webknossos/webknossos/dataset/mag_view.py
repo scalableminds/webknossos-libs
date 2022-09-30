@@ -8,10 +8,17 @@ from uuid import uuid4
 
 import numpy as np
 import zarr
+from cluster_tools import Executor
 from upath import UPath
 
 from ..geometry import BoundingBox, Mag, Vec3Int, Vec3IntLike
-from ..utils import get_executor_for_args, is_fs_path, rmtree, wait_and_ensure_success
+from ..utils import (
+    get_executor_for_args,
+    is_fs_path,
+    rmtree,
+    wait_and_ensure_success,
+    warn_deprecated,
+)
 from ._array import ArrayInfo, BaseArray, ZarrArray
 from .properties import MagViewProperties
 
@@ -268,7 +275,8 @@ class MagView(View):
     def compress(
         self,
         target_path: Optional[Union[str, Path]] = None,
-        args: Optional[Namespace] = None,
+        args: Optional[Namespace] = None,  # deprecated
+        executor: Optional[Executor] = None,
     ) -> None:
         """
         Compresses the files on disk. This has consequences for writing data (see `write`).
@@ -280,6 +288,12 @@ class MagView(View):
         """
 
         from webknossos.dataset.dataset import Dataset
+
+        if args is not None:
+            warn_deprecated(
+                "args argument",
+                "executor (e.g. via webknossos.utils.get_executor_for_args(args))",
+            )
 
         if target_path is None:
             if self._is_compressed():
@@ -323,7 +337,7 @@ class MagView(View):
                 self.name, str(uncompressed_full_path)
             )
         )
-        with get_executor_for_args(args) as executor:
+        with get_executor_for_args(args, executor) as executor:
             job_args = []
             for bbox in self.get_bounding_boxes_on_disk():
                 bbox = bbox.intersected_with(self.layer.bounding_box, dont_assert=True)

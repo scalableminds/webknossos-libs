@@ -3,12 +3,12 @@ from argparse import ArgumentParser, Namespace
 from typing import Sequence, cast
 
 from webknossos import Mag
+from webknossos.utils import get_executor_for_args
 
 from ._internal.utils import (
     add_isotropic_flag,
     add_sampling_mode_flag,
     get_channel_and_sample_iters_for_wk_compatibility,
-    get_executor_args,
     is_wk_compatible_layer_format,
     setup_logging,
     setup_warnings,
@@ -144,44 +144,45 @@ def main(args: Namespace) -> None:
 
     layer_count = 0
     layers = []
-    for channel_index in channel_iter:
-        for sample_index in sample_iter:
-            layers.append(
-                cubing(
-                    args.source_path,
-                    args.target_path,
-                    f"{args.layer_name}_{layer_count}"
-                    if len(channel_iter) * len(sample_iter) > 1
-                    else args.layer_name,
-                    arg_dict.get("batch_size"),
-                    channel_index,
-                    sample_index,
-                    arg_dict.get("dtype"),
-                    args.target_mag,
-                    args.data_format,
-                    args.chunk_shape,
-                    args.chunks_per_shard,
-                    args.interpolation_mode,
-                    args.start_z,
-                    args.skip_first_z_slices,
-                    args.pad,
-                    args.voxel_size,
-                    args,
+    with get_executor_for_args(args) as executor:
+        for channel_index in channel_iter:
+            for sample_index in sample_iter:
+                layers.append(
+                    cubing(
+                        args.source_path,
+                        args.target_path,
+                        f"{args.layer_name}_{layer_count}"
+                        if len(channel_iter) * len(sample_iter) > 1
+                        else args.layer_name,
+                        arg_dict.get("batch_size"),
+                        channel_index,
+                        sample_index,
+                        arg_dict.get("dtype"),
+                        args.target_mag,
+                        args.data_format,
+                        args.chunk_shape,
+                        args.chunks_per_shard,
+                        args.interpolation_mode,
+                        args.start_z,
+                        args.skip_first_z_slices,
+                        args.pad,
+                        args.voxel_size,
+                        executor=executor,
+                    )
                 )
+                layer_count += 1
+
+        for layer in layers:
+            if not args.no_compress:
+                layer.get_mag(args.target_mag).compress(executor=executor)
+
+            layer.downsample(
+                from_mag=args.target_mag,
+                coarsest_mag=None if args.max_mag is None else Mag(args.max_mag),
+                compress=not args.no_compress,
+                sampling_mode=args.sampling_mode,
+                executor=executor,
             )
-            layer_count += 1
-
-    for layer in layers:
-        if not args.no_compress:
-            layer.get_mag(args.target_mag).compress(args=args)
-
-        layer.downsample(
-            from_mag=args.target_mag,
-            coarsest_mag=None if args.max_mag is None else Mag(args.max_mag),
-            compress=not args.no_compress,
-            sampling_mode=args.sampling_mode,
-            args=get_executor_args(args),
-        )
 
 
 if __name__ == "__main__":

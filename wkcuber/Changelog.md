@@ -14,6 +14,8 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Added
 
 ### Changed
+- Some methods now take and `executor` argument instead of `args` or `executor_args`.
+  This does not affect the CLI arguments. [#805](https://github.com/scalableminds/webknossos-libs/pull/805)
 
 ### Fixed
 

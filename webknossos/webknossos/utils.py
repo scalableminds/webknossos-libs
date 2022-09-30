@@ -8,6 +8,7 @@ import time
 import warnings
 from concurrent.futures import as_completed
 from concurrent.futures._base import Future
+from contextlib import nullcontext
 from datetime import datetime
 from inspect import getframeinfo, stack
 from multiprocessing import cpu_count
@@ -17,6 +18,7 @@ from shutil import copyfileobj
 from typing import (
     Any,
     Callable,
+    ContextManager,
     Dict,
     Iterable,
     Iterator,
@@ -25,12 +27,10 @@ from typing import (
     Optional,
     Tuple,
     TypeVar,
-    Union,
 )
 
 import rich
-from cluster_tools import WrappedProcessPoolExecutor, get_executor
-from cluster_tools.schedulers.cluster_executor import ClusterExecutor
+from cluster_tools import Executor, get_executor
 from rich.progress import Progress
 from upath import UPath
 
@@ -49,8 +49,11 @@ def time_stop(identifier: str) -> None:
 
 def get_executor_for_args(
     args: Optional[argparse.Namespace],
-) -> Union[ClusterExecutor, WrappedProcessPoolExecutor]:
-    executor = None
+    executor: Optional[Executor] = None,
+) -> ContextManager[Executor]:
+    if executor is not None:
+        return nullcontext(enter_result=executor)
+
     if args is None:
         # For backwards compatibility with code from other packages
         # we allow args to be None. In this case we are defaulting

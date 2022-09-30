@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Dict, List
 
 from webknossos import Mag
+from webknossos.utils import get_executor_for_args
 
 from ._internal.utils import (
     add_distribution_flags,
@@ -87,19 +88,20 @@ def cube_with_args(args: Namespace) -> None:
             for mag in mags:
                 compress_mag_inplace(args.target_path, layer_name, mag, args)
 
-    for (layer_path, mags) in layer_path_to_mags.items():
-        layer_name = layer_path.name
-        mags.sort()
-        downsample_mags(
-            path=args.target_path,
-            layer_name=layer_name,
-            from_mag=mags[-1],
-            max_mag=None if args.max_mag is None else Mag(args.max_mag),
-            interpolation_mode="default",
-            compress=not args.no_compress,
-            sampling_mode=args.sampling_mode,
-            args=args,
-        )
+    with get_executor_for_args(args) as executor:
+        for (layer_path, mags) in layer_path_to_mags.items():
+            layer_name = layer_path.name
+            mags.sort()
+            downsample_mags(
+                path=args.target_path,
+                layer_name=layer_name,
+                from_mag=mags[-1],
+                max_mag=None if args.max_mag is None else Mag(args.max_mag),
+                interpolation_mode="default",
+                compress=not args.no_compress,
+                sampling_mode=args.sampling_mode,
+                executor=executor,
+            )
 
     refresh_metadata(args.target_path)
 

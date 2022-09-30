@@ -13,6 +13,16 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.18...HEAD)
 
 ### Breaking Changes
+- The `executor` argument can now be passed to the following methods,
+  `args` is deprecated now for those [#805](https://github.com/scalableminds/webknossos-libs/pull/805):
+  * `dataset.copy_dataset(…)`
+  * `layer.upsample(…)`
+  * `layer.downsample(…)`
+  * `layer.downsample_mag(…)`
+  * `layer.downsample_mag_list(…)`
+  * `layer.redownsample(…)`
+  * `mag_view.compress(…)`
+  * `view.content_is_equal(…)`
 
 ### Added
 

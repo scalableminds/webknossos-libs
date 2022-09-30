@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union, cast
 
 import numpy as np
+from cluster_tools import Executor
 from webknossos import (
     COLOR_CATEGORY,
     SEGMENTATION_CATEGORY,
@@ -285,7 +286,8 @@ def tile_cubing(
     batch_size: int,
     input_path_pattern: str,
     voxel_size: Tuple[int, int, int],
-    args: Optional[Namespace] = None,
+    args: Namespace,
+    executor: Executor,
 ) -> None:
     decimal_lengths = get_digit_counts_for_dimensions(input_path_pattern)
     (
@@ -351,47 +353,44 @@ def tile_cubing(
         Mag(1), block_len=DEFAULT_CHUNK_SHAPE.z
     )
 
-    with get_executor_for_args(args) as executor:
-        job_args = []
-        # Iterate over all z batches
-        for z_batch in get_regular_chunks(
-            min_dimensions["z"], max_dimensions["z"], DEFAULT_CHUNK_SHAPE.z
-        ):
-            # The z_batch always starts and ends at a multiple of DEFAULT_CHUNK_SHAPE.z.
-            # However, we only want the part that is inside the bounding box
-            z_batch = range(
-                max(list(z_batch)[0], target_layer.bounding_box.topleft.z),
-                min(list(z_batch)[-1] + 1, target_layer.bounding_box.bottomright.z),
+    job_args = []
+    # Iterate over all z batches
+    for z_batch in get_regular_chunks(
+        min_dimensions["z"], max_dimensions["z"], DEFAULT_CHUNK_SHAPE.z
+    ):
+        # The z_batch always starts and ends at a multiple of DEFAULT_CHUNK_SHAPE.z.
+        # However, we only want the part that is inside the bounding box
+        z_batch = range(
+            max(list(z_batch)[0], target_layer.bounding_box.topleft.z),
+            min(list(z_batch)[-1] + 1, target_layer.bounding_box.bottomright.z),
+        )
+        z_values = list(z_batch)
+        job_args.append(
+            (
+                target_mag_view.get_view(
+                    (x_offset, y_offset, z_values[0]),
+                    (num_x, num_y, len(z_values)),
+                ),
+                z_values,
+                input_path_pattern,
+                batch_size,
+                (tile_width, tile_height, num_channels),
+                min_dimensions,
+                max_dimensions,
+                decimal_lengths,
+                dtype,
+                num_channels,
             )
-            z_values = list(z_batch)
-            job_args.append(
-                (
-                    target_mag_view.get_view(
-                        (x_offset, y_offset, z_values[0]),
-                        (num_x, num_y, len(z_values)),
-                    ),
-                    z_values,
-                    input_path_pattern,
-                    batch_size,
-                    (tile_width, tile_height, num_channels),
-                    min_dimensions,
-                    max_dimensions,
-                    decimal_lengths,
-                    dtype,
-                    num_channels,
-                )
-            )
-
-        largest_segment_id_per_chunk = wait_and_ensure_success(
-            executor.map_to_futures(tile_cubing_job, job_args),
-            f"Tile cubing layer {layer_name}",
         )
 
-        if is_segmentation_layer:
-            largest_segment_id = max(largest_segment_id_per_chunk)
-            cast(
-                SegmentationLayer, target_layer
-            ).largest_segment_id = largest_segment_id
+    largest_segment_id_per_chunk = wait_and_ensure_success(
+        executor.map_to_futures(tile_cubing_job, job_args),
+        f"Tile cubing layer {layer_name}",
+    )
+
+    if is_segmentation_layer:
+        largest_segment_id = max(largest_segment_id_per_chunk)
+        cast(SegmentationLayer, target_layer).largest_segment_id = largest_segment_id
 
 
 def create_parser() -> ArgumentParser:
@@ -414,11 +413,13 @@ if __name__ == "__main__":
     setup_logging(args)
     input_path_pattern = os.path.join(args.source_path, args.input_path_pattern)
 
-    tile_cubing(
-        args.target_path,
-        args.layer_name,
-        int(args.batch_size),
-        input_path_pattern,
-        args.voxel_size,
-        args,
-    )
+    with get_executor_for_args(args) as executor:
+        tile_cubing(
+            args.target_path,
+            args.layer_name,
+            int(args.batch_size),
+            input_path_pattern,
+            args.voxel_size,
+            args,
+            executor=executor,
+        )

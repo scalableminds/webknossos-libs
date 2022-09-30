@@ -27,8 +27,7 @@ from typing import (
 import attr
 import numpy as np
 from boltons.typeutils import make_sentinel
-from cluster_tools import WrappedProcessPoolExecutor
-from cluster_tools.schedulers.cluster_executor import ClusterExecutor
+from cluster_tools import Executor
 from upath import UPath
 
 from ..geometry.vec3_int import Vec3Int, Vec3IntLike
@@ -789,7 +788,7 @@ class Dataset:
         channel: Optional[int] = None,
         timepoint: Optional[int] = None,
         batch_size: Optional[int] = None,  # defaults to shard-size z
-        executor: Optional[Union[ClusterExecutor, WrappedProcessPoolExecutor]] = None,
+        executor: Optional[Executor] = None,
         *,
         chunk_size: Optional[Union[Vec3IntLike, int]] = None,  # deprecated
     ) -> Layer:
@@ -901,8 +900,6 @@ class Dataset:
                 category=RuntimeWarning,
                 module="webknossos",
             )
-            if executor is None:
-                executor = get_executor_for_args(None)
             # There are race-conditions about setting the bbox of the layer.
             # The bbox is set correctly afterwards, ignore errors here:
             warnings.filterwarnings(
@@ -911,10 +908,11 @@ class Dataset:
                 category=UserWarning,
                 module="webknossos",
             )
-            shapes_and_max_ids = wait_and_ensure_success(
-                executor.map_to_futures(func_per_chunk, args),
-                progress_desc="Creating layer from images",
-            )
+            with get_executor_for_args(None, executor) as executor:
+                shapes_and_max_ids = wait_and_ensure_success(
+                    executor.map_to_futures(func_per_chunk, args),
+                    progress_desc="Creating layer from images",
+                )
             shapes, max_ids = zip(*shapes_and_max_ids)
             if category == "segmentation":
                 max_id = max(max_ids)
@@ -1009,7 +1007,7 @@ class Dataset:
         chunks_per_shard: Optional[Union[Vec3IntLike, int]] = None,
         data_format: Optional[Union[str, DataFormat]] = None,
         compress: Optional[bool] = None,
-        executor: Optional[Union[ClusterExecutor, WrappedProcessPoolExecutor]] = None,
+        executor: Optional[Executor] = None,
     ) -> Layer:
         """
         Copies the data at `foreign_layer` which belongs to another dataset to the current dataset.
@@ -1142,7 +1140,8 @@ class Dataset:
         chunks_per_shard: Optional[Union[Vec3IntLike, int]] = None,
         data_format: Optional[Union[str, DataFormat]] = None,
         compress: Optional[bool] = None,
-        args: Optional[Namespace] = None,
+        args: Optional[Namespace] = None,  # deprecated
+        executor: Optional[Executor] = None,
         *,
         chunk_size: Optional[Union[Vec3IntLike, int]] = None,  # deprecated
         block_len: Optional[int] = None,  # deprecated
@@ -1154,6 +1153,12 @@ class Dataset:
         are also used for the new dataset.
         WKW layers can only be copied to datasets on local file systems.
         """
+
+        if args is not None:
+            warn_deprecated(
+                "args argument",
+                "executor (e.g. via webknossos.utils.get_executor_for_args(args))",
+            )
 
         chunk_shape, chunks_per_shard = _get_sharding_parameters(
             chunk_shape=chunk_shape,
@@ -1180,7 +1185,7 @@ class Dataset:
             voxel_size = self.voxel_size
         new_ds = Dataset(new_dataset_path, voxel_size=voxel_size, exist_ok=False)
 
-        with get_executor_for_args(args) as executor:
+        with get_executor_for_args(args, executor) as executor:
             for layer in self.layers.values():
                 new_ds.add_copy_layer(
                     layer,

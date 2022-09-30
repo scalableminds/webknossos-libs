@@ -9,8 +9,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 
 import numpy as np
-from cluster_tools import WrappedProcessPoolExecutor
-from cluster_tools.schedulers.cluster_executor import ClusterExecutor
+from cluster_tools import Executor
 from upath import UPath
 
 from webknossos.dataset.sampling_modes import SamplingModes
@@ -539,7 +538,7 @@ class Layer:
         chunk_shape: Optional[Union[Vec3IntLike, int]] = None,
         chunks_per_shard: Optional[Union[Vec3IntLike, int]] = None,
         compress: Optional[bool] = None,
-        executor: Optional[Union[ClusterExecutor, WrappedProcessPoolExecutor]] = None,
+        executor: Optional[Executor] = None,
     ) -> MagView:
         """
         Copies the data at `foreign_mag_view_or_path` which can belong to another dataset
@@ -677,9 +676,10 @@ class Layer:
         align_with_other_layers: Union[bool, "Dataset"] = True,
         buffer_shape: Optional[Vec3Int] = None,
         force_sampling_scheme: bool = False,
-        args: Optional[Namespace] = None,
+        args: Optional[Namespace] = None,  # deprecated
         allow_overwrite: bool = False,
         only_setup_mags: bool = False,
+        executor: Optional[Executor] = None,
     ) -> None:
         """
         Downsamples the data starting from `from_mag` until a magnification is `>= max(coarsest_mag)`.
@@ -776,6 +776,7 @@ class Layer:
                 args=args,
                 allow_overwrite=allow_overwrite,
                 only_setup_mag=only_setup_mags,
+                executor=executor,
             )
 
     def downsample_mag(
@@ -785,9 +786,10 @@ class Layer:
         interpolation_mode: str = "default",
         compress: bool = True,
         buffer_shape: Optional[Vec3Int] = None,
-        args: Optional[Namespace] = None,
+        args: Optional[Namespace] = None,  # deprecated
         allow_overwrite: bool = False,
         only_setup_mag: bool = False,
+        executor: Optional[Executor] = None,
     ) -> None:
         """
         Performs a single downsampling step from `from_mag` to `target_mag`.
@@ -799,14 +801,23 @@ class Layer:
          - "bilinear"
          - "bicubic"
 
-        The `args` can contain information to distribute the computation.
         If allow_overwrite is True, an existing Mag may be overwritten.
 
         If only_setup_mag is True, the magnification is created, but left
         empty. This parameter can be used to prepare for parallel downsampling
         of multiple layers while avoiding parallel writes with outdated updates
         to the datasource-properties.json file.
+
+        `executor` can be passed to allow distrubuted computation, parallelizing
+        across chunks. `args` is deprecated.
         """
+
+        if args is not None:
+            warn_deprecated(
+                "args argument",
+                "executor (e.g. via webknossos.utils.get_executor_for_args(args))",
+            )
+
         assert (
             from_mag in self.mags.keys()
         ), f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
@@ -850,7 +861,7 @@ class Layer:
         )
 
         # perform downsampling
-        with get_executor_for_args(args) as executor:
+        with get_executor_for_args(args, executor) as executor:
             if buffer_shape is None:
                 buffer_shape = determine_buffer_shape(prev_mag_view.info)
             func = named_partial(
@@ -873,7 +884,8 @@ class Layer:
         interpolation_mode: str = "default",
         compress: bool = True,
         buffer_shape: Optional[Vec3Int] = None,
-        args: Optional[Namespace] = None,
+        args: Optional[Namespace] = None,  # deprecated
+        executor: Optional[Executor] = None,
     ) -> None:
         """
         Use this method to recompute downsampled magnifications after mutating data in the
@@ -894,6 +906,7 @@ class Layer:
             buffer_shape=buffer_shape,
             args=args,
             allow_overwrite=True,
+            executor=executor,
         )
 
     def downsample_mag_list(
@@ -903,9 +916,10 @@ class Layer:
         interpolation_mode: str = "default",
         compress: bool = True,
         buffer_shape: Optional[Vec3Int] = None,
-        args: Optional[Namespace] = None,
+        args: Optional[Namespace] = None,  # deprecated
         allow_overwrite: bool = False,
         only_setup_mags: bool = False,
+        executor: Optional[Executor] = None,
     ) -> None:
         """
         Downsamples the data starting at `from_mag` to each magnification in `target_mags` iteratively.
@@ -938,6 +952,7 @@ class Layer:
                 args=args,
                 allow_overwrite=allow_overwrite,
                 only_setup_mag=only_setup_mags,
+                executor=executor,
             )
             source_mag = target_mag
 
@@ -950,7 +965,8 @@ class Layer:
         align_with_other_layers: Union[bool, "Dataset"] = True,
         buffer_shape: Optional[Vec3Int] = None,
         buffer_edge_len: Optional[int] = None,
-        args: Optional[Namespace] = None,
+        args: Optional[Namespace] = None,  # deprecated
+        executor: Optional[Executor] = None,
         *,
         min_mag: Optional[Mag] = None,
     ) -> None:
@@ -963,6 +979,13 @@ class Layer:
 
         `min_mag` is deprecated, please use `finest_mag` instead.
         """
+
+        if args is not None:
+            warn_deprecated(
+                "args argument",
+                "executor (e.g. via webknossos.utils.get_executor_for_args(args))",
+            )
+
         assert (
             from_mag in self.mags.keys()
         ), f"Failed to upsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
@@ -1022,7 +1045,7 @@ class Layer:
             target_view = target_mag_view.get_view()
 
             # perform upsampling
-            with get_executor_for_args(args) as executor:
+            with get_executor_for_args(args, executor) as actual_executor:
 
                 if buffer_shape is None:
                     buffer_shape = determine_buffer_shape(prev_mag_view.info)
@@ -1035,7 +1058,7 @@ class Layer:
                     # this view is restricted to the bounding box specified in the properties
                     func,
                     target_view=target_view,
-                    executor=executor,
+                    executor=actual_executor,
                     progress_desc=f"Upsampling from Mag {prev_mag} to Mag {target_mag}",
                 )
 
