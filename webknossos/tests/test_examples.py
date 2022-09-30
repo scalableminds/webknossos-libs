@@ -98,8 +98,8 @@ def test_calculate_segment_sizes() -> None:
     count1, volume1 = stats_per_id[1]
     count2, volume2 = stats_per_id[2]
 
-    assert count1 == 11296 and volume1 == 39959066.8288
-    assert count2 == 12704 and volume2 == 44939800.3712
+    assert count1 == 11296 and volume1 == 39959065.20141486
+    assert count2 == 12704 and volume2 == 44939798.540967986
 
 
 def test_skeleton_synapse_candidates() -> None:

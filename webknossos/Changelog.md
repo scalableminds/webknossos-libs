@@ -10,16 +10,40 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.14...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.18...HEAD)
 
 ### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [0.10.18](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.18) - 2022-09-29
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.17...v0.10.18)
+
+### Added
+- `Annotation.download()` now accepts the keyword-only argument `skip_volume_data`, which can be set to `True` to omit downloading volume data.  [#806](https://github.com/scalableminds/webknossos-libs/pull/806)
+
+
+## [0.10.17](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.17) - 2022-09-26
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.16...v0.10.17)
+
+### Added
+- Added `annotation.get_remote_annotation_dataset()` to get a streamed annotation dataset, which also reflects fallback layers or applied mappings. [#794](https://github.com/scalableminds/webknossos-libs/pull/794)
+- Added direct access to an underlying Zarr array with the `MagView.get_zarr_array()` method. [#792](https://github.com/scalableminds/webknossos-libs/pull/792)
+
+
+## [0.10.16](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.16) - 2022-09-13
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.14...v0.10.16)
 
 ### Added
 - Added direct access to an underlying Zarr array with the `MagView.get_zarr_array()` method. [#792](https://github.com/scalableminds/webknossos-libs/pull/792)
 
 ### Changed
-
-### Fixed
+- Upgraded `zarr` and `numcodecs`. [#798](https://github.com/scalableminds/webknossos-libs/pull/798)
 
 
 ## [0.10.14](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.14) - 2022-08-30

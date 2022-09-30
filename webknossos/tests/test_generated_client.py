@@ -60,7 +60,6 @@ def test_datastore_list(auth_client: Client) -> None:
     internal_datastore = DatastoreListResponse200Item(
         name="localhost",
         url="http://localhost:9000",
-        is_foreign=False,
         is_scratch=False,
         is_connector=False,
         allows_upload=True,
