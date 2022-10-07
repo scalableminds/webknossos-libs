@@ -10,8 +10,7 @@ import pytest
 from tifffile import TiffFile
 
 import webknossos as wk
-
-from .constants import TESTDATA_DIR
+from tests.constants import TESTDATA_DIR
 
 pytestmark = [pytest.mark.block_network(allowed_hosts=[".*"])]
 

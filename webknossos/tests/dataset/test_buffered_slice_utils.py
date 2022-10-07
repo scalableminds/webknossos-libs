@@ -3,11 +3,10 @@ from pathlib import Path
 import numpy as np
 import wkw
 
+from tests.constants import TESTOUTPUT_DIR
 from webknossos.dataset import COLOR_CATEGORY, Dataset
 from webknossos.geometry import BoundingBox, Mag, Vec3Int
 from webknossos.utils import rmtree
-
-from .constants import TESTOUTPUT_DIR
 
 
 def test_buffered_slice_writer() -> None:

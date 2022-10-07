@@ -10,6 +10,7 @@ from typing import Generator, Tuple, cast
 import numpy as np
 import pytest
 
+from tests.constants import TESTDATA_DIR, TESTOUTPUT_DIR
 from webknossos.dataset import (
     COLOR_CATEGORY,
     SEGMENTATION_CATEGORY,
@@ -34,8 +35,6 @@ from webknossos.utils import (
     rmtree,
     snake_to_camel_case,
 )
-
-from .constants import TESTDATA_DIR, TESTOUTPUT_DIR
 
 
 @pytest.fixture(autouse=True, scope="function")
