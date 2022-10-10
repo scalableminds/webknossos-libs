@@ -25,6 +25,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
   * `view.content_is_equal(…)`
 
 ### Added
+- Added `Dataset.from_images`, which converts images to a Dataset, possibly consisting of multiple layers. [#808](https://github.com/scalableminds/webknossos-libs/pull/808
 
 ### Changed
 
