@@ -1,7 +1,20 @@
 import warnings
 from contextlib import contextmanager, nullcontext
+from itertools import chain
 from os import PathLike
-from typing import Iterator, List, Optional, Sequence, Tuple, TypeVar, Union, cast
+from pathlib import Path
+from typing import (
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+    cast,
+)
 from urllib.error import HTTPError
 
 import numpy as np
@@ -242,12 +255,13 @@ class PimsImages:
                             self._original_images
                         )
                 else:
+                    original_images = self._original_images
+                    if isinstance(original_images, Path):
+                        original_images = str(original_images)
                     try:
-                        images_context_manager = pims.open(self._original_images)
+                        images_context_manager = pims.open(original_images)
                     except TypeError:
-                        images_context_manager = pims.ImageSequence(
-                            self._original_images
-                        )
+                        images_context_manager = pims.ImageSequence(original_images)
 
             with images_context_manager as images:
                 if isinstance(images, pims.FramesSequenceND):
@@ -334,3 +348,23 @@ def dimwise_max(vectors: Sequence[T]) -> T:
         return vectors[0]
     else:
         return cast(T, tuple(map(max, *vectors)))
+
+
+C = TypeVar("C", bound=Type)
+
+
+def _recursive_subclasses(cls: C) -> List[C]:
+    "Return all subclasses (and their subclasses, etc.)."
+    # Source: http://stackoverflow.com/a/3862957/1221924
+    return cls.__subclasses__() + [
+        g for s in cls.__subclasses__() for g in _recursive_subclasses(s)
+    ]
+
+
+def get_all_pims_handlers() -> Iterable[
+    Type[Union[pims.FramesSequence, pims.FramesSequenceND]]
+]:
+    return chain(
+        _recursive_subclasses(pims.FramesSequence),
+        _recursive_subclasses(pims.FramesSequenceND),
+    )

@@ -6,12 +6,14 @@ import re
 import warnings
 from argparse import Namespace
 from contextlib import nullcontext
+from enum import Enum, unique
 from os import PathLike
 from os.path import relpath
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
     Any,
+    Callable,
     ContextManager,
     Dict,
     Iterable,
@@ -28,6 +30,7 @@ import attr
 import numpy as np
 from boltons.typeutils import make_sentinel
 from cluster_tools import Executor
+from natsort import natsort_keygen
 from upath import UPath
 
 from ..geometry.vec3_int import Vec3Int, Vec3IntLike
@@ -106,6 +109,33 @@ _UNSPECIFIED_SCALE_FROM_OPEN = make_sentinel(
 )
 
 
+def _guess_if_segmentation_path(filepath: Path) -> bool:
+    return "segmentation" in str(filepath)
+
+
+def _has_image_z_dimension(
+    filepath: Path,
+    use_bioformats: bool,
+    is_segmentation: bool,
+) -> bool:
+    from ._utils.pims_images import PimsImages
+
+    pims_images = PimsImages(
+        filepath,
+        use_bioformats=use_bioformats,
+        is_segmentation=is_segmentation,
+        # the following arguments shouldn't matter much for the Dataset.from_images method:
+        channel=None,
+        timepoint=None,
+        swap_xy=False,
+        flip_x=False,
+        flip_y=False,
+        flip_z=False,
+    )
+
+    return pims_images.expected_shape.z > 1
+
+
 class Dataset:
     """
     A dataset is the entry point of the Dataset API.
@@ -120,6 +150,40 @@ class Dataset:
 
     When using `Dataset.open_remote()` an instance of the `RemoteDataset` subclass is returned.
     """
+
+    @unique
+    class ConversionLayerMapping(Enum):
+        """This specifies mapping strategies which can be used in
+        `Dataset.from_images` for the `map_filepath_to_layer_name` argument.
+
+        If none of the strategies fit, the mapping can also be specified by a callable.
+        """
+
+        INSPECT_SINGLE_FILE = "inspect_single_file"
+        """The first found image file is opened. If it seems like
+        a 2D image, `ENFORCE_LAYER_PER_FOLDER` is used,
+        if it seems like a 3D image, `ENFORCE_LAYER_PER_FILE`.
+        This is the default mapping."""
+
+        INSPECT_EVERY_FILE = "inspect_every_file"
+        """Similar to `INSPECT_SINGLE_FILE`, but the strategy
+        is determined for each image file separately."""
+
+        ENFORCE_LAYER_PER_FILE = "enforce_layer_per_file"
+        """Enforce a new layer per file. This is useful for 2D
+        images, which should be converted to 2D layers each."""
+
+        ENFORCE_SINGLE_LAYER = "enforce_single_layer"
+        """Combines all found files into a single layer. This is only
+        useful if all images are 2D."""
+
+        ENFORCE_LAYER_PER_FOLDER = "enforce_layer_per_folder"
+        """Combine all files in a folder into one layer."""
+
+        ENFORCE_LAYER_PER_TOPLEVEL_FOLDER = "enforce_layer_per_toplevel_folder"
+        """The first folders of the input path are each converted to one layer.
+        This might be useful if multiple layers have stacks of 2D images, but
+        parts of the stacks are in different folders."""
 
     def __init__(
         self,
@@ -440,6 +504,172 @@ class Dataset:
                 path=path,
                 exist_ok=exist_ok,
             )
+
+    @classmethod
+    def from_images(
+        cls,
+        input_path: Union[str, PathLike],
+        output_path: Union[str, PathLike],
+        voxel_size: Optional[Tuple[float, float, float]] = None,
+        name: Optional[str] = None,
+        *,
+        map_filepath_to_layer_name: Union[
+            ConversionLayerMapping, Callable[[Path], str]
+        ] = ConversionLayerMapping.INSPECT_SINGLE_FILE,
+        z_slices_sort_key: Callable[[Path], Any] = natsort_keygen(),
+        enforce_category: Optional[LayerCategoryType] = None,
+        data_format: Union[str, DataFormat] = DEFAULT_DATA_FORMAT,
+        chunk_shape: Optional[Union[Vec3IntLike, int]] = None,
+        chunks_per_shard: Optional[Union[int, Vec3IntLike]] = None,
+        compress: bool = False,
+        swap_xy: bool = False,
+        flip_x: bool = False,
+        flip_y: bool = False,
+        flip_z: bool = False,
+        use_bioformats: bool = False,
+        batch_size: Optional[int] = None,
+        executor: Optional[Executor] = None,
+    ) -> "Dataset":
+        """
+        This method imports image data in a folder as a webKnossos dataset. The
+        image data can be 3D images (such as multipage tiffs) or stacks of 2D
+        images. In case of multiple 3D images or image stacks, those are mapped
+        to different layers. The exact mapping is handled by the argument
+        `map_filepath_to_layer_name`, which can be a pre-defined strategy from
+        the enum `ConversionLayerMapping`, or a custom callable which must take
+        a path of an image file and return the corresponding layer name. All
+        files belonging to the same layer name are then grouped. In case of
+        multiple files per layer, those are usually mapped to the z-dimension.
+        The order of the z-slices can be customized by setting
+        `z_slices_sort_key`.
+
+        The category of layers (`color` vs `segmentation`) is determined
+        automatically by checking if `segmentation` is part of the path.
+        Alternatively, a category can be enforced by passing `enforce_category`.
+
+        Further arguments behave as in `add_layer_from_images`, please also
+        refer to its documentation.
+
+        For more fine-grained control, please create an empty dataset and use
+        `add_layer_from_images`.
+        """
+        try:
+            from ._utils.pims_images import get_all_pims_handlers
+        except ImportError as e:
+            raise RuntimeError(
+                "Cannot import pims, please install it e.g. using 'webknossos[all]'"
+            ) from e
+
+        input_upath = UPath(input_path)
+
+        valid_suffixes = set()
+        for pims_handler in get_all_pims_handlers():
+            valid_suffixes.update(pims_handler.class_exts())
+
+        input_files = [
+            i.relative_to(input_upath)
+            for i in input_upath.glob("**/*")
+            if i.is_file() and i.suffix.lstrip(".") in valid_suffixes
+        ]
+        if len(input_files) == 0:
+            raise ValueError(
+                "Could not find any image data supported. "
+                + f"The following suffixes are supported: {valid_suffixes}"
+            )
+
+        if (
+            map_filepath_to_layer_name
+            == Dataset.ConversionLayerMapping.ENFORCE_LAYER_PER_FILE
+        ):
+            map_filepath_to_layer_name = str
+        elif (
+            map_filepath_to_layer_name
+            == Dataset.ConversionLayerMapping.ENFORCE_SINGLE_LAYER
+        ):
+            map_filepath_to_layer_name = lambda p: input_upath.name
+        elif (
+            map_filepath_to_layer_name
+            == Dataset.ConversionLayerMapping.ENFORCE_LAYER_PER_FOLDER
+        ):
+            map_filepath_to_layer_name = lambda p: str(p.parent)
+        elif (
+            map_filepath_to_layer_name
+            == Dataset.ConversionLayerMapping.ENFORCE_LAYER_PER_TOPLEVEL_FOLDER
+        ):
+            map_filepath_to_layer_name = lambda p: p.parts[0]
+        elif (
+            map_filepath_to_layer_name
+            == Dataset.ConversionLayerMapping.INSPECT_EVERY_FILE
+        ):
+            # If a file has z dimensions, it becomes it's own layer,
+            # if it's 2D, the folder becomes a layer.
+            map_filepath_to_layer_name = (
+                lambda p: str(p)
+                if _has_image_z_dimension(
+                    input_upath / p,
+                    use_bioformats=use_bioformats,
+                    is_segmentation=_guess_if_segmentation_path(p),
+                )
+                else str(p.parent)
+            )
+        elif (
+            map_filepath_to_layer_name
+            == Dataset.ConversionLayerMapping.INSPECT_SINGLE_FILE
+        ):
+            # As before, but only a single image is inspected to determine 2D vs 3D.
+            if _has_image_z_dimension(
+                input_path / input_files[0],
+                use_bioformats=use_bioformats,
+                is_segmentation=_guess_if_segmentation_path(input_files[0]),
+            ):
+                map_filepath_to_layer_name = str
+            else:
+                map_filepath_to_layer_name = lambda p: str(p.parent)
+        elif isinstance(map_filepath_to_layer_name, Dataset.ConversionLayerMapping):
+            raise ValueError(
+                f"Got unexpected ConversionLayerMapping value for map_filepath_to_layer_name: {map_filepath_to_layer_name}"
+            )
+
+        ds = cls(output_path, voxel_size=voxel_size, name=name)
+
+        filepaths_per_layer: Dict[str, List[Path]] = {}
+        for input_file in input_files:
+            layername = map_filepath_to_layer_name(input_file)
+            filepaths_per_layer.setdefault(layername, []).append(
+                input_path / input_file
+            )
+
+        print(filepaths_per_layer)
+
+        for layername, filepaths in filepaths_per_layer.items():
+            filepaths.sort(key=z_slices_sort_key)
+            category: LayerCategoryType
+            if enforce_category is None:
+                category = (
+                    "segmentation"
+                    if _guess_if_segmentation_path(filepaths[0])
+                    else "color"
+                )
+            else:
+                category = enforce_category
+            ds.add_layer_from_images(
+                filepaths[0] if len(filepaths) == 1 else filepaths,
+                layername,
+                category=category,
+                data_format=data_format,
+                chunk_shape=chunk_shape,
+                chunks_per_shard=chunks_per_shard,
+                compress=compress,
+                swap_xy=swap_xy,
+                flip_x=flip_x,
+                flip_y=flip_y,
+                flip_z=flip_z,
+                use_bioformats=use_bioformats,
+                batch_size=batch_size,
+                executor=executor,
+            )
+
+        return ds
 
     @property
     def layers(self) -> Dict[str, Layer]:
@@ -821,7 +1051,7 @@ class Dataset:
             from ._utils.pims_images import PimsImages, dimwise_max
         except ImportError as e:
             raise RuntimeError(
-                "Cannot import pims, please install e.g. using 'webknossos[all]'"
+                "Cannot import pims, please install it e.g. using 'webknossos[all]'"
             ) from e
 
         chunk_shape, chunks_per_shard = _get_sharding_parameters(
