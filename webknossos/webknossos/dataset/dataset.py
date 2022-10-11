@@ -574,7 +574,7 @@ class Dataset:
         if len(input_files) == 0:
             raise ValueError(
                 "Could not find any image data supported. "
-                + f"The following suffixes are supported: {valid_suffixes}"
+                + f"The following suffixes are supported: {sorted(valid_suffixes)}"
             )
 
         if (
@@ -591,12 +591,16 @@ class Dataset:
             map_filepath_to_layer_name
             == Dataset.ConversionLayerMapping.ENFORCE_LAYER_PER_FOLDER
         ):
-            map_filepath_to_layer_name = lambda p: str(p.parent)
+            map_filepath_to_layer_name = (
+                lambda p: input_upath.name if p.parent == Path() else str(p.parent)
+            )
         elif (
             map_filepath_to_layer_name
             == Dataset.ConversionLayerMapping.ENFORCE_LAYER_PER_TOPLEVEL_FOLDER
         ):
-            map_filepath_to_layer_name = lambda p: p.parts[0]
+            map_filepath_to_layer_name = (
+                lambda p: input_upath.name if p.parent == Path() else p.parts[0]
+            )
         elif (
             map_filepath_to_layer_name
             == Dataset.ConversionLayerMapping.INSPECT_EVERY_FILE
@@ -610,6 +614,8 @@ class Dataset:
                     use_bioformats=use_bioformats,
                     is_segmentation=_guess_if_segmentation_path(p),
                 )
+                else input_upath.name
+                if p.parent == Path()
                 else str(p.parent)
             )
         elif (
@@ -624,7 +630,9 @@ class Dataset:
             ):
                 map_filepath_to_layer_name = str
             else:
-                map_filepath_to_layer_name = lambda p: str(p.parent)
+                map_filepath_to_layer_name = (
+                    lambda p: input_upath.name if p.parent == Path() else str(p.parent)
+                )
         elif isinstance(map_filepath_to_layer_name, Dataset.ConversionLayerMapping):
             raise ValueError(
                 f"Got unexpected ConversionLayerMapping value for map_filepath_to_layer_name: {map_filepath_to_layer_name}"
@@ -638,8 +646,6 @@ class Dataset:
             filepaths_per_layer.setdefault(layername, []).append(
                 input_path / input_file
             )
-
-        print(filepaths_per_layer)
 
         for layername, filepaths in filepaths_per_layer.items():
             filepaths.sort(key=z_slices_sort_key)
