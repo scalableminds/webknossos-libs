@@ -46,9 +46,40 @@ interactions:
       user-agent:
       - python-httpx/0.18.2
     method: GET
+    uri: http://localhost:9000/api/datastores
+  response:
+    content: '[{"name":"connect","url":"http://localhost:8000","isScratch":false,"isConnector":true,"allowsUpload":false},{"name":"localhost","url":"http://localhost:9000","isScratch":false,"isConnector":false,"allowsUpload":true}]'
+    headers:
+      content-length:
+      - '217'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: ''
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.18.2
+    method: GET
     uri: http://localhost:9000/api/user
   response:
-    content: '{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1660298900333,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true}'
+    content: '{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1665531072225,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true}'
     headers:
       content-length:
       - '630'
@@ -604,11 +635,11 @@ interactions:
     method: GET
     uri: http://localhost:9000/api/datasets/Organization_X/cell_2000-01-01_00-00-00
   response:
-    content: '{"name":"cell_2022-08-12_10-08-45","dataSource":{"id":{"name":"cell_2022-08-12_10-08-45","team":"Organization_X"},"dataLayers":[{"name":"cell
-      membranes","category":"color","boundingBox":{"topLeft":[0,0,0],"width":256,"height":256,"depth":60},"resolutions":[[1,1,1]],"elementClass":"uint16","defaultViewConfiguration":{"color":[17,212,17],"intensityRange":[0,16000]}},{"name":"nuclei","category":"color","boundingBox":{"topLeft":[0,0,0],"width":256,"height":256,"depth":60},"resolutions":[[1,1,1]],"elementClass":"uint16","defaultViewConfiguration":{"color":[212,17,17],"intensityRange":[3000,30000]}}],"scale":[260,260,290]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isForeign":false,"isScratch":false,"isConnector":false,"allowsUpload":true},"owningOrganization":"Organization_X","allowedTeams":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1660298927461,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1660298927461,"details":null,"isUnreported":false,"isForeign":false,"jobsEnabled":false,"tags":[],"publication":null}'
+    content: '{"name":"cell_2022-10-11_23-31-20","dataSource":{"id":{"name":"cell_2022-10-11_23-31-20","team":"Organization_X"},"dataLayers":[{"name":"cell
+      membranes","category":"color","boundingBox":{"topLeft":[0,0,0],"width":256,"height":256,"depth":60},"resolutions":[[1,1,1]],"elementClass":"uint16","defaultViewConfiguration":{"color":[17,212,17],"intensityRange":[0,16000]}},{"name":"nuclei","category":"color","boundingBox":{"topLeft":[0,0,0],"width":256,"height":256,"depth":60},"resolutions":[[1,1,1]],"elementClass":"uint16","defaultViewConfiguration":{"color":[212,17,17],"intensityRange":[3000,30000]}}],"scale":[260,260,290]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"isConnector":false,"allowsUpload":true},"owningOrganization":"Organization_X","allowedTeams":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1665531083445,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1665531083445,"details":null,"isUnreported":false,"jobsEnabled":false,"tags":[],"publication":null}'
     headers:
       content-length:
-      - '1135'
+      - '1099'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -640,11 +671,11 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/cell_2022-08-12_10-08-45\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/cell_2022-10-11_23-31-20\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=\"datasource-properties.json/\">datasource-properties.json</a></li>\n
-        \     \n        <li><a href=\".zgroup/\">.zgroup</a></li>\n      \n        <li><a
-        href=\"cell membranes/\">cell membranes</a></li>\n      \n        <li><a href=\"nuclei/\">nuclei</a></li>\n
+        \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
+        \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
+        href=\"cell membranes\">cell membranes</a></li>\n      \n        <li><a href=\"nuclei\">nuclei</a></li>\n
         \     \n    </ul>\n  </body>\n</html>\n"
     headers:
       access-control-allow-origin:
@@ -652,7 +683,7 @@ interactions:
       access-control-max-age:
       - '600'
       content-length:
-      - '1511'
+      - '1507'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -665,7 +696,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-08-12_10-08-45
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-10-11_23-31-20
 - request:
     body: null
     headers:
@@ -682,7 +713,7 @@ interactions:
       access-control-max-age:
       - '600'
       content-length:
-      - '1511'
+      - '1507'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -695,7 +726,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-08-12_10-08-45
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-10-11_23-31-20
 - request:
     body: null
     headers: {}
@@ -716,11 +747,11 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/cell_2022-08-12_10-08-45\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/cell_2022-10-11_23-31-20\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=\"datasource-properties.json/\">datasource-properties.json</a></li>\n
-        \     \n        <li><a href=\".zgroup/\">.zgroup</a></li>\n      \n        <li><a
-        href=\"cell membranes/\">cell membranes</a></li>\n      \n        <li><a href=\"nuclei/\">nuclei</a></li>\n
+        \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
+        \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
+        href=\"cell membranes\">cell membranes</a></li>\n      \n        <li><a href=\"nuclei\">nuclei</a></li>\n
         \     \n    </ul>\n  </body>\n</html>\n"
     headers:
       access-control-allow-origin:
@@ -728,7 +759,7 @@ interactions:
       access-control-max-age:
       - '600'
       content-length:
-      - '1511'
+      - '1507'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -741,7 +772,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-08-12_10-08-45
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-10-11_23-31-20
 - request:
     body: null
     headers: {}
@@ -762,11 +793,11 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/cell_2022-08-12_10-08-45\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/cell_2022-10-11_23-31-20\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=\"datasource-properties.json/\">datasource-properties.json</a></li>\n
-        \     \n        <li><a href=\".zgroup/\">.zgroup</a></li>\n      \n        <li><a
-        href=\"cell membranes/\">cell membranes</a></li>\n      \n        <li><a href=\"nuclei/\">nuclei</a></li>\n
+        \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
+        \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
+        href=\"cell membranes\">cell membranes</a></li>\n      \n        <li><a href=\"nuclei\">nuclei</a></li>\n
         \     \n    </ul>\n  </body>\n</html>\n"
     headers:
       access-control-allow-origin:
@@ -774,7 +805,7 @@ interactions:
       access-control-max-age:
       - '600'
       content-length:
-      - '1511'
+      - '1507'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -787,7 +818,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-08-12_10-08-45
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-10-11_23-31-20
 - request:
     body: null
     headers:
@@ -804,7 +835,7 @@ interactions:
       access-control-max-age:
       - '600'
       content-length:
-      - '495'
+      - '571'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -817,7 +848,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-08-12_10-08-45/datasource-properties.json
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-10-11_23-31-20/datasource-properties.json
 - request:
     body: null
     headers: {}
@@ -825,15 +856,15 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/cell_2000-01-01_00-00-00/datasource-properties.json
   response:
     body:
-      string: '{"id":{"name":"cell_2022-08-12_10-08-45","team":"Organization_X"},"dataLayers":[{"name":"cell
-        membranes","category":"color","boundingBox":{"topLeft":[0,0,0],"width":256,"height":256,"depth":60},"elementClass":"uint16","mags":[{"mag":[1,1,1]}],"numChannels":1,"dataFormat":"zarr"},{"name":"nuclei","category":"color","boundingBox":{"topLeft":[0,0,0],"width":256,"height":256,"depth":60},"elementClass":"uint16","mags":[{"mag":[1,1,1]}],"numChannels":1,"dataFormat":"zarr"}],"scale":[260,260,290]}'
+      string: '{"id":{"name":"cell_2022-10-11_23-31-20","team":"Organization_X"},"dataLayers":[{"name":"cell
+        membranes","category":"color","boundingBox":{"topLeft":[0,0,0],"width":256,"height":256,"depth":60},"elementClass":"uint16","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"},{"name":"nuclei","category":"color","boundingBox":{"topLeft":[0,0,0],"width":256,"height":256,"depth":60},"elementClass":"uint16","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"}],"scale":[260,260,290]}'
     headers:
       access-control-allow-origin:
       - '*'
       access-control-max-age:
       - '600'
       content-length:
-      - '495'
+      - '571'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -846,7 +877,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-08-12_10-08-45/datasource-properties.json
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-10-11_23-31-20/datasource-properties.json
 - request:
     body: null
     headers:
@@ -863,7 +894,7 @@ interactions:
       access-control-max-age:
       - '600'
       content-length:
-      - '495'
+      - '571'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -876,25 +907,25 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-08-12_10-08-45/datasource-properties.json
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-10-11_23-31-20/datasource-properties.json
 - request:
     body: null
     headers:
       Range:
-      - bytes=0-494
+      - bytes=0-570
     method: GET
     uri: http://localhost:9000/data/zarr/Organization_X/cell_2000-01-01_00-00-00/datasource-properties.json
   response:
     body:
-      string: '{"id":{"name":"cell_2022-08-12_10-08-45","team":"Organization_X"},"dataLayers":[{"name":"cell
-        membranes","category":"color","boundingBox":{"topLeft":[0,0,0],"width":256,"height":256,"depth":60},"elementClass":"uint16","mags":[{"mag":[1,1,1]}],"numChannels":1,"dataFormat":"zarr"},{"name":"nuclei","category":"color","boundingBox":{"topLeft":[0,0,0],"width":256,"height":256,"depth":60},"elementClass":"uint16","mags":[{"mag":[1,1,1]}],"numChannels":1,"dataFormat":"zarr"}],"scale":[260,260,290]}'
+      string: '{"id":{"name":"cell_2022-10-11_23-31-20","team":"Organization_X"},"dataLayers":[{"name":"cell
+        membranes","category":"color","boundingBox":{"topLeft":[0,0,0],"width":256,"height":256,"depth":60},"elementClass":"uint16","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"},{"name":"nuclei","category":"color","boundingBox":{"topLeft":[0,0,0],"width":256,"height":256,"depth":60},"elementClass":"uint16","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"}],"scale":[260,260,290]}'
     headers:
       access-control-allow-origin:
       - '*'
       access-control-max-age:
       - '600'
       content-length:
-      - '495'
+      - '571'
       content-type:
       - application/json
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -907,7 +938,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-08-12_10-08-45/datasource-properties.json
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-10-11_23-31-20/datasource-properties.json
 - request:
     body: null
     headers: {}
@@ -928,9 +959,9 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/cell_2022-08-12_10-08-45/cell
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/cell_2022-10-11_23-31-20/cell
         membranes/1\u201D folder.</p>\n    <p>The following are the contents of the
-        folder:</p>\n    <ul>\n      \n        <li><a href=\".zarray/\">.zarray</a></li>\n
+        folder:</p>\n    <ul>\n      \n        <li><a href=\".zarray\">.zarray</a></li>\n
         \     \n    </ul>\n  </body>\n</html>\n"
     headers:
       access-control-allow-origin:
@@ -938,7 +969,7 @@ interactions:
       access-control-max-age:
       - '600'
       content-length:
-      - '1313'
+      - '1312'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -951,7 +982,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-08-12_10-08-45/cell%20membranes/1
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-10-11_23-31-20/cell%20membranes/1
 - request:
     body: null
     headers: {}
@@ -979,7 +1010,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-08-12_10-08-45/cell%20membranes/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-10-11_23-31-20/cell%20membranes/1/.zarray
 - request:
     body: null
     headers:
@@ -1009,7 +1040,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-08-12_10-08-45/cell%20membranes/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-10-11_23-31-20/cell%20membranes/1/.zarray
 - request:
     body: null
     headers: {}
@@ -1037,7 +1068,91 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-08-12_10-08-45/cell%20membranes/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-10-11_23-31-20/cell%20membranes/1/.zarray
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/cell_2000-01-01_00-00-00/cell%20membranes/1/.zarray
+  response:
+    body:
+      string: '{"dtype":"<u2","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,256,256,60],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '162'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-10-11_23-31-20/cell%20membranes/1/.zarray
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/cell_2000-01-01_00-00-00/cell%20membranes/1/.zarray
+  response:
+    body:
+      string: '{"dtype":"<u2","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,256,256,60],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '162'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-10-11_23-31-20/cell%20membranes/1/.zarray
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/cell_2000-01-01_00-00-00/cell%20membranes/1/.zarray
+  response:
+    body:
+      string: '{"dtype":"<u2","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,256,256,60],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '162'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-10-11_23-31-20/cell%20membranes/1/.zarray
 - request:
     body: null
     headers: {}
@@ -1058,9 +1173,9 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/cell_2022-08-12_10-08-45/cell
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/cell_2022-10-11_23-31-20/cell
         membranes/1\u201D folder.</p>\n    <p>The following are the contents of the
-        folder:</p>\n    <ul>\n      \n        <li><a href=\".zarray/\">.zarray</a></li>\n
+        folder:</p>\n    <ul>\n      \n        <li><a href=\".zarray\">.zarray</a></li>\n
         \     \n    </ul>\n  </body>\n</html>\n"
     headers:
       access-control-allow-origin:
@@ -1068,7 +1183,7 @@ interactions:
       access-control-max-age:
       - '600'
       content-length:
-      - '1313'
+      - '1312'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -1081,179 +1196,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-08-12_10-08-45/cell%20membranes/1
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/cell_2000-01-01_00-00-00/cell%20membranes/1
-  response:
-    body:
-      string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
-        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
-        + '//' + \n                  window.location.host + \n                  window.location.pathname
-        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
-        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
-        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
-        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
-        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
-        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
-        {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/cell_2022-08-12_10-08-45/cell
-        membranes/1\u201D folder.</p>\n    <p>The following are the contents of the
-        folder:</p>\n    <ul>\n      \n        <li><a href=\".zarray/\">.zarray</a></li>\n
-        \     \n    </ul>\n  </body>\n</html>\n"
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      content-length:
-      - '1313'
-      content-type:
-      - text/html; charset=UTF-8
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 200
-      message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-08-12_10-08-45/cell%20membranes/1
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/cell_2000-01-01_00-00-00/cell%20membranes/1/.zarray
-  response:
-    body:
-      string: '{"dtype":"<u2","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,256,256,60],"dimension_seperator":"."}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      content-length:
-      - '162'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 200
-      message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-08-12_10-08-45/cell%20membranes/1/.zarray
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/cell_2000-01-01_00-00-00/cell%20membranes/1/.zarray
-  response:
-    body:
-      string: '{"dtype":"<u2","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,256,256,60],"dimension_seperator":"."}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      content-length:
-      - '162'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 200
-      message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-08-12_10-08-45/cell%20membranes/1/.zarray
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/cell_2000-01-01_00-00-00/cell%20membranes/1/.zarray
-  response:
-    body:
-      string: '{"dtype":"<u2","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,256,256,60],"dimension_seperator":"."}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      content-length:
-      - '162'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 200
-      message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-08-12_10-08-45/cell%20membranes/1/.zarray
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/cell_2000-01-01_00-00-00/cell%20membranes/1
-  response:
-    body:
-      string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
-        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
-        + '//' + \n                  window.location.host + \n                  window.location.pathname
-        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
-        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
-        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
-        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
-        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
-        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
-        {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/cell_2022-08-12_10-08-45/cell
-        membranes/1\u201D folder.</p>\n    <p>The following are the contents of the
-        folder:</p>\n    <ul>\n      \n        <li><a href=\".zarray/\">.zarray</a></li>\n
-        \     \n    </ul>\n  </body>\n</html>\n"
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      content-length:
-      - '1313'
-      content-type:
-      - text/html; charset=UTF-8
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 200
-      message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-08-12_10-08-45/cell%20membranes/1
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-10-11_23-31-20/cell%20membranes/1
 - request:
     body: null
     headers: {}
@@ -1274,9 +1217,9 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/cell_2022-08-12_10-08-45/nuclei/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/cell_2022-10-11_23-31-20/nuclei/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=\".zarray/\">.zarray</a></li>\n      \n    </ul>\n
+        \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
@@ -1284,7 +1227,7 @@ interactions:
       access-control-max-age:
       - '600'
       content-length:
-      - '1305'
+      - '1304'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -1297,7 +1240,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-08-12_10-08-45/nuclei/1
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-10-11_23-31-20/nuclei/1
 - request:
     body: null
     headers: {}
@@ -1325,7 +1268,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-08-12_10-08-45/nuclei/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-10-11_23-31-20/nuclei/1/.zarray
 - request:
     body: null
     headers:
@@ -1355,7 +1298,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-08-12_10-08-45/nuclei/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-10-11_23-31-20/nuclei/1/.zarray
 - request:
     body: null
     headers: {}
@@ -1383,7 +1326,91 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-08-12_10-08-45/nuclei/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-10-11_23-31-20/nuclei/1/.zarray
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/cell_2000-01-01_00-00-00/nuclei/1/.zarray
+  response:
+    body:
+      string: '{"dtype":"<u2","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,256,256,60],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '162'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-10-11_23-31-20/nuclei/1/.zarray
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/cell_2000-01-01_00-00-00/nuclei/1/.zarray
+  response:
+    body:
+      string: '{"dtype":"<u2","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,256,256,60],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '162'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-10-11_23-31-20/nuclei/1/.zarray
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/cell_2000-01-01_00-00-00/nuclei/1/.zarray
+  response:
+    body:
+      string: '{"dtype":"<u2","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,256,256,60],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '162'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-10-11_23-31-20/nuclei/1/.zarray
 - request:
     body: null
     headers: {}
@@ -1404,9 +1431,9 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/cell_2022-08-12_10-08-45/nuclei/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/cell_2022-10-11_23-31-20/nuclei/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=\".zarray/\">.zarray</a></li>\n      \n    </ul>\n
+        \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
     headers:
       access-control-allow-origin:
@@ -1414,7 +1441,7 @@ interactions:
       access-control-max-age:
       - '600'
       content-length:
-      - '1305'
+      - '1304'
       content-type:
       - text/html; charset=UTF-8
       date: Mon, 01 Jan 2000 00:00:00 GMT
@@ -1427,177 +1454,5 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-08-12_10-08-45/nuclei/1
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/cell_2000-01-01_00-00-00/nuclei/1
-  response:
-    body:
-      string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
-        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
-        + '//' + \n                  window.location.host + \n                  window.location.pathname
-        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
-        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
-        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
-        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
-        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
-        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
-        {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/cell_2022-08-12_10-08-45/nuclei/1\u201D
-        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=\".zarray/\">.zarray</a></li>\n      \n    </ul>\n
-        \ </body>\n</html>\n"
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      content-length:
-      - '1305'
-      content-type:
-      - text/html; charset=UTF-8
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 200
-      message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-08-12_10-08-45/nuclei/1
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/cell_2000-01-01_00-00-00/nuclei/1/.zarray
-  response:
-    body:
-      string: '{"dtype":"<u2","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,256,256,60],"dimension_seperator":"."}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      content-length:
-      - '162'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 200
-      message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-08-12_10-08-45/nuclei/1/.zarray
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/cell_2000-01-01_00-00-00/nuclei/1/.zarray
-  response:
-    body:
-      string: '{"dtype":"<u2","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,256,256,60],"dimension_seperator":"."}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      content-length:
-      - '162'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 200
-      message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-08-12_10-08-45/nuclei/1/.zarray
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/cell_2000-01-01_00-00-00/nuclei/1/.zarray
-  response:
-    body:
-      string: '{"dtype":"<u2","fill_value":0,"zarr_format":2,"order":"F","chunks":[1,32,32,32],"compressor":null,"filters":null,"shape":[1,256,256,60],"dimension_seperator":"."}'
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      content-length:
-      - '162'
-      content-type:
-      - application/json
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 200
-      message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-08-12_10-08-45/nuclei/1/.zarray
-- request:
-    body: null
-    headers: {}
-    method: GET
-    uri: http://localhost:9000/data/zarr/Organization_X/cell_2000-01-01_00-00-00/nuclei/1
-  response:
-    body:
-      string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
-        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
-        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
-        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
-        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
-        + '//' + \n                  window.location.host + \n                  window.location.pathname
-        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
-        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
-        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
-        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
-        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
-        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
-        {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/cell_2022-08-12_10-08-45/nuclei/1\u201D
-        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
-        \     \n        <li><a href=\".zarray/\">.zarray</a></li>\n      \n    </ul>\n
-        \ </body>\n</html>\n"
-    headers:
-      access-control-allow-origin:
-      - '*'
-      access-control-max-age:
-      - '600'
-      content-length:
-      - '1305'
-      content-type:
-      - text/html; charset=UTF-8
-      date: Mon, 01 Jan 2000 00:00:00 GMT
-      referrer-policy:
-      - origin-when-cross-origin, strict-origin-when-cross-origin
-      x-permitted-cross-domain-policies:
-      - master-only
-      x-xss-protection:
-      - 1; mode=block
-    status:
-      code: 200
-      message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-08-12_10-08-45/nuclei/1
+    url: http://localhost:9000/data/zarr/Organization_X/cell_2022-10-11_23-31-20/nuclei/1
 version: 1
