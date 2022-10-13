@@ -154,25 +154,25 @@ class Dataset:
 
     @unique
     class ConversionLayerMapping(Enum):
-        """This specifies mapping strategies which can be used in
+        """Strategies for mapping file paths to layers, for use in
         `Dataset.from_images` for the `map_filepath_to_layer_name` argument.
 
         If none of the strategies fit, the mapping can also be specified by a callable.
         """
 
         INSPECT_SINGLE_FILE = "inspect_single_file"
-        """The first found image file is opened. If it seems like
+        """The first found image file is opened. If it appears to be
         a 2D image, `ENFORCE_LAYER_PER_FOLDER` is used,
-        if it seems like a 3D image, `ENFORCE_LAYER_PER_FILE`.
+        if it appears to be 3D, `ENFORCE_LAYER_PER_FILE` is used.
         This is the default mapping."""
 
         INSPECT_EVERY_FILE = "inspect_every_file"
-        """Similar to `INSPECT_SINGLE_FILE`, but the strategy
+        """Like `INSPECT_SINGLE_FILE`, but the strategy
         is determined for each image file separately."""
 
         ENFORCE_LAYER_PER_FILE = "enforce_layer_per_file"
         """Enforce a new layer per file. This is useful for 2D
-        images, which should be converted to 2D layers each."""
+        images that should be converted to 2D layers each."""
 
         ENFORCE_SINGLE_LAYER = "enforce_single_layer"
         """Combines all found files into a single layer. This is only
@@ -537,8 +537,8 @@ class Dataset:
         images. In case of multiple 3D images or image stacks, those are mapped
         to different layers. The exact mapping is handled by the argument
         `map_filepath_to_layer_name`, which can be a pre-defined strategy from
-        the enum `ConversionLayerMapping`, or a custom callable which must take
-        a path of an image file and return the corresponding layer name. All
+        the enum `ConversionLayerMapping`, or a custom callable, taking
+        a path of an image file and returning the corresponding layer name. All
         files belonging to the same layer name are then grouped. In case of
         multiple files per layer, those are usually mapped to the z-dimension.
         The order of the z-slices can be customized by setting
@@ -567,7 +567,7 @@ class Dataset:
         ]
         if len(input_files) == 0:
             raise ValueError(
-                "Could not find any image data supported. "
+                "Could not find any supported image data. "
                 + f"The following suffixes are supported: {sorted(valid_suffixes)}"
             )
 
@@ -599,7 +599,7 @@ class Dataset:
             map_filepath_to_layer_name
             == Dataset.ConversionLayerMapping.INSPECT_EVERY_FILE
         ):
-            # If a file has z dimensions, it becomes it's own layer,
+            # If a file has z dimensions, it becomes its own layer,
             # if it's 2D, the folder becomes a layer.
             map_filepath_to_layer_name = (
                 lambda p: str(p)
