@@ -9,6 +9,7 @@ from typing import (
     List,
     Optional,
     Sequence,
+    Set,
     Tuple,
     Type,
     TypeVar,
@@ -18,10 +19,16 @@ from typing import (
 from urllib.error import HTTPError
 
 import numpy as np
-import pims
 
 from webknossos.dataset.mag_view import MagView
 from webknossos.geometry.vec3_int import Vec3Int
+
+try:
+    import pims
+except ImportError as e:
+    raise RuntimeError(
+        "Cannot import pims, please install it e.g. using 'webknossos[all]'"
+    ) from e
 
 
 class PimsImages:
@@ -361,10 +368,17 @@ def _recursive_subclasses(cls: C) -> List[C]:
     ]
 
 
-def get_all_pims_handlers() -> Iterable[
+def _get_all_pims_handlers() -> Iterable[
     Type[Union[pims.FramesSequence, pims.FramesSequenceND]]
 ]:
     return chain(
         _recursive_subclasses(pims.FramesSequence),
         _recursive_subclasses(pims.FramesSequenceND),
     )
+
+
+def get_valid_pims_suffixes() -> Set[str]:
+    valid_suffixes = set()
+    for pims_handler in _get_all_pims_handlers():
+        valid_suffixes.update(pims_handler.class_exts())
+    return valid_suffixes

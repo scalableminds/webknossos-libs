@@ -110,7 +110,8 @@ _UNSPECIFIED_SCALE_FROM_OPEN = make_sentinel(
 
 
 def _guess_if_segmentation_path(filepath: Path) -> bool:
-    return "segmentation" in str(filepath)
+    lowercase_filepath = str(filepath).lower()
+    return any(i in lowercase_filepath for i in ["segmentation", "labels"])
 
 
 def _has_image_z_dimension(
@@ -517,7 +518,7 @@ class Dataset:
             ConversionLayerMapping, Callable[[Path], str]
         ] = ConversionLayerMapping.INSPECT_SINGLE_FILE,
         z_slices_sort_key: Callable[[Path], Any] = natsort_keygen(),
-        enforce_category: Optional[LayerCategoryType] = None,
+        layer_category: Optional[LayerCategoryType] = None,
         data_format: Union[str, DataFormat] = DEFAULT_DATA_FORMAT,
         chunk_shape: Optional[Union[Vec3IntLike, int]] = None,
         chunks_per_shard: Optional[Union[int, Vec3IntLike]] = None,
@@ -545,7 +546,7 @@ class Dataset:
 
         The category of layers (`color` vs `segmentation`) is determined
         automatically by checking if `segmentation` is part of the path.
-        Alternatively, a category can be enforced by passing `enforce_category`.
+        Alternatively, a category can be enforced by passing `layer_category`.
 
         Further arguments behave as in `add_layer_from_images`, please also
         refer to its documentation.
@@ -553,18 +554,11 @@ class Dataset:
         For more fine-grained control, please create an empty dataset and use
         `add_layer_from_images`.
         """
-        try:
-            from ._utils.pims_images import get_all_pims_handlers
-        except ImportError as e:
-            raise RuntimeError(
-                "Cannot import pims, please install it e.g. using 'webknossos[all]'"
-            ) from e
+        from ._utils.pims_images import get_valid_pims_suffixes
 
         input_upath = UPath(input_path)
 
-        valid_suffixes = set()
-        for pims_handler in get_all_pims_handlers():
-            valid_suffixes.update(pims_handler.class_exts())
+        valid_suffixes = get_valid_pims_suffixes()
 
         input_files = [
             i.relative_to(input_upath)
@@ -650,14 +644,14 @@ class Dataset:
         for layername, filepaths in filepaths_per_layer.items():
             filepaths.sort(key=z_slices_sort_key)
             category: LayerCategoryType
-            if enforce_category is None:
+            if layer_category is None:
                 category = (
                     "segmentation"
                     if _guess_if_segmentation_path(filepaths[0])
                     else "color"
                 )
             else:
-                category = enforce_category
+                category = layer_category
             ds.add_layer_from_images(
                 filepaths[0] if len(filepaths) == 1 else filepaths,
                 layername,
@@ -1053,12 +1047,7 @@ class Dataset:
         * `batch_size`: size to process the images, must be a multiple of the chunk-size z-axis for uncompressed and the shard-size z-axis for compressed layers, default is the chunk-size or shard-size respectively
         * `executor`: pass a `ClusterExecutor` instance to parallelize the conversion jobs across the batches
         """
-        try:
-            from ._utils.pims_images import PimsImages, dimwise_max
-        except ImportError as e:
-            raise RuntimeError(
-                "Cannot import pims, please install it e.g. using 'webknossos[all]'"
-            ) from e
+        from ._utils.pims_images import PimsImages, dimwise_max
 
         chunk_shape, chunks_per_shard = _get_sharding_parameters(
             chunk_shape=chunk_shape,
