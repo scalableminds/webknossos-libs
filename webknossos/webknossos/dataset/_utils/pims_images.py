@@ -34,7 +34,7 @@ except ImportError as e:
 class PimsImages:
     def __init__(
         self,
-        images: Union[str, "pims.FramesSequence", List[Union[str, PathLike]]],
+        images: Union[str, Path, "pims.FramesSequence", List[Union[str, PathLike]]],
         channel: Optional[int],
         timepoint: Optional[int],
         swap_xy: bool,
@@ -382,3 +382,25 @@ def get_valid_pims_suffixes() -> Set[str]:
     for pims_handler in _get_all_pims_handlers():
         valid_suffixes.update(pims_handler.class_exts())
     return valid_suffixes
+
+
+def has_image_z_dimension(
+    filepath: Path,
+    use_bioformats: bool,
+    is_segmentation: bool,
+) -> bool:
+
+    pims_images = PimsImages(
+        filepath,
+        use_bioformats=use_bioformats,
+        is_segmentation=is_segmentation,
+        # the following arguments shouldn't matter much for the Dataset.from_images method:
+        channel=None,
+        timepoint=None,
+        swap_xy=False,
+        flip_x=False,
+        flip_y=False,
+        flip_z=False,
+    )
+
+    return pims_images.expected_shape.z > 1

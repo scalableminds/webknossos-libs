@@ -54,6 +54,7 @@ from ..utils import (
     wait_and_ensure_success,
     warn_deprecated,
 )
+from ._utils.from_images import guess_if_segmentation_path
 from ._utils.infer_bounding_box_existing_files import infer_bounding_box_existing_files
 from .layer import (
     Layer,
@@ -109,34 +110,6 @@ _UNSPECIFIED_SCALE_FROM_OPEN = make_sentinel(
 )
 
 
-def _guess_if_segmentation_path(filepath: Path) -> bool:
-    lowercase_filepath = str(filepath).lower()
-    return any(i in lowercase_filepath for i in ["segmentation", "labels"])
-
-
-def _has_image_z_dimension(
-    filepath: Path,
-    use_bioformats: bool,
-    is_segmentation: bool,
-) -> bool:
-    from ._utils.pims_images import PimsImages
-
-    pims_images = PimsImages(
-        filepath,
-        use_bioformats=use_bioformats,
-        is_segmentation=is_segmentation,
-        # the following arguments shouldn't matter much for the Dataset.from_images method:
-        channel=None,
-        timepoint=None,
-        swap_xy=False,
-        flip_x=False,
-        flip_y=False,
-        flip_z=False,
-    )
-
-    return pims_images.expected_shape.z > 1
-
-
 class Dataset:
     """
     A dataset is the entry point of the Dataset API.
@@ -185,6 +158,54 @@ class Dataset:
         """The first folders of the input path are each converted to one layer.
         This might be useful if multiple layers have stacks of 2D images, but
         parts of the stacks are in different folders."""
+
+        def _to_callable(
+            self, input_path: Path, input_files: Sequence[Path], use_bioformats: bool
+        ) -> Callable[[Path], str]:
+            from ._utils.pims_images import has_image_z_dimension
+
+            ConversionLayerMapping = Dataset.ConversionLayerMapping
+
+            if self == ConversionLayerMapping.ENFORCE_LAYER_PER_FILE:
+                return str
+            elif self == ConversionLayerMapping.ENFORCE_SINGLE_LAYER:
+                return lambda p: input_path.name
+            elif self == ConversionLayerMapping.ENFORCE_LAYER_PER_FOLDER:
+                return (
+                    lambda p: input_path.name if p.parent == Path() else str(p.parent)
+                )
+            elif self == ConversionLayerMapping.ENFORCE_LAYER_PER_TOPLEVEL_FOLDER:
+                return lambda p: input_path.name if p.parent == Path() else p.parts[0]
+            elif self == ConversionLayerMapping.INSPECT_EVERY_FILE:
+                # If a file has z dimensions, it becomes its own layer,
+                # if it's 2D, the folder becomes a layer.
+                return (
+                    lambda p: str(p)
+                    if has_image_z_dimension(
+                        input_path / p,
+                        use_bioformats=use_bioformats,
+                        is_segmentation=guess_if_segmentation_path(p),
+                    )
+                    else input_path.name
+                    if p.parent == Path()
+                    else str(p.parent)
+                )
+            elif self == ConversionLayerMapping.INSPECT_SINGLE_FILE:
+                # As before, but only a single image is inspected to determine 2D vs 3D.
+                if has_image_z_dimension(
+                    input_path / input_files[0],
+                    use_bioformats=use_bioformats,
+                    is_segmentation=guess_if_segmentation_path(input_files[0]),
+                ):
+                    return str
+                else:
+                    return (
+                        lambda p: input_path.name
+                        if p.parent == Path()
+                        else str(p.parent)
+                    )
+            else:
+                raise ValueError(f"Got unexpected ConversionLayerMapping value: {self}")
 
     def __init__(
         self,
@@ -511,7 +532,7 @@ class Dataset:
         cls,
         input_path: Union[str, PathLike],
         output_path: Union[str, PathLike],
-        voxel_size: Optional[Tuple[float, float, float]] = None,
+        voxel_size: Tuple[float, float, float],
         name: Optional[str] = None,
         *,
         map_filepath_to_layer_name: Union[
@@ -571,90 +592,34 @@ class Dataset:
                 + f"The following suffixes are supported: {sorted(valid_suffixes)}"
             )
 
-        if (
-            map_filepath_to_layer_name
-            == Dataset.ConversionLayerMapping.ENFORCE_LAYER_PER_FILE
-        ):
-            map_filepath_to_layer_name = str
-        elif (
-            map_filepath_to_layer_name
-            == Dataset.ConversionLayerMapping.ENFORCE_SINGLE_LAYER
-        ):
-            map_filepath_to_layer_name = lambda p: input_upath.name
-        elif (
-            map_filepath_to_layer_name
-            == Dataset.ConversionLayerMapping.ENFORCE_LAYER_PER_FOLDER
-        ):
-            map_filepath_to_layer_name = (
-                lambda p: input_upath.name if p.parent == Path() else str(p.parent)
-            )
-        elif (
-            map_filepath_to_layer_name
-            == Dataset.ConversionLayerMapping.ENFORCE_LAYER_PER_TOPLEVEL_FOLDER
-        ):
-            map_filepath_to_layer_name = (
-                lambda p: input_upath.name if p.parent == Path() else p.parts[0]
-            )
-        elif (
-            map_filepath_to_layer_name
-            == Dataset.ConversionLayerMapping.INSPECT_EVERY_FILE
-        ):
-            # If a file has z dimensions, it becomes its own layer,
-            # if it's 2D, the folder becomes a layer.
-            map_filepath_to_layer_name = (
-                lambda p: str(p)
-                if _has_image_z_dimension(
-                    input_upath / p,
-                    use_bioformats=use_bioformats,
-                    is_segmentation=_guess_if_segmentation_path(p),
-                )
-                else input_upath.name
-                if p.parent == Path()
-                else str(p.parent)
-            )
-        elif (
-            map_filepath_to_layer_name
-            == Dataset.ConversionLayerMapping.INSPECT_SINGLE_FILE
-        ):
-            # As before, but only a single image is inspected to determine 2D vs 3D.
-            if _has_image_z_dimension(
-                input_path / input_files[0],
-                use_bioformats=use_bioformats,
-                is_segmentation=_guess_if_segmentation_path(input_files[0]),
-            ):
-                map_filepath_to_layer_name = str
-            else:
-                map_filepath_to_layer_name = (
-                    lambda p: input_upath.name if p.parent == Path() else str(p.parent)
-                )
-        elif isinstance(map_filepath_to_layer_name, Dataset.ConversionLayerMapping):
-            raise ValueError(
-                f"Got unexpected ConversionLayerMapping value for map_filepath_to_layer_name: {map_filepath_to_layer_name}"
+        if isinstance(map_filepath_to_layer_name, Dataset.ConversionLayerMapping):
+            map_filepath_to_layer_name = map_filepath_to_layer_name._to_callable(
+                input_upath, input_files=input_files, use_bioformats=use_bioformats
             )
 
         ds = cls(output_path, voxel_size=voxel_size, name=name)
 
         filepaths_per_layer: Dict[str, List[Path]] = {}
         for input_file in input_files:
-            layername = map_filepath_to_layer_name(input_file)
-            filepaths_per_layer.setdefault(layername, []).append(
+            layer_name = map_filepath_to_layer_name(input_file)
+            filepaths_per_layer.setdefault(layer_name, []).append(
                 input_path / input_file
             )
 
-        for layername, filepaths in filepaths_per_layer.items():
+        for layer_name, filepaths in filepaths_per_layer.items():
             filepaths.sort(key=z_slices_sort_key)
             category: LayerCategoryType
             if layer_category is None:
                 category = (
                     "segmentation"
-                    if _guess_if_segmentation_path(filepaths[0])
+                    if guess_if_segmentation_path(filepaths[0])
                     else "color"
                 )
             else:
                 category = layer_category
             ds.add_layer_from_images(
                 filepaths[0] if len(filepaths) == 1 else filepaths,
-                layername,
+                layer_name,
                 category=category,
                 data_format=data_format,
                 chunk_shape=chunk_shape,
