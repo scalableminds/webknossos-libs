@@ -25,6 +25,8 @@ For upgrade instructions, please check the respective *Breaking Changes* section
   * `view.content_is_equal(…)`
 
 ### Added
+- Added `Annotation.open_as_remote_dataset(…)`, which is a shorthand for `Annotation.download(...).get_remote_annotation_dataset()`.
+- `skeleton.save()` now also accepts paths with a `.zip` suffix.
 
 ### Changed
 
