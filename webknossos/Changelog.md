@@ -26,7 +26,8 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 
 ### Added
 - Added `Annotation.open_as_remote_dataset(…)`, which is a shorthand for `Annotation.download(...).get_remote_annotation_dataset()`.
-- `skeleton.save()` now also accepts paths with a `.zip` suffix.
+  [#811](https://github.com/scalableminds/webknossos-libs/pull/811)
+- `skeleton.save()` now also accepts paths with a `.zip` suffix. [#811](https://github.com/scalableminds/webknossos-libs/pull/811)
 
 ### Changed
 
