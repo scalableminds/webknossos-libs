@@ -1,6 +1,7 @@
 import inspect
 import os
 from contextlib import contextmanager, nullcontext
+from pathlib import Path
 from tempfile import TemporaryDirectory
 from types import ModuleType
 from typing import Any, ContextManager, Iterator, Optional, Tuple, Type
@@ -232,3 +233,29 @@ def test_zarr_and_dask() -> None:
     (mean_value,) = exec_main_and_get_vars(example, "mean_value")
 
     assert 124 < mean_value < 125
+
+
+@pytest.mark.block_network(allowed_hosts=[".*"])
+def test_upload_tiff_stack() -> None:
+    import examples.upload_tiff_stack as example
+
+    with tmp_cwd():
+        (remote_dataset,) = exec_main_and_get_vars(example, "remote_dataset")
+
+        assert remote_dataset.url.startswith(
+            "http://localhost:9000/datasets/Organization_X/tiff_dataset"
+        )
+
+
+@pytest.mark.block_network(allowed_hosts=[".*"])
+@pytest.mark.vcr(ignore_hosts=["webknossos.org", "data-humerus.webknossos.org"])
+def test_download_segments() -> None:
+    import examples.download_segments as example
+
+    with tmp_cwd():
+        (mag,) = exec_main_and_get_vars(example, "mag")
+
+        assert (
+            len(list(Path("l4_sample_segments").iterdir()))
+            == 2 * mag.layer.bounding_box.size.z / mag.mag.z
+        )
