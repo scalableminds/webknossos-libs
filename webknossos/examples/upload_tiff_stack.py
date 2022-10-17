@@ -7,8 +7,8 @@ import webknossos as wk
 
 def main() -> None:
     dataset = wk.Dataset.from_images(
-        str(Path(__file__).parent.parent / "testdata" / "tiff_dataset" / "*.tiff"),
-        "test_dataset",
+        str(Path(__file__).parent.parent / "testdata" / "tiff"),
+        "tiff_dataset",
         voxel_size=(12, 12, 12),
     )
     dataset.compress()

@@ -253,9 +253,12 @@ def test_download_segments() -> None:
     import examples.download_segments as example
 
     with tmp_cwd():
+        output_path = Path("l4_sample_segments")
+        output_path.mkdir()
+
         (mag,) = exec_main_and_get_vars(example, "mag")
 
         assert (
-            len(list(Path("l4_sample_segments").iterdir()))
+            len(list(output_path.iterdir()))
             == 2 * mag.layer.bounding_box.size.z / mag.mag.z
         )
