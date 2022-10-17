@@ -1,23 +1,23 @@
-from typing import NamedTuple, Optional
+from typing import List, NamedTuple, Optional
 from xml.etree.ElementTree import Element
 
 from loxun import XmlWriter
 
+from .segment import Segment
 from .utils import enforce_not_null, filter_none_values
 
 
 class Volume(NamedTuple):
     id: int
     location: str  # path to a ZIP file containing a wK volume annotation
-    fallback_layer: Optional[
-        str
-    ] = None  # name of an already existing wK volume annotation segmentation layer
-    name: Optional[
-        str
-    ] = None  # older wk versions did not serialize the name which is why the name is optional
+    # name of an already existing wK volume annotation segmentation layer:
+    fallback_layer: Optional[str]
+    # older wk versions did not serialize the name which is why the name is optional:
+    name: Optional[str]
+    segments: List[Segment]
 
     def _dump(self, xf: XmlWriter) -> None:
-        xf.tag(
+        xf.startTag(
             "volume",
             filter_none_values(
                 {
@@ -28,12 +28,19 @@ class Volume(NamedTuple):
                 }
             ),
         )
+        if self.segments is not None:
+            xf.startTag("segments")
+            for segment in self.segments:
+                segment._dump(xf)
+            xf.endTag()  # segments
+        xf.endTag()  # volume
 
     @classmethod
     def _parse(cls, nml_volume: Element) -> "Volume":
         return cls(
-            int(enforce_not_null(nml_volume.get("id"))),
-            enforce_not_null(nml_volume.get("location")),
-            nml_volume.get("fallbackLayer", default=None),
-            nml_volume.get("name", default=None),
+            id=int(enforce_not_null(nml_volume.get("id"))),
+            location=enforce_not_null(nml_volume.get("location")),
+            fallback_layer=nml_volume.get("fallbackLayer", default=None),
+            name=nml_volume.get("name", default=None),
+            segments=[],
         )

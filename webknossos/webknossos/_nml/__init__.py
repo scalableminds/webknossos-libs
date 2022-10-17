@@ -6,5 +6,6 @@ from .meta import Meta
 from .nml import Nml
 from .node import Node
 from .parameters import Parameters
+from .segment import Segment
 from .tree import Tree
 from .volume import Volume

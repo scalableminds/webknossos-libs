@@ -10,6 +10,7 @@ from .group import Group
 from .meta import Meta
 from .node import Node
 from .parameters import Parameters
+from .segment import Segment
 from .tree import Tree
 from .volume import Volume
 
@@ -135,6 +136,11 @@ class Nml(NamedTuple):
                     group = Group._parse(elem)
                     group_stack[-1].children.append(group)
                     group_stack.append(group)
+                elif elem.tag == "segment":
+                    segment = Segment._parse(elem)
+                    if volumes[-1].segments is None:
+                        volumes[-1].segments = []
+                    volumes[-1].segments.append(segment)
             elif event == "end":
                 if elem.tag == "parameters":
                     parameters = Parameters._parse(elem)
