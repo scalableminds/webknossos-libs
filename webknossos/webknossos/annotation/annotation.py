@@ -734,7 +734,9 @@ class Annotation:
         volume_layer_id: Optional[int] = None,
     ) -> Dict[int, SegmentInformation]:
         """Returns a dict mapping from segment ids to `SegmentInformation`.
-        The dict is mutable, changes to the returned instance are saved in the annotation."""
+        The dict is mutable, changes to the returned instance are saved in the local annotation.
+        Changes in a downloaded annotation that are done online in webknossos are not
+        reflected automatically, the annotation needs to be re-downloaded."""
         layer = self._get_volume_layer(
             volume_layer_name=volume_layer_name,
             volume_layer_id=volume_layer_id,

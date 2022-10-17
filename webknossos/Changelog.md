@@ -25,7 +25,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
   * `view.content_is_equal(…)`
 
 ### Added
-- Added `annotation.get_volume_layer_segments()` to interaction with information from the `Segments` tab in annotations. This method returns a dict from segment ids to an object containing optional segment `name`, `color` and `anchor_position`. [#812](https://github.com/scalableminds/webknossos-libs/pull/812)
+- Added `annotation.get_volume_layer_segments()` to interact with information from the `Segments` tab in annotations. This method returns a dict from segment ids to an object containing optional segment `name`, `color` and `anchor_position`. [#812](https://github.com/scalableminds/webknossos-libs/pull/812)
 
 ### Changed
 
