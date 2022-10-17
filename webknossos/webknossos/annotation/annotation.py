@@ -38,6 +38,7 @@ from typing import (
     Tuple,
     Union,
     cast,
+    overload,
 )
 from zipfile import ZIP_DEFLATED, ZipFile
 from zlib import Z_BEST_SPEED
@@ -222,6 +223,7 @@ class Annotation:
                 "The loaded annotation must have the suffix .zip or .nml, but is {annotation_path.suffix}"
             )
 
+    @overload
     @classmethod
     def download(
         cls,
@@ -231,6 +233,31 @@ class Annotation:
         *,
         skip_volume_data: bool = False,
     ) -> "Annotation":
+        ...
+
+    @overload
+    @classmethod
+    def download(
+        cls,
+        annotation_id_or_url: str,
+        annotation_type: Union[str, "AnnotationType", None] = None,
+        webknossos_url: Optional[str] = None,
+        *,
+        skip_volume_data: bool = False,
+        _return_context: bool,
+    ) -> Tuple["Annotation", ContextManager[None]]:
+        ...
+
+    @classmethod
+    def download(
+        cls,
+        annotation_id_or_url: str,
+        annotation_type: Union[str, "AnnotationType", None] = None,
+        webknossos_url: Optional[str] = None,
+        *,
+        skip_volume_data: bool = False,
+        _return_context: bool = False,
+    ) -> Union["Annotation", Tuple["Annotation", ContextManager[None]]]:
         """
         * `annotation_id_or_url` may be an annotation id or a full URL to an annotation, e.g.
           `https://webknossos.org/annotations/6114d9410100009f0096c640`
@@ -240,6 +267,7 @@ class Annotation:
           It defaults to the url from your current `webknossos_context`, using https://webknossos.org as a fallback.
         * `skip_volume_data` can be set to `True` to omit downloading annotated volume data.
           They can still be streamed from webKnossos using `annotation.get_remote_annotation_dataset()`.
+        * `_return_context` should not be set.
         """
         from webknossos.client._generated.api.default import annotation_download
         from webknossos.client.context import (
@@ -296,12 +324,37 @@ class Annotation:
             assert (
                 len(nml.volumes) == 0
             ), "The downloaded NML contains volume tags, it should have downloaded a zip instead."
-            return annotation
         else:
             assert filename.endswith(
                 ".zip"
             ), f"Downloaded annoation should have the suffix .zip or .nml, but has filename {filename}"
-            return Annotation._load_from_zip(BytesIO(response.content))
+            annotation = Annotation._load_from_zip(BytesIO(response.content))
+
+        if _return_context:
+            return annotation, context
+        else:
+            return annotation
+
+    @classmethod
+    def open_as_remote_dataset(
+        cls,
+        annotation_id_or_url: str,
+        annotation_type: Union[str, "AnnotationType", None] = None,
+        webknossos_url: Optional[str] = None,
+    ) -> Dataset:
+        (  # pylint: disable=unpacking-non-sequence
+            annotation,
+            context,
+        ) = Annotation.download(
+            annotation_id_or_url=annotation_id_or_url,
+            annotation_type=annotation_type,
+            webknossos_url=webknossos_url,
+            skip_volume_data=True,
+            _return_context=True,
+        )
+
+        with context:
+            return annotation.get_remote_annotation_dataset()
 
     @classmethod
     def _load_from_nml(
