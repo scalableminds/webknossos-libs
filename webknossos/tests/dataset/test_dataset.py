@@ -12,6 +12,7 @@ import pytest
 from jsonschema import validate
 from upath import UPath
 
+from tests.constants import TESTDATA_DIR, TESTOUTPUT_DIR
 from webknossos.dataset import (
     COLOR_CATEGORY,
     SEGMENTATION_CATEGORY,
@@ -36,8 +37,6 @@ from webknossos.utils import (
     rmtree,
     snake_to_camel_case,
 )
-
-from .constants import TESTDATA_DIR, TESTOUTPUT_DIR
 
 MINIO_ROOT_USER = "ANTN35UAENTS5UIAEATD"
 MINIO_ROOT_PASSWORD = "TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur"
