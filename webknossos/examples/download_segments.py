@@ -7,11 +7,13 @@ import webknossos as wk
 
 ANNOTATION_ID = "634d6e3e010000e000cffad6"
 SEGMENT_IDS = [32, 667325]
-MAG = "4-4-1"
+MAG = wk.Mag("4-4-1")
 
 
 def main() -> None:
-    dataset = wk.Annotation.open_as_remote_dataset(ANNOTATION_ID)
+    dataset = wk.Annotation.open_as_remote_dataset(
+        ANNOTATION_ID, webknossos_url="https://webknossos.org"
+    )
     mag = dataset.get_segmentation_layers()[0].get_mag(MAG)
 
     z = mag.layer.bounding_box.topleft.z
