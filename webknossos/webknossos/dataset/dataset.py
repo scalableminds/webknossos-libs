@@ -35,7 +35,6 @@ from upath import UPath
 
 from ..geometry.vec3_int import Vec3Int, Vec3IntLike
 from ._array import ArrayException, ArrayInfo, BaseArray, DataFormat
-from .defaults import DEFAULT_CHUNK_SHAPE
 from .remote_dataset_registry import RemoteDatasetRegistry
 
 if TYPE_CHECKING:
@@ -544,9 +543,7 @@ class Dataset:
         data_format: Union[str, DataFormat] = DEFAULT_DATA_FORMAT,
         chunk_shape: Optional[Union[Vec3IntLike, int]] = None,
         chunks_per_shard: Optional[Union[int, Vec3IntLike]] = None,
-        compress: bool = True,
-        enforce_direct_compression: bool = False,
-        downsample: bool = True,
+        compress: bool = False,
         swap_xy: bool = False,
         flip_x: bool = False,
         flip_y: bool = False,
@@ -628,8 +625,6 @@ class Dataset:
                 chunk_shape=chunk_shape,
                 chunks_per_shard=chunks_per_shard,
                 compress=compress,
-                enforce_direct_compression=enforce_direct_compression,
-                downsample=downsample,
                 swap_xy=swap_xy,
                 flip_x=flip_x,
                 flip_y=flip_y,
@@ -974,15 +969,12 @@ class Dataset:
         layer_name: str,
         category: LayerCategoryType = "color",
         data_format: Union[str, DataFormat] = DEFAULT_DATA_FORMAT,
-        *,
         ## add_mag arguments
         mag: Union[int, str, list, tuple, np.ndarray, Mag] = Mag(1),
         chunk_shape: Optional[Union[Vec3IntLike, int]] = None,
         chunks_per_shard: Optional[Union[int, Vec3IntLike]] = None,
-        compress: bool = True,
+        compress: bool = False,
         ## other arguments
-        enforce_direct_compression: bool = False,
-        downsample: bool = True,
         swap_xy: bool = False,
         flip_x: bool = False,
         flip_y: bool = False,
@@ -992,6 +984,7 @@ class Dataset:
         timepoint: Optional[int] = None,
         batch_size: Optional[int] = None,  # defaults to shard-size z
         executor: Optional[Executor] = None,
+        *,
         chunk_size: Optional[Union[Vec3IntLike, int]] = None,  # deprecated
     ) -> Layer:
         """
@@ -1011,9 +1004,6 @@ class Dataset:
         * `data_format`: by default wkw files are written, may be set to "zarr"
         * `mag`: magnification to use for the written data
         * `chunk_shape`, `chunks_per_shard`, `compress`: adjust how the data is stored on disk
-          (Setting `compress=True` only ensures that the data is compressed, it might be written uncompressed first, see next argument.)
-        * `enforce_direct_compression`: enforces to directly write compressed shards, which needs to read more image slices at once
-          (This is the default if only few slices are available. Can only be used with `compress=True`.)
         * `swap_xy`: set to `True` to interchange x and y axis before writing to disk
         * `flip_x`, `flip_y`, `flip_z`: set to `True` to flip the respective axis before writing to disk
         * `use_bioformats`: set to `True` to use the [pims bioformats adapter](https://soft-matter.github.io/pims/v0.6.1/bioformats.html), needs a JVM
@@ -1023,14 +1013,6 @@ class Dataset:
         * `executor`: pass a `ClusterExecutor` instance to parallelize the conversion jobs across the batches
         """
         from ._utils.pims_images import PimsImages, dimwise_max
-
-        if enforce_direct_compression:
-            if not compress:
-                # The default is compress=True, so the user explicitly stated
-                # `enforce_direct_compression=True` and `compress=False`:
-                raise ValueError(
-                    "When specifying `enforce_direct_compression=True`, `compress=False` is not possible."
-                )
 
         chunk_shape, chunks_per_shard = _get_sharding_parameters(
             chunk_shape=chunk_shape,
@@ -1062,21 +1044,11 @@ class Dataset:
             num_channels=pims_images.num_channels,
             **add_layer_kwargs,  # type: ignore[arg-type]
         )
-        if compress:
-            if enforce_direct_compression:
-                compress_in_add_mag = True
-            else:
-                compress_in_add_mag = (
-                    pims_images.expected_shape.z
-                    <= (chunk_shape or DEFAULT_CHUNK_SHAPE).z
-                )
-        else:
-            compress_in_add_mag = False
         mag_view = layer.add_mag(
             mag=mag,
             chunk_shape=chunk_shape,
             chunks_per_shard=chunks_per_shard,
-            compress=compress_in_add_mag,
+            compress=compress,
         )
         mag = mag_view.mag
         layer.bounding_box = BoundingBox(
@@ -1126,9 +1098,9 @@ class Dataset:
                 category=UserWarning,
                 module="webknossos",
             )
-            with get_executor_for_args(None, executor) as inner_executor:
+            with get_executor_for_args(None, executor) as executor:
                 shapes_and_max_ids = wait_and_ensure_success(
-                    inner_executor.map_to_futures(func_per_chunk, args),
+                    executor.map_to_futures(func_per_chunk, args),
                     progress_desc="Creating layer from images",
                 )
             shapes, max_ids = zip(*shapes_and_max_ids)
@@ -1145,13 +1117,6 @@ class Dataset:
                 + f"New size is {actual_size}, expected {pims_images.expected_shape}.",
                 RuntimeWarning,
             )
-
-        if compress and not compress_in_add_mag:
-            mag_view.compress(executor=executor)
-
-        if downsample:
-            layer.downsample(compress=compress, executor=executor)
-
         return layer
 
     def get_segmentation_layer(self) -> SegmentationLayer:

@@ -29,7 +29,6 @@ def test_multiple_multitiffs(tmp_path: Path) -> None:
         "testdata/various_tiff_formats",
         tmp_path,
         (1, 1, 1),
-        compress=False,
     )
     assert len(ds.layers) == 4
 
