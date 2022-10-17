@@ -23,9 +23,6 @@ For upgrade instructions, please check the respective *Breaking Changes* section
   * `layer.redownsample(…)`
   * `mag_view.compress(…)`
   * `view.content_is_equal(…)`
-- `dataset.add_layer_from_images()` compresses and downsamples the layer by default now.
-  This can be controlled by setting the argument `compress`, `enforce_direct_compression` and `downsample`.
-  Some arguments for this method changed to keyword-only. [#808](https://github.com/scalableminds/webknossos-libs/pull/808
 
 ### Added
 - Added `Dataset.from_images`, which converts images to a Dataset, possibly consisting of multiple layers. [#808](https://github.com/scalableminds/webknossos-libs/pull/808
