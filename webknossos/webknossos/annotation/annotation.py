@@ -53,11 +53,12 @@ from webknossos.annotation._nml_conversion import annotation_to_nml, nml_to_skel
 from webknossos.client._generated.api.default import dataset_info
 from webknossos.dataset import SEGMENTATION_CATEGORY, Dataset, Layer, SegmentationLayer
 from webknossos.dataset.dataset import RemoteDataset
-from webknossos.geometry import BoundingBox
+from webknossos.geometry import BoundingBox, Vec3Int
 from webknossos.skeleton import Skeleton
 from webknossos.utils import time_since_epoch_in_ms, warn_deprecated
 
 Vector3 = Tuple[float, float, float]
+Vector4 = Tuple[float, float, float, float]
 
 
 MAG_RE = r"((\d+-\d+-)?\d+)"
@@ -67,11 +68,19 @@ ANNOTATION_WKW_PATH_RE = re.compile(rf"{MAG_RE}{SEP_RE}(header\.wkw|{CUBE_RE})")
 
 
 @attr.define
+class SegmentInformation:
+    name: Optional[str]
+    anchor_position: Optional[Vec3Int]
+    color: Optional[Vector4]
+
+
+@attr.define
 class _VolumeLayer:
     id: int
     name: str
     fallback_layer_name: Optional[str]
     zip: Optional[ZipPath]
+    segments: Dict[int, SegmentInformation]
 
     def _default_zip_name(self) -> str:
         return f"data_{self.id}_{self.name}.zip"
@@ -406,12 +415,21 @@ class Annotation:
                         volume_path = None
                     else:
                         volume_path = fitting_volume_paths[0]
+            segments = {}
+            if volume.segments is not None:
+                for segment in volume.segments:
+                    segments[segment.id] = SegmentInformation(
+                        name=segment.name,
+                        anchor_position=segment.anchor_position,
+                        color=segment.color,
+                    )
             volume_layers.append(
                 _VolumeLayer(
                     id=volume.id,
                     name="Volume" if volume.name is None else volume.name,
                     fallback_layer_name=volume.fallback_layer,
                     zip=volume_path,
+                    segments=segments,
                 )
             )
         assert len(set(i.id for i in volume_layers)) == len(
@@ -597,6 +615,7 @@ class Annotation:
                 name=name,
                 fallback_layer_name=fallback_layer_name,
                 zip=None,
+                segments={},
             )
         )
 
@@ -761,6 +780,21 @@ class Annotation:
             input_annotation_dataset._read_only = True
 
             yield input_annotation_layer
+
+    def get_volume_layer_segments(
+        self,
+        volume_layer_name: Optional[str] = None,
+        volume_layer_id: Optional[int] = None,
+    ) -> Dict[int, SegmentInformation]:
+        """Returns a dict mapping from segment ids to `SegmentInformation`.
+        The dict is mutable, changes to the returned instance are saved in the local annotation.
+        Changes in a downloaded annotation that are done online in webknossos are not
+        reflected automatically, the annotation needs to be re-downloaded."""
+        layer = self._get_volume_layer(
+            volume_layer_name=volume_layer_name,
+            volume_layer_id=volume_layer_id,
+        )
+        return layer.segments
 
 
 Annotation._set_init_docstring()
