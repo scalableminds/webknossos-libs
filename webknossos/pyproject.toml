@@ -38,6 +38,7 @@ cluster_tools = { path = "../cluster_tools/", develop = true }
 fsspec = "^2022.2.0"
 httpx = ">=0.15.4,<0.19.0"
 loxun = "^2.0"
+natsort = "^6.2.0"
 networkx = "^2.6.2"
 numcodecs = "^0.10"
 numpy = "^1.15.0"  # see https://numpy.org/neps/nep-0029-deprecation_policy.html#support-table

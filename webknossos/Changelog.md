@@ -25,6 +25,10 @@ For upgrade instructions, please check the respective *Breaking Changes* section
   * `view.content_is_equal(…)`
 
 ### Added
+- Added `Dataset.from_images`, which converts images to a Dataset, possibly consisting of multiple layers. [#808](https://github.com/scalableminds/webknossos-libs/pull/808
+- Added `Annotation.open_as_remote_dataset(…)`, which is a shorthand for `Annotation.download(...).get_remote_annotation_dataset()`.
+  [#811](https://github.com/scalableminds/webknossos-libs/pull/811)
+- `skeleton.save()` now also accepts paths with a `.zip` suffix. [#811](https://github.com/scalableminds/webknossos-libs/pull/811)
 - Added `annotation.get_volume_layer_segments()` to interact with information from the `Segments` tab in annotations. This method returns a dict from segment ids to an object containing optional segment `name`, `color` and `anchor_position`. [#812](https://github.com/scalableminds/webknossos-libs/pull/812)
 
 ### Changed

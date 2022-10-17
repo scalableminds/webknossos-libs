@@ -96,9 +96,10 @@ class Skeleton(Group):
         from webknossos import Annotation
 
         out_path = Path(out_path)
-        assert (
-            out_path.suffix == ".nml"
-        ), f"The suffix if the file must be .nml, not {out_path.suffix}"
+        assert out_path.suffix in [
+            ".nml",
+            ".zip",
+        ], f"The suffix if the file must be .nml or .zip, not {out_path.suffix}"
         annotation = Annotation(name=out_path.stem, skeleton=self, time=None)
         annotation.save(out_path)
 

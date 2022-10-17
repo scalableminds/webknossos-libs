@@ -1,20 +1,40 @@
 import warnings
 from contextlib import contextmanager, nullcontext
+from itertools import chain
 from os import PathLike
-from typing import Iterator, List, Optional, Sequence, Tuple, TypeVar, Union, cast
+from pathlib import Path
+from typing import (
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+    cast,
+)
 from urllib.error import HTTPError
 
 import numpy as np
-import pims
 
 from webknossos.dataset.mag_view import MagView
 from webknossos.geometry.vec3_int import Vec3Int
+
+try:
+    import pims
+except ImportError as e:
+    raise RuntimeError(
+        "Cannot import pims, please install it e.g. using 'webknossos[all]'"
+    ) from e
 
 
 class PimsImages:
     def __init__(
         self,
-        images: Union[str, "pims.FramesSequence", List[Union[str, PathLike]]],
+        images: Union[str, Path, "pims.FramesSequence", List[Union[str, PathLike]]],
         channel: Optional[int],
         timepoint: Optional[int],
         swap_xy: bool,
@@ -242,12 +262,13 @@ class PimsImages:
                             self._original_images
                         )
                 else:
+                    original_images = self._original_images
+                    if isinstance(original_images, Path):
+                        original_images = str(original_images)
                     try:
-                        images_context_manager = pims.open(self._original_images)
+                        images_context_manager = pims.open(original_images)
                     except TypeError:
-                        images_context_manager = pims.ImageSequence(
-                            self._original_images
-                        )
+                        images_context_manager = pims.ImageSequence(original_images)
 
             with images_context_manager as images:
                 if isinstance(images, pims.FramesSequenceND):
@@ -334,3 +355,52 @@ def dimwise_max(vectors: Sequence[T]) -> T:
         return vectors[0]
     else:
         return cast(T, tuple(map(max, *vectors)))
+
+
+C = TypeVar("C", bound=Type)
+
+
+def _recursive_subclasses(cls: C) -> List[C]:
+    "Return all subclasses (and their subclasses, etc.)."
+    # Source: http://stackoverflow.com/a/3862957/1221924
+    return cls.__subclasses__() + [
+        g for s in cls.__subclasses__() for g in _recursive_subclasses(s)
+    ]
+
+
+def _get_all_pims_handlers() -> Iterable[
+    Type[Union[pims.FramesSequence, pims.FramesSequenceND]]
+]:
+    return chain(
+        _recursive_subclasses(pims.FramesSequence),
+        _recursive_subclasses(pims.FramesSequenceND),
+    )
+
+
+def get_valid_pims_suffixes() -> Set[str]:
+    valid_suffixes = set()
+    for pims_handler in _get_all_pims_handlers():
+        valid_suffixes.update(pims_handler.class_exts())
+    return valid_suffixes
+
+
+def has_image_z_dimension(
+    filepath: Path,
+    use_bioformats: bool,
+    is_segmentation: bool,
+) -> bool:
+
+    pims_images = PimsImages(
+        filepath,
+        use_bioformats=use_bioformats,
+        is_segmentation=is_segmentation,
+        # the following arguments shouldn't matter much for the Dataset.from_images method:
+        channel=None,
+        timepoint=None,
+        swap_xy=False,
+        flip_x=False,
+        flip_y=False,
+        flip_z=False,
+    )
+
+    return pims_images.expected_shape.z > 1
