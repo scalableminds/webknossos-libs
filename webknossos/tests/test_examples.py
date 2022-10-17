@@ -236,6 +236,7 @@ def test_zarr_and_dask() -> None:
 
 
 @pytest.mark.block_network(allowed_hosts=[".*"])
+@pytest.mark.vcr(ignore_hosts=[".*"])
 def test_upload_tiff_stack() -> None:
     import examples.upload_tiff_stack as example
 
