@@ -2,8 +2,6 @@ from pathlib import Path
 
 import webknossos as wk
 
-# pylint: disable=unused-variable
-
 
 def main() -> None:
     dataset = wk.Dataset.from_images(
