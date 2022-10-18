@@ -33,11 +33,10 @@ from cluster_tools import Executor
 from natsort import natsort_keygen
 from upath import UPath
 
-from webknossos import SamplingModes
-
 from ..geometry.vec3_int import Vec3Int, Vec3IntLike
 from ._array import ArrayException, ArrayInfo, BaseArray, DataFormat
 from .remote_dataset_registry import RemoteDatasetRegistry
+from .sampling_modes import SamplingModes
 
 if TYPE_CHECKING:
     import pims
