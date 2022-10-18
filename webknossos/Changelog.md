@@ -10,7 +10,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.18...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.19...HEAD)
+
+### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [0.10.19](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.19) - 2022-10-18
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.18...v0.10.19)
 
 ### Breaking Changes
 - The `executor` argument can now be passed to the following methods,
@@ -32,10 +44,6 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 - Added `annotation.get_volume_layer_segments()` to interact with information from the `Segments` tab in annotations. This method returns a dict from segment ids to an object containing optional segment `name`, `color` and `anchor_position`. [#812](https://github.com/scalableminds/webknossos-libs/pull/812)
 - Added convenience methods `Dataset.compress` and `Dataset.downsample` for compressing and downsampling all layers and mags in a dataset. [#813](https://github.com/scalableminds/webknossos-libs/pull/813)
 - Added examples for downloading segment masks from webKnossos and cubing & uploading tiff stacks. [#813](https://github.com/scalableminds/webknossos-libs/pull/813)
-
-### Changed
-
-### Fixed
 
 
 ## [0.10.18](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.18) - 2022-09-29

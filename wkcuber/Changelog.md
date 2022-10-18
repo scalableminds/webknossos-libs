@@ -7,17 +7,23 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.18...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.19...HEAD)
 
 ### Breaking Changes
 
 ### Added
 
 ### Changed
-- Some methods now take and `executor` argument instead of `args` or `executor_args`.
-  This does not affect the CLI arguments. [#805](https://github.com/scalableminds/webknossos-libs/pull/805)
 
 ### Fixed
+
+
+## [0.10.19](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.19) - 2022-10-18
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.18...v0.10.19)
+
+### Changed
+- Some methods now take and `executor` argument instead of `args` or `executor_args`.
+  This does not affect the CLI arguments. [#805](https://github.com/scalableminds/webknossos-libs/pull/805)
 
 
 ## [0.10.18](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.18) - 2022-09-29
