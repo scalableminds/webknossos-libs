@@ -31,7 +31,7 @@ def main() -> None:
                 )
             if z % 100 == 0:
                 print(f"z={z:04d}")
-            z += 1
+            z += mag.z
 
 
 if __name__ == "__main__":
