@@ -29,8 +29,8 @@ def main() -> None:
                     f"l4_sample_segments/seg{segment_id:04d}_mag{mag.mag}_z{z:04d}.tiff",
                     segment_mask,
                 )
-            if z % 100 == 0:
-                print(f"z={z:04d}")
+
+            print(f"Downloaded z={z:04d}")
             z += MAG.z
 
 

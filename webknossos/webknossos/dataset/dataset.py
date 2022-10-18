@@ -33,6 +33,8 @@ from cluster_tools import Executor
 from natsort import natsort_keygen
 from upath import UPath
 
+from webknossos import SamplingModes
+
 from ..geometry.vec3_int import Vec3Int, Vec3IntLike
 from ._array import ArrayException, ArrayInfo, BaseArray, DataFormat
 from .remote_dataset_registry import RemoteDatasetRegistry
@@ -1447,13 +1449,17 @@ class Dataset:
 
     def downsample(
         self,
+        sampling_mode: Optional[SamplingModes] = None,
         executor: Optional[Executor] = None,
     ) -> None:
         """
         Downsamples all layers that are not yet downsampled.
         """
         for layer in self.layers.values():
-            layer.downsample(executor=executor)
+            layer.downsample(
+                sampling_mode=sampling_mode or SamplingModes.ANISOTROPIC,
+                executor=executor,
+            )
 
     def _get_layer_by_category(self, category: LayerCategoryType) -> Layer:
         assert category == COLOR_CATEGORY or category == SEGMENTATION_CATEGORY
