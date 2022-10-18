@@ -255,9 +255,9 @@ def test_download_segments() -> None:
         output_path = Path("l4_sample_segments")
         output_path.mkdir()
 
-        (mag,) = exec_main_and_get_vars(example, "mag")
+        (mag_view,) = exec_main_and_get_vars(example, "mag_view")
 
         assert (
             len(list(output_path.iterdir()))
-            == 2 * mag.layer.bounding_box.size.z / mag.mag.z
+            == 2 * mag_view.layer.bounding_box.size.z / mag_view.mag.z
         )
