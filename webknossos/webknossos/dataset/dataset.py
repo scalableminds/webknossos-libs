@@ -1448,7 +1448,7 @@ class Dataset:
 
     def downsample(
         self,
-        sampling_mode: Optional[SamplingModes] = None,
+        sampling_mode: SamplingModes = SamplingModes.ANISOTROPIC,
         executor: Optional[Executor] = None,
     ) -> None:
         """
@@ -1456,7 +1456,7 @@ class Dataset:
         """
         for layer in self.layers.values():
             layer.downsample(
-                sampling_mode=sampling_mode or SamplingModes.ANISOTROPIC,
+                sampling_mode=sampling_mode,
                 executor=executor,
             )
 
