@@ -30,6 +30,8 @@ For upgrade instructions, please check the respective *Breaking Changes* section
   [#811](https://github.com/scalableminds/webknossos-libs/pull/811)
 - `skeleton.save()` now also accepts paths with a `.zip` suffix. [#811](https://github.com/scalableminds/webknossos-libs/pull/811)
 - Added `annotation.get_volume_layer_segments()` to interact with information from the `Segments` tab in annotations. This method returns a dict from segment ids to an object containing optional segment `name`, `color` and `anchor_position`. [#812](https://github.com/scalableminds/webknossos-libs/pull/812)
+- Added convenience methods `Dataset.compress` and `Dataset.downsample` for compressing and downsampling all layers and mags in a dataset. [#813](https://github.com/scalableminds/webknossos-libs/pull/813)
+- Added examples for downloading segment masks from webKnossos and cubing & uploading tiff stacks. [#813](https://github.com/scalableminds/webknossos-libs/pull/813)
 
 ### Changed
 

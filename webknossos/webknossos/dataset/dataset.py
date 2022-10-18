@@ -36,6 +36,7 @@ from upath import UPath
 from ..geometry.vec3_int import Vec3Int, Vec3IntLike
 from ._array import ArrayException, ArrayInfo, BaseArray, DataFormat
 from .remote_dataset_registry import RemoteDatasetRegistry
+from .sampling_modes import SamplingModes
 
 if TYPE_CHECKING:
     import pims
@@ -1432,6 +1433,32 @@ class Dataset:
             )
 
         return new_dataset
+
+    def compress(
+        self,
+        executor: Optional[Executor] = None,
+    ) -> None:
+        """
+        Compresses all mag views in-place that are not yet compressed.
+        """
+        for layer in self.layers.values():
+            for mag in layer.mags.values():
+                if not mag._is_compressed():
+                    mag.compress(executor=executor)
+
+    def downsample(
+        self,
+        sampling_mode: SamplingModes = SamplingModes.ANISOTROPIC,
+        executor: Optional[Executor] = None,
+    ) -> None:
+        """
+        Downsamples all layers that are not yet downsampled.
+        """
+        for layer in self.layers.values():
+            layer.downsample(
+                sampling_mode=sampling_mode,
+                executor=executor,
+            )
 
     def _get_layer_by_category(self, category: LayerCategoryType) -> Layer:
         assert category == COLOR_CATEGORY or category == SEGMENTATION_CATEGORY
