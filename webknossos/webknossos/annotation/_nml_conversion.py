@@ -175,6 +175,15 @@ def annotation_to_nml(  # pylint: disable=dangerous-default-value
                 location=volume._default_zip_name(),
                 fallback_layer=volume.fallback_layer_name,
                 name=volume.name,
+                segments=[
+                    wknml.Segment(
+                        id=segment_id,
+                        name=segment_info.name,
+                        anchor_position=segment_info.anchor_position,
+                        color=segment_info.color,
+                    )
+                    for segment_id, segment_info in volume.segments.items()
+                ],
             )
         )
 

@@ -157,11 +157,19 @@ def test_annotation_from_url() -> None:
         mag.read(absolute_offset=(128, 128, 128), size=(10, 10, 10))[0, 0, 0, 0]
         == 286021
     )
+    segment_info = annotation.get_volume_layer_segments("Volume")[2504698]
+    assert segment_info.anchor_position == (2785, 4423, 1792)
+    segment_info.name = "Test Segment"
+    segment_info.color = (1, 0, 0, 1)
 
     annotation.save(TESTOUTPUT_DIR / "test_dummy_downloaded.zip")
     annotation = wk.Annotation.load(TESTOUTPUT_DIR / "test_dummy_downloaded.zip")
     assert annotation.dataset_name == "l4dense_motta_et_al_demo_v2"
     assert len(list(annotation.skeleton.flattened_trees())) == 1
+    segment_info = annotation.get_volume_layer_segments("Volume")[2504698]
+    assert segment_info.anchor_position == (2785, 4423, 1792)
+    assert segment_info.name == "Test Segment"
+    assert segment_info.color == (1, 0, 0, 1)
 
 
 def test_reading_bounding_boxes() -> None:

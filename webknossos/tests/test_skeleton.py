@@ -240,6 +240,7 @@ def test_volume_dump_round_trip(tmp_path: Path, layer_name: Optional[str]) -> No
         location="data_Volume.zip",
         fallback_layer="my_very_important_layer",
         name=layer_name,
+        segments=[],
     )
     volume_out = None
 

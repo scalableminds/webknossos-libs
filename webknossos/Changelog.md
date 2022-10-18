@@ -29,6 +29,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 - Added `Annotation.open_as_remote_dataset(…)`, which is a shorthand for `Annotation.download(...).get_remote_annotation_dataset()`.
   [#811](https://github.com/scalableminds/webknossos-libs/pull/811)
 - `skeleton.save()` now also accepts paths with a `.zip` suffix. [#811](https://github.com/scalableminds/webknossos-libs/pull/811)
+- Added `annotation.get_volume_layer_segments()` to interact with information from the `Segments` tab in annotations. This method returns a dict from segment ids to an object containing optional segment `name`, `color` and `anchor_position`. [#812](https://github.com/scalableminds/webknossos-libs/pull/812)
 - Added convenience methods `Dataset.compress` and `Dataset.downsample` for compressing and downsampling all layers and mags in a dataset. [#813](https://github.com/scalableminds/webknossos-libs/pull/813)
 - Added examples for downloading segment masks from webKnossos and cubing & uploading tiff stacks. [#813](https://github.com/scalableminds/webknossos-libs/pull/813)
 
@@ -41,7 +42,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.17...v0.10.18)
 
 ### Added
-- `Annotation.download()` now accepts the keyword-only argument `skip_volume_data`, which can be set to `True` to omit downloading volume data.  [#806](https://github.com/scalableminds/webknossos-libs/pull/806)
+- `Annotation.download()` now accepts the keyword-only argument `skip_volume_data`, which can be set to `True` to omit downloading volume data. [#806](https://github.com/scalableminds/webknossos-libs/pull/806)
 
 
 ## [0.10.17](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.17) - 2022-09-26
