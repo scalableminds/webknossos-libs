@@ -12,12 +12,12 @@ def main() -> None:
         ANNOTATION_ID, webknossos_url="https://webknossos.org", skip_volume_data=True
     )
     dataset = annotation.get_remote_annotation_dataset()
-    mag = dataset.get_segmentation_layers()[0].get_mag(MAG)
+    mag_view = dataset.get_segmentation_layers()[0].get_mag(MAG)
 
     segment_ids = list(annotation.get_volume_layer_segments().keys())
 
-    z = mag.layer.bounding_box.topleft.z
-    with mag.get_buffered_slice_reader() as reader:
+    z = mag_view.layer.bounding_box.topleft.z
+    with mag_view.get_buffered_slice_reader() as reader:
         for slice_data in reader:
             slice_data = slice_data[0]  # First channel only
             for segment_id in segment_ids:
@@ -26,7 +26,7 @@ def main() -> None:
                 ) * 255  # Make a binary mask 0=empty, 255=segment
                 segment_mask = segment_mask.T  # Tiff likes the data transposed
                 imwrite(
-                    f"l4_sample_segments/seg{segment_id:04d}_mag{mag.mag}_z{z:04d}.tiff",
+                    f"l4_sample_segments/seg{segment_id:04d}_mag{MAG}_z{z:04d}.tiff",
                     segment_mask,
                 )
 
