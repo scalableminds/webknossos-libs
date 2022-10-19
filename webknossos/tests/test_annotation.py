@@ -207,8 +207,6 @@ def test_reading_bounding_boxes() -> None:
 
 
 def test_empty_volume_annotation() -> None:
-    import webknossos as wk
-
     a = wk.Annotation.load(TESTDATA_DIR / "annotations" / "empty_volume_annotation.zip")
     with a.temporary_volume_layer_copy() as layer:
         assert layer.bounding_box == wk.BoundingBox.empty()
