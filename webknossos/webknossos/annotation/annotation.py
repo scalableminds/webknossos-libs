@@ -742,7 +742,7 @@ class Annotation:
 
         assert (
             volume_zip_path is not None
-        ), "The selected volume layer is empty and cannot be exported."
+        ), "The selected volume layer data is not available and cannot be exported."
 
         with volume_zip_path.open(mode="rb") as f:
             data_zip = ZipFile(f)
