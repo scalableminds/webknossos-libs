@@ -1,0 +1,24 @@
+<things>
+  <meta name="writer" content="NmlWriter.scala" />
+  <meta name="writerGitCommit" content="d35e587fb59752e1899be99e2d5e046b186a5d6f" />
+  <meta name="timestamp" content="1666187511849" />
+  <meta name="annotationId" content="635000ac0100007800c91264" />
+  <meta name="username" content="Sample User" />
+  <parameters>
+    <experiment name="l4_sample" organization="sample_organization" description="" />
+    <scale x="11.239999771118164" y="11.239999771118164" z="28.0" />
+    <offset x="0" y="0" z="0" />
+    <time ms="1666187436145" />
+    <editPosition x="3581" y="3585" z="1024" />
+    <editRotation xRot="0.0" yRot="0.0" zRot="0.0" />
+    <zoomLevel zoom="1.0" />
+  </parameters>
+  <branchpoints />
+  <comments />
+  <groups />
+  <volume id="0" name="segmentation" fallbackLayer="segmentation" largestSegmentId="2504698"><!--Note that volume data was omitted when downloading this annotation.-->
+    <segments>
+      <segment id="2504698" name="test_segment" created="1666187488227" anchorPositionX="3581" anchorPositionY="3585" anchorPositionZ="1024" />
+    </segments>
+  </volume>
+</things>

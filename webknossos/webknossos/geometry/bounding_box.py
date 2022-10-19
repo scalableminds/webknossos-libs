@@ -97,26 +97,26 @@ class BoundingBox:
         new_size = self.size.with_z(new_size_z) if new_size_z is not None else self.size
         return BoundingBox(new_topleft, new_size)
 
-    @staticmethod
-    def from_wkw_dict(bbox: Dict) -> "BoundingBox":
+    @classmethod
+    def from_wkw_dict(cls, bbox: Dict) -> "BoundingBox":
         return BoundingBox(
             bbox["topLeft"], [bbox["width"], bbox["height"], bbox["depth"]]
         )
 
-    @staticmethod
-    def from_config_dict(bbox: Dict) -> "BoundingBox":
+    @classmethod
+    def from_config_dict(cls, bbox: Dict) -> "BoundingBox":
         return BoundingBox(bbox["topleft"], bbox["size"])
 
-    @staticmethod
-    def from_tuple6(tuple6: Tuple[int, int, int, int, int, int]) -> "BoundingBox":
+    @classmethod
+    def from_tuple6(cls, tuple6: Tuple[int, int, int, int, int, int]) -> "BoundingBox":
         return BoundingBox(tuple6[0:3], tuple6[3:6])
 
-    @staticmethod
-    def from_tuple2(tuple2: Tuple[Vec3IntLike, Vec3IntLike]) -> "BoundingBox":
+    @classmethod
+    def from_tuple2(cls, tuple2: Tuple[Vec3IntLike, Vec3IntLike]) -> "BoundingBox":
         return BoundingBox(tuple2[0], tuple2[1])
 
-    @staticmethod
-    def from_points(points: Iterable[Vec3IntLike]) -> "BoundingBox":
+    @classmethod
+    def from_points(cls, points: Iterable[Vec3IntLike]) -> "BoundingBox":
         """Returns a bounding box exactly containing all points."""
 
         all_points = np.array([Vec3Int(point).to_list() for point in points])
@@ -128,8 +128,8 @@ class BoundingBox:
 
         return BoundingBox(topleft, bottomright - topleft)
 
-    @staticmethod
-    def from_checkpoint_name(checkpoint_name: str) -> "BoundingBox":
+    @classmethod
+    def from_checkpoint_name(cls, checkpoint_name: str) -> "BoundingBox":
         """This function extracts a bounding box in the format `x_y_z_sx_sy_xz` which is contained in a string."""
         regex = r"(([0-9]+_){5}([0-9]+))"
         match = re.search(regex, checkpoint_name)
@@ -141,15 +141,17 @@ class BoundingBox:
             cast(Tuple[int, int, int, int, int, int], bbox_tuple)
         )
 
-    @staticmethod
-    def from_csv(csv_bbox: str) -> "BoundingBox":
+    @classmethod
+    def from_csv(cls, csv_bbox: str) -> "BoundingBox":
         bbox_tuple = tuple(int(x) for x in csv_bbox.split(","))
         return BoundingBox.from_tuple6(
             cast(Tuple[int, int, int, int, int, int], bbox_tuple)
         )
 
-    @staticmethod
-    def from_auto(obj: Union["BoundingBox", str, Dict, List, Tuple]) -> "BoundingBox":
+    @classmethod
+    def from_auto(
+        cls, obj: Union["BoundingBox", str, Dict, List, Tuple]
+    ) -> "BoundingBox":
         if isinstance(obj, BoundingBox):
             return obj
         elif isinstance(obj, str):
@@ -169,9 +171,9 @@ class BoundingBox:
 
         raise Exception("Unknown bounding box format.")
 
-    @staticmethod
+    @classmethod
     def group_boxes_with_aligned_mag(
-        bounding_boxes: Iterable["BoundingBox"], aligning_mag: Mag
+        cls, bounding_boxes: Iterable["BoundingBox"], aligning_mag: Mag
     ) -> Dict["BoundingBox", List["BoundingBox"]]:
         """
         Groups the given BoundingBox instances by aligning each
@@ -187,6 +189,12 @@ class BoundingBox:
             chunks_with_bboxes[chunk_key].append(bbox)
 
         return chunks_with_bboxes
+
+    @classmethod
+    def empty(
+        cls,
+    ) -> "BoundingBox":
+        return cls(Vec3Int.zeros(), Vec3Int.zeros())
 
     def to_wkw_dict(self) -> dict:
 

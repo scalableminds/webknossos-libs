@@ -219,14 +219,7 @@ class Annotation:
             return cls._load_from_zip(annotation_path)
         elif annotation_path.suffix == ".nml":
             with annotation_path.open(mode="rb") as f:
-                annotation, nml = cls._load_from_nml(annotation_path.stem, f)
-            if len(nml.volumes) > 0:
-                warnings.warn(
-                    "The loaded nml contains references to volume layer annotations. "
-                    + "Those can only be loaded from a zip-file containing the nml and the volume annotation layer zips. "
-                    + "Omitting the volume layer annotations."
-                )
-            return annotation
+                return cls._load_from_nml(annotation_path.stem, f)
         else:
             raise RuntimeError(
                 "The loaded annotation must have the suffix .zip or .nml, but is {annotation_path.suffix}"
@@ -327,12 +320,9 @@ class Annotation:
         _header_value, header_params = cgi.parse_header(content_disposition_header)
         filename = header_params.get("filename", "")
         if filename.endswith(".nml"):
-            annotation, nml = Annotation._load_from_nml(
+            annotation = Annotation._load_from_nml(
                 filename[:-4], BytesIO(response.content)
             )
-            assert (
-                len(nml.volumes) == 0
-            ), "The downloaded NML contains volume tags, it should have downloaded a zip instead."
         else:
             assert filename.endswith(
                 ".zip"
@@ -367,54 +357,66 @@ class Annotation:
 
     @classmethod
     def _load_from_nml(
-        cls, name: str, nml_content: BinaryIO
-    ) -> Tuple["Annotation", wknml.Nml]:
+        cls,
+        name: str,
+        nml_content: BinaryIO,
+        possible_volume_paths: Optional[List[ZipPath]] = None,
+    ) -> "Annotation":
         nml = wknml.Nml.parse(nml_content)
 
-        return (
-            cls(
-                name=name,
-                skeleton=nml_to_skeleton(nml),
-                owner_name=nml.get_meta("username"),
-                annotation_id=nml.get_meta("annotationId"),
-                time=nml.parameters.time,
-                edit_position=nml.parameters.editPosition,
-                edit_rotation=nml.parameters.editRotation,
-                zoom_level=nml.parameters.zoomLevel,
-                task_bounding_box=nml.parameters.taskBoundingBox,
-                user_bounding_boxes=nml.parameters.userBoundingBoxes or [],
-                metadata={
-                    i.name: i.content
-                    for i in nml.meta
-                    if i.name not in ["username", "annotationId"]
-                },
-            ),
-            nml,
+        annotation = cls(
+            name=name,
+            skeleton=nml_to_skeleton(nml),
+            owner_name=nml.get_meta("username"),
+            annotation_id=nml.get_meta("annotationId"),
+            time=nml.parameters.time,
+            edit_position=nml.parameters.editPosition,
+            edit_rotation=nml.parameters.editRotation,
+            zoom_level=nml.parameters.zoomLevel,
+            task_bounding_box=nml.parameters.taskBoundingBox,
+            user_bounding_boxes=nml.parameters.userBoundingBoxes or [],
+            metadata={
+                i.name: i.content
+                for i in nml.meta
+                if i.name not in ["username", "annotationId"]
+            },
         )
+        annotation._volume_layers = cls._parse_volumes(nml, possible_volume_paths)
+        return annotation
 
-    @classmethod
-    def _load_from_zip(cls, content: Union[str, PathLike, BinaryIO]) -> "Annotation":
-        zipfile = ZipFile(content)
-        paths = [ZipPath(zipfile, i.filename) for i in zipfile.filelist]
-        nml_paths = [i for i in paths if i.suffix == ".nml"]
-        assert len(nml_paths) > 0, "Couldn't find an nml file in the supplied zip-file."
-        assert (
-            len(nml_paths) == 1
-        ), f"There must be exactly one nml file in the zip-file, buf found {len(nml_paths)}."
-        with nml_paths[0].open(mode="rb") as f:
-            annotation, nml = cls._load_from_nml(nml_paths[0].stem, f)
+    @staticmethod
+    def _parse_volumes(
+        nml: wknml.Nml, possible_paths: Optional[List[ZipPath]]
+    ) -> List[_VolumeLayer]:
         volume_layers = []
+        layers_with_not_found_location = []
+        layers_without_location = []
         for volume in nml.volumes:
-            fitting_volume_paths = [i for i in paths if str(i.at) == volume.location]
-            assert (
-                len(fitting_volume_paths) == 1
-            ), f"Couldn't find the file {volume.location} for the volume annotation {volume.name or volume.id}"
-            with fitting_volume_paths[0].open(mode="rb") as f:
-                with ZipFile(f) as volume_layer_zipfile:
-                    if len(volume_layer_zipfile.filelist) == 0:
-                        volume_path = None
-                    else:
-                        volume_path = fitting_volume_paths[0]
+            if possible_paths is None:  # when parsing NML files
+                volume_path = None
+                if volume.location is not None:
+                    # This should only happen if a zipped nml
+                    # is unpacked and loaded directly.
+                    layers_with_not_found_location.append(volume)
+                    volume_path = None
+            elif volume.location is None:
+                volume_path = None
+                layers_without_location.append(volume)
+            else:
+                fitting_volume_paths = [
+                    i for i in possible_paths if str(i.at) == volume.location
+                ]
+                if len(fitting_volume_paths) == 1:
+                    with fitting_volume_paths[0].open(mode="rb") as f:
+                        with ZipFile(f) as volume_layer_zipfile:
+                            if len(volume_layer_zipfile.filelist) == 0:
+                                volume_path = None
+                            else:
+                                volume_path = fitting_volume_paths[0]
+                else:
+                    layers_with_not_found_location.append(volume)
+                    volume_path = None
+
             segments = {}
             if volume.segments is not None:
                 for segment in volume.segments:
@@ -435,8 +437,32 @@ class Annotation:
         assert len(set(i.id for i in volume_layers)) == len(
             volume_layers
         ), "Some volume layers have the same id, this is not allowed."
-        annotation._volume_layers = volume_layers
-        return annotation
+        if len(layers_without_location) > 0:
+            warnings.warn(
+                "Omitting the volume layer annotation data for layers "
+                + f"{[v.name or v.id for v in layers_without_location]}, "
+                + "as their location is not referenced in the NML."
+            )
+        if len(layers_with_not_found_location) > 0:
+            warnings.warn(
+                "Omitting the volume layer annotation data for layers "
+                + f"{[v.name or v.id for v in layers_without_location]}, "
+                + f"as their referenced files {[v.location for v in layers_without_location]} "
+                + "cannot be found."
+            )
+        return volume_layers
+
+    @classmethod
+    def _load_from_zip(cls, content: Union[str, PathLike, BinaryIO]) -> "Annotation":
+        zipfile = ZipFile(content)
+        paths = [ZipPath(zipfile, i.filename) for i in zipfile.filelist]
+        nml_paths = [i for i in paths if i.suffix == ".nml"]
+        assert len(nml_paths) > 0, "Couldn't find an nml file in the supplied zip-file."
+        assert (
+            len(nml_paths) == 1
+        ), f"There must be exactly one nml file in the zip-file, buf found {len(nml_paths)}."
+        with nml_paths[0].open(mode="rb") as f:
+            return cls._load_from_nml(nml_paths[0].stem, f, possible_volume_paths=paths)
 
     def save(self, path: Union[str, PathLike]) -> None:
         """
@@ -739,8 +765,11 @@ class Annotation:
 
         if largest_segment_id is None:
             max_value = max(
-                view.read().max()
-                for view in best_mag_view.get_views_on_disk(read_only=True)
+                (
+                    view.read().max()
+                    for view in best_mag_view.get_views_on_disk(read_only=True)
+                ),
+                default=0,
             )
             layer.largest_segment_id = int(max_value)
         else:
