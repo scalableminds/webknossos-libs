@@ -99,21 +99,19 @@ class BoundingBox:
 
     @classmethod
     def from_wkw_dict(cls, bbox: Dict) -> "BoundingBox":
-        return BoundingBox(
-            bbox["topLeft"], [bbox["width"], bbox["height"], bbox["depth"]]
-        )
+        return cls(bbox["topLeft"], [bbox["width"], bbox["height"], bbox["depth"]])
 
     @classmethod
     def from_config_dict(cls, bbox: Dict) -> "BoundingBox":
-        return BoundingBox(bbox["topleft"], bbox["size"])
+        return cls(bbox["topleft"], bbox["size"])
 
     @classmethod
     def from_tuple6(cls, tuple6: Tuple[int, int, int, int, int, int]) -> "BoundingBox":
-        return BoundingBox(tuple6[0:3], tuple6[3:6])
+        return cls(tuple6[0:3], tuple6[3:6])
 
     @classmethod
     def from_tuple2(cls, tuple2: Tuple[Vec3IntLike, Vec3IntLike]) -> "BoundingBox":
-        return BoundingBox(tuple2[0], tuple2[1])
+        return cls(tuple2[0], tuple2[1])
 
     @classmethod
     def from_points(cls, points: Iterable[Vec3IntLike]) -> "BoundingBox":
@@ -126,7 +124,7 @@ class BoundingBox:
         # bottomright is exclusive
         bottomright += 1
 
-        return BoundingBox(topleft, bottomright - topleft)
+        return cls(topleft, bottomright - topleft)
 
     @classmethod
     def from_checkpoint_name(cls, checkpoint_name: str) -> "BoundingBox":
@@ -137,37 +135,33 @@ class BoundingBox:
             match is not None
         ), f"Could not extract bounding box from {checkpoint_name}"
         bbox_tuple = tuple(int(value) for value in match.group().split("_"))
-        return BoundingBox.from_tuple6(
-            cast(Tuple[int, int, int, int, int, int], bbox_tuple)
-        )
+        return cls.from_tuple6(cast(Tuple[int, int, int, int, int, int], bbox_tuple))
 
     @classmethod
     def from_csv(cls, csv_bbox: str) -> "BoundingBox":
         bbox_tuple = tuple(int(x) for x in csv_bbox.split(","))
-        return BoundingBox.from_tuple6(
-            cast(Tuple[int, int, int, int, int, int], bbox_tuple)
-        )
+        return cls.from_tuple6(cast(Tuple[int, int, int, int, int, int], bbox_tuple))
 
     @classmethod
     def from_auto(
         cls, obj: Union["BoundingBox", str, Dict, List, Tuple]
     ) -> "BoundingBox":
-        if isinstance(obj, BoundingBox):
+        if isinstance(obj, cls):
             return obj
         elif isinstance(obj, str):
             if ":" in obj:
-                return BoundingBox.from_auto(json.loads(obj))
+                return cls.from_auto(json.loads(obj))
             else:
-                return BoundingBox.from_csv(obj)
+                return cls.from_csv(obj)
         elif isinstance(obj, dict):
             if "size" in obj:
-                return BoundingBox.from_config_dict(obj)
-            return BoundingBox.from_wkw_dict(obj)
+                return cls.from_config_dict(obj)
+            return cls.from_wkw_dict(obj)
         elif isinstance(obj, list) or isinstance(obj, tuple):
             if len(obj) == 2:
-                return BoundingBox.from_tuple2(obj)  # type: ignore
+                return cls.from_tuple2(obj)  # type: ignore
             elif len(obj) == 6:
-                return BoundingBox.from_tuple6(obj)  # type: ignore
+                return cls.from_tuple6(obj)  # type: ignore
 
         raise Exception("Unknown bounding box format.")
 
