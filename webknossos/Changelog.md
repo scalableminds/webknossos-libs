@@ -10,17 +10,26 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.19...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.20...HEAD)
 
 ### Breaking Changes
 
 ### Added
 
 ### Changed
+
+### Fixed
+
+
+## [0.10.20](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.20) - 2022-10-20
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.19...v0.10.20)
+
+### Changed
 - Make volume locations optional, allowing to parse segment information in future NML-only annotations. [#814](https://github.com/scalableminds/webknossos-libs/pull/814)
 
 ### Fixed
 - `annotation.temporary_volume_layer_copy()` works also with empty volume annotations. [#814](https://github.com/scalableminds/webknossos-libs/pull/814)
+
 
 
 
