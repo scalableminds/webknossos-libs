@@ -204,3 +204,39 @@ def test_reading_bounding_boxes() -> None:
 
         annotation_deserialized = wk.Annotation.load(output_path)
         check_properties(annotation_deserialized)
+
+
+def test_empty_volume_annotation() -> None:
+    a = wk.Annotation.load(TESTDATA_DIR / "annotations" / "empty_volume_annotation.zip")
+    with a.temporary_volume_layer_copy() as layer:
+        assert layer.bounding_box == wk.BoundingBox.empty()
+        assert layer.largest_segment_id == 0
+        assert set(layer.mags) == set(
+            [
+                wk.Mag(1),
+                wk.Mag((2, 2, 1)),
+                wk.Mag((4, 4, 1)),
+                wk.Mag((8, 8, 1)),
+                wk.Mag((16, 16, 1)),
+            ]
+        )
+
+
+@pytest.mark.parametrize(
+    "nml_path",
+    [
+        TESTDATA_DIR / "annotations" / "nml_with_volumes.nml",
+        TESTDATA_DIR / "annotations" / "nml_with_volumes.zip",
+    ],
+)
+def test_nml_with_volumes(nml_path: Path) -> None:
+    if nml_path.suffix == ".zip":
+        with pytest.warns(UserWarning, match="location is not referenced in the NML"):
+            a = wk.Annotation.load(nml_path)
+    else:
+        a = wk.Annotation.load(nml_path)
+    segment_info = a.get_volume_layer_segments("segmentation")
+    assert set(segment_info) == set([2504698])
+    assert segment_info[2504698] == wk.SegmentInformation(
+        name="test_segment", anchor_position=Vec3Int(3581, 3585, 1024), color=None
+    )

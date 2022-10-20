@@ -17,8 +17,11 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Added
 
 ### Changed
+- Make volume locations optional, allowing to parse segment information in future NML-only annotations. [#814](https://github.com/scalableminds/webknossos-libs/pull/814)
 
 ### Fixed
+- `annotation.temporary_volume_layer_copy()` works also with empty volume annotations. [#814](https://github.com/scalableminds/webknossos-libs/pull/814)
+
 
 
 ## [0.10.19](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.19) - 2022-10-18

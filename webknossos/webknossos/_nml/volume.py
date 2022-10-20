@@ -9,7 +9,9 @@ from .utils import enforce_not_null, filter_none_values
 
 class Volume(NamedTuple):
     id: int
-    location: str  # path to a ZIP file containing a wK volume annotation
+    location: Optional[
+        str
+    ]  # path to a ZIP file containing a wK volume annotation, may be omitted when using skip_volume_data
     # name of an already existing wK volume annotation segmentation layer:
     fallback_layer: Optional[str]
     # older wk versions did not serialize the name which is why the name is optional:
@@ -39,7 +41,7 @@ class Volume(NamedTuple):
     def _parse(cls, nml_volume: Element) -> "Volume":
         return cls(
             id=int(enforce_not_null(nml_volume.get("id"))),
-            location=enforce_not_null(nml_volume.get("location")),
+            location=nml_volume.get("location"),
             fallback_layer=nml_volume.get("fallbackLayer", default=None),
             name=nml_volume.get("name", default=None),
             segments=[],
