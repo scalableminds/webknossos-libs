@@ -54,6 +54,7 @@ nav:
     - webknossos/tooling.md
     - webknossos/export.md
     - webknossos/proof_reading.md
+    - webknossos/connectome_viewer.md
   - Reference: 
     - webknossos/terminology.md
     - webknossos/data_formats.md
