@@ -487,17 +487,17 @@ python-versions = ">=3.5"
 
 [[package]]
 name = "imagecodecs"
-version = "2020.12.24"
+version = "2021.11.20"
 description = "Image transformation, compression, and decompression codecs"
 category = "main"
 optional = false
 python-versions = ">=3.7"
 
 [package.dependencies]
-numpy = ">=1.15.1"
+numpy = ">=1.16.5"
 
 [package.extras]
-all = ["matplotlib (>=3.2)", "tifffile (>=2020.12.8)"]
+all = ["matplotlib (>=3.2)", "tifffile (>=2021.1.11)", "numcodecs"]
 
 [[package]]
 name = "imageio"
@@ -1175,8 +1175,8 @@ python-versions = ">=3.6"
 
 [[package]]
 name = "tifffile"
-version = "2020.12.8"
-description = "Read and write TIFF(r) files"
+version = "2021.11.2"
+description = "Read and write TIFF files"
 category = "main"
 optional = false
 python-versions = ">=3.7"
@@ -1185,7 +1185,7 @@ python-versions = ">=3.7"
 numpy = ">=1.15.1"
 
 [package.extras]
-all = ["imagecodecs (>=2020.5.30)", "matplotlib (>=3.2)", "lxml"]
+all = ["imagecodecs (>=2021.7.30)", "matplotlib (>=3.2)", "lxml"]
 
 [[package]]
 name = "toml"
@@ -1282,10 +1282,10 @@ zipp = "^3.5.0"
 
 [package.extras]
 pims = ["pims (>=0.6.0,<0.7.0)"]
-tifffile = ["pims (>=0.6.0,<0.7.0)", "tifffile (==2021.11.2)"]
-imagecodecs = ["pims (>=0.6.0,<0.7.0)", "imagecodecs (==2021.11.20)"]
+tifffile = ["pims (>=0.6.0,<0.7.0)", "tifffile (>=2021.11.2)"]
+imagecodecs = ["pims (>=0.6.0,<0.7.0)", "imagecodecs (>=2021.11.20)"]
 bioformats = ["pims (>=0.6.0,<0.7.0)", "JPype1 (>=1.3.0,<2.0.0)"]
-all = ["pims (>=0.6.0,<0.7.0)", "tifffile (==2021.11.2)", "imagecodecs (==2021.11.20)", "JPype1 (>=1.3.0,<2.0.0)"]
+all = ["pims (>=0.6.0,<0.7.0)", "tifffile (>=2021.11.2)", "imagecodecs (>=2021.11.20)", "JPype1 (>=1.3.0,<2.0.0)"]
 
 [package.source]
 type = "directory"
@@ -1372,7 +1372,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7.1,<3.10"
-content-hash = "b380dd31b1ea6f95ea5b702a0f2c27d3a4d418640e6d0e7d2751c1824373a655"
+content-hash = "d5d7ca1e3352b5cc52f2724e8e2221e839c81d774cd433d0d41f17e2733b7725"
 
 [metadata.files]
 aiobotocore = [
@@ -1719,29 +1719,28 @@ idna = [
     {file = "idna-3.3.tar.gz", hash = "sha256:9d643ff0a55b762d5cdb124b8eaa99c66322e2157b69160bc32796e824360e6d"},
 ]
 imagecodecs = [
-    {file = "imagecodecs-2020.12.24-cp37-cp37m-macosx_10_14_x86_64.whl", hash = "sha256:cbab499b936fba7ea6785d5e29302f65f6e6775eb85ff3789d43a4f32e05ddef"},
-    {file = "imagecodecs-2020.12.24-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:fb66f56c4d806d60271dae38b65e640f81acae14c0bdc3394661f7df65655854"},
-    {file = "imagecodecs-2020.12.24-cp37-cp37m-manylinux2010_i686.whl", hash = "sha256:947824b6e12e2305378394b370b99222f444f05d70d4764f13108c6e53c674dc"},
-    {file = "imagecodecs-2020.12.24-cp37-cp37m-manylinux2010_x86_64.whl", hash = "sha256:40e94929fcb1d7e16484d508f67bb523e703fe25960decfe61d639de88971e19"},
-    {file = "imagecodecs-2020.12.24-cp37-cp37m-manylinux2014_x86_64.whl", hash = "sha256:3f3b9332cda9b7e0e72b2b36ac1456b99541277c77cb041b7d7327712b5b67ba"},
-    {file = "imagecodecs-2020.12.24-cp37-cp37m-win32.whl", hash = "sha256:145900dd5db4b13400d5742c1b63da2c6553edf42a0487d1c1d1e63702b5440a"},
-    {file = "imagecodecs-2020.12.24-cp37-cp37m-win_amd64.whl", hash = "sha256:b2b90c00eaf81e7772e56c359c7eab4067ac3728d4b7d44953464df227a032c1"},
-    {file = "imagecodecs-2020.12.24-cp38-cp38-macosx_10_14_x86_64.whl", hash = "sha256:955e0350d38d6f34260608b8cc95a6dcd954f7b1ac88332e1f61ec90444bbcc2"},
-    {file = "imagecodecs-2020.12.24-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:5227e5fe30813099f8f87fe20efc065d08d6a073921566f8a5828e6475111aca"},
-    {file = "imagecodecs-2020.12.24-cp38-cp38-manylinux2010_i686.whl", hash = "sha256:c233b7191675474122da096fd7a60b0301b23181873ea2cef5b8d880473d0fbb"},
-    {file = "imagecodecs-2020.12.24-cp38-cp38-manylinux2010_x86_64.whl", hash = "sha256:a5cba1ca4ad1c008839514980770d841616f965f90ebe123a6805aca95b5c257"},
-    {file = "imagecodecs-2020.12.24-cp38-cp38-manylinux2014_x86_64.whl", hash = "sha256:cabd3bd74549c079a38d9842ff110ddcb29cba2613ee2a664c0ac31d9f5f79f5"},
-    {file = "imagecodecs-2020.12.24-cp38-cp38-win32.whl", hash = "sha256:4c392a308a3cc50f4461f377f511c4d244397510356d38c30e7587e85b2a4eec"},
-    {file = "imagecodecs-2020.12.24-cp38-cp38-win_amd64.whl", hash = "sha256:63f66fda54530706ecdd268e3bb1916aca7ec9d4695209167a677ed75f61640f"},
-    {file = "imagecodecs-2020.12.24-cp39-cp39-macosx_10_14_x86_64.whl", hash = "sha256:6e8eaa870834ccc0a77eda22a1c9e800ea91aa174184052f3e56876c6ba2bb3f"},
-    {file = "imagecodecs-2020.12.24-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:c5ac2276f3ee170a94508c4d68e60dbda414ab8957f5152b6fd083abaef44186"},
-    {file = "imagecodecs-2020.12.24-cp39-cp39-manylinux2010_i686.whl", hash = "sha256:1df5db330ab8be64a1faee702df8bef68bd3fa4cddd400c03cca4b5af52431c7"},
-    {file = "imagecodecs-2020.12.24-cp39-cp39-manylinux2010_x86_64.whl", hash = "sha256:df131cee7a490513b6c64853c382615b70ce7c8522da16af00cd3275a96967f4"},
-    {file = "imagecodecs-2020.12.24-cp39-cp39-manylinux2014_x86_64.whl", hash = "sha256:d23f3c1f776ff377bf26f1a11ed6968b895ca6ab856088900bd6cc5dd5b60135"},
-    {file = "imagecodecs-2020.12.24-cp39-cp39-win32.whl", hash = "sha256:5e35b7648ec4ddda40c58db42138edd113a9d7d1914483e295d51e0a948b8035"},
-    {file = "imagecodecs-2020.12.24-cp39-cp39-win_amd64.whl", hash = "sha256:b5fdfa68c4b46e1ef4c80747e3caec57c4cc434704019dcf5ddc265e957dcd86"},
-    {file = "imagecodecs-2020.12.24-pp37-pypy37_pp73-win32.whl", hash = "sha256:4edde922c1fb4184d53d46fd597388ffa62a3f67c6afbd6508b8d0041a55eeab"},
-    {file = "imagecodecs-2020.12.24.tar.gz", hash = "sha256:bcfb909c38fc0460f24ab75f58c643f2c50a10d0fa49ac07d5ea7b780765e7bd"},
+    {file = "imagecodecs-2021.11.20-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:69c154ca16b92d5db99093648d6a4be83616a475a10ceb5ba465b72fb9b17aae"},
+    {file = "imagecodecs-2021.11.20-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d18a6a92eadbe195dced25a9736e7897dd958929c167634dd62a64994be4f158"},
+    {file = "imagecodecs-2021.11.20-cp310-cp310-win32.whl", hash = "sha256:079fe05120a8d2209595c405369f712904b3885fd03c882905204b008424fd9f"},
+    {file = "imagecodecs-2021.11.20-cp310-cp310-win_amd64.whl", hash = "sha256:d7b224a65c7cff7bed2b080630594ce19785579af11cd817fbe23cbb931d3e7c"},
+    {file = "imagecodecs-2021.11.20-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:740131d71b4b9dfc9190768870d9cea31091ca196034811b7f871decffb745aa"},
+    {file = "imagecodecs-2021.11.20-cp37-cp37m-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:b9b00fa5f834627a1d15bb48be86fe0925f35b0a6863c5af6347a1af0c9c0596"},
+    {file = "imagecodecs-2021.11.20-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:044a498ae8b854d59090c4dbd7ff2dbf8c1fbda16d504861a0eddc33b2d58a4a"},
+    {file = "imagecodecs-2021.11.20-cp37-cp37m-win32.whl", hash = "sha256:97802935e93e0d57cb404cb0371fcff31467ab31dc2ae165d50c584c17c87cb0"},
+    {file = "imagecodecs-2021.11.20-cp37-cp37m-win_amd64.whl", hash = "sha256:fe0405eb85e3f9c6ec6f18ebd12a0e151c6bb687dd1dbfbd3b64fc09750cbcee"},
+    {file = "imagecodecs-2021.11.20-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:7fcdb139fdec2941c536680adc9a923f635da7bd2c026bc0fef5627dcda6bcf9"},
+    {file = "imagecodecs-2021.11.20-cp38-cp38-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:115d28d3827513333af6edb7eb0e5c51f9f18296572ba05aa23ad99cfbea9e9e"},
+    {file = "imagecodecs-2021.11.20-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:b5bc913197cd587303b178cdd95477bf5f12d68526f94d4a83f5140a6efd86a0"},
+    {file = "imagecodecs-2021.11.20-cp38-cp38-win32.whl", hash = "sha256:b80630f5c8d5131b1e5399816e8f93990e6e165fc332f0bf294a9c22650bdc5c"},
+    {file = "imagecodecs-2021.11.20-cp38-cp38-win_amd64.whl", hash = "sha256:ed5d68e08b013046d10319d80699f95a4f5933d15a6d09e0fab01428aaeadc58"},
+    {file = "imagecodecs-2021.11.20-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:3e305f655bb887b2739d4a36a19741da565bd2f539f3d13c1e7b3e65ecfc2e7a"},
+    {file = "imagecodecs-2021.11.20-cp39-cp39-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:14efa2310a1257c902a0b860b66369c569b36a6296d215b02e303c9df4ae74bc"},
+    {file = "imagecodecs-2021.11.20-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:4d020a02db7c419e41fd1eb8b7ee1e9622e384a21c72476936348fae4d4fadc8"},
+    {file = "imagecodecs-2021.11.20-cp39-cp39-win32.whl", hash = "sha256:8993b7134f9fa5f63343cabaea20a5273a09359646693929ac8382c071d31a54"},
+    {file = "imagecodecs-2021.11.20-cp39-cp39-win_amd64.whl", hash = "sha256:539bf438d5b5e6f2d68829057304be729948b8e154e2d1e0195bb58bc361ed52"},
+    {file = "imagecodecs-2021.11.20-pp37-pypy37_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:8df54fb17925cb22eed608ece6f5121db6025f4527ea899dc58417f30ffc13a1"},
+    {file = "imagecodecs-2021.11.20-pp38-pypy38_pp73-win_amd64.whl", hash = "sha256:1e9c0e5d52c122e3ca7ee745fa1cae600469704d72134983a10adc818e03c543"},
+    {file = "imagecodecs-2021.11.20.tar.gz", hash = "sha256:04b378ddaafa3178d079b1a84f3d8fdce0980f85a17b89cb6c68bf3de687293c"},
 ]
 imageio = [
     {file = "imageio-2.19.1-py3-none-any.whl", hash = "sha256:cd5b6ac2f4111c76f08d33b86a4cb987520f1d6ec2183e8a2656ace8d026a38e"},
@@ -2249,6 +2248,13 @@ pyyaml = [
     {file = "PyYAML-6.0-cp310-cp310-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:f84fbc98b019fef2ee9a1cb3ce93e3187a6df0b2538a651bfb890254ba9f90b5"},
     {file = "PyYAML-6.0-cp310-cp310-win32.whl", hash = "sha256:2cd5df3de48857ed0544b34e2d40e9fac445930039f3cfe4bcc592a1f836d513"},
     {file = "PyYAML-6.0-cp310-cp310-win_amd64.whl", hash = "sha256:daf496c58a8c52083df09b80c860005194014c3698698d1a57cbcfa182142a3a"},
+    {file = "PyYAML-6.0-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:d4b0ba9512519522b118090257be113b9468d804b19d63c71dbcf4a48fa32358"},
+    {file = "PyYAML-6.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:81957921f441d50af23654aa6c5e5eaf9b06aba7f0a19c18a538dc7ef291c5a1"},
+    {file = "PyYAML-6.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:afa17f5bc4d1b10afd4466fd3a44dc0e245382deca5b3c353d8b757f9e3ecb8d"},
+    {file = "PyYAML-6.0-cp311-cp311-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:dbad0e9d368bb989f4515da330b88a057617d16b6a8245084f1b05400f24609f"},
+    {file = "PyYAML-6.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:432557aa2c09802be39460360ddffd48156e30721f5e8d917f01d31694216782"},
+    {file = "PyYAML-6.0-cp311-cp311-win32.whl", hash = "sha256:bfaef573a63ba8923503d27530362590ff4f576c626d86a9fed95822a8255fd7"},
+    {file = "PyYAML-6.0-cp311-cp311-win_amd64.whl", hash = "sha256:01b45c0191e6d66c470b6cf1b9531a771a83c1c4208272ead47a3ae4f2f603bf"},
     {file = "PyYAML-6.0-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:897b80890765f037df3403d22bab41627ca8811ae55e9a722fd0392850ec4d86"},
     {file = "PyYAML-6.0-cp36-cp36m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:50602afada6d6cbfad699b0c7bb50d5ccffa7e46a3d738092afddc1f9758427f"},
     {file = "PyYAML-6.0-cp36-cp36m-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:48c346915c114f5fdb3ead70312bd042a953a8ce5c7106d5bfb1a5254e47da92"},
@@ -2408,8 +2414,8 @@ threadpoolctl = [
     {file = "threadpoolctl-3.1.0.tar.gz", hash = "sha256:a335baacfaa4400ae1f0d8e3a58d6674d2f8828e3716bb2802c44955ad391380"},
 ]
 tifffile = [
-    {file = "tifffile-2020.12.8-py3-none-any.whl", hash = "sha256:78e7fe7d27fdd3fbd67cc95aaa8265c43b942170bd2473b1d587dcc849822892"},
-    {file = "tifffile-2020.12.8.tar.gz", hash = "sha256:6c65c3997a21cad40349921e557a383fd5f0ebd728f5e91fa6c8f8f9e45c4bbd"},
+    {file = "tifffile-2021.11.2-py3-none-any.whl", hash = "sha256:2e0066f90e2dbeb3e6a287cfd78bafbd2f142fabbca4a76a8ff809573baf5ad5"},
+    {file = "tifffile-2021.11.2.tar.gz", hash = "sha256:153e31fa1d892f482fabb2ae9f2561fa429ee42d01a6f67e58cee13637d9285b"},
 ]
 toml = [
     {file = "toml-0.10.2-py2.py3-none-any.whl", hash = "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b"},
