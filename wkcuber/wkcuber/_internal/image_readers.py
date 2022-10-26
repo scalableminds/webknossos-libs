@@ -297,7 +297,7 @@ class TiffImageReader(ImageReader):
 
     @staticmethod
     def find_count_of_axis(tif_file: TiffFile, axis: str) -> int:
-        assert len(tif_file.series) == 1, "only single tif series are supported"
+        #assert len(tif_file.series) == 1, "only single tif series are supported"
         tif_series = tif_file.series[0]
         index = tif_series.axes.find(axis)
         if index == -1:
@@ -317,7 +317,7 @@ class TiffImageReader(ImageReader):
             # Read metadata
             z_axis_name = self._find_right_z_axis_name(tif_file)
             used_axes = {"C", "Y", "X", "S"} | {z_axis_name}
-            assert len(tif_file.series) == 1, "Multi-series tiff not supported"
+            # assert len(tif_file.series) == 1, f"Multi-series tiff not supported, got {len(tif_file.series)}"
             series = tif_file.series[0]  # pylint: disable=unsubscriptable-object
             page = tif_file.pages[0]
             axes = {}
