@@ -20,6 +20,8 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 
 ### Fixed
 
+- Fixed a bug where some image sequences could not be read in layer_from_images. [#817](https://github.com/scalableminds/webknossos-libs/pull/817)
+
 
 ## [0.10.21](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.21) - 2022-10-26
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.20...v0.10.21)
