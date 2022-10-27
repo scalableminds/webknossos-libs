@@ -267,7 +267,7 @@ class PimsImages:
                         original_images = str(original_images)
                     try:
                         images_context_manager = pims.open(original_images)
-                    except TypeError:
+                    except Exception:
                         images_context_manager = pims.ImageSequence(original_images)
 
             with images_context_manager as images:
