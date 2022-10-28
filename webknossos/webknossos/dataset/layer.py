@@ -54,7 +54,6 @@ from .defaults import (
 )
 from .mag_view import MagView, _find_mag_path_on_disk
 
-
 try:
     from numpy.typing import DTypeLike
 except:
@@ -87,9 +86,7 @@ def _convert_dtypes(
     return "".join(converted_dtype_parts)
 
 
-def _normalize_dtype_per_channel(
-    dtype_per_channel: DTypeLike
-) -> np.dtype:
+def _normalize_dtype_per_channel(dtype_per_channel: DTypeLike) -> np.dtype:
     try:
         return np.dtype(dtype_per_channel)
     except TypeError as e:
@@ -98,9 +95,7 @@ def _normalize_dtype_per_channel(
         ) from e
 
 
-def _normalize_dtype_per_layer(
-    dtype_per_layer: DTypeLike
-) -> DTypeLike:
+def _normalize_dtype_per_layer(dtype_per_layer: DTypeLike) -> DTypeLike:
     try:
         dtype_per_layer = str(np.dtype(dtype_per_layer))
     except Exception:

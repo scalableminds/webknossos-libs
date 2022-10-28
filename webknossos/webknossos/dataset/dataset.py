@@ -58,6 +58,7 @@ from ..utils import (
 from ._utils.from_images import guess_if_segmentation_path
 from ._utils.infer_bounding_box_existing_files import infer_bounding_box_existing_files
 from .layer import (
+    DTypeLike,
     Layer,
     SegmentationLayer,
     _dtype_per_channel_to_element_class,
@@ -65,7 +66,6 @@ from .layer import (
     _get_sharding_parameters,
     _normalize_dtype_per_channel,
     _normalize_dtype_per_layer,
-    DTypeLike
 )
 from .layer_categories import COLOR_CATEGORY, SEGMENTATION_CATEGORY, LayerCategoryType
 from .properties import (
