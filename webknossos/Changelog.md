@@ -13,8 +13,10 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.22...HEAD)
 
 ### Breaking Changes
+- `ds.add_layer_from_images`: Turned some arguments into keyword-only arguments, only affecting positional arguments after the first 8 arguments. [#818](https://github.com/scalableminds/webknossos-libs/pull/818)
 
 ### Added
+- `ds.add_layer_from_images`: added topleft and enforce_dtype kw-only arguments. [#818](https://github.com/scalableminds/webknossos-libs/pull/818)
 
 ### Changed
 
@@ -25,9 +27,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.21...v0.10.22)
 
 ### Fixed
-
 - Fixed a bug where some image sequences could not be read in layer_from_images. [#817](https://github.com/scalableminds/webknossos-libs/pull/817)
-
 
 
 ## [0.10.21](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.21) - 2022-10-26
@@ -42,8 +42,6 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 
 ### Fixed
 - `annotation.temporary_volume_layer_copy()` works also with empty volume annotations. [#814](https://github.com/scalableminds/webknossos-libs/pull/814)
-
-
 
 
 ## [0.10.19](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.19) - 2022-10-18
