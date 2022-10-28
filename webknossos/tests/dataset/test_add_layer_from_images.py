@@ -22,7 +22,9 @@ def test_compare_tifffile(tmp_path: Path) -> None:
         layer_name="compare_tifffile",
         compress=True,
         category="segmentation",
+        topleft=(100, 100, 55),
     )
+    assert l.bounding_box.topleft == wk.Vec3Int(100, 100, 55)
     data = l.get_finest_mag().read()[0, :, :]
     for z_index in range(0, data.shape[-1]):
         with TiffFile("testdata/tiff/test.0000.tiff") as tif_file:
@@ -60,8 +62,8 @@ REPO_IMAGES_ARGS: List[
     ),
     (
         "testdata/rgb_tiff/test_rgb.tif",
-        {"mag": 2, "channel": 1},
-        "uint8",
+        {"mag": 2, "channel": 1, "enforce_dtype": "uint32"},
+        "uint32",
         1,
         (64, 64, 2),
     ),

@@ -31,6 +31,7 @@ import numpy as np
 from boltons.typeutils import make_sentinel
 from cluster_tools import Executor
 from natsort import natsort_keygen
+from numpy.typing import DTypeLike
 from upath import UPath
 
 from ..geometry.vec3_int import Vec3Int, Vec3IntLike
@@ -739,7 +740,7 @@ class Dataset:
         layer_name: str,
         category: LayerCategoryType,
         dtype_per_layer: Optional[Union[str, np.dtype, type]] = None,
-        dtype_per_channel: Optional[Union[str, np.dtype, type]] = None,
+        dtype_per_channel: Optional[Union[str, np.dtype, type, DTypeLike]] = None,
         num_channels: Optional[int] = None,
         data_format: Union[str, DataFormat] = DEFAULT_DATA_FORMAT,
         **kwargs: Any,
@@ -975,17 +976,19 @@ class Dataset:
         chunk_shape: Optional[Union[Vec3IntLike, int]] = None,
         chunks_per_shard: Optional[Union[int, Vec3IntLike]] = None,
         compress: bool = False,
+        *,
         ## other arguments
+        topleft: Vec3IntLike = Vec3Int.zeros(),  # in Mag(1)
         swap_xy: bool = False,
         flip_x: bool = False,
         flip_y: bool = False,
         flip_z: bool = False,
+        enforce_dtype: Optional[DTypeLike] = None,
         use_bioformats: bool = False,
         channel: Optional[int] = None,
         timepoint: Optional[int] = None,
         batch_size: Optional[int] = None,  # defaults to shard-size z
         executor: Optional[Executor] = None,
-        *,
         chunk_size: Optional[Union[Vec3IntLike, int]] = None,  # deprecated
     ) -> Layer:
         """
@@ -1005,8 +1008,9 @@ class Dataset:
         * `data_format`: by default wkw files are written, may be set to "zarr"
         * `mag`: magnification to use for the written data
         * `chunk_shape`, `chunks_per_shard`, `compress`: adjust how the data is stored on disk
+        * `topleft`: set an offset in Mag(1) to start writing the data, only affecting the output
         * `swap_xy`: set to `True` to interchange x and y axis before writing to disk
-        * `flip_x`, `flip_y`, `flip_z`: set to `True` to flip the respective axis before writing to disk
+        * `flip_x`, `flip_y`, `flip_z`: set to `True` to reverse the respective axis before writing to disk
         * `use_bioformats`: set to `True` to use the [pims bioformats adapter](https://soft-matter.github.io/pims/v0.6.1/bioformats.html), needs a JVM
         * `channel`: may be used to select a single channel, if multiple are available,
         * `timepoint`: for timeseries, select a timepoint to use by specifying it as an int, starting from 0
@@ -1041,7 +1045,9 @@ class Dataset:
             layer_name=layer_name,
             category=category,
             data_format=data_format,
-            dtype_per_channel=pims_images.dtype,
+            dtype_per_channel=pims_images.dtype
+            if enforce_dtype is None
+            else enforce_dtype,
             num_channels=pims_images.num_channels,
             **add_layer_kwargs,  # type: ignore[arg-type]
         )
@@ -1052,9 +1058,11 @@ class Dataset:
             compress=compress,
         )
         mag = mag_view.mag
-        layer.bounding_box = BoundingBox(
-            (0, 0, 0), pims_images.expected_shape
-        ).from_mag_to_mag1(mag)
+        layer.bounding_box = (
+            BoundingBox((0, 0, 0), pims_images.expected_shape)
+            .from_mag_to_mag1(mag)
+            .offset(topleft)
+        )
 
         if batch_size is None:
             if compress:
@@ -1074,6 +1082,7 @@ class Dataset:
             pims_images.copy_to_view,
             mag_view=mag_view,
             is_segmentation=category == "segmentation",
+            enforce_dtype=enforce_dtype,
         )
 
         args = []
@@ -1109,8 +1118,10 @@ class Dataset:
                 max_id = max(max_ids)
                 cast(SegmentationLayer, layer).largest_segment_id = max_id
             actual_size = Vec3Int(dimwise_max(shapes) + (pims_images.expected_shape.z,))
-            layer.bounding_box = BoundingBox((0, 0, 0), actual_size).from_mag_to_mag1(
-                mag
+            layer.bounding_box = (
+                BoundingBox((0, 0, 0), actual_size)
+                .from_mag_to_mag1(mag)
+                .offset(topleft)
             )
         if pims_images.expected_shape != actual_size:
             warnings.warn(
