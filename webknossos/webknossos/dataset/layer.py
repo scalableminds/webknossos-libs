@@ -56,7 +56,7 @@ from .mag_view import MagView, _find_mag_path_on_disk
 
 try:
     from numpy.typing import DTypeLike
-except:
+except ImportError:
     DTypeLike = Union[str, np.dtype, type]  # type: ignore[misc]
 
 
