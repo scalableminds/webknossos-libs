@@ -31,7 +31,6 @@ import numpy as np
 from boltons.typeutils import make_sentinel
 from cluster_tools import Executor
 from natsort import natsort_keygen
-from numpy.typing import DTypeLike
 from upath import UPath
 
 from ..geometry.vec3_int import Vec3Int, Vec3IntLike
@@ -66,6 +65,7 @@ from .layer import (
     _get_sharding_parameters,
     _normalize_dtype_per_channel,
     _normalize_dtype_per_layer,
+    DTypeLike
 )
 from .layer_categories import COLOR_CATEGORY, SEGMENTATION_CATEGORY, LayerCategoryType
 from .properties import (
@@ -739,8 +739,8 @@ class Dataset:
         self,
         layer_name: str,
         category: LayerCategoryType,
-        dtype_per_layer: Optional[Union[str, np.dtype, type]] = None,
-        dtype_per_channel: Optional[Union[str, np.dtype, type, DTypeLike]] = None,
+        dtype_per_layer: Optional[DTypeLike] = None,
+        dtype_per_channel: Optional[DTypeLike] = None,
         num_channels: Optional[int] = None,
         data_format: Union[str, DataFormat] = DEFAULT_DATA_FORMAT,
         **kwargs: Any,
@@ -847,8 +847,8 @@ class Dataset:
         self,
         layer_name: str,
         category: LayerCategoryType,
-        dtype_per_layer: Optional[Union[str, np.dtype, type]] = None,
-        dtype_per_channel: Optional[Union[str, np.dtype, type]] = None,
+        dtype_per_layer: Optional[DTypeLike] = None,
+        dtype_per_channel: Optional[DTypeLike] = None,
         num_channels: Optional[int] = None,
         data_format: Union[str, DataFormat] = DEFAULT_DATA_FORMAT,
         **kwargs: Any,

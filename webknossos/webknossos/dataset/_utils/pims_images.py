@@ -19,9 +19,9 @@ from typing import (
 from urllib.error import HTTPError
 
 import numpy as np
-from numpy.typing import DTypeLike
 
 from webknossos.dataset.mag_view import MagView
+from webknossos.dataset.layer import DTypeLike
 from webknossos.geometry.vec3_int import Vec3Int
 
 try:
@@ -33,6 +33,10 @@ except ImportError as e:
 
 
 class PimsImages:
+    dtype: DTypeLike
+    expected_shape: Vec3Int
+    num_channels: int
+
     def __init__(
         self,
         images: Union[str, Path, "pims.FramesSequence", List[Union[str, PathLike]]],
