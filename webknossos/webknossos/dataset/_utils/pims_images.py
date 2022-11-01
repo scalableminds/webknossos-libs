@@ -20,6 +20,7 @@ from urllib.error import HTTPError
 
 import numpy as np
 
+from webknossos.dataset.layer import DTypeLike
 from webknossos.dataset.mag_view import MagView
 from webknossos.geometry.vec3_int import Vec3Int
 
@@ -32,6 +33,10 @@ except ImportError as e:
 
 
 class PimsImages:
+    dtype: DTypeLike
+    expected_shape: Vec3Int
+    num_channels: int
+
     def __init__(
         self,
         images: Union[str, Path, "pims.FramesSequence", List[Union[str, PathLike]]],
@@ -294,7 +299,11 @@ class PimsImages:
                 yield images
 
     def copy_to_view(
-        self, args: Tuple[int, int], mag_view: MagView, is_segmentation: bool
+        self,
+        args: Tuple[int, int],
+        mag_view: MagView,
+        is_segmentation: bool,
+        dtype: Optional[DTypeLike] = None,
     ) -> Tuple[Tuple[int, int], Optional[int]]:
         """Copies the images according to the passed arguments to the given mag_view.
         args is expected to be the start and end of the z-range, meant for usage with an executor."""
@@ -310,7 +319,7 @@ class PimsImages:
             if self._flip_z:
                 images = images[::-1]  # pylint: disable=unsubscriptable-object
             with mag_view.get_buffered_slice_writer(
-                absolute_offset=(0, 0, z_start * mag_view.mag.z),
+                relative_offset=(0, 0, z_start * mag_view.mag.z),
                 buffer_size=mag_view.info.chunk_shape.z,
             ) as writer:
                 for image_slice in images[z_start:z_end]:
@@ -338,6 +347,9 @@ class PimsImages:
                         image_slice = np.flip(image_slice, -2)
                     if self._flip_y:
                         image_slice = np.flip(image_slice, -1)
+
+                    if dtype is not None:
+                        image_slice = image_slice.astype(dtype, order="F")
 
                     if max_id is not None:
                         max_id = max(max_id, image_slice.max())

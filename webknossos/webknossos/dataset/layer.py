@@ -54,6 +54,11 @@ from .defaults import (
 )
 from .mag_view import MagView, _find_mag_path_on_disk
 
+try:
+    from numpy.typing import DTypeLike
+except ImportError:
+    DTypeLike = Union[str, np.dtype, type]  # type: ignore[misc]
+
 
 def _is_int(s: str) -> bool:
     try:
@@ -64,7 +69,7 @@ def _is_int(s: str) -> bool:
 
 
 def _convert_dtypes(
-    dtype: Union[str, np.dtype],
+    dtype: DTypeLike,
     num_channels: int,
     dtype_per_layer_to_dtype_per_channel: bool,
 ) -> str:
@@ -81,9 +86,7 @@ def _convert_dtypes(
     return "".join(converted_dtype_parts)
 
 
-def _normalize_dtype_per_channel(
-    dtype_per_channel: Union[str, np.dtype, type]
-) -> np.dtype:
+def _normalize_dtype_per_channel(dtype_per_channel: DTypeLike) -> np.dtype:
     try:
         return np.dtype(dtype_per_channel)
     except TypeError as e:
@@ -92,9 +95,7 @@ def _normalize_dtype_per_channel(
         ) from e
 
 
-def _normalize_dtype_per_layer(
-    dtype_per_layer: Union[str, np.dtype, type]
-) -> Union[str, np.dtype]:
+def _normalize_dtype_per_layer(dtype_per_layer: DTypeLike) -> DTypeLike:
     try:
         dtype_per_layer = str(np.dtype(dtype_per_layer))
     except Exception:
@@ -103,7 +104,7 @@ def _normalize_dtype_per_layer(
 
 
 def _dtype_per_layer_to_dtype_per_channel(
-    dtype_per_layer: Union[str, np.dtype], num_channels: int
+    dtype_per_layer: DTypeLike, num_channels: int
 ) -> np.dtype:
     try:
         return np.dtype(
@@ -118,7 +119,7 @@ def _dtype_per_layer_to_dtype_per_channel(
 
 
 def _dtype_per_channel_to_dtype_per_layer(
-    dtype_per_channel: Union[str, np.dtype], num_channels: int
+    dtype_per_channel: DTypeLike, num_channels: int
 ) -> str:
     return _convert_dtypes(
         np.dtype(dtype_per_channel),
@@ -128,7 +129,7 @@ def _dtype_per_channel_to_dtype_per_layer(
 
 
 def _dtype_per_channel_to_element_class(
-    dtype_per_channel: Union[str, np.dtype], num_channels: int
+    dtype_per_channel: DTypeLike, num_channels: int
 ) -> str:
     dtype_per_layer = _dtype_per_channel_to_dtype_per_layer(
         dtype_per_channel, num_channels
