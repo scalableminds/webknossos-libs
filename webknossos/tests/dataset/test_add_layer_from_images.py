@@ -62,7 +62,7 @@ REPO_IMAGES_ARGS: List[
     ),
     (
         "testdata/rgb_tiff/test_rgb.tif",
-        {"mag": 2, "channel": 1, "enforce_dtype": "uint32"},
+        {"mag": 2, "channel": 1, "dtype": "uint32"},
         "uint32",
         1,
         (64, 64, 2),

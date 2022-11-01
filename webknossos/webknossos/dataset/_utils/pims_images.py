@@ -303,7 +303,7 @@ class PimsImages:
         args: Tuple[int, int],
         mag_view: MagView,
         is_segmentation: bool,
-        enforce_dtype: Optional[DTypeLike] = None,
+        dtype: Optional[DTypeLike] = None,
     ) -> Tuple[Tuple[int, int], Optional[int]]:
         """Copies the images according to the passed arguments to the given mag_view.
         args is expected to be the start and end of the z-range, meant for usage with an executor."""
@@ -348,8 +348,8 @@ class PimsImages:
                     if self._flip_y:
                         image_slice = np.flip(image_slice, -1)
 
-                    if enforce_dtype is not None:
-                        image_slice = image_slice.astype(enforce_dtype, order="F")
+                    if dtype is not None:
+                        image_slice = image_slice.astype(dtype, order="F")
 
                     if max_id is not None:
                         max_id = max(max_id, image_slice.max())

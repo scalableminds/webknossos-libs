@@ -983,7 +983,7 @@ class Dataset:
         flip_x: bool = False,
         flip_y: bool = False,
         flip_z: bool = False,
-        enforce_dtype: Optional[DTypeLike] = None,
+        dtype: Optional[DTypeLike] = None,
         use_bioformats: bool = False,
         channel: Optional[int] = None,
         timepoint: Optional[int] = None,
@@ -1011,7 +1011,7 @@ class Dataset:
         * `topleft`: set an offset in Mag(1) to start writing the data, only affecting the output
         * `swap_xy`: set to `True` to interchange x and y axis before writing to disk
         * `flip_x`, `flip_y`, `flip_z`: set to `True` to reverse the respective axis before writing to disk
-        * `enforce_dtype`: the read image data will be convertoed to this dtype using `numpy.ndarray.astype`
+        * `dtype`: the read image data will be convertoed to this dtype using `numpy.ndarray.astype`
         * `use_bioformats`: set to `True` to use the [pims bioformats adapter](https://soft-matter.github.io/pims/v0.6.1/bioformats.html), needs a JVM
         * `channel`: may be used to select a single channel, if multiple are available,
         * `timepoint`: for timeseries, select a timepoint to use by specifying it as an int, starting from 0
@@ -1046,9 +1046,7 @@ class Dataset:
             layer_name=layer_name,
             category=category,
             data_format=data_format,
-            dtype_per_channel=pims_images.dtype
-            if enforce_dtype is None
-            else enforce_dtype,
+            dtype_per_channel=pims_images.dtype if dtype is None else dtype,
             num_channels=pims_images.num_channels,
             **add_layer_kwargs,  # type: ignore[arg-type]
         )
@@ -1083,7 +1081,7 @@ class Dataset:
             pims_images.copy_to_view,
             mag_view=mag_view,
             is_segmentation=category == "segmentation",
-            enforce_dtype=enforce_dtype,
+            dtype=dtype,
         )
 
         args = []

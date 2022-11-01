@@ -16,7 +16,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 - `ds.add_layer_from_images`: Turned some arguments into keyword-only arguments, only affecting positional arguments after the first 8 arguments. [#818](https://github.com/scalableminds/webknossos-libs/pull/818)
 
 ### Added
-- `ds.add_layer_from_images`: added topleft and enforce_dtype kw-only arguments. [#818](https://github.com/scalableminds/webknossos-libs/pull/818)
+- `ds.add_layer_from_images`: added topleft and dtype kw-only arguments. [#818](https://github.com/scalableminds/webknossos-libs/pull/818)
 
 ### Changed
 
