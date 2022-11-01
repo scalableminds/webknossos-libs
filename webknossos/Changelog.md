@@ -10,17 +10,25 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.22...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.23...HEAD)
+
+### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [0.10.23](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.23) - 2022-11-01
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.22...v0.10.23)
 
 ### Breaking Changes
 - `ds.add_layer_from_images`: Turned some arguments into keyword-only arguments, only affecting positional arguments after the first 8 arguments. [#818](https://github.com/scalableminds/webknossos-libs/pull/818)
 
 ### Added
 - `ds.add_layer_from_images`: added topleft and dtype kw-only arguments. [#818](https://github.com/scalableminds/webknossos-libs/pull/818)
-
-### Changed
-
-### Fixed
 
 
 ## [0.10.22](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.22) - 2022-10-27
