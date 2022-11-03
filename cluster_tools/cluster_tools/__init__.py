@@ -312,13 +312,11 @@ class SequentialNewProcessExecutor(SequentialExecutor):
         queue.put(result)
 
     def _new_process_submit(self, *args, **kwargs):
-        mp_context = multiprocessing.get_context(kwargs["mp_context"])
-
         fut = futures.Future()
 
         queue = multiprocessing.Queue()
         args = [queue, *args]
-        p = mp_context.Process(
+        p = self._mp_context.Process(
             target=SequentialNewProcessExecutor._add_result_to_queue,
             args=args,
             kwargs=kwargs,
