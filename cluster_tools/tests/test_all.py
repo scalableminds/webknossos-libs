@@ -40,6 +40,7 @@ def get_executors(with_debug_sequential=False):
     }
     if with_debug_sequential:
         executor_keys.add("debug_sequential")
+        executor_keys.add("sequential_new_process")
 
     if "PYTEST_EXECUTORS" in os.environ:
         executor_keys = executor_keys.intersection(
@@ -191,9 +192,6 @@ def test_process_id():
 
 
 def test_unordered_sleep():
-    """Get host identifying information about the servers running
-    our jobs.
-    """
     for exc in get_executors():
         with exc:
             durations = [10, 5]

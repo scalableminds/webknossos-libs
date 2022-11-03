@@ -276,6 +276,61 @@ class DebugSequentialExecutor(SequentialExecutor):
         return fut
 
 
+class SequentialNewProcessExecutor(SequentialExecutor):
+    """
+    Only use for debugging purposes, starts a new process for each job to avoid memory leaks.
+    """
+
+    def submit(self, *args, **kwargs):
+
+        output_pickle_path = None
+        if "__cfut_options" in kwargs:
+            output_pickle_path = kwargs["__cfut_options"]["output_pickle_path"]
+            del kwargs["__cfut_options"]
+
+        if output_pickle_path is not None:
+            fut = self._new_process_submit(
+                WrappedProcessPoolExecutor._execute_and_persist_function,
+                output_pickle_path,
+                *args,
+                **kwargs,
+            )
+        else:
+            fut = self._new_process_submit(*args, **kwargs)
+
+        enrich_future_with_uncaught_warning(fut)
+        return fut
+
+    @staticmethod
+    def _add_result_to_queue(queue, *args, **kwargs):
+
+        func = args[0]
+        args = args[1:]
+
+        result = func(*args, **kwargs)
+
+        queue.put(result)
+
+    def _new_process_submit(self, *args, **kwargs):
+        mp_context = multiprocessing.get_context(kwargs["mp_context"])
+
+        fut = futures.Future()
+
+        queue = multiprocessing.Queue()
+        args = [queue, *args]
+        p = mp_context.Process(
+            target=SequentialNewProcessExecutor._add_result_to_queue,
+            args=args,
+            kwargs=kwargs,
+        )
+        p.start()
+        p.join()
+
+        fut.set_result(queue.get())
+
+        return fut
+
+
 def pickle_identity(obj):
     return pickling.loads(pickling.dumps(obj))
 
@@ -353,6 +408,8 @@ def get_executor(environment, **kwargs):
         return DebugSequentialExecutor(**kwargs)
     elif environment == "test_pickling":
         return PickleExecutor(**kwargs)
+    elif environment == "sequential_new_process":
+        return SequentialNewProcessExecutor(**kwargs)
     raise Exception("Unknown executor: {}".format(environment))
 
 
