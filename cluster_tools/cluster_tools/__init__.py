@@ -288,15 +288,28 @@ class SequentialNewProcessExecutor(SequentialExecutor):
             output_pickle_path = kwargs["__cfut_options"]["output_pickle_path"]
             del kwargs["__cfut_options"]
 
-        if output_pickle_path is not None:
-            fut = self._new_process_submit(
-                WrappedProcessPoolExecutor._execute_and_persist_function,
-                output_pickle_path,
-                *args,
-                **kwargs,
+        call_stack = []
+
+        if self._mp_context.get_start_method() != "fork":
+            # If a start_method other than the default "fork" is used, logging needs to be re-setup,
+            # because the programming context is not inherited in those cases.
+            multiprocessing_logging_setup_fn = get_multiprocessing_logging_setup_fn()
+            call_stack.extend(
+                [
+                    WrappedProcessPoolExecutor._setup_logging_and_execute,
+                    multiprocessing_logging_setup_fn,
+                ]
             )
-        else:
-            fut = self._new_process_submit(*args, **kwargs)
+
+        if output_pickle_path is not None:
+            call_stack.extend(
+                [
+                    WrappedProcessPoolExecutor._execute_and_persist_function,
+                    output_pickle_path,
+                ]
+            )
+
+        fut = self._new_process_submit(*call_stack, *args, **kwargs)
 
         enrich_future_with_uncaught_warning(fut)
         return fut
