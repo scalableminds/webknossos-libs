@@ -12,7 +12,7 @@ include = ["wkcuber/version.py"]  # included explicitly since it's in .gitignore
 [tool.poetry.dependencies]
 python = ">=3.7.1,<3.10"
 attrs = "^21.1.0"
-cattrs = "1.9.0"
+cattrs = "22.2.0"
 cluster_tools = { path = "../cluster_tools/", develop = true }
 czifile = "^2019.7.2"
 GitPython = "^3.0.5"
