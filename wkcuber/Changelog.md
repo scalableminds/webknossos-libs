@@ -14,6 +14,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Added
 
 ### Changed
+- Updated cattrs dependency to 22.2.0. [#819](https://github.com/scalableminds/webknossos-libs/pull/819)
 
 ### Fixed
 
