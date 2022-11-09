@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.23...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.24...HEAD)
 
 ### Breaking Changes
 
@@ -19,6 +19,13 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+
+
+## [0.10.24](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.24) - 2022-11-09
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.23...v0.10.24)
+
+### Changed
+- Updated cattrs dependency to 22.2.0. [#819](https://github.com/scalableminds/webknossos-libs/pull/819)
 
 
 ## [0.10.23](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.23) - 2022-11-01
