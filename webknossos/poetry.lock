@@ -1815,7 +1815,7 @@ tifffile = ["pims", "tifffile"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7.1,<3.10"
-content-hash = "1daacf205af44ee5ff95f3d44234ce4475f2071bb20207f4800b0fff22ee8fb0"
+content-hash = "ec4b0e2863b9361b46714ba9186b36ec6c64a5ec82727f3c582691253085d525"
 
 [metadata.files]
 aiobotocore = [
