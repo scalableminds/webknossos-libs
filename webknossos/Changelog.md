@@ -13,8 +13,11 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.24...HEAD)
 
 ### Breaking Changes
+- `Dataset.from_images` now adds a layer per timepoint and per channel (if the data doesn't have 1 or 3 channels).
 
 ### Added
+- Added python-native CZI support for `Dataset.from_images` or `dataset.add_layer_from_images`, without using bioformats.
+- `dataset.add_layer_from_images` can add a layer per timepoint and per channel when passing `allow_multiple_layers=True`.
 
 ### Changed
 

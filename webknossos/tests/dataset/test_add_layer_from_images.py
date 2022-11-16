@@ -1,8 +1,9 @@
 from pathlib import Path
+from shutil import copy
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from time import gmtime, strftime
 from typing import Any, Dict, List, Tuple, Union
-from zipfile import ZipFile
+from zipfile import BadZipFile, ZipFile
 
 import httpx
 import numpy as np
@@ -118,7 +119,7 @@ def test_repo_images(
     return ds
 
 
-def download_and_unpack(url: str, out_path: Path) -> None:
+def download_and_unpack(url: str, out_path: Path, filename: str) -> None:
     with NamedTemporaryFile() as download_file:
         with httpx.stream("GET", url) as response:
             total = int(response.headers["Content-Length"])
@@ -130,8 +131,12 @@ def download_and_unpack(url: str, out_path: Path) -> None:
                     progress.update(
                         download_task, completed=response.num_bytes_downloaded
                     )
-        with ZipFile(download_file, "r") as zip_file:
-            zip_file.extractall(out_path)
+        try:
+            with ZipFile(download_file, "r") as zip_file:
+                zip_file.extractall(out_path)
+        except BadZipFile:
+            out_path.mkdir(parents=True, exist_ok=True)
+            copy(download_file.name, out_path / filename)
 
 
 BIOFORMATS_ARGS = [
@@ -142,6 +147,7 @@ BIOFORMATS_ARGS = [
         "uint8",
         3,
         (320, 240, 108),
+        1,
     ),
     (
         "https://samples.scif.io/wtembryo.zip",
@@ -150,6 +156,7 @@ BIOFORMATS_ARGS = [
         "uint8",
         3,
         (240, 320, 1),
+        1,
     ),
     (
         "https://samples.scif.io/HEART.zip",
@@ -158,6 +165,7 @@ BIOFORMATS_ARGS = [
         "uint8",
         1,
         (512, 512, 30),
+        1,
     ),
     (
         "https://samples.scif.io/sdub.zip",
@@ -166,6 +174,16 @@ BIOFORMATS_ARGS = [
         "uint8",
         1,
         (192, 128, 9),
+        1,
+    ),
+    (
+        "https://samples.scif.io/sdub.zip",
+        "sdub*.pic",
+        {"allow_multiple_layers": True},
+        "uint8",
+        1,
+        (192, 128, 9),
+        12,
     ),
     (
         "https://samples.scif.io/test-avi.zip",
@@ -174,12 +192,13 @@ BIOFORMATS_ARGS = [
         "uint8",
         3,
         (206, 218, 36),
+        1,
     ),
 ]
 
 
 @pytest.mark.parametrize(
-    "url, filename, kwargs, dtype, num_channels, size", BIOFORMATS_ARGS
+    "url, filename, kwargs, dtype, num_channels, size, num_layers", BIOFORMATS_ARGS
 )
 def test_bioformats(
     tmp_path: Path,
@@ -189,9 +208,10 @@ def test_bioformats(
     dtype: str,
     num_channels: int,
     size: Tuple[int, int, int],
+    num_layers: int,
 ) -> wk.Dataset:
     unzip_path = tmp_path / "unzip"
-    download_and_unpack(url, unzip_path)
+    download_and_unpack(url, unzip_path, filename)
     ds = wk.Dataset(tmp_path / "ds", (1, 1, 1))
     with wk.utils.get_executor_for_args(None) as executor:
         l = ds.add_layer_from_images(
@@ -205,10 +225,21 @@ def test_bioformats(
         assert l.dtype_per_channel == np.dtype(dtype)
         assert l.num_channels == num_channels
         assert l.bounding_box == wk.BoundingBox(topleft=(0, 0, 0), size=size)
+    assert len(ds.layers) == num_layers
     return ds
 
 
 TEST_IMAGES_ARGS = [
+    (
+        # published with CC0 license, taken from
+        # https://doi.org/10.6084/m9.figshare.c.3727411_D391.v1
+        "https://figshare.com/ndownloader/files/8909407",
+        "embedded_NCI_mono_matrigelcollagen_docetaxel_day10_sample10.czi",
+        {},
+        "uint16",
+        1,
+        (512, 512, 30),
+    ),
     (
         "https://samples.scif.io/test-gif.zip",
         "scifio-test.gif",
@@ -220,7 +251,7 @@ TEST_IMAGES_ARGS = [
     (
         "https://samples.scif.io/test-jpeg2000.zip",
         "scifio-test.jp2",
-        {},
+        {},  # {"channel": 499},
         "uint8",
         3,
         (500, 500, 1),
@@ -257,7 +288,7 @@ def test_test_images(
     size: Tuple[int, int, int],
 ) -> wk.Dataset:
     unzip_path = tmp_path / "unzip"
-    download_and_unpack(url, unzip_path)
+    download_and_unpack(url, unzip_path, filename)
     ds = wk.Dataset(tmp_path / "ds", (1, 1, 1))
     with wk.utils.get_executor_for_args(None) as executor:
         l_bio = ds.add_layer_from_images(

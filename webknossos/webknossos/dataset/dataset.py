@@ -7,6 +7,7 @@ import warnings
 from argparse import Namespace
 from contextlib import nullcontext
 from enum import Enum, unique
+from itertools import product
 from os import PathLike
 from os.path import relpath
 from pathlib import Path
@@ -633,6 +634,7 @@ class Dataset:
                 flip_z=flip_z,
                 use_bioformats=use_bioformats,
                 batch_size=batch_size,
+                allow_multiple_layers=True,
                 executor=executor,
             )
 
@@ -987,7 +989,9 @@ class Dataset:
         use_bioformats: bool = False,
         channel: Optional[int] = None,
         timepoint: Optional[int] = None,
+        czi_channel: Optional[int] = None,
         batch_size: Optional[int] = None,  # defaults to shard-size z
+        allow_multiple_layers: bool = False,
         executor: Optional[Executor] = None,
         chunk_size: Optional[Union[Vec3IntLike, int]] = None,  # deprecated
     ) -> Layer:
@@ -1016,6 +1020,7 @@ class Dataset:
         * `channel`: may be used to select a single channel, if multiple are available,
         * `timepoint`: for timeseries, select a timepoint to use by specifying it as an int, starting from 0
         * `batch_size`: size to process the images, must be a multiple of the chunk-size z-axis for uncompressed and the shard-size z-axis for compressed layers, default is the chunk-size or shard-size respectively
+        * `allow_multiple_layers`: set to `True` if timepoints or channels may result in multiple layers being added (only the first is returned)
         * `executor`: pass a `ClusterExecutor` instance to parallelize the conversion jobs across the batches
         """
         from ._utils.pims_images import PimsImages, dimwise_max
@@ -1032,6 +1037,7 @@ class Dataset:
             images,
             channel=channel,
             timepoint=timepoint,
+            czi_channel=czi_channel,
             swap_xy=swap_xy,
             flip_x=flip_x,
             flip_y=flip_y,
@@ -1039,96 +1045,137 @@ class Dataset:
             use_bioformats=use_bioformats,
             is_segmentation=category == "segmentation",
         )
-        add_layer_kwargs = {}
-        if category == "segmentation":
-            add_layer_kwargs["largest_segment_id"] = 0
-        layer = self.add_layer(
-            layer_name=layer_name,
-            category=category,
-            data_format=data_format,
-            dtype_per_channel=pims_images.dtype if dtype is None else dtype,
-            num_channels=pims_images.num_channels,
-            **add_layer_kwargs,  # type: ignore[arg-type]
-        )
-        mag_view = layer.add_mag(
-            mag=mag,
-            chunk_shape=chunk_shape,
-            chunks_per_shard=chunks_per_shard,
-            compress=compress,
-        )
-        mag = mag_view.mag
-        layer.bounding_box = (
-            BoundingBox((0, 0, 0), pims_images.expected_shape)
-            .from_mag_to_mag1(mag)
-            .offset(topleft)
-        )
-
-        if batch_size is None:
-            if compress:
-                batch_size = mag_view.info.shard_shape.z
+        possible_layers = pims_images.get_possible_layers()
+        if possible_layers is not None:
+            if allow_multiple_layers:
+                suffix_with_kwargs = {
+                    "__" + "_".join(f"{k}={v}" for k, v in sorted(pairs)): dict(pairs)
+                    for pairs in product(
+                        *(
+                            [(key, value) for value in values]
+                            for key, values in possible_layers.items()
+                        )
+                    )
+                }
+                print(suffix_with_kwargs)
             else:
-                batch_size = mag_view.info.chunk_shape.z
-        elif compress:
-            assert (
-                batch_size % mag_view.info.shard_shape.z == 0
-            ), f"batch_size {batch_size} must be divisible by z shard-size {mag_view.info.shard_shape.z} when creating compressed layers"
-        else:
-            assert (
-                batch_size % mag_view.info.chunk_shape.z == 0
-            ), f"batch_size {batch_size} must be divisible by z chunk-size {mag_view.info.chunk_shape.z}"
-
-        func_per_chunk = named_partial(
-            pims_images.copy_to_view,
-            mag_view=mag_view,
-            is_segmentation=category == "segmentation",
-            dtype=dtype,
-        )
-
-        args = []
-        for z_start in range(0, pims_images.expected_shape.z, batch_size):
-            z_end = min(z_start + batch_size, pims_images.expected_shape.z)
-            # return shapes and set to union when using --pad
-            args.append((z_start, z_end))
-        with warnings.catch_warnings():
-            # Block alignmnent within the dataset should not be a problem, since shard-wise chunking is enforced.
-            # However, dataset borders might change between different parallelized writes, when sizes differ.
-            # For differing sizes, a separate warning is thrown, so block alignment warnings can be ignored:
-            warnings.filterwarnings(
-                "ignore",
-                message=_BLOCK_ALIGNMENT_WARNING,
-                category=RuntimeWarning,
-                module="webknossos",
-            )
-            # There are race-conditions about setting the bbox of the layer.
-            # The bbox is set correctly afterwards, ignore errors here:
-            warnings.filterwarnings(
-                "ignore",
-                message=".*properties were found on disk which are newer than the ones that were seen last time.*",
-                category=UserWarning,
-                module="webknossos",
-            )
-            with get_executor_for_args(None, executor) as executor:
-                shapes_and_max_ids = wait_and_ensure_success(
-                    executor.map_to_futures(func_per_chunk, args),
-                    progress_desc="Creating layer from images",
+                suffix_with_kwargs = {"": {}}
+                warnings.warn(
+                    f"There are dimensions beyond channels and xyz which cannot be read: {possible_layers}. "
+                    "Defaulting to the first one. "
+                    "Please set allow_multiple_layers=True if all of them should be written to different layers, "
+                    "or set specific values as arguments.",
+                    RuntimeWarning,
                 )
-            shapes, max_ids = zip(*shapes_and_max_ids)
-            if category == "segmentation":
-                max_id = max(max_ids)
-                cast(SegmentationLayer, layer).largest_segment_id = max_id
-            actual_size = Vec3Int(dimwise_max(shapes) + (pims_images.expected_shape.z,))
+        else:
+            suffix_with_kwargs = {"": {}}
+        first_layer = None
+        for suffix, pims_kwargs in suffix_with_kwargs.items():
+            if len(pims_kwargs) > 0:
+                pims_kwargs.setdefault("timepoint", timepoint)
+                pims_kwargs.setdefault("channel", channel)
+                pims_kwargs.setdefault("czi_channel", czi_channel)
+                pims_images = PimsImages(
+                    images,
+                    swap_xy=swap_xy,
+                    flip_x=flip_x,
+                    flip_y=flip_y,
+                    flip_z=flip_z,
+                    use_bioformats=use_bioformats,
+                    is_segmentation=category == "segmentation",
+                    **pims_kwargs,
+                )
+            layer = self.add_layer(
+                layer_name=layer_name + suffix,
+                category=category,
+                data_format=data_format,
+                dtype_per_channel=pims_images.dtype if dtype is None else dtype,
+                num_channels=pims_images.num_channels,
+            )
+            mag_view = layer.add_mag(
+                mag=mag,
+                chunk_shape=chunk_shape,
+                chunks_per_shard=chunks_per_shard,
+                compress=compress,
+            )
+            mag = mag_view.mag
             layer.bounding_box = (
-                BoundingBox((0, 0, 0), actual_size)
+                BoundingBox((0, 0, 0), pims_images.expected_shape)
                 .from_mag_to_mag1(mag)
                 .offset(topleft)
             )
-        if pims_images.expected_shape != actual_size:
-            warnings.warn(
-                "Some images are larger than expected, smaller slices are padded with zeros now. "
-                + f"New size is {actual_size}, expected {pims_images.expected_shape}.",
-                RuntimeWarning,
+
+            if batch_size is None:
+                if compress:
+                    batch_size = mag_view.info.shard_shape.z
+                else:
+                    batch_size = mag_view.info.chunk_shape.z
+            elif compress:
+                assert (
+                    batch_size % mag_view.info.shard_shape.z == 0
+                ), f"batch_size {batch_size} must be divisible by z shard-size {mag_view.info.shard_shape.z} when creating compressed layers"
+            else:
+                assert (
+                    batch_size % mag_view.info.chunk_shape.z == 0
+                ), f"batch_size {batch_size} must be divisible by z chunk-size {mag_view.info.chunk_shape.z}"
+
+            func_per_chunk = named_partial(
+                pims_images.copy_to_view,
+                mag_view=mag_view,
+                is_segmentation=category == "segmentation",
+                dtype=dtype,
             )
-        return layer
+
+            args = []
+            for z_start in range(0, pims_images.expected_shape.z, batch_size):
+                z_end = min(z_start + batch_size, pims_images.expected_shape.z)
+                # return shapes and set to union when using --pad
+                args.append((z_start, z_end))
+            with warnings.catch_warnings():
+                # Block alignmnent within the dataset should not be a problem, since shard-wise chunking is enforced.
+                # However, dataset borders might change between different parallelized writes, when sizes differ.
+                # For differing sizes, a separate warning is thrown, so block alignment warnings can be ignored:
+                warnings.filterwarnings(
+                    "ignore",
+                    message=_BLOCK_ALIGNMENT_WARNING,
+                    category=RuntimeWarning,
+                    module="webknossos",
+                )
+                # There are race-conditions about setting the bbox of the layer.
+                # The bbox is set correctly afterwards, ignore errors here:
+                warnings.filterwarnings(
+                    "ignore",
+                    message=".*properties were found on disk which are newer than the ones that were seen last time.*",
+                    category=UserWarning,
+                    module="webknossos",
+                )
+                with get_executor_for_args(None, executor) as executor:
+                    shapes_and_max_ids = wait_and_ensure_success(
+                        executor.map_to_futures(func_per_chunk, args),
+                        progress_desc="Creating layer from images",
+                    )
+                shapes, max_ids = zip(*shapes_and_max_ids)
+                if category == "segmentation":
+                    max_id = max(max_ids)
+                    cast(SegmentationLayer, layer).largest_segment_id = max_id
+                actual_size = Vec3Int(
+                    dimwise_max(shapes) + (pims_images.expected_shape.z,)
+                )
+                layer.bounding_box = (
+                    BoundingBox((0, 0, 0), actual_size)
+                    .from_mag_to_mag1(mag)
+                    .offset(topleft)
+                )
+            if pims_images.expected_shape != actual_size:
+                warnings.warn(
+                    "Some images are larger than expected, smaller slices are padded with zeros now. "
+                    + f"New size is {actual_size}, expected {pims_images.expected_shape}.",
+                    RuntimeWarning,
+                )
+            if first_layer is None:
+                first_layer = layer
+        assert first_layer is not None
+        return first_layer
 
     def get_segmentation_layer(self) -> SegmentationLayer:
         """
