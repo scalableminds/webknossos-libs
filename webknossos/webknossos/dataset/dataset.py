@@ -1081,6 +1081,9 @@ class Dataset:
         else:
             suffix_with_kwargs = {"": {}}
         first_layer = None
+        add_layer_kwargs = {}
+        if category == "segmentation":
+            add_layer_kwargs["largest_segment_id"] = 0
         for suffix, pims_kwargs in suffix_with_kwargs.items():
             if len(pims_kwargs) > 0:
                 pims_kwargs.setdefault("timepoint", timepoint)
@@ -1102,6 +1105,7 @@ class Dataset:
                 data_format=data_format,
                 dtype_per_channel=pims_images.dtype if dtype is None else dtype,
                 num_channels=pims_images.num_channels,
+                **add_layer_kwargs,  # type: ignore[arg-type]
             )
             mag_view = layer.add_mag(
                 mag=mag,
