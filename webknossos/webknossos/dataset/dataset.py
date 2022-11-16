@@ -992,6 +992,7 @@ class Dataset:
         czi_channel: Optional[int] = None,
         batch_size: Optional[int] = None,  # defaults to shard-size z
         allow_multiple_layers: bool = False,
+        truncate_rgba_to_rgb: bool = True,
         executor: Optional[Executor] = None,
         chunk_size: Optional[Union[Vec3IntLike, int]] = None,  # deprecated
     ) -> Layer:
@@ -1021,6 +1022,7 @@ class Dataset:
         * `timepoint`: for timeseries, select a timepoint to use by specifying it as an int, starting from 0
         * `batch_size`: size to process the images, must be a multiple of the chunk-size z-axis for uncompressed and the shard-size z-axis for compressed layers, default is the chunk-size or shard-size respectively
         * `allow_multiple_layers`: set to `True` if timepoints or channels may result in multiple layers being added (only the first is returned)
+        * `truncate_rgba_to_rgb`: only applies if `allow_multiple_layers=True`, set to `False` to write four channels into layers instead of an RGB channel
         * `executor`: pass a `ClusterExecutor` instance to parallelize the conversion jobs across the batches
         """
         from ._utils.pims_images import PimsImages, dimwise_max
@@ -1046,6 +1048,15 @@ class Dataset:
             is_segmentation=category == "segmentation",
         )
         possible_layers = pims_images.get_possible_layers()
+        if (
+            possible_layers is not None
+            and truncate_rgba_to_rgb
+            and len(possible_layers.get("channel", [])) == 4
+        ):
+            if len(possible_layers) == 1:
+                possible_layers = None
+            else:
+                del possible_layers["channel"]
         if possible_layers is not None:
             if allow_multiple_layers:
                 suffix_with_kwargs = {

@@ -38,6 +38,11 @@ except ImportError as e:
     ) from e
 
 
+# Fix ImageIOReader not handling channels correctly. This might get fixed via
+# https://github.com/soft-matter/pims/pull/430
+pims.ImageIOReader.frame_shape = pims.FramesSequenceND.frame_shape
+
+
 class PimsImages:
     dtype: DTypeLike
     expected_shape: Vec3Int
@@ -122,12 +127,13 @@ class PimsImages:
                 self._init_c_axis = False
                 if isinstance(images, pims.imageio_reader.ImageIOReader):
                     # bugfix for ImageIOReader which misses channel axis sometimes,
-                    # assuming channels come last:
+                    # assuming channels come last. This might get fixed via
+                    # https://github.com/soft-matter/pims/pull/430
                     if (
-                        len(images.shape) > len(images.sizes)
+                        len(images._shape) >= len(images.sizes)
                         and "c" not in images.sizes
                     ):
-                        images._init_axis("c", images.shape[-1])
+                        images._init_axis("c", images._shape[-1])
                         self._init_c_axis = True
 
                 if isinstance(images, PimsCziReader):
@@ -318,7 +324,8 @@ class PimsImages:
                         if self._init_c_axis and "c" not in images.sizes:
                             # Bugfix for ImageIOReader which misses channel axis sometimes,
                             # assuming channels come last. _init_c_axis is set in __init__().
-                            images._init_axis("c", images.shape[-1])
+                            # This might get fixed via https://github.com/soft-matter/pims/pull/430
+                            images._init_axis("c", images._shape[-1])
                             for key in list(images._get_frame_dict.keys()):
                                 images._get_frame_dict[
                                     key + ("c",)
