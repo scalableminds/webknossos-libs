@@ -1049,18 +1049,23 @@ class Dataset:
             is_segmentation=category == "segmentation",
         )
         possible_layers = pims_images.get_possible_layers()
+        # Check if 4 color channels should be converted to
+        # 3 color channels (rbg)
         if (
             possible_layers is not None
             and truncate_rgba_to_rgb
             and len(possible_layers.get("channel", [])) == 4
         ):
-            if len(possible_layers) == 1:
-                possible_layers = None
-            else:
-                del possible_layers["channel"]
-        if possible_layers is not None:
+            # Remove channels from possible_layers to keep those
+            # and automatically truncate to 3 channels
+            # (pims_images takes care of this:)
+            del possible_layers["channel"]
+        # Below, we iterate over suffix_with_pims_open_kwargs_per_layer in the for-loop
+        # to add one layer per possible_layer if allow_multiple_layers is True.
+        # If just a single layer is added, we still add a default value in the dict.
+        if possible_layers is not None and len(possible_layers) > 0:
             if allow_multiple_layers:
-                suffix_with_kwargs = {
+                suffix_with_pims_open_kwargs_per_layer = {
                     "__" + "_".join(f"{k}={v}" for k, v in sorted(pairs)): dict(pairs)
                     for pairs in product(
                         *(
@@ -1069,9 +1074,8 @@ class Dataset:
                         )
                     )
                 }
-                print(suffix_with_kwargs)
             else:
-                suffix_with_kwargs = {"": {}}
+                suffix_with_pims_open_kwargs_per_layer = {"": {}}
                 warnings.warn(
                     f"There are dimensions beyond channels and xyz which cannot be read: {possible_layers}. "
                     "Defaulting to the first one. "
@@ -1080,16 +1084,22 @@ class Dataset:
                     RuntimeWarning,
                 )
         else:
-            suffix_with_kwargs = {"": {}}
+            suffix_with_pims_open_kwargs_per_layer = {"": {}}
         first_layer = None
         add_layer_kwargs = {}
         if category == "segmentation":
             add_layer_kwargs["largest_segment_id"] = 0
-        for suffix, pims_kwargs in suffix_with_kwargs.items():
-            if len(pims_kwargs) > 0:
-                pims_kwargs.setdefault("timepoint", timepoint)
-                pims_kwargs.setdefault("channel", channel)
-                pims_kwargs.setdefault("czi_channel", czi_channel)
+        for (
+            layer_name_suffix,
+            pims_open_kwargs,
+        ) in suffix_with_pims_open_kwargs_per_layer.items():
+            # If pims_open_kwargs is empty there's no need to re-open the images:
+            if len(pims_open_kwargs) > 0:
+                # Set parameters from this method as default
+                # if they are not part of the kwargs per layer:
+                pims_open_kwargs.setdefault("timepoint", timepoint)
+                pims_open_kwargs.setdefault("channel", channel)
+                pims_open_kwargs.setdefault("czi_channel", czi_channel)
                 pims_images = PimsImages(
                     images,
                     swap_xy=swap_xy,
@@ -1098,10 +1108,10 @@ class Dataset:
                     flip_z=flip_z,
                     use_bioformats=use_bioformats,
                     is_segmentation=category == "segmentation",
-                    **pims_kwargs,
+                    **pims_open_kwargs,
                 )
             layer = self.add_layer(
-                layer_name=layer_name + suffix,
+                layer_name=layer_name + layer_name_suffix,
                 category=category,
                 data_format=data_format,
                 dtype_per_channel=pims_images.dtype if dtype is None else dtype,

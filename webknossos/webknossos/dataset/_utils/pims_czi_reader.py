@@ -39,6 +39,9 @@ class PimsCziReader(FramesSequenceND):
     def class_exts(cls) -> Set[str]:
         return {".czi"}
 
+    # class_priority is used in pims to pick the reader with the highest priority.
+    # Default is 10, and bioformats priority (which is the only other reader supporting czi) is 2.
+    # See http://soft-matter.github.io/pims/v0.6.1/custom_readers.html#plugging-into-pims-s-open-function
     class_priority = 20
 
     def __init__(self, path: PathLike, czi_channel: int = 0) -> None:
@@ -94,8 +97,12 @@ class PimsCziReader(FramesSequenceND):
 
     def get_frame_2D(self, **ind: int) -> np.ndarray:
         plane = {k.upper(): v for k, v in ind.items()}
+
+        # safe-guard against x/y in ind argument,
+        # we always read the whole slice here:
         plane.pop("X", None)
         plane.pop("Y", None)
+
         plane["C"] = self.czi_channel
         with self.czi_file() as czi_file:
             a = czi_file.read(plane=plane)

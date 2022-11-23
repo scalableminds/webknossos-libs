@@ -43,6 +43,10 @@ except ImportError as e:
 pims.ImageIOReader.frame_shape = pims.FramesSequenceND.frame_shape
 
 
+def _assume_color_channel(dim_size: int, dtype: np.dtype) -> bool:
+    return dim_size == 1 or (dim_size == 3 and dtype == np.dtype("uint8"))
+
+
 class PimsImages:
     dtype: DTypeLike
     expected_shape: Vec3Int
@@ -170,22 +174,25 @@ class PimsImages:
                     assert "t" in images.axes
                     self._default_coords["t"] = timepoint
             else:
+                # Fallback for generic pims classes that do not name their
+                # dimensions as pims.FramesSequenceND does:
+
                 _allow_channels_first = not is_segmentation
                 if isinstance(images, (pims.ImageSequence, pims.ReaderSequence)):
                     _allow_channels_first = False
+
                 if len(images.shape) == 2:
+                    # Assume yx
                     self._img_dims = "yx"
                     self._iter_dim = ""
                 elif len(images.shape) == 3:
-                    if images.shape[2] == 1 or (
-                        images.shape[2] == 3 and images.dtype == np.dtype("uint8")
-                    ):
+                    # Assume yxc, cyx or zyx
+                    if _assume_color_channel(images.shape[2], images.dtype):
                         self._img_dims = "yxc"
                         self._iter_dim = ""
                     elif images.shape[0] == 1 or (
                         _allow_channels_first
-                        and images.shape[0] == 3
-                        and images.dtype == np.dtype("uint8")
+                        and _assume_color_channel(images.shape[0], images.dtype)
                     ):
                         self._img_dims = "cyx"
                         self._iter_dim = ""
@@ -193,17 +200,27 @@ class PimsImages:
                         self._img_dims = "yx"
                         self._iter_dim = "z"
                 elif len(images.shape) == 4:
-                    if images.shape[1] == 1 or (
-                        images.shape[1] == 3 and images.dtype == np.dtype("uint8")
+                    # Assume zcyx or zyxc
+                    if images.shape[1] == 1 or _assume_color_channel(
+                        images.shape[1], images.dtype
                     ):
                         self._img_dims = "cyx"
                     else:
                         self._img_dims = "yxc"
                     self._iter_dim = "z"
                 elif len(images.shape) == 5:
-                    if images.shape[2] == 1 or (
-                        images.shape[2] == 3 and images.dtype == np.dtype("uint8")
-                    ):
+                    # Assume tzcyx or tzyxc
+                    # t has to be constant for this reader to obtain 4D image
+                    # (only possible if not specified manually already, since
+                    # the timepoint would already be indexed here and the
+                    # 5th dimension would be something else)
+                    if timepoint is not None:
+                        raise RuntimeError(
+                            f"Got {len(images.shape)} axes for the images, "
+                            + "cannot map to 3D+channels+timepoints."
+                        )
+
+                    if _assume_color_channel(images.shape[2], images.dtype):
                         self._img_dims = "cyx"
                     else:
                         self._img_dims = "yxc"
