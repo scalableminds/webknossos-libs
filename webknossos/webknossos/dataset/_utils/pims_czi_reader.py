@@ -97,7 +97,6 @@ class PimsCziReader(FramesSequenceND):
         plane.pop("X", None)
         plane.pop("Y", None)
         plane["C"] = self.czi_channel
-        print(plane)
         with self.czi_file() as czi_file:
             a = czi_file.read(plane=plane)
             num_channels = a.shape[-1]

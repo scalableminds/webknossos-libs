@@ -1018,8 +1018,9 @@ class Dataset:
         * `flip_x`, `flip_y`, `flip_z`: set to `True` to reverse the respective axis before writing to disk
         * `dtype`: the read image data will be convertoed to this dtype using `numpy.ndarray.astype`
         * `use_bioformats`: set to `True` to use the [pims bioformats adapter](https://soft-matter.github.io/pims/v0.6.1/bioformats.html), needs a JVM
-        * `channel`: may be used to select a single channel, if multiple are available,
+        * `channel`: may be used to select a single channel, if multiple are available
         * `timepoint`: for timeseries, select a timepoint to use by specifying it as an int, starting from 0
+        * `czi_channel`: may be used to select a channel for .czi images, which differs from normal color-channels
         * `batch_size`: size to process the images, must be a multiple of the chunk-size z-axis for uncompressed and the shard-size z-axis for compressed layers, default is the chunk-size or shard-size respectively
         * `allow_multiple_layers`: set to `True` if timepoints or channels may result in multiple layers being added (only the first is returned)
         * `truncate_rgba_to_rgb`: only applies if `allow_multiple_layers=True`, set to `False` to write four channels into layers instead of an RGB channel

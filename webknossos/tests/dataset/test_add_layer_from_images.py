@@ -251,7 +251,7 @@ TEST_IMAGES_ARGS = [
     (
         "https://samples.scif.io/test-jpeg2000.zip",
         "scifio-test.jp2",
-        {},  # {"channel": 499},
+        {},
         "uint8",
         3,
         (500, 500, 1),
