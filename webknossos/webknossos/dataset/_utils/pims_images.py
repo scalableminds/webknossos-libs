@@ -216,8 +216,8 @@ class PimsImages:
                     # 5th dimension would be something else)
                     if timepoint is not None:
                         raise RuntimeError(
-                            f"Got {len(images.shape)} axes for the images, "
-                            + "cannot map to 3D+channels+timepoints."
+                            f"Got {len(images.shape)} axes for the images after "
+                            + "removing time dimension, can only map to 3D+channels."
                         )
 
                     if _assume_color_channel(images.shape[2], images.dtype):

@@ -1060,11 +1060,24 @@ class Dataset:
             # and automatically truncate to 3 channels
             # (pims_images takes care of this:)
             del possible_layers["channel"]
-        # Below, we iterate over suffix_with_pims_open_kwargs_per_layer in the for-loop
+        # Further below, we iterate over suffix_with_pims_open_kwargs_per_layer in the for-loop
         # to add one layer per possible_layer if allow_multiple_layers is True.
         # If just a single layer is added, we still add a default value in the dict.
         if possible_layers is not None and len(possible_layers) > 0:
             if allow_multiple_layers:
+                # Get all combinations of possible layers. E.g.
+                # possible_layers = {
+                #    "channel": [0, 1, 3, 4, 5],
+                #    "timepoint": [0, 1],
+                # }
+                # suffix_with_pims_open_kwargs_per_layer = {
+                #    "__channel=0_timepoint=0", {"channel": 0, "timepoint": 0},
+                #    "__channel=0_timepoint=1", {"channel": 0, "timepoint": 1},
+                #    "__channel=0_timepoint=2", {"channel": 0, "timepoint": 2},
+                #    …,
+                #    "__channel=1_timepoint=0", {"channel": 1, "timepoint": 0},
+                #    …,
+                # }
                 suffix_with_pims_open_kwargs_per_layer = {
                     "__" + "_".join(f"{k}={v}" for k, v in sorted(pairs)): dict(pairs)
                     for pairs in product(
@@ -1075,6 +1088,7 @@ class Dataset:
                     )
                 }
             else:
+                # initialize PimsImages as above, with normal layer name
                 suffix_with_pims_open_kwargs_per_layer = {"": {}}
                 warnings.warn(
                     f"There are dimensions beyond channels and xyz which cannot be read: {possible_layers}. "
@@ -1084,6 +1098,7 @@ class Dataset:
                     RuntimeWarning,
                 )
         else:
+            # initialize PimsImages as above, with normal layer name
             suffix_with_pims_open_kwargs_per_layer = {"": {}}
         first_layer = None
         add_layer_kwargs = {}
