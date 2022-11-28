@@ -552,6 +552,7 @@ class Dataset:
         flip_y: bool = False,
         flip_z: bool = False,
         use_bioformats: bool = False,
+        max_layers: int = 20,
         batch_size: Optional[int] = None,
         executor: Optional[Executor] = None,
     ) -> "Dataset":
@@ -635,6 +636,7 @@ class Dataset:
                 use_bioformats=use_bioformats,
                 batch_size=batch_size,
                 allow_multiple_layers=True,
+                max_layers=max_layers - len(ds.layers),
                 executor=executor,
             )
 
@@ -992,6 +994,7 @@ class Dataset:
         czi_channel: Optional[int] = None,
         batch_size: Optional[int] = None,  # defaults to shard-size z
         allow_multiple_layers: bool = False,
+        max_layers: int = 20,
         truncate_rgba_to_rgb: bool = True,
         executor: Optional[Executor] = None,
         chunk_size: Optional[Union[Vec3IntLike, int]] = None,  # deprecated
@@ -1023,6 +1026,7 @@ class Dataset:
         * `czi_channel`: may be used to select a channel for .czi images, which differs from normal color-channels
         * `batch_size`: size to process the images, must be a multiple of the chunk-size z-axis for uncompressed and the shard-size z-axis for compressed layers, default is the chunk-size or shard-size respectively
         * `allow_multiple_layers`: set to `True` if timepoints or channels may result in multiple layers being added (only the first is returned)
+        * `max_layers`: only applies if `allow_multiple_layers=True`, limits the number of layers added via different channels or timepoints
         * `truncate_rgba_to_rgb`: only applies if `allow_multiple_layers=True`, set to `False` to write four channels into layers instead of an RGB channel
         * `executor`: pass a `ClusterExecutor` instance to parallelize the conversion jobs across the batches
         """
@@ -1104,10 +1108,16 @@ class Dataset:
         add_layer_kwargs = {}
         if category == "segmentation":
             add_layer_kwargs["largest_segment_id"] = 0
-        for (
+        if len(suffix_with_pims_open_kwargs_per_layer) > max_layers:
+            warnings.warn(
+                f"Limiting the number of added layers to {max_layers} out of {len(suffix_with_pims_open_kwargs_per_layer)}. "
+                + "Please increase max_layers if you want more layers to be added.",
+                RuntimeWarning,
+            )
+        for _, (
             layer_name_suffix,
             pims_open_kwargs,
-        ) in suffix_with_pims_open_kwargs_per_layer.items():
+        ) in zip(range(max_layers), suffix_with_pims_open_kwargs_per_layer.items()):
             # If pims_open_kwargs is empty there's no need to re-open the images:
             if len(pims_open_kwargs) > 0:
                 # Set parameters from this method as default
