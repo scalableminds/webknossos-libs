@@ -145,7 +145,6 @@ def detect_interval_for_dimensions(
                             idx : idx + current_decimal_length[current_dimension]
                         ]
                         coordinate_value = int(coordinate_value_str)
-                        assert coordinate_value
                         min_dimensions[current_dimension] = min(
                             min_dimensions.get(current_dimension, coordinate_value),
                             coordinate_value,
