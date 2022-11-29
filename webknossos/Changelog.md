@@ -10,7 +10,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.24...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.25...HEAD)
+
+### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [0.10.25](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.25) - 2022-11-29
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.24...v0.10.25)
 
 ### Breaking Changes
 - `Dataset.from_images` now adds a layer per timepoint and per channel (if the data doesn't have 1 or 3 channels). [#822](https://github.com/scalableminds/webknossos-libs/pull/822)
@@ -18,10 +30,6 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Added
 - Added python-native CZI support for `Dataset.from_images` or `dataset.add_layer_from_images`, without using bioformats. [#822](https://github.com/scalableminds/webknossos-libs/pull/822)
 - `dataset.add_layer_from_images` can add a layer per timepoint and per channel when passing `allow_multiple_layers=True`. [#822](https://github.com/scalableminds/webknossos-libs/pull/822)
-
-### Changed
-
-### Fixed
 
 
 ## [0.10.24](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.24) - 2022-11-09
