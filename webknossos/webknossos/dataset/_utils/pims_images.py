@@ -4,6 +4,7 @@ from itertools import chain
 from os import PathLike
 from pathlib import Path
 from typing import (
+    Dict,
     Iterable,
     Iterator,
     List,
@@ -20,6 +21,11 @@ from urllib.error import HTTPError
 
 import numpy as np
 
+try:
+    from webknossos.dataset._utils.pims_czi_reader import PimsCziReader
+except ImportError:
+    PimsCziReader = type(None)  # type: ignore[misc,assignment]
+
 from webknossos.dataset.layer import DTypeLike
 from webknossos.dataset.mag_view import MagView
 from webknossos.geometry.vec3_int import Vec3Int
@@ -32,6 +38,15 @@ except ImportError as e:
     ) from e
 
 
+# Fix ImageIOReader not handling channels correctly. This might get fixed via
+# https://github.com/soft-matter/pims/pull/430
+pims.ImageIOReader.frame_shape = pims.FramesSequenceND.frame_shape
+
+
+def _assume_color_channel(dim_size: int, dtype: np.dtype) -> bool:
+    return dim_size == 1 or (dim_size == 3 and dtype == np.dtype("uint8"))
+
+
 class PimsImages:
     dtype: DTypeLike
     expected_shape: Vec3Int
@@ -42,6 +57,7 @@ class PimsImages:
         images: Union[str, Path, "pims.FramesSequence", List[Union[str, PathLike]]],
         channel: Optional[int],
         timepoint: Optional[int],
+        czi_channel: Optional[int],
         swap_xy: bool,
         flip_x: bool,
         flip_y: bool,
@@ -74,6 +90,7 @@ class PimsImages:
         ## arguments as inner attributes
         self._channel = channel
         self._timepoint = timepoint
+        self._czi_channel = czi_channel
         self._swap_xy = swap_xy
         self._flip_x = flip_x
         self._flip_y = flip_y
@@ -82,6 +99,7 @@ class PimsImages:
 
         ## attributes that will be set in __init__()
         self._iter_dim = None
+        self._possible_layers = {}
         # _img_dims
 
         ## attributes only for pims.FramesSequenceND instances:
@@ -113,13 +131,20 @@ class PimsImages:
                 self._init_c_axis = False
                 if isinstance(images, pims.imageio_reader.ImageIOReader):
                     # bugfix for ImageIOReader which misses channel axis sometimes,
-                    # assuming channels come last:
+                    # assuming channels come last. This might get fixed via
+                    # https://github.com/soft-matter/pims/pull/430
                     if (
-                        len(images.shape) > len(images.sizes)
+                        len(images._shape) >= len(images.sizes)
                         and "c" not in images.sizes
                     ):
-                        images._init_axis("c", images.shape[-1])
+                        images._init_axis("c", images._shape[-1])
                         self._init_c_axis = True
+
+                if isinstance(images, PimsCziReader):
+                    available_czi_channels = images.available_czi_channels()
+                    if len(available_czi_channels) > 1:
+                        self._possible_layers["czi_channel"] = available_czi_channels
+
                 if images.sizes.get("c", 1) > 1:
                     self._img_dims = "cyx"
                 else:
@@ -136,34 +161,38 @@ class PimsImages:
 
                 if timepoint is None:
                     if images.sizes.get("t", 1) > 1:
-                        assert self._iter_dim != "z", (
-                            f"Found both axes t {images.sizes.get('t', 1) } "
-                            + f"and z {images.sizes.get('z', 1) > 1}, "
-                            + "cannot use both without setting timepoint"
-                        )
-                        self._iter_dim = "t"
+                        if self._iter_dim == "":
+                            self._iter_dim = "t"
+                        else:
+                            self._default_coords["t"] = 0
+                            self._possible_layers["timepoint"] = list(
+                                range(0, images.sizes["t"])
+                            )
                     elif "t" in images.axes:
                         self._default_coords["t"] = 0
                 else:
                     assert "t" in images.axes
                     self._default_coords["t"] = timepoint
             else:
+                # Fallback for generic pims classes that do not name their
+                # dimensions as pims.FramesSequenceND does:
+
                 _allow_channels_first = not is_segmentation
                 if isinstance(images, (pims.ImageSequence, pims.ReaderSequence)):
                     _allow_channels_first = False
+
                 if len(images.shape) == 2:
+                    # Assume yx
                     self._img_dims = "yx"
                     self._iter_dim = ""
                 elif len(images.shape) == 3:
-                    if images.shape[2] == 1 or (
-                        images.shape[2] == 3 and images.dtype == np.dtype("uint8")
-                    ):
+                    # Assume yxc, cyx or zyx
+                    if _assume_color_channel(images.shape[2], images.dtype):
                         self._img_dims = "yxc"
                         self._iter_dim = ""
                     elif images.shape[0] == 1 or (
                         _allow_channels_first
-                        and images.shape[0] == 3
-                        and images.dtype == np.dtype("uint8")
+                        and _assume_color_channel(images.shape[0], images.dtype)
                     ):
                         self._img_dims = "cyx"
                         self._iter_dim = ""
@@ -171,17 +200,40 @@ class PimsImages:
                         self._img_dims = "yx"
                         self._iter_dim = "z"
                 elif len(images.shape) == 4:
-                    if images.shape[1] == 1 or (
-                        images.shape[1] == 3 and images.dtype == np.dtype("uint8")
+                    # Assume zcyx or zyxc
+                    if images.shape[1] == 1 or _assume_color_channel(
+                        images.shape[1], images.dtype
                     ):
                         self._img_dims = "cyx"
                     else:
                         self._img_dims = "yxc"
                     self._iter_dim = "z"
+                elif len(images.shape) == 5:
+                    # Assume tzcyx or tzyxc
+                    # t has to be constant for this reader to obtain 4D image
+                    # (only possible if not specified manually already, since
+                    # the timepoint would already be indexed here and the
+                    # 5th dimension would be something else)
+                    if timepoint is not None:
+                        raise RuntimeError(
+                            f"Got {len(images.shape)} axes for the images after "
+                            + "removing time dimension, can only map to 3D+channels."
+                        )
+
+                    if _assume_color_channel(images.shape[2], images.dtype):
+                        self._img_dims = "cyx"
+                    else:
+                        self._img_dims = "yxc"
+                    self._iter_dim = "z"
+                    self._timepoint = 0
+                    if images.shape[0] > 1:
+                        self._possible_layers["timepoint"] = list(
+                            range(0, images.shape[0])
+                        )
                 else:
                     raise RuntimeError(
                         f"Got {len(images.shape)} axes for the images, "
-                        + "cannot map to 3D+channels, consider setting timepoint."
+                        + "cannot map to 3D+channels+timepoints."
                     )
 
         #############################
@@ -218,12 +270,15 @@ class PimsImages:
                 self._channel < self.num_channels
             ), f"Selected channel {self._channel} (0-indexed), but only {self.num_channels} channels are available."
             self.num_channels = 1
-        elif self.num_channels > 3:
-            warnings.warn(
-                f"Found more than 3 channels ({self.num_channels}), clamping to the first 3."
-            )
-            self.num_channels = 3
-            self._first_n_channels = 3
+        else:
+            if self.num_channels == 2:
+                self._possible_layers["channel"] = [0, 1]
+                self.num_channels = 1
+                self._channel = 0
+            elif self.num_channels > 3:
+                self._possible_layers["channel"] = list(range(0, self.num_channels))
+                self.num_channels = 3
+                self._first_n_channels = 3
 
     @contextmanager
     def _open_images(
@@ -271,6 +326,9 @@ class PimsImages:
                     if isinstance(original_images, Path):
                         original_images = str(original_images)
                     try:
+                        open_kwargs = {}
+                        if self._czi_channel is not None:
+                            open_kwargs["czi_channel"] = self._czi_channel
                         images_context_manager = pims.open(original_images)
                     except Exception:
                         images_context_manager = pims.ImageSequence(original_images)
@@ -283,7 +341,8 @@ class PimsImages:
                         if self._init_c_axis and "c" not in images.sizes:
                             # Bugfix for ImageIOReader which misses channel axis sometimes,
                             # assuming channels come last. _init_c_axis is set in __init__().
-                            images._init_axis("c", images.shape[-1])
+                            # This might get fixed via https://github.com/soft-matter/pims/pull/430
+                            images._init_axis("c", images._shape[-1])
                             for key in list(images._get_frame_dict.keys()):
                                 images._get_frame_dict[
                                     key + ("c",)
@@ -358,6 +417,12 @@ class PimsImages:
 
             return dimwise_max(shapes), None if max_id is None else int(max_id)
 
+    def get_possible_layers(self) -> Optional[Dict["str", List[int]]]:
+        if len(self._possible_layers) == 0:
+            return None
+        else:
+            return self._possible_layers
+
 
 T = TypeVar("T", bound=Tuple[int, ...])
 
@@ -409,6 +474,7 @@ def has_image_z_dimension(
         # the following arguments shouldn't matter much for the Dataset.from_images method:
         channel=None,
         timepoint=None,
+        czi_channel=None,
         swap_xy=False,
         flip_x=False,
         flip_y=False,

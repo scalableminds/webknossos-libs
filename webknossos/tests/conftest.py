@@ -21,6 +21,22 @@ from webknossos.client.context import _clear_all_context_caches
 
 from .constants import TESTDATA_DIR, TESTOUTPUT_DIR
 
+
+def pytest_make_parametrize_id(config: Any, val: Any, argname: str) -> Any:
+    del config
+    del argname
+    if isinstance(val, str):
+        val = val.rsplit("?", maxsplit=1)[0]
+        val = val.rsplit("#", maxsplit=1)[0]
+        parts = val.rstrip("/").split("/")
+        take = 1
+        while (len(parts[-take]) <= 1 or parts[-take] == "view") and take < len(parts):
+            take += 1
+        return "/".join(parts[-take:])
+    # return None to let pytest handle the formatting
+    return None
+
+
 ### HYPOTHESIS STRATEGIES (library to test many combinations for data class input)
 
 

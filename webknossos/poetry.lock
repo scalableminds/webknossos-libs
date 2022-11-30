@@ -307,6 +307,17 @@ type = "directory"
 url = "../cluster_tools"
 
 [[package]]
+name = "cmake"
+version = "3.24.3"
+description = "CMake is an open-source, cross-platform family of tools designed to build, test and package software"
+category = "main"
+optional = true
+python-versions = "*"
+
+[package.extras]
+test = ["codecov (>=2.0.5)", "coverage (>=4.2)", "flake8 (>=3.0.4)", "path.py (>=11.5.0)", "pytest (>=3.0.3)", "pytest-cov (>=2.4.0)", "pytest-runner (>=2.9)", "pytest-virtualenv (>=1.7.0)", "scikit-build (>=0.10.0)", "setuptools (>=28.0.0)", "virtualenv (>=15.0.3)", "wheel"]
+
+[[package]]
 name = "colorama"
 version = "0.4.4"
 description = "Cross-platform colored terminal text."
@@ -405,7 +416,7 @@ python-versions = ">=3.6"
 
 [[package]]
 name = "fastremap"
-version = "1.13.3"
+version = "1.12.2"
 description = "Remap, mask, renumber, unique, and in-place transposition of 3D labeled images. Point cloud too."
 category = "dev"
 optional = false
@@ -1222,6 +1233,19 @@ optional = false
 python-versions = ">=3.6"
 
 [[package]]
+name = "pylibCZIrw"
+version = "3.2.1"
+description = "A python wrapper around the libCZI C++ library with reading and writing functionality."
+category = "main"
+optional = true
+python-versions = ">=3.7,<4"
+
+[package.dependencies]
+cmake = "*"
+numpy = "*"
+xmltodict = "*"
+
+[[package]]
 name = "pylint"
 version = "2.13.8"
 description = "python code static checker"
@@ -1781,6 +1805,14 @@ optional = false
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
 
 [[package]]
+name = "xmltodict"
+version = "0.13.0"
+description = "Makes working with XML feel like you are working with JSON"
+category = "main"
+optional = true
+python-versions = ">=3.4"
+
+[[package]]
 name = "yarl"
 version = "1.7.2"
 description = "Yet another URL library"
@@ -1823,8 +1855,9 @@ docs = ["jaraco.packaging (>=9)", "rst.linker (>=1.9)", "sphinx"]
 testing = ["func-timeout", "jaraco.itertools", "pytest (>=6)", "pytest-black (>=0.3.7)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=1.0.1)", "pytest-flake8", "pytest-mypy (>=0.9.1)"]
 
 [extras]
-all = ["pims", "tifffile", "imagecodecs", "JPype1"]
+all = ["pims", "tifffile", "imagecodecs", "JPype1", "pylibCZIrw"]
 bioformats = ["pims", "JPype1"]
+czi = ["pims", "pylibCZIrw"]
 imagecodecs = ["pims", "imagecodecs"]
 pims = ["pims"]
 tifffile = ["pims", "tifffile"]
@@ -1832,7 +1865,7 @@ tifffile = ["pims", "tifffile"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7.1,<3.11"
-content-hash = "da0538609792ab90e9b4f205017c1e55a915a662224aa5fbd1f39253b9b29b82"
+content-hash = "d828d1d62f4831aa9417e2c9c367cb09384453fc580a87e664a4029d37c8019c"
 
 [metadata.files]
 aiobotocore = [
@@ -2047,6 +2080,24 @@ cloudpickle = [
     {file = "cloudpickle-2.2.0.tar.gz", hash = "sha256:3f4219469c55453cfe4737e564b67c2a149109dabf7f242478948b895f61106f"},
 ]
 cluster-tools = []
+cmake = [
+    {file = "cmake-3.24.3-py2.py3-none-macosx_10_10_universal2.macosx_10_10_x86_64.macosx_11_0_arm64.macosx_11_0_universal2.whl", hash = "sha256:7f44502c52d02ac7526133b9080cfe91e4ccbb2a3abf36139697d6e6161ff89b"},
+    {file = "cmake-3.24.3-py2.py3-none-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:3a28abd32284935d54f1fcc33140ccde293fb529a6cb0418ca0eea7ff0ac7b26"},
+    {file = "cmake-3.24.3-py2.py3-none-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:0402c38e34e0cec1a099a40e147f47e509640db01d5ced7313327555185b8d1e"},
+    {file = "cmake-3.24.3-py2.py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:b2da8c93e1adcf8df307487e852d6f1f63b03aea7cbf22050c081d9f369d142b"},
+    {file = "cmake-3.24.3-py2.py3-none-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:7ba1a0e3fdc7a9512c30a7b75024f67e65b96a15f7e8174fb1b58356ecc44aa4"},
+    {file = "cmake-3.24.3-py2.py3-none-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:717938fc5ee4c7538b27aac29a6e3b75c5eb223cb523e06cf8139f12ea73f708"},
+    {file = "cmake-3.24.3-py2.py3-none-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:737580fd3f7435f80bd9bc91af7e819b1a2def131712fcc4d9133fdb78138a51"},
+    {file = "cmake-3.24.3-py2.py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:38348b9f0e4094fcf375bb84bc04cdf0fd57ba640dffa11a899ec12a7eb100b9"},
+    {file = "cmake-3.24.3-py2.py3-none-musllinux_1_1_aarch64.whl", hash = "sha256:a8cebc2ca35b6e945f5f432159c95e0012ea26bc977421ab3fd1c01cc0818fd0"},
+    {file = "cmake-3.24.3-py2.py3-none-musllinux_1_1_i686.whl", hash = "sha256:ca3a7bcfbdf4981091a72693dccb35192bcd6a3342579eb46f1c6d6bd6d7779d"},
+    {file = "cmake-3.24.3-py2.py3-none-musllinux_1_1_ppc64le.whl", hash = "sha256:fa69e7bb50abe1408e6b2f8ae311ad268347e6db865b14f50e8c8f677203175d"},
+    {file = "cmake-3.24.3-py2.py3-none-musllinux_1_1_s390x.whl", hash = "sha256:90b5486fc4e0526745dd3dc028dd2a5a0d2933290dc0887a9c0748f02e6295d7"},
+    {file = "cmake-3.24.3-py2.py3-none-musllinux_1_1_x86_64.whl", hash = "sha256:ea7bf708da65b6f0de8565c020e68048681cf79cc8c9967aec8f5293b4108115"},
+    {file = "cmake-3.24.3-py2.py3-none-win32.whl", hash = "sha256:4ea7e1d0e6f011c727954db2cdcaac2c6320ebf856d1952de4eeb8c157ea8265"},
+    {file = "cmake-3.24.3-py2.py3-none-win_amd64.whl", hash = "sha256:c9cf37bb3839cdfba915dcceabe2d2cf0550612b6b5a747cefa32dea854c5d1a"},
+    {file = "cmake-3.24.3.tar.gz", hash = "sha256:73fa252b21fce1db988beace3e1a2b21f926dd870322d9f37ff04e773b13a12a"},
+]
 colorama = [
     {file = "colorama-0.4.4-py2.py3-none-any.whl", hash = "sha256:9f47eda37229f68eee03b24b9748937c7dc3868f906e8ba69fbcbdd3bc5dc3e2"},
     {file = "colorama-0.4.4.tar.gz", hash = "sha256:5941b2b48a20143d2267e95b1c2a7603ce057ee39fd88e7329b0c292aa16869b"},
@@ -2084,40 +2135,32 @@ fasteners = [
     {file = "fasteners-0.17.3.tar.gz", hash = "sha256:a9a42a208573d4074c77d041447336cf4e3c1389a256fd3e113ef59cf29b7980"},
 ]
 fastremap = [
-    {file = "fastremap-1.13.3-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:2c3b1a6c2527a17ba5f63cd01f69fb1a42488a5b51b0c87f5c46d75f88e5eb67"},
-    {file = "fastremap-1.13.3-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:9d268e597ed93b796a88621bed036cbf3a1ea1138e9d3e205bfd5e25cbf4fb11"},
-    {file = "fastremap-1.13.3-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:4f272745005429cce3d65cb122f882e43b39c728e2b63d010c0f4d3fa4aed9ab"},
-    {file = "fastremap-1.13.3-cp310-cp310-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:3253eedeb0e410ed9c1ee39507fc712775f0d520b87a146d6a2ea591f1d222ab"},
-    {file = "fastremap-1.13.3-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:cca768c47023a4ea99862695ea927da21d58e314070e91e9301845c33e2ebe7d"},
-    {file = "fastremap-1.13.3-cp310-cp310-win32.whl", hash = "sha256:798fb555ef69d2bb0afa12f2bf4839cd315af6764a4a7f9d8f47bc1e5e491f8c"},
-    {file = "fastremap-1.13.3-cp310-cp310-win_amd64.whl", hash = "sha256:946c0d7426140f6d6092cdf0ab75bce88b058fa9906e208e71526377702ee654"},
-    {file = "fastremap-1.13.3-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:1d26846b47e73ffd95f0edcefefe1e1b45df4bb9bd99b897541b081a8d8db5c8"},
-    {file = "fastremap-1.13.3-cp36-cp36m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:6f375a49c00ce91f70235fab4fa591c77d6f50c2457efb2a269a29d8b6b8e68e"},
-    {file = "fastremap-1.13.3-cp36-cp36m-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:cd7be0e3820f85dc7684015c0b8ac652e6ef015133fcbd6e3bcdefc9266b1ca4"},
-    {file = "fastremap-1.13.3-cp36-cp36m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:9ed461cae15de34b62e87f97a5c3d5ea794197cdfa96c72b965a486e3cc1adc9"},
-    {file = "fastremap-1.13.3-cp36-cp36m-win32.whl", hash = "sha256:a9aa1ae0865dbdde54ac1a6be43891ca297f4fb253eeab03e2d00260ee4f0f2c"},
-    {file = "fastremap-1.13.3-cp36-cp36m-win_amd64.whl", hash = "sha256:2f8340b774315db9d1e46920cb01f171814e4210878ea4ec33c0ce35f6c08139"},
-    {file = "fastremap-1.13.3-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:231725229c6d0f72c5a8f8193b957418f6398a226cdec85f6f344df1ee6e9231"},
-    {file = "fastremap-1.13.3-cp37-cp37m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:f0a765c5ad9c78e523a2f46c62a5534e31fd5eb62abed00328fb08328a38d579"},
-    {file = "fastremap-1.13.3-cp37-cp37m-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:6f26270206da18938acf1e750ba9cf998ee742123e66adfc9eab7c1094942c90"},
-    {file = "fastremap-1.13.3-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:b50d3fc80ec4851564b5bc6f4e209a0e7bed9102f0f9568cee146898edf2bdae"},
-    {file = "fastremap-1.13.3-cp37-cp37m-win32.whl", hash = "sha256:195de61565fff88454cb15815defce770e893cf83fca8ef0c74a91602b3d33ef"},
-    {file = "fastremap-1.13.3-cp37-cp37m-win_amd64.whl", hash = "sha256:a4a949efd9f71ca82a6431a896d5121b7a32dcc910d9b3807e0adcbb0e696f53"},
-    {file = "fastremap-1.13.3-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:7312cac3ced1d650d13ee6df0b6f0433d145afa9f059a2508c6734b05280d4ce"},
-    {file = "fastremap-1.13.3-cp38-cp38-macosx_11_0_universal2.whl", hash = "sha256:ee5ab1eaebcb8fc30dbf5c3d7db0e8dd8c8c3e68e0c89de33e41ce89758e25b1"},
-    {file = "fastremap-1.13.3-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:768dfc3968b8864f5ecdcd9a1928e0995248c7e905d0ce0bfb6eae34ed14a69e"},
-    {file = "fastremap-1.13.3-cp38-cp38-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:98a533081be53197e895aa890c239a345bf13e8ba088bf1750614532fd092967"},
-    {file = "fastremap-1.13.3-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:3a051fd08ea2fe2056d971d1e82742a910f180eb3417b1729e2ed549c12d1fd1"},
-    {file = "fastremap-1.13.3-cp38-cp38-win32.whl", hash = "sha256:a6fc113a1c3759a001a520e79dde9b61149081b744e92f70994d9d9c961dc930"},
-    {file = "fastremap-1.13.3-cp38-cp38-win_amd64.whl", hash = "sha256:889f4d68ae37bc816e90cc96ad5c87ad6ea6096797a2a5dc79c018b74caf5f55"},
-    {file = "fastremap-1.13.3-cp39-cp39-macosx_10_9_universal2.whl", hash = "sha256:8e0f6303ed1e6bb71641d770c1c91c8819b0bccc6ea8a4d1ff35f71953e453fa"},
-    {file = "fastremap-1.13.3-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:9c4c4c1a1083b125e94fc99af30a2972a43a56888c170557bb766fa77441dd0d"},
-    {file = "fastremap-1.13.3-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:0f03b9ee4380b65952787ad3956e8b58b2f3be853ea2256c9a41068bc381731c"},
-    {file = "fastremap-1.13.3-cp39-cp39-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:1d8e5059de66c1159a8e768a3d16e95cf3236878e538e50b47276db07c91500b"},
-    {file = "fastremap-1.13.3-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:3cfd6187dd3c92fccf5ed904bd445152a41b27257e6f1b5e89f3a78a9f9c7f7b"},
-    {file = "fastremap-1.13.3-cp39-cp39-win32.whl", hash = "sha256:ea00bcea485fd4768f1bc291489f2ecc98574f307baf6660671e3af994780f1e"},
-    {file = "fastremap-1.13.3-cp39-cp39-win_amd64.whl", hash = "sha256:47e5e1a1f41c22f94511ff1380e8d2e34fd58f614cb3fea8f79113fca85dc063"},
-    {file = "fastremap-1.13.3.tar.gz", hash = "sha256:c07e1b1d42192a46352b55e33da8062560940dcaf4ae4e667f4de71e05a5e5d0"},
+    {file = "fastremap-1.12.2-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:afac212df01e2c2e21824ad278e1142e250c0cbacace17cae2d7790f6968dd06"},
+    {file = "fastremap-1.12.2-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:e822d6fdcac5cd5f8ea910c1ebd98d757dc86ab12fa4b79c48887133f9937854"},
+    {file = "fastremap-1.12.2-cp36-cp36m-manylinux2010_i686.whl", hash = "sha256:c3df82935717f32caad8e9fd94c3d969e7c0a5ea553500eaf012e64903548fc7"},
+    {file = "fastremap-1.12.2-cp36-cp36m-manylinux2010_x86_64.whl", hash = "sha256:d101b0ada54aa3d70dc10aebcd0c054c69ab5f76e35779366adb940eb70f00eb"},
+    {file = "fastremap-1.12.2-cp36-cp36m-win32.whl", hash = "sha256:7163fcdcf4bc1231738ebcc1d1123200cc8d0269ba2f82dad43134ed7bca4a5b"},
+    {file = "fastremap-1.12.2-cp36-cp36m-win_amd64.whl", hash = "sha256:be89c38ab7b6013e5c85b62f5b1ec01fe5fffef9cbe40074c6d2907de858d803"},
+    {file = "fastremap-1.12.2-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:b10cfeabe2e0e05f9d1c3de5ca5bafff38daa63907aa2c2ea90cff5b84f780b4"},
+    {file = "fastremap-1.12.2-cp37-cp37m-manylinux2010_i686.whl", hash = "sha256:1bb5c82592ef89fc37b0b90768e46f4b66411616aabe956e208c577605956f7b"},
+    {file = "fastremap-1.12.2-cp37-cp37m-manylinux2010_x86_64.whl", hash = "sha256:4a7b65816dc9a8a0429a81cb3f6c1e1a11e032f464e4608cead62a4f3a3f1aa8"},
+    {file = "fastremap-1.12.2-cp37-cp37m-win32.whl", hash = "sha256:6abf341ebfcfc9f1fa743e6fbf9831d9934dc9fc23864fbb67e5fa386c695da5"},
+    {file = "fastremap-1.12.2-cp37-cp37m-win_amd64.whl", hash = "sha256:15260a8e6da342f7764fd1a96248f451a7b876f6c1e43e25420f231f635e0206"},
+    {file = "fastremap-1.12.2-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:1fff7a7ae1d414be60d6165ee50b4540f3d2c56f7e00725c117c0101f24a95f8"},
+    {file = "fastremap-1.12.2-cp38-cp38-manylinux2010_i686.whl", hash = "sha256:7ff69e1eb1590504a95b8c6e94e9d03503241b36a8f96b07869c3be2055e4758"},
+    {file = "fastremap-1.12.2-cp38-cp38-manylinux2010_x86_64.whl", hash = "sha256:1ce528d646dd75c9b10b6470c74599371d01a4d5e22b3ba1e4dd10eee8e51784"},
+    {file = "fastremap-1.12.2-cp38-cp38-win32.whl", hash = "sha256:d35203e61693b38e5102ea6c7d50088f0b0e4fbe5126853c1cca320e4f428673"},
+    {file = "fastremap-1.12.2-cp38-cp38-win_amd64.whl", hash = "sha256:9eb1d50efe6333cba1f711962cf72afd244003f7fcd22b4a02e7b81d9f5de42d"},
+    {file = "fastremap-1.12.2-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:93f2fcc0ba666514038aca3173625407da53cd7a0fd94602f6e628ef85e0ad79"},
+    {file = "fastremap-1.12.2-cp39-cp39-manylinux2010_i686.whl", hash = "sha256:c23e1f9a68a2cfea4bedf5e25d38f5815b19872f705bc34386bc0abc32a30014"},
+    {file = "fastremap-1.12.2-cp39-cp39-manylinux2010_x86_64.whl", hash = "sha256:dd88b38db6ae4f012ea2fc81d29fa7f9c039afd13a67694280423aad3fbdc796"},
+    {file = "fastremap-1.12.2-cp39-cp39-win32.whl", hash = "sha256:84e2b93213cab92ff5be3fdd03c56d4edfc4662c957291936c54f31695a57d95"},
+    {file = "fastremap-1.12.2-cp39-cp39-win_amd64.whl", hash = "sha256:1159b3f7ac25d7b8152b194d32c8f78cede03bdca994f6a0e5d5d3dd9f37d516"},
+    {file = "fastremap-1.12.2-pp36-pypy36_pp73-manylinux2010_x86_64.whl", hash = "sha256:53422d2d5c511d939f2c061237bde2093a4f6f17591e907bc3e9483df1f51e0c"},
+    {file = "fastremap-1.12.2-pp36-pypy36_pp73-win32.whl", hash = "sha256:09997b95a762d7e1e063222f2745fcaa2768ed2a34949b7c7b3b8677543eaea6"},
+    {file = "fastremap-1.12.2-pp37-pypy37_pp73-manylinux2010_x86_64.whl", hash = "sha256:02447ce47dda3ac1aa8062fc888c7f77f5ad8d8ba96a61e6d79c746bf17ebabb"},
+    {file = "fastremap-1.12.2-pp37-pypy37_pp73-win32.whl", hash = "sha256:5fefd0062d046a775bd1855d45ba8190edb1db80ca4e35ec447bad664328a13c"},
+    {file = "fastremap-1.12.2.tar.gz", hash = "sha256:153cb48c5c2bd4dc9ffb8a859400bb04fe0a90f03c56aaee777f15d98d722f40"},
 ]
 fonttools = [
     {file = "fonttools-4.33.3-py3-none-any.whl", hash = "sha256:f829c579a8678fa939a1d9e9894d01941db869de44390adb49ce67055a06cc2a"},
@@ -2858,6 +2901,17 @@ pygments = [
     {file = "Pygments-2.12.0-py3-none-any.whl", hash = "sha256:dc9c10fb40944260f6ed4c688ece0cd2048414940f1cea51b8b226318411c519"},
     {file = "Pygments-2.12.0.tar.gz", hash = "sha256:5eb116118f9612ff1ee89ac96437bb6b49e8f04d8a13b514ba26f620208e26eb"},
 ]
+pylibCZIrw = [
+    {file = "pylibCZIrw-3.2.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:0a733d70504dcbc3cc35e23751cf0a6c3bb9a37aa29deb3f4887bc931593321c"},
+    {file = "pylibCZIrw-3.2.1-cp310-cp310-win_amd64.whl", hash = "sha256:83f76d0258f4a5e2b28f1f0f658d4972397bc695712e14ff7fda86967a7913ed"},
+    {file = "pylibCZIrw-3.2.1-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:70d3008f8c192afb85a0cfcbba343e9c3e6b78cbfd5cc0836b35c1f0763a5aca"},
+    {file = "pylibCZIrw-3.2.1-cp37-cp37m-win_amd64.whl", hash = "sha256:a4bde3261f58cacf802e0b6b8178dd5a726ee614e2026638ceec23ed8992cf0a"},
+    {file = "pylibCZIrw-3.2.1-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:8a5543d70150a61dbf222b94aaeb044505606a9378840eaba556c25ff5cbf3cd"},
+    {file = "pylibCZIrw-3.2.1-cp38-cp38-win_amd64.whl", hash = "sha256:b9bea0d8cfa3b9f96eebb66a9b28c3bf2bea664bf720dcf0e8c0c60e59d123e7"},
+    {file = "pylibCZIrw-3.2.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:0e30b4a872abde8271964ff1b745a89ad7a7b56b116d4bcb3391dc52cb7759d8"},
+    {file = "pylibCZIrw-3.2.1-cp39-cp39-win_amd64.whl", hash = "sha256:0326745e5d9f919ee9563df02505ba719a40b9e16ec89d874f680a08d7cd2a0a"},
+    {file = "pylibCZIrw-3.2.1.tar.gz", hash = "sha256:053194285265329ef15878d48e046ea377477c90712775a2b744841b5e920283"},
+]
 pylint = [
     {file = "pylint-2.13.8-py3-none-any.whl", hash = "sha256:f87e863a0b08f64b5230e7e779bcb75276346995737b2c0dc2793070487b1ff6"},
     {file = "pylint-2.13.8.tar.gz", hash = "sha256:ced8968c3b699df0615e2a709554dec3ddac2f5cd06efadb69554a69eeca364a"},
@@ -3336,6 +3390,10 @@ wrapt = [
     {file = "wrapt-1.14.1-cp39-cp39-win32.whl", hash = "sha256:dee0ce50c6a2dd9056c20db781e9c1cfd33e77d2d569f5d1d9321c641bb903d5"},
     {file = "wrapt-1.14.1-cp39-cp39-win_amd64.whl", hash = "sha256:dee60e1de1898bde3b238f18340eec6148986da0455d8ba7848d50470a7a32fb"},
     {file = "wrapt-1.14.1.tar.gz", hash = "sha256:380a85cf89e0e69b7cfbe2ea9f765f004ff419f34194018a6827ac0e3edfed4d"},
+]
+xmltodict = [
+    {file = "xmltodict-0.13.0-py2.py3-none-any.whl", hash = "sha256:aa89e8fd76320154a40d19a0df04a4695fb9dc5ba977cbb68ab3e4eb225e7852"},
+    {file = "xmltodict-0.13.0.tar.gz", hash = "sha256:341595a488e3e01a85a9d8911d8912fd922ede5fecc4dce437eb4b6c8d037e56"},
 ]
 yarl = [
     {file = "yarl-1.7.2-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:f2a8508f7350512434e41065684076f640ecce176d262a7d54f0da41d99c5a95"},
