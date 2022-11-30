@@ -290,48 +290,85 @@ class PimsImages:
         For a 2D image this is achieved by wrapping it in a list.
         """
         with warnings.catch_warnings():
-
             if isinstance(self._original_images, pims.FramesSequence):
                 images_context_manager = nullcontext(enter_result=self._original_images)
             else:
-                if self._use_bioformats:
-                    # There is a wrong warning about jpype, supressing it here.
-                    # See issue https://github.com/soft-matter/pims/issues/384
-                    warnings.filterwarnings(
-                        "ignore",
-                        "Due to an issue with JPype 0.6.0, reading is slower.*",
-                        category=UserWarning,
-                        module="pims.bioformats",
-                    )
-                    try:
-                        pims.bioformats._find_jar()
-                    except HTTPError:
-                        # We cannot use the newest bioformats version,
-                        # since it does not include the necessary loci_tools.jar.
-                        # Updates to support newer bioformats jars with pims are in PR
-                        # https://github.com/soft-matter/pims/pull/403
-                        pims.bioformats.download_jar(version="6.7.0")
-                    if "*" in str(self._original_images) or isinstance(
-                        self._original_images, list
-                    ):
-                        images_context_manager = pims.ReaderSequence(
-                            self._original_images, pims.bioformats.BioformatsReader
-                        )
-                    else:
-                        images_context_manager = pims.bioformats.BioformatsReader(
-                            self._original_images
-                        )
+                pims_open_exceptions = []
+                original_images = self._original_images
+                if isinstance(original_images, (str, Path)):
+                    original_images_path = Path(original_images)
+                    if original_images_path.is_dir():
+                        valid_suffixes = get_valid_pims_suffixes()
+                        original_images = [
+                            str(i)
+                            for i in original_images_path.glob("**/*")
+                            if i.is_file() and i.suffix.lstrip(".") in valid_suffixes
+                        ]
+                        if len(original_images) == 1:
+                            original_images = original_images[0]
+                if isinstance(original_images, Path):
+                    original_images = str(original_images)
                 else:
-                    original_images = self._original_images
-                    if isinstance(original_images, Path):
-                        original_images = str(original_images)
+                    try:
+                        if isinstance(original_images[0], Path):
+                            original_images = [str(i) for i in original_images]
+                    except Exception as e2:
+                        pims_open_exceptions.append(e2)
+                if not self._use_bioformats:
                     try:
                         open_kwargs = {}
                         if self._czi_channel is not None:
                             open_kwargs["czi_channel"] = self._czi_channel
                         images_context_manager = pims.open(original_images)
-                    except Exception:
-                        images_context_manager = pims.ImageSequence(original_images)
+                    except Exception as e2:
+                        pims_open_exceptions.append(e2)
+                        try:
+                            images_context_manager = pims.ImageSequence(original_images)
+                        except Exception as e3:
+                            pims_open_exceptions.append(e3)
+                            self._use_bioformats = True
+
+                if self._use_bioformats:
+                    try:
+                        # There is a wrong warning about jpype, supressing it here.
+                        # See issue https://github.com/soft-matter/pims/issues/384
+                        warnings.filterwarnings(
+                            "ignore",
+                            "Due to an issue with JPype 0.6.0, reading is slower.*",
+                            category=UserWarning,
+                            module="pims.bioformats",
+                        )
+                        try:
+                            pims.bioformats._find_jar()
+                        except HTTPError:
+                            # We cannot use the newest bioformats version,
+                            # since it does not include the necessary loci_tools.jar.
+                            # Updates to support newer bioformats jars with pims are in PR
+                            # https://github.com/soft-matter/pims/pull/403
+                            pims.bioformats.download_jar(version="6.7.0")
+                        if "*" in str(original_images) or isinstance(
+                            original_images, list
+                        ):
+                            images_context_manager = pims.ReaderSequence(
+                                original_images, pims.bioformats.BioformatsReader
+                            )
+                        else:
+                            images_context_manager = pims.bioformats.BioformatsReader(
+                                original_images
+                            )
+                    except Exception as e2:
+                        if len(pims_open_exceptions) == 0:
+                            raise
+                        else:
+                            pims_open_exceptions.append(e2)
+                            pims_open_exceptions_str = "\n".join(
+                                f"{type(e).__name__}: {str(e)}"
+                                for e in pims_open_exceptions
+                            )
+                            raise ValueError(
+                                f"Tried to open the images {self._original_images} with different methods, "
+                                + f"none succeded. The following errors were raised:\n{pims_open_exceptions_str}"
+                            ) from None
 
             with images_context_manager as images:
                 if isinstance(images, pims.FramesSequenceND):
