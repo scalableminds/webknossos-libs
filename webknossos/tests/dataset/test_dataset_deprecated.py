@@ -132,7 +132,7 @@ def copy_and_transform_job(args: Tuple[View, View, int], name: str, val: int) ->
 
 
 def get_multichanneled_data(dtype: type) -> np.ndarray:
-    data = np.zeros((3, 250, 200, 10), dtype=dtype)
+    data: np.ndarray = np.zeros((3, 250, 200, 10), dtype=dtype)
     for h in range(10):
         for i in range(250):
             for j in range(200):
