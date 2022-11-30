@@ -76,11 +76,14 @@ REPO_IMAGES_ARGS: List[
         (1024, 1024, 12),
     ),
     (
-        "testdata/temca2/*/*/*.jpg",
+        "testdata/temca2",
         {"flip_z": True, "batch_size": 2048},
         "uint8",
         1,
-        (1024, 1024, 12),
+        # The topmost folder contains an extra image,
+        # which is included here as well, but not in
+        # the glob pattern above. Therefore z is +1.
+        (1024, 1024, 13),
     ),
     (
         "testdata/tiff_with_different_dimensions/*",

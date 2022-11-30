@@ -17,8 +17,10 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Added
 
 ### Changed
+- `Dataset.from_images` and `dataset.add_layer_from_images` now try to import the images via the [bioformats](https://www.openmicroscopy.org/bio-formats) after all other options as well. [#829](https://github.com/scalableminds/webknossos-libs/pull/829)
 
 ### Fixed
+- `dataset.add_layer_from_images` can now handle paths to folders which only contain a single image. [#829](https://github.com/scalableminds/webknossos-libs/pull/829)
 
 
 ## [0.10.25](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.25) - 2022-11-29
