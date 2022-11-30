@@ -1,4 +1,5 @@
 import logging
+from abc import abstractmethod
 from pathlib import Path
 from typing import Dict, Optional, Tuple, Union
 
@@ -15,6 +16,7 @@ Image.MAX_IMAGE_PIXELS = None
 
 
 class ImageReader:
+    @abstractmethod
     def read_array(
         self,
         file_name: Path,
@@ -25,9 +27,11 @@ class ImageReader:
     ) -> np.ndarray:
         pass
 
+    @abstractmethod
     def read_dimensions(self, file_name: Path) -> Tuple[int, int]:
         pass
 
+    @abstractmethod
     def read_channel_count(self, file_name: Path) -> int:
         pass
 

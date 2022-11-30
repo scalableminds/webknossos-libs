@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Literal, Optional, Tuple
 
 import numpy as np
 import pytest
@@ -9,7 +9,9 @@ from wkcuber.convert_raw import create_parser, main
 
 @pytest.mark.parametrize("order", ["F", "C"])
 @pytest.mark.parametrize("flip_axes", [None, (1, 2)])
-def test_main(tmp_path: Path, order: str, flip_axes: Optional[Tuple[int, int]]) -> None:
+def test_main(
+    tmp_path: Path, order: Literal["C", "F"], flip_axes: Optional[Tuple[int, int]]
+) -> None:
     raw_file = tmp_path / "input.raw"
 
     input_dtype = "float32"

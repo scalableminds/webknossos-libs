@@ -2,11 +2,10 @@ import argparse
 import logging
 from functools import partial
 from pathlib import Path
-from typing import Optional, Tuple, Union
-
-from cluster_tools import Executor
+from typing import Literal, Optional, Tuple, Union
 
 import numpy as np
+from cluster_tools import Executor
 from webknossos import BoundingBox, DataFormat, Dataset, Mag, MagView, Vec3Int
 from webknossos.utils import (
     get_executor_for_args,
@@ -141,12 +140,16 @@ def _raw_chunk_converter(
     target_mag_view: MagView,
     input_dtype: str,
     shape: Tuple[int, int, int],
-    order: str,
+    order: Literal["C", "F"],
     flip_axes: Optional[Union[int, Tuple[int, ...]]],
 ) -> None:
     logging.info(f"Conversion of {bounding_box.topleft}")
-    source_data: np.memmap = np.memmap(
-        source_raw_path, dtype=input_dtype, mode="r", shape=(1,) + shape, order=order
+    source_data: np.ndarray = np.memmap(
+        source_raw_path,
+        dtype=np.dtype(input_dtype),
+        mode="r",
+        shape=(1,) + shape,
+        order=order,
     )
 
     if flip_axes:
