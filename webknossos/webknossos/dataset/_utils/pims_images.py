@@ -295,12 +295,10 @@ class PimsImages:
                     original_images = original_images[0]
         if isinstance(original_images, str):
             return original_images
-        try:
-            if isinstance(original_images[0], Path):  # type: ignore
-                return [str(i) for i in original_images]  # type: ignore[union-attr]
-        except Exception:
-            pass
-        return str(original_images)
+        elif isinstance(original_images, Iterable):
+            return [str(i) for i in original_images]
+        else:
+            return str(original_images)
 
     def _open_bioformats_images_raw(
         self,
