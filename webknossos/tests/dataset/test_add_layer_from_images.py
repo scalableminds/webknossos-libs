@@ -62,7 +62,7 @@ REPO_IMAGES_ARGS: List[
         (64, 64, 2),
     ),
     (
-        "testdata/rgb_tiff/test_rgb.tif",
+        "testdata/rgb_tiff",
         {"mag": 2, "channel": 1, "dtype": "uint32"},
         "uint32",
         1,
@@ -76,6 +76,16 @@ REPO_IMAGES_ARGS: List[
         (1024, 1024, 12),
     ),
     (
+        "testdata/temca2",
+        {"flip_z": True, "batch_size": 2048},
+        "uint8",
+        1,
+        # The topmost folder contains an extra image,
+        # which is included here as well, but not in
+        # the glob pattern above. Therefore z is +1.
+        (1024, 1024, 13),
+    ),
+    (
         "testdata/tiff_with_different_dimensions/*",
         {"flip_y": True},
         "uint8",
@@ -84,6 +94,8 @@ REPO_IMAGES_ARGS: List[
     ),
     ("testdata/various_tiff_formats/test_CS.tif", {}, "uint8", 3, (128, 128, 320)),
     ("testdata/various_tiff_formats/test_C.tif", {}, "uint8", 1, (128, 128, 320)),
+    # same as test_C.tif above, but as a single file in a folder:
+    ("testdata/single_multipage_tiff_folder", {}, "uint8", 1, (128, 128, 320)),
     ("testdata/various_tiff_formats/test_I.tif", {}, "uint32", 1, (64, 128, 64)),
     ("testdata/various_tiff_formats/test_S.tif", {}, "uint16", 3, (128, 128, 64)),
 ]
