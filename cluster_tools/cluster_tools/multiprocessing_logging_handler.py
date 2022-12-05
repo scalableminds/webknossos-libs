@@ -51,7 +51,6 @@ class MultiProcessingHandler(logging.Handler):
                 if record is not None:
                     self.wrapped_handler.emit(record)
             except (KeyboardInterrupt, SystemExit):  # pylint: disable=try-except-raise
-                self.close()
                 raise
             # The following errors pop up quite often.
             # It seems that they can be safely ignored, though.
