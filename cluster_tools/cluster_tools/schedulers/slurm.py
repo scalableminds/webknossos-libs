@@ -200,6 +200,25 @@ class SlurmExecutor(ClusterExecutor):
     def handle_kill(self, *args, **kwargs):
         for submit_thread in self.submit_threads:
             submit_thread.stop()
+
+        # Jobs with a "pending" state have not been submitted to the cluster yet
+        scheduled_job_ids = [
+            job_id for job_id, job_state in self.jobs.items() if job_state != "pending"
+        ]
+
+        if len(scheduled_job_ids):
+            # Array jobs (whose id looks like `<job_id>_<array_index>`) don't need to be canceled individually,
+            # but can be canceled together using the job_id
+            unique_job_ids = set(map(lambda x: x.split("_")[0], scheduled_job_ids))
+            _stdout, stderr, exit_code = call(f"scancel {' '.join(unique_job_ids)}")
+
+            if exit_code == 0:
+                logging.debug(f"Canceled slurm jobs {', '.join(unique_job_ids)}.")
+            else:
+                logging.warning(
+                    f"Couldn't automatically cancel all slurm jobs. Reason: {stderr}"
+                )
+
         super().handle_kill(*args, **kwargs)
 
     def cleanup_submit_threads(self):

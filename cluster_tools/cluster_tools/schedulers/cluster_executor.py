@@ -111,12 +111,6 @@ class ClusterExecutor(futures.Executor):
 
     def handle_kill(self, _signum, _frame):
         self.wait_thread.stop()
-        job_ids = ",".join(str(id) for id in self.jobs.keys())
-        logging.debug(
-            "A termination signal was registered. The following jobs are still running on the cluster:\n{}".format(
-                job_ids
-            )
-        )
         sys.exit(130)
 
     @abstractmethod

@@ -53,6 +53,29 @@ class PBSExecutor(ClusterExecutor):
     def get_job_id_string(cls):
         return cls.get_current_job_id()
 
+    def handle_kill(self, *args, **kwargs):
+        scheduled_job_ids = list(self.jobs.keys())
+
+        if len(scheduled_job_ids):
+            # Array jobs (whose id looks like `<job_id>_<array_index>`) don't need to be canceled individually,
+            # but can be canceled together using the job_id.
+            split_job_ids = map(lambda x: x.split("_"), scheduled_job_ids)
+            # However array job ids need to include [] in the end.
+            unique_job_ids = set(
+                job_id_parts[0] if len(job_id_parts) == 1 else f"{job_id_parts[0]}[]"
+                for job_id_parts in split_job_ids
+            )
+            _stdout, stderr, exit_code = call(f"qdel {' '.join(unique_job_ids)}")
+
+            if exit_code == 0:
+                logging.debug(f"Canceled PBS jobs {', '.join(unique_job_ids)}.")
+            else:
+                logging.warning(
+                    f"Couldn't automatically cancel all PBS jobs. Reason: {stderr}"
+                )
+
+        super().handle_kill(*args, **kwargs)
+
     def submit_text(self, job):
         """Submits a PBS job represented as a job file string. Returns
         the job ID.
