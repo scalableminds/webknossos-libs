@@ -67,12 +67,11 @@ class PBSExecutor(ClusterExecutor):
             )
             _stdout, stderr, exit_code = call(f"qdel {' '.join(unique_job_ids)}")
 
+            # Avoid using the logging module during shutdown to avoid additional errors
             if exit_code == 0:
-                logging.debug(f"Canceled PBS jobs {', '.join(unique_job_ids)}.")
+                print(f"Canceled PBS jobs {', '.join(unique_job_ids)}.")
             else:
-                logging.warning(
-                    f"Couldn't automatically cancel all PBS jobs. Reason: {stderr}"
-                )
+                print(f"Couldn't automatically cancel all PBS jobs. Reason: {stderr}")
 
         super().handle_kill(*args, **kwargs)
 

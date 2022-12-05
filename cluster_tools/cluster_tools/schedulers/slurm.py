@@ -212,12 +212,11 @@ class SlurmExecutor(ClusterExecutor):
             unique_job_ids = set(map(lambda x: x.split("_")[0], scheduled_job_ids))
             _stdout, stderr, exit_code = call(f"scancel {' '.join(unique_job_ids)}")
 
+            # Avoid using the logging module during shutdown to avoid additional errors
             if exit_code == 0:
-                logging.debug(f"Canceled slurm jobs {', '.join(unique_job_ids)}.")
+                print(f"Canceled slurm jobs {', '.join(unique_job_ids)}.")
             else:
-                logging.warning(
-                    f"Couldn't automatically cancel all slurm jobs. Reason: {stderr}"
-                )
+                print(f"Couldn't automatically cancel all slurm jobs. Reason: {stderr}")
 
         super().handle_kill(*args, **kwargs)
 

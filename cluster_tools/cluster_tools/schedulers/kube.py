@@ -1,6 +1,5 @@
 """Abstracts access to a Kubernetes cluster via its Python library."""
 import concurrent
-import logging
 import os
 import re
 import sys
@@ -84,7 +83,9 @@ class KubernetesExecutor(ClusterExecutor):
 
     def handle_kill(self, *args, **kwargs):
         job_ids = ",".join(str(id) for id in self.jobs.keys())
-        logging.debug(
+
+        # Avoid using the logging module during shutdown to avoid additional errors
+        print(
             "Couldn't automatically cancel all Kubernetes jobs. The following jobs are still running on the cluster:\n{}".format(
                 job_ids
             )
