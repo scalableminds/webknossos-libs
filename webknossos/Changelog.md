@@ -10,17 +10,26 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.25...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.26...HEAD)
 
 ### Breaking Changes
 
 ### Added
 
 ### Changed
+
+### Fixed
+
+
+## [0.10.26](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.26) - 2022-12-05
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.25...v0.10.26)
+
+### Changed
 - `Dataset.from_images` and `dataset.add_layer_from_images` now try to import the images via the [bioformats](https://www.openmicroscopy.org/bio-formats) after all other options as well. [#829](https://github.com/scalableminds/webknossos-libs/pull/829)
 
 ### Fixed
 - `dataset.add_layer_from_images` can now handle paths to folders which only contain a single image. [#829](https://github.com/scalableminds/webknossos-libs/pull/829)
+
 
 
 ## [0.10.25](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.25) - 2022-11-29
