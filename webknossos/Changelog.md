@@ -19,6 +19,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+- Fixed bounding box serialization in NMLs, so that bounding boxes which are uploaded via annotations are now recognized properly by webKnossos. [#836](https://github.com/scalableminds/webknossos-libs/pull/836)
 
 
 ## [0.10.26](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.26) - 2022-12-05
