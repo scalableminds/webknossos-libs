@@ -15,6 +15,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes
 
 ### Added
+- Short links, such as `https://webknossos.org/links/93zLg9U9vJ3c_UWp`, are now supported for dataset and annotation urls in `download` and `open_remote` methods. [#837](https://github.com/scalableminds/webknossos-libs/pull/837)
 
 ### Changed
 
