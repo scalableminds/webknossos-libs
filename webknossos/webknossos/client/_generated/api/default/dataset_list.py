@@ -16,6 +16,9 @@ def _get_kwargs(
     organization_name: Union[Unset, None, str] = UNSET,
     only_my_organization: Union[Unset, None, bool] = UNSET,
     uploader_id: Union[Unset, None, str] = UNSET,
+    folder_id: Union[Unset, None, str] = UNSET,
+    search_query: Union[Unset, None, str] = UNSET,
+    limit: Union[Unset, None, int] = UNSET,
 ) -> Dict[str, Any]:
     url = "{}/api/datasets".format(client.base_url)
 
@@ -29,6 +32,9 @@ def _get_kwargs(
         "organizationName": organization_name,
         "onlyMyOrganization": only_my_organization,
         "uploaderId": uploader_id,
+        "folderId": folder_id,
+        "searchQuery": search_query,
+        "limit": limit,
     }
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -78,6 +84,9 @@ def sync_detailed(
     organization_name: Union[Unset, None, str] = UNSET,
     only_my_organization: Union[Unset, None, bool] = UNSET,
     uploader_id: Union[Unset, None, str] = UNSET,
+    folder_id: Union[Unset, None, str] = UNSET,
+    search_query: Union[Unset, None, str] = UNSET,
+    limit: Union[Unset, None, int] = UNSET,
 ) -> Response[List[DatasetListResponse200Item]]:
     kwargs = _get_kwargs(
         client=client,
@@ -87,6 +96,9 @@ def sync_detailed(
         organization_name=organization_name,
         only_my_organization=only_my_organization,
         uploader_id=uploader_id,
+        folder_id=folder_id,
+        search_query=search_query,
+        limit=limit,
     )
 
     response = httpx.get(
@@ -105,6 +117,9 @@ def sync(
     organization_name: Union[Unset, None, str] = UNSET,
     only_my_organization: Union[Unset, None, bool] = UNSET,
     uploader_id: Union[Unset, None, str] = UNSET,
+    folder_id: Union[Unset, None, str] = UNSET,
+    search_query: Union[Unset, None, str] = UNSET,
+    limit: Union[Unset, None, int] = UNSET,
 ) -> Optional[List[DatasetListResponse200Item]]:
     """ """
 
@@ -116,6 +131,9 @@ def sync(
         organization_name=organization_name,
         only_my_organization=only_my_organization,
         uploader_id=uploader_id,
+        folder_id=folder_id,
+        search_query=search_query,
+        limit=limit,
     ).parsed
 
 
@@ -128,6 +146,9 @@ async def asyncio_detailed(
     organization_name: Union[Unset, None, str] = UNSET,
     only_my_organization: Union[Unset, None, bool] = UNSET,
     uploader_id: Union[Unset, None, str] = UNSET,
+    folder_id: Union[Unset, None, str] = UNSET,
+    search_query: Union[Unset, None, str] = UNSET,
+    limit: Union[Unset, None, int] = UNSET,
 ) -> Response[List[DatasetListResponse200Item]]:
     kwargs = _get_kwargs(
         client=client,
@@ -137,6 +158,9 @@ async def asyncio_detailed(
         organization_name=organization_name,
         only_my_organization=only_my_organization,
         uploader_id=uploader_id,
+        folder_id=folder_id,
+        search_query=search_query,
+        limit=limit,
     )
 
     async with httpx.AsyncClient() as _client:
@@ -154,6 +178,9 @@ async def asyncio(
     organization_name: Union[Unset, None, str] = UNSET,
     only_my_organization: Union[Unset, None, bool] = UNSET,
     uploader_id: Union[Unset, None, str] = UNSET,
+    folder_id: Union[Unset, None, str] = UNSET,
+    search_query: Union[Unset, None, str] = UNSET,
+    limit: Union[Unset, None, int] = UNSET,
 ) -> Optional[List[DatasetListResponse200Item]]:
     """ """
 
@@ -166,5 +193,8 @@ async def asyncio(
             organization_name=organization_name,
             only_my_organization=only_my_organization,
             uploader_id=uploader_id,
+            folder_id=folder_id,
+            search_query=search_query,
+            limit=limit,
         )
     ).parsed

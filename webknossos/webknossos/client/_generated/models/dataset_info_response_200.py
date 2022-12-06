@@ -2,6 +2,9 @@ from typing import Any, Dict, List, Type, TypeVar, Union
 
 import attr
 
+from ..models.dataset_info_response_200_allowed_teams_cumulative_item import (
+    DatasetInfoResponse200AllowedTeamsCumulativeItem,
+)
 from ..models.dataset_info_response_200_allowed_teams_item import (
     DatasetInfoResponse200AllowedTeamsItem,
 )
@@ -31,6 +34,9 @@ class DatasetInfoResponse200:
     created: int
     tags: List[Any]
     owning_organization: Union[Unset, str] = UNSET
+    allowed_teams_cumulative: Union[
+        Unset, List[DatasetInfoResponse200AllowedTeamsCumulativeItem]
+    ] = UNSET
     is_editable: Union[Unset, int] = UNSET
     last_used_by_user: Union[Unset, int] = UNSET
     logo_url: Union[Unset, str] = UNSET
@@ -38,6 +44,7 @@ class DatasetInfoResponse200:
     details: Union[Unset, str] = UNSET
     is_unreported: Union[Unset, int] = UNSET
     jobs_enabled: Union[Unset, int] = UNSET
+    folder_id: Union[Unset, str] = UNSET
     publication: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
@@ -65,6 +72,16 @@ class DatasetInfoResponse200:
             tags.append(tags_item)
 
         owning_organization = self.owning_organization
+        allowed_teams_cumulative: Union[Unset, List[Dict[str, Any]]] = UNSET
+        if not isinstance(self.allowed_teams_cumulative, Unset):
+            allowed_teams_cumulative = []
+            for allowed_teams_cumulative_item_data in self.allowed_teams_cumulative:
+                allowed_teams_cumulative_item = (
+                    allowed_teams_cumulative_item_data.to_dict()
+                )
+
+                allowed_teams_cumulative.append(allowed_teams_cumulative_item)
+
         is_editable = self.is_editable
         last_used_by_user = self.last_used_by_user
         logo_url = self.logo_url
@@ -72,6 +89,7 @@ class DatasetInfoResponse200:
         details = self.details
         is_unreported = self.is_unreported
         jobs_enabled = self.jobs_enabled
+        folder_id = self.folder_id
         publication = self.publication
 
         field_dict: Dict[str, Any] = {}
@@ -92,6 +110,8 @@ class DatasetInfoResponse200:
         )
         if owning_organization is not UNSET:
             field_dict["owningOrganization"] = owning_organization
+        if allowed_teams_cumulative is not UNSET:
+            field_dict["allowedTeamsCumulative"] = allowed_teams_cumulative
         if is_editable is not UNSET:
             field_dict["isEditable"] = is_editable
         if last_used_by_user is not UNSET:
@@ -106,6 +126,8 @@ class DatasetInfoResponse200:
             field_dict["isUnreported"] = is_unreported
         if jobs_enabled is not UNSET:
             field_dict["jobsEnabled"] = jobs_enabled
+        if folder_id is not UNSET:
+            field_dict["folderId"] = folder_id
         if publication is not UNSET:
             field_dict["publication"] = publication
 
@@ -148,6 +170,17 @@ class DatasetInfoResponse200:
 
         owning_organization = d.pop("owningOrganization", UNSET)
 
+        allowed_teams_cumulative = []
+        _allowed_teams_cumulative = d.pop("allowedTeamsCumulative", UNSET)
+        for allowed_teams_cumulative_item_data in _allowed_teams_cumulative or []:
+            allowed_teams_cumulative_item = (
+                DatasetInfoResponse200AllowedTeamsCumulativeItem.from_dict(
+                    allowed_teams_cumulative_item_data
+                )
+            )
+
+            allowed_teams_cumulative.append(allowed_teams_cumulative_item)
+
         is_editable = d.pop("isEditable", UNSET)
 
         last_used_by_user = d.pop("lastUsedByUser", UNSET)
@@ -161,6 +194,8 @@ class DatasetInfoResponse200:
         is_unreported = d.pop("isUnreported", UNSET)
 
         jobs_enabled = d.pop("jobsEnabled", UNSET)
+
+        folder_id = d.pop("folderId", UNSET)
 
         publication = d.pop("publication", UNSET)
 
@@ -176,6 +211,7 @@ class DatasetInfoResponse200:
             created=created,
             tags=tags,
             owning_organization=owning_organization,
+            allowed_teams_cumulative=allowed_teams_cumulative,
             is_editable=is_editable,
             last_used_by_user=last_used_by_user,
             logo_url=logo_url,
@@ -183,6 +219,7 @@ class DatasetInfoResponse200:
             details=details,
             is_unreported=is_unreported,
             jobs_enabled=jobs_enabled,
+            folder_id=folder_id,
             publication=publication,
         )
 

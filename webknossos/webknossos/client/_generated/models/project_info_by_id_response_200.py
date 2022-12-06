@@ -21,6 +21,7 @@ class ProjectInfoByIdResponse200:
     paused: int
     expected_time: int
     id: str
+    created: int
     owner: Union[Unset, ProjectInfoByIdResponse200Owner] = UNSET
     is_blacklisted_from_report: Union[Unset, int] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
@@ -33,6 +34,7 @@ class ProjectInfoByIdResponse200:
         paused = self.paused
         expected_time = self.expected_time
         id = self.id
+        created = self.created
         owner: Union[Unset, Dict[str, Any]] = UNSET
         if not isinstance(self.owner, Unset):
             owner = self.owner.to_dict()
@@ -50,6 +52,7 @@ class ProjectInfoByIdResponse200:
                 "paused": paused,
                 "expectedTime": expected_time,
                 "id": id,
+                "created": created,
             }
         )
         if owner is not UNSET:
@@ -76,6 +79,8 @@ class ProjectInfoByIdResponse200:
 
         id = d.pop("id")
 
+        created = d.pop("created")
+
         _owner = d.pop("owner", UNSET)
         owner: Union[Unset, ProjectInfoByIdResponse200Owner]
         if isinstance(_owner, Unset):
@@ -93,6 +98,7 @@ class ProjectInfoByIdResponse200:
             paused=paused,
             expected_time=expected_time,
             id=id,
+            created=created,
             owner=owner,
             is_blacklisted_from_report=is_blacklisted_from_report,
         )
