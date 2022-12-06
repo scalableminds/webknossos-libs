@@ -243,7 +243,7 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
 
     short_link_key = httpx.post(
         url=f"{WK_URL}/api/shortLinks",
-        json=f"{WK_URL}",
+        json=WK_URL,
         headers={"X-Auth-Token": f"{WK_TOKEN}"},
     ).json()["key"]
 
