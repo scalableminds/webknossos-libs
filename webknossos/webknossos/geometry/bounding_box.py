@@ -9,6 +9,8 @@ import numpy as np
 from .mag import Mag
 from .vec3_int import Vec3Int, Vec3IntLike
 
+_DEFAULT_BBOX_NAME = "Unnamed Bounding Box"
+
 
 @attr.frozen
 class BoundingBox:
@@ -31,7 +33,7 @@ class BoundingBox:
     topleft: Vec3Int = attr.field(converter=Vec3Int)
     size: Vec3Int = attr.field(converter=Vec3Int)
     bottomright: Vec3Int = attr.field(init=False)
-    name: Optional[str] = "Unnamed Bounding Box"
+    name: Optional[str] = _DEFAULT_BBOX_NAME
     is_visible: bool = True
     id: Optional[str] = None
     color: Optional[Tuple[float, float, float, float]] = None

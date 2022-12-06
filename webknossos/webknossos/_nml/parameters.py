@@ -4,6 +4,7 @@ from xml.etree.ElementTree import Element
 from loxun import XmlWriter
 
 from webknossos.geometry import BoundingBox
+from webknossos.geometry.bounding_box import _DEFAULT_BBOX_NAME
 
 from .utils import Vector3, enforce_not_null, filter_none_values
 
@@ -25,8 +26,21 @@ class Parameters(NamedTuple):
     taskBoundingBox: Optional[BoundingBox] = None
     userBoundingBoxes: Optional[List[BoundingBox]] = None
 
+    def _get_max_bbox_id(self) -> int:
+        bboxes = []
+        if self.taskBoundingBox is not None:
+            bboxes.append(self.taskBoundingBox)
+        if self.userBoundingBoxes is not None:
+            bboxes += self.userBoundingBoxes
+        ids = filter(lambda x: x is not None, (i.id for i in bboxes))
+        return max(ids, default=0)
+
     def _dump_bounding_box(
-        self, xf: XmlWriter, bounding_box: BoundingBox, tag_name: Text
+        self,
+        xf: XmlWriter,
+        bounding_box: BoundingBox,
+        tag_name: Text,
+        next_bbox_id: int,
     ) -> None:
 
         color = bounding_box.color or DEFAULT_BOUNDING_BOX_COLOR
@@ -34,8 +48,10 @@ class Parameters(NamedTuple):
         xf.tag(
             tag_name,
             {
-                "id": str(bounding_box.id),
-                "name": str(bounding_box.name),
+                "id": next_bbox_id if bounding_box.id is None else str(bounding_box.id),
+                "name": _DEFAULT_BBOX_NAME
+                if bounding_box.name is None
+                else str(bounding_box.name),
                 "isVisible": "true" if bounding_box.is_visible else "false",
                 "color.r": str(color[0]),
                 "color.g": str(color[1]),
@@ -53,15 +69,23 @@ class Parameters(NamedTuple):
     def _dump_task_bounding_box(self, xf: XmlWriter) -> None:
         task_bounding_box = getattr(self, "taskBoundingBox")
         if task_bounding_box is not None:
-            self._dump_bounding_box(xf, task_bounding_box, "taskBoundingBox")
+            next_bbox_id = self._get_max_bbox_id() + 1
+            self._dump_bounding_box(
+                xf, task_bounding_box, "taskBoundingBox", next_bbox_id
+            )
 
     def _dump_user_bounding_boxes(self, xf: XmlWriter) -> None:
         user_bounding_boxes = getattr(self, "userBoundingBoxes")
 
         if user_bounding_boxes is not None:
+            next_bbox_id = self._get_max_bbox_id() + 2
             # pylint: disable=not-an-iterable
-            for user_bounding_box in user_bounding_boxes:
-                self._dump_bounding_box(xf, user_bounding_box, "userBoundingBox")
+            for next_bbox_id, user_bounding_box in enumerate(
+                user_bounding_boxes, start=next_bbox_id
+            ):
+                self._dump_bounding_box(
+                    xf, user_bounding_box, "userBoundingBox", next_bbox_id
+                )
 
     def _dump(self, xf: XmlWriter) -> None:
         xf.startTag("parameters")
