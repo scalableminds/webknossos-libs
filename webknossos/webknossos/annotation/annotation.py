@@ -272,11 +272,14 @@ class Annotation:
         * `_return_context` should not be set.
         """
         from webknossos.client._generated.api.default import annotation_download
+        from webknossos.client._resolve_short_link import resolve_short_link
         from webknossos.client.context import (
             _get_context,
             _get_generated_client,
             webknossos_context,
         )
+
+        annotation_id_or_url = resolve_short_link(annotation_id_or_url)
 
         match = re.match(_ANNOTATION_URL_REGEX, annotation_id_or_url)
         if match is not None:

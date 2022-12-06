@@ -90,13 +90,13 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
         generate_token_for_data_store,
         project_info_by_id,
         project_info_by_name,
+        short_link_by_key,
         task_info,
         task_infos_by_project_id,
         team_list,
         user_info_by_id,
         user_list,
         user_logged_time,
-        short_link_by_key,
     )
     from webknossos.client.context import _get_generated_client
     from webknossos.utils import snake_to_camel_case

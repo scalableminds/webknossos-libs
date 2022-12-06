@@ -134,11 +134,16 @@ def test_annotation_from_file_with_multi_volume() -> None:
             pass
 
 
-def test_annotation_from_url() -> None:
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://webknossos.org/annotations/61c20205010000cc004a6356",
+        "https://webknossos.org/links/LNir_A2-aCUzsoSL",
+    ],
+)
+def test_annotation_from_url(url: str) -> None:
 
-    annotation = wk.Annotation.download(
-        "https://webknossos.org/annotations/61c20205010000cc004a6356"
-    )
+    annotation = wk.Annotation.download(url)
     assert annotation.dataset_name == "l4dense_motta_et_al_demo_v2"
     assert len(list(annotation.skeleton.flattened_trees())) == 1
 
