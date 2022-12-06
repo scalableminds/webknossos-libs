@@ -116,7 +116,7 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
     )
     response = httpx.get(
         url=f"{WK_URL}/api/datasets/{organization_id}/{dataset_name}",
-        headers={"X-Auth-Token": f"{WK_TOKEN}"},
+        headers={"X-Auth-Token": WK_TOKEN},
     )
     assert (
         response.status_code == 200 and response.json()["isActive"]
@@ -244,7 +244,7 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
     short_link_key = httpx.post(
         url=f"{WK_URL}/api/shortLinks",
         json=WK_URL,
-        headers={"X-Auth-Token": f"{WK_TOKEN}"},
+        headers={"X-Auth-Token": WK_TOKEN},
     ).json()["key"]
 
     yield (
