@@ -187,10 +187,7 @@ def test_slurm_deferred_submit_shutdown():
         for submit_thread in executor.submit_threads:
             assert submit_thread.is_alive()
 
-        with pytest.raises(SystemExit) as pytest_wrapped_e:
-            executor.handle_kill(None, None)
-        assert pytest_wrapped_e.type == SystemExit
-        assert pytest_wrapped_e.value.code == 130
+        executor.handle_kill(None, None)
 
         # Wait for the threads to die down, but less than it would take to submit all jobs
         # which would take ~5 seconds since only one job is scheduled at a time
@@ -198,9 +195,8 @@ def test_slurm_deferred_submit_shutdown():
             submit_thread.join(1)
             assert not submit_thread.is_alive()
 
-        # Wait for scheduled jobs to finish, so that the queue is empty again
-        while executor.get_number_of_submitted_jobs() > 0:
-            time.sleep(0.5)
+        # Killing the executor should have canceled all submitted jobs
+        assert executor.get_number_of_submitted_jobs() == 0
 
     finally:
         _, _, exit_code = call(
