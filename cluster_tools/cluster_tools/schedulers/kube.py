@@ -84,7 +84,6 @@ class KubernetesExecutor(ClusterExecutor):
     def handle_kill(self, *args, **kwargs):
         job_ids = ",".join(str(id) for id in self.jobs.keys())
 
-        # Avoid using the logging module during shutdown to avoid additional errors
         print(
             "Couldn't automatically cancel all Kubernetes jobs. The following jobs are still running on the cluster:\n{}".format(
                 job_ids
