@@ -93,7 +93,6 @@ class ClusterExecutor(futures.Executor):
         os.makedirs(self.cfut_dir, exist_ok=True)
 
         signal.signal(signal.SIGINT, self.handle_kill)
-        signal.signal(signal.SIGTERM, self.handle_kill)
 
         self.meta_data = {}
         assert not (
@@ -111,7 +110,6 @@ class ClusterExecutor(futures.Executor):
 
     def handle_kill(self, _signum, _frame):
         self.wait_thread.stop()
-        sys.exit(130)
 
     @abstractmethod
     def check_job_state(
