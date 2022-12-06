@@ -32,7 +32,13 @@ class Parameters(NamedTuple):
             bboxes.append(self.taskBoundingBox)
         if self.userBoundingBoxes is not None:
             bboxes += self.userBoundingBoxes
-        ids = filter(lambda x: x is not None, (i.id for i in bboxes))
+        ids = []
+        for bbox in bboxes:
+            if bbox.id is not None:
+                try:
+                    ids.append(int(bbox.id))
+                except ValueError:
+                    pass
         return max(ids, default=0)
 
     def _dump_bounding_box(
