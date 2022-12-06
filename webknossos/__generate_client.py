@@ -96,6 +96,7 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
         user_info_by_id,
         user_list,
         user_logged_time,
+        short_link_by_key,
     )
     from webknossos.client.context import _get_generated_client
     from webknossos.utils import snake_to_camel_case
@@ -240,6 +241,22 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
         ),
     )
 
+    short_link_key = httpx.post(
+        url=f"{WK_URL}/api/shortLinks",
+        json=f"{WK_URL}",
+        headers={"X-Auth-Token": f"{WK_TOKEN}"},
+    ).json()["key"]
+
+    yield (
+        "shortLinkByKey",
+        extract_200_response(
+            short_link_by_key.sync_detailed(
+                key=short_link_key,
+                client=client,
+            ),
+        ),
+    )
+
     for api_endpoint in [
         datastore_list,
         build_info,
@@ -322,6 +339,8 @@ REQUIRED_KEYS = {
     "tags",
     "isPublic",
     "allowedTeams",
+    ##### Short links ####
+    "longLink",
 }
 
 # Those key-pairs of (parent-key, child-key) mark exceptions
