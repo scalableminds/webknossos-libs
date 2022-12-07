@@ -368,9 +368,12 @@ class Dataset:
         * organization_id,
         * sharing_token.
         """
+        from webknossos.client._resolve_short_link import resolve_short_link
         from webknossos.client.context import _get_context, webknossos_context
 
         caller = inspect.stack()[1].function
+
+        dataset_name_or_url = resolve_short_link(dataset_name_or_url)
 
         match = re.match(_DATASET_URL_REGEX, dataset_name_or_url)
         if match is not None:
