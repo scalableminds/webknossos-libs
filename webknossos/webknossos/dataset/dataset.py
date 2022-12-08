@@ -1772,7 +1772,7 @@ class RemoteDataset(Dataset):
             if hasattr(self, "_properties"):
                 warnings.warn(
                     f"Cannot open remote webknossos dataset {dataset_path} as zarr. "
-                    + f"Returning a stub dataset instead, accessing metadata properties might still work.",
+                    + "Returning a stub dataset instead, accessing metadata properties might still work.",
                     RuntimeWarning,
                 )
                 self.path = None  # type: ignore[assignment]
