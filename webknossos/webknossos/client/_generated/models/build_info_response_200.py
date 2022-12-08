@@ -15,7 +15,6 @@ T = TypeVar("T", bound="BuildInfoResponse200")
 class BuildInfoResponse200:
     """ """
 
-    token: str
     webknossos: Union[Unset, BuildInfoResponse200Webknossos] = UNSET
     webknossos_wrap: Union[Unset, BuildInfoResponse200WebknossosWrap] = UNSET
     schema_version: Union[Unset, int] = UNSET
@@ -24,7 +23,6 @@ class BuildInfoResponse200:
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        token = self.token
         webknossos: Union[Unset, Dict[str, Any]] = UNSET
         if not isinstance(self.webknossos, Unset):
             webknossos = self.webknossos.to_dict()
@@ -39,11 +37,7 @@ class BuildInfoResponse200:
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update(
-            {
-                "token": token,
-            }
-        )
+        field_dict.update({})
         if webknossos is not UNSET:
             field_dict["webknossos"] = webknossos
         if webknossos_wrap is not UNSET:
@@ -60,8 +54,6 @@ class BuildInfoResponse200:
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        token = d.pop("token")
-
         _webknossos = d.pop("webknossos", UNSET)
         webknossos: Union[Unset, BuildInfoResponse200Webknossos]
         if isinstance(_webknossos, Unset):
@@ -85,7 +77,6 @@ class BuildInfoResponse200:
         local_tracing_store_enabled = d.pop("localTracingStoreEnabled", UNSET)
 
         build_info_response_200 = cls(
-            token=token,
             webknossos=webknossos,
             webknossos_wrap=webknossos_wrap,
             schema_version=schema_version,

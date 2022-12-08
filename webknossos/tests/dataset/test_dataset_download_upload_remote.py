@@ -31,6 +31,7 @@ def sample_dataset(sample_bbox: wk.BoundingBox) -> Iterator[wk.Dataset]:
         "https://webknossos.org/datasets/scalable_minds/l4_sample_dev",
         "https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view",
         "https://webknossos.org/datasets/scalable_minds/l4_sample_dev_sharing/view?token=ilDXmfQa2G8e719vb1U9YQ#%7B%22orthogonal%7D",
+        "https://webknossos.org/links/93zLg9U9vJ3c_UWp",
     ],
 )
 def test_url_download(
@@ -54,6 +55,7 @@ def test_url_download(
         "https://webknossos.org/datasets/scalable_minds/l4_sample_dev",
         "https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view",
         "https://webknossos.org/datasets/scalable_minds/l4_sample_dev_sharing/view?token=ilDXmfQa2G8e719vb1U9YQ#%7B%22orthogonal%7D",
+        "https://webknossos.org/links/93zLg9U9vJ3c_UWp",
     ],
 )
 def test_url_open_remote(
