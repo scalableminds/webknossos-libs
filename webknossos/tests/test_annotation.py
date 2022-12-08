@@ -183,7 +183,6 @@ def test_reading_bounding_boxes() -> None:
         assert annotation.user_bounding_boxes[0].topleft.x == 2371
         assert annotation.user_bounding_boxes[0].name == "Bounding box 1"
         assert annotation.user_bounding_boxes[0].is_visible
-        assert annotation.user_bounding_boxes[0].id == "1"
 
         assert annotation.user_bounding_boxes[1] == BoundingBox(
             (371, 4063, 1676), (891, 579, 232)
