@@ -211,6 +211,36 @@ def test_reading_bounding_boxes() -> None:
         check_properties(annotation_deserialized)
 
 
+def test_bounding_box_roundtrip() -> None:
+    ds = wk.Dataset.open_remote("e2006_knossos")
+
+    annotation_before = wk.Annotation(
+        name="test_bounding_box_roundtrip",
+        dataset_name=ds.name,
+        voxel_size=ds.voxel_size,
+    )
+    group = annotation_before.skeleton.add_group("a group")
+    tree = group.add_tree("a tree")
+    tree.add_node(position=(0, 0, 0), comment="node 1")
+
+    annotation_before.user_bounding_boxes = [
+        wk.BoundingBox((1024, 512, 128), (64, 64, 64))
+    ]
+    color = (0.5, 0, 0.2, 1)
+    annotation_before.task_bounding_box = (
+        wk.BoundingBox((10, 10, 10), (5, 5, 5)).with_name("task_bbox").with_color(color)
+    )
+
+    annotation_url = annotation_before.upload()
+    annotation_after = wk.Annotation.download(annotation_url)
+
+    # task bounding box is appended to user bounding boxes when uploading a normal annotation:
+    assert (
+        annotation_after.user_bounding_boxes
+        == annotation_before.user_bounding_boxes + [annotation_before.task_bounding_box]
+    )
+
+
 def test_empty_volume_annotation() -> None:
     a = wk.Annotation.load(TESTDATA_DIR / "annotations" / "empty_volume_annotation.zip")
     with a.temporary_volume_layer_copy() as layer:

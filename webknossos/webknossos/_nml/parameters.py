@@ -31,7 +31,7 @@ class Parameters(NamedTuple):
         xf: XmlWriter,
         bounding_box: BoundingBox,
         tag_name: Text,
-        id: Optional[int],
+        bbox_id: Optional[int],
     ) -> None:
 
         color = bounding_box.color or DEFAULT_BOUNDING_BOX_COLOR
@@ -52,8 +52,8 @@ class Parameters(NamedTuple):
             "height": str(bounding_box.size.y),
             "depth": str(bounding_box.size.z),
         }
-        if id is not None:
-            attributes["id"] = str(id)
+        if bbox_id is not None:
+            attributes["id"] = str(bbox_id)
 
         xf.tag(
             tag_name,
@@ -70,10 +70,12 @@ class Parameters(NamedTuple):
 
         if user_bounding_boxes is not None:
             # pylint: disable=not-an-iterable
-            for id, user_bounding_box in enumerate(
+            for bbox_id, user_bounding_box in enumerate(
                 user_bounding_boxes,
             ):
-                self._dump_bounding_box(xf, user_bounding_box, "userBoundingBox", id)
+                self._dump_bounding_box(
+                    xf, user_bounding_box, "userBoundingBox", bbox_id
+                )
 
     def _dump(self, xf: XmlWriter) -> None:
         xf.startTag("parameters")

@@ -109,11 +109,6 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
     project_name = "Test_Project"
     explorative_annotation_id = "58135c192faeb34c0081c05d"
 
-    extract_200_response(
-        httpx.post(
-            url=f"{WK_URL}/data/triggers/checkInboxBlocking?token={WK_TOKEN}",
-        )
-    )
     response = httpx.get(
         url=f"{WK_URL}/api/datasets/{organization_id}/{dataset_name}",
         headers={"X-Auth-Token": WK_TOKEN},
