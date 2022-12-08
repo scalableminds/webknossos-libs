@@ -26,72 +26,54 @@ class Parameters(NamedTuple):
     taskBoundingBox: Optional[BoundingBox] = None
     userBoundingBoxes: Optional[List[BoundingBox]] = None
 
-    def _get_max_bbox_id(self) -> int:
-        bboxes = []
-        if self.taskBoundingBox is not None:
-            bboxes.append(self.taskBoundingBox)
-        if self.userBoundingBoxes is not None:
-            bboxes += self.userBoundingBoxes
-        ids = []
-        for bbox in bboxes:
-            if bbox.id is not None:
-                try:
-                    ids.append(int(bbox.id))
-                except ValueError:
-                    pass
-        return max(ids, default=0)
-
     def _dump_bounding_box(
         self,
         xf: XmlWriter,
         bounding_box: BoundingBox,
         tag_name: Text,
-        next_bbox_id: int,
+        id: Optional[int],
     ) -> None:
 
         color = bounding_box.color or DEFAULT_BOUNDING_BOX_COLOR
 
+        attributes = {
+            "name": _DEFAULT_BBOX_NAME
+            if bounding_box.name is None
+            else str(bounding_box.name),
+            "isVisible": "true" if bounding_box.is_visible else "false",
+            "color.r": str(color[0]),
+            "color.g": str(color[1]),
+            "color.b": str(color[2]),
+            "color.a": str(color[3]),
+            "topLeftX": str(bounding_box.topleft.x),
+            "topLeftY": str(bounding_box.topleft.y),
+            "topLeftZ": str(bounding_box.topleft.z),
+            "width": str(bounding_box.size.x),
+            "height": str(bounding_box.size.y),
+            "depth": str(bounding_box.size.z),
+        }
+        if id is not None:
+            attributes["id"] = str(id)
+
         xf.tag(
             tag_name,
-            {
-                "id": next_bbox_id if bounding_box.id is None else str(bounding_box.id),
-                "name": _DEFAULT_BBOX_NAME
-                if bounding_box.name is None
-                else str(bounding_box.name),
-                "isVisible": "true" if bounding_box.is_visible else "false",
-                "color.r": str(color[0]),
-                "color.g": str(color[1]),
-                "color.b": str(color[2]),
-                "color.a": str(color[3]),
-                "topLeftX": str(bounding_box.topleft.x),
-                "topLeftY": str(bounding_box.topleft.y),
-                "topLeftZ": str(bounding_box.topleft.z),
-                "width": str(bounding_box.size.x),
-                "height": str(bounding_box.size.y),
-                "depth": str(bounding_box.size.z),
-            },
+            attributes,
         )
 
     def _dump_task_bounding_box(self, xf: XmlWriter) -> None:
         task_bounding_box = getattr(self, "taskBoundingBox")
         if task_bounding_box is not None:
-            next_bbox_id = self._get_max_bbox_id() + 1
-            self._dump_bounding_box(
-                xf, task_bounding_box, "taskBoundingBox", next_bbox_id
-            )
+            self._dump_bounding_box(xf, task_bounding_box, "taskBoundingBox", None)
 
     def _dump_user_bounding_boxes(self, xf: XmlWriter) -> None:
         user_bounding_boxes = getattr(self, "userBoundingBoxes")
 
         if user_bounding_boxes is not None:
-            next_bbox_id = self._get_max_bbox_id() + 2
             # pylint: disable=not-an-iterable
-            for next_bbox_id, user_bounding_box in enumerate(
-                user_bounding_boxes, start=next_bbox_id
+            for id, user_bounding_box in enumerate(
+                user_bounding_boxes,
             ):
-                self._dump_bounding_box(
-                    xf, user_bounding_box, "userBoundingBox", next_bbox_id
-                )
+                self._dump_bounding_box(xf, user_bounding_box, "userBoundingBox", id)
 
     def _dump(self, xf: XmlWriter) -> None:
         xf.startTag("parameters")
@@ -182,7 +164,6 @@ class Parameters(NamedTuple):
             size,
             name=bounding_box_element.get("name"),
             is_visible=bounding_box_element.get("isVisible", "true") == "true",
-            id=bounding_box_element.get("id"),
             color=color,
         )
 
