@@ -231,6 +231,7 @@ def tile_cubing_job(
         num_channels,
     ) = args
     largest_value_in_chunk = 0  # This is used to compute the largest_segmentation_id if it is a segmentation layer
+    z_offset = target_view.bounding_box.in_mag(target_view.mag).topleft.z
 
     # Iterate over the z batches
     # Batching is useful to utilize IO more efficiently
@@ -262,7 +263,7 @@ def tile_cubing_job(
                             # read the image
                             image = read_image_file(
                                 file_path,
-                                target_view.header.voxel_type,
+                                target_view.info.voxel_type,
                                 z,
                                 None,
                                 None,
@@ -271,7 +272,7 @@ def tile_cubing_job(
                             # add zeros instead
                             image = np.zeros(
                                 tile_size + (1,),
-                                dtype=target_view.header.voxel_type,
+                                dtype=target_view.info.voxel_type,
                             )
                         # The size of a image might be smaller than the buffer, if the tile is at the bottom/right border
                         buffer[
@@ -282,9 +283,9 @@ def tile_cubing_job(
                         offset = (
                             (x - min_dimensions["x"]) * tile_size[0],
                             (y - min_dimensions["y"]) * tile_size[1],
-                            z_batch[0] - target_view.global_offset.z,
+                            z_batch[0] - z_offset,
                         )
-                        target_view.write(data=buffer, offset=offset)
+                        target_view.write(data=buffer, relative_offset=offset)
                         largest_value_in_chunk = max(
                             largest_value_in_chunk, np.max(buffer)
                         )
@@ -367,7 +368,7 @@ def tile_cubing(
         target_layer.bounding_box = target_layer.bounding_box.extended_by(bbox)
 
     target_mag_view = target_layer.get_or_add_mag(
-        Mag(1), block_len=DEFAULT_CHUNK_SHAPE.z
+        Mag(1), chunk_shape=DEFAULT_CHUNK_SHAPE.z
     )
 
     job_args = []
@@ -385,8 +386,8 @@ def tile_cubing(
         job_args.append(
             (
                 target_mag_view.get_view(
-                    (x_offset, y_offset, z_values[0]),
-                    (num_x, num_y, len(z_values)),
+                    absolute_offset=(x_offset, y_offset, z_values[0]),
+                    size=(num_x, num_y, len(z_values)),
                 ),
                 z_values,
                 input_path_pattern,
