@@ -1,0 +1,743 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.18.2
+    method: GET
+    uri: http://localhost:9000/api/user
+  response:
+    content: '{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1670515674846,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true}'
+    headers:
+      content-length:
+      - '630'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: ''
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.18.2
+    method: GET
+    uri: http://localhost:9000/api/datasets/Organization_X/e2006_knossos
+  response:
+    content: '{"name":"e2006_knossos","dataSource":{"id":{"name":"e2006_knossos","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[0,0,0],"width":24,"height":24,"depth":24},"resolutions":[[1,1,1]],"elementClass":"uint24","defaultViewConfiguration":{"color":[255,0,0]}}],"scale":[1.1,1.1,1.1]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"isConnector":false,"allowsUpload":true},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X"}],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1508495293789,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"details":null,"isUnreported":false,"jobsEnabled":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null}'
+    headers:
+      content-length:
+      - '1033'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: ''
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '0'
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.18.2
+    method: POST
+    uri: http://localhost:9000/api/userToken/generate
+  response:
+    content: '{"token":"xxxsecrettokenxxx"}'
+    headers:
+      content-length:
+      - '34'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/e2006_knossos
+  response:
+    body:
+      string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
+        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
+        {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/e2006_knossos\u201D
+        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
+        \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
+        \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
+        href=\"color\">color</a></li>\n      \n    </ul>\n  </body>\n</html>\n"
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '1426'
+      content-type:
+      - text/html; charset=UTF-8
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/e2006_knossos
+- request:
+    body: null
+    headers:
+      Accept-Encoding:
+      - identity
+    method: HEAD
+    uri: http://localhost:9000/data/zarr/Organization_X/e2006_knossos
+  response:
+    body:
+      string: ''
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '1426'
+      content-type:
+      - text/html; charset=UTF-8
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/e2006_knossos
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/e2006_knossos
+  response:
+    body:
+      string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
+        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
+        {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/e2006_knossos\u201D
+        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
+        \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
+        \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
+        href=\"color\">color</a></li>\n      \n    </ul>\n  </body>\n</html>\n"
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '1426'
+      content-type:
+      - text/html; charset=UTF-8
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/e2006_knossos
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/e2006_knossos
+  response:
+    body:
+      string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
+        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
+        {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/e2006_knossos\u201D
+        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
+        \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
+        \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
+        href=\"color\">color</a></li>\n      \n    </ul>\n  </body>\n</html>\n"
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '1426'
+      content-type:
+      - text/html; charset=UTF-8
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/e2006_knossos
+- request:
+    body: null
+    headers:
+      Accept-Encoding:
+      - identity
+    method: HEAD
+    uri: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/datasource-properties.json
+  response:
+    body:
+      string: ''
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '319'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/datasource-properties.json
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/datasource-properties.json
+  response:
+    body:
+      string: '{"id":{"name":"e2006_knossos","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[0,0,0],"width":24,"height":24,"depth":24},"elementClass":"uint24","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":3,"dataFormat":"zarr"}],"scale":[1.1,1.1,1.1]}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '319'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/datasource-properties.json
+- request:
+    body: null
+    headers:
+      Accept-Encoding:
+      - identity
+    method: HEAD
+    uri: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/datasource-properties.json
+  response:
+    body:
+      string: ''
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '319'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/datasource-properties.json
+- request:
+    body: null
+    headers:
+      Range:
+      - bytes=0-318
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/datasource-properties.json
+  response:
+    body:
+      string: '{"id":{"name":"e2006_knossos","team":"Organization_X"},"dataLayers":[{"name":"color","category":"color","boundingBox":{"topLeft":[0,0,0],"width":24,"height":24,"depth":24},"elementClass":"uint24","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":3,"dataFormat":"zarr"}],"scale":[1.1,1.1,1.1]}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '319'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/datasource-properties.json
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/color/1
+  response:
+    body:
+      string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
+        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
+        {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/e2006_knossos/color/1\u201D
+        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
+        \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '1292'
+      content-type:
+      - text/html; charset=UTF-8
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/color/1
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/color/1/.zarray
+  response:
+    body:
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[3,32,32,32],"compressor":null,"filters":null,"shape":[3,24,24,24],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '160'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/color/1/.zarray
+- request:
+    body: null
+    headers:
+      Accept-Encoding:
+      - identity
+    method: HEAD
+    uri: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/color/1/.zarray
+  response:
+    body:
+      string: ''
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '160'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/color/1/.zarray
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/color/1/.zarray
+  response:
+    body:
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[3,32,32,32],"compressor":null,"filters":null,"shape":[3,24,24,24],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '160'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/color/1/.zarray
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/color/1/.zarray
+  response:
+    body:
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[3,32,32,32],"compressor":null,"filters":null,"shape":[3,24,24,24],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '160'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/color/1/.zarray
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/color/1/.zarray
+  response:
+    body:
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[3,32,32,32],"compressor":null,"filters":null,"shape":[3,24,24,24],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '160'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/color/1/.zarray
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/color/1/.zarray
+  response:
+    body:
+      string: '{"dtype":"|u1","fill_value":0,"zarr_format":2,"order":"F","chunks":[3,32,32,32],"compressor":null,"filters":null,"shape":[3,24,24,24],"dimension_seperator":"."}'
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '160'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/color/1/.zarray
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/color/1
+  response:
+    body:
+      string: "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta name=\"viewport\"
+        content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n    <title>webKnossos
+        Datastore</title>\n    <meta name=\"robot\" content=\"noindex\" />\n    <script
+        type=\"text/javascript\">\n      // foward to path with trailing slash\n      if
+        (!window.location.pathname.endsWith('/')) {\n        var url = window.location.protocol
+        + '//' + \n                  window.location.host + \n                  window.location.pathname
+        + '/' + \n                  window.location.search;\n        window.location.replace(url);\n
+        \     }\n    </script>\n    \n    <style>\n      * {\n        font-family:
+        \"Monospaced Number\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n
+        \       \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Helvetica
+        Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
+        \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
+        {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the webKnossos Datastore \u201COrganization_X/e2006_knossos/color/1\u201D
+        folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
+        \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
+        \ </body>\n</html>\n"
+    headers:
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '600'
+      content-length:
+      - '1292'
+      content-type:
+      - text/html; charset=UTF-8
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+    url: http://localhost:9000/data/zarr/Organization_X/e2006_knossos/color/1
+- request:
+    body:
+      zip:
+        test_bounding_box_roundtrip.nml: "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<things>\n
+          \ <parameters>\n    <experiment name=\"e2006_knossos\" />\n    <scale x=\"1.1\"
+          y=\"1.1\" z=\"1.1\" />\n    <time ms=\"1670515677000\" />\n    <taskBoundingBox
+          color.a=\"1\" color.b=\"0.2\" color.g=\"0\" color.r=\"0.5\" depth=\"5\"
+          height=\"5\" isVisible=\"true\" name=\"task_bbox\" topLeftX=\"10\" topLeftY=\"10\"
+          topLeftZ=\"10\" width=\"5\" />\n    <userBoundingBox color.a=\"1\" color.b=\"0.1\"
+          color.g=\"0.5\" color.r=\"0.2\" depth=\"64\" height=\"64\" id=\"0\" isVisible=\"true\"
+          name=\"Unnamed Bounding Box\" topLeftX=\"1024\" topLeftY=\"512\" topLeftZ=\"128\"
+          width=\"64\" />\n  </parameters>\n  <thing color.a=\"1.0\" color.b=\"0.9409285955187706\"
+          color.g=\"0.03147378287192237\" color.r=\"0.9937523698700693\" groupId=\"1\"
+          id=\"2\" name=\"a tree\">\n    <nodes>\n      <node id=\"3\" x=\"0.0\" y=\"0.0\"
+          z=\"0.0\" />\n    </nodes>\n    <edges />\n  </thing>\n  <branchpoints />\n
+          \ <comments>\n    <comment content=\"node 1\" node=\"3\" />\n  </comments>\n
+          \ <groups>\n    <group id=\"1\" name=\"a group\" />\n  </groups>\n</things>\n"
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '960'
+      content-type:
+      - multipart/form-data; boundary=fffffff0000000
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.18.2
+    method: POST
+    uri: http://localhost:9000/api/annotations/upload
+  response:
+    content: '{"annotation":{"typ":"Explorational","id":"63920bdd01000027004b7e89"},"messages":[{"success":"Successfully
+      uploaded file"}]}'
+    headers:
+      content-length:
+      - '124'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: ''
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.18.2
+    method: GET
+    uri: http://localhost:9000/api/annotations/63920bdd01000027004b7e89/download?skipVolumeData=false
+  response:
+    content: "<things>\n  <meta name=\"writer\" content=\"NmlWriter.scala\" />\n  <meta
+      name=\"writerGitCommit\" content=\"afe612a8efc3a63828535085cceb67c9dc8a44bc\"
+      />\n  <meta name=\"timestamp\" content=\"1670515677551\" />\n  <meta name=\"annotationId\"
+      content=\"63920bdd01000027004b7e89\" />\n  <meta name=\"username\" content=\"user_A
+      BoyA\" />\n  <parameters>\n    <experiment name=\"e2006_knossos\" organization=\"Organization_X\"
+      description=\"\" />\n    <scale x=\"1.1\" y=\"1.1\" z=\"1.1\" />\n    <offset
+      x=\"0\" y=\"0\" z=\"0\" />\n    <time ms=\"1670515677316\" />\n    <editPosition
+      x=\"0\" y=\"0\" z=\"0\" />\n    <editRotation xRot=\"0.0\" yRot=\"0.0\" zRot=\"0.0\"
+      />\n    <zoomLevel zoom=\"2.0\" />\n    <userBoundingBox id=\"0\" name=\"Unnamed
+      Bounding Box\" isVisible=\"true\" color.r=\"0.20000000298023224\" color.g=\"0.5\"
+      color.b=\"0.10000000149011612\" color.a=\"1.0\" topLeftX=\"1024\" topLeftY=\"512\"
+      topLeftZ=\"128\" width=\"64\" height=\"64\" depth=\"64\" />\n    <userBoundingBox
+      id=\"1\" name=\"task bounding box\" color.r=\"0.07196411453317153\" color.g=\"0.8299802741222254\"
+      color.b=\"0.17419121669407067\" color.a=\"1.0\" topLeftX=\"10\" topLeftY=\"10\"
+      topLeftZ=\"10\" width=\"5\" height=\"5\" depth=\"5\" />\n  </parameters>\n  <thing
+      id=\"2\" color.r=\"0.9937523603439331\" color.g=\"0.031473781913518906\" color.b=\"0.94092857837677\"
+      color.a=\"1.0\" name=\"a tree\" groupId=\"1\">\n    <nodes>\n      <node id=\"3\"
+      radius=\"1.0\" x=\"0\" y=\"0\" z=\"0\" rotX=\"0.0\" rotY=\"0.0\" rotZ=\"0.0\"
+      inVp=\"0\" inMag=\"0\" bitDepth=\"0\" interpolation=\"false\" time=\"0\" />\n
+      \   </nodes>\n    <edges />\n  </thing>\n  <branchpoints />\n  <comments>\n
+      \   <comment node=\"3\" content=\"node 1\" />\n  </comments>\n  <groups>\n    <group
+      name=\"a group\" id=\"1\" />\n  </groups>\n</things>"
+    headers:
+      content-disposition:
+      - attachment;filename="test_bounding_box_roundtrip.nml"
+      content-length:
+      - '1628'
+      content-type:
+      - application/xml
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+version: 1
