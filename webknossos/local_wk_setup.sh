@@ -40,6 +40,8 @@ function ensure_local_test_wk {
         exit 1
     fi
 
+    curl -s -X POST -H "X-Auth-Token: $WK_TOKEN" localhost:9000/data/triggers/checkInboxBlocking
+
     WK_ORG_VERSION="$(curl -s https://webknossos.org/api/buildinfo | tr ',"' "\n" | sed -n '/version/{n;n;p;q;}')"
     LOCAL_VERSION="$(curl -s http://localhost:9000/api/buildinfo | tr ',"' "\n" | sed -n '/version/{n;n;p;q;}')"
 

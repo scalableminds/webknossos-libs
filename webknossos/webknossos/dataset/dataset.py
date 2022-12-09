@@ -1768,13 +1768,16 @@ class RemoteDataset(Dataset):
                 exist_ok=True,
                 read_only=True,
             )
-        except FileNotFoundError:
-            warnings.warn(
-                f"Cannot open remote webknossos dataset {dataset_path} as zarr. "
-                + "Returning a stub dataset instead, accessing metadata properties might still work.",
-                RuntimeWarning,
-            )
-            self.path = None  # type: ignore[assignment]
+        except FileNotFoundError as e:
+            if hasattr(self, "_properties"):
+                warnings.warn(
+                    f"Cannot open remote webknossos dataset {dataset_path} as zarr. "
+                    + "Returning a stub dataset instead, accessing metadata properties might still work.",
+                    RuntimeWarning,
+                )
+                self.path = None  # type: ignore[assignment]
+            else:
+                raise e from None
         self._dataset_name = dataset_name
         self._organization_id = organization_id
         self._sharing_token = sharing_token
