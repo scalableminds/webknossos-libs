@@ -31,9 +31,8 @@ class Parameters(NamedTuple):
         xf: XmlWriter,
         bounding_box: BoundingBox,
         tag_name: Text,
-        bbox_id: Optional[int],
+        bbox_id: Optional[int],  # user bounding boxes need an id
     ) -> None:
-
         color = bounding_box.color or DEFAULT_BOUNDING_BOX_COLOR
 
         attributes = {
@@ -70,6 +69,9 @@ class Parameters(NamedTuple):
 
         if user_bounding_boxes is not None:
             # pylint: disable=not-an-iterable
+
+            # User bounding boxes need an id to be recognized
+            # when uploaded to webknossos, which is added by bbox_idx:
             for bbox_idx, user_bounding_box in enumerate(
                 user_bounding_boxes,
             ):
