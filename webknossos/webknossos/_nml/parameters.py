@@ -70,11 +70,11 @@ class Parameters(NamedTuple):
 
         if user_bounding_boxes is not None:
             # pylint: disable=not-an-iterable
-            for bbox_id, user_bounding_box in enumerate(
+            for bbox_idx, user_bounding_box in enumerate(
                 user_bounding_boxes,
             ):
                 self._dump_bounding_box(
-                    xf, user_bounding_box, "userBoundingBox", bbox_id
+                    xf, user_bounding_box, "userBoundingBox", bbox_idx
                 )
 
     def _dump(self, xf: XmlWriter) -> None:
