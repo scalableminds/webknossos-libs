@@ -23,6 +23,9 @@ from cluster_tools.util import (
 )
 
 
+NOT_YET_SUBMITTED_STATE = "NOT_YET_SUBMITTED"
+
+
 def join_messages(strings: List[str]) -> str:
     return " ".join(x.strip() for x in strings if x.strip())
 
@@ -86,12 +89,16 @@ class ClusterExecutor(futures.Executor):
         self.jobs_lock = threading.Lock()
         self.jobs_empty_cond = threading.Condition(self.jobs_lock)
         self.keep_logs = keep_logs
+        self.is_shutting_down = False
 
         self.wait_thread = FileWaitThread(self._completion, self)
         self.wait_thread.start()
 
         os.makedirs(self.cfut_dir, exist_ok=True)
 
+        # Clean up if a SIGINT signal is received. However, do not interfere with the
+        # shutdown of the main process which sends SIGTERM signals to terminate all
+        # child processes.
         signal.signal(signal.SIGINT, self.handle_kill)
 
         self.meta_data = {}
@@ -108,8 +115,18 @@ class ClusterExecutor(futures.Executor):
     def executor_key(cls):
         pass
 
-    def handle_kill(self, _signum, _frame):
+    def handle_kill(self, signum, frame):
+        if self.is_shutting_down:
+            return
+
+        self.is_shutting_down = True
+
+        self.inner_handle_kill(signum, frame)
         self.wait_thread.stop()
+
+    @abstractmethod
+    def inner_handle_kill(self, _signum, _frame):
+        pass
 
     @abstractmethod
     def check_job_state(
@@ -418,7 +435,7 @@ class ClusterExecutor(futures.Executor):
                 # Register the job in the jobs array, although the jobid is not known yet.
                 # Otherwise it might happen that self.jobs becomes empty, but some of the jobs were
                 # not even submitted yet.
-                self.jobs[workerid_with_index] = "pending"
+                self.jobs[workerid_with_index] = NOT_YET_SUBMITTED_STATE
 
         job_count = len(allArgs)
         job_name = get_function_name(fun)

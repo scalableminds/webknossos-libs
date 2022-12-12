@@ -81,7 +81,7 @@ class KubernetesExecutor(ClusterExecutor):
             return job_id
         return cls.get_jobid_with_index(job_id, job_index)
 
-    def handle_kill(self, *args, **kwargs):
+    def inner_handle_kill(self, *args, **kwargs):
         job_ids = ",".join(str(id) for id in self.jobs.keys())
 
         print(
@@ -89,8 +89,6 @@ class KubernetesExecutor(ClusterExecutor):
                 job_ids
             )
         )
-
-        super().handle_kill(*args, **kwargs)
 
     def ensure_kubernetes_namespace(self):
         kubernetes_client = KubernetesClient()

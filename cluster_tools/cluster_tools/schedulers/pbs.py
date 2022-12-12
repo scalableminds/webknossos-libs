@@ -53,7 +53,7 @@ class PBSExecutor(ClusterExecutor):
     def get_job_id_string(cls):
         return cls.get_current_job_id()
 
-    def handle_kill(self, *args, **kwargs):
+    def inner_handle_kill(self, *args, **kwargs):
         scheduled_job_ids = list(self.jobs.keys())
 
         if len(scheduled_job_ids):
@@ -73,8 +73,6 @@ class PBSExecutor(ClusterExecutor):
                 logging.warning(
                     f"Couldn't automatically cancel all PBS jobs. Reason: {stderr}"
                 )
-
-        super().handle_kill(*args, **kwargs)
 
     def submit_text(self, job):
         """Submits a PBS job represented as a job file string. Returns

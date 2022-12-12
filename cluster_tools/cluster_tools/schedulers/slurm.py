@@ -17,6 +17,7 @@ from .cluster_executor import (
     ClusterExecutor,
     RemoteException,
     RemoteOutOfMemoryException,
+    NOT_YET_SUBMITTED_STATE,
 )
 
 SLURM_STATES = {
@@ -197,13 +198,15 @@ class SlurmExecutor(ClusterExecutor):
 
         return int(job_id)
 
-    def handle_kill(self, *args, **kwargs):
+    def inner_handle_kill(self, *args, **kwargs):
         for submit_thread in self.submit_threads:
             submit_thread.stop()
 
-        # Jobs with a "pending" state have not been submitted to the cluster yet
+        # Jobs with a NOT_YET_SUBMITTED_STATE have not been submitted to the cluster yet
         scheduled_job_ids = [
-            job_id for job_id, job_state in self.jobs.items() if job_state != "pending"
+            job_id
+            for job_id, job_state in self.jobs.items()
+            if job_state != NOT_YET_SUBMITTED_STATE
         ]
 
         if len(scheduled_job_ids):
@@ -218,8 +221,6 @@ class SlurmExecutor(ClusterExecutor):
                 logging.warning(
                     f"Couldn't automatically cancel all slurm jobs. Reason: {stderr}"
                 )
-
-        super().handle_kill(*args, **kwargs)
 
     def cleanup_submit_threads(self):
         self.submit_threads = [
