@@ -4,7 +4,7 @@ import logging
 import os
 import re
 from concurrent import futures
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 
 from typing_extensions import Literal
 
@@ -54,12 +54,12 @@ class PBSExecutor(ClusterExecutor):
         return cls.get_current_job_id()
 
     def inner_handle_kill(self, *args, **kwargs):
-        scheduled_job_ids = list(self.jobs.keys())
+        scheduled_job_ids: List[Union[int, str]] = list(self.jobs.keys())
 
         if len(scheduled_job_ids):
             # Array jobs (whose id looks like `<job_id>_<array_index>`) don't need to be canceled individually,
             # but can be canceled together using the job_id.
-            split_job_ids = map(lambda x: x.split("_"), scheduled_job_ids)
+            split_job_ids = map(lambda x: str(x).split("_"), scheduled_job_ids)
             # However array job ids need to include [] in the end.
             unique_job_ids = set(
                 job_id_parts[0] if len(job_id_parts) == 1 else f"{job_id_parts[0]}[]"

@@ -82,7 +82,7 @@ class KubernetesExecutor(ClusterExecutor):
         return cls.get_jobid_with_index(job_id, job_index)
 
     def inner_handle_kill(self, *args, **kwargs):
-        job_ids = ",".join(str(id) for id in self.jobs.keys())
+        job_ids = ",".join(str(job_id) for job_id in self.jobs.keys())
 
         print(
             "Couldn't automatically cancel all Kubernetes jobs. The following jobs are still running on the cluster:\n{}".format(

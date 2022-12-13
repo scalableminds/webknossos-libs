@@ -7,7 +7,7 @@ import re
 import sys
 import threading
 from functools import lru_cache
-from typing import List, Optional, Tuple, Type
+from typing import List, Optional, Tuple, Type, Union
 
 from typing_extensions import Literal
 
@@ -203,7 +203,7 @@ class SlurmExecutor(ClusterExecutor):
             submit_thread.stop()
 
         # Jobs with a NOT_YET_SUBMITTED_STATE have not been submitted to the cluster yet
-        scheduled_job_ids = [
+        scheduled_job_ids: List[Union[int, str]] = [
             job_id
             for job_id, job_state in self.jobs.items()
             if job_state != NOT_YET_SUBMITTED_STATE
@@ -212,7 +212,7 @@ class SlurmExecutor(ClusterExecutor):
         if len(scheduled_job_ids):
             # Array jobs (whose id looks like `<job_id>_<array_index>`) don't need to be canceled individually,
             # but can be canceled together using the job_id
-            unique_job_ids = set(map(lambda x: x.split("_")[0], scheduled_job_ids))
+            unique_job_ids = set(map(lambda x: str(x).split("_")[0], scheduled_job_ids))
             _stdout, stderr, exit_code = call(f"scancel {' '.join(unique_job_ids)}")
 
             if exit_code == 0:
