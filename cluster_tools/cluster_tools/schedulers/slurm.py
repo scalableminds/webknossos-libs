@@ -14,10 +14,10 @@ from typing_extensions import Literal
 from cluster_tools.util import call, chcall, random_string
 
 from .cluster_executor import (
+    NOT_YET_SUBMITTED_STATE,
     ClusterExecutor,
     RemoteException,
     RemoteOutOfMemoryException,
-    NOT_YET_SUBMITTED_STATE,
 )
 
 SLURM_STATES = {

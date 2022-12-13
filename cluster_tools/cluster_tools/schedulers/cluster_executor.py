@@ -22,7 +22,6 @@ from cluster_tools.util import (
     with_preliminary_postfix,
 )
 
-
 NOT_YET_SUBMITTED_STATE = "NOT_YET_SUBMITTED"
 
 
