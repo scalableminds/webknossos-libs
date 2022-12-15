@@ -1030,7 +1030,7 @@ class Dataset:
         * `dtype`: the read image data will be convertoed to this dtype using `numpy.ndarray.astype`
         * `use_bioformats`: set to `True` to only use the
           [pims bioformats adapter](https://soft-matter.github.io/pims/v0.6.1/bioformats.html) directly, needs a JVM,
-          set to `False` to forbid using the bioformats adapter
+          set to `False` to forbid using the bioformats adapter, by default it is tried as a last option
         * `channel`: may be used to select a single channel, if multiple are available
         * `timepoint`: for timeseries, select a timepoint to use by specifying it as an int, starting from 0
         * `czi_channel`: may be used to select a channel for .czi images, which differs from normal color-channels
