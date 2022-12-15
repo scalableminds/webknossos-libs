@@ -34,6 +34,7 @@ from .cubing import read_image_file
 
 PADDING_FILE_NAME = "/"
 COORDINATE_REGEX = re.compile("{(x+|y+|z+)}")
+COORDINATES = "x", "y", "z"
 
 
 # similar to ImageJ https://imagej.net/BigStitcher_StackLoader#File_pattern
@@ -76,7 +77,7 @@ def parse_coordinate_pattern(pattern: str) -> Tuple[List[re.Pattern], Path]:
     as the second component of the return value.
 
     Raises ValueError in case the pattern is incorrectly formatted."""
-    coord_set = {"x", "y", "z"}
+    coord_set = {*COORDINATES}
     regexes: List[re.Pattern] = []
     pattern_parts: List[str] = []
     root_path = Path()
@@ -123,8 +124,7 @@ def detect_interval_for_dimensions(
 
     Returns the needed information to find all matching files, in order:
     - The minimum amount of length of each coordinate, this represents the
-        amount of leading zeros that should be added inside shorter filenames,
-        this will be 1 for each coordinate in case the numbers are not padded
+        amount of leading zeros that should be added inside shorter filenames
     - The lowest value of indexes of each coordinate.
     - The highest value of indexes of each coordinate.
     - The first matching file found.
@@ -133,6 +133,7 @@ def detect_interval_for_dimensions(
     Raises RuntimeError in case padding is not used in a consistent way."""
     arbitrary_file = None
     file_count = 0
+    padding_found = {coord: False for coord in COORDINATES}
     min_paddings: Dict[str, int] = {}
     max_dimensions: Dict[str, int] = {}
     min_dimensions: Dict[str, int] = {}
@@ -159,47 +160,48 @@ def detect_interval_for_dimensions(
         if depth != target_depth:
             continue
 
+        dirs.clear()
         for file in files:
             file_path = dir_path / file
             match = full_rx.fullmatch(str(file_path))
             if match is None:
                 continue
 
-            dirs.clear()
             file_count += 1
             if arbitrary_file is None:
                 arbitrary_file = root_path / file_path
 
-            for current_dimension in ("x", "y", "z"):
+            for current_dimension in COORDINATES:
                 coordinate_value_str = match.group(current_dimension)
-                if coordinate_value_str[0] == "0":
-                    padding = len(coordinate_value_str)
-                else:
-                    padding = None
-
                 coordinate_value = int(coordinate_value_str)
+                length = len(coordinate_value_str)
+                is_padded = coordinate_value_str[0] == "0"
                 if file_count == 1:
-                    min_paddings[current_dimension] = padding
+                    min_paddings[current_dimension] = length
                     min_dimensions[current_dimension] = coordinate_value
                     max_dimensions[current_dimension] = coordinate_value
                 else:
-                    if padding is not None:
-                        previous_padding = min_paddings[current_dimension]
-                        if previous_padding is None:
-                            min_paddings[current_dimension] = padding
-                        elif previous_padding != padding:
+                    previous_length = min_paddings[current_dimension]
+                    if is_padded:
+                        if length > previous_length:
                             raise RuntimeError("Inconsistent use of padding found")
 
+                    previous_is_padded = padding_found[current_dimension]
+                    if previous_is_padded:
+                        if length < previous_length:
+                            raise RuntimeError("Inconsistent use of padding found")
+                    else:
+                        min_paddings[current_dimension] = min(length, previous_length)
+
                     min_dimensions[current_dimension] = min(
-                        min_dimensions[current_dimension], coordinate_value
+                        coordinate_value, min_dimensions[current_dimension]
                     )
                     max_dimensions[current_dimension] = max(
-                        max_dimensions[current_dimension], coordinate_value
+                        coordinate_value, max_dimensions[current_dimension]
                     )
 
-    for coord in min_paddings.keys():
-        if min_paddings[coord] is None:
-            min_paddings[coord] = 1
+                if is_padded:
+                    padding_found[current_dimension] = True
 
     return min_paddings, min_dimensions, max_dimensions, arbitrary_file, file_count
 
@@ -253,7 +255,7 @@ def tile_cubing_job(
                     for z in z_batch:
                         # Read file if exists or use zeros instead
                         coordinate_info: Dict[str, Tuple[int, int]] = {}
-                        for coord, value in zip(("x", "y", "z"), (x, y, z)):
+                        for coord, value in zip(COORDINATES, (x, y, z)):
                             coordinate_info[coord] = value, min_paddings[coord]
 
                         file_path = path_from_coordinate_pattern(
