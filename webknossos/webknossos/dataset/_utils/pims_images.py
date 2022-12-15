@@ -4,6 +4,7 @@ from itertools import chain
 from os import PathLike
 from pathlib import Path
 from typing import (
+    ContextManager,
     Dict,
     Iterable,
     Iterator,
@@ -21,10 +22,17 @@ from urllib.error import HTTPError
 
 import numpy as np
 
+# pylint: disable=unused-import
 try:
     from webknossos.dataset._utils.pims_czi_reader import PimsCziReader
 except ImportError:
     PimsCziReader = type(None)  # type: ignore[misc,assignment]
+
+try:
+    import webknossos.dataset._utils.pims_dm_readers
+except ImportError:
+    pass
+# pylint: enable=unused-import
 
 from webknossos.dataset.layer import DTypeLike
 from webknossos.dataset.mag_view import MagView
@@ -62,7 +70,7 @@ class PimsImages:
         flip_x: bool,
         flip_y: bool,
         flip_z: bool,
-        use_bioformats: bool,
+        use_bioformats: Optional[bool],
         is_segmentation: bool,
     ) -> None:
         """
@@ -246,7 +254,7 @@ class PimsImages:
                     pims.FramesSequence, images[0]
                 ).shape
             else:
-                images_shape = images.shape
+                images_shape = images.shape  # pylint: disable=no-member
             c_index = self._img_dims.find("c")
             if c_index == -1:
                 self.num_channels = 1
@@ -300,12 +308,67 @@ class PimsImages:
         else:
             return str(original_images)
 
-    def _open_bioformats_images_raw(
+    def _ensure_correct_bioformats_usage(
+        self, images_context_manager: pims.FramesSequence
+    ) -> None:
+        if (
+            isinstance(images_context_manager, pims.bioformats.BioformatsReader)
+            and self._use_bioformats == False
+        ):  # None is allowed
+            raise RuntimeError(
+                "Selected bioformats reader, but using bioformats is not allowed "
+                + "(use_bioformats is False)."
+            )
+
+    def _try_open_pims_images(
+        self, original_images: Union[str, List[str]], exceptions: List[Exception]
+    ) -> Optional[pims.FramesSequence]:
+        if self._use_bioformats:
+            return None
+
+        open_kwargs = {}
+        if self._czi_channel is not None:
+            open_kwargs["czi_channel"] = self._czi_channel
+
+        def strategy_0() -> pims.FramesSequence:
+            result = pims.open(original_images, **open_kwargs)
+            self._ensure_correct_bioformats_usage(original_images)
+            return result
+
+        strategy_1 = lambda: pims.ImageSequence(original_images)
+
+        def strategy_2() -> pims.FramesSequence:
+            if isinstance(original_images, list):
+                # assuming the same reader works for all images:
+                first_image_handler = pims.open(original_images[0], **open_kwargs)
+                self._ensure_correct_bioformats_usage(first_image_handler)
+                return pims.ReaderSequence(
+                    original_images, type(first_image_handler), **open_kwargs
+                )
+            else:
+                return None
+
+        for strategy in [strategy_0, strategy_1, strategy_2]:
+            try:
+                images_context_manager = strategy()
+            except Exception as e:
+                exceptions.append(e)
+            else:
+                if images_context_manager is not None:
+                    return images_context_manager
+        return None
+
+    def _try_open_bioformats_images_raw(
         self,
         original_images: Union[str, List[str]],
-        previous_exceptions: List[Exception],
+        exceptions: List[Exception],
     ) -> pims.FramesSequence:
         try:
+            if self._use_bioformats == False:  # None is allowed
+                raise RuntimeError(
+                    "Using bioformats is not allowed (use_bioformats is False)."
+                )
+
             # There is a wrong warning about jpype, supressing it here.
             # See issue https://github.com/soft-matter/pims/issues/384
             warnings.filterwarnings(
@@ -324,26 +387,13 @@ class PimsImages:
                 pims.bioformats.download_jar(version="6.7.0")
 
             if "*" in str(original_images) or isinstance(original_images, list):
-                images_context_manager = pims.ReaderSequence(
+                return pims.ReaderSequence(
                     original_images, pims.bioformats.BioformatsReader
                 )
             else:
-                images_context_manager = pims.bioformats.BioformatsReader(
-                    original_images
-                )
+                return pims.bioformats.BioformatsReader(original_images)
         except Exception as e:
-            if len(previous_exceptions) == 0:
-                raise e
-            else:
-                previous_exceptions.append(e)
-                previous_exceptions_str = "\n".join(
-                    f"{type(e).__name__}: {str(e)}" for e in previous_exceptions
-                )
-                raise ValueError(
-                    f"Tried to open the images {self._original_images} with different methods, "
-                    + f"none succeded. The following errors were raised:\n{previous_exceptions_str}"
-                ) from None
-        return images_context_manager
+            exceptions.append(e)
 
     @contextmanager
     def _open_images(
@@ -354,30 +404,35 @@ class PimsImages:
         after IDENTIFY AXIS ORDER of __init__() has run.
         For a 2D image this is achieved by wrapping it in a list.
         """
+        images_context_manager: Optional[ContextManager]
         with warnings.catch_warnings():
             if isinstance(self._original_images, pims.FramesSequence):
                 images_context_manager = nullcontext(enter_result=self._original_images)
             else:
-                pims_open_exceptions = []
+                exceptions: List[Exception] = []
                 original_images = self._normalize_original_images()
-                if not self._use_bioformats:
-                    try:
-                        open_kwargs = {}
-                        if self._czi_channel is not None:
-                            open_kwargs["czi_channel"] = self._czi_channel
-                        images_context_manager = pims.open(original_images)
-                    except Exception as e1:
-                        pims_open_exceptions.append(e1)
-                        try:
-                            images_context_manager = pims.ImageSequence(original_images)
-                        except Exception as e2:
-                            pims_open_exceptions.append(e2)
-                            self._use_bioformats = True
+                images_context_manager = None
 
-                if self._use_bioformats:
-                    images_context_manager = self._open_bioformats_images_raw(
-                        original_images, pims_open_exceptions
+                images_context_manager = self._try_open_pims_images(
+                    original_images, exceptions
+                )
+
+                if images_context_manager is None:
+                    images_context_manager = self._try_open_bioformats_images_raw(
+                        original_images, exceptions
                     )
+
+                if images_context_manager is None:
+                    if len(exceptions) == 1:
+                        raise exceptions[0]
+                    else:
+                        exceptions_str = "\n".join(
+                            f"{type(e).__name__}: {str(e)}" for e in exceptions
+                        )
+                        raise ValueError(
+                            f"Tried to open the images {self._original_images} with different methods, "
+                            + f"none succeded. The following errors were raised:\n{exceptions_str}"
+                        )
 
             with images_context_manager as images:
                 if isinstance(images, pims.FramesSequenceND):
@@ -509,7 +564,7 @@ def get_valid_pims_suffixes() -> Set[str]:
 
 def has_image_z_dimension(
     filepath: Path,
-    use_bioformats: bool,
+    use_bioformats: Optional[bool],
     is_segmentation: bool,
 ) -> bool:
 

@@ -61,20 +61,20 @@ class PimsCziReader(FramesSequenceND):
                     # not propagating axes of length one
                     continue
                 self._init_axis(axis, length)
-            czi_pixel_type = czi_file.get_channel_pixel_type(self.czi_channel)
-            if czi_pixel_type.startswith("Bgra"):
+            self._czi_pixel_type = czi_file.get_channel_pixel_type(self.czi_channel)
+            if self._czi_pixel_type.startswith("Bgra"):
                 self._init_axis("c", 4)
-            elif czi_pixel_type.startswith("Bgr"):
+            elif self._czi_pixel_type.startswith("Bgr"):
                 self._init_axis("c", 3)
-            elif czi_pixel_type.startswith("Gray"):
+            elif self._czi_pixel_type.startswith("Gray"):
                 self._init_axis("c", 1)
-            elif czi_pixel_type == "Invalid":
+            elif self._czi_pixel_type == "Invalid":
                 raise ValueError(
                     f"czi_channel {self.czi_channel} does not exist in {self.path}"
                 )
             else:
                 raise ValueError(
-                    f"Got unsupported czi pixel-type {czi_pixel_type} in {self.path}"
+                    f"Got unsupported czi pixel-type {self._czi_pixel_type} in {self.path}"
                 )
 
         self._register_get_frame(self.get_frame_2D, "yxc")
@@ -90,10 +90,7 @@ class PimsCziReader(FramesSequenceND):
 
     @property  # potential @cached_property for py3.8+
     def pixel_type(self) -> np.dtype:
-        with self.czi_file() as czi_file:
-            return np.dtype(
-                PIXEL_TYPE_TO_DTYPE[czi_file.get_channel_pixel_type(self.czi_channel)]
-            )
+        return np.dtype(PIXEL_TYPE_TO_DTYPE[self._czi_pixel_type])
 
     def get_frame_2D(self, **ind: int) -> np.ndarray:
         plane = {k.upper(): v for k, v in ind.items()}

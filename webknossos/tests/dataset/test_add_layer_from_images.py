@@ -2,7 +2,7 @@ from pathlib import Path
 from shutil import copy
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from time import gmtime, strftime
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 from zipfile import BadZipFile, ZipFile
 
 import httpx
@@ -120,6 +120,7 @@ def test_repo_images(
             layer_name=layer_name,
             compress=True,
             executor=executor,
+            use_bioformats=False,
             **kwargs,
         )
         assert l.dtype_per_channel == np.dtype(dtype)
@@ -131,24 +132,33 @@ def test_repo_images(
     return ds
 
 
-def download_and_unpack(url: str, out_path: Path, filename: str) -> None:
-    with NamedTemporaryFile() as download_file:
-        with httpx.stream("GET", url) as response:
-            total = int(response.headers["Content-Length"])
+def download_and_unpack(
+    url: Union[str, List[str]], out_path: Path, filename: Union[str, List[str]]
+) -> None:
+    if isinstance(url, str):
+        assert isinstance(filename, str)
+        url = [url]
+        filename = [filename]
+    for url_i, filename_i in zip(url, filename):
+        with NamedTemporaryFile() as download_file:
+            with httpx.stream("GET", url_i) as response:
+                total = int(response.headers["Content-Length"])
 
-            with wk.utils.get_rich_progress() as progress:
-                download_task = progress.add_task("Download Image Data", total=total)
-                for chunk in response.iter_bytes():
-                    download_file.write(chunk)
-                    progress.update(
-                        download_task, completed=response.num_bytes_downloaded
+                with wk.utils.get_rich_progress() as progress:
+                    download_task = progress.add_task(
+                        "Download Image Data", total=total
                     )
-        try:
-            with ZipFile(download_file, "r") as zip_file:
-                zip_file.extractall(out_path)
-        except BadZipFile:
-            out_path.mkdir(parents=True, exist_ok=True)
-            copy(download_file.name, out_path / filename)
+                    for chunk in response.iter_bytes():
+                        download_file.write(chunk)
+                        progress.update(
+                            download_task, completed=response.num_bytes_downloaded
+                        )
+            try:
+                with ZipFile(download_file, "r") as zip_file:
+                    zip_file.extractall(out_path)
+            except BadZipFile:
+                out_path.mkdir(parents=True, exist_ok=True)
+                copy(download_file.name, out_path / filename_i)
 
 
 BIOFORMATS_ARGS = [
@@ -241,7 +251,44 @@ def test_bioformats(
     return ds
 
 
+# All scif images used here are published with CC0 license,
+# see https://scif.io/images.
 TEST_IMAGES_ARGS = [
+    (
+        "https://static.webknossos.org/data/webknossos-libs/slice_0420.dm4",
+        "slice_0420.dm4",
+        {"data_format": "zarr"},  # using zarr to allow z=1 chunking
+        "uint16",
+        1,
+        (8192, 8192, 1),
+    ),
+    (
+        "https://static.webknossos.org/data/webknossos-libs/slice_0073.dm3",
+        "slice_0073.dm3",
+        {},
+        "uint16",
+        1,
+        (4096, 4096, 1),
+    ),
+    (
+        [
+            "https://static.webknossos.org/data/webknossos-libs/slice_0073.dm3",
+            "https://static.webknossos.org/data/webknossos-libs/slice_0074.dm3",
+        ],
+        ["slice_0073.dm3", "slice_0074.dm3"],
+        {},
+        "uint16",
+        1,
+        (4096, 4096, 2),
+    ),
+    (
+        "https://samples.scif.io/dnasample1.zip",
+        "dnasample1.dm3",
+        {},
+        "int16",
+        1,
+        (4096, 4096, 1),
+    ),
     (
         # published with CC0 license, taken from
         # https://doi.org/10.6084/m9.figshare.c.3727411_D391.v1
@@ -292,8 +339,8 @@ TEST_IMAGES_ARGS = [
 )
 def test_test_images(
     tmp_path: Path,
-    url: str,
-    filename: str,
+    url: Union[str, List[str]],
+    filename: Union[str, List[str]],
     kwargs: Dict,
     dtype: str,
     num_channels: int,
@@ -301,32 +348,47 @@ def test_test_images(
 ) -> wk.Dataset:
     unzip_path = tmp_path / "unzip"
     download_and_unpack(url, unzip_path, filename)
+    path: Union[Path, List[Path]]
+    if isinstance(filename, list):
+        layer_name = filename[0] + "..."
+        path = [unzip_path / i for i in filename]
+    else:
+        layer_name = filename
+        path = unzip_path / filename
     ds = wk.Dataset(tmp_path / "ds", (1, 1, 1))
     with wk.utils.get_executor_for_args(None) as executor:
-        l_bio = ds.add_layer_from_images(
-            str(unzip_path / filename),
-            layer_name="bioformats_" + filename,
-            compress=True,
-            executor=executor,
-            use_bioformats=True,
-            **kwargs,
-        )
-        assert l_bio.dtype_per_channel == np.dtype(dtype)
-        assert l_bio.num_channels == num_channels
-        assert l_bio.bounding_box == wk.BoundingBox(topleft=(0, 0, 0), size=size)
+        l_bio: Optional[wk.Layer]
+        try:
+            l_bio = ds.add_layer_from_images(
+                path,
+                layer_name="bioformats_" + layer_name,
+                compress=True,
+                executor=executor,
+                use_bioformats=True,
+                **kwargs,
+            )
+        except Exception as e:
+            print(e)
+            l_bio = None
+        else:
+            assert l_bio.dtype_per_channel == np.dtype(dtype)
+            assert l_bio.num_channels == num_channels
+            assert l_bio.bounding_box == wk.BoundingBox(topleft=(0, 0, 0), size=size)
         l_normal = ds.add_layer_from_images(
-            str(unzip_path / filename),
-            layer_name="normal_" + filename,
+            path,
+            layer_name="normal_" + layer_name,
             compress=True,
             executor=executor,
+            use_bioformats=False,
             **kwargs,
         )
         assert l_normal.dtype_per_channel == np.dtype(dtype)
         assert l_normal.num_channels == num_channels
         assert l_normal.bounding_box == wk.BoundingBox(topleft=(0, 0, 0), size=size)
-        assert np.array_equal(
-            l_bio.get_finest_mag().read(), l_normal.get_finest_mag().read()
-        )
+        if l_bio is not None:
+            assert np.array_equal(
+                l_bio.get_finest_mag().read(), l_normal.get_finest_mag().read()
+            )
     return ds
 
 
