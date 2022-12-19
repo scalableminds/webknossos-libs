@@ -265,7 +265,7 @@ TEST_IMAGES_ARGS = [
     (
         "https://static.webknossos.org/data/webknossos-libs/slice_0073.dm3",
         "slice_0073.dm3",
-        {},
+        {"data_format": "zarr"},  # using zarr to allow z=1 chunking
         "uint16",
         1,
         (4096, 4096, 1),
@@ -276,7 +276,7 @@ TEST_IMAGES_ARGS = [
             "https://static.webknossos.org/data/webknossos-libs/slice_0074.dm3",
         ],
         ["slice_0073.dm3", "slice_0074.dm3"],
-        {},
+        {"data_format": "zarr"},  # using zarr to allow z=1 chunking
         "uint16",
         1,
         (4096, 4096, 2),
@@ -284,7 +284,7 @@ TEST_IMAGES_ARGS = [
     (
         "https://samples.scif.io/dnasample1.zip",
         "dnasample1.dm3",
-        {},
+        {"data_format": "zarr"},  # using zarr to allow z=1 chunking
         "int16",
         1,
         (4096, 4096, 1),
