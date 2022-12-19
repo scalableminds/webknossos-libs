@@ -330,13 +330,17 @@ class PimsImages:
         if self._czi_channel is not None:
             open_kwargs["czi_channel"] = self._czi_channel
 
+        # try normal pims.open
         def strategy_0() -> pims.FramesSequence:
             result = pims.open(original_images, **open_kwargs)
             self._ensure_correct_bioformats_usage(original_images)
             return result
 
+        # try pims.ImageSequence, which uses skimage internally but works for multiple images
         strategy_1 = lambda: pims.ImageSequence(original_images)
 
+        # for image lists, try to guess the correct reader using only the first image,
+        # and apply that for all images via pims.ReaderSequence
         def strategy_2() -> pims.FramesSequence:
             if isinstance(original_images, list):
                 # assuming the same reader works for all images:

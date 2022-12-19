@@ -34,7 +34,10 @@ from cluster_tools import Executor
 from natsort import natsort_keygen
 from upath import UPath
 
-from webknossos.dataset.defaults import DEFAULT_CHUNK_SHAPE
+from webknossos.dataset.defaults import (
+    DEFAULT_CHUNK_SHAPE,
+    DEFAULT_CHUNKS_PER_SHARD_ZARR,
+)
 
 from ..geometry.vec3_int import Vec3Int, Vec3IntLike
 from ._array import ArrayException, ArrayInfo, BaseArray, DataFormat
@@ -1159,7 +1162,10 @@ class Dataset:
             ):
                 if chunk_shape is None:
                     chunk_shape = DEFAULT_CHUNK_SHAPE.with_z(1)
-                # chunks_per_shard is 1 by default for zarr atm
+                if chunks_per_shard is None:
+                    # chunks_per_shard is 1 by default for zarr atm, but this
+                    # might change in the future:
+                    chunks_per_shard = DEFAULT_CHUNKS_PER_SHARD_ZARR.with_z(1)
             mag_view = layer.add_mag(
                 mag=mag,
                 chunk_shape=chunk_shape,
