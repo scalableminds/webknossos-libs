@@ -1,3 +1,4 @@
+import gc
 import json
 import re
 import warnings
@@ -35,6 +36,11 @@ def pytest_make_parametrize_id(config: Any, val: Any, argname: str) -> Any:
         return "/".join(parts[-take:])
     # return None to let pytest handle the formatting
     return None
+
+
+@pytest.fixture(autouse=True)
+def ensure_gc():
+    gc.collect()
 
 
 ### HYPOTHESIS STRATEGIES (library to test many combinations for data class input)
