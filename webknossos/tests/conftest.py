@@ -39,7 +39,7 @@ def pytest_make_parametrize_id(config: Any, val: Any, argname: str) -> Any:
 
 
 @pytest.fixture(autouse=True)
-def ensure_gc():
+def ensure_gc() -> None:
     gc.collect()
 
 
