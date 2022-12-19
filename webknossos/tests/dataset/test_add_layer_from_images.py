@@ -276,7 +276,7 @@ TEST_IMAGES_ARGS = [
             "https://static.webknossos.org/data/webknossos-libs/slice_0074.dm3",
         ],
         ["slice_0073.dm3", "slice_0074.dm3"],
-        {"data_format": "zarr"},  # using zarr to allow z=1 chunking
+        {"data_format": "zarr"},  # using zarr to allow smaller chunking
         "uint16",
         1,
         (4096, 4096, 2),
