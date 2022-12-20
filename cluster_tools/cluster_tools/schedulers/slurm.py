@@ -210,10 +210,14 @@ class SlurmExecutor(ClusterExecutor):
         ]
 
         if len(scheduled_job_ids):
-            # Array jobs (whose id looks like `<job_id>_<array_index>`) don't need to be canceled individually,
-            # but can be canceled together using the job_id
+            # Array jobs (whose id looks like `<job_id>_<array_index>`) don't need to be signaled individually,
+            # but can be canceled together using the job_id.
             unique_job_ids = set(map(lambda x: str(x).split("_")[0], scheduled_job_ids))
-            _stdout, stderr, exit_code = call(f"scancel {' '.join(unique_job_ids)}")
+            # Send SIGINT signal instead of terminating the jobs right away. This way, the jobs can
+            # react to the signal, safely shutdown and signal (cancel) jobs they possibly scheduled, recursively.
+            _stdout, stderr, exit_code = call(
+                f"scancel -s SIGINT {' '.join(unique_job_ids)}"
+            )
 
             if exit_code == 0:
                 logging.debug(f"Canceled slurm jobs {', '.join(unique_job_ids)}.")

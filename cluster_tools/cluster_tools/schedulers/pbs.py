@@ -65,7 +65,11 @@ class PBSExecutor(ClusterExecutor):
                 job_id_parts[0] if len(job_id_parts) == 1 else f"{job_id_parts[0]}[]"
                 for job_id_parts in split_job_ids
             )
-            _stdout, stderr, exit_code = call(f"qdel {' '.join(unique_job_ids)}")
+            # Send SIGINT signal instead of SIGTERM using qdel. This way, the jobs can
+            # react to the signal, safely shutdown and signal (cancel) jobs they possibly scheduled, recursively.
+            _stdout, stderr, exit_code = call(
+                f"qsig -s SIGINT {' '.join(unique_job_ids)}"
+            )
 
             if exit_code == 0:
                 logging.debug(f"Canceled PBS jobs {', '.join(unique_job_ids)}.")
