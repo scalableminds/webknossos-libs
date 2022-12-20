@@ -138,7 +138,7 @@ jobs:
       max-parallel: 4
       matrix:
         python-version: [3.7, 3.8, 3.9]
-        group: [1, 2, 3, 4, 5]
+        group: [1, 2, 3]
     defaults:
       run:
         working-directory: webknossos
@@ -157,15 +157,15 @@ jobs:
         poetry install --extras all
 
     - name: Check formatting
-      if: matrix.group == 0
+      if: matrix.group == 1
       run: ./format.sh check
 
     - name: Lint code
-      if: matrix.group == 0
+      if: matrix.group == 1
       run: ./lint.sh
 
     - name: Check typing
-      if: matrix.group == 0
+      if: matrix.group == 1
       run: ./typecheck.sh
 
     - name: Python tests
