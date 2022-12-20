@@ -2525,7 +2525,7 @@ def test_aligned_downsampling(data_format: DataFormat, output_path: Path) -> Non
     ds_path = copy_simple_dataset(data_format, output_path, "aligned_downsampling")
     dataset = Dataset.open(ds_path)
     input_layer = dataset.get_layer("color")
-    input_layer.downsample()
+    input_layer.downsample(coarsest_mag=Mag(2))
     test_layer = dataset.add_layer(
         layer_name="color_2",
         category="color",
@@ -2539,20 +2539,17 @@ def test_aligned_downsampling(data_format: DataFormat, output_path: Path) -> Non
         # assuming the layer has 3 channels:
         data=(np.random.rand(3, 24, 24, 24) * 255).astype(np.uint8),
     )
-    test_layer.downsample()
+    test_layer.downsample(coarsest_mag=Mag(2))
 
     assert (ds_path / "color_2" / "1").exists()
     assert (ds_path / "color_2" / "2").exists()
-    assert (ds_path / "color_2" / "4").exists()
 
     if data_format == DataFormat.Zarr:
         assert (ds_path / "color_2" / "1" / ".zarray").exists()
         assert (ds_path / "color_2" / "2" / ".zarray").exists()
-        assert (ds_path / "color_2" / "4" / ".zarray").exists()
     else:
         assert (ds_path / "color_2" / "1" / "header.wkw").exists()
         assert (ds_path / "color_2" / "2" / "header.wkw").exists()
-        assert (ds_path / "color_2" / "4" / "header.wkw").exists()
 
     assure_exported_properties(dataset)
 
