@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.26...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.11.0...HEAD)
 
 ### Breaking Changes
 
@@ -19,6 +19,25 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+
+
+## [0.11.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.11.0) - 2022-12-09
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.27...v0.11.0)
+
+### Breaking Changes
+- Removed the `id` attribute of the `BoundingBox` class, also from the constructor. [#836](https://github.com/scalableminds/webknossos-libs/pull/836)
+
+### Fixed
+- Fixed bounding box serialization in NMLs, so that bounding boxes which are uploaded via annotations are now recognized properly by webKnossos. [#836](https://github.com/scalableminds/webknossos-libs/pull/836)
+- Bounding boxes keep their name, color and visibility when transformed via methods, such as `bbox.padded_with_margins()`. [#836](https://github.com/scalableminds/webknossos-libs/pull/836)
+
+
+
+## [0.10.27](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.27) - 2022-12-07
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.26...v0.10.27)
+
+### Added
+- Short links, such as `https://webknossos.org/links/93zLg9U9vJ3c_UWp`, are now supported for dataset and annotation urls in `download` and `open_remote` methods. [#837](https://github.com/scalableminds/webknossos-libs/pull/837)
 
 
 ## [0.10.26](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.26) - 2022-12-05
