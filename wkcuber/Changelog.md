@@ -14,6 +14,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Added
 
 ### Changed
+- Improved perfomance of `wkcuber.tile_cubing` and making it more robust. [#840](https://github.com/scalableminds/webknossos-libs/pull/840)
 
 ### Fixed
 
