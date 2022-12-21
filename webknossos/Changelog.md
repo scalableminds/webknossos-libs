@@ -15,6 +15,10 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes
 
 ### Added
+- `Dataset.from_images` and `dataset.add_layer_from_images` have new features: [#842](https://github.com/scalableminds/webknossos-libs/pull/842)
+  * `dm3` and `dm4` datasets can be read without bioformats now.
+  * It's possible to completely disable the bioformats adapter by setting `use_bioformats` to False.
+  * Lists of images can now be handled with other readers, before only images supported by skimage worked in lists.
 
 ### Changed
 

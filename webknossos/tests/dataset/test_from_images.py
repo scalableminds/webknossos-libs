@@ -13,6 +13,7 @@ def test_compare_tifffile(tmp_path: Path) -> None:
         (1, 1, 1),
         compress=True,
         layer_category="segmentation",
+        chunks_per_shard=(8, 8, 8),
         map_filepath_to_layer_name=wk.Dataset.ConversionLayerMapping.ENFORCE_SINGLE_LAYER,
     )
     assert len(ds.layers) == 1
