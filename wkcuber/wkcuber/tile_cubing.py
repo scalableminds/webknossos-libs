@@ -2,9 +2,8 @@ import logging
 import os
 import re
 from argparse import ArgumentParser, ArgumentTypeError, Namespace
-from glob import glob
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union, cast
+from typing import Dict, List, Optional, Tuple, cast
 
 import numpy as np
 from cluster_tools import Executor
@@ -34,6 +33,8 @@ from .cubing import create_parser as create_cubing_parser
 from .cubing import read_image_file
 
 PADDING_FILE_NAME = "/"
+COORDINATE_REGEX = re.compile("{(x+|y+|z+)}")
+COORDINATES = "x", "y", "z"
 
 
 # similar to ImageJ https://imagej.net/BigStitcher_StackLoader#File_pattern
@@ -48,146 +49,161 @@ def check_input_pattern(input_pattern: str) -> str:
     return input_pattern
 
 
-def replace_coordinates(
+def path_from_coordinate_pattern(
     pattern: str, coord_ids_with_replacement_info: Dict[str, Tuple[int, int]]
-) -> str:
-    """Replaces the coordinates with a specific length.
+) -> Path:
+    """Formulates a path from the given pattern and coordinate info.
+
     The coord_ids_with_replacement_info is a Dict that maps a dimension
     to a tuple of the coordinate value and the desired length."""
-    occurrences = re.findall("({x+}|{y+}|{z+})", pattern)
-    for occurrence in occurrences:
-        coord = occurrence[1]
-        if coord in coord_ids_with_replacement_info:
-            number_of_digits = coord_ids_with_replacement_info[coord][1]
-            format_str = "0" + str(number_of_digits) + "d"
-            pattern = pattern.replace(
-                occurrence,
-                format(coord_ids_with_replacement_info[coord][0], format_str),
-                1,
-            )
-    return pattern
+    path_parts: List[str] = []
+    last = 0
+    for match in COORDINATE_REGEX.finditer(pattern):
+        coord = match.group(1)[0]
+        value, number_of_digits = coord_ids_with_replacement_info[coord]
+        path_parts.append(pattern[last : match.start()])
+        path_parts.append(str(value).zfill(number_of_digits))
+        last = match.end()
+
+    path_parts.append(pattern[last:])
+    return Path("".join(path_parts))
 
 
-def replace_pattern_to_specific_length_without_brackets(
-    pattern: str, coord_ids_with_specific_length: Dict[str, int]
-) -> str:
-    occurrences = re.findall("({x+}|{y+}|{z+})", pattern)
-    for occurrence in occurrences:
-        coord = occurrence[1]
-        if coord in coord_ids_with_specific_length:
-            pattern = pattern.replace(
-                occurrence, coord * coord_ids_with_specific_length[coord], 1
-            )
-    return pattern
+def parse_coordinate_pattern(pattern: str) -> Tuple[List[re.Pattern], Path]:
+    """Creates a list of all subdirectores in pattern as regexes
 
+    Only starts creating regexes from the first path component that contains a
+    coordinate template string (eg. {x}), these are returned as a pathlib.Path
+    as the second component of the return value.
 
-def replace_coordinates_with_glob_regex(pattern: str, coord_ids: Dict[str, int]) -> str:
-    occurrences = re.findall("({x+}|{y+}|{z+})", pattern)
-    for occurrence in occurrences:
-        coord = occurrence[1]
-        if coord in coord_ids:
-            number_of_digits = coord_ids[coord]
-            pattern = pattern.replace(occurrence, "[0-9]" * number_of_digits, 1)
-    return pattern
+    Raises ValueError in case the pattern is incorrectly formatted."""
+    coord_set = {*COORDINATES}
+    regexes: List[re.Pattern] = []
+    pattern_parts: List[str] = []
+    root_path = Path()
+    for dirpattern in Path(pattern).parts:
+        last = 0
+        for match in COORDINATE_REGEX.finditer(dirpattern):
+            coord_string = match.group(1)
+            coord = coord_string[0]
+            try:
+                coord_set.remove(coord)
+            except KeyError:
+                raise ValueError(
+                    f"pattern ({pattern}) contains more than one {coord} coordinate"
+                ) from None
+            else:
+                substring = re.escape(dirpattern[last : match.start()])
+                length = str(len(coord_string))
+                pattern_parts.extend(
+                    [substring, "(?P<", coord, ">[0-9]{1,", length, "})"]
+                )
+                last = match.end()
 
+        if not pattern_parts:  # no matches found yet
+            root_path /= dirpattern
+        else:
+            pattern_parts.append(re.escape(dirpattern[last:]))
+            next_pattern = "".join(pattern_parts)
+            regexes.append(re.compile(next_pattern))
+            pattern_parts = [next_pattern]
+            pattern_parts.append(re.escape(os.sep))
 
-def get_digit_counts_for_dimensions(pattern: str) -> Dict[str, int]:
-    """Counts how many digits the dimensions x, y and z occupy in the given pattern."""
-    occurrences = re.findall("({x+}|{y+}|{z+})", pattern)
-    decimal_lengths = {"x": 0, "y": 0, "z": 0}
-
-    for occurrence in occurrences:
-        current_dimension = occurrence[1]
-        decimal_lengths[current_dimension] = max(
-            decimal_lengths[current_dimension], len(occurrence) - 2
+    if coord_set:
+        raise ValueError(
+            f"pattern ({pattern}) is missing these coordinates: {', '.join(coord_set)}"
         )
 
-    return decimal_lengths
+    return regexes, root_path
 
 
 def detect_interval_for_dimensions(
-    file_path_pattern: str, decimal_lengths: Dict[str, int]
-) -> Tuple[Dict[str, int], Dict[str, int], Optional[Path], int]:
+    file_path_pattern: str,
+) -> Tuple[Dict[str, int], Dict[str, int], Dict[str, int], Optional[Path], int]:
+    """Searches filesystem for all files that will match the given pattern.
+
+    Returns the needed information to find all matching files, in order:
+    - The minimum amount of length of each coordinate, this represents the
+        amount of leading zeros that should be added inside shorter filenames
+    - The lowest value of indexes of each coordinate.
+    - The highest value of indexes of each coordinate.
+    - The first matching file found.
+    - The total amount of matching files.
+
+    Raises RuntimeError in case padding is not used in a consistent way."""
     arbitrary_file = None
     file_count = 0
-    # dictionary that maps the dimension string to the current dimension length
-    # used to avoid distinction of dimensions with if statements
-    current_decimal_length = {"x": 0, "y": 0, "z": 0}
-    max_dimensions = {"x": 0, "y": 0, "z": 0}
+    padding_found = {coord: False for coord in COORDINATES}
+    min_paddings: Dict[str, int] = {}
+    max_dimensions: Dict[str, int] = {}
     min_dimensions: Dict[str, int] = {}
 
-    # find all files by trying all combinations of dimension lengths
-    for x in range(decimal_lengths["x"] + 1):
-        current_decimal_length["x"] = x
-        for y in range(decimal_lengths["y"] + 1):
-            current_decimal_length["y"] = y
-            for z in range(decimal_lengths["z"] + 1):
-                current_decimal_length["z"] = z
-                specific_pattern = replace_coordinates_with_glob_regex(
-                    file_path_pattern, {"z": z, "y": y, "x": x}
-                )
-                found_files = glob(specific_pattern)
-                file_count += len(found_files)
-                for file_name in found_files:
-                    if arbitrary_file is None:
-                        arbitrary_file = Path(file_name)
-                    # Turn a pattern {xxx}/{yyy}/{zzzzzz} for given dimension counts into (e.g., 2, 2, 3) into
-                    # something like xx/yy/zzz (note that the curly braces are gone)
-                    applied_fpp = replace_pattern_to_specific_length_without_brackets(
-                        file_path_pattern, {"x": x, "y": y, "z": z}
+    regexes, root_path = parse_coordinate_pattern(file_path_pattern)
+    *dir_regexes, full_rx = regexes
+    root_depth = len(root_path.parts)
+    target_depth = len(dir_regexes)
+    for dirname, dirs, files in os.walk(root_path, followlinks=True):
+        dir_path_parts = Path(dirname).parts[root_depth:]
+        dir_path = Path(*dir_path_parts)
+        depth = len(dir_path_parts)
+        if depth != 0:
+            try:
+                dir_rx = dir_regexes[depth - 1]
+            except IndexError:
+                dirs.clear()
+                continue
+
+            if dir_rx.fullmatch(str(dir_path)) is None:
+                dirs.clear()
+                continue
+
+        if depth != target_depth:
+            continue
+
+        dirs.clear()
+        for file in files:
+            file_path = dir_path / file
+            match = full_rx.fullmatch(str(file_path))
+            if match is None:
+                continue
+
+            file_count += 1
+            if arbitrary_file is None:
+                arbitrary_file = root_path / file_path
+
+            for current_dimension in COORDINATES:
+                coordinate_value_str = match.group(current_dimension)
+                coordinate_value = int(coordinate_value_str)
+                length = len(coordinate_value_str)
+                is_padded = coordinate_value_str[0] == "0"
+                if file_count == 1:
+                    min_paddings[current_dimension] = length
+                    min_dimensions[current_dimension] = coordinate_value
+                    max_dimensions[current_dimension] = coordinate_value
+                else:
+                    previous_length = min_paddings[current_dimension]
+                    if is_padded:
+                        if length > previous_length:
+                            raise RuntimeError("Inconsistent use of padding found")
+
+                    previous_is_padded = padding_found[current_dimension]
+                    if previous_is_padded:
+                        if length < previous_length:
+                            raise RuntimeError("Inconsistent use of padding found")
+                    else:
+                        min_paddings[current_dimension] = min(length, previous_length)
+
+                    min_dimensions[current_dimension] = min(
+                        coordinate_value, min_dimensions[current_dimension]
+                    )
+                    max_dimensions[current_dimension] = max(
+                        coordinate_value, max_dimensions[current_dimension]
                     )
 
-                    # For each dimension, look up where it starts within the applied pattern.
-                    # Use that index to look up the actual value within the file name
-                    for current_dimension in ["x", "y", "z"]:
-                        idx = applied_fpp.index(current_dimension)
-                        coordinate_value_str = file_name[
-                            idx : idx + current_decimal_length[current_dimension]
-                        ]
-                        coordinate_value = int(coordinate_value_str)
-                        min_dimensions[current_dimension] = min(
-                            min_dimensions.get(current_dimension, coordinate_value),
-                            coordinate_value,
-                        )
-                        max_dimensions[current_dimension] = max(
-                            max_dimensions[current_dimension], coordinate_value
-                        )
+                if is_padded:
+                    padding_found[current_dimension] = True
 
-    return min_dimensions, max_dimensions, arbitrary_file, file_count
-
-
-def find_file_with_dimensions(
-    file_path_pattern: str,
-    x_value: int,
-    y_value: int,
-    z_value: int,
-    decimal_lengths: Dict[str, int],
-) -> Union[Path, None]:
-    file_path_unpadded = Path(
-        replace_coordinates(
-            file_path_pattern, {"z": (z_value, 0), "y": (y_value, 0), "x": (x_value, 0)}
-        )
-    )
-
-    file_path_padded = Path(
-        replace_coordinates(
-            file_path_pattern,
-            {
-                "z": (z_value, decimal_lengths["z"]),
-                "y": (y_value, decimal_lengths["y"]),
-                "x": (x_value, decimal_lengths["x"]),
-            },
-        )
-    )
-
-    # the unpadded file pattern has a higher precedence
-    if file_path_unpadded.is_file():
-        return file_path_unpadded
-
-    if file_path_padded.is_file():
-        return file_path_padded
-
-    return None
+    return min_paddings, min_dimensions, max_dimensions, arbitrary_file, file_count
 
 
 def tile_cubing_job(
@@ -212,11 +228,12 @@ def tile_cubing_job(
         tile_size,
         min_dimensions,
         max_dimensions,
-        decimal_lengths,
+        min_paddings,
         dtype,
         num_channels,
     ) = args
     largest_value_in_chunk = 0  # This is used to compute the largest_segmentation_id if it is a segmentation layer
+    z_offset = target_view.bounding_box.in_mag(target_view.mag).topleft.z
 
     # Iterate over the z batches
     # Batching is useful to utilize IO more efficiently
@@ -237,14 +254,18 @@ def tile_cubing_job(
                     buffer = np.empty(buffer_shape, dtype=dtype, order="F")
                     for z in z_batch:
                         # Read file if exists or use zeros instead
-                        file_name = find_file_with_dimensions(
-                            input_path_pattern, x, y, z, decimal_lengths
+                        coordinate_info: Dict[str, Tuple[int, int]] = {}
+                        for coord, value in zip(COORDINATES, (x, y, z)):
+                            coordinate_info[coord] = value, min_paddings[coord]
+
+                        file_path = path_from_coordinate_pattern(
+                            input_path_pattern, coordinate_info
                         )
-                        if file_name:
+                        if file_path.exists():
                             # read the image
                             image = read_image_file(
-                                file_name,
-                                target_view.header.voxel_type,
+                                file_path,
+                                target_view.info.voxel_type,
                                 z,
                                 None,
                                 None,
@@ -253,7 +274,7 @@ def tile_cubing_job(
                             # add zeros instead
                             image = np.zeros(
                                 tile_size + (1,),
-                                dtype=target_view.header.voxel_type,
+                                dtype=target_view.info.voxel_type,
                             )
                         # The size of a image might be smaller than the buffer, if the tile is at the bottom/right border
                         buffer[
@@ -264,18 +285,18 @@ def tile_cubing_job(
                         offset = (
                             (x - min_dimensions["x"]) * tile_size[0],
                             (y - min_dimensions["y"]) * tile_size[1],
-                            z_batch[0] - target_view.global_offset.z,
+                            z_batch[0] - z_offset,
                         )
-                        target_view.write(data=buffer, offset=offset)
+                        target_view.write(data=buffer, relative_offset=offset)
                         largest_value_in_chunk = max(
                             largest_value_in_chunk, np.max(buffer)
                         )
             time_stop(f"Cubing of z={z_batch[0]}-{z_batch[-1]}")
         except Exception as exc:
-            logging.error(
-                "Cubing of z={}-{} failed with: {}".format(z_batch[0], z_batch[-1], exc)
-            )
-            raise exc
+            raise RuntimeError(
+                "Cubing of z={}-{} failed".format(z_batch[0], z_batch[-1])
+            ) from exc
+
     return largest_value_in_chunk
 
 
@@ -288,13 +309,13 @@ def tile_cubing(
     args: Namespace,
     executor: Executor,
 ) -> None:
-    decimal_lengths = get_digit_counts_for_dimensions(input_path_pattern)
     (
+        min_paddings,
         min_dimensions,
         max_dimensions,
         arbitrary_file,
         file_count,
-    ) = detect_interval_for_dimensions(input_path_pattern, decimal_lengths)
+    ) = detect_interval_for_dimensions(input_path_pattern)
 
     if not arbitrary_file:
         logging.error(
@@ -349,7 +370,7 @@ def tile_cubing(
         target_layer.bounding_box = target_layer.bounding_box.extended_by(bbox)
 
     target_mag_view = target_layer.get_or_add_mag(
-        Mag(1), block_len=DEFAULT_CHUNK_SHAPE.z
+        Mag(1), chunk_shape=DEFAULT_CHUNK_SHAPE.z
     )
 
     job_args = []
@@ -367,8 +388,8 @@ def tile_cubing(
         job_args.append(
             (
                 target_mag_view.get_view(
-                    (x_offset, y_offset, z_values[0]),
-                    (num_x, num_y, len(z_values)),
+                    absolute_offset=(x_offset, y_offset, z_values[0]),
+                    size=(num_x, num_y, len(z_values)),
                 ),
                 z_values,
                 input_path_pattern,
@@ -376,7 +397,7 @@ def tile_cubing(
                 (tile_width, tile_height, num_channels),
                 min_dimensions,
                 max_dimensions,
-                decimal_lengths,
+                min_paddings,
                 dtype,
                 num_channels,
             )
