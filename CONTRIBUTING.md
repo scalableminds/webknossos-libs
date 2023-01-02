@@ -114,10 +114,10 @@ See below for specifics of the different packages. Let's have a look at the comm
 
   To install the dependencies for all sub-projects, run `make install`.
 * **Tooling** we use across the sub-projects to enforce coding styles and tests:
-    * `format.sh`: black and isort
-    * `lint.sh`: pylint
-    * `typecheck.sh`: mypy
-    * `test.sh`: pytest and custom scripts
+    * `./format.sh`: black and isort
+    * `./lint.sh`: pylint
+    * `./typecheck.sh`: mypy
+    * `./test.sh`: pytest and custom scripts
 
   Those are also accessible via make commands from the top-level directory, running the respective scripts for each sub-project
   , e.g. `make format`, `make lint`, …
@@ -138,9 +138,13 @@ The `webknossos` folder contains examples, which are not part of the package, bu
 
 The tests also contain functionality for the webKnossos client. There a two modes to run the tests:
 
-1. `test.sh --refresh-snapshots`, sending network requests to a webKnossos instance:
-  This expects a local webKnossos setup with specific test data, which is shipped with webKnossos. If you're starting and running webKnossos manually, please use port 9000 (the default) and run the `tools/postgres/prepareTestDb.sh` script in the webKnossos repository (⚠️ this overwrites your local webKnossos database). Alternatively, a docker-compose setup is started automatically for the tests, see `test.sh` and `tests/docker-compose.yml` for details. The network requests & response are recorded as "cassettes" by [vcr.py](https://vcrpy.readthedocs.io), see next point:
-2. `test.sh` replays responses from previous network snapshots using [vcr.py](https://vcrpy.readthedocs.io) via [pytest-recording](https://github.com/kiwicom/pytest-recording). No additional network requests are allowed in this mode.
+1. `./test.sh --refresh-snapshots`, sending network requests to a webKnossos instance:
+  This expects a local webKnossos setup with specific test data, which is shipped with webKnossos. If you're starting and running webKnossos manually, please use port 9000 (the default) and run the `tools/postgres/prepareTestDb.sh` script in the webKnossos repository (⚠️ this overwrites your local webKnossos database). Alternatively, a docker-compose setup is started automatically for the tests, see `./test.sh` and `tests/docker-compose.yml` for details. The network requests & response are recorded as "cassettes" by [vcr.py](https://vcrpy.readthedocs.io), see next point:
+2. `./test.sh` replays responses from previous network snapshots using [vcr.py](https://vcrpy.readthedocs.io) via [pytest-recording](https://github.com/kiwicom/pytest-recording). No additional network requests are allowed in this mode.
+
+`./test.sh --store-durations` updates the durations for
+[`pytest-split`](https://jerry-git.github.io/pytest-split),
+which is used in the CI to split the tests for different runners.
 
 The code under `webknossos/client/_generated` is auto-generated! Please don't adapt anything in the `generated` folder manually, but re-run the code generation.
 
@@ -154,14 +158,8 @@ To re-generate the code, run
 
 #### `wkcuber` package
 
-Currently the test setup consists of different scripts as well as pytest tests. The following commands are run in CI:
-```bash
-tar -xzvf testdata/WT1_wkw.tar.gz
-poetry run pytest tests
-poetry run tests/scripts/all_tests.sh
-```
-
-There is also a `test.sh` which is currently outdated, see [issue #580](https://github.com/scalableminds/webknossos-libs/issues/580).
+Simply use the default scripts mentioned above, such as
+`./format.sh`, `./lint.sh`, `./typecheck.sh`, `./test.sh`.
 
 
 #### `cluster_tools` package

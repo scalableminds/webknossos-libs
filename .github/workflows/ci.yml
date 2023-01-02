@@ -138,6 +138,7 @@ jobs:
       max-parallel: 4
       matrix:
         python-version: [3.7, 3.8, 3.9]
+        group: [1, 2, 3]
     defaults:
       run:
         working-directory: webknossos
@@ -156,18 +157,21 @@ jobs:
         poetry install --extras all
 
     - name: Check formatting
+      if: matrix.group == 1
       run: ./format.sh check
 
     - name: Lint code
+      if: matrix.group == 1
       run: ./lint.sh
 
     - name: Check typing
+      if: matrix.group == 1
       run: ./typecheck.sh
 
     - name: Python tests
       env:
         WK_TOKEN: ${{ secrets.WK_TOKEN }}
-      run: ./test.sh
+      run: ./test.sh --splits 5 --group ${{ matrix.group }}
 
     - name: Check if git is dirty
       run: |
