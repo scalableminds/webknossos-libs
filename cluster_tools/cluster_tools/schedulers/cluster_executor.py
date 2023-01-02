@@ -125,7 +125,10 @@ class ClusterExecutor(futures.Executor):
         self.inner_handle_kill(signum, frame)
         self.wait_thread.stop()
 
-        if existing_sigint_handler != signal.default_int_handler:
+        if (
+            existing_sigint_handler  # pylint: disable=comparison-with-callable
+            != signal.default_int_handler
+        ):
             existing_sigint_handler(signum, frame)
 
     @abstractmethod
@@ -508,7 +511,7 @@ class ClusterExecutor(futures.Executor):
         self.was_requested_to_shutdown = True
         if wait:
             with self.jobs_lock:
-                if self.jobs:
+                if self.jobs and self.wait_thread.is_alive():
                     self.jobs_empty_cond.wait()
 
         self.wait_thread.stop()
