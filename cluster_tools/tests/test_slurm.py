@@ -5,6 +5,7 @@ import logging
 import multiprocessing as mp
 import os
 import shutil
+import signal
 import tempfile
 import time
 from collections import Counter
@@ -187,7 +188,7 @@ def test_slurm_deferred_submit_shutdown():
         for submit_thread in executor.submit_threads:
             assert submit_thread.is_alive()
 
-        executor.handle_kill(None, None)
+        executor.handle_kill(signal.default_int_handler, None, None)
 
         # Wait for the threads to die down, but less than it would take to submit all jobs
         # which would take ~5 seconds since only one job is scheduled at a time
