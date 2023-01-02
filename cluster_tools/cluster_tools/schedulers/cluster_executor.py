@@ -96,9 +96,11 @@ class ClusterExecutor(futures.Executor):
         os.makedirs(self.cfut_dir, exist_ok=True)
 
         # Clean up if a SIGINT signal is received. However, do not interfere with the
+        # existing signal handler of the process or the
         # shutdown of the main process which sends SIGTERM signals to terminate all
         # child processes.
-        signal.signal(signal.SIGINT, self.handle_kill)
+        existing_sigint_handler = signal.getsignal(signal.SIGINT)
+        signal.signal(signal.SIGINT, partial(self.handle_kill, existing_sigint_handler))
 
         self.meta_data = {}
         assert not (
@@ -114,7 +116,7 @@ class ClusterExecutor(futures.Executor):
     def executor_key(cls):
         pass
 
-    def handle_kill(self, signum, frame):
+    def handle_kill(self, existing_sigint_handler, signum, frame):
         if self.is_shutting_down:
             return
 
@@ -122,6 +124,9 @@ class ClusterExecutor(futures.Executor):
 
         self.inner_handle_kill(signum, frame)
         self.wait_thread.stop()
+
+        if existing_sigint_handler != signal.default_int_handler:
+            existing_sigint_handler(signum, frame)
 
     @abstractmethod
     def inner_handle_kill(self, _signum, _frame):
