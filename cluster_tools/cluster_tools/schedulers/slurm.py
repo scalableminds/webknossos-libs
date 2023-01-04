@@ -164,7 +164,7 @@ class SlurmExecutor(ClusterExecutor):
         return max_submit_jobs
 
     @staticmethod
-    def get_number_of_submitted_jobs(state: str = None):
+    def get_number_of_submitted_jobs(state: Optional[str] = None):
         number_of_submitted_jobs = 0
         state_string = f"-t {state}" if state else ""
         # --array so that each job array element is displayed on a separate line and -h to hide the header

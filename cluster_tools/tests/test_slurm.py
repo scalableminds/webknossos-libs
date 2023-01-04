@@ -11,6 +11,7 @@ import time
 from collections import Counter
 from functools import partial
 from pathlib import Path
+from typing import Optional
 
 import pytest
 
@@ -159,7 +160,7 @@ def test_slurm_deferred_submit():
         )
 
 
-def wait_until_first_job_was_submitted(executor, state: str = None):
+def wait_until_first_job_was_submitted(executor, state: Optional[str] = None):
     # Since the job submission is not synchronous, we need to poll
     # to find out when the first job was submitted
     while executor.get_number_of_submitted_jobs(state) <= 0:
