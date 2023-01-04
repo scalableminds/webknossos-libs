@@ -159,10 +159,10 @@ def test_slurm_deferred_submit():
         )
 
 
-def wait_until_first_job_was_submitted(executor):
+def wait_until_first_job_was_submitted(executor, state: str = None):
     # Since the job submission is not synchronous, we need to poll
     # to find out when the first job was submitted
-    while executor.get_number_of_submitted_jobs() <= 0:
+    while executor.get_number_of_submitted_jobs(state) <= 0:
         time.sleep(0.1)
 
 
@@ -196,13 +196,55 @@ def test_slurm_deferred_submit_shutdown():
             submit_thread.join(1)
             assert not submit_thread.is_alive()
 
-        # Killing the executor should have canceled all submitted jobs
-        assert executor.get_number_of_submitted_jobs() == 0
+        # Wait for scheduled jobs to be canceled, so that the queue is empty again
+        while executor.get_number_of_submitted_jobs() > 0:
+            time.sleep(0.5)
 
     finally:
         _, _, exit_code = call(
             "echo y | sacctmgr modify qos normal set MaxSubmitJobs=-1"
         )
+
+
+def test_slurm_job_canceling_on_shutdown():
+    # Test that scheduled jobs are canceled on shutdown, regardless
+    # of whether they are pending or running.
+    max_running_size = 2
+
+    executor = cluster_tools.get_executor("slurm", debug=True)
+    # Only two jobs can run at once, so that some of the jobs will be
+    # running and some will be pending.
+    os.environ["SLURM_MAX_RUNNING_SIZE"] = str(max_running_size)
+
+    try:
+        executor.map_to_futures(sleep, [10] * 4)
+
+        # Wait until first job is running
+        wait_until_first_job_was_submitted(executor, "RUNNING")
+
+        job_start_time = time.time()
+
+        # The job cancellation is flaky if jobs just switched from PENDING to RUNNING,
+        # probably because Python is not yet able to react to the SIGINT signal.
+        # This is an unsolved issue as of now.
+        time.sleep(1)
+
+        executor.handle_kill(signal.default_int_handler, None, None)
+
+        # Wait for scheduled jobs to be canceled, so that the queue is empty again
+        # and measure how long the cancellation takes
+        while executor.get_number_of_submitted_jobs() > 0:
+            time.sleep(0.5)
+
+        job_cancellation_duration = time.time() - job_start_time
+
+        # Killing the executor should have canceled all submitted jobs, regardless
+        # of whether they were running or pending in much less time than it would
+        # have taken the jobs to finish on their own
+        assert job_cancellation_duration < 5
+
+    finally:
+        del os.environ["SLURM_MAX_RUNNING_SIZE"]
 
 
 def test_slurm_number_of_submitted_jobs():
