@@ -15,8 +15,7 @@ services:
       - ..:/cluster_tools
 
   slurmdbd:
-    # TODO: Update to new version from https://github.com/scalableminds/dockerfiles/pull/42
-    image: scalableminds/slurm-docker-cluster:master__2021363052
+    image: scalableminds/slurm-docker-cluster:master__3840662994
     command: ["slurmdbd"]
     container_name: slurmdbd
     hostname: slurmdbd
@@ -30,8 +29,7 @@ services:
       - mysql
 
   slurmctld:
-    # TODO: Update to new version from https://github.com/scalableminds/dockerfiles/pull/42
-    image: scalableminds/slurm-docker-cluster:master__2021363052
+    image: scalableminds/slurm-docker-cluster:master__3840662994
     command: ["slurmctld"]
     container_name: slurmctld
     environment:
@@ -50,8 +48,7 @@ services:
       - "slurmdbd"
 
   c1:
-    # TODO: Update to new version from https://github.com/scalableminds/dockerfiles/pull/42
-    image: scalableminds/slurm-docker-cluster:master__2021363052
+    image: scalableminds/slurm-docker-cluster:master__3840662994
     command: ["slurmd"]
     hostname: c1
     container_name: c1
@@ -67,8 +64,7 @@ services:
       - "slurmctld"
 
   c2:
-    # TODO: Update to new version from https://github.com/scalableminds/dockerfiles/pull/42
-    image: scalableminds/slurm-docker-cluster:master__2021363052
+    image: scalableminds/slurm-docker-cluster:master__3840662994
     command: ["slurmd"]
     hostname: c2
     container_name: c2
