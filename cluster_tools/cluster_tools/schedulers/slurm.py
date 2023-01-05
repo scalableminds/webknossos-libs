@@ -230,7 +230,7 @@ class SlurmExecutor(ClusterExecutor):
                 if stderr
                 else ""
             )
-            print(
+            logging.debug(
                 f"Canceled slurm jobs {', '.join(unique_job_ids)}.{maybe_error_or_warning}"
             )
 
