@@ -7,13 +7,14 @@ import re
 import sys
 import threading
 from functools import lru_cache
-from typing import List, Optional, Tuple, Type
+from typing import List, Optional, Tuple, Type, Union
 
 from typing_extensions import Literal
 
 from cluster_tools.util import call, chcall, random_string
 
 from .cluster_executor import (
+    NOT_YET_SUBMITTED_STATE,
     ClusterExecutor,
     RemoteException,
     RemoteOutOfMemoryException,
@@ -163,18 +164,23 @@ class SlurmExecutor(ClusterExecutor):
         return max_submit_jobs
 
     @staticmethod
-    def get_number_of_submitted_jobs():
+    def get_number_of_submitted_jobs(state: Optional[str] = None):
         number_of_submitted_jobs = 0
+        state_string = f"-t {state}" if state else ""
         # --array so that each job array element is displayed on a separate line and -h to hide the header
-        stdout, stderr, exit_code = call("squeue --array -u $USER -h | wc -l")
+        stdout, stderr, exit_code = call(
+            f"squeue --array -u $USER -h {state_string} | wc -l"
+        )
+
+        job_state_string = f"with state {state} " if state else ""
         if exit_code == 0:
             number_of_submitted_jobs = int(stdout.decode("utf8"))
             logging.debug(
-                f"Number of currently submitted jobs is {number_of_submitted_jobs}."
+                f"Number of currently submitted jobs {job_state_string}is {number_of_submitted_jobs}."
             )
         else:
             logging.warning(
-                f"Number of currently submitted jobs couldn't be determined. Reason: {stderr}"
+                f"Number of currently submitted jobs {job_state_string}couldn't be determined. Reason: {stderr}"
             )
         return number_of_submitted_jobs
 
@@ -197,10 +203,36 @@ class SlurmExecutor(ClusterExecutor):
 
         return int(job_id)
 
-    def handle_kill(self, *args, **kwargs):
+    def inner_handle_kill(self, *args, **kwargs):
         for submit_thread in self.submit_threads:
             submit_thread.stop()
-        super().handle_kill(*args, **kwargs)
+
+        # Jobs with a NOT_YET_SUBMITTED_STATE have not been submitted to the cluster yet
+        scheduled_job_ids: List[Union[int, str]] = [
+            job_id
+            for job_id, job_state in self.jobs.items()
+            if job_state != NOT_YET_SUBMITTED_STATE
+        ]
+
+        if len(scheduled_job_ids):
+            # Array jobs (whose id looks like `<job_id>_<array_index>`) don't need to be signaled individually,
+            # but can be canceled together using the job_id.
+            unique_job_ids = set(map(lambda x: str(x).split("_")[0], scheduled_job_ids))
+            job_id_string = " ".join(unique_job_ids)
+            # Send SIGINT signal to running jobs instead of terminating the jobs right away. This way, the jobs can
+            # react to the signal, safely shutdown and signal (cancel) jobs they possibly scheduled, recursively.
+            _, stderr, _ = call(
+                f"scancel --state=PENDING {job_id_string}; scancel -s SIGINT --state=RUNNING {job_id_string}; scancel --state=SUSPENDED {job_id_string}"
+            )
+
+            maybe_error_or_warning = (
+                f"\nErrors and warnings (if all jobs were pending 'Invalid job id' errors are expected):\n{stderr.decode('utf8')}"
+                if stderr
+                else ""
+            )
+            print(
+                f"Canceled slurm jobs {', '.join(unique_job_ids)}.{maybe_error_or_warning}"
+            )
 
     def cleanup_submit_threads(self):
         self.submit_threads = [

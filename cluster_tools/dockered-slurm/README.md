@@ -32,6 +32,8 @@ Run `docker-compose` to instantiate the cluster:
 $ docker-compose up -d
 ```
 
+> Note: If you encounter permission errors (`Failed to check keyfile "/etc/munge/munge.key": Permission denied`), follow the steps from the "Deleting the Cluster" section and run the previous command again.
+
 ## Register the Cluster with SlurmDBD
 
 To register the cluster to the slurmdbd daemon, run the `register_cluster.sh`
@@ -47,6 +49,8 @@ $ ./register_cluster.sh
 >
 > You can check the status of the cluster by viewing the logs: `docker-compose
 > logs -f`
+
+> Note: If you encounter an error that the daemon is not running (`Error response from daemon: Container <...> is not running`), the start of the containers was not successful. Check the logs using `docker-compose logs -f` and revisit the last step.
 
 ## Accessing the Cluster
 

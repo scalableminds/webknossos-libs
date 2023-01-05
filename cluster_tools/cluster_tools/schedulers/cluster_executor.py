@@ -22,6 +22,8 @@ from cluster_tools.util import (
     with_preliminary_postfix,
 )
 
+NOT_YET_SUBMITTED_STATE = "NOT_YET_SUBMITTED"
+
 
 def join_messages(strings: List[str]) -> str:
     return " ".join(x.strip() for x in strings if x.strip())
@@ -86,14 +88,19 @@ class ClusterExecutor(futures.Executor):
         self.jobs_lock = threading.Lock()
         self.jobs_empty_cond = threading.Condition(self.jobs_lock)
         self.keep_logs = keep_logs
+        self.is_shutting_down = False
 
         self.wait_thread = FileWaitThread(self._completion, self)
         self.wait_thread.start()
 
         os.makedirs(self.cfut_dir, exist_ok=True)
 
-        signal.signal(signal.SIGINT, self.handle_kill)
-        signal.signal(signal.SIGTERM, self.handle_kill)
+        # Clean up if a SIGINT signal is received. However, do not interfere with the
+        # existing signal handler of the process or the
+        # shutdown of the main process which sends SIGTERM signals to terminate all
+        # child processes.
+        existing_sigint_handler = signal.getsignal(signal.SIGINT)
+        signal.signal(signal.SIGINT, partial(self.handle_kill, existing_sigint_handler))
 
         self.meta_data = {}
         assert not (
@@ -109,15 +116,24 @@ class ClusterExecutor(futures.Executor):
     def executor_key(cls):
         pass
 
-    def handle_kill(self, _signum, _frame):
+    def handle_kill(self, existing_sigint_handler, signum, frame):
+        if self.is_shutting_down:
+            return
+
+        self.is_shutting_down = True
+
+        self.inner_handle_kill(signum, frame)
         self.wait_thread.stop()
-        job_ids = ",".join(str(id) for id in self.jobs.keys())
-        logging.debug(
-            "A termination signal was registered. The following jobs are still running on the cluster:\n{}".format(
-                job_ids
-            )
-        )
-        sys.exit(130)
+
+        if (
+            existing_sigint_handler  # pylint: disable=comparison-with-callable
+            != signal.default_int_handler
+        ):
+            existing_sigint_handler(signum, frame)
+
+    @abstractmethod
+    def inner_handle_kill(self, _signum, _frame):
+        pass
 
     @abstractmethod
     def check_job_state(
@@ -426,7 +442,7 @@ class ClusterExecutor(futures.Executor):
                 # Register the job in the jobs array, although the jobid is not known yet.
                 # Otherwise it might happen that self.jobs becomes empty, but some of the jobs were
                 # not even submitted yet.
-                self.jobs[workerid_with_index] = "pending"
+                self.jobs[workerid_with_index] = NOT_YET_SUBMITTED_STATE
 
         job_count = len(allArgs)
         job_name = get_function_name(fun)
@@ -495,7 +511,7 @@ class ClusterExecutor(futures.Executor):
         self.was_requested_to_shutdown = True
         if wait:
             with self.jobs_lock:
-                if self.jobs:
+                if self.jobs and self.wait_thread.is_alive():
                     self.jobs_empty_cond.wait()
 
         self.wait_thread.stop()

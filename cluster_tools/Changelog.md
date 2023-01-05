@@ -14,6 +14,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Added
 
 ### Changed
+- When using the slurm or pbs distribution strategy, scheduled jobs are automatically canceled when aborting a run, i.e. if the SIGINT signal is received. [#838](https://github.com/scalableminds/webknossos-libs/pull/838)
 
 ### Fixed
 

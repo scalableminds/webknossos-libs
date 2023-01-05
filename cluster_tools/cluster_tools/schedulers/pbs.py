@@ -4,7 +4,7 @@ import logging
 import os
 import re
 from concurrent import futures
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 
 from typing_extensions import Literal
 
@@ -52,6 +52,31 @@ class PBSExecutor(ClusterExecutor):
     @classmethod
     def get_job_id_string(cls):
         return cls.get_current_job_id()
+
+    def inner_handle_kill(self, *args, **kwargs):
+        scheduled_job_ids: List[Union[int, str]] = list(self.jobs.keys())
+
+        if len(scheduled_job_ids):
+            # Array jobs (whose id looks like `<job_id>_<array_index>`) don't need to be canceled individually,
+            # but can be canceled together using the job_id.
+            split_job_ids = map(lambda x: str(x).split("_"), scheduled_job_ids)
+            # However array job ids need to include [] in the end.
+            unique_job_ids = set(
+                job_id_parts[0] if len(job_id_parts) == 1 else f"{job_id_parts[0]}[]"
+                for job_id_parts in split_job_ids
+            )
+            # Send SIGINT signal instead of SIGTERM using qdel. This way, the jobs can
+            # react to the signal, safely shutdown and signal (cancel) jobs they possibly scheduled, recursively.
+            _stdout, stderr, exit_code = call(
+                f"qsig -s SIGINT {' '.join(unique_job_ids)}"
+            )
+
+            if exit_code == 0:
+                logging.debug(f"Canceled PBS jobs {', '.join(unique_job_ids)}.")
+            else:
+                logging.warning(
+                    f"Couldn't automatically cancel all PBS jobs. Reason: {stderr}"
+                )
 
     def submit_text(self, job):
         """Submits a PBS job represented as a job file string. Returns
