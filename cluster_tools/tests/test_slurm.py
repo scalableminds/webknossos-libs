@@ -215,6 +215,7 @@ def test_slurm_job_canceling_on_shutdown():
     executor = cluster_tools.get_executor("slurm", debug=True)
     # Only two jobs can run at once, so that some of the jobs will be
     # running and some will be pending.
+    original_max_running_size = os.environ.get("SLURM_MAX_RUNNING_SIZE")
     os.environ["SLURM_MAX_RUNNING_SIZE"] = str(max_running_size)
 
     try:
@@ -245,7 +246,10 @@ def test_slurm_job_canceling_on_shutdown():
         assert job_cancellation_duration < 5
 
     finally:
-        del os.environ["SLURM_MAX_RUNNING_SIZE"]
+        if original_max_running_size is not None:
+            os.environ["SLURM_MAX_RUNNING_SIZE"] = original_max_running_size
+        else:
+            del os.environ["SLURM_MAX_RUNNING_SIZE"]
 
 
 def test_slurm_number_of_submitted_jobs():
