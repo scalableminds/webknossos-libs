@@ -10,19 +10,25 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.11.0...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.11.1...HEAD)
 
 ### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [0.11.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.11.1) - 2023-01-05
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.11.0...v0.11.1)
 
 ### Added
 - `Dataset.from_images` and `dataset.add_layer_from_images` have new features: [#842](https://github.com/scalableminds/webknossos-libs/pull/842)
   * `dm3` and `dm4` datasets can be read without bioformats now.
   * It's possible to completely disable the bioformats adapter by setting `use_bioformats` to False.
   * Lists of images can now be handled with other readers, before only images supported by skimage worked in lists.
-
-### Changed
-
-### Fixed
 
 
 ## [0.11.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.11.0) - 2022-12-09
