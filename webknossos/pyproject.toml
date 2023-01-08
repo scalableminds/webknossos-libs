@@ -76,7 +76,7 @@ black = "21.7b0"
 dask = "2022.02.0"
 hypothesis = "^6.35.0"
 icecream = "^2.1.1"
-inducoapi = { git = "https://github.com/scalableminds/inducoapi.git", branch = "update-pyyaml" }
+inducoapi = "^2.0.2"
 isort = "^5.9.3"
 jsonschema = "^4.6.0"
 mypy = "0.991"
