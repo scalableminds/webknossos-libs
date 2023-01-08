@@ -4,6 +4,7 @@ from xml.etree.ElementTree import Element
 from loxun import XmlWriter
 
 from webknossos.geometry import BoundingBox
+from webknossos.geometry.bounding_box import _DEFAULT_BBOX_NAME
 
 from .utils import Vector3, enforce_not_null, filter_none_values
 
@@ -26,42 +27,57 @@ class Parameters(NamedTuple):
     userBoundingBoxes: Optional[List[BoundingBox]] = None
 
     def _dump_bounding_box(
-        self, xf: XmlWriter, bounding_box: BoundingBox, tag_name: Text
+        self,
+        xf: XmlWriter,
+        bounding_box: BoundingBox,
+        tag_name: Text,
+        bbox_id: Optional[int],  # user bounding boxes need an id
     ) -> None:
-
         color = bounding_box.color or DEFAULT_BOUNDING_BOX_COLOR
+
+        attributes = {
+            "name": _DEFAULT_BBOX_NAME
+            if bounding_box.name is None
+            else str(bounding_box.name),
+            "isVisible": "true" if bounding_box.is_visible else "false",
+            "color.r": str(color[0]),
+            "color.g": str(color[1]),
+            "color.b": str(color[2]),
+            "color.a": str(color[3]),
+            "topLeftX": str(bounding_box.topleft.x),
+            "topLeftY": str(bounding_box.topleft.y),
+            "topLeftZ": str(bounding_box.topleft.z),
+            "width": str(bounding_box.size.x),
+            "height": str(bounding_box.size.y),
+            "depth": str(bounding_box.size.z),
+        }
+        if bbox_id is not None:
+            attributes["id"] = str(bbox_id)
 
         xf.tag(
             tag_name,
-            {
-                "id": str(bounding_box.id),
-                "name": str(bounding_box.name),
-                "isVisible": "true" if bounding_box.is_visible else "false",
-                "color.r": str(color[0]),
-                "color.g": str(color[1]),
-                "color.b": str(color[2]),
-                "color.a": str(color[3]),
-                "topLeftX": str(bounding_box.topleft.x),
-                "topLeftY": str(bounding_box.topleft.y),
-                "topLeftZ": str(bounding_box.topleft.z),
-                "width": str(bounding_box.size.x),
-                "height": str(bounding_box.size.y),
-                "depth": str(bounding_box.size.z),
-            },
+            attributes,
         )
 
     def _dump_task_bounding_box(self, xf: XmlWriter) -> None:
         task_bounding_box = getattr(self, "taskBoundingBox")
         if task_bounding_box is not None:
-            self._dump_bounding_box(xf, task_bounding_box, "taskBoundingBox")
+            self._dump_bounding_box(xf, task_bounding_box, "taskBoundingBox", None)
 
     def _dump_user_bounding_boxes(self, xf: XmlWriter) -> None:
         user_bounding_boxes = getattr(self, "userBoundingBoxes")
 
         if user_bounding_boxes is not None:
             # pylint: disable=not-an-iterable
-            for user_bounding_box in user_bounding_boxes:
-                self._dump_bounding_box(xf, user_bounding_box, "userBoundingBox")
+
+            # User bounding boxes need an id to be recognized
+            # when uploaded to webknossos, which is added by bbox_idx:
+            for bbox_idx, user_bounding_box in enumerate(
+                user_bounding_boxes,
+            ):
+                self._dump_bounding_box(
+                    xf, user_bounding_box, "userBoundingBox", bbox_idx
+                )
 
     def _dump(self, xf: XmlWriter) -> None:
         xf.startTag("parameters")
@@ -152,7 +168,6 @@ class Parameters(NamedTuple):
             size,
             name=bounding_box_element.get("name"),
             is_visible=bounding_box_element.get("isVisible", "true") == "true",
-            id=bounding_box_element.get("id"),
             color=color,
         )
 

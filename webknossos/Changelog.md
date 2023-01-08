@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.25...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.11.1...HEAD)
 
 ### Breaking Changes
 
@@ -19,6 +19,46 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+
+
+## [0.11.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.11.1) - 2023-01-05
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.11.0...v0.11.1)
+
+### Added
+- `Dataset.from_images` and `dataset.add_layer_from_images` have new features: [#842](https://github.com/scalableminds/webknossos-libs/pull/842)
+  * `dm3` and `dm4` datasets can be read without bioformats now.
+  * It's possible to completely disable the bioformats adapter by setting `use_bioformats` to False.
+  * Lists of images can now be handled with other readers, before only images supported by skimage worked in lists.
+
+
+## [0.11.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.11.0) - 2022-12-09
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.27...v0.11.0)
+
+### Breaking Changes
+- Removed the `id` attribute of the `BoundingBox` class, also from the constructor. [#836](https://github.com/scalableminds/webknossos-libs/pull/836)
+
+### Fixed
+- Fixed bounding box serialization in NMLs, so that bounding boxes which are uploaded via annotations are now recognized properly by webKnossos. [#836](https://github.com/scalableminds/webknossos-libs/pull/836)
+- Bounding boxes keep their name, color and visibility when transformed via methods, such as `bbox.padded_with_margins()`. [#836](https://github.com/scalableminds/webknossos-libs/pull/836)
+
+
+
+## [0.10.27](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.27) - 2022-12-07
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.26...v0.10.27)
+
+### Added
+- Short links, such as `https://webknossos.org/links/93zLg9U9vJ3c_UWp`, are now supported for dataset and annotation urls in `download` and `open_remote` methods. [#837](https://github.com/scalableminds/webknossos-libs/pull/837)
+
+
+## [0.10.26](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.26) - 2022-12-05
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.25...v0.10.26)
+
+### Changed
+- `Dataset.from_images` and `dataset.add_layer_from_images` now try to import the images via the [bioformats](https://www.openmicroscopy.org/bio-formats) after all other options as well. [#829](https://github.com/scalableminds/webknossos-libs/pull/829)
+
+### Fixed
+- `dataset.add_layer_from_images` can now handle paths to folders which only contain a single image. [#829](https://github.com/scalableminds/webknossos-libs/pull/829)
+
 
 
 ## [0.10.25](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.25) - 2022-11-29

@@ -2207,6 +2207,21 @@ pytest = ">=3.5.0"
 vcrpy = ">=2.0.1"
 
 [[package]]
+name = "pytest-split"
+version = "0.8.0"
+description = "Pytest plugin which splits the test suite to equally sized sub suites based on test execution time."
+category = "dev"
+optional = false
+python-versions = ">=3.7.1,<4.0"
+files = [
+    {file = "pytest-split-0.8.0.tar.gz", hash = "sha256:8571a3f60ca8656c698ed86b0a3212bb9e79586ecb201daef9988c336ff0e6ff"},
+    {file = "pytest_split-0.8.0-py3-none-any.whl", hash = "sha256:2e06b8b1ab7ceb19d0b001548271abaf91d12415a8687086cf40581c555d309f"},
+]
+
+[package.dependencies]
+pytest = ">=5,<8"
+
+[[package]]
 name = "pytest-sugar"
 version = "0.9.4"
 description = "pytest-sugar is a plugin for pytest that changes the default look and feel of pytest (e.g. progressbar, show tests that fail instantly)."
@@ -3240,4 +3255,4 @@ tifffile = ["pims", "tifffile"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.11"
-content-hash = "92e4f9ae547e54cdfcbb85400663ebeea1b3b646fff023f0f88b9a022d56c6b0"
+content-hash = "ced7b9c370ff0f4af4425bad184096c2ce501c5a128bd064affff368bea0496d"

@@ -20,7 +20,6 @@ def _get_kwargs(
     height: int,
     depth: int,
     mag: str,
-    resolution: Union[Unset, None, int] = UNSET,
     half_byte: Union[Unset, None, bool] = False,
     mapping_name: Union[Unset, None, str] = UNSET,
 ) -> Dict[str, Any]:
@@ -43,7 +42,6 @@ def _get_kwargs(
         "height": height,
         "depth": depth,
         "mag": mag,
-        "resolution": resolution,
         "halfByte": half_byte,
         "mappingName": mapping_name,
     }
@@ -81,7 +79,6 @@ def sync_detailed(
     height: int,
     depth: int,
     mag: str,
-    resolution: Union[Unset, None, int] = UNSET,
     half_byte: Union[Unset, None, bool] = False,
     mapping_name: Union[Unset, None, str] = UNSET,
 ) -> Response[Any]:
@@ -98,7 +95,6 @@ def sync_detailed(
         height=height,
         depth=depth,
         mag=mag,
-        resolution=resolution,
         half_byte=half_byte,
         mapping_name=mapping_name,
     )
@@ -124,7 +120,6 @@ async def asyncio_detailed(
     height: int,
     depth: int,
     mag: str,
-    resolution: Union[Unset, None, int] = UNSET,
     half_byte: Union[Unset, None, bool] = False,
     mapping_name: Union[Unset, None, str] = UNSET,
 ) -> Response[Any]:
@@ -141,7 +136,6 @@ async def asyncio_detailed(
         height=height,
         depth=depth,
         mag=mag,
-        resolution=resolution,
         half_byte=half_byte,
         mapping_name=mapping_name,
     )

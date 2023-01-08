@@ -2525,7 +2525,7 @@ def test_aligned_downsampling(data_format: DataFormat, output_path: Path) -> Non
     ds_path = copy_simple_dataset(data_format, output_path, "aligned_downsampling")
     dataset = Dataset.open(ds_path)
     input_layer = dataset.get_layer("color")
-    input_layer.downsample()
+    input_layer.downsample(coarsest_mag=Mag(2))
     test_layer = dataset.add_layer(
         layer_name="color_2",
         category="color",
@@ -2539,20 +2539,17 @@ def test_aligned_downsampling(data_format: DataFormat, output_path: Path) -> Non
         # assuming the layer has 3 channels:
         data=(np.random.rand(3, 24, 24, 24) * 255).astype(np.uint8),
     )
-    test_layer.downsample()
+    test_layer.downsample(coarsest_mag=Mag(2))
 
     assert (ds_path / "color_2" / "1").exists()
     assert (ds_path / "color_2" / "2").exists()
-    assert (ds_path / "color_2" / "4").exists()
 
     if data_format == DataFormat.Zarr:
         assert (ds_path / "color_2" / "1" / ".zarray").exists()
         assert (ds_path / "color_2" / "2" / ".zarray").exists()
-        assert (ds_path / "color_2" / "4" / ".zarray").exists()
     else:
         assert (ds_path / "color_2" / "1" / "header.wkw").exists()
         assert (ds_path / "color_2" / "2" / "header.wkw").exists()
-        assert (ds_path / "color_2" / "4" / "header.wkw").exists()
 
     assure_exported_properties(dataset)
 
@@ -2565,9 +2562,8 @@ def test_guided_downsampling(data_format: DataFormat, output_path: Path) -> None
     input_layer = input_dataset.get_layer("color")
     # Adding additional mags to the input dataset for testing
     input_layer.get_or_add_mag("2-2-1")
-    input_layer.get_or_add_mag("4-4-2")
     input_layer.redownsample()
-    assert len(input_layer.mags) == 3
+    assert len(input_layer.mags) == 2
     # Use the mag with the best resolution
     finest_input_mag = input_layer.get_finest_mag()
 
@@ -2589,7 +2585,7 @@ def test_guided_downsampling(data_format: DataFormat, output_path: Path) -> None
     # Downsampling the layer to the magnification used in the input dataset
     output_layer.downsample(
         from_mag=output_mag.mag,
-        coarsest_mag=Mag("8-8-4"),
+        coarsest_mag=Mag("4-4-2"),
         align_with_other_layers=input_dataset,
     )
     for mag in input_layer.mags:
@@ -2598,18 +2594,15 @@ def test_guided_downsampling(data_format: DataFormat, output_path: Path) -> None
     assert (output_ds_path / "color" / "1").exists()
     assert (output_ds_path / "color" / "2-2-1").exists()
     assert (output_ds_path / "color" / "4-4-2").exists()
-    assert (output_ds_path / "color" / "8-8-4").exists()
 
     if data_format == DataFormat.Zarr:
         assert (output_ds_path / "color" / "1" / ".zarray").exists()
         assert (output_ds_path / "color" / "2-2-1" / ".zarray").exists()
         assert (output_ds_path / "color" / "4-4-2" / ".zarray").exists()
-        assert (output_ds_path / "color" / "8-8-4" / ".zarray").exists()
     else:
         assert (output_ds_path / "color" / "1" / "header.wkw").exists()
         assert (output_ds_path / "color" / "2-2-1" / "header.wkw").exists()
         assert (output_ds_path / "color" / "4-4-2" / "header.wkw").exists()
-        assert (output_ds_path / "color" / "8-8-4" / "header.wkw").exists()
 
     assure_exported_properties(input_dataset)
 

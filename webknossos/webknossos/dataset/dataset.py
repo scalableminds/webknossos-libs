@@ -34,6 +34,11 @@ from cluster_tools import Executor
 from natsort import natsort_keygen
 from upath import UPath
 
+from webknossos.dataset.defaults import (
+    DEFAULT_CHUNK_SHAPE,
+    DEFAULT_CHUNKS_PER_SHARD_ZARR,
+)
+
 from ..geometry.vec3_int import Vec3Int, Vec3IntLike
 from ._array import ArrayException, ArrayInfo, BaseArray, DataFormat
 from .remote_dataset_registry import RemoteDatasetRegistry
@@ -163,7 +168,10 @@ class Dataset:
         parts of the stacks are in different folders."""
 
         def _to_callable(
-            self, input_path: Path, input_files: Sequence[Path], use_bioformats: bool
+            self,
+            input_path: Path,
+            input_files: Sequence[Path],
+            use_bioformats: Optional[bool],
         ) -> Callable[[Path], str]:
             from ._utils.pims_images import has_image_z_dimension
 
@@ -368,9 +376,12 @@ class Dataset:
         * organization_id,
         * sharing_token.
         """
+        from webknossos.client._resolve_short_link import resolve_short_link
         from webknossos.client.context import _get_context, webknossos_context
 
         caller = inspect.stack()[1].function
+
+        dataset_name_or_url = resolve_short_link(dataset_name_or_url)
 
         match = re.match(_DATASET_URL_REGEX, dataset_name_or_url)
         if match is not None:
@@ -551,7 +562,7 @@ class Dataset:
         flip_x: bool = False,
         flip_y: bool = False,
         flip_z: bool = False,
-        use_bioformats: bool = False,
+        use_bioformats: Optional[bool] = None,
         max_layers: int = 20,
         batch_size: Optional[int] = None,
         executor: Optional[Executor] = None,
@@ -988,7 +999,7 @@ class Dataset:
         flip_y: bool = False,
         flip_z: bool = False,
         dtype: Optional[DTypeLike] = None,
-        use_bioformats: bool = False,
+        use_bioformats: Optional[bool] = None,
         channel: Optional[int] = None,
         timepoint: Optional[int] = None,
         czi_channel: Optional[int] = None,
@@ -1020,7 +1031,9 @@ class Dataset:
         * `swap_xy`: set to `True` to interchange x and y axis before writing to disk
         * `flip_x`, `flip_y`, `flip_z`: set to `True` to reverse the respective axis before writing to disk
         * `dtype`: the read image data will be convertoed to this dtype using `numpy.ndarray.astype`
-        * `use_bioformats`: set to `True` to use the [pims bioformats adapter](https://soft-matter.github.io/pims/v0.6.1/bioformats.html), needs a JVM
+        * `use_bioformats`: set to `True` to only use the
+          [pims bioformats adapter](https://soft-matter.github.io/pims/v0.6.1/bioformats.html) directly, needs a JVM,
+          set to `False` to forbid using the bioformats adapter, by default it is tried as a last option
         * `channel`: may be used to select a single channel, if multiple are available
         * `timepoint`: for timeseries, select a timepoint to use by specifying it as an int, starting from 0
         * `czi_channel`: may be used to select a channel for .czi images, which differs from normal color-channels
@@ -1143,6 +1156,16 @@ class Dataset:
                 num_channels=pims_images.num_channels,
                 **add_layer_kwargs,  # type: ignore[arg-type]
             )
+            if (
+                pims_images.expected_shape.z == 1
+                and layer.data_format == DataFormat.Zarr
+            ):
+                if chunk_shape is None:
+                    chunk_shape = DEFAULT_CHUNK_SHAPE.with_z(1)
+                if chunks_per_shard is None:
+                    # chunks_per_shard is 1 by default for zarr atm, but this
+                    # might change in the future:
+                    chunks_per_shard = DEFAULT_CHUNKS_PER_SHARD_ZARR.with_z(1)
             mag_view = layer.add_mag(
                 mag=mag,
                 chunk_shape=chunk_shape,
@@ -1764,13 +1787,16 @@ class RemoteDataset(Dataset):
                 exist_ok=True,
                 read_only=True,
             )
-        except FileNotFoundError:
-            warnings.warn(
-                f"Cannot open remote webknossos dataset {dataset_path} as zarr. "
-                + "Returning a stub dataset instead, accessing metadata properties might still work.",
-                RuntimeWarning,
-            )
-            self.path = None  # type: ignore[assignment]
+        except FileNotFoundError as e:
+            if hasattr(self, "_properties"):
+                warnings.warn(
+                    f"Cannot open remote webknossos dataset {dataset_path} as zarr. "
+                    + "Returning a stub dataset instead, accessing metadata properties might still work.",
+                    RuntimeWarning,
+                )
+                self.path = None  # type: ignore[assignment]
+            else:
+                raise e from None
         self._dataset_name = dataset_name
         self._organization_id = organization_id
         self._sharing_token = sharing_token

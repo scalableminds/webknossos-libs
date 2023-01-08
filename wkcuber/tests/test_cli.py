@@ -386,6 +386,29 @@ def test_tile_cubing(tmp_path: Path) -> None:
     assert count_wkw_files(tmp_path / "color" / "1") == 8
 
 
+def test_tile_cubing_with_pattern(tmp_path: Path) -> None:
+    check_call(
+        "python",
+        "-m",
+        "wkcuber.tile_cubing",
+        "--jobs",
+        2,
+        "--batch_size",
+        8,
+        "--layer_name",
+        "color",
+        "--voxel_size",
+        "1,1,1",
+        "--input_path_pattern",
+        "image_zyx_{zz}_{yy}_{xxx}.jpg",
+        TESTDATA_DIR / "temca2_copy",
+        tmp_path,
+    )
+    assert (tmp_path / "color").is_dir()
+    assert (tmp_path / "color" / "1").is_dir()
+    assert count_wkw_files(tmp_path / "color" / "1") == 8
+
+
 def test_simple_tiff_cubing(tmp_path: Path) -> None:
     check_call(
         "python",

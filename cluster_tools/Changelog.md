@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.25...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.11.1...HEAD)
 
 ### Breaking Changes
 
@@ -16,6 +16,25 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+
+
+## [0.11.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.11.1) - 2023-01-05
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.11.0...v0.11.1)
+
+### Changed
+- When using the slurm or pbs distribution strategy, scheduled jobs are automatically canceled when aborting a run, i.e. if the SIGINT signal is received. [#838](https://github.com/scalableminds/webknossos-libs/pull/838)
+
+
+## [0.11.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.11.0) - 2022-12-09
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.27...v0.11.0)
+
+
+## [0.10.27](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.27) - 2022-12-07
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.26...v0.10.27)
+
+
+## [0.10.26](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.26) - 2022-12-05
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.10.25...v0.10.26)
 
 
 ## [0.10.25](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.10.25) - 2022-11-29

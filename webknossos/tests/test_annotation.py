@@ -134,11 +134,16 @@ def test_annotation_from_file_with_multi_volume() -> None:
             pass
 
 
-def test_annotation_from_url() -> None:
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://webknossos.org/annotations/61c20205010000cc004a6356",
+        "https://webknossos.org/links/LNir_A2-aCUzsoSL",
+    ],
+)
+def test_annotation_from_url(url: str) -> None:
 
-    annotation = wk.Annotation.download(
-        "https://webknossos.org/annotations/61c20205010000cc004a6356"
-    )
+    annotation = wk.Annotation.download(url)
     assert annotation.dataset_name == "l4dense_motta_et_al_demo_v2"
     assert len(list(annotation.skeleton.flattened_trees())) == 1
 
@@ -178,7 +183,6 @@ def test_reading_bounding_boxes() -> None:
         assert annotation.user_bounding_boxes[0].topleft.x == 2371
         assert annotation.user_bounding_boxes[0].name == "Bounding box 1"
         assert annotation.user_bounding_boxes[0].is_visible
-        assert annotation.user_bounding_boxes[0].id == "1"
 
         assert annotation.user_bounding_boxes[1] == BoundingBox(
             (371, 4063, 1676), (891, 579, 232)
@@ -204,6 +208,36 @@ def test_reading_bounding_boxes() -> None:
 
         annotation_deserialized = wk.Annotation.load(output_path)
         check_properties(annotation_deserialized)
+
+
+def test_bounding_box_roundtrip() -> None:
+    ds = wk.Dataset.open_remote("e2006_knossos")
+
+    annotation_before = wk.Annotation(
+        name="test_bounding_box_roundtrip",
+        dataset_name=ds.name,
+        voxel_size=ds.voxel_size,
+    )
+    group = annotation_before.skeleton.add_group("a group")
+    tree = group.add_tree("a tree")
+    tree.add_node(position=(0, 0, 0), comment="node 1")
+
+    annotation_before.user_bounding_boxes = [
+        wk.BoundingBox((1024, 512, 128), (64, 64, 64))
+    ]
+    color = (0.5, 0, 0.2, 1)
+    annotation_before.task_bounding_box = (
+        wk.BoundingBox((10, 10, 10), (5, 5, 5)).with_name("task_bbox").with_color(color)
+    )
+
+    annotation_url = annotation_before.upload()
+    annotation_after = wk.Annotation.download(annotation_url)
+
+    # task bounding box is appended to user bounding boxes when uploading a normal annotation:
+    assert (
+        annotation_after.user_bounding_boxes
+        == annotation_before.user_bounding_boxes + [annotation_before.task_bounding_box]
+    )
 
 
 def test_empty_volume_annotation() -> None:

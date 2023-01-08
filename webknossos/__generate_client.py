@@ -90,6 +90,7 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
         generate_token_for_data_store,
         project_info_by_id,
         project_info_by_name,
+        short_link_by_key,
         task_info,
         task_infos_by_project_id,
         team_list,
@@ -108,14 +109,9 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
     project_name = "Test_Project"
     explorative_annotation_id = "58135c192faeb34c0081c05d"
 
-    extract_200_response(
-        httpx.post(
-            url=f"{WK_URL}/data/triggers/checkInboxBlocking?token={WK_TOKEN}",
-        )
-    )
     response = httpx.get(
         url=f"{WK_URL}/api/datasets/{organization_id}/{dataset_name}",
-        headers={"X-Auth-Token": f"{WK_TOKEN}"},
+        headers={"X-Auth-Token": WK_TOKEN},
     )
     assert (
         response.status_code == 200 and response.json()["isActive"]
@@ -240,6 +236,22 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
         ),
     )
 
+    short_link_key = httpx.post(
+        url=f"{WK_URL}/api/shortLinks",
+        json=WK_URL,
+        headers={"X-Auth-Token": WK_TOKEN},
+    ).json()["key"]
+
+    yield (
+        "shortLinkByKey",
+        extract_200_response(
+            short_link_by_key.sync_detailed(
+                key=short_link_key,
+                client=client,
+            ),
+        ),
+    )
+
     for api_endpoint in [
         datastore_list,
         build_info,
@@ -321,6 +333,8 @@ REQUIRED_KEYS = {
     "tags",
     "isPublic",
     "allowedTeams",
+    ##### Short links ####
+    "longLink",
 }
 
 # Those key-pairs of (parent-key, child-key) mark exceptions

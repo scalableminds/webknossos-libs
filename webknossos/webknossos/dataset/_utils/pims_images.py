@@ -4,6 +4,7 @@ from itertools import chain
 from os import PathLike
 from pathlib import Path
 from typing import (
+    ContextManager,
     Dict,
     Iterable,
     Iterator,
@@ -21,10 +22,17 @@ from urllib.error import HTTPError
 
 import numpy as np
 
+# pylint: disable=unused-import
 try:
     from webknossos.dataset._utils.pims_czi_reader import PimsCziReader
 except ImportError:
     PimsCziReader = type(None)  # type: ignore[misc,assignment]
+
+try:
+    import webknossos.dataset._utils.pims_dm_readers
+except ImportError:
+    pass
+# pylint: enable=unused-import
 
 from webknossos.dataset.layer import DTypeLike
 from webknossos.dataset.mag_view import MagView
@@ -32,10 +40,10 @@ from webknossos.geometry.vec3_int import Vec3Int
 
 try:
     import pims
-except ImportError as e:
+except ImportError as import_error:
     raise RuntimeError(
         "Cannot import pims, please install it e.g. using 'webknossos[all]'"
-    ) from e
+    ) from import_error
 
 
 # Fix ImageIOReader not handling channels correctly. This might get fixed via
@@ -62,7 +70,7 @@ class PimsImages:
         flip_x: bool,
         flip_y: bool,
         flip_z: bool,
-        use_bioformats: bool,
+        use_bioformats: Optional[bool],
         is_segmentation: bool,
     ) -> None:
         """
@@ -246,7 +254,7 @@ class PimsImages:
                     pims.FramesSequence, images[0]
                 ).shape
             else:
-                images_shape = images.shape
+                images_shape = images.shape  # pylint: disable=no-member
             c_index = self._img_dims.find("c")
             if c_index == -1:
                 self.num_channels = 1
@@ -280,6 +288,117 @@ class PimsImages:
                 self.num_channels = 3
                 self._first_n_channels = 3
 
+    def _normalize_original_images(self) -> Union[str, List[str]]:
+        original_images = self._original_images
+        if isinstance(original_images, (str, Path)):
+            original_images_path = Path(original_images)
+            if original_images_path.is_dir():
+                valid_suffixes = get_valid_pims_suffixes()
+                original_images = [
+                    str(i)
+                    for i in original_images_path.glob("**/*")
+                    if i.is_file() and i.suffix.lstrip(".") in valid_suffixes
+                ]
+                if len(original_images) == 1:
+                    original_images = original_images[0]
+        if isinstance(original_images, str):
+            return original_images
+        elif isinstance(original_images, Iterable):
+            return [str(i) for i in original_images]
+        else:
+            return str(original_images)
+
+    def _ensure_correct_bioformats_usage(
+        self, images_context_manager: pims.FramesSequence
+    ) -> None:
+        if (
+            isinstance(images_context_manager, pims.bioformats.BioformatsReader)
+            and self._use_bioformats == False
+        ):  # None is allowed
+            raise RuntimeError(
+                "Selected bioformats reader, but using bioformats is not allowed "
+                + "(use_bioformats is False)."
+            )
+
+    def _try_open_pims_images(
+        self, original_images: Union[str, List[str]], exceptions: List[Exception]
+    ) -> Optional[pims.FramesSequence]:
+        if self._use_bioformats:
+            return None
+
+        open_kwargs = {}
+        if self._czi_channel is not None:
+            open_kwargs["czi_channel"] = self._czi_channel
+
+        # try normal pims.open
+        def strategy_0() -> pims.FramesSequence:
+            result = pims.open(original_images, **open_kwargs)
+            self._ensure_correct_bioformats_usage(original_images)
+            return result
+
+        # try pims.ImageSequence, which uses skimage internally but works for multiple images
+        strategy_1 = lambda: pims.ImageSequence(original_images)
+
+        # for image lists, try to guess the correct reader using only the first image,
+        # and apply that for all images via pims.ReaderSequence
+        def strategy_2() -> pims.FramesSequence:
+            if isinstance(original_images, list):
+                # assuming the same reader works for all images:
+                first_image_handler = pims.open(original_images[0], **open_kwargs)
+                self._ensure_correct_bioformats_usage(first_image_handler)
+                return pims.ReaderSequence(
+                    original_images, type(first_image_handler), **open_kwargs
+                )
+            else:
+                return None
+
+        for strategy in [strategy_0, strategy_1, strategy_2]:
+            try:
+                images_context_manager = strategy()
+            except Exception as e:
+                exceptions.append(e)
+            else:
+                if images_context_manager is not None:
+                    return images_context_manager
+        return None
+
+    def _try_open_bioformats_images_raw(
+        self,
+        original_images: Union[str, List[str]],
+        exceptions: List[Exception],
+    ) -> pims.FramesSequence:
+        try:
+            if self._use_bioformats == False:  # None is allowed
+                raise RuntimeError(
+                    "Using bioformats is not allowed (use_bioformats is False)."
+                )
+
+            # There is a wrong warning about jpype, supressing it here.
+            # See issue https://github.com/soft-matter/pims/issues/384
+            warnings.filterwarnings(
+                "ignore",
+                "Due to an issue with JPype 0.6.0, reading is slower.*",
+                category=UserWarning,
+                module="pims.bioformats",
+            )
+            try:
+                pims.bioformats._find_jar()
+            except HTTPError:
+                # We cannot use the newest bioformats version,
+                # since it does not include the necessary loci_tools.jar.
+                # Updates to support newer bioformats jars with pims are in PR
+                # https://github.com/soft-matter/pims/pull/403
+                pims.bioformats.download_jar(version="6.7.0")
+
+            if "*" in str(original_images) or isinstance(original_images, list):
+                return pims.ReaderSequence(
+                    original_images, pims.bioformats.BioformatsReader
+                )
+            else:
+                return pims.bioformats.BioformatsReader(original_images)
+        except Exception as e:
+            exceptions.append(e)
+
     @contextmanager
     def _open_images(
         self,
@@ -289,49 +408,35 @@ class PimsImages:
         after IDENTIFY AXIS ORDER of __init__() has run.
         For a 2D image this is achieved by wrapping it in a list.
         """
+        images_context_manager: Optional[ContextManager]
         with warnings.catch_warnings():
-
             if isinstance(self._original_images, pims.FramesSequence):
                 images_context_manager = nullcontext(enter_result=self._original_images)
             else:
-                if self._use_bioformats:
-                    # There is a wrong warning about jpype, supressing it here.
-                    # See issue https://github.com/soft-matter/pims/issues/384
-                    warnings.filterwarnings(
-                        "ignore",
-                        "Due to an issue with JPype 0.6.0, reading is slower.*",
-                        category=UserWarning,
-                        module="pims.bioformats",
+                exceptions: List[Exception] = []
+                original_images = self._normalize_original_images()
+                images_context_manager = None
+
+                images_context_manager = self._try_open_pims_images(
+                    original_images, exceptions
+                )
+
+                if images_context_manager is None:
+                    images_context_manager = self._try_open_bioformats_images_raw(
+                        original_images, exceptions
                     )
-                    try:
-                        pims.bioformats._find_jar()
-                    except HTTPError:
-                        # We cannot use the newest bioformats version,
-                        # since it does not include the necessary loci_tools.jar.
-                        # Updates to support newer bioformats jars with pims are in PR
-                        # https://github.com/soft-matter/pims/pull/403
-                        pims.bioformats.download_jar(version="6.7.0")
-                    if "*" in str(self._original_images) or isinstance(
-                        self._original_images, list
-                    ):
-                        images_context_manager = pims.ReaderSequence(
-                            self._original_images, pims.bioformats.BioformatsReader
-                        )
+
+                if images_context_manager is None:
+                    if len(exceptions) == 1:
+                        raise exceptions[0]
                     else:
-                        images_context_manager = pims.bioformats.BioformatsReader(
-                            self._original_images
+                        exceptions_str = "\n".join(
+                            f"{type(e).__name__}: {str(e)}" for e in exceptions
                         )
-                else:
-                    original_images = self._original_images
-                    if isinstance(original_images, Path):
-                        original_images = str(original_images)
-                    try:
-                        open_kwargs = {}
-                        if self._czi_channel is not None:
-                            open_kwargs["czi_channel"] = self._czi_channel
-                        images_context_manager = pims.open(original_images)
-                    except Exception:
-                        images_context_manager = pims.ImageSequence(original_images)
+                        raise ValueError(
+                            f"Tried to open the images {self._original_images} with different methods, "
+                            + f"none succeded. The following errors were raised:\n{exceptions_str}"
+                        )
 
             with images_context_manager as images:
                 if isinstance(images, pims.FramesSequenceND):
@@ -463,7 +568,7 @@ def get_valid_pims_suffixes() -> Set[str]:
 
 def has_image_z_dimension(
     filepath: Path,
-    use_bioformats: bool,
+    use_bioformats: Optional[bool],
     is_segmentation: bool,
 ) -> bool:
 
