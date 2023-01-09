@@ -32,7 +32,7 @@
 ################################################################################
 
 # pylint: disable=bare-except
-# type: ignore[no-untyped-def]
+# mypy: disable-error-code=no-untyped-def
 
 from __future__ import print_function
 
