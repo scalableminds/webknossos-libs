@@ -11,7 +11,8 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: [3.7, 3.8]
+        python-version: [3.7, 3.8, 3.9]
+        group: [1, 2, 3]
     defaults:
       run:
         working-directory: webknossos
@@ -40,15 +41,9 @@ jobs:
     - name: Python tests, refreshing the network snapshots
       env:
         WK_TOKEN: ${{ secrets.WK_TOKEN }}
-      run: ./test.sh --refresh-snapshots
+      run: ./test.sh --refresh-snapshots --splits 3 --group ${{ matrix.group }}
 
     - name: Python tests, using the new snapshots
       env:
         WK_TOKEN: ${{ secrets.WK_TOKEN }}
-      run: ./test.sh --refresh-snapshots
-
-    - name: Check if git is dirty
-      continue-on-error: true  # This is currently expected to fail, might change in the future
-      run: |
-        git diff --no-ext-diff --quiet --exit-code
-        [[ -z $(git status -s) ]]
+      run: ./test.sh --refresh-snapshots --splits 3 --group ${{ matrix.group }}
