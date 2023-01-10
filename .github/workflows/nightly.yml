@@ -3,7 +3,6 @@ name: nightly
 on:
   schedule:
     - cron:  '00 06 * * *'
-  pull_request: {}
   workflow_dispatch: ~
 
 jobs:
