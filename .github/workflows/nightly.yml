@@ -41,7 +41,7 @@ jobs:
     - name: Python tests, refreshing the network snapshots
       env:
         WK_TOKEN: ${{ secrets.WK_TOKEN }}
-      run: ./test.sh --refresh-snapshots --splits 5 --group ${{ matrix.group }}
+      run: ./test.sh --refresh-snapshots --splits 3 --group ${{ matrix.group }}
 
     - name: Python tests, using the new snapshots
       env:
