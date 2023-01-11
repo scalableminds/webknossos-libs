@@ -16,6 +16,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+- Fixed `TypeError` when aborting a run that occurred under certain circumstances. [#851](https://github.com/scalableminds/webknossos-libs/pull/851)
 
 
 ## [0.11.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.11.1) - 2023-01-05
