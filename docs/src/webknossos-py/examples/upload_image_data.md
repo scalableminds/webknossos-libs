@@ -8,4 +8,4 @@ webknossos/examples/upload_image_data.py
 --8<--
 ```
 
-![Cell Dataset uploaded to webKnossos](./upload_image_data_dataset.jpg)
+![Cell Dataset uploaded to WEBKNOSSOS](./upload_image_data_dataset.jpg)

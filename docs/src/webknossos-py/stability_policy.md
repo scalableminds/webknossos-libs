@@ -2,7 +2,7 @@
 
 This project adheres to [Semantic Versioning](http://semver.org/) regarding the Python API
 compatibility, using the `MAJOR.MINOR.PATCH` version number format.
-To allow fast development of the webKnossos server, the server-client interaction may need minor
+To allow fast development of the WEBKNOSSOS server, the server-client interaction may need minor
 version upgrades to ensure full functionality. Starting from v1 and above, minor and patch upgrades won't require
 changes consuming the Python API as long as the following two points are followed:
 

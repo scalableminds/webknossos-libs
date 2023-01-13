@@ -4,16 +4,16 @@
     which can be exported as a `SegmentationLayer`, see `export_volume_layer_to_dataset()`
     and `temporary_volume_layer_copy()`.
 
-Usually, annotations should be created manually in the webKnossos interface and can be downloaded using
+Usually, annotations should be created manually in the WEBKNOSSOS interface and can be downloaded using
 `Annotation.download()`. The downloaded instance is not persisted to disk automatically, please use `save()`
 for this purpose. The general purpose file format is `.zip` files containing an `.nml` file with
 meta-information and the skeleton data and also containing inner `.zip` files for the volume layers.
 For skeleton-only annotations without volume layers `.nml` files can be used directly. Both formats
-are compatible with the webKnossos up- and downloads.
+are compatible with the WEBKNOSSOS up- and downloads.
 
-To prepare volume annotations in the code for correction of segmentation data in the webKnossos interface,
+To prepare volume annotations in the code for correction of segmentation data in the WEBKNOSSOS interface,
 please use `add_volume_layer()` with the `fallback_layer` argument, referencing a segmentation layer that
-is available on webKnossos (e.g. using the `Dataset` upload before).
+is available on WEBKNOSSOS (e.g. using the `Dataset` upload before).
 Correcting segmentations using fallback layers is much more efficient, adding volume
 annotation data programmatically is discouraged therefore.
 """
@@ -268,7 +268,7 @@ class Annotation:
           and allows to specifiy in which webknossos instance to search for the annotation.
           It defaults to the url from your current `webknossos_context`, using https://webknossos.org as a fallback.
         * `skip_volume_data` can be set to `True` to omit downloading annotated volume data.
-          They can still be streamed from webKnossos using `annotation.get_remote_annotation_dataset()`.
+          They can still be streamed from WEBKNOSSOS using `annotation.get_remote_annotation_dataset()`.
         * `_return_context` should not be set.
         """
         from webknossos.client._generated.api.default import annotation_download
@@ -547,7 +547,7 @@ class Annotation:
         Returns a streamed dataset of the annotation as shown in webknossos,
         incorporating fallback layers and potentially mappings.
         A mapping is currently only incorporated if it is a pinned agglomerate mapping.
-        After an agglomerate mapping was activated in webKnossos, it is pinned as soon
+        After an agglomerate mapping was activated in WEBKNOSSOS, it is pinned as soon
         as the first volume editing action is done. Note that this behavior might change
         in the future.
         """
@@ -617,8 +617,8 @@ class Annotation:
         """
         Adds a volume layer to the annotation, without manual annotations but possibly referring to
         segmentation data using the `fallback_layer`.
-        To prepare volume annotations in the code for correction of segmentation data in the webKnossos interface,
-        please use the `fallback_layer` argument, referencing a segmentation layer that is available on webKnossos
+        To prepare volume annotations in the code for correction of segmentation data in the WEBKNOSSOS interface,
+        please use the `fallback_layer` argument, referencing a segmentation layer that is available on WEBKNOSSOS
         (e.g. using the `Dataset` upload before).
         Correcting segmentations using fallback layers is much more efficient, adding volume annotation data
         programmatically is discouraged therefore."""

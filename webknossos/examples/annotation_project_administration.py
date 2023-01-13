@@ -3,7 +3,7 @@ from webknossos import AnnotationState, Project, Task
 
 def main() -> None:
     # Assume running annotation project with previously created tasks.
-    # Compare webKnossos documentation at https://docs.webknossos.org/webknossos/tasks.html
+    # Compare WEBKNOSSOS documentation at https://docs.webknossos.org/webknossos/tasks.html
 
     # Fetch statistics about how many annotation tasks have been completed yet.
     sample_project = Project.get_by_name("sampleProject")
@@ -28,7 +28,7 @@ def main() -> None:
     # annotations and perform a secondary annotation step on them
     # (e.g. first task is to seed positions, second is to fully label around those)
 
-    task_type_id = "61f90e4efe0100b102553009"  # from webKnossos web interface
+    task_type_id = "61f90e4efe0100b102553009"  # from WEBKNOSSOS web interface
     tasks = Task.create_from_annotations(
         task_type_id=task_type_id,  # New task type instructs annotators what to do in the task
         project_name="sampleProject2",

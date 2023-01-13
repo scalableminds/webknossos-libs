@@ -55,7 +55,7 @@ def create_parser() -> ArgumentParser:
     )
     parser.add_argument(
         "--force_non_webknossos_format",
-        help="Specifies if the data should be converted, although webKnossos cannot read the result.",
+        help="Specifies if the data should be converted, although WEBKNOSSOS cannot read the result.",
         default=False,
         action="store_true",
     )
@@ -71,11 +71,11 @@ def _handle_hierarchical_data(args: Namespace, dtype: str, sample_count: int) ->
     if not is_wk_compatible_layer_format(sample_count, dtype):
         if args.force_non_webknossos_format:
             logging.warning(
-                "Chosen wkw format is incompatible with webKnossos. Proceeding anyways..."
+                "Chosen wkw format is incompatible with WEBKNOSSOS. Proceeding anyways..."
             )
         else:
             raise AssertionError(
-                "Chosen wkw format would not be compatible with webKnossos. If you wish to convert it anyway, use --force_wkw_format."
+                "Chosen wkw format would not be compatible with WEBKNOSSOS. If you wish to convert it anyway, use --force_wkw_format."
             )
 
 
@@ -122,11 +122,11 @@ def main(args: Namespace) -> None:
             if not is_wk_compatible_layer_format(channel_count * sample_count, dtype):
                 if args.force_non_webknossos_format:
                     logging.warning(
-                        "Chosen wkw format is incompatible with webKnossos. Proceeding anyways..."
+                        "Chosen wkw format is incompatible with WEBKNOSSOS. Proceeding anyways..."
                     )
                 else:
                     raise AssertionError(
-                        "Chosen wkw format would not be compatible with webKnossos. If you wish to convert it anyway, use --force_wkw_format."
+                        "Chosen wkw format would not be compatible with WEBKNOSSOS. If you wish to convert it anyway, use --force_wkw_format."
                     )
             channel_iter = [None]
             sample_iter = [None]

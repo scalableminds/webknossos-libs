@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 @attr.frozen
 class AnnotationInfo:
-    """Data class containing information about a webKnossos annotation"""
+    """Data class containing information about a WEBKNOSSOS annotation"""
 
     id: str
     owner_id: Optional[str]

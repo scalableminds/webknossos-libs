@@ -200,7 +200,7 @@ class Tree(nx.Graph):
         Adds a node to the tree. Apart from the mandatory `position` parameter,
         there are several optional parameters which can be used to encode
         additional information. For example, the comment will be shown by the
-        webKnossos UI.
+        WEBKNOSSOS UI.
         """
         node = Node(
             position=Vec3Int(position),

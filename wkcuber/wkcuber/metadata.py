@@ -92,7 +92,7 @@ def write_webknossos_metadata(
     if name == None:
         name = dataset_path.name
 
-    # Generate a metadata file for webKnossos
+    # Generate a metadata file for WEBKNOSSOS
     # Currently includes no source of information for team
     layers = list(
         detect_layers(
