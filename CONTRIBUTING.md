@@ -94,7 +94,7 @@ in the following sections:
 
 ### Development
 
-The [webknossos-libs repository](https://github.com/scalableminds/webknossos-libs) is structured as a mono-repo, containing multiple packages:
+The [WEBKNOSSOS-libs repository](https://github.com/scalableminds/webknossos-libs) is structured as a mono-repo, containing multiple packages:
 
 * `cluster_tools`
 * `webknossos`
@@ -171,7 +171,7 @@ For testing the `kubernetes` setup, we recommend a [Kubernetes-in-Docker setup](
 
 ### Documentation
 
-We render a common documentation for WEBKNOSSOS itself and webknossos-libs from this repository using [mkdocs](https://www.mkdocs.org/). Source-files for the documentation are stored at `docs/src`:
+We render a common documentation for WEBKNOSSOS itself and WEBKNOSSOS-libs from this repository using [mkdocs](https://www.mkdocs.org/). Source-files for the documentation are stored at `docs/src`:
 
 * `docs/src/webknossos`: Server & Website documentation, linked from the [webknossos repository](https://github.com/scalableminds/webknossos) (must be available under `docs/wk-repo`, see below).
 * `docs/src/api`: Generated using [pdoc](https://pdoc.dev) from Python docstrings.
