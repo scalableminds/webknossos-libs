@@ -10,7 +10,7 @@ edit_uri: ""
 theme:
   name: material
   custom_dir: overrides
-  favicon: https://static.webknossos.org/assets/favicon.png
+  favicon: https://static.webknossos.org/assets/favicon-docs2.png
   logo: https://static.webknossos.org/assets/icon-only-white.svg
   icon:
     repo: fontawesome/brands/github
