@@ -19,12 +19,12 @@ def create_parser() -> ArgumentParser:
 
     parser.add_argument(
         "--token",
-        help="Auth token of the user on webKnossos",
+        help="Auth token of the user on WEBKNOSSOS",
         default=None,
     )
 
     parser.add_argument(
-        "--url", help="Base url of the webKnossos instance", default=None
+        "--url", help="Base url of the WEBKNOSSOS instance", default=None
     )
 
     parser.add_argument(

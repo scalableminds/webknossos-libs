@@ -1136,7 +1136,7 @@ watchmedo = ["PyYAML (>=3.10)"]
 [[package]]
 name = "webknossos"
 version = "0.0.0"
-description = "Python API for working with webKnossos datasets, annotations, and for webKnossos server interaction."
+description = "Python API for working with WEBKNOSSOS datasets, annotations, and for WEBKNOSSOS server interaction."
 category = "dev"
 optional = false
 python-versions = ">=3.7.1,<3.10"
@@ -1194,7 +1194,7 @@ docs = ["sphinx-rtd-theme (>=0.5)", "Sphinx (>=3.4)"]
 [[package]]
 name = "wkcuber"
 version = "0.0.0"
-description = "Python package to create, cube, and work with webKnossos WKW datasets"
+description = "Python package to create, cube, and work with WEBKNOSSOS WKW datasets"
 category = "dev"
 optional = false
 python-versions = ">=3.7.1,<3.10"

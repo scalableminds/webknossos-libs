@@ -1,12 +1,12 @@
 # Intro
 
-The `webknossos` Python package provides an API for working with [webKnossos](https://webknossos.org) datasets,
-annotations, and for webKnossos server interaction.
+The `webknossos` Python package provides an API for working with [WEBKNOSSOS](https://webknossos.org) datasets,
+annotations, and for WEBKNOSSOS server interaction.
 To get started, check out the [installation instructions](installation.md) and the code examples, such as
 
 * [Intro to Dataset Usage](examples/dataset_usage.md)
 * [How to Upload a Dataset](examples/upload_image_data.md)<br/>
-  ![Cell Dataset uploaded to webKnossos](examples/upload_image_data_dataset.jpg){: style="max-width: calc(100%/2 - 1em);"}
+  ![Cell Dataset uploaded to WEBKNOSSOS](examples/upload_image_data_dataset.jpg){: style="max-width: calc(100%/2 - 1em);"}
 * [How to Download a Dataset](examples/download_image_data.md)
 * [Using a Volume Annotation to Train a Custom Segmenter](examples/learned_segmenter.md)<br/>
   ![Volume Annotation used as Training Data](examples/learned_segmenter_annotation.png){: style="max-width: calc(100%/4 - 1em);"}
@@ -16,17 +16,17 @@ To get started, check out the [installation instructions](installation.md) and t
 ## Features
 
 - Easy-to-use dataset API for reading/writing/editing raw 2D/3D image data
-  and volume annotations/segmentation in webKnossos wrap (*.wkw) format
+  and volume annotations/segmentation in WEBKNOSSOS wrap (*.wkw) format
     - Add/remove layers
     - Update metadata (`datasource-properties.json`)
     - Up/downsample layers
     - Compress layers
     - Add/remove magnifications
     - Execute any of the `wkCuber` operations from your code
-- Manipulation of webKnossos skeleton annotations (*.nml) as Python objects
+- Manipulation of WEBKNOSSOS skeleton annotations (*.nml) as Python objects
     - Access to nodes, comments, trees, bounding boxes, metadata, etc.
     - Create new skeleton annotation from Graph structures or Python objects
-- Interaction, connection & scripting with your webKnossos instance over the REST API
+- Interaction, connection & scripting with your WEBKNOSSOS instance over the REST API
     - Up- & downloading annotations and datasets
 
 ## Source Code

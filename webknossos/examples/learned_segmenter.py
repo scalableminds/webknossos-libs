@@ -20,7 +20,7 @@ def main() -> None:
     )
 
     # Step 1: Read the training data from the annotation and the dataset's color
-    # layer (the data will be streamed from webKnossos to our local computer)
+    # layer (the data will be streamed from WEBKNOSSOS to our local computer)
     training_data_bbox = annotation.user_bounding_boxes[0]  # type: ignore[index]
     time_str = strftime("%Y-%m-%d_%H-%M-%S", gmtime())
     new_dataset_name = annotation.dataset_name + f"_segmented_{time_str}"
@@ -62,7 +62,7 @@ def main() -> None:
     assert segmentation.max() < 256
     segmentation = segmentation.astype("uint8")
 
-    # Step 5: Bundle everything as a webKnossos layer and upload to wK for viewing and further work
+    # Step 5: Bundle everything as a WEBKNOSSOS layer and upload to wK for viewing and further work
     with TemporaryDirectory() as tempdir:
         new_dataset = wk.Dataset(
             tempdir, voxel_size=dataset.voxel_size, name=new_dataset_name

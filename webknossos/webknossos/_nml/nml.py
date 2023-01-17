@@ -82,13 +82,13 @@ class Nml(NamedTuple):
     @classmethod
     def parse(cls, file: IO[bytes]) -> "Nml":
         """
-        Reads a webKnossos NML skeleton file from disk, _parses it and returns an NML Python object
+        Reads a WEBKNOSSOS NML skeleton file from disk, _parses it and returns an NML Python object
 
         Arguments:
             file (BinaryIO): A Python file handle
 
         Return:
-            NML: A webKnossos skeleton annotation as Python NML object
+            NML: A WEBKNOSSOS skeleton annotation as Python NML object
 
         Example:
             ```

@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "webknossos"
 version = "0.0.0"  # filled by dunamai
-description = "Python API for working with webKnossos datasets, annotations, and for webKnossos server interaction."
+description = "Python API for working with WEBKNOSSOS datasets, annotations, and for WEBKNOSSOS server interaction."
 authors = ["scalable minds <hello@scalableminds.com>"]
 readme = "README.md"
 license = "AGPL-3.0"

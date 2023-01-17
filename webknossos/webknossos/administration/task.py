@@ -35,7 +35,7 @@ class TaskStatus:
 
 @attr.frozen
 class Task:
-    """Data class containing information about a webKnossos task"""
+    """Data class containing information about a WEBKNOSSOS task"""
 
     task_id: str
     project_id: str
@@ -64,7 +64,7 @@ class Task:
         script_id: Optional[str] = None,
         bounding_box: Optional[BoundingBox] = None,
     ) -> List["Task"]:
-        """Submits tasks in webKnossos based on existing annotations, and returns the Task objects"""
+        """Submits tasks in WEBKNOSSOS based on existing annotations, and returns the Task objects"""
 
         assert (
             len(base_annotations) > 0
@@ -119,7 +119,7 @@ class Task:
         script_id: Optional[str] = None,
         bounding_box: Optional[BoundingBox] = None,
     ) -> List["Task"]:
-        """Submits tasks in webKnossos based on a dataset, starting position + rotation, and returns the Task objects"""
+        """Submits tasks in WEBKNOSSOS based on a dataset, starting position + rotation, and returns the Task objects"""
 
         client = _get_generated_client(enforce_auth=True)
         url = f"{client.base_url}/api/tasks"
