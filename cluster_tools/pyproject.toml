@@ -9,7 +9,7 @@ repository = "https://github.com/scalableminds/webknossos-libs"
 
 [tool.poetry.dependencies]
 python = "^3.6.2"
-kubernetes = "^23.3.0"
+kubernetes = ">=23.3,<26.0"
 
 [tool.poetry.dev-dependencies]
 black = "21.12b0"
