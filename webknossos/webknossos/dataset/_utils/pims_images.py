@@ -19,9 +19,9 @@ from typing import (
     cast,
 )
 from urllib.error import HTTPError
-from natsort import natsorted
 
 import numpy as np
+from natsort import natsorted
 
 # pylint: disable=unused-import
 try:
