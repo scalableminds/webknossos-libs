@@ -19,7 +19,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
-
+- Fixed a bug, where the image order could be randomized when passing a directory path to `Dataset.add_layer_from_images`. [#854](https://github.com/scalableminds/webknossos-libs/pull/854)
 
 ## [0.11.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.11.1) - 2023-01-05
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.11.0...v0.11.1)
