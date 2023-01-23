@@ -16,6 +16,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+- Fixed a bug where converting coarse-mag Knossos data would crash with an assertion error. [#857](https://github.com/scalableminds/webknossos-libs/pull/857)
 
 
 ## [0.11.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.11.2) - 2023-01-18
