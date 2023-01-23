@@ -98,7 +98,7 @@ def convert_knossos(
     dtype: str,
     voxel_size: Tuple[float, float, float],
     data_format: DataFormat,
-    chunk_shape: Vec3Int, # in target-mag
+    chunk_shape: Vec3Int,  # in target-mag
     chunks_per_shard: Vec3Int,
     mag: int = 1,
     args: Optional[Namespace] = None,
