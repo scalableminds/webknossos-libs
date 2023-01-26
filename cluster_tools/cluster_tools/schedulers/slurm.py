@@ -11,9 +11,9 @@ from typing import List, Optional, Tuple, Type, Union
 
 from typing_extensions import Literal
 
-from cluster_tools.util import call, chcall, random_string
-
-from .cluster_executor import (
+from cluster_tools._utils.call import call, chcall
+from cluster_tools._utils.string import random_string
+from cluster_tools.schedulers.cluster_executor import (
     NOT_YET_SUBMITTED_STATE,
     ClusterExecutor,
     RemoteException,
@@ -111,7 +111,7 @@ class SlurmExecutor(ClusterExecutor):
             "scontrol show config | sed -n '/^MaxArraySize/s/.*= *//p'"
         )
         if exit_code == 0:
-            max_array_size = int(stdout.decode("utf8"))
+            max_array_size = int(stdout)
             logging.debug(f"Slurm MaxArraySize is {max_array_size}.")
         else:
             logging.warning(
@@ -147,14 +147,14 @@ class SlurmExecutor(ClusterExecutor):
             "sacctmgr list -n user $USER withassoc format=maxsubmitjobsperuser"
         )
         try:
-            max_submit_jobs = int(stdout_user.decode("utf8"))
+            max_submit_jobs = int(stdout_user)
         except ValueError:
             # If there is no limit per user check whether there is a general limit
             stdout_qos, stderr_qos, _ = call(
                 "sacctmgr list -n qos normal format=maxsubmitjobsperuser"
             )
             try:
-                max_submit_jobs = int(stdout_qos.decode("utf8"))
+                max_submit_jobs = int(stdout_qos)
             except ValueError:
                 logging.warning(
                     f"Slurm's MaxSubmitJobsPerUser couldn't be determined. Reason: {stderr_user}\n{stderr_qos}"
@@ -174,7 +174,7 @@ class SlurmExecutor(ClusterExecutor):
 
         job_state_string = f"with state {state} " if state else ""
         if exit_code == 0:
-            number_of_submitted_jobs = int(stdout.decode("utf8"))
+            number_of_submitted_jobs = int(stdout)
             logging.debug(
                 f"Number of currently submitted jobs {job_state_string}is {number_of_submitted_jobs}."
             )
@@ -226,7 +226,7 @@ class SlurmExecutor(ClusterExecutor):
             )
 
             maybe_error_or_warning = (
-                f"\nErrors and warnings (if all jobs were pending 'Invalid job id' errors are expected):\n{stderr.decode('utf8')}"
+                f"\nErrors and warnings (if all jobs were pending 'Invalid job id' errors are expected):\n{stderr}"
                 if stderr
                 else ""
             )
@@ -323,10 +323,9 @@ class SlurmExecutor(ClusterExecutor):
         # If the output file was not found, we determine the job status so that
         # we can recognize jobs which failed hard (in this case, they don't produce output files)
         stdout, _, exit_code = call("scontrol show job {}".format(job_id_with_index))
-        stdout = stdout.decode("utf8")
 
         if exit_code == 0:
-            job_state_search = re.search("JobState=([a-zA-Z_]*)", str(stdout))
+            job_state_search = re.search("JobState=([a-zA-Z_]*)", stdout)
             if job_state_search:
                 job_states = [job_state_search.group(1)]
             else:
@@ -337,7 +336,6 @@ class SlurmExecutor(ClusterExecutor):
             stdout, _, exit_code = call(
                 "sacct -j {} -o State -P".format(job_id_with_index)
             )
-            stdout = stdout.decode("utf8")
 
             if exit_code == 0:
                 job_states = stdout.split("\n")[1:]
@@ -384,7 +382,6 @@ class SlurmExecutor(ClusterExecutor):
 
         # Parse stdout into a key-value object
         properties = {}
-        stdout = stdout.decode("utf8")
         for line in stdout.split("\n"):
             if ":" not in line:
                 continue
@@ -441,7 +438,6 @@ class SlurmExecutor(ClusterExecutor):
             # Get the job ids (%i) of the active user (-u) which are pending (-t) and format
             # them one-per-line (-r) while excluding the header (-h).
             stdout, _ = chcall("squeue -u $(whoami) -t PENDING -r -h --format=%i")
-            stdout = stdout.decode("utf8")
 
             job_ids = set(stdout.split("\n"))
             return job_ids

@@ -4,12 +4,11 @@ import os
 import sys
 import traceback
 
+from cluster_tools._utils import pickling
+from cluster_tools._utils.string import with_preliminary_postfix
 from cluster_tools.schedulers.kube import KubernetesExecutor
 from cluster_tools.schedulers.pbs import PBSExecutor
 from cluster_tools.schedulers.slurm import SlurmExecutor
-from cluster_tools.util import with_preliminary_postfix
-
-from . import pickling
 
 
 def get_executor_class(executor_key):

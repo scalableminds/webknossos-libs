@@ -11,16 +11,12 @@ from typing import List, Optional, Tuple, Type
 
 from typing_extensions import Literal
 
-from cluster_tools import pickling
-from cluster_tools.pickling import file_path_to_absolute_module
-from cluster_tools.tailf import Tail
-from cluster_tools.util import (
-    FileWaitThread,
-    enrich_future_with_uncaught_warning,
-    get_function_name,
-    random_string,
-    with_preliminary_postfix,
-)
+from cluster_tools._utils import pickling
+from cluster_tools._utils.file_wait_thread import FileWaitThread
+from cluster_tools._utils.meta import file_path_to_absolute_module, get_function_name
+from cluster_tools._utils.string import random_string, with_preliminary_postfix
+from cluster_tools._utils.tailf import Tail
+from cluster_tools._utils.warning import enrich_future_with_uncaught_warning
 
 NOT_YET_SUBMITTED_STATE = "NOT_YET_SUBMITTED"
 

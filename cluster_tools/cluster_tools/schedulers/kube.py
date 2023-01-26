@@ -11,7 +11,7 @@ import kubernetes
 import kubernetes.client.models as kubernetes_models
 from typing_extensions import Literal
 
-from .cluster_executor import ClusterExecutor
+from cluster_tools.schedulers.cluster_executor import ClusterExecutor
 
 
 def volume_name_from_path(path: Path) -> str:

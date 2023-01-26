@@ -9,24 +9,35 @@ from functools import partial
 from multiprocessing.context import BaseContext
 from pathlib import Path
 from shutil import rmtree
-from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple, TypeVar
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Tuple,
+    TypeVar,
+    cast,
+)
 
-from cluster_tools import pickling
+from typing_extensions import Literal, ParamSpec, TypedDict
 
-from .multiprocessing_logging_handler import get_multiprocessing_logging_setup_fn
-from .util import enrich_future_with_uncaught_warning
-
-if sys.version_info >= (3, 8):
-    from typing import Literal, TypedDict
-
-    class CFutDict(TypedDict):
-        output_pickle_path: os.PathLike
-
-else:
-    from typing import Any as CFutDict
+from cluster_tools._utils import pickling
+from cluster_tools._utils.multiprocessing_logging_handler import (
+    _get_multiprocessing_logging_setup_fn,
+)
+from cluster_tools._utils.warning import enrich_future_with_uncaught_warning
 
 
-T = TypeVar("T")
+class CFutDict(TypedDict):
+    output_pickle_path: os.PathLike
+
+
+_T = TypeVar("_T")
+_P = ParamSpec("_P")
+_S = TypeVar("_S")
 
 
 class MultiprocessingExecutor(ProcessPoolExecutor):
@@ -71,13 +82,12 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
 
     def submit(
         self,
-        fn: Callable[..., T],
-        /,
-        *args: Any,
-        __cfut_options: Optional[CFutDict] = None,
-        **kwargs: Any,
-    ) -> Future[T]:
+        __fn: Callable[_P, _T],
+        *args: _P.args,
+        **kwargs: _P.kwargs,
+    ) -> Future[_T]:
         output_pickle_path = None
+        __cfut_options = cast(Optional[CFutDict], kwargs.get("__cfut_options"))
         if __cfut_options is not None:
             output_pickle_path = __cfut_options["output_pickle_path"]
 
@@ -102,7 +112,7 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
         if self._mp_context.get_start_method() != "fork":
             # If a start_method other than the default "fork" is used, logging needs to be re-setup,
             # because the programming context is not inherited in those cases.
-            multiprocessing_logging_setup_fn = get_multiprocessing_logging_setup_fn()
+            multiprocessing_logging_setup_fn = _get_multiprocessing_logging_setup_fn()
             call_stack.extend(
                 [
                     MultiprocessingExecutor._setup_logging_and_execute,
@@ -118,14 +128,17 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
                 ]
             )
 
-        fut = submit_fn(*call_stack, fn, *args, **kwargs)
+        fut = submit_fn(*call_stack, __fn, *args, **kwargs)
 
         enrich_future_with_uncaught_warning(fut)
         return fut
 
     def _submit_via_io(
-        self, fn: Callable[..., T], /, *args: Any, **kwargs: Any
-    ) -> Future[T]:
+        self,
+        __fn: Callable[_P, _T],
+        *args: _P.args,
+        **kwargs: _P.kwargs,
+    ) -> Future[_T]:
         opt_tmp_dir = os.environ.get("MULTIPROCESSING_VIA_IO_TMP_DIR")
         if opt_tmp_dir is not None:
             dirpath = tempfile.mkdtemp(dir=opt_tmp_dir)
@@ -135,7 +148,7 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
         output_pickle_path = Path(dirpath) / "jobdescription.pickle"
 
         with open(output_pickle_path, "wb") as file:
-            pickling.dump((fn, args, kwargs), file)
+            pickling.dump((__fn, args, kwargs), file)
 
         future = super().submit(
             MultiprocessingExecutor._execute_via_io, output_pickle_path
@@ -154,10 +167,10 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
     @staticmethod
     def _setup_logging_and_execute(
         multiprocessing_logging_setup_fn: Callable[[], None],
-        fn: Callable[..., Future[T]],
+        fn: Callable[_P, Future[_T]],
         *args: Any,
         **kwargs: Any,
-    ) -> Future[T]:
+    ) -> Future[_T]:
         multiprocessing_logging_setup_fn()
         return fn(*args, **kwargs)
 
@@ -169,8 +182,11 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
 
     @staticmethod
     def _execute_and_persist_function(
-        output_pickle_path: os.PathLike, fn: Callable[..., T], *args: Any, **kwargs: Any
-    ) -> T:
+        output_pickle_path: os.PathLike,
+        fn: Callable[_P, _T],
+        *args: _P.args,
+        **kwargs: _P.kwargs,
+    ) -> _T:
         try:
             result = fn(*args, **kwargs)
         except Exception as exc:
@@ -188,8 +204,8 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
                 pickling.dump((True, result), file)
             return result
 
-    def map_unordered(self, fn: Callable[..., T], args: Any) -> Iterator[T]:
-        futs = self.map_to_futures(fn, args)
+    def map_unordered(self, fn: Callable[_P, _T], args: Any) -> Iterator[_T]:
+        futs: List[Future[_T]] = self.map_to_futures(fn, args)
         # Return a separate generator to avoid that map_unordered
         # is executed lazily (otherwise, jobs would be submitted
         # lazily, as well).
@@ -201,13 +217,13 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
 
     def map_to_futures(
         self,
-        fn: Callable[..., T],
-        args: Any,
-        output_pickle_path_getter: Optional[Callable[..., os.PathLike]] = None,
-    ) -> List[Future[T]]:
+        fn: Callable[[_S], _T],
+        args: Iterable[_S],  # TODO breaking change: allow more than one arg per call
+        output_pickle_path_getter: Optional[Callable[[_S], os.PathLike]] = None,
+    ) -> List[Future[_T]]:
         if output_pickle_path_getter is not None:
             futs = [
-                self.submit(
+                self.submit(  # type: ignore[call-arg]
                     fn,
                     arg,
                     __cfut_options={
@@ -221,7 +237,7 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
 
         return futs
 
-    def forward_log(self, fut: Future[T]) -> T:
+    def forward_log(self, fut: Future[_T]) -> _T:
         """
         Similar to the cluster executor, this method Takes a future from which the log file is forwarded to the active
         process. This method blocks as long as the future is not done.

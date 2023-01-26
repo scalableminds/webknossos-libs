@@ -10,6 +10,7 @@ repository = "https://github.com/scalableminds/webknossos-libs"
 [tool.poetry.dependencies]
 python = ">=3.7"
 kubernetes = "^23.3.0"
+typing-extensions = "^4.4.0"
 
 [tool.poetry.dev-dependencies]
 black = "21.12b0"
@@ -32,7 +33,12 @@ namespace_packages = true
 strict_equality = true
 show_error_codes = true
 no_implicit_optional = true
+warn_unused_ignores = true
 
 [[tool.mypy.overrides]]
 module = "cluster_tools.executors.*"
+disallow_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = "cluster_tools._utils.*"
 disallow_untyped_defs = true

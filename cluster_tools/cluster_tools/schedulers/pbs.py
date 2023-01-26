@@ -8,9 +8,9 @@ from typing import Dict, List, Optional, Tuple, Union
 
 from typing_extensions import Literal
 
-from cluster_tools.util import call, chcall, random_string
-
-from .cluster_executor import ClusterExecutor
+from cluster_tools._utils.call import call, chcall
+from cluster_tools._utils.string import random_string
+from cluster_tools.schedulers.cluster_executor import ClusterExecutor
 
 # qstat vs. checkjob
 PBS_STATES: Dict[str, List[str]] = {
@@ -89,7 +89,7 @@ class PBSExecutor(ClusterExecutor):
         with open(filename, "w") as f:
             f.write(job)
         jobid_desc, _ = chcall("qsub -V {}".format(filename))
-        match = re.search("^[0-9]+", jobid_desc.decode("utf-8"))
+        match = re.search("^[0-9]+", jobid_desc)
         assert match is not None
         jobid = match.group(0)
 
@@ -173,7 +173,7 @@ class PBSExecutor(ClusterExecutor):
             return "ignore"
         else:
 
-            job_state_search = re.search("job_state = ([a-zA-Z_]*)", str(stdout))
+            job_state_search = re.search("job_state = ([a-zA-Z_]*)", stdout)
             if job_state_search:
                 job_state = job_state_search.group(1)
 

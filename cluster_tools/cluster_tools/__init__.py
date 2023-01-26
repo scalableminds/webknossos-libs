@@ -9,30 +9,31 @@ from pathlib import Path
 from shutil import rmtree
 from typing import Union
 
-from . import pickling
-from .executors.debug_sequential import DebugSequentialExecutor
-from .executors.multiprocessing import MultiprocessingExecutor
-from .executors.sequential import SequentialExecutor
-from .executors.pickle import PickleExecutor
-from .schedulers.cluster_executor import ClusterExecutor, RemoteOutOfMemoryException
-from .schedulers.kube import KubernetesExecutor
-from .schedulers.pbs import PBSExecutor
-from .schedulers.slurm import SlurmExecutor
-from .util import enrich_future_with_uncaught_warning
+from cluster_tools._utils.warning import enrich_future_with_uncaught_warning
+from cluster_tools.executors.debug_sequential import DebugSequentialExecutor
+from cluster_tools.executors.multiprocessing import MultiprocessingExecutor
+from cluster_tools.executors.pickle import PickleExecutor
+from cluster_tools.executors.sequential import SequentialExecutor
+from cluster_tools.schedulers.cluster_executor import (
+    ClusterExecutor,
+    RemoteOutOfMemoryException,
+)
+from cluster_tools.schedulers.kube import KubernetesExecutor
+from cluster_tools.schedulers.pbs import PBSExecutor
+from cluster_tools.schedulers.slurm import SlurmExecutor
 
 # For backwards-compatibility:
 WrappedProcessPoolExecutor = MultiprocessingExecutor
 
 
-def noop():
+def _noop():
     return True
 
 
 did_start_test_multiprocessing = False
 
 
-def test_valid_multiprocessing():
-
+def _test_valid_multiprocessing():
     msg = """
     ###############################################################
     An attempt has been made to start a new process before the
@@ -50,7 +51,7 @@ def test_valid_multiprocessing():
 
     with get_executor("multiprocessing") as executor:
         try:
-            res_fut = executor.submit(noop)
+            res_fut = executor.submit(_noop)
             assert res_fut.result() == True, msg
         except RuntimeError as exc:
             raise Exception(msg) from exc
@@ -70,7 +71,7 @@ def get_executor(environment, **kwargs):
         global did_start_test_multiprocessing
         if not did_start_test_multiprocessing:
             did_start_test_multiprocessing = True
-            test_valid_multiprocessing()
+            _test_valid_multiprocessing()
 
         return MultiprocessingExecutor(**kwargs)
     elif environment == "sequential":

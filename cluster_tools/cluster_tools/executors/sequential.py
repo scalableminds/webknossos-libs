@@ -1,7 +1,7 @@
 from multiprocessing.context import BaseContext
 from typing import Callable, Optional, Tuple
 
-from .multiprocessing import MultiprocessingExecutor
+from cluster_tools.executors.multiprocessing import MultiprocessingExecutor
 
 
 class SequentialExecutor(MultiprocessingExecutor):

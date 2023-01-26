@@ -8,7 +8,7 @@ import time
 from typing import Any, Callable
 
 
-class Tail(object):
+class Tail:
     """Represents a tail command."""
 
     def __init__(

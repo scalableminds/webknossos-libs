@@ -16,7 +16,7 @@ from typing import Optional
 import pytest
 
 import cluster_tools
-from cluster_tools.util import call
+from cluster_tools._utils.call import call, chcall
 
 
 # "Worker" functions.
@@ -77,11 +77,10 @@ def test_slurm_max_submit_user():
         executor = cluster_tools.get_executor("slurm", debug=True)
         original_max_submit_jobs = executor.get_max_submit_jobs()
 
-        _, _, exit_code = call(
-            f"echo y | sacctmgr modify {command} set MaxSubmitJobs={max_submit_jobs}"
-        )
         try:
-            assert exit_code == 0
+            chcall(
+                f"echo y | sacctmgr modify {command} set MaxSubmitJobs={max_submit_jobs}"
+            )
 
             new_max_submit_jobs = executor.get_max_submit_jobs()
             assert new_max_submit_jobs == max_submit_jobs
@@ -96,10 +95,7 @@ def test_slurm_max_submit_user():
                 # The 10 work packages should have been scheduled as 2 separate jobs.
                 assert len(job_ids) == 2
         finally:
-            _, _, exit_code = call(
-                f"echo y | sacctmgr modify {command} set MaxSubmitJobs=-1"
-            )
-            assert exit_code == 0
+            chcall(f"echo y | sacctmgr modify {command} set MaxSubmitJobs=-1")
             reset_max_submit_jobs = executor.get_max_submit_jobs()
             assert reset_max_submit_jobs == original_max_submit_jobs
 
@@ -135,9 +131,7 @@ def test_slurm_deferred_submit():
     max_submit_jobs = 1
 
     # Only one job can be scheduled at a time
-    _, _, exit_code = call(
-        f"echo y | sacctmgr modify qos normal set MaxSubmitJobs={max_submit_jobs}"
-    )
+    call(f"echo y | sacctmgr modify qos normal set MaxSubmitJobs={max_submit_jobs}")
     executor = cluster_tools.get_executor("slurm", debug=True)
 
     try:
@@ -155,9 +149,7 @@ def test_slurm_deferred_submit():
             # since only one job is scheduled at a time and each job takes 0.5 seconds
             assert time_of_result - time_of_start > 1
     finally:
-        _, _, exit_code = call(
-            "echo y | sacctmgr modify qos normal set MaxSubmitJobs=-1"
-        )
+        call("echo y | sacctmgr modify qos normal set MaxSubmitJobs=-1")
 
 
 def wait_until_first_job_was_submitted(executor, state: Optional[str] = None):
@@ -174,9 +166,7 @@ def test_slurm_deferred_submit_shutdown():
     max_submit_jobs = 1
 
     # Only one job can be scheduled at a time
-    _, _, exit_code = call(
-        f"echo y | sacctmgr modify qos normal set MaxSubmitJobs={max_submit_jobs}"
-    )
+    call(f"echo y | sacctmgr modify qos normal set MaxSubmitJobs={max_submit_jobs}")
     executor = cluster_tools.get_executor("slurm", debug=True)
 
     try:
@@ -202,9 +192,7 @@ def test_slurm_deferred_submit_shutdown():
             time.sleep(0.5)
 
     finally:
-        _, _, exit_code = call(
-            "echo y | sacctmgr modify qos normal set MaxSubmitJobs=-1"
-        )
+        call("echo y | sacctmgr modify qos normal set MaxSubmitJobs=-1")
 
 
 def test_slurm_job_canceling_on_shutdown():
@@ -277,12 +265,9 @@ def test_slurm_max_array_size():
     original_max_array_size = executor.get_max_array_size()
 
     command = f"MaxArraySize={max_array_size}"
-    _, _, exit_code = call(
-        f"echo -e '{command}' >> /etc/slurm/slurm.conf && scontrol reconfigure"
-    )
 
     try:
-        assert exit_code == 0
+        chcall(f"echo -e '{command}' >> /etc/slurm/slurm.conf && scontrol reconfigure")
 
         new_max_array_size = executor.get_max_array_size()
         assert new_max_array_size == max_array_size
@@ -297,10 +282,7 @@ def test_slurm_max_array_size():
 
             assert all(array_size <= max_array_size for array_size in occurences)
     finally:
-        _, _, exit_code = call(
-            f"sed -i 's/{command}//g' /etc/slurm/slurm.conf && scontrol reconfigure"
-        )
-        assert exit_code == 0
+        chcall(f"sed -i 's/{command}//g' /etc/slurm/slurm.conf && scontrol reconfigure")
         reset_max_array_size = executor.get_max_array_size()
         assert reset_max_array_size == original_max_array_size
 
