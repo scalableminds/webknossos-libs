@@ -82,7 +82,7 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
 
     def submit(
         self,
-        __fn: Callable[_P, _T],
+        fn: Callable[_P, _T],
         *args: _P.args,
         **kwargs: _P.kwargs,
     ) -> Future[_T]:
@@ -128,14 +128,14 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
                 ]
             )
 
-        fut = submit_fn(*call_stack, __fn, *args, **kwargs)
+        fut = submit_fn(*call_stack, fn, *args, **kwargs)
 
         enrich_future_with_uncaught_warning(fut)
         return fut
 
     def _submit_via_io(
         self,
-        __fn: Callable[_P, _T],
+        fn: Callable[_P, _T],
         *args: _P.args,
         **kwargs: _P.kwargs,
     ) -> Future[_T]:
@@ -148,7 +148,7 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
         output_pickle_path = Path(dirpath) / "jobdescription.pickle"
 
         with open(output_pickle_path, "wb") as file:
-            pickling.dump((__fn, args, kwargs), file)
+            pickling.dump((fn, args, kwargs), file)
 
         future = super().submit(
             MultiprocessingExecutor._execute_via_io, output_pickle_path
