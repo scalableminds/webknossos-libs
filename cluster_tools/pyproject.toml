@@ -33,7 +33,6 @@ namespace_packages = true
 strict_equality = true
 show_error_codes = true
 no_implicit_optional = true
-warn_unused_ignores = true
 
 [[tool.mypy.overrides]]
 module = "cluster_tools.executors.*"

@@ -18,7 +18,7 @@ class DebugSequentialExecutor(SequentialExecutor):
     setting breakpoint()'s should be possible without context-related problems.
     """
 
-    def submit(
+    def submit(  # type: ignore[override]
         self,
         __fn: Callable[_P, _T],
         *args: _P.args,

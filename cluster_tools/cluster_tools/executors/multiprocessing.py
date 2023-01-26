@@ -80,7 +80,7 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
             initargs=initargs,
         )
 
-    def submit(
+    def submit(  # type: ignore[override]
         self,
         __fn: Callable[_P, _T],
         *args: _P.args,
@@ -98,7 +98,7 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
             # This should be fixed in python 3.8
             submit_fn = self._submit_via_io
         else:
-            submit_fn = super().submit
+            submit_fn = super().submit  # type: ignore[assignment]
 
         # Depending on the start_method and output_pickle_path, wrapper functions may need to be
         # executed in the new process context, before the actual code is ran.
