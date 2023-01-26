@@ -8,14 +8,14 @@ license = "MIT"
 repository = "https://github.com/scalableminds/webknossos-libs"
 
 [tool.poetry.dependencies]
-python = "^3.6.2"
+python = ">=3.7"
 kubernetes = "^23.3.0"
 
 [tool.poetry.dev-dependencies]
 black = "21.12b0"
 icecream = "^2.1.1"
 isort = "^5.9.3"
-mypy = "0.910"
+mypy = "0.991"
 pylint = "^2.12.2"
 pytest = "^6.2.4"
 
@@ -31,5 +31,8 @@ ignore_missing_imports = true
 namespace_packages = true
 strict_equality = true
 show_error_codes = true
-# disallow_untyped_defs = true
 no_implicit_optional = true
+
+[[tool.mypy.overrides]]
+module = "cluster_tools.executors.*"
+disallow_untyped_defs = true
