@@ -85,7 +85,7 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
         __fn: Callable[_P, _T],
         *args: _P.args,
         **kwargs: _P.kwargs,
-    ) -> Future[_T]:
+    ) -> "Future[_T]":
         output_pickle_path = None
         __cfut_options = cast(Optional[CFutDict], kwargs.get("__cfut_options"))
         if __cfut_options is not None:
@@ -138,7 +138,7 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
         __fn: Callable[_P, _T],
         *args: _P.args,
         **kwargs: _P.kwargs,
-    ) -> Future[_T]:
+    ) -> "Future[_T]":
         opt_tmp_dir = os.environ.get("MULTIPROCESSING_VIA_IO_TMP_DIR")
         if opt_tmp_dir is not None:
             dirpath = tempfile.mkdtemp(dir=opt_tmp_dir)
@@ -167,10 +167,10 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
     @staticmethod
     def _setup_logging_and_execute(
         multiprocessing_logging_setup_fn: Callable[[], None],
-        fn: Callable[_P, Future[_T]],
+        fn: Callable[_P, "Future[_T]"],
         *args: Any,
         **kwargs: Any,
-    ) -> Future[_T]:
+    ) -> "Future[_T]":
         multiprocessing_logging_setup_fn()
         return fn(*args, **kwargs)
 
@@ -205,7 +205,7 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
             return result
 
     def map_unordered(self, fn: Callable[_P, _T], args: Any) -> Iterator[_T]:
-        futs: List[Future[_T]] = self.map_to_futures(fn, args)
+        futs: List["Future[_T]"] = self.map_to_futures(fn, args)
         # Return a separate generator to avoid that map_unordered
         # is executed lazily (otherwise, jobs would be submitted
         # lazily, as well).
@@ -220,7 +220,7 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
         fn: Callable[[_S], _T],
         args: Iterable[_S],  # TODO breaking change: allow more than one arg per call
         output_pickle_path_getter: Optional[Callable[[_S], os.PathLike]] = None,
-    ) -> List[Future[_T]]:
+    ) -> List["Future[_T]"]:
         if output_pickle_path_getter is not None:
             futs = [
                 self.submit(  # type: ignore[call-arg]
@@ -237,7 +237,7 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
 
         return futs
 
-    def forward_log(self, fut: Future[_T]) -> _T:
+    def forward_log(self, fut: "Future[_T]") -> _T:
         """
         Similar to the cluster executor, this method Takes a future from which the log file is forwarded to the active
         process. This method blocks as long as the future is not done.

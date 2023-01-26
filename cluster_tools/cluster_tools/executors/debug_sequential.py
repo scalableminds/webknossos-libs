@@ -23,7 +23,7 @@ class DebugSequentialExecutor(SequentialExecutor):
         __fn: Callable[_P, _T],
         *args: _P.args,
         **kwargs: _P.kwargs,
-    ) -> Future[_T]:
+    ) -> "Future[_T]":
         output_pickle_path = None
         __cfut_options = cast(Optional[CFutDict], kwargs.get("__cfut_options"))
         if __cfut_options is not None:
@@ -49,8 +49,8 @@ class DebugSequentialExecutor(SequentialExecutor):
         __fn: Callable[_P, _T],
         *args: _P.args,
         **kwargs: _P.kwargs,
-    ) -> Future[_T]:
-        fut: Future[_T] = Future()
+    ) -> "Future[_T]":
+        fut: "Future[_T]" = Future()
         result = __fn(*args, **kwargs)
         fut.set_result(result)
         return fut

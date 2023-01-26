@@ -28,7 +28,7 @@ class PickleExecutor(MultiprocessingExecutor):
         fn: Callable[..., _T],
         *args: Any,
         **kwargs: Any,
-    ) -> Future[_T]:
+    ) -> "Future[_T]":
         (fn_pickled, args_pickled, kwargs_pickled) = _pickle_identity(
             (fn, args, kwargs)
         )
