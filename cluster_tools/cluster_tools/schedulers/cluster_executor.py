@@ -320,12 +320,12 @@ class ClusterExecutor(futures.Executor):
         fut = self.create_enriched_future()
         workerid = random_string()
 
-        should_keep_output = False
         if "__cfut_options" in kwargs:
             should_keep_output = True
             output_pickle_path = kwargs["__cfut_options"]["output_pickle_path"]
             del kwargs["__cfut_options"]
         else:
+            should_keep_output = False
             output_pickle_path = self.format_outfile_name(self.cfut_dir, workerid)
 
         self.ensure_not_shutdown()

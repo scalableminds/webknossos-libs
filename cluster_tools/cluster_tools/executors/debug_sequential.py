@@ -24,13 +24,11 @@ class DebugSequentialExecutor(SequentialExecutor):
         *args: _P.args,
         **kwargs: _P.kwargs,
     ) -> "Future[_T]":
-        output_pickle_path = None
-        __cfut_options = cast(Optional[CFutDict], kwargs.get("__cfut_options"))
-        if __cfut_options is not None:
-            output_pickle_path = __cfut_options["output_pickle_path"]
+        if "__cfut_options" in kwargs:
+            output_pickle_path = cast(CFutDict, kwargs["__cfut_options"])[
+                "output_pickle_path"
+            ]
             del kwargs["__cfut_options"]
-
-        if output_pickle_path is not None:
             fut = self._blocking_submit(
                 MultiprocessingExecutor._execute_and_persist_function,  # type: ignore[arg-type]
                 output_pickle_path,  # type: ignore[arg-type]

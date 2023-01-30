@@ -87,10 +87,13 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
         *args: _P.args,
         **kwargs: _P.kwargs,
     ) -> "Future[_T]":
-        output_pickle_path = None
-        __cfut_options = cast(Optional[CFutDict], kwargs.get("__cfut_options"))
-        if __cfut_options is not None:
-            output_pickle_path = __cfut_options["output_pickle_path"]
+        if "__cfut_options" in kwargs:
+            output_pickle_path = cast(CFutDict, kwargs["__cfut_options"])[
+                "output_pickle_path"
+            ]
+            del kwargs["__cfut_options"]
+        else:
+            output_pickle_path = None
 
         if os.environ.get("MULTIPROCESSING_VIA_IO"):
             # If MULTIPROCESSING_VIA_IO is set, _submit_via_io is used to
