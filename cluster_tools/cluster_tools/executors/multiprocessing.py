@@ -58,6 +58,7 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
         mp_context: Optional[BaseContext] = None,
         initializer: Optional[Callable] = None,
         initargs: Tuple = (),
+        **__kwargs: Any,
     ) -> None:
         if mp_context is None:
             if start_method is not None:

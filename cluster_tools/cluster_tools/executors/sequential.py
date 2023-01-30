@@ -1,5 +1,5 @@
 from multiprocessing.context import BaseContext
-from typing import Callable, Optional, Tuple
+from typing import Any, Callable, Optional, Tuple
 
 from cluster_tools.executors.multiprocessing import MultiprocessingExecutor
 
@@ -18,6 +18,7 @@ class SequentialExecutor(MultiprocessingExecutor):
         mp_context: Optional[BaseContext] = None,
         initializer: Optional[Callable] = None,
         initargs: Tuple = (),
+        **__kwargs: Any,
     ) -> None:
         super().__init__(
             max_workers=1,
