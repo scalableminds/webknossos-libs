@@ -50,8 +50,8 @@ def test_slurm_submit_returns_job_ids() -> None:
     exc = cluster_tools.get_executor("slurm", debug=True)
     with exc:
         future = exc.submit(square, 2)
-        assert isinstance(future.cluster_jobid, int)
-        assert future.cluster_jobid > 0
+        assert isinstance(future.cluster_jobid, int)  # type: ignore[attr-defined]
+        assert future.cluster_jobid > 0  # type: ignore[attr-defined]
         assert future.result() == 4
 
 
@@ -91,7 +91,7 @@ def test_slurm_max_submit_user() -> None:
                 result = [fut.result() for fut in futures]
                 assert result == [i ** 2 for i in range(10)]
 
-                job_ids = {fut.cluster_jobid for fut in futures}
+                job_ids = {fut.cluster_jobid for fut in futures}  # type: ignore[attr-defined]
                 # The 10 work packages should have been scheduled as 2 separate jobs.
                 assert len(job_ids) == 2
         finally:
@@ -118,7 +118,7 @@ def test_slurm_max_submit_user_env() -> None:
             result = [fut.result() for fut in futures]
             assert result == [i ** 2 for i in range(10)]
 
-            job_ids = {fut.cluster_jobid for fut in futures}
+            job_ids = {fut.cluster_jobid for fut in futures}  # type: ignore[attr-defined]
             # The 10 work packages should have been scheduled as 3 separate jobs.
             assert len(job_ids) == 3
     finally:
@@ -277,7 +277,7 @@ def test_slurm_max_array_size() -> None:
         with executor:
             futures = executor.map_to_futures(square, range(6))
             concurrent.futures.wait(futures)
-            job_ids = [fut.cluster_jobid for fut in futures]
+            job_ids = [fut.cluster_jobid for fut in futures]  # type: ignore[attr-defined]
 
             # Count how often each job_id occurs which corresponds to the array size of the job
             occurences = list(Counter(job_ids).values())
@@ -304,7 +304,7 @@ def test_slurm_max_array_size_env() -> None:
         with executor:
             futures = executor.map_to_futures(square, range(6))
             concurrent.futures.wait(futures)
-            job_ids = [fut.cluster_jobid for fut in futures]
+            job_ids = [fut.cluster_jobid for fut in futures]  # type: ignore[attr-defined]
 
             # Count how often each job_id occurs which corresponds to the array size of the job
             occurences = list(Counter(job_ids).values())
@@ -335,7 +335,7 @@ def test_pickled_logging() -> None:
             fut = executor.submit(log, test_output_str)
             fut.result()
 
-            output = ".cfut/slurmpy.{}.log.stdout".format(fut.cluster_jobid)
+            output = ".cfut/slurmpy.{}.log.stdout".format(fut.cluster_jobid)  # type: ignore[attr-defined]
 
             with open(output, "r") as file:
                 return file.read()
@@ -396,12 +396,12 @@ def test_preliminary_file_submit() -> None:
             assert not output_pickle_path.exists(), "Final output file should not exist"
 
             # Schedule succeeding job with same output path
-            fut = executor.submit(
+            fut_2 = executor.submit(
                 square,
                 3,
-                __cfut_options={"output_pickle_path": str(output_pickle_path)},
+                __cfut_options={"output_pickle_path": str(output_pickle_path)},  # type: ignore[call-arg]
             )
-            assert fut.result() == 9
+            assert fut_2.result() == 9
             assert output_pickle_path.exists(), "Final output file should exist"
             assert (
                 not preliminary_output_path.exists()
@@ -452,13 +452,13 @@ def test_preliminary_file_map() -> None:
                 ), "Final output file should not exist"
 
             # Schedule succeeding jobs with same output paths
-            futs = executor.map_to_futures(
+            futs_2 = executor.map_to_futures(
                 square,
                 list(a_range),
                 output_pickle_path_getter=partial(output_pickle_path_getter, tmp_dir),
             )
-            for (fut, job_index) in zip(futs, a_range):
-                assert fut.result() == square(job_index)
+            for (fut_2, job_index) in zip(futs_2, a_range):
+                assert fut_2.result() == square(job_index)
 
             for idx in a_range:
                 output_pickle_path = Path(output_pickle_path_getter(tmp_dir, idx))

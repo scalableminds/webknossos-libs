@@ -137,7 +137,7 @@ class ClusterExecutor(futures.Executor):
         pass
 
     def handle_kill(
-        self, existing_sigint_handler: Any, signum: int, frame: Any
+        self, existing_sigint_handler: Any, signum: Optional[int], frame: Any
     ) -> None:
         if self.is_shutting_down:
             return
