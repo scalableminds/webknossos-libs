@@ -622,7 +622,7 @@ class ClusterExecutor(futures.Executor):
 
         return result_generator()
 
-    def forward_log(self, fut: Future[_T]) -> _T:
+    def forward_log(self, fut: "Future[_T]") -> _T:
         """
         Takes a future from which the log file is forwarded to the active
         process. This method blocks as long as the future is not done.

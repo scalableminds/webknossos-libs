@@ -1,8 +1,8 @@
 """Abstracts access to a Kubernetes cluster via its Python library."""
-import concurrent
 import os
 import re
 import sys
+from concurrent.futures import Future
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import uuid4
@@ -137,14 +137,14 @@ class KubernetesExecutor(ClusterExecutor):
         job_name: Optional[str] = None,
         additional_setup_lines: Optional[List[str]] = None,
         job_count: Optional[int] = None,
-    ) -> Tuple[List["concurrent.futures.Future[str]"], List[Tuple[int, int]]]:
+    ) -> Tuple[List["Future[str]"], List[Tuple[int, int]]]:
         """Starts a Kubernetes pod that runs the specified shell command line."""
 
         kubernetes_client = KubernetesClient()
         self.ensure_kubernetes_namespace()
         job_id = str(uuid4())
 
-        job_id_future: "concurrent.futures.Future[str]" = concurrent.futures.Future()
+        job_id_future: "Future[str]" = Future()
         job_id_future.set_result(job_id)
         job_id_futures = [job_id_future]
 

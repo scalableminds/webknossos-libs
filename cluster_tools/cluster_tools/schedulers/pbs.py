@@ -3,7 +3,7 @@
 import logging
 import os
 import re
-from concurrent import futures
+from concurrent.futures import Future
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from typing_extensions import Literal
@@ -108,7 +108,7 @@ class PBSExecutor(ClusterExecutor):
         job_name: Optional[str] = None,
         additional_setup_lines: Optional[List[str]] = None,
         job_count: Optional[int] = None,
-    ) -> Tuple[List["futures.Future[str]"], List[Tuple[int, int]]]:
+    ) -> Tuple[List["Future[str]"], List[Tuple[int, int]]]:
         """Starts a PBS job that runs the specified shell command line."""
         if additional_setup_lines is None:
             additional_setup_lines = []
@@ -153,7 +153,7 @@ class PBSExecutor(ClusterExecutor):
         ]
 
         job_id = self.submit_text("\n".join(script_lines))
-        job_id_future: "futures.Future[str]" = futures.Future()
+        job_id_future: "Future[str]" = Future()
         job_id_future.set_result(job_id)
 
         return [job_id_future], [(0, job_count or 1)]
