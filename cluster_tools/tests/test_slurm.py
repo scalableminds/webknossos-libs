@@ -11,7 +11,7 @@ import time
 from collections import Counter
 from functools import partial
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 import pytest
 
@@ -20,11 +20,11 @@ from cluster_tools._utils.call import call, chcall
 
 
 # "Worker" functions.
-def square(n):
+def square(n: float) -> float:
     return n * n
 
 
-def sleep(duration):
+def sleep(duration: float) -> float:
     time.sleep(duration)
     return duration
 
@@ -32,12 +32,12 @@ def sleep(duration):
 logging.basicConfig()
 
 
-def expect_fork():
+def expect_fork() -> bool:
     assert mp.get_start_method() == "fork"
     return True
 
 
-def test_map_with_spawn():
+def test_map_with_spawn() -> None:
     with cluster_tools.get_executor(
         "slurm", max_workers=5, start_method="spawn"
     ) as executor:
@@ -46,7 +46,7 @@ def test_map_with_spawn():
         ).result(), "Slurm should ignore provided start_method"
 
 
-def test_slurm_submit_returns_job_ids():
+def test_slurm_submit_returns_job_ids() -> None:
     exc = cluster_tools.get_executor("slurm", debug=True)
     with exc:
         future = exc.submit(square, 2)
@@ -55,7 +55,7 @@ def test_slurm_submit_returns_job_ids():
         assert future.result() == 4
 
 
-def test_slurm_cfut_dir():
+def test_slurm_cfut_dir() -> None:
     cfut_dir = "./test_cfut_dir"
     if os.path.exists(cfut_dir):
         shutil.rmtree(cfut_dir)
@@ -69,7 +69,7 @@ def test_slurm_cfut_dir():
     assert len(os.listdir(cfut_dir)) == 2
 
 
-def test_slurm_max_submit_user():
+def test_slurm_max_submit_user() -> None:
     max_submit_jobs = 6
 
     # MaxSubmitJobs can either be defined at the user or at the qos level
@@ -100,7 +100,7 @@ def test_slurm_max_submit_user():
             assert reset_max_submit_jobs == original_max_submit_jobs
 
 
-def test_slurm_max_submit_user_env():
+def test_slurm_max_submit_user_env() -> None:
     max_submit_jobs = 4
 
     executor = cluster_tools.get_executor("slurm", debug=True)
@@ -127,7 +127,7 @@ def test_slurm_max_submit_user_env():
         assert reset_max_submit_jobs == original_max_submit_jobs
 
 
-def test_slurm_deferred_submit():
+def test_slurm_deferred_submit() -> None:
     max_submit_jobs = 1
 
     # Only one job can be scheduled at a time
@@ -152,14 +152,16 @@ def test_slurm_deferred_submit():
         call("echo y | sacctmgr modify qos normal set MaxSubmitJobs=-1")
 
 
-def wait_until_first_job_was_submitted(executor, state: Optional[str] = None):
+def wait_until_first_job_was_submitted(
+    executor: cluster_tools.SlurmExecutor, state: Optional[str] = None
+) -> None:
     # Since the job submission is not synchronous, we need to poll
     # to find out when the first job was submitted
     while executor.get_number_of_submitted_jobs(state) <= 0:
         time.sleep(0.1)
 
 
-def test_slurm_deferred_submit_shutdown():
+def test_slurm_deferred_submit_shutdown() -> None:
     # Test that the SlurmExecutor stops scheduling jobs in a separate thread
     # once it was killed even if the executor was used multiple times and
     # therefore started multiple job submission threads
@@ -195,7 +197,7 @@ def test_slurm_deferred_submit_shutdown():
         call("echo y | sacctmgr modify qos normal set MaxSubmitJobs=-1")
 
 
-def test_slurm_job_canceling_on_shutdown():
+def test_slurm_job_canceling_on_shutdown() -> None:
     # Test that scheduled jobs are canceled on shutdown, regardless
     # of whether they are pending or running.
     max_running_size = 2
@@ -240,7 +242,7 @@ def test_slurm_job_canceling_on_shutdown():
             del os.environ["SLURM_MAX_RUNNING_SIZE"]
 
 
-def test_slurm_number_of_submitted_jobs():
+def test_slurm_number_of_submitted_jobs() -> None:
     number_of_jobs = 6
     executor = cluster_tools.get_executor("slurm", debug=True)
 
@@ -258,7 +260,7 @@ def test_slurm_number_of_submitted_jobs():
         assert executor.get_number_of_submitted_jobs() == 0
 
 
-def test_slurm_max_array_size():
+def test_slurm_max_array_size() -> None:
     max_array_size = 2
 
     executor = cluster_tools.get_executor("slurm", debug=True)
@@ -287,7 +289,7 @@ def test_slurm_max_array_size():
         assert reset_max_array_size == original_max_array_size
 
 
-def test_slurm_max_array_size_env():
+def test_slurm_max_array_size_env() -> None:
     max_array_size = 2
 
     executor = cluster_tools.get_executor("slurm", debug=True)
@@ -317,12 +319,12 @@ def test_slurm_max_array_size_env():
 test_output_str = "Test-Output"
 
 
-def log(string):
+def log(string: str) -> None:
     logging.debug(string)
 
 
-def test_pickled_logging():
-    def execute_with_log_level(log_level):
+def test_pickled_logging() -> None:
+    def execute_with_log_level(log_level: int) -> str:
         logging_config = {"level": log_level}
         with cluster_tools.get_executor(
             "slurm",
@@ -345,7 +347,7 @@ def test_pickled_logging():
     assert not (test_output_str in info_out)
 
 
-def test_tailed_logging():
+def test_tailed_logging() -> None:
 
     with cluster_tools.get_executor(
         "slurm",
@@ -364,16 +366,15 @@ def test_tailed_logging():
         assert "jid" in f.getvalue()
 
 
-def fail(val):
+def fail(val: Any) -> None:
     raise Exception("Fail()")
 
 
-def output_pickle_path_getter(tmp_dir, chunk):
-
+def output_pickle_path_getter(tmp_dir: str, chunk: int) -> Path:
     return Path(tmp_dir) / f"test_{chunk}.pickle"
 
 
-def test_preliminary_file_submit():
+def test_preliminary_file_submit() -> None:
 
     with tempfile.TemporaryDirectory(dir=".") as tmp_dir:
         output_pickle_path = Path(tmp_dir) / "test.pickle"
@@ -407,8 +408,8 @@ def test_preliminary_file_submit():
             ), "Preliminary output file should not exist anymore"
 
 
-def test_executor_args():
-    def pass_with(exc):
+def test_executor_args() -> None:
+    def pass_with(exc: cluster_tools.SlurmExecutor) -> None:
         with exc:
             pass
 
@@ -420,7 +421,7 @@ def test_executor_args():
     # Test should succeed if the above lines don't raise an exception
 
 
-def test_preliminary_file_map():
+def test_preliminary_file_map() -> None:
 
     a_range = range(1, 4)
 

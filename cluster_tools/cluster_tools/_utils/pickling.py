@@ -1,6 +1,6 @@
 import pickle
 import sys
-from typing import Any, BinaryIO, ByteString, Optional
+from typing import Any, BinaryIO, Optional
 
 from cluster_tools._utils.warning import warn_after
 
@@ -15,7 +15,7 @@ def _get_suitable_pickle_protocol() -> int:
 
 
 @warn_after("pickle.dumps", WARNING_TIMEOUT)
-def dumps(*args: Any, **kwargs: Any) -> ByteString:
+def dumps(*args: Any, **kwargs: Any) -> bytes:
     return pickle.dumps(*args, protocol=_get_suitable_pickle_protocol(), **kwargs)  # type: ignore[misc]
 
 

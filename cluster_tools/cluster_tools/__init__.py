@@ -7,7 +7,9 @@ from concurrent.futures import ProcessPoolExecutor
 from functools import partial
 from pathlib import Path
 from shutil import rmtree
-from typing import Union
+from typing import Any, Union, overload
+
+from typing_extensions import Literal
 
 from cluster_tools._utils.warning import enrich_future_with_uncaught_warning
 from cluster_tools.executors.debug_sequential import DebugSequentialExecutor
@@ -26,14 +28,14 @@ from cluster_tools.schedulers.slurm import SlurmExecutor
 WrappedProcessPoolExecutor = MultiprocessingExecutor
 
 
-def _noop():
+def _noop() -> bool:
     return True
 
 
 did_start_test_multiprocessing = False
 
 
-def _test_valid_multiprocessing():
+def _test_valid_multiprocessing() -> None:
     msg = """
     ###############################################################
     An attempt has been made to start a new process before the
@@ -59,8 +61,52 @@ def _test_valid_multiprocessing():
             raise Exception(msg) from exc
 
 
-def get_executor(environment, **kwargs):
+@overload
+def get_executor(environment: Literal["slurm"], **kwargs: Any) -> SlurmExecutor:
+    ...
 
+
+@overload
+def get_executor(environment: Literal["pbs"], **kwargs: Any) -> PBSExecutor:
+    ...
+
+
+@overload
+def get_executor(
+    environment: Literal["kubernetes"], **kwargs: Any
+) -> KubernetesExecutor:
+    ...
+
+
+@overload
+def get_executor(
+    environment: Literal["multiprocessing"], **kwargs: Any
+) -> MultiprocessingExecutor:
+    ...
+
+
+@overload
+def get_executor(
+    environment: Literal["sequential"], **kwargs: Any
+) -> SequentialExecutor:
+    ...
+
+
+@overload
+def get_executor(
+    environment: Literal["debug_sequential"], **kwargs: Any
+) -> DebugSequentialExecutor:
+    ...
+
+
+@overload
+def get_executor(
+    environment: Literal["test_pickling"], **kwargs: Any
+) -> PickleExecutor:
+    ...
+
+
+def get_executor(environment: str, **kwargs: Any) -> "Executor":
     if environment == "slurm":
         return SlurmExecutor(**kwargs)
     elif environment == "pbs":

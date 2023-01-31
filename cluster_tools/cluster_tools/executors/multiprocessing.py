@@ -32,7 +32,7 @@ from cluster_tools._utils.warning import enrich_future_with_uncaught_warning
 
 
 class CFutDict(TypedDict):
-    output_pickle_path: os.PathLike
+    output_pickle_path: str
 
 
 _T = TypeVar("_T")
@@ -222,7 +222,7 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
     def map_to_futures(
         self,
         fn: Callable[[_S], _T],
-        args: Iterable[_S],  # TODO breaking change: allow more than one arg per call
+        args: Iterable[_S],  # TODO change: allow more than one arg per call
         output_pickle_path_getter: Optional[Callable[[_S], os.PathLike]] = None,
     ) -> List["Future[_T]"]:
         if output_pickle_path_getter is not None:

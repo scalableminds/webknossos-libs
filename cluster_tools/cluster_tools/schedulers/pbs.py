@@ -4,7 +4,7 @@ import logging
 import os
 import re
 from concurrent import futures
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from typing_extensions import Literal
 
@@ -38,22 +38,27 @@ class PBSExecutor(ClusterExecutor):
         return "pbs"
 
     @staticmethod
-    def get_job_array_index():
-        return os.environ.get("PBS_ARRAYID", None)
+    def get_job_array_index() -> Optional[int]:
+        try:
+            return int(os.environ["PBS_ARRAYID"])
+        except KeyError:
+            return None
 
     @staticmethod
-    def get_current_job_id():
-        return os.environ.get("PBS_JOBID")
+    def get_current_job_id() -> str:
+        r = os.environ.get("PBS_JOBID")
+        assert r is not None
+        return r
 
     @staticmethod
-    def format_log_file_name(job_id_with_index, suffix=".stdout"):
-        return "pbs.{}.log{}".format(str(job_id_with_index), suffix)
+    def format_log_file_name(job_id_with_index: str, suffix: str = ".stdout") -> str:
+        return f"pbs.{job_id_with_index}.log{suffix}"
 
     @classmethod
-    def get_job_id_string(cls):
+    def get_job_id_string(cls) -> str:
         return cls.get_current_job_id()
 
-    def inner_handle_kill(self, *args, **kwargs):
+    def inner_handle_kill(self, *args: Any, **kwargs: Any) -> None:
         scheduled_job_ids: List[Union[int, str]] = list(self.jobs.keys())
 
         if len(scheduled_job_ids):
@@ -78,7 +83,7 @@ class PBSExecutor(ClusterExecutor):
                     f"Couldn't automatically cancel all PBS jobs. Reason: {stderr}"
                 )
 
-    def submit_text(self, job):
+    def submit_text(self, job: str) -> str:
         """Submits a PBS job represented as a job file string. Returns
         the job ID.
         """
@@ -95,7 +100,7 @@ class PBSExecutor(ClusterExecutor):
 
         print("jobid", jobid)
         # os.unlink(filename)
-        return int(jobid)
+        return jobid
 
     def inner_submit(
         self,
@@ -154,7 +159,7 @@ class PBSExecutor(ClusterExecutor):
         return [job_id_future], [(0, job_count or 1)]
 
     def check_job_state(
-        self, job_id_with_index
+        self, job_id_with_index: str
     ) -> Literal["failed", "ignore", "completed"]:
         if len(str(job_id_with_index).split("_")) >= 2:
             a, b = job_id_with_index.split("_")
@@ -199,6 +204,6 @@ class PBSExecutor(ClusterExecutor):
                 )
                 return "ignore"
 
-    def get_pending_tasks(self):
+    def get_pending_tasks(self) -> List:
         # Not implemented, yet. Currently, this is only used for performance optimization.
         return []

@@ -6,10 +6,24 @@ import threading
 import time
 from abc import abstractmethod
 from concurrent import futures
+from concurrent.futures import Future
 from functools import partial
-from typing import List, Optional, Tuple, Type
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+    cast,
+)
 
-from typing_extensions import Literal
+from typing_extensions import Literal, ParamSpec
 
 from cluster_tools._utils import pickling
 from cluster_tools._utils.file_wait_thread import FileWaitThread
@@ -17,8 +31,14 @@ from cluster_tools._utils.meta import file_path_to_absolute_module, get_function
 from cluster_tools._utils.string import random_string, with_preliminary_postfix
 from cluster_tools._utils.tailf import Tail
 from cluster_tools._utils.warning import enrich_future_with_uncaught_warning
+from cluster_tools.executors.multiprocessing import CFutDict
 
-NOT_YET_SUBMITTED_STATE = "NOT_YET_SUBMITTED"
+NOT_YET_SUBMITTED_STATE_TYPE = Literal["NOT_YET_SUBMITTED"]
+NOT_YET_SUBMITTED_STATE: NOT_YET_SUBMITTED_STATE_TYPE = "NOT_YET_SUBMITTED"
+
+_T = TypeVar("_T")
+_P = ParamSpec("_P")
+_S = TypeVar("_S")
 
 
 def join_messages(strings: List[str]) -> str:
@@ -26,16 +46,18 @@ def join_messages(strings: List[str]) -> str:
 
 
 class RemoteException(Exception):
-    def __init__(self, error, job_id):  # pylint: disable=super-init-not-called
+    def __init__(
+        self, error: str, job_id: str
+    ):  # pylint: disable=super-init-not-called
         self.error = error
         self.job_id = job_id
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.error.strip() + f" (job_id={self.job_id})"
 
 
 class RemoteOutOfMemoryException(RemoteException):
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.job_id) + "\n" + self.error.strip()
 
 
@@ -44,13 +66,13 @@ class ClusterExecutor(futures.Executor):
 
     def __init__(
         self,
-        debug=False,
-        keep_logs=True,
-        cfut_dir=None,
-        job_resources=None,
-        job_name=None,
-        additional_setup_lines=None,
-        **kwargs,
+        debug: bool = False,
+        keep_logs: bool = True,
+        cfut_dir: Optional[str] = None,
+        job_resources: Optional[Dict[str, Any]] = None,
+        job_name: Optional[str] = None,
+        additional_setup_lines: Optional[List[str]] = None,
+        **kwargs: Any,
     ):
         """
         `kwargs` can be the following optional parameters:
@@ -70,7 +92,7 @@ class ClusterExecutor(futures.Executor):
         self.cfut_dir = (
             cfut_dir if cfut_dir is not None else os.getenv("CFUT_DIR", ".cfut")
         )
-        self.files_to_clean_up = []
+        self.files_to_clean_up: List[str] = []
 
         logging.info(
             f"Instantiating ClusterExecutor. Log files are stored in {self.cfut_dir}"
@@ -79,8 +101,10 @@ class ClusterExecutor(futures.Executor):
         # `jobs` maps from job id to (future, workerid, outfile_name, should_keep_output)
         # In case, job arrays are used: job id and workerid are in the format of
         # `job_id-job_index` and `workerid-job_index`.
-        self.jobs = {}
-        self.job_outfiles = {}
+        self.jobs: Dict[
+            Union[int, str],
+            Union[NOT_YET_SUBMITTED_STATE_TYPE, Tuple[Future, str, str, bool]],
+        ] = {}
         self.jobs_lock = threading.Lock()
         self.jobs_empty_cond = threading.Condition(self.jobs_lock)
         self.keep_logs = keep_logs
@@ -109,10 +133,12 @@ class ClusterExecutor(futures.Executor):
 
     @classmethod
     @abstractmethod
-    def executor_key(cls):
+    def executor_key(cls) -> str:
         pass
 
-    def handle_kill(self, existing_sigint_handler, signum, frame):
+    def handle_kill(
+        self, existing_sigint_handler: Any, signum: int, frame: Any
+    ) -> None:
         if self.is_shutting_down:
             return
 
@@ -129,17 +155,22 @@ class ClusterExecutor(futures.Executor):
             existing_sigint_handler(signum, frame)
 
     @abstractmethod
-    def inner_handle_kill(self, _signum, _frame):
+    def inner_handle_kill(self, _signum: Any, _frame: Any) -> None:
         pass
 
     @abstractmethod
     def check_job_state(
-        self, job_id_with_index
+        self, job_id_with_index: str
     ) -> Literal["failed", "ignore", "completed"]:
         pass
 
+    @staticmethod
+    @abstractmethod
+    def get_current_job_id() -> str:
+        pass
+
     def investigate_failed_job(
-        self, job_id_with_index  # pylint: disable=unused-argument
+        self, job_id_with_index: str  # pylint: disable=unused-argument
     ) -> Optional[Tuple[str, Type[RemoteException]]]:
         """
         When a job fails, this method is called to investigate why. If a tuple is returned,
@@ -150,7 +181,12 @@ class ClusterExecutor(futures.Executor):
         """
         return None
 
-    def _start(self, workerid, job_count=None, job_name=None):
+    def _start(
+        self,
+        workerid: str,
+        job_count: Optional[int] = None,
+        job_name: Optional[str] = None,
+    ) -> Tuple[List["Future[str]"], List[Tuple[int, int]]]:
         """Start job(s) with the given worker ID and return IDs
         identifying the new job(s). The job should run ``python -m
         cfut.remote <executorkey> <workerid>.
@@ -179,10 +215,10 @@ class ClusterExecutor(futures.Executor):
         job_name: Optional[str] = None,
         additional_setup_lines: Optional[List[str]] = None,
         job_count: Optional[int] = None,
-    ) -> Tuple[List["futures.Future[str]"], List[Tuple[int, int]]]:
+    ) -> Tuple[List["Future[str]"], List[Tuple[int, int]]]:
         pass
 
-    def _cleanup(self, jobid):
+    def _cleanup(self, jobid: str) -> None:
         """Given a job ID as returned by _start, perform any necessary
         cleanup after the job has finished.
         """
@@ -194,44 +230,53 @@ class ClusterExecutor(futures.Executor):
 
     @staticmethod
     @abstractmethod
-    def format_log_file_name(job_id_with_index, suffix=".stdout"):
+    def format_log_file_name(job_id_with_index: str, suffix: str = ".stdout") -> str:
         pass
 
     @classmethod
-    def format_log_file_path(cls, cfut_dir, job_id_with_index, suffix=".stdout"):
+    def format_log_file_path(
+        cls, cfut_dir: str, job_id_with_index: str, suffix: str = ".stdout"
+    ) -> str:
         return os.path.join(
             cfut_dir, cls.format_log_file_name(job_id_with_index, suffix)
         )
 
     @classmethod
     @abstractmethod
-    def get_job_id_string(self):
+    def get_job_id_string(self) -> str:
         pass
 
     @staticmethod
-    def get_temp_file_path(cfut_dir, file_name):
+    @abstractmethod
+    def get_job_array_index() -> Optional[int]:
+        pass
+
+    @staticmethod
+    def get_temp_file_path(cfut_dir: str, file_name: str) -> str:
         return os.path.join(cfut_dir, file_name)
 
     @staticmethod
-    def format_infile_name(cfut_dir, job_id):
+    def format_infile_name(cfut_dir: str, job_id: str) -> str:
         return os.path.join(cfut_dir, "cfut.in.%s.pickle" % job_id)
 
     @staticmethod
-    def format_outfile_name(cfut_dir, job_id):
+    def format_outfile_name(cfut_dir: str, job_id: str) -> str:
         return os.path.join(cfut_dir, "cfut.out.%s.pickle" % job_id)
 
-    def get_python_executable(self):
+    def get_python_executable(self) -> str:
         return sys.executable
 
-    def _completion(self, jobid, failed_early):
+    def _completion(self, jobid: str, failed_early: bool) -> None:
         """Called whenever a job finishes."""
         with self.jobs_lock:
             job_info = self.jobs.pop(jobid)
+            assert job_info != NOT_YET_SUBMITTED_STATE
+
             if len(job_info) == 4:
                 fut, workerid, outfile_name, should_keep_output = job_info
             else:
                 # Backwards compatibility
-                fut, workerid = job_info
+                fut, workerid = job_info  # type: ignore[misc]
                 should_keep_output = False
                 outfile_name = self.format_outfile_name(self.cfut_dir, workerid)
 
@@ -296,18 +341,23 @@ class ClusterExecutor(futures.Executor):
 
         self._cleanup(jobid)
 
-    def ensure_not_shutdown(self):
+    def ensure_not_shutdown(self) -> None:
         if self.was_requested_to_shutdown:
             raise RuntimeError(
                 "submit() was invoked on a ClusterExecutor instance even though shutdown() was executed for that instance."
             )
 
-    def create_enriched_future(self):
-        fut = futures.Future()
+    def create_enriched_future(self) -> Future:
+        fut: Future = Future()
         enrich_future_with_uncaught_warning(fut)
         return fut
 
-    def submit(self, fun, *args, **kwargs):
+    def submit(  # type: ignore[override]
+        self,
+        __fn: Callable[_P, _T],
+        *args: _P.args,
+        **kwargs: _P.kwargs,
+    ) -> "Future[_T]":
         """
         Submit a job to the pool.
         kwargs may contain __cfut_options which currently should look like:
@@ -322,7 +372,9 @@ class ClusterExecutor(futures.Executor):
 
         if "__cfut_options" in kwargs:
             should_keep_output = True
-            output_pickle_path = kwargs["__cfut_options"]["output_pickle_path"]
+            output_pickle_path = cast(CFutDict, kwargs["__cfut_options"])[
+                "output_pickle_path"
+            ]
             del kwargs["__cfut_options"]
         else:
             should_keep_output = False
@@ -332,7 +384,7 @@ class ClusterExecutor(futures.Executor):
 
         # Start the job.
         serialized_function_info = pickling.dumps(
-            (fun, args, kwargs, self.meta_data, output_pickle_path)
+            (__fn, args, kwargs, self.meta_data, output_pickle_path)
         )
         with open(self.format_infile_name(self.cfut_dir, workerid), "wb") as f:
             f.write(serialized_function_info)
@@ -346,7 +398,7 @@ class ClusterExecutor(futures.Executor):
             )
             os.unlink(preliminary_output_pickle_path)
 
-        job_name = get_function_name(fun)
+        job_name = get_function_name(__fn)
         jobids_futures, _ = self._start(workerid, job_name=job_name)
         # Only a single job was submitted
         jobid = jobids_futures[0].result()
@@ -360,34 +412,39 @@ class ClusterExecutor(futures.Executor):
         with self.jobs_lock:
             self.jobs[jobid] = (fut, workerid, output_pickle_path, should_keep_output)
 
-        fut.cluster_jobid = jobid
+        fut.cluster_jobid = jobid  # type: ignore[attr-defined]
         return fut
 
     @classmethod
-    def get_workerid_with_index(cls, workerid, index):
-        return workerid + "_" + str(index)
+    def get_workerid_with_index(cls, workerid: str, index: Union[int, str]) -> str:
+        return f"{workerid}_{index}"
 
     @classmethod
-    def get_jobid_with_index(cls, jobid, index):
-        return str(jobid) + "_" + str(index)
+    def get_jobid_with_index(cls, jobid: str, index: int) -> str:
+        return f"{jobid}_{index}"
 
-    def get_function_pickle_path(self, workerid):
+    def get_function_pickle_path(self, workerid: str) -> str:
         return self.format_infile_name(
             self.cfut_dir, self.get_workerid_with_index(workerid, "function")
         )
 
     @staticmethod
-    def get_main_meta_path(cfut_dir, workerid):
+    def get_main_meta_path(cfut_dir: str, workerid: str) -> str:
         return os.path.join(cfut_dir, f"cfut.main_path.{workerid}.txt")
 
-    def store_main_path_to_meta_file(self, workerid):
+    def store_main_path_to_meta_file(self, workerid: str) -> None:
         with open(self.get_main_meta_path(self.cfut_dir, workerid), "w") as file:
             file.write(file_path_to_absolute_module(sys.argv[0]))
 
-    def map_to_futures(self, fun, allArgs, output_pickle_path_getter=None):
+    def map_to_futures(
+        self,
+        fn: Callable[[_S], _T],
+        args: Iterable[_S],  # TODO change: allow more than one arg per call
+        output_pickle_path_getter: Optional[Callable[[_S], os.PathLike]] = None,
+    ) -> List["Future[_T]"]:
         self.ensure_not_shutdown()
-        allArgs = list(allArgs)
-        if len(allArgs) == 0:
+        args = list(args)
+        if len(args) == 0:
             return []
 
         should_keep_output = output_pickle_path_getter is not None
@@ -398,10 +455,10 @@ class ClusterExecutor(futures.Executor):
         pickled_function_path = self.get_function_pickle_path(workerid)
         self.files_to_clean_up.append(pickled_function_path)
         with open(pickled_function_path, "wb") as file:
-            pickling.dump(fun, file)
+            pickling.dump(fn, file)
         self.store_main_path_to_meta_file(workerid)
 
-        for index, arg in enumerate(allArgs):
+        for index, arg in enumerate(args):
             fut = self.create_enriched_future()
             workerid_with_index = self.get_workerid_with_index(workerid, index)
 
@@ -410,7 +467,7 @@ class ClusterExecutor(futures.Executor):
                     self.cfut_dir, workerid_with_index
                 )
             else:
-                output_pickle_path = output_pickle_path_getter(arg)
+                output_pickle_path = str(output_pickle_path_getter(arg))
 
             preliminary_output_pickle_path = with_preliminary_postfix(
                 output_pickle_path
@@ -441,8 +498,8 @@ class ClusterExecutor(futures.Executor):
                 # not even submitted yet.
                 self.jobs[workerid_with_index] = NOT_YET_SUBMITTED_STATE
 
-        job_count = len(allArgs)
-        job_name = get_function_name(fun)
+        job_count = len(args)
+        job_name = get_function_name(fn)
         jobids_futures, job_index_ranges = self._start(workerid, job_count, job_name)
 
         number_of_batches = len(jobids_futures)
@@ -464,13 +521,13 @@ class ClusterExecutor(futures.Executor):
 
     def register_jobs(
         self,
-        futs_with_output_paths,
-        workerid,
-        should_keep_output,
-        job_index_offset,
-        batch_description,
-        jobid_future,
-    ):
+        futs_with_output_paths: List[Tuple[Future, str]],
+        workerid: str,
+        should_keep_output: bool,
+        job_index_offset: int,
+        batch_description: str,
+        jobid_future: "Future[str]",
+    ) -> None:
         jobid = jobid_future.result()
         if self.debug:
 
@@ -488,8 +545,7 @@ class ClusterExecutor(futures.Executor):
                 with_preliminary_postfix(output_path), jobid_with_index
             )
 
-            fut.cluster_jobid = jobid
-            fut.cluster_jobindex = array_index
+            fut.cluster_jobid = jobid  # type: ignore[attr-defined]
 
             job_index = job_index_offset + array_index
             workerid_with_index = self.get_workerid_with_index(workerid, job_index)
@@ -503,8 +559,12 @@ class ClusterExecutor(futures.Executor):
                     should_keep_output,
                 )
 
-    def shutdown(self, wait=True):
+    def shutdown(self, wait: bool = True, cancel_futures: bool = True) -> None:
         """Close the pool."""
+        if not cancel_futures:
+            logging.warning(
+                "The provided cancel_futures argument is ignored by ClusterExecutor."
+            )
         self.was_requested_to_shutdown = True
         if wait:
             with self.jobs_lock:
@@ -521,22 +581,29 @@ class ClusterExecutor(futures.Executor):
                 pass
         self.files_to_clean_up = []
 
-    def map(self, func, args, timeout=None, chunksize=None):
+    # TODO: args should be *iterables, this would be a breaking change!
+    def map(  # type: ignore[override]
+        self,
+        fn: Callable[_P, _T],
+        args: Iterable[Any],
+        timeout: Optional[float] = None,
+        chunksize: Optional[int] = None,
+    ) -> Iterator[_T]:
         if chunksize is not None:
             logging.warning(
-                "The provided chunksize parameter is ignored by ClusterExecutor."
+                "The provided chunksize argument is ignored by ClusterExecutor."
             )
 
         start_time = time.time()
 
-        futs = self.map_to_futures(func, args)
+        futs = self.map_to_futures(fn, args)
 
         # Return a separate generator as an iterator to avoid that the
         # map() method itself becomes a generator (due to the usage of yield).
         # If map() was a generator, the submit() calls would be invoked
         # lazily which can lead to a shutdown of the executor before
         # the submit calls are performed.
-        def result_generator():
+        def result_generator() -> Iterator[_T]:
             for fut in futs:
                 passed_time = time.time() - start_time
                 remaining_timeout = None if timeout is None else timeout - passed_time
@@ -544,27 +611,27 @@ class ClusterExecutor(futures.Executor):
 
         return result_generator()
 
-    def map_unordered(self, func, args):
-        futs = self.map_to_futures(func, args)
+    def map_unordered(self, fn: Callable[_P, _T], args: Any) -> Iterator[_T]:
+        futs = self.map_to_futures(fn, args)
 
         # Return a separate generator to avoid that map_unordered
         # is executed lazily.
-        def result_generator():
+        def result_generator() -> Iterator[_T]:
             for fut in futures.as_completed(futs):
                 yield fut.result()
 
         return result_generator()
 
-    def forward_log(self, fut):
+    def forward_log(self, fut: Future[_T]) -> _T:
         """
         Takes a future from which the log file is forwarded to the active
         process. This method blocks as long as the future is not done.
         """
 
-        log_path = self.format_log_file_path(self.cfut_dir, fut.cluster_jobid)
+        log_path = self.format_log_file_path(self.cfut_dir, fut.cluster_jobid)  # type: ignore[attr-defined]
         # Don't use a logger instance here, since the child process
         # probably already used a logger.
-        log_callback = lambda s: sys.stdout.write(f"(jid={fut.cluster_jobid}) {s}")
+        log_callback = lambda s: sys.stdout.write(f"(jid={fut.cluster_jobid}) {s}")  # type: ignore[attr-defined]
         tailer = Tail(log_path, log_callback)
         fut.add_done_callback(lambda _: tailer.cancel())
 
@@ -578,5 +645,5 @@ class ClusterExecutor(futures.Executor):
         return fut.result()
 
     @abstractmethod
-    def get_pending_tasks(self):
+    def get_pending_tasks(self) -> Iterable[str]:
         pass

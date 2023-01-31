@@ -3,29 +3,34 @@ import logging
 import os
 import sys
 import traceback
+from typing import Any, Dict, Optional, Type
 
 from cluster_tools._utils import pickling
 from cluster_tools._utils.string import with_preliminary_postfix
+from cluster_tools.schedulers.cluster_executor import ClusterExecutor
 from cluster_tools.schedulers.kube import KubernetesExecutor
 from cluster_tools.schedulers.pbs import PBSExecutor
 from cluster_tools.schedulers.slurm import SlurmExecutor
 
 
-def get_executor_class(executor_key):
+def get_executor_class(executor_key: str) -> Type[ClusterExecutor]:
     return {
         "slurm": SlurmExecutor,
         "pbs": PBSExecutor,
         "kubernetes": KubernetesExecutor,
-    }.get(executor_key)
+    }[executor_key]
 
 
-def format_remote_exc():
+def format_remote_exc() -> str:
     typ, value, tb = sys.exc_info()
-    tb = tb.tb_next  # Remove root call to worker().
+    if tb is not None:
+        tb = tb.tb_next  # Remove root call to worker().
     return "".join(traceback.format_exception(typ, value, tb))
 
 
-def get_custom_main_path(workerid, executor):
+def get_custom_main_path(
+    workerid: str, executor: Type[ClusterExecutor]
+) -> Optional[str]:
     custom_main_path = None
     main_meta_path = executor.get_main_meta_path(cfut_dir, workerid)
     if os.path.exists(main_meta_path):
@@ -34,12 +39,18 @@ def get_custom_main_path(workerid, executor):
     return custom_main_path
 
 
-def worker(executor, workerid, job_array_index, job_array_index_offset, cfut_dir):
+def worker(
+    executor: Type[ClusterExecutor],
+    workerid: str,
+    job_array_index: Optional[int],
+    job_array_index_offset: str,
+    cfut_dir: str,
+) -> None:
     """Called to execute a job on a remote host."""
 
     if job_array_index is not None:
         workerid_with_idx = (
-            worker_id + "_" + str(int(job_array_index_offset) + int(job_array_index))
+            worker_id + "_" + str(int(job_array_index_offset) + job_array_index)
         )
     else:
         workerid_with_idx = worker_id
@@ -96,7 +107,9 @@ def worker(executor, workerid, job_array_index, job_array_index_offset, cfut_dir
     logging.debug("Pickle file renamed to {}.".format(destfile))
 
 
-def setup_logging(meta_data, executor, cfut_dir):
+def setup_logging(
+    meta_data: Dict[str, Any], executor: Type[ClusterExecutor], cfut_dir: str
+) -> None:
     if "logging_setup_fn" in meta_data:
         logging.debug("Using supplied logging_setup_fn to setup logging.")
         job_id_string = executor.get_job_id_string()

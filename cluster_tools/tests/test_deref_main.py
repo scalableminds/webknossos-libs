@@ -1,3 +1,7 @@
+from typing import Tuple, Type
+
+from typing_extensions import Literal
+
 import cluster_tools
 
 
@@ -5,14 +9,14 @@ class TestClass:
     pass
 
 
-def deref_fun_helper(obj):
+def deref_fun_helper(obj: Tuple[Type[TestClass], TestClass, int, int]) -> None:
     clss, inst, one, two = obj
     assert one == 1
     assert two == 2
     assert isinstance(inst, clss)
 
 
-def test_dereferencing_main():
+def test_dereferencing_main() -> None:
     with cluster_tools.get_executor(
         "slurm", debug=True, job_resources={"mem": "10M"}
     ) as executor:
