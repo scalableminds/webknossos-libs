@@ -103,7 +103,7 @@ class ClusterExecutor(futures.Executor):
         # In case, job arrays are used: job id and workerid are in the format of
         # `job_id-job_index` and `workerid-job_index`.
         self.jobs: Dict[
-            Union[int, str],
+            str,
             Union[NOT_YET_SUBMITTED_STATE_TYPE, Tuple[Future, str, str, bool]],
         ] = {}
         self.jobs_lock = threading.Lock()
@@ -187,7 +187,7 @@ class ClusterExecutor(futures.Executor):
         workerid: str,
         job_count: Optional[int] = None,
         job_name: Optional[str] = None,
-    ) -> Tuple[Sequence[Union["Future[str]", "Future[int]"]], List[Tuple[int, int]]]:
+    ) -> Tuple[List["Future[str]"], List[Tuple[int, int]]]:
         """Start job(s) with the given worker ID and return IDs
         identifying the new job(s). The job should run ``python -m
         cfut.remote <executorkey> <workerid>.
@@ -216,7 +216,7 @@ class ClusterExecutor(futures.Executor):
         job_name: Optional[str] = None,
         additional_setup_lines: Optional[List[str]] = None,
         job_count: Optional[int] = None,
-    ) -> Tuple[Sequence[Union["Future[str]", "Future[int]"]], List[Tuple[int, int]]]:
+    ) -> Tuple[List["Future[str]"], List[Tuple[int, int]]]:
         pass
 
     def _cleanup(self, jobid: str) -> None:
@@ -408,7 +408,7 @@ class ClusterExecutor(futures.Executor):
             logging.debug(f"Job submitted: {jobid}")
 
         # Thread will wait for it to finish.
-        self.wait_thread.waitFor(preliminary_output_pickle_path, str(jobid))
+        self.wait_thread.waitFor(preliminary_output_pickle_path, jobid)
 
         with self.jobs_lock:
             self.jobs[jobid] = (fut, workerid, output_pickle_path, should_keep_output)
@@ -527,7 +527,7 @@ class ClusterExecutor(futures.Executor):
         should_keep_output: bool,
         job_index_offset: int,
         batch_description: str,
-        jobid_future: Union["Future[str]", "Future[int]"],
+        jobid_future: "Future[str]",
     ) -> None:
         jobid = jobid_future.result()
         if self.debug:

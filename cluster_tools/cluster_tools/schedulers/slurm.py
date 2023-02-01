@@ -285,7 +285,7 @@ class SlurmExecutor(ClusterExecutor):
         job_name: Optional[str] = None,
         additional_setup_lines: Optional[List[str]] = None,
         job_count: Optional[int] = None,
-    ) -> Tuple[List["Future[int]"], List[Tuple[int, int]]]:
+    ) -> Tuple[List["Future[str]"], List[Tuple[int, int]]]:
         """Starts a Slurm job that runs the specified shell command line."""
         if additional_setup_lines is None:
             additional_setup_lines = []
@@ -311,7 +311,7 @@ class SlurmExecutor(ClusterExecutor):
         batch_size = max(min(max_array_size, max_submit_jobs), 1)
 
         scripts = []
-        job_id_futures: List["Future[int]"] = []
+        job_id_futures: List["Future[str]"] = []
         ranges = []
         number_of_jobs = job_count if job_count is not None else 1
         for job_index_start in range(0, number_of_jobs, batch_size):
@@ -493,7 +493,7 @@ class _JobSubmitThread(threading.Thread):
         self,
         scripts: List[str],
         job_sizes: List[int],
-        futures: List["Future[int]"],
+        futures: List["Future[str]"],
         cfut_dir: str,
     ):
         super().__init__()
@@ -525,4 +525,4 @@ class _JobSubmitThread(threading.Thread):
                     return
 
             job_id = SlurmExecutor.submit_text(script, self.cfut_dir)
-            future.set_result(job_id)
+            future.set_result(str(job_id))
