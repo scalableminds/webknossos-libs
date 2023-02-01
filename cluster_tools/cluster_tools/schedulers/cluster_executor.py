@@ -16,6 +16,7 @@ from typing import (
     Iterator,
     List,
     Optional,
+    Sequence,
     Tuple,
     Type,
     TypeVar,
@@ -186,7 +187,7 @@ class ClusterExecutor(futures.Executor):
         workerid: str,
         job_count: Optional[int] = None,
         job_name: Optional[str] = None,
-    ) -> Tuple[List["Future[str]"], List[Tuple[int, int]]]:
+    ) -> Tuple[Sequence[Union["Future[str]", "Future[int]"]], List[Tuple[int, int]]]:
         """Start job(s) with the given worker ID and return IDs
         identifying the new job(s). The job should run ``python -m
         cfut.remote <executorkey> <workerid>.
@@ -215,7 +216,7 @@ class ClusterExecutor(futures.Executor):
         job_name: Optional[str] = None,
         additional_setup_lines: Optional[List[str]] = None,
         job_count: Optional[int] = None,
-    ) -> Tuple[List["Future[str]"], List[Tuple[int, int]]]:
+    ) -> Tuple[Sequence[Union["Future[str]", "Future[int]"]], List[Tuple[int, int]]]:
         pass
 
     def _cleanup(self, jobid: str) -> None:
@@ -407,7 +408,7 @@ class ClusterExecutor(futures.Executor):
             logging.debug(f"Job submitted: {jobid}")
 
         # Thread will wait for it to finish.
-        self.wait_thread.waitFor(preliminary_output_pickle_path, jobid)
+        self.wait_thread.waitFor(preliminary_output_pickle_path, str(jobid))
 
         with self.jobs_lock:
             self.jobs[jobid] = (fut, workerid, output_pickle_path, should_keep_output)
@@ -420,7 +421,7 @@ class ClusterExecutor(futures.Executor):
         return f"{workerid}_{index}"
 
     @classmethod
-    def get_jobid_with_index(cls, jobid: str, index: int) -> str:
+    def get_jobid_with_index(cls, jobid: Union[str, int], index: int) -> str:
         return f"{jobid}_{index}"
 
     def get_function_pickle_path(self, workerid: str) -> str:
@@ -526,7 +527,7 @@ class ClusterExecutor(futures.Executor):
         should_keep_output: bool,
         job_index_offset: int,
         batch_description: str,
-        jobid_future: "Future[str]",
+        jobid_future: Union["Future[str]", "Future[int]"],
     ) -> None:
         jobid = jobid_future.result()
         if self.debug:

@@ -225,7 +225,7 @@ class SlurmExecutor(ClusterExecutor):
         return number_of_submitted_jobs
 
     @classmethod
-    def submit_text(cls, job: str, cfut_dir: str) -> str:
+    def submit_text(cls, job: str, cfut_dir: str) -> int:
         """Submits a Slurm job represented as a job file string. Returns
         the job ID.
         """
@@ -241,7 +241,7 @@ class SlurmExecutor(ClusterExecutor):
         if len(stderr) > 0:
             logging.warning(f"Submitting batch job emitted warnings: {stderr}")
 
-        return job_id
+        return int(job_id)
 
     def inner_handle_kill(self, *args: Any, **kwargs: Any) -> None:
         for submit_thread in self.submit_threads:
@@ -285,7 +285,7 @@ class SlurmExecutor(ClusterExecutor):
         job_name: Optional[str] = None,
         additional_setup_lines: Optional[List[str]] = None,
         job_count: Optional[int] = None,
-    ) -> Tuple[List["Future[str]"], List[Tuple[int, int]]]:
+    ) -> Tuple[List["Future[int]"], List[Tuple[int, int]]]:
         """Starts a Slurm job that runs the specified shell command line."""
         if additional_setup_lines is None:
             additional_setup_lines = []
@@ -311,7 +311,7 @@ class SlurmExecutor(ClusterExecutor):
         batch_size = max(min(max_array_size, max_submit_jobs), 1)
 
         scripts = []
-        job_id_futures: List["Future[str]"] = []
+        job_id_futures: List["Future[int]"] = []
         ranges = []
         number_of_jobs = job_count if job_count is not None else 1
         for job_index_start in range(0, number_of_jobs, batch_size):
@@ -493,7 +493,7 @@ class _JobSubmitThread(threading.Thread):
         self,
         scripts: List[str],
         job_sizes: List[int],
-        futures: List["Future[str]"],
+        futures: List["Future[int]"],
         cfut_dir: str,
     ):
         super().__init__()

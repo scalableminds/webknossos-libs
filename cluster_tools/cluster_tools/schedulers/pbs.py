@@ -83,7 +83,7 @@ class PBSExecutor(ClusterExecutor):
                     f"Couldn't automatically cancel all PBS jobs. Reason: {stderr}"
                 )
 
-    def submit_text(self, job: str) -> str:
+    def submit_text(self, job: str) -> int:
         """Submits a PBS job represented as a job file string. Returns
         the job ID.
         """
@@ -100,7 +100,7 @@ class PBSExecutor(ClusterExecutor):
 
         print("jobid", jobid)
         # os.unlink(filename)
-        return jobid
+        return int(jobid)
 
     def inner_submit(
         self,
@@ -108,7 +108,7 @@ class PBSExecutor(ClusterExecutor):
         job_name: Optional[str] = None,
         additional_setup_lines: Optional[List[str]] = None,
         job_count: Optional[int] = None,
-    ) -> Tuple[List["Future[str]"], List[Tuple[int, int]]]:
+    ) -> Tuple[List["Future[int]"], List[Tuple[int, int]]]:
         """Starts a PBS job that runs the specified shell command line."""
         if additional_setup_lines is None:
             additional_setup_lines = []
@@ -153,7 +153,7 @@ class PBSExecutor(ClusterExecutor):
         ]
 
         job_id = self.submit_text("\n".join(script_lines))
-        job_id_future: "Future[str]" = Future()
+        job_id_future: "Future[int]" = Future()
         job_id_future.set_result(job_id)
 
         return [job_id_future], [(0, job_count or 1)]
