@@ -50,8 +50,8 @@ def test_slurm_submit_returns_job_ids() -> None:
     exc = cluster_tools.get_executor("slurm", debug=True)
     with exc:
         future = exc.submit(square, 2)
-        assert isinstance(future.cluster_jobid, int)  # type: ignore[attr-defined]
-        assert future.cluster_jobid > 0  # type: ignore[attr-defined]
+        assert isinstance(future.cluster_jobid, str)  # type: ignore[attr-defined]
+        assert int(future.cluster_jobid) > 0  # type: ignore[attr-defined]
         assert future.result() == 4
 
 
