@@ -114,7 +114,7 @@ class KubernetesExecutor(ClusterExecutor):
     def ensure_kubernetes_namespace(self) -> None:
         kubernetes_client = KubernetesClient()
         try:
-            kubernetes_client.core.read_namespace(self.job_resources)["namespace"]
+            kubernetes_client.core.read_namespace(self.job_resources["namespace"])
         except kubernetes.client.exceptions.ApiException as e:
             if e.status != 404:
                 raise e
