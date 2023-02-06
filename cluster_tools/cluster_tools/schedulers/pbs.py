@@ -83,7 +83,7 @@ class PBSExecutor(ClusterExecutor):
                     f"Couldn't automatically cancel all PBS jobs. Reason: {stderr}"
                 )
 
-    def submit_text(self, job: str) -> int:
+    def submit_text(self, job: str) -> str:
         """Submits a PBS job represented as a job file string. Returns
         the job ID.
         """
@@ -100,7 +100,7 @@ class PBSExecutor(ClusterExecutor):
 
         print("jobid", jobid)
         # os.unlink(filename)
-        return int(jobid)
+        return str(int(jobid))  # int() ensures coherent parsing
 
     def inner_submit(
         self,
@@ -154,7 +154,7 @@ class PBSExecutor(ClusterExecutor):
 
         job_id = self.submit_text("\n".join(script_lines))
         job_id_future: "Future[str]" = Future()
-        job_id_future.set_result(str(job_id))
+        job_id_future.set_result(job_id)
 
         return [job_id_future], [(0, job_count or 1)]
 

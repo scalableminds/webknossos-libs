@@ -225,7 +225,7 @@ class SlurmExecutor(ClusterExecutor):
         return number_of_submitted_jobs
 
     @classmethod
-    def submit_text(cls, job: str, cfut_dir: str) -> int:
+    def submit_text(cls, job: str, cfut_dir: str) -> str:
         """Submits a Slurm job represented as a job file string. Returns
         the job ID.
         """
@@ -241,7 +241,7 @@ class SlurmExecutor(ClusterExecutor):
         if len(stderr) > 0:
             logging.warning(f"Submitting batch job emitted warnings: {stderr}")
 
-        return int(job_id)
+        return str(int(job_id))  # int() ensures coherent parsing
 
     def inner_handle_kill(self, *args: Any, **kwargs: Any) -> None:
         for submit_thread in self.submit_threads:
@@ -525,4 +525,4 @@ class _JobSubmitThread(threading.Thread):
                     return
 
             job_id = SlurmExecutor.submit_text(script, self.cfut_dir)
-            future.set_result(str(job_id))
+            future.set_result(job_id)
