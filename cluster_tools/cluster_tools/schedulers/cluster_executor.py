@@ -27,7 +27,7 @@ from typing_extensions import Literal, ParamSpec
 
 from cluster_tools._utils import pickling
 from cluster_tools._utils.file_wait_thread import FileWaitThread
-from cluster_tools._utils.metaprogramming import (
+from cluster_tools._utils.reflection import (
     file_path_to_absolute_module,
     get_function_name,
 )
