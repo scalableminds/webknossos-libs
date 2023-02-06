@@ -549,6 +549,8 @@ class ClusterExecutor(futures.Executor):
             )
 
             fut.cluster_jobid = jobid  # type: ignore[attr-defined]
+            # fut.cluster_jobindex is only used for debugging:
+            fut.cluster_jobindex = array_index  # type: ignore[attr-defined]
 
             job_index = job_index_offset + array_index
             workerid_with_index = self.get_workerid_with_index(workerid, job_index)
