@@ -7,7 +7,7 @@ def local_filename(filename: str = "") -> str:
     return os.path.join(os.getenv("CFUT_DIR", ".cfut"), filename)
 
 
-# Instantiate a dedicate generator to avoid being dependent on
+# Instantiate a dedicated generator to avoid being dependent on
 # the global seed which some external code might have set.
 random_generator = random.Random()
 
