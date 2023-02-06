@@ -1,24 +1,24 @@
 """Abstracts access to a Kubernetes cluster via its Python library."""
-import concurrent
 import os
 import re
 import sys
+from concurrent.futures import Future
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 from uuid import uuid4
 
 import kubernetes
 import kubernetes.client.models as kubernetes_models
 from typing_extensions import Literal
 
-from .cluster_executor import ClusterExecutor
+from cluster_tools.schedulers.cluster_executor import ClusterExecutor
 
 
-def volume_name_from_path(path: Path) -> str:
+def _volume_name_from_path(path: Path) -> str:
     return f"{(hash(str(path)) & sys.maxsize):016x}"
 
 
-def deduplicate_mounts(mounts: List[Path]) -> List[Path]:
+def _deduplicate_mounts(mounts: List[Path]) -> List[Path]:
     output = []
     unique_mounts = set(mounts)
     for mount in unique_mounts:
@@ -28,15 +28,34 @@ def deduplicate_mounts(mounts: List[Path]) -> List[Path]:
 
 
 class KubernetesClient:
-    def __init__(self):
+    def __init__(self) -> None:
         kubernetes.config.load_kube_config()
         self.core = kubernetes.client.api.core_v1_api.CoreV1Api()
         self.batch = kubernetes.client.api.batch_v1_api.BatchV1Api()
 
 
 class KubernetesExecutor(ClusterExecutor):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    job_resources: Dict[str, Any]
+
+    def __init__(
+        self,
+        debug: bool = False,
+        keep_logs: bool = True,
+        cfut_dir: Optional[str] = None,
+        job_resources: Optional[Dict[str, Any]] = None,
+        job_name: Optional[str] = None,
+        additional_setup_lines: Optional[List[str]] = None,
+        **kwargs: Any,
+    ):
+        super().__init__(
+            debug=debug,
+            keep_logs=keep_logs,
+            cfut_dir=cfut_dir,
+            job_resources=job_resources,
+            job_name=job_name,
+            additional_setup_lines=additional_setup_lines,
+            **kwargs,
+        )
         if self.job_resources is None:
             self.job_resources = {}
         if "namespace" not in self.job_resources:
@@ -53,7 +72,7 @@ class KubernetesExecutor(ClusterExecutor):
         return "kubernetes"
 
     @staticmethod
-    def format_log_file_name(job_id_with_index: str, suffix=".stdout") -> str:
+    def format_log_file_name(job_id_with_index: str, suffix: str = ".stdout") -> str:
         return "kube.{}.log{}".format(str(job_id_with_index), suffix)
 
     @staticmethod
@@ -70,18 +89,20 @@ class KubernetesExecutor(ClusterExecutor):
         return None
 
     @staticmethod
-    def get_current_job_id() -> Optional[str]:
-        return os.environ.get("JOB_ID", None)
+    def get_current_job_id() -> str:
+        r = os.environ.get("JOB_ID")
+        assert r is not None
+        return r
 
     @classmethod
-    def get_job_id_string(cls) -> Optional[str]:
+    def get_job_id_string(cls) -> str:
         job_id = cls.get_current_job_id()
         job_index = cls.get_job_array_index()
         if job_index is None:
             return job_id
         return cls.get_jobid_with_index(job_id, job_index)
 
-    def inner_handle_kill(self, *args, **kwargs):
+    def inner_handle_kill(self, *args: Any, **kwargs: Any) -> None:
         job_ids = ",".join(str(job_id) for job_id in self.jobs.keys())
 
         print(
@@ -90,7 +111,7 @@ class KubernetesExecutor(ClusterExecutor):
             )
         )
 
-    def ensure_kubernetes_namespace(self):
+    def ensure_kubernetes_namespace(self) -> None:
         kubernetes_client = KubernetesClient()
         try:
             kubernetes_client.core.read_namespace(self.job_resources["namespace"])
@@ -107,7 +128,7 @@ class KubernetesExecutor(ClusterExecutor):
                 )
             )
 
-    def get_python_executable(self):
+    def get_python_executable(self) -> str:
         return self.job_resources.get("python_executable", "python")
 
     def inner_submit(
@@ -116,14 +137,14 @@ class KubernetesExecutor(ClusterExecutor):
         job_name: Optional[str] = None,
         additional_setup_lines: Optional[List[str]] = None,
         job_count: Optional[int] = None,
-    ) -> Tuple[List["concurrent.futures.Future[str]"], List[Tuple[int, int]]]:
+    ) -> Tuple[List["Future[str]"], List[Tuple[int, int]]]:
         """Starts a Kubernetes pod that runs the specified shell command line."""
 
         kubernetes_client = KubernetesClient()
         self.ensure_kubernetes_namespace()
         job_id = str(uuid4())
 
-        job_id_future: "concurrent.futures.Future[str]" = concurrent.futures.Future()
+        job_id_future: "Future[str]" = Future()
         job_id_future.set_result(job_id)
         job_id_futures = [job_id_future]
 
@@ -146,7 +167,7 @@ class KubernetesExecutor(ClusterExecutor):
             if is_array_job
             else self.format_log_file_path(self.cfut_dir, job_id)
         )
-        mounts = deduplicate_mounts(
+        mounts = _deduplicate_mounts(
             [Path(mount) for mount in self.job_resources["mounts"]]
             + [Path.cwd(), Path(self.cfut_dir).absolute()]
         )
@@ -207,7 +228,7 @@ class KubernetesExecutor(ClusterExecutor):
                                 ),
                                 volume_mounts=[
                                     kubernetes_models.V1VolumeMount(
-                                        name=volume_name_from_path(mount),
+                                        name=_volume_name_from_path(mount),
                                         mount_path=str(mount),
                                     )
                                     for mount in mounts
@@ -218,7 +239,7 @@ class KubernetesExecutor(ClusterExecutor):
                         restart_policy="Never",
                         volumes=[
                             kubernetes_models.V1Volume(
-                                name=volume_name_from_path(mount),
+                                name=_volume_name_from_path(mount),
                                 host_path=kubernetes_models.V1HostPathVolumeSource(
                                     path=str(mount)
                                 ),

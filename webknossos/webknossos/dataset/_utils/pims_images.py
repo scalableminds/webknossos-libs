@@ -389,6 +389,10 @@ class PimsImages:
                 # since it does not include the necessary loci_tools.jar.
                 # Updates to support newer bioformats jars with pims are in PR
                 # https://github.com/soft-matter/pims/pull/403
+
+                # This is also part of the worker dockerfile to cache the
+                # jar in the image, please update Dockerfile.worker in the
+                # voxelytics repo accordingly when editing this.
                 pims.bioformats.download_jar(version="6.7.0")
 
             if "*" in str(original_images) or isinstance(original_images, list):

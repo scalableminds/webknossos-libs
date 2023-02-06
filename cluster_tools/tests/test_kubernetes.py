@@ -1,17 +1,18 @@
 import os
+from typing import List
 
 import cluster_tools
 
 
-def square(n):
+def square(n: float) -> float:
     return n * n
 
 
-def list_dir(path):
+def list_dir(path: str) -> List[str]:
     return os.listdir(path)
 
 
-def test_simple():
+def test_simple() -> None:
     with cluster_tools.get_executor(
         "kubernetes",
         job_resources={
@@ -26,7 +27,7 @@ def test_simple():
         assert list(exec.map(square, [n + 2 for n in range(2)])) == [4, 9]
 
 
-def test_mounts():
+def test_mounts() -> None:
     parent_dir = os.path.abspath(os.path.join(os.pardir, os.curdir))
     with cluster_tools.get_executor(
         "kubernetes",
