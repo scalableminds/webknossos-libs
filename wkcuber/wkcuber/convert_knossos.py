@@ -98,7 +98,7 @@ def convert_knossos(
     dtype: str,
     voxel_size: Tuple[float, float, float],
     data_format: DataFormat,
-    chunk_shape: Vec3Int,
+    chunk_shape: Vec3Int,  # in target-mag
     chunks_per_shard: Vec3Int,
     mag: int = 1,
     args: Optional[Namespace] = None,
@@ -134,7 +134,7 @@ def convert_knossos(
     with get_executor_for_args(args) as executor:
         target_mag.for_each_chunk(
             partial(convert_cube_job, source_knossos_info),
-            chunk_shape=chunk_shape * chunks_per_shard,
+            chunk_shape=chunk_shape * mag * chunks_per_shard,
             executor=executor,
             progress_desc=f"Converting knossos layer {layer_name}",
         )

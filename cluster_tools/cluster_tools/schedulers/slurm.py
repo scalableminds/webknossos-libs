@@ -1,19 +1,31 @@
 """Abstracts access to a Slurm cluster via its command-line tools.
 """
-import concurrent
 import logging
 import os
 import re
 import sys
 import threading
+from concurrent.futures import Future
 from functools import lru_cache
-from typing import List, Optional, Tuple, Type, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+    cast,
+)
 
 from typing_extensions import Literal
 
-from cluster_tools.util import call, chcall, random_string
-
-from .cluster_executor import (
+from cluster_tools._utils.call import call, chcall
+from cluster_tools._utils.string import random_string
+from cluster_tools.schedulers.cluster_executor import (
     NOT_YET_SUBMITTED_STATE,
     ClusterExecutor,
     RemoteException,
@@ -49,41 +61,69 @@ SLURM_STATES = {
 
 SLURM_QUEUE_CHECK_INTERVAL = 1 if "pytest" in sys.modules else 60
 
+T = TypeVar("T")
 
-def noopDecorator(func):
+
+def noopDecorator(func: T) -> T:
     return func
 
 
-cache_in_production = noopDecorator if "pytest" in sys.modules else lru_cache(maxsize=1)
+cache_in_production = cast(
+    Callable[[T], T], noopDecorator if "pytest" in sys.modules else lru_cache(maxsize=1)
+)
 
 
 class SlurmExecutor(ClusterExecutor):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.submit_threads = []
+    def __init__(
+        self,
+        debug: bool = False,
+        keep_logs: bool = True,
+        cfut_dir: Optional[str] = None,
+        job_resources: Optional[Dict[str, Any]] = None,
+        job_name: Optional[str] = None,
+        additional_setup_lines: Optional[List[str]] = None,
+        **kwargs: Any,
+    ):
+        super().__init__(
+            debug=debug,
+            keep_logs=keep_logs,
+            cfut_dir=cfut_dir,
+            job_resources=job_resources,
+            job_name=job_name,
+            additional_setup_lines=additional_setup_lines,
+            **kwargs,
+        )
+        self.submit_threads: List["_JobSubmitThread"] = []
 
     @classmethod
     def executor_key(cls) -> str:
         return "slurm"
 
     @staticmethod
-    def get_job_array_index():
-        return os.environ.get("SLURM_ARRAY_TASK_ID", None)
+    def get_job_array_index() -> Optional[int]:
+        try:
+            return int(os.environ["SLURM_ARRAY_TASK_ID"])
+        except KeyError:
+            return None
 
     @staticmethod
-    def get_job_array_id():
-        return os.environ.get("SLURM_ARRAY_JOB_ID", None)
+    def get_job_array_id() -> str:
+        r = os.environ.get("SLURM_ARRAY_JOB_ID")
+        assert r is not None
+        return r
 
     @staticmethod
-    def get_current_job_id():
-        return os.environ.get("SLURM_JOB_ID")
+    def get_current_job_id() -> str:
+        r = os.environ.get("SLURM_JOB_ID")
+        assert r is not None
+        return r
 
     @staticmethod
-    def format_log_file_name(job_id_with_index, suffix=".stdout"):
-        return "slurmpy.{}.log{}".format(str(job_id_with_index), suffix)
+    def format_log_file_name(job_id_with_index: str, suffix: str = ".stdout") -> str:
+        return f"slurmpy.{job_id_with_index}.log{suffix}"
 
     @classmethod
-    def get_job_id_string(cls):
+    def get_job_id_string(cls) -> str:
         job_id = cls.get_current_job_id()
         job_array_id = cls.get_job_array_id()
         job_array_index = cls.get_job_array_index()
@@ -97,7 +137,7 @@ class SlurmExecutor(ClusterExecutor):
 
     @staticmethod
     @cache_in_production
-    def get_max_array_size():
+    def get_max_array_size() -> int:
         max_array_size_env = os.environ.get("SLURM_MAX_ARRAY_SIZE", None)
         if max_array_size_env is not None:
             logging.debug(
@@ -111,7 +151,7 @@ class SlurmExecutor(ClusterExecutor):
             "scontrol show config | sed -n '/^MaxArraySize/s/.*= *//p'"
         )
         if exit_code == 0:
-            max_array_size = int(stdout.decode("utf8"))
+            max_array_size = int(stdout)
             logging.debug(f"Slurm MaxArraySize is {max_array_size}.")
         else:
             logging.warning(
@@ -121,7 +161,7 @@ class SlurmExecutor(ClusterExecutor):
 
     @staticmethod
     @cache_in_production
-    def get_max_running_size():
+    def get_max_running_size() -> int:
         max_running_size_env = os.environ.get("SLURM_MAX_RUNNING_SIZE", None)
         if max_running_size_env is not None:
             logging.debug(
@@ -133,7 +173,7 @@ class SlurmExecutor(ClusterExecutor):
 
     @staticmethod
     @cache_in_production
-    def get_max_submit_jobs():
+    def get_max_submit_jobs() -> int:
         max_submit_jobs_env = os.environ.get("SLURM_MAX_SUBMIT_JOBS", None)
         if max_submit_jobs_env is not None:
             logging.debug(
@@ -147,14 +187,14 @@ class SlurmExecutor(ClusterExecutor):
             "sacctmgr list -n user $USER withassoc format=maxsubmitjobsperuser"
         )
         try:
-            max_submit_jobs = int(stdout_user.decode("utf8"))
+            max_submit_jobs = int(stdout_user)
         except ValueError:
             # If there is no limit per user check whether there is a general limit
             stdout_qos, stderr_qos, _ = call(
                 "sacctmgr list -n qos normal format=maxsubmitjobsperuser"
             )
             try:
-                max_submit_jobs = int(stdout_qos.decode("utf8"))
+                max_submit_jobs = int(stdout_qos)
             except ValueError:
                 logging.warning(
                     f"Slurm's MaxSubmitJobsPerUser couldn't be determined. Reason: {stderr_user}\n{stderr_qos}"
@@ -164,7 +204,7 @@ class SlurmExecutor(ClusterExecutor):
         return max_submit_jobs
 
     @staticmethod
-    def get_number_of_submitted_jobs(state: Optional[str] = None):
+    def get_number_of_submitted_jobs(state: Optional[str] = None) -> int:
         number_of_submitted_jobs = 0
         state_string = f"-t {state}" if state else ""
         # --array so that each job array element is displayed on a separate line and -h to hide the header
@@ -174,7 +214,7 @@ class SlurmExecutor(ClusterExecutor):
 
         job_state_string = f"with state {state} " if state else ""
         if exit_code == 0:
-            number_of_submitted_jobs = int(stdout.decode("utf8"))
+            number_of_submitted_jobs = int(stdout)
             logging.debug(
                 f"Number of currently submitted jobs {job_state_string}is {number_of_submitted_jobs}."
             )
@@ -185,7 +225,7 @@ class SlurmExecutor(ClusterExecutor):
         return number_of_submitted_jobs
 
     @classmethod
-    def submit_text(cls, job, cfut_dir):
+    def submit_text(cls, job: str, cfut_dir: str) -> str:
         """Submits a Slurm job represented as a job file string. Returns
         the job ID.
         """
@@ -201,9 +241,9 @@ class SlurmExecutor(ClusterExecutor):
         if len(stderr) > 0:
             logging.warning(f"Submitting batch job emitted warnings: {stderr}")
 
-        return int(job_id)
+        return str(int(job_id))  # int() ensures coherent parsing
 
-    def inner_handle_kill(self, *args, **kwargs):
+    def inner_handle_kill(self, *args: Any, **kwargs: Any) -> None:
         for submit_thread in self.submit_threads:
             submit_thread.stop()
 
@@ -226,7 +266,7 @@ class SlurmExecutor(ClusterExecutor):
             )
 
             maybe_error_or_warning = (
-                f"\nErrors and warnings (if all jobs were pending 'Invalid job id' errors are expected):\n{stderr.decode('utf8')}"
+                f"\nErrors and warnings (if all jobs were pending 'Invalid job id' errors are expected):\n{stderr}"
                 if stderr
                 else ""
             )
@@ -234,7 +274,7 @@ class SlurmExecutor(ClusterExecutor):
                 f"Canceled slurm jobs {', '.join(unique_job_ids)}.{maybe_error_or_warning}"
             )
 
-    def cleanup_submit_threads(self):
+    def cleanup_submit_threads(self) -> None:
         self.submit_threads = [
             thread for thread in self.submit_threads if thread.is_alive()
         ]
@@ -245,7 +285,7 @@ class SlurmExecutor(ClusterExecutor):
         job_name: Optional[str] = None,
         additional_setup_lines: Optional[List[str]] = None,
         job_count: Optional[int] = None,
-    ) -> Tuple[List["concurrent.futures.Future[str]"], List[Tuple[int, int]]]:
+    ) -> Tuple[List["Future[str]"], List[Tuple[int, int]]]:
         """Starts a Slurm job that runs the specified shell command line."""
         if additional_setup_lines is None:
             additional_setup_lines = []
@@ -271,7 +311,7 @@ class SlurmExecutor(ClusterExecutor):
         batch_size = max(min(max_array_size, max_submit_jobs), 1)
 
         scripts = []
-        job_id_futures: List["concurrent.futures.Future[str]"] = []
+        job_id_futures: List["Future[str]"] = []
         ranges = []
         number_of_jobs = job_count if job_count is not None else 1
         for job_index_start in range(0, number_of_jobs, batch_size):
@@ -298,7 +338,7 @@ class SlurmExecutor(ClusterExecutor):
                 ]
             )
 
-            job_id_futures.append(concurrent.futures.Future())
+            job_id_futures.append(Future())
             scripts.append("\n".join(script_lines))
             ranges.append((job_index_start, job_index_end + 1))
 
@@ -306,7 +346,7 @@ class SlurmExecutor(ClusterExecutor):
 
         self.cleanup_submit_threads()
 
-        submit_thread = JobSubmitThread(
+        submit_thread = _JobSubmitThread(
             scripts, job_sizes, job_id_futures, self.cfut_dir
         )
         self.submit_threads.append(submit_thread)
@@ -315,29 +355,23 @@ class SlurmExecutor(ClusterExecutor):
         return job_id_futures, ranges
 
     def check_job_state(
-        self, job_id_with_index
+        self, job_id_with_index: str
     ) -> Literal["failed", "ignore", "completed"]:
 
         job_states = []
 
         # If the output file was not found, we determine the job status so that
         # we can recognize jobs which failed hard (in this case, they don't produce output files)
-        stdout, _, exit_code = call("scontrol show job {}".format(job_id_with_index))
-        stdout = stdout.decode("utf8")
+        stdout, _, exit_code = call(f"scontrol show job {job_id_with_index}")
 
         if exit_code == 0:
-            job_state_search = re.search("JobState=([a-zA-Z_]*)", str(stdout))
+            job_state_search = re.search("JobState=([a-zA-Z_]*)", stdout)
             if job_state_search:
                 job_states = [job_state_search.group(1)]
             else:
-                logging.error(
-                    "Could not extract slurm job state? {}".format(stdout[0:10])
-                )
+                logging.error(f"Could not extract slurm job state? {stdout[0:10]}")
         else:
-            stdout, _, exit_code = call(
-                "sacct -j {} -o State -P".format(job_id_with_index)
-            )
-            stdout = stdout.decode("utf8")
+            stdout, _, exit_code = call(f"sacct -j {job_id_with_index} -o State -P")
 
             if exit_code == 0:
                 job_states = stdout.split("\n")[1:]
@@ -348,7 +382,7 @@ class SlurmExecutor(ClusterExecutor):
             )
             return "ignore"
 
-        def matches_states(slurm_states):
+        def matches_states(slurm_states: List[str]) -> bool:
             return len(list(set(job_states) & set(slurm_states))) > 0
 
         if matches_states(SLURM_STATES["Failure"]):
@@ -373,25 +407,26 @@ class SlurmExecutor(ClusterExecutor):
             return "ignore"
 
     def investigate_failed_job(
-        self, job_id_with_index
+        self, job_id_with_index: str
     ) -> Optional[Tuple[str, Type[RemoteException]]]:
         # We call `seff job_id` which should return some output including a line,
         # such as: "Memory Efficiency: 25019.18% of 1.00 GB"
 
-        stdout, _, exit_code = call("seff {}".format(job_id_with_index))
+        stdout, _, exit_code = call(f"seff {job_id_with_index}")
         if exit_code != 0:
             return None
 
         # Parse stdout into a key-value object
         properties = {}
-        stdout = stdout.decode("utf8")
         for line in stdout.split("\n"):
             if ":" not in line:
                 continue
             key, value = line.split(":", 1)
             properties[key.strip()] = value.strip()
 
-        def investigate_memory_consumption():
+        def investigate_memory_consumption() -> Optional[
+            Tuple[str, Type[RemoteOutOfMemoryException]]
+        ]:
             if not properties.get("Memory Efficiency", None):
                 return None
 
@@ -416,7 +451,9 @@ class SlurmExecutor(ClusterExecutor):
             reason = f"The job was probably terminated because it consumed too much memory ({efficiency_note})."
             return (reason, RemoteOutOfMemoryException)
 
-        def investigate_exit_code():
+        def investigate_exit_code() -> Optional[
+            Tuple[str, Type[RemoteOutOfMemoryException]]
+        ]:
             if not properties.get("State", None):
                 return None
             if "exit code 137" not in properties["State"]:
@@ -436,12 +473,11 @@ class SlurmExecutor(ClusterExecutor):
 
         return investigate_exit_code()
 
-    def get_pending_tasks(self):
+    def get_pending_tasks(self) -> Iterable[str]:
         try:
             # Get the job ids (%i) of the active user (-u) which are pending (-t) and format
             # them one-per-line (-r) while excluding the header (-h).
             stdout, _ = chcall("squeue -u $(whoami) -t PENDING -r -h --format=%i")
-            stdout = stdout.decode("utf8")
 
             job_ids = set(stdout.split("\n"))
             return job_ids
@@ -452,19 +488,25 @@ class SlurmExecutor(ClusterExecutor):
             return []
 
 
-class JobSubmitThread(threading.Thread):
-    def __init__(self, scripts, job_sizes, futures, cfut_dir, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+class _JobSubmitThread(threading.Thread):
+    def __init__(
+        self,
+        scripts: List[str],
+        job_sizes: List[int],
+        futures: List["Future[str]"],
+        cfut_dir: str,
+    ):
+        super().__init__()
         self._stop_event = threading.Event()
         self.scripts = scripts
         self.job_sizes = job_sizes
         self.futures = futures
         self.cfut_dir = cfut_dir
 
-    def stop(self):
+    def stop(self) -> None:
         self._stop_event.set()
 
-    def run(self):
+    def run(self) -> None:
         max_submit_jobs = SlurmExecutor.get_max_submit_jobs()
 
         for script, job_size, future in zip(self.scripts, self.job_sizes, self.futures):
