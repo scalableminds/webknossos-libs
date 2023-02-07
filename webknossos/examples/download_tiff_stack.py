@@ -8,7 +8,11 @@ MAG = wk.Mag("4-4-1")
 
 
 def main() -> None:
-    dataset = wk.Dataset.open_remote(DATASET_NAME, organization_id="scalable_minds")
+    dataset = wk.Dataset.open_remote(
+        DATASET_NAME,
+        organization_id="scalable_minds",
+        webknossos_url="https://webknossos.org",
+    )
     mag_view = dataset.get_layer(LAYER_NAME).get_mag(MAG)
 
     z = mag_view.layer.bounding_box.topleft.z
