@@ -1,4 +1,3 @@
-import numpy as np
 from tifffile import imwrite
 
 import webknossos as wk
