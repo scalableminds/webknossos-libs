@@ -266,7 +266,7 @@ def test_download_segments() -> None:
 @pytest.mark.block_network(allowed_hosts=[".*"])
 @pytest.mark.vcr(ignore_hosts=["webknossos.org", "data-humerus.webknossos.org"])
 def test_download_tiff_stack() -> None:
-    import examples.download_segments as example
+    import examples.download_tiff_stack as example
 
     with tmp_cwd():
         output_path = Path("l4_sample_tiff")
