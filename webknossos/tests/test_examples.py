@@ -261,3 +261,20 @@ def test_download_segments() -> None:
             len(list(output_path.iterdir()))
             == 2 * mag_view.layer.bounding_box.size.z / mag_view.mag.z
         )
+
+
+@pytest.mark.block_network(allowed_hosts=[".*"])
+@pytest.mark.vcr(ignore_hosts=["webknossos.org", "data-humerus.webknossos.org"])
+def test_download_tiff_stack() -> None:
+    import examples.download_segments as example
+
+    with tmp_cwd():
+        output_path = Path("l4_sample_tiff")
+        output_path.mkdir()
+
+        (mag_view,) = exec_main_and_get_vars(example, "mag_view")
+
+        assert (
+            len(list(output_path.iterdir()))
+            == mag_view.layer.bounding_box.size.z / mag_view.mag.z
+        )
