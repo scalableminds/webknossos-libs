@@ -107,10 +107,11 @@ class SlurmExecutor(ClusterExecutor):
             return None
 
     @staticmethod
-    def get_job_array_id() -> str:
-        r = os.environ.get("SLURM_ARRAY_JOB_ID")
-        assert r is not None
-        return r
+    def get_job_array_id() -> Optional[str]:
+        try:
+            return os.environ.get("SLURM_ARRAY_JOB_ID")
+        except KeyError:
+            return None
 
     @staticmethod
     def get_current_job_id() -> str:
@@ -131,7 +132,9 @@ class SlurmExecutor(ClusterExecutor):
         # This variable needs to be kept in sync with the job_id_string variable in the
         # inner_submit function.
         job_id_string = (
-            job_id if job_array_index is None else f"{job_array_id}_{job_array_index}"
+            job_id
+            if job_array_index is None or job_array_id is None
+            else f"{job_array_id}_{job_array_index}"
         )
         return job_id_string
 
