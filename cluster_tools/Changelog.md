@@ -16,6 +16,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+- Fixed the execution of non-array jobs using slurm. [#864](https://github.com/scalableminds/webknossos-libs/pull/864)
 
 
 ## [0.11.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.11.3) - 2023-02-06
