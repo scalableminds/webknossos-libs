@@ -133,7 +133,7 @@ class SlurmExecutor(ClusterExecutor):
         # inner_submit function.
         job_id_string = (
             job_id
-            if job_array_index is None or job_array_id is None
+            if job_array_id is None or job_array_index is None
             else f"{job_array_id}_{job_array_index}"
         )
         return job_id_string
