@@ -24,6 +24,7 @@ def test_compare_tifffile(tmp_path: Path) -> None:
         compress=True,
         category="segmentation",
         topleft=(100, 100, 55),
+        chunks_per_shard=(8, 8, 8),
     )
     assert l.bounding_box.topleft == wk.Vec3Int(100, 100, 55)
     data = l.get_finest_mag().read()[0, :, :]

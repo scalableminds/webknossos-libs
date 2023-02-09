@@ -172,7 +172,7 @@ jobs:
     - name: Python tests
       env:
         WK_TOKEN: ${{ secrets.WK_TOKEN }}
-      run: ./test.sh --splits 3 --group ${{ matrix.group }} -p no:faulthandler
+      run: ./test.sh --splits 3 --group ${{ matrix.group }}
 
     - name: Check if git is dirty
       run: |
