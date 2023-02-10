@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 from cluster_tools import Executor
+from numpy.typing import DTypeLike
 from upath import UPath
 
 from webknossos.dataset.sampling_modes import SamplingModes
@@ -53,11 +54,6 @@ from .defaults import (
     DEFAULT_CHUNKS_PER_SHARD_ZARR,
 )
 from .mag_view import MagView, _find_mag_path_on_disk
-
-try:
-    from numpy.typing import DTypeLike
-except ImportError:
-    DTypeLike = Union[str, np.dtype, type]  # type: ignore[misc]
 
 
 def _is_int(s: str) -> bool:
