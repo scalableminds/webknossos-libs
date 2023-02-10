@@ -111,14 +111,14 @@ def create_parser() -> ArgumentParser:
         "-c",
         type=int,
         default=None,
-        help="Select a single channel to be cubed into a layer. This can be helpful if several channels should be converted to multiple data layers. Note that webKnossos only supports multiple channels if these are three uint8 channels. If this is not the case, use --channel_index to create a layer per channel.",
+        help="Select a single channel to be cubed into a layer. This can be helpful if several channels should be converted to multiple data layers. Note that WEBKNOSSOS only supports multiple channels if these are three uint8 channels. If this is not the case, use --channel_index to create a layer per channel.",
     )
 
     parser.add_argument(
         "--sample_index",
         type=int,
         default=None,
-        help="Select a single sample of a specific channel to be cubed into a layer. This option is only valid if channel_index is set. Since webKnossos only supports multiple uint8 channels, it may be necessary to cube a multi-sample dataset to different layers.",
+        help="Select a single sample of a specific channel to be cubed into a layer. This option is only valid if channel_index is set. Since WEBKNOSSOS only supports multiple uint8 channels, it may be necessary to cube a multi-sample dataset to different layers.",
     )
 
     add_voxel_size_flag(parser)

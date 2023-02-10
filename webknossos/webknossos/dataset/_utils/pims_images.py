@@ -21,6 +21,7 @@ from typing import (
 from urllib.error import HTTPError
 
 import numpy as np
+from natsort import natsorted
 
 # pylint: disable=unused-import
 try:
@@ -294,11 +295,11 @@ class PimsImages:
             original_images_path = Path(original_images)
             if original_images_path.is_dir():
                 valid_suffixes = get_valid_pims_suffixes()
-                original_images = [
+                original_images = natsorted(
                     str(i)
                     for i in original_images_path.glob("**/*")
                     if i.is_file() and i.suffix.lstrip(".") in valid_suffixes
-                ]
+                )
                 if len(original_images) == 1:
                     original_images = original_images[0]
         if isinstance(original_images, str):
@@ -388,6 +389,10 @@ class PimsImages:
                 # since it does not include the necessary loci_tools.jar.
                 # Updates to support newer bioformats jars with pims are in PR
                 # https://github.com/soft-matter/pims/pull/403
+
+                # This is also part of the worker dockerfile to cache the
+                # jar in the image, please update Dockerfile.worker in the
+                # voxelytics repo accordingly when editing this.
                 pims.bioformats.download_jar(version="6.7.0")
 
             if "*" in str(original_images) or isinstance(original_images, list):

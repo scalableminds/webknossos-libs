@@ -51,7 +51,7 @@ def generate_client(openapi_schema: Dict) -> None:
 
 
 def add_api_prefix_for_non_data_paths(openapi_schema: Dict) -> None:
-    """The current webKnossos backend does not include the
+    """The current WEBKNOSSOS backend does not include the
     /api prefix into the different backend paths.
     Howevery, the /data prefix for datastore paths is included.
     This adds the missing /api prefixes in the openapi_schema (in-place)."""
@@ -77,7 +77,7 @@ def remove_zarr_tagged_endpoints(openapi_schema: Dict) -> None:
 
 
 def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
-    """Send requests to webKnossos and record the schema of their replies"""
+    """Send requests to WEBKNOSSOS and record the schema of their replies"""
     from webknossos.client._generated.api.default import (
         annotation_info,
         annotation_infos_by_task_id,

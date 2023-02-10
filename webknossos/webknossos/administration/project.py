@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 
 @attr.frozen
 class Project:
-    """Data class containing information about a webKnossos project"""
+    """Data class containing information about a WEBKNOSSOS project"""
 
     project_id: str
     name: str

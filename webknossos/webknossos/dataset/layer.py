@@ -390,7 +390,7 @@ class Layer:
         if chunk_shape not in (Vec3Int.full(32), Vec3Int.full(64)):
             warnings.warn(
                 "[INFO] `chunk_shape` of `32, 32, 32` or `64, 64, 64` is recommended for optimal "
-                + f"performance in webKnossos. Got {chunk_shape}."
+                + f"performance in WEBKNOSSOS. Got {chunk_shape}."
             )
 
         self._assert_mag_does_not_exist_yet(mag)

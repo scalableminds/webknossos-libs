@@ -1,4 +1,4 @@
-site_name: webKnossos Documentation
+site_name: WEBKNOSSOS Documentation
 docs_dir: src
 site_dir: out
 site_url: https://docs.webknossos.org/
@@ -10,8 +10,8 @@ edit_uri: ""
 theme:
   name: material
   custom_dir: overrides
-  favicon: https://static.webknossos.org/assets/favicon-docs.png
-  logo: https://static.webknossos.org/assets/icon-white.png
+  favicon: https://static.webknossos.org/assets/favicon-docs2.png
+  logo: https://static.webknossos.org/assets/icon-only-white.svg
   icon:
     repo: fontawesome/brands/github
   font: false
@@ -35,7 +35,7 @@ theme:
     - navigation.top
 
 nav:
-- webKnossos:
+- WEBKNOSSOS:
   - webknossos/index.md
   - webknossos/getting_started.md
   - Guides:
@@ -81,6 +81,7 @@ nav:
         - webknossos-py/examples/upload_tiff_stack.md
         - webknossos-py/examples/upload_image_data.md
         - webknossos-py/examples/download_image_data.md
+        - webknossos-py/examples/download_tiff_stack.md
         - webknossos-py/examples/remote_datasets.md
         - webknossos-py/examples/zarr_and_dask.md
       - Annotation Examples:
@@ -126,7 +127,7 @@ nav:
       - Commercial Support: https://scalableminds.com" target="_blank
     - GitHub: https://github.com/scalableminds/webknossos-libs/tree/master/webknossos" target="_blank
     - Blog: https://medium.com/scalableminds" target="_blank
-- webKnossos Cuber:
+- WEBKNOSSOS Cuber:
   - wkcuber CLI: wkcuber/index.md
   - wkcuber/changelog.md
   - Getting Help:

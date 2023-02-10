@@ -9,22 +9,22 @@ import cluster_tools
 logging.basicConfig()
 
 
-def expect_fork():
+def expect_fork() -> bool:
     assert mp.get_start_method() == "fork"
     return True
 
 
-def expect_forkserver():
+def expect_forkserver() -> bool:
     assert mp.get_start_method() == "forkserver"
     return True
 
 
-def expect_spawn():
+def expect_spawn() -> bool:
     assert mp.get_start_method() == "spawn"
     return True
 
 
-def test_map_with_spawn():
+def test_map_with_spawn() -> None:
     with cluster_tools.get_executor("multiprocessing", max_workers=5) as executor:
         assert executor.submit(
             expect_spawn
@@ -52,14 +52,14 @@ def test_map_with_spawn():
         ).result(), "Multiprocessing should use `fork` if requested"
 
 
-def accept_high_mem(data):
+def accept_high_mem(data: str) -> int:
     return len(data)
 
 
 @pytest.mark.skip(
     reason="This test does not pass on the CI. Probably because the machine does not have enough RAM."
 )
-def test_high_ram_usage():
+def test_high_ram_usage() -> None:
     very_long_string = " " * 10 ** 6 * 2500
 
     os.environ["MULTIPROCESSING_VIA_IO"] = "True"
@@ -68,7 +68,7 @@ def test_high_ram_usage():
         fut1 = executor.submit(
             accept_high_mem,
             very_long_string,
-            __cfut_options={"output_pickle_path": "/tmp/test.pickle"},
+            __cfut_options={"output_pickle_path": "/tmp/test.pickle"},  # type: ignore[call-arg]
         )
         assert fut1.result() == len(very_long_string)
 
@@ -79,8 +79,8 @@ def test_high_ram_usage():
     del os.environ["MULTIPROCESSING_VIA_IO"]
 
 
-def test_executor_args():
-    def pass_with(exc):
+def test_executor_args() -> None:
+    def pass_with(exc: cluster_tools.MultiprocessingExecutor) -> None:
         with exc:
             pass
 
@@ -88,13 +88,13 @@ def test_executor_args():
     # Test should succeed if the above lines don't raise an exception
 
 
-def test_multiprocessing_validation():
-
+def test_multiprocessing_validation() -> None:
     import sys
     from subprocess import PIPE, STDOUT, Popen
 
     cmd = [sys.executable, "guardless_multiprocessing.py"]
     p = Popen(cmd, shell=False, stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+    assert p.stdout is not None
     output = p.stdout.read()
 
     assert "current process has finished its bootstrapping phase." in str(output), "S"

@@ -11,20 +11,20 @@ import time
 from collections import Counter
 from functools import partial
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 import pytest
 
 import cluster_tools
-from cluster_tools.util import call
+from cluster_tools._utils.call import call, chcall
 
 
 # "Worker" functions.
-def square(n):
+def square(n: float) -> float:
     return n * n
 
 
-def sleep(duration):
+def sleep(duration: float) -> float:
     time.sleep(duration)
     return duration
 
@@ -32,12 +32,12 @@ def sleep(duration):
 logging.basicConfig()
 
 
-def expect_fork():
+def expect_fork() -> bool:
     assert mp.get_start_method() == "fork"
     return True
 
 
-def test_map_with_spawn():
+def test_map_with_spawn() -> None:
     with cluster_tools.get_executor(
         "slurm", max_workers=5, start_method="spawn"
     ) as executor:
@@ -46,16 +46,16 @@ def test_map_with_spawn():
         ).result(), "Slurm should ignore provided start_method"
 
 
-def test_slurm_submit_returns_job_ids():
+def test_slurm_submit_returns_job_ids() -> None:
     exc = cluster_tools.get_executor("slurm", debug=True)
     with exc:
         future = exc.submit(square, 2)
-        assert isinstance(future.cluster_jobid, int)
-        assert future.cluster_jobid > 0
+        assert isinstance(future.cluster_jobid, str)  # type: ignore[attr-defined]
+        assert int(future.cluster_jobid) > 0  # type: ignore[attr-defined]
         assert future.result() == 4
 
 
-def test_slurm_cfut_dir():
+def test_slurm_cfut_dir() -> None:
     cfut_dir = "./test_cfut_dir"
     if os.path.exists(cfut_dir):
         shutil.rmtree(cfut_dir)
@@ -69,7 +69,7 @@ def test_slurm_cfut_dir():
     assert len(os.listdir(cfut_dir)) == 2
 
 
-def test_slurm_max_submit_user():
+def test_slurm_max_submit_user() -> None:
     max_submit_jobs = 6
 
     # MaxSubmitJobs can either be defined at the user or at the qos level
@@ -77,11 +77,10 @@ def test_slurm_max_submit_user():
         executor = cluster_tools.get_executor("slurm", debug=True)
         original_max_submit_jobs = executor.get_max_submit_jobs()
 
-        _, _, exit_code = call(
-            f"echo y | sacctmgr modify {command} set MaxSubmitJobs={max_submit_jobs}"
-        )
         try:
-            assert exit_code == 0
+            chcall(
+                f"echo y | sacctmgr modify {command} set MaxSubmitJobs={max_submit_jobs}"
+            )
 
             new_max_submit_jobs = executor.get_max_submit_jobs()
             assert new_max_submit_jobs == max_submit_jobs
@@ -92,19 +91,16 @@ def test_slurm_max_submit_user():
                 result = [fut.result() for fut in futures]
                 assert result == [i ** 2 for i in range(10)]
 
-                job_ids = {fut.cluster_jobid for fut in futures}
+                job_ids = {fut.cluster_jobid for fut in futures}  # type: ignore[attr-defined]
                 # The 10 work packages should have been scheduled as 2 separate jobs.
                 assert len(job_ids) == 2
         finally:
-            _, _, exit_code = call(
-                f"echo y | sacctmgr modify {command} set MaxSubmitJobs=-1"
-            )
-            assert exit_code == 0
+            chcall(f"echo y | sacctmgr modify {command} set MaxSubmitJobs=-1")
             reset_max_submit_jobs = executor.get_max_submit_jobs()
             assert reset_max_submit_jobs == original_max_submit_jobs
 
 
-def test_slurm_max_submit_user_env():
+def test_slurm_max_submit_user_env() -> None:
     max_submit_jobs = 4
 
     executor = cluster_tools.get_executor("slurm", debug=True)
@@ -122,7 +118,7 @@ def test_slurm_max_submit_user_env():
             result = [fut.result() for fut in futures]
             assert result == [i ** 2 for i in range(10)]
 
-            job_ids = {fut.cluster_jobid for fut in futures}
+            job_ids = {fut.cluster_jobid for fut in futures}  # type: ignore[attr-defined]
             # The 10 work packages should have been scheduled as 3 separate jobs.
             assert len(job_ids) == 3
     finally:
@@ -131,13 +127,11 @@ def test_slurm_max_submit_user_env():
         assert reset_max_submit_jobs == original_max_submit_jobs
 
 
-def test_slurm_deferred_submit():
+def test_slurm_deferred_submit() -> None:
     max_submit_jobs = 1
 
     # Only one job can be scheduled at a time
-    _, _, exit_code = call(
-        f"echo y | sacctmgr modify qos normal set MaxSubmitJobs={max_submit_jobs}"
-    )
+    call(f"echo y | sacctmgr modify qos normal set MaxSubmitJobs={max_submit_jobs}")
     executor = cluster_tools.get_executor("slurm", debug=True)
 
     try:
@@ -155,28 +149,26 @@ def test_slurm_deferred_submit():
             # since only one job is scheduled at a time and each job takes 0.5 seconds
             assert time_of_result - time_of_start > 1
     finally:
-        _, _, exit_code = call(
-            "echo y | sacctmgr modify qos normal set MaxSubmitJobs=-1"
-        )
+        call("echo y | sacctmgr modify qos normal set MaxSubmitJobs=-1")
 
 
-def wait_until_first_job_was_submitted(executor, state: Optional[str] = None):
+def wait_until_first_job_was_submitted(
+    executor: cluster_tools.SlurmExecutor, state: Optional[str] = None
+) -> None:
     # Since the job submission is not synchronous, we need to poll
     # to find out when the first job was submitted
     while executor.get_number_of_submitted_jobs(state) <= 0:
         time.sleep(0.1)
 
 
-def test_slurm_deferred_submit_shutdown():
+def test_slurm_deferred_submit_shutdown() -> None:
     # Test that the SlurmExecutor stops scheduling jobs in a separate thread
     # once it was killed even if the executor was used multiple times and
     # therefore started multiple job submission threads
     max_submit_jobs = 1
 
     # Only one job can be scheduled at a time
-    _, _, exit_code = call(
-        f"echo y | sacctmgr modify qos normal set MaxSubmitJobs={max_submit_jobs}"
-    )
+    call(f"echo y | sacctmgr modify qos normal set MaxSubmitJobs={max_submit_jobs}")
     executor = cluster_tools.get_executor("slurm", debug=True)
 
     try:
@@ -202,12 +194,10 @@ def test_slurm_deferred_submit_shutdown():
             time.sleep(0.5)
 
     finally:
-        _, _, exit_code = call(
-            "echo y | sacctmgr modify qos normal set MaxSubmitJobs=-1"
-        )
+        call("echo y | sacctmgr modify qos normal set MaxSubmitJobs=-1")
 
 
-def test_slurm_job_canceling_on_shutdown():
+def test_slurm_job_canceling_on_shutdown() -> None:
     # Test that scheduled jobs are canceled on shutdown, regardless
     # of whether they are pending or running.
     max_running_size = 2
@@ -252,7 +242,7 @@ def test_slurm_job_canceling_on_shutdown():
             del os.environ["SLURM_MAX_RUNNING_SIZE"]
 
 
-def test_slurm_number_of_submitted_jobs():
+def test_slurm_number_of_submitted_jobs() -> None:
     number_of_jobs = 6
     executor = cluster_tools.get_executor("slurm", debug=True)
 
@@ -270,19 +260,16 @@ def test_slurm_number_of_submitted_jobs():
         assert executor.get_number_of_submitted_jobs() == 0
 
 
-def test_slurm_max_array_size():
+def test_slurm_max_array_size() -> None:
     max_array_size = 2
 
     executor = cluster_tools.get_executor("slurm", debug=True)
     original_max_array_size = executor.get_max_array_size()
 
     command = f"MaxArraySize={max_array_size}"
-    _, _, exit_code = call(
-        f"echo -e '{command}' >> /etc/slurm/slurm.conf && scontrol reconfigure"
-    )
 
     try:
-        assert exit_code == 0
+        chcall(f"echo -e '{command}' >> /etc/slurm/slurm.conf && scontrol reconfigure")
 
         new_max_array_size = executor.get_max_array_size()
         assert new_max_array_size == max_array_size
@@ -290,22 +277,19 @@ def test_slurm_max_array_size():
         with executor:
             futures = executor.map_to_futures(square, range(6))
             concurrent.futures.wait(futures)
-            job_ids = [fut.cluster_jobid for fut in futures]
+            job_ids = [fut.cluster_jobid for fut in futures]  # type: ignore[attr-defined]
 
             # Count how often each job_id occurs which corresponds to the array size of the job
             occurences = list(Counter(job_ids).values())
 
             assert all(array_size <= max_array_size for array_size in occurences)
     finally:
-        _, _, exit_code = call(
-            f"sed -i 's/{command}//g' /etc/slurm/slurm.conf && scontrol reconfigure"
-        )
-        assert exit_code == 0
+        chcall(f"sed -i 's/{command}//g' /etc/slurm/slurm.conf && scontrol reconfigure")
         reset_max_array_size = executor.get_max_array_size()
         assert reset_max_array_size == original_max_array_size
 
 
-def test_slurm_max_array_size_env():
+def test_slurm_max_array_size_env() -> None:
     max_array_size = 2
 
     executor = cluster_tools.get_executor("slurm", debug=True)
@@ -320,7 +304,7 @@ def test_slurm_max_array_size_env():
         with executor:
             futures = executor.map_to_futures(square, range(6))
             concurrent.futures.wait(futures)
-            job_ids = [fut.cluster_jobid for fut in futures]
+            job_ids = [fut.cluster_jobid for fut in futures]  # type: ignore[attr-defined]
 
             # Count how often each job_id occurs which corresponds to the array size of the job
             occurences = list(Counter(job_ids).values())
@@ -335,12 +319,12 @@ def test_slurm_max_array_size_env():
 test_output_str = "Test-Output"
 
 
-def log(string):
+def log(string: str) -> None:
     logging.debug(string)
 
 
-def test_pickled_logging():
-    def execute_with_log_level(log_level):
+def test_pickled_logging() -> None:
+    def execute_with_log_level(log_level: int) -> str:
         logging_config = {"level": log_level}
         with cluster_tools.get_executor(
             "slurm",
@@ -351,7 +335,7 @@ def test_pickled_logging():
             fut = executor.submit(log, test_output_str)
             fut.result()
 
-            output = ".cfut/slurmpy.{}.log.stdout".format(fut.cluster_jobid)
+            output = ".cfut/slurmpy.{}.log.stdout".format(fut.cluster_jobid)  # type: ignore[attr-defined]
 
             with open(output, "r") as file:
                 return file.read()
@@ -363,7 +347,7 @@ def test_pickled_logging():
     assert not (test_output_str in info_out)
 
 
-def test_tailed_logging():
+def test_tailed_logging() -> None:
 
     with cluster_tools.get_executor(
         "slurm",
@@ -382,16 +366,15 @@ def test_tailed_logging():
         assert "jid" in f.getvalue()
 
 
-def fail(val):
+def fail(val: Any) -> None:
     raise Exception("Fail()")
 
 
-def output_pickle_path_getter(tmp_dir, chunk):
-
+def output_pickle_path_getter(tmp_dir: str, chunk: int) -> Path:
     return Path(tmp_dir) / f"test_{chunk}.pickle"
 
 
-def test_preliminary_file_submit():
+def test_preliminary_file_submit() -> None:
 
     with tempfile.TemporaryDirectory(dir=".") as tmp_dir:
         output_pickle_path = Path(tmp_dir) / "test.pickle"
@@ -413,20 +396,20 @@ def test_preliminary_file_submit():
             assert not output_pickle_path.exists(), "Final output file should not exist"
 
             # Schedule succeeding job with same output path
-            fut = executor.submit(
+            fut_2 = executor.submit(
                 square,
                 3,
-                __cfut_options={"output_pickle_path": str(output_pickle_path)},
+                __cfut_options={"output_pickle_path": str(output_pickle_path)},  # type: ignore[call-arg]
             )
-            assert fut.result() == 9
+            assert fut_2.result() == 9
             assert output_pickle_path.exists(), "Final output file should exist"
             assert (
                 not preliminary_output_path.exists()
             ), "Preliminary output file should not exist anymore"
 
 
-def test_executor_args():
-    def pass_with(exc):
+def test_executor_args() -> None:
+    def pass_with(exc: cluster_tools.SlurmExecutor) -> None:
         with exc:
             pass
 
@@ -438,7 +421,7 @@ def test_executor_args():
     # Test should succeed if the above lines don't raise an exception
 
 
-def test_preliminary_file_map():
+def test_preliminary_file_map() -> None:
 
     a_range = range(1, 4)
 
@@ -469,13 +452,13 @@ def test_preliminary_file_map():
                 ), "Final output file should not exist"
 
             # Schedule succeeding jobs with same output paths
-            futs = executor.map_to_futures(
+            futs_2 = executor.map_to_futures(
                 square,
                 list(a_range),
                 output_pickle_path_getter=partial(output_pickle_path_getter, tmp_dir),
             )
-            for (fut, job_index) in zip(futs, a_range):
-                assert fut.result() == square(job_index)
+            for (fut_2, job_index) in zip(futs_2, a_range):
+                assert fut_2.result() == square(job_index)
 
             for idx in a_range:
                 output_pickle_path = Path(output_pickle_path_getter(tmp_dir, idx))

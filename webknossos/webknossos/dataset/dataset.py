@@ -568,7 +568,7 @@ class Dataset:
         executor: Optional[Executor] = None,
     ) -> "Dataset":
         """
-        This method imports image data in a folder as a webKnossos dataset. The
+        This method imports image data in a folder as a WEBKNOSSOS dataset. The
         image data can be 3D images (such as multipage tiffs) or stacks of 2D
         images. In case of multiple 3D images or image stacks, those are mapped
         to different layers. The exact mapping is handled by the argument
@@ -711,11 +711,11 @@ class Dataset:
         jobs: Optional[int] = None,
     ) -> "RemoteDataset":
         """
-        Uploads this dataset to webKnossos.
+        Uploads this dataset to WEBKNOSSOS.
 
         The `new_dataset_name` parameter allows to assign a specific name for the dataset.
         `layers_to_link` allows to add (or override) a layer in the uploaded dataset, so that
-        it links to a layer of an existing dataset in webKnossos. That way, already existing
+        it links to a layer of an existing dataset in WEBKNOSSOS. That way, already existing
         layers don't need to be uploaded again.
 
         If supplied, the `jobs` parameter will determine the number of simultaneous chunk uploads. Defaults to 5.

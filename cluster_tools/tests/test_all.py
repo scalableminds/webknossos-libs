@@ -6,6 +6,7 @@ import time
 from enum import Enum
 from functools import partial
 from pathlib import Path
+from typing import List
 
 import pytest
 
@@ -13,11 +14,11 @@ import cluster_tools
 
 
 # "Worker" functions.
-def square(n):
+def square(n: float) -> float:
     return n * n
 
 
-def sleep(duration):
+def sleep(duration: float) -> float:
     time.sleep(duration)
     return duration
 
@@ -25,12 +26,12 @@ def sleep(duration):
 logging.basicConfig()
 
 
-def raise_if(msg, bool):
-    if bool:
+def raise_if(msg: str, _bool: bool) -> None:
+    if _bool:
         raise Exception("raise_if was called with True: {}".format(msg))
 
 
-def get_executors(with_debug_sequential=False):
+def get_executors(with_debug_sequential: bool = False) -> List[cluster_tools.Executor]:
     executor_keys = {
         "slurm",
         "kubernetes",
@@ -46,7 +47,7 @@ def get_executors(with_debug_sequential=False):
             os.environ["PYTEST_EXECUTORS"].split(",")
         )
 
-    executors = []
+    executors: List[cluster_tools.Executor] = []
     if "slurm" in executor_keys:
         executors.append(
             cluster_tools.get_executor(
@@ -80,7 +81,7 @@ def get_executors(with_debug_sequential=False):
 @pytest.mark.skip(
     reason="The test is flaky on the CI for some reason. Disable it for now."
 )
-def test_uncaught_warning():
+def test_uncaught_warning() -> None:
     """
     This test ensures that there are warnings for "uncaught" futures.
     """
@@ -97,7 +98,7 @@ def test_uncaught_warning():
 
     cases = [False, True]
 
-    def expect_marker(marker, msg, should_exist=True):
+    def expect_marker(marker: str, msg: str, should_exist: bool = True) -> None:
         maybe_negate = lambda b: b if should_exist else not b
 
         fh.flush()
@@ -148,8 +149,8 @@ def test_uncaught_warning():
     logger.removeHandler(fh)
 
 
-def test_submit():
-    def run_square_numbers(executor):
+def test_submit() -> None:
+    def run_square_numbers(executor: cluster_tools.Executor) -> None:
         with executor:
             job_count = 3
             job_range = range(job_count)
@@ -161,16 +162,16 @@ def test_submit():
         run_square_numbers(exc)
 
 
-def get_pid():
+def get_pid() -> int:
 
     return os.getpid()
 
 
-def test_process_id():
+def test_process_id() -> None:
 
     outer_pid = os.getpid()
 
-    def compare_pids(executor):
+    def compare_pids(executor: cluster_tools.Executor) -> None:
         with executor:
             future = executor.submit(get_pid)
             inner_pid = future.result()
@@ -190,7 +191,7 @@ def test_process_id():
         compare_pids(exc)
 
 
-def test_unordered_sleep():
+def test_unordered_sleep() -> None:
     """Get host identifying information about the servers running
     our jobs.
     """
@@ -206,7 +207,7 @@ def test_unordered_sleep():
                 assert future.result() == duration
 
 
-def test_unordered_map():
+def test_unordered_map() -> None:
     for exc in get_executors():
         with exc:
             durations = [15, 1]
@@ -220,7 +221,7 @@ def test_unordered_map():
                 assert result == duration
 
 
-def test_map_to_futures():
+def test_map_to_futures() -> None:
     for exc in get_executors():
         with exc:
             durations = [15, 1]
@@ -233,11 +234,11 @@ def test_map_to_futures():
             if not isinstance(exc, cluster_tools.SequentialExecutor):
                 durations.sort()
 
-            for duration, result in zip(durations, results):
-                assert result == duration
+            for duration_, result in zip(durations, results):
+                assert result == duration_
 
 
-def test_empty_map_to_futures():
+def test_empty_map_to_futures() -> None:
     for exc in get_executors():
         with exc:
             futures = exc.map_to_futures(sleep, [])
@@ -245,12 +246,11 @@ def test_empty_map_to_futures():
             assert len(results) == 0
 
 
-def output_pickle_path_getter(tmp_dir, chunk):
-
+def output_pickle_path_getter(tmp_dir: str, chunk: int) -> Path:
     return Path(tmp_dir) / f"test_{chunk}.pickle"
 
 
-def test_map_to_futures_with_pickle_paths():
+def test_map_to_futures_with_pickle_paths() -> None:
 
     for exc in get_executors(with_debug_sequential=True):
         with tempfile.TemporaryDirectory(dir=".") as tmp_dir:
@@ -271,17 +271,17 @@ def test_map_to_futures_with_pickle_paths():
                 assert 2 in results
                 assert 1 in results
 
-            for duration in durations:
+            for duration_ in durations:
                 assert Path(
-                    output_pickle_path_getter(tmp_dir, duration)
-                ).exists(), f"File for chunk {duration} should exist."
+                    output_pickle_path_getter(tmp_dir, duration_)
+                ).exists(), f"File for chunk {duration_} should exist."
 
 
-def test_submit_with_pickle_paths():
+def test_submit_with_pickle_paths() -> None:
     for (idx, exc) in enumerate(get_executors()):
         with tempfile.TemporaryDirectory(dir=".") as tmp_dir:
 
-            def run_square_numbers(idx, executor):
+            def run_square_numbers(idx: int, executor: cluster_tools.Executor) -> Path:
                 with executor:
                     job_count = 3
                     job_range = range(job_count)
@@ -291,7 +291,7 @@ def test_submit_with_pickle_paths():
                         output_path = Path(tmp_dir) / f"{idx}_{n}.pickle"
                         cfut_options = {"output_pickle_path": output_path}
                         futures.append(
-                            executor.submit(square, n, __cfut_options=cfut_options)
+                            executor.submit(square, n, __cfut_options=cfut_options)  # type: ignore[call-arg]
                         )
 
                     for future, job_index in zip(futures, job_range):
@@ -302,8 +302,8 @@ def test_submit_with_pickle_paths():
             assert output_path.exists(), "Output pickle file should exist."
 
 
-def test_map():
-    def run_map(executor):
+def test_map() -> None:
+    def run_map(executor: cluster_tools.Executor) -> None:
         with executor:
             result = list(executor.map(square, [2, 3, 4]))
             assert result == [4, 9, 16]
@@ -312,8 +312,8 @@ def test_map():
         run_map(exc)
 
 
-def test_map_lazy():
-    def run_map(executor):
+def test_map_lazy() -> None:
+    def run_map(executor: cluster_tools.Executor) -> None:
         with executor:
             result = executor.map(square, [2, 3, 4])
         assert list(result) == [4, 9, 16]
@@ -322,8 +322,8 @@ def test_map_lazy():
         run_map(exc)
 
 
-def test_executor_args():
-    def pass_with(exc):
+def test_executor_args() -> None:
+    def pass_with(exc: cluster_tools.Executor) -> None:
         with exc:
             pass
 
@@ -337,11 +337,11 @@ class DummyEnum(Enum):
     PEAR = 2
 
 
-def enum_consumer(value):
+def enum_consumer(value: DummyEnum) -> None:
     assert value == DummyEnum.BANANA
 
 
-def test_cloudpickle_serialization():
+def test_cloudpickle_serialization() -> None:
     enum_consumer_inner = enum_consumer
 
     for fn in [enum_consumer, enum_consumer_inner]:
@@ -355,7 +355,7 @@ def test_cloudpickle_serialization():
     assert True
 
 
-def test_map_to_futures_with_debug_sequential():
+def test_map_to_futures_with_debug_sequential() -> None:
 
     with cluster_tools.get_executor("debug_sequential") as exc:
         durations = [4, 1]
@@ -370,5 +370,5 @@ def test_map_to_futures_with_debug_sequential():
         for i, duration in enumerate(futures):
             results.append(duration.result())
 
-        for duration, result in zip(durations, results):
-            assert result == duration
+        for duration_, result in zip(durations, results):
+            assert result == duration_

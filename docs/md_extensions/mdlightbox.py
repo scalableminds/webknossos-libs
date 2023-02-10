@@ -45,7 +45,7 @@ class LightboxImagesTreeprocessor(Treeprocessor):
     def run(self, root):
         parent_map = {c:p for p in root.iter() for c in p}
         i = 0
-        images = root.getiterator("img")
+        images = root.iter("img")
         for image in images:
             desc = image.attrib["alt"]
             h = self.hidden_re.match(desc)

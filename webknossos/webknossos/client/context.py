@@ -1,7 +1,7 @@
 """
 # Authentication & Server Context
 
-When interacting with a webKnossos server, you might need to
+When interacting with a WEBKNOSSOS server, you might need to
 specify your user token to authenticate yourself.
 You can copy your token from
 
@@ -190,7 +190,7 @@ class webknossos_context(ContextDecorator):
         token: Optional[str] = None,
         timeout: Optional[int] = None,
     ) -> None:
-        """Returns a new webKnossos server contextmanager. Use with the `with` statement:
+        """Returns a new WEBKNOSSOS server contextmanager. Use with the `with` statement:
         ```python
         with webknossos_context(token="my_webknossos_token"):
             # code that interacts with webknossos

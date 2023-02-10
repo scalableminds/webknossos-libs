@@ -1,5 +1,5 @@
 """
-This package package provides methods to modify or interact with webKnossos resources.
+This package package provides methods to modify or interact with WEBKNOSSOS resources.
 
 The core classes and can be created and saved as shown:
 
@@ -18,7 +18,7 @@ The core classes and can be created and saved as shown:
 
 Additionally, we provide the geometrical primitives `Vec3Int`, `BoundingBox` and `Mag`.
 
-The `User`, `Project` and `Task` classes provide webKnossos server interactions for administration purposes.
+The `User`, `Project` and `Task` classes provide WEBKNOSSOS server interactions for administration purposes.
 Server interactions may require [authentication](webknossos/client/context.html) e.g. via `webknossos_context`.
 """
 
