@@ -16,9 +16,9 @@ jobs:
   changes:
     runs-on: ubuntu-latest
     outputs:
-      webknossos: ${{ steps.filter.outputs.webknossos || true }}
-      wkcuber: ${{ steps.filter.outputs.wkcuber || true }}
-      cluster_tools: ${{ steps.filter.outputs.cluster_tools || true }}
+      webknossos: ${{ steps.filter.outputs.webknossos || github.ref == 'refs/heads/master' }}
+      wkcuber: ${{ steps.filter.outputs.wkcuber || github.ref == 'refs/heads/master' }}
+      cluster_tools: ${{ steps.filter.outputs.cluster_tools || github.ref == 'refs/heads/master' }}
     steps:
     - uses: actions/checkout@v2
     - uses: dorny/paths-filter@v2
