@@ -135,7 +135,9 @@ class Vec3Int(tuple):
     def __sub__(self, other: Union[int, "Vec3IntLike"]) -> "Vec3Int":
         return self._element_wise(other, sub)
 
-    def __mul__(self, other: Union[int, "Vec3IntLike"]) -> "Vec3Int":
+    # Note: When multiplying regular tuples with an int those are repeated,
+    # which is a different behavior in the superclass! Hence the type:ignore.
+    def __mul__(self, other: Union[int, "Vec3IntLike"]) -> "Vec3Int":  # type: ignore[override]
         return self._element_wise(other, mul)
 
     def __floordiv__(self, other: Union[int, "Vec3IntLike"]) -> "Vec3Int":

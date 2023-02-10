@@ -32,6 +32,7 @@ import numpy as np
 from boltons.typeutils import make_sentinel
 from cluster_tools import Executor
 from natsort import natsort_keygen
+from numpy.typing import DTypeLike
 from upath import UPath
 
 from webknossos.dataset.defaults import (
@@ -64,7 +65,6 @@ from ..utils import (
 from ._utils.from_images import guess_if_segmentation_path
 from ._utils.infer_bounding_box_existing_files import infer_bounding_box_existing_files
 from .layer import (
-    DTypeLike,
     Layer,
     SegmentationLayer,
     _dtype_per_channel_to_element_class,

@@ -2,6 +2,7 @@ from pathlib import Path
 
 import numpy as np
 import wkw
+from wkcuber._internal.utils import WkwDatasetInfo, ensure_wkw, open_wkw
 from wkcuber.metadata import (
     detect_mappings,
     read_datasource_properties,
@@ -9,7 +10,6 @@ from wkcuber.metadata import (
     refresh_metadata,
     write_webknossos_metadata,
 )
-from wkcuber._internal.utils import WkwDatasetInfo, ensure_wkw, open_wkw
 
 from .constants import TESTDATA_DIR
 
@@ -70,7 +70,7 @@ def check_element_class_of_layer(
 def write_custom_layer(
     target_path: Path, layer_name: str, dtype: type, num_channels: int
 ) -> None:
-    data = (
+    data: np.ndarray = (
         np.arange(4 * 4 * 4 * num_channels)
         .reshape((num_channels, 4, 4, 4))
         .astype(dtype)

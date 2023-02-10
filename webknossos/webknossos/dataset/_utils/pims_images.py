@@ -22,6 +22,7 @@ from urllib.error import HTTPError
 
 import numpy as np
 from natsort import natsorted
+from numpy.typing import DTypeLike
 
 # pylint: disable=unused-import
 try:
@@ -35,7 +36,6 @@ except ImportError:
     pass
 # pylint: enable=unused-import
 
-from webknossos.dataset.layer import DTypeLike
 from webknossos.dataset.mag_view import MagView
 from webknossos.geometry.vec3_int import Vec3Int
 

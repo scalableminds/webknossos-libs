@@ -330,7 +330,6 @@ REQUIRED_KEYS = {
     "resolutions",
     "sharingToken",
     "displayName",
-    "description",
     "tags",
     "isPublic",
     "allowedTeams",
