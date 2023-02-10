@@ -7,17 +7,25 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.11.4...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.12.0...HEAD)
+
+### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [0.12.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.12.0) - 2023-02-10
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.11.4...v0.12.0)
 
 ### Breaking Changes
 - Dropped support for Python 3.7. [#833](https://github.com/scalableminds/webknossos-libs/pull/833)
 
 ### Added
 - Added support for Python 3.10. [#833](https://github.com/scalableminds/webknossos-libs/pull/833)
-
-### Changed
-
-### Fixed
 
 
 ## [0.11.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.11.4) - 2023-02-09
