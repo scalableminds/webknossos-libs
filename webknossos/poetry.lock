@@ -3209,24 +3209,24 @@ multidict = ">=4.0"
 
 [[package]]
 name = "zarr"
-version = "2.13.3"
-description = "An implementation of chunked, compressed, N-dimensional arrays for Python."
+version = "2.14.0"
+description = "An implementation of chunked, compressed, N-dimensional arrays for Python"
 category = "main"
 optional = false
-python-versions = ">=3.8, <4"
+python-versions = ">=3.8"
 files = [
-    {file = "zarr-2.13.3-py3-none-any.whl", hash = "sha256:883305e8ded972e25992269b0355436f11d7057b2943d278bf33cdcd2debfe2d"},
-    {file = "zarr-2.13.3.tar.gz", hash = "sha256:db24b090616c638f65e33a6bc5d956d642221182961515ccbc28b17fb0d0b48c"},
+    {file = "zarr-2.14.0-py3-none-any.whl", hash = "sha256:388a24345c27f1ab1624e7296dabbb9184c9ef8a92cb232ae523c841a9616947"},
+    {file = "zarr-2.14.0.tar.gz", hash = "sha256:ddce409e2bc1a7b962e517346fc002033211bc5c5c73229960763815ff9f1839"},
 ]
 
 [package.dependencies]
 asciitree = "*"
 fasteners = "*"
 numcodecs = ">=0.10.0"
-numpy = ">=1.7"
+numpy = ">=1.20"
 
 [package.extras]
-jupyter = ["ipytree", "notebook"]
+jupyter = ["ipytree (>=0.2.2)", "ipywidgets (>=8.0.0)", "notebook"]
 
 [[package]]
 name = "zipp"
@@ -3255,4 +3255,4 @@ tifffile = ["pims", "tifffile"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.11"
-content-hash = "ced7b9c370ff0f4af4425bad184096c2ce501c5a128bd064affff368bea0496d"
+content-hash = "f4296f524b3accc75ca2ddd8446ff19cc9b0f7096f33f8fb14061c25e18bc6c0"

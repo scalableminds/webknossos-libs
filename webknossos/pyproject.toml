@@ -51,7 +51,7 @@ scipy = "^1.9.0"
 typing-extensions = "^4.0"
 universal-pathlib = "0.0.19"
 wkw = "1.1.18"
-zarr = "^2.13.0"
+zarr = "^2.14.0"
 zipp = "^3.5.0"
 
 # A list of all of the optional dependencies, some of which are included in the
