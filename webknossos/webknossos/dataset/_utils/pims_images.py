@@ -567,7 +567,7 @@ def _get_all_pims_handlers() -> Iterable[
 def get_valid_pims_suffixes() -> Set[str]:
     valid_suffixes = set()
     for pims_handler in _get_all_pims_handlers():
-        valid_suffixes.update(pims_handler.class_exts())
+        valid_suffixes.update([ext.lstrip(".") for ext in pims_handler.class_exts()])
     return valid_suffixes
 
 

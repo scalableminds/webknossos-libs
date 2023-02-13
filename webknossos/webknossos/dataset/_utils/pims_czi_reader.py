@@ -37,7 +37,7 @@ PIXEL_TYPE_TO_DTYPE = {
 class PimsCziReader(FramesSequenceND):
     @classmethod
     def class_exts(cls) -> Set[str]:
-        return {".czi"}
+        return {"czi"}
 
     # class_priority is used in pims to pick the reader with the highest priority.
     # Default is 10, and bioformats priority (which is the only other reader supporting czi) is 2.

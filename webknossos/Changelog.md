@@ -20,6 +20,8 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 
 ### Fixed
 
+- Fixed a bug where some czi, dm3, dm4 images could not be converted to wkw due to a too-strict check. [#865](https://github.com/scalableminds/webknossos-libs/pull/865)
+
 
 ## [0.12.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.12.0) - 2023-02-10
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.11.4...v0.12.0)
