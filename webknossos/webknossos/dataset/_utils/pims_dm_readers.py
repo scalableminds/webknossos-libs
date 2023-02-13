@@ -20,7 +20,7 @@ except ImportError as e:
 class PimsDm3Reader(FramesSequenceND):
     @classmethod
     def class_exts(cls) -> Set[str]:
-        return {".dm3"}
+        return {"dm3"}
 
     # class_priority is used in pims to pick the reader with the highest priority.
     # Default is 10, and bioformats priority is 2.
@@ -52,7 +52,7 @@ class PimsDm3Reader(FramesSequenceND):
 class PimsDm4Reader(FramesSequenceND):
     @classmethod
     def class_exts(cls) -> Set[str]:
-        return {".dm4"}
+        return {"dm4"}
 
     # class_priority is used in pims to pick the reader with the highest priority.
     # Default is 10, and bioformats priority is 2.
