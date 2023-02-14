@@ -116,7 +116,7 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
     )
     assert (
         response.status_code == 200 and response.json()["isActive"]
-    ), f"You need to copy or link any dataset to binaryData/{organization_id}/{dataset_name}."
+    ), f"You need to copy https://static.webknossos.org/data/l4_sample.zip to binaryData/{organization_id}/{dataset_name}."
 
     d = datetime.utcnow()
     unixtime = calendar.timegm(d.utctimetuple())
