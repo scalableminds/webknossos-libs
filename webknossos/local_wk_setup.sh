@@ -52,7 +52,9 @@ function ensure_local_test_wk {
 
 
 function stop_local_test_wk {
-    pushd $WK_DOCKER_DIR > /dev/null
-    docker-compose down || true
-    popd > /dev/null
+    if [ -n "${WK_DOCKER_DIR-}" ]; then
+        pushd $WK_DOCKER_DIR > /dev/null
+        docker-compose down || true
+        popd > /dev/null
+    fi
 }
