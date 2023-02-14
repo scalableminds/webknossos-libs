@@ -1,25 +1,38 @@
-from typing import Any, Dict, List, Type, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union
 
 import attr
 
-from ..models.annotation_info_response_200_task_type_settings import (
-    AnnotationInfoResponse200TaskTypeSettings,
-)
 from ..types import UNSET, Unset
+
+if TYPE_CHECKING:
+    from ..models.annotation_info_response_200_task_type_settings import (
+        AnnotationInfoResponse200TaskTypeSettings,
+    )
+
 
 T = TypeVar("T", bound="AnnotationInfoResponse200TaskType")
 
 
 @attr.s(auto_attribs=True)
 class AnnotationInfoResponse200TaskType:
-    """ """
+    """
+    Attributes:
+        id (str):  Example: 570b9f4c2a7c0e4c008da6ff.
+        description (str):  Example: Check those cells out!.
+        team_name (str):  Example: team_X2.
+        summary (Union[Unset, str]):  Example: ek_0674_BipolarCells.
+        team_id (Union[Unset, str]):  Example: 69882b370d889b84020efd4f.
+        settings (Union[Unset, AnnotationInfoResponse200TaskTypeSettings]):
+        recommended_configuration (Union[Unset, str]):
+        tracing_type (Union[Unset, str]):  Example: skeleton.
+    """
 
     id: str
     description: str
     team_name: str
     summary: Union[Unset, str] = UNSET
     team_id: Union[Unset, str] = UNSET
-    settings: Union[Unset, AnnotationInfoResponse200TaskTypeSettings] = UNSET
+    settings: Union[Unset, "AnnotationInfoResponse200TaskTypeSettings"] = UNSET
     recommended_configuration: Union[Unset, str] = UNSET
     tracing_type: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
@@ -61,6 +74,10 @@ class AnnotationInfoResponse200TaskType:
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+        from ..models.annotation_info_response_200_task_type_settings import (
+            AnnotationInfoResponse200TaskTypeSettings,
+        )
+
         d = src_dict.copy()
         id = d.pop("id")
 

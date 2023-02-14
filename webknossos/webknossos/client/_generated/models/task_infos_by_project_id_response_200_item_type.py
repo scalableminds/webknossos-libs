@@ -1,25 +1,38 @@
-from typing import Any, Dict, List, Type, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union
 
 import attr
 
-from ..models.task_infos_by_project_id_response_200_item_type_settings import (
-    TaskInfosByProjectIdResponse200ItemTypeSettings,
-)
 from ..types import UNSET, Unset
+
+if TYPE_CHECKING:
+    from ..models.task_infos_by_project_id_response_200_item_type_settings import (
+        TaskInfosByProjectIdResponse200ItemTypeSettings,
+    )
+
 
 T = TypeVar("T", bound="TaskInfosByProjectIdResponse200ItemType")
 
 
 @attr.s(auto_attribs=True)
 class TaskInfosByProjectIdResponse200ItemType:
-    """ """
+    """
+    Attributes:
+        id (str):  Example: 570b9f4c2a7c0e4c008da6ee.
+        description (str):  Example: Check those cells out!.
+        team_name (str):  Example: team_X1.
+        summary (Union[Unset, str]):  Example: ek_0563_BipolarCells.
+        team_id (Union[Unset, str]):  Example: 570b9f4b2a7c0e3b008da6ec.
+        settings (Union[Unset, TaskInfosByProjectIdResponse200ItemTypeSettings]):
+        recommended_configuration (Union[Unset, str]):
+        tracing_type (Union[Unset, str]):  Example: skeleton.
+    """
 
     id: str
     description: str
     team_name: str
     summary: Union[Unset, str] = UNSET
     team_id: Union[Unset, str] = UNSET
-    settings: Union[Unset, TaskInfosByProjectIdResponse200ItemTypeSettings] = UNSET
+    settings: Union[Unset, "TaskInfosByProjectIdResponse200ItemTypeSettings"] = UNSET
     recommended_configuration: Union[Unset, str] = UNSET
     tracing_type: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
@@ -61,6 +74,10 @@ class TaskInfosByProjectIdResponse200ItemType:
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+        from ..models.task_infos_by_project_id_response_200_item_type_settings import (
+            TaskInfosByProjectIdResponse200ItemTypeSettings,
+        )
+
         d = src_dict.copy()
         id = d.pop("id")
 

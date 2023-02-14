@@ -1,25 +1,38 @@
-from typing import Any, Dict, List, Type, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union
 
 import attr
 
-from ..models.task_info_response_200_type_settings import (
-    TaskInfoResponse200TypeSettings,
-)
 from ..types import UNSET, Unset
+
+if TYPE_CHECKING:
+    from ..models.task_info_response_200_type_settings import (
+        TaskInfoResponse200TypeSettings,
+    )
+
 
 T = TypeVar("T", bound="TaskInfoResponse200Type")
 
 
 @attr.s(auto_attribs=True)
 class TaskInfoResponse200Type:
-    """ """
+    """
+    Attributes:
+        id (str):  Example: 570b9f4c2a7c0e4c008da6ee.
+        description (str):  Example: Check those cells out!.
+        team_name (str):  Example: team_X1.
+        summary (Union[Unset, str]):  Example: ek_0563_BipolarCells.
+        team_id (Union[Unset, str]):  Example: 570b9f4b2a7c0e3b008da6ec.
+        settings (Union[Unset, TaskInfoResponse200TypeSettings]):
+        recommended_configuration (Union[Unset, str]):
+        tracing_type (Union[Unset, str]):  Example: skeleton.
+    """
 
     id: str
     description: str
     team_name: str
     summary: Union[Unset, str] = UNSET
     team_id: Union[Unset, str] = UNSET
-    settings: Union[Unset, TaskInfoResponse200TypeSettings] = UNSET
+    settings: Union[Unset, "TaskInfoResponse200TypeSettings"] = UNSET
     recommended_configuration: Union[Unset, str] = UNSET
     tracing_type: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
@@ -61,6 +74,10 @@ class TaskInfoResponse200Type:
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+        from ..models.task_info_response_200_type_settings import (
+            TaskInfoResponse200TypeSettings,
+        )
+
         d = src_dict.copy()
         id = d.pop("id")
 

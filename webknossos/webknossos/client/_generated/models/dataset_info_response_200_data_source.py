@@ -1,25 +1,33 @@
-from typing import Any, Dict, List, Type, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union, cast
 
 import attr
 
-from ..models.dataset_info_response_200_data_source_data_layers_item import (
-    DatasetInfoResponse200DataSourceDataLayersItem,
-)
-from ..models.dataset_info_response_200_data_source_id import (
-    DatasetInfoResponse200DataSourceId,
-)
 from ..types import UNSET, Unset
+
+if TYPE_CHECKING:
+    from ..models.dataset_info_response_200_data_source_data_layers_item import (
+        DatasetInfoResponse200DataSourceDataLayersItem,
+    )
+    from ..models.dataset_info_response_200_data_source_id import (
+        DatasetInfoResponse200DataSourceId,
+    )
+
 
 T = TypeVar("T", bound="DatasetInfoResponse200DataSource")
 
 
 @attr.s(auto_attribs=True)
 class DatasetInfoResponse200DataSource:
-    """ """
+    """
+    Attributes:
+        id (DatasetInfoResponse200DataSourceId):
+        data_layers (Union[Unset, List['DatasetInfoResponse200DataSourceDataLayersItem']]):
+        scale (Union[Unset, List[float]]):
+    """
 
-    id: DatasetInfoResponse200DataSourceId
+    id: "DatasetInfoResponse200DataSourceId"
     data_layers: Union[
-        Unset, List[DatasetInfoResponse200DataSourceDataLayersItem]
+        Unset, List["DatasetInfoResponse200DataSourceDataLayersItem"]
     ] = UNSET
     scale: Union[Unset, List[float]] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
@@ -55,6 +63,13 @@ class DatasetInfoResponse200DataSource:
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+        from ..models.dataset_info_response_200_data_source_data_layers_item import (
+            DatasetInfoResponse200DataSourceDataLayersItem,
+        )
+        from ..models.dataset_info_response_200_data_source_id import (
+            DatasetInfoResponse200DataSourceId,
+        )
+
         d = src_dict.copy()
         id = DatasetInfoResponse200DataSourceId.from_dict(d.pop("id"))
 

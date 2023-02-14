@@ -1,18 +1,31 @@
-from typing import Any, Dict, List, Type, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union
 
 import attr
 
-from ..models.project_info_by_id_response_200_owner_teams_item import (
-    ProjectInfoByIdResponse200OwnerTeamsItem,
-)
 from ..types import UNSET, Unset
+
+if TYPE_CHECKING:
+    from ..models.project_info_by_id_response_200_owner_teams_item import (
+        ProjectInfoByIdResponse200OwnerTeamsItem,
+    )
+
 
 T = TypeVar("T", bound="ProjectInfoByIdResponse200Owner")
 
 
 @attr.s(auto_attribs=True)
 class ProjectInfoByIdResponse200Owner:
-    """ """
+    """
+    Attributes:
+        id (str):  Example: 570b9f4d2a7c0e4d008da6ef.
+        email (str):  Example: user_A@scalableminds.com.
+        first_name (str):  Example: user_A.
+        last_name (str):  Example: BoyA.
+        is_admin (int):  Example: True.
+        is_dataset_manager (int):  Example: True.
+        is_anonymous (Union[Unset, int]):
+        teams (Union[Unset, List['ProjectInfoByIdResponse200OwnerTeamsItem']]):
+    """
 
     id: str
     email: str
@@ -21,7 +34,7 @@ class ProjectInfoByIdResponse200Owner:
     is_admin: int
     is_dataset_manager: int
     is_anonymous: Union[Unset, int] = UNSET
-    teams: Union[Unset, List[ProjectInfoByIdResponse200OwnerTeamsItem]] = UNSET
+    teams: Union[Unset, List["ProjectInfoByIdResponse200OwnerTeamsItem"]] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -61,6 +74,10 @@ class ProjectInfoByIdResponse200Owner:
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+        from ..models.project_info_by_id_response_200_owner_teams_item import (
+            ProjectInfoByIdResponse200OwnerTeamsItem,
+        )
+
         d = src_dict.copy()
         id = d.pop("id")
 

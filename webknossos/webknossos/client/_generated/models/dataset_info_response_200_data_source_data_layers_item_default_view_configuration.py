@@ -11,7 +11,10 @@ T = TypeVar(
 
 @attr.s(auto_attribs=True)
 class DatasetInfoResponse200DataSourceDataLayersItemDefaultViewConfiguration:
-    """ """
+    """
+    Attributes:
+        color (Union[Unset, List[int]]):
+    """
 
     color: Union[Unset, List[int]] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)

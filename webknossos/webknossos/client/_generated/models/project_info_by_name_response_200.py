@@ -1,18 +1,33 @@
-from typing import Any, Dict, List, Type, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union
 
 import attr
 
-from ..models.project_info_by_name_response_200_owner import (
-    ProjectInfoByNameResponse200Owner,
-)
 from ..types import UNSET, Unset
+
+if TYPE_CHECKING:
+    from ..models.project_info_by_name_response_200_owner import (
+        ProjectInfoByNameResponse200Owner,
+    )
+
 
 T = TypeVar("T", bound="ProjectInfoByNameResponse200")
 
 
 @attr.s(auto_attribs=True)
 class ProjectInfoByNameResponse200:
-    """ """
+    """
+    Attributes:
+        name (str):  Example: Test_Project.
+        team (str):  Example: 570b9f4b2a7c0e3b008da6ec.
+        team_name (str):  Example: team_X1.
+        priority (int):  Example: 100.
+        paused (int):
+        expected_time (int):  Example: 5400000.
+        id (str):  Example: 58135bfd2faeb3190181c057.
+        created (int):  Example: 1477663741000.
+        owner (Union[Unset, ProjectInfoByNameResponse200Owner]):
+        is_blacklisted_from_report (Union[Unset, int]):
+    """
 
     name: str
     team: str
@@ -22,7 +37,7 @@ class ProjectInfoByNameResponse200:
     expected_time: int
     id: str
     created: int
-    owner: Union[Unset, ProjectInfoByNameResponse200Owner] = UNSET
+    owner: Union[Unset, "ProjectInfoByNameResponse200Owner"] = UNSET
     is_blacklisted_from_report: Union[Unset, int] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
@@ -64,6 +79,10 @@ class ProjectInfoByNameResponse200:
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+        from ..models.project_info_by_name_response_200_owner import (
+            ProjectInfoByNameResponse200Owner,
+        )
+
         d = src_dict.copy()
         name = d.pop("name")
 

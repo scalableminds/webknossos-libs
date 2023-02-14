@@ -9,7 +9,13 @@ T = TypeVar("T", bound="AnnotationInfoResponse200Restrictions")
 
 @attr.s(auto_attribs=True)
 class AnnotationInfoResponse200Restrictions:
-    """ """
+    """
+    Attributes:
+        allow_access (Union[Unset, int]):  Example: True.
+        allow_update (Union[Unset, int]):  Example: True.
+        allow_finish (Union[Unset, int]):  Example: True.
+        allow_download (Union[Unset, int]):  Example: True.
+    """
 
     allow_access: Union[Unset, int] = UNSET
     allow_update: Union[Unset, int] = UNSET

@@ -1,18 +1,29 @@
-from typing import Any, Dict, List, Type, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union, cast
 
 import attr
 
-from ..models.annotation_info_response_200_task_type_settings_resolution_restrictions import (
-    AnnotationInfoResponse200TaskTypeSettingsResolutionRestrictions,
-)
 from ..types import UNSET, Unset
+
+if TYPE_CHECKING:
+    from ..models.annotation_info_response_200_task_type_settings_resolution_restrictions import (
+        AnnotationInfoResponse200TaskTypeSettingsResolutionRestrictions,
+    )
+
 
 T = TypeVar("T", bound="AnnotationInfoResponse200TaskTypeSettings")
 
 
 @attr.s(auto_attribs=True)
 class AnnotationInfoResponse200TaskTypeSettings:
-    """ """
+    """
+    Attributes:
+        allowed_modes (Union[Unset, List[str]]):
+        branch_points_allowed (Union[Unset, int]):  Example: True.
+        soma_clicking_allowed (Union[Unset, int]):  Example: True.
+        volume_interpolation_allowed (Union[Unset, int]):
+        merger_mode (Union[Unset, int]):  Example: True.
+        resolution_restrictions (Union[Unset, AnnotationInfoResponse200TaskTypeSettingsResolutionRestrictions]):
+    """
 
     allowed_modes: Union[Unset, List[str]] = UNSET
     branch_points_allowed: Union[Unset, int] = UNSET
@@ -20,7 +31,7 @@ class AnnotationInfoResponse200TaskTypeSettings:
     volume_interpolation_allowed: Union[Unset, int] = UNSET
     merger_mode: Union[Unset, int] = UNSET
     resolution_restrictions: Union[
-        Unset, AnnotationInfoResponse200TaskTypeSettingsResolutionRestrictions
+        Unset, "AnnotationInfoResponse200TaskTypeSettingsResolutionRestrictions"
     ] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
@@ -57,6 +68,10 @@ class AnnotationInfoResponse200TaskTypeSettings:
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+        from ..models.annotation_info_response_200_task_type_settings_resolution_restrictions import (
+            AnnotationInfoResponse200TaskTypeSettingsResolutionRestrictions,
+        )
+
         d = src_dict.copy()
         allowed_modes = cast(List[str], d.pop("allowedModes", UNSET))
 

@@ -784,6 +784,7 @@ class Annotation:
         self,
         volume_layer_name: Optional[str] = None,
         volume_layer_id: Optional[int] = None,
+        read_only: bool = True,
     ) -> Iterator[SegmentationLayer]:
 
         """
@@ -809,7 +810,7 @@ class Annotation:
                 volume_layer_id=volume_layer_id,
             )
 
-            input_annotation_dataset._read_only = True
+            input_annotation_dataset._read_only = read_only
 
             yield input_annotation_layer
 

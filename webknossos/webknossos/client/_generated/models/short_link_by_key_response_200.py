@@ -9,7 +9,12 @@ T = TypeVar("T", bound="ShortLinkByKeyResponse200")
 
 @attr.s(auto_attribs=True)
 class ShortLinkByKeyResponse200:
-    """ """
+    """
+    Attributes:
+        long_link (str):  Example: http://localhost:9000.
+        id (Union[Unset, str]):  Example: 63eb5373010000b2001ddb8c.
+        key (Union[Unset, str]):  Example: _gUgy1V03RDTSl6R.
+    """
 
     long_link: str
     id: Union[Unset, str] = UNSET

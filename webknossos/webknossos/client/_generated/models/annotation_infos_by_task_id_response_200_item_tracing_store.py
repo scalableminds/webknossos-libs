@@ -7,7 +7,11 @@ T = TypeVar("T", bound="AnnotationInfosByTaskIdResponse200ItemTracingStore")
 
 @attr.s(auto_attribs=True)
 class AnnotationInfosByTaskIdResponse200ItemTracingStore:
-    """ """
+    """
+    Attributes:
+        name (str):  Example: localhost.
+        url (str):  Example: http://localhost:9000.
+    """
 
     name: str
     url: str

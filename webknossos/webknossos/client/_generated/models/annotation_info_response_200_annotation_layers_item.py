@@ -9,7 +9,12 @@ T = TypeVar("T", bound="AnnotationInfoResponse200AnnotationLayersItem")
 
 @attr.s(auto_attribs=True)
 class AnnotationInfoResponse200AnnotationLayersItem:
-    """ """
+    """
+    Attributes:
+        typ (str):  Example: Skeleton.
+        tracing_id (Union[Unset, str]):  Example: 76220a3a-9715-4792-bed5-6fda7ca8193f.
+        name (Union[Unset, str]):  Example: Skeleton.
+    """
 
     typ: str
     tracing_id: Union[Unset, str] = UNSET

@@ -1,24 +1,47 @@
-from typing import Any, Dict, List, Type, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union
 
 import attr
 
-from ..models.user_info_by_id_response_200_experiences import (
-    UserInfoByIdResponse200Experiences,
-)
-from ..models.user_info_by_id_response_200_novel_user_experience_infos import (
-    UserInfoByIdResponse200NovelUserExperienceInfos,
-)
-from ..models.user_info_by_id_response_200_teams_item import (
-    UserInfoByIdResponse200TeamsItem,
-)
 from ..types import UNSET, Unset
+
+if TYPE_CHECKING:
+    from ..models.user_info_by_id_response_200_experiences import (
+        UserInfoByIdResponse200Experiences,
+    )
+    from ..models.user_info_by_id_response_200_novel_user_experience_infos import (
+        UserInfoByIdResponse200NovelUserExperienceInfos,
+    )
+    from ..models.user_info_by_id_response_200_teams_item import (
+        UserInfoByIdResponse200TeamsItem,
+    )
+
 
 T = TypeVar("T", bound="UserInfoByIdResponse200")
 
 
 @attr.s(auto_attribs=True)
 class UserInfoByIdResponse200:
-    """ """
+    """
+    Attributes:
+        id (str):  Example: 570b9f4d2a7c0e4d008da6ef.
+        email (str):  Example: user_A@scalableminds.com.
+        first_name (str):  Example: user_A.
+        last_name (str):  Example: BoyA.
+        is_admin (int):  Example: True.
+        is_dataset_manager (int):  Example: True.
+        is_active (int):  Example: True.
+        experiences (UserInfoByIdResponse200Experiences):
+        last_activity (int):  Example: 1676366706605.
+        organization (str):  Example: Organization_X.
+        created (int):  Example: 1460379469000.
+        teams (Union[Unset, List['UserInfoByIdResponse200TeamsItem']]):
+        is_anonymous (Union[Unset, int]):
+        is_editable (Union[Unset, int]):  Example: True.
+        novel_user_experience_infos (Union[Unset, UserInfoByIdResponse200NovelUserExperienceInfos]):
+        selected_theme (Union[Unset, str]):  Example: auto.
+        last_task_type_id (Union[Unset, str]):
+        is_super_user (Union[Unset, int]):  Example: True.
+    """
 
     id: str
     email: str
@@ -27,15 +50,15 @@ class UserInfoByIdResponse200:
     is_admin: int
     is_dataset_manager: int
     is_active: int
-    experiences: UserInfoByIdResponse200Experiences
+    experiences: "UserInfoByIdResponse200Experiences"
     last_activity: int
     organization: str
     created: int
-    teams: Union[Unset, List[UserInfoByIdResponse200TeamsItem]] = UNSET
+    teams: Union[Unset, List["UserInfoByIdResponse200TeamsItem"]] = UNSET
     is_anonymous: Union[Unset, int] = UNSET
     is_editable: Union[Unset, int] = UNSET
     novel_user_experience_infos: Union[
-        Unset, UserInfoByIdResponse200NovelUserExperienceInfos
+        Unset, "UserInfoByIdResponse200NovelUserExperienceInfos"
     ] = UNSET
     selected_theme: Union[Unset, str] = UNSET
     last_task_type_id: Union[Unset, str] = UNSET
@@ -109,6 +132,16 @@ class UserInfoByIdResponse200:
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+        from ..models.user_info_by_id_response_200_experiences import (
+            UserInfoByIdResponse200Experiences,
+        )
+        from ..models.user_info_by_id_response_200_novel_user_experience_infos import (
+            UserInfoByIdResponse200NovelUserExperienceInfos,
+        )
+        from ..models.user_info_by_id_response_200_teams_item import (
+            UserInfoByIdResponse200TeamsItem,
+        )
+
         d = src_dict.copy()
         id = d.pop("id")
 

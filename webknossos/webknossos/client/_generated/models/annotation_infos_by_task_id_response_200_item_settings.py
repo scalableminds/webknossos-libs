@@ -1,18 +1,29 @@
-from typing import Any, Dict, List, Type, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union, cast
 
 import attr
 
-from ..models.annotation_infos_by_task_id_response_200_item_settings_resolution_restrictions import (
-    AnnotationInfosByTaskIdResponse200ItemSettingsResolutionRestrictions,
-)
 from ..types import UNSET, Unset
+
+if TYPE_CHECKING:
+    from ..models.annotation_infos_by_task_id_response_200_item_settings_resolution_restrictions import (
+        AnnotationInfosByTaskIdResponse200ItemSettingsResolutionRestrictions,
+    )
+
 
 T = TypeVar("T", bound="AnnotationInfosByTaskIdResponse200ItemSettings")
 
 
 @attr.s(auto_attribs=True)
 class AnnotationInfosByTaskIdResponse200ItemSettings:
-    """ """
+    """
+    Attributes:
+        allowed_modes (Union[Unset, List[str]]):
+        branch_points_allowed (Union[Unset, int]):  Example: True.
+        soma_clicking_allowed (Union[Unset, int]):  Example: True.
+        volume_interpolation_allowed (Union[Unset, int]):
+        merger_mode (Union[Unset, int]):
+        resolution_restrictions (Union[Unset, AnnotationInfosByTaskIdResponse200ItemSettingsResolutionRestrictions]):
+    """
 
     allowed_modes: Union[Unset, List[str]] = UNSET
     branch_points_allowed: Union[Unset, int] = UNSET
@@ -20,7 +31,7 @@ class AnnotationInfosByTaskIdResponse200ItemSettings:
     volume_interpolation_allowed: Union[Unset, int] = UNSET
     merger_mode: Union[Unset, int] = UNSET
     resolution_restrictions: Union[
-        Unset, AnnotationInfosByTaskIdResponse200ItemSettingsResolutionRestrictions
+        Unset, "AnnotationInfosByTaskIdResponse200ItemSettingsResolutionRestrictions"
     ] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
@@ -57,6 +68,10 @@ class AnnotationInfosByTaskIdResponse200ItemSettings:
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+        from ..models.annotation_infos_by_task_id_response_200_item_settings_resolution_restrictions import (
+            AnnotationInfosByTaskIdResponse200ItemSettingsResolutionRestrictions,
+        )
+
         d = src_dict.copy()
         allowed_modes = cast(List[str], d.pop("allowedModes", UNSET))
 

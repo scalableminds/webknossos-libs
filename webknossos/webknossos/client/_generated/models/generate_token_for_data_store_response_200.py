@@ -7,7 +7,10 @@ T = TypeVar("T", bound="GenerateTokenForDataStoreResponse200")
 
 @attr.s(auto_attribs=True)
 class GenerateTokenForDataStoreResponse200:
-    """ """
+    """
+    Attributes:
+        token (str):  Example: w1df_mDczXgjcIXS8UPh7A.
+    """
 
     token: str
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
