@@ -808,6 +808,7 @@ class Layer:
         `executor` can be passed to allow distrubuted computation, parallelizing
         across chunks. `args` is deprecated.
         """
+        self._dataset._ensure_writable()
 
         if args is not None:
             warn_deprecated(
@@ -976,6 +977,7 @@ class Layer:
 
         `min_mag` is deprecated, please use `finest_mag` instead.
         """
+        self._dataset._ensure_writable()
 
         if args is not None:
             warn_deprecated(
