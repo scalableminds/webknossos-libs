@@ -1,18 +1,29 @@
-from typing import Any, Dict, List, Type, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union, cast
 
 import attr
 
-from ..models.task_info_response_200_type_settings_resolution_restrictions import (
-    TaskInfoResponse200TypeSettingsResolutionRestrictions,
-)
 from ..types import UNSET, Unset
+
+if TYPE_CHECKING:
+    from ..models.task_info_response_200_type_settings_resolution_restrictions import (
+        TaskInfoResponse200TypeSettingsResolutionRestrictions,
+    )
+
 
 T = TypeVar("T", bound="TaskInfoResponse200TypeSettings")
 
 
 @attr.s(auto_attribs=True)
 class TaskInfoResponse200TypeSettings:
-    """ """
+    """
+    Attributes:
+        allowed_modes (Union[Unset, List[str]]):
+        branch_points_allowed (Union[Unset, int]):  Example: True.
+        soma_clicking_allowed (Union[Unset, int]):  Example: True.
+        volume_interpolation_allowed (Union[Unset, int]):
+        merger_mode (Union[Unset, int]):
+        resolution_restrictions (Union[Unset, TaskInfoResponse200TypeSettingsResolutionRestrictions]):
+    """
 
     allowed_modes: Union[Unset, List[str]] = UNSET
     branch_points_allowed: Union[Unset, int] = UNSET
@@ -20,7 +31,7 @@ class TaskInfoResponse200TypeSettings:
     volume_interpolation_allowed: Union[Unset, int] = UNSET
     merger_mode: Union[Unset, int] = UNSET
     resolution_restrictions: Union[
-        Unset, TaskInfoResponse200TypeSettingsResolutionRestrictions
+        Unset, "TaskInfoResponse200TypeSettingsResolutionRestrictions"
     ] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
@@ -57,6 +68,10 @@ class TaskInfoResponse200TypeSettings:
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+        from ..models.task_info_response_200_type_settings_resolution_restrictions import (
+            TaskInfoResponse200TypeSettingsResolutionRestrictions,
+        )
+
         d = src_dict.copy()
         allowed_modes = cast(List[str], d.pop("allowedModes", UNSET))
 

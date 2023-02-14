@@ -7,7 +7,10 @@ T = TypeVar("T", bound="DatasetSharingTokenResponse200")
 
 @attr.s(auto_attribs=True)
 class DatasetSharingTokenResponse200:
-    """ """
+    """
+    Attributes:
+        sharing_token (str):  Example: kmsSdFZ36rd01h-gHjNDuQ.
+    """
 
     sharing_token: str
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)

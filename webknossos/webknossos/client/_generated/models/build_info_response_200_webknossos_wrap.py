@@ -9,7 +9,16 @@ T = TypeVar("T", bound="BuildInfoResponse200WebknossosWrap")
 
 @attr.s(auto_attribs=True)
 class BuildInfoResponse200WebknossosWrap:
-    """ """
+    """
+    Attributes:
+        name (str):  Example: webknossos-wrap.
+        built_at_millis (Union[Unset, str]):  Example: 1640035836569.
+        commit_hash (Union[Unset, str]):  Example: 8b842648702f469a3ffd90dc8a68c4310e64b351.
+        scala_version (Union[Unset, str]):  Example: 2.12.7.
+        version (Union[Unset, str]):  Example: 1.1.15.
+        sbt_version (Union[Unset, str]):  Example: 1.4.1.
+        built_at_string (Union[Unset, str]):  Example: 2021-12-20 21:30:36.569.
+    """
 
     name: str
     built_at_millis: Union[Unset, str] = UNSET

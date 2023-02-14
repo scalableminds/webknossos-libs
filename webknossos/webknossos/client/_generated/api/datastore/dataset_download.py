@@ -1,3 +1,4 @@
+from http import HTTPStatus
 from typing import Any, Dict, Union
 
 import httpx
@@ -30,24 +31,34 @@ def _get_kwargs(
         dataLayerName=data_layer_name,
     )
 
-    headers: Dict[str, Any] = client.get_headers()
+    headers: Dict[str, str] = client.get_headers()
     cookies: Dict[str, Any] = client.get_cookies()
 
-    params: Dict[str, Any] = {
-        "token": token,
-        "x": x,
-        "y": y,
-        "z": z,
-        "width": width,
-        "height": height,
-        "depth": depth,
-        "mag": mag,
-        "halfByte": half_byte,
-        "mappingName": mapping_name,
-    }
+    params: Dict[str, Any] = {}
+    params["token"] = token
+
+    params["x"] = x
+
+    params["y"] = y
+
+    params["z"] = z
+
+    params["width"] = width
+
+    params["height"] = height
+
+    params["depth"] = depth
+
+    params["mag"] = mag
+
+    params["halfByte"] = half_byte
+
+    params["mappingName"] = mapping_name
+
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
     return {
+        "method": "get",
         "url": url,
         "headers": headers,
         "cookies": cookies,
@@ -58,7 +69,7 @@ def _get_kwargs(
 
 def _build_response(*, response: httpx.Response) -> Response[Any]:
     return Response(
-        status_code=response.status_code,
+        status_code=HTTPStatus(response.status_code),
         content=response.content,
         headers=response.headers,
         parsed=None,
@@ -82,6 +93,27 @@ def sync_detailed(
     half_byte: Union[Unset, None, bool] = False,
     mapping_name: Union[Unset, None, str] = UNSET,
 ) -> Response[Any]:
+    """Get raw binary data from a bounding box in a dataset layer
+
+    Args:
+        organization_name (str):
+        data_set_name (str):
+        data_layer_name (str):
+        token (Union[Unset, None, str]):
+        x (int):
+        y (int):
+        z (int):
+        width (int):
+        height (int):
+        depth (int):
+        mag (str):
+        half_byte (Union[Unset, None, bool]):
+        mapping_name (Union[Unset, None, str]):
+
+    Returns:
+        Response[Any]
+    """
+
     kwargs = _get_kwargs(
         organization_name=organization_name,
         data_set_name=data_set_name,
@@ -99,7 +131,8 @@ def sync_detailed(
         mapping_name=mapping_name,
     )
 
-    response = httpx.get(
+    response = httpx.request(
+        verify=client.verify_ssl,
         **kwargs,
     )
 
@@ -123,6 +156,27 @@ async def asyncio_detailed(
     half_byte: Union[Unset, None, bool] = False,
     mapping_name: Union[Unset, None, str] = UNSET,
 ) -> Response[Any]:
+    """Get raw binary data from a bounding box in a dataset layer
+
+    Args:
+        organization_name (str):
+        data_set_name (str):
+        data_layer_name (str):
+        token (Union[Unset, None, str]):
+        x (int):
+        y (int):
+        z (int):
+        width (int):
+        height (int):
+        depth (int):
+        mag (str):
+        half_byte (Union[Unset, None, bool]):
+        mapping_name (Union[Unset, None, str]):
+
+    Returns:
+        Response[Any]
+    """
+
     kwargs = _get_kwargs(
         organization_name=organization_name,
         data_set_name=data_set_name,
@@ -140,7 +194,7 @@ async def asyncio_detailed(
         mapping_name=mapping_name,
     )
 
-    async with httpx.AsyncClient() as _client:
-        response = await _client.get(**kwargs)
+    async with httpx.AsyncClient(verify=client.verify_ssl) as _client:
+        response = await _client.request(**kwargs)
 
     return _build_response(response=response)

@@ -1,18 +1,29 @@
-from typing import Any, Dict, List, Type, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union, cast
 
 import attr
 
-from ..models.task_infos_by_project_id_response_200_item_type_settings_resolution_restrictions import (
-    TaskInfosByProjectIdResponse200ItemTypeSettingsResolutionRestrictions,
-)
 from ..types import UNSET, Unset
+
+if TYPE_CHECKING:
+    from ..models.task_infos_by_project_id_response_200_item_type_settings_resolution_restrictions import (
+        TaskInfosByProjectIdResponse200ItemTypeSettingsResolutionRestrictions,
+    )
+
 
 T = TypeVar("T", bound="TaskInfosByProjectIdResponse200ItemTypeSettings")
 
 
 @attr.s(auto_attribs=True)
 class TaskInfosByProjectIdResponse200ItemTypeSettings:
-    """ """
+    """
+    Attributes:
+        allowed_modes (Union[Unset, List[str]]):
+        branch_points_allowed (Union[Unset, int]):  Example: True.
+        soma_clicking_allowed (Union[Unset, int]):  Example: True.
+        volume_interpolation_allowed (Union[Unset, int]):
+        merger_mode (Union[Unset, int]):
+        resolution_restrictions (Union[Unset, TaskInfosByProjectIdResponse200ItemTypeSettingsResolutionRestrictions]):
+    """
 
     allowed_modes: Union[Unset, List[str]] = UNSET
     branch_points_allowed: Union[Unset, int] = UNSET
@@ -20,7 +31,7 @@ class TaskInfosByProjectIdResponse200ItemTypeSettings:
     volume_interpolation_allowed: Union[Unset, int] = UNSET
     merger_mode: Union[Unset, int] = UNSET
     resolution_restrictions: Union[
-        Unset, TaskInfosByProjectIdResponse200ItemTypeSettingsResolutionRestrictions
+        Unset, "TaskInfosByProjectIdResponse200ItemTypeSettingsResolutionRestrictions"
     ] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
@@ -57,6 +68,10 @@ class TaskInfosByProjectIdResponse200ItemTypeSettings:
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+        from ..models.task_infos_by_project_id_response_200_item_type_settings_resolution_restrictions import (
+            TaskInfosByProjectIdResponse200ItemTypeSettingsResolutionRestrictions,
+        )
+
         d = src_dict.copy()
         allowed_modes = cast(List[str], d.pop("allowedModes", UNSET))
 

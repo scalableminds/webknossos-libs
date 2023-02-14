@@ -7,7 +7,12 @@ T = TypeVar("T", bound="DatasetListResponse200ItemAllowedTeamsCumulativeItem")
 
 @attr.s(auto_attribs=True)
 class DatasetListResponse200ItemAllowedTeamsCumulativeItem:
-    """ """
+    """
+    Attributes:
+        id (str):  Example: 570b9f4b2a7c0e3b008da6ec.
+        name (str):  Example: team_X1.
+        organization (str):  Example: Organization_X.
+    """
 
     id: str
     name: str

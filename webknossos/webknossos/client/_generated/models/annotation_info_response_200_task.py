@@ -1,37 +1,58 @@
-from typing import Any, Dict, List, Type, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union, cast
 
 import attr
 
-from ..models.annotation_info_response_200_task_needed_experience import (
-    AnnotationInfoResponse200TaskNeededExperience,
-)
-from ..models.annotation_info_response_200_task_status import (
-    AnnotationInfoResponse200TaskStatus,
-)
-from ..models.annotation_info_response_200_task_type import (
-    AnnotationInfoResponse200TaskType,
-)
 from ..types import UNSET, Unset
+
+if TYPE_CHECKING:
+    from ..models.annotation_info_response_200_task_needed_experience import (
+        AnnotationInfoResponse200TaskNeededExperience,
+    )
+    from ..models.annotation_info_response_200_task_status import (
+        AnnotationInfoResponse200TaskStatus,
+    )
+    from ..models.annotation_info_response_200_task_type import (
+        AnnotationInfoResponse200TaskType,
+    )
+
 
 T = TypeVar("T", bound="AnnotationInfoResponse200Task")
 
 
 @attr.s(auto_attribs=True)
 class AnnotationInfoResponse200Task:
-    """ """
+    """
+    Attributes:
+        id (str):  Example: 581367a82faeb37a008a5354.
+        project_id (str):  Example: 68135bfd2faeb3190181c058.
+        team (str):  Example: team_X2.
+        data_set (str):  Example: 2012-06-28_Cortex.
+        created (int):  Example: 1477666728000.
+        status (AnnotationInfoResponse200TaskStatus):
+        bounding_box (str):
+        formatted_hash (Union[Unset, str]):  Example: 8a5354.
+        project_name (Union[Unset, str]):  Example: Test_Project2.
+        type (Union[Unset, AnnotationInfoResponse200TaskType]):
+        needed_experience (Union[Unset, AnnotationInfoResponse200TaskNeededExperience]):
+        script (Union[Unset, str]):
+        tracing_time (Union[Unset, None, int]):
+        creation_info (Union[Unset, str]):
+        edit_position (Union[Unset, List[int]]):
+        edit_rotation (Union[Unset, List[int]]):
+    """
 
     id: str
     project_id: str
     team: str
     data_set: str
     created: int
-    status: AnnotationInfoResponse200TaskStatus
+    status: "AnnotationInfoResponse200TaskStatus"
     bounding_box: str
     formatted_hash: Union[Unset, str] = UNSET
     project_name: Union[Unset, str] = UNSET
-    type: Union[Unset, AnnotationInfoResponse200TaskType] = UNSET
+    type: Union[Unset, "AnnotationInfoResponse200TaskType"] = UNSET
     needed_experience: Union[
-        Unset, AnnotationInfoResponse200TaskNeededExperience
+        Unset, "AnnotationInfoResponse200TaskNeededExperience"
     ] = UNSET
     script: Union[Unset, str] = UNSET
     tracing_time: Union[Unset, None, int] = UNSET
@@ -106,6 +127,16 @@ class AnnotationInfoResponse200Task:
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+        from ..models.annotation_info_response_200_task_needed_experience import (
+            AnnotationInfoResponse200TaskNeededExperience,
+        )
+        from ..models.annotation_info_response_200_task_status import (
+            AnnotationInfoResponse200TaskStatus,
+        )
+        from ..models.annotation_info_response_200_task_type import (
+            AnnotationInfoResponse200TaskType,
+        )
+
         d = src_dict.copy()
         id = d.pop("id")
 

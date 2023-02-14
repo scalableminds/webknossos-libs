@@ -9,7 +9,12 @@ T = TypeVar("T", bound="AnnotationInfoResponse200UserTeamsItem")
 
 @attr.s(auto_attribs=True)
 class AnnotationInfoResponse200UserTeamsItem:
-    """ """
+    """
+    Attributes:
+        id (str):  Example: 570b9f4b2a7c0e3b008da6ec.
+        name (str):  Example: team_X1.
+        is_team_manager (Union[Unset, int]):  Example: True.
+    """
 
     id: str
     name: str

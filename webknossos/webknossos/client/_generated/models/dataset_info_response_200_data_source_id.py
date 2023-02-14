@@ -7,7 +7,11 @@ T = TypeVar("T", bound="DatasetInfoResponse200DataSourceId")
 
 @attr.s(auto_attribs=True)
 class DatasetInfoResponse200DataSourceId:
-    """ """
+    """
+    Attributes:
+        name (str):  Example: e2006_knossos.
+        team (str):  Example: Organization_X.
+    """
 
     name: str
     team: str

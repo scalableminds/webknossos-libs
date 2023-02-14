@@ -1,34 +1,69 @@
-from typing import Any, Dict, List, Type, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union, cast
 
 import attr
 
-from ..models.annotation_info_response_200_annotation_layers_item import (
-    AnnotationInfoResponse200AnnotationLayersItem,
-)
-from ..models.annotation_info_response_200_data_store import (
-    AnnotationInfoResponse200DataStore,
-)
-from ..models.annotation_info_response_200_owner import AnnotationInfoResponse200Owner
-from ..models.annotation_info_response_200_restrictions import (
-    AnnotationInfoResponse200Restrictions,
-)
-from ..models.annotation_info_response_200_settings import (
-    AnnotationInfoResponse200Settings,
-)
-from ..models.annotation_info_response_200_stats import AnnotationInfoResponse200Stats
-from ..models.annotation_info_response_200_task import AnnotationInfoResponse200Task
-from ..models.annotation_info_response_200_tracing_store import (
-    AnnotationInfoResponse200TracingStore,
-)
-from ..models.annotation_info_response_200_user import AnnotationInfoResponse200User
 from ..types import UNSET, Unset
+
+if TYPE_CHECKING:
+    from ..models.annotation_info_response_200_annotation_layers_item import (
+        AnnotationInfoResponse200AnnotationLayersItem,
+    )
+    from ..models.annotation_info_response_200_data_store import (
+        AnnotationInfoResponse200DataStore,
+    )
+    from ..models.annotation_info_response_200_owner import (
+        AnnotationInfoResponse200Owner,
+    )
+    from ..models.annotation_info_response_200_restrictions import (
+        AnnotationInfoResponse200Restrictions,
+    )
+    from ..models.annotation_info_response_200_settings import (
+        AnnotationInfoResponse200Settings,
+    )
+    from ..models.annotation_info_response_200_stats import (
+        AnnotationInfoResponse200Stats,
+    )
+    from ..models.annotation_info_response_200_task import AnnotationInfoResponse200Task
+    from ..models.annotation_info_response_200_tracing_store import (
+        AnnotationInfoResponse200TracingStore,
+    )
+    from ..models.annotation_info_response_200_user import AnnotationInfoResponse200User
+
 
 T = TypeVar("T", bound="AnnotationInfoResponse200")
 
 
 @attr.s(auto_attribs=True)
 class AnnotationInfoResponse200:
-    """ """
+    """
+    Attributes:
+        state (str):  Example: Active.
+        id (str):  Example: 58135c192faeb34c0081c05d.
+        name (str):
+        description (str):
+        typ (str):  Example: TracingBase.
+        organization (str):  Example: Organization_X.
+        data_store (AnnotationInfoResponse200DataStore):
+        tags (List[str]):
+        modified (Union[Unset, int]):
+        view_configuration (Union[Unset, str]):
+        task (Union[Unset, None, AnnotationInfoResponse200Task]):
+        stats (Union[Unset, AnnotationInfoResponse200Stats]):
+        restrictions (Union[Unset, AnnotationInfoResponse200Restrictions]):
+        formatted_hash (Union[Unset, str]):  Example: 81c05d.
+        annotation_layers (Union[Unset, List['AnnotationInfoResponse200AnnotationLayersItem']]):
+        data_set_name (Union[Unset, str]):  Example: 2012-06-28_Cortex.
+        tracing_store (Union[Unset, AnnotationInfoResponse200TracingStore]):
+        visibility (Union[Unset, str]):  Example: Internal.
+        settings (Union[Unset, AnnotationInfoResponse200Settings]):
+        tracing_time (Union[Unset, None, int]):
+        teams (Union[Unset, List[Any]]):
+        user (Union[Unset, AnnotationInfoResponse200User]):
+        owner (Union[Unset, AnnotationInfoResponse200Owner]):
+        meshes (Union[Unset, List[Any]]):
+        contributors (Union[Unset, List[Any]]):
+        others_may_edit (Union[Unset, int]):
+    """
 
     state: str
     id: str
@@ -36,25 +71,25 @@ class AnnotationInfoResponse200:
     description: str
     typ: str
     organization: str
-    data_store: AnnotationInfoResponse200DataStore
+    data_store: "AnnotationInfoResponse200DataStore"
     tags: List[str]
     modified: Union[Unset, int] = UNSET
     view_configuration: Union[Unset, str] = UNSET
-    task: Union[Unset, None, AnnotationInfoResponse200Task] = UNSET
-    stats: Union[Unset, AnnotationInfoResponse200Stats] = UNSET
-    restrictions: Union[Unset, AnnotationInfoResponse200Restrictions] = UNSET
+    task: Union[Unset, None, "AnnotationInfoResponse200Task"] = UNSET
+    stats: Union[Unset, "AnnotationInfoResponse200Stats"] = UNSET
+    restrictions: Union[Unset, "AnnotationInfoResponse200Restrictions"] = UNSET
     formatted_hash: Union[Unset, str] = UNSET
     annotation_layers: Union[
-        Unset, List[AnnotationInfoResponse200AnnotationLayersItem]
+        Unset, List["AnnotationInfoResponse200AnnotationLayersItem"]
     ] = UNSET
     data_set_name: Union[Unset, str] = UNSET
-    tracing_store: Union[Unset, AnnotationInfoResponse200TracingStore] = UNSET
+    tracing_store: Union[Unset, "AnnotationInfoResponse200TracingStore"] = UNSET
     visibility: Union[Unset, str] = UNSET
-    settings: Union[Unset, AnnotationInfoResponse200Settings] = UNSET
+    settings: Union[Unset, "AnnotationInfoResponse200Settings"] = UNSET
     tracing_time: Union[Unset, None, int] = UNSET
     teams: Union[Unset, List[Any]] = UNSET
-    user: Union[Unset, AnnotationInfoResponse200User] = UNSET
-    owner: Union[Unset, AnnotationInfoResponse200Owner] = UNSET
+    user: Union[Unset, "AnnotationInfoResponse200User"] = UNSET
+    owner: Union[Unset, "AnnotationInfoResponse200Owner"] = UNSET
     meshes: Union[Unset, List[Any]] = UNSET
     contributors: Union[Unset, List[Any]] = UNSET
     others_may_edit: Union[Unset, int] = UNSET
@@ -107,11 +142,7 @@ class AnnotationInfoResponse200:
         tracing_time = self.tracing_time
         teams: Union[Unset, List[Any]] = UNSET
         if not isinstance(self.teams, Unset):
-            teams = []
-            for teams_item_data in self.teams:
-                teams_item = teams_item_data
-
-                teams.append(teams_item)
+            teams = self.teams
 
         user: Union[Unset, Dict[str, Any]] = UNSET
         if not isinstance(self.user, Unset):
@@ -123,19 +154,11 @@ class AnnotationInfoResponse200:
 
         meshes: Union[Unset, List[Any]] = UNSET
         if not isinstance(self.meshes, Unset):
-            meshes = []
-            for meshes_item_data in self.meshes:
-                meshes_item = meshes_item_data
-
-                meshes.append(meshes_item)
+            meshes = self.meshes
 
         contributors: Union[Unset, List[Any]] = UNSET
         if not isinstance(self.contributors, Unset):
-            contributors = []
-            for contributors_item_data in self.contributors:
-                contributors_item = contributors_item_data
-
-                contributors.append(contributors_item)
+            contributors = self.contributors
 
         others_may_edit = self.others_may_edit
 
@@ -194,6 +217,34 @@ class AnnotationInfoResponse200:
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+        from ..models.annotation_info_response_200_annotation_layers_item import (
+            AnnotationInfoResponse200AnnotationLayersItem,
+        )
+        from ..models.annotation_info_response_200_data_store import (
+            AnnotationInfoResponse200DataStore,
+        )
+        from ..models.annotation_info_response_200_owner import (
+            AnnotationInfoResponse200Owner,
+        )
+        from ..models.annotation_info_response_200_restrictions import (
+            AnnotationInfoResponse200Restrictions,
+        )
+        from ..models.annotation_info_response_200_settings import (
+            AnnotationInfoResponse200Settings,
+        )
+        from ..models.annotation_info_response_200_stats import (
+            AnnotationInfoResponse200Stats,
+        )
+        from ..models.annotation_info_response_200_task import (
+            AnnotationInfoResponse200Task,
+        )
+        from ..models.annotation_info_response_200_tracing_store import (
+            AnnotationInfoResponse200TracingStore,
+        )
+        from ..models.annotation_info_response_200_user import (
+            AnnotationInfoResponse200User,
+        )
+
         d = src_dict.copy()
         state = d.pop("state")
 
@@ -275,12 +326,7 @@ class AnnotationInfoResponse200:
 
         tracing_time = d.pop("tracingTime", UNSET)
 
-        teams = []
-        _teams = d.pop("teams", UNSET)
-        for teams_item_data in _teams or []:
-            teams_item = teams_item_data
-
-            teams.append(teams_item)
+        teams = cast(List[Any], d.pop("teams", UNSET))
 
         _user = d.pop("user", UNSET)
         user: Union[Unset, AnnotationInfoResponse200User]
@@ -296,19 +342,9 @@ class AnnotationInfoResponse200:
         else:
             owner = AnnotationInfoResponse200Owner.from_dict(_owner)
 
-        meshes = []
-        _meshes = d.pop("meshes", UNSET)
-        for meshes_item_data in _meshes or []:
-            meshes_item = meshes_item_data
+        meshes = cast(List[Any], d.pop("meshes", UNSET))
 
-            meshes.append(meshes_item)
-
-        contributors = []
-        _contributors = d.pop("contributors", UNSET)
-        for contributors_item_data in _contributors or []:
-            contributors_item = contributors_item_data
-
-            contributors.append(contributors_item)
+        contributors = cast(List[Any], d.pop("contributors", UNSET))
 
         others_may_edit = d.pop("othersMayEdit", UNSET)
 

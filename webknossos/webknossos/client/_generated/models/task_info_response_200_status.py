@@ -7,7 +7,12 @@ T = TypeVar("T", bound="TaskInfoResponse200Status")
 
 @attr.s(auto_attribs=True)
 class TaskInfoResponse200Status:
-    """ """
+    """
+    Attributes:
+        open_ (int):  Example: 10.
+        active (int):  Example: 1.
+        finished (int):  Example: -1.
+    """
 
     open_: int
     active: int

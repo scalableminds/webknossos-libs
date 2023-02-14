@@ -7,7 +7,12 @@ T = TypeVar("T", bound="TaskInfosByProjectIdResponse200ItemStatus")
 
 @attr.s(auto_attribs=True)
 class TaskInfosByProjectIdResponse200ItemStatus:
-    """ """
+    """
+    Attributes:
+        open_ (int):  Example: 10.
+        active (int):  Example: 1.
+        finished (int):  Example: -1.
+    """
 
     open_: int
     active: int

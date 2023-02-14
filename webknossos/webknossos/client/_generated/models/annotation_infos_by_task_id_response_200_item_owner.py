@@ -1,18 +1,31 @@
-from typing import Any, Dict, List, Type, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union
 
 import attr
 
-from ..models.annotation_infos_by_task_id_response_200_item_owner_teams_item import (
-    AnnotationInfosByTaskIdResponse200ItemOwnerTeamsItem,
-)
 from ..types import UNSET, Unset
+
+if TYPE_CHECKING:
+    from ..models.annotation_infos_by_task_id_response_200_item_owner_teams_item import (
+        AnnotationInfosByTaskIdResponse200ItemOwnerTeamsItem,
+    )
+
 
 T = TypeVar("T", bound="AnnotationInfosByTaskIdResponse200ItemOwner")
 
 
 @attr.s(auto_attribs=True)
 class AnnotationInfosByTaskIdResponse200ItemOwner:
-    """ """
+    """
+    Attributes:
+        id (str):  Example: 570b9f4d2a7c0e4d008da6ef.
+        email (str):  Example: user_A@scalableminds.com.
+        first_name (str):  Example: user_A.
+        last_name (str):  Example: BoyA.
+        is_admin (int):  Example: True.
+        is_dataset_manager (int):  Example: True.
+        is_anonymous (Union[Unset, int]):
+        teams (Union[Unset, List['AnnotationInfosByTaskIdResponse200ItemOwnerTeamsItem']]):
+    """
 
     id: str
     email: str
@@ -22,7 +35,7 @@ class AnnotationInfosByTaskIdResponse200ItemOwner:
     is_dataset_manager: int
     is_anonymous: Union[Unset, int] = UNSET
     teams: Union[
-        Unset, List[AnnotationInfosByTaskIdResponse200ItemOwnerTeamsItem]
+        Unset, List["AnnotationInfosByTaskIdResponse200ItemOwnerTeamsItem"]
     ] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
@@ -63,6 +76,10 @@ class AnnotationInfosByTaskIdResponse200ItemOwner:
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+        from ..models.annotation_infos_by_task_id_response_200_item_owner_teams_item import (
+            AnnotationInfosByTaskIdResponse200ItemOwnerTeamsItem,
+        )
+
         d = src_dict.copy()
         id = d.pop("id")
 

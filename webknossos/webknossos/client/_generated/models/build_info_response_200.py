@@ -1,22 +1,34 @@
-from typing import Any, Dict, List, Type, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union
 
 import attr
 
-from ..models.build_info_response_200_webknossos import BuildInfoResponse200Webknossos
-from ..models.build_info_response_200_webknossos_wrap import (
-    BuildInfoResponse200WebknossosWrap,
-)
 from ..types import UNSET, Unset
+
+if TYPE_CHECKING:
+    from ..models.build_info_response_200_webknossos import (
+        BuildInfoResponse200Webknossos,
+    )
+    from ..models.build_info_response_200_webknossos_wrap import (
+        BuildInfoResponse200WebknossosWrap,
+    )
+
 
 T = TypeVar("T", bound="BuildInfoResponse200")
 
 
 @attr.s(auto_attribs=True)
 class BuildInfoResponse200:
-    """ """
+    """
+    Attributes:
+        webknossos (Union[Unset, BuildInfoResponse200Webknossos]):
+        webknossos_wrap (Union[Unset, BuildInfoResponse200WebknossosWrap]):
+        schema_version (Union[Unset, int]):  Example: 92.
+        local_data_store_enabled (Union[Unset, int]):  Example: True.
+        local_tracing_store_enabled (Union[Unset, int]):  Example: True.
+    """
 
-    webknossos: Union[Unset, BuildInfoResponse200Webknossos] = UNSET
-    webknossos_wrap: Union[Unset, BuildInfoResponse200WebknossosWrap] = UNSET
+    webknossos: Union[Unset, "BuildInfoResponse200Webknossos"] = UNSET
+    webknossos_wrap: Union[Unset, "BuildInfoResponse200WebknossosWrap"] = UNSET
     schema_version: Union[Unset, int] = UNSET
     local_data_store_enabled: Union[Unset, int] = UNSET
     local_tracing_store_enabled: Union[Unset, int] = UNSET
@@ -53,6 +65,13 @@ class BuildInfoResponse200:
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+        from ..models.build_info_response_200_webknossos import (
+            BuildInfoResponse200Webknossos,
+        )
+        from ..models.build_info_response_200_webknossos_wrap import (
+            BuildInfoResponse200WebknossosWrap,
+        )
+
         d = src_dict.copy()
         _webknossos = d.pop("webknossos", UNSET)
         webknossos: Union[Unset, BuildInfoResponse200Webknossos]

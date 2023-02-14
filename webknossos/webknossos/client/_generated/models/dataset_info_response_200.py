@@ -1,32 +1,58 @@
-from typing import Any, Dict, List, Type, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union, cast
 
 import attr
 
-from ..models.dataset_info_response_200_allowed_teams_cumulative_item import (
-    DatasetInfoResponse200AllowedTeamsCumulativeItem,
-)
-from ..models.dataset_info_response_200_allowed_teams_item import (
-    DatasetInfoResponse200AllowedTeamsItem,
-)
-from ..models.dataset_info_response_200_data_source import (
-    DatasetInfoResponse200DataSource,
-)
-from ..models.dataset_info_response_200_data_store import (
-    DatasetInfoResponse200DataStore,
-)
 from ..types import UNSET, Unset
+
+if TYPE_CHECKING:
+    from ..models.dataset_info_response_200_allowed_teams_cumulative_item import (
+        DatasetInfoResponse200AllowedTeamsCumulativeItem,
+    )
+    from ..models.dataset_info_response_200_allowed_teams_item import (
+        DatasetInfoResponse200AllowedTeamsItem,
+    )
+    from ..models.dataset_info_response_200_data_source import (
+        DatasetInfoResponse200DataSource,
+    )
+    from ..models.dataset_info_response_200_data_store import (
+        DatasetInfoResponse200DataStore,
+    )
+
 
 T = TypeVar("T", bound="DatasetInfoResponse200")
 
 
 @attr.s(auto_attribs=True)
 class DatasetInfoResponse200:
-    """ """
+    """
+    Attributes:
+        name (str):  Example: e2006_knossos.
+        data_source (DatasetInfoResponse200DataSource):
+        data_store (DatasetInfoResponse200DataStore):
+        allowed_teams (List['DatasetInfoResponse200AllowedTeamsItem']):
+        is_active (int):  Example: True.
+        is_public (int):
+        description (str):
+        display_name (str):
+        created (int):  Example: 1508495293789.
+        tags (List[Any]):
+        owning_organization (Union[Unset, str]):  Example: Organization_X.
+        allowed_teams_cumulative (Union[Unset, List['DatasetInfoResponse200AllowedTeamsCumulativeItem']]):
+        is_editable (Union[Unset, int]):  Example: True.
+        last_used_by_user (Union[Unset, int]):  Example: 1676366706471.
+        logo_url (Union[Unset, str]):  Example: /assets/images/mpi-logos.svg.
+        sorting_key (Union[Unset, int]):  Example: 1508495293789.
+        details (Union[Unset, str]):
+        is_unreported (Union[Unset, int]):
+        jobs_enabled (Union[Unset, int]):
+        folder_id (Union[Unset, str]):  Example: 570b9f4e4bb848d0885ea917.
+        publication (Union[Unset, str]):
+    """
 
     name: str
-    data_source: DatasetInfoResponse200DataSource
-    data_store: DatasetInfoResponse200DataStore
-    allowed_teams: List[DatasetInfoResponse200AllowedTeamsItem]
+    data_source: "DatasetInfoResponse200DataSource"
+    data_store: "DatasetInfoResponse200DataStore"
+    allowed_teams: List["DatasetInfoResponse200AllowedTeamsItem"]
     is_active: int
     is_public: int
     description: str
@@ -35,7 +61,7 @@ class DatasetInfoResponse200:
     tags: List[Any]
     owning_organization: Union[Unset, str] = UNSET
     allowed_teams_cumulative: Union[
-        Unset, List[DatasetInfoResponse200AllowedTeamsCumulativeItem]
+        Unset, List["DatasetInfoResponse200AllowedTeamsCumulativeItem"]
     ] = UNSET
     is_editable: Union[Unset, int] = UNSET
     last_used_by_user: Union[Unset, int] = UNSET
@@ -65,11 +91,7 @@ class DatasetInfoResponse200:
         description = self.description
         display_name = self.display_name
         created = self.created
-        tags = []
-        for tags_item_data in self.tags:
-            tags_item = tags_item_data
-
-            tags.append(tags_item)
+        tags = self.tags
 
         owning_organization = self.owning_organization
         allowed_teams_cumulative: Union[Unset, List[Dict[str, Any]]] = UNSET
@@ -135,6 +157,19 @@ class DatasetInfoResponse200:
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+        from ..models.dataset_info_response_200_allowed_teams_cumulative_item import (
+            DatasetInfoResponse200AllowedTeamsCumulativeItem,
+        )
+        from ..models.dataset_info_response_200_allowed_teams_item import (
+            DatasetInfoResponse200AllowedTeamsItem,
+        )
+        from ..models.dataset_info_response_200_data_source import (
+            DatasetInfoResponse200DataSource,
+        )
+        from ..models.dataset_info_response_200_data_store import (
+            DatasetInfoResponse200DataStore,
+        )
+
         d = src_dict.copy()
         name = d.pop("name")
 
@@ -161,12 +196,7 @@ class DatasetInfoResponse200:
 
         created = d.pop("created")
 
-        tags = []
-        _tags = d.pop("tags")
-        for tags_item_data in _tags:
-            tags_item = tags_item_data
-
-            tags.append(tags_item)
+        tags = cast(List[Any], d.pop("tags"))
 
         owning_organization = d.pop("owningOrganization", UNSET)
 

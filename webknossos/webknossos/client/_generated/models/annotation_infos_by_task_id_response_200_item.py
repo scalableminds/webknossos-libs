@@ -1,42 +1,73 @@
-from typing import Any, Dict, List, Type, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union, cast
 
 import attr
 
-from ..models.annotation_infos_by_task_id_response_200_item_annotation_layers_item import (
-    AnnotationInfosByTaskIdResponse200ItemAnnotationLayersItem,
-)
-from ..models.annotation_infos_by_task_id_response_200_item_data_store import (
-    AnnotationInfosByTaskIdResponse200ItemDataStore,
-)
-from ..models.annotation_infos_by_task_id_response_200_item_owner import (
-    AnnotationInfosByTaskIdResponse200ItemOwner,
-)
-from ..models.annotation_infos_by_task_id_response_200_item_restrictions import (
-    AnnotationInfosByTaskIdResponse200ItemRestrictions,
-)
-from ..models.annotation_infos_by_task_id_response_200_item_settings import (
-    AnnotationInfosByTaskIdResponse200ItemSettings,
-)
-from ..models.annotation_infos_by_task_id_response_200_item_stats import (
-    AnnotationInfosByTaskIdResponse200ItemStats,
-)
-from ..models.annotation_infos_by_task_id_response_200_item_task import (
-    AnnotationInfosByTaskIdResponse200ItemTask,
-)
-from ..models.annotation_infos_by_task_id_response_200_item_tracing_store import (
-    AnnotationInfosByTaskIdResponse200ItemTracingStore,
-)
-from ..models.annotation_infos_by_task_id_response_200_item_user import (
-    AnnotationInfosByTaskIdResponse200ItemUser,
-)
 from ..types import UNSET, Unset
+
+if TYPE_CHECKING:
+    from ..models.annotation_infos_by_task_id_response_200_item_annotation_layers_item import (
+        AnnotationInfosByTaskIdResponse200ItemAnnotationLayersItem,
+    )
+    from ..models.annotation_infos_by_task_id_response_200_item_data_store import (
+        AnnotationInfosByTaskIdResponse200ItemDataStore,
+    )
+    from ..models.annotation_infos_by_task_id_response_200_item_owner import (
+        AnnotationInfosByTaskIdResponse200ItemOwner,
+    )
+    from ..models.annotation_infos_by_task_id_response_200_item_restrictions import (
+        AnnotationInfosByTaskIdResponse200ItemRestrictions,
+    )
+    from ..models.annotation_infos_by_task_id_response_200_item_settings import (
+        AnnotationInfosByTaskIdResponse200ItemSettings,
+    )
+    from ..models.annotation_infos_by_task_id_response_200_item_stats import (
+        AnnotationInfosByTaskIdResponse200ItemStats,
+    )
+    from ..models.annotation_infos_by_task_id_response_200_item_task import (
+        AnnotationInfosByTaskIdResponse200ItemTask,
+    )
+    from ..models.annotation_infos_by_task_id_response_200_item_tracing_store import (
+        AnnotationInfosByTaskIdResponse200ItemTracingStore,
+    )
+    from ..models.annotation_infos_by_task_id_response_200_item_user import (
+        AnnotationInfosByTaskIdResponse200ItemUser,
+    )
+
 
 T = TypeVar("T", bound="AnnotationInfosByTaskIdResponse200Item")
 
 
 @attr.s(auto_attribs=True)
 class AnnotationInfosByTaskIdResponse200Item:
-    """ """
+    """
+    Attributes:
+        state (str):  Example: Active.
+        id (str):  Example: 58135c402faeb34e0081c068.
+        name (str):
+        description (str):
+        typ (str):  Example: Task.
+        organization (str):  Example: Organization_X.
+        data_store (AnnotationInfosByTaskIdResponse200ItemDataStore):
+        tags (List[str]):
+        modified (Union[Unset, int]):
+        view_configuration (Union[Unset, str]):
+        task (Union[Unset, None, AnnotationInfosByTaskIdResponse200ItemTask]):
+        stats (Union[Unset, AnnotationInfosByTaskIdResponse200ItemStats]):
+        restrictions (Union[Unset, AnnotationInfosByTaskIdResponse200ItemRestrictions]):
+        formatted_hash (Union[Unset, str]):  Example: 81c068.
+        annotation_layers (Union[Unset, List['AnnotationInfosByTaskIdResponse200ItemAnnotationLayersItem']]):
+        data_set_name (Union[Unset, str]):  Example: 2012-06-28_Cortex.
+        tracing_store (Union[Unset, AnnotationInfosByTaskIdResponse200ItemTracingStore]):
+        visibility (Union[Unset, str]):  Example: Internal.
+        settings (Union[Unset, AnnotationInfosByTaskIdResponse200ItemSettings]):
+        tracing_time (Union[Unset, None, int]):
+        teams (Union[Unset, List[Any]]):
+        user (Union[Unset, AnnotationInfosByTaskIdResponse200ItemUser]):
+        owner (Union[Unset, AnnotationInfosByTaskIdResponse200ItemOwner]):
+        meshes (Union[Unset, List[Any]]):
+        contributors (Union[Unset, List[Any]]):
+        others_may_edit (Union[Unset, int]):
+    """
 
     state: str
     id: str
@@ -44,29 +75,29 @@ class AnnotationInfosByTaskIdResponse200Item:
     description: str
     typ: str
     organization: str
-    data_store: AnnotationInfosByTaskIdResponse200ItemDataStore
+    data_store: "AnnotationInfosByTaskIdResponse200ItemDataStore"
     tags: List[str]
     modified: Union[Unset, int] = UNSET
     view_configuration: Union[Unset, str] = UNSET
-    task: Union[Unset, None, AnnotationInfosByTaskIdResponse200ItemTask] = UNSET
-    stats: Union[Unset, AnnotationInfosByTaskIdResponse200ItemStats] = UNSET
+    task: Union[Unset, None, "AnnotationInfosByTaskIdResponse200ItemTask"] = UNSET
+    stats: Union[Unset, "AnnotationInfosByTaskIdResponse200ItemStats"] = UNSET
     restrictions: Union[
-        Unset, AnnotationInfosByTaskIdResponse200ItemRestrictions
+        Unset, "AnnotationInfosByTaskIdResponse200ItemRestrictions"
     ] = UNSET
     formatted_hash: Union[Unset, str] = UNSET
     annotation_layers: Union[
-        Unset, List[AnnotationInfosByTaskIdResponse200ItemAnnotationLayersItem]
+        Unset, List["AnnotationInfosByTaskIdResponse200ItemAnnotationLayersItem"]
     ] = UNSET
     data_set_name: Union[Unset, str] = UNSET
     tracing_store: Union[
-        Unset, AnnotationInfosByTaskIdResponse200ItemTracingStore
+        Unset, "AnnotationInfosByTaskIdResponse200ItemTracingStore"
     ] = UNSET
     visibility: Union[Unset, str] = UNSET
-    settings: Union[Unset, AnnotationInfosByTaskIdResponse200ItemSettings] = UNSET
+    settings: Union[Unset, "AnnotationInfosByTaskIdResponse200ItemSettings"] = UNSET
     tracing_time: Union[Unset, None, int] = UNSET
     teams: Union[Unset, List[Any]] = UNSET
-    user: Union[Unset, AnnotationInfosByTaskIdResponse200ItemUser] = UNSET
-    owner: Union[Unset, AnnotationInfosByTaskIdResponse200ItemOwner] = UNSET
+    user: Union[Unset, "AnnotationInfosByTaskIdResponse200ItemUser"] = UNSET
+    owner: Union[Unset, "AnnotationInfosByTaskIdResponse200ItemOwner"] = UNSET
     meshes: Union[Unset, List[Any]] = UNSET
     contributors: Union[Unset, List[Any]] = UNSET
     others_may_edit: Union[Unset, int] = UNSET
@@ -119,11 +150,7 @@ class AnnotationInfosByTaskIdResponse200Item:
         tracing_time = self.tracing_time
         teams: Union[Unset, List[Any]] = UNSET
         if not isinstance(self.teams, Unset):
-            teams = []
-            for teams_item_data in self.teams:
-                teams_item = teams_item_data
-
-                teams.append(teams_item)
+            teams = self.teams
 
         user: Union[Unset, Dict[str, Any]] = UNSET
         if not isinstance(self.user, Unset):
@@ -135,19 +162,11 @@ class AnnotationInfosByTaskIdResponse200Item:
 
         meshes: Union[Unset, List[Any]] = UNSET
         if not isinstance(self.meshes, Unset):
-            meshes = []
-            for meshes_item_data in self.meshes:
-                meshes_item = meshes_item_data
-
-                meshes.append(meshes_item)
+            meshes = self.meshes
 
         contributors: Union[Unset, List[Any]] = UNSET
         if not isinstance(self.contributors, Unset):
-            contributors = []
-            for contributors_item_data in self.contributors:
-                contributors_item = contributors_item_data
-
-                contributors.append(contributors_item)
+            contributors = self.contributors
 
         others_may_edit = self.others_may_edit
 
@@ -206,6 +225,34 @@ class AnnotationInfosByTaskIdResponse200Item:
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+        from ..models.annotation_infos_by_task_id_response_200_item_annotation_layers_item import (
+            AnnotationInfosByTaskIdResponse200ItemAnnotationLayersItem,
+        )
+        from ..models.annotation_infos_by_task_id_response_200_item_data_store import (
+            AnnotationInfosByTaskIdResponse200ItemDataStore,
+        )
+        from ..models.annotation_infos_by_task_id_response_200_item_owner import (
+            AnnotationInfosByTaskIdResponse200ItemOwner,
+        )
+        from ..models.annotation_infos_by_task_id_response_200_item_restrictions import (
+            AnnotationInfosByTaskIdResponse200ItemRestrictions,
+        )
+        from ..models.annotation_infos_by_task_id_response_200_item_settings import (
+            AnnotationInfosByTaskIdResponse200ItemSettings,
+        )
+        from ..models.annotation_infos_by_task_id_response_200_item_stats import (
+            AnnotationInfosByTaskIdResponse200ItemStats,
+        )
+        from ..models.annotation_infos_by_task_id_response_200_item_task import (
+            AnnotationInfosByTaskIdResponse200ItemTask,
+        )
+        from ..models.annotation_infos_by_task_id_response_200_item_tracing_store import (
+            AnnotationInfosByTaskIdResponse200ItemTracingStore,
+        )
+        from ..models.annotation_infos_by_task_id_response_200_item_user import (
+            AnnotationInfosByTaskIdResponse200ItemUser,
+        )
+
         d = src_dict.copy()
         state = d.pop("state")
 
@@ -293,12 +340,7 @@ class AnnotationInfosByTaskIdResponse200Item:
 
         tracing_time = d.pop("tracingTime", UNSET)
 
-        teams = []
-        _teams = d.pop("teams", UNSET)
-        for teams_item_data in _teams or []:
-            teams_item = teams_item_data
-
-            teams.append(teams_item)
+        teams = cast(List[Any], d.pop("teams", UNSET))
 
         _user = d.pop("user", UNSET)
         user: Union[Unset, AnnotationInfosByTaskIdResponse200ItemUser]
@@ -314,19 +356,9 @@ class AnnotationInfosByTaskIdResponse200Item:
         else:
             owner = AnnotationInfosByTaskIdResponse200ItemOwner.from_dict(_owner)
 
-        meshes = []
-        _meshes = d.pop("meshes", UNSET)
-        for meshes_item_data in _meshes or []:
-            meshes_item = meshes_item_data
+        meshes = cast(List[Any], d.pop("meshes", UNSET))
 
-            meshes.append(meshes_item)
-
-        contributors = []
-        _contributors = d.pop("contributors", UNSET)
-        for contributors_item_data in _contributors or []:
-            contributors_item = contributors_item_data
-
-            contributors.append(contributors_item)
+        contributors = cast(List[Any], d.pop("contributors", UNSET))
 
         others_may_edit = d.pop("othersMayEdit", UNSET)
 

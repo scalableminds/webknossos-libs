@@ -1,32 +1,53 @@
-from typing import Any, Dict, List, Type, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union, cast
 
 import attr
 
-from ..models.task_info_response_200_needed_experience import (
-    TaskInfoResponse200NeededExperience,
-)
-from ..models.task_info_response_200_status import TaskInfoResponse200Status
-from ..models.task_info_response_200_type import TaskInfoResponse200Type
 from ..types import UNSET, Unset
+
+if TYPE_CHECKING:
+    from ..models.task_info_response_200_needed_experience import (
+        TaskInfoResponse200NeededExperience,
+    )
+    from ..models.task_info_response_200_status import TaskInfoResponse200Status
+    from ..models.task_info_response_200_type import TaskInfoResponse200Type
+
 
 T = TypeVar("T", bound="TaskInfoResponse200")
 
 
 @attr.s(auto_attribs=True)
 class TaskInfoResponse200:
-    """ """
+    """
+    Attributes:
+        id (str):  Example: 581367a82faeb37a008a5352.
+        project_id (str):  Example: 58135bfd2faeb3190181c057.
+        team (str):  Example: team_X1.
+        data_set (str):  Example: 2012-06-28_Cortex.
+        created (int):  Example: 1477666728000.
+        status (TaskInfoResponse200Status):
+        bounding_box (str):
+        formatted_hash (Union[Unset, str]):  Example: 8a5352.
+        project_name (Union[Unset, str]):  Example: Test_Project.
+        type (Union[Unset, TaskInfoResponse200Type]):
+        needed_experience (Union[Unset, TaskInfoResponse200NeededExperience]):
+        script (Union[Unset, str]):
+        tracing_time (Union[Unset, None, int]):
+        creation_info (Union[Unset, str]):
+        edit_position (Union[Unset, List[int]]):
+        edit_rotation (Union[Unset, List[int]]):
+    """
 
     id: str
     project_id: str
     team: str
     data_set: str
     created: int
-    status: TaskInfoResponse200Status
+    status: "TaskInfoResponse200Status"
     bounding_box: str
     formatted_hash: Union[Unset, str] = UNSET
     project_name: Union[Unset, str] = UNSET
-    type: Union[Unset, TaskInfoResponse200Type] = UNSET
-    needed_experience: Union[Unset, TaskInfoResponse200NeededExperience] = UNSET
+    type: Union[Unset, "TaskInfoResponse200Type"] = UNSET
+    needed_experience: Union[Unset, "TaskInfoResponse200NeededExperience"] = UNSET
     script: Union[Unset, str] = UNSET
     tracing_time: Union[Unset, None, int] = UNSET
     creation_info: Union[Unset, str] = UNSET
@@ -100,6 +121,12 @@ class TaskInfoResponse200:
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+        from ..models.task_info_response_200_needed_experience import (
+            TaskInfoResponse200NeededExperience,
+        )
+        from ..models.task_info_response_200_status import TaskInfoResponse200Status
+        from ..models.task_info_response_200_type import TaskInfoResponse200Type
+
         d = src_dict.copy()
         id = d.pop("id")
 

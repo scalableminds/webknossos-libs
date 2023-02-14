@@ -9,7 +9,10 @@ T = TypeVar("T", bound="CurrentUserInfoResponse200Experiences")
 
 @attr.s(auto_attribs=True)
 class CurrentUserInfoResponse200Experiences:
-    """ """
+    """
+    Attributes:
+        abc (Union[Unset, int]):  Example: 5.
+    """
 
     abc: Union[Unset, int] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
