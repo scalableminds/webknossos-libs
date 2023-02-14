@@ -1,19 +1,25 @@
-from typing import Any, Dict, List, Type, TypeVar
+from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar
 
 import attr
 
-from ..models.user_logged_time_response_200_logged_time_item_payment_interval import (
-    UserLoggedTimeResponse200LoggedTimeItemPaymentInterval,
-)
+if TYPE_CHECKING:
+    from ..models.user_logged_time_response_200_logged_time_item_payment_interval import (
+        UserLoggedTimeResponse200LoggedTimeItemPaymentInterval,
+    )
+
 
 T = TypeVar("T", bound="UserLoggedTimeResponse200LoggedTimeItem")
 
 
 @attr.s(auto_attribs=True)
 class UserLoggedTimeResponse200LoggedTimeItem:
-    """ """
+    """
+    Attributes:
+        payment_interval (UserLoggedTimeResponse200LoggedTimeItemPaymentInterval):
+        duration_in_seconds (int):  Example: 265.
+    """
 
-    payment_interval: UserLoggedTimeResponse200LoggedTimeItemPaymentInterval
+    payment_interval: "UserLoggedTimeResponse200LoggedTimeItemPaymentInterval"
     duration_in_seconds: int
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
@@ -35,6 +41,10 @@ class UserLoggedTimeResponse200LoggedTimeItem:
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+        from ..models.user_logged_time_response_200_logged_time_item_payment_interval import (
+            UserLoggedTimeResponse200LoggedTimeItemPaymentInterval,
+        )
+
         d = src_dict.copy()
         payment_interval = (
             UserLoggedTimeResponse200LoggedTimeItemPaymentInterval.from_dict(

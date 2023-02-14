@@ -9,7 +9,14 @@ T = TypeVar("T", bound="AnnotationInfosByTaskIdResponse200ItemDataStore")
 
 @attr.s(auto_attribs=True)
 class AnnotationInfosByTaskIdResponse200ItemDataStore:
-    """ """
+    """
+    Attributes:
+        name (str):  Example: localhost.
+        url (str):  Example: http://localhost:9000.
+        allows_upload (int):  Example: True.
+        is_scratch (Union[Unset, int]):
+        is_connector (Union[Unset, int]):
+    """
 
     name: str
     url: str

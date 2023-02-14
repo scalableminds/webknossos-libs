@@ -1,20 +1,27 @@
-from typing import Any, Dict, List, Type, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union
 
 import attr
 
-from ..models.dataset_list_response_200_item_data_source_id import (
-    DatasetListResponse200ItemDataSourceId,
-)
 from ..types import UNSET, Unset
+
+if TYPE_CHECKING:
+    from ..models.dataset_list_response_200_item_data_source_id import (
+        DatasetListResponse200ItemDataSourceId,
+    )
+
 
 T = TypeVar("T", bound="DatasetListResponse200ItemDataSource")
 
 
 @attr.s(auto_attribs=True)
 class DatasetListResponse200ItemDataSource:
-    """ """
+    """
+    Attributes:
+        id (DatasetListResponse200ItemDataSourceId):
+        status (Union[Unset, str]):  Example: No longer available on datastore..
+    """
 
-    id: DatasetListResponse200ItemDataSourceId
+    id: "DatasetListResponse200ItemDataSourceId"
     status: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
@@ -37,6 +44,10 @@ class DatasetListResponse200ItemDataSource:
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+        from ..models.dataset_list_response_200_item_data_source_id import (
+            DatasetListResponse200ItemDataSourceId,
+        )
+
         d = src_dict.copy()
         id = DatasetListResponse200ItemDataSourceId.from_dict(d.pop("id"))
 

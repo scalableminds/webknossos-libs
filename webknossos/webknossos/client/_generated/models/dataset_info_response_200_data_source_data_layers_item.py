@@ -1,29 +1,41 @@
-from typing import Any, Dict, List, Type, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union, cast
 
 import attr
 
-from ..models.dataset_info_response_200_data_source_data_layers_item_bounding_box import (
-    DatasetInfoResponse200DataSourceDataLayersItemBoundingBox,
-)
-from ..models.dataset_info_response_200_data_source_data_layers_item_default_view_configuration import (
-    DatasetInfoResponse200DataSourceDataLayersItemDefaultViewConfiguration,
-)
 from ..types import UNSET, Unset
+
+if TYPE_CHECKING:
+    from ..models.dataset_info_response_200_data_source_data_layers_item_bounding_box import (
+        DatasetInfoResponse200DataSourceDataLayersItemBoundingBox,
+    )
+    from ..models.dataset_info_response_200_data_source_data_layers_item_default_view_configuration import (
+        DatasetInfoResponse200DataSourceDataLayersItemDefaultViewConfiguration,
+    )
+
 
 T = TypeVar("T", bound="DatasetInfoResponse200DataSourceDataLayersItem")
 
 
 @attr.s(auto_attribs=True)
 class DatasetInfoResponse200DataSourceDataLayersItem:
-    """ """
+    """
+    Attributes:
+        name (str):  Example: color.
+        category (str):  Example: color.
+        bounding_box (DatasetInfoResponse200DataSourceDataLayersItemBoundingBox):
+        resolutions (List[List[int]]):
+        element_class (str):  Example: uint24.
+        default_view_configuration (Union[Unset,
+            DatasetInfoResponse200DataSourceDataLayersItemDefaultViewConfiguration]):
+    """
 
     name: str
     category: str
-    bounding_box: DatasetInfoResponse200DataSourceDataLayersItemBoundingBox
+    bounding_box: "DatasetInfoResponse200DataSourceDataLayersItemBoundingBox"
     resolutions: List[List[int]]
     element_class: str
     default_view_configuration: Union[
-        Unset, DatasetInfoResponse200DataSourceDataLayersItemDefaultViewConfiguration
+        Unset, "DatasetInfoResponse200DataSourceDataLayersItemDefaultViewConfiguration"
     ] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
@@ -61,6 +73,13 @@ class DatasetInfoResponse200DataSourceDataLayersItem:
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+        from ..models.dataset_info_response_200_data_source_data_layers_item_bounding_box import (
+            DatasetInfoResponse200DataSourceDataLayersItemBoundingBox,
+        )
+        from ..models.dataset_info_response_200_data_source_data_layers_item_default_view_configuration import (
+            DatasetInfoResponse200DataSourceDataLayersItemDefaultViewConfiguration,
+        )
+
         d = src_dict.copy()
         name = d.pop("name")
 

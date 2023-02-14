@@ -9,7 +9,11 @@ T = TypeVar("T", bound="AnnotationInfoResponse200TaskNeededExperience")
 
 @attr.s(auto_attribs=True)
 class AnnotationInfoResponse200TaskNeededExperience:
-    """ """
+    """
+    Attributes:
+        domain (Union[Unset, str]):  Example: abc.
+        value (Union[Unset, int]):
+    """
 
     domain: Union[Unset, str] = UNSET
     value: Union[Unset, int] = UNSET

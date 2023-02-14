@@ -1,37 +1,58 @@
-from typing import Any, Dict, List, Type, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar, Union, cast
 
 import attr
 
-from ..models.annotation_infos_by_task_id_response_200_item_task_needed_experience import (
-    AnnotationInfosByTaskIdResponse200ItemTaskNeededExperience,
-)
-from ..models.annotation_infos_by_task_id_response_200_item_task_status import (
-    AnnotationInfosByTaskIdResponse200ItemTaskStatus,
-)
-from ..models.annotation_infos_by_task_id_response_200_item_task_type import (
-    AnnotationInfosByTaskIdResponse200ItemTaskType,
-)
 from ..types import UNSET, Unset
+
+if TYPE_CHECKING:
+    from ..models.annotation_infos_by_task_id_response_200_item_task_needed_experience import (
+        AnnotationInfosByTaskIdResponse200ItemTaskNeededExperience,
+    )
+    from ..models.annotation_infos_by_task_id_response_200_item_task_status import (
+        AnnotationInfosByTaskIdResponse200ItemTaskStatus,
+    )
+    from ..models.annotation_infos_by_task_id_response_200_item_task_type import (
+        AnnotationInfosByTaskIdResponse200ItemTaskType,
+    )
+
 
 T = TypeVar("T", bound="AnnotationInfosByTaskIdResponse200ItemTask")
 
 
 @attr.s(auto_attribs=True)
 class AnnotationInfosByTaskIdResponse200ItemTask:
-    """ """
+    """
+    Attributes:
+        id (str):  Example: 581367a82faeb37a008a5352.
+        project_id (str):  Example: 58135bfd2faeb3190181c057.
+        team (str):  Example: team_X1.
+        data_set (str):  Example: 2012-06-28_Cortex.
+        created (int):  Example: 1477666728000.
+        status (AnnotationInfosByTaskIdResponse200ItemTaskStatus):
+        bounding_box (str):
+        formatted_hash (Union[Unset, str]):  Example: 8a5352.
+        project_name (Union[Unset, str]):  Example: Test_Project.
+        type (Union[Unset, AnnotationInfosByTaskIdResponse200ItemTaskType]):
+        needed_experience (Union[Unset, AnnotationInfosByTaskIdResponse200ItemTaskNeededExperience]):
+        script (Union[Unset, str]):
+        tracing_time (Union[Unset, None, int]):
+        creation_info (Union[Unset, str]):
+        edit_position (Union[Unset, List[int]]):
+        edit_rotation (Union[Unset, List[int]]):
+    """
 
     id: str
     project_id: str
     team: str
     data_set: str
     created: int
-    status: AnnotationInfosByTaskIdResponse200ItemTaskStatus
+    status: "AnnotationInfosByTaskIdResponse200ItemTaskStatus"
     bounding_box: str
     formatted_hash: Union[Unset, str] = UNSET
     project_name: Union[Unset, str] = UNSET
-    type: Union[Unset, AnnotationInfosByTaskIdResponse200ItemTaskType] = UNSET
+    type: Union[Unset, "AnnotationInfosByTaskIdResponse200ItemTaskType"] = UNSET
     needed_experience: Union[
-        Unset, AnnotationInfosByTaskIdResponse200ItemTaskNeededExperience
+        Unset, "AnnotationInfosByTaskIdResponse200ItemTaskNeededExperience"
     ] = UNSET
     script: Union[Unset, str] = UNSET
     tracing_time: Union[Unset, None, int] = UNSET
@@ -106,6 +127,16 @@ class AnnotationInfosByTaskIdResponse200ItemTask:
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+        from ..models.annotation_infos_by_task_id_response_200_item_task_needed_experience import (
+            AnnotationInfosByTaskIdResponse200ItemTaskNeededExperience,
+        )
+        from ..models.annotation_infos_by_task_id_response_200_item_task_status import (
+            AnnotationInfosByTaskIdResponse200ItemTaskStatus,
+        )
+        from ..models.annotation_infos_by_task_id_response_200_item_task_type import (
+            AnnotationInfosByTaskIdResponse200ItemTaskType,
+        )
+
         d = src_dict.copy()
         id = d.pop("id")
 

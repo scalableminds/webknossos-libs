@@ -1,19 +1,24 @@
-from typing import Any, Dict, List, Type, TypeVar
+from typing import TYPE_CHECKING, Any, Dict, List, Type, TypeVar
 
 import attr
 
-from ..models.user_logged_time_response_200_logged_time_item import (
-    UserLoggedTimeResponse200LoggedTimeItem,
-)
+if TYPE_CHECKING:
+    from ..models.user_logged_time_response_200_logged_time_item import (
+        UserLoggedTimeResponse200LoggedTimeItem,
+    )
+
 
 T = TypeVar("T", bound="UserLoggedTimeResponse200")
 
 
 @attr.s(auto_attribs=True)
 class UserLoggedTimeResponse200:
-    """ """
+    """
+    Attributes:
+        logged_time (List['UserLoggedTimeResponse200LoggedTimeItem']):
+    """
 
-    logged_time: List[UserLoggedTimeResponse200LoggedTimeItem]
+    logged_time: List["UserLoggedTimeResponse200LoggedTimeItem"]
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -35,6 +40,10 @@ class UserLoggedTimeResponse200:
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
+        from ..models.user_logged_time_response_200_logged_time_item import (
+            UserLoggedTimeResponse200LoggedTimeItem,
+        )
+
         d = src_dict.copy()
         logged_time = []
         _logged_time = d.pop("loggedTime")

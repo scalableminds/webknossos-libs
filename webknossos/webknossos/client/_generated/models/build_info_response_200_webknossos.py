@@ -9,7 +9,18 @@ T = TypeVar("T", bound="BuildInfoResponse200Webknossos")
 
 @attr.s(auto_attribs=True)
 class BuildInfoResponse200Webknossos:
-    """ """
+    """
+    Attributes:
+        name (str):  Example: webknossos.
+        ci_tag (Union[Unset, str]):
+        commit_hash (Union[Unset, str]):  Example: afe612a8efc3a63828535085cceb67c9dc8a44bc.
+        ci_build (Union[Unset, str]):  Example: 20617.
+        scala_version (Union[Unset, str]):  Example: 2.12.15.
+        version (Union[Unset, str]):  Example: 20617.
+        sbt_version (Union[Unset, str]):  Example: 1.6.2.
+        datastore_api_version (Union[Unset, str]):  Example: 2.0.
+        commit_date (Union[Unset, str]):  Example: Tue Dec 6 14:25:26 2022 +0000.
+    """
 
     name: str
     ci_tag: Union[Unset, str] = UNSET

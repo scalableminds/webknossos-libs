@@ -9,7 +9,14 @@ T = TypeVar("T", bound="DatastoreListResponse200Item")
 
 @attr.s(auto_attribs=True)
 class DatastoreListResponse200Item:
-    """ """
+    """
+    Attributes:
+        name (str):  Example: connect.
+        url (str):  Example: http://localhost:8000.
+        allows_upload (int):
+        is_scratch (Union[Unset, int]):
+        is_connector (Union[Unset, int]):  Example: True.
+    """
 
     name: str
     url: str

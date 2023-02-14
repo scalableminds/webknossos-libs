@@ -7,7 +7,12 @@ T = TypeVar("T", bound="AnnotationInfoResponse200TaskStatus")
 
 @attr.s(auto_attribs=True)
 class AnnotationInfoResponse200TaskStatus:
-    """ """
+    """
+    Attributes:
+        open_ (int):  Example: 10.
+        active (int):
+        finished (int):
+    """
 
     open_: int
     active: int
