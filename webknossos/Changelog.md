@@ -18,6 +18,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 - Added `read_only` parameter for `annotation.temporary_volume_layer_copy`. [#866](https://github.com/scalableminds/webknossos-libs/pull/866)
 
 ### Changed
+- in Dataset.layer_from_images, layer names generated from multiple input image channels no longer contain equal signs, yielding better url safety. [#867](https://github.com/scalableminds/webknossos-libs/pull/867)
 
 ### Fixed
 - Fixed a bug where some czi, dm3, dm4 images could not be converted to wkw due to a too-strict check. [#865](https://github.com/scalableminds/webknossos-libs/pull/865)

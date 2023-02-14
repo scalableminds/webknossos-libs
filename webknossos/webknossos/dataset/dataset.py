@@ -1088,15 +1088,15 @@ class Dataset:
                 #    "timepoint": [0, 1],
                 # }
                 # suffix_with_pims_open_kwargs_per_layer = {
-                #    "__channel=0_timepoint=0", {"channel": 0, "timepoint": 0},
-                #    "__channel=0_timepoint=1", {"channel": 0, "timepoint": 1},
-                #    "__channel=0_timepoint=2", {"channel": 0, "timepoint": 2},
+                #    "__channel0_timepoint0", {"channel": 0, "timepoint": 0},
+                #    "__channel0_timepoint1", {"channel": 0, "timepoint": 1},
+                #    "__channel0_timepoint2", {"channel": 0, "timepoint": 2},
                 #    …,
-                #    "__channel=1_timepoint=0", {"channel": 1, "timepoint": 0},
+                #    "__channel1_timepoint0", {"channel": 1, "timepoint": 0},
                 #    …,
                 # }
                 suffix_with_pims_open_kwargs_per_layer = {
-                    "__" + "_".join(f"{k}={v}" for k, v in sorted(pairs)): dict(pairs)
+                    "__" + "_".join(f"{k}{v}" for k, v in sorted(pairs)): dict(pairs)
                     for pairs in product(
                         *(
                             [(key, value) for value in values]
