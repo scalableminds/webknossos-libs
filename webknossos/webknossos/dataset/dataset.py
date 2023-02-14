@@ -30,11 +30,11 @@ from typing import (
 import attr
 import numpy as np
 from boltons.typeutils import make_sentinel
+from cluster_tools import Executor
 from natsort import natsort_keygen
 from numpy.typing import DTypeLike
 from upath import UPath
 
-from cluster_tools import Executor
 from webknossos.dataset.defaults import (
     DEFAULT_CHUNK_SHAPE,
     DEFAULT_CHUNKS_PER_SHARD_ZARR,

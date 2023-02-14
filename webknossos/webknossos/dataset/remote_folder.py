@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Iterator
+from typing import TYPE_CHECKING, Iterable
 
 import attr
 
@@ -10,8 +10,8 @@ if TYPE_CHECKING:
 
 def _get_folder_path(
     folder: "FolderTreeResponse200Item",
-    all_folders: Iterator["FolderTreeResponse200Item"],
-):
+    all_folders: Iterable["FolderTreeResponse200Item"],
+) -> str:
     if folder.parent is None:
         return folder.name
     else:

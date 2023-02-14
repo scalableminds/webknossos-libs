@@ -328,6 +328,7 @@ REQUIRED_KEYS = {
     "dataStore",
     "url",
     "dataSource",
+    "folderId",
     # "scale", not available for errors
     # "dataLayers", not available for errors
     "category",

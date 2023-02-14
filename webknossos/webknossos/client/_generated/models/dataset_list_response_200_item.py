@@ -36,6 +36,7 @@ class DatasetListResponse200Item:
         display_name (str):
         created (int):  Example: 1460379470082.
         tags (List[Any]):
+        folder_id (str):  Example: 570b9f4e4bb848d0885ea917.
         owning_organization (Union[Unset, str]):  Example: Organization_X.
         allowed_teams_cumulative (Union[Unset, List['DatasetListResponse200ItemAllowedTeamsCumulativeItem']]):
         is_editable (Union[Unset, int]):  Example: True.
@@ -45,7 +46,6 @@ class DatasetListResponse200Item:
         details (Union[Unset, str]):
         is_unreported (Union[Unset, int]):  Example: True.
         jobs_enabled (Union[Unset, int]):
-        folder_id (Union[Unset, str]):  Example: 570b9f4e4bb848d0885ea917.
         publication (Union[Unset, str]):
     """
 
@@ -59,6 +59,7 @@ class DatasetListResponse200Item:
     display_name: str
     created: int
     tags: List[Any]
+    folder_id: str
     owning_organization: Union[Unset, str] = UNSET
     allowed_teams_cumulative: Union[
         Unset, List["DatasetListResponse200ItemAllowedTeamsCumulativeItem"]
@@ -70,7 +71,6 @@ class DatasetListResponse200Item:
     details: Union[Unset, str] = UNSET
     is_unreported: Union[Unset, int] = UNSET
     jobs_enabled: Union[Unset, int] = UNSET
-    folder_id: Union[Unset, str] = UNSET
     publication: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
@@ -93,6 +93,7 @@ class DatasetListResponse200Item:
         created = self.created
         tags = self.tags
 
+        folder_id = self.folder_id
         owning_organization = self.owning_organization
         allowed_teams_cumulative: Union[Unset, List[Dict[str, Any]]] = UNSET
         if not isinstance(self.allowed_teams_cumulative, Unset):
@@ -111,7 +112,6 @@ class DatasetListResponse200Item:
         details = self.details
         is_unreported = self.is_unreported
         jobs_enabled = self.jobs_enabled
-        folder_id = self.folder_id
         publication = self.publication
 
         field_dict: Dict[str, Any] = {}
@@ -128,6 +128,7 @@ class DatasetListResponse200Item:
                 "displayName": display_name,
                 "created": created,
                 "tags": tags,
+                "folderId": folder_id,
             }
         )
         if owning_organization is not UNSET:
@@ -148,8 +149,6 @@ class DatasetListResponse200Item:
             field_dict["isUnreported"] = is_unreported
         if jobs_enabled is not UNSET:
             field_dict["jobsEnabled"] = jobs_enabled
-        if folder_id is not UNSET:
-            field_dict["folderId"] = folder_id
         if publication is not UNSET:
             field_dict["publication"] = publication
 
@@ -200,6 +199,8 @@ class DatasetListResponse200Item:
 
         tags = cast(List[Any], d.pop("tags"))
 
+        folder_id = d.pop("folderId")
+
         owning_organization = d.pop("owningOrganization", UNSET)
 
         allowed_teams_cumulative = []
@@ -227,8 +228,6 @@ class DatasetListResponse200Item:
 
         jobs_enabled = d.pop("jobsEnabled", UNSET)
 
-        folder_id = d.pop("folderId", UNSET)
-
         publication = d.pop("publication", UNSET)
 
         dataset_list_response_200_item = cls(
@@ -242,6 +241,7 @@ class DatasetListResponse200Item:
             display_name=display_name,
             created=created,
             tags=tags,
+            folder_id=folder_id,
             owning_organization=owning_organization,
             allowed_teams_cumulative=allowed_teams_cumulative,
             is_editable=is_editable,
@@ -251,7 +251,6 @@ class DatasetListResponse200Item:
             details=details,
             is_unreported=is_unreported,
             jobs_enabled=jobs_enabled,
-            folder_id=folder_id,
             publication=publication,
         )
 
