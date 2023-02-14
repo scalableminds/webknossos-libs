@@ -4,59 +4,66 @@ import attr
 
 from ..types import UNSET, Unset
 
-T = TypeVar("T", bound="ShortLinkByKeyResponse200")
+T = TypeVar("T", bound="FolderTreeResponse200Item")
 
 
 @attr.s(auto_attribs=True)
-class ShortLinkByKeyResponse200:
+class FolderTreeResponse200Item:
     """
     Attributes:
-        long_link (str):  Example: http://localhost:9000.
-        id (Union[Unset, str]):  Example: 63eb9198100200e718197b15.
-        key (Union[Unset, str]):  Example: BO23J4tO2MormkV8.
+        id (str):  Example: 570b9f4e4bb848d08880712a.
+        name (str):  Example: A subfolder!.
+        parent (Union[Unset, str]):  Example: 570b9f4e4bb848d0885ea917.
+        is_editable (Union[Unset, int]):  Example: True.
     """
 
-    long_link: str
-    id: Union[Unset, str] = UNSET
-    key: Union[Unset, str] = UNSET
+    id: str
+    name: str
+    parent: Union[Unset, str] = UNSET
+    is_editable: Union[Unset, int] = UNSET
     additional_properties: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        long_link = self.long_link
         id = self.id
-        key = self.key
+        name = self.name
+        parent = self.parent
+        is_editable = self.is_editable
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "longLink": long_link,
+                "id": id,
+                "name": name,
             }
         )
-        if id is not UNSET:
-            field_dict["_id"] = id
-        if key is not UNSET:
-            field_dict["key"] = key
+        if parent is not UNSET:
+            field_dict["parent"] = parent
+        if is_editable is not UNSET:
+            field_dict["isEditable"] = is_editable
 
         return field_dict
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        long_link = d.pop("longLink")
+        id = d.pop("id")
 
-        id = d.pop("_id", UNSET)
+        name = d.pop("name")
 
-        key = d.pop("key", UNSET)
+        parent = d.pop("parent", UNSET)
 
-        short_link_by_key_response_200 = cls(
-            long_link=long_link,
+        is_editable = d.pop("isEditable", UNSET)
+
+        folder_tree_response_200_item = cls(
             id=id,
-            key=key,
+            name=name,
+            parent=parent,
+            is_editable=is_editable,
         )
 
-        short_link_by_key_response_200.additional_properties = d
-        return short_link_by_key_response_200
+        folder_tree_response_200_item.additional_properties = d
+        return folder_tree_response_200_item
 
     @property
     def additional_keys(self) -> List[str]:

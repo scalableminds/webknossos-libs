@@ -36,7 +36,7 @@ function ensure_local_test_wk {
         echo "The login user user_A@scalableminds.com could not be found or changed."
         echo "Please ensure that the test-db is prepared by running this in the webknossos repo"
         echo "(⚠️ this overwrites your local webknossos database):"
-        echo "tools/postgres/prepareTestDB.sh"
+        echo "tools/postgres/dbtool.js prepare-test-db"
         exit 1
     fi
 

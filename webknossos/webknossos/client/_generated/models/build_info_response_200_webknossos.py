@@ -13,13 +13,13 @@ class BuildInfoResponse200Webknossos:
     Attributes:
         name (str):  Example: webknossos.
         ci_tag (Union[Unset, str]):
-        commit_hash (Union[Unset, str]):  Example: afe612a8efc3a63828535085cceb67c9dc8a44bc.
-        ci_build (Union[Unset, str]):  Example: 20617.
+        commit_hash (Union[Unset, str]):  Example: af6817022865faeda4415f6ed360e2990a7fe419.
+        ci_build (Union[Unset, str]):
         scala_version (Union[Unset, str]):  Example: 2.12.15.
-        version (Union[Unset, str]):  Example: 20617.
+        version (Union[Unset, str]):  Example: dev.
         sbt_version (Union[Unset, str]):  Example: 1.6.2.
         datastore_api_version (Union[Unset, str]):  Example: 2.0.
-        commit_date (Union[Unset, str]):  Example: Tue Dec 6 14:25:26 2022 +0000.
+        commit_date (Union[Unset, str]):  Example: Thu Feb 9 21:57:36 2023 +0100.
     """
 
     name: str

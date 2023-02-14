@@ -1,10 +1,10 @@
 from http import HTTPStatus
-from typing import Any, Dict, Optional, Union, cast
+from typing import Any, Dict, List, Optional, Union, cast
 
 import httpx
 
 from ...client import Client
-from ...models.build_info_response_200 import BuildInfoResponse200
+from ...models.folder_tree_response_200_item import FolderTreeResponse200Item
 from ...types import Response
 
 
@@ -12,7 +12,7 @@ def _get_kwargs(
     *,
     client: Client,
 ) -> Dict[str, Any]:
-    url = "{}/api/buildinfo".format(client.base_url)
+    url = "{}/api/folders/tree".format(client.base_url)
 
     headers: Dict[str, str] = client.get_headers()
     cookies: Dict[str, Any] = client.get_cookies()
@@ -28,9 +28,16 @@ def _get_kwargs(
 
 def _parse_response(
     *, response: httpx.Response
-) -> Optional[Union[Any, BuildInfoResponse200]]:
+) -> Optional[Union[Any, List["FolderTreeResponse200Item"]]]:
     if response.status_code == HTTPStatus.OK:
-        response_200 = BuildInfoResponse200.from_dict(response.json())
+        response_200 = []
+        _response_200 = response.json()
+        for response_200_item_data in _response_200:
+            response_200_item = FolderTreeResponse200Item.from_dict(
+                response_200_item_data
+            )
+
+            response_200.append(response_200_item)
 
         return response_200
     if response.status_code == HTTPStatus.BAD_REQUEST:
@@ -41,7 +48,7 @@ def _parse_response(
 
 def _build_response(
     *, response: httpx.Response
-) -> Response[Union[Any, BuildInfoResponse200]]:
+) -> Response[Union[Any, List["FolderTreeResponse200Item"]]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -53,11 +60,11 @@ def _build_response(
 def sync_detailed(
     *,
     client: Client,
-) -> Response[Union[Any, BuildInfoResponse200]]:
-    """Information about the version of WEBKNOSSOS
+) -> Response[Union[Any, List["FolderTreeResponse200Item"]]]:
+    """List all accessible folders hierarchically.
 
     Returns:
-        Response[Union[Any, BuildInfoResponse200]]
+        Response[Union[Any, List['FolderTreeResponse200Item']]]
     """
 
     kwargs = _get_kwargs(
@@ -75,11 +82,11 @@ def sync_detailed(
 def sync(
     *,
     client: Client,
-) -> Optional[Union[Any, BuildInfoResponse200]]:
-    """Information about the version of WEBKNOSSOS
+) -> Optional[Union[Any, List["FolderTreeResponse200Item"]]]:
+    """List all accessible folders hierarchically.
 
     Returns:
-        Response[Union[Any, BuildInfoResponse200]]
+        Response[Union[Any, List['FolderTreeResponse200Item']]]
     """
 
     return sync_detailed(
@@ -90,11 +97,11 @@ def sync(
 async def asyncio_detailed(
     *,
     client: Client,
-) -> Response[Union[Any, BuildInfoResponse200]]:
-    """Information about the version of WEBKNOSSOS
+) -> Response[Union[Any, List["FolderTreeResponse200Item"]]]:
+    """List all accessible folders hierarchically.
 
     Returns:
-        Response[Union[Any, BuildInfoResponse200]]
+        Response[Union[Any, List['FolderTreeResponse200Item']]]
     """
 
     kwargs = _get_kwargs(
@@ -110,11 +117,11 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: Client,
-) -> Optional[Union[Any, BuildInfoResponse200]]:
-    """Information about the version of WEBKNOSSOS
+) -> Optional[Union[Any, List["FolderTreeResponse200Item"]]]:
+    """List all accessible folders hierarchically.
 
     Returns:
-        Response[Union[Any, BuildInfoResponse200]]
+        Response[Union[Any, List['FolderTreeResponse200Item']]]
     """
 
     return (

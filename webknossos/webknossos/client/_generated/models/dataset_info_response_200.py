@@ -39,7 +39,7 @@ class DatasetInfoResponse200:
         owning_organization (Union[Unset, str]):  Example: Organization_X.
         allowed_teams_cumulative (Union[Unset, List['DatasetInfoResponse200AllowedTeamsCumulativeItem']]):
         is_editable (Union[Unset, int]):  Example: True.
-        last_used_by_user (Union[Unset, int]):  Example: 1676366706471.
+        last_used_by_user (Union[Unset, int]):  Example: 1676382616043.
         logo_url (Union[Unset, str]):  Example: /assets/images/mpi-logos.svg.
         sorting_key (Union[Unset, int]):  Example: 1508495293789.
         details (Union[Unset, str]):

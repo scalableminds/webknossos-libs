@@ -87,6 +87,7 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
         dataset_list,
         dataset_sharing_token,
         datastore_list,
+        folder_tree,
         generate_token_for_data_store,
         project_info_by_id,
         project_info_by_name,
@@ -147,6 +148,15 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
         "datasetList",
         extract_200_response(
             dataset_list.sync_detailed(
+                client=client,
+            )
+        ),
+    )
+
+    yield (
+        "folderTree",
+        extract_200_response(
+            folder_tree.sync_detailed(
                 client=client,
             )
         ),

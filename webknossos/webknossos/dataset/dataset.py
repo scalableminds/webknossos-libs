@@ -30,11 +30,11 @@ from typing import (
 import attr
 import numpy as np
 from boltons.typeutils import make_sentinel
-from cluster_tools import Executor
 from natsort import natsort_keygen
 from numpy.typing import DTypeLike
 from upath import UPath
 
+from cluster_tools import Executor
 from webknossos.dataset.defaults import (
     DEFAULT_CHUNK_SHAPE,
     DEFAULT_CHUNKS_PER_SHARD_ZARR,
@@ -43,6 +43,7 @@ from webknossos.dataset.defaults import (
 from ..geometry.vec3_int import Vec3Int, Vec3IntLike
 from ._array import ArrayException, ArrayInfo, BaseArray, DataFormat
 from .remote_dataset_registry import RemoteDatasetRegistry
+from .remote_folder import RemoteFolder
 from .sampling_modes import SamplingModes
 
 if TYPE_CHECKING:
@@ -1840,6 +1841,7 @@ class RemoteDataset(Dataset):
         display_name: Optional[str] = _UNSET,
         description: Optional[str] = _UNSET,
         is_public: bool = _UNSET,
+        folder_id: str = _UNSET,
         tags: List[str] = _UNSET,
     ) -> None:
         from webknossos.client._generated.api.default import dataset_update
@@ -1860,6 +1862,8 @@ class RemoteDataset(Dataset):
             info["tags"] = tags
         if is_public is not _UNSET:
             info["isPublic"] = is_public
+        if folder_id is not _UNSET:
+            info["folderId"] = folder_id
         if display_name is not _UNSET:
             info["displayName"] = display_name
 
@@ -1958,3 +1962,11 @@ class RemoteDataset(Dataset):
             assert (
                 dataset_update_teams_response.status_code == 200
             ), dataset_update_teams_response
+
+    @property
+    def folder(self) -> RemoteFolder:
+        return RemoteFolder.get_by_id(self._get_dataset_info().folder_id)
+
+    @folder.setter
+    def folder(self, folder: RemoteFolder) -> None:
+        self._update_dataset_info(folder_id=folder.id)
