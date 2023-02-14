@@ -17,6 +17,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Added
 
 ### Changed
+- in Dataset.layer_from_images, layer names generated from multiple input image channels no longer contain equal signs, yielding better url safety. [#867](https://github.com/scalableminds/webknossos-libs/pull/867)
 
 ### Fixed
 
