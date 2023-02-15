@@ -431,6 +431,8 @@ interactions:
       - '*'
       access-control-max-age:
       - '600'
+      connection:
+      - keep-alive
       content-length:
       - '166'
       content-type:
