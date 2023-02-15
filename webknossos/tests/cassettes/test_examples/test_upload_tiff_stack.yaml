@@ -46,9 +46,40 @@ interactions:
       user-agent:
       - python-httpx/0.18.2
     method: GET
+    uri: http://localhost:9000/api/datastores
+  response:
+    content: '[{"name":"connect","url":"http://localhost:8000","isScratch":false,"isConnector":true,"allowsUpload":false},{"name":"localhost","url":"http://localhost:9000","isScratch":false,"isConnector":false,"allowsUpload":true}]'
+    headers:
+      content-length:
+      - '217'
+      content-type:
+      - application/json
+      date: Mon, 01 Jan 2000 00:00:00 GMT
+      referrer-policy:
+      - origin-when-cross-origin, strict-origin-when-cross-origin
+      x-permitted-cross-domain-policies:
+      - master-only
+      x-xss-protection:
+      - 1; mode=block
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: ''
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - localhost:9000
+      user-agent:
+      - python-httpx/0.18.2
+    method: GET
     uri: http://localhost:9000/api/user
   response:
-    content: '{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1676468690730,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true}'
+    content: '{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_A@scalableminds.com","firstName":"user_A","lastName":"BoyA","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1676476126418,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true}'
     headers:
       content-length:
       - '657'
@@ -763,7 +794,7 @@ interactions:
     method: GET
     uri: http://localhost:9000/api/datasets/Organization_X/tiff_dataset_2000-01-01_00-00-00
   response:
-    content: '{"name":"tiff_dataset_2023-02-15_13-45-51","dataSource":{"id":{"name":"tiff_dataset_2023-02-15_13-45-51","team":"Organization_X"},"dataLayers":[{"name":"tiff","category":"color","boundingBox":{"topLeft":[0,0,0],"width":265,"height":265,"depth":257},"resolutions":[[1,1,1],[2,2,2],[4,4,4]],"elementClass":"uint8"}],"scale":[12,12,12]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"isConnector":false,"allowsUpload":true},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1676468760541,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1676468760541,"details":null,"isUnreported":false,"jobsEnabled":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null}'
+    content: '{"name":"tiff_dataset_2023-02-15_15-50-10","dataSource":{"id":{"name":"tiff_dataset_2023-02-15_15-50-10","team":"Organization_X"},"dataLayers":[{"name":"tiff","category":"color","boundingBox":{"topLeft":[0,0,0],"width":265,"height":265,"depth":257},"resolutions":[[1,1,1],[2,2,2],[4,4,4]],"elementClass":"uint8"}],"scale":[12,12,12]},"dataStore":{"name":"localhost","url":"http://localhost:9000","isScratch":false,"isConnector":false,"allowsUpload":true},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"displayName":null,"created":1676476222026,"isEditable":true,"lastUsedByUser":1010101010101,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1676476222026,"details":null,"isUnreported":false,"jobsEnabled":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","publication":null}'
     headers:
       content-length:
       - '874'
@@ -798,7 +829,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2023-02-15_13-45-51\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2023-02-15_15-50-10\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
         \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
@@ -822,7 +853,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_13-45-51
+    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_15-50-10
 - request:
     body: null
     headers:
@@ -852,7 +883,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_13-45-51
+    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_15-50-10
 - request:
     body: null
     headers: {}
@@ -873,7 +904,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2023-02-15_13-45-51\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2023-02-15_15-50-10\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
         \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
@@ -897,7 +928,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_13-45-51
+    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_15-50-10
 - request:
     body: null
     headers: {}
@@ -918,7 +949,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2023-02-15_13-45-51\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2023-02-15_15-50-10\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\"datasource-properties.json\">datasource-properties.json</a></li>\n
         \     \n        <li><a href=\".zgroup\">.zgroup</a></li>\n      \n        <li><a
@@ -942,7 +973,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_13-45-51
+    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_15-50-10
 - request:
     body: null
     headers:
@@ -972,7 +1003,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_13-45-51/datasource-properties.json
+    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_15-50-10/datasource-properties.json
 - request:
     body: null
     headers: {}
@@ -980,7 +1011,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2000-01-01_00-00-00/datasource-properties.json
   response:
     body:
-      string: '{"id":{"name":"tiff_dataset_2023-02-15_13-45-51","team":"Organization_X"},"dataLayers":[{"name":"tiff","category":"color","boundingBox":{"topLeft":[0,0,0],"width":265,"height":265,"depth":257},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"}],"scale":[12,12,12]}'
+      string: '{"id":{"name":"tiff_dataset_2023-02-15_15-50-10","team":"Organization_X"},"dataLayers":[{"name":"tiff","category":"color","boundingBox":{"topLeft":[0,0,0],"width":265,"height":265,"depth":257},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"}],"scale":[12,12,12]}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -1000,7 +1031,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_13-45-51/datasource-properties.json
+    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_15-50-10/datasource-properties.json
 - request:
     body: null
     headers:
@@ -1030,7 +1061,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_13-45-51/datasource-properties.json
+    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_15-50-10/datasource-properties.json
 - request:
     body: null
     headers:
@@ -1040,7 +1071,7 @@ interactions:
     uri: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2000-01-01_00-00-00/datasource-properties.json
   response:
     body:
-      string: '{"id":{"name":"tiff_dataset_2023-02-15_13-45-51","team":"Organization_X"},"dataLayers":[{"name":"tiff","category":"color","boundingBox":{"topLeft":[0,0,0],"width":265,"height":265,"depth":257},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"}],"scale":[12,12,12]}'
+      string: '{"id":{"name":"tiff_dataset_2023-02-15_15-50-10","team":"Organization_X"},"dataLayers":[{"name":"tiff","category":"color","boundingBox":{"topLeft":[0,0,0],"width":265,"height":265,"depth":257},"elementClass":"uint8","mags":[{"mag":[1,1,1],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,2],"axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,4],"axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"dataFormat":"zarr"}],"scale":[12,12,12]}'
     headers:
       access-control-allow-origin:
       - '*'
@@ -1060,7 +1091,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_13-45-51/datasource-properties.json
+    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_15-50-10/datasource-properties.json
 - request:
     body: null
     headers: {}
@@ -1081,7 +1112,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2023-02-15_13-45-51/tiff/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2023-02-15_15-50-10/tiff/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -1104,7 +1135,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_13-45-51/tiff/1
+    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_15-50-10/tiff/1
 - request:
     body: null
     headers: {}
@@ -1132,7 +1163,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_13-45-51/tiff/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_15-50-10/tiff/1/.zarray
 - request:
     body: null
     headers:
@@ -1162,7 +1193,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_13-45-51/tiff/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_15-50-10/tiff/1/.zarray
 - request:
     body: null
     headers: {}
@@ -1190,7 +1221,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_13-45-51/tiff/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_15-50-10/tiff/1/.zarray
 - request:
     body: null
     headers: {}
@@ -1218,7 +1249,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_13-45-51/tiff/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_15-50-10/tiff/1/.zarray
 - request:
     body: null
     headers: {}
@@ -1246,7 +1277,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_13-45-51/tiff/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_15-50-10/tiff/1/.zarray
 - request:
     body: null
     headers: {}
@@ -1274,7 +1305,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_13-45-51/tiff/1/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_15-50-10/tiff/1/.zarray
 - request:
     body: null
     headers: {}
@@ -1295,7 +1326,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2023-02-15_13-45-51/tiff/1\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2023-02-15_15-50-10/tiff/1\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -1318,7 +1349,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_13-45-51/tiff/1
+    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_15-50-10/tiff/1
 - request:
     body: null
     headers: {}
@@ -1339,7 +1370,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2023-02-15_13-45-51/tiff/2\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2023-02-15_15-50-10/tiff/2\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -1362,7 +1393,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_13-45-51/tiff/2
+    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_15-50-10/tiff/2
 - request:
     body: null
     headers: {}
@@ -1390,7 +1421,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_13-45-51/tiff/2/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_15-50-10/tiff/2/.zarray
 - request:
     body: null
     headers:
@@ -1420,7 +1451,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_13-45-51/tiff/2/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_15-50-10/tiff/2/.zarray
 - request:
     body: null
     headers: {}
@@ -1448,7 +1479,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_13-45-51/tiff/2/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_15-50-10/tiff/2/.zarray
 - request:
     body: null
     headers: {}
@@ -1476,7 +1507,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_13-45-51/tiff/2/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_15-50-10/tiff/2/.zarray
 - request:
     body: null
     headers: {}
@@ -1504,7 +1535,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_13-45-51/tiff/2/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_15-50-10/tiff/2/.zarray
 - request:
     body: null
     headers: {}
@@ -1532,7 +1563,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_13-45-51/tiff/2/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_15-50-10/tiff/2/.zarray
 - request:
     body: null
     headers: {}
@@ -1553,7 +1584,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2023-02-15_13-45-51/tiff/2\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2023-02-15_15-50-10/tiff/2\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -1576,7 +1607,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_13-45-51/tiff/2
+    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_15-50-10/tiff/2
 - request:
     body: null
     headers: {}
@@ -1597,7 +1628,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2023-02-15_13-45-51/tiff/4\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2023-02-15_15-50-10/tiff/4\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -1620,7 +1651,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_13-45-51/tiff/4
+    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_15-50-10/tiff/4
 - request:
     body: null
     headers: {}
@@ -1648,7 +1679,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_13-45-51/tiff/4/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_15-50-10/tiff/4/.zarray
 - request:
     body: null
     headers:
@@ -1678,7 +1709,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_13-45-51/tiff/4/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_15-50-10/tiff/4/.zarray
 - request:
     body: null
     headers: {}
@@ -1706,7 +1737,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_13-45-51/tiff/4/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_15-50-10/tiff/4/.zarray
 - request:
     body: null
     headers: {}
@@ -1734,7 +1765,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_13-45-51/tiff/4/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_15-50-10/tiff/4/.zarray
 - request:
     body: null
     headers: {}
@@ -1762,7 +1793,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_13-45-51/tiff/4/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_15-50-10/tiff/4/.zarray
 - request:
     body: null
     headers: {}
@@ -1790,7 +1821,7 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_13-45-51/tiff/4/.zarray
+    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_15-50-10/tiff/4/.zarray
 - request:
     body: null
     headers: {}
@@ -1811,7 +1842,7 @@ interactions:
         Neue\", Helvetica, Arial,\n        sans-serif;\n        text-align: center\n
         \     }\n      \n      ul {\n        list-style: none;\n      }\n\n      p#hint
         {\n        color: #777;\n        margin-top: 4em\n      }\n    </style>\n
-        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2023-02-15_13-45-51/tiff/4\u201D
+        \ </head>\n  <body>\n    <p id=\"hint\">This is the WEBKNOSSOS Datastore \u201COrganization_X/tiff_dataset_2023-02-15_15-50-10/tiff/4\u201D
         folder.</p>\n    <p>The following are the contents of the folder:</p>\n    <ul>\n
         \     \n        <li><a href=\".zarray\">.zarray</a></li>\n      \n    </ul>\n
         \ </body>\n</html>\n"
@@ -1834,5 +1865,5 @@ interactions:
     status:
       code: 200
       message: OK
-    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_13-45-51/tiff/4
+    url: http://localhost:9000/data/zarr/Organization_X/tiff_dataset_2023-02-15_15-50-10/tiff/4
 version: 1
