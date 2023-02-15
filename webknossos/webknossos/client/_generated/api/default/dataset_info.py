@@ -41,7 +41,6 @@ def _parse_response(
     *, response: httpx.Response
 ) -> Optional[Union[Any, DatasetInfoResponse200]]:
     if response.status_code == HTTPStatus.OK:
-        print(response.json())
         response_200 = DatasetInfoResponse200.from_dict(response.json())
 
         return response_200
