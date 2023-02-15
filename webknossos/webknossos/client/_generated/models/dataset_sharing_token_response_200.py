@@ -9,7 +9,7 @@ T = TypeVar("T", bound="DatasetSharingTokenResponse200")
 class DatasetSharingTokenResponse200:
     """
     Attributes:
-        sharing_token (str):  Example: g46dd97uoV0O_6sIyAL8Bg.
+        sharing_token (str):  Example: Vui0y7qCWj66ylpMhEzdJg.
     """
 
     sharing_token: str

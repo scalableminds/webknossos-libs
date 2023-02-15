@@ -31,7 +31,7 @@ class UserInfoByIdResponse200:
         is_dataset_manager (int):  Example: True.
         is_active (int):  Example: True.
         experiences (UserInfoByIdResponse200Experiences):
-        last_activity (int):  Example: 1676383881960.
+        last_activity (int):  Example: 1676459044291.
         organization (str):  Example: Organization_X.
         created (int):  Example: 1460379469000.
         is_organization_owner (Union[Unset, int]):  Example: True.

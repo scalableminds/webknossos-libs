@@ -103,7 +103,7 @@ def iterate_request_ids_with_responses() -> Iterable[Tuple[str, bytes]]:
     from webknossos.utils import snake_to_camel_case
 
     organization_id = "Organization_X"
-    dataset_name = "e2006_knossos"
+    dataset_name = "l4_sample"
     task_id = "581367a82faeb37a008a5352"
     user_id = "570b9f4d2a7c0e4d008da6ef"
     project_id = "58135bfd2faeb3190181c057"

@@ -12,8 +12,8 @@ class ShortLinkByKeyResponse200:
     """
     Attributes:
         long_link (str):  Example: http://localhost:9000.
-        id (Union[Unset, str]):  Example: 63eb968a100200391a197b19.
-        key (Union[Unset, str]):  Example: NxOYy7h8AMBN--D1.
+        id (Union[Unset, str]):  Example: 63ecbc24e00100ad02ba81ec.
+        key (Union[Unset, str]):  Example: kfu75s6Nm8-imvW4.
     """
 
     long_link: str

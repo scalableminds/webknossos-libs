@@ -31,7 +31,7 @@ class UserListResponse200Item:
         is_dataset_manager (int):  Example: True.
         is_active (int):  Example: True.
         experiences (UserListResponse200ItemExperiences):
-        last_activity (int):  Example: 1676383882929.
+        last_activity (int):  Example: 1676459044612.
         organization (str):  Example: Organization_X.
         created (int):  Example: 1460379469000.
         is_organization_owner (Union[Unset, int]):  Example: True.

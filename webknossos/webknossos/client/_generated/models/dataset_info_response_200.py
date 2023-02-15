@@ -26,7 +26,7 @@ T = TypeVar("T", bound="DatasetInfoResponse200")
 class DatasetInfoResponse200:
     """
     Attributes:
-        name (str):  Example: e2006_knossos.
+        name (str):  Example: l4_sample.
         data_source (DatasetInfoResponse200DataSource):
         data_store (DatasetInfoResponse200DataStore):
         allowed_teams (List['DatasetInfoResponse200AllowedTeamsItem']):
@@ -40,7 +40,7 @@ class DatasetInfoResponse200:
         owning_organization (Union[Unset, str]):  Example: Organization_X.
         allowed_teams_cumulative (Union[Unset, List['DatasetInfoResponse200AllowedTeamsCumulativeItem']]):
         is_editable (Union[Unset, int]):  Example: True.
-        last_used_by_user (Union[Unset, int]):  Example: 1676383881732.
+        last_used_by_user (Union[Unset, int]):  Example: 1676459044224.
         logo_url (Union[Unset, str]):  Example: /assets/images/mpi-logos.svg.
         sorting_key (Union[Unset, int]):  Example: 1508495293789.
         details (Union[Unset, str]):
