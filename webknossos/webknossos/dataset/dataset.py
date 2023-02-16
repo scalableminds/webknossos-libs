@@ -1970,5 +1970,5 @@ class RemoteDataset(Dataset):
 
     @folder.setter
     def folder(self, folder: RemoteFolder) -> None:
-        """Move the dataset to a folder. Specify the folder like this `RemoteFolder.get_by_path("Root/Folder_A")`."""
+        """Move the dataset to a folder. Specify the folder like this `RemoteFolder.get_by_path("Datasets/Folder_A")`."""
         self._update_dataset_info(folder_id=folder.id)
