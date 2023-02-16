@@ -1946,6 +1946,7 @@ class RemoteDataset(Dataset):
 
     @allowed_teams.setter
     def allowed_teams(self, allowed_teams: Sequence[Union[str, "Team"]]) -> None:
+        """Assign the teams that are allowed to access the dataset. Specify the teams like this `[Team.get_by_name("Lab_A"), ...]`."""
         from webknossos.administration.user import Team
         from webknossos.client._generated.api.default import dataset_update_teams
         from webknossos.client.context import _get_generated_client
@@ -1969,4 +1970,5 @@ class RemoteDataset(Dataset):
 
     @folder.setter
     def folder(self, folder: RemoteFolder) -> None:
+        """Move the dataset to a folder. Specify the folder like this `RemoteFolder.get_by_path("Root/Folder_A")`."""
         self._update_dataset_info(folder_id=folder.id)
