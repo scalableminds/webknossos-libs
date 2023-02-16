@@ -65,7 +65,7 @@ st.register_type_strategy(
 
 _mag_strategy = st.builds(
     lambda mag_xy_log2, mag_z_log2: wk.Mag(
-        (2**mag_xy_log2, 2**mag_xy_log2, 2**mag_z_log2)
+        (2 ** mag_xy_log2, 2 ** mag_xy_log2, 2 ** mag_z_log2)
     ),
     st.integers(min_value=0, max_value=12),
     st.integers(min_value=0, max_value=12),
