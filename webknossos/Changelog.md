@@ -10,9 +10,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.12.0...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.12.1...HEAD)
 
 ### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [0.12.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.12.1) - 2023-02-16
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v0.12.0...v0.12.1)
 
 ### Added
 - Added `read_only` parameter for `annotation.temporary_volume_layer_copy`. [#866](https://github.com/scalableminds/webknossos-libs/pull/866)
@@ -23,6 +33,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Fixed
 - Fixed a bug where some czi, dm3, dm4 images could not be converted to wkw due to a too-strict check. [#865](https://github.com/scalableminds/webknossos-libs/pull/865)
 - Enforce `read_only` property of datasets also for down- and upsampling. [#866](https://github.com/scalableminds/webknossos-libs/pull/866)
+
 
 
 ## [0.12.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v0.12.0) - 2023-02-10
