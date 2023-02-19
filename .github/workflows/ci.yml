@@ -308,8 +308,7 @@ jobs:
     - name: Write version file
       run: |
         pip install -r requirements.txt
-        for PKG in */pyproject.toml; do
-          PKG="$(dirname "$PKG")"
+        for PKG in "cluster_tools" "webknossos" "wkcuber"; do
           pushd "$PKG" > /dev/null
 
           PKG_VERSION="$(dunamai from git)"
