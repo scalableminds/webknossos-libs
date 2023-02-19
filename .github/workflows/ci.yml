@@ -308,18 +308,15 @@ jobs:
     - name: Write version file
       run: |
         pip install -r requirements.txt
-        for PKG in "cluster_tools" "webknossos" "wkcuber"; do
-          pushd "$PKG" > /dev/null
+        pushd wkcuber
+        
+        PKG_VERSION="$(dunamai from git)"
+        echo "__version__ = '$PKG_VERSION'" > ./wkcuber/version.py
+        poetry version "$PKG_VERSION"
+        # replace all relative path dependencies with the current version:
+        sed -i 's/\(.*\) = .* path \= \"\.\..*/\1 = "'"$PKG_VERSION"'"/g' pyproject.toml
 
-          PKG_VERSION="$(dunamai from git)"
-          echo "__version__ = '$PKG_VERSION'" > ./"$PKG"/version.py
-
-          poetry version "$PKG_VERSION"
-          # replace all relative path dependencies with the current version:
-          sed -i 's/\(.*\) = .* path \= \"\.\..*/\1 = "'"$PKG_VERSION"'"/g' pyproject.toml
-
-          popd > /dev/null
-        done
+        popd
 
     - name: Build docker image
       run: docker build -t scalableminds/webknossos-cuber:$GITHUB_SHA -f wkcuber/Dockerfile .
