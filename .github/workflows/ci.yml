@@ -309,12 +309,10 @@ jobs:
       run: |
         pip install -r requirements.txt
         pushd wkcuber
-        
+
         PKG_VERSION="$(dunamai from git)"
         echo "__version__ = '$PKG_VERSION'" > ./wkcuber/version.py
         poetry version "$PKG_VERSION"
-        # replace all relative path dependencies with the current version:
-        sed -i 's/\(.*\) = .* path \= \"\.\..*/\1 = "'"$PKG_VERSION"'"/g' pyproject.toml
 
         popd
 
