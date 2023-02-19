@@ -290,7 +290,7 @@ jobs:
       run: ./test.sh
 
   wkcuber_docker:
-    # needs: [cluster_tools, webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac]
+    needs: [cluster_tools, webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac]
     if: |
       always() &&
       !contains(needs.*.result, 'failure') &&
