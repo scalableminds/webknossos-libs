@@ -290,7 +290,7 @@ jobs:
       run: ./test.sh
 
   wkcuber_docker:
-    needs: [cluster_tools, webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac]
+    # needs: [cluster_tools, webknossos_linux, wkcuber_linux, wkcuber_win, wkcuber_mac]
     if: |
       always() &&
       !contains(needs.*.result, 'failure') &&
@@ -309,6 +309,7 @@ jobs:
       run: |
         pip install -r requirements.txt
         for PKG in */pyproject.toml; do
+          PKG="$(dirname "$PKG")"
           pushd "$PKG" > /dev/null
 
           PKG_VERSION="$(dunamai from git)"
