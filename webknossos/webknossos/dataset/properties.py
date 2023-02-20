@@ -189,7 +189,9 @@ dataset_converter.register_structure_hook(
     Vec3Int, lambda d, _: Vec3Int.full(d) if isinstance(d, int) else Vec3Int(d)
 )
 
-dataset_converter.register_structure_hook(LayerCategoryType, lambda d, _: str(d))
+dataset_converter.register_structure_hook_func(
+    lambda d: d == LayerCategoryType, lambda d, _: str(d)  # type: ignore[comparison-overlap]
+)
 
 # Register (un-)structure hooks for attr-classes to bring the data into the expected format.
 # The properties on disk (in datasource-properties.json) use camel case for the names of the attributes.
