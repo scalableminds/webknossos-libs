@@ -5,7 +5,7 @@ import webknossos as wk
 
 ANNOTATION_ID = "634e8fe1010000b4006f3cf4"
 SEGMENT_IDS = [32, 667325]
-MAG = wk.Mag("4-4-1")
+MAG = wk.Mag("8-8-2")
 
 
 def main() -> None:
@@ -14,7 +14,7 @@ def main() -> None:
     )
     mag_view = dataset.get_segmentation_layers()[0].get_mag(MAG)
 
-    z = mag_view.layer.bounding_box.topleft.z
+    z = mag_view.bounding_box.topleft.z
     with mag_view.get_buffered_slice_reader() as reader:
         for slice_data in reader:
             slice_data = slice_data[0]  # First channel only
