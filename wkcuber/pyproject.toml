@@ -41,6 +41,9 @@ s3fs = "^2022.3.0"
 [tool.poetry.scripts]
 wkcuber = "wkcuber.__main__:main"
 
+[tool.pylint."MESSAGES CONTROL"]
+disable = ["logging-format-interpolation","logging-fstring-interpolation","broad-except","broad-exception-raised","protected-access","R","C","fixme","global-statement","redefined-outer-name","arguments-differ","unused-argument"]
+
 [build-system]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"

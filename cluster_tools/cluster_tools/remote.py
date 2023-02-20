@@ -34,7 +34,7 @@ def get_custom_main_path(
     custom_main_path = None
     main_meta_path = executor.get_main_meta_path(cfut_dir, workerid)
     if os.path.exists(main_meta_path):
-        with open(main_meta_path, "r") as file:
+        with open(main_meta_path, "r", encoding="utf-8") as file:
             custom_main_path = file.read()
     return custom_main_path
 

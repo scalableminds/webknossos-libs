@@ -124,7 +124,7 @@ ignore = ["webknossos/client/_generated"]
 load-plugins = ["_helpers.pylint_plugins.attrs_ng_api"]
 
 [tool.pylint."MESSAGES CONTROL"]
-disable = ["logging-format-interpolation","logging-fstring-interpolation","broad-except","protected-access","R","C"]
+disable = ["logging-format-interpolation","logging-fstring-interpolation","broad-except","broad-exception-raised","protected-access","R","C"]
 
 [tool.pytest.ini_options]
 markers = ["with_vcr: Runs with VCR recording and optionally blocked network"]

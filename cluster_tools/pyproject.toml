@@ -34,3 +34,6 @@ namespace_packages = true
 strict_equality = true
 show_error_codes = true
 no_implicit_optional = true
+
+[tool.pylint."MESSAGES CONTROL"]
+disable = ["logging-format-interpolation","logging-fstring-interpolation","broad-except","broad-exception-raised","protected-access","R","C","fixme","global-statement","redefined-outer-name","arguments-differ","unused-argument"]

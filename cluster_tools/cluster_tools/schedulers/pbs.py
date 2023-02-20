@@ -91,7 +91,7 @@ class PBSExecutor(ClusterExecutor):
         filename = self.get_temp_file_path(
             self.cfut_dir, "_temp_pbs_{}.sh".format(random_string())
         )
-        with open(filename, "w") as f:
+        with open(filename, "w", encoding="utf-8") as f:
             f.write(job)
         jobid_desc, _ = chcall("qsub -V {}".format(filename))
         match = re.search("^[0-9]+", jobid_desc)

@@ -148,7 +148,7 @@ class SlurmExecutor(ClusterExecutor):
             )
             return int(max_array_size_env)
 
-        max_array_size = 2**32
+        max_array_size = 2 ** 32
         # See https://unix.stackexchange.com/a/364615
         stdout, stderr, exit_code = call(
             "scontrol show config | sed -n '/^MaxArraySize/s/.*= *//p'"
@@ -184,7 +184,7 @@ class SlurmExecutor(ClusterExecutor):
             )
             return int(max_submit_jobs_env)
 
-        max_submit_jobs = 2**32
+        max_submit_jobs = 2 ** 32
         # Check whether there is a limit per user
         stdout_user, stderr_user, _ = call(
             "sacctmgr list -n user $USER withassoc format=maxsubmitjobsperuser"
@@ -236,7 +236,7 @@ class SlurmExecutor(ClusterExecutor):
         filename = cls.get_temp_file_path(
             cfut_dir, "_temp_slurm{}.sh".format(random_string())
         )
-        with open(filename, "w") as f:
+        with open(filename, "w", encoding="utf-8") as f:
             f.write(job)
         job_id, stderr = chcall("sbatch --parsable {}".format(filename))
         os.unlink(filename)

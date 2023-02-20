@@ -4,9 +4,9 @@ Created on Aug 7, 2015
 From: https://github.com/jamesra/dm4reader/blob/master/dm4reader/__init__.py
 """
 
+import array
 import collections
 import struct
-import array
 
 DM4Header = collections.namedtuple(
     "DM4Header", ("version", "root_length", "little_endian")
@@ -162,7 +162,6 @@ def _read_tag_name(dmfile, _endian):
             tag_name = data.decode("utf-8", errors="ignore")
         except UnicodeDecodeError as _e:
             tag_name = None
-            pass
 
     return tag_name
 
